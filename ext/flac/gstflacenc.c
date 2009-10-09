@@ -757,16 +757,16 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
     gst_object_unref (peerpad);
 
     if (ret) {
-      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
-          "succeeded");
+      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s",
+          (guint64) absolute_byte_offset, "succeeded");
     } else {
-      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
-          "failed");
+      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s",
+          (guint64) absolute_byte_offset, "failed");
       return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
     }
   } else {
     GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " failed (no peer pad)",
-        absolute_byte_offset);
+        (guint64) absolute_byte_offset);
   }
 
   flacenc->offset = absolute_byte_offset;

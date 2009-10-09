@@ -669,7 +669,7 @@ gst_flac_dec_seek (const FLAC__StreamDecoder * decoder,
 
   flacdec = GST_FLAC_DEC (client_data);
 
-  GST_DEBUG_OBJECT (flacdec, "seek %" G_GINT64_FORMAT, position);
+  GST_DEBUG_OBJECT (flacdec, "seek %" G_GINT64_FORMAT, (gint64) position);
   flacdec->offset = position;
 
   return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
@@ -685,7 +685,7 @@ gst_flac_dec_tell (const FLAC__StreamDecoder * decoder,
 
   *position = flacdec->offset;
 
-  GST_DEBUG_OBJECT (flacdec, "tell %" G_GINT64_FORMAT, *position);
+  GST_DEBUG_OBJECT (flacdec, "tell %" G_GINT64_FORMAT, (gint64) * position);
 
   return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
@@ -711,7 +711,8 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
 
   *length = len;
 
-  GST_DEBUG_OBJECT (flacdec, "encoded byte length %" G_GINT64_FORMAT, *length);
+  GST_DEBUG_OBJECT (flacdec, "encoded byte length %" G_GINT64_FORMAT,
+      (gint64) * length);
 
   return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
