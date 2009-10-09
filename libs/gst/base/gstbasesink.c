@@ -1732,7 +1732,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   priv = basesink->priv;
 
   /* start with nothing */
-  start = stop = -1;
+  start = stop = GST_CLOCK_TIME_NONE;
 
   if (G_UNLIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
@@ -1743,14 +1743,14 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
       {
         if (basesink->segment.rate >= 0.0) {
           sstart = sstop = priv->current_sstop;
-          if (sstart == -1) {
+          if (!GST_CLOCK_TIME_IS_VALID (sstart)) {
             /* we have not seen a buffer yet, use the segment values */
             sstart = sstop = gst_segment_to_stream_time (&basesink->segment,
                 basesink->segment.format, basesink->segment.stop);
           }
         } else {
           sstart = sstop = priv->current_sstart;
-          if (sstart == -1) {
+          if (!GST_CLOCK_TIME_IS_VALID (sstart)) {
             /* we have not seen a buffer yet, use the segment values */
             sstart = sstop = gst_segment_to_stream_time (&basesink->segment,
                 basesink->segment.format, basesink->segment.start);
@@ -1789,7 +1789,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   if (bclass->get_times)
     bclass->get_times (basesink, buffer, &start, &stop);
 
-  if (start == -1) {
+  if (!GST_CLOCK_TIME_IS_VALID (start)) {
     /* we don't need to sync but we still want to get the timestamps for
      * tracking the position */
     gst_base_sink_get_times (basesink, buffer, &start, &stop);
@@ -2216,11 +2216,11 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   priv = basesink->priv;
 
 do_step:
-  sstart = sstop = rstart = rstop = -1;
+  sstart = sstop = rstart = rstop = GST_CLOCK_TIME_NONE;
   do_sync = TRUE;
   stepped = FALSE;
 
-  priv->current_rstart = -1;
+  priv->current_rstart = GST_CLOCK_TIME_NONE;
 
   /* get stepping info */
   current = &priv->current_step;
@@ -2241,10 +2241,10 @@ do_step:
 
   /* store timing info for current object */
   priv->current_rstart = rstart;
-  priv->current_rstop = (rstop != -1 ? rstop : rstart);
+  priv->current_rstop = (GST_CLOCK_TIME_IS_VALID (rstop) ? rstop : rstart);
 
   /* save sync time for eos when the previous object needed sync */
-  priv->eos_rtime = (do_sync ? priv->current_rstop : -1);
+  priv->eos_rtime = (do_sync ? priv->current_rstop : GST_CLOCK_TIME_NONE);
 
 again:
   /* first do preroll, this makes sure we commit our state
@@ -2258,7 +2258,7 @@ again:
    * it to report the position. We need to take the lock here. */
   GST_OBJECT_LOCK (basesink);
   priv->current_sstart = sstart;
-  priv->current_sstop = (sstop != -1 ? sstop : sstart);
+  priv->current_sstop = (GST_CLOCK_TIME_IS_VALID (sstop) ? sstop : sstart);
   GST_OBJECT_UNLOCK (basesink);
 
   /* update the segment with a pending step if the current one is invalid and we
@@ -2275,7 +2275,7 @@ again:
   stime = gst_base_sink_adjust_time (basesink, rstart);
 
   /* adjust for render-delay, avoid underflows */
-  if (stime != -1) {
+  if (GST_CLOCK_TIME_IS_VALID (stime)) {
     if (stime > priv->render_delay)
       stime -= priv->render_delay;
     else
@@ -2382,7 +2382,8 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
     return;
 
   /* if Quality-of-Service disabled, do nothing */
-  if (!g_atomic_int_get (&priv->qos_enabled) || start == -1)
+  if (!g_atomic_int_get (&priv->qos_enabled) ||
+      !GST_CLOCK_TIME_IS_VALID (start))
     return;
 
   stop = priv->current_rstop;
@@ -2403,14 +2404,14 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   }
 
   /* calculate duration of the buffer */
-  if (stop != -1)
+  if (GST_CLOCK_TIME_IS_VALID (stop))
     duration = stop - start;
   else
-    duration = -1;
+    duration = GST_CLOCK_TIME_NONE;
 
   /* if we have the time when the last buffer left us, calculate
    * processing time */
-  if (priv->last_left != -1) {
+  if (GST_CLOCK_TIME_IS_VALID (priv->last_left)) {
     if (entered > priv->last_left) {
       pt = entered - priv->last_left;
     } else {
@@ -2434,12 +2435,12 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
 
   /* collect running averages. for first observations, we copy the
    * values */
-  if (priv->avg_duration == -1)
+  if (!GST_CLOCK_TIME_IS_VALID (priv->avg_duration))
     priv->avg_duration = duration;
   else
     priv->avg_duration = UPDATE_RUNNING_AVG (priv->avg_duration, duration);
 
-  if (priv->avg_pt == -1)
+  if (!GST_CLOCK_TIME_IS_VALID (priv->avg_pt))
     priv->avg_pt = pt;
   else
     priv->avg_pt = UPDATE_RUNNING_AVG (priv->avg_pt, pt);
@@ -2451,7 +2452,7 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
   else
     rate = 0.0;
 
-  if (priv->last_left != -1) {
+  if (GST_CLOCK_TIME_IS_VALID (priv->last_left)) {
     if (dropped || priv->avg_rate < 0.0) {
       priv->avg_rate = rate;
     } else {
@@ -2492,12 +2493,12 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
 
   priv = sink->priv;
 
-  priv->last_in_time = -1;
-  priv->last_left = -1;
-  priv->avg_duration = -1;
-  priv->avg_pt = -1;
+  priv->last_in_time = GST_CLOCK_TIME_NONE;
+  priv->last_left = GST_CLOCK_TIME_NONE;
+  priv->avg_duration = GST_CLOCK_TIME_NONE;
+  priv->avg_pt = GST_CLOCK_TIME_NONE;
   priv->avg_rate = -1.0;
-  priv->avg_render = -1;
+  priv->avg_render = GST_CLOCK_TIME_NONE;
   priv->rendered = 0;
   priv->dropped = 0;
 
@@ -2540,11 +2541,11 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
     goto not_buffer;
 
   /* can't do check if we don't have a timestamp */
-  if (G_UNLIKELY (start == -1))
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (start)))
     goto no_timestamp;
 
   /* we can add a valid stop time */
-  if (stop != -1)
+  if (GST_CLOCK_TIME_IS_VALID (stop))
     max_lateness += stop;
   else
     max_lateness += start;
@@ -2557,7 +2558,8 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
         GST_TIME_ARGS (max_lateness));
     /* !!emergency!!, if we did not receive anything valid for more than a
      * second, render it anyway so the user sees something */
-    if (priv->last_in_time != -1 && start - priv->last_in_time > GST_SECOND) {
+    if (GST_CLOCK_TIME_IS_VALID (priv->last_in_time) &&
+        start - priv->last_in_time > GST_SECOND) {
       late = FALSE;
       GST_ELEMENT_WARNING (basesink, CORE, CLOCK,
           (_("A lot of buffers are being dropped.")),
@@ -2616,7 +2618,7 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
 
     elapsed = GST_CLOCK_DIFF (priv->start, priv->stop);
 
-    if (priv->avg_render == -1)
+    if (!GST_CLOCK_TIME_IS_VALID (priv->avg_render))
       priv->avg_render = elapsed;
     else
       priv->avg_render = UPDATE_RUNNING_AVG (priv->avg_render, elapsed);
@@ -3046,9 +3048,9 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad)
 
   /* for position reporting */
   GST_OBJECT_LOCK (basesink);
-  basesink->priv->current_sstart = -1;
-  basesink->priv->current_sstop = -1;
-  basesink->priv->eos_rtime = -1;
+  basesink->priv->current_sstart = GST_CLOCK_TIME_NONE;
+  basesink->priv->current_sstop = GST_CLOCK_TIME_NONE;
+  basesink->priv->eos_rtime = GST_CLOCK_TIME_NONE;
   basesink->priv->call_preroll = TRUE;
   basesink->priv->current_step.valid = FALSE;
   basesink->priv->pending_step.valid = FALSE;
@@ -3274,9 +3276,9 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     /* this means this sink will assume timestamps start from 0 */
     GST_OBJECT_LOCK (basesink);
     clip_segment->start = 0;
-    clip_segment->stop = -1;
+    clip_segment->stop = GST_CLOCK_TIME_NONE;
     basesink->segment.start = 0;
-    basesink->segment.stop = -1;
+    basesink->segment.stop = GST_CLOCK_TIME_NONE;
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
   }
@@ -3288,7 +3290,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   if (bclass->get_times)
     bclass->get_times (basesink, time_buf, &start, &end);
 
-  if (start == -1) {
+  if (!GST_CLOCK_TIME_IS_VALID (start)) {
     /* if the subclass does not want sync, we use our own values so that we at
      * least clip the buffer to the segment */
     gst_base_sink_get_times (basesink, time_buf, &start, &end);
@@ -3694,9 +3696,9 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
       sink->priv->have_latency = TRUE;
       sink->need_preroll = FALSE;
     }
-    priv->current_sstart = -1;
-    priv->current_sstop = -1;
-    priv->eos_rtime = -1;
+    priv->current_sstart = GST_CLOCK_TIME_NONE;
+    priv->current_sstop = GST_CLOCK_TIME_NONE;
+    priv->eos_rtime = GST_CLOCK_TIME_NONE;
     priv->call_preroll = TRUE;
     gst_base_sink_set_last_buffer (sink, NULL);
     gst_base_sink_reset_qos (sink);
@@ -4238,7 +4240,8 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
 
   if (oformat == GST_FORMAT_TIME) {
     *cur = basesink->priv->current_sstart;
-    if (segment->rate < 0.0 && basesink->priv->current_sstop != -1) {
+    if (segment->rate < 0.0 &&
+        GST_CLOCK_TIME_IS_VALID (basesink->priv->current_sstop)) {
       /* for reverse playback we prefer the stream time stop position if we have
        * one */
       *cur = basesink->priv->current_sstop;
@@ -4584,9 +4587,9 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       priv->step_unlock = FALSE;
       basesink->need_preroll = TRUE;
       basesink->playing_async = TRUE;
-      priv->current_sstart = -1;
-      priv->current_sstop = -1;
-      priv->eos_rtime = -1;
+      priv->current_sstart = GST_CLOCK_TIME_NONE;
+      priv->current_sstop = GST_CLOCK_TIME_NONE;
+      priv->eos_rtime = GST_CLOCK_TIME_NONE;
       priv->latency = 0;
       basesink->eos = FALSE;
       priv->received_eos = FALSE;
@@ -4713,8 +4716,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
        * messages so that the message handlers pick this up. */
       GST_OBJECT_LOCK (basesink);
       basesink->have_newsegment = FALSE;
-      priv->current_sstart = -1;
-      priv->current_sstop = -1;
+      priv->current_sstart = GST_CLOCK_TIME_NONE;
+      priv->current_sstop = GST_CLOCK_TIME_NONE;
       priv->have_latency = FALSE;
       GST_OBJECT_UNLOCK (basesink);
 
