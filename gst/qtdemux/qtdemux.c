@@ -399,8 +399,6 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), qtdemux->sinkpad);
 
   qtdemux->state = QTDEMUX_STATE_INITIAL;
-  /* FIXME, use segment last_stop for this */
-  qtdemux->last_ts = GST_CLOCK_TIME_NONE;
   qtdemux->pullbased = FALSE;
   qtdemux->neededbytes = 16;
   qtdemux->todrop = 0;
@@ -1396,7 +1394,6 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       gint n;
 
       qtdemux->state = QTDEMUX_STATE_INITIAL;
-      qtdemux->last_ts = GST_CLOCK_TIME_NONE;
       qtdemux->neededbytes = 16;
       qtdemux->todrop = 0;
       qtdemux->pullbased = FALSE;
@@ -1938,22 +1935,6 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   GST_LOG_OBJECT (qtdemux, "segment active, index = %u of %u",
       stream->sample_index, stream->n_samples);
 
-  /* send out pending buffers */
-  while (stream->buffers) {
-    GstBuffer *buffer = (GstBuffer *) stream->buffers->data;
-
-    if (G_UNLIKELY (stream->discont)) {
-      GST_LOG_OBJECT (qtdemux, "marking discont buffer");
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-      stream->discont = FALSE;
-    }
-    gst_buffer_set_caps (buffer, stream->caps);
-
-    gst_pad_push (stream->pad, buffer);
-
-    stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
-  }
-
   if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto eos;
 
@@ -1965,12 +1946,6 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   *size = sample->size;
   *duration = sample->duration;
   *keyframe = stream->all_keyframe || sample->keyframe;
-
-  /* add padding */
-  if (stream->padding) {
-    *offset += stream->padding;
-    *size -= stream->padding;
-  }
 
   return TRUE;
 
@@ -2304,6 +2279,105 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return buf;
 }
 
+/* Sets a buffer's attributes properly and pushes it downstream.
+ * Also checks for additional actions and custom processing that may
+ * need to be done first.
+ */
+static gboolean
+gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, GstBuffer * buf,
+    guint64 timestamp, guint64 duration, gboolean keyframe, guint64 position)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
+    GstMessage *m;
+    gchar *url;
+
+    url = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+    /* we have RTSP redirect now */
+    m = gst_message_new_element (GST_OBJECT_CAST (qtdemux),
+        gst_structure_new ("redirect",
+            "new-location", G_TYPE_STRING, url, NULL));
+    g_free (url);
+
+    gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
+  }
+
+  /* position reporting */
+  if (qtdemux->segment.rate >= 0) {
+    gst_segment_set_last_stop (&qtdemux->segment, GST_FORMAT_TIME, position);
+    gst_qtdemux_sync_streams (qtdemux);
+  }
+
+  if (G_UNLIKELY (!stream->pad)) {
+    GST_DEBUG_OBJECT (qtdemux, "No output pad for stream, ignoring");
+    gst_buffer_unref (buf);
+    goto exit;
+  }
+
+  /* send out pending buffers */
+  while (stream->buffers) {
+    GstBuffer *buffer = (GstBuffer *) stream->buffers->data;
+
+    if (G_UNLIKELY (stream->discont)) {
+      GST_LOG_OBJECT (qtdemux, "marking discont buffer");
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      stream->discont = FALSE;
+    }
+    gst_buffer_set_caps (buffer, stream->caps);
+
+    gst_pad_push (stream->pad, buffer);
+
+    stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
+  }
+
+  /* we're going to modify the metadata */
+  buf = gst_buffer_make_metadata_writable (buf);
+
+  if (G_UNLIKELY (stream->need_process))
+    buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
+
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+  GST_BUFFER_OFFSET (buf) = -1;
+  GST_BUFFER_OFFSET_END (buf) = -1;
+
+  if (G_UNLIKELY (stream->padding)) {
+    GST_BUFFER_DATA (buf) += stream->padding;
+    GST_BUFFER_SIZE (buf) -= stream->padding;
+  }
+
+  if (stream->need_clip)
+    buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
+
+  if (G_UNLIKELY (buf == NULL))
+    goto exit;
+
+  if (G_UNLIKELY (stream->discont)) {
+    GST_LOG_OBJECT (qtdemux, "marking discont buffer");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    stream->discont = FALSE;
+  }
+
+  if (!keyframe)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  gst_buffer_set_caps (buf, stream->caps);
+
+  GST_LOG_OBJECT (qtdemux,
+      "Pushing buffer with time %" GST_TIME_FORMAT ", duration %"
+      GST_TIME_FORMAT " on pad %s",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_PAD_NAME (stream->pad));
+
+  ret = gst_pad_push (stream->pad, buf);
+
+exit:
+  return ret;
+}
+
 static GstFlowReturn
 gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 {
@@ -2377,67 +2451,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
-  if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
-    GstMessage *m;
-    gchar *url;
-
-    url = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
-    /* we have RTSP redirect now */
-    m = gst_message_new_element (GST_OBJECT_CAST (qtdemux),
-        gst_structure_new ("redirect",
-            "new-location", G_TYPE_STRING, url, NULL));
-    g_free (url);
-
-    gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
-  }
-
-  qtdemux->last_ts = min_time;
-  if (qtdemux->segment.rate >= 0) {
-    gst_segment_set_last_stop (&qtdemux->segment, GST_FORMAT_TIME, min_time);
-    gst_qtdemux_sync_streams (qtdemux);
-  }
-  if (G_LIKELY (stream->pad)) {
-    /* we're going to modify the metadata */
-    buf = gst_buffer_make_metadata_writable (buf);
-
-    if (G_UNLIKELY (stream->need_process))
-      buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
-
-    GST_BUFFER_TIMESTAMP (buf) = timestamp;
-    GST_BUFFER_DURATION (buf) = duration;
-    GST_BUFFER_OFFSET (buf) = -1;
-    GST_BUFFER_OFFSET_END (buf) = -1;
-
-    if (stream->need_clip)
-      buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
-
-    if (buf == NULL)
-      goto next;
-
-    if (stream->discont) {
-      GST_LOG_OBJECT (qtdemux, "marking discont buffer");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-      stream->discont = FALSE;
-    }
-
-    if (!keyframe)
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    gst_buffer_set_caps (buf, stream->caps);
-
-    GST_LOG_OBJECT (qtdemux,
-        "Pushing buffer with time %" GST_TIME_FORMAT ", duration %"
-        GST_TIME_FORMAT " on pad %s",
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_PAD_NAME (stream->pad));
-
-    ret = gst_pad_push (stream->pad, buf);
-  } else {
-    GST_DEBUG_OBJECT (qtdemux, "No output pad for stream, ignoring");
-    gst_buffer_unref (buf);
-    ret = GST_FLOW_OK;
-  }
+  ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
+      timestamp, duration, keyframe, min_time);
 
   /* combine flows */
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
@@ -2676,6 +2691,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         guint32 fourcc;
         guint64 size;
 
+        /* prepare newsegment to send when streaming actually starts */
+        if (!demux->pending_newsegment) {
+          demux->pending_newsegment =
+              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+              0, GST_CLOCK_TIME_NONE, 0);
+        }
+
         data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* get fourcc/length, set neededbytes */
@@ -2809,6 +2831,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GstBuffer *outbuf;
         QtDemuxStream *stream = NULL;
         int i = -1;
+        guint64 timestamp, duration, position;
+        gboolean keyframe;
 
         GST_DEBUG_OBJECT (demux,
             "BEGIN // in MOVIE for offset %" G_GUINT64_FORMAT, demux->offset);
@@ -2823,10 +2847,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* first buffer? */
         /* initial newsegment sent here after having added pads,
          * possible others in sink_event */
-        if (G_UNLIKELY (demux->last_ts == GST_CLOCK_TIME_NONE)) {
-          gst_qtdemux_push_event (demux,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  0, GST_CLOCK_TIME_NONE, 0));
+        if (G_UNLIKELY (demux->pending_newsegment)) {
+          gst_qtdemux_push_event (demux, demux->pending_newsegment);
+          demux->pending_newsegment = NULL;
           /* clear to send tags on all streams */
           for (i = 0; i < demux->n_streams; i++) {
             gst_qtdemux_push_tags (demux, demux->streams[i]);
@@ -2858,37 +2881,14 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
-        if (stream->samples[stream->sample_index].pts_offset) {
-          demux->last_ts = stream->samples[stream->sample_index].timestamp;
-          GST_BUFFER_TIMESTAMP (outbuf) = demux->last_ts +
-              stream->samples[stream->sample_index].pts_offset;
-        } else {
-          GST_BUFFER_TIMESTAMP (outbuf) =
-              stream->samples[stream->sample_index].timestamp;
-          demux->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
-        }
-        GST_BUFFER_DURATION (outbuf) =
-            stream->samples[stream->sample_index].duration;
-        if (!stream->all_keyframe &&
-            !stream->samples[stream->sample_index].keyframe)
-          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+        position = stream->samples[stream->sample_index].timestamp;
+        timestamp = position + stream->samples[stream->sample_index].pts_offset;
+        duration = stream->samples[stream->sample_index].duration;
+        keyframe = stream->all_keyframe ||
+            stream->samples[stream->sample_index].keyframe;
 
-        /* position reporting */
-        gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
-            demux->last_ts);
-        gst_qtdemux_sync_streams (demux);
-
-        /* send buffer */
-        if (stream->pad) {
-          GST_LOG_OBJECT (demux,
-              "Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), stream->pad);
-          gst_buffer_set_caps (outbuf, stream->caps);
-          ret = gst_pad_push (stream->pad, outbuf);
-        } else {
-          gst_buffer_unref (outbuf);
-          ret = GST_FLOW_OK;
-        }
+        ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
+            timestamp, duration, keyframe, position);
 
         /* combine flows */
         ret = gst_qtdemux_combine_flows (demux, stream, ret);

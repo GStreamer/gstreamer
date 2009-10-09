@@ -89,9 +89,6 @@ struct _GstQTDemux {
 
   GstTagList *tag_list;
 
-  /* track stuff */
-  guint64 last_ts;
-
   /* configured playback region */
   GstSegment segment;
   gboolean segment_running;
