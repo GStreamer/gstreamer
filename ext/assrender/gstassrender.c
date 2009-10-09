@@ -94,7 +94,7 @@ gst_assrender_base_init (gpointer gclass)
       gst_static_pad_template_get (&text_sink_factory));
 
   gst_element_class_set_details_simple (element_class, "ASS/SSA Render",
-      "Filter/Effect/Video",
+      "Mixer/Video/Overlay/Subtitle",
       "Renders ASS/SSA subtitles with libass",
       "Benjamin Schmitz <vortex@wolpzone.de>");
 }
