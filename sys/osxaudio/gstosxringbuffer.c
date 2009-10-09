@@ -191,7 +191,8 @@ gst_osx_ring_buffer_create_audio_unit (GstOsxRingBuffer * osxbuf,
 
     if (status) {
       CloseComponent (unit);
-      GST_WARNING_OBJECT (osxbuf, "Failed to enable input: %lx", status);
+      GST_WARNING_OBJECT (osxbuf, "Failed to enable input: %lx",
+          (gulong) status);
       return NULL;
     }
 
@@ -202,7 +203,8 @@ gst_osx_ring_buffer_create_audio_unit (GstOsxRingBuffer * osxbuf,
 
     if (status) {
       CloseComponent (unit);
-      GST_WARNING_OBJECT (osxbuf, "Failed to disable output: %lx", status);
+      GST_WARNING_OBJECT (osxbuf, "Failed to disable output: %lx",
+          (gulong) status);
       return NULL;
     }
   }
@@ -214,7 +216,7 @@ gst_osx_ring_buffer_create_audio_unit (GstOsxRingBuffer * osxbuf,
 
   if (status) {
     CloseComponent (unit);
-    GST_WARNING_OBJECT (osxbuf, "Failed to set device: %lx", status);
+    GST_WARNING_OBJECT (osxbuf, "Failed to set device: %lx", (gulong) status);
     return NULL;
   }
 
@@ -252,7 +254,7 @@ gst_osx_ring_buffer_open_device (GstRingBuffer * buf)
       CloseComponent (osxbuf->audiounit);
       osxbuf->audiounit = NULL;
       GST_WARNING_OBJECT (osxbuf, "Unable to obtain device properties: %lx",
-          status);
+          (gulong) status);
       return FALSE;
     }
 
@@ -400,7 +402,8 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       kAudioUnitProperty_StreamFormat, scope, element, &format, propertySize);
 
   if (status) {
-    GST_WARNING_OBJECT (osxbuf, "Failed to set audio description: %lx", status);
+    GST_WARNING_OBJECT (osxbuf, "Failed to set audio description: %lx",
+        (gulong) status);
     goto done;
   }
 
@@ -409,7 +412,7 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       scope, element, layout, layoutSize);
   if (status) {
     GST_WARNING_OBJECT (osxbuf, "Failed to set output channel layout: %lx",
-        status);
+        (gulong) status);
     goto done;
   }
 
@@ -425,7 +428,8 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
         &frameSize, &propertySize);
 
     if (status) {
-      GST_WARNING_OBJECT (osxbuf, "Failed to get frame size: %lx", status);
+      GST_WARNING_OBJECT (osxbuf, "Failed to get frame size: %lx",
+          (gulong) status);
       goto done;
     }
 
@@ -547,7 +551,7 @@ gst_osx_ring_buffer_start (GstRingBuffer * buf)
   osxbuf = GST_OSX_RING_BUFFER (buf);
 
   GST_DEBUG ("osx ring buffer start ioproc: 0x%p device_id %lu",
-      osxbuf->element->io_proc, osxbuf->device_id);
+      osxbuf->element->io_proc, (gulong) osxbuf->device_id);
   if (!osxbuf->io_proc_active) {
     callback_type = osxbuf->is_src ?
         kAudioOutputUnitProperty_SetInputCallback :
@@ -592,7 +596,7 @@ gst_osx_ring_buffer_pause (GstRingBuffer * buf)
   GstOsxRingBuffer *osxbuf = GST_OSX_RING_BUFFER (buf);
 
   GST_DEBUG ("osx ring buffer pause ioproc: 0x%p device_id %lu",
-      osxbuf->element->io_proc, osxbuf->device_id);
+      osxbuf->element->io_proc, (gulong) osxbuf->device_id);
   if (osxbuf->io_proc_active) {
     /* CoreAudio isn't threadsafe enough to do this here; we must deactivate
      * the render callback elsewhere. See:
@@ -613,7 +617,7 @@ gst_osx_ring_buffer_stop (GstRingBuffer * buf)
   osxbuf = GST_OSX_RING_BUFFER (buf);
 
   GST_DEBUG ("osx ring buffer stop ioproc: 0x%p device_id %lu",
-      osxbuf->element->io_proc, osxbuf->device_id);
+      osxbuf->element->io_proc, (gulong) osxbuf->device_id);
 
   status = AudioOutputUnitStop (osxbuf->audiounit);
   if (status)
