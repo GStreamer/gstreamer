@@ -3702,8 +3702,8 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     }
 
     GST_LOG ("reading buffer (size=%" G_GUINT64_FORMAT "), stream %d, pos %"
-        G_GUINT64_FORMAT " (%llx), kf %d", size, stream_num, offset,
-        offset, keyframe);
+        G_GUINT64_FORMAT " (0x%" G_GINT64_MODIFIER "x), kf %d", size,
+        stream_num, offset, offset, keyframe);
 
     /* FIXME, check large chunks and cut them up */
 
