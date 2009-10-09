@@ -4241,6 +4241,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 version;
   guint32 tkhd_flags;
   guint8 tkhd_version;
+  guint32 fourcc;
+  guint len;
 
   stream = g_new0 (QtDemuxStream, 1);
   /* new streams always need a discont */
@@ -4333,8 +4335,27 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     goto corrupt_file;
   stsd_data = (const guint8 *) stsd->data;
 
+  /* stsd should at least have one entry */
+  len = QT_UINT32 (stsd_data);
+  if (len < 24)
+    goto corrupt_file;
+
+  /* and that entry should fit within stsd */
+  len = QT_UINT32 (stsd_data + 16);
+  if (len > QT_UINT32 (stsd_data) + 16)
+    goto corrupt_file;
+  GST_LOG_OBJECT (qtdemux, "stsd len:           %d", len);
+
+  stream->fourcc = fourcc = QT_FOURCC (stsd_data + 16 + 4);
+  GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (stream->fourcc));
+
+  if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
+      ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
+    goto error_encrypted;
+
   if (stream->subtype == FOURCC_vide) {
-    guint32 w, h, fourcc;
+    guint32 w, h;
 
     stream->sampled = TRUE;
 
@@ -4348,9 +4369,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->display_height = h >> 16;
 
     offset = 16;
-    stream->fourcc = fourcc = QT_FOURCC (stsd_data + offset + 4);
-    GST_LOG_OBJECT (qtdemux, "st type:          %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (fourcc));
+    if (len < 86)
+      goto corrupt_file;
 
     stream->width = QT_UINT16 (stsd_data + offset + 32);
     stream->height = QT_UINT16 (stsd_data + offset + 34);
@@ -4361,10 +4381,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     GST_LOG_OBJECT (qtdemux, "frame count:   %u",
         QT_UINT16 (stsd_data + offset + 48));
-
-    if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
-        ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
-      goto error_encrypted;
 
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
@@ -4555,18 +4571,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   } else if (stream->subtype == FOURCC_soun) {
     int version, samplesize;
-    guint32 fourcc;
-    int len;
     guint16 compression_id;
 
-    len = QT_UINT32 (stsd_data + 16);
-    GST_LOG_OBJECT (qtdemux, "stsd len:           %d", len);
-
-    stream->fourcc = fourcc = QT_FOURCC (stsd_data + 16 + 4);
-    GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (stream->fourcc));
-
     offset = 32;
+    if (len < 36)
+      goto corrupt_file;
 
     version = QT_UINT32 (stsd_data + offset);
     stream->n_channels = QT_UINT16 (stsd_data + offset + 8);
@@ -4700,10 +4709,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_WARNING_OBJECT (qtdemux, "unknown version %08x", version);
     }
 
-    if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
-        ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
-      goto error_encrypted;
-
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
         &codec);
 
@@ -4820,12 +4825,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_FOURCC_ARGS (fourcc), stream->caps);
 
   } else if (stream->subtype == FOURCC_strm) {
-    guint32 fourcc;
-
-    stream->fourcc = fourcc = QT_FOURCC (stsd_data + 16 + 4);
-    GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (fourcc));
-
     if (fourcc != FOURCC_rtsp) {
       GST_INFO_OBJECT (qtdemux, "unhandled stream type %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (fourcc));
@@ -4833,14 +4832,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
     stream->sampled = TRUE;
   } else if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text) {
-    guint32 fourcc;
 
     stream->sampled = TRUE;
 
     offset = 16;
-    stream->fourcc = fourcc = QT_FOURCC (stsd_data + offset + 4);
-    GST_LOG_OBJECT (qtdemux, "st type:          %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (fourcc));
 
     stream->caps =
         qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_data, &codec);
