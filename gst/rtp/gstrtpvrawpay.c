@@ -502,7 +502,8 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
       if (!cont)
         break;
     }
-    GST_LOG_OBJECT (rtpvrawpay, "consumed %u bytes", outdata - headers);
+    GST_LOG_OBJECT (rtpvrawpay, "consumed %u bytes",
+        (guint) (outdata - headers));
 
     /* second pass, read headers and write the data */
     while (TRUE) {

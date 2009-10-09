@@ -708,7 +708,7 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
     if ((current[i] == 0x0) &&
         (current[i + 1] == 0x0) && (current[i + 2] >> 7 == 0x1)) {
       GST_LOG ("GOB end found at: %p start: %p len: %u", current + i - 1,
-          boundry->end + 1, current + i - boundry->end + 2);
+          boundry->end + 1, (guint) (current + i - boundry->end + 2));
       gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
           current + i - 1, 0, 0);
 
@@ -924,8 +924,9 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     } else {
       if (n > rest_bits) {
         context->window =
-            (context->window << rest_bits) | (*context->
-            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
+            (context->
+            window << rest_bits) | (*context->win_end & (((guint) pow (2.0,
+                        (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
@@ -1686,8 +1687,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
-            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
+            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {
