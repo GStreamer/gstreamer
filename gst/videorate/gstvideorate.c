@@ -773,7 +773,8 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     GST_LOG_OBJECT (videorate,
         "END, putting new in old, diff1 %" GST_TIME_FORMAT
         ", diff2 %" GST_TIME_FORMAT ", next_ts %" GST_TIME_FORMAT
-        ", in %lld, out %lld, drop %lld, dup %lld", GST_TIME_ARGS (diff1),
+        ", in %" G_GUINT64_FORMAT ", out %" G_GUINT64_FORMAT ", drop %"
+        G_GUINT64_FORMAT ", dup %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff1),
         GST_TIME_ARGS (diff2), GST_TIME_ARGS (videorate->next_ts),
         videorate->in, videorate->out, videorate->drop, videorate->dup);
 
