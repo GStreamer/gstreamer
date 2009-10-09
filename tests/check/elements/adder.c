@@ -531,7 +531,7 @@ GST_START_TEST (test_live_seeking)
     fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
-#if 0
+#if 1
     fail_unless (res == TRUE, NULL);
 #else
     /* adder is picky, if a single seek fails it totaly fails */

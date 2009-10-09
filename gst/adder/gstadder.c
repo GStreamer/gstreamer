@@ -609,7 +609,6 @@ forward_event_func (GstPad * pad, GValue * ret, EventData * data)
   gst_event_ref (event);
   GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
   if (!gst_pad_push_event (pad, event)) {
-    g_value_set_boolean (ret, FALSE);
     GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
         event, GST_EVENT_TYPE_NAME (event));
     /* quick hack to unflush the pads, ideally we need a way to just unflush
@@ -617,6 +616,7 @@ forward_event_func (GstPad * pad, GValue * ret, EventData * data)
     if (data->flush)
       gst_pad_send_event (pad, gst_event_new_flush_stop ());
   } else {
+    g_value_set_boolean (ret, TRUE);
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
@@ -648,7 +648,7 @@ forward_event (GstAdder * adder, GstEvent * event, gboolean flush)
   data.flush = flush;
 
   g_value_init (&vret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&vret, TRUE);
+  g_value_set_boolean (&vret, FALSE);
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
   while (TRUE) {
     ires = gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func,
