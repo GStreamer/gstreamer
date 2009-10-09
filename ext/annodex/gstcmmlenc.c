@@ -612,7 +612,7 @@ gst_cmml_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   if (!gst_cmml_parser_parse_chunk (enc->parser,
           (gchar *) GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), &err)) {
-    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL), (err->message));
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL), ("%s", err->message));
     g_error_free (err);
     enc->flow_return = GST_FLOW_ERROR;
   }
