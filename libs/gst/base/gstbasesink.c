@@ -3276,9 +3276,9 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     /* this means this sink will assume timestamps start from 0 */
     GST_OBJECT_LOCK (basesink);
     clip_segment->start = 0;
-    clip_segment->stop = GST_CLOCK_TIME_NONE;
+    clip_segment->stop = -1;
     basesink->segment.start = 0;
-    basesink->segment.stop = GST_CLOCK_TIME_NONE;
+    basesink->segment.stop = -1;
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
   }
