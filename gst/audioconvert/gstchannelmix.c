@@ -638,7 +638,7 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
       g_string_append (s, " }");
     }
     g_string_append (s, " }");
-    GST_DEBUG ("%s", s->str);
+    GST_DEBUG (s->str);
     g_string_free (s, TRUE);
   }
 #endif
