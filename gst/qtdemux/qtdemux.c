@@ -2524,7 +2524,8 @@ next_entry_size (GstQTDemux * demux)
   guint64 smalloffs = (guint64) - 1;
   QtDemuxSample *sample;
 
-  GST_LOG_OBJECT (demux, "Finding entry at offset %lld", demux->offset);
+  GST_LOG_OBJECT (demux, "Finding entry at offset %" G_GUINT64_FORMAT,
+      demux->offset);
 
   for (i = 0; i < demux->n_streams; i++) {
     stream = demux->streams[i];
@@ -2540,8 +2541,9 @@ next_entry_size (GstQTDemux * demux)
     sample = &stream->samples[stream->sample_index];
 
     GST_LOG_OBJECT (demux,
-        "Checking Stream %d (sample_index:%d / offset:%lld / size:%d)",
-        i, stream->sample_index, sample->offset, sample->size);
+        "Checking Stream %d (sample_index:%d / offset:%" G_GUINT64_FORMAT
+        " / size:%" G_GUINT32_FORMAT ")", i, stream->sample_index,
+        sample->offset, sample->size);
 
     if (((smalloffs == -1)
             || (sample->offset < smalloffs)) && (sample->size)) {
@@ -2550,8 +2552,9 @@ next_entry_size (GstQTDemux * demux)
     }
   }
 
-  GST_LOG_OBJECT (demux, "stream %d offset %lld demux->offset :%lld",
-      smallidx, smalloffs, demux->offset);
+  GST_LOG_OBJECT (demux,
+      "stream %d offset %" G_GUINT64_FORMAT " demux->offset :%"
+      G_GUINT64_FORMAT, smallidx, smalloffs, demux->offset);
 
   if (smallidx == -1)
     return -1;
@@ -2564,8 +2567,8 @@ next_entry_size (GstQTDemux * demux)
     return sample->size + demux->todrop;
   }
 
-  GST_DEBUG_OBJECT (demux, "There wasn't any entry at offset %lld",
-      demux->offset);
+  GST_DEBUG_OBJECT (demux,
+      "There wasn't any entry at offset %" G_GUINT64_FORMAT, demux->offset);
   return -1;
 }
 
@@ -2601,8 +2604,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
       (ret == GST_FLOW_OK)) {
 
     GST_DEBUG_OBJECT (demux,
-        "state:%d , demux->neededbytes:%d, demux->offset:%lld", demux->state,
-        demux->neededbytes, demux->offset);
+        "state:%d , demux->neededbytes:%d, demux->offset:%" G_GUINT64_FORMAT,
+        demux->state, demux->neededbytes, demux->offset);
 
     switch (demux->state) {
       case QTDEMUX_STATE_INITIAL:{
@@ -2723,7 +2726,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
       case QTDEMUX_STATE_BUFFER_MDAT:{
         GstBuffer *buf;
 
-        GST_DEBUG_OBJECT (demux, "Got our buffer at offset %lld",
+        GST_DEBUG_OBJECT (demux, "Got our buffer at offset %" G_GUINT64_FORMAT,
             demux->offset);
         buf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
         GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
@@ -2744,8 +2747,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         QtDemuxStream *stream = NULL;
         int i = -1;
 
-        GST_DEBUG_OBJECT (demux, "BEGIN // in MOVIE for offset %lld",
-            demux->offset);
+        GST_DEBUG_OBJECT (demux,
+            "BEGIN // in MOVIE for offset %" G_GUINT64_FORMAT, demux->offset);
 
         if (demux->todrop) {
           GST_LOG_OBJECT (demux, "Dropping %d bytes", demux->todrop);
@@ -2773,8 +2776,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           if (stream->sample_index >= stream->n_samples)
             continue;
           GST_LOG_OBJECT (demux,
-              "Checking stream %d (sample_index:%d / offset:%lld / size:%d)",
-              i, stream->sample_index,
+              "Checking stream %d (sample_index:%d / offset:%" G_GUINT64_FORMAT
+              " / size:%d)", i, stream->sample_index,
               stream->samples[stream->sample_index].offset,
               stream->samples[stream->sample_index].size);
 
@@ -2833,7 +2836,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GST_LOG_OBJECT (demux, "increasing offset %" G_GUINT64_FORMAT " by %u",
             demux->offset, demux->neededbytes);
         demux->offset += demux->neededbytes;
-        GST_LOG_OBJECT (demux, "offset is now %lld", demux->offset);
+        GST_LOG_OBJECT (demux, "offset is now %" G_GUINT64_FORMAT,
+            demux->offset);
 
         if ((demux->neededbytes = next_entry_size (demux)) == -1)
           goto eos;
@@ -3052,7 +3056,8 @@ qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, const guint8 * buf,
       break;
     }
     if (G_UNLIKELY (len > (end - buf))) {
-      GST_WARNING_OBJECT (qtdemux, "length too long (%d > %d)", len, end - buf);
+      GST_WARNING_OBJECT (qtdemux, "length too long (%d > %d)", len,
+          (gint) (end - buf));
       break;
     }
 
