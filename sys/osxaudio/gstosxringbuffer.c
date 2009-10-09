@@ -43,6 +43,7 @@
  */
 
 #include <CoreAudio/CoreAudio.h>
+#include <CoreServices/CoreServices.h>
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 #include "gstosxringbuffer.h"
