@@ -277,6 +277,7 @@ bindings/python/codegen/Makefile
 bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-rtsp-server.pc
+pkgconfig/gst-rtsp-server-uninstalled.pc
 ])
 AC_OUTPUT
 
