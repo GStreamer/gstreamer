@@ -85,7 +85,7 @@
 - (void) sendEvent:(NSEvent *) event {
   BOOL taken = NO;
 
-  GST_DEBUG ("event %p type:%d", event,[event type]);
+  GST_DEBUG ("event %p type:%d", event,(gint)[event type]);
 
   if ([event type] == NSKeyDown) {
   }
