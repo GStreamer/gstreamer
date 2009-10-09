@@ -252,9 +252,9 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   }
 
   GST_DEBUG_OBJECT (self, "Pushing residue buffer of size %d with timestamp: %"
-      GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %lld,"
-      " offset_end: %lld, nsamples: %d", GST_BUFFER_SIZE (outbuf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+      G_GUINT64_FORMAT ", offset_end: %" G_GUINT64_FORMAT ", nsamples: %d",
+      GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf), outsamples);
 
@@ -374,9 +374,9 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   self->next_off = GST_BUFFER_OFFSET_END (outbuf);
 
   GST_DEBUG_OBJECT (self, "Pushing buffer of size %d with timestamp: %"
-      GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %lld,"
-      " offset_end: %lld, nsamples: %d", GST_BUFFER_SIZE (outbuf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+      G_GUINT64_FORMAT ", offset_end: %" G_GUINT64_FORMAT ", nsamples: %d",
+      GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf), output_samples / channels);
 
