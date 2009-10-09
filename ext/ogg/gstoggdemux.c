@@ -1661,7 +1661,8 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
       GST_LOG_OBJECT (ogg,
           "got page at %" G_GINT64_FORMAT ", serial %08x, end at %"
           G_GINT64_FORMAT ", granule %" G_GINT64_FORMAT, res_offset,
-          ogg_page_serialno (og), ogg->offset, ogg_page_granulepos (og));
+          ogg_page_serialno (og), ogg->offset,
+          (gint64) ogg_page_granulepos (og));
       break;
     }
   }
