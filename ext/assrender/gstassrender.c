@@ -736,7 +736,7 @@ plugin_init (GstPlugin * plugin)
       0, "ASS/SSA subtitle renderer");
 
   return gst_element_register (plugin, "assrender",
-      GST_RANK_NONE, GST_TYPE_ASSRENDER);
+      GST_RANK_PRIMARY, GST_TYPE_ASSRENDER);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

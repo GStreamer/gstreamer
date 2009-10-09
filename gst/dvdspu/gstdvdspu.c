@@ -1199,7 +1199,7 @@ gst_dvd_spu_plugin_init (GstPlugin * plugin)
       0, "Sub-picture Overlay decoder/renderer");
 
   return gst_element_register (plugin, "dvdspu",
-      GST_RANK_NONE, GST_TYPE_DVD_SPU);
+      GST_RANK_PRIMARY, GST_TYPE_DVD_SPU);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
