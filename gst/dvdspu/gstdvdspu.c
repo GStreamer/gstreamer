@@ -117,7 +117,7 @@ gst_dvd_spu_base_init (gpointer gclass)
 {
   static GstElementDetails element_details =
       GST_ELEMENT_DETAILS ("GStreamer Sub-picture Overlay",
-      "Mixer/Video/Overlay/DVD/Bluray",
+      "Mixer/Video/Overlay/SubPicture/DVD/Bluray",
       "Parses Sub-Picture command streams and renders the SPU overlay "
       "onto the video as it passes through",
       "Jan Schmidt <thaytan@noraisin.net>");
