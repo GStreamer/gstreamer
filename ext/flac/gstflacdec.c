@@ -669,7 +669,7 @@ gst_flac_dec_seek (const FLAC__StreamDecoder * decoder,
 
   flacdec = GST_FLAC_DEC (client_data);
 
-  GST_DEBUG_OBJECT (flacdec, "seek %" G_GINT64_FORMAT, (gint64) position);
+  GST_DEBUG_OBJECT (flacdec, "seek %" G_GUINT64_FORMAT, position);
   flacdec->offset = position;
 
   return FLAC__STREAM_DECODER_SEEK_STATUS_OK;

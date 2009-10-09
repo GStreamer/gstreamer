@@ -707,8 +707,8 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
   for (i = 3; i < range - 3; i++) {
     if ((current[i] == 0x0) &&
         (current[i + 1] == 0x0) && (current[i + 2] >> 7 == 0x1)) {
-      GST_LOG ("GOB end found at: %p start: %p len: %d", current + i - 1,
-          boundry->end + 1, (gint) (current + i - boundry->end + 2));
+      GST_LOG ("GOB end found at: %p start: %p len: %u", current + i - 1,
+          boundry->end + 1, current + i - boundry->end + 2);
       gst_rtp_h263_pay_boundry_init (boundry, boundry->end + 1,
           current + i - 1, 0, 0);
 
