@@ -833,7 +833,7 @@ theora_parse_src_query (GstPad * pad, GstQuery * query)
       frame = parse->prev_frame;
 
       GST_LOG_OBJECT (parse,
-          "query %p: we have current frame: %lld", query, frame);
+          "query %p: we have current frame: %" G_GINT64_FORMAT, query, frame);
 
       /* parse format */
       gst_query_parse_position (query, &format, NULL);
@@ -861,7 +861,8 @@ theora_parse_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (parse,
-          "query %p: we return %lld (format %u)", query, value, format);
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
+          format);
 
       break;
     }

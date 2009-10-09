@@ -484,7 +484,8 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       granulepos = dec->granulepos;
 
       GST_LOG_OBJECT (dec,
-          "query %p: we have current granule: %lld", query, granulepos);
+          "query %p: we have current granule: %" G_GINT64_FORMAT, query,
+          granulepos);
 
       /* parse format */
       gst_query_parse_position (query, &format, NULL);
@@ -509,7 +510,8 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %p: we return %lld (format %u)", query, value, format);
+          "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
+          format);
 
       break;
     }
@@ -1084,7 +1086,9 @@ theora_dec_push_forward (GstTheoraDec * dec, GstBuffer * buf)
         time = outtime - gst_util_uint64_scale_int (size * GST_SECOND,
             dec->info.fps_denominator, dec->info.fps_numerator);
 
-        GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", size, time);
+        GST_DEBUG_OBJECT (dec,
+            "patch buffer %" G_GINT64_FORMAT "%" GST_TIME_FORMAT, size,
+            GST_TIME_ARGS (time));
         GST_BUFFER_TIMESTAMP (buffer) = time;
         /* Next timestamp - this one is duration */
         GST_BUFFER_DURATION (buffer) =
@@ -1280,8 +1284,10 @@ theora_handle_420_image (GstTheoraDec * dec, yuv_buffer * yuv, GstBuffer ** out)
     dest_v = dest_u + stride_uv * GST_ROUND_UP_2 (height) / 2;
 
     GST_LOG_OBJECT (dec, "plane 0, offset 0");
-    GST_LOG_OBJECT (dec, "plane 1, offset %d", dest_u - dest_y);
-    GST_LOG_OBJECT (dec, "plane 2, offset %d", dest_v - dest_y);
+    GST_LOG_OBJECT (dec, "plane 1, offset %" G_GINT64_FORMAT,
+        (gint64) (dest_u - dest_y));
+    GST_LOG_OBJECT (dec, "plane 2, offset %" G_GINT64_FORMAT,
+        (gint64) (dest_v - dest_y));
 
     src_y = yuv->y + dec->offset_x + dec->offset_y * yuv->y_stride;
 
@@ -1482,8 +1488,8 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, granule pos=%"
       G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
-      packet.bytes ? packet.packet[0] : -1, packet.packetno, packet.granulepos,
-      GST_TIME_ARGS (dec->last_timestamp));
+      packet.bytes ? packet.packet[0] : -1, packet.packetno,
+      (gint64) packet.granulepos, GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type. A zero byte packet is always a data
    * packet; we don't dereference it in that case. */
