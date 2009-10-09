@@ -342,8 +342,9 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
       src->ringbuffer->spec.rate);
 
   GST_DEBUG_OBJECT (src,
-      "processed samples: raw %llu, delay %u, real %llu, time %"
-      GST_TIME_FORMAT, raw, delay, samples, GST_TIME_ARGS (result));
+      "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
+      G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT, raw, delay, samples,
+      GST_TIME_ARGS (result));
 
   return result;
 }
