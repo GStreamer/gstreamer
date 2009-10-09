@@ -61,3 +61,337 @@
    fun:g_vfs_get_default
 }
 
+{
+   <ALSA unitialised access>
+   Memcheck:Cond
+   obj:/usr/lib/libasound.so.*
+   fun:snd_pcm_hw_params_set_buffer_time_near
+}
+
+{
+   <ALSA unitialized access>
+   Memcheck:Cond
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_pcm_hw_params_set_buffer_time_near
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsa_device_property_probe_get_values
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:calloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_hook_load
+   obj:*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsa_device_property_probe_get_values
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:calloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsa_device_property_probe_get_values
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:calloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsa_device_property_probe_get_values
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:calloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsa_device_property_probe_get_values
+}
+
+{
+   <One time init in ALSA>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_hctl_open
+   fun:snd_mixer_attach
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_proplist_sets
+   fun:pa_context_new_with_proplist
+   fun:pa_context_new
+   obj:/usr/lib/alsa-lib/libasound_module_pcm_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_pcm_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_hook_load
+   obj:/usr/lib/alsa-lib/libasound_module_ctl_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_proplist_sets
+   fun:pa_context_new_with_proplist
+   fun:pa_context_new
+   obj:/usr/lib/alsa-lib/libasound_module_ctl_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_ctl_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_ctl_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_ctl_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:snd_config_hook_load
+   obj:/usr/lib/alsa-lib/libasound_module_pcm_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_pcm_pulse.so
+}
+
+{
+   <Pulseaudio ALSA plugin initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:pa_xmalloc0
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   obj:/usr/lib/libpulse.so.*
+   fun:pa_mainloop_dispatch
+   obj:/usr/lib/alsa-lib/libasound_module_pcm_pulse.so
+}
+
+{
+   <One time ALSA init>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   obj:/usr/lib/libasound.so.*
+   fun:gst_alsasrc_open
+}
+
+{
+   <Fontconfig init>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libexpat.so.*
+   obj:/usr/lib/libexpat.so.*
+   obj:/usr/lib/libexpat.so.*
+   obj:/usr/lib/libexpat.so.*
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+}
+
+{
+   <Fontconfig init>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   fun:FcDefaultSubstitute
+}
+
+{
+   <Fontconfig init>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   fun:FcConfigSubstituteWithPat
+}
+
+{
+   <Fontconfig init>
+   Memcheck:Leak
+   fun:realloc
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   obj:/usr/lib/libfontconfig.so.*
+   fun:FcFontRenderPrepare
+}
