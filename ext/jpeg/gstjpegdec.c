@@ -431,7 +431,8 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     /* do we need to resync? */
     resync = (*data != 0xff);
     if (resync) {
-      GST_DEBUG ("Lost sync at 0x%08x, resyncing", data - start);
+      GST_DEBUG ("Lost sync at 0x%08" G_GINT64_MODIFIER "x, resyncing",
+          (gint64) (data - start));
       /* at the very least we expect 0xff 0xNN, thus end-1 */
       while (*data != 0xff && data < end - 1)
         ++data;
@@ -450,7 +451,8 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     }
 
     if (*data == 0xd9) {
-      GST_DEBUG ("0x%08x: EOI marker", data - start);
+      GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: EOI marker",
+          (gint64) (data - start));
       return (data - start + 1);
     }
 
@@ -460,8 +462,8 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       return 0;
     else
       frame_len = GST_READ_UINT16_BE (data + 1);
-    GST_DEBUG ("0x%08x: tag %02x, frame_len=%u", data - start - 1, *data,
-        frame_len);
+    GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: tag %02x, frame_len=%u",
+        (gint64) (data - start - 1), *data, frame_len);
     /* the frame length includes the 2 bytes for the length; here we want at
      * least 2 more bytes at the end for an end marker, thus end-2 */
     if (data + 1 + frame_len >= end - 2) {
@@ -480,7 +482,8 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       guint8 *d2 = data + 1 + frame_len;
       guint eseglen = 0;
 
-      GST_DEBUG ("0x%08x: finding entropy segment length", data - start - 1);
+      GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: finding entropy segment length",
+          (gint64) (data - start - 1));
       while (1) {
         if (d2[eseglen] == 0xff && d2[eseglen + 1] != 0x00)
           break;
