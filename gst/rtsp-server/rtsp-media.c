@@ -1569,6 +1569,8 @@ gst_rtsp_media_remove_elements (GstRTSPMedia *media)
     
     gst_pad_unlink (stream->srcpad, stream->send_rtp_sink);
     
+    g_signal_handler_disconnect (stream->send_rtp_sink, stream->caps_sig);
+
     for (j = 0; j < 2; j++) {
       gst_element_set_state (stream->udpsrc[j], GST_STATE_NULL);
       gst_element_set_state (stream->udpsink[j], GST_STATE_NULL);
@@ -1584,11 +1586,13 @@ gst_rtsp_media_remove_elements (GstRTSPMedia *media)
       gst_bin_remove (GST_BIN (media->pipeline), stream->tee[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->selector[j]);
     }
+    if (stream->caps)
+      gst_caps_unref (stream->caps);
     stream->caps = NULL;
     gst_rtsp_media_stream_free (stream);
   }
   g_array_remove_range (media->streams, 0, media->streams->len);
-  
+
   gst_element_set_state (media->rtpbin, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
 
