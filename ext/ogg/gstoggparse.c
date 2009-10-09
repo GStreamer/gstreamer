@@ -435,7 +435,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
         if (stream != NULL) {
           GST_LOG_OBJECT (ogg, "Incorrect stream; repeats serial number %u "
-              "at offset %lld", serialno, ogg->offset);
+              "at offset %" G_GINT64_FORMAT, serialno, ogg->offset);
         }
 
         if (ogg->last_page_not_bos) {
@@ -452,7 +452,8 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         stream->headers = g_slist_append (stream->headers, pagebuffer);
 
         if (!ogg->in_headers) {
-          GST_LOG_OBJECT (ogg, "Found start of new chain at offset %llu",
+          GST_LOG_OBJECT (ogg,
+              "Found start of new chain at offset %" G_GUINT64_FORMAT,
               startoffset);
           ogg->in_headers = 1;
         }
@@ -474,7 +475,8 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         GstOggStream *stream = gst_ogg_parse_find_stream (ogg, serialno);
 
         if (!stream) {
-          GST_LOG_OBJECT (ogg, "Non-BOS page unexpectedly found at %lld",
+          GST_LOG_OBJECT (ogg,
+              "Non-BOS page unexpectedly found at %" G_GINT64_FORMAT,
               ogg->offset);
           goto failure;
         }
@@ -491,7 +493,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
         } else if (type == PAGE_HEADER) {
           if (!ogg->in_headers) {
             GST_LOG_OBJECT (ogg, "Header page unexpectedly found outside "
-                "headers at offset %lld", ogg->offset);
+                "headers at offset %" G_GINT64_FORMAT, ogg->offset);
             goto failure;
           } else {
             /* Append the header to the buffer list, after any unknown previous
@@ -602,7 +604,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
               if (found_pending_headers) {
                 GST_WARNING_OBJECT (ogg, "Incorrectly muxed headers found at "
-                    "approximate offset %lld", ogg->offset);
+                    "approximate offset %" G_GINT64_FORMAT, ogg->offset);
               }
               found_pending_headers = TRUE;
 

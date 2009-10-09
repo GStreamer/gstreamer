@@ -62,6 +62,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
     : GST_BUFFER_TIMESTAMP (buf))
 
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
+#define GST_GP_CAST(_gp) ((gint64) _gp)
 
 typedef enum
 {
@@ -475,7 +476,8 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   GST_LOG_OBJECT (mux, GST_GP_FORMAT
-      " created buffer %p from ogg page", ogg_page_granulepos (page), buffer);
+      " created buffer %p from ogg page",
+      GST_GP_CAST (ogg_page_granulepos (page)), buffer);
 
   return buffer;
 }
@@ -645,7 +647,7 @@ gst_ogg_mux_pad_queue_page (GstOggMux * mux, GstOggPad * pad, ogg_page * page,
   GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT
       " queued buffer page %p (gp time %"
       GST_TIME_FORMAT ", timestamp %" GST_TIME_FORMAT
-      "), %d page buffers queued", ogg_page_granulepos (page),
+      "), %d page buffers queued", GST_GP_CAST (ogg_page_granulepos (page)),
       buffer, GST_TIME_ARGS (GST_BUFFER_OFFSET (buffer)),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       g_queue_get_length (pad->pagebuffers));
@@ -1201,7 +1203,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
       GST_LOG_OBJECT (pad->collect.pad,
           GST_GP_FORMAT " stored packet %" G_GINT64_FORMAT
           " will make page too long, flushing",
-          GST_BUFFER_OFFSET_END (pad->buffer), pad->stream.packetno);
+          GST_BUFFER_OFFSET_END (pad->buffer), (gint64) pad->stream.packetno);
 
       while (ogg_stream_flush (&pad->stream, &page)) {
         /* end time of this page is the timestamp of the next buffer */
@@ -1283,7 +1285,8 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     packet.packetno = pad->packetno++;
     GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT
         " packet %" G_GINT64_FORMAT " (%ld bytes) created from buffer",
-        packet.granulepos, packet.packetno, packet.bytes);
+        GST_GP_CAST (packet.granulepos), (gint64) packet.packetno,
+        packet.bytes);
 
     packet.e_o_s = (pad->eos ? 1 : 0);
     tmpbuf = NULL;
@@ -1366,7 +1369,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     GST_LOG_OBJECT (pad->collect.pad,
         GST_GP_FORMAT " packet %" G_GINT64_FORMAT ", gp time %"
         GST_TIME_FORMAT ", timestamp %" GST_TIME_FORMAT " packetin'd",
-        granulepos, packet.packetno, GST_TIME_ARGS (gp_time),
+        granulepos, (gint64) packet.packetno, GST_TIME_ARGS (gp_time),
         GST_TIME_ARGS (timestamp));
     /* don't need the old buffer anymore */
     gst_buffer_unref (pad->buffer);
@@ -1383,10 +1386,10 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
       GST_LOG_OBJECT (pad->collect.pad,
           GST_GP_FORMAT " packet %" G_GINT64_FORMAT ", time %"
           GST_TIME_FORMAT ") caused new page",
-          granulepos, packet.packetno, GST_TIME_ARGS (timestamp));
+          granulepos, (gint64) packet.packetno, GST_TIME_ARGS (timestamp));
       GST_LOG_OBJECT (pad->collect.pad,
-          GST_GP_FORMAT " new page %ld", ogg_page_granulepos (&page),
-          pad->stream.pageno);
+          GST_GP_FORMAT " new page %ld",
+          GST_GP_CAST (ogg_page_granulepos (&page)), pad->stream.pageno);
 
       if (ogg_page_granulepos (&page) == granulepos) {
         /* the packet we streamed in finishes on the current page,
