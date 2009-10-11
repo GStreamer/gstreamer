@@ -862,7 +862,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     dirac_enc->granule_offset =
         gst_util_uint64_scale (frame->presentation_timestamp,
         2 * state->fps_n, GST_SECOND * state->fps_d);
-    GST_DEBUG ("granule offset %lld", dirac_enc->granule_offset);
+    GST_DEBUG ("granule offset %" G_GINT64_FORMAT, dirac_enc->granule_offset);
   }
 
   switch (state->format) {
@@ -1238,7 +1238,8 @@ gst_dirac_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
 
   granulepos_hi = (((uint64_t) pt - delay) << 9) | ((dist >> 8));
   granulepos_low = (delay << 9) | (dist & 0xff);
-  GST_DEBUG ("granulepos %lld:%lld", granulepos_hi, granulepos_low);
+  GST_DEBUG ("granulepos %" G_GINT64_FORMAT ":%" G_GINT64_FORMAT, granulepos_hi,
+      granulepos_low);
 
   if (frame->is_eos) {
     GST_BUFFER_OFFSET_END (buf) = dirac_enc->last_granulepos;
