@@ -620,9 +620,10 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
             &dest_format, &offset) && dest_format == GST_FORMAT_BYTES) {
       packet = (offset - demux->data_offset) / demux->packet_size;
       GST_LOG_OBJECT (demux, "convert %" GST_TIME_FORMAT
-          " to bytes query result: %lld, data_ofset: %llu, packet_size: %u,"
-          " resulting packet: %u\n", GST_TIME_ARGS (seek_time), offset,
-          demux->data_offset, demux->packet_size, packet);
+          " to bytes query result: %" G_GINT64_FORMAT ", data_ofset: %"
+          G_GINT64_FORMAT ", packet_size: %u," " resulting packet: %u\n",
+          GST_TIME_ARGS (seek_time), offset, demux->data_offset,
+          demux->packet_size, packet);
     } else {
       /* Hackety hack, this sucks. We just seek to an earlier position
        *  and let the sinks throw away the stuff before the segment start */
