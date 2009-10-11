@@ -919,7 +919,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   if (G_LIKELY (buffer)) {
-    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
+    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %" G_GINT64_FORMAT,
         GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
     if (G_UNLIKELY (parse->priv->passthrough)) {
       buffer = gst_buffer_make_metadata_writable (buffer);
@@ -1391,7 +1391,7 @@ gst_base_parse_set_duration (GstBaseParse * parse,
   }
   parse->priv->duration = duration;
   parse->priv->duration_fmt = fmt;
-  GST_DEBUG_OBJECT (parse, "set duration: %lld", duration);
+  GST_DEBUG_OBJECT (parse, "set duration: %" G_GINT64_FORMAT, duration);
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
@@ -1662,7 +1662,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (parse, "seek position %lld in bytes: %lld", cur, seekpos);
+  GST_DEBUG_OBJECT (parse,
+      "seek position %" G_GINT64_FORMAT " in bytes: %" G_GINT64_FORMAT, cur,
+      seekpos);
 
   if (parse->priv->pad_mode == GST_ACTIVATE_PULL) {
     gint64 last_stop;

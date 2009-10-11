@@ -550,7 +550,8 @@ gst_amrparse_convert (GstBaseParse * parse,
 
       if (amrparse->framecount) {
         *dest_value = AMR_FRAME_DURATION * (src_value - amrparse->header) / bpf;
-        GST_DEBUG ("conversion result: %lld ms", *dest_value / GST_MSECOND);
+        GST_DEBUG ("conversion result: %" G_GINT64_FORMAT " ms",
+            *dest_value / GST_MSECOND);
         ret = TRUE;
       }
     }
@@ -559,7 +560,7 @@ gst_amrparse_convert (GstBaseParse * parse,
     if (dest_format == GST_FORMAT_BYTES) {
       if (amrparse->framecount) {
         *dest_value = bpf * src_value / AMR_FRAME_DURATION + amrparse->header;
-        GST_DEBUG ("time %lld ms in bytes = %lld",
+        GST_DEBUG ("time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
             src_value / GST_MSECOND, *dest_value);
         ret = TRUE;
       }
