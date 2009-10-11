@@ -809,7 +809,8 @@ gst_aacparse_convert (GstBaseParse * parse,
 
       if (aacparse->framecount && aacparse->frames_per_sec) {
         *dest_value = AAC_FRAME_DURATION (aacparse) * src_value / bpf;
-        GST_DEBUG ("conversion result: %lld ms", *dest_value / GST_MSECOND);
+        GST_DEBUG ("conversion result: %" G_GINT64_FORMAT " ms",
+            *dest_value / GST_MSECOND);
         ret = TRUE;
       }
     } else if (dest_format == GST_FORMAT_BYTES) {
@@ -822,8 +823,8 @@ gst_aacparse_convert (GstBaseParse * parse,
     if (dest_format == GST_FORMAT_BYTES) {
       if (aacparse->framecount && aacparse->frames_per_sec) {
         *dest_value = bpf * src_value / AAC_FRAME_DURATION (aacparse);
-        GST_DEBUG ("time %lld ms in bytes = %lld", src_value / GST_MSECOND,
-            *dest_value);
+        GST_DEBUG ("time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
+            src_value / GST_MSECOND, *dest_value);
         ret = TRUE;
       }
     }
