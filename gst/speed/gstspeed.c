@@ -367,9 +367,11 @@ speed_src_query (GstPad * pad, GstQuery * query)
       }
 
       if (rformat == GST_FORMAT_BYTES)
-        GST_LOG_OBJECT (filter, "peer pad returned current=%lld bytes", cur);
+        GST_LOG_OBJECT (filter,
+            "peer pad returned current=%" G_GINT64_FORMAT " bytes", cur);
       else if (rformat == GST_FORMAT_TIME)
-        GST_LOG_OBJECT (filter, "peer pad returned time=%lld", cur);
+        GST_LOG_OBJECT (filter, "peer pad returned time=%" G_GINT64_FORMAT,
+            cur);
 
       /* convert to time format */
       if (!gst_speed_convert (pad, rformat, cur, &conv_format, &cur)) {
@@ -388,7 +390,8 @@ speed_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, cur);
 
       GST_LOG_OBJECT (filter,
-          "position query: we return %llu (format %u)", cur, format);
+          "position query: we return %" G_GUINT64_FORMAT " (format %u)", cur,
+          format);
 
       break;
     }
@@ -411,9 +414,11 @@ speed_src_query (GstPad * pad, GstQuery * query)
       }
 
       if (rformat == GST_FORMAT_BYTES)
-        GST_LOG_OBJECT (filter, "peer pad returned total=%lld bytes", end);
+        GST_LOG_OBJECT (filter,
+            "peer pad returned total=%" G_GINT64_FORMAT " bytes", end);
       else if (rformat == GST_FORMAT_TIME)
-        GST_LOG_OBJECT (filter, "peer pad returned time=%lld", end);
+        GST_LOG_OBJECT (filter, "peer pad returned time=%" G_GINT64_FORMAT,
+            end);
 
       /* convert to time format */
       if (!gst_speed_convert (pad, rformat, end, &conv_format, &end)) {
@@ -433,7 +438,8 @@ speed_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_duration (query, format, end);
 
       GST_LOG_OBJECT (filter,
-          "duration query: we return %llu (format %u)", end, format);
+          "duration query: we return %" G_GUINT64_FORMAT " (format %u)", end,
+          format);
 
       break;
     }
