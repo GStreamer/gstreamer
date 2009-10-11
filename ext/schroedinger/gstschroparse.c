@@ -448,7 +448,8 @@ gst_schro_parse_shape_output_ogg (GstBaseVideoParse * base_video_parse,
 
   granulepos_hi = (((guint64) pt - delay) << 9) | ((dist >> 8));
   granulepos_low = (delay << 9) | (dist & 0xff);
-  GST_DEBUG ("granulepos %lld:%lld", granulepos_hi, granulepos_low);
+  GST_DEBUG ("granulepos %" G_GINT64_FORMAT ":%" G_GINT64_FORMAT, granulepos_hi,
+      granulepos_low);
 
   if (frame->is_eos) {
     GST_BUFFER_OFFSET_END (buf) = schro_parse->last_granulepos;

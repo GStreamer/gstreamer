@@ -473,7 +473,8 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->last_sink_timestamp)) {
       base_video_decoder->current_frame->presentation_timestamp =
           base_video_decoder->last_sink_timestamp;
-      GST_DEBUG ("got timestamp %lld", base_video_decoder->last_sink_timestamp);
+      GST_DEBUG ("got timestamp %" G_GINT64_FORMAT,
+          base_video_decoder->last_sink_timestamp);
     } else if (base_video_decoder->last_sink_offset_end != -1) {
       GstVideoState *state;
 
