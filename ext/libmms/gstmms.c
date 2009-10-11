@@ -298,8 +298,9 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
       GST_DEBUG_OBJECT (mmssrc, "connection broken during seek");
       return FALSE;
     }
-    GST_DEBUG_OBJECT (mmssrc, "sought to: %llu bytes, result: %lld",
-        segment->start, start);
+    GST_DEBUG_OBJECT (mmssrc,
+        "sought to: %" G_GINT64_FORMAT " bytes, result: %lld", segment->start,
+        start);
   } else {
     GST_DEBUG_OBJECT (mmssrc, "unsupported seek segment format: %d",
         (int) segment->format);
