@@ -496,8 +496,9 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
 
           GST_DEBUG_OBJECT (mp3parse,
               "Pushing accurate newseg rate %g, applied rate %g, "
-              "format %d, start %lld, stop %lld, pos %lld", rate,
-              applied_rate, format, start, stop, pos);
+              "format %d, start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT
+              ", pos %" G_GINT64_FORMAT, rate, applied_rate, format, start,
+              stop, pos);
 
           g_free (seek);
           mp3parse->pending_accurate_seeks =
@@ -553,8 +554,9 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
       GST_DEBUG_OBJECT (mp3parse, "Pushing newseg rate %g, applied rate %g, "
-          "format %d, start %lld, stop %lld, pos %lld",
-          rate, applied_rate, format, start, stop, pos);
+          "format %d, start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT
+          ", pos %" G_GINT64_FORMAT, rate, applied_rate, format, start, stop,
+          pos);
 
       gst_segment_set_newsegment_full (&mp3parse->segment, update, rate,
           applied_rate, format, start, stop, pos);
@@ -663,8 +665,8 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
       if (diff < -thresh || diff > thresh) {
         GST_DEBUG_OBJECT (mp3parse, "Updating next_ts from %" GST_TIME_FORMAT
             " to pending ts %" GST_TIME_FORMAT
-            " at offset %lld (pending offset was %lld)",
-            GST_TIME_ARGS (mp3parse->next_ts),
+            " at offset %" G_GINT64_FORMAT " (pending offset was %"
+            G_GINT64_FORMAT ")", GST_TIME_ARGS (mp3parse->next_ts),
             GST_TIME_ARGS (mp3parse->pending_ts), mp3parse->tracked_offset,
             mp3parse->pending_offset);
         mp3parse->next_ts = mp3parse->pending_ts;
@@ -1512,7 +1514,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
       mp3parse->next_ts = timestamp;
 
     GST_LOG_OBJECT (mp3parse, "Have pending ts %" GST_TIME_FORMAT
-        " to apply in %lld bytes (@ off %lld)",
+        " to apply in %" G_GINT64_FORMAT " bytes (@ off %" G_GINT64_FORMAT ")",
         GST_TIME_ARGS (mp3parse->pending_ts), avail, mp3parse->pending_offset);
   }
 
