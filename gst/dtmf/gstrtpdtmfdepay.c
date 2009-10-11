@@ -512,7 +512,7 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   GST_DEBUG_OBJECT (depayload, "new previous duration : %d - new duration : %d"
-      " - diff  : %d - clock rate : %d - timestamp : %llu",
+      " - diff  : %d - clock rate : %d - timestamp : %" G_GUINT64_FORMAT,
       rtpdtmfdepay->previous_duration, dtmf_payload.duration,
       (rtpdtmfdepay->previous_duration - dtmf_payload.duration),
       depayload->clock_rate, GST_BUFFER_TIMESTAMP (buf));
@@ -532,7 +532,8 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_OFFSET_END (outbuf) = rtpdtmfdepay->previous_duration *
         GST_SECOND / depayload->clock_rate;
 
-    GST_DEBUG_OBJECT (depayload, "timestamp : %llu - time %" GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (depayload,
+        "timestamp : %" G_GUINT64_FORMAT " - time %" GST_TIME_FORMAT,
         GST_BUFFER_TIMESTAMP (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   }
