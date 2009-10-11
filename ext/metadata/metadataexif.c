@@ -888,9 +888,9 @@ metadatamux_exif_for_each_tag_in_list (const GstTagList * list,
 {
   ExifData *ed = (ExifData *) user_data;
   ExifTag exif_tag;
-  GType type;
+  GType type = G_TYPE_INVALID;
   ExifEntry *entry = NULL;
-  ExifIfd ifd;
+  ExifIfd ifd = EXIF_IFD_COUNT;
   const ExifByteOrder byte_order = exif_data_get_byte_order (ed);
 
   exif_tag = metadatamux_exif_get_exif_from_tag (tag, &type, &ifd);
