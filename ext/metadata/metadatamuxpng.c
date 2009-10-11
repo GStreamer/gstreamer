@@ -346,7 +346,7 @@ metadatamux_png_lazy_update (PngMuxData * png_data)
   gsize i;
   MetadataChunkArray *chunks = png_data->inject_chunks;
 
-  GST_INFO ("checking %d chunks", chunks->len);
+  GST_INFO ("checking %" G_GSIZE_FORMAT " chunks", chunks->len);
 
   for (i = 0; i < chunks->len; ++i) {
 

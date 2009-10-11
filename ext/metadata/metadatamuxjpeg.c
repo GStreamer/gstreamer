@@ -272,7 +272,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
   gboolean has_exif = FALSE;
   MetadataChunkArray *chunks = jpeg_data->inject_chunks;
 
-  GST_INFO ("checking %d chunks", chunks->len);
+  GST_INFO ("checking %" G_GSIZE_FORMAT " chunks", chunks->len);
 
   for (i = 0; i < chunks->len; ++i) {
 
