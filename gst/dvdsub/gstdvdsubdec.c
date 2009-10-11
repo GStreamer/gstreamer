@@ -369,7 +369,8 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
           event_time = gst_util_uint64_scale (ticks, 1024 * GST_SECOND, 90000);
 
           GST_DEBUG_OBJECT (dec,
-              "Next DCSQ at offset %d, delay %g secs (%d ticks)", buf - start,
+              "Next DCSQ at offset %" G_GINT64_FORMAT
+              ", delay %g secs (%d ticks)", buf - start,
               gst_util_guint64_to_gdouble (event_time / GST_SECOND), ticks);
 
           dec->parse_pos = buf;
@@ -1015,7 +1016,8 @@ gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec, GstEvent * event)
 
   event_name = gst_structure_get_string (structure, "event");
 
-  GST_LOG_OBJECT (dec, "DVD event %s with timestamp %lld on sub pad",
+  GST_LOG_OBJECT (dec,
+      "DVD event %s with timestamp %" G_GINT64_FORMAT " on sub pad",
       GST_STR_NULL (event_name), GST_EVENT_TIMESTAMP (event));
 
   if (event_name == NULL)
