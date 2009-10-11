@@ -1165,7 +1165,8 @@ normal_seek (GstMPEGParse * mpeg_parse, GstPad * pad, GstEvent * event)
       goto done;
     }
     GST_INFO_OBJECT (mpeg_parse,
-        "Finished conversion of cur, BYTES cur : %lld", start_position);
+        "Finished conversion of cur, BYTES cur : %" G_GINT64_FORMAT,
+        start_position);
   } else {
     start_position = -1;
   }
@@ -1185,7 +1186,8 @@ normal_seek (GstMPEGParse * mpeg_parse, GstPad * pad, GstEvent * event)
       goto done;
     }
     GST_INFO_OBJECT (mpeg_parse,
-        "Finished conversion of stop, BYTES stop : %lld", end_position);
+        "Finished conversion of stop, BYTES stop : %" G_GINT64_FORMAT,
+        end_position);
   } else {
     end_position = -1;
   }
