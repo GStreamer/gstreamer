@@ -1534,7 +1534,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     /* We keep the offset of this scr */
     demux->cur_scr_offset = demux->adapter_offset + 12;
 
-    GST_DEBUG_OBJECT (demux, "SCR: 0x%08llx SCRE: 0x%08x", scr, scr_ext);
+    GST_DEBUG_OBJECT (demux, "SCR: 0x%08" G_GINT64_MODIFIER "x SCRE: 0x%08x",
+        scr, scr_ext);
 
     if (scr_ext) {
       scr = (scr * 300 + scr_ext % 300) / 300;

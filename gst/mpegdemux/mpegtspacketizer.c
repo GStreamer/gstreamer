@@ -217,8 +217,9 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer * packetizer,
 
   /* skip the adaptation field body for now */
   if (packet->data + length > packet->data_end) {
-    GST_DEBUG ("PID %d afc length %d overflows the buffer current %d max %d",
-        packet->pid, length, packet->data - packet->data_start,
+    GST_DEBUG ("PID %d afc length %d overflows the buffer current %"
+        G_GINT64_FORMAT " max %" G_GINT64_FORMAT, packet->pid, length,
+        packet->data - packet->data_start,
         packet->data_end - packet->data_start);
     return FALSE;
   }
@@ -339,8 +340,9 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
     length = *data++;
 
     if (data + length > buffer_end) {
-      GST_WARNING ("invalid descriptor length %d now at %d max %d",
-          length, data - *buffer, buffer_end - *buffer);
+      GST_WARNING ("invalid descriptor length %d now at %" G_GINT64_FORMAT
+          " max %" G_GINT64_FORMAT, length, data - *buffer,
+          buffer_end - *buffer);
       goto error;
     }
 
@@ -355,8 +357,8 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer * packetizer,
   }
 
   if (data != buffer_end) {
-    GST_WARNING ("descriptors size %d expected %d",
-        data - *buffer, buffer_end - *buffer);
+    GST_WARNING ("descriptors size %" G_GINT64_FORMAT " expected %"
+        G_GINT64_FORMAT, data - *buffer, buffer_end - *buffer);
     goto error;
   }
 
@@ -495,7 +497,8 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
      * program_info_length bytes + CRC */
     if (data + program_info_length + 4 > end) {
       GST_WARNING ("PID %d invalid program info length %d "
-          "left %d", section->pid, program_info_length, end - data);
+          "left %" G_GINT64_FORMAT, section->pid, program_info_length,
+          end - data);
       goto error;
     }
 
@@ -525,7 +528,8 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
 
     if (data + stream_info_length + 4 > end) {
       GST_WARNING ("PID %d invalid stream info length %d "
-          "left %d", section->pid, stream_info_length, end - data);
+          "left %" G_GINT64_FORMAT, section->pid, stream_info_length,
+          end - data);
       g_value_unset (&programs);
       goto error;
     }
@@ -651,8 +655,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
   data += 2;
 
   if (data + section->section_length != end) {
-    GST_WARNING ("PID %d invalid NIT section length %d expected %d",
-        section->pid, section->section_length, end - data);
+    GST_WARNING ("PID %d invalid NIT section length %d expected %"
+        G_GINT64_FORMAT, section->pid, section->section_length, end - data);
     goto error;
   }
 
@@ -1232,7 +1236,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid NIT parsed %d length %d",
+    GST_WARNING ("PID %d invalid NIT parsed %" G_GINT64_FORMAT " length %d",
         section->pid, data - GST_BUFFER_DATA (section->buffer),
         GST_BUFFER_SIZE (section->buffer));
     goto error;
@@ -1288,8 +1292,8 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   data += 2;
 
   if (data + section->section_length != end) {
-    GST_WARNING ("PID %d invalid SDT section length %d expected %d",
-        section->pid, section->section_length, end - data);
+    GST_WARNING ("PID %d invalid SDT section length %d expected %"
+        G_GINT64_FORMAT, section->pid, section->section_length, end - data);
     goto error;
   }
 
@@ -1438,7 +1442,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid SDT parsed %d length %d",
+    GST_WARNING ("PID %d invalid SDT parsed %" G_GINT64_FORMAT " length %d",
         section->pid, data - GST_BUFFER_DATA (section->buffer),
         GST_BUFFER_SIZE (section->buffer));
     goto error;
@@ -1495,8 +1499,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   data += 2;
 
   if (data + section->section_length != end) {
-    GST_WARNING ("PID %d invalid EIT section length %d expected %d",
-        section->pid, section->section_length, end - data);
+    GST_WARNING ("PID %d invalid EIT section length %d expected %"
+        G_GINT64_FORMAT, section->pid, section->section_length, end - data);
     goto error;
   }
 
@@ -1537,7 +1541,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   while (data < end - 4) {
     /* 12 is the minimum entry size + CRC */
     if (end - data < 12 + 4) {
-      GST_WARNING ("PID %d invalid EIT entry length %d",
+      GST_WARNING ("PID %d invalid EIT entry length %" G_GINT64_FORMAT,
           section->pid, end - 4 - data);
       gst_structure_free (eit);
       goto error;
@@ -1898,7 +1902,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid EIT parsed %d length %d",
+    GST_WARNING ("PID %d invalid EIT parsed %" G_GINT64_FORMAT " length %d",
         section->pid, data - GST_BUFFER_DATA (section->buffer),
         GST_BUFFER_SIZE (section->buffer));
     goto error;
@@ -2138,8 +2142,8 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
       mpegts_packetizer_clear_section (packetizer, stream);
     } else {
       GST_DEBUG
-          ("pusi set and new stream section is %d long and data we have is: %d",
-          section_length, packet->data_end - packet->data);
+          ("pusi set and new stream section is %d long and data we have is: %"
+          G_GINT64_FORMAT, section_length, packet->data_end - packet->data);
     }
     stream->continuity_counter = packet->continuity_counter;
     stream->section_length = section_length;
