@@ -16,9 +16,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #define FLOAT_SAMPLES 1
 #include <soundtouch/BPMDetect.h>
@@ -31,6 +28,11 @@
 #undef PACKAGE_NAME
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
+
+/* FIXME: keep it here to avoid PACKAGE* redefinition warnings */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
@@ -47,7 +49,7 @@ struct _GstBPMDetectPrivate
 {
   gfloat bpm;
 #if HAVE_SOUNDTOUCH_1_4
-  soundtouch::BPMDetect *detect;
+    soundtouch::BPMDetect * detect;
 #else
   BPMDetect *detect;
 #endif
@@ -199,10 +201,10 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       GST_ERROR_OBJECT (bpm_detect, "No channels or rate set yet");
       return GST_FLOW_ERROR;
     }
-
 #if HAVE_SOUNDTOUCH_1_4
     bpm_detect->priv->detect =
-        new soundtouch::BPMDetect (filter->format.channels, filter->format.rate);
+        new soundtouch::BPMDetect (filter->format.channels,
+        filter->format.rate);
 #else
     bpm_detect->priv->detect =
         new BPMDetect (filter->format.channels, filter->format.rate);
@@ -223,7 +225,7 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       inbuf += 2048;
     }
   } else {
-    gfloat *inbuf, *intmp, data[2*2048];
+    gfloat *inbuf, *intmp, data[2 * 2048];
 
     inbuf = (gfloat *) GST_BUFFER_DATA (in);
     intmp = data;

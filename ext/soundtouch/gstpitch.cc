@@ -724,7 +724,8 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
     base = 0;
   }
 
-  GST_LOG_OBJECT (pitch->sinkpad, "segment %lld - %lld (%d)", start_value,
+  GST_LOG_OBJECT (pitch->sinkpad,
+      "segment %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (%d)", start_value,
       stop_value, format);
 
   if (stream_time_ratio == 0) {
