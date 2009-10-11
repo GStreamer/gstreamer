@@ -279,7 +279,7 @@ gst_base_video_parse_src_query (GstPad * pad, GstQuery * query)
       time = gst_util_uint64_scale (base_parse->presentation_frame_number,
           base_parse->state.fps_n, base_parse->state.fps_d);
       time += base_parse->state.segment.time;
-      GST_DEBUG ("query position %lld", time);
+      GST_DEBUG ("query position %" G_GINT64_FORMAT, time);
       res = gst_base_video_encoded_video_convert (&base_parse->state,
           GST_FORMAT_TIME, time, &format, &value);
       if (!res)
@@ -484,7 +484,8 @@ gst_base_video_parse_sink_event (GstPad * pad, GstEvent * event)
       if (rate <= 0.0)
         goto newseg_wrong_rate;
 
-      GST_DEBUG ("newsegment %lld %lld", start, time);
+      GST_DEBUG ("newsegment %" G_GINT64_FORMAT " %" G_GINT64_FORMAT, start,
+          time);
       gst_segment_set_newsegment (&base_video_parse->state.segment, update,
           rate, format, start, stop, time);
 
@@ -854,9 +855,9 @@ gst_base_video_parse_push (GstBaseVideoParse * base_video_parse,
   }
   gst_buffer_set_caps (buffer, base_video_parse->caps);
 
-  GST_DEBUG ("pushing ts=%lld dur=%lld off=%lld off_end=%lld",
-      GST_BUFFER_TIMESTAMP (buffer),
-      GST_BUFFER_DURATION (buffer),
+  GST_DEBUG ("pushing ts=%" G_GINT64_FORMAT " dur=%" G_GINT64_FORMAT " off=%"
+      G_GINT64_FORMAT " off_end=%" G_GINT64_FORMAT,
+      GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_DURATION (buffer),
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET_END (buffer));
 
   if (base_video_parse->discont) {
