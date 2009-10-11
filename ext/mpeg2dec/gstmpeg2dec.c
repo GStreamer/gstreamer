@@ -1539,7 +1539,8 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, cur);
 
       GST_LOG_OBJECT (mpeg2dec,
-          "position query: we return %llu (format %u)", cur, format);
+          "position query: we return %" G_GUINT64_FORMAT " (format %u)", cur,
+          format);
       break;
     }
     case GST_QUERY_DURATION:
@@ -1575,8 +1576,8 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
 
       /* get the returned format */
       gst_query_parse_duration (query, &rformat, &total_bytes);
-      GST_LOG_OBJECT (mpeg2dec, "peer pad returned total=%lld bytes",
-          total_bytes);
+      GST_LOG_OBJECT (mpeg2dec,
+          "peer pad returned total=%" G_GINT64_FORMAT " bytes", total_bytes);
 
       if (total_bytes != -1) {
         if (!gst_mpeg2dec_sink_convert (pad, GST_FORMAT_BYTES, total_bytes,
@@ -1589,7 +1590,8 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_duration (query, format, total);
 
       GST_LOG_OBJECT (mpeg2dec,
-          "position query: we return %llu (format %u)", total, format);
+          "position query: we return %" G_GUINT64_FORMAT " (format %u)", total,
+          format);
       break;
     }
     default:
