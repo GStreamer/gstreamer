@@ -172,6 +172,9 @@ gst_mim_enc_set_property (GObject * object, guint prop_id,
     case PROP_PAUSED_MODE:
       GST_OBJECT_LOCK (mimenc);
       mimenc->paused_mode = g_value_get_boolean (value);
+      if (GST_STATE (object) == GST_STATE_PLAYING)
+        GST_WARNING_OBJECT (object, "Tried to disable paused-mode in a playing"
+            " encoder, it will not be stopped until it is paused");
       GST_OBJECT_UNLOCK (mimenc);
       break;
     default:
