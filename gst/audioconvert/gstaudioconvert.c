@@ -67,6 +67,7 @@
 #include "plugin.h"
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 /*** DEFINITIONS **************************************************************/
 
@@ -114,7 +115,8 @@ enum
 };
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (audio_convert_debug, "audioconvert", 0, "audio conversion element");
+  GST_DEBUG_CATEGORY_INIT (audio_convert_debug, "audioconvert", 0, "audio conversion element"); \
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
 GST_BOILERPLATE_FULL (GstAudioConvert, gst_audio_convert, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
@@ -1083,6 +1085,10 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   gint insize, outsize;
   gint samples;
   gpointer src, dst;
+
+  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, base, "converting audio from %"
+      GST_PTR_FORMAT " to %" GST_PTR_FORMAT, GST_BUFFER_CAPS (inbuf),
+      GST_BUFFER_CAPS (outbuf));
 
   /* get amount of samples to convert. */
   samples = GST_BUFFER_SIZE (inbuf) / this->ctx.in.unit_size;
