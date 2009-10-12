@@ -62,19 +62,19 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "height = (int) [16, 4096], " "width = (int) [16, 4096]")
     );
 
-static void gst_mimdec_finalize (GObject * object);
+static void gst_mim_dec_finalize (GObject * object);
 
-static GstFlowReturn gst_mimdec_chain (GstPad * pad, GstBuffer * in);
+static GstFlowReturn gst_mim_dec_chain (GstPad * pad, GstBuffer * in);
 static GstStateChangeReturn
-gst_mimdec_change_state (GstElement * element, GstStateChange transition);
+gst_mim_dec_change_state (GstElement * element, GstStateChange transition);
 
-static gboolean gst_mimdec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_mim_dec_sink_event (GstPad * pad, GstEvent * event);
 
 
-GST_BOILERPLATE (GstMimDec, gst_mimdec, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstMimDec, gst_mim_dec, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_mimdec_base_init (gpointer klass)
+gst_mim_dec_base_init (gpointer klass)
 {
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -94,27 +94,27 @@ gst_mimdec_base_init (gpointer klass)
 }
 
 static void
-gst_mimdec_class_init (GstMimDecClass * klass)
+gst_mim_dec_class_init (GstMimDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstelement_class->change_state = gst_mimdec_change_state;
+  gstelement_class->change_state = gst_mim_dec_change_state;
 
-  gobject_class->finalize = gst_mimdec_finalize;
+  gobject_class->finalize = gst_mim_dec_finalize;
 
   GST_DEBUG_CATEGORY_INIT (mimdec_debug, "mimdec", 0, "Mimic decoder plugin");
 }
 
 static void
-gst_mimdec_init (GstMimDec * mimdec, GstMimDecClass * klass)
+gst_mim_dec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 {
   mimdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->sinkpad);
-  gst_pad_set_chain_function (mimdec->sinkpad, gst_mimdec_chain);
-  gst_pad_set_event_function (mimdec->sinkpad, gst_mimdec_sink_event);
+  gst_pad_set_chain_function (mimdec->sinkpad, gst_mim_dec_chain);
+  gst_pad_set_event_function (mimdec->sinkpad, gst_mim_dec_sink_event);
 
   mimdec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);
@@ -130,9 +130,9 @@ gst_mimdec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 }
 
 static void
-gst_mimdec_finalize (GObject * object)
+gst_mim_dec_finalize (GObject * object)
 {
-  GstMimDec *mimdec = GST_MIMDEC (object);
+  GstMimDec *mimdec = GST_MIM_DEC (object);
 
   gst_adapter_clear (mimdec->adapter);
   g_object_unref (mimdec->adapter);
@@ -141,7 +141,7 @@ gst_mimdec_finalize (GObject * object)
 }
 
 static GstFlowReturn
-gst_mimdec_chain (GstPad * pad, GstBuffer * in)
+gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
 {
   GstMimDec *mimdec;
   GstBuffer *out_buf, *buf;
@@ -155,12 +155,10 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
   GstEvent *event = NULL;
   gboolean result = TRUE;
 
-  GST_DEBUG ("in gst_mimdec_chain");
-
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
 
-  mimdec = GST_MIMDEC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_IS_MIMDEC (mimdec), GST_FLOW_ERROR);
+  mimdec = GST_MIM_DEC (gst_pad_get_parent (pad));
+  g_return_val_if_fail (GST_IS_MIM_DEC (mimdec), GST_FLOW_ERROR);
 
   buf = GST_BUFFER (in);
   gst_adapter_push (mimdec->adapter, buf);
@@ -331,11 +329,11 @@ out:
 }
 
 static GstStateChangeReturn
-gst_mimdec_change_state (GstElement * element, GstStateChange transition)
+gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMimDec *mimdec;
 
-  mimdec = GST_MIMDEC (element);
+  mimdec = GST_MIM_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -363,10 +361,10 @@ gst_mimdec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_mimdec_sink_event (GstPad * pad, GstEvent * event)
+gst_mim_dec_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstMimDec *mimdec = GST_MIMDEC (gst_pad_get_parent (pad));
+  GstMimDec *mimdec = GST_MIM_DEC (gst_pad_get_parent (pad));
 
   /*
    * Ignore upstream newsegment event, its EVIL, we should implement

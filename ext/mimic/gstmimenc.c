@@ -81,32 +81,32 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static gboolean gst_mimenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_mimenc_chain (GstPad * pad, GstBuffer * in);
-static GstBuffer *gst_mimenc_create_tcp_header (GstMimEnc * mimenc,
+static gboolean gst_mim_enc_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_mim_enc_chain (GstPad * pad, GstBuffer * in);
+static GstBuffer *gst_mim_enc_create_tcp_header (GstMimEnc * mimenc,
     guint32 payload_size, GstClockTime timestamp, gboolean keyframe,
     gboolean paused);
-static gboolean gst_mimenc_event (GstPad * pad, GstEvent * event);
+static gboolean gst_mim_enc_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn
-gst_mimenc_change_state (GstElement * element, GstStateChange transition);
+gst_mim_enc_change_state (GstElement * element, GstStateChange transition);
 
-static void gst_mimenc_set_property (GObject * object, guint prop_id,
+static void gst_mim_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_mimenc_get_property (GObject * object, guint prop_id,
+static void gst_mim_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstMimEnc, gst_mimenc, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstMimEnc, gst_mim_enc, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_mimenc_base_init (gpointer klass)
+gst_mim_enc_base_init (gpointer klass)
 {
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->set_property = gst_mimenc_set_property;
-  gobject_class->get_property = gst_mimenc_get_property;
+  gobject_class->set_property = gst_mim_enc_set_property;
+  gobject_class->get_property = gst_mim_enc_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PAUSED_MODE,
       g_param_spec_boolean ("paused-mode", "Paused mode",
@@ -124,26 +124,26 @@ gst_mimenc_base_init (gpointer klass)
 }
 
 static void
-gst_mimenc_class_init (GstMimEncClass * klass)
+gst_mim_enc_class_init (GstMimEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstelement_class->change_state = gst_mimenc_change_state;
+  gstelement_class->change_state = gst_mim_enc_change_state;
 
   GST_DEBUG_CATEGORY_INIT (mimenc_debug, "mimenc", 0, "Mimic encoder plugin");
 }
 
 static void
-gst_mimenc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
+gst_mim_enc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
 {
   mimenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->sinkpad);
-  gst_pad_set_setcaps_function (mimenc->sinkpad, gst_mimenc_setcaps);
-  gst_pad_set_chain_function (mimenc->sinkpad, gst_mimenc_chain);
-  gst_pad_set_event_function (mimenc->sinkpad, gst_mimenc_event);
+  gst_pad_set_setcaps_function (mimenc->sinkpad, gst_mim_enc_setcaps);
+  gst_pad_set_chain_function (mimenc->sinkpad, gst_mim_enc_chain);
+  gst_pad_set_event_function (mimenc->sinkpad, gst_mim_enc_event);
 
   mimenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->srcpad);
@@ -160,10 +160,10 @@ gst_mimenc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
 }
 
 static void
-gst_mimenc_set_property (GObject * object, guint prop_id,
+gst_mim_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMimEnc *mimenc = GST_MIMENC (object);
+  GstMimEnc *mimenc = GST_MIM_ENC (object);
 
   switch (prop_id) {
     case PROP_PAUSED_MODE:
@@ -178,10 +178,10 @@ gst_mimenc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_mimenc_get_property (GObject * object, guint prop_id,
+gst_mim_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstMimEnc *mimenc = GST_MIMENC (object);
+  GstMimEnc *mimenc = GST_MIM_ENC (object);
 
   switch (prop_id) {
     case PROP_PAUSED_MODE:
@@ -196,15 +196,15 @@ gst_mimenc_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_mimenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_mim_enc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstMimEnc *filter;
   GstStructure *structure;
   int ret = TRUE, height, width;
 
-  filter = GST_MIMENC (gst_pad_get_parent (pad));
+  filter = GST_MIM_ENC (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_MIMENC (filter), FALSE);
+  g_return_val_if_fail (GST_IS_MIM_ENC (filter), FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width", &width);
@@ -244,7 +244,7 @@ out:
 }
 
 static GstFlowReturn
-gst_mimenc_chain (GstPad * pad, GstBuffer * in)
+gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
 {
   GstMimEnc *mimenc;
   GstBuffer *out_buf = NULL, *buf = NULL;
@@ -256,9 +256,9 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   gboolean keyframe;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  mimenc = GST_MIMENC (gst_pad_get_parent (pad));
+  mimenc = GST_MIM_ENC (gst_pad_get_parent (pad));
 
-  g_return_val_if_fail (GST_IS_MIMENC (mimenc), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_MIM_ENC (mimenc), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (mimenc);
 
@@ -320,7 +320,7 @@ gst_mimenc_chain (GstPad * pad, GstBuffer * in)
   ++mimenc->frames;
 
   // now let's create that tcp header
-  header = gst_mimenc_create_tcp_header (mimenc, buffer_size,
+  header = gst_mim_enc_create_tcp_header (mimenc, buffer_size,
       GST_BUFFER_TIMESTAMP (out_buf), keyframe, FALSE);
 
   if (!header) {
@@ -364,7 +364,7 @@ out_unlock:
 }
 
 static GstBuffer *
-gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
+gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
     GstClockTime timestamp, gboolean keyframe, gboolean paused)
 {
   // 24 bytes
@@ -388,9 +388,9 @@ gst_mimenc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
 }
 
 static gboolean
-gst_mimenc_event (GstPad * pad, GstEvent * event)
+gst_mim_enc_event (GstPad * pad, GstEvent * event)
 {
-  GstMimEnc *mimenc = GST_MIMENC (gst_pad_get_parent (pad));
+  GstMimEnc *mimenc = GST_MIM_ENC (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
   gboolean forward = TRUE;
 
@@ -459,7 +459,7 @@ newseg_wrong_format:
 static void
 paused_mode_task (gpointer data)
 {
-  GstMimEnc *mimenc = GST_MIMENC (data);
+  GstMimEnc *mimenc = GST_MIM_ENC (data);
   GstClockTime now;
   GstClockTimeDiff diff;
   GstFlowReturn ret;
@@ -484,7 +484,7 @@ paused_mode_task (gpointer data)
     diff = 0;
 
   if (diff > 3.95 * GST_SECOND) {
-    GstBuffer *buffer = gst_mimenc_create_tcp_header (mimenc, 0,
+    GstBuffer *buffer = gst_mim_enc_create_tcp_header (mimenc, 0,
         mimenc->last_buffer + 4 * GST_SECOND, FALSE, TRUE);
     GstEvent *event = NULL;
 
@@ -541,9 +541,9 @@ stop_task:
 }
 
 static GstStateChangeReturn
-gst_mimenc_change_state (GstElement * element, GstStateChange transition)
+gst_mim_enc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMimEnc *mimenc = GST_MIMENC (element);
+  GstMimEnc *mimenc = GST_MIM_ENC (element);
   GstStateChangeReturn ret;
   gboolean paused_mode;
 
