@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-29 12:47+0100\n"
-"PO-Revision-Date: 2009-05-12 21:32+0930\n"
+"POT-Creation-Date: 2009-10-12 12:22+0100\n"
+"PO-Revision-Date: 2009-09-19 22:11+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -74,11 +74,10 @@ msgstr ""
 "bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
 
 msgid "Volume"
-msgstr ""
+msgstr "Âm"
 
-#, fuzzy
 msgid "Master"
-msgstr "Nhanh"
+msgstr "Chủ"
 
 msgid "Front"
 msgstr "Trước"
@@ -89,188 +88,176 @@ msgstr "Sau"
 msgid "Headphones"
 msgstr "Tai nghe"
 
-#, fuzzy
 msgid "Center"
-msgstr "Giữa/LFE"
+msgstr "Giữa"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Âm thanh vòm"
+msgstr "Vòm"
 
 msgid "Side"
 msgstr "Bên"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Loa dựng sẵn"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 Ra"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 Ra"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX Ra"
 
 msgid "Bass"
-msgstr ""
+msgstr "Trầm"
 
 msgid "Treble"
-msgstr ""
+msgstr "Cao"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "Sâu 3D"
 
 msgid "3D Center"
-msgstr ""
+msgstr "Giữa 3D"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "Tăng cường 3D"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Tai nghe"
+msgstr "Điện thoại"
 
 msgid "Microphone"
 msgstr "Máy vi âm"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Dây Ra"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Dây vào"
+msgstr "Dây Vào"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "CD nội bộ"
 
 msgid "Video In"
-msgstr ""
+msgstr "Phim Vào"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 Vào"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 Vào"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX Vào"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Khuếch đại Thu"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Khuếch đại Xuất"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Máy vi âm"
+msgstr "Tăng Máy vi âm"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Mạch nội bộ"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Chẩn đoán"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Tăng Trầm"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Cổng Phát lại"
 
 msgid "Input"
 msgstr "Vào"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Nguồn Thu"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Nguồn Màn hình"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Bíp Bàn phím"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Màn hình"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Mô phỏng Âm lập thể"
 
 msgid "Stereo"
 msgstr "Âm lập thể"
 
-#, fuzzy
 msgid "Surround Sound"
-msgstr "Âm thanh vòm"
+msgstr "Âm thanh Vòm"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Máy vi âm"
+msgstr "Khuếch đại Máy vi âm"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Nguồn Loa"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Máy vi âm"
+msgstr "Nguồn Máy vi âm"
 
 msgid "Jack"
-msgstr ""
+msgstr "Ổ cắm"
 
 msgid "Center / LFE"
 msgstr "Giữa/LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Âm lập thể"
+msgstr "Trộn Âm lập thể"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Trộn Nguồn đơn"
 
-#, fuzzy
 msgid "Input Mix"
-msgstr "Hoà tiếng đầu vào"
+msgstr "Trộn Đầu vào"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF Vào"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF Ra"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Máy vi âm"
+msgstr "Máy vi âm 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Máy vi âm"
+msgstr "Máy vi âm 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Thuật số Ra"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Thuật số Vào"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Bộ điều giải"
 
 msgid "Handset"
-msgstr ""
+msgstr "Cầm tay"
 
 msgid "Other"
-msgstr ""
+msgstr "Khác"
 
 msgid "None"
-msgstr ""
+msgstr "Không có"
 
 msgid "On"
 msgstr "Bật"
@@ -279,13 +266,13 @@ msgid "Off"
 msgstr "Tắt"
 
 msgid "Mute"
-msgstr ""
+msgstr "Câm"
 
 msgid "Fast"
 msgstr "Nhanh"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Rất thấp"
 
 msgid "Low"
 msgstr "Thấp"
@@ -296,126 +283,100 @@ msgstr "Vừa"
 msgid "High"
 msgstr "Cao"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Rất cao"
 
 msgid "Production"
 msgstr "Sản xuất"
 
-#, fuzzy
 msgid "Front Panel Microphone"
 msgstr "Máy vi âm bảng trước"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "Dây vào bảng trước"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Tai nghe bảng trước"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Dây vào bảng trước"
+msgstr "Dây ra bảng trước"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Đầu kẹp lục"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Đầu kẹp hồng"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Đầu kẹp xanh"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Đầu kẹp trắng"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Đầu kẹp đen"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Đầu kẹp xám"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Đầu kẹp cam"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Đầu kẹp đỏ"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Đầu kẹp vàng"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Đầu kẹp lục bảng trước"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Đầu kẹp hồng bảng trước"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Đầu kẹp xanh bảng trước"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Đầu kẹp trắng bảng trước"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Đầu kẹp đen bảng trước"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Đầu kẹp xám bảng trước"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Đầu kẹp cam bảng trước"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Đầu kẹp đỏ bảng trước"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Đầu kẹp vàng bảng trước"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Giăng ra kết xuất"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Trộn xuống"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
-msgstr "Đầu vào bộ hoà tiếng ảo"
+msgstr "Đầu vào Trộn Ảo"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
-msgstr "Đầu ra bộ hoà tiếng ảo"
+msgstr "Đầu ra Trộn Ảo"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Đầu vào bộ hoà tiếng ảo"
+msgstr "Kênh Trộn Ảo"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Hàm %s"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -452,72 +413,3 @@ msgstr "Thiết bị âm thanh này không hỗ trợ chức năng thu."
 
 msgid "Error recording from audio device."
 msgstr "Lỗi thu từ thiết bị âm thanh."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Chức năng đầu kẹp lục"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Chức năng đầu kẹp lục bảng trước"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Chức năng đầu kẹp hồng"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Chức năng đầu kẹp hồng bảng trước"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Chức năng đầu kẹp xanh"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Chức năng đầu kẹp xanh bảng trước"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Chức năng đầu kẹp cam"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Chức năng đầu kẹp cam bảng trước"
-
-#~ msgid "Black connector function"
-#~ msgstr "Chức năng đầu kẹp đen"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Chức năng đầu kẹp đen bảng trước"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Chức năng đầu kẹp xám"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Chức năng đầu kẹp xám bảng trước"
-
-#~ msgid "White connector function"
-#~ msgstr "Chức năng đầu kẹp trắng"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Chức năng đầu kẹp trắng bảng trước"
-
-#~ msgid "Red connector function"
-#~ msgstr "Chức năng đầu kẹp đỏ"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Chức năng đầu kẹp đỏ bảng trước"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Chức năng đầu kẹp vàng"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Chức năng đầu kẹp vàng bảng trước"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Cấu hình kênh bộ hoà tiếng ảo"

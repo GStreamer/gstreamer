@@ -2,14 +2,14 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-29 12:47+0100\n"
-"PO-Revision-Date: 2008-11-04 09:39+0100\n"
+"POT-Creation-Date: 2009-10-12 12:22+0100\n"
+"PO-Revision-Date: 2009-09-21 10:23+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,7 @@ msgid "Failed to open DVD device '%s'."
 msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
 
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Nepodarilo sa nastaviť PGC posun."
 
 msgid "Internal clock error."
 msgstr "Vnútorná chyba časovača."
@@ -77,11 +77,10 @@ msgstr ""
 "verzia Open Sound System nie je podporovaná týmto prvkom."
 
 msgid "Volume"
-msgstr ""
+msgstr "Hlasitosť"
 
-#, fuzzy
 msgid "Master"
-msgstr "Rýchla"
+msgstr "Hlavné"
 
 msgid "Front"
 msgstr "Predné"
@@ -92,188 +91,177 @@ msgstr "Zadné"
 msgid "Headphones"
 msgstr "Slúchadlá"
 
-#, fuzzy
 msgid "Center"
-msgstr "Stredné / LFE"
+msgstr "Stredné"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
-#, fuzzy
 msgid "Surround"
-msgstr "Surround"
+msgstr "Priestorové"
 
 msgid "Side"
 msgstr "Postranné"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Zabudovaný reproduktor"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 výstup"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 výstup"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX výstup"
 
 msgid "Bass"
-msgstr ""
+msgstr "Basy"
 
 msgid "Treble"
-msgstr ""
+msgstr "Výšky"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D hĺbka"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D stred"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D vylepšenie"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Slúchadlá"
+msgstr "TelefónSlúchadlá"
 
 msgid "Microphone"
 msgstr "Mikrofón"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linkový výstup"
 
-#, fuzzy
 msgid "Line In"
 msgstr "Linkový vstup"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Vnútorne CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video vstup"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 vstup"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 vstup"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX vstup"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "Zisk záznamu"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Zisk výstupu"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofón"
+msgstr "Zosilnenie mikrofónu"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Spätná väzba"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostika"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Zosilnenie basov"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Prehrávacie porty"
 
 msgid "Input"
 msgstr "Vstup"
 
 msgid "Record Source"
-msgstr ""
+msgstr "Zdroj záznamu"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "Zdroj monitora"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Pípanie klávesnice"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitor"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Napodobniť stereo"
 
 msgid "Stereo"
 msgstr "Stereo"
 
-#, fuzzy
 msgid "Surround Sound"
-msgstr "Surround"
+msgstr "Priestorový zvuk"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofón"
+msgstr "Zisk mikrofónu"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "Zdroj reproduktora"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofón"
+msgstr "Zdroj mikrofónu"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
 msgstr "Stredné / LFE"
 
-#, fuzzy
 msgid "Stereo Mix"
-msgstr "Stereo"
+msgstr "Stereo mix"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mono mix"
 
 #, fuzzy
 msgid "Input Mix"
 msgstr "Vstup mix"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF vstup"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF výstup"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofón"
+msgstr "Mikrofón 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofón"
+msgstr "Mikrofón 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digitálny výstup"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digitálny vstup"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
 msgstr ""
 
 msgid "Other"
-msgstr ""
+msgstr "Iné"
 
 msgid "None"
-msgstr ""
+msgstr "Žiadne"
 
 msgid "On"
 msgstr "Zap"
@@ -282,13 +270,13 @@ msgid "Off"
 msgstr "Vyp"
 
 msgid "Mute"
-msgstr ""
+msgstr "Potichu"
 
 msgid "Fast"
 msgstr "Rýchla"
 
 msgid "Very Low"
-msgstr ""
+msgstr "Veľmi nízka"
 
 msgid "Low"
 msgstr "Nízka"
@@ -299,98 +287,75 @@ msgstr "Stredná"
 msgid "High"
 msgstr "Vysoká"
 
-#, fuzzy
 msgid "Very High"
 msgstr "Veľmi vysoká"
 
 msgid "Production"
 msgstr "Produkčná"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Mikrofón predného panelu"
+msgstr "Mikrofón na prednom paneli"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "Linkový vstup na prednom paneli"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "Slúchadlá na prednom paneli"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "Linkový vstup na prednom paneli"
+msgstr "Linkový výstup na prednom paneli"
 
-#, fuzzy
 msgid "Green Connector"
 msgstr "Zelený konektor"
 
-#, fuzzy
 msgid "Pink Connector"
 msgstr "Ružový konektor"
 
-#, fuzzy
 msgid "Blue Connector"
 msgstr "Modrý konektor"
 
-#, fuzzy
 msgid "White Connector"
 msgstr "Biely konektor"
 
-#, fuzzy
 msgid "Black Connector"
 msgstr "Čierny konektor"
 
-#, fuzzy
 msgid "Gray Connector"
 msgstr "Šedý konektor"
 
-#, fuzzy
 msgid "Orange Connector"
 msgstr "Oranžový konektor"
 
-#, fuzzy
 msgid "Red Connector"
 msgstr "Červený konektor"
 
-#, fuzzy
 msgid "Yellow Connector"
 msgstr "Žltý konektor"
 
-#, fuzzy
 msgid "Green Front Panel Connector"
 msgstr "Zelený konektor na prednom paneli"
 
-#, fuzzy
 msgid "Pink Front Panel Connector"
 msgstr "Ružový konektor na prednom paneli"
 
-#, fuzzy
 msgid "Blue Front Panel Connector"
 msgstr "Modrý konektor na prednom paneli"
 
-#, fuzzy
 msgid "White Front Panel Connector"
 msgstr "Biely konektor na prednom paneli"
 
-#, fuzzy
 msgid "Black Front Panel Connector"
 msgstr "Čierny konektor na prednom paneli"
 
-#, fuzzy
 msgid "Gray Front Panel Connector"
 msgstr "Šedý konektor na prednom paneli"
 
-#, fuzzy
 msgid "Orange Front Panel Connector"
 msgstr "Oranžový konektor na prednom paneli"
 
-#, fuzzy
 msgid "Red Front Panel Connector"
 msgstr "Červený konektor na prednom paneli"
 
-#, fuzzy
 msgid "Yellow Front Panel Connector"
 msgstr "Žltý konektor na prednom paneli"
 
@@ -398,27 +363,24 @@ msgid "Spread Output"
 msgstr ""
 
 msgid "Downmix"
-msgstr ""
+msgstr "Zmixovať"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "Vstup virtuálneho mixéra"
 
-#, fuzzy
 msgid "Virtual Mixer Output"
 msgstr "Výstup virtuálneho mixéra"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
-msgstr "Vstup virtuálneho mixéra"
+msgstr "Kanály virtuálneho mixéra"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s Funkcia"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
