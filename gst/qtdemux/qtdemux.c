@@ -3658,9 +3658,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   QtAtomParser stsc;
   QtAtomParser stts;
   GNode *ctts;
-  guint32 sample_size;
-  guint32 n_samples;
-  guint32 n_samples_per_chunk;
+  guint32 sample_size = 0;
+  guint32 n_samples = 0;
+  guint32 n_samples_per_chunk = 0;
   int sample_index;
   QtDemuxSample *samples;
   gint i, j, k;
@@ -3803,7 +3803,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   done2:
     {
-      guint32 n_sample_times;
+      guint32 n_sample_times = 0;
       guint32 time;
 
       if (!qt_atom_parser_skip (&stts, 4))
@@ -3869,7 +3869,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
       /* sample sync, can be NULL */
       if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss, &stss)) {
-        guint32 n_sample_syncs;
+        guint32 n_sample_syncs = 0;
 
         /* mark keyframes */
         if (!qt_atom_parser_skip (&stss, 4))
@@ -4243,8 +4243,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   gchar *codec = NULL;
   const guint8 *stsd_data;
   guint32 version;
-  guint32 tkhd_flags;
-  guint8 tkhd_version;
+  guint32 tkhd_flags = 0;
+  guint8 tkhd_version = 0;
   guint32 fourcc;
   guint len;
 
@@ -4368,7 +4368,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     goto error_encrypted;
 
   if (stream->subtype == FOURCC_vide) {
-    guint32 w, h;
+    guint32 w = 0, h = 0;
 
     stream->sampled = TRUE;
 
