@@ -1337,6 +1337,10 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
       else
         goto select_error;
     }
+
+    /* could also be an error with read socket */
+    if (gst_poll_fd_has_error (conn->fdset, conn->readfd))
+      goto socket_error;
   }
   return GST_RTSP_OK;
 
@@ -1352,6 +1356,10 @@ select_error:
 stopped:
   {
     return GST_RTSP_EINTR;
+  }
+socket_error:
+  {
+    return GST_RTSP_ENET;
   }
 write_error:
   {
@@ -2050,6 +2058,11 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
       else
         goto select_error;
     }
+
+    /* could also be an error with write socket */
+    if (gst_poll_fd_has_error (conn->fdset, conn->writefd))
+      goto socket_error;
+
     gst_poll_set_controllable (conn->fdset, FALSE);
   }
   return GST_RTSP_OK;
@@ -2070,6 +2083,10 @@ stopped:
 eof:
   {
     return GST_RTSP_EEOF;
+  }
+socket_error:
+  {
+    res = GST_RTSP_ENET;
   }
 read_error:
   {
@@ -2204,6 +2221,11 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
       else
         goto select_error;
     }
+
+    /* could also be an error with write socket */
+    if (gst_poll_fd_has_error (conn->fdset, conn->writefd))
+      goto socket_error;
+
     gst_poll_set_controllable (conn->fdset, FALSE);
   }
 
@@ -2231,6 +2253,11 @@ stopped:
 eof:
   {
     res = GST_RTSP_EEOF;
+    goto cleanup;
+  }
+socket_error:
+  {
+    res = GST_RTSP_ENET;
     goto cleanup;
   }
 read_error:
