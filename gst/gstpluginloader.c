@@ -881,7 +881,7 @@ exchange_packets (GstPluginLoader * l)
   /* Wait for activity on our FDs */
   do {
     do {
-      res = gst_poll_wait (l->fdset, GST_CLOCK_TIME_NONE);
+      res = gst_poll_wait (l->fdset, GST_SECOND);
     } while (res == -1 && (errno == EINTR || errno == EAGAIN));
 
     if (res < 0)
