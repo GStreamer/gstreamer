@@ -456,13 +456,14 @@ paused_mode_task (gpointer data)
   GstClockTimeDiff diff;
   GstFlowReturn ret;
 
+  GST_OBJECT_LOCK (mimenc);
+
   if (!GST_ELEMENT_CLOCK (mimenc)) {
+    GST_OBJECT_UNLOCK (mimenc);
     GST_ERROR_OBJECT (mimenc, "Element has no clock");
     gst_pad_pause_task (mimenc->srcpad);
     return;
   }
-
-  GST_OBJECT_LOCK (mimenc);
 
   if (mimenc->stop_paused_mode) {
     GST_OBJECT_UNLOCK (mimenc);
