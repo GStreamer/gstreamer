@@ -70,6 +70,7 @@ gst_fake_object_get_type (void)
   return _gst_fake_object_type;
 }
 
+#ifndef HAVE_OSX
 /* g_object_new on abstract GstObject should fail */
 GST_START_TEST (test_fail_abstract_new)
 {
@@ -80,6 +81,7 @@ GST_START_TEST (test_fail_abstract_new)
 }
 
 GST_END_TEST;
+#endif
 
 /* g_object_new on GstFakeObject should succeed */
 GST_START_TEST (test_fake_object_new)
