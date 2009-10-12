@@ -153,17 +153,17 @@ gst_mim_dec_finalize (GObject * object)
 }
 
 static GstFlowReturn
-gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
+gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMimDec *mimdec;
-  GstBuffer *out_buf, *buf;
+  GstBuffer *out_buf;
   guchar *header, *frame_body;
   guint32 fourcc;
   guint16 header_size;
   gint width, height;
   GstCaps *caps;
   GstFlowReturn res = GST_FLOW_OK;
-  GstClockTime in_time = GST_BUFFER_TIMESTAMP (in);
+  GstClockTime in_time = GST_BUFFER_TIMESTAMP (buf);
   GstEvent *event = NULL;
   gboolean result = TRUE;
 
@@ -172,7 +172,6 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
   mimdec = GST_MIM_DEC (gst_pad_get_parent (pad));
   g_return_val_if_fail (GST_IS_MIM_DEC (mimdec), GST_FLOW_ERROR);
 
-  buf = GST_BUFFER (in);
   gst_adapter_push (mimdec->adapter, buf);
 
   GST_OBJECT_LOCK (mimdec);
