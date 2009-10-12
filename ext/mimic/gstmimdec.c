@@ -174,9 +174,9 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
       header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
       header_size = header[0];
       if (header_size != 24) {
-        GST_WARNING_OBJECT (mimdec,
-            "invalid frame: header size %d incorrect", header_size);
         gst_adapter_flush (mimdec->adapter, 24);
+        GST_ELEMENT_ERROR (mimdec, STREAM, DECODE, (NULL),
+            ("invalid frame: header size %d incorrect", header_size));
         res = GST_FLOW_ERROR;
         goto out;
       }
@@ -189,9 +189,10 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
 
       fourcc = GUINT32_FROM_LE (*((guint32 *) (header + 12)));
       if (GST_MAKE_FOURCC ('M', 'L', '2', '0') != fourcc) {
-        GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code"
-            " %X (%" GST_FOURCC_FORMAT ")", fourcc, GST_FOURCC_ARGS (fourcc));
         gst_adapter_flush (mimdec->adapter, 24);
+        GST_ELEMENT_ERROR (mimdec, STREAM, WRONG_TYPE, (NULL),
+            ("invalid frame: unknown FOURCC code %X (%" GST_FOURCC_FORMAT ")",
+                fourcc, GST_FOURCC_ARGS (fourcc)));
         res = GST_FLOW_ERROR;
         goto out;
       }
@@ -225,34 +226,35 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
 
       mimdec->dec = mimic_open ();
       if (mimdec->dec == NULL) {
-        GST_WARNING_OBJECT (mimdec, "mimic_open error\n");
 
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
+        GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL), ("mimic_open error"));
         res = GST_FLOW_ERROR;
         goto out;
       }
 
       if (!mimic_decoder_init (mimdec->dec, frame_body)) {
-        GST_WARNING_OBJECT (mimdec, "mimic_decoder_init error\n");
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
 
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
+        GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
+            ("mimic_decoder_init error"));
         res = GST_FLOW_ERROR;
         goto out;
       }
 
       if (!mimic_get_property (mimdec->dec, "buffer_size",
               &mimdec->buffer_size)) {
-        GST_WARNING_OBJECT (mimdec,
-            "mimic_get_property('buffer_size') error\n");
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
 
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
+        GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
+            ("mimic_get_property('buffer_size') error"));
         res = GST_FLOW_ERROR;
         goto out;
       }
@@ -290,6 +292,8 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
       mimdec->have_header = FALSE;
 
       gst_buffer_unref (out_buf);
+      GST_ELEMENT_ERROR (mimdec, STREAM, DECODE, (NULL),
+          ("mimic_decode_frame error"));
       res = GST_FLOW_ERROR;
       goto out;
     }
@@ -328,6 +332,7 @@ out:
   gst_object_unref (mimdec);
 
   return res;
+
 }
 
 static GstStateChangeReturn

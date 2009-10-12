@@ -279,23 +279,25 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   if (mimenc->enc == NULL) {
     mimenc->enc = mimic_open ();
     if (mimenc->enc == NULL) {
-      GST_WARNING_OBJECT (mimenc, "mimic_open error\n");
+      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL), ("mimic_open error"));
       res = GST_FLOW_ERROR;
       goto out_unlock;
     }
 
     if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
-      GST_WARNING_OBJECT (mimenc, "mimic_encoder_init error\n");
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
+      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL),
+          ("mimic_encoder_init error"));
       res = GST_FLOW_ERROR;
       goto out_unlock;
     }
 
     if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
-      GST_WARNING_OBJECT (mimenc, "mimic_get_property('buffer_size') error\n");
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
+      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL),
+          ("mimic_get_property(buffer_size) error"));
       res = GST_FLOW_ERROR;
       goto out_unlock;
     }
@@ -313,9 +315,10 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   keyframe = (mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE;
   if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf),
           &buffer_size, keyframe)) {
-    GST_WARNING_OBJECT (mimenc, "mimic_encode_frame error\n");
     gst_buffer_unref (out_buf);
     gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (mimenc, STREAM, ENCODE, (NULL),
+        ("mimic_encode_frame error"));
     res = GST_FLOW_ERROR;
     goto out_unlock;
   }
@@ -366,7 +369,6 @@ out:
 out_unlock:
   GST_OBJECT_UNLOCK (mimenc);
   goto out;
-
 }
 
 static GstBuffer *
