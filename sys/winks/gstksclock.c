@@ -151,7 +151,7 @@ gst_ks_clock_open (GstKsClock * self)
 
   state = KSSTATE_STOP;
   if (!ks_object_set_property (priv->clock_handle, KSPROPSETID_Clock,
-          KSPROPERTY_CLOCK_STATE, &state, sizeof (state)))
+          KSPROPERTY_CLOCK_STATE, &state, sizeof (state), NULL))
     goto error;
 
   ks_device_list_free (devices);
@@ -193,7 +193,7 @@ gst_ks_clock_set_state_unlocked (GstKsClock * self, KSSTATE state)
         ks_state_to_string (priv->state), ks_state_to_string (next_state));
 
     if (ks_object_set_property (priv->clock_handle, KSPROPSETID_Clock,
-            KSPROPERTY_CLOCK_STATE, &next_state, sizeof (next_state))) {
+            KSPROPERTY_CLOCK_STATE, &next_state, sizeof (next_state), NULL)) {
       priv->state = next_state;
 
       GST_DEBUG ("Changed clock state to %s", ks_state_to_string (priv->state));
@@ -298,7 +298,7 @@ gst_ks_clock_worker_thread_func (gpointer data)
       now /= 100;
 
       if (ks_object_set_property (priv->clock_handle, KSPROPSETID_Clock,
-              KSPROPERTY_CLOCK_TIME, &now, sizeof (now))) {
+              KSPROPERTY_CLOCK_TIME, &now, sizeof (now), NULL)) {
         GST_DEBUG ("clock synchronized");
         gst_object_unref (priv->master_clock);
         priv->master_clock = NULL;

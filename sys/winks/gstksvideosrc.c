@@ -114,6 +114,8 @@ struct _GstKsVideoSrcPrivate
   gboolean worker_pending_run;
   gboolean worker_run_result;
 
+  gulong worker_error_code;
+
   /* Statistics */
   GstClockTime last_sampling;
   guint count;
@@ -555,15 +557,15 @@ error_no_devices:
 error_no_match:
   {
     if (priv->device_path != NULL) {
-      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
           ("Specified video capture device with path '%s' not found",
               priv->device_path), (NULL));
     } else if (priv->device_name != NULL) {
-      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
           ("Specified video capture device with name '%s' not found",
               priv->device_name), (NULL));
     } else {
-      GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
           ("Specified video capture device with index %d not found",
               priv->device_index), (NULL));
     }
@@ -633,8 +635,8 @@ gst_ks_video_src_worker_func (gpointer data)
     } else if (priv->worker_pending_run) {
       if (priv->ksclock != NULL)
         gst_ks_clock_start (priv->ksclock);
-      priv->worker_run_result =
-          gst_ks_video_device_set_state (priv->device, KSSTATE_RUN);
+      priv->worker_run_result = gst_ks_video_device_set_state (priv->device,
+          KSSTATE_RUN, &priv->worker_error_code);
 
       priv->worker_pending_run = FALSE;
       KS_WORKER_NOTIFY_RESULT (priv);
@@ -1014,6 +1016,7 @@ gst_ks_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
     while (priv->worker_pending_run)
       KS_WORKER_WAIT_FOR_RESULT (priv);
     priv->running = priv->worker_run_result;
+    error_code = priv->worker_error_code;
     KS_WORKER_UNLOCK (priv);
 
     if (!priv->running)
@@ -1051,9 +1054,22 @@ error_no_caps:
   }
 error_start_capture:
   {
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
-        ("could not start capture"),
-        ("failed to change pin state to KSSTATE_RUN"));
+    const gchar *debug_str = "failed to change pin state to KSSTATE_RUN";
+
+    switch (error_code) {
+      case ERROR_FILE_NOT_FOUND:
+        GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+            ("failed to start capture (device unplugged)"), (debug_str));
+        break;
+      case ERROR_NO_SYSTEM_RESOURCES:
+        GST_ELEMENT_ERROR (self, RESOURCE, BUSY,
+            ("failed to start capture (device already in use)"), (debug_str));
+        break;
+      default:
+        GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
+            ("failed to start capture (0x%08x)", error_code), (debug_str));
+        break;
+    }
 
     return GST_FLOW_ERROR;
   }

@@ -71,7 +71,7 @@ GstCaps * gst_ks_video_device_get_available_caps (GstKsVideoDevice * self);
 gboolean gst_ks_video_device_has_caps (GstKsVideoDevice * self);
 gboolean gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps);
 
-gboolean gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state);
+gboolean gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state, gulong * error_code);
 
 GstClockTime gst_ks_video_device_get_duration (GstKsVideoDevice * self);
 gboolean gst_ks_video_device_get_latency (GstKsVideoDevice * self, GstClockTime * min_latency, GstClockTime * max_latency);

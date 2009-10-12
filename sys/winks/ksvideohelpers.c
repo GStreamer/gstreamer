@@ -427,7 +427,7 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
   guint pin_id;
 
   if (!ks_filter_get_pin_property (filter_handle, 0, KSPROPSETID_Pin,
-          KSPROPERTY_PIN_CTYPES, &pin_count, sizeof (pin_count)))
+          KSPROPERTY_PIN_CTYPES, &pin_count, sizeof (pin_count), NULL))
     goto beach;
 
   GST_DEBUG ("pin_count = %d", pin_count);
@@ -438,15 +438,15 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
     GUID pin_cat;
 
     if (!ks_filter_get_pin_property (filter_handle, pin_id, KSPROPSETID_Pin,
-            KSPROPERTY_PIN_COMMUNICATION, &pin_comm, sizeof (pin_comm)))
+            KSPROPERTY_PIN_COMMUNICATION, &pin_comm, sizeof (pin_comm), NULL))
       continue;
 
     if (!ks_filter_get_pin_property (filter_handle, pin_id, KSPROPSETID_Pin,
-            KSPROPERTY_PIN_DATAFLOW, &pin_flow, sizeof (pin_flow)))
+            KSPROPERTY_PIN_DATAFLOW, &pin_flow, sizeof (pin_flow), NULL))
       continue;
 
     if (!ks_filter_get_pin_property (filter_handle, pin_id, KSPROPSETID_Pin,
-            KSPROPERTY_PIN_CATEGORY, &pin_cat, sizeof (pin_cat)))
+            KSPROPERTY_PIN_CATEGORY, &pin_cat, sizeof (pin_cat), NULL))
       continue;
 
     GST_DEBUG ("pin[%u]: pin_comm=%d, pin_flow=%d", pin_id, pin_comm, pin_flow);
@@ -456,7 +456,7 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
       KSMULTIPLE_ITEM *items;
 
       if (ks_filter_get_pin_property_multi (filter_handle, pin_id,
-              KSPROPSETID_Pin, KSPROPERTY_PIN_DATARANGES, &items)) {
+              KSPROPSETID_Pin, KSPROPERTY_PIN_DATARANGES, &items, NULL)) {
         KSDATARANGE *range = (KSDATARANGE *) (items + 1);
         guint i;
 

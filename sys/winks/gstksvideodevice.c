@@ -556,7 +556,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   alignment = 0;
 
   if (ks_object_get_property (pin_handle, KSPROPSETID_Connection,
-          KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX, &framing_ex, NULL)) {
+          KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX, &framing_ex, NULL, NULL)) {
     if (framing_ex->CountItems >= 1) {
       *num_outstanding = framing_ex->FramingItem[0].Frames;
       alignment = framing_ex->FramingItem[0].FileAlignment;
@@ -568,7 +568,8 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
         "ALLOCATORFRAMING");
 
     if (ks_object_get_property (pin_handle, KSPROPSETID_Connection,
-            KSPROPERTY_CONNECTION_ALLOCATORFRAMING, &framing, &framing_size)) {
+            KSPROPERTY_CONNECTION_ALLOCATORFRAMING, &framing, &framing_size,
+            NULL)) {
       *num_outstanding = framing->Frames;
       alignment = framing->FileAlignment;
     } else {
@@ -597,7 +598,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
     mem_transport = 0;          /* REVISIT: use the constant here */
     if (!ks_object_set_property (pin_handle, KSPROPSETID_MemoryTransport,
             KSPROPERTY_MEMORY_TRANSPORT, &mem_transport,
-            sizeof (mem_transport))) {
+            sizeof (mem_transport), NULL)) {
       GST_DEBUG ("failed to set memory transport, sticking with the default");
     }
   }
@@ -611,7 +612,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
 
     if (ks_object_get_property (pin_handle, KSPROPSETID_Stream,
             KSPROPERTY_STREAM_MASTERCLOCK, (gpointer *) & cur_clock_handle,
-            &cur_clock_handle_size)) {
+            &cur_clock_handle_size, NULL)) {
       GST_DEBUG ("current master clock handle: 0x%08x", *cur_clock_handle);
       CloseHandle (*cur_clock_handle);
       g_free (cur_clock_handle);
@@ -620,7 +621,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
 
       if (ks_object_set_property (pin_handle, KSPROPSETID_Stream,
               KSPROPERTY_STREAM_MASTERCLOCK, &new_clock_handle,
-              sizeof (new_clock_handle))) {
+              sizeof (new_clock_handle), NULL)) {
         gst_ks_clock_prepare (priv->clock);
       } else {
         GST_WARNING ("failed to set pin's master clock");
@@ -660,7 +661,7 @@ gst_ks_video_device_close_current_pin (GstKsVideoDevice * self)
   if (!ks_is_valid_handle (priv->pin_handle))
     return;
 
-  gst_ks_video_device_set_state (self, KSSTATE_STOP);
+  gst_ks_video_device_set_state (self, KSSTATE_STOP, NULL);
 
   CloseHandle (priv->pin_handle);
   priv->pin_handle = INVALID_HANDLE_VALUE;
@@ -801,7 +802,8 @@ same_caps:
 }
 
 gboolean
-gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
+gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state,
+    gulong * error_code)
 {
   GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
   KSSTATE initial_state;
@@ -828,7 +830,8 @@ gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
     GST_DEBUG ("Changing pin state from %s to %s",
         ks_state_to_string (priv->state), ks_state_to_string (next_state));
 
-    if (ks_object_set_connection_state (priv->pin_handle, next_state)) {
+    if (ks_object_set_connection_state (priv->pin_handle, next_state,
+            error_code)) {
       priv->state = next_state;
 
       GST_DEBUG ("Changed pin state to %s", ks_state_to_string (priv->state));
@@ -840,6 +843,7 @@ gst_ks_video_device_set_state (GstKsVideoDevice * self, KSSTATE state)
     } else {
       GST_WARNING ("Failed to change pin state to %s",
           ks_state_to_string (next_state));
+
       return FALSE;
     }
   }
