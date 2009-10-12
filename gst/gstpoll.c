@@ -275,13 +275,15 @@ choose_mode (const GstPoll * set, GstClockTime timeout)
 
 #ifndef G_OS_WIN32
 static gint
-pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds)
+pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds,
+    fd_set * errorfds)
 {
   gint max_fd = -1;
   guint i;
 
   FD_ZERO (readfds);
   FD_ZERO (writefds);
+  FD_ZERO (errorfds);
 
   g_mutex_lock (set->lock);
 
@@ -293,6 +295,8 @@ pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds)
         FD_SET (pfd->fd, readfds);
       if (pfd->events & POLLOUT)
         FD_SET (pfd->fd, writefds);
+      if (pfd->events)
+        FD_SET (pfd->fd, errorfds);
       if (pfd->fd > max_fd)
         max_fd = pfd->fd;
     }
@@ -304,7 +308,8 @@ pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds)
 }
 
 static void
-fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds)
+fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds,
+    fd_set * errorfds)
 {
   guint i;
 
@@ -318,6 +323,8 @@ fd_set_to_pollfd (GstPoll * set, fd_set * readfds, fd_set * writefds)
         pfd->revents |= POLLIN;
       if (FD_ISSET (pfd->fd, writefds))
         pfd->revents |= POLLOUT;
+      if (FD_ISSET (pfd->fd, errorfds))
+        pfd->revents |= POLLERR;
     }
   }
 
@@ -1179,9 +1186,10 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 #ifndef G_OS_WIN32
         fd_set readfds;
         fd_set writefds;
+        fd_set errorfds;
         gint max_fd;
 
-        max_fd = pollfd_to_fd_set (set, &readfds, &writefds);
+        max_fd = pollfd_to_fd_set (set, &readfds, &writefds, &errorfds);
 
         if (mode == GST_POLL_MODE_SELECT) {
           struct timeval tv;
@@ -1194,7 +1202,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
             tvptr = NULL;
           }
 
-          res = select (max_fd + 1, &readfds, &writefds, NULL, tvptr);
+          res = select (max_fd + 1, &readfds, &writefds, &errorfds, tvptr);
         } else {
 #ifdef HAVE_PSELECT
           struct timespec ts;
@@ -1207,12 +1215,13 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
             tsptr = NULL;
           }
 
-          res = pselect (max_fd + 1, &readfds, &writefds, NULL, tsptr, NULL);
+          res =
+              pselect (max_fd + 1, &readfds, &writefds, &errorfds, tsptr, NULL);
 #endif
         }
 
-        if (res > 0) {
-          fd_set_to_pollfd (set, &readfds, &writefds);
+        if (res >= 0) {
+          fd_set_to_pollfd (set, &readfds, &writefds, &errorfds);
         }
 #else /* G_OS_WIN32 */
         g_assert_not_reached ();
