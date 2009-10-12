@@ -157,7 +157,11 @@ GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
 GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
 GST_EXPORT GstDebugCategory *GST_CAT_QOS;
 GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
-GST_EXPORT GstDebugCategory *GST_CAT_POLL;
+
+/* Categories that should be completely private to
+ * libgstreamer should be done like this: */
+#define GST_CAT_POLL _priv_GST_CAT_POLL
+GstDebugCategory *_priv_GST_CAT_POLL;
 
 #else
 
