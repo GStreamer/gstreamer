@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -678,6 +679,8 @@ static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v, gint r_h)
 {
+  /* FIXME: these are too large now that MAX_WIDTH is 64k! Allocating 3MB on
+   * the stack is not very nice... */
   guchar y[16][MAX_WIDTH];
   guchar u[16][MAX_WIDTH];
   guchar v[16][MAX_WIDTH];
@@ -732,48 +735,72 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   }
 }
 
-static void
+static GstFlowReturn
 gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
-    guchar * last[3], guint width, guint height, gint r_v)
+    guchar * last[3], guint width, guint height)
 {
-  guchar **line[3];             /* the jpeg line buffer */
-  guchar *y[4 * DCTSIZE];       /* alloc enough for the lines, r_v must be <4 */
-  guchar *u[4 * DCTSIZE];
-  guchar *v[4 * DCTSIZE];
+  guchar **line[3];             /* the jpeg line buffer         */
+  guchar *y[4 * DCTSIZE] = { NULL, };   /* alloc enough for the lines   */
+  guchar *u[4 * DCTSIZE] = { NULL, };   /* r_v will be <4               */
+  guchar *v[4 * DCTSIZE] = { NULL, };
   gint i, j, k;
-  gint lines;
+  gint lines, v_samp[3];
 
   line[0] = y;
   line[1] = u;
   line[2] = v;
 
+  v_samp[0] = dec->cinfo.cur_comp_info[0]->v_samp_factor;
+  v_samp[1] = dec->cinfo.cur_comp_info[1]->v_samp_factor;
+  v_samp[2] = dec->cinfo.cur_comp_info[2]->v_samp_factor;
+
+  if (G_UNLIKELY (v_samp[0] != 2 || v_samp[1] > 2 || v_samp[2] > 2))
+    goto format_not_supported;
+
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
-  for (i = 0; i < height; i += r_v * DCTSIZE) {
-    for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
-      /* init y component address */
-      line[0][j] = base[0];
-      if (G_LIKELY (base[0] < last[0]))
-        base[0] += I420_Y_ROWSTRIDE (width);
-      if (r_v == 2) {
-        line[0][j + 1] = base[0];
+
+  for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
+    /* init Y component address */
+    for (j = 0; j < (v_samp[0] * DCTSIZE); j += v_samp[0]) {
+      for (k = 0; k < v_samp[0]; ++k) {
+        line[0][j + k] = base[0];
         if (G_LIKELY (base[0] < last[0]))
           base[0] += I420_Y_ROWSTRIDE (width);
       }
-      /* init u,v component addresses */
-      line[1][k] = base[1];
-      line[2][k] = base[2];
-      if (r_v == 2 || (k & 1) != 0) {
-        if (G_LIKELY (base[1] < last[1] && base[2] < last[2])) {
+    }
+
+    /* init U component addresses */
+    for (j = 0; j < (v_samp[1] * DCTSIZE); j += v_samp[1]) {
+      for (k = 0; k < v_samp[1]; ++k) {
+        line[1][j + k] = base[1];
+        if ((k % 2) == 0 && G_LIKELY (base[1] < last[1]))
           base[1] += I420_U_ROWSTRIDE (width);
-          base[2] += I420_V_ROWSTRIDE (width);
-        }
       }
     }
-    lines = jpeg_read_raw_data (&dec->cinfo, line, r_v * DCTSIZE);
+
+    /* init V component addresses */
+    for (j = 0; j < (v_samp[2] * DCTSIZE); j += v_samp[2]) {
+      for (k = 0; k < v_samp[2]; ++k) {
+        line[2][j + k] = base[2];
+        if ((k % 2) == 0 && G_LIKELY (base[2] < last[2]))
+          base[2] += I420_V_ROWSTRIDE (width);
+      }
+    }
+    lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
     if (G_UNLIKELY (!lines)) {
       GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
     }
+  }
+  return GST_FLOW_OK;
+
+format_not_supported:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("Unsupported subsampling schema: v_samp factors: %u %u %u",
+            v_samp[0], v_samp[1], v_samp[2]));
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -1018,6 +1045,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
     GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
         dec->cinfo.max_v_samp_factor);
+    GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d",
+        dec->cinfo.max_h_samp_factor);
 
     gst_pad_set_caps (dec->srcpad, caps);
     gst_caps_unref (caps);
@@ -1085,13 +1114,18 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * copy over the data into our final picture buffer, otherwise jpeglib might
    * write over the end of a line into the beginning of the next line,
    * resulting in blocky artifacts on the left side of the picture. */
-  if (G_UNLIKELY (r_h != 2
-          || width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0)) {
+  if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
+          || dec->cinfo.cur_comp_info[0]->h_samp_factor != 2
+          || dec->cinfo.cur_comp_info[1]->h_samp_factor != 1
+          || dec->cinfo.cur_comp_info[2]->h_samp_factor != 1)) {
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
         "indirect decoding using extra buffer copy");
     gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h);
   } else {
-    gst_jpeg_dec_decode_direct (dec, base, last, width, height, r_v);
+    ret = gst_jpeg_dec_decode_direct (dec, base, last, width, height);
+
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto decode_direct_failed;
   }
 
   GST_LOG_OBJECT (dec, "decompressing finished");
@@ -1176,6 +1210,13 @@ decode_error:
       outbuf = NULL;
     }
     ret = GST_FLOW_ERROR;
+    goto done;
+  }
+decode_direct_failed:
+  {
+    /* already posted an error message */
+    jpeg_abort_decompress (&dec->cinfo);
+    gst_buffer_replace (&outbuf, NULL);
     goto done;
   }
 alloc_failed:
