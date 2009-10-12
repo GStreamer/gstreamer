@@ -101,7 +101,7 @@ gst_mim_dec_class_init (GstMimDecClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstelement_class->change_state = gst_mim_dec_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_mim_dec_change_state);
 
   gobject_class->finalize = gst_mim_dec_finalize;
 
@@ -113,8 +113,10 @@ gst_mim_dec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 {
   mimdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->sinkpad);
-  gst_pad_set_chain_function (mimdec->sinkpad, gst_mim_dec_chain);
-  gst_pad_set_event_function (mimdec->sinkpad, gst_mim_dec_sink_event);
+  gst_pad_set_chain_function (mimdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mim_dec_chain));
+  gst_pad_set_event_function (mimdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mim_dec_sink_event));
 
   mimdec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);

@@ -131,7 +131,7 @@ gst_mim_enc_class_init (GstMimEncClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstelement_class->change_state = gst_mim_enc_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_mim_enc_change_state);
 
   GST_DEBUG_CATEGORY_INIT (mimenc_debug, "mimenc", 0, "Mimic encoder plugin");
 }
@@ -141,9 +141,12 @@ gst_mim_enc_init (GstMimEnc * mimenc, GstMimEncClass * klass)
 {
   mimenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->sinkpad);
-  gst_pad_set_setcaps_function (mimenc->sinkpad, gst_mim_enc_setcaps);
-  gst_pad_set_chain_function (mimenc->sinkpad, gst_mim_enc_chain);
-  gst_pad_set_event_function (mimenc->sinkpad, gst_mim_enc_event);
+  gst_pad_set_setcaps_function (mimenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mim_enc_setcaps));
+  gst_pad_set_chain_function (mimenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mim_enc_chain));
+  gst_pad_set_event_function (mimenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mim_enc_event));
 
   mimenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (mimenc), mimenc->srcpad);
