@@ -315,6 +315,9 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
     res = GST_FLOW_ERROR;
     goto out_unlock;
   }
+  if (!keyframe)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
   GST_BUFFER_SIZE (out_buf) = buffer_size + TCP_HEADER_SIZE;
 
   GST_DEBUG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
