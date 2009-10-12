@@ -42,6 +42,10 @@ GST_DEBUG_CATEGORY (mimenc_debug);
 
 #define MAX_INTERFRAMES 15
 
+#define TCP_HEADER_SIZE 24
+
+#define PAUSED_MODE_INTERVAL (4 * GST_SECOND)
+
 
 enum
 {
@@ -83,9 +87,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 static gboolean gst_mim_enc_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_mim_enc_chain (GstPad * pad, GstBuffer * in);
-static GstBuffer *gst_mim_enc_create_tcp_header (GstMimEnc * mimenc,
-    guint32 payload_size, GstClockTime timestamp, gboolean keyframe,
-    gboolean paused);
+static void gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, GstBuffer * buf,
+    guint32 payload_size, gboolean keyframe, gboolean paused);
 static gboolean gst_mim_enc_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn
@@ -256,7 +259,6 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   GstBuffer *out_buf = NULL, *buf = NULL;
   guchar *data;
   gint buffer_size;
-  GstBuffer *header = NULL;
   GstFlowReturn res = GST_FLOW_OK;
   GstEvent *event = NULL;
   gboolean keyframe;
@@ -306,15 +308,16 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   buf = in;
   data = GST_BUFFER_DATA (buf);
 
-  out_buf = gst_buffer_new_and_alloc (mimenc->buffer_size);
+  out_buf = gst_buffer_new_and_alloc (mimenc->buffer_size + TCP_HEADER_SIZE);
   GST_BUFFER_TIMESTAMP (out_buf) =
       gst_segment_to_running_time (&mimenc->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buf));
   mimenc->last_buffer = GST_BUFFER_TIMESTAMP (out_buf);
   buffer_size = mimenc->buffer_size;
   keyframe = (mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE;
-  if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf),
-          &buffer_size, keyframe)) {
+  if (!mimic_encode_frame (mimenc->enc, data,
+          GST_BUFFER_DATA (out_buf) + TCP_HEADER_SIZE, &buffer_size,
+          keyframe)) {
     gst_buffer_unref (out_buf);
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (mimenc, STREAM, ENCODE, (NULL),
@@ -322,15 +325,14 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
     res = GST_FLOW_ERROR;
     goto out_unlock;
   }
-  GST_BUFFER_SIZE (out_buf) = buffer_size;
+  GST_BUFFER_SIZE (out_buf) = buffer_size + TCP_HEADER_SIZE;
 
   GST_DEBUG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
       GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (out_buf));
   ++mimenc->frames;
 
   /* now let's create that tcp header */
-  header = gst_mim_enc_create_tcp_header (mimenc, buffer_size,
-      GST_BUFFER_TIMESTAMP (out_buf), keyframe, FALSE);
+  gst_mim_enc_create_tcp_header (mimenc, out_buf, buffer_size, keyframe, FALSE);
 
   if (mimenc->need_newsegment) {
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
@@ -342,12 +344,6 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   if (event) {
     if (!gst_pad_push_event (mimenc->srcpad, event))
       GST_WARNING_OBJECT (mimenc, "Failed to push NEWSEGMENT event");
-  }
-
-  res = gst_pad_push (mimenc->srcpad, header);
-  if (res != GST_FLOW_OK) {
-    gst_buffer_unref (out_buf);
-    goto out;
   }
 
   res = gst_pad_push (mimenc->srcpad, out_buf);
@@ -364,15 +360,12 @@ out_unlock:
   goto out;
 }
 
-static GstBuffer *
-gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
-    GstClockTime timestamp, gboolean keyframe, gboolean paused)
+static void
+gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, GstBuffer * buf,
+    guint32 payload_size, gboolean keyframe, gboolean paused)
 {
   /* 24 bytes */
-  GstBuffer *buf_header = gst_buffer_new_and_alloc (24);
-  guchar *p = (guchar *) GST_BUFFER_DATA (buf_header);
-
-  GST_BUFFER_TIMESTAMP (buf_header) = timestamp;
+  guchar *p = (guchar *) GST_BUFFER_DATA (buf);
 
   p[0] = 24;
   p[1] = paused ? 1 : 0;
@@ -383,9 +376,7 @@ gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
   GST_WRITE_UINT32_LE (p + 12, paused ? 0 :
       GST_MAKE_FOURCC ('M', 'L', '2', '0'));
   GST_WRITE_UINT32_LE (p + 16, 0);
-  GST_WRITE_UINT32_LE (p + 20, timestamp / GST_MSECOND);
-
-  return buf_header;
+  GST_WRITE_UINT32_LE (p + 20, GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
 }
 
 static gboolean
@@ -485,11 +476,14 @@ paused_mode_task (gpointer data)
     diff = 0;
 
   if (diff > 3.95 * GST_SECOND) {
-    GstBuffer *buffer = gst_mim_enc_create_tcp_header (mimenc, 0,
-        mimenc->last_buffer + 4 * GST_SECOND, FALSE, TRUE);
+    GstBuffer *buffer;
     GstEvent *event = NULL;
 
-    mimenc->last_buffer += 4 * GST_SECOND;
+    buffer = gst_buffer_try_new_and_alloc (TCP_HEADER_SIZE);
+    GST_BUFFER_TIMESTAMP (buffer) = mimenc->last_buffer + PAUSED_MODE_INTERVAL;
+    gst_mim_enc_create_tcp_header (mimenc, buffer, 0, FALSE, TRUE);
+
+    mimenc->last_buffer += PAUSED_MODE_INTERVAL;
 
     if (mimenc->need_newsegment) {
       event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
@@ -514,7 +508,7 @@ paused_mode_task (gpointer data)
     GstClockTime next_stop;
     GstClockID id;
 
-    next_stop = now + (4 * GST_SECOND - MIN (diff, 4 * GST_SECOND));
+    next_stop = now + (PAUSED_MODE_INTERVAL - MIN (diff, PAUSED_MODE_INTERVAL));
 
     id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (mimenc), next_stop);
 
