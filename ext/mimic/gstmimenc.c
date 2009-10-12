@@ -209,48 +209,60 @@ gst_mim_enc_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_mim_enc_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstMimEnc *filter;
+  GstMimEnc *mimenc;
   GstStructure *structure;
   int ret = TRUE, height, width;
 
-  filter = GST_MIM_ENC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_MIM_ENC (filter), FALSE);
+  mimenc = GST_MIM_ENC (gst_pad_get_parent (pad));
+  g_return_val_if_fail (mimenc != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_MIM_ENC (mimenc), FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width", &width);
   if (!ret) {
-    GST_DEBUG_OBJECT (filter, "No width set");
+    GST_DEBUG_OBJECT (mimenc, "No width set");
     goto out;
   }
   ret = gst_structure_get_int (structure, "height", &height);
   if (!ret) {
-    GST_DEBUG_OBJECT (filter, "No height set");
+    GST_DEBUG_OBJECT (mimenc, "No height set");
     goto out;
   }
 
-  GST_OBJECT_LOCK (filter);
+  GST_OBJECT_LOCK (mimenc);
 
   if (width == 320 && height == 240)
-    filter->res = MIMIC_RES_HIGH;
+    mimenc->res = MIMIC_RES_HIGH;
   else if (width == 160 && height == 120)
-    filter->res = MIMIC_RES_LOW;
+    mimenc->res = MIMIC_RES_LOW;
   else {
-    GST_WARNING_OBJECT (filter, "Invalid resolution %dx%d", width, height);
+    GST_WARNING_OBJECT (mimenc, "Invalid resolution %dx%d", width, height);
     ret = FALSE;
-    GST_OBJECT_UNLOCK (filter);
+    GST_OBJECT_UNLOCK (mimenc);
     goto out;
   }
 
-  filter->width = (guint16) width;
-  filter->height = (guint16) height;
+  mimenc->width = (guint16) width;
+  mimenc->height = (guint16) height;
 
-  GST_DEBUG_OBJECT (filter, "Got info from caps w : %d, h : %d",
-      filter->width, filter->height);
+  GST_DEBUG_OBJECT (mimenc, "Got info from caps w : %d, h : %d",
+      mimenc->width, mimenc->height);
 
-  GST_OBJECT_UNLOCK (filter);
+  if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
+    GST_ERROR_OBJECT (mimenc, "mimic_encoder_init error");
+    ret = FALSE;
+    GST_OBJECT_UNLOCK (mimenc);
+    goto out;
+  }
+
+  if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
+    GST_ERROR_OBJECT (mimenc, "mimic_get_property(buffer_size) error");
+    ret = FALSE;
+  }
+
+  GST_OBJECT_UNLOCK (mimenc);
 out:
-  gst_object_unref (filter);
+  gst_object_unref (mimenc);
   return ret;
 }
 
@@ -281,30 +293,6 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   }
 
   if (mimenc->enc == NULL) {
-    mimenc->enc = mimic_open ();
-    if (mimenc->enc == NULL) {
-      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL), ("mimic_open error"));
-      res = GST_FLOW_ERROR;
-      goto out_unlock;
-    }
-
-    if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
-      mimic_close (mimenc->enc);
-      mimenc->enc = NULL;
-      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL),
-          ("mimic_encoder_init error"));
-      res = GST_FLOW_ERROR;
-      goto out_unlock;
-    }
-
-    if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
-      mimic_close (mimenc->enc);
-      mimenc->enc = NULL;
-      GST_ELEMENT_ERROR (mimenc, LIBRARY, INIT, (NULL),
-          ("mimic_get_property(buffer_size) error"));
-      res = GST_FLOW_ERROR;
-      goto out_unlock;
-    }
   }
 
   buf = in;
@@ -546,15 +534,12 @@ gst_mim_enc_change_state (GstElement * element, GstStateChange transition)
   gboolean paused_mode;
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_OBJECT_LOCK (element);
-      if (mimenc->enc != NULL) {
-        mimic_close (mimenc->enc);
-        mimenc->enc = NULL;
-        mimenc->buffer_size = -1;
-        mimenc->frames = 0;
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      mimenc->enc = mimic_open ();
+      if (!mimenc) {
+        GST_ERROR_OBJECT (mimenc, "mimic_open failed");
+        return GST_STATE_CHANGE_FAILURE;
       }
-      GST_OBJECT_UNLOCK (element);
       break;
 
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -608,6 +593,17 @@ gst_mim_enc_change_state (GstElement * element, GstStateChange transition)
         }
       }
       break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (element);
+      if (mimenc->enc != NULL) {
+        mimic_close (mimenc->enc);
+        mimenc->enc = NULL;
+        mimenc->buffer_size = -1;
+        mimenc->frames = 0;
+      }
+      GST_OBJECT_UNLOCK (element);
+      break;
+
     default:
       break;
   }

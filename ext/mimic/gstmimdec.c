@@ -216,7 +216,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
     frame_body =
         (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
-    if (mimdec->dec == NULL) {
+    if (mimdec->buffer_size < 0) {
       /* Check if its a keyframe, otherwise skip it */
       if (GUINT32_FROM_LE (*((guint32 *) (frame_body + 12))) != 0) {
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
@@ -225,20 +225,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
         goto out;
       }
 
-      mimdec->dec = mimic_open ();
-      if (mimdec->dec == NULL) {
-
-        gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-        mimdec->have_header = FALSE;
-        GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL), ("mimic_open error"));
-        res = GST_FLOW_ERROR;
-        goto out;
-      }
-
       if (!mimic_decoder_init (mimdec->dec, frame_body)) {
-        mimic_close (mimdec->dec);
-        mimdec->dec = NULL;
-
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
         GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
@@ -249,9 +236,6 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
 
       if (!mimic_get_property (mimdec->dec, "buffer_size",
               &mimdec->buffer_size)) {
-        mimic_close (mimdec->dec);
-        mimdec->dec = NULL;
-
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
         GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
@@ -340,8 +324,33 @@ static GstStateChangeReturn
 gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMimDec *mimdec;
+  GstStateChangeReturn ret;
 
   mimdec = GST_MIM_DEC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      mimdec->dec = mimic_open ();
+      if (!mimdec) {
+        GST_ERROR_OBJECT (mimdec, "mimic_open failed");
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
+
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (element);
+      mimdec->need_newsegment = TRUE;
+      GST_OBJECT_UNLOCK (element);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -356,16 +365,11 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
       }
       GST_OBJECT_UNLOCK (element);
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_OBJECT_LOCK (element);
-      mimdec->need_newsegment = TRUE;
-      GST_OBJECT_UNLOCK (element);
-      break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }
 
 static gboolean
