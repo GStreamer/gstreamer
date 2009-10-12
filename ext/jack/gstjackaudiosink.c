@@ -440,10 +440,9 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   spec->segsize = buffer_size * sizeof (gfloat) * channels;
   spec->latency_time = gst_util_uint64_scale (spec->segsize,
       (GST_SECOND / GST_USECOND), spec->rate * spec->bytes_per_sample);
-  if (spec->latency_time < spec->buffer_time) {
-    /* segtotal based on buffer-time latency */
-    spec->segtotal = spec->buffer_time / spec->latency_time;
-  } else {
+  /* segtotal based on buffer-time latency */
+  spec->segtotal = spec->buffer_time / spec->latency_time;
+  if (spec->segtotal < 2) {
     spec->segtotal = 2;
     spec->buffer_time = spec->latency_time * spec->segtotal;
   }
@@ -452,7 +451,6 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       spec->buffer_time);
   GST_DEBUG_OBJECT (sink, "latency time: %" G_GINT64_FORMAT " usec",
       spec->latency_time);
-
   GST_DEBUG_OBJECT (sink, "buffer_size %d, segsize %d, segtotal %d",
       buffer_size, spec->segsize, spec->segtotal);
 
