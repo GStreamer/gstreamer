@@ -55,11 +55,20 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (fraction) [ 0/1, 30/1 ], "
+        "framerate = (fraction) [1/1, 30/1], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
-        "height = (int) [16, 4096], " "width = (int) [16, 4096]")
+        "width = (int) 320, "
+        "height = (int) 240"
+        ";video/x-raw-rgb, "
+        "bpp = (int) 24, "
+        "depth = (int) 24, "
+        "endianness = (int) 4321, "
+        "framerate = (fraction) [1/1, 30/1], "
+        "red_mask = (int) 16711680, "
+        "green_mask = (int) 65280, "
+        "blue_mask = (int) 255, " "width = (int) 160, " "height = (int) 120")
     );
 
 static void gst_mim_dec_finalize (GObject * object);
