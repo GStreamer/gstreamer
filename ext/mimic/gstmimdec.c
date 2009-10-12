@@ -167,7 +167,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * in)
 
   GST_OBJECT_LOCK (mimdec);
 
-  // do we have enough bytes to read a header
+  /* do we have enough bytes to read a header */
   while (gst_adapter_available (mimdec->adapter) >=
       (mimdec->have_header ? mimdec->payload_size : 24)) {
     if (!mimdec->have_header) {

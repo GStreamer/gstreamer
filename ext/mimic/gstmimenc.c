@@ -328,7 +328,7 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
       GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (out_buf));
   ++mimenc->frames;
 
-  // now let's create that tcp header
+  /* now let's create that tcp header */
   header = gst_mim_enc_create_tcp_header (mimenc, buffer_size,
       GST_BUFFER_TIMESTAMP (out_buf), keyframe, FALSE);
 
@@ -375,7 +375,7 @@ static GstBuffer *
 gst_mim_enc_create_tcp_header (GstMimEnc * mimenc, guint32 payload_size,
     GstClockTime timestamp, gboolean keyframe, gboolean paused)
 {
-  // 24 bytes
+  /* 24 bytes */
   GstBuffer *buf_header = gst_buffer_new_and_alloc (24);
   guchar *p = (guchar *) GST_BUFFER_DATA (buf_header);
 
