@@ -332,13 +332,6 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
   header = gst_mim_enc_create_tcp_header (mimenc, buffer_size,
       GST_BUFFER_TIMESTAMP (out_buf), keyframe, FALSE);
 
-  if (!header) {
-    gst_buffer_unref (out_buf);
-    GST_DEBUG_OBJECT (mimenc, "header not created succesfully");
-    res = GST_FLOW_ERROR;
-    goto out_unlock;
-  }
-
   if (mimenc->need_newsegment) {
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
     mimenc->need_newsegment = FALSE;
