@@ -476,10 +476,11 @@ gst_object_suite (void)
 
   /* FIXME: GLib shouldn't crash here, but issue a warning and return a NULL
    * object, or at least g_error() and then abort properly ... (tpm) */
-#ifdef HAVE_OSX
-  /* on OSX we get SIGBUS instead it seems */
-  tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGBUS);
-#else
+#ifndef HAVE_OSX
+  /* Disabled for OS/X because a) it's a pretty silly test anyway and
+   * b) different OS/X versions raise different signals and it isn't worth
+   * the effort to try and detect which one should be producing which
+   */
   /* SEGV tests go last so we can debug the others */
   tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
 #endif
