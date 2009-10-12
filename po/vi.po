@@ -1,14 +1,14 @@
 # Vietnamese translation for GST Plugins Ugly.
-# Copyright © 2008 Free Software Foundation, Inc.
+# Copyright © 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Clytie Siddall <clytie@riverland.net.au>, 2007-2008.
+# Clytie Siddall <clytie@riverland.net.au>, 2007-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
-"PO-Revision-Date: 2008-12-25 17:29+1030\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
+"PO-Revision-Date: 2009-09-19 18:59+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -28,19 +28,6 @@ msgstr "Đĩa không phải là một đĩa CD âm thanh."
 
 msgid "Could not open DVD"
 msgstr "Không thể mở đĩa DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Đĩa DVD có thông tin tựa đề sai."
-
-msgid "Could not read title information for DVD."
-msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Lỗi mở thiết bị đĩa DVD « %s »."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Lỗi đặt cách tìm nơi dựa vào PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -67,12 +54,23 @@ msgstr ""
 "Không cho phép tỷ lệ đã yêu cầu %d kbit/giây cho thuộc tính « %s » nên tỷ lệ "
 "bit bị thay đổi thành %d kbit/g."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Lỗi cấu hình bộ biên mã LAME. Hãy kiểm tra các tham số biên mã."
+msgstr "Lỗi cấu hình bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số biên mã."
 
 msgid "This stream contains no data."
 msgstr "Luồng này không chứa dữ liệu."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Đĩa DVD có thông tin tựa đề sai."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Lỗi mở thiết bị đĩa DVD « %s »."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Lỗi đặt cách tìm nơi dựa vào PGC."

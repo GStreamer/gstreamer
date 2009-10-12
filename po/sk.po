@@ -1,14 +1,14 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
-"PO-Revision-Date: 2008-02-19 14:45+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
+"PO-Revision-Date: 2009-09-21 10:26+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -19,32 +19,17 @@ msgstr ""
 "X-Poedit-Language: Slovak\n"
 "X-Poedit-Country: SLOVAKIA\n"
 
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Nepodarilo sa načítať informáciu o titule DVD."
+msgstr "Nepodarilo sa čítať z CD."
 
 msgid "Could not open CD device for reading."
 msgstr "Nemohu otevřít zařízení CD pro čtení."
 
-#, fuzzy
 msgid "Disc is not an Audio CD."
-msgstr "Zařízení není otevřeno."
+msgstr "Tento disk nie je zvukové CD."
 
 msgid "Could not open DVD"
 msgstr "Nepodarilo sa otvoriť DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Chybný titul na DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Nepodarilo sa načítať informáciu o titule DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nepodarilo sa otvoriť DVD zariadenie '%s'."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Nepodarilo sa nastaviť preskočenie na báze PGC. "
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -75,17 +60,28 @@ msgstr ""
 "Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je dovolená. "
 "Bitová rýchlosť bola nastavená na %d kbit/s."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Nepodarilo sa nastaviť LAME enkodér. Skontrolujte svoje kódovacie "
+"Nepodarilo sa nastaviť TwoLAME enkodér. Skontrolujte svoje kódovacie "
 "nastavenia, prosím."
 
 msgid "This stream contains no data."
 msgstr "Tento prúd neobsahuje žiadne údaje."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Chyba vnútorného prúdu údajov."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Chybný titul na DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Nepodarilo sa načítať informáciu o titule DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nepodarilo sa otvoriť DVD zariadenie '%s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Nepodarilo sa nastaviť preskočenie na báze PGC. "
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Tento súbor je šifrovaný a nedá sa prehrať."

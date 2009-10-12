@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -28,20 +28,6 @@ msgid "Disc is not an Audio CD."
 msgstr "ଯନ୍ତ୍ର ଖୋଲାଯାଇ ନାହିଁ."
 
 msgid "Could not open DVD"
-msgstr ""
-
-msgid "Invalid title information on DVD."
-msgstr ""
-
-#, fuzzy
-msgid "Could not read title information for DVD."
-msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
-
-#, fuzzy, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
-
-msgid "Failed to set PGC based seeking."
 msgstr ""
 
 #, fuzzy, c-format
@@ -75,6 +61,14 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
+
+#, fuzzy
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."

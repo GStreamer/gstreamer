@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-02-12 14:26+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -26,19 +26,6 @@ msgstr "Диск не в формате аудио-CD."
 
 msgid "Could not open DVD"
 msgstr "Не удалось открыть DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Неверные сведения о разделах на DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Не удалось прочесть сведения о разделах для DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Ошибка при открытии DVD-устройства «%s»."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Не удалось включить PGC-позиционирование."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -76,6 +63,18 @@ msgstr "Поток не содержит данных."
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Неверные сведения о разделах на DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Не удалось прочесть сведения о разделах для DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Ошибка при открытии DVD-устройства «%s»."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Не удалось включить PGC-позиционирование."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Файл зашифрован и не может быть воспроизведён."

@@ -1,9 +1,582 @@
-=== release 0.10.12 ===
+2009-10-12 11:31:22 +0100  Jan Schmidt <thaytan@noraisin.net>
 
-2009-06-18  Jan Schmidt <jan.schmidt@sun.com>
+	* docs/plugins/gst-plugins-ugly-plugins.args.new:
+	* docs/plugins/gst-plugins-ugly-plugins.signals.new:
+	  docs: Remove files accidentally added
+	  Remove the gst-plugins-ugly-plugins.args.new and
+	  gst-plugins-ugly-plugins.signals.new files, that appear
+	  to have been accidentally added in commit
+	  f5d046a0b034f9bd7274291f7131ee5db1a30052
+
+2009-09-16 00:00:28 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Add some debugging for new segment events
+
+2009-10-11 16:18:37 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix warning in macosx snow leopard
+
+2009-10-11 16:16:09 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/mpegstream/gstmpegparse.c:
+	  mpegstream: fix warning in macosx snow leopard
+
+2009-10-11 16:14:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: fix warning in macosx snow leopard
+
+2009-10-11 16:09:11 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: fix warning on macosx snow leopard
+
+2009-10-11 16:06:25 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix warning in macosx snow leopard
+
+2009-10-08 19:58:25 +0300  René Stadler <rene.stadler@nokia.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: don't fail SEEKING query when upstream query fails for TIME format
+
+2009-10-08 11:01:03 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 19fa4f3 to a3e3ce4
+
+2009-10-07 14:22:09 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rdtmanager.c:
+	  build: fprintf, sprintf, sscanf need stdio.h
+
+2009-10-02 18:27:11 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/mad/gstmad.c:
+	  mad: add missing include to fix the build
+
+2009-10-05 12:13:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcm: whitespace fixes
+
+2009-10-04 22:51:41 +0100  Christian F.K. Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-ugly.spec.in:
+	  update spec file
+
+2009-10-02 15:22:38 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.12, "Moving Along The Highway"
+	  x264enc: adjust configure checking to changed upstream
+
+2009-10-01 18:58:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: conditionally adjust to new upstream API
+	  Fixes #596517.
+
+2009-09-24 17:49:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mpegaudioparse: prevent infinite (re)syncing
+	  Conflicts:
+	  gst/mpegaudioparse/gstmpegaudioparse.c
+
+2009-09-22 12:13:38 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: Refactor checking for sync. Make resyncing more reliable.
+	  Previously, we could get false sync relatively easily - it sometimes happened
+	  on real files. This cleans the code up a fair bit, and makes it require more
+	  confirmation that we've found valid sync before continuing.
+
+2009-09-17 16:12:29 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: ensure 2 valid headers in a row when resyncing
+
+2009-09-11 10:05:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegstream/gstdvddemux.c:
+	  dvddemux: remove bogus ifndef
+
+2009-09-05 10:23:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94f95e3 to 19fa4f3
+
+2009-09-01 12:22:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix GstIndex handling, incl. refcounting and NULL indizes
+
+2009-08-31 13:42:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubparse.c:
+	  dvdsubparse: GstAdapter is not a GstObject and should be freed with g_object_unref
+
+2009-08-24 13:59:05 -0700  David Schleef <ds@schleef.org>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	  Remove Ronald Bultje from Authors field
+	  Replaced with "GStreamer maintainers
+	  <gstreamer-devel@lists.sourceforge.net>" or just removed,
+	  depending on the number of other authors.
+
+2009-08-24 13:57:14 -0700  David Schleef <ds@schleef.org>
+
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/gstasfmux.c:
+	* gst/asfdemux/gstasfmux.h:
+	  asfdemux: Remove old non-built asfmux code
+	  Remove so people don't confuse it with the new asfmux code
+	  in -bad.
+
+2009-08-23 13:35:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Only add the MM_ACCEL_DJBFFT flag if it's defined
+	  It's not defined for older liba52 versions.
+
+2009-08-23 13:34:32 +0200  Mart Raudsepp <leio@gentoo.org>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Allow liba52 to use djbfft based IMDCT transform
+	  liba52 in a52dec-0.7.4 does not have any MMX, MMXEXT or 3DNOW based
+	  IMDCT transform acceleration. It does however have a software based
+	  acceleration using the djbfft library (D.J. Bernstein's library for
+	  fourier transforms - Extremely fast library for floating-point
+	  convolution). So allow liba52 to use it through the MM_ACCEL_DJBFFT
+	  flag.
+	  The liba52 copy in MPlayer sources does have SSE, 3dnowext, 3dnow
+	  and AltiVec implementations, but those are checked for first, and
+	  djbfft is chosen only if none of those is available - good in the
+	  case of some distributions including a port of the MPlayer changes
+	  in their system a52dec library.
+	  The down and upmix code in liba52 doesn't seem to be disturbed by
+	  this additional MM_ACCEL flag and will still use MMX, SSE or 3DNOW
+	  versions if passed from oil_cpu_get_flags (SSE currently is not).
+	  Fixes bug #592787.
+
+2009-08-17 17:31:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  amr: Use opencore-amr pkg-config files if possible
+	  This makes it possible to build the plugins when the libraries
+	  are installed at non-standard locations.
+	  Fixes bug #591348.
+
+2009-08-14 12:07:40 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: use metadata (xing, vbri) provided bytesize for conversions
+	  Metadata provided seek tables are consistent with metadata's view of
+	  total size, which typically matches real size, but need not do so
+	  (e.g. a truncated file).  Fixes seeking and position reporting
+	  in such truncated files (although duration based on metadata may then
+	  still be incorrect).
+
+2009-08-10 22:22:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump core/base requirements to released versions
+	  to avoid confusion.
+
+2009-08-04 10:44:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Remove all mentions to the id3tag plugin which was removed
+
+2009-08-01 08:43:21 +0200  Marvin Schmidt <marvin_schmidt@gmx.net>
+
+	* configure.ac:
+	  mad: make check for mad independent of the check for id3tag
+	  Fixes bug #590432.
+
+2009-07-31 00:25:43 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  rtpasfdepay: set padding size to the correct value
+	  asf packets in rtp packets should come with their padding fields
+	  set to 0 and the depayload must update them to the correct
+	  value before pushing downstream
+
+2009-07-27 20:12:20 +0200  Iago Toral <itoral@igalia.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* ext/Makefile.am:
+	* ext/amrnb/GstAmrnbEnc.prs:
+	* ext/amrnb/Makefile.am:
+	* ext/amrnb/README:
+	* ext/amrnb/amrnb.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrnb/amrnbparse.c:
+	* ext/amrnb/amrnbparse.h:
+	* ext/amrwbdec/Makefile.am:
+	* ext/amrwbdec/README:
+	* ext/amrwbdec/amrwb.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/amrwbdec/amrwbdec.h:
+	  amr: Add AMR-WB decoder and AMR-NB encoder and decoder
+	  These are based on the OpenCore codecs.
+	  Fixes bug #584890.
+
+2009-07-24 00:43:07 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fedaaee to 94f95e3
+
+2009-07-22 11:10:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* LICENSE_readme:
+	* REQUIREMENTS:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins.args.new:
+	* docs/plugins/gst-plugins-ugly-plugins.signals.new:
+	* docs/plugins/inspect/plugin-dvdnav.xml:
+	* ext/Makefile.am:
+	* ext/dvdnav/.gitignore:
+	* ext/dvdnav/Makefile.am:
+	* ext/dvdnav/README:
+	* ext/dvdnav/dvdnavsrc.c:
+	* ext/dvdnav/dvdnavsrc.h:
+	* ext/dvdnav/gst-dvd:
+	* ext/dvdread/dvdreadsrc.c:
+	* gst-plugins-ugly.spec.in:
+	* po/POTFILES.in:
+	  dvdnav: remove dvdnav plugin
+	  Remove dvdnav plugin, it has no future. resindvd is the plugin to
+	  use for dvd playback. Note that dvdnav was never really enabled
+	  in -ugly, you had to edit configure.ac to get it built.
+
+2009-06-20 14:31:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/mpeg2dec.c:
+	  mpeg2dec: Fix unused variables compiler warnings in unit test
+
+2009-06-26 15:21:12 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* autogen.sh:
+	  autogen.sh: Use printf instead of 'echo -n'. Check for automake-1.1[01]
+	  Check for more automake command variants. Use printf instead of 'echo -n'
+	  for portability
+
+2009-07-13 12:24:14 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5845b63 to fedaaee
+
+2009-02-10 13:25:54 +0000  Tim-Philipp Muller <tpm@mini.centricular.net>
+
+	* .gitignore:
+	  Make git ignore more files
+
+2009-06-29 11:10:42 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Refactor multiple packet pull.
+	  This also fixes a bug by which the first buffer (in a multi-packet mode)
+	  passed to asf_demux_parse_packet() would have a GST_BUFFER_SIZE of the
+	  full incoming buffer and not just of the single asf packet.
+	  Fixes corrupted frames introduced by latest commit.
+
+2009-06-29 10:58:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: use the right accurate field
+	  Remove accurate variable and its faulty use because the real variable is an
+	  instance variable.
+
+2009-06-28 17:48:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Sprinkle branch prediction macros accross the code
+
+2009-06-28 17:43:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Delay newsegment handling until we have a keyframe.
+	  We now have a chance for packets to be collected before we send out the
+	  newsegment. If we're not in accurate seeking (keyunit) it will set
+	  the segment start/time to the keyframe's timestamp.
+
+2009-06-28 17:39:23 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Remove useless check. We already have checked for it above.
+
+2009-06-28 17:31:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: No longer queue GOPs now that seeking is fixed.
+	  We now *always* seek to the keyframe just before our requested position.
+	  When we encounter the first keyframe and we were not accurate (therefore doing
+	  keyframe seeking), we update the segment start position to the keyframe timestamp.
+
+2009-06-28 17:42:44 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Store the accurate seeking flag
+
+2009-06-28 17:04:00 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Use the average frame duration for buffers without a duration.
+	  This will still cause some timestamp jitter, but giving a hint as to the duration
+	  rather than nothing seems to be a better idea.
+	  Also, this allows some scenarios (like remuxing with asfmux) to estimate the total
+	  duration using the accumulated packet duration (which will be correct).
+
+2009-06-28 17:02:17 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Use index entry packet count to optimize seeking.
+	  The simple index entries also contain the number of packets one needs
+	  to retrieve at a given position to get a full keyframe. We therefore
+	  use that information to retrieve all those packets in one buffer when
+	  working in pull-mode.
+
+2009-06-26 20:52:29 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Do not try to free const pointer
+	  In gst_asf_demux_chain_headers, when 'goto wrong_type' was called
+	  asfdemux tried to free a const pointer that had been cast to a
+	  normal pointer variable.
+
+2009-06-26 20:44:09 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Use presentation timestamp when searching in the index.
+	  We need to take the preroll into account... else we end up too early.
+
+2009-06-26 13:43:16 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f3bb51b to 5845b63
+
+2009-06-26 13:35:38 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Convert index entry from presentation time to timestamps.
+	  We weren't taking the preroll into account previously, meaning that we
+	  were always seeking preroll nanoseconds too early... resulting in a lot
+	  of dropped packets (which are before the start time).
+	  This brings quit a bit closer to as-fast-as-possible seeking in asf files.
+
+2009-06-26 10:58:56 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix byte array metadata handling.
+	  We basically discard byte array metadata. Should be trivial to adapt
+	  to storing the pointers if we need it later on.
+
+2009-06-26 10:41:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Handle PAR/interlaced information stored in packet payload.
+	  This is the 'other' way to store non 1/1 PAR in asf streams (by storing it
+	  in the ASF Packet payload extensions).
+
+2009-06-26 10:40:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Store/Handle global metadata (not specific to one stream).
+	  This allows us to store (and handle) PAR information which might be stored there.
+
+2009-06-25 18:24:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: fix Xing inverse seek table building
+
+2009-06-24 15:15:37 +0100  Jan Schmidt <jan.schmidt@sun.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From f3bb51b to f810030
+
+2009-06-23 16:45:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: don't try to free a NULL taglist
+
+2009-06-23 02:14:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: post tags only after we've created our source pads
+	  Post global tags only after we've added our source pads, so that
+	  tag events get sent downstream in addition to tag messages posted
+	  on the bus. This makes sure tags can be picked up automatically
+	  when transcoding, but also by tagreadbin/playbin2. Fixes #519721.
+	  While we're at it, also add a container-format tag.
+
+2009-06-23 01:37:01 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: use new bytereader functions for image tag parsing
+
+2009-06-22 18:53:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: remove some more unused variables
+
+2009-06-19 17:25:58 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: plug buffer leaking
+
+2009-06-22 17:36:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  asfdepay: guard against dropped buffers
+	  If a buffer was dropped, we might request data from the adapter that is not
+	  there and then we get a NULL buffer.
+
+2009-06-22 17:16:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: set DISCONT on streams
+	  When we receive a DISCONT as input, don't clear our complete state but simply
+	  mark a discont that will be put on the next buffer. The code will be able to
+	  handle and throw away incomplete data.
+	  Add some more debug info.
+	  Remove an unused variable.
+
+2009-06-22 17:15:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  asfdepay: set DELTA_UNIT flag correctly
+	  Only set the DELTA_UNIT flag when we are not dealing with a keyframe.
+	  Add some more debug info.
+
+2009-06-22 13:37:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix latency calculations
+	  We need to check for -1 as an invalid timestamp, not 1.
+
+2009-06-16 09:45:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mp3parse: don't put every single frame into the index
+	  Let's not put every single mp3 frame in our index, a few frames per
+	  second should be more than enough. For now use an index interval
+	  of 100ms-500ms depending on the upstream size, to keep the index at
+	  a reasonable size. Factor out the code that adds the index entry
+	  into a separate function for better code readability.
+
+2009-06-16 01:40:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mp3parse: assume seekability only if we know the upstream size
+	  While technically upstream may be seekable even if it doesn't know
+	  the exact size, I can't think of a use case where this distincation
+	  is relevant in practice, so for now just assume we're not seekable
+	  if upstream doesn't provide us with a size. Makes sure we don't
+	  build a seek index when streaming internet radio with sources that
+	  pretend to be seekable until you try to actually seek.
+
+2009-06-19 17:46:12 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-ugly.spec.in:
+	  Fix x264 requirement in SPEC file
+
+2009-06-19 15:01:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* gst/realmedia/rdtmanager.c:
+	  x264enc, rdtmanager: fix compilation with debugging disabled
+
+2009-06-11 13:48:22 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	* docs/plugins/Makefile.am:
+	  docs: Bump common. Fix comment in the docs Makefile.am
+
+2009-06-18 20:26:04 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  Back to development -> 0.10.12.1
+
+2009-06-18 08:54:17 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst-plugins-ugly.doap:
+	  Add 0.10.12 release to the doap file
+
+=== release 0.10.12 ===
+
+2009-06-18 08:34:54 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Release 0.10.12
+
+2009-06-18 08:34:46 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/bg.po:
+	* po/id.po:
+	* po/it.po:
+	* po/nl.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2009-06-18 08:04:40 +0100  Jan Schmidt <thaytan@noraisin.net>
 

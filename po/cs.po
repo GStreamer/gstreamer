@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-03-16 03:46+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -29,19 +29,6 @@ msgstr "Disk není zvukovým CD."
 
 msgid "Could not open DVD"
 msgstr "Nezdařilo se otevření DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Neplatná informace o titulu na DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Nezdařilo se čtení informace o titulu u DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nezdařilo se otevření zařízení DVD \"%s\"."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Nezdařilo se připravit hledání založené na PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -81,3 +68,15 @@ msgstr "Tento proud neobsahuje žádná data."
 
 msgid "Internal data stream error."
 msgstr "Interní chyba datového proudu."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Neplatná informace o titulu na DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Nezdařilo se čtení informace o titulu u DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nezdařilo se otevření zařízení DVD \"%s\"."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Nezdařilo se připravit hledání založené na PGC."

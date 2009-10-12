@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-04-20 01:48+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -28,19 +28,6 @@ msgstr "A lemez nem hang CD."
 
 msgid "Could not open DVD"
 msgstr "A DVD nem nyitható meg"
-
-msgid "Invalid title information on DVD."
-msgstr "A DVD címinformációi érvénytelenek."
-
-msgid "Could not read title information for DVD."
-msgstr "A DVD címinformációi nem olvashatók."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nem nyitható meg a DVD eszköz („%s”)."
-
-msgid "Failed to set PGC based seeking."
-msgstr "A PGC alapú keresés beállítása meghiúsult."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -79,3 +66,15 @@ msgstr "Ez az adatfolyam nem tartalmaz adatokat."
 
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "A DVD címinformációi érvénytelenek."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "A DVD címinformációi nem olvashatók."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nem nyitható meg a DVD eszköz („%s”)."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "A PGC alapú keresés beállítása meghiúsult."

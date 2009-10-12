@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2008-05-14 02:52+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -30,19 +30,6 @@ msgstr ""
 
 msgid "Could not open DVD"
 msgstr "Nepavyko atverti DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Netaisyklinga DVD įrašo informacija."
-
-msgid "Could not read title information for DVD."
-msgstr "Nepavyko perskaityti DVD įrašo informacijos."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nepavyko atverti DVD įrenginio „%s“."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Nepavyko nustatyti PGC paieškos."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -83,6 +70,18 @@ msgstr "Šiame sraute nėra duomenų."
 
 msgid "Internal data stream error."
 msgstr ""
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Netaisyklinga DVD įrašo informacija."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Nepavyko perskaityti DVD įrašo informacijos."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nepavyko atverti DVD įrenginio „%s“."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Nepavyko nustatyti PGC paieškos."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Šis failas užšifruotas ir negali būti parodytas."

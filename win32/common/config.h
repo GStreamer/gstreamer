@@ -196,13 +196,13 @@
 #undef PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.12.1"
+#undef PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.12.2"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME "gst-plugins-ugly"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "0.10.12.1"
+#undef PACKAGE_VERSION "0.10.12.2"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -226,7 +226,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.12.1"
+#define VERSION "0.10.12.2"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

@@ -6,10 +6,10 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
-"PO-Revision-Date: 2009-01-08 22:44+0900\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
+"PO-Revision-Date: 2009-07-27 12:04+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -17,29 +17,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not read from CD."
-msgstr "CDを読むことができません"
+msgstr "CDを読むことができません。"
 
 msgid "Could not open CD device for reading."
-msgstr "読み込み用にCDデバイスを開くことができません"
+msgstr "読み込み用にCDデバイスを開くことができません。"
 
 msgid "Disc is not an Audio CD."
-msgstr "ディスクは音声CDではありません"
+msgstr "ディスクは音声CDではありません。"
 
 msgid "Could not open DVD"
 msgstr "DVDを開くことができません"
-
-msgid "Invalid title information on DVD."
-msgstr "DVD上のタイトル情報が不正です"
-
-msgid "Could not read title information for DVD."
-msgstr "DVDからタイトル情報を読み込むことができません"
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "DVDデバイス '%s' を開くことができません"
-
-msgid "Failed to set PGC based seeking."
-msgstr "プログラム・チェーン (PGC) のシークに失敗しました"
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -47,7 +34,7 @@ msgstr "DVDタイトル %d を開くことができません"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "DVDタイトル %d のチャプター %d へ移動できません"
+msgstr "DVDタイトル %2$d のチャプター %1$d へ移動できません"
 
 #, c-format
 msgid ""
@@ -55,10 +42,11 @@ msgid ""
 "element"
 msgstr ""
 "DVDタイトル %d を開くことが出来ません。このエレメントはインタラクティブタイト"
-"ルをサポートしていません"
+"ルをサポートしていません。"
 
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
+msgstr ""
+"LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください。"
 
 #, c-format
 msgid ""
@@ -66,14 +54,27 @@ msgid ""
 "bitrate was changed to %d kbit/s."
 msgstr ""
 "要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そのた"
-"めビットレートは %d kbit/s へ変更されました"
+"めビットレートは %d kbit/s へ変更されました。"
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
+msgstr ""
+"TwoLAMEエンコーダーの構成に失敗しました。エンコード用のパラメータをチェックし"
+"てください。"
 
 msgid "This stream contains no data."
-msgstr "このストリームはデータを含んでいません"
+msgstr "このストリームはデータを含んでいません。"
 
 msgid "Internal data stream error."
-msgstr "内部データストリームエラー"
+msgstr "内部データストリームエラー。"
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "DVD上のタイトル情報が不正です。"
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "DVDからタイトル情報を読み込むことができません。"
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "DVDデバイス '%s' を開くことができません。"
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "プログラム・チェーン (PGC) のシークに失敗しました。"

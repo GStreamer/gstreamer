@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-04-13 03:56+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -29,19 +29,6 @@ msgstr "Disk er ikke en lyd-cd."
 
 msgid "Could not open DVD"
 msgstr "Kunne ikke åbne dvd"
-
-msgid "Invalid title information on DVD."
-msgstr "Ugyldig titelinformation på dvd."
-
-msgid "Could not read title information for DVD."
-msgstr "Kunne ikke læse titelinformation på dvd."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Kunne ikke åbne dvd-enhed %s."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Mislykkedes i at indstille PGC-baseret søgning."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -80,6 +67,18 @@ msgstr "Denne strøm indeholder ingen data."
 
 msgid "Internal data stream error."
 msgstr "Intern datastrømfejl."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ugyldig titelinformation på dvd."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kunne ikke læse titelinformation på dvd."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kunne ikke åbne dvd-enhed %s."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Mislykkedes i at indstille PGC-baseret søgning."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Filen er krypteret og kan ikke afspilles."

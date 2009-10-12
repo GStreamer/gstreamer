@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2008-11-13 18:18+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -28,19 +28,6 @@ msgstr "Id-diska mijhiex CD tal-awdjo."
 
 msgid "Could not open DVD"
 msgstr "Ma nistax niftaħ DVD."
-
-msgid "Invalid title information on DVD."
-msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
-
-msgid "Could not read title information for DVD."
-msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -80,3 +67,15 @@ msgstr "L-istream ma fiha l-ebda data."
 
 msgid "Internal data stream error."
 msgstr "Problema interna fid-data stream."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."

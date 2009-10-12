@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2008-08-22 11:49+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -27,19 +27,6 @@ msgstr "Le disque n'est pas un CD audio."
 
 msgid "Could not open DVD"
 msgstr "Impossible d'ouvrir le DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Le DVD contient des informations de titre non valides."
-
-msgid "Could not read title information for DVD."
-msgstr "Impossible de lire les informations de titre sur le DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "L'ouverture du lecteur DVD « %s » a échoué."
-
-msgid "Failed to set PGC based seeking."
-msgstr "La définition du positionnement basé sur PGC a échoué."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -79,3 +66,15 @@ msgstr "Ce flux ne contient aucune donnée."
 
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Le DVD contient des informations de titre non valides."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Impossible de lire les informations de titre sur le DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "L'ouverture du lecteur DVD « %s » a échoué."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "La définition du positionnement basé sur PGC a échoué."

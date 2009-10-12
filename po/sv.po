@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-03-10 16:12+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -26,19 +26,6 @@ msgstr "Skivan är inte en ljud-cd."
 
 msgid "Could not open DVD"
 msgstr "Kunde inte öppna dvd"
-
-msgid "Invalid title information on DVD."
-msgstr "Ogiltig titelinformation på dvd."
-
-msgid "Could not read title information for DVD."
-msgstr "Kunde inte läsa titelinformation för dvd."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -79,6 +66,18 @@ msgstr "Den här strömmen innehåller inget data."
 
 msgid "Internal data stream error."
 msgstr "Fel i intern dataström."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ogiltig titelinformation på dvd."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kunde inte läsa titelinformation för dvd."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Den här filen är krypterad och kan inte spelas upp."

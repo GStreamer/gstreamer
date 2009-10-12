@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-04-04 13:32+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -28,19 +28,6 @@ msgstr "El disco no es un CD de sonido."
 
 msgid "Could not open DVD"
 msgstr "No se pudo abrir el DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Información del título del DVD no válida."
-
-msgid "Could not read title information for DVD."
-msgstr "No se pudo leer la información del título para el DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Falló abrir el dispositivo DVD «%s»."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Falló al establecer la búsqueda basada en PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -81,6 +68,18 @@ msgstr "Este medio no contiene datos."
 
 msgid "Internal data stream error."
 msgstr "Error del flujo de datos interno."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Información del título del DVD no válida."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "No se pudo leer la información del título para el DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Falló abrir el dispositivo DVD «%s»."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Falló al establecer la búsqueda basada en PGC."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Este archivo está cifrado y no se puede reproducir."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2007-07-05 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -30,19 +30,6 @@ msgstr ""
 
 msgid "Could not open DVD"
 msgstr "Не вдається відкрити DVD"
-
-msgid "Invalid title information on DVD."
-msgstr ""
-
-msgid "Could not read title information for DVD."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Не вдається відкрити заголовок DVD %d"
-
-msgid "Failed to set PGC based seeking."
-msgstr ""
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -80,6 +67,10 @@ msgstr "Потік не містить даних."
 
 msgid "Internal data stream error."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Не вдається відкрити заголовок DVD %d"
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Файл зашифрований та не може бути відтворений."

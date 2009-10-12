@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-06-15 07:48+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -27,19 +27,6 @@ msgstr "Дискът не е аудио CD."
 
 msgid "Could not open DVD"
 msgstr "DVD-то не може да бъде отворено"
-
-msgid "Invalid title information on DVD."
-msgstr "Неправилна заглавна информация в DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Заглавната информация в DVD не може да бъде прочетена."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Устройството за DVD — „%s“, не може да бъде отворено."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Не може да се зададе търсене на базата на PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -78,3 +65,15 @@ msgstr "Потокът не съдържа данни."
 
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка в потока от данни."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Неправилна заглавна информация в DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Заглавната информация в DVD не може да бъде прочетена."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Устройството за DVD — „%s“, не може да бъде отворено."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Не може да се зададе търсене на базата на PGC."

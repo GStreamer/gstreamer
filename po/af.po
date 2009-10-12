@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -27,20 +27,6 @@ msgid "Disc is not an Audio CD."
 msgstr "Toestel is nie oop nie."
 
 msgid "Could not open DVD"
-msgstr ""
-
-msgid "Invalid title information on DVD."
-msgstr ""
-
-#, fuzzy
-msgid "Could not read title information for DVD."
-msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#, fuzzy, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
-
-msgid "Failed to set PGC based seeking."
 msgstr ""
 
 #, fuzzy, c-format
@@ -74,6 +60,14 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#, fuzzy
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kon nie lêer \"%s\" oopmaak om in te skryf nie."

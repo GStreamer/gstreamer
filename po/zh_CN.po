@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-06-12 23:12+0800\n"
 "Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -28,19 +28,6 @@ msgstr "盘类型不是音频CD。"
 
 msgid "Could not open DVD"
 msgstr "无法打开 DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "无效的 DVD 标题信息。"
-
-msgid "Could not read title information for DVD."
-msgstr "无法读取为 DVD 读取标题信息。"
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "无法打开 DVD 设备 '%s'。"
-
-msgid "Failed to set PGC based seeking."
-msgstr "设置基于 PGC 的定位失败。"
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -73,3 +60,15 @@ msgstr "这个串流中没有包含数据."
 
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "无效的 DVD 标题信息。"
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "无法读取为 DVD 读取标题信息。"
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "无法打开 DVD 设备 '%s'。"
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "设置基于 PGC 的定位失败。"

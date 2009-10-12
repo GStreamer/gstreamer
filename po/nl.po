@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-06-14 23:07+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -28,19 +28,6 @@ msgstr "De schrijf is geen audio-CD"
 
 msgid "Could not open DVD"
 msgstr "Kan DVD niet openen"
-
-msgid "Invalid title information on DVD."
-msgstr "Ongeldige titelinformatie op de DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Kan de titelinformatie van de DVD niet lezen."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Kan het DVD-apparaat '%s' niet openen."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Kan op PGC gebaseerd zoeken niet instellen."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -79,3 +66,15 @@ msgstr "Deze stroom bevat geen gegevens."
 
 msgid "Internal data stream error."
 msgstr "Fout met interne gegevensstroom."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ongeldige titelinformatie op de DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kan de titelinformatie van de DVD niet lezen."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kan het DVD-apparaat '%s' niet openen."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Kan op PGC gebaseerd zoeken niet instellen."

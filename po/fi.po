@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-03-10 20:41+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -32,19 +32,6 @@ msgstr "Levy ei ole ääni-CD."
 
 msgid "Could not open DVD"
 msgstr "DVD:tä ei voitu avata"
-
-msgid "Invalid title information on DVD."
-msgstr "DVD:llä on virheellisiä ohjelmatietoja."
-
-msgid "Could not read title information for DVD."
-msgstr "Ohjelmatietoja ei voitu lukea DVD:ltä."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "DVD-laitetta \"%s\" ei voitu avata."
-
-msgid "Failed to set PGC based seeking."
-msgstr "PGC-pohjaista siirtymistä ei voitu asettaa."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -81,6 +68,18 @@ msgstr "Virta ei sisällä tietoa."
 
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "DVD:llä on virheellisiä ohjelmatietoja."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Ohjelmatietoja ei voitu lukea DVD:ltä."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "DVD-laitetta \"%s\" ei voitu avata."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "PGC-pohjaista siirtymistä ei voitu asettaa."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Tiedosto on salattu eikä sitä voi toistaa."

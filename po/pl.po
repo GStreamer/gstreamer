@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-06-18 08:03+0100\n"
+"POT-Creation-Date: 2009-10-12 12:41+0100\n"
 "PO-Revision-Date: 2009-03-10 21:42+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -25,19 +25,6 @@ msgstr "Płyta nie jest płytą CD Audio."
 
 msgid "Could not open DVD"
 msgstr "Nie udało się otworzyć DVD"
-
-msgid "Invalid title information on DVD."
-msgstr "Błędna informacja tytułowa na DVD."
-
-msgid "Could not read title information for DVD."
-msgstr "Nie udało się odczytać informacji tytułowej dla DVD."
-
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
-
-msgid "Failed to set PGC based seeking."
-msgstr "Nie udało się ustawić przemieszczania opartego na PGC."
 
 #, c-format
 msgid "Could not open DVD title %d"
@@ -78,3 +65,15 @@ msgstr "Ten strumień nie zawiera danych."
 
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
+
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Błędna informacja tytułowa na DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Nie udało się odczytać informacji tytułowej dla DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Nie udało się ustawić przemieszczania opartego na PGC."
