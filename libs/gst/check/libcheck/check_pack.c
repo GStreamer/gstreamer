@@ -36,6 +36,14 @@
 #include "check_impl.h"
 #include "check_pack.h"
 
+#ifdef HAVE_PTHREAD_H
+#include <pthread.h>
+pthread_mutex_t lock_mutex = PTHREAD_MUTEX_INITIALIZER;
+#else
+#define pthread_mutex_lock(arg)
+#define pthread_mutex_unlock(arg)
+#endif
+
 /* typedef an unsigned int that has at least 4 bytes */
 typedef uint32_t ck_uint32;
 
@@ -260,8 +268,12 @@ static void
 check_type (int type, const char *file, int line)
 {
   if (type < 0 || type >= CK_MSG_LAST)
-    eprintf ("Bad message type arg", file, line);
+    eprintf ("Bad message type arg %d", file, line, type);
 }
+
+#ifdef HAVE_PTHREAD_H
+pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 void
 ppack (int fdes, enum ck_msg_type type, CheckMsg * msg)
@@ -271,7 +283,9 @@ ppack (int fdes, enum ck_msg_type type, CheckMsg * msg)
   ssize_t r;
 
   n = pack (type, &buf, msg);
+  pthread_mutex_lock (&mutex_lock);
   r = write (fdes, buf, n);
+  pthread_mutex_unlock (&mutex_lock);
   if (r == -1)
     eprintf ("Error in call to write:", __FILE__, __LINE__ - 2);
 
