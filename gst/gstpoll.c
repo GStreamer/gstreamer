@@ -82,6 +82,13 @@
 /* OS/X needs this because of bad headers */
 #include <string.h>
 
+/* The poll() emulation on OS/X doesn't handle fds=NULL, nfds=0,
+ * so we prefer our own poll emulation.
+ */
+#if defined(BROKEN_POLL)
+#undef HAVE_POLL
+#endif
+
 #include "gstpoll.h"
 
 #define GST_CAT_DEFAULT GST_CAT_POLL
