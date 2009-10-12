@@ -395,6 +395,36 @@ AC_CHECK_FUNCS([poll])
 AC_CHECK_FUNCS([ppoll])
 AC_CHECK_FUNCS([pselect])
 
+dnl ****************************************
+dnl *** GLib POLL* compatibility defines ***
+dnl ****************************************
+
+AC_MSG_CHECKING([for broken poll])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+	#include <stdlib.h>
+	#include <fcntl.h>
+	#include <poll.h>
+	#ifdef HAVE_SYS_POLL_H
+	#include <sys/poll.h>
+	#endif
+	int main(void) {
+	  struct pollfd fds[1];
+	  int fd;
+	  fd = open("/dev/null", 1);
+	  fds[0].fd = fd;
+	  fds[0].events = POLLIN;
+	  fds[0].revents = 0;
+	  if (poll(fds, 1, 0) < 0 || (fds[0].revents & POLLNVAL) != 0) {
+		exit(1);  /* Does not work for devices -- fail */
+	  }
+	  exit(0);
+	}]])],
+  [broken_poll=no],
+  [broken_poll=yes
+   AC_DEFINE(BROKEN_POLL,1,[poll doesn't work on devices])],
+  [broken_poll="no (cross compiling)"])
+AC_MSG_RESULT($broken_poll)
+
 dnl check for mmap()
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
