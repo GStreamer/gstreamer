@@ -297,7 +297,7 @@ pollfd_to_fd_set (GstPoll * set, fd_set * readfds, fd_set * writefds,
         FD_SET (pfd->fd, writefds);
       if (pfd->events)
         FD_SET (pfd->fd, errorfds);
-      if (pfd->fd > max_fd)
+      if (pfd->fd > max_fd && (pfd->events & (POLLIN | POLLOUT)))
         max_fd = pfd->fd;
     }
   }
