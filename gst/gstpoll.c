@@ -84,6 +84,8 @@
 
 #include "gstpoll.h"
 
+#define GST_CAT_DEFAULT GST_CAT_POLL
+
 #ifndef G_OS_WIN32
 /* the poll/select call is also performed on a control socket, that way
  * we can send special commands to control it

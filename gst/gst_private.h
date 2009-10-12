@@ -157,6 +157,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
 GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
 GST_EXPORT GstDebugCategory *GST_CAT_QOS;
 GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
+GST_EXPORT GstDebugCategory *GST_CAT_POLL;
 
 #else
 
@@ -192,6 +193,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
 #define GST_CAT_REGISTRY         NULL
 #define GST_CAT_QOS              NULL
 #define GST_CAT_TYPES            NULL
+#define GST_CAT_POLL             NULL
 
 #endif
 
