@@ -104,7 +104,6 @@ GST_BOILERPLATE (GstMimEnc, gst_mim_enc, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_mim_enc_base_init (gpointer klass)
 {
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
@@ -121,9 +120,12 @@ gst_mim_enc_base_init (gpointer klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "MimEnc",
+  gst_element_class_set_details_simple (element_class,
+      "Mimic Encoder",
       "Codec/Encoder/Video",
-      "Mimic encoder", "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>");
+      "MSN Messenger compatible Mimic video encoder element",
+      "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>,"
+      "Olivier Crête <olivier.crete@collabora.co.uk");
 }
 
 static void

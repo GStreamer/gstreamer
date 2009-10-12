@@ -76,7 +76,6 @@ GST_BOILERPLATE (GstMimDec, gst_mim_dec, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_mim_dec_base_init (gpointer klass)
 {
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -84,13 +83,15 @@ gst_mim_dec_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (element_class, "MimDec",
+  gst_element_class_set_details_simple (element_class,
+      "Mimic Decoder",
       "Codec/Decoder/Video",
-      "Mimic decoder",
+      "MSN Messenger compatible Mimic video decoder element",
       "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
       "Rob Taylor <robtaylor@fastmail.fm>, "
       "Philippe Khalaf <burger@speedy.org>, "
-      "Ole André Vadla Ravnås <oleavr@gmail.com>");
+      "Ole André Vadla Ravnås <oleavr@gmail.com>,"
+      "Olivier Crête <olivier.crete@collabora.co.uk");
 }
 
 static void
