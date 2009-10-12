@@ -674,9 +674,12 @@ gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jbuf, gboolean active,
     JBUF_SIGNAL (priv);
   }
   if ((head = rtp_jitter_buffer_peek (priv->jbuf))) {
-    last_out = GST_BUFFER_TIMESTAMP (head);
-  } else
+    /* head buffer timestamp and offset gives our output time */
+    last_out = GST_BUFFER_TIMESTAMP (head) + priv->ts_offset;
+  } else {
+    /* use last known time when the buffer is empty */
     last_out = priv->last_out_time;
+  }
   JBUF_UNLOCK (priv);
 
   return last_out;
