@@ -135,10 +135,6 @@ gst_mim_dec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 
   mimdec->dec = NULL;
   mimdec->buffer_size = -1;
-  mimdec->have_header = FALSE;
-  mimdec->payload_size = -1;
-  mimdec->current_ts = -1;
-  mimdec->need_newsegment = TRUE;
 }
 
 static void
@@ -166,6 +162,8 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime in_time = GST_BUFFER_TIMESTAMP (buf);
   GstEvent *event = NULL;
   gboolean result = TRUE;
+  guint32 payload_size;
+  guint32 current_ts;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
 
@@ -177,65 +175,57 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_OBJECT_LOCK (mimdec);
 
   /* do we have enough bytes to read a header */
-  while (gst_adapter_available (mimdec->adapter) >=
-      (mimdec->have_header ? mimdec->payload_size : 24)) {
-    if (!mimdec->have_header) {
-      header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
-      header_size = header[0];
-      if (header_size != 24) {
-        gst_adapter_flush (mimdec->adapter, 24);
-        GST_ELEMENT_ERROR (mimdec, STREAM, DECODE, (NULL),
-            ("invalid frame: header size %d incorrect", header_size));
-        res = GST_FLOW_ERROR;
-        goto out;
-      }
-
-      if (header[1] == 1) {
-        /* This is a a paused frame, skip it */
-        gst_adapter_flush (mimdec->adapter, 24);
-        continue;
-      }
-
-      fourcc = GUINT32_FROM_LE (*((guint32 *) (header + 12)));
-      if (GST_MAKE_FOURCC ('M', 'L', '2', '0') != fourcc) {
-        gst_adapter_flush (mimdec->adapter, 24);
-        GST_ELEMENT_ERROR (mimdec, STREAM, WRONG_TYPE, (NULL),
-            ("invalid frame: unknown FOURCC code %X (%" GST_FOURCC_FORMAT ")",
-                fourcc, GST_FOURCC_ARGS (fourcc)));
-        res = GST_FLOW_ERROR;
-        goto out;
-      }
-
-      mimdec->payload_size = GUINT32_FROM_LE (*((guint32 *) (header + 8)));
-
-      mimdec->current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
-
-      GST_DEBUG ("Got packet, payload size %d", mimdec->payload_size);
-
+  while (gst_adapter_available (mimdec->adapter) >= 24) {
+    header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
+    header_size = header[0];
+    if (header_size != 24) {
       gst_adapter_flush (mimdec->adapter, 24);
-
-      mimdec->have_header = TRUE;
-    }
-
-    if (gst_adapter_available (mimdec->adapter) < mimdec->payload_size) {
+      GST_ELEMENT_ERROR (mimdec, STREAM, DECODE, (NULL),
+          ("invalid frame: header size %d incorrect", header_size));
+      res = GST_FLOW_ERROR;
       goto out;
     }
 
-    frame_body =
-        (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
+    if (header[1] == 1) {
+      /* This is a a paused frame, skip it */
+      gst_adapter_flush (mimdec->adapter, 24);
+      continue;
+    }
+
+    fourcc = GUINT32_FROM_LE (*((guint32 *) (header + 12)));
+    if (GST_MAKE_FOURCC ('M', 'L', '2', '0') != fourcc) {
+      gst_adapter_flush (mimdec->adapter, 24);
+      GST_ELEMENT_ERROR (mimdec, STREAM, WRONG_TYPE, (NULL),
+          ("invalid frame: unknown FOURCC code %X (%" GST_FOURCC_FORMAT ")",
+              fourcc, GST_FOURCC_ARGS (fourcc)));
+      res = GST_FLOW_ERROR;
+      goto out;
+    }
+
+    payload_size = GUINT32_FROM_LE (*((guint32 *) (header + 8)));
+
+    current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
+
+    GST_DEBUG ("Got packet, payload size %d", payload_size);
+
+    if (gst_adapter_available (mimdec->adapter) < payload_size + 24)
+      goto out;
+
+    /* We have a whole packet and have read the header, lets flush it out */
+    gst_adapter_flush (mimdec->adapter, 24);
+
+    frame_body = (guchar *) gst_adapter_peek (mimdec->adapter, payload_size);
 
     if (mimdec->buffer_size < 0) {
       /* Check if its a keyframe, otherwise skip it */
       if (GUINT32_FROM_LE (*((guint32 *) (frame_body + 12))) != 0) {
-        gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-        mimdec->have_header = FALSE;
+        gst_adapter_flush (mimdec->adapter, payload_size);
         res = GST_FLOW_OK;
         goto out;
       }
 
       if (!mimic_decoder_init (mimdec->dec, frame_body)) {
-        gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-        mimdec->have_header = FALSE;
+        gst_adapter_flush (mimdec->adapter, payload_size);
         GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
             ("mimic_decoder_init error"));
         res = GST_FLOW_ERROR;
@@ -244,8 +234,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
 
       if (!mimic_get_property (mimdec->dec, "buffer_size",
               &mimdec->buffer_size)) {
-        gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-        mimdec->have_header = FALSE;
+        gst_adapter_flush (mimdec->adapter, payload_size);
         GST_ELEMENT_ERROR (mimdec, LIBRARY, INIT, (NULL),
             ("mimic_get_property('buffer_size') error"));
         res = GST_FLOW_ERROR;
@@ -260,7 +249,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
             in_time, -1, 0);
       else
         event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-            mimdec->current_ts * GST_MSECOND, -1, 0);
+            current_ts * GST_MSECOND, -1, 0);
     }
     mimdec->need_newsegment = FALSE;
     GST_OBJECT_UNLOCK (mimdec);
@@ -281,8 +270,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
             GST_BUFFER_DATA (out_buf))) {
       GST_WARNING_OBJECT (mimdec, "mimic_decode_frame error\n");
 
-      gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-      mimdec->have_header = FALSE;
+      gst_adapter_flush (mimdec->adapter, payload_size);
 
       gst_buffer_unref (out_buf);
       GST_ELEMENT_ERROR (mimdec, STREAM, DECODE, (NULL),
@@ -294,13 +282,13 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
     if (GST_CLOCK_TIME_IS_VALID (in_time))
       GST_BUFFER_TIMESTAMP (out_buf) = in_time;
     else
-      GST_BUFFER_TIMESTAMP (out_buf) = mimdec->current_ts * GST_MSECOND;
+      GST_BUFFER_TIMESTAMP (out_buf) = current_ts * GST_MSECOND;
 
     mimic_get_property (mimdec->dec, "width", &width);
     mimic_get_property (mimdec->dec, "height", &height);
     GST_DEBUG_OBJECT (mimdec,
         "got WxH %d x %d payload size %d buffer_size %d",
-        width, height, mimdec->payload_size, mimdec->buffer_size);
+        width, height, payload_size, mimdec->buffer_size);
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, 24,
         "depth", G_TYPE_INT, 24,
@@ -316,8 +304,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
     res = gst_pad_push (mimdec->srcpad, out_buf);
     GST_OBJECT_LOCK (mimdec);
 
-    gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
-    mimdec->have_header = FALSE;
+    gst_adapter_flush (mimdec->adapter, payload_size);
   }
 
 out:
@@ -367,9 +354,6 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
         mimdec->buffer_size = -1;
-        mimdec->have_header = FALSE;
-        mimdec->payload_size = -1;
-        mimdec->current_ts = -1;
       }
       GST_OBJECT_UNLOCK (element);
       break;

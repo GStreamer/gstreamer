@@ -54,9 +54,6 @@ struct _GstMimDec
   MimCtx *dec;
 
   gint buffer_size;
-  gboolean have_header;
-  guint32 payload_size;
-  guint32 current_ts;
 
   gboolean need_newsegment;
 };
