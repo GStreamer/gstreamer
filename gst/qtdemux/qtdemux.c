@@ -3892,7 +3892,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         }
         /* stps marks partial sync frames like open GOP I-Frames */
         if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps, &stps)) {
-          guint32 n_sample_syncs;
+          guint32 n_sample_syncs = 0;
 
           if (!qt_atom_parser_skip (&stps, 4))
             goto corrupt_file;
