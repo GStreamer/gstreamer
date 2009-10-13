@@ -49,12 +49,8 @@ struct _GstMimDec
 
   /* Protected by stream lock */
   GstAdapter *adapter;
-
-  /* Protected by object lock */
   MimCtx *dec;
-
   gint buffer_size;
-
   gboolean need_newsegment;
 };
 

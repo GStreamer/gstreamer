@@ -172,7 +172,6 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
 
   gst_adapter_push (mimdec->adapter, buf);
 
-  GST_OBJECT_LOCK (mimdec);
 
   /* do we have enough bytes to read a header */
   while (gst_adapter_available (mimdec->adapter) >= 24) {
@@ -252,11 +251,11 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
             current_ts * GST_MSECOND, -1, 0);
     }
     mimdec->need_newsegment = FALSE;
-    GST_OBJECT_UNLOCK (mimdec);
+
     if (event)
       result = gst_pad_push_event (mimdec->srcpad, event);
     event = NULL;
-    GST_OBJECT_LOCK (mimdec);
+
     if (!result) {
       GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
       res = GST_FLOW_ERROR;
@@ -300,15 +299,12 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
         "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
-    GST_OBJECT_UNLOCK (mimdec);
     res = gst_pad_push (mimdec->srcpad, out_buf);
-    GST_OBJECT_LOCK (mimdec);
 
     gst_adapter_flush (mimdec->adapter, payload_size);
   }
 
 out:
-  GST_OBJECT_UNLOCK (mimdec);
   gst_object_unref (mimdec);
 
   return res;
@@ -333,9 +329,7 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
       break;
 
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_OBJECT_LOCK (element);
       mimdec->need_newsegment = TRUE;
-      GST_OBJECT_UNLOCK (element);
       break;
     default:
       break;
@@ -349,13 +343,11 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_OBJECT_LOCK (element);
       if (mimdec->dec != NULL) {
         mimic_close (mimdec->dec);
         mimdec->dec = NULL;
         mimdec->buffer_size = -1;
       }
-      GST_OBJECT_UNLOCK (element);
       break;
     default:
       break;
@@ -392,16 +384,12 @@ gst_mim_dec_sink_event (GstPad * pad, GstEvent * event)
       if (rate <= 0.0)
         goto newseg_wrong_rate;
 
-      GST_OBJECT_LOCK (mimdec);
       mimdec->need_newsegment = FALSE;
-      GST_OBJECT_UNLOCK (mimdec);
 
       break;
     }
     case GST_EVENT_FLUSH_STOP:
-      GST_OBJECT_LOCK (mimdec);
       mimdec->need_newsegment = TRUE;
-      GST_OBJECT_UNLOCK (mimdec);
 
       break;
     default:
