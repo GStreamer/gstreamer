@@ -5206,6 +5206,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
   gboolean result;
+  gboolean is_latency = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -5242,6 +5243,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         goto flushed;
       }
       break;
+    case GST_EVENT_LATENCY:
+      is_latency = TRUE;
     default:
       while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         /* block the event as long as the pad is blocked */
@@ -5295,6 +5298,10 @@ not_linked:
     GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
     gst_event_unref (event);
     GST_OBJECT_UNLOCK (pad);
+
+    if (is_latency)             /* unlinked pads should not influence latency configuration */
+      return TRUE;
+
     return FALSE;
   }
 flushed:
