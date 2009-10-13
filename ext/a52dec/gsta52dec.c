@@ -742,10 +742,12 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       ret = gst_a52dec_chain_raw (pad, subbuf);
     }
   } else {
+    gst_buffer_ref (buf);
     ret = gst_a52dec_chain_raw (pad, buf);
   }
 
 done:
+  gst_buffer_unref (buf);
   return ret;
 
 /* ERRORS */
@@ -753,12 +755,14 @@ not_enough_data:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
         ("Insufficient data in buffer. Can't determine first_acess"));
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 bad_first_access_parameter:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
         ("Bad first_access parameter (%d) in buffer", first_access));
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 }
