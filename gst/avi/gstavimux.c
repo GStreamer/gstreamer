@@ -1803,6 +1803,10 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   }
 
   if (avipad->is_video) {
+    /* the suggested buffer size is the max frame size */
+    if (avipad->hdr.bufsize < GST_BUFFER_SIZE (data))
+      avipad->hdr.bufsize = GST_BUFFER_SIZE (data);
+
     avimux->total_frames++;
 
     if (avimux->is_bigfile) {
