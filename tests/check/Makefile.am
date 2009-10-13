@@ -119,7 +119,8 @@ check_PROGRAMS = \
 	libs/tag \
 	libs/video \
 	pipelines/simple-launch-lines \
-	pipelines/streamheader
+	pipelines/streamheader \
+	pipelines/basetime
 
 # TORTURE_TO_FIX = \
 #       elements/adder
