@@ -393,17 +393,20 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   if (!faad->packetised)
     gst_faad_send_tags (faad);
 
+  gst_object_unref (faad);
   return TRUE;
 
   /* ERRORS */
 wrong_length:
   {
     GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
+    gst_object_unref (faad);
     return FALSE;
   }
 init_failed:
   {
     GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
+    gst_object_unref (faad);
     return FALSE;
   }
 }
