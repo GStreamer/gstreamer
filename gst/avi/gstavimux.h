@@ -46,6 +46,9 @@ G_BEGIN_DECLS
 /* this allows indexing up to 64GB avi file */
 #define GST_AVI_SUPERINDEX_COUNT    32
 
+/* max size */
+#define GST_AVI_MAX_SIZE    0x40000000
+
 typedef struct _gst_avi_superindex_entry {
   guint64 offset;
   guint32 size;

@@ -1773,7 +1773,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
 
   /* need to restart or start a next avix chunk ? */
   if ((avimux->is_bigfile ? avimux->datax_size : avimux->data_size) +
-      GST_BUFFER_SIZE (data) > 1024 * 1024 * 2000) {
+      GST_BUFFER_SIZE (data) > GST_AVI_MAX_SIZE) {
     if (avimux->enable_large_avi) {
       if ((res = gst_avi_mux_bigfile (avimux, FALSE)) != GST_FLOW_OK)
         return res;
