@@ -21,7 +21,8 @@ libgstplaybin_la_SOURCES = \
 	gstinputselector.c \
 	gstscreenshot.c \
 	gststreaminfo.c \
-	gststreamselector.c
+	gststreamselector.c \
+	gstsubtitleoverlay.c
 
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
@@ -29,6 +30,7 @@ libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplaybin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
 libgstplaybin_la_LIBTOOLFLAGS = --tag=disable-static
 
@@ -59,7 +61,8 @@ noinst_HEADERS = \
 	gstplay-enum.h \
 	gstscreenshot.h \
 	gststreamselector.h \
-	gstrawcaps.h
+	gstrawcaps.h \
+	gstsubtitleoverlay.h
 
 noinst_PROGRAMS = test decodetest test2 test3 test4 test5 test6 test7
 
