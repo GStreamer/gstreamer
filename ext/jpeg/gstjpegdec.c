@@ -902,7 +902,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_DEBUG_OBJECT (dec, "buffer has DISCONT flag set");
     dec->discont = TRUE;
-    if (!dec->packetized) {
+    if (!dec->packetized && dec->tempbuf != NULL) {
       GST_WARNING_OBJECT (dec, "DISCONT buffer in non-packetized mode, bad");
       gst_buffer_replace (&dec->tempbuf, NULL);
     }
