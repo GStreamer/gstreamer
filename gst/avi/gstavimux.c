@@ -150,7 +150,11 @@ static GstStaticPadTemplate video_sink_factory =
         "video/x-wmv, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ], "
-        "wmvversion = (int) [ 1, 3]")
+        "wmvversion = (int) [ 1, 3];"
+        "image/x-jpc, "
+        "width = (int) [ 1, 2147483647 ], "
+        "height = (int) [ 1, 2147483647 ], "
+        "framerate = (fraction) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate audio_sink_factory =
@@ -605,6 +609,8 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
             break;
         }
       }
+    } else if (!strcmp (mimetype, "image/x-jpc")) {
+      avipad->vids.compression = GST_MAKE_FOURCC ('M', 'J', '2', 'C');
     }
 
     if (!avipad->vids.compression)
