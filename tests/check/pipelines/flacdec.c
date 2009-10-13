@@ -202,7 +202,7 @@ GST_START_TEST (test_decode_seek_partial)
   do {
     GST_DEBUG ("pulling buffer");
     g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
-    GST_DEBUG ("pulled buffer %x", buffer);
+    GST_DEBUG ("pulled buffer %p", buffer);
     if (buffer == NULL)
       break;
     if (first_sample == 0) {
