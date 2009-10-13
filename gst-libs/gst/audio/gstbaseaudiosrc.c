@@ -947,7 +947,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         timestamp = gst_clock_get_time (clock);
         base_time = GST_ELEMENT_CAST (src)->base_time;
 
-        if (timestamp > base_time)
+        if (GST_CLOCK_DIFF (timestamp, base_time) < 0)
           timestamp -= base_time;
         else
           timestamp = 0;
@@ -972,7 +972,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* we are not slaved, subtract base_time */
     base_time = GST_ELEMENT_CAST (src)->base_time;
 
-    if (timestamp > base_time) {
+    if (GST_CLOCK_DIFF (timestamp, base_time) < 0) {
       timestamp -= base_time;
       GST_LOG_OBJECT (src,
           "buffer timestamp %" GST_TIME_FORMAT " (base_time %" GST_TIME_FORMAT
