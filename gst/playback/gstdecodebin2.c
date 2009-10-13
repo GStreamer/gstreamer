@@ -1620,6 +1620,10 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
     GST_LOG_OBJECT (chain->dbin, "no-more-pads from old chain element '%s'",
         GST_OBJECT_NAME (element));
     return;
+  } else if (!chain->demuxer) {
+    GST_LOG_OBJECT (chain->dbin, "no-more-pads from a non-demuxer element '%s'",
+        GST_OBJECT_NAME (element));
+    return;
   }
 
   CHAIN_MUTEX_LOCK (chain);
