@@ -359,6 +359,7 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (munge);
   return ret;
 
 newseg_wrong_format:
