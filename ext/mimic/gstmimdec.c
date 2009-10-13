@@ -55,7 +55,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (fraction) [1/1, 30/1], "
+        "framerate = (fraction) 0/1, "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -65,7 +65,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (fraction) [1/1, 30/1], "
+        "framerate = (fraction) 0/1, "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, " "width = (int) 160, " "height = (int) 120")
@@ -293,10 +293,10 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
         "bpp", G_TYPE_INT, 24,
         "depth", G_TYPE_INT, 24,
         "endianness", G_TYPE_INT, 4321,
-        "framerate", GST_TYPE_FRACTION, 7, 1,
         "red_mask", G_TYPE_INT, 16711680,
         "green_mask", G_TYPE_INT, 65280,
         "blue_mask", G_TYPE_INT, 255,
+        "framerate", GST_TYPE_FRACTION, 0, 1,
         "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
