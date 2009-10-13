@@ -4430,6 +4430,11 @@ not_linked:
     GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
     gst_event_unref (event);
+
+    /* unlinked pads should not influence latency configuration */
+    if (event_type == GST_EVENT_LATENCY)
+      return GST_FLOW_OK;
+
     return GST_FLOW_NOT_LINKED;
   }
 idle_probe_stopped:
