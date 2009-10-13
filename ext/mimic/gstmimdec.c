@@ -205,7 +205,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
 
     current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
 
-    GST_DEBUG ("Got packet, payload size %d", payload_size);
+    GST_LOG_OBJECT (mimdec, "Got packet, payload size %d", payload_size);
 
     if (gst_adapter_available (mimdec->adapter) < payload_size + 24)
       goto out;

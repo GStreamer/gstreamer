@@ -320,7 +320,7 @@ gst_mim_enc_chain (GstPad * pad, GstBuffer * in)
 
   GST_BUFFER_SIZE (out_buf) = buffer_size + TCP_HEADER_SIZE;
 
-  GST_DEBUG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
+  GST_LOG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
       GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (out_buf));
   ++mimenc->frames;
 
