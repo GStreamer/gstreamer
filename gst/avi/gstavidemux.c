@@ -968,14 +968,14 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
   }
   num = GST_READ_UINT32_LE (&data[4]);
 
-  GST_WARNING_OBJECT (avi, "got %d indexes", num);
+  GST_DEBUG_OBJECT (avi, "got %d indexes", num);
 
   indexes = g_new (guint64, num + 1);
   for (i = 0; i < num; i++) {
     if (size < 24 + bpe * (i + 1))
       break;
     indexes[i] = GST_READ_UINT64_LE (&data[24 + bpe * i]);
-    GST_WARNING_OBJECT (avi, "index %d at %" G_GUINT64_FORMAT, i, indexes[i]);
+    GST_DEBUG_OBJECT (avi, "index %d at %" G_GUINT64_FORMAT, i, indexes[i]);
   }
   indexes[i] = GST_BUFFER_OFFSET_NONE;
   *_indexes = indexes;
