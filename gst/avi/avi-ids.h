@@ -31,6 +31,7 @@ typedef struct _gst_riff_avih {
 #define GST_RIFF_AVIH_HASINDEX       0x00000010 /* has idx1 chunk */
 #define GST_RIFF_AVIH_MUSTUSEINDEX   0x00000020 /* must use idx1 chunk to determine order */
 #define GST_RIFF_AVIH_ISINTERLEAVED  0x00000100 /* AVI file is interleaved */
+#define GST_RIFF_AVIH_TRUSTCKTYPE    0x00000800 /* Use CKType to find key frames */
 #define GST_RIFF_AVIH_WASCAPTUREFILE 0x00010000 /* specially allocated used for capturing real time video */
 #define GST_RIFF_AVIH_COPYRIGHTED    0x00020000 /* contains copyrighted data */
   guint32 tot_frames;        /* # of frames (all) */
