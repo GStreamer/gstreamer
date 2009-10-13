@@ -740,10 +740,12 @@ gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
       ret = gst_dtsdec_chain_raw (pad, subbuf);
     }
   } else {
+    gst_object_ref (buf);
     ret = gst_dtsdec_chain_raw (pad, buf);
   }
 
 done:
+  gst_object_unref (buf);
   return ret;
 
 /* ERRORS */
@@ -751,12 +753,14 @@ not_enough_data:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (dts), STREAM, DECODE, (NULL),
         ("Insufficient data in buffer. Can't determine first_acess"));
+    gst_object_unref (buf);
     return GST_FLOW_ERROR;
   }
 bad_first_access_parameter:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (dts), STREAM, DECODE, (NULL),
         ("Bad first_access parameter (%d) in buffer", first_access));
+    gst_object_unref (buf);
     return GST_FLOW_ERROR;
   }
 }
