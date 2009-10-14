@@ -139,14 +139,9 @@ mux_pcm_audio (guint num_buffers, guint repeat)
 
 GST_START_TEST (test_index_writing)
 {
-  guint bufs;
-
   /* note: there's a magic 128 value in flvmux when doing index writing */
-  for (bufs = 1; bufs < 500; bufs += 33) {
-    mux_pcm_audio (bufs, 2);
-  }
-
-  gst_task_cleanup_all ();
+  if ((__i__ % 33) == 1)
+    mux_pcm_audio (__i__, 2);
 }
 
 GST_END_TEST;
@@ -158,7 +153,7 @@ flvmux_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_index_writing);
+  tcase_add_loop_test (tc_chain, test_index_writing, 1, 499);
 
   return s;
 }
