@@ -883,21 +883,24 @@ gst_object_unparent (GstObject * object)
 gboolean
 gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
 {
-  GstObject *parent;
-  gboolean result = FALSE;
+  GstObject *parent, *tmp;
 
-  if (object == NULL)
+  if (!ancestor || !object)
     return FALSE;
 
-  if (object == ancestor)
-    return TRUE;
+  parent = gst_object_ref (object);
+  do {
+    if (parent == ancestor) {
+      gst_object_unref (parent);
+      return TRUE;
+    }
 
-  parent = gst_object_get_parent (object);
-  result = gst_object_has_ancestor (parent, ancestor);
-  if (parent)
+    tmp = gst_object_get_parent (parent);
     gst_object_unref (parent);
+    parent = tmp;
+  } while (parent);
 
-  return result;
+  return FALSE;
 }
 
 /**
