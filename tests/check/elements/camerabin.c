@@ -25,6 +25,7 @@
 #endif
 
 #include <unistd.h>
+#include <glib.h>
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/interfaces/photography.h>
@@ -40,6 +41,7 @@
 static GstElement *camera;
 static GMainLoop *main_loop;
 static guint cycle_count = 0;
+static gboolean received_preview_msg = FALSE;
 
 /* helper function for filenames */
 static const gchar *
@@ -201,6 +203,23 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
   return TRUE;
 }
 
+static GstBusSyncReply
+bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
+{
+  const GstStructure *st;
+  st = gst_message_get_structure (message);
+  if (st) {
+    if (gst_structure_has_name (st, "preview-image")) {
+      GST_DEBUG ("get preview-image message");
+      received_preview_msg = TRUE;
+    }
+  }
+
+
+  return GST_BUS_PASS;
+
+}
+
 static void
 setup (void)
 {
@@ -221,6 +240,7 @@ setup (void)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);
+  gst_bus_set_sync_handler (bus, bus_sync_callback, main_loop);
   gst_object_unref (bus);
 
   filter_caps = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420");
@@ -429,6 +449,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_recording)
 {
+  GstCaps *preview_caps;
+  preview_caps = gst_caps_from_string ("video/x-raw-rgb,width=320,height=240");
+
   if (!camera)
     return;
 
@@ -436,11 +459,19 @@ GST_START_TEST (test_video_recording)
   g_object_set (camera, "mode", 1,
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
+  /*Set preview-caps */
+  g_object_set (camera, "preview-caps", preview_caps, NULL);
+
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
   /* Record for one seconds  */
   g_usleep (G_USEC_PER_SEC);
   g_signal_emit_by_name (camera, "capture-stop", NULL);
+
+  /*check if receiving the preview-image message */
+  fail_if (!received_preview_msg,
+      "creating video recording preview image failed");
+
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 }
 
