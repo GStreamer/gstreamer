@@ -933,6 +933,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       priv->blocked = TRUE;
       /* reset skew detection initialy */
       rtp_jitter_buffer_reset_skew (priv->jbuf);
+      rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
       JBUF_UNLOCK (priv);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -987,6 +988,25 @@ gst_rtp_jitter_buffer_src_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_LATENCY:
+    {
+      GstClockTime latency;
+
+      gst_event_parse_latency (event, &latency);
+
+      JBUF_LOCK (priv);
+      /* adjust the overall buffer delay to the total pipeline latency in
+       * buffering mode because if downstream consumes too fast (because of
+       * large latency or queues, we would start rebuffering again. */
+      if (rtp_jitter_buffer_get_mode (priv->jbuf) ==
+          RTP_JITTER_BUFFER_MODE_BUFFER) {
+        rtp_jitter_buffer_set_delay (priv->jbuf, latency);
+      }
+      JBUF_UNLOCK (priv);
+
+      ret = gst_pad_push_event (priv->sinkpad, event);
+      break;
+    }
     default:
       ret = gst_pad_push_event (priv->sinkpad, event);
       break;
