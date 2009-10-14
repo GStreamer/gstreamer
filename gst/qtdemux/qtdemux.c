@@ -305,6 +305,8 @@ static void gst_qtdemux_base_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_init (GstQTDemux * quicktime_demux);
 static void gst_qtdemux_dispose (GObject * object);
 
+static void gst_qtdemux_set_index (GstElement * element, GstIndex * index);
+static GstIndex *gst_qtdemux_get_index (GstElement * element);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad);
@@ -385,7 +387,10 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
 
   gobject_class->dispose = gst_qtdemux_dispose;
 
-  gstelement_class->change_state = gst_qtdemux_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_qtdemux_change_state);
+
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_qtdemux_set_index);
+  gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_qtdemux_get_index);
 }
 
 static void
@@ -1378,6 +1383,42 @@ drop:
   return res;
 }
 
+static void
+gst_qtdemux_set_index (GstElement * element, GstIndex * index)
+{
+  GstQTDemux *demux = GST_QTDEMUX (element);
+
+  GST_OBJECT_LOCK (demux);
+  if (demux->element_index)
+    gst_object_unref (demux->element_index);
+  if (index) {
+    demux->element_index = gst_object_ref (index);
+  } else {
+    demux->element_index = NULL;
+  }
+  GST_OBJECT_UNLOCK (demux);
+  /* object lock might be taken again */
+  if (index)
+    gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
+  GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT, demux->element_index);
+}
+
+static GstIndex *
+gst_qtdemux_get_index (GstElement * element)
+{
+  GstIndex *result = NULL;
+  GstQTDemux *demux = GST_QTDEMUX (element);
+
+  GST_OBJECT_LOCK (demux);
+  if (demux->element_index)
+    result = gst_object_ref (demux->element_index);
+  GST_OBJECT_UNLOCK (demux);
+
+  GST_DEBUG_OBJECT (demux, "Returning index %" GST_PTR_FORMAT, result);
+
+  return result;
+}
+
 static GstStateChangeReturn
 gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1412,6 +1453,9 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       if (qtdemux->tag_list)
         gst_tag_list_free (qtdemux->tag_list);
       qtdemux->tag_list = NULL;
+      if (qtdemux->element_index)
+        gst_object_unref (qtdemux->element_index);
+      qtdemux->element_index = NULL;
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
         QtDemuxStream *stream = qtdemux->streams[n];
@@ -2290,7 +2334,8 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static gboolean
 gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstBuffer * buf,
-    guint64 timestamp, guint64 duration, gboolean keyframe, guint64 position)
+    guint64 timestamp, guint64 duration, gboolean keyframe, guint64 position,
+    guint64 byte_position)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2351,6 +2396,20 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->padding)) {
     GST_BUFFER_DATA (buf) += stream->padding;
     GST_BUFFER_SIZE (buf) -= stream->padding;
+  }
+
+  if (G_UNLIKELY (qtdemux->element_index)) {
+    GstClockTime stream_time;
+
+    stream_time = gst_segment_to_stream_time (&stream->segment, GST_FORMAT_TIME,
+        timestamp);
+    if (GST_CLOCK_TIME_IS_VALID (stream_time)) {
+      GST_LOG_OBJECT (qtdemux, "adding association %" GST_TIME_FORMAT "-> %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (stream_time), byte_position);
+      gst_index_add_association (qtdemux->element_index, qtdemux->index_id,
+          keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+          GST_FORMAT_TIME, stream_time, GST_FORMAT_BYTES, byte_position, NULL);
+    }
   }
 
   if (stream->need_clip)
@@ -2456,7 +2515,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto beach;
 
   ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
-      timestamp, duration, keyframe, min_time);
+      timestamp, duration, keyframe, min_time, offset);
 
   /* combine flows */
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
@@ -2892,7 +2951,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             stream->samples[stream->sample_index].keyframe;
 
         ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
-            timestamp, duration, keyframe, position);
+            timestamp, duration, keyframe, position, demux->offset);
 
         /* combine flows */
         ret = gst_qtdemux_combine_flows (demux, stream, ret);
@@ -3454,6 +3513,11 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 {
   if (qtdemux->n_streams >= GST_QTDEMUX_MAX_STREAMS)
     goto too_many_streams;
+
+  /* consistent default for push based mode */
+  gst_segment_init (&stream->segment, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&stream->segment, FALSE, 1.0, GST_FORMAT_TIME,
+      0, GST_CLOCK_TIME_NONE, 0);
 
   if (stream->subtype == FOURCC_vide) {
     gchar *name = g_strdup_printf ("video_%02d", qtdemux->n_video_streams);

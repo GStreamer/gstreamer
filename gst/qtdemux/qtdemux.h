@@ -93,6 +93,10 @@ struct _GstQTDemux {
   GstSegment segment;
   gboolean segment_running;
   GstEvent *pending_newsegment;
+
+  /* gst index support */
+  GstIndex *element_index;
+  gint index_id;
 };
 
 struct _GstQTDemuxClass {
