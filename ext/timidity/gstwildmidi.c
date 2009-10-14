@@ -156,7 +156,9 @@ wildmidi_open_config ()
   }
 
   if (path == NULL) {
-    path = g_build_path (G_DIR_SEPARATOR_S, "/etc", "wildmidi.cfg", NULL);
+    path =
+        g_build_path (G_DIR_SEPARATOR_S, G_DIR_SEPARATOR_S "etc",
+        "wildmidi.cfg", NULL);
     GST_DEBUG ("trying %s", path);
     if (path && (g_access (path, R_OK) == -1)) {
       g_free (path);
@@ -166,8 +168,8 @@ wildmidi_open_config ()
 
   if (path == NULL) {
     path =
-        g_build_path (G_DIR_SEPARATOR_S, "/etc", "wildmidi", "wildmidi.cfg",
-        NULL);
+        g_build_path (G_DIR_SEPARATOR_S, G_DIR_SEPARATOR_S "etc", "wildmidi",
+        "wildmidi.cfg", NULL);
     GST_DEBUG ("trying %s", path);
     if (path && (g_access (path, R_OK) == -1)) {
       g_free (path);
@@ -185,7 +187,9 @@ wildmidi_open_config ()
   }
 
   if (path == NULL) {
-    path = g_build_path (G_DIR_SEPARATOR_S, "/etc", "timidity.cfg", NULL);
+    path =
+        g_build_path (G_DIR_SEPARATOR_S, G_DIR_SEPARATOR_S "etc",
+        "timidity.cfg", NULL);
     GST_DEBUG ("trying %s", path);
     if (path && (g_access (path, R_OK) == -1)) {
       g_free (path);
@@ -195,8 +199,8 @@ wildmidi_open_config ()
 
   if (path == NULL) {
     path =
-        g_build_path (G_DIR_SEPARATOR_S, "/etc", "timidity", "timidity.cfg",
-        NULL);
+        g_build_path (G_DIR_SEPARATOR_S, G_DIR_SEPARATOR_S "etc", "timidity",
+        "timidity.cfg", NULL);
     GST_DEBUG ("trying %s", path);
     if (path && (g_access (path, R_OK) == -1)) {
       g_free (path);
