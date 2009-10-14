@@ -150,5 +150,6 @@ CHECK_EXPORTS = check-exports
 endif
 endif
 endif
+endif
 
 check: $(CHECK_EXPORTS) check-enum-gettypes
