@@ -50,7 +50,7 @@
  * <orderedlist>
  *   <listitem><para>
  *     first put some properties under control, by calling
- *     controller = g_object_control_properties(object, "prop1", "prop2",...);
+ *     controller = gst_object_control_properties (object, "prop1", "prop2",...);
  *   </para></listitem>
  *   <listitem><para>
  *     Get a #GstControlSource for the property and set it up.
