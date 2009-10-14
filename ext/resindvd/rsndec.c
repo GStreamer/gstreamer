@@ -357,29 +357,9 @@ static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "audio/x-raw-int, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) true; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true")
+        "endianness = (int) { 1234, 4321 },"
+        "width = (int) [ 1, 32 ], "
+        "depth = (int) [ 1, 32 ], " "signed = (boolean) { false, true }")
     );
 
 G_DEFINE_TYPE (RsnAudioDec, rsn_audiodec, RSN_TYPE_DEC);
