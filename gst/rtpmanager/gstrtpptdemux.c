@@ -124,6 +124,7 @@ static void gst_rtp_pt_demux_finalize (GObject * object);
 static void gst_rtp_pt_demux_release (GstRtpPtDemux * ptdemux);
 static gboolean gst_rtp_pt_demux_setup (GstRtpPtDemux * ptdemux);
 
+static gboolean gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -237,6 +238,7 @@ gst_rtp_pt_demux_init (GstRtpPtDemux * ptdemux, GstRtpPtDemuxClass * g_class)
   g_assert (ptdemux->sink != NULL);
 
   gst_pad_set_chain_function (ptdemux->sink, gst_rtp_pt_demux_chain);
+  gst_pad_set_event_function (ptdemux->sink, gst_rtp_pt_demux_sink_event);
 
   gst_element_add_pad (GST_ELEMENT (ptdemux), ptdemux->sink);
 }
@@ -424,6 +426,40 @@ find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
   }
   return respad;
 }
+
+static gboolean
+gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpPtDemux *rtpdemux;
+  gboolean res = FALSE;
+
+  rtpdemux = GST_RTP_PT_DEMUX (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstRTPPacketLost")) {
+        GstRtpPtDemuxPad *rtpdemuxpad =
+            find_pad_for_pt (rtpdemux, rtpdemux->last_pt);
+
+        if (rtpdemuxpad)
+          res = gst_pad_push_event (rtpdemuxpad->pad, event);
+
+      } else {
+        res = gst_pad_event_default (pad, event);
+      }
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+  return res;
+}
+
 
 /*
  * Reserves resources for the object.
