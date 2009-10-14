@@ -120,6 +120,8 @@ typedef struct {
   guint             idx_max;   /* max allocated size of entries */
 
   GstTagList	*taglist;
+
+  gint           index_id;
 } GstAviStream;
 
 typedef enum {
@@ -177,6 +179,11 @@ typedef struct _GstAviDemux {
   GstEvent      *seek_event;
   GstTagList	*globaltags;
   gboolean	 got_tags;
+
+  /* gst index support */
+  GstIndex      *element_index;
+  gint           index_id;
+  gboolean       seekable;
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {
