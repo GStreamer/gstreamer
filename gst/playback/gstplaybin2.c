@@ -1810,32 +1810,6 @@ static const gchar *blacklisted_mimes[] = {
   "video/x-dvd-subpicture", "subpicture/x-pgs", NULL
 };
 
-
-/* Returns TRUE if child is object or any parent (transitive)
- * of child is object */
-static gboolean
-_gst_object_contains_object (GstObject * object, GstObject * child)
-{
-  GstObject *parent, *tmp;
-
-  if (!object || !child)
-    return FALSE;
-
-  parent = gst_object_ref (child);
-  do {
-    if (parent == object) {
-      gst_object_unref (parent);
-      return TRUE;
-    }
-
-    tmp = gst_object_get_parent (parent);
-    gst_object_unref (parent);
-    parent = tmp;
-  } while (parent);
-
-  return FALSE;
-}
-
 static void
 gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 {
@@ -1864,8 +1838,8 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
   if (group && group->pending && group->suburidecodebin) {
     GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
 
-    if (G_UNLIKELY (_gst_object_contains_object (GST_OBJECT_CAST
-                (group->suburidecodebin), msg->src)
+    if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
+                (group->suburidecodebin))
             && GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)) {
       GError *err;
       gchar *debug = NULL;
