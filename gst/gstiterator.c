@@ -707,7 +707,7 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
  *
  * This #GstIterator is a convenient iterator for the common
  * case where a #GstIterator needs to be returned but only
- * a single object has the be considered. This happens often
+ * a single object has to be considered. This happens often
  * for the #GstPadIterIntLinkFunction.
  *
  * Returns: the new #GstIterator for @object.
