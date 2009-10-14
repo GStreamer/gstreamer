@@ -1614,6 +1614,7 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstRTSPSrc *src;
   gboolean res = TRUE;
+  gboolean forward;
 
   src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
 
@@ -1621,19 +1622,29 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_QOS:
-      break;
     case GST_EVENT_SEEK:
       res = gst_rtspsrc_perform_seek (src, event);
+      forward = FALSE;
       break;
+    case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
-      break;
     case GST_EVENT_LATENCY:
-      break;
     default:
+      forward = TRUE;
       break;
   }
-  gst_event_unref (event);
+  if (forward) {
+    GstPad *target;
+
+    if ((target = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad)))) {
+      res = gst_pad_send_event (target, event);
+      gst_object_unref (target);
+    } else {
+      gst_event_unref (event);
+    }
+  } else {
+    gst_event_unref (event);
+  }
   gst_object_unref (src);
 
   return res;
