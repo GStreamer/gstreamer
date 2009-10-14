@@ -223,7 +223,6 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_set_default
 #pragma GCC poison 	_gst_trace_add_entry
 #pragma GCC poison 	gst_trace_read_tsc
-#pragma GCC poison 	gst_trace_add_entry
 #endif
 
 #define		gst_alloc_trace_register(name)	(NULL)
