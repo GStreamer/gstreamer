@@ -167,6 +167,7 @@ typedef struct _GstAviDemux {
   gboolean       streaming;
   gboolean       have_eos;
   GstAdapter    *adapter;
+  guint          todrop;
 
   /* some stream info for length */
   gst_riff_avih *avih;
