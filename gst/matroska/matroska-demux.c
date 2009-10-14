@@ -253,6 +253,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux,
   demux->writing_app = NULL;
   demux->muxing_app = NULL;
   demux->index = NULL;
+  demux->global_tags = NULL;
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
@@ -2032,8 +2033,8 @@ gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
   } else {
     /* hm, already sent, no need to cache and wait anymore */
     GST_DEBUG_OBJECT (demux, "Sending late global tags %" GST_PTR_FORMAT,
-        demux->global_tags);
-    gst_element_found_tags (GST_ELEMENT (demux), demux->global_tags);
+        taglist);
+    gst_element_found_tags (GST_ELEMENT (demux), taglist);
   }
 }
 
