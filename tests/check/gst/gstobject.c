@@ -453,6 +453,55 @@ GST_START_TEST (test_fake_object_parentage_dispose)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fake_object_has_ancestor)
+{
+  GstObject *object1, *object2, *object3, *object4;
+  gboolean result;
+
+  object1 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object1 == NULL, "Failed to create instance of GstFakeObject");
+
+  object2 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object2 == NULL, "Failed to create instance of GstFakeObject");
+
+  object3 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object3 == NULL, "Failed to create instance of GstFakeObject");
+
+  object4 = g_object_new (gst_fake_object_get_type (), NULL);
+  fail_if (object4 == NULL, "Failed to create instance of GstFakeObject");
+
+  /* try to set other object as parent */
+  result = gst_object_set_parent (object1, object3);
+  fail_if (result == FALSE,
+      "GstFakeObject could not accept other object as parent");
+  result = gst_object_set_parent (object2, object3);
+  fail_if (result == FALSE,
+      "GstFakeObject could not accept other object as parent");
+  result = gst_object_set_parent (object3, object4);
+  fail_if (result == FALSE,
+      "GstFakeObject could not accept other object as parent");
+
+  fail_unless (gst_object_has_ancestor (object1, object1));
+  fail_if (gst_object_has_ancestor (object1, object2));
+  fail_unless (gst_object_has_ancestor (object1, object3));
+  fail_unless (gst_object_has_ancestor (object1, object4));
+  fail_if (gst_object_has_ancestor (object3, object1));
+  fail_if (gst_object_has_ancestor (object4, object1));
+  fail_unless (gst_object_has_ancestor (object3, object4));
+  fail_if (gst_object_has_ancestor (object4, object3));
+  fail_unless (gst_object_has_ancestor (object4, object4));
+
+  /* unparent everything */
+  gst_object_unparent (object3);
+  gst_object_unparent (object2);
+  gst_object_unparent (object1);
+
+  /* now dispose objects */
+  gst_object_unref (object4);
+}
+
+GST_END_TEST;
+
 /* test: try renaming a parented object, make sure it fails */
 
 static Suite *
@@ -474,6 +523,8 @@ gst_object_suite (void)
   tcase_add_test (tc_chain, test_fake_object_name_threaded_unique);
   tcase_add_test (tc_chain, test_fake_object_parentage);
   tcase_add_test (tc_chain, test_fake_object_parentage_dispose);
+
+  tcase_add_test (tc_chain, test_fake_object_has_ancestor);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
 
   /* FIXME: GLib shouldn't crash here, but issue a warning and return a NULL
