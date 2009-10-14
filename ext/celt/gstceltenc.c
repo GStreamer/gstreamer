@@ -68,7 +68,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-celt, "
-        "rate = (int) [ 32000, 64000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 32000, 64000 ], "
+        "channels = (int) [ 1, 2 ], " "frame-size = (int) [ 64, 512 ]")
     );
 
 static const GstElementDetails celtenc_details =
@@ -78,7 +79,7 @@ GST_ELEMENT_DETAILS ("Celt audio encoder",
     "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
 #define DEFAULT_BITRATE         64
-#define DEFAULT_FRAMESIZE       256
+#define DEFAULT_FRAMESIZE       480
 #define DEFAULT_CBR             TRUE
 #define DEFAULT_COMPLEXITY      9
 #define DEFAULT_MAX_BITRATE     64
@@ -202,13 +203,27 @@ gst_celt_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstCeltEnc *enc;
   GstStructure *structure;
+  GstCaps *otherpadcaps;
 
   enc = GST_CELT_ENC (GST_PAD_PARENT (pad));
   enc->setup = FALSE;
+  enc->frame_size = DEFAULT_FRAMESIZE;
+  otherpadcaps = gst_pad_get_allowed_caps (pad);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "channels", &enc->channels);
   gst_structure_get_int (structure, "rate", &enc->rate);
+
+  if (otherpadcaps) {
+    if (!gst_caps_is_empty (otherpadcaps)) {
+      GstStructure *ps = gst_caps_get_structure (otherpadcaps, 0);
+      gst_structure_get_int (ps, "frame-size", &enc->frame_size);
+    }
+    gst_caps_unref (otherpadcaps);
+  }
+
+  GST_DEBUG_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
+      enc->channels, enc->rate, enc->frame_size);
 
   gst_celt_enc_setup (enc);
 
@@ -841,10 +856,13 @@ gst_celt_enc_chain (GstPad * pad, GstBuffer * buf)
 
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, enc->rate,
-        "channels", G_TYPE_INT, enc->channels, NULL);
+        "channels", G_TYPE_INT, enc->channels,
+        "frame-size", G_TYPE_INT, enc->frame_size, NULL);
 
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
+    GST_LOG_OBJECT (enc, "rate=%d channels=%d frame-size=%d",
+        enc->rate, enc->channels, enc->frame_size);
     gst_pad_set_caps (enc->srcpad, caps);
 
     gst_buffer_set_caps (buf1, caps);
