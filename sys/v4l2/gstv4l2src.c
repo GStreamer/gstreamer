@@ -906,6 +906,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
     GstClock *clock;
     GstClockTime timestamp;
+    GstClockTime duration = GST_CLOCK_TIME_NONE;
 
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
@@ -938,11 +939,14 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
           timestamp -= latency;
         else
           timestamp = 0;
+
+        duration = latency;
       }
     }
 
     /* FIXME: use the timestamp from the buffer itself! */
     GST_BUFFER_TIMESTAMP (*buf) = timestamp;
+    GST_BUFFER_DURATION (*buf) = duration;
   }
   return ret;
 }
