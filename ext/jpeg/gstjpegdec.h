@@ -99,9 +99,6 @@ struct _GstJpegDec {
   gint     caps_width;
   gint     caps_height;
   gint     outsize;
-  /* temp space for samples */
-  gboolean direct;
-  guchar **scanarray[3];
 
   /* properties */
   gint     idct_method;
