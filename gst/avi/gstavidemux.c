@@ -2776,6 +2776,9 @@ skipping_done:
   GST_DEBUG ("Found movi chunk. Starting to stream data");
   avi->state = GST_AVI_DEMUX_MOVI;
 
+  /* no indexes in push mode, but it still sets some variables */
+  gst_avi_demux_calculate_durations_from_index (avi);
+
   /* create initial NEWSEGMENT event */
   if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
     stop = avi->segment.duration;
