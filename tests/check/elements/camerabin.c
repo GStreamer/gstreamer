@@ -282,15 +282,22 @@ teardown (void)
 static void
 test_photography_settings (GstElement * cam)
 {
-#ifdef HAVE_GST_PHOTO_IFACE_H
   GTypeClass *tclass;
+  gfloat ev_comp, orig_ev_comp;
+  guint iso_speed = 100, orig_iso_speed;
+  GstFlashMode flash, orig_flash;
+  GstWhiteBalanceMode wb, orig_wb;
+  GstColourToneMode ct, orig_ct;
+  GstSceneMode sm, orig_sm;
+  gfloat zoom, orig_zoom;
 
   if (!GST_IS_PHOTOGRAPHY (cam)) {
-    GST_WARNING ("omitting photography test");
+    GST_WARNING
+        ("omitting photography settings test, "
+        "photography interface not implemented");
     return;
   }
 
-  gfloat ev_comp, orig_ev_comp;
   for (ev_comp = -3.0; ev_comp <= 3.0; ev_comp += 0.5) {
     orig_ev_comp = ev_comp;
     gst_photography_set_ev_compensation (GST_PHOTOGRAPHY (cam), ev_comp);
@@ -302,7 +309,6 @@ test_photography_settings (GstElement * cam)
   }
 
   /* FIXME: what are the actual iso values? */
-  guint iso_speed = 100, orig_iso_speed;
   for (iso_speed = 100; iso_speed <= 800; iso_speed *= 2) {
     orig_iso_speed = iso_speed;
     gst_photography_set_iso_speed (GST_PHOTOGRAPHY (cam), iso_speed);
@@ -314,7 +320,6 @@ test_photography_settings (GstElement * cam)
   }
 
   tclass = g_type_class_ref (GST_TYPE_FLASH_MODE);
-  GstFlashMode flash, orig_flash;
   for (flash = 0; flash < G_ENUM_CLASS (tclass)->n_values; flash++) {
     orig_flash = flash;
     gst_photography_set_flash_mode (GST_PHOTOGRAPHY (cam), flash);
@@ -326,7 +331,6 @@ test_photography_settings (GstElement * cam)
   g_type_class_unref (tclass);
 
   tclass = g_type_class_ref (GST_TYPE_WHITE_BALANCE_MODE);
-  GstWhiteBalanceMode wb, orig_wb;
   for (wb = 0; wb < G_ENUM_CLASS (tclass)->n_values; wb++) {
     orig_wb = wb;
     gst_photography_set_white_balance_mode (GST_PHOTOGRAPHY (cam), wb);
@@ -338,7 +342,6 @@ test_photography_settings (GstElement * cam)
   g_type_class_unref (tclass);
 
   tclass = g_type_class_ref (GST_TYPE_COLOUR_TONE_MODE);
-  GstColourToneMode ct, orig_ct;
   for (ct = 0; ct < G_ENUM_CLASS (tclass)->n_values; ct++) {
     orig_ct = ct;
     gst_photography_set_colour_tone_mode (GST_PHOTOGRAPHY (cam), ct);
@@ -350,7 +353,6 @@ test_photography_settings (GstElement * cam)
   g_type_class_unref (tclass);
 
   tclass = g_type_class_ref (GST_TYPE_SCENE_MODE);
-  GstSceneMode sm, orig_sm;
   for (sm = 0; sm < G_ENUM_CLASS (tclass)->n_values; sm++) {
     orig_sm = sm;
     gst_photography_set_scene_mode (GST_PHOTOGRAPHY (cam), sm);
@@ -361,8 +363,6 @@ test_photography_settings (GstElement * cam)
   }
   g_type_class_unref (tclass);
 
-  gfloat zoom, orig_zoom;
-  gst_photography_set_zoom (GST_PHOTOGRAPHY (cam), zoom);
   for (zoom = 1.0; zoom <= 10.0; zoom += 1.0) {
     orig_zoom = zoom;
     gst_photography_set_zoom (GST_PHOTOGRAPHY (cam), zoom);
@@ -371,9 +371,143 @@ test_photography_settings (GstElement * cam)
     zoom = orig_zoom;
     g_usleep (PHOTO_SETTING_DELAY_US);
   }
-#else
-  GST_DEBUG ("omitting photography test");
-#endif
+}
+
+static void
+test_photography_properties (GstElement * cam)
+{
+  GTypeClass *tclass;
+  gulong capabilities;
+  guint aperture;
+  guint32 exposure;
+  gfloat ev_comp, orig_ev_comp;
+  guint iso_speed = 100, orig_iso_speed;
+  GstFlashMode flash, orig_flash;
+  GstWhiteBalanceMode wb, orig_wb;
+  GstColourToneMode ct, orig_ct;
+  GstSceneMode sm, orig_sm;
+  GstCaps *caps = NULL;
+
+  if (!GST_IS_PHOTOGRAPHY (cam)) {
+    GST_WARNING
+        ("omitting photography properties test, not photography interface");
+    return;
+  }
+
+  /* NOTE: unit testing uses videotestsrc element which is doesn't implement
+     photography interface so we just check that values returned
+     are sane */
+
+  /* read only flags */
+  g_object_get (GST_PHOTOGRAPHY (cam), "capabilities", &capabilities, NULL);
+  fail_if (capabilities < 0, "getting photography capabilities failed");
+
+  /* for image-capture-supported-caps we should get something always */
+  g_object_get (GST_PHOTOGRAPHY (cam), "image-capture-supported-caps", &caps,
+      NULL);
+  fail_if (caps == NULL, "getting photography capabilities failed");
+  if (caps)
+    gst_caps_unref (caps);
+
+  exposure = 0;                 /* auto */
+  g_object_set (GST_PHOTOGRAPHY (cam), "exposure", exposure, NULL);
+  g_object_get (GST_PHOTOGRAPHY (cam), "exposure", &exposure, NULL);
+  fail_if (exposure < 0, "setting photography exposure failed");
+
+  aperture = 0;                 /* auto */
+  g_object_set (GST_PHOTOGRAPHY (cam), "aperture", aperture, NULL);
+  g_object_get (GST_PHOTOGRAPHY (cam), "aperture", &aperture, NULL);
+  fail_if (aperture < 0 || aperture > 255,
+      "setting photography aperture failed");
+
+  for (ev_comp = -2.5; ev_comp <= 2.5; ev_comp += 0.5) {
+    orig_ev_comp = ev_comp;
+    g_object_set (GST_PHOTOGRAPHY (cam), "ev-compensation", ev_comp, NULL);
+    g_object_get (GST_PHOTOGRAPHY (cam), "ev-compensation", &ev_comp, NULL);
+    fail_if (ev_comp < -2.5 || ev_comp > 2.5,
+        "setting photography ev compensation failed");
+    ev_comp = orig_ev_comp;
+  }
+
+  /* FIXME: what are the actual iso values? */
+  for (iso_speed = 100; iso_speed <= 800; iso_speed *= 2) {
+    orig_iso_speed = iso_speed;
+    g_object_set (GST_PHOTOGRAPHY (cam), "iso-speed", iso_speed, NULL);
+    g_object_get (GST_PHOTOGRAPHY (cam), "iso-speed", &iso_speed, NULL);
+    GST_INFO ("iso speed %d", iso_speed);
+    fail_if (iso_speed < 0 || iso_speed > 800,
+        "setting photography iso speed failed");
+    iso_speed = orig_iso_speed;
+  }
+
+  tclass = g_type_class_ref (GST_TYPE_FLASH_MODE);
+  for (flash = 0; flash < G_ENUM_CLASS (tclass)->n_values; flash++) {
+    orig_flash = flash;
+    g_object_set (GST_PHOTOGRAPHY (cam), "flash-mode", flash, NULL);
+    g_object_get (GST_PHOTOGRAPHY (cam), "flash-mode", &flash, NULL);
+    fail_if (flash < 0 || flash >= G_ENUM_CLASS (tclass)->n_values,
+        "setting photography flash failed");
+    flash = orig_flash;
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_WHITE_BALANCE_MODE);
+  for (wb = 0; wb < G_ENUM_CLASS (tclass)->n_values; wb++) {
+    orig_wb = wb;
+    g_object_set (G_OBJECT (cam), "white-balance-mode", wb, NULL);
+    g_object_get (G_OBJECT (cam), "white-balance-mode", &wb, NULL);
+    fail_if (wb < 0 || wb >= G_ENUM_CLASS (tclass)->n_values,
+        "setting photography white balance mode failed");
+    wb = orig_wb;
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_COLOUR_TONE_MODE);
+  for (ct = 0; ct < G_ENUM_CLASS (tclass)->n_values; ct++) {
+    orig_ct = ct;
+    g_object_set (G_OBJECT (cam), "colour-tone-mode", ct, NULL);
+    g_object_get (G_OBJECT (cam), "colour-tone-mode", &ct, NULL);
+    fail_if (ct < 0 || ct >= G_ENUM_CLASS (tclass)->n_values,
+        "setting photography colour tone mode failed");
+    ct = orig_ct;
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_SCENE_MODE);
+  for (sm = 0; sm < G_ENUM_CLASS (tclass)->n_values; sm++) {
+    orig_sm = sm;
+    g_object_set (G_OBJECT (cam), "scene-mode", sm, NULL);
+    g_object_get (G_OBJECT (cam), "scene-mode", &sm, NULL);
+    fail_if (sm < 0 || sm > G_ENUM_CLASS (tclass)->n_values,
+        "setting photography scene mode failed");
+    sm = orig_sm;
+  }
+  g_type_class_unref (tclass);
+}
+
+static void
+test_camerabin_properties (GstElement * cam)
+{
+  guint flags;
+  gint zoom;
+  gboolean mute;
+
+  flags = 0x1f;
+  g_object_set (G_OBJECT (cam), "flags", flags, NULL);
+  g_object_get (G_OBJECT (cam), "flags", &flags, NULL);
+  fail_if (flags != 0x1f, "setting camerabin flags failed");
+
+  zoom = 200;
+  g_object_set (G_OBJECT (cam), "zoom", zoom, NULL);
+  g_object_get (G_OBJECT (cam), "zoom", &zoom, NULL);
+  fail_if (zoom != 200, "setting camerabin zoom failed");
+  g_object_set (G_OBJECT (cam), "zoom", 100, NULL);
+
+  mute = TRUE;
+  g_object_set (G_OBJECT (cam), "mute", mute, NULL);
+  g_object_get (G_OBJECT (cam), "mute", &mute, NULL);
+  fail_if (mute != TRUE, "setting camerabin mute failed");
+  g_object_set (G_OBJECT (cam), "mute", FALSE, NULL);
 }
 
 static gboolean
@@ -437,6 +571,8 @@ GST_START_TEST (test_single_image_capture)
   /* Test photography iface settings */
   gst_element_get_state (GST_ELEMENT (camera), NULL, NULL, (2 * GST_SECOND));
   test_photography_settings (camera);
+  test_photography_properties (camera);
+  test_camerabin_properties (camera);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
@@ -459,7 +595,7 @@ GST_START_TEST (test_video_recording)
   g_object_set (camera, "mode", 1,
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
-  /*Set preview-caps */
+  /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
 
   GST_INFO ("starting capture");
@@ -472,6 +608,35 @@ GST_START_TEST (test_video_recording)
   fail_if (!received_preview_msg,
       "creating video recording preview image failed");
 
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_recording_pause)
+{
+  if (!camera)
+    return;
+
+  /* Set video recording mode */
+  g_object_set (camera, "mode", 1,
+      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
+
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "capture-start", NULL);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
+
+  GST_INFO ("pause capture");
+  g_signal_emit_by_name (camera, "capture-pause", NULL);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
+
+  GST_INFO ("continue capture");
+  g_signal_emit_by_name (camera, "capture-start", NULL);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
+  g_signal_emit_by_name (camera, "capture-stop", NULL);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 }
 
@@ -552,6 +717,7 @@ camerabin_suite (void)
   tcase_add_checked_fixture (tc_basic, setup, teardown);
   tcase_add_test (tc_basic, test_single_image_capture);
   tcase_add_test (tc_basic, test_video_recording);
+  tcase_add_test (tc_basic, test_video_recording_pause);
   tcase_add_test (tc_basic, test_image_video_cycle);
 
   /* Validate captured files */
