@@ -298,6 +298,10 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps);
 static void gst_camerabin_finish_image_capture (GstCameraBin * camera);
 static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
     GstCaps * new_caps);
+static void gst_camerabin_proxy_notify_cb (GObject * video_source,
+    GParamSpec * pspec, gpointer user_data);
+static void gst_camerabin_monitor_video_source_properties (GstCameraBin *
+    camera);
 static void gst_camerabin_configure_format (GstCameraBin * camera,
     GstCaps * caps);
 static gboolean
@@ -485,6 +489,8 @@ camerabin_setup_src_elements (GstCameraBin * camera)
     st = gst_structure_copy (gst_caps_get_structure (camera->view_finder_caps,
             0));
   }
+
+  gst_camerabin_monitor_video_source_properties (camera);
 
   /* Update photography interface settings */
   if (GST_IS_ELEMENT (camera->src_vid_src) &&
@@ -2341,6 +2347,61 @@ gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
   }
 }
 
+static void
+gst_camerabin_proxy_notify_cb (GObject * video_source, GParamSpec * pspec,
+    gpointer user_data)
+{
+  const gchar *name = g_param_spec_get_name (pspec);
+  GstElement *camerabin = GST_ELEMENT (user_data);
+
+  GST_DEBUG_OBJECT (camerabin, "proxying %s notify from %" GST_PTR_FORMAT, name,
+      GST_ELEMENT (video_source));
+  g_object_notify (G_OBJECT (camerabin), name);
+
+}
+
+/*
+ * gst_camerabin_monitor_video_source_properties:
+ * @camera: camerabin object
+ *
+ * Monitor notify signals from video source photography interface
+ * properties, and proxy the notifications to application.
+ *
+ */
+static void
+gst_camerabin_monitor_video_source_properties (GstCameraBin * camera)
+{
+  GParamSpec **properties;
+  gchar *notify_string;
+  gpointer photo_iface;
+  guint i, n_properties = 0;
+
+  GST_DEBUG_OBJECT (camera, "checking for photography interface support");
+  if (GST_IS_ELEMENT (camera->src_vid_src) &&
+      gst_element_implements_interface (camera->src_vid_src,
+          GST_TYPE_PHOTOGRAPHY)) {
+    GST_DEBUG_OBJECT (camera,
+        "start monitoring property changes in %" GST_PTR_FORMAT,
+        camera->src_vid_src);
+    photo_iface = g_type_default_interface_ref (GST_TYPE_PHOTOGRAPHY);
+    properties =
+        g_object_interface_list_properties (photo_iface, &n_properties);
+    if (properties) {
+      for (i = 0; i < n_properties; i++) {
+        notify_string =
+            g_strconcat ("notify::", g_param_spec_get_name (properties[i]),
+            NULL);
+        GST_DEBUG_OBJECT (camera, "connecting to %" GST_PTR_FORMAT " - %s",
+            camera->src_vid_src, notify_string);
+        g_signal_connect (G_OBJECT (camera->src_vid_src), notify_string,
+            (GCallback) gst_camerabin_proxy_notify_cb, camera);
+        g_free (notify_string);
+      }
+    }
+    g_type_default_interface_unref (photo_iface);
+  }
+}
+
 /*
  * gst_camerabin_configure_format:
  * @camera: camerabin object
@@ -3249,6 +3310,8 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
         g_cond_signal (camera->cond);
       }
       g_mutex_unlock (camera->capture_mutex);
+      g_signal_handlers_disconnect_by_func (camera->src_vid_src,
+          gst_camerabin_proxy_notify_cb, camera);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       camerabin_destroy_elements (camera);
