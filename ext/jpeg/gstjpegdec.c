@@ -750,9 +750,9 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   line[1] = u;
   line[2] = v;
 
-  v_samp[0] = dec->cinfo.cur_comp_info[0]->v_samp_factor;
-  v_samp[1] = dec->cinfo.cur_comp_info[1]->v_samp_factor;
-  v_samp[2] = dec->cinfo.cur_comp_info[2]->v_samp_factor;
+  v_samp[0] = dec->cinfo.comp_info[0].v_samp_factor;
+  v_samp[1] = dec->cinfo.comp_info[1].v_samp_factor;
+  v_samp[2] = dec->cinfo.comp_info[2].v_samp_factor;
 
   if (G_UNLIKELY (v_samp[0] != 2 || v_samp[1] > 2 || v_samp[2] > 2))
     goto format_not_supported;
@@ -974,21 +974,22 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_WARNING_OBJECT (dec, "reading the header failed, %d", hdr_ok);
   }
 
-  r_h = dec->cinfo.cur_comp_info[0]->h_samp_factor;
-  r_v = dec->cinfo.cur_comp_info[0]->v_samp_factor;
+  r_h = dec->cinfo.comp_info[0].h_samp_factor;
+  r_v = dec->cinfo.comp_info[0].v_samp_factor;
 
   GST_LOG_OBJECT (dec, "r_h = %d, r_v = %d", r_h, r_v);
-  GST_LOG_OBJECT (dec, "num_components=%d, comps_in_scan=%d",
-      dec->cinfo.num_components, dec->cinfo.comps_in_scan);
+  GST_LOG_OBJECT (dec, "num_components=%d", dec->cinfo.num_components);
+  GST_LOG_OBJECT (dec, "jpeg_color_space=%d", dec->cinfo.jpeg_color_space);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
     gint i;
 
-    for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
-      GST_LOG_OBJECT (dec, "[%d] h_samp_factor=%d, v_samp_factor=%d", i,
-          dec->cinfo.cur_comp_info[i]->h_samp_factor,
-          dec->cinfo.cur_comp_info[i]->v_samp_factor);
+    for (i = 0; i < dec->cinfo.num_components; ++i) {
+      GST_LOG_OBJECT (dec, "[%d] h_samp_factor=%d, v_samp_factor=%d, cid=%d",
+          i, dec->cinfo.comp_info[i].h_samp_factor,
+          dec->cinfo.comp_info[i].v_samp_factor,
+          dec->cinfo.comp_info[i].component_id);
     }
   }
 #endif
@@ -1115,9 +1116,9 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * write over the end of a line into the beginning of the next line,
    * resulting in blocky artifacts on the left side of the picture. */
   if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
-          || dec->cinfo.cur_comp_info[0]->h_samp_factor != 2
-          || dec->cinfo.cur_comp_info[1]->h_samp_factor != 1
-          || dec->cinfo.cur_comp_info[2]->h_samp_factor != 1)) {
+          || dec->cinfo.comp_info[0].h_samp_factor != 2
+          || dec->cinfo.comp_info[1].h_samp_factor != 1
+          || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
         "indirect decoding using extra buffer copy");
     gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h);
