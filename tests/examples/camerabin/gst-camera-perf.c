@@ -560,6 +560,13 @@ setup_pipeline (void)
 
   GST_INFO_OBJECT (camera_bin, "elements created");
 
+  if (GST_STATE_CHANGE_FAILURE ==
+      gst_element_set_state (camera_bin, GST_STATE_READY)) {
+    g_warning ("can't set camerabin to ready\n");
+    goto error;
+  }
+  GST_INFO_OBJECT (camera_bin, "camera ready");
+
   /* set properties */
   g_object_set (camera_bin, "filename", filename->str, NULL);
 
@@ -635,13 +642,6 @@ setup_pipeline (void)
     g_signal_emit_by_name (camera_bin, "user-res-fps", video_width,
         video_height, view_framerate_num, view_framerate_den, NULL);
   }
-
-  if (GST_STATE_CHANGE_FAILURE ==
-      gst_element_set_state (camera_bin, GST_STATE_READY)) {
-    g_warning ("can't set camerabin to ready\n");
-    goto error;
-  }
-  GST_INFO_OBJECT (camera_bin, "camera ready");
 
   if (GST_STATE_CHANGE_FAILURE ==
       gst_element_set_state (camera_bin, GST_STATE_PLAYING)) {
