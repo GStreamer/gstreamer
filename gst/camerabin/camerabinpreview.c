@@ -59,24 +59,20 @@ create_element (const gchar * factory_name, const gchar * elem_name,
 
 /**
  * gst_camerabin_preview_create_pipeline:
- * @camera: camerabin object
+ * @caps: pointer to the caps used in pipeline
  *
- * Create a preview converter pipeline.
+ * Create a preview converter pipeline that outputs the format defined in
+ * @caps parameter.
  *
- * Returns: TRUE if pipeline was constructed, otherwise FALSE.
+ * Returns: New pipeline, or NULL if error occured.
  */
-gboolean
-gst_camerabin_preview_create_pipeline (GstCameraBin * camera)
+GstElement *
+gst_camerabin_preview_create_pipeline (GstCameraBin * camera, GstCaps * caps)
 {
-  GstElement *src, *csp, *filter, *vscale, *sink;
+  GstElement *pipe, *src, *csp, *filter, *vscale, *sink;
   GError *error = NULL;
 
-  if (!camera->preview_caps) {
-    return FALSE;
-  }
-
-  /* Destroy old pipeline, if any */
-  gst_camerabin_preview_destroy_pipeline (camera);
+  g_return_val_if_fail (caps != NULL, FALSE);
 
   GST_DEBUG ("creating elements");
 
@@ -87,17 +83,19 @@ gst_camerabin_preview_create_pipeline (GstCameraBin * camera)
       !create_element ("fakesink", "prev_sink", &sink, &error))
     goto no_elements;
 
-  camera->preview_pipeline = gst_pipeline_new ("preview-pipeline");
-  if (camera->preview_pipeline == NULL)
+  /* We have multiple pipelines created by using this function, so we can't
+   * give a name to them. Another way would to ensure the uniqueness of the
+   * name here*/
+  pipe = gst_pipeline_new (NULL);
+  if (pipe == NULL)
     goto no_pipeline;
 
   GST_DEBUG ("adding elements");
-  gst_bin_add_many (GST_BIN (camera->preview_pipeline),
-      src, csp, filter, vscale, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipe), src, csp, filter, vscale, sink, NULL);
 
-  GST_DEBUG ("preview format is: %" GST_PTR_FORMAT, camera->preview_caps);
+  GST_DEBUG ("preview format is: %" GST_PTR_FORMAT, caps);
 
-  g_object_set (filter, "caps", camera->preview_caps, NULL);
+  g_object_set (filter, "caps", caps, NULL);
   g_object_set (sink, "preroll-queue-len", 1, "signal-handoffs", TRUE, NULL);
   g_object_set (vscale, "method", 0, NULL);
 
@@ -118,20 +116,20 @@ gst_camerabin_preview_create_pipeline (GstCameraBin * camera)
   if (!gst_element_link_pads (filter, "src", sink, "sink"))
     return FALSE;
 
-  return TRUE;
+  return pipe;
 
   /* ERRORS */
 no_elements:
   {
     g_warning ("Could not make preview pipeline: %s", error->message);
     g_error_free (error);
-    return FALSE;
+    return NULL;
   }
 no_pipeline:
   {
     g_warning ("Could not make preview pipeline: %s",
         "no pipeline (unknown error)");
-    return FALSE;
+    return NULL;
   }
 }
 
@@ -139,23 +137,25 @@ no_pipeline:
 /**
  * gst_camerabin_preview_destroy_pipeline:
  * @camera: camerabin object
+ * @pipeline: the pipeline to be destroyed
  *
  * Destroy preview converter pipeline.
  */
 void
-gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera)
+gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
+    GstElement * pipeline)
 {
-  if (camera->preview_pipeline) {
-    gst_element_set_state (camera->preview_pipeline, GST_STATE_NULL);
-    gst_object_unref (camera->preview_pipeline);
-    camera->preview_pipeline = NULL;
-  }
+  g_return_if_fail (pipeline != NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
 }
 
 
 /**
  * gst_camerabin_preview_convert:
  * @camera: camerabin object
+ * @pipeline: preview pipeline to use
  * @buf: #GstBuffer that contains the frame to be converted
  *
  * Create a preview image of the given frame.
@@ -163,7 +163,8 @@ gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera)
  * Returns: converted preview image, or NULL if operation failed.
  */
 GstBuffer *
-gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
+gst_camerabin_preview_convert (GstCameraBin * camera,
+    GstElement * pipeline, GstBuffer * buf)
 {
   GstMessage *msg;
   GstBuffer *result = NULL;
@@ -175,13 +176,13 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
 
   g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
 
-  if (camera->preview_pipeline == NULL) {
+  if (pipeline == NULL) {
     GST_WARNING ("pipeline is NULL");
     goto no_pipeline;
   }
 
-  src = gst_bin_get_by_name (GST_BIN (camera->preview_pipeline), "prev_src");
-  sink = gst_bin_get_by_name (GST_BIN (camera->preview_pipeline), "prev_sink");
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "prev_src");
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "prev_sink");
 
   if (!src || !sink) {
     GST_WARNING ("pipeline doesn't have src / sink elements");
@@ -199,12 +200,12 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
 
   GST_DEBUG ("running conversion pipeline, source is: %" GST_PTR_FORMAT,
       GST_BUFFER_CAPS (buf));
-  gst_element_set_state (camera->preview_pipeline, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   g_signal_emit_by_name (src, "push-buffer", buf, &fret);
 
   /* TODO: do we need to use a bus poll, can we just register a callback to the bus? */
-  bus = gst_element_get_bus (camera->preview_pipeline);
+  bus = gst_element_get_bus (pipeline);
   msg =
       gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_EOS, 25 * GST_SECOND);
 
@@ -245,7 +246,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera, GstBuffer * buf)
 
   g_signal_handlers_disconnect_by_func (sink, G_CALLBACK (save_result),
       &result);
-  gst_element_set_state (camera->preview_pipeline, GST_STATE_READY);
+  gst_element_set_state (pipeline, GST_STATE_READY);
 
   GST_BUFFER_FLAGS (buf) = bflags;
 

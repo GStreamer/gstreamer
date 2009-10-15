@@ -87,6 +87,9 @@ struct _GstCameraBin
   /* Caps used to create preview image */
   GstCaps *preview_caps;
 
+  /* Caps used to create video preview image */
+  GstCaps *video_preview_caps;
+
   /* The digital zoom (from 100% to 1000%) */
   gint zoom;
 
@@ -110,6 +113,9 @@ struct _GstCameraBin
   GstElement *vidbin;           /*  bin that holds video capturing elements */
   GstElement *active_bin;       /* image or video bin that is currently in use */
   GstElement *preview_pipeline; /* pipeline for creating preview images */
+  GstElement *video_preview_pipeline;   /* pipeline for creating video preview image */
+
+  GstBuffer *video_preview_buffer;      /* buffer for storing video preview */
 
   /* source elements */
   GstElement *src_vid_src;

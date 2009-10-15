@@ -26,12 +26,14 @@
 #include "gstcamerabin.h"
 
 G_BEGIN_DECLS
-    gboolean gst_camerabin_preview_create_pipeline (GstCameraBin * camera);
+    GstElement * gst_camerabin_preview_create_pipeline (GstCameraBin * camera,
+    GstCaps * caps);
 
-void gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera);
+void gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
+    GstElement * pipeline);
 
 GstBuffer *gst_camerabin_preview_convert (GstCameraBin * camera,
-    GstBuffer * buf);
+    GstElement * pipeline, GstBuffer * buf);
 
 G_END_DECLS
 #endif                          /* __CAMERABINPREVIEW_H__ */
