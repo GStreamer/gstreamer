@@ -1890,9 +1890,11 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
           (int) a->audio_format);
       continue;
     }
-#endif
     if (a->audio_format == 0)
       have_audio = TRUE;
+#else
+    have_audio = TRUE;
+#endif
 
     GST_DEBUG_OBJECT (src, "Audio stream %d is format %d, substream %d", i,
         (int) a->audio_format, phys_id);
