@@ -550,12 +550,15 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   GST_INFO ("gl window created");
 
-  //Init glew
+#ifndef OPENGL_ES2
   err = glewInit ();
+#endif
   if (err != GLEW_OK) {
+#ifndef OPENGL_ES2
     GST_ERROR_OBJECT (display, "Failed to init GLEW: %s",
         glewGetErrorString (err));
     display->isAlive = FALSE;
+#endif
   } else {
     //OpenGL > 1.2.0 and Glew > 1.4.0
     GString *opengl_version =
@@ -568,7 +571,9 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
         &opengl_version_minor);
 
     GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
+#ifndef OPENGL_ES2
     GST_INFO ("GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
+#endif
     if (glGetString (GL_SHADING_LANGUAGE_VERSION))
       GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
           glGetString (GL_SHADING_LANGUAGE_VERSION));
@@ -1931,10 +1936,8 @@ gst_gl_display_glgen_texture (GstGLDisplay * display, GLuint * pTexture,
       g_assert_not_reached ();
   }
 
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
       GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
@@ -2163,7 +2166,7 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
 
   } else
     *pTexture = 0;
- 
+
   gst_gl_display_unlock (display);
 }
 
@@ -2806,7 +2809,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
           GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
           GL_CLAMP_TO_EDGE);
+#ifndef OPENGL_ES2
       glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#endif
     }
       break;
 
@@ -2888,7 +2893,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
               GL_CLAMP_TO_EDGE);
           glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
               GL_CLAMP_TO_EDGE);
+#ifndef OPENGL_ES2
           glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#endif
         }
           break;
         default:
@@ -3081,8 +3088,6 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
 
   glUseProgramObjectARB (0);
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
-  glReadBuffer (GL_BACK);
 #endif
 
   switch (video_format) {
@@ -3317,7 +3322,9 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   gst_gl_display_check_framebuffer_status ();
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->download_fbo);
+#ifndef OPENGL_ES2
   glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+#endif
 
   switch (video_format) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -3335,13 +3342,16 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
     {
       glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 
+#ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+#endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           (guint8 *) data + gst_video_format_get_component_offset (video_format,
               1, width, height));
-
+#ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
+#endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           (guint8 *) data + gst_video_format_get_component_offset (video_format,
@@ -3351,8 +3361,9 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
     default:
       g_assert_not_reached ();
   }
-
+#ifndef OPENGL_ES2
   glReadBuffer (GL_NONE);
+#endif
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
   gst_gl_display_check_framebuffer_status ();
