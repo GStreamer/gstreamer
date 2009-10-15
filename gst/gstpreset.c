@@ -922,8 +922,8 @@ gst_preset_load_preset (GstPreset * preset, const gchar * name)
  * @preset: a #GObject that implements #GstPreset
  * @name: preset name to save
  *
- * Save the current preset under the given name. If there is already a preset by
- * this @name it will be overwritten.
+ * Save the current object settings as a preset under the given name. If there
+ * is already a preset by this @name it will be overwritten.
  *
  * Returns: %TRUE for success, %FALSE
  *
