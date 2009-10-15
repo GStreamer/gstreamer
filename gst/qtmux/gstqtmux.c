@@ -1344,7 +1344,7 @@ bail:
 no_time:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
-        ("Failed to determine time to mux."));
+        ("Received buffer without timestamp/duration."));
     goto bail;
   }
 fragmented_sample:
