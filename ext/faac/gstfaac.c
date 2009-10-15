@@ -130,6 +130,12 @@ GST_DEBUG_CATEGORY_STATIC (faac_debug);
 #define GST_CAT_DEFAULT faac_debug
 
 #define FAAC_DEFAULT_MPEGVERSION 4
+#define FAAC_DEFAULT_OUTPUTFORMAT 0     /* RAW */
+#define FAAC_DEFAULT_BITRATE      128 * 1000
+#define FAAC_DEFAULT_PROFILE      LOW
+#define FAAC_DEFAULT_TNS          FALSE
+#define FAAC_DEFAULT_MIDSIDE      TRUE
+#define FAAC_DEFAULT_SHORTCTL     SHORTCTL_NORMAL
 
 GType
 gst_faac_get_type (void)
@@ -257,24 +263,25 @@ gst_faac_class_init (GstFaacClass * klass)
   /* properties */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (bps)", "Bitrate in bits/sec",
-          8 * 1000, 320 * 1000, 128 * 1000, G_PARAM_READWRITE));
+          8 * 1000, 320 * 1000, FAAC_DEFAULT_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROFILE,
       g_param_spec_enum ("profile", "Profile", "MPEG/AAC encoding profile",
-          GST_TYPE_FAAC_PROFILE, LOW, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_PROFILE, FAAC_DEFAULT_PROFILE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TNS,
       g_param_spec_boolean ("tns", "TNS", "Use temporal noise shaping",
-          FALSE, G_PARAM_READWRITE));
+          FAAC_DEFAULT_TNS, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MIDSIDE,
       g_param_spec_boolean ("midside", "Midside", "Allow mid/side encoding",
-          TRUE, G_PARAM_READWRITE));
+          FAAC_DEFAULT_MIDSIDE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SHORTCTL,
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
-          GST_TYPE_FAAC_SHORTCTL, SHORTCTL_NORMAL, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
       g_param_spec_enum ("outputformat", "Output format",
           "Format of output frames",
-          GST_TYPE_FAAC_OUTPUTFORMAT, 0 /* RAW */ , G_PARAM_READWRITE));
+          GST_TYPE_FAAC_OUTPUTFORMAT, FAAC_DEFAULT_OUTPUTFORMAT,
+          G_PARAM_READWRITE));
 
   /* virtual functions */
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faac_change_state);
@@ -299,12 +306,12 @@ gst_faac_init (GstFaac * faac)
   faac->adapter = gst_adapter_new ();
 
   /* default properties */
-  faac->bitrate = 1000 * 128;
-  faac->profile = LOW;
-  faac->shortctl = SHORTCTL_NORMAL;
-  faac->outputformat = 0;       /* RAW */
-  faac->tns = FALSE;
-  faac->midside = TRUE;
+  faac->bitrate = FAAC_DEFAULT_BITRATE;
+  faac->profile = FAAC_DEFAULT_PROFILE;
+  faac->shortctl = FAAC_DEFAULT_SHORTCTL;
+  faac->outputformat = FAAC_DEFAULT_OUTPUTFORMAT;
+  faac->tns = FAAC_DEFAULT_TNS;
+  faac->midside = FAAC_DEFAULT_MIDSIDE;
 
   gst_faac_reset (faac);
 }
