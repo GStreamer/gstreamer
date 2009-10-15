@@ -272,7 +272,7 @@ gst_faac_class_init (GstFaacClass * klass)
   g_object_class_install_property (gobject_class, ARG_SHORTCTL,
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
-          GST_TYPE_FAAC_SHORTCTL, MAIN, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_SHORTCTL, SHORTCTL_NORMAL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
       g_param_spec_enum ("outputformat", "Output format",
           "Format of output frames",
