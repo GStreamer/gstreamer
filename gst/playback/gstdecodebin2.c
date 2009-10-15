@@ -335,6 +335,9 @@ struct _GstDecodeChain
   gboolean deadend;             /* This chain is incomplete and can't be completed,
                                    e.g. no suitable decoder could be found
                                  */
+  GstCaps *endcaps;             /* Caps that were used when linking to the endpad
+                                   or that resulted in the deadend
+                                 */
 
   /* FIXME: This should be done directly via a thread! */
   GList *old_groups;            /* Groups that should be freed later */
@@ -999,7 +1002,7 @@ static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
 static gboolean connect_element (GstDecodeBin * dbin, GstElement * element,
     GstDecodeChain * chain);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src,
-    GstDecodePad * dpad, GstPad * pad, GstDecodeChain * chain);
+    GstDecodePad * dpad, GstPad * pad, GstCaps * caps, GstDecodeChain * chain);
 
 static void pad_added_cb (GstElement * element, GstPad * pad,
     GstDecodeChain * chain);
@@ -1120,7 +1123,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 expose_pad:
   {
     GST_LOG_OBJECT (dbin, "Pad is final. autoplug-continue:%d", apcontinue);
-    expose_pad (dbin, src, dpad, pad, chain);
+    expose_pad (dbin, src, dpad, pad, caps, chain);
     gst_object_unref (dpad);
     return;
   }
@@ -1131,6 +1134,7 @@ unknown_type:
         gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
 
     chain->deadend = TRUE;
+    chain->endcaps = gst_caps_ref (caps);
 
     gst_element_post_message (GST_ELEMENT_CAST (dbin),
         gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
@@ -1259,7 +1263,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       case GST_AUTOPLUG_SELECT_EXPOSE:
         GST_DEBUG_OBJECT (dbin, "autoplug select requested expose");
         /* expose the pad, we don't have the source element */
-        expose_pad (dbin, src, dpad, pad, chain);
+        expose_pad (dbin, src, dpad, pad, caps, chain);
         res = TRUE;
         goto beach;
       case GST_AUTOPLUG_SELECT_SKIP:
@@ -1488,7 +1492,7 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
  */
 static void
 expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
-    GstPad * pad, GstDecodeChain * chain)
+    GstPad * pad, GstCaps * caps, GstDecodeChain * chain)
 {
   GstPad *mqpad = NULL;
 
@@ -1513,6 +1517,7 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
   gst_decode_pad_activate (dpad, chain);
   chain->endpad = gst_object_ref (dpad);
+  chain->endcaps = gst_caps_ref (caps);
 
   EXPOSE_LOCK (dbin);
   if (gst_decode_chain_is_complete (dbin->decode_chain)) {
@@ -1897,6 +1902,11 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   if (chain->pad) {
     gst_object_unref (chain->pad);
     chain->pad = NULL;
+  }
+
+  if (chain->endcaps) {
+    gst_caps_unref (chain->endcaps);
+    chain->endcaps = NULL;
   }
 
   GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hided" : "Freed"),
