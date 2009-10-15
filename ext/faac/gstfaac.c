@@ -31,10 +31,8 @@
  * framing and needs no container.
  *
  * The #GstFaac:profile property determines the AAC profile, where the default
- * Main profile is fine for most players and settings,
- * but in some cases (e.g. hardware platforms)
- * a more restricted profile/level may be necessary.
- * In particular, typical (iTunes) m4a expects LC profile AAC data.
+ * LC (Low Complexity) profile is most widely used, supported and suitable for
+ * general use. The other profiles are very rarely used and often not supported.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -262,7 +260,7 @@ gst_faac_class_init (GstFaacClass * klass)
           8 * 1000, 320 * 1000, 128 * 1000, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROFILE,
       g_param_spec_enum ("profile", "Profile", "MPEG/AAC encoding profile",
-          GST_TYPE_FAAC_PROFILE, MAIN, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_PROFILE, LOW, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TNS,
       g_param_spec_boolean ("tns", "TNS", "Use temporal noise shaping",
           FALSE, G_PARAM_READWRITE));
@@ -302,7 +300,7 @@ gst_faac_init (GstFaac * faac)
 
   /* default properties */
   faac->bitrate = 1000 * 128;
-  faac->profile = MAIN;
+  faac->profile = LOW;
   faac->shortctl = SHORTCTL_NORMAL;
   faac->outputformat = 0;       /* RAW */
   faac->tns = FALSE;
