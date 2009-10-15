@@ -58,7 +58,8 @@ enum
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_DISPLAY
 };
 
 /* the capabilities of the inputs and outputs.
@@ -79,7 +80,6 @@ GST_BOILERPLATE_FULL (GstVdpMpegDec, gst_vdp_mpeg_dec,
     GstElement, GST_TYPE_ELEMENT, DEBUG_INIT);
 
 static void gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
-static void gst_vdp_mpeg_dec_finalize (GObject * object);
 
 typedef struct
 {
@@ -373,7 +373,7 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
     gint width, height;
 
     if (G_UNLIKELY (!mpeg_dec->device)) {
-      mpeg_dec->device = gst_vdp_get_device (mpeg_dec->display_name);
+      mpeg_dec->device = gst_vdp_get_device (mpeg_dec->display);
       if (G_UNLIKELY (!mpeg_dec->device))
         goto device_error;
     }
@@ -1165,6 +1165,46 @@ gst_vdp_mpeg_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 /* GObject vmethod implementations */
+static void
+gst_vdp_mpeg_dec_finalize (GObject * object)
+{
+  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
+
+  g_object_unref (mpeg_dec->adapter);
+  g_mutex_free (mpeg_dec->mutex);
+}
+
+static void
+gst_vdp_mpeg_dec_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
+
+  switch (property_id) {
+    case PROP_DISPLAY:
+      g_value_set_string (value, mpeg_dec->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vdp_mpeg_dec_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
+
+  switch (property_id) {
+    case PROP_DISPLAY:
+      mpeg_dec->display = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_vdp_mpeg_dec_base_init (gpointer gclass)
@@ -1200,9 +1240,15 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->get_property = gst_vdp_mpeg_dec_get_property;
+  gobject_class->set_property = gst_vdp_mpeg_dec_set_property;
   gobject_class->finalize = gst_vdp_mpeg_dec_finalize;
 
   gstelement_class->change_state = gst_vdp_mpeg_dec_change_state;
+
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_string ("display", "Display", "X Display name",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -1247,17 +1293,8 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->sink);
 
-  mpeg_dec->display_name = NULL;
+  mpeg_dec->display = NULL;
 
   mpeg_dec->adapter = gst_adapter_new ();
   mpeg_dec->mutex = g_mutex_new ();
-}
-
-static void
-gst_vdp_mpeg_dec_finalize (GObject * object)
-{
-  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
-
-  g_object_unref (mpeg_dec->adapter);
-  g_mutex_free (mpeg_dec->mutex);
 }

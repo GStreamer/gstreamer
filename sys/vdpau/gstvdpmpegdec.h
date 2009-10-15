@@ -52,7 +52,7 @@ struct _GstVdpMpegDec
   GstPad *sink;
 
   /* properties */
-  gchar *display_name;
+  gchar *display;
   
   gboolean yuv_output;
 
