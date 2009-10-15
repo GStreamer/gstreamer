@@ -627,7 +627,7 @@ gst_avi_demux_seek_streams (GstAviDemux * avi, guint64 offset, gboolean before)
     }
 
     if (!entry) {
-      GST_DEBUG_OBJECT (avi, "no position for stream %d, assuming at start");
+      GST_DEBUG_OBJECT (avi, "no position for stream %d, assuming at start", i);
       stream->current_entry = 0;
       stream->current_total = 0;
       continue;
