@@ -4341,13 +4341,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       goto corrupt_file;
   }
 
+  len = QT_UINT32 ((guint8 *) mdhd->data);
   version = QT_UINT32 ((guint8 *) mdhd->data + 8);
   GST_LOG_OBJECT (qtdemux, "track version/flags: %08x", version);
   if (version == 0x01000000) {
+    if (len < 38)
+      goto corrupt_file;
     stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 28);
     stream->duration = QT_UINT64 ((guint8 *) mdhd->data + 32);
     stream->lang_code = QT_UINT16 ((guint8 *) mdhd->data + 36);
   } else {
+    if (len < 30)
+      goto corrupt_file;
     stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 20);
     stream->duration = QT_UINT32 ((guint8 *) mdhd->data + 24);
     stream->lang_code = QT_UINT16 ((guint8 *) mdhd->data + 28);
@@ -4397,7 +4402,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GST_LOG_OBJECT (qtdemux, "track type: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QT_FOURCC ((guint8 *) hdlr->data + 12)));
 
-  stream->subtype = QT_FOURCC ((guint8 *) hdlr->data + 16);
+  len = QT_UINT32 ((guint8 *) hdlr->data);
+  if (len >= 20)
+    stream->subtype = QT_FOURCC ((guint8 *) hdlr->data + 16);
   GST_LOG_OBJECT (qtdemux, "track subtype: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (stream->subtype));
 
@@ -5090,6 +5097,11 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
   char *name;
   gchar *data;
   gdouble longitude, latitude, altitude;
+  gint len;
+
+  len = QT_UINT32 (node->data);
+  if (len <= 14)
+    goto short_read;
 
   data = node->data;
   offset = 14;
@@ -5111,6 +5123,9 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
     g_free (name);
   }
 
+  if (len <= offset + 2 + 4 + 4 + 4)
+    goto short_read;
+
   /* +1 +1 = skip null-terminator and location role byte */
   offset += 1 + 1;
   longitude = QT_FP32 (data + offset);
@@ -5131,6 +5146,15 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
   }
 
   /* TODO: no GST_TAG_, so astronomical body and additional notes skipped */
+
+  return;
+
+  /* ERRORS */
+short_read:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "short read parsing 3GP location");
+    return;
+  }
 }
 
 
@@ -5140,6 +5164,11 @@ qtdemux_tag_add_year (GstQTDemux * qtdemux, const char *tag, const char *dummy,
 {
   guint16 y;
   GDate *date;
+  gint len;
+
+  len = QT_UINT32 (node->data);
+  if (len < 14)
+    return;
 
   y = QT_UINT16 ((guint8 *) node->data + 12);
   GST_DEBUG_OBJECT (qtdemux, "year: %u", y);
@@ -5157,7 +5186,11 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
   char *tag_str = NULL;
   guint8 *entity;
   guint16 table;
+  gint len;
 
+  len = QT_UINT32 (node->data);
+  if (len <= 20)
+    goto short_read;
 
   offset = 12;
   entity = (guint8 *) node->data + offset;
@@ -5184,6 +5217,15 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
       tag_str, NULL);
 
   g_free (tag_str);
+
+  return;
+
+  /* ERRORS */
+short_read:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "short read parsing 3GP classification");
+    return;
+  }
 }
 
 static gboolean
@@ -5202,7 +5244,7 @@ qtdemux_tag_add_str_full (GstQTDemux * qtdemux, const char *tag,
   if (data) {
     len = QT_UINT32 (data->data);
     type = QT_UINT32 ((guint8 *) data->data + 8);
-    if (type == 0x00000001) {
+    if (type == 0x00000001 && len > 16) {
       s = gst_tag_freeform_string_to_utf8 ((char *) data->data + 16, len - 16,
           env_vars);
       if (s) {
@@ -5437,7 +5479,7 @@ qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   if (data) {
     len = QT_UINT32 (data->data);
     type = QT_UINT32 ((guint8 *) data->data + 8);
-    if (type == 0x00000001) {
+    if (type == 0x00000001 && len > 16) {
       guint y, m = 1, d = 1;
       gint ret;
 
@@ -5620,8 +5662,16 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   for (i = 0; i < G_N_ELEMENTS (add_funcs); ++i) {
     node = qtdemux_tree_get_child_by_type (ilst, add_funcs[i].fourcc);
     if (node) {
-      add_funcs[i].func (qtdemux, add_funcs[i].gst_tag,
-          add_funcs[i].gst_tag_bis, node);
+      gint len;
+
+      len = QT_UINT32 (node->data);
+      if (len < 12) {
+        GST_DEBUG_OBJECT (qtdemux, "too small tag atom %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (add_funcs[i].fourcc));
+      } else {
+        add_funcs[i].func (qtdemux, add_funcs[i].gst_tag,
+            add_funcs[i].gst_tag_bis, node);
+      }
       g_node_destroy (node);
     }
   }
