@@ -314,13 +314,16 @@ gst_ladspa_class_get_param_name (GstLADSPAClass * klass, gint portnum)
     gint n = 1;
     gchar *nret = g_strdup_printf ("%s-%d", ret, n++);
 
-    g_free (ret);
     while (g_object_class_find_property (G_OBJECT_CLASS (klass), nret)) {
       g_free (nret);
       nret = g_strdup_printf ("%s-%d", ret, n++);
     }
+    g_free (ret);
     ret = nret;
   }
+
+  GST_DEBUG ("built property name '%s' from port name '%s'", ret,
+      desc->PortNames[portnum]);
 
   return ret;
 }
