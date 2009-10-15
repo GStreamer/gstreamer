@@ -1650,6 +1650,31 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+/* this is the final event function we receive on the internal source pad when
+ * we deal with TCP connections */
+static gboolean
+gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstEvent * event)
+{
+  GstRTSPSrc *src;
+  gboolean res;
+
+  src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
+
+  GST_DEBUG_OBJECT (src, "pad %s:%s received event %s",
+      GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    case GST_EVENT_QOS:
+    case GST_EVENT_NAVIGATION:
+    case GST_EVENT_LATENCY:
+    default:
+      res = TRUE;
+      break;
+  }
+  return res;
+}
+
 /* this is the final query function we receive on the internal source pad when
  * we deal with TCP connections */
 static gboolean
@@ -2140,6 +2165,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_pad_link (pad0, stream->channelpad[0]);
     gst_object_unref (stream->channelpad[0]);
     stream->channelpad[0] = pad0;
+    gst_pad_set_event_function (pad0, gst_rtspsrc_handle_internal_src_event);
     gst_pad_set_query_function (pad0, gst_rtspsrc_handle_internal_src_query);
     gst_pad_set_element_private (pad0, src);
     gst_pad_set_active (pad0, TRUE);
