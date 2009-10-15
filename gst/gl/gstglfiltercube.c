@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -319,7 +319,9 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
       GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
+#ifndef OPENGL_ES2
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#endif
 
   glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
