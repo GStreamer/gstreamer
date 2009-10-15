@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.12.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-12 12:41+0100\n"
-"PO-Revision-Date: 2009-09-19 18:59+0930\n"
+"POT-Creation-Date: 2009-10-15 23:53+0100\n"
+"PO-Revision-Date: 2009-10-14 19:52+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -62,15 +62,3 @@ msgstr "Luồng này không chứa dữ liệu."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
-
-#~ msgid "Invalid title information on DVD."
-#~ msgstr "Đĩa DVD có thông tin tựa đề sai."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
-
-#~ msgid "Failed to open DVD device '%s'."
-#~ msgstr "Lỗi mở thiết bị đĩa DVD « %s »."
-
-#~ msgid "Failed to set PGC based seeking."
-#~ msgstr "Lỗi đặt cách tìm nơi dựa vào PGC."
