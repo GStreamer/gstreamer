@@ -3820,12 +3820,13 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
     GstFlowReturn ret)
 {
   guint i;
+  gboolean unexpected = FALSE, not_linked = TRUE;
 
   /* store the value */
   stream->last_flow = ret;
 
-  /* any other error that is not-linked can be returned right away */
-  if (G_UNLIKELY (ret != GST_FLOW_NOT_LINKED))
+  /* any other error that is not-linked or eos can be returned right away */
+  if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
     goto done;
 
   /* only return NOT_LINKED if all other pads returned NOT_LINKED */
@@ -3833,13 +3834,19 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
     GstAviStream *ostream = &avi->stream[i];
 
     ret = ostream->last_flow;
-    /* some other return value (must be SUCCESS but we can return
-     * other values as well) */
-    if (G_UNLIKELY (ret != GST_FLOW_NOT_LINKED))
+    /* no unexpected or unlinked, return */
+    if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
       goto done;
+
+    /* we check to see if we have at least 1 unexpected or all unlinked */
+    unexpected |= (ret == GST_FLOW_UNEXPECTED);
+    not_linked &= (ret == GST_FLOW_NOT_LINKED);
   }
-  /* if we get here, all other pads were unlinked and we return
-   * NOT_LINKED then */
+  /* when we get here, we all have unlinked or unexpected */
+  if (not_linked)
+    ret = GST_FLOW_NOT_LINKED;
+  else if (unexpected)
+    ret = GST_FLOW_UNEXPECTED;
 done:
   GST_LOG_OBJECT (avi, "combined %s to return %s",
       gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
