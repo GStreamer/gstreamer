@@ -117,7 +117,7 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
 GstElement *
 gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
 {
-  GstElement *new_elem = NULL;
+  GstElement *new_elem;
 
   new_elem = gst_element_factory_make (elem_name, NULL);
   if (!new_elem) {
@@ -128,6 +128,53 @@ gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
   }
 
   return new_elem;
+}
+
+/* try to change the state of an element. This function returns the element when
+ * the state change could be performed. When this function returns NULL an error
+ * occured and the element is unreffed if @unref is TRUE. */
+static GstElement *
+try_element (GstElement * bin, GstElement * element, gboolean unref)
+{
+  GstStateChangeReturn ret;
+
+  if (element) {
+    ret = gst_element_set_state (element, GST_STATE_READY);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+      GST_DEBUG_OBJECT (bin, "failed state change..");
+      gst_element_set_state (element, GST_STATE_NULL);
+      if (unref)
+        gst_object_unref (element);
+      element = NULL;
+    }
+  }
+  return element;
+}
+
+GstElement *
+gst_camerabin_setup_default_element (GstBin * bin, GstElement * user_elem,
+    const gchar * auto_elem_name, const gchar * default_elem_name)
+{
+  GstElement *elem;
+
+  if (user_elem) {
+    GST_DEBUG_OBJECT (bin, "trying configured element");
+    elem = try_element (bin, user_elem, FALSE);
+  } else {
+    /* only try fallback if no specific sink was chosen */
+    GST_DEBUG_OBJECT (bin, "trying %s", auto_elem_name);
+    elem = gst_element_factory_make (auto_elem_name, NULL);
+    elem = try_element (bin, elem, TRUE);
+    if (elem == NULL) {
+      /* if default sink from config.h is different then try it too */
+      if (strcmp (default_elem_name, auto_elem_name)) {
+        GST_DEBUG_OBJECT (bin, "trying %s", default_elem_name);
+        elem = gst_element_factory_make (default_elem_name, NULL);
+        elem = try_element (bin, elem, TRUE);
+      }
+    }
+  }
+  return elem;
 }
 
 /**

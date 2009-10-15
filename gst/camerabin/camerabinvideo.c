@@ -51,6 +51,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
 #include "camerabingeneral.h"
@@ -63,7 +66,6 @@
 
 /* internal element names */
 
-#define DEFAULT_AUD_SRC "pulsesrc"
 #define DEFAULT_AUD_ENC "vorbisenc"
 #define DEFAULT_VID_ENC "theoraenc"
 #define DEFAULT_MUX "oggmux"
@@ -616,14 +618,13 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       NULL);
 
   /* Add user set or default audio source element */
-  if (vid->user_aud_src) {
-    vid->aud_src = vid->user_aud_src;
-    if (!gst_camerabin_add_element (vidbin, vid->aud_src)) {
-      goto error;
-    }
-  } else if (!(vid->aud_src =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_SRC))) {
+  if (!(vid->aud_src = gst_camerabin_setup_default_element (vidbin,
+              vid->user_aud_src, "autoaudiosrc", DEFAULT_AUDIOSRC))) {
+    vid->aud_src = NULL;
     goto error;
+  } else {
+    if (!gst_camerabin_add_element (vidbin, vid->aud_src))
+      goto error;
   }
 
   /* Add queue element for audio */

@@ -246,6 +246,9 @@ AG_GST_SET_ERROR_CXXFLAGS($GST_CVS)
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
+dnl used in examples
+AG_GST_DEFAULT_ELEMENTS
+
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs

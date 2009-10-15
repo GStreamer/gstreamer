@@ -226,12 +226,6 @@ static guint camerabin_signals[LAST_SIGNAL];
 //#define USE_VIEWFINDER_COLOR_CONVERTER 1
 //#define USE_VIEWFINDER_SCALE 1
 
-/* internal element names */
-
-/* FIXME: Make sure this can work with autovideosrc and use that. */
-#define DEFAULT_SRC_VID_SRC "v4l2src"
-#define DEFAULT_VIEW_SINK "autovideosink"
-
 /* message names */
 #define PREVIEW_MESSAGE_NAME "preview-image"
 #define IMG_CAPTURED_MESSAGE_NAME "image-captured"
@@ -558,16 +552,15 @@ camerabin_create_src_elements (GstCameraBin * camera)
   GstBin *cbin = GST_BIN (camera);
   gchar *driver_name = NULL;
 
-  if (camera->user_vid_src) {
-    camera->src_vid_src = camera->user_vid_src;
-
-    if (!gst_camerabin_add_element (cbin, camera->src_vid_src)) {
-      camera->src_vid_src = NULL;
-      goto done;
-    }
-  } else if (!(camera->src_vid_src =
-          gst_camerabin_create_and_add_element (cbin, DEFAULT_SRC_VID_SRC)))
+  /* Add user set or default video src element */
+  if (!(camera->src_vid_src = gst_camerabin_setup_default_element (cbin,
+              camera->user_vid_src, "autovideosrc", DEFAULT_VIDEOSRC))) {
+    camera->src_vid_src = NULL;
     goto done;
+  } else {
+    if (!gst_camerabin_add_element (cbin, camera->src_vid_src))
+      goto done;
+  }
 #ifdef USE_COLOR_CONVERTER
   if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
     goto done;
@@ -646,10 +639,10 @@ static gboolean
 camerabin_create_view_elements (GstCameraBin * camera)
 {
   const GList *pads;
+  GstBin *cbin = GST_BIN (camera);
 
   if (!(camera->view_in_sel =
-          gst_camerabin_create_and_add_element (GST_BIN (camera),
-              "input-selector"))) {
+          gst_camerabin_create_and_add_element (cbin, "input-selector"))) {
     goto error;
   }
 
@@ -664,33 +657,29 @@ camerabin_create_view_elements (GstCameraBin * camera)
 #ifdef USE_VIEWFINDER_CONVERTERS
   /* Add videoscale in case we need to downscale frame for view finder */
   if (!(camera->view_scale =
-          gst_camerabin_create_and_add_element (GST_BIN (camera),
-              "videoscale"))) {
+          gst_camerabin_create_and_add_element (cbin, "videoscale"))) {
     goto error;
   }
 
   /* Add capsfilter to maintain aspect ratio while scaling */
   if (!(camera->aspect_filter =
-          gst_camerabin_create_and_add_element (GST_BIN (camera),
-              "capsfilter"))) {
+          gst_camerabin_create_and_add_element (cbin, "capsfilter"))) {
     goto error;
   }
 #endif
 #ifdef USE_VIEWFINDER_COLOR_CONVERTER
-  if (!gst_camerabin_create_and_add_element (GST_BIN (camera),
-          "ffmpegcolorspace")) {
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace")) {
     goto error;
   }
 #endif
-  if (camera->user_vf_sink) {
-    camera->view_sink = camera->user_vf_sink;
-    if (!gst_camerabin_add_element (GST_BIN (camera), camera->view_sink)) {
-      goto error;
-    }
-  } else if (!(camera->view_sink =
-          gst_camerabin_create_and_add_element (GST_BIN (camera),
-              DEFAULT_VIEW_SINK))) {
+  /* Add user set or default video sink element */
+  if (!(camera->view_sink = gst_camerabin_setup_default_element (cbin,
+              camera->user_vf_sink, "autovideosink", DEFAULT_VIDEOSINK))) {
+    camera->view_sink = NULL;
     goto error;
+  } else {
+    if (!gst_camerabin_add_element (cbin, camera->view_sink))
+      goto error;
   }
 
   return TRUE;
@@ -1652,8 +1641,7 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
     gst_pad_send_event (videopad, gst_event_new_eos ());
     gst_object_unref (videopad);
     camera->eos_handled = TRUE;
-  }
-  else {
+  } else {
     GST_INFO_OBJECT (camera, "dropping duplicate EOS");
   }
 }
@@ -2472,41 +2460,41 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    *  GstCameraBin:vfsink:
    *
    * Set up a sink element to render frames in view finder.
-   * By default "autovideosink" will be the sink element.
+   * By default "autovideosink" or DEFAULT_VIDEOSINK will be used.
    * This property can only be set while #GstCameraBin is in NULL state.
    * The ownership of the element will be taken by #GstCameraBin.
    */
 
   g_object_class_install_property (gobject_class, ARG_VF_SINK,
       g_param_spec_object ("vfsink", "View finder sink",
-          "View finder sink GStreamer element (default is " DEFAULT_VIEW_SINK
-          ")", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          "View finder sink GStreamer element (NULL = default video sink)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
    *  GstCameraBin:videosrc:
    *
    * Set up a video source element.
-   * By default "v4l2src" will be the src element.
+   * By default "autovideosrc" or DEFAULT_VIDEOSRC will be used.
    * This property can only be set while #GstCameraBin is in NULL state.
    * The ownership of the element will be taken by #GstCameraBin.
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SRC,
       g_param_spec_object ("videosrc", "Video source element",
-          "Video source GStreamer element (default is " DEFAULT_SRC_VID_SRC ")",
+          "Video source GStreamer element (NULL = default video src)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
   /**
    *  GstCameraBin:audiosrc:
    *
    * Set up an audio source element.
-   * By default "pulsesrc" will be the source element.
+   * By default "autoaudiosrc" or DEFAULT_AUDIOSRC will be used.
    * This property can only be set while #GstCameraBin is in NULL state.
    * The ownership of the element will be taken by #GstCameraBin.
    */
 
   g_object_class_install_property (gobject_class, ARG_AUDIO_SRC,
       g_param_spec_object ("audiosrc", "Audio source element",
-          "Audio source GStreamer element (default is pulsesrc)",
+          "Audio source GStreamer element (NULL = default audio src)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
@@ -2898,7 +2886,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         new_caps = (GstCaps *) gst_value_get_caps (value);
         GST_DEBUG_OBJECT (camera,
             "setting preview caps: %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT,
-             camera->preview_caps, new_caps);
+            camera->preview_caps, new_caps);
 
         if (!gst_caps_is_equal (camera->preview_caps, new_caps)) {
           GST_OBJECT_LOCK (camera);
