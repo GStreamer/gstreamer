@@ -2447,6 +2447,128 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   return va - vb;
 }
 
+static GstCaps *
+_gst_element_get_linked_caps (GstElement * src, GstElement * sink)
+{
+  GstIterator *it;
+  GstElement *parent;
+  GstPad *pad, *peer;
+  gboolean done = FALSE;
+  GstCaps *caps = NULL;
+
+  it = gst_element_iterate_src_pads (src);
+  while (!done) {
+    switch (gst_iterator_next (it, (gpointer) & pad)) {
+      case GST_ITERATOR_OK:
+        peer = gst_pad_get_peer (pad);
+        if (peer) {
+          parent = gst_pad_get_parent_element (peer);
+          if (parent == sink) {
+            caps = gst_pad_get_negotiated_caps (pad);
+            done = TRUE;
+          }
+
+          if (parent)
+            gst_object_unref (parent);
+          gst_object_unref (peer);
+        }
+        gst_object_unref (pad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+
+  gst_iterator_free (it);
+
+  return caps;
+}
+
+static GQuark topology_structure_name = 0;
+static GQuark topology_caps = 0;
+static GQuark topology_next = 0;
+static GQuark topology_pad = 0;
+
+/* FIXME: Invent gst_structure_take_structure() to prevent all the
+ * structure copying for nothing
+ */
+static GstStructure *
+gst_decode_chain_get_topology (GstDecodeChain * chain)
+{
+  GstStructure *s, *u;
+  GList *l;
+  GstCaps *caps;
+
+  u = gst_structure_id_empty_new (topology_structure_name);
+
+  /* Now at the last element */
+  if (chain->elements && (chain->endpad || chain->deadend)) {
+    s = gst_structure_id_empty_new (topology_structure_name);
+    gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
+        NULL);
+
+    if (chain->endpad)
+      gst_structure_id_set (u, topology_pad, GST_TYPE_PAD, chain->endpad, NULL);
+    gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+    gst_structure_free (u);
+    u = s;
+  } else if (chain->active_group) {
+    GValue list = { 0, };
+    GValue item = { 0, };
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&item, GST_TYPE_STRUCTURE);
+    for (l = chain->active_group->children; l; l = l->next) {
+      s = gst_decode_chain_get_topology (l->data);
+      gst_value_set_structure (&item, s);
+      gst_value_list_append_value (&list, &item);
+      g_value_reset (&item);
+      gst_structure_free (s);
+    }
+    gst_structure_id_set_value (u, topology_next, &list);
+    g_value_unset (&list);
+    g_value_unset (&item);
+  }
+
+  /* Get caps between all elements in this chain */
+  l = (chain->elements && chain->elements->next) ? chain->elements->next : NULL;
+  for (; l && l->next; l = l->next) {
+    GstCaps *caps = _gst_element_get_linked_caps (l->next->data, l->data);
+
+    s = gst_structure_id_empty_new (topology_structure_name);
+    gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
+    gst_caps_unref (caps);
+
+    gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+    gst_structure_free (u);
+    u = s;
+  }
+
+  /* Caps that resulted in this chain */
+  caps = gst_pad_get_negotiated_caps (chain->pad);
+  gst_structure_set (u, "caps", GST_TYPE_CAPS, caps, NULL);
+  gst_caps_unref (caps);
+
+  return u;
+}
+
+static void
+gst_decode_bin_post_topology_message (GstDecodeBin * dbin)
+{
+  GstStructure *s;
+  GstMessage *msg;
+
+  s = gst_decode_chain_get_topology (dbin->decode_chain);
+
+  msg = gst_message_new_element (GST_OBJECT (dbin), s);
+  gst_element_post_message (GST_ELEMENT (dbin), msg);
+}
+
 /* Must only be called if the toplevel chain is complete and blocked! */
 /* Not MT-safe, call with decodebin expose lock! */
 static gboolean
@@ -2528,12 +2650,15 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     GST_DEBUG_OBJECT (dbin, "emitted new-decoded-pad");
   }
 
-  /* signal no-more-pads. This allows the application to hook stuff to the
+  /* 4. Signal no-more-pads. This allows the application to hook stuff to the
    * exposed pads */
   GST_LOG_OBJECT (dbin, "signalling no-more-pads");
   gst_element_no_more_pads (GST_ELEMENT (dbin));
 
-  /* 4. Unblock internal pads. The application should have connected stuff now
+  /* 5. Send a custom element message with the stream topology */
+  gst_decode_bin_post_topology_message (dbin);
+
+  /* 6. Unblock internal pads. The application should have connected stuff now
    * so that streaming can continue. */
   for (tmp = endpads; tmp; tmp = tmp->next) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
@@ -2912,6 +3037,12 @@ gst_decode_bin_plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
+
+  /* Register some quarks here for the stream topology message */
+  topology_structure_name = g_quark_from_static_string ("stream-topology");
+  topology_caps = g_quark_from_static_string ("caps");
+  topology_next = g_quark_from_static_string ("next");
+  topology_pad = g_quark_from_static_string ("pad");
 
   return gst_element_register (plugin, "decodebin2", GST_RANK_NONE,
       GST_TYPE_DECODE_BIN);
