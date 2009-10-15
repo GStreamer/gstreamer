@@ -313,6 +313,8 @@ struct _GstDecodeChain
 
   GMutex *lock;                 /* Protects this chain and its groups */
 
+  GstPad *pad;                  /* srcpad that caused creation of this chain */
+
   gboolean demuxer;             /* TRUE if elements->data is a demuxer */
   GList *elements;              /* All elements in this group, first
                                    is the latest and most downstream element */
@@ -340,7 +342,7 @@ struct _GstDecodeChain
 
 static void gst_decode_chain_free (GstDecodeChain * chain);
 static GstDecodeChain *gst_decode_chain_new (GstDecodeBin * dbin,
-    GstDecodeGroup * group);
+    GstDecodeGroup * group, GstPad * pad);
 static void gst_decode_group_hide (GstDecodeGroup * group);
 static void gst_decode_group_free (GstDecodeGroup * group);
 static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
@@ -1048,7 +1050,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     CHAIN_MUTEX_LOCK (oldchain);
     group = gst_decode_chain_get_current_group (chain);
     if (group) {
-      chain = gst_decode_chain_new (dbin, group);
+      chain = gst_decode_chain_new (dbin, group, pad);
       group->children = g_list_prepend (group->children, chain);
     }
     CHAIN_MUTEX_UNLOCK (oldchain);
@@ -1552,7 +1554,7 @@ type_found (GstElement * typefind, guint probability,
 
   pad = gst_element_get_static_pad (typefind, "src");
 
-  decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL);
+  decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
   analyze_new_pad (decode_bin, typefind, pad, caps, decode_bin->decode_chain);
 
   gst_object_unref (pad);
@@ -1892,6 +1894,11 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     }
   }
 
+  if (chain->pad) {
+    gst_object_unref (chain->pad);
+    chain->pad = NULL;
+  }
+
   GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hided" : "Freed"),
       chain);
   CHAIN_MUTEX_UNLOCK (chain);
@@ -1923,7 +1930,8 @@ gst_decode_chain_free (GstDecodeChain * chain)
  * a group!
  */
 static GstDecodeChain *
-gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent)
+gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
+    GstPad * pad)
 {
   GstDecodeChain *chain = g_slice_new0 (GstDecodeChain);
 
@@ -1933,6 +1941,7 @@ gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent)
   chain->dbin = dbin;
   chain->parent = parent;
   chain->lock = g_mutex_new ();
+  chain->pad = gst_object_ref (pad);
 
   return chain;
 }
