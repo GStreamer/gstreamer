@@ -1,3 +1,79 @@
+2009-10-14 11:06:46 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/rsndec.c:
+	  resindvd: Fix decoder pad template to allow LPCM
+	  The pad template in the new switching decoder is too restrictive,
+	  preventing the LPCM decoder from being selected.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=575568
+
+2009-10-14 10:41:38 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a3e3ce4 to 85d1530
+
+2009-10-13 13:05:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/rsnaudiomunge.c:
+	  resindvd: Don't leak a reference to the parent in rsnaudiomunge
+	  Don't leak a reference to the pad parent in the sink pad event handler
+	  in rsnaudiomunge.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=598263
+
+2009-10-13 13:04:47 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/dts/gstdtsdec.c:
+	  dtsdec: Fix reference leak on all input buffers in 'dvd mode'
+	  https://bugzilla.gnome.org/show_bug.cgi?id=598274
+
+2009-10-13 16:01:26 +0200  Peter Christoffersen <gnome-bugzilla@plyt.dk>
+
+	* ext/faad/gstfaad.c:
+	  faad2: Don't leak element reference in the setcaps function
+	  Fixes bug #598139.
+
+2009-10-12 14:27:57 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/LINGUAS:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  0.10.14.2 pre-release
+
 2009-10-12 12:29:44 +0200  Josep Torra <n770galaxy@gmail.com>
 
 	* ext/faad/gstfaad.c:
