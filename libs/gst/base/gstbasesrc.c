@@ -1934,6 +1934,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
+again:
   if (src->is_live) {
     while (G_UNLIKELY (!src->live_running)) {
       ret = gst_base_src_wait_playing (src);
@@ -2011,14 +2012,23 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       break;
     case GST_CLOCK_UNSCHEDULED:
       /* this case is triggered when we were waiting for the clock and
-       * it got unlocked because we did a state change. We return
-       * WRONG_STATE in this case to stop the dataflow also get rid of the
-       * produced buffer. */
-      GST_DEBUG_OBJECT (src,
-          "clock was unscheduled (%d), returning WRONG_STATE", status);
+       * it got unlocked because we did a state change. In any case, get rid of
+       * the buffer. */
       gst_buffer_unref (*buf);
       *buf = NULL;
-      ret = GST_FLOW_WRONG_STATE;
+      if (!src->live_running) {
+        /* We return WRONG_STATE when we are not running to stop the dataflow also
+         * get rid of the produced buffer. */
+        GST_DEBUG_OBJECT (src,
+            "clock was unscheduled (%d), returning WRONG_STATE", status);
+        ret = GST_FLOW_WRONG_STATE;
+      } else {
+        /* If we are running when this happens, we quickly switched between
+         * pause and playing. We try to produce a new buffer */
+        GST_DEBUG_OBJECT (src,
+            "clock was unscheduled (%d), but we are running", status);
+        goto again;
+      }
       break;
     default:
       /* all other result values are unexpected and errors */
