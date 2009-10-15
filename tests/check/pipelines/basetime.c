@@ -67,9 +67,17 @@ GST_START_TEST (test_basetime_calculation)
   fail_if (p1 == NULL);
 
   /* Create a sub-bin that is activated only in "certain situations" */
-  bin = gst_bin_new ("audiobin");
   asrc = gst_element_factory_make (DEFAULT_AUDIOSRC, NULL);
+  if (asrc == NULL) {
+    GST_WARNING ("Cannot run test. test audio source %s not available",
+        DEFAULT_AUDIOSRC);
+    gst_element_set_state (p1, GST_STATE_NULL);
+    gst_object_unref (p1);
+    return;
+  }
   asink = gst_element_factory_make ("fakesink", NULL);
+
+  bin = gst_bin_new ("audiobin");
   gst_bin_add_many (GST_BIN (bin), asrc, asink, NULL);
   gst_element_link (asrc, asink);
 
