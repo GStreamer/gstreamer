@@ -247,6 +247,7 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
   gint attrib[] = {
     GLX_RGBA,
     GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
+    GLX_DEPTH_SIZE, 16,
     GLX_DOUBLEBUFFER,
     None
   };
