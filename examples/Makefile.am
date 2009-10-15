@@ -16,6 +16,7 @@ examples_DATA = 	\
 	remuxer.py	\
 	sinkelement.py  \
 	vumeter.py	\
-	decodebin.py
+	decodebin.py	\
+	maemogst.py
 
 EXTRA_DIST = $(examples_DATA)
