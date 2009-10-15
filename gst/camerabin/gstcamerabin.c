@@ -840,17 +840,19 @@ camerabin_destroy_elements (GstCameraBin * camera)
     camera->pad_src_queue = NULL;
   }
 
-  camera->view_sink = NULL;
-  camera->aspect_filter = NULL;
-  camera->view_scale = NULL;
+  /* view finder elements */
   camera->view_in_sel = NULL;
+  camera->view_scale = NULL;
+  camera->aspect_filter = NULL;
+  camera->view_sink = NULL;
 
-  camera->src_out_sel = NULL;
+  /* source elements */
+  camera->src_vid_src = NULL;
   camera->src_filter = NULL;
   camera->src_zoom_crop = NULL;
   camera->src_zoom_scale = NULL;
   camera->src_zoom_filter = NULL;
-  camera->src_vid_src = NULL;
+  camera->src_out_sel = NULL;
 
   camera->active_bin = NULL;
 
@@ -2737,16 +2739,6 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
 
   camera->video_preview_buffer = NULL;
 
-  /* source elements */
-  camera->src_vid_src = NULL;
-  camera->src_filter = NULL;
-  camera->src_zoom_crop = NULL;
-  camera->src_zoom_scale = NULL;
-  camera->src_zoom_filter = NULL;
-  camera->src_out_sel = NULL;
-
-  camera->user_vf_sink = NULL;
-
   /* image capture bin */
   camera->imgbin = g_object_new (GST_TYPE_CAMERABIN_IMAGE, NULL);
   gst_object_ref (camera->imgbin);
@@ -2755,13 +2747,25 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->vidbin = g_object_new (GST_TYPE_CAMERABIN_VIDEO, NULL);
   gst_object_ref (camera->vidbin);
 
-  camera->active_bin = NULL;
-
   /* view finder elements */
   camera->view_in_sel = NULL;
   camera->view_scale = NULL;
   camera->aspect_filter = NULL;
   camera->view_sink = NULL;
+
+  camera->user_vf_sink = NULL;
+
+  /* source elements */
+  camera->src_vid_src = NULL;
+  camera->src_filter = NULL;
+  camera->src_zoom_crop = NULL;
+  camera->src_zoom_scale = NULL;
+  camera->src_zoom_filter = NULL;
+  camera->src_out_sel = NULL;
+
+  camera->user_vid_src = NULL;
+
+  camera->active_bin = NULL;
 
   memset (&camera->photo_settings, 0, sizeof (GstPhotoSettings));
 }
@@ -3002,10 +3006,16 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
           gst_camerabin_video_get_muxer (GST_CAMERABIN_VIDEO (camera->vidbin)));
       break;
     case ARG_VF_SINK:
-      g_value_set_object (value, camera->user_vf_sink);
+      if (camera->view_sink)
+        g_value_set_object (value, camera->view_sink);
+      else
+        g_value_set_object (value, camera->user_vf_sink);
       break;
     case ARG_VIDEO_SRC:
-      g_value_set_object (value, camera->src_vid_src);
+      if (camera->src_vid_src)
+        g_value_set_object (value, camera->src_vid_src);
+      else
+        g_value_set_object (value, camera->user_vid_src);
       break;
     case ARG_AUDIO_SRC:
       g_value_set_object (value,
