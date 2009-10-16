@@ -199,12 +199,15 @@ gst_pulsemixer_ctrl_success_cb (pa_context * context, int success,
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 
-#define CHECK_DEAD_GOTO(c, label) do { \
-if (!(c)->context || pa_context_get_state((c)->context) != PA_CONTEXT_READY) { \
-    GST_WARNING_OBJECT (c->object, "Not connected: %s", (c)->context ? pa_strerror(pa_context_errno((c)->context)) : "NULL"); \
-    goto label; \
-} \
-} while(0);
+#define CHECK_DEAD_GOTO(c, label)                                       \
+  G_STMT_START {                                                        \
+    if (!(c)->context ||                                                \
+        !PA_CONTEXT_IS_GOOD(pa_context_get_state((c)->context))) {      \
+      GST_WARNING_OBJECT ((c)->object, "Not connected: %s",             \
+                          (c)->context ? pa_strerror(pa_context_errno((c)->context)) : "NULL"); \
+      goto label;                                                       \
+    }                                                                   \
+  } G_STMT_END
 
 static gboolean
 gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
