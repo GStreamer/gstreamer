@@ -735,6 +735,24 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   }
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static inline void
+dump_lines (guchar * base[3], guchar ** line[3], int v_samp0, int width)
+{
+  int j;
+
+  for (j = 0; j < (v_samp0 * DCTSIZE); ++j) {
+    GST_LOG ("[%02d]  %5d  %5d  %5d", j,
+        (line[0][j] >= base[0]) ?
+        (int) (line[0][j] - base[0]) / I420_Y_ROWSTRIDE (width) : -1,
+        (line[1][j] >= base[1]) ?
+        (int) (line[1][j] - base[1]) / I420_U_ROWSTRIDE (width) : -1,
+        (line[2][j] >= base[2]) ?
+        (int) (line[2][j] - base[2]) / I420_V_ROWSTRIDE (width) : -1);
+  }
+}
+#endif
+
 static GstFlowReturn
 gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height)
@@ -743,7 +761,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   guchar *y[4 * DCTSIZE] = { NULL, };   /* alloc enough for the lines   */
   guchar *u[4 * DCTSIZE] = { NULL, };   /* r_v will be <4               */
   guchar *v[4 * DCTSIZE] = { NULL, };
-  gint i, j, k;
+  gint i, j;
   gint lines, v_samp[3];
 
   line[0] = y;
@@ -754,39 +772,38 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   v_samp[1] = dec->cinfo.comp_info[1].v_samp_factor;
   v_samp[2] = dec->cinfo.comp_info[2].v_samp_factor;
 
-  if (G_UNLIKELY (v_samp[0] != 2 || v_samp[1] > 2 || v_samp[2] > 2))
+  if (G_UNLIKELY (v_samp[0] > 2 || v_samp[1] > 2 || v_samp[2] > 2))
     goto format_not_supported;
 
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
 
   for (i = 0; i < height; i += v_samp[0] * DCTSIZE) {
-    /* init Y component address */
-    for (j = 0; j < (v_samp[0] * DCTSIZE); j += v_samp[0]) {
-      for (k = 0; k < v_samp[0]; ++k) {
-        line[0][j + k] = base[0];
-        if (G_LIKELY (base[0] < last[0]))
-          base[0] += I420_Y_ROWSTRIDE (width);
+    for (j = 0; j < (v_samp[0] * DCTSIZE); ++j) {
+      /* Y */
+      line[0][j] = base[0] + (i + j) * I420_Y_ROWSTRIDE (width);
+      if (G_UNLIKELY (line[0][j] > last[0]))
+        line[0][j] = last[0];
+      /* U */
+      if (v_samp[1] == v_samp[0]) {
+        line[1][j] = base[1] + ((i + j) / 2) * I420_U_ROWSTRIDE (width);
+      } else if (j < (v_samp[1] * DCTSIZE)) {
+        line[1][j] = base[1] + ((i / 2) + j) * I420_U_ROWSTRIDE (width);
       }
+      if (G_UNLIKELY (line[1][j] > last[1]))
+        line[1][j] = last[1];
+      /* V */
+      if (v_samp[2] == v_samp[0]) {
+        line[2][j] = base[2] + ((i + j) / 2) * I420_V_ROWSTRIDE (width);
+      } else if (j < (v_samp[2] * DCTSIZE)) {
+        line[2][j] = base[2] + ((i / 2) + j) * I420_V_ROWSTRIDE (width);
+      }
+      if (G_UNLIKELY (line[2][j] > last[2]))
+        line[2][j] = last[2];
     }
 
-    /* init U component addresses */
-    for (j = 0; j < (v_samp[1] * DCTSIZE); j += v_samp[1]) {
-      for (k = 0; k < v_samp[1]; ++k) {
-        line[1][j + k] = base[1];
-        if ((k % 2) == 0 && G_LIKELY (base[1] < last[1]))
-          base[1] += I420_U_ROWSTRIDE (width);
-      }
-    }
+    /* dump_lines (base, line, v_samp[0], width); */
 
-    /* init V component addresses */
-    for (j = 0; j < (v_samp[2] * DCTSIZE); j += v_samp[2]) {
-      for (k = 0; k < v_samp[2]; ++k) {
-        line[2][j + k] = base[2];
-        if ((k % 2) == 0 && G_LIKELY (base[2] < last[2]))
-          base[2] += I420_V_ROWSTRIDE (width);
-      }
-    }
     lines = jpeg_read_raw_data (&dec->cinfo, line, v_samp[0] * DCTSIZE);
     if (G_UNLIKELY (!lines)) {
       GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
