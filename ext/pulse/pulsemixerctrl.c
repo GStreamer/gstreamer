@@ -250,16 +250,12 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
   }
 
   /* Wait until the context is ready */
-  pa_threaded_mainloop_wait (c->mainloop);
-
-  if (pa_context_get_state (c->context) != PA_CONTEXT_READY) {
-    GST_WARNING_OBJECT (c->object, "Failed to connect context: %s",
-        pa_strerror (pa_context_errno (c->context)));
-    goto unlock_and_fail;
+  while (pa_context_get_state (c->context) != PA_CONTEXT_READY) {
+    CHECK_DEAD_GOTO (c, unlock_and_fail);
+    pa_threaded_mainloop_wait (c->mainloop);
   }
 
   /* Subscribe to events */
-
   if (!(o =
           pa_context_subscribe (c->context,
               PA_SUBSCRIPTION_MASK_SINK | PA_SUBSCRIPTION_MASK_SOURCE,
@@ -271,8 +267,8 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 
   c->operation_success = FALSE;
   while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
-    pa_threaded_mainloop_wait (c->mainloop);
     CHECK_DEAD_GOTO (c, unlock_and_fail);
+    pa_threaded_mainloop_wait (c->mainloop);
   }
 
   if (!c->operation_success) {
@@ -297,8 +293,8 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 
     c->operation_success = FALSE;
     while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
-      pa_threaded_mainloop_wait (c->mainloop);
       CHECK_DEAD_GOTO (c, unlock_and_fail);
+      pa_threaded_mainloop_wait (c->mainloop);
     }
 
     pa_operation_unref (o);
@@ -323,8 +319,8 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 
     c->operation_success = FALSE;
     while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
-      pa_threaded_mainloop_wait (c->mainloop);
       CHECK_DEAD_GOTO (c, unlock_and_fail);
+      pa_threaded_mainloop_wait (c->mainloop);
     }
 
     pa_operation_unref (o);
