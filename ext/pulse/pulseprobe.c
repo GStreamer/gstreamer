@@ -201,7 +201,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
       goto unlock_and_fail;
     }
 
-    c->operation_success = 0;
+    c->operation_success = FALSE;
 
     while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
 
@@ -232,7 +232,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
       goto unlock_and_fail;
     }
 
-    c->operation_success = 0;
+    c->operation_success = FALSE;
     while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
 
       if (gst_pulseprobe_is_dead (c))
@@ -308,8 +308,11 @@ gst_pulseprobe_new (GObject * object, GObjectClass * klass,
   c->prop_id = prop_id;
   c->properties =
       g_list_append (NULL, g_object_class_find_property (klass, "device"));
+
   c->devices = NULL;
-  c->devices_valid = 0;
+  c->devices_valid = FALSE;
+
+  c->operation_success = FALSE;
 
   return c;
 }

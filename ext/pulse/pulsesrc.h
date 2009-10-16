@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -70,10 +72,10 @@ struct _GstPulseSrc
   GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
 
-  gboolean corked;
-  gboolean operation_success;
-  gboolean paused;
-  gboolean in_read;
+  gboolean corked:1;
+  gboolean operation_success:1;
+  gboolean paused:1;
+  gboolean in_read:1;
 };
 
 struct _GstPulseSrcClass

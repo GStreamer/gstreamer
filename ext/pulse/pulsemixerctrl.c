@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -74,7 +76,7 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
   }
 
   if (!i && eol < 0) {
-    c->operation_success = 0;
+    c->operation_success = FALSE;
     pa_threaded_mainloop_signal (c->mainloop, 0);
     return;
   }
@@ -89,7 +91,7 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
   c->index = i->index;
   c->channel_map = i->channel_map;
   c->volume = i->volume;
-  c->muted = i->mute;
+  c->muted = !!i->mute;
   c->type = GST_PULSEMIXER_SINK;
 
   if (c->track) {
@@ -100,7 +102,7 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
     c->track->flags = flags;
   }
 
-  c->operation_success = 1;
+  c->operation_success = TRUE;
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 
@@ -124,7 +126,7 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
   }
 
   if (!i && eol < 0) {
-    c->operation_success = 0;
+    c->operation_success = FALSE;
     pa_threaded_mainloop_signal (c->mainloop, 0);
     return;
   }
@@ -139,7 +141,7 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
   c->index = i->index;
   c->channel_map = i->channel_map;
   c->volume = i->volume;
-  c->muted = i->mute;
+  c->muted = !!i->mute;
   c->type = GST_PULSEMIXER_SOURCE;
 
   if (c->track) {
@@ -150,7 +152,7 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
     c->track->flags = flags;
   }
 
-  c->operation_success = 1;
+  c->operation_success = TRUE;
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 
@@ -193,7 +195,7 @@ gst_pulsemixer_ctrl_success_cb (pa_context * context, int success,
 {
   GstPulseMixerCtrl *c = (GstPulseMixerCtrl *) userdata;
 
-  c->operation_success = success;
+  c->operation_success = !!success;
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 
@@ -260,7 +262,7 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
     goto unlock_and_fail;
   }
 
-  c->operation_success = 0;
+  c->operation_success = FALSE;
   while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
     pa_threaded_mainloop_wait (c->mainloop);
     CHECK_DEAD_GOTO (c, unlock_and_fail);
@@ -286,7 +288,7 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
       goto unlock_and_fail;
     }
 
-    c->operation_success = 0;
+    c->operation_success = FALSE;
     while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
       pa_threaded_mainloop_wait (c->mainloop);
       CHECK_DEAD_GOTO (c, unlock_and_fail);
@@ -312,7 +314,7 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
       goto unlock_and_fail;
     }
 
-    c->operation_success = 0;
+    c->operation_success = FALSE;
     while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
       pa_threaded_mainloop_wait (c->mainloop);
       CHECK_DEAD_GOTO (c, unlock_and_fail);
@@ -404,7 +406,7 @@ gst_pulsemixer_ctrl_new (GObject * object, const gchar * server,
 
   pa_cvolume_mute (&c->volume, PA_CHANNELS_MAX);
   pa_channel_map_init (&c->channel_map);
-  c->muted = 0;
+  c->muted = FALSE;
   c->index = PA_INVALID_INDEX;
   c->type = type;
   c->name = NULL;
@@ -470,10 +472,10 @@ gst_pulsemixer_ctrl_timeout_event (pa_mainloop_api * a, pa_time_event * e,
 
   if (c->update_mute) {
     if (c->type == GST_PULSEMIXER_SINK)
-      o = pa_context_set_sink_mute_by_index (c->context, c->index, !!c->muted,
+      o = pa_context_set_sink_mute_by_index (c->context, c->index, c->muted,
           NULL, NULL);
     else
-      o = pa_context_set_source_mute_by_index (c->context, c->index, !!c->muted,
+      o = pa_context_set_source_mute_by_index (c->context, c->index, c->muted,
           NULL, NULL);
 
     if (!o)
@@ -576,7 +578,7 @@ gst_pulsemixer_ctrl_set_mute (GstPulseMixerCtrl * c, GstMixerTrack * track,
 
   pa_threaded_mainloop_lock (c->mainloop);
 
-  c->muted = !!mute;
+  c->muted = mute;
   c->update_mute = TRUE;
 
   if (c->track) {

@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -53,11 +55,17 @@ struct _GstPulseMixerCtrl
 
   gchar *name, *description;
   pa_channel_map channel_map;
+
   pa_cvolume volume;
-  int muted;
+  gboolean muted:1;
+
+  gboolean update_volume:1;
+  gboolean update_mute:1;
+
+  gboolean operation_success:1;
+
   guint32 index;
   GstPulseMixerType type;
-  int operation_success;
 
   GstMixerTrack *track;
 
@@ -66,7 +74,6 @@ struct _GstPulseMixerCtrl
   int outstandig_queries;
   int ignore_queries;
 
-  gboolean update_volume, update_mute;
 };
 
 GstPulseMixerCtrl *gst_pulsemixer_ctrl_new (GObject *object, const gchar * server,

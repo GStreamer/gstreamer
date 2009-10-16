@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -60,14 +62,16 @@ struct _GstPulseSink
   GstPulseProbe *probe;
 
   gdouble volume;
-  gboolean volume_set;
-  gboolean mute;
-  gboolean mute_set;
-  gint notify;
+  gboolean volume_set:1;
+  gboolean mute:1;
+  gboolean mute_set:1;
+
+  gboolean pa_defer_ran:1;
+
+  gint notify; /* atomic */
 
   const gchar *pa_version;
 
-  gboolean pa_defer_ran;
 };
 
 struct _GstPulseSinkClass

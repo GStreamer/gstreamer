@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -36,17 +38,20 @@ struct _GstPulseProbe
 {
   GObject *object;
   gchar *server;
+
   GList *devices;
-  gboolean devices_valid;
+  gboolean devices_valid:1;
+
+  gboolean operation_success:1;
+
+  gboolean enumerate_sinks:1;
+  gboolean enumerate_sources:1;
 
   pa_threaded_mainloop *mainloop;
   pa_context *context;
 
   GList *properties;
   guint prop_id;
-
-  int enumerate_sinks, enumerate_sources;
-  int operation_success;
 };
 
 GstPulseProbe *gst_pulseprobe_new (GObject *object, GObjectClass * klass,

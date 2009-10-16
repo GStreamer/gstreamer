@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*  GStreamer pulseaudio plugin
  *
  *  Copyright (c) 2004-2008 Lennart Poettering
@@ -109,10 +111,9 @@ struct _GstPulseRingBuffer
 
   pa_sample_spec sample_spec;
 
-  gboolean corked;
-  gboolean in_commit;
-  gboolean paused;
-  guint required;
+  gboolean corked:1;
+  gboolean in_commit:1;
+  gboolean paused:1;
 };
 
 struct _GstPulseRingBufferClass
@@ -218,8 +219,9 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf,
   pbuf->sample_spec.channels = 0;
 #endif
 
-  pbuf->paused = FALSE;
   pbuf->corked = TRUE;
+  pbuf->in_commit = FALSE;
+  pbuf->paused = FALSE;
 }
 
 static void
