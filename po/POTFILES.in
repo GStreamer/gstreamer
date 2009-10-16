@@ -1,4 +1,5 @@
 ext/esd/esdsink.c
+ext/pulse/pulsesink.c
 ext/flac/gstflacdec.c
 ext/jpeg/gstjpegdec.c
 ext/libpng/gstpngdec.c

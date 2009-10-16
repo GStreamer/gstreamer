@@ -49,6 +49,7 @@
 #include <gst/base/gstbasesink.h>
 #include <gst/gsttaglist.h>
 #include <gst/interfaces/streamvolume.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "pulsesink.h"
 #include "pulseutil.h"
@@ -2172,7 +2173,7 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 
       if (title && artist)
         t = buf =
-            g_strdup_printf ("'%s' by '%s'", g_strstrip (title),
+            g_strdup_printf (_("'%s' by '%s'"), g_strstrip (title),
             g_strstrip (artist));
       else if (title)
         t = g_strstrip (title);
