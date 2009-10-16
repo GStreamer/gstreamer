@@ -1,9 +1,10 @@
 plugin_LTLIBRARIES = libgstrtpmanager.la
 
 glib_enum_define = GST_RTP_BIN
-glib_enum_prefix = gst_rtp_bin
+glib_gen_prefix = gst_rtp_bin
+glib_gen_basename = gstrtpbin
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 built_sources = gstrtpbin-marshal.c
 built_headers = gstrtpbin-marshal.h

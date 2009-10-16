@@ -3,9 +3,10 @@ plugin_LTLIBRARIES = libgstudp.la
 # variables used for enum/marshal generation
 glib_enum_headers = gstudp.h
 glib_enum_define = GST_UDP
-glib_enum_prefix = gst_udp
+glib_gen_prefix = gst_udp
+glib_gen_basename = gstudp
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 built_sources = gstudp-enumtypes.c gstudp-marshal.c
 built_headers = gstudp-enumtypes.h gstudp-marshal.h
