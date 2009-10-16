@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include "stdio.h"
+
 #include <gst/video/gstvideosink.h>
 #include "gstgldisplay.h"
 
