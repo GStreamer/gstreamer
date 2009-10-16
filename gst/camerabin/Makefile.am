@@ -1,6 +1,7 @@
-glib_enum_prefix = __gst_camerabin
+glib_gen_prefix = __gst_camerabin
+glib_gen_basename = gstcamerabin
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 built_sources = gstcamerabin-marshal.c
 built_headers = gstcamerabin-marshal.h

@@ -8,7 +8,8 @@ headers_photography = 		\
 # variables used for enum/marshal generation
 glib_enum_headers=$(headers_photography)
 glib_enum_define=GST_PHOTOGRAPHY
-glib_enum_prefix=gst_photography
+glib_gen_prefix=gst_photography
+glib_gen_basename=photography
 
 built_sources = \
 	photography-enumtypes.c
@@ -38,4 +39,4 @@ BUILT_SOURCES = \
 
 CLEANFILES = $(BUILT_SOURCES)
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak

@@ -1,6 +1,7 @@
-glib_enum_prefix = gst_selector
+glib_gen_prefix = gst_selector
+glib_gen_basename = gstselector
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 built_sources = gstselector-marshal.c
 built_headers = gstselector-marshal.h
