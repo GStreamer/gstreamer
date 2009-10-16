@@ -178,6 +178,7 @@ EXPORTS
 	gst_caps_save_thyself
 	gst_caps_set_simple
 	gst_caps_set_simple_valist
+	gst_caps_set_value
 	gst_caps_subtract
 	gst_caps_to_string
 	gst_caps_truncate
