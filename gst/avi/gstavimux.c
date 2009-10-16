@@ -636,6 +636,96 @@ refuse_caps:
   }
 }
 
+static GstFlowReturn
+gst_avi_mux_audsink_scan_mpeg_audio (GstAviMux * avimux, GstAviPad * avipad,
+    GstBuffer * buffer)
+{
+  guint8 *data;
+  guint size;
+  guint spf;
+  guint32 header;
+  gulong layer;
+  gulong version;
+  gint lsf, mpg25;
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  if (size < 4)
+    goto not_parsed;
+
+  header = GST_READ_UINT32_BE (data);
+
+  if ((header & 0xffe00000) != 0xffe00000)
+    goto not_parsed;
+
+  /* thanks go to mp3parse */
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
+  } else {
+    lsf = 1;
+    mpg25 = 1;
+  }
+
+  version = 1 + lsf + mpg25;
+  layer = 4 - ((header >> 17) & 0x3);
+
+  /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
+  if (layer == 1)
+    spf = 384;
+  else if (layer == 2)
+    spf = 1152;
+  else if (version == 1) {
+    spf = 1152;
+  } else {
+    /* MPEG-2 or "2.5" */
+    spf = 576;
+  }
+
+  if (G_UNLIKELY (avipad->hdr.scale <= 1))
+    avipad->hdr.scale = spf;
+  else if (G_UNLIKELY (avipad->hdr.scale != spf)) {
+    GST_WARNING_OBJECT (avimux, "input mpeg audio has varying frame size");
+    goto cbr_fallback;
+  }
+
+  return GST_FLOW_OK;
+
+  /* EXITS */
+not_parsed:
+  {
+    GST_WARNING_OBJECT (avimux, "input mpeg audio is not parsed");
+    /* fall-through */
+  }
+cbr_fallback:
+  {
+    GST_WARNING_OBJECT (avimux, "falling back to CBR muxing");
+    avipad->hdr.scale = 1;
+    /* no need to check further */
+    avipad->hook = NULL;
+    return GST_FLOW_OK;
+  }
+}
+
+static void
+gst_avi_mux_audsink_set_fields (GstAviMux * avimux, GstAviAudioPad * avipad)
+{
+  if (avipad->parent.hdr.scale > 1) {
+    /* vbr case: fixed duration per frame/chunk */
+    avipad->parent.hdr.rate = avipad->auds.rate;
+    avipad->parent.hdr.samplesize = 0;
+    /* FIXME ?? some rumours say this should be largest audio chunk size */
+    avipad->auds.blockalign = avipad->parent.hdr.scale;
+  } else {
+    /* by spec, hdr.rate is av_bps related, is calculated that way in stop_file,
+     * and reduces to sample rate in PCM like cases */
+    avipad->parent.hdr.rate = avipad->auds.av_bps / avipad->auds.blockalign;
+    avipad->parent.hdr.samplesize = avipad->auds.blockalign;
+    avipad->parent.hdr.scale = 1;
+  }
+}
+
 static gboolean
 gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
 {
@@ -729,8 +819,10 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
       switch (mpegversion) {
         case 1:{
           gint layer = 3;
+          gboolean parsed = FALSE;
 
           gst_structure_get_int (structure, "layer", &layer);
+          gst_structure_get_boolean (structure, "parsed", &parsed);
           switch (layer) {
             case 3:
               avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL3;
@@ -740,12 +832,32 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
               avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL12;
               break;
           }
+          if (parsed) {
+            /* treat as VBR, should also cover CBR case;
+             * setup hook to parse frame header and determine spf */
+            avipad->parent.hook = gst_avi_mux_audsink_scan_mpeg_audio;
+          } else {
+            GST_WARNING_OBJECT (avimux, "unparsed MPEG audio input (?), "
+                "doing CBR muxing");
+          }
           break;
         }
         case 4:
-          GST_WARNING ("AAC");
+        {
+          GstBuffer *codec_data_buf = avipad->auds_codec_data;
+          guint codec;
+
+          /* vbr case needs some special handling */
+          if (!codec_data_buf || GST_BUFFER_SIZE (codec_data_buf) < 2) {
+            GST_WARNING_OBJECT (avimux, "no (valid) codec_data for AAC audio");
+            break;
+          }
           avipad->auds.format = GST_RIFF_WAVE_FORMAT_AAC;
+          /* need to determine frame length */
+          codec = GST_READ_UINT16_BE (GST_BUFFER_DATA (codec_data_buf));
+          avipad->parent.hdr.scale = (codec & 0x4) ? 960 : 1024;
           break;
+        }
       }
     } else if (!strcmp (mimetype, "audio/x-vorbis")) {
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_VORBIS3;
@@ -793,11 +905,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   if (!avipad->auds.format)
     goto refuse_caps;
 
-  /* by spec, hdr.rate is av_bps related, is calculated that way in stop_file,
-   * and reduces to sample rate in PCM like cases */
-  avipad->parent.hdr.rate = avipad->auds.av_bps / avipad->auds.blockalign;
-  avipad->parent.hdr.samplesize = avipad->auds.blockalign;
-  avipad->parent.hdr.scale = 1;
+  gst_avi_mux_audsink_set_fields (avimux, avipad);
 
   gst_object_unref (avimux);
   return TRUE;
@@ -1667,10 +1775,11 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
               (NULL));
           audpad->auds.av_bps = 0;
         }
-        avipad->hdr.rate = audpad->auds.av_bps * avipad->hdr.scale;
       }
+      gst_avi_mux_audsink_set_fields (avimux, audpad);
       avimux->avi_hdr.max_bps += audpad->auds.av_bps;
-      avipad->hdr.length = (audpad->audio_time * avipad->hdr.rate) / GST_SECOND;
+      avipad->hdr.length = gst_util_uint64_scale (audpad->audio_time,
+          avipad->hdr.rate, avipad->hdr.scale * GST_SECOND);
     } else {
       GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
 
@@ -1801,6 +1910,9 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   } else {
     avimux->data_size += total_size;
   }
+
+  if (G_UNLIKELY (avipad->hook))
+    avipad->hook (avimux, avipad, data);
 
   if (avipad->is_video) {
     /* the suggested buffer size is the max frame size */
