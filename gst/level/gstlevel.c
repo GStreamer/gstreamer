@@ -562,11 +562,12 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
   guint8 *in_data;
-  double CS;
+  gdouble CS;
   guint i;
   guint num_frames = 0;
   guint num_int_samples = 0;    /* number of interleaved samples
                                  * ie. total count for all channels combined */
+  GstClockTimeDiff falloff_time;
 
   filter = GST_LEVEL (trans);
 
@@ -605,16 +606,15 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       filter->last_peak[i] = filter->peak[i];
 
     /* make decay peak fall off if too old */
-    if (gst_guint64_to_gdouble (filter->decay_peak_age[i]) >
-        filter->decay_peak_ttl) {
-      double falloff_dB;
-      double falloff;
-      GstClockTimeDiff falloff_time;
-      double length;            /* length of falloff time in seconds */
+    falloff_time =
+        GST_CLOCK_DIFF (gst_gdouble_to_guint64 (filter->decay_peak_ttl),
+        filter->decay_peak_age[i]);
+    if (falloff_time > 0) {
+      gdouble falloff_dB;
+      gdouble falloff;
+      gdouble length;           /* length of falloff time in seconds */
 
-      falloff_time = GST_CLOCK_DIFF (filter->decay_peak_ttl,
-          gst_guint64_to_gdouble (filter->decay_peak_age[i]));
-      length = (gdouble) falloff_time / GST_SECOND;
+      length = (gdouble) (falloff_time / GST_SECOND);
       falloff_dB = filter->decay_peak_falloff * length;
       falloff = pow (10, falloff_dB / -20.0);
 
@@ -662,8 +662,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
           GST_TIME_ARGS (filter->message_ts), filter->num_frames);
 
       for (i = 0; i < filter->channels; ++i) {
-        double RMS;
-        double RMSdB, lastdB, decaydB;
+        gdouble RMS;
+        gdouble RMSdB, lastdB, decaydB;
 
         RMS = sqrt (filter->CS[i] / filter->num_frames);
         GST_LOG_OBJECT (filter,
