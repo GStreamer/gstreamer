@@ -651,8 +651,8 @@ find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
   data->offset = GST_BUFFER_OFFSET (*buffer);
 
-  /* stop when we find a timestamp and duration */
-  if (data->timestamp != -1 && data->offset != -1)
+  /* stop when we find a timestamp */
+  if (data->timestamp != -1)
     return GST_BUFFER_LIST_END;
   else
     return GST_BUFFER_LIST_CONTINUE;
@@ -696,10 +696,11 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
   data.ssrc = payload->current_ssrc;
   data.pt = payload->pt;
   data.caps = GST_PAD_CAPS (payload->srcpad);
-  data.timestamp = -1;
 
   /* find the first buffer with a timestamp */
   if (is_list) {
+    data.timestamp = -1;
+    data.offset = GST_BUFFER_OFFSET_NONE;
     gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
         (GstBufferListFunc) find_timestamp, &data);
   } else {
