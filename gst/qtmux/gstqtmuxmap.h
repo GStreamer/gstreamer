@@ -73,7 +73,9 @@ extern GstQTMuxFormatProp gst_qt_mux_format_list[];
 
 void            gst_qt_mux_map_format_to_header      (GstQTMuxFormat format, GstBuffer ** _prefix,
                                                       guint32 * _major, guint32 * verson,
-                                                      GList ** _compatible, AtomMOOV * moov);
+                                                      GList ** _compatible, AtomMOOV * moov,
+                                                      GstClockTime longest_chunk,
+                                                      gboolean faststart);
 
 AtomsTreeFlavor gst_qt_mux_map_format_to_flavor      (GstQTMuxFormat format);
 

@@ -56,6 +56,7 @@ G_BEGIN_DECLS
 #define FOURCC_3gp4     GST_MAKE_FOURCC('3','g','p','4')
 #define FOURCC_3gp6     GST_MAKE_FOURCC('3','g','p','6')
 #define FOURCC_3gg6     GST_MAKE_FOURCC('3','g','g','6')
+#define FOURCC_3gr6     GST_MAKE_FOURCC('3','g','r','6')
 #define FOURCC_3gg7     GST_MAKE_FOURCC('3','g','g','7')
 #define FOURCC_avc1     GST_MAKE_FOURCC('a','v','c','1')
 #define FOURCC_qt__     GST_MAKE_FOURCC('q','t',' ',' ')

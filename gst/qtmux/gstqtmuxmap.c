@@ -243,7 +243,8 @@ gst_qt_mux_map_check_tracks (AtomMOOV * moov, gint * _video, gint * _audio,
  *   (but that might need ftyp rewriting at the end) */
 void
 gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
-    guint32 * _major, guint32 * _version, GList ** _compatible, AtomMOOV * moov)
+    guint32 * _major, guint32 * _version, GList ** _compatible, AtomMOOV * moov,
+    GstClockTime longest_chunk, gboolean faststart)
 {
   static guint32 qt_brands[] = { 0 };
   static guint32 mp4_brands[] = { FOURCC_mp41, FOURCC_isom, FOURCC_iso2, 0 };
@@ -287,6 +288,14 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
         version = 0x100;
       }
       comp = gpp_brands;
+
+      /*
+       * We assume that we have chunks in dts order
+       */
+      if (faststart && longest_chunk <= GST_SECOND) {
+        /* add progressive download profile */
+        result = g_list_append (result, GUINT_TO_POINTER (FOURCC_3gr6));
+      }
       break;
     }
     case GST_QT_MUX_FORMAT_MJ2:

@@ -112,6 +112,9 @@ struct _GstQTMux
   /* position of mdat atom (for later updating) */
   guint64 mdat_pos;
 
+  /* keep track of the largest chunk to fine-tune brands */
+  GstClockTime longest_chunk;
+
   /* atom helper objects */
   AtomsContext *context;
   AtomFTYP *ftyp;

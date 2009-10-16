@@ -268,6 +268,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   qtmux->header_size = 0;
   qtmux->mdat_size = 0;
   qtmux->mdat_pos = 0;
+  qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
 
   if (qtmux->ftyp) {
     atom_ftyp_free (qtmux->ftyp);
@@ -1035,7 +1036,8 @@ gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
   if (qtmux->ftyp)
     atom_ftyp_free (qtmux->ftyp);
   gst_qt_mux_map_format_to_header (qtmux_klass->format, &prefix, &major,
-      &version, &comp, qtmux->moov);
+      &version, &comp, qtmux->moov, qtmux->longest_chunk,
+      qtmux->fast_start_file != NULL);
   qtmux->ftyp = atom_ftyp_new (qtmux->context, major, version, comp);
   if (comp)
     g_list_free (comp);
@@ -1355,6 +1357,17 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     do_pts = TRUE;
     GST_LOG_OBJECT (qtmux, "Adding ctts entry for pad %s: %" G_GINT64_FORMAT,
         GST_PAD_NAME (pad->collect.pad), pts_offset);
+  }
+
+  /*
+   * Each buffer starts a new chunk, so we can assume the buffer
+   * duration is the chunk duration
+   */
+  if (GST_CLOCK_TIME_IS_VALID (duration) && (duration > qtmux->longest_chunk ||
+          !GST_CLOCK_TIME_IS_VALID (qtmux->longest_chunk))) {
+    GST_DEBUG_OBJECT (qtmux, "New longest chunk found: %" GST_TIME_FORMAT
+        ", pad %s", GST_TIME_ARGS (duration), GST_PAD_NAME (pad->collect.pad));
+    qtmux->longest_chunk = duration;
   }
 
   /* now we go and register this buffer/sample all over */
