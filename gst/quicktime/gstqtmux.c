@@ -993,6 +993,115 @@ gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
 }
 
 static GstFlowReturn
+gst_qt_mux_send_ftyp (GstQTMux * qtmux, guint64 * off)
+{
+  GstBuffer *buf;
+  guint64 size = 0, offset = 0;
+  guint8 *data = NULL;
+
+  GST_DEBUG_OBJECT (qtmux, "Sending ftyp atom");
+
+  if (!atom_ftyp_copy_data (qtmux->ftyp, &data, &size, &offset))
+    goto serialize_error;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  GST_BUFFER_SIZE (buf) = offset;
+
+  GST_LOG_OBJECT (qtmux, "Pushing ftyp");
+  return gst_qt_mux_send_buffer (qtmux, buf, off, FALSE);
+
+  /* ERRORS */
+serialize_error:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
+        ("Failed to serialize ftyp"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+  guint32 major, version;
+  GList *comp;
+  GstBuffer *prefix;
+
+  GST_DEBUG_OBJECT (qtmux, "Preparing to send ftyp atom");
+
+  /* init and send context and ftyp based on current property state */
+  if (qtmux->ftyp)
+    atom_ftyp_free (qtmux->ftyp);
+  gst_qt_mux_map_format_to_header (qtmux_klass->format, &prefix, &major,
+      &version, &comp, qtmux->moov);
+  qtmux->ftyp = atom_ftyp_new (qtmux->context, major, version, comp);
+  if (comp)
+    g_list_free (comp);
+  if (prefix) {
+    ret = gst_qt_mux_send_buffer (qtmux, prefix, &qtmux->header_size, FALSE);
+    if (ret != GST_FLOW_OK)
+      return ret;
+  }
+  return gst_qt_mux_send_ftyp (qtmux, &qtmux->header_size);
+}
+
+static GstFlowReturn
+gst_qt_mux_start_file (GstQTMux * qtmux)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_DEBUG_OBJECT (qtmux, "starting file");
+
+  /* let downstream know we think in BYTES and expect to do seeking later on */
+  gst_pad_push_event (qtmux->srcpad,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+
+  /* 
+   * send mdat header if already needed, and mark position for later update.
+   * We don't send ftyp now if we are on fast start mode, because we can
+   * better fine tune using the information we gather to create the whole moov
+   * atom.
+   */
+  if (qtmux->fast_start) {
+    GST_OBJECT_LOCK (qtmux);
+    qtmux->fast_start_file = g_fopen (qtmux->fast_start_file_path, "wb+");
+    if (!qtmux->fast_start_file)
+      goto open_failed;
+    GST_OBJECT_UNLOCK (qtmux);
+
+    /* send a dummy buffer for preroll */
+    ret = gst_qt_mux_send_buffer (qtmux, gst_buffer_new (), NULL, FALSE);
+    if (ret != GST_FLOW_OK)
+      goto exit;
+
+  } else {
+    ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
+    if (ret != GST_FLOW_OK) {
+      goto exit;
+    }
+
+    /* extended to ensure some spare space */
+    qtmux->mdat_pos = qtmux->header_size;
+    ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
+  }
+
+exit:
+  return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (qtmux, RESOURCE, OPEN_READ_WRITE,
+        (("Could not open temporary file \"%s\""), qtmux->fast_start_file_path),
+        GST_ERROR_SYSTEM);
+    GST_OBJECT_UNLOCK (qtmux);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
 gst_qt_mux_stop_file (GstQTMux * qtmux)
 {
   gboolean ret = GST_FLOW_OK;
@@ -1040,10 +1149,17 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
   large_file = (qtmux->mdat_size > MDAT_LARGE_FILE_LIMIT);
   /* if faststart, update the offset of the atoms in the movie with the offset
-   * that the movie headers before mdat will cause */
+   * that the movie headers before mdat will cause.
+   * Also, send the ftyp */
   if (qtmux->fast_start_file) {
-    /* copy into NULL to obtain size */
+    GstFlowReturn flow_ret;
     offset = size = 0;
+
+    flow_ret = gst_qt_mux_prepare_and_send_ftyp (qtmux);
+    if (flow_ret != GST_FLOW_OK) {
+      goto ftyp_error;
+    }
+    /* copy into NULL to obtain size */
     if (!atom_moov_copy_data (qtmux->moov, NULL, &size, &offset))
       goto serialize_error;
     GST_DEBUG_OBJECT (qtmux, "calculated moov atom size %" G_GUINT64_FORMAT,
@@ -1098,91 +1214,9 @@ serialize_error:
         ("Failed to serialize moov"));
     return GST_FLOW_ERROR;
   }
-}
-
-static GstFlowReturn
-gst_qt_mux_send_ftyp (GstQTMux * qtmux, guint64 * off)
-{
-  GstBuffer *buf;
-  guint64 size = 0, offset = 0;
-  guint8 *data = NULL;
-
-  GST_DEBUG_OBJECT (qtmux, "Sending ftyp atom");
-
-  if (!atom_ftyp_copy_data (qtmux->ftyp, &data, &size, &offset))
-    goto serialize_error;
-
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = offset;
-
-  GST_LOG_OBJECT (qtmux, "Pushing ftyp");
-  return gst_qt_mux_send_buffer (qtmux, buf, off, FALSE);
-
-  /* ERRORS */
-serialize_error:
+ftyp_error:
   {
-    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
-        ("Failed to serialize ftyp"));
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-gst_qt_mux_start_file (GstQTMux * qtmux)
-{
-  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint32 major, version;
-  GList *comp;
-  GstBuffer *prefix;
-
-  GST_DEBUG_OBJECT (qtmux, "starting file");
-
-  /* let downstream know we think in BYTES and expect to do seeking later on */
-  gst_pad_push_event (qtmux->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
-
-  /* init and send context and ftyp based on current property state */
-  if (qtmux->ftyp)
-    atom_ftyp_free (qtmux->ftyp);
-  gst_qt_mux_map_format_to_header (qtmux_klass->format, &prefix, &major,
-      &version, &comp, qtmux->moov);
-  qtmux->ftyp = atom_ftyp_new (qtmux->context, major, version, comp);
-  if (comp)
-    g_list_free (comp);
-  if (prefix) {
-    ret = gst_qt_mux_send_buffer (qtmux, prefix, &qtmux->header_size, FALSE);
-    if (ret != GST_FLOW_OK)
-      goto exit;
-  }
-  ret = gst_qt_mux_send_ftyp (qtmux, &qtmux->header_size);
-  if (ret != GST_FLOW_OK)
-    goto exit;
-
-  /* send mdat header if already needed, and mark position for later update */
-  GST_OBJECT_LOCK (qtmux);
-  if (qtmux->fast_start) {
-    qtmux->fast_start_file = g_fopen (qtmux->fast_start_file_path, "wb+");
-    if (!qtmux->fast_start_file)
-      goto open_failed;
-  } else {
-    /* extended to ensure some spare space */
-    qtmux->mdat_pos = qtmux->header_size;
-    ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
-  }
-  GST_OBJECT_UNLOCK (qtmux);
-
-exit:
-  return ret;
-
-  /* ERRORS */
-open_failed:
-  {
-    GST_ELEMENT_ERROR (qtmux, RESOURCE, OPEN_READ_WRITE,
-        (("Could not open temporary file \"%s\""), qtmux->fast_start_file_path),
-        GST_ERROR_SYSTEM);
-    GST_OBJECT_UNLOCK (qtmux);
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL), ("Failed to send ftyp"));
     return GST_FLOW_ERROR;
   }
 }
