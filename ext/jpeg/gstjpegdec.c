@@ -702,20 +702,20 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
 
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     lines = jpeg_read_raw_data (&dec->cinfo, scanarray, r_v * DCTSIZE);
-    if (G_LIKELY (lines)) {
+    if (G_LIKELY (lines > 0)) {
       for (j = 0, k = 0; j < (r_v * DCTSIZE); j += r_v, k++) {
         memcpy (base[0], y_rows[j], I420_Y_ROWSTRIDE (width));
-        if (base[0] < last[0])
+        if (G_LIKELY (base[0] < last[0]))
           base[0] += I420_Y_ROWSTRIDE (width);
-        if (G_LIKELY (r_v == 2)) {
+        if (r_v == 2) {
           memcpy (base[0], y_rows[j + 1], I420_Y_ROWSTRIDE (width));
-          if (base[0] < last[0])
+          if (G_LIKELY (base[0] < last[0]))
             base[0] += I420_Y_ROWSTRIDE (width);
         }
-        if (G_LIKELY (r_h == 2)) {
+        if (r_h == 2) {
           memcpy (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
           memcpy (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
-        } else if (G_UNLIKELY (r_h == 1)) {
+        } else if (r_h == 1) {
           hresamplecpy1 (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
           hresamplecpy1 (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
         } else {
@@ -723,7 +723,7 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
         }
 
         if (r_v == 2 || (k & 1) != 0) {
-          if (base[1] < last[1] && base[2] < last[2]) {
+          if (G_LIKELY (base[1] < last[1] && base[2] < last[2])) {
             base[1] += I420_U_ROWSTRIDE (width);
             base[2] += I420_V_ROWSTRIDE (width);
           }
