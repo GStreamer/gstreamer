@@ -29,8 +29,8 @@ GType gst_navseek_get_type (void);
 GType gst_progress_report_get_type (void);
 GType gst_tag_inject_get_type (void);
 GType gst_test_get_type (void);
-/*
 GType gst_push_file_src_get_type (void);
+/*
 GType gst_gst_negotiation_get_type (void);
 */
 
@@ -42,8 +42,9 @@ plugin_init (GstPlugin * plugin)
       || !gst_element_register (plugin, "rndbuffersize", GST_RANK_NONE,
           gst_rnd_buffer_size_get_type ())
       || !gst_element_register (plugin, "navseek", GST_RANK_NONE,
-          gst_navseek_get_type ()) ||
-/*    !gst_element_register (plugin, "pushfilesrc", GST_RANK_NONE, gst_push_file_src_get_type ()) || */
+          gst_navseek_get_type ())
+      || !gst_element_register (plugin, "pushfilesrc", GST_RANK_NONE,
+          gst_push_file_src_get_type ()) ||
 /*    !gst_element_register (plugin, "negotiation", GST_RANK_NONE, gst_gst_negotiation_get_type ()) || */
       !gst_element_register (plugin, "progressreport", GST_RANK_NONE,
           gst_progress_report_get_type ())
