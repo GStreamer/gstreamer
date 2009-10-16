@@ -700,6 +700,9 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
         id3v2_frame_write_string (&frame, encoding, desc, TRUE);
 
+        id3v2_frame_write_bytes (&frame, GST_BUFFER_DATA (image),
+            GST_BUFFER_SIZE (image));
+
         g_array_append_val (id3v2tag->frames, frame);
       }
     } else {
