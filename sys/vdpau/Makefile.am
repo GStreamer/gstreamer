@@ -30,6 +30,6 @@ noinst_HEADERS = \
 	gstvdputils.h \
 	gstvdpvideopostprocess.h \
 	gstvdpoutputbuffer.h \
-	gstvdpsink.c
+	gstvdpsink.h
 	
 
