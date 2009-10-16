@@ -1814,6 +1814,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   audio_attr_t *a_attrs;
   subp_attr_t *s_attrs;
   gint n_audio, n_subp;
+  int8_t cur_audio;
   GstStructure *s;
   GstEvent *e;
   gint i;
@@ -1868,6 +1869,8 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
       NULL);
 
   /* audio */
+  cur_audio = dvdnav_get_active_audio_stream (src->dvdnav);
+
   have_audio = FALSE;
   for (i = 0; i < n_audio; i++) {
     const audio_attr_t *a = a_attrs + i;
@@ -1881,7 +1884,11 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 
     GST_DEBUG_OBJECT (src, "mapped logical audio %d to MPEG substream %d",
         i, phys_id);
-
+    /* Force audio stream reselection in case format changed ... */
+    if (i == cur_audio) {
+      src->cur_audio_phys_stream = -1;
+      rsn_dvdsrc_prepare_audio_stream_event (src, i, phys_id);
+    }
 #if 0
     /* FIXME: Only output A52 streams for now, until the decoder switching
      * is ready */
