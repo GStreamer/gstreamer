@@ -651,7 +651,8 @@ find_timestamp (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
   data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
   data->offset = GST_BUFFER_OFFSET (*buffer);
 
-  /* stop when we find a timestamp */
+  /* stop when we find a timestamp. We take whatever offset is associated with
+   * the timestamp (if any) to do perfect timestamps when we need to. */
   if (data->timestamp != -1)
     return GST_BUFFER_LIST_END;
   else
