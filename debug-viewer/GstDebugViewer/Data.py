@@ -35,6 +35,20 @@ def time_args (ts):
                                   secs % 60,
                                   ts % SECOND,)
 
+def time_diff_args (time_diff):
+
+    if time_diff >= 0:
+        sign = "+"
+    else:
+        sign = "-"
+
+    secs = abs (time_diff) // SECOND
+
+    return "%s%02i:%02i.%09i" % (sign,
+                                 secs // 60,
+                                 secs % 60,
+                                 abs (time_diff) % SECOND,)
+
 def time_args_no_hours (ts):
 
     secs = ts // SECOND

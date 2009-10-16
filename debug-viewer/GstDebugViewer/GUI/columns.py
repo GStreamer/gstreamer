@@ -96,13 +96,17 @@ class TextColumn (SizedColumn):
         elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
         else:
-            modify_func = self.get_modify_func ()
-            id_ = self.id
-            def cell_data_func (column, cell, model, tree_iter):
-                cell.props.text = modify_func (model.get (tree_iter, id_)[0])
-            column.set_cell_data_func (cell, cell_data_func)
+            self.update_modify_func (column, cell)
 
         column.props.resizable = True
+
+    def update_modify_func (self, column, cell):
+
+        modify_func = self.get_modify_func ()
+        id_ = self.id
+        def cell_data_func (column, cell, model, tree_iter):
+            cell.props.text = modify_func (model.get (tree_iter, id_)[0])
+        column.set_cell_data_func (cell, cell_data_func)
 
     def compute_default_size (self, view, model):
 
@@ -137,15 +141,27 @@ class TimeColumn (TextColumn):
     id = LazyLogModel.COL_TIME
     font_family = "monospace"
 
-    @staticmethod
-    def get_modify_func ():
+    def __init__ (self, *a, **kw):
 
-        time_args = Data.time_args
-        def format_time (value):
-            # TODO: This is hard coded to omit hours as well as the last 3
-            # digits at the end, since current gst uses g_get_current_time,
-            # which has microsecond precision only.
-            return time_args (value)[2:-3]
+        self.base_time = 0
+
+        TextColumn.__init__ (self, *a, **kw)
+
+    def get_modify_func (self):
+
+        if self.base_time:
+            time_diff_args = Data.time_diff_args
+            base_time = self.base_time
+            def format_time (value):
+                # TODO: Hard coded to omit trailing zeroes, see below.
+                return time_diff_args (value - base_time)[:-3]
+        else:
+            time_args = Data.time_args
+            def format_time (value):
+                # TODO: This is hard coded to omit hours as well as the last 3
+                # digits at the end, since current gst uses g_get_current_time,
+                # which has microsecond precision only.
+                return time_args (value)[2:-3]
 
         return format_time
 
@@ -154,6 +170,14 @@ class TimeColumn (TextColumn):
         values = [0]
 
         return values
+
+    def set_base_time (self, base_time):
+
+        self.base_time = base_time
+
+        column = self.view_column
+        cell = column.get_cell_renderers ()[0]
+        self.update_modify_func (column, cell)
 
 class LevelColumn (TextColumn):
 

@@ -225,6 +225,7 @@ class Window (object):
                             ("show-hidden-lines", None, _("Show hidden lines")),
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"), ""),
+                            ("set-base-time", None, _("Set base time")),
                             ("hide-log-level", None, _("Hide log level")),
                             ("hide-log-category", None, _("Hide log category")),
                             ("hide-log-object", None, _("Hide object")),
@@ -292,7 +293,7 @@ class Window (object):
         for action_name in ("new-window", "open-file", "reload-file",
                             "close-window", "cancel-load",
                             "hide-before-line", "hide-after-line", "show-hidden-lines",
-                            "edit-copy-line", "edit-copy-message",
+                            "edit-copy-line", "edit-copy-message", "set-base-time",
                             "hide-log-level", "hide-log-category", "hide-log-object",
                             "hide-filename", "show-about",):
             name = action_name.replace ("-", "_")
@@ -626,6 +627,12 @@ class Window (object):
         self.pop_view_state ()
 
         self.actions.show_hidden_lines.props.sensitive = True
+
+    def handle_set_base_time_action_activate (self, action):
+
+        row = self.get_active_line ()
+        time_column = self.column_manager.find_item (name = "time")
+        time_column.set_base_time (row[LogModelBase.COL_TIME])
 
     def handle_hide_log_level_action_activate (self, action):
 

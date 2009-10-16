@@ -55,6 +55,7 @@
       </menu>
       <placeholder name="LogViewContextMenuAdditions"/>
       <separator/>
+      <menuitem name="ViewContextMenuSetBaseTime" action="set-base-time"/>
       <menuitem name="ViewContextMenuHideLevel" action="hide-log-level"/>
       <menuitem name="ViewContextMenuHideCategory" action="hide-log-category"/>
       <menuitem name="ViewContextMenuHideObject" action="hide-log-object"/>
