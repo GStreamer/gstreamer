@@ -9,7 +9,7 @@ headers_pbutils = \
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_pbutils)
 glib_enum_define = GST_INSTALL
-glib_enum_prefix = gst_install
+glib_gen_prefix = gst_install
 glib_gen_basename = pbutils
 
 built_sources = \

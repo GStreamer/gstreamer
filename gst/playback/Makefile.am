@@ -1,6 +1,6 @@
 # variables used for enum/marshal generation
 glib_enum_define = GST_PLAY
-glib_enum_prefix = gst_play
+glib_gen_prefix = gst_play
 glib_gen_basename = gstplay
 
 built_sources = gstplay-marshal.c

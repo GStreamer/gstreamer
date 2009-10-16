@@ -35,7 +35,7 @@
 #include "config.h"
 #endif
 
-#include "rtsp-marshal.h"
+#include "gstrtsp-marshal.h"
 #include "gstrtsp-enumtypes.h"
 #include "gstrtspextension.h"
 

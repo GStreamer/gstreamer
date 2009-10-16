@@ -14,8 +14,8 @@ libgstrtspinclude_HEADERS = gstrtspbase64.h \
 
 lib_LTLIBRARIES = libgstrtsp-@GST_MAJORMINOR@.la
 
-built_sources = rtsp-marshal.c gstrtsp-enumtypes.c
-built_headers = rtsp-marshal.h gstrtsp-enumtypes.h
+built_sources = gstrtsp-marshal.c gstrtsp-enumtypes.c
+built_headers = gstrtsp-marshal.h gstrtsp-enumtypes.h
 
 libgstrtsp_@GST_MAJORMINOR@_la_SOURCES = gstrtspbase64.c \
 					 gstrtsptransport.c \
@@ -39,10 +39,10 @@ libgstrtsp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(WIN32_LIBS) $(HSTRERROR_LI
 libgstrtsp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
-EXTRA_DIST = rtsp-marshal.list
+EXTRA_DIST = gstrtsp-marshal.list
 CLEANFILES = $(BUILT_SOURCES)
 
-glib_enum_prefix = gst_rtsp
+glib_gen_prefix = gst_rtsp
 glib_enum_define = gst_rtsp
 glib_enum_headers = gstrtspdefs.h
 glib_gen_basename = gstrtsp

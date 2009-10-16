@@ -1,7 +1,7 @@
 # variables used for enum/marshal generation
 glib_enum_headers = video.h
 glib_enum_define = GST_VIDEO
-glib_enum_prefix = gst_video
+glib_gen_prefix = gst_video
 glib_gen_basename = video
 
 built_sources = video-enumtypes.c

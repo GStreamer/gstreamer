@@ -20,7 +20,7 @@ headers_interfaces = 		\
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_interfaces)
 glib_enum_define = GST_INTERFACES
-glib_enum_prefix = gst_interfaces
+glib_gen_prefix = gst_interfaces
 glib_gen_basename = interfaces
 
 built_sources = \

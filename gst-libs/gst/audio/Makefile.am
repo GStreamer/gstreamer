@@ -4,7 +4,7 @@ glib_enum_headers= 		\
 	gstringbuffer.h
 
 glib_enum_define = GST_AUDIO
-glib_enum_prefix = gst_audio
+glib_gen_prefix = gst_audio
 glib_gen_basename = audio
 
 built_sources = audio-enumtypes.c

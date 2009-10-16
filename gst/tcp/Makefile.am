@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgsttcp.la
 # variables used for enum/marshal generation
 glib_enum_headers = gsttcp.h
 glib_enum_define = GST_TCP
-glib_enum_prefix = gst_tcp
+glib_gen_prefix = gst_tcp
 glib_gen_basename = gsttcp
 
 include $(top_srcdir)/common/gst-glib-gen.mak
