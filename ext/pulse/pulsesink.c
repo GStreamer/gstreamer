@@ -2083,6 +2083,10 @@ gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
 {
   static const gchar *const map[] = {
     GST_TAG_TITLE, PA_PROP_MEDIA_TITLE,
+
+    /* might get overriden in the next iteration by GST_TAG_ARTIST */
+    GST_TAG_PERFORMER, PA_PROP_MEDIA_ARTIST,
+
     GST_TAG_ARTIST, PA_PROP_MEDIA_ARTIST,
     GST_TAG_LANGUAGE_CODE, PA_PROP_MEDIA_LANGUAGE,
     GST_TAG_LOCATION, PA_PROP_MEDIA_FILENAME,
@@ -2170,6 +2174,9 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
       gst_tag_list_get_string (l, GST_TAG_ARTIST, &artist);
       gst_tag_list_get_string (l, GST_TAG_LOCATION, &location);
       gst_tag_list_get_string (l, GST_TAG_DESCRIPTION, &description);
+
+      if (!artist)
+        gst_tag_list_get_string (l, GST_TAG_PERFORMER, &artist);
 
       if (title && artist)
         t = buf =
