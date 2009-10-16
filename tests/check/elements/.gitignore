@@ -3,6 +3,7 @@ aacparse
 amrparse
 asfmux
 camerabin
+capssetter
 deinterleave
 faac
 gdpdepay
