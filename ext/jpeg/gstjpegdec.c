@@ -707,7 +707,7 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
         memcpy (base[0], y_rows[j], I420_Y_ROWSTRIDE (width));
         if (base[0] < last[0])
           base[0] += I420_Y_ROWSTRIDE (width);
-        if (G_LIKELY (r_h == 2)) {
+        if (G_LIKELY (r_v == 2)) {
           memcpy (base[0], y_rows[j + 1], I420_Y_ROWSTRIDE (width));
           if (base[0] < last[0])
             base[0] += I420_Y_ROWSTRIDE (width);
