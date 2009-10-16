@@ -2,8 +2,9 @@ lib_LTLIBRARIES = libgstapp-@GST_MAJORMINOR@.la
 
 glib_enum_define = GST_APP
 glib_enum_prefix = __gst_app
+glib_gen_basename = gstapp
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 built_sources = gstapp-marshal.c
 built_headers = gstapp-marshal.h

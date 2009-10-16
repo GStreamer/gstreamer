@@ -42,11 +42,12 @@ BUILT_SOURCES = $(built_headers) $(built_sources)
 EXTRA_DIST = rtsp-marshal.list
 CLEANFILES = $(BUILT_SOURCES)
 
-glib_enum_prefix=gst_rtsp
-glib_enum_define=gst_rtsp
-glib_enum_headers=gstrtspdefs.h
+glib_enum_prefix = gst_rtsp
+glib_enum_define = gst_rtsp
+glib_enum_headers = gstrtspdefs.h
+glib_gen_basename = gstrtsp
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstRtsp-@GST_MAJORMINOR@.gir

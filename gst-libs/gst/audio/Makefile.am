@@ -3,8 +3,9 @@ glib_enum_headers= 		\
 	multichannel.h		\
 	gstringbuffer.h
 
-glib_enum_define=GST_AUDIO
-glib_enum_prefix=gst_audio
+glib_enum_define = GST_AUDIO
+glib_enum_prefix = gst_audio
+glib_gen_basename = audio
 
 built_sources = audio-enumtypes.c
 built_headers = audio-enumtypes.h
@@ -54,7 +55,7 @@ testchannels_SOURCES = testchannels.c
 testchannels_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 testchannels_LDADD = $(GST_LIBS)
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstAudio-@GST_MAJORMINOR@.gir

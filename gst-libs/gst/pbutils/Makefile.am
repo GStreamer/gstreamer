@@ -7,9 +7,10 @@ headers_pbutils = \
 	missing-plugins.h
 
 # variables used for enum/marshal generation
-glib_enum_headers=$(headers_pbutils)
-glib_enum_define=GST_INSTALL
-glib_enum_prefix=gst_install
+glib_enum_headers = $(headers_pbutils)
+glib_enum_define = GST_INSTALL
+glib_enum_prefix = gst_install
+glib_gen_basename = pbutils
 
 built_sources = \
 	pbutils-enumtypes.c
@@ -43,7 +44,7 @@ BUILT_SOURCES = \
 CLEANFILES = $(BUILT_SOURCES)
 
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstPbutils-@GST_MAJORMINOR@.gir

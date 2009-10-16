@@ -1,8 +1,8 @@
 # variables used for enum/marshal generation
-glib_enum_headers= video.h
-
-glib_enum_define=GST_VIDEO
-glib_enum_prefix=gst_video
+glib_enum_headers = video.h
+glib_enum_define = GST_VIDEO
+glib_enum_prefix = gst_video
+glib_gen_basename = video
 
 built_sources = video-enumtypes.c
 built_headers = video-enumtypes.h
@@ -25,7 +25,7 @@ libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS
 libgstvideo_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstVideo-@GST_MAJORMINOR@.gir

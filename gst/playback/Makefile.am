@@ -1,8 +1,9 @@
-glib_enum_define=GST_PLAY
-glib_enum_prefix=gst_play
+# variables used for enum/marshal generation
+glib_enum_define = GST_PLAY
+glib_enum_prefix = gst_play
+glib_gen_basename = gstplay
 
 built_sources = gstplay-marshal.c
-
 built_headers = gstplay-marshal.h
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
@@ -98,4 +99,5 @@ EXTRA_DIST = gstplay-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
+

@@ -18,9 +18,10 @@ headers_interfaces = 		\
 	xoverlay.h
 
 # variables used for enum/marshal generation
-glib_enum_headers=$(headers_interfaces)
-glib_enum_define=GST_INTERFACES
-glib_enum_prefix=gst_interfaces
+glib_enum_headers = $(headers_interfaces)
+glib_enum_define = GST_INTERFACES
+glib_enum_prefix = gst_interfaces
+glib_gen_basename = interfaces
 
 built_sources = \
 	interfaces-marshal.c \
@@ -67,7 +68,7 @@ EXTRA_DIST = interfaces-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
-include $(top_srcdir)/common/glib-gen.mak
+include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstInterfaces-@GST_MAJORMINOR@.gir
