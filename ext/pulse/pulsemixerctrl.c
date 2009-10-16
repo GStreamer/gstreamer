@@ -213,7 +213,7 @@ static gboolean
 gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 {
   int e;
-  gchar *name = gst_pulse_client_name ();
+  gchar *name;
   pa_operation *o = NULL;
 
   g_assert (c);
@@ -221,10 +221,14 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
   GST_DEBUG_OBJECT (c->object, "ctrl open");
 
   c->mainloop = pa_threaded_mainloop_new ();
-  g_assert (c->mainloop);
+  if (!c->mainloop)
+    return FALSE;
 
   e = pa_threaded_mainloop_start (c->mainloop);
-  g_assert (e == 0);
+  if (e < 0)
+    return FALSE;
+
+  name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (c->mainloop);
 

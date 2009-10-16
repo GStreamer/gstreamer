@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 2 -*-*/
+
 /*
  *  GStreamer pulseaudio plugin
  *
@@ -99,17 +101,21 @@ static gboolean
 gst_pulseprobe_open (GstPulseProbe * c)
 {
   int e;
-  gchar *name = gst_pulse_client_name ();
+  gchar *name;
 
   g_assert (c);
 
   GST_DEBUG_OBJECT (c->object, "probe open");
 
   c->mainloop = pa_threaded_mainloop_new ();
-  g_assert (c->mainloop);
+  if (!c->mainloop)
+    return FALSE;
 
   e = pa_threaded_mainloop_start (c->mainloop);
-  g_assert (e == 0);
+  if (e < 0)
+    return FALSE;
+
+  name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (c->mainloop);
 
