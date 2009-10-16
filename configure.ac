@@ -156,7 +156,7 @@ AC_CHECK_HEADERS([sys/time.h])
 dnl *** checks for types/defines ***
 
 dnl Check for FIONREAD ioctl declaration.  This check is needed
-dnl for the UDP plugin to build on Solaris 
+dnl for the UDP plugin to build on Solaris
 GST_CHECK_FIONREAD
 
 dnl *** checks for structures ***
@@ -755,7 +755,7 @@ AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
 dnl *** pulseaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PULSE, true)
 AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
-  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.8)
+  AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.10)
   AG_GST_PKG_CHECK_MODULES(PULSE_0_9_11, libpulse >= 0.9.11)
   if test x$HAVE_PULSE_0_9_11 = xyes; then
     AC_DEFINE(HAVE_PULSE_0_9_11, 1, [defined if pulseaudio >= 0.9.11 is available])
