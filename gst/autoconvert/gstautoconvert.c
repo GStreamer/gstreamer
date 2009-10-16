@@ -692,7 +692,7 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   subelement = gst_auto_convert_get_subelement (autoconvert);
   if (subelement) {
-    if (gst_pad_set_caps (autoconvert->current_internal_srcpad, caps)) {
+    if (gst_pad_peer_accept_caps (autoconvert->current_internal_srcpad, caps)) {
       /* If we can set the new caps on the current element,
        * then we just get out
        */
@@ -777,7 +777,7 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
         internal_sinkpad_quark);
 
     /* Now we check if the element can really accept said caps */
-    if (!gst_pad_set_caps (internal_srcpad, caps)) {
+    if (!gst_pad_peer_accept_caps (internal_srcpad, caps)) {
       GST_DEBUG_OBJECT (autoconvert, "Could not set %s:%s to %" GST_PTR_FORMAT,
           GST_DEBUG_PAD_NAME (internal_srcpad), caps);
       goto next_element;
