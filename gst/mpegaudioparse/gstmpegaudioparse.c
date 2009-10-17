@@ -138,24 +138,37 @@ mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total);
 GST_BOILERPLATE (GstMPEGAudioParse, gst_mp3parse, GstElement, GST_TYPE_ELEMENT);
 
 #define GST_TYPE_MP3_CHANNEL_MODE (gst_mp3_channel_mode_get_type())
+
+static const GEnumValue mp3_channel_mode[] = {
+  {MP3_CHANNEL_MODE_UNKNOWN, "Unknown", "unknown"},
+  {MP3_CHANNEL_MODE_MONO, "Mono", "mono"},
+  {MP3_CHANNEL_MODE_DUAL_CHANNEL, "Dual Channel", "dual-channel"},
+  {MP3_CHANNEL_MODE_JOINT_STEREO, "Joint Stereo", "joint-stereo"},
+  {MP3_CHANNEL_MODE_STEREO, "Stereo", "stereo"},
+  {0, NULL, NULL},
+};
+
 static GType
 gst_mp3_channel_mode_get_type (void)
 {
   static GType mp3_channel_mode_type = 0;
-  static GEnumValue mp3_channel_mode[] = {
-    {MP3_CHANNEL_MODE_UNKNOWN, "Unknown", "unknown"},
-    {MP3_CHANNEL_MODE_MONO, "Mono", "mono"},
-    {MP3_CHANNEL_MODE_DUAL_CHANNEL, "Dual Channel", "dual-channel"},
-    {MP3_CHANNEL_MODE_JOINT_STEREO, "Joint Stereo", "joint-stereo"},
-    {MP3_CHANNEL_MODE_STEREO, "Stereo", "stereo"},
-    {0, NULL, NULL},
-  };
 
   if (!mp3_channel_mode_type) {
     mp3_channel_mode_type =
         g_enum_register_static ("GstMp3ChannelMode", mp3_channel_mode);
   }
   return mp3_channel_mode_type;
+}
+
+static const gchar *
+gst_mp3_channel_mode_get_nick (gint mode)
+{
+  guint i;
+  for (i = 0; i < G_N_ELEMENTS (mp3_channel_mode); i++) {
+    if (mp3_channel_mode[i].value == mode)
+      return mp3_channel_mode[i].value_nick;
+  }
+  return NULL;
 }
 
 static const guint mp3types_bitrates[2][3][16] = {
@@ -186,7 +199,6 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
   gulong mode, samplerate, bitrate, layer, channels, padding, crc;
   gulong version;
   gint lsf, mpg25;
-  GEnumValue *mode_enum;
 
   if (header & (1 << 20)) {
     lsf = (header & (1 << 19)) ? 0 : 1;
@@ -229,14 +241,11 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
       break;
   }
 
-  mode_enum =
-      g_enum_get_value (g_type_class_peek (GST_TYPE_MP3_CHANNEL_MODE), mode);
-
   GST_DEBUG_OBJECT (mp3parse, "Calculated mp3 frame length of %u bytes",
       length);
   GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, version = %lu, "
       "layer = %lu, channels = %lu, mode = %s", samplerate, bitrate, version,
-      layer, channels, mode_enum->value_nick);
+      layer, channels, gst_mp3_channel_mode_get_nick (mode));
 
   if (put_version)
     *put_version = version;
@@ -758,18 +767,13 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
   }
 
   if (mp3parse->last_posted_channel_mode != mode) {
-    GEnumValue *mode_enum;
-
     if (!taglist) {
       taglist = gst_tag_list_new ();
     }
     mp3parse->last_posted_channel_mode = mode;
 
-    mode_enum =
-        g_enum_get_value (g_type_class_peek (GST_TYPE_MP3_CHANNEL_MODE), mode);
-
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MODE,
-        mode_enum->value_nick, NULL);
+        gst_mp3_channel_mode_get_nick (mode), NULL);
   }
 
   /* if the taglist exists, we need to send it */
