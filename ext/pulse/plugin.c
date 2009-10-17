@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "pulsesink.h"
 #include "pulsesrc.h"
 #include "pulsemixer.h"
@@ -32,6 +34,12 @@ GST_DEBUG_CATEGORY (pulse_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
 
   if (!gst_element_register (plugin, "pulsesink", GST_RANK_PRIMARY,
           GST_TYPE_PULSESINK))
