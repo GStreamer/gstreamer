@@ -675,8 +675,6 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
     wavenc->sent_header = TRUE;
   }
 
-  wavenc->length += GST_BUFFER_SIZE (buf);
-
   GST_LOG_OBJECT (wavenc, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
@@ -685,6 +683,8 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wavenc->srcpad));
   GST_BUFFER_OFFSET (buf) = WAV_HEADER_LEN + wavenc->length;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  wavenc->length += GST_BUFFER_SIZE (buf);
 
   flow = gst_pad_push (wavenc->srcpad, buf);
 
