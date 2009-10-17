@@ -1,4 +1,4 @@
 gstrtsp-enumtypes.c
 gstrtsp-enumtypes.h
-rtsp-marshal.c
-rtsp-marshal.h
+gstrtsp-marshal.c
+gstrtsp-marshal.h
