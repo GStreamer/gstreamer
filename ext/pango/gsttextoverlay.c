@@ -466,12 +466,10 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           DEFAULT_PROP_AUTO_ADJUST_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#ifdef HAVE_PANGO_VERTICAL_WRITING
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VERTICAL_RENDER,
       g_param_spec_boolean ("vertical-render", "vertical render",
           "Vertical Render.", DEFAULT_PROP_VERTICAL_RENDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 }
 
 static void
@@ -633,7 +631,6 @@ gst_text_overlay_update_wrap_mode (GstTextOverlay * overlay)
 static void
 gst_text_overlay_update_render_mode (GstTextOverlay * overlay)
 {
-#if HAVE_PANGO_VERTICAL_WRITING
   PangoMatrix matrix = PANGO_MATRIX_INIT;
   PangoContext *context = pango_layout_get_context (overlay->layout);
 
@@ -645,11 +642,8 @@ gst_text_overlay_update_render_mode (GstTextOverlay * overlay)
   } else {
     pango_context_set_base_gravity (context, PANGO_GRAVITY_SOUTH);
     pango_context_set_matrix (context, &matrix);
-#endif
     pango_layout_set_alignment (overlay->layout, overlay->line_align);
-#if HAVE_PANGO_VERTICAL_WRITING
   }
-#endif
 }
 
 static gboolean
@@ -812,11 +806,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       overlay->need_render = TRUE;
     }
     case PROP_VERTICAL_RENDER:
-#ifdef HAVE_PANGO_VERTICAL_WRITING
       overlay->use_vertical_render = g_value_get_boolean (value);
       gst_text_overlay_update_render_mode (overlay);
       overlay->need_render = TRUE;
-#endif
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -875,11 +867,7 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, overlay->auto_adjust_size);
       break;
     case PROP_VERTICAL_RENDER:
-#ifdef HAVE_PANGO_VERTICAL_WRITING
       g_value_set_boolean (value, overlay->use_vertical_render);
-#else
-      g_value_set_boolean (value, FALSE);
-#endif
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1206,7 +1194,6 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   if (height > overlay->height) {
     height = overlay->height;
   }
-#ifdef HAVE_PANGO_VERTICAL_WRITING
   if (overlay->use_vertical_render) {
     PangoRectangle rect;
     PangoContext *context;
@@ -1237,9 +1224,7 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
     tmp = height;
     height = width;
     width = tmp;
-  } else
-#endif
-  {
+  } else {
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
   /* clear shadow surface */

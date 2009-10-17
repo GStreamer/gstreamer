@@ -591,10 +591,7 @@ AG_GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
 AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
-  AG_GST_PKG_CHECK_MODULES(PANGO, pango pangocairo)
-  PKG_CHECK_MODULES(PANGOCAIRO_1_15_4, pangocairo >= 1.15.4, [
-    AC_DEFINE(HAVE_PANGO_VERTICAL_WRITING, 1, [Defined if pango can write vertically])
-  ], true)
+  AG_GST_PKG_CHECK_MODULES(PANGO, pango >= 1.16.0  pangocairo >= 1.16.0)
 ])
 
 dnl *** theora ***
