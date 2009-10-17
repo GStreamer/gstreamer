@@ -730,6 +730,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     pa_threaded_mainloop_wait (psink->mainloop);
   }
 
+  /* After we passed the volume off of to PA we never want to set it
+     again, since it is PA's job to save/restore volumes.  */
+  psink->volume_set = psink->mute_set = FALSE;
+
   GST_LOG_OBJECT (psink, "stream is acquired now");
 
   /* get the actual buffering properties now */
@@ -1527,8 +1531,8 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
-          "Volume of this stream, 1.0=100%", 0.0, MAX_VOLUME, DEFAULT_VOLUME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Linear volume of this stream, 1.0=100%", 0.0, MAX_VOLUME,
+          DEFAULT_VOLUME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute",
@@ -1588,10 +1592,10 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->device = NULL;
   pulsesink->device_description = NULL;
 
-  pulsesink->volume = 1.0;
+  pulsesink->volume = DEFAULT_VOLUME;
   pulsesink->volume_set = FALSE;
 
-  pulsesink->mute = FALSE;
+  pulsesink->mute = DEFAULT_MUTE;
   pulsesink->mute_set = FALSE;
 
   pulsesink->notify = 0;
@@ -1654,9 +1658,6 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 
   GST_DEBUG_OBJECT (psink, "setting volume to %f", volume);
 
-  psink->volume = volume;
-  psink->volume_set = TRUE;
-
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
@@ -1683,6 +1684,9 @@ unlock:
   /* ERRORS */
 no_buffer:
   {
+    psink->volume = volume;
+    psink->volume_set = TRUE;
+
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
     goto unlock;
   }
@@ -1711,9 +1715,6 @@ gst_pulsesink_set_mute (GstPulseSink * psink, gboolean mute)
 
   GST_DEBUG_OBJECT (psink, "setting mute state to %d", mute);
 
-  psink->mute = mute;
-  psink->mute_set = TRUE;
-
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
@@ -1738,6 +1739,9 @@ unlock:
   /* ERRORS */
 no_buffer:
   {
+    psink->mute = mute;
+    psink->mute_set = TRUE;
+
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
     goto unlock;
   }
@@ -1788,7 +1792,7 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
 {
   GstPulseRingBuffer *pbuf;
   pa_operation *o = NULL;
-  gdouble v;
+  gdouble v = DEFAULT_VOLUME;
   uint32_t idx;
 
   pa_threaded_mainloop_lock (psink->mainloop);
@@ -1810,11 +1814,12 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
       goto unlock;
   }
 
+  v = psink->volume;
+
 unlock:
   if (o)
     pa_operation_unref (o);
 
-  v = psink->volume;
   pa_threaded_mainloop_unlock (psink->mainloop);
 
   if (v > MAX_VOLUME) {
@@ -1850,7 +1855,7 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
   GstPulseRingBuffer *pbuf;
   pa_operation *o = NULL;
   uint32_t idx;
-  gboolean mute;
+  gboolean mute = FALSE;
 
   pa_threaded_mainloop_lock (psink->mainloop);
 
@@ -1871,11 +1876,12 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
       goto unlock;
   }
 
+  mute = psink->mute;
+
 unlock:
   if (o)
     pa_operation_unref (o);
 
-  mute = psink->mute;
   pa_threaded_mainloop_unlock (psink->mainloop);
 
   return mute;
