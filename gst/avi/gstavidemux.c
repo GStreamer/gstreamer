@@ -2684,7 +2684,7 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
     gst_riff_strh *strh;
 
     stream = &avi->stream[i];
-    if (G_UNLIKELY (!stream || !(strh = stream->strh)))
+    if (G_UNLIKELY (!stream || !stream->idx_n || !(strh = stream->strh)))
       continue;
 
     /* get header duration for the stream */
@@ -2701,11 +2701,14 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
       /* fall back to header info to calculate a duration */
       duration = hduration;
     }
+    GST_INFO ("Setting duration of stream #%d to %" GST_TIME_FORMAT,
+        i, GST_TIME_ARGS (duration));
     /* set duration for the stream */
     stream->duration = duration;
 
     /* find total duration */
-    if (total == GST_CLOCK_TIME_NONE || duration > total)
+    if (total == GST_CLOCK_TIME_NONE ||
+        (GST_CLOCK_TIME_IS_VALID (duration) && duration > total))
       total = duration;
   }
 
