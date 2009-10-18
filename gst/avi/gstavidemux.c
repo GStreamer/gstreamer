@@ -3484,7 +3484,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
     GstAviStream *ostream;
 
     ostream = &avi->stream[i];
-    if (ostream == stream)
+    if ((ostream == stream) || (ostream->index == NULL))
       continue;
 
     /* get the entry index for the requested position */
