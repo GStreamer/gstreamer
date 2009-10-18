@@ -77,7 +77,7 @@ gst_control_point_free (GstControlPoint * cp)
 static void
 gst_interpolation_control_source_reset (GstInterpolationControlSource * self)
 {
-  GstControlSource *csource = GST_CONTROL_SOURCE (self);
+  GstControlSource *csource = (GstControlSource *) self;
 
   csource->get_value = NULL;
   csource->get_value_array = NULL;
@@ -242,7 +242,7 @@ gst_interpolation_control_source_bind (GstControlSource * source,
 {
   GType type, base;
   GstInterpolationControlSource *self =
-      GST_INTERPOLATION_CONTROL_SOURCE (source);
+      (GstInterpolationControlSource *) source;
   gboolean ret = TRUE;
 
   /* get the fundamental base type */
@@ -656,6 +656,7 @@ gst_interpolation_control_source_get_count (GstInterpolationControlSource *
   g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self), 0);
   return self->priv->nvalues;
 }
+
 
 static void
 gst_interpolation_control_source_init (GstInterpolationControlSource * self)
