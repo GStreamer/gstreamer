@@ -3148,6 +3148,11 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             gst_avi_demux_parse_odml (avi, sub);
             sub = NULL;
             break;
+          case GST_RIFF_LIST_INFO:
+            GST_BUFFER_DATA (sub) = data + 4;
+            GST_BUFFER_SIZE (sub) -= 4;
+            gst_riff_parse_info (element, sub, &avi->globaltags);
+            break;
           default:
             GST_WARNING_OBJECT (avi,
                 "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
