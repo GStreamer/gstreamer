@@ -67,6 +67,7 @@ typedef struct {
 
   /* pad*/
   GstPad        *pad;
+  gboolean       exposed;
 
   /* stream info and headers */
   gst_riff_strh *strh;

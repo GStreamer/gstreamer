@@ -235,8 +235,11 @@ gst_avi_demux_reset_stream (GstAviDemux * avi, GstAviStream * stream)
   if (stream->extradata)
     gst_buffer_unref (stream->extradata);
   if (stream->pad) {
-    gst_pad_set_active (stream->pad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (avi), stream->pad);
+    if (stream->exposed) {
+      gst_pad_set_active (stream->pad, FALSE);
+      gst_element_remove_pad (GST_ELEMENT (avi), stream->pad);
+    } else
+      gst_object_unref (stream->pad);
   }
   if (stream->taglist) {
     gst_tag_list_free (stream->taglist);
@@ -1645,6 +1648,29 @@ too_small:
   }
 }
 
+static void
+gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
+{
+  guint i;
+
+  GST_DEBUG_OBJECT (avi, "force : %d", force);
+
+  for (i = 0; i < avi->num_streams; i++) {
+    GstAviStream *stream = &avi->stream[i];
+
+    if (force || stream->idx_n != 0) {
+      GST_LOG_OBJECT (avi, "Added pad %s with caps %" GST_PTR_FORMAT,
+          GST_PAD_NAME (stream->pad), GST_PAD_CAPS (stream->pad));
+      gst_element_add_pad ((GstElement *) avi, stream->pad);
+      stream->exposed = TRUE;
+    } else {
+      GST_WARNING_OBJECT (avi, "Stream #%d doesn't have any entry, removing it",
+          i);
+      gst_avi_demux_reset_stream (avi, stream);
+    }
+  }
+}
+
 /*
  * gst_avi_demux_parse_stream:
  * @avi: calling element (used for debugging/errors).
@@ -2023,10 +2049,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
   gst_pad_set_caps (pad, caps);
   gst_pad_set_active (pad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (avi), pad);
-
-  GST_LOG_OBJECT (element, "Added pad %s with caps %" GST_PTR_FORMAT,
-      GST_PAD_NAME (pad), caps);
   gst_caps_unref (caps);
 
   /* make tags */
@@ -2970,6 +2992,8 @@ skipping_done:
   /* no indexes in push mode, but it still sets some variables */
   gst_avi_demux_calculate_durations_from_index (avi);
 
+  gst_avi_demux_expose_streams (avi, TRUE);
+
   /* create initial NEWSEGMENT event */
   if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
     stop = avi->segment.duration;
@@ -3266,6 +3290,8 @@ skipping_done:
   }
   /* use the indexes now to construct nice durations */
   gst_avi_demux_calculate_durations_from_index (avi);
+
+  gst_avi_demux_expose_streams (avi, FALSE);
 
   /* create initial NEWSEGMENT event */
   if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
