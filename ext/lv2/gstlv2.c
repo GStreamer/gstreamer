@@ -348,7 +348,7 @@ gst_lv2_base_init (gpointer g_class)
     SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, desc->index);
     const gchar *name =
         slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port));
-    gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SINK,
+    gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SRC,
         j, 1, &mono_position);
   }
 
