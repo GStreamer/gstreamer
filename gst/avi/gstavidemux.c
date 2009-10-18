@@ -1239,7 +1239,7 @@ gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
         *ts_end = avi_stream_convert_frames_to_time_unchecked (stream,
             entry_n + 1);
     }
-  } else {
+  } else if (stream->strh->type == GST_RIFF_FCC_auds) {
     /* constant rate stream */
     if (timestamp)
       *timestamp =
