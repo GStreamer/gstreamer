@@ -3270,6 +3270,16 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         /* Fall-through */
       case GST_MAKE_FOURCC ('J', 'U', 'N', 'Q'):
       case GST_MAKE_FOURCC ('J', 'U', 'N', 'K'):
+        /* Only get buffer for debugging if the memdump is needed  */
+        if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= 9) {
+          res = gst_pad_pull_range (avi->sinkpad, avi->offset, size, &buf);
+          if (res != GST_FLOW_OK) {
+            GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
+            goto pull_range_failed;
+          }
+          GST_MEMDUMP ("Junk", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+          gst_buffer_unref (buf);
+        }
         avi->offset += 8 + GST_ROUND_UP_2 (size);
         break;
     }
