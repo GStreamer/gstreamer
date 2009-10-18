@@ -1261,8 +1261,10 @@ gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
 
 /* collect and debug stats about the indexes for all streams.
  * This method is also responsible for filling in the stream duration
- * as measured by the amount of index entries. */
-static void
+ * as measured by the amount of index entries.
+ *
+ * Returns TRUE if the index is not empty, else FALSE */
+static gboolean
 gst_avi_demux_do_index_stats (GstAviDemux * avi)
 {
   guint i;
@@ -1303,6 +1305,12 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
 #endif
   GST_INFO_OBJECT (avi, "%u bytes for index vs %u ideally, %u wasted",
       total_max, total_idx, total_max - total_idx);
+
+  if (total_idx == 0) {
+    GST_WARNING_OBJECT (avi, "Index is empty !");
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /*
@@ -1470,9 +1478,7 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi)
     stream->indexes = NULL;
   }
   /* get stream stats now */
-  gst_avi_demux_do_index_stats (avi);
-
-  avi->have_index = TRUE;
+  avi->have_index = gst_avi_demux_do_index_stats (avi);
 }
 #endif
 
@@ -1515,9 +1521,7 @@ gst_avi_demux_read_subindexes_pull (GstAviDemux * avi)
     stream->indexes = NULL;
   }
   /* get stream stats now */
-  gst_avi_demux_do_index_stats (avi);
-
-  avi->have_index = TRUE;
+  avi->have_index = gst_avi_demux_do_index_stats (avi);
 }
 
 /*
@@ -2346,14 +2350,11 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
   gst_buffer_unref (buf);
 
   /* get stream stats now */
-  gst_avi_demux_do_index_stats (avi);
+  avi->have_index = gst_avi_demux_do_index_stats (avi);
 
   stamp = gst_util_get_timestamp () - stamp;
   GST_DEBUG_OBJECT (avi, "parsing index %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
-
-  /* we have an index now */
-  avi->have_index = TRUE;
 
   return TRUE;
 
@@ -2625,11 +2626,10 @@ gst_avi_demux_stream_scan (GstAviDemux * avi)
       break;
     }
   }
-  /* collect stats */
-  gst_avi_demux_do_index_stats (avi);
 
-  /* we have an index now */
-  avi->have_index = TRUE;
+  /* collect stats */
+  avi->have_index = gst_avi_demux_do_index_stats (avi);
+
 
   return TRUE;
 
