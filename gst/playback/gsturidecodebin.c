@@ -84,6 +84,7 @@ struct _GstURIDecodeBin
   GstElement *typefind;
   guint have_type_id;           /* have-type signal id from typefind */
   GSList *decodebins;
+  GSList *pending_decodebins;
   GSList *srcpads;
   gint numpads;
 
@@ -169,6 +170,7 @@ static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstURIDecodeBin, gst_uri_decode_bin, GstBin, GST_TYPE_BIN);
 
+static void remove_decoders (GstURIDecodeBin * bin, gboolean force);
 static void gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
@@ -460,6 +462,7 @@ gst_uri_decode_bin_finalize (GObject * obj)
 {
   GstURIDecodeBin *dec = GST_URI_DECODE_BIN (obj);
 
+  remove_decoders (dec, TRUE);
   g_mutex_free (dec->lock);
   g_free (dec->uri);
   g_free (dec->encoding);
@@ -1078,8 +1081,13 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   return res;
 }
 
+/* Remove all decodebin2 from ourself 
+ * If force is FALSE, then the decodebin2 instances will be stored in
+ * pending_decodebins for re-use later on.
+ * If force is TRUE, then all decodebin2 instances will be unreferenced
+ * and cleared, including the pending ones. */
 static void
-remove_decoders (GstURIDecodeBin * bin)
+remove_decoders (GstURIDecodeBin * bin, gboolean force)
 {
   GSList *walk;
 
@@ -1087,11 +1095,31 @@ remove_decoders (GstURIDecodeBin * bin)
     GstElement *decoder = GST_ELEMENT_CAST (walk->data);
 
     GST_DEBUG_OBJECT (bin, "removing old decoder element");
-    gst_element_set_state (decoder, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (bin), decoder);
+    if (force) {
+      gst_element_set_state (decoder, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (bin), decoder);
+    } else {
+      gst_element_set_state (decoder, GST_STATE_READY);
+      /* add it to our list of pending decodebins */
+      g_object_ref (decoder);
+      gst_bin_remove (GST_BIN_CAST (bin), decoder);
+      bin->pending_decodebins =
+          g_slist_prepend (bin->pending_decodebins, decoder);
+    }
   }
   g_slist_free (bin->decodebins);
   bin->decodebins = NULL;
+  if (force) {
+    GSList *tmp;
+
+    for (tmp = bin->pending_decodebins; tmp; tmp = tmp->next) {
+      gst_element_set_state ((GstElement *) tmp->data, GST_STATE_NULL);
+      gst_object_unref ((GstElement *) tmp->data);
+    }
+    g_slist_free (bin->pending_decodebins);
+    bin->pending_decodebins = NULL;
+
+  }
 }
 
 static void
@@ -1180,39 +1208,49 @@ make_decoder (GstURIDecodeBin * decoder)
 {
   GstElement *decodebin;
 
-  GST_LOG_OBJECT (decoder, "making new decodebin2");
+  /* re-use pending decodebin2 */
+  if (decoder->pending_decodebins) {
+    GSList *first = decoder->pending_decodebins;
+    GST_LOG_OBJECT (decoder, "re-using pending decodebin2");
+    decodebin = (GstElement *) first->data;
+    decoder->pending_decodebins =
+        g_slist_delete_link (decoder->pending_decodebins, first);
+  } else {
+    GST_LOG_OBJECT (decoder, "making new decodebin2");
 
-  /* now create the decoder element */
-  decodebin = gst_element_factory_make ("decodebin2", NULL);
-  if (!decodebin)
-    goto no_decodebin;
+    /* now create the decoder element */
+    decodebin = gst_element_factory_make ("decodebin2", NULL);
+
+    if (!decodebin)
+      goto no_decodebin;
+    /* connect signals to proxy */
+    g_signal_connect (G_OBJECT (decodebin), "unknown-type",
+        G_CALLBACK (proxy_unknown_type_signal), decoder);
+    g_signal_connect (G_OBJECT (decodebin), "autoplug-continue",
+        G_CALLBACK (proxy_autoplug_continue_signal), decoder);
+    g_signal_connect (G_OBJECT (decodebin), "autoplug-factories",
+        G_CALLBACK (proxy_autoplug_factories_signal), decoder);
+    g_signal_connect (G_OBJECT (decodebin), "autoplug-select",
+        G_CALLBACK (proxy_autoplug_select_signal), decoder);
+    g_signal_connect (G_OBJECT (decodebin), "drained",
+        G_CALLBACK (proxy_drained_signal), decoder);
+
+    /* set up callbacks to create the links between decoded data
+     * and video/audio/subtitle rendering/output. */
+    g_signal_connect (G_OBJECT (decodebin),
+        "new-decoded-pad", G_CALLBACK (new_decoded_pad_cb), decoder);
+    g_signal_connect (G_OBJECT (decodebin),
+        "pad-removed", G_CALLBACK (pad_removed_cb), decoder);
+    g_signal_connect (G_OBJECT (decodebin), "no-more-pads",
+        G_CALLBACK (no_more_pads), decoder);
+    g_signal_connect (G_OBJECT (decodebin),
+        "unknown-type", G_CALLBACK (unknown_type_cb), decoder);
+  }
 
   /* configure caps if we have any */
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
 
-  /* connect signals to proxy */
-  g_signal_connect (G_OBJECT (decodebin), "unknown-type",
-      G_CALLBACK (proxy_unknown_type_signal), decoder);
-  g_signal_connect (G_OBJECT (decodebin), "autoplug-continue",
-      G_CALLBACK (proxy_autoplug_continue_signal), decoder);
-  g_signal_connect (G_OBJECT (decodebin), "autoplug-factories",
-      G_CALLBACK (proxy_autoplug_factories_signal), decoder);
-  g_signal_connect (G_OBJECT (decodebin), "autoplug-select",
-      G_CALLBACK (proxy_autoplug_select_signal), decoder);
-  g_signal_connect (G_OBJECT (decodebin), "drained",
-      G_CALLBACK (proxy_drained_signal), decoder);
-
-  /* set up callbacks to create the links between decoded data
-   * and video/audio/subtitle rendering/output. */
-  g_signal_connect (G_OBJECT (decodebin),
-      "new-decoded-pad", G_CALLBACK (new_decoded_pad_cb), decoder);
-  g_signal_connect (G_OBJECT (decodebin),
-      "pad-removed", G_CALLBACK (pad_removed_cb), decoder);
-  g_signal_connect (G_OBJECT (decodebin), "no-more-pads",
-      G_CALLBACK (no_more_pads), decoder);
-  g_signal_connect (G_OBJECT (decodebin),
-      "unknown-type", G_CALLBACK (unknown_type_cb), decoder);
   g_object_set_data (G_OBJECT (decodebin), "pending", "1");
   g_object_set (G_OBJECT (decodebin), "subtitle-encoding", decoder->encoding,
       NULL);
@@ -1480,7 +1518,7 @@ setup_source (GstURIDecodeBin * decoder)
   g_object_notify (G_OBJECT (decoder), "source");
 
   /* remove the old decoders now, if any */
-  remove_decoders (decoder);
+  remove_decoders (decoder, FALSE);
 
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
@@ -1965,14 +2003,14 @@ gst_uri_decode_bin_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
-      remove_decoders (decoder);
+      remove_decoders (decoder, FALSE);
       remove_pads (decoder);
       remove_source (decoder);
       do_async_done (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");
-      remove_decoders (decoder);
+      remove_decoders (decoder, TRUE);
       remove_pads (decoder);
       remove_source (decoder);
       break;
