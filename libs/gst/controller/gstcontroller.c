@@ -135,16 +135,15 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           g_object_class_find_property (G_OBJECT_GET_CLASS (object), name))) {
     GST_DEBUG ("  psec->flags : 0x%08x", pspec->flags);
 
-    /* check if this param is witable */
-    g_return_val_if_fail ((pspec->flags & G_PARAM_WRITABLE), NULL);
-    /* check if property is controlable */
-    g_return_val_if_fail ((pspec->flags & GST_PARAM_CONTROLLABLE), NULL);
-    /* check if this param is not construct-only */
-    g_return_val_if_fail (!(pspec->flags & G_PARAM_CONSTRUCT_ONLY), NULL);
+    /* check if this param is witable && controlable && !construct-only */
+    g_return_val_if_fail ((pspec->flags & (G_PARAM_WRITABLE |
+                GST_PARAM_CONTROLLABLE | G_PARAM_CONSTRUCT_ONLY)) ==
+        (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE), NULL);
 
-    if ((prop = g_new0 (GstControlledProperty, 1))) {
+    if ((prop = g_slice_new (GstControlledProperty))) {
       prop->pspec = pspec;
       prop->name = pspec->name;
+      prop->csource = NULL;
       prop->disabled = FALSE;
       memset (&prop->last_value, 0, sizeof (GValue));
       g_value_init (&prop->last_value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
@@ -169,7 +168,7 @@ gst_controlled_property_free (GstControlledProperty * prop)
   if (prop->csource)
     g_object_unref (prop->csource);
   g_value_unset (&prop->last_value);
-  g_free (prop);
+  g_slice_free (GstControlledProperty, prop);
 }
 
 /*
@@ -244,7 +243,7 @@ gst_controller_add_property (GstController * self, GObject * object,
       self->properties = g_list_prepend (self->properties, prop);
     }
   } else {
-    GST_WARNING ("trying to control property again");
+    GST_WARNING ("trying to control property %s again", name);
     if (*ref_existing) {
       g_object_ref (self);
       *ref_existing = FALSE;
