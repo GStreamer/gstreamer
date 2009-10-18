@@ -263,6 +263,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   avi->num_v_streams = 0;
   avi->num_a_streams = 0;
   avi->num_t_streams = 0;
+  avi->main_stream = -1;
 
   avi->state = GST_AVI_DEMUX_START;
   avi->offset = 0;
@@ -1663,6 +1664,8 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
           GST_PAD_NAME (stream->pad), GST_PAD_CAPS (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
       stream->exposed = TRUE;
+      if (avi->main_stream == -1)
+        avi->main_stream = i;
     } else {
       GST_WARNING_OBJECT (avi, "Stream #%d doesn't have any entry, removing it",
           i);
@@ -3441,7 +3444,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 
   /* FIXME, this code assumes the main stream with keyframes is stream 0,
    * which is mostly correct... */
-  stream = &avi->stream[0];
+  stream = &avi->stream[avi->main_stream];
 
   /* get the entry index for the requested position */
   index = gst_avi_demux_index_for_time (avi, stream, seek_time);

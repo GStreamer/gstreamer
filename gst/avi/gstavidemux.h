@@ -164,6 +164,8 @@ typedef struct _GstAviDemux {
   guint          num_a_streams;
   guint          num_t_streams;  /* subtitle text streams */
 
+  guint          main_stream; /* used for seeking */
+
   /* for streaming mode */
   gboolean       streaming;
   gboolean       have_eos;
