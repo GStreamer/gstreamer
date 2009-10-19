@@ -255,8 +255,9 @@ restart:
     PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
 
     if (!plugin_loader_load_and_sync (l, entry)) {
-      GST_INFO ("AHA! %s crashes on loading", entry->filename);
       /* Create dummy plugin entry to block re-scanning this file */
+      GST_ERROR ("Plugin file %s failed to load. Blacklisting",
+          entry->filename);
       plugin_loader_create_blacklist_plugin (l, entry);
       l->got_plugin_details = TRUE;
       /* Now remove this crashy plugin from the head of the list */
