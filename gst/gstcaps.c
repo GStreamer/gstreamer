@@ -909,7 +909,7 @@ gst_caps_set_value (GstCaps * caps, const char *field, const GValue * value)
  * <note>Prior to GStreamer version 0.10.26, this function failed when
  * @caps was simple. If your code needs to work with those versions of
  * GStreamer, you may only call this function when GST_CAPS_IS_SIMPLE()
- * returns %TRUE for @caps.</note>
+ * is %TRUE for @caps.</note>
  */
 void
 gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
@@ -956,7 +956,7 @@ gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
  * <note>Prior to GStreamer version 0.10.26, this function failed when
  * @caps was simple. If your code needs to work with those versions of
  * GStreamer, you may only call this function when GST_CAPS_IS_SIMPLE()
- * returns %TRUE for @caps.</note>
+ * is %TRUE for @caps.</note>
  */
 void
 gst_caps_set_simple (GstCaps * caps, const char *field, ...)
