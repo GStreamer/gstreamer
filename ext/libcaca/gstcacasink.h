@@ -30,9 +30,7 @@
 #   include <caca0.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_CACASINK \
   (gst_cacasink_get_type())
@@ -51,9 +49,6 @@ typedef struct _GstCACASinkClass GstCACASinkClass;
 struct _GstCACASink {
   GstBaseSink parent;
 
-  GstPad *sinkpad;
-
-  gulong format;
   gint width, height;
   gint screen_width, screen_height;
   guint bpp;
@@ -72,9 +67,6 @@ struct _GstCACASinkClass {
 
 GType gst_cacasink_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
-
-#endif /* __GST_CACASINKE_H__ */
+#endif /* __GST_CACASINK_H__ */
