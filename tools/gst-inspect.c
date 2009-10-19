@@ -42,13 +42,12 @@ static void
 n_print (const char *format, ...)
 {
   va_list args;
-  gint retval;
 
   if (_name)
     g_print ("%s", _name);
 
   va_start (args, format);
-  retval = g_vprintf (format, args);
+  g_vprintf (format, args);
   va_end (args);
 }
 
