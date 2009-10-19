@@ -415,6 +415,7 @@ GST_START_TEST (test_single_image_capture)
   g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 }
 
 GST_END_TEST;
@@ -433,6 +434,7 @@ GST_START_TEST (test_video_recording)
   /* Record for one seconds  */
   g_usleep (G_USEC_PER_SEC);
   g_signal_emit_by_name (camera, "capture-stop", NULL);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 }
 
 GST_END_TEST;
@@ -452,6 +454,7 @@ GST_START_TEST (test_image_video_cycle)
   g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 }
 
 GST_END_TEST;
