@@ -350,7 +350,12 @@ static gboolean
 gst_cacasink_open (GstCACASink * cacasink)
 {
   cacasink->bitmap = NULL;
-  caca_init ();
+
+  if (caca_init () < 0) {
+    GST_ELEMENT_ERROR (cacasink, RESOURCE, OPEN_WRITE, (NULL),
+        ("caca_init() failed"));
+    return FALSE;
+  }
 
   cacasink->screen_width = caca_get_width ();
   cacasink->screen_height = caca_get_height ();
