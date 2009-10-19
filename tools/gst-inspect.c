@@ -992,6 +992,8 @@ print_element_list (gboolean print_all)
     while (features) {
       GstPluginFeature *feature;
 
+      if (G_UNLIKELY (features->data == NULL))
+        goto next;
       feature = GST_PLUGIN_FEATURE (features->data);
       featurecount++;
 
@@ -1040,6 +1042,7 @@ print_element_list (gboolean print_all)
               g_type_name (G_OBJECT_TYPE (feature)));
       }
 
+    next:
       features = g_list_next (features);
     }
 
@@ -1203,7 +1206,7 @@ print_plugin_features (GstPlugin * plugin)
             gst_plugin_feature_get_name (feature));
 
       num_typefinders++;
-    } else {
+    } else if (feature) {
       n_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
           g_type_name (G_OBJECT_TYPE (feature)));
       num_other++;
