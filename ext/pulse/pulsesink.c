@@ -1378,6 +1378,8 @@ gst_pulsesink_interface_supported (GstImplementsInterface *
 
   if (interface_type == GST_TYPE_PROPERTY_PROBE && this->probe)
     return TRUE;
+  if (interface_type == GST_TYPE_STREAM_VOLUME)
+    return TRUE;
 
   return FALSE;
 }
