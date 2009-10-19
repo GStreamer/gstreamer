@@ -24,10 +24,11 @@
 #include <gst/gst.h>
 
 typedef enum {
+  GST_ENCODING_PROFILE_UNKNOWN,
   GST_ENCODING_PROFILE_VIDEO,
   GST_ENCODING_PROFILE_AUDIO,
-  GST_ENCODING_PROFILE_TEXT,
-  GST_ENCODING_PROFILE_UNKNOWN
+  GST_ENCODING_PROFILE_TEXT
+  /* Room for extenstion */
 } GstEncodingProfileType;
 
 typedef struct _GstEncodingTarget GstEncodingTarget;
@@ -213,7 +214,7 @@ gboolean gst_preset_create (GstPreset *preset, gchar *name,
  * Sets all the properties of the element back to their default values.
  */
 /* FIXME : This could actually be put at the GstObject level, or maybe even
- * at the GObject leve. */
+ * at the GObject level. */
 void gst_preset_reset (GstPreset *preset);
 
 #endif /* __GST_PROFILE_H__ */

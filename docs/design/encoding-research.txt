@@ -97,10 +97,14 @@ Use Cases
   The final pass uses previously collected information, and the output
   is then muxed and outputted.
 
+* Archiving and intermediary format
+
+  The requirement is to have lossless
+
 * CD ripping
 
   Example applications: Sound-juicer
 
 * DVD ripping
 
-  
+  Example application: Thoggen

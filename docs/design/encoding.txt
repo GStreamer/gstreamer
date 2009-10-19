@@ -3,15 +3,15 @@ Encoding and Muxing
 
 Summary
 -------
- 0 Problems
- 0 Goals
+ A. Problems
+ B. Goals
  1. EncodeBin
  2. Encoding Profile System
  3. Helper Library for Profiles
 
 
 
-0. Problems this proposal attempts to solve
+A. Problems this proposal attempts to solve
 -------------------------------------------
 
 * Duplication of pipeline code for gstreamer-based applications
@@ -23,11 +23,13 @@ Summary
 
 * No unified system for creating encoding targets for applications,
   resulting in duplication of code accross all applications,
-  differences and inconsistencies that come with that duplication.
+  differences and inconsistencies that come with that duplication,
+  and applications hardcoding element names and settings resulting in
+  poor portability.
 
 
 
-0. Goals
+B. Goals
 --------
 
 1. Convenience encoding element
@@ -44,7 +46,7 @@ Summary
 
   Create a helper library to:
   * create EncodeBin instances based on profiles, and
-  * help applications to create/load/save those profiles.
+  * help applications to create/load/save/browse those profiles.
 
 
 
@@ -191,16 +193,16 @@ Summary
 
   Such a classification is required in order for:
   * Applications with a very-specific use-case to limit the number of
-  profiles they can offer the user. A screencasting application has no
-  use with the online services targets for example.
+    profiles they can offer the user. A screencasting application has
+    no use with the online services targets for example. 
   * Offering the user some initial classification in the case of a
-  more generic encoding application (like a video editor or a
-  transcoder).
+    more generic encoding application (like a video editor or a
+    transcoder). 
 
   Ex:
    Consumer devices
    Online service
-   Intermediate editing format
+   Intermediate Editing Format
    Screencast
    Capture
    Computer
@@ -242,7 +244,7 @@ An encoding profile requires the following information:
  * Description
    This is a translatable string describing the profile
  * Muxing format
-   This is a string containing the GStreamer mime-type of the
+   This is a string containing the GStreamer media-type of the
    container format.
  * Muxing preset
    This is an optional string describing the preset(s) to use on the
@@ -259,9 +261,9 @@ A Stream Profile consists of:
  * Type
    The type of stream profile (audio, video, text, private-data)
  * Encoding Format
-   This is a string containing the GStreamer mime-type of the encoding
+   This is a string containing the GStreamer media-type of the encoding
    format to be used. If encoding is not to be applied, the raw audio
-   mime type will be used.
+   media type will be used.
  * Encoding preset
    This is an optional string describing the preset(s) to use on the
    encoder.
@@ -377,6 +379,23 @@ made as to which formatting to use for storing targets and profiles.
   gst_preset_load_preset (h264enc,
                           "pass:1/profile:baseline/quality:high");
 
+2.7 Points to be determined
+---------------------------
+
+  This document hasn't determined yet how to solve the following
+  problems:
+
+2.7.1 Storage of profiles
+
+  One proposal for storage would be to use a system wide directory
+  (like $prefix/share/gstreamer-0.10/profiles) and store XML files for
+  every individual profiles.
+
+  Users could then add their own profiles in ~/.gstreamer-0.10/profiles
+
+  This poses some limitations as to what to do if some applications
+  want to have some profiles limited to their own usage.
+
 
 3. Helper library for profiles
 ------------------------------
@@ -414,10 +433,31 @@ made as to which formatting to use for storing targets and profiles.
 
  The remaining parts concern the restrictions to encoder
  input.
- 
 
-[0] http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/GstPreset.html
-[1] http://www.gnome.org/~bmsmith/gconf-docs/C/gnome-media.html
-[2] http://gstreamer.freedesktop.org/wiki/DeviceProfile
-[3] http://gstreamer.freedesktop.org/wiki/PresetDesign
+3.4 Ensuring availability of plugins for Profiles
+
+ When an application wishes to use a Profile, it should be able to
+ query whether it has all the needed plugins to use it.
+
+ This part will use GstPbUtils to query, and if needed install the
+ missing plugins through the installed distribution plugin installer.
+
+
+
+
+* Research links
+
+  Some of these are still active documents, some other not
+
+[0] GstPreset API documentation
+    http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/GstPreset.html
+
+[1] gnome-media GConf profiles
+    http://www.gnome.org/~bmsmith/gconf-docs/C/gnome-media.html
+
+[2] Research on a Device Profile API
+    http://gstreamer.freedesktop.org/wiki/DeviceProfile
+
+[3] Research on defining presets usage
+    http://gstreamer.freedesktop.org/wiki/PresetDesign
 
