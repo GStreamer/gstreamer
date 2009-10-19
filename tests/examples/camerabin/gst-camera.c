@@ -424,7 +424,7 @@ stop_image_preview (gpointer data)
 {
   g_return_val_if_fail (data != NULL, FALSE);
 
-  g_signal_emit_by_name (data, "user-stop", 0);
+  g_signal_emit_by_name (data, "capture-stop", 0);
 
   return FALSE;
 }
@@ -511,7 +511,8 @@ me_gst_setup_pipeline_create_post_bin (const gchar * post, gboolean video)
   gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
   gst_object_unref (GST_OBJECT (pad));
 
-  g_object_set (gst_camera_bin, (video ? "videopp" : "imagepp"), bin, NULL);
+  g_object_set (gst_camera_bin,
+      (video ? "video-post-processing" : "image-post-processing"), bin, NULL);
   return TRUE;
 done:
   return FALSE;
@@ -521,13 +522,13 @@ static void
 me_gst_setup_pipeline_create_codecs (void)
 {
 #ifdef USE_MP4
-  g_object_set (gst_camera_bin, "videoenc",
+  g_object_set (gst_camera_bin, "video-encoder",
       gst_element_factory_make ("omx_mpeg4enc", NULL), NULL);
 
-  g_object_set (gst_camera_bin, "audioenc",
+  g_object_set (gst_camera_bin, "audio-encoder",
       gst_element_factory_make ("omx_aacenc", NULL), NULL);
 
-  g_object_set (gst_camera_bin, "videomux",
+  g_object_set (gst_camera_bin, "video-muxer",
       gst_element_factory_make ("hantromp4mux", NULL), NULL);
 #else
   /* using defaults theora, vorbis, ogg */
@@ -561,7 +562,7 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
     goto done;
   }
 
-  g_signal_connect (gst_camera_bin, "img-done",
+  g_signal_connect (gst_camera_bin, "image-done",
       (GCallback) me_image_capture_done, NULL);
 
   preview_caps = gst_caps_from_string (PREVIEW_CAPS);
@@ -578,7 +579,8 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
 
   gst_videosrc = gst_element_factory_make (CAMERA_APP_VIDEOSRC, NULL);
   if (gst_videosrc) {
-    g_object_set (G_OBJECT (gst_camera_bin), "videosrc", gst_videosrc, NULL);
+    g_object_set (G_OBJECT (gst_camera_bin), "video-source", gst_videosrc,
+        NULL);
   }
 
   if (imagepost) {
@@ -589,7 +591,8 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
     GstElement *ipp =
         gst_element_factory_make (CAMERA_APP_IMAGE_POSTPROC, NULL);
     if (ipp) {
-      g_object_set (G_OBJECT (gst_camera_bin), "imagepp", ipp, NULL);
+      g_object_set (G_OBJECT (gst_camera_bin), "image-post-processing", ipp,
+          NULL);
     }
   }
 
@@ -606,7 +609,8 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
   }
 
   if (!gst_videosrc) {
-    g_object_get (G_OBJECT (gst_camera_bin), "videosrc", &gst_videosrc, NULL);
+    g_object_get (G_OBJECT (gst_camera_bin), "video-source", &gst_videosrc,
+        NULL);
   }
 
   init_view_finder_resolution_combobox ();
@@ -733,15 +737,15 @@ capture_mode_set_state (CaptureState state)
         g_object_set (gst_camera_bin, "mode", 0, NULL);
       else {                    /* state == CAP_STATE_VIDEO_RECORDING */
         g_object_set (gst_camera_bin, "mode", 1, NULL);
-        g_signal_emit_by_name (gst_camera_bin, "user-start", 0);
+        g_signal_emit_by_name (gst_camera_bin, "capture-start", 0);
       }
       break;
     case CAP_STATE_VIDEO_PAUSED:
       if (state == CAP_STATE_VIDEO_RECORDING) {
-        g_signal_emit_by_name (gst_camera_bin, "user-start", 0);
+        g_signal_emit_by_name (gst_camera_bin, "capture-start", 0);
         capture_state = CAP_STATE_VIDEO_RECORDING;
       } else {
-        g_signal_emit_by_name (gst_camera_bin, "user-stop", 0);
+        g_signal_emit_by_name (gst_camera_bin, "capture-stop", 0);
         capture_state = CAP_STATE_VIDEO_STOPED;
         if (state == CAP_STATE_IMAGE)
           capture_mode_set_state (state);
@@ -749,10 +753,10 @@ capture_mode_set_state (CaptureState state)
       break;
     case CAP_STATE_VIDEO_RECORDING:
       if (state == CAP_STATE_VIDEO_PAUSED) {
-        g_signal_emit_by_name (gst_camera_bin, "user-pause", 0);
+        g_signal_emit_by_name (gst_camera_bin, "capture-pause", 0);
         capture_state = CAP_STATE_VIDEO_PAUSED;
       } else {
-        g_signal_emit_by_name (gst_camera_bin, "user-stop", 0);
+        g_signal_emit_by_name (gst_camera_bin, "capture-stop", 0);
         capture_state = CAP_STATE_VIDEO_STOPED;
         if (state == CAP_STATE_IMAGE)
           capture_mode_set_state (state);
@@ -813,7 +817,7 @@ on_buttonShot_clicked (GtkButton * button, gpointer user_data)
       g_object_set (gst_camera_bin, "filename", filename->str, NULL);
 
       set_metadata ();
-      g_signal_emit_by_name (gst_camera_bin, "user-start", 0);
+      g_signal_emit_by_name (gst_camera_bin, "capture-start", 0);
     }
       break;
     case CAP_STATE_VIDEO_STOPED:
@@ -1271,7 +1275,7 @@ init_view_finder_resolution_combobox ()
 {
   GstCaps *input_caps = NULL, *default_caps = NULL, *intersect = NULL;
 
-  g_object_get (gst_camera_bin, "inputcaps", &input_caps, NULL);
+  g_object_get (gst_camera_bin, "video-source-caps", &input_caps, NULL);
   if (input_caps) {
     fill_resolution_combo (input_caps);
   }
@@ -1621,7 +1625,7 @@ capture_image_res_toggled_cb (GtkRadioMenuItem * menuitem, gpointer user_data)
     for (i = 0; i < G_N_ELEMENTS (image_resolution_label_map); i++) {
       if (g_str_equal (label, image_resolution_label_map[i].label)) {
         /* set found values */
-        g_signal_emit_by_name (gst_camera_bin, "user-image-res",
+        g_signal_emit_by_name (gst_camera_bin, "set-image-resolution",
             image_resolution_label_map[i].width,
             image_resolution_label_map[i].height, 0);
         break;

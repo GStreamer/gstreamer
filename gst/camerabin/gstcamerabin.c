@@ -42,35 +42,36 @@
  * <refsect2>
  * <title>Image capture</title>
  * <para>
- * Taking still images is initiated with the #GstCameraBin::user-start action
+ * Taking still images is initiated with the #GstCameraBin::capture-start action
  * signal. Once the image has been captured, "image-captured" gst message is
  * posted to the bus and capturing another image is possible. If application 
  * has set #GstCameraBin:preview-caps property, then a "preview-image" gst
  * message is posted to bus containing preview image formatted according to
- * specified caps. Eventually when image has been saved #GstCameraBin::img-done
- * signal is emitted.
+ * specified caps. Eventually when image has been saved
+ * #GstCameraBin::image-done signal is emitted.
  * 
- * Available resolutions can be taken from the #GstCameraBin:inputcaps property.
- * Image capture resolution can be set with #GstCameraBin::user-image-res
- * action signal.
+ * Available resolutions can be taken from the #GstCameraBin:video-source-caps
+ * property. Image capture resolution can be set with 
+ * #GstCameraBin::set-image-resolution action signal.
  * </para>
  * </refsect2>
  * <refsect2>
  * <title>Video capture</title>
  * <para>
- * Video capture is started with the #GstCameraBin::user-start action signal too.
- * In addition to image capture one can use #GstCameraBin::user-pause to
- * pause recording and #GstCameraBin::user-stop to end recording.
+ * Video capture is started with the #GstCameraBin::capture-start action signal
+ * too. In addition to image capture one can use #GstCameraBin::capture-pause to
+ * pause recording and #GstCameraBin::capture-stop to end recording.
  * 
- * Available resolutions and fps can be taken from the #GstCameraBin:inputcaps
- * property. #GstCameraBin::user-res-fps action signal can be used to set frame
- * rate and resolution for the video recording and view finder as well.
+ * Available resolutions and fps can be taken from the 
+ * #GstCameraBin:video-source-caps property. 
+ * #GstCameraBin::set-video-resolution-fps action signal can be used to set
+ * frame rate and resolution for the video recording and view finder as well.
  * </para>
  * </refsect2>
  * <refsect2>
  * <title>Photography interface</title>
  * <para>
- * GstCameraBin implements gst photography interface, which can be used to set
+ * GstCameraBin implements #GstPhotography interface, which can be used to set
  * and get different settings related to digital imaging. Since currently many
  * of these settings require low-level support the photography interface support
  * is dependent on video src element. In practice photography interface settings
@@ -85,9 +86,9 @@
  * Elements within GstCameraBin are created and destroyed when switching
  * between NULL and READY states. Therefore element properties should be set
  * in NULL state. User set elements are not unreffed until GstCameraBin is
- * unreffed or replaced by a new user set element. Initially only elements needed
- * for view finder mode are created to speed up startup. Image bin and video bin
- * elements are created when setting the mode or starting capture.
+ * unreffed or replaced by a new user set element. Initially only elements
+ * needed for view finder mode are created to speed up startup. Image bin and
+ * video bin elements are created when setting the mode or starting capture.
  * </para>
  * </refsect2>
  * <refsect2>
@@ -113,8 +114,8 @@
  * has been disabled, and then in order to record video, you MUST ensure that
  * there is enough CPU to encode the video. Thus choose smart resolution and
  * frames per second values. It is also highly recommended to avoid color
- * conversions; make sure all the elements involved work with the same colorspace
- * (i.e. rgb or yuv i420 or whatelse).
+ * conversions; make sure all the elements involved work with the same
+ * colorspace (i.e. rgb or yuv i420 or whatelse).
  * </para>
  * </note>
  * </refsect2>
@@ -2022,7 +2023,7 @@ gst_camerabin_do_stop (GstCameraBin * camera)
  * @camera: camerabin object
  * @fname: filename of the recently saved image
  *
- * Default handler for #GstCameraBin::img-done signal,
+ * Default handler for #GstCameraBin::image-done signal,
  * stops always capture.
  *
  * Returns: FALSE always
@@ -2408,19 +2409,20 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           MIN_ZOOM, MAX_ZOOM, DEFAULT_ZOOM, G_PARAM_READWRITE));
 
   /**
-   * GstCameraBin:imagepp:
+   * GstCameraBin:image-post-processing:
    *
    * Set up an element to do image post processing.
    * This property can only be set while #GstCameraBin is in NULL state.
    * The ownership of the element will be taken by #GstCameraBin.
    */
   g_object_class_install_property (gobject_class, ARG_IMAGE_POST,
-      g_param_spec_object ("imagepp", "Image post processing element",
+      g_param_spec_object ("image-post-processing",
+          "Image post processing element",
           "Image Post-Processing GStreamer element (default is NULL)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:imageenc:
+   *  GstCameraBin:image-encoder:
    *
    * Set up an image encoder (for example, jpegenc or pngenc) element.
    * This property can only be set while #GstCameraBin is in NULL state.
@@ -2428,12 +2430,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_IMAGE_ENC,
-      g_param_spec_object ("imageenc", "Image encoder",
+      g_param_spec_object ("image-encoder", "Image encoder",
           "Image encoder GStreamer element (default is jpegenc)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:videopp:
+   *  GstCameraBin:video-post-processing:
    *
    * Set up an element to do video post processing.
    * This property can only be set while #GstCameraBin is in NULL state.
@@ -2441,12 +2443,13 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_POST,
-      g_param_spec_object ("videopp", "Video post processing element",
+      g_param_spec_object ("video-post-processing",
+          "Video post processing element",
           "Video post processing GStreamer element (default is NULL)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:videoenc:
+   *  GstCameraBin:video-encoder:
    *
    * Set up a video encoder element.
    * This property can only be set while #GstCameraBin is in NULL state.
@@ -2454,12 +2457,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_ENC,
-      g_param_spec_object ("videoenc", "Video encoder",
+      g_param_spec_object ("video-encoder", "Video encoder",
           "Video encoder GStreamer element (default is theoraenc)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:audioenc:
+   *  GstCameraBin:audio-encoder:
    *
    * Set up an audio encoder element.
    * This property can only be set while #GstCameraBin is in NULL state.
@@ -2467,12 +2470,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_AUDIO_ENC,
-      g_param_spec_object ("audioenc", "Audio encoder",
+      g_param_spec_object ("audio-encoder", "Audio encoder",
           "Audio encoder GStreamer element (default is vorbisenc)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:videomux:
+   *  GstCameraBin:video-muxer:
    *
    * Set up a video muxer element.
    * This property can only be set while #GstCameraBin is in NULL state.
@@ -2480,12 +2483,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_MUX,
-      g_param_spec_object ("videomux", "Video muxer",
+      g_param_spec_object ("video-muxer", "Video muxer",
           "Video muxer GStreamer element (default is oggmux)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:vfsink:
+   *  GstCameraBin:viewfinder-sink:
    *
    * Set up a sink element to render frames in view finder.
    * By default "autovideosink" or DEFAULT_VIDEOSINK will be used.
@@ -2494,12 +2497,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_VF_SINK,
-      g_param_spec_object ("vfsink", "View finder sink",
-          "View finder sink GStreamer element (NULL = default video sink)",
+      g_param_spec_object ("viewfinder-sink", "Viewfinder sink",
+          "Viewfinder sink GStreamer element (NULL = default video sink)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   *  GstCameraBin:videosrc:
+   *  GstCameraBin:video-source:
    *
    * Set up a video source element.
    * By default "autovideosrc" or DEFAULT_VIDEOSRC will be used.
@@ -2508,11 +2511,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SRC,
-      g_param_spec_object ("videosrc", "Video source element",
+      g_param_spec_object ("video-source", "Video source element",
           "Video source GStreamer element (NULL = default video src)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
   /**
-   *  GstCameraBin:audiosrc:
+   *  GstCameraBin:audio-source:
    *
    * Set up an audio source element.
    * By default "autoaudiosrc" or DEFAULT_AUDIOSRC will be used.
@@ -2521,12 +2524,12 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_AUDIO_SRC,
-      g_param_spec_object ("audiosrc", "Audio source element",
+      g_param_spec_object ("audio-source", "Audio source element",
           "Audio source GStreamer element (NULL = default audio src)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
-   * GstCameraBin:inputcaps:
+   * GstCameraBin:video-source-caps:
    *
    * The allowed modes of operation of the video source. Have in mind that it
    * doesn't mean #GstCameraBin can operate in all those modes,
@@ -2535,7 +2538,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_INPUT_CAPS,
-      g_param_spec_boxed ("inputcaps", "Input caps",
+      g_param_spec_boxed ("video-source-caps", "Video source caps",
           "The allowed modes of the video source operation",
           GST_TYPE_CAPS, G_PARAM_READABLE));
 
@@ -2568,7 +2571,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   /**
-   * GstCameraBin::user-start:
+   * GstCameraBin::capture-start:
    * @camera: the camera bin element
    *
    * Starts image capture or video recording depending on the Mode.
@@ -2577,14 +2580,14 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[USER_START_SIGNAL] =
-      g_signal_new ("user-start",
+      g_signal_new ("capture-start",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_start),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
-   * GstCameraBin::user-stop:
+   * GstCameraBin::capture-stop:
    * @camera: the camera bin element
    *
    * Stops still image preview, continuous image capture and video
@@ -2592,14 +2595,14 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[USER_STOP_SIGNAL] =
-      g_signal_new ("user-stop",
+      g_signal_new ("capture-stop",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_stop),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
-   * GstCameraBin::user-pause:
+   * GstCameraBin::capture-pause:
    * @camera: the camera bin element
    *
    * Pauses video recording or resumes paused video recording.
@@ -2607,14 +2610,14 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[USER_PAUSE_SIGNAL] =
-      g_signal_new ("user-pause",
+      g_signal_new ("capture-pause",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_pause),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
-   * GstCameraBin::user-res-fps:
+   * GstCameraBin::set-video-resolution-fps:
    * @camera: the camera bin element
    * @width: number of horizontal pixels
    * @height: number of vertical pixels
@@ -2630,7 +2633,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[USER_RES_FPS_SIGNAL] =
-      g_signal_new ("user-res-fps",
+      g_signal_new ("set-video-resolution-fps",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_res_fps),
@@ -2638,7 +2641,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
   /**
-   * GstCameraBin::user-image-res:
+   * GstCameraBin::set-image-resolution:
    * @camera: the camera bin element
    * @width: number of horizontal pixels
    * @height: number of vertical pixels
@@ -2648,7 +2651,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[USER_IMAGE_RES_SIGNAL] =
-      g_signal_new ("user-image-res",
+      g_signal_new ("set-image-resolution",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_image_res),
@@ -2656,7 +2659,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       G_TYPE_INT, G_TYPE_INT);
 
   /**
-   * GstCameraBin::img-done:
+   * GstCameraBin::image-done:
    * @camera: the camera bin element
    * @filename: the name of the file just saved
    *
@@ -2667,7 +2670,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   camerabin_signals[IMG_DONE_SIGNAL] =
-      g_signal_new ("img-done", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("image-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCameraBinClass, img_done),
       g_signal_accumulator_true_handled, NULL,
       __gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1,
@@ -3132,7 +3135,7 @@ gst_camerabin_imgbin_finished (gpointer u_data)
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
   GST_DEBUG_OBJECT (camera, "Image pipeline set to READY");
 
-  /* Send img-done signal */
+  /* Send image-done signal */
   gst_camerabin_image_capture_continue (camera, filename);
   g_free (filename);
 
@@ -3224,7 +3227,7 @@ gst_camerabin_user_start (GstCameraBin * camera)
     GST_WARNING_OBJECT (camera, "capturing \"%s\" ongoing, set new filename",
         camera->filename->str);
     /* FIXME: we need to send something more to the app, so that it does not for
-     * for img-done */
+     * for image-done */
     g_mutex_unlock (camera->capture_mutex);
     return;
   }

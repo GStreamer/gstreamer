@@ -393,7 +393,7 @@ gst_camerabin_handle_scene_mode (GstCameraBin * camera, GstSceneMode scene_mode)
       /* Remember frame rate before setting night mode */
       camera->pre_night_fps_n = camera->fps_n;
       camera->pre_night_fps_d = camera->fps_d;
-      g_signal_emit_by_name (camera, "user-res-fps", camera->width,
+      g_signal_emit_by_name (camera, "set-video-resolution-fps", camera->width,
           camera->height, 0, 0, 0);
     } else {
       GST_DEBUG ("night mode already enabled");
@@ -403,7 +403,7 @@ gst_camerabin_handle_scene_mode (GstCameraBin * camera, GstSceneMode scene_mode)
       GST_DEBUG ("disabling night mode, restoring fps to %d/%d",
           camera->pre_night_fps_n, camera->pre_night_fps_d);
       camera->night_mode = FALSE;
-      g_signal_emit_by_name (camera, "user-res-fps", camera->width,
+      g_signal_emit_by_name (camera, "set-video-resolution-fps", camera->width,
           camera->height, camera->pre_night_fps_n, camera->pre_night_fps_d, 0);
     }
   }

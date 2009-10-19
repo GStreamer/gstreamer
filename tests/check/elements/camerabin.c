@@ -84,16 +84,16 @@ handle_image_captured_cb (gpointer data)
     g_object_set (camera, "mode", 1,
         "filename", make_test_file_name (CYCLE_VIDEO_FILENAME), NULL);
     /* Record video */
-    g_signal_emit_by_name (camera, "user-start", NULL);
+    g_signal_emit_by_name (camera, "capture-start", NULL);
     g_usleep (G_USEC_PER_SEC);
-    g_signal_emit_by_name (camera, "user-stop", NULL);
+    g_signal_emit_by_name (camera, "capture-stop", NULL);
     GST_DEBUG ("video captured");
 
     /* Set still image mode */
     g_object_set (camera, "mode", 0,
         "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
     /* Take a picture */
-    g_signal_emit_by_name (camera, "user-start", NULL);
+    g_signal_emit_by_name (camera, "capture-start", NULL);
 
     cycle_count--;
     GST_DEBUG ("next cycle: %d", cycle_count);
@@ -136,9 +136,9 @@ setup_camerabin_elements (GstElement * camera)
 
   if (vfsink && audiosrc && videosrc && audioenc && videoenc && videomux
       && imageenc) {
-    g_object_set (camera, "vfsink", vfsink, "audiosrc", audiosrc, "videosrc",
-        videosrc, "audioenc", audioenc, "videoenc", videoenc, "imageenc",
-        imageenc, "videomux", videomux, NULL);
+    g_object_set (camera, "viewfinder-sink", vfsink, "audio-source", audiosrc,
+        "video-source", videosrc, "audio-encoder", audioenc, "video-encoder",
+        videoenc, "image-encoder", imageenc, "video-muxer", videomux, NULL);
   } else {
     GST_WARNING ("error setting up test plugins");
   }
@@ -210,7 +210,7 @@ setup (void)
 
   setup_camerabin_elements (camera);
 
-  g_signal_connect (camera, "img-done", G_CALLBACK (capture_done), main_loop);
+  g_signal_connect (camera, "image-done", G_CALLBACK (capture_done), main_loop);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, (GstBusFunc) capture_bus_cb, main_loop);
@@ -222,7 +222,8 @@ setup (void)
 
   /* force a low framerate here to not timeout the tests because of the
    * encoders */
-  g_signal_emit_by_name (camera, "user-res-fps", 320, 240, 5, 1, NULL);
+  g_signal_emit_by_name (camera, "set-video-resolution-fps", 320, 240, 5, 1,
+      NULL);
 
   /* Set some default tags */
   setter = GST_TAG_SETTER (camera);
@@ -411,7 +412,7 @@ GST_START_TEST (test_single_image_capture)
   test_photography_settings (camera);
 
   GST_INFO ("starting capture");
-  g_signal_emit_by_name (camera, "user-start", NULL);
+  g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
 }
@@ -428,10 +429,10 @@ GST_START_TEST (test_video_recording)
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
   GST_INFO ("starting capture");
-  g_signal_emit_by_name (camera, "user-start", NULL);
+  g_signal_emit_by_name (camera, "capture-start", NULL);
   /* Record for one seconds  */
   g_usleep (G_USEC_PER_SEC);
-  g_signal_emit_by_name (camera, "user-stop", NULL);
+  g_signal_emit_by_name (camera, "capture-stop", NULL);
 }
 
 GST_END_TEST;
@@ -448,7 +449,7 @@ GST_START_TEST (test_image_video_cycle)
       "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
 
   GST_INFO ("starting capture");
-  g_signal_emit_by_name (camera, "user-start", NULL);
+  g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
 }

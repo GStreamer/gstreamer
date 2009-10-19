@@ -197,7 +197,7 @@ pad_has_buffer (GstPad * pad, GstBuffer * buf, gpointer user_data)
       case 8:                  // video recording start
         DIFF_TIME (t_final[num_pics_cont], t_initial, diff);
         result.avg = result.min = result.max = diff;
-        //g_signal_emit_by_name (camera_bin, "user-stop", 0);
+        //g_signal_emit_by_name (camera_bin, "capture-stop", 0);
         print_and_restart = TRUE;
         break;
       default:
@@ -223,7 +223,7 @@ element_added (GstBin * bin, GstElement * element, gpointer user_data)
   }
 
   if (need_vmux_pad_probe) {
-    g_object_get (camera_bin, "videomux", &elem, NULL);
+    g_object_get (camera_bin, "video-muxer", &elem, NULL);
     if (elem) {
       need_vmux_pad_probe = FALSE;
       GST_INFO_OBJECT (elem, "got default video muxer");
@@ -235,7 +235,7 @@ element_added (GstBin * bin, GstElement * element, gpointer user_data)
     }
   }
   if (need_ienc_pad_probe) {
-    g_object_get (camera_bin, "imageenc", &elem, NULL);
+    g_object_get (camera_bin, "image-encoder", &elem, NULL);
     if (elem) {
       need_ienc_pad_probe = FALSE;
       GST_INFO_OBJECT (elem, "got default image encoder");
@@ -291,7 +291,7 @@ img_capture_done (GstElement * camera, GString * fname, gpointer user_data)
       // but this needs sync so that we have received "image-captured" message already
       if (have_img_captured) {
         have_img_captured = FALSE;
-        g_signal_emit_by_name (camera_bin, "user-start", NULL);
+        g_signal_emit_by_name (camera_bin, "capture-start", NULL);
       } else {
         have_img_done = TRUE;
       }
@@ -416,7 +416,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               // we need to have this received before we can take next one
               if (have_img_done) {
                 have_img_done = FALSE;
-                g_signal_emit_by_name (camera_bin, "user-start", NULL);
+                g_signal_emit_by_name (camera_bin, "capture-start", NULL);
               } else {
                 have_img_captured = TRUE;
               }
@@ -538,7 +538,8 @@ setup_pipeline (void)
     goto error;
   }
 
-  g_signal_connect (camera_bin, "img-done", (GCallback) img_capture_done, NULL);
+  g_signal_connect (camera_bin, "image-done", (GCallback) img_capture_done,
+      NULL);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera_bin));
   gst_bus_add_watch (bus, bus_callback, NULL);
@@ -547,13 +548,13 @@ setup_pipeline (void)
   GST_INFO_OBJECT (camera_bin, "camerabin created");
 
   /* configure used elements */
-  res &= setup_pipeline_element ("vfsink", "fakesink", &sink);
-  res &= setup_pipeline_element ("audiosrc", audiosrc_name, NULL);
-  res &= setup_pipeline_element ("videosrc", videosrc_name, NULL);
-  res &= setup_pipeline_element ("audioenc", audioenc_name, NULL);
-  res &= setup_pipeline_element ("videoenc", videoenc_name, NULL);
-  res &= setup_pipeline_element ("imageenc", imageenc_name, &ienc);
-  res &= setup_pipeline_element ("videomux", videomux_name, &vmux);
+  res &= setup_pipeline_element ("viewfinder-sink", "fakesink", &sink);
+  res &= setup_pipeline_element ("audio-source", audiosrc_name, NULL);
+  res &= setup_pipeline_element ("video-source", videosrc_name, NULL);
+  res &= setup_pipeline_element ("audio-encoder", audioenc_name, NULL);
+  res &= setup_pipeline_element ("video-encoder", videoenc_name, NULL);
+  res &= setup_pipeline_element ("image-encoder", imageenc_name, &ienc);
+  res &= setup_pipeline_element ("video-muxer", videomux_name, &vmux);
   if (!res) {
     goto error;
   }
@@ -597,7 +598,7 @@ setup_pipeline (void)
     goto error;
   }
   if (!vmux) {
-    g_object_get (camera_bin, "videomux", &vmux, NULL);
+    g_object_get (camera_bin, "video-muxer", &vmux, NULL);
     if (!vmux) {
       need_pad_probe = need_vmux_pad_probe = TRUE;
       /* only run the test if we later get the element */
@@ -612,7 +613,7 @@ setup_pipeline (void)
     }
   }
   if (!ienc) {
-    g_object_get (camera_bin, "imageenc", &ienc, NULL);
+    g_object_get (camera_bin, "image-encoder", &ienc, NULL);
     if (!ienc) {
       need_pad_probe = need_ienc_pad_probe = TRUE;
       /* only run the test if we later get the element */
@@ -634,12 +635,12 @@ setup_pipeline (void)
 
   /* configure a resolution and framerate for video and viewfinder */
   if (image_width && image_height) {
-    g_signal_emit_by_name (camera_bin, "user-image-res", image_width,
+    g_signal_emit_by_name (camera_bin, "set-image-resolution", image_width,
         image_height, NULL);
   }
   /* configure a resolution and framerate for video and viewfinder */
   if (video_width && video_height && view_framerate_num && view_framerate_den) {
-    g_signal_emit_by_name (camera_bin, "user-res-fps", video_width,
+    g_signal_emit_by_name (camera_bin, "set-video-resolution-fps", video_width,
         video_height, view_framerate_num, view_framerate_den, NULL);
   }
 
@@ -706,7 +707,7 @@ test_03 (void)
   g_object_set (camera_bin, "mode", 0, NULL);
   g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
   /* the actual results are fetched in bus_callback::preview-image */
   result.times = 1;
@@ -723,7 +724,7 @@ test_04 (void)
   /* switch to image mode */
   g_object_set (camera_bin, "mode", 0, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
   /* the actual results are fetched in bus_callback::image-captured */
   result.times = 1;
@@ -743,7 +744,7 @@ test_05 (void)
   /* switch to image mode */
   g_object_set (camera_bin, "mode", 0, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
   /* the actual results are fetched in img_capture_done */
   result.times = CONT_SHOTS;
@@ -764,7 +765,7 @@ test_06 (void)
   g_object_set (camera_bin, "mode", 0, NULL);
   g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
   /* the actual results are fetched in pad_has_buffer */
   result.times = 1;
@@ -786,7 +787,7 @@ test_07 (void)
   g_object_set (camera_bin, "mode", 0, NULL);
   g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
   /* the actual results are fetched in img_capture_done */
   result.times = 1;
   return FALSE;
@@ -851,7 +852,7 @@ test_09 (void)
   g_object_set (camera_bin, "mode", 1, NULL);
   g_object_set (camera_bin, "filename", filename->str, NULL);
   GET_TIME (t_initial);
-  g_signal_emit_by_name (camera_bin, "user-start", 0);
+  g_signal_emit_by_name (camera_bin, "capture-start", 0);
 
   /* the actual results are fetched in pad_has_buffer */
   result.times = 1;
