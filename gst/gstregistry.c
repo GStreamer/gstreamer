@@ -659,25 +659,15 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
     GType type)
 {
   GstPluginFeature *feature = NULL;
-  GList *walk;
-  GstTypeNameData data;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_PLUGIN_FEATURE), NULL);
 
-  data.name = name;
-  data.type = type;
-
-  walk = gst_registry_feature_filter (registry,
-      (GstPluginFeatureFilter) gst_plugin_feature_type_name_filter,
-      TRUE, &data);
-
-  if (walk) {
-    feature = GST_PLUGIN_FEATURE_CAST (walk->data);
-
-    gst_object_ref (feature);
-    gst_plugin_feature_list_free (walk);
+  feature = gst_registry_lookup_feature (registry, name);
+  if (feature && !g_type_is_a (G_TYPE_FROM_INSTANCE (feature), type)) {
+    gst_object_unref (feature);
+    feature = NULL;
   }
 
   return feature;
