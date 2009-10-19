@@ -122,7 +122,7 @@ static void
 setup_camerabin_elements (GstElement * camera)
 {
   GstElement *vfsink, *audiosrc, *videosrc, *audioenc, *videoenc, *imageenc,
-      *videomux;
+      *videomux, *viewfinder_filter;
   GstCaps *audiocaps, *videocaps;
 
   /* Use fakesink for view finder */
@@ -143,12 +143,14 @@ setup_camerabin_elements (GstElement * camera)
   gst_caps_unref (videocaps);
   videomux = gst_element_factory_make ("avimux", NULL);
   imageenc = gst_element_factory_make ("jpegenc", NULL);
+  viewfinder_filter = gst_element_factory_make ("identity", NULL);
 
   if (vfsink && audiosrc && videosrc && audioenc && videoenc && videomux
-      && imageenc) {
+      && imageenc && viewfinder_filter) {
     g_object_set (camera, "viewfinder-sink", vfsink, "audio-source", audiosrc,
         "video-source", videosrc, "audio-encoder", audioenc, "video-encoder",
-        videoenc, "image-encoder", imageenc, "video-muxer", videomux, NULL);
+        videoenc, "image-encoder", imageenc, "video-muxer", videomux,
+        "viewfinder-filter", viewfinder_filter, NULL);
   } else {
     GST_WARNING ("error setting up test plugins");
   }

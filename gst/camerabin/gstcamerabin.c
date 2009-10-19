@@ -690,6 +690,14 @@ camerabin_create_view_elements (GstCameraBin * camera)
       goto error;
     }
   }
+
+  if (camera->app_viewfinder_filter) {
+    if (!gst_camerabin_add_element (GST_BIN (camera),
+            camera->app_viewfinder_filter)) {
+      goto error;
+    }
+  }
+
   /* Add application set or default video sink element */
   if (!(camera->view_sink = gst_camerabin_setup_default_element (cbin,
               camera->app_vf_sink, "autovideosink", DEFAULT_VIDEOSINK))) {
@@ -898,6 +906,11 @@ camerabin_dispose_elements (GstCameraBin * camera)
   if (camera->app_video_filter) {
     gst_object_unref (camera->app_video_filter);
     camera->app_video_filter = NULL;
+  }
+
+  if (camera->app_viewfinder_filter) {
+    gst_object_unref (camera->app_viewfinder_filter);
+    camera->app_viewfinder_filter = NULL;
   }
 
   /* Free caps */
@@ -2712,6 +2725,21 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   /**
+   * GstCameraBin:viewfinder-filter:
+   * Set up viewfinder filter element, all frames going to viewfinder sink
+   * element will be processed by this element.
+   * Applications can use this to overlay text/images in the screen, or
+   * plug facetracking algorithms, for example.
+   * This property can only be set while #GstCameraBin is in NULL state.
+   * The ownership of the element will be taken by #GstCameraBin.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_VIEWFINDER_FILTER,
+      g_param_spec_object ("viewfinder-filter", "viewfinder filter element",
+          "viewfinder filter GStreamer element",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+
+  /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
    *
@@ -2905,6 +2933,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->view_sink = NULL;
 
   camera->app_vf_sink = NULL;
+  camera->app_viewfinder_filter = NULL;
 
   /* source elements */
   camera->src_vid_src = NULL;
@@ -3152,6 +3181,17 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case ARG_VIEWFINDER_FILTER:
+      if (GST_STATE (camera) != GST_STATE_NULL) {
+        GST_ELEMENT_ERROR (camera, CORE, FAILED,
+            ("camerabin must be in NULL state when setting the viewfinder filter element"),
+            (NULL));
+      } else {
+        if (camera->app_viewfinder_filter)
+          gst_object_unref (camera->app_viewfinder_filter);
+        camera->app_viewfinder_filter = g_value_dup_object (value);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3243,6 +3283,9 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
         gst_value_set_caps (value, camera->preview_caps);
       else if (camera->mode == MODE_VIDEO)
         gst_value_set_caps (value, camera->video_preview_caps);
+      break;
+    case ARG_VIEWFINDER_FILTER:
+      g_value_set_object (value, camera->app_viewfinder_filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
