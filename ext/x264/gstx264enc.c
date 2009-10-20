@@ -582,7 +582,12 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.analyse.i_noise_reduction = encoder->noise_reduction;
   encoder->x264param.i_frame_reference = encoder->ref;
   encoder->x264param.i_bframe = encoder->bframes;
+#if X264_BUILD < 78
   encoder->x264param.b_bframe_pyramid = encoder->b_pyramid;
+#else
+  encoder->x264param.i_bframe_pyramid =
+      encoder->b_pyramid ? X264_B_PYRAMID_NORMAL : X264_B_PYRAMID_NONE;
+#endif
 #if X264_BUILD < 63
   encoder->x264param.b_bframe_adaptive = encoder->b_adapt;
 #else
