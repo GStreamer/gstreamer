@@ -326,6 +326,7 @@ setup (cmdclass = cmdclass,
 
        packages = ["GstDebugViewer",
                    "GstDebugViewer.Common",
+                   "GstDebugViewer.GUI",
                    "GstDebugViewer.Plugins"],
        scripts = ["gst-debug-viewer"],
        data_files = [("share/gst-debug-viewer", ["data/about-dialog.ui",
