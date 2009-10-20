@@ -243,6 +243,13 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
   if (G_UNLIKELY (!mpeg_util_parse_sequence_hdr (&new_hdr, cur, end)))
     return FALSE;
 
+  if (new_hdr.width < 16 || new_hdr.width > 4096 ||
+      new_hdr.height < 16 || new_hdr.height > 4096) {
+    GST_WARNING_OBJECT (mpegvideoparse, "Width/height out of valid range "
+        "[16, 4096]");
+    return FALSE;
+  }
+
   if (memcmp (&mpegvideoparse->seq_hdr, &new_hdr, sizeof (MPEGSeqHdr)) != 0) {
     GstCaps *caps;
     GstBuffer *seq_buf;
