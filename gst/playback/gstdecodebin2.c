@@ -2551,6 +2551,15 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
 
   /* Caps that resulted in this chain */
   caps = gst_pad_get_negotiated_caps (chain->pad);
+  if (!caps) {
+    caps = gst_pad_get_caps (chain->pad);
+    if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {
+      GST_ERROR_OBJECT (chain->pad,
+          "Couldn't get fixed caps, got %" GST_PTR_FORMAT, caps);
+      gst_caps_unref (caps);
+      caps = NULL;
+    }
+  }
   gst_structure_set (u, "caps", GST_TYPE_CAPS, caps, NULL);
   gst_caps_unref (caps);
 
