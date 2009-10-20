@@ -2579,6 +2579,15 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Exposing currently active chains/groups");
 
+  /* Don't expose if we're currently shutting down */
+  DYN_LOCK (dbin);
+  if (G_UNLIKELY (dbin->shutdown == TRUE)) {
+    GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
+    DYN_UNLOCK (dbin);
+    return FALSE;
+  }
+  DYN_UNLOCK (dbin);
+
   /* Get the pads that we're going to expose and mark things as exposed */
   if (!gst_decode_chain_expose (dbin->decode_chain, &endpads)) {
     g_list_foreach (endpads, (GFunc) gst_object_unref, NULL);
