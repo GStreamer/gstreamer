@@ -21,6 +21,7 @@
 # include "config.h"
 #endif
 
+#include <stdio.h>
 #include <gst/check/gstcheck.h>
 #include <gst/audio/multichannel.h>
 
