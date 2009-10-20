@@ -4537,9 +4537,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_mjp2:
         {
-          GNode *jp2h, *colr, *mjp2, *field, *prefix;
+          /* see annex I of the jpeg2000 spec */
+          GNode *jp2h, *ihdr, *colr, *mjp2, *field, *prefix, *cmap, *cdef;
           const guint8 *data;
           guint32 fourcc = 0;
+          gint ncomp = 0;
+          guint32 ncomp_map = 0;
+          gint32 *comp_map = NULL;
+          guint32 nchan_def = 0;
+          gint32 *chan_def = NULL;
 
           GST_DEBUG_OBJECT (qtdemux, "found mjp2");
           /* some required atoms */
@@ -4549,11 +4555,19 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           jp2h = qtdemux_tree_get_child_by_type (mjp2, FOURCC_jp2h);
           if (!jp2h)
             break;
+
+          /* number of components; redundant with info in codestream, but useful
+             to a muxer */
+          ihdr = qtdemux_tree_get_child_by_type (jp2h, FOURCC_ihdr);
+          if (!ihdr || QT_UINT32 (ihdr->data) != 22)
+            break;
+          ncomp = QT_UINT16 (((guint8 *) ihdr->data) + 16);
+
           colr = qtdemux_tree_get_child_by_type (jp2h, FOURCC_colr);
           if (!colr)
             break;
           GST_DEBUG_OBJECT (qtdemux, "found colr");
-          /* try to extract colour space info */
+          /* extract colour space info */
           if (QT_UINT8 ((guint8 *) colr->data + 8) == 1) {
             switch (QT_UINT32 ((guint8 *) colr->data + 11)) {
               case 16:
@@ -4569,10 +4583,110 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 break;
             }
           }
+          if (!fourcc)
+            /* colr is required, and only values 16, 17, and 18 are specified,
+               so error if we have no fourcc */
+            break;
 
-          if (fourcc)
-            gst_caps_set_simple (stream->caps,
-                "fourcc", GST_TYPE_FOURCC, fourcc, NULL);
+          /* extract component mapping */
+          cmap = qtdemux_tree_get_child_by_type (jp2h, FOURCC_cmap);
+          if (cmap) {
+            guint32 cmap_len = 0;
+            int i;
+            cmap_len = QT_UINT32 (cmap->data);
+            if (cmap_len >= 8) {
+              /* normal box, subtract off header */
+              cmap_len -= 8;
+              /* cmap: { u16 cmp; u8 mtyp; u8 pcol; }* */
+              if (cmap_len % 4 == 0) {
+                ncomp_map = (cmap_len / 4);
+                comp_map = g_new0 (gint32, ncomp_map);
+                for (i = 0; i < ncomp_map; i++) {
+                  guint16 cmp;
+                  guint8 mtyp, pcol;
+                  cmp = QT_UINT16 (((guint8 *) cmap->data) + 8 + i * 4);
+                  mtyp = QT_UINT8 (((guint8 *) cmap->data) + 8 + i * 4 + 2);
+                  pcol = QT_UINT8 (((guint8 *) cmap->data) + 8 + i * 4 + 3);
+                  comp_map[i] = (mtyp << 24) | (pcol << 16) | cmp;
+                }
+              }
+            }
+          }
+          /* extract channel definitions */
+          cdef = qtdemux_tree_get_child_by_type (jp2h, FOURCC_cdef);
+          if (cdef) {
+            guint32 cdef_len = 0;
+            int i;
+            cdef_len = QT_UINT32 (cdef->data);
+            if (cdef_len >= 10) {
+              /* normal box, subtract off header and len */
+              cdef_len -= 10;
+              /* cdef: u16 n; { u16 cn; u16 typ; u16 asoc; }* */
+              if (cdef_len % 6 == 0) {
+                nchan_def = (cdef_len / 6);
+                chan_def = g_new0 (gint32, nchan_def);
+                for (i = 0; i < nchan_def; i++)
+                  chan_def[i] = -1;
+                for (i = 0; i < nchan_def; i++) {
+                  guint16 cn, typ, asoc;
+                  cn = QT_UINT16 (((guint8 *) cdef->data) + 10 + i * 6);
+                  typ = QT_UINT16 (((guint8 *) cdef->data) + 10 + i * 6 + 2);
+                  asoc = QT_UINT16 (((guint8 *) cdef->data) + 10 + i * 6 + 4);
+                  if (cn < nchan_def) {
+                    switch (typ) {
+                      case 0:
+                        chan_def[cn] = asoc;
+                        break;
+                      case 1:
+                        chan_def[cn] = 0;       /* alpha */
+                        break;
+                      default:
+                        chan_def[cn] = -typ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          gst_caps_set_simple (stream->caps,
+              "num-components", G_TYPE_INT, ncomp, NULL);
+          gst_caps_set_simple (stream->caps,
+              "fourcc", GST_TYPE_FOURCC, fourcc, NULL);
+
+          if (comp_map) {
+            GValue arr = { 0, };
+            GValue elt = { 0, };
+            int i;
+            g_value_init (&arr, GST_TYPE_ARRAY);
+            g_value_init (&elt, G_TYPE_INT);
+            for (i = 0; i < ncomp_map; i++) {
+              g_value_set_int (&elt, comp_map[i]);
+              gst_value_array_append_value (&arr, &elt);
+            }
+            gst_structure_set_value (gst_caps_get_structure (stream->caps, 0),
+                "component-map", &arr);
+            g_value_unset (&elt);
+            g_value_unset (&arr);
+            g_free (comp_map);
+          }
+
+          if (chan_def) {
+            GValue arr = { 0, };
+            GValue elt = { 0, };
+            int i;
+            g_value_init (&arr, GST_TYPE_ARRAY);
+            g_value_init (&elt, G_TYPE_INT);
+            for (i = 0; i < nchan_def; i++) {
+              g_value_set_int (&elt, chan_def[i]);
+              gst_value_array_append_value (&arr, &elt);
+            }
+            gst_structure_set_value (gst_caps_get_structure (stream->caps, 0),
+                "channel-definitions", &arr);
+            g_value_unset (&elt);
+            g_value_unset (&arr);
+            g_free (chan_def);
+          }
 
           /* some optional atoms */
           field = qtdemux_tree_get_child_by_type (mjp2, FOURCC_fiel);

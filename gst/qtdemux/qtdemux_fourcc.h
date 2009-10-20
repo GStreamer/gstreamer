@@ -164,9 +164,12 @@ G_BEGIN_DECLS
 /* ISO Motion JPEG 2000 fourcc */
 #define FOURCC_mjp2     GST_MAKE_FOURCC('m','j','p','2')
 #define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
+#define FOURCC_ihdr     GST_MAKE_FOURCC('i','h','d','r')
 #define FOURCC_colr     GST_MAKE_FOURCC('c','o','l','r')
 #define FOURCC_fiel     GST_MAKE_FOURCC('f','i','e','l')
 #define FOURCC_jp2x     GST_MAKE_FOURCC('j','p','2','x')
+#define FOURCC_cmap     GST_MAKE_FOURCC('c','m','a','p')
+#define FOURCC_cdef     GST_MAKE_FOURCC('c','d','e','f')
 /* some buggy hardware's notion of mdhd */
 #define FOURCC_mhdr     GST_MAKE_FOURCC('m','h','d','r')
 
