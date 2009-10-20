@@ -63,7 +63,7 @@ class OptionParser (Common.Main.LogOptionParser):
             sys.exit (0)
 
         if self.options["main"] is None:
-            import GUI
+            from GstDebugViewer import GUI
             self.options["main"] = GUI.main
 
         self.options["args"][:] = remaining_args
