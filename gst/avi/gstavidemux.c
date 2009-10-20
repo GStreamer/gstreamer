@@ -3912,7 +3912,7 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
   new_entry = old_entry + 1;
 
   /* see if we reached the end */
-  if (new_entry >= stream->stop_entry) {
+  if (new_entry > stream->stop_entry) {
     if (avi->segment.rate < 0.0) {
       if (stream->step_entry == stream->start_entry) {
         /* we stepped all the way to the start, eos */
