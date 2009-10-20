@@ -132,7 +132,8 @@ element_filter (GstPluginFeature * feature, FilterData * data)
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
 
-  res = gst_factory_list_is_type (GST_ELEMENT_FACTORY (feature), data->type);
+  res =
+      gst_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (feature), data->type);
 
   return res;
 }
@@ -164,7 +165,7 @@ gst_factory_list_get_elements (GstFactoryListType type)
 
   /* convert to an array */
   for (walk = list; walk; walk = g_list_next (walk)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
+    GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (walk->data);
     GValue val = { 0, };
 
     g_value_init (&val, G_TYPE_OBJECT);
