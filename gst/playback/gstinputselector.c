@@ -148,6 +148,7 @@ static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_selector_pad_getcaps (GstPad * pad);
+static gboolean gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps);
 static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
@@ -464,6 +465,21 @@ gst_selector_pad_getcaps (GstPad * pad)
   gst_object_unref (sel);
 
   return caps;
+}
+
+static gboolean
+gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstInputSelector *sel;
+  gboolean res;
+
+  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (sel, "Checking acceptcaps of srcpad peer");
+  res = gst_pad_peer_accept_caps (sel->srcpad, caps);
+  gst_object_unref (sel);
+
+  return res;
 }
 
 static GstFlowReturn
@@ -1245,6 +1261,8 @@ gst_input_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_selector_pad_event));
   gst_pad_set_getcaps_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_getcaps));
+  gst_pad_set_acceptcaps_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_selector_pad_acceptcaps));
   gst_pad_set_chain_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_chain));
   gst_pad_set_iterate_internal_links_function (sinkpad,
