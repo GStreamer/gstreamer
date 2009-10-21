@@ -131,7 +131,8 @@ setup_camerabin_elements (GstElement * camera)
   audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
   g_object_set (audiosrc, "is-live", TRUE, NULL);
   videosrc = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (videosrc, "is-live", TRUE, NULL);
+  /* Set pattern to white (3) to avoid timeouts */
+  g_object_set (videosrc, "is-live", TRUE, "pattern", 3, NULL);
   audioenc = gst_element_factory_make ("capsfilter", NULL);
   audiocaps = gst_caps_from_string ("audio/x-raw-int");
   g_object_set (audioenc, "caps", audiocaps, NULL);
