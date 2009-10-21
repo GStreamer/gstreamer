@@ -1787,6 +1787,7 @@ gst_plugin_feature_set_name
 gst_plugin_feature_get_rank
 gst_plugin_feature_get_name
 gst_plugin_feature_load
+gst_plugin_feature_list_copy
 gst_plugin_feature_list_free
 gst_plugin_feature_check_version
 <SUBSECTION Standard>

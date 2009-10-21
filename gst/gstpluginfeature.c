@@ -260,6 +260,41 @@ gst_plugin_feature_list_free (GList * list)
 }
 
 /**
+ * gst_plugin_feature_list_copy:
+ * @list: list of #GstPluginFeature
+ *
+ * Copies the list of features. Caller should call @gst_plugin_feature_list_free
+ * when done with the list.
+ *
+ * Returns: a copy of @list, with each feature's reference count incremented.
+ */
+GList *
+gst_plugin_feature_list_copy (GList * list)
+{
+  GList *new_list = NULL;
+
+  if (G_LIKELY (list)) {
+    GList *last;
+
+    new_list = g_list_alloc ();
+    new_list->data = g_object_ref ((GObject *) list->data);
+    new_list->prev = NULL;
+    last = new_list;
+    list = list->next;
+    while (list) {
+      last->next = g_list_alloc ();
+      last->next->prev = last;
+      last = last->next;
+      last->data = g_object_ref ((GObject *) list->data);
+      list = list->next;
+    }
+    last->next = NULL;
+  }
+
+  return new_list;
+}
+
+/**
  * gst_plugin_feature_check_version:
  * @feature: a feature
  * @min_major: minimum required major version

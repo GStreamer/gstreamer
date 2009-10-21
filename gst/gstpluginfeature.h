@@ -137,6 +137,7 @@ guint           gst_plugin_feature_get_rank             (GstPluginFeature *featu
 G_CONST_RETURN gchar *gst_plugin_feature_get_name       (GstPluginFeature *feature);
 
 void            gst_plugin_feature_list_free            (GList *list);
+GList          *gst_plugin_feature_list_copy            (GList *list);
 
 gboolean        gst_plugin_feature_check_version        (GstPluginFeature *feature,
                                                          guint             min_major,
