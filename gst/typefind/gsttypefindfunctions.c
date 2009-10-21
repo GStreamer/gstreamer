@@ -2705,7 +2705,7 @@ mxf_type_find (GstTypeFind * tf, gpointer ununsed)
 
     for (i = 0; i < 1024 - 16; i++) {
       /* Check first byte before calling more expensive memcmp function */
-      if (G_UNLIKELY (c.data[0] == 0x06
+      if (G_UNLIKELY (c.data[i] == 0x06
               && memcmp (c.data + i, partition_pack_key, 13) == 0)) {
         /* Header partition pack? */
         if (c.data[i + 13] != 0x02)
