@@ -931,20 +931,23 @@ gst_auto_convert_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   internal_srcpad = gst_auto_convert_get_internal_srcpad (autoconvert);
   if (internal_srcpad) {
+    GList *events = NULL;
+    GList *l;
+
     GST_OBJECT_LOCK (autoconvert);
     if (autoconvert->cached_events) {
-      GList *l;
-
-      GST_DEBUG_OBJECT (autoconvert, "Sending cached events downstream");
-
-      autoconvert->cached_events = g_list_reverse (autoconvert->cached_events);
-
-      for (l = autoconvert->cached_events; l; l = l->next)
-        gst_pad_push_event (internal_srcpad, l->data);
-      g_list_free (autoconvert->cached_events);
+      events = g_list_reverse (autoconvert->cached_events);
       autoconvert->cached_events = NULL;
     }
     GST_OBJECT_UNLOCK (autoconvert);
+
+    if (events) {
+      GST_DEBUG_OBJECT (autoconvert, "Sending cached events downstream");
+      for (l = events; l; l = l->next)
+        gst_pad_push_event (internal_srcpad, l->data);
+      g_list_free (events);
+    }
+
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
   } else {
