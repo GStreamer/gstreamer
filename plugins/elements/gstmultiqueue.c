@@ -1315,8 +1315,8 @@ compute_high_id (GstMultiQueue * mq)
       lowest);
 }
 
-#define IS_FILLED(format, value) ((sq->max_size.format) != 0 && \
-     (sq->max_size.format) <= (value))
+#define IS_FILLED(q, format, value) (((q)->max_size.format) != 0 && \
+     ((q)->max_size.format) <= (value))
 
 /*
  * GstSingleQueue functions
@@ -1342,7 +1342,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
     if (gst_data_queue_is_empty (ssq->queue)) {
       GST_LOG_OBJECT (mq, "Queue %d is empty", ssq->id);
-      if (IS_FILLED (visible, size.visible)) {
+      if (IS_FILLED (sq, visible, size.visible)) {
         sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
             "Another queue is empty, bumping single queue %d max visible to %d",
@@ -1360,8 +1360,8 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         ssize.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
     /* if this queue is filled completely we must signal overrun */
-    if (sq->is_eos || IS_FILLED (bytes, ssize.bytes) ||
-        IS_FILLED (time, sq->cur_time)) {
+    if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
+        IS_FILLED (sq, time, sq->cur_time)) {
       GST_LOG_OBJECT (mq, "Queue %d is filled", ssq->id);
       filled = TRUE;
     }
@@ -1397,7 +1397,7 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       GstDataQueueSize size;
 
       gst_data_queue_get_level (sq->queue, &size);
-      if (IS_FILLED (visible, size.visible)) {
+      if (IS_FILLED (sq, visible, size.visible)) {
         sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
             "queue %d is filled, bumping its max visible to %d", sq->id,
@@ -1431,11 +1431,11 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
     return TRUE;
 
   /* we never go past the max visible items */
-  if (IS_FILLED (visible, visible))
+  if (IS_FILLED (sq, visible, visible))
     return TRUE;
 
   /* check time or bytes */
-  res = IS_FILLED (time, sq->cur_time) || IS_FILLED (bytes, bytes);
+  res = IS_FILLED (sq, time, sq->cur_time) || IS_FILLED (sq, bytes, bytes);
 
   return res;
 }
