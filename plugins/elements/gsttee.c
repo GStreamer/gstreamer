@@ -119,6 +119,7 @@ static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
 static GstFlowReturn gst_tee_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
+static gboolean gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_src_check_get_range (GstPad * pad);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
@@ -219,6 +220,8 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_acceptcaps_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_sink_acceptcaps));
   gst_pad_set_bufferalloc_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_buffer_alloc));
   gst_pad_set_activatepush_function (tee->sinkpad,
@@ -522,6 +525,46 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     res = gst_tee_find_buffer_alloc (tee, offset, size, caps, buf);
   }
   GST_OBJECT_UNLOCK (tee);
+
+  return res;
+}
+
+/* on the sink we accept caps that are acceptable to all srcpads */
+static gboolean
+gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstTee *tee;
+  gboolean res, done;
+  GstIterator *it;
+
+  tee = GST_TEE (GST_PAD_PARENT (pad));
+
+  it = gst_element_iterate_src_pads (GST_ELEMENT_CAST (tee));
+
+  res = TRUE;
+  done = FALSE;
+  while (!done && res) {
+    gpointer item;
+
+    switch (gst_iterator_next (it, &item)) {
+      case GST_ITERATOR_OK:
+        res &= gst_pad_peer_accept_caps (GST_PAD_CAST (item), caps);
+        gst_object_unref (item);
+        break;
+      case GST_ITERATOR_RESYNC:
+        res = TRUE;
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+        res = FALSE;
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
 
   return res;
 }
