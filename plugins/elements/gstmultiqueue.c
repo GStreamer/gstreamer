@@ -218,6 +218,8 @@ enum
 #define DEFAULT_EXTRA_SIZE_TIME 3 * GST_SECOND
 
 #define DEFAULT_USE_BUFFERING FALSE
+#define DEFAULT_LOW_PERCENT   10
+#define DEFAULT_HIGH_PERCENT  99
 
 enum
 {
@@ -229,6 +231,8 @@ enum
   PROP_MAX_SIZE_BUFFERS,
   PROP_MAX_SIZE_TIME,
   PROP_USE_BUFFERING,
+  PROP_LOW_PERCENT,
+  PROP_HIGH_PERCENT,
   PROP_LAST
 };
 
@@ -368,6 +372,33 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds"
           " (not implemented yet)",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiQueue:low-percent
+   * 
+   * Low threshold percent for buffering to start.
+   *
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
+      g_param_spec_int ("low-percent", "Low percent",
+          "Low threshold for buffering to start (not implemented)", 0, 100,
+          DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiQueue:high-percent
+   * 
+   * High threshold percent for buffering to finish.
+   *
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
+      g_param_spec_int ("high-percent", "High percent",
+          "High threshold for buffering to finish (not implemented)", 0, 100,
+          DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_multi_queue_finalize);
 
@@ -392,6 +423,8 @@ gst_multi_queue_init (GstMultiQueue * mqueue, GstMultiQueueClass * klass)
   mqueue->extra_size.time = DEFAULT_EXTRA_SIZE_TIME;
 
   mqueue->use_buffering = DEFAULT_USE_BUFFERING;
+  mqueue->low_percent = DEFAULT_LOW_PERCENT;
+  mqueue->high_percent = DEFAULT_HIGH_PERCENT;
 
   mqueue->counter = 1;
   mqueue->highid = -1;
@@ -462,6 +495,12 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
     case PROP_USE_BUFFERING:
       mq->use_buffering = g_value_get_boolean (value);
       break;
+    case PROP_LOW_PERCENT:
+      mq->low_percent = g_value_get_int (value);
+      break;
+    case PROP_HIGH_PERCENT:
+      mq->high_percent = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -497,6 +536,12 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, mq->use_buffering);
+      break;
+    case PROP_LOW_PERCENT:
+      g_value_set_int (value, mq->low_percent);
+      break;
+    case PROP_HIGH_PERCENT:
+      g_value_set_int (value, mq->high_percent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

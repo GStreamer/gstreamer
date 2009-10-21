@@ -59,6 +59,7 @@ struct _GstMultiQueue {
 
   GstDataQueueSize  max_size, extra_size;
   gboolean use_buffering;
+  gint low_percent, high_percent;
 
   guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
   guint32  highid;	/* contains highest id of last outputted object */
