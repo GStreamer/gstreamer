@@ -1356,8 +1356,8 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
     GST_DEBUG_OBJECT (mq,
         "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
-        G_GUINT64_FORMAT, oq->id, ssize.visible, sq->max_size.visible,
-        ssize.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
+        G_GUINT64_FORMAT, oq->id, ssize.visible, oq->max_size.visible,
+        ssize.bytes, oq->max_size.bytes, oq->cur_time, oq->max_size.time);
 
     /* if this queue is filled completely we must signal overrun */
     if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
