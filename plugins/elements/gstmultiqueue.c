@@ -1014,9 +1014,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   mq = sq->mqueue;
 
   /* Get a unique incrementing id */
-  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   curid = mq->counter++;
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
   GST_LOG_OBJECT (mq, "SingleQueue %d : about to enqueue buffer %p with id %d",
       sq->id, buffer, curid);
@@ -1112,10 +1110,9 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* Get an unique incrementing id */
-  GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+  /* Get an unique incrementing id. protected with the STREAM_LOCK, unserialized
+   * events already got pushed and don't end up in the queue. */
   curid = mq->counter++;
-  GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
   item = gst_multi_queue_event_item_new ((GstMiniObject *) event, curid);
 

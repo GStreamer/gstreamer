@@ -59,7 +59,7 @@ struct _GstMultiQueue {
 
   GstDataQueueSize  max_size, extra_size;
 
-  guint32  counter;	/* incoming object counter */
+  guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
   guint32  highid;	/* contains highest id of last outputted object */
 
   GMutex * qlock;	/* Global queue lock (vs object lock or individual */
