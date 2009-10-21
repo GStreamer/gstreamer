@@ -719,8 +719,8 @@ gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload *
     /* as long as we have full frames */
     while (available >= min_payload_len) {
       /* get multiple of alignment */
-      payload_len = ALIGN_DOWN (available, align);
-      payload_len = MIN (max_payload_len, payload_len);
+      payload_len = MIN (max_payload_len, available);
+      payload_len = ALIGN_DOWN (payload_len, align);
 
       /* and flush out the bytes from the adapter, automatically set the
        * timestamp. */
