@@ -48,15 +48,12 @@ _strnlen (const gchar * str, gint maxlen)
 {
   gint len = 0;
 
-  if (G_UNLIKELY (len == maxlen))
-    return -1;
-
-  while (*str++ != '\0') {
+  while (G_LIKELY (len < maxlen)) {
+    if (G_UNLIKELY (str[len] == '\0'))
+      return len;
     len++;
-    if (G_UNLIKELY (len == maxlen))
-      return -1;
   }
-  return len;
+  return -1;
 }
 
 /* Macros */
