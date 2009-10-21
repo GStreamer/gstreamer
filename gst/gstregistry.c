@@ -152,8 +152,8 @@ static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
 
 static GstPluginFeature *gst_registry_lookup_feature_locked (GstRegistry *
     registry, const char *name);
-static GstPlugin *gst_registry_lookup_locked (GstRegistry * registry,
-    const char *filename);
+static GstPlugin *gst_registry_lookup_bn_locked (GstRegistry * registry,
+    const char *basename);
 
 G_DEFINE_TYPE (GstRegistry, gst_registry, GST_TYPE_OBJECT);
 static GstObjectClass *parent_class = NULL;
@@ -361,7 +361,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
 
   GST_OBJECT_LOCK (registry);
-  existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
+  existing_plugin = gst_registry_lookup_bn_locked (registry, plugin->basename);
   if (G_UNLIKELY (existing_plugin)) {
     GST_DEBUG_OBJECT (registry,
         "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
@@ -765,28 +765,34 @@ gst_registry_lookup_feature (GstRegistry * registry, const char *name)
 }
 
 static GstPlugin *
-gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
+gst_registry_lookup_bn_locked (GstRegistry * registry, const char *basename)
 {
   GList *g;
   GstPlugin *plugin;
-  gchar *basename;
 
-  if (G_UNLIKELY (filename == NULL))
-    return NULL;
-
-  basename = g_path_get_basename (filename);
   /* FIXME: use GTree speed up lookups */
   for (g = registry->plugins; g; g = g_list_next (g)) {
     plugin = GST_PLUGIN_CAST (g->data);
     if (G_UNLIKELY (plugin->basename
             && strcmp (basename, plugin->basename) == 0)) {
-      g_free (basename);
       return plugin;
     }
   }
-
-  g_free (basename);
   return NULL;
+}
+
+static GstPlugin *
+gst_registry_lookup_bn (GstRegistry * registry, const char *basename)
+{
+  GstPlugin *plugin;
+
+  GST_OBJECT_LOCK (registry);
+  plugin = gst_registry_lookup_bn_locked (registry, basename);
+  if (plugin)
+    gst_object_ref (plugin);
+  GST_OBJECT_UNLOCK (registry);
+
+  return plugin;
 }
 
 /**
@@ -804,15 +810,18 @@ GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)
 {
   GstPlugin *plugin;
+  gchar *basename;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (filename != NULL, NULL);
 
-  GST_OBJECT_LOCK (registry);
-  plugin = gst_registry_lookup_locked (registry, filename);
-  if (plugin)
-    gst_object_ref (plugin);
-  GST_OBJECT_UNLOCK (registry);
+  basename = g_path_get_basename (filename);
+  if (G_UNLIKELY (basename == NULL))
+    return NULL;
+
+  plugin = gst_registry_lookup_bn (registry, basename);
+
+  g_free (basename);
 
   return plugin;
 }
@@ -995,7 +1004,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
 
     /* plug-ins are considered unique by basename; if the given name
      * was already seen by the registry, we ignore it */
-    plugin = gst_registry_lookup (context->registry, filename);
+    plugin = gst_registry_lookup_bn (context->registry, dirent);
     if (plugin) {
       gboolean env_vars_changed, deps_changed = FALSE;
 
