@@ -3,16 +3,16 @@
   <description>DVD Sub-picture Overlay element</description>
   <filename>../../gst/dvdspu/.libs/libgstdvdspu.so</filename>
   <basename>libgstdvdspu.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>dvdspu</name>
       <longname>GStreamer Sub-picture Overlay</longname>
-      <class>Mixer/Video/Overlay/DVD/Bluray</class>
+      <class>Mixer/Video/Overlay/SubPicture/DVD/Bluray</class>
       <description>Parses Sub-Picture command streams and renders the SPU overlay onto the video as it passes through</description>
       <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>

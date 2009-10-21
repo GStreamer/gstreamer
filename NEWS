@@ -1,4 +1,58 @@
-This is GStreamer Bad Plug-ins 0.10.14, "Your New Best Friends"
+This is GStreamer Bad Plug-ins 0.10.15, "Ending the war"
+
+Changes since 0.10.14:
+    
+      * Add barcode scanner plugin using the zbar library
+      * Improvements to camerabin
+      * Support audio-track format switching in DVD
+      * Improve parsing and display of PGS subpictures
+      * Add Cog plugin
+      * Add LV2 plugin support
+      * Improve VDPAU plugin. Add post-processing support
+      * Add videomeasure plugin
+      * Improve Siren codec
+      * Improved Directshow capture element
+      * Add EAC3 mapping in MPEG-TS playback
+      * Improve AAC encoding
+      * Improved MIDI file playback
+      * Improve H-264 parsing
+      * Add MPEG-PS muxer
+      * Add PNM encoder and decoder
+      * Add SVG decoder
+      * Update GLib dependency to GLib 2.16
+      * Various other bug fixes and improvements (see ChangeLog)
+
+Bugs fixed since 0.10.14:
+     
+      * 303975 : Add tar support
+      * 519001 : [wildmidi] Doesn't handle seeking correctly
+      * 575261 : Do not use the outdated Debian/Ubuntu libass libraries!
+      * 583901 : aacparse fails for remuxing
+      * 589609 : [PATCH] fix dvdspu crash when subtitles do not fit the incoming video
+      * 593348 : faac encoder produces first buffer with wrong duration
+      * 593625 : Broken Compilation, missing files with latest commits in git repository
+      * 593683 : Typo in variable name for libraries to link against
+      * 593864 : pcapparse: Set the GStreamer timestamp according to the pcap timestamps
+      * 594030 : [mpegtsdemux] Support for AC3/EAC3 not 100% correct
+      * 594277 : Make the default segment of outputselector TIME instead of UNDEFINED
+      * 594278 : dshowvideosink: remove unused variable
+      * 594279 : dshowsrcwrapper: use tchar macro for string literals
+      * 594321 : Videomeasure plugin
+      * 594382 : assrender: Fix compilation with libass = 0.9.6
+      * 594489 : broken compilation for mpegdemux
+      * 594715 : libgstsignalprocessor install issues
+      * 594812 : [mpegpsdemux] Seeking broken for MPEG PS cut from VOB file
+      * 595215 : PNM encoder doesn't support ASCII encoding
+      * 595409 : PNM decoder can't decode ASCII encoded files.
+      * 596285 : gstvideomeasure crashes at the end of some streams
+      * 596743 : qtmux: fix flags_as_uint to flags[]
+      * 598139 : faad element leaks itself.
+      * 598263 : refcount leak in resindvd
+      * 598274 : dtsdec leaks input buffers
+      * 598369 : Properly detect pre-releases
+      * 598733 : id3mux doesn't write image to APIC tag
+      * 582779 : [resindvd] Add support for other audio codecs than ac3
+      * 595700 : PNM decoder doesn't handle ASCII encoded pnm data split over several buffers
 
 Changes since 0.10.13:
 

@@ -1,8 +1,8 @@
 <plugin>
-  <name>spcdec</name>
-  <description>OpenSPC Audio Decoder</description>
-  <filename>../../ext/spc/.libs/libgstspc.so</filename>
-  <basename>libgstspc.so</basename>
+  <name>gmedec</name>
+  <description>GME Audio Decoder</description>
+  <filename>../../ext/gme/.libs/libgstgme.so</filename>
+  <basename>libgstgme.so</basename>
   <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
@@ -10,11 +10,11 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>spcdec</name>
-      <longname>OpenSPC SPC decoder</longname>
+      <name>gmedec</name>
+      <longname>Gaming console music file decoder</longname>
       <class>Codec/Audio/Decoder</class>
-      <description>Uses OpenSPC to emulate an SPC processor</description>
-      <author>Chris Lee &lt;clee@kde.org&gt;, Brian Koropoff &lt;bkoropoff@gmail.com&gt;</author>
+      <description>Uses libgme to emulate a gaming console sound processors</description>
+      <author>Chris Lee &lt;clee@kde.org&gt;, Brian Koropoff &lt;bkoropoff@gmail.com&gt;, Michael Pyne &lt;mpyne@kde.org&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -26,7 +26,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-spc</details>
+          <details>audio/x-ay; audio/x-gbs; audio/x-gym; audio/x-hes; audio/x-kss; audio/x-nsf; audio/x-sap; audio/x-spc; audio/x-vgm</details>
         </caps>
       </pads>
     </element>

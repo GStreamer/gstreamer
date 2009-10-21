@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1341,7 +1341,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -16865,7 +16865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17815,7 +17815,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17855,7 +17855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18015,7 +18015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22500,13 +22500,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>Overlap Length</NICK>
 <BLURB>Percentage of stride to overlap.</BLURB>
-<DEFAULT>0,2</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstScaletempo::rate</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-2,14748e+09,2,14748e+09]</RANGE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Playback Rate</NICK>
 <BLURB>Current playback rate.</BLURB>
@@ -28170,7 +28170,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Deviation (for Gauss function)</NICK>
 <BLURB>Used to calculate Gussian weights (only when using Gaussian window).</BLURB>
-<DEFAULT>1,5</DEFAULT>
+<DEFAULT>1.5</DEFAULT>
 </ARG>
 
 <ARG>

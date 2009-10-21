@@ -1,3 +1,104 @@
+=== release 0.10.15 ===
+
+2009-10-21  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.15, "Ending the war"
+
+2009-10-16 14:37:02 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/id3tag/id3tag.c:
+	  id3tag: actually write image to APIC tag.
+
+2009-10-16 12:30:59 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.14.4 pre-release
+
+2009-10-16 11:53:14 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* sys/vdpau/Makefile.am:
+	  dist: Include vdpsink.h in the tarball to fix the dist.
+
+2009-10-16 11:08:05 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/dts/gstdtsdec.c:
+	  dtsdec: Use gst_buffer_ref/unref, not gst_object_ref/unref
+	  properly fixes: #598274
+
+2009-10-16 01:26:10 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/autoconvert/gstautoconvert.c:
+	  autoconvert: Use gst_pad_peer_accept_caps instead of gst_pad_set_caps.
+	  gst_pad_set_caps on the internal source pad always succeeds, because
+	  caps propagate to the peer with buffers, not immediately. Using
+	  gst_pad_peer_accept_caps properly checks whether the actual
+	  sub-element can accept caps when they change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=575568
+
+2009-10-16 01:09:49 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Re-send audio stream select on re-configuration
+	  When the layout of the audio streams changes, re-send the current
+	  audio stream selection event, in order to trigger switching to the
+	  new stream properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=575568
+
+2009-10-16 00:50:31 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Fix a small flaw - if any audio stream exists, use it
+	  Don't create a dummy audio stream if only non-AC3 tracks exist.
+
+2009-10-16 10:16:33 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 85d1530 to 0702fe1
+
+2009-10-15 23:48:53 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  0.10.14.3 pre-release
+
 2009-10-14 11:06:46 +0100  Jan Schmidt <thaytan@noraisin.net>
 
 	* ext/resindvd/rsndec.c:

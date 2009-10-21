@@ -3,16 +3,16 @@
   <description>ASS/SSA subtitle renderer</description>
   <filename>../../ext/assrender/.libs/libgstassrender.so</filename>
   <basename>libgstassrender.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
+  <package>GStreamer Bad Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>assrender</name>
       <longname>ASS/SSA Render</longname>
-      <class>Filter/Effect/Video</class>
+      <class>Mixer/Video/Overlay/Subtitle</class>
       <description>Renders ASS/SSA subtitles with libass</description>
       <author>Benjamin Schmitz &lt;vortex@wolpzone.de&gt;</author>
       <pads>

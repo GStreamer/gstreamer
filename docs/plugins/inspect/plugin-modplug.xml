@@ -1,13 +1,13 @@
 <plugin>
   <name>modplug</name>
   <description>.MOD audio decoding</description>
-  <filename>../../ext/modplug/.libs/libgstmodplug.so</filename>
+  <filename>../../gst/modplug/.libs/libgstmodplug.so</filename>
   <basename>libgstmodplug.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.10</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>modplug</name>

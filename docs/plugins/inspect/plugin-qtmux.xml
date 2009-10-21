@@ -3,7 +3,7 @@
   <description>Quicktime Muxer plugin</description>
   <filename>../../gst/qtmux/.libs/libgstqtmux.so</filename>
   <basename>libgstqtmux.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>gsoc2008 package</package>
