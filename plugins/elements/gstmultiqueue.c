@@ -192,6 +192,14 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
 GST_DEBUG_CATEGORY_STATIC (multi_queue_debug);
 #define GST_CAT_DEFAULT (multi_queue_debug)
 
+/* Signals and args */
+enum
+{
+  SIGNAL_UNDERRUN,
+  SIGNAL_OVERRUN,
+  LAST_SIGNAL
+};
+
 /* default limits, we try to keep up to 2 seconds of data and if there is not
  * time, up to 10 MB. The number of buffers is dynamically scaled to make sure
  * there is data in the queues. Normally, the byte and time limits are not hit
@@ -202,28 +210,24 @@ GST_DEBUG_CATEGORY_STATIC (multi_queue_debug);
 
 /* second limits. When we hit one of the above limits we are probably dealing
  * with a badly muxed file and we scale the limits to these emergency values.
- * This is currently not yet implemented. */
+ * This is currently not yet implemented.
+ * Since we dynamically scale the queue buffer size up to the limits but avoid
+ * going above the max-size-buffers when we can, we don't really need this
+ * aditional extra size. */
 #define DEFAULT_EXTRA_SIZE_BYTES 10 * 1024 * 1024       /* 10 MB */
 #define DEFAULT_EXTRA_SIZE_BUFFERS 5
 #define DEFAULT_EXTRA_SIZE_TIME 3 * GST_SECOND
 
-/* Signals and args */
 enum
 {
-  SIGNAL_UNDERRUN,
-  SIGNAL_OVERRUN,
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_EXTRA_SIZE_BYTES,
-  ARG_EXTRA_SIZE_BUFFERS,
-  ARG_EXTRA_SIZE_TIME,
-  ARG_MAX_SIZE_BYTES,
-  ARG_MAX_SIZE_BUFFERS,
-  ARG_MAX_SIZE_TIME,
+  PROP_0,
+  PROP_EXTRA_SIZE_BYTES,
+  PROP_EXTRA_SIZE_BUFFERS,
+  PROP_EXTRA_SIZE_TIME,
+  PROP_MAX_SIZE_BYTES,
+  PROP_MAX_SIZE_BUFFERS,
+  PROP_MAX_SIZE_TIME,
+  PROP_LAST
 };
 
 #define GST_MULTI_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
@@ -313,34 +317,37 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
 
   /* PROPERTIES */
 
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BYTES,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
           0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
           "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
           DEFAULT_MAX_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_TIME,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
           "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_BYTES,
+  g_object_class_install_property (gobject_class, PROP_EXTRA_SIZE_BYTES,
       g_param_spec_uint ("extra-size-bytes", "Extra Size (kB)",
-          "Amount of data the queues can grow if one of them is empty (bytes, 0=disable)",
+          "Amount of data the queues can grow if one of them is empty (bytes, 0=disable)"
+          " (NOT IMPLEMENTED)",
           0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_EXTRA_SIZE_BUFFERS,
       g_param_spec_uint ("extra-size-buffers", "Extra Size (buffers)",
-          "Amount of buffers the queues can grow if one of them is empty (0=disable)",
+          "Amount of buffers the queues can grow if one of them is empty (0=disable)"
+          " (NOT IMPLEMENTED)",
           0, G_MAXUINT, DEFAULT_EXTRA_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_EXTRA_SIZE_TIME,
+  g_object_class_install_property (gobject_class, PROP_EXTRA_SIZE_TIME,
       g_param_spec_uint64 ("extra-size-time", "Extra Size (ns)",
-          "Amount of time the queues can grow if one of them is empty (in ns, 0=disable)",
+          "Amount of time the queues can grow if one of them is empty (in ns, 0=disable)"
+          " (NOT IMPLEMENTED)",
           0, G_MAXUINT64, DEFAULT_EXTRA_SIZE_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -405,31 +412,31 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
   GstMultiQueue *mq = GST_MULTI_QUEUE (object);
 
   switch (prop_id) {
-    case ARG_MAX_SIZE_BYTES:
+    case PROP_MAX_SIZE_BYTES:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.bytes = g_value_get_uint (value);
       SET_CHILD_PROPERTY (mq, bytes);
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
-    case ARG_MAX_SIZE_BUFFERS:
+    case PROP_MAX_SIZE_BUFFERS:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.visible = g_value_get_uint (value);
       SET_CHILD_PROPERTY (mq, visible);
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
-    case ARG_MAX_SIZE_TIME:
+    case PROP_MAX_SIZE_TIME:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.time = g_value_get_uint64 (value);
       SET_CHILD_PROPERTY (mq, time);
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
-    case ARG_EXTRA_SIZE_BYTES:
+    case PROP_EXTRA_SIZE_BYTES:
       mq->extra_size.bytes = g_value_get_uint (value);
       break;
-    case ARG_EXTRA_SIZE_BUFFERS:
+    case PROP_EXTRA_SIZE_BUFFERS:
       mq->extra_size.visible = g_value_get_uint (value);
       break;
-    case ARG_EXTRA_SIZE_TIME:
+    case PROP_EXTRA_SIZE_TIME:
       mq->extra_size.time = g_value_get_uint64 (value);
       break;
     default:
@@ -447,22 +454,22 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
   switch (prop_id) {
-    case ARG_EXTRA_SIZE_BYTES:
+    case PROP_EXTRA_SIZE_BYTES:
       g_value_set_uint (value, mq->extra_size.bytes);
       break;
-    case ARG_EXTRA_SIZE_BUFFERS:
+    case PROP_EXTRA_SIZE_BUFFERS:
       g_value_set_uint (value, mq->extra_size.visible);
       break;
-    case ARG_EXTRA_SIZE_TIME:
+    case PROP_EXTRA_SIZE_TIME:
       g_value_set_uint64 (value, mq->extra_size.time);
       break;
-    case ARG_MAX_SIZE_BYTES:
+    case PROP_MAX_SIZE_BYTES:
       g_value_set_uint (value, mq->max_size.bytes);
       break;
-    case ARG_MAX_SIZE_BUFFERS:
+    case PROP_MAX_SIZE_BUFFERS:
       g_value_set_uint (value, mq->max_size.visible);
       break;
-    case ARG_MAX_SIZE_TIME:
+    case PROP_MAX_SIZE_TIME:
       g_value_set_uint64 (value, mq->max_size.time);
       break;
     default:
