@@ -200,6 +200,7 @@ static void
 gst_registry_init (GstRegistry * registry)
 {
   registry->feature_hash = g_hash_table_new (g_str_hash, g_str_equal);
+  registry->basename_hash = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
@@ -244,6 +245,8 @@ gst_registry_finalize (GObject * object)
 
   g_hash_table_destroy (registry->feature_hash);
   registry->feature_hash = NULL;
+  g_hash_table_destroy (registry->basename_hash);
+  registry->basename_hash = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -361,19 +364,28 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
 
   GST_OBJECT_LOCK (registry);
-  existing_plugin = gst_registry_lookup_bn_locked (registry, plugin->basename);
-  if (G_UNLIKELY (existing_plugin)) {
-    GST_DEBUG_OBJECT (registry,
-        "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
-        existing_plugin, plugin, GST_STR_NULL (plugin->filename));
-    registry->plugins = g_list_remove (registry->plugins, existing_plugin);
-    gst_object_unref (existing_plugin);
+  if (G_LIKELY (plugin->basename)) {
+    /* we have a basename, see if we find the plugin */
+    existing_plugin =
+        gst_registry_lookup_bn_locked (registry, plugin->basename);
+    if (existing_plugin) {
+      GST_DEBUG_OBJECT (registry,
+          "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
+          existing_plugin, plugin, GST_STR_NULL (plugin->filename));
+      registry->plugins = g_list_remove (registry->plugins, existing_plugin);
+      if (G_LIKELY (existing_plugin->basename))
+        g_hash_table_remove (registry->basename_hash,
+            existing_plugin->basename);
+      gst_object_unref (existing_plugin);
+    }
   }
 
   GST_DEBUG_OBJECT (registry, "adding plugin %p for filename \"%s\"",
       plugin, GST_STR_NULL (plugin->filename));
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
+  if (G_LIKELY (plugin->basename))
+    g_hash_table_replace (registry->basename_hash, plugin->basename, plugin);
 
   gst_object_ref_sink (plugin);
   GST_OBJECT_UNLOCK (registry);
@@ -435,6 +447,8 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   GST_OBJECT_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
+  if (G_LIKELY (plugin->basename))
+    g_hash_table_remove (registry->basename_hash, plugin->basename);
   gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
   GST_OBJECT_UNLOCK (registry);
   gst_object_unref (plugin);
@@ -764,18 +778,7 @@ gst_registry_lookup_feature (GstRegistry * registry, const char *name)
 static GstPlugin *
 gst_registry_lookup_bn_locked (GstRegistry * registry, const char *basename)
 {
-  GList *g;
-  GstPlugin *plugin;
-
-  /* FIXME: use GTree speed up lookups */
-  for (g = registry->plugins; g; g = g_list_next (g)) {
-    plugin = GST_PLUGIN_CAST (g->data);
-    if (G_UNLIKELY (plugin->basename
-            && strcmp (basename, plugin->basename) == 0)) {
-      return plugin;
-    }
-  }
-  return NULL;
+  return g_hash_table_lookup (registry->basename_hash, basename);
 }
 
 static GstPlugin *
@@ -1238,6 +1241,8 @@ gst_registry_remove_cache_plugins (GstRegistry * registry)
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
       registry->plugins = g_list_delete_link (registry->plugins, g);
+      if (G_LIKELY (plugin->basename))
+        g_hash_table_remove (registry->basename_hash, plugin->basename);
       gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
       gst_object_unref (plugin);
       changed = TRUE;

@@ -59,9 +59,11 @@ struct _GstRegistry {
 
   /* hash to speedup _lookup_feature_locked() */
   GHashTable *feature_hash;
+  /* hash to speedup _lookup */
+  GHashTable *basename_hash;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING-2];
 };
 
 struct _GstRegistryClass {
