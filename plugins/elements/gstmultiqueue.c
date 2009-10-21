@@ -217,6 +217,8 @@ enum
 #define DEFAULT_EXTRA_SIZE_BUFFERS 5
 #define DEFAULT_EXTRA_SIZE_TIME 3 * GST_SECOND
 
+#define DEFAULT_USE_BUFFERING FALSE
+
 enum
 {
   PROP_0,
@@ -226,6 +228,7 @@ enum
   PROP_MAX_SIZE_BYTES,
   PROP_MAX_SIZE_BUFFERS,
   PROP_MAX_SIZE_TIME,
+  PROP_USE_BUFFERING,
   PROP_LAST
 };
 
@@ -350,6 +353,22 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           0, G_MAXUINT64, DEFAULT_EXTRA_SIZE_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMultiQueue:use-buffering
+   * 
+   * Enable the buffering option in multiqueue so that BUFFERING messages are
+   * emited based on low-/high-percent thresholds.
+   *
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
+      g_param_spec_boolean ("use-buffering", "Use buffering",
+          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds"
+          " (not implemented yet)",
+          DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_multi_queue_finalize);
 
   gstelement_class->request_new_pad =
@@ -371,6 +390,8 @@ gst_multi_queue_init (GstMultiQueue * mqueue, GstMultiQueueClass * klass)
   mqueue->extra_size.bytes = DEFAULT_EXTRA_SIZE_BYTES;
   mqueue->extra_size.visible = DEFAULT_EXTRA_SIZE_BUFFERS;
   mqueue->extra_size.time = DEFAULT_EXTRA_SIZE_TIME;
+
+  mqueue->use_buffering = DEFAULT_USE_BUFFERING;
 
   mqueue->counter = 1;
   mqueue->highid = -1;
@@ -438,6 +459,9 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
     case PROP_EXTRA_SIZE_TIME:
       mq->extra_size.time = g_value_get_uint64 (value);
       break;
+    case PROP_USE_BUFFERING:
+      mq->use_buffering = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -470,6 +494,9 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_SIZE_TIME:
       g_value_set_uint64 (value, mq->max_size.time);
+      break;
+    case PROP_USE_BUFFERING:
+      g_value_set_boolean (value, mq->use_buffering);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

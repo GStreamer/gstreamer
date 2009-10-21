@@ -58,6 +58,7 @@ struct _GstMultiQueue {
   guint32 queues_cookie;
 
   GstDataQueueSize  max_size, extra_size;
+  gboolean use_buffering;
 
   guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
   guint32  highid;	/* contains highest id of last outputted object */
