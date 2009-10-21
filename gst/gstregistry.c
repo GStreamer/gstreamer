@@ -114,12 +114,24 @@
 
 #include "gst-i18n-lib.h"
 
+/* needed for fast retrieval of element and typefind factory lists */
+extern GType gst_type_find_factory_get_type (void);
+#define GST_TYPE_TYPE_FIND_FACTORY                 (gst_type_find_factory_get_type())
+extern GType gst_element_factory_get_type (void);
+#define GST_TYPE_ELEMENT_FACTORY                 (gst_element_factory_get_type())
+
+
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
 struct _GstRegistryPrivate
 {
   /* updated whenever the feature list changes */
   guint32 cookie;
+  /* speedup for searching features */
+  GList *element_factory_list;
+  guint32 efl_cookie;
+  GList *typefind_factory_list;
+  guint32 tfl_cookie;
 };
 
 /* the one instance of the default registry and the mutex protecting the
@@ -257,6 +269,16 @@ gst_registry_finalize (GObject * object)
   registry->feature_hash = NULL;
   g_hash_table_destroy (registry->basename_hash);
   registry->basename_hash = NULL;
+
+  if (registry->private->element_factory_list) {
+    GST_DEBUG_OBJECT (registry, "Cleaning up cached element factory list");
+    gst_plugin_feature_list_free (registry->private->element_factory_list);
+  }
+
+  if (registry->private->typefind_factory_list) {
+    GST_DEBUG_OBJECT (registry, "Cleaning up cached typefind factory list");
+    gst_plugin_feature_list_free (registry->private->typefind_factory_list);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -584,6 +606,74 @@ gst_registry_plugin_filter (GstRegistry * registry,
   return list;
 }
 
+/* returns TRUE if the list was changed
+ *
+ * Must be called with the object lock taken */
+static gboolean
+gst_registry_get_feature_list_or_create (GstRegistry * registry,
+    GList ** previous, guint32 * cookie, GType type)
+{
+  gboolean res = FALSE;
+  GstRegistryPrivate *private = registry->private;
+
+  if (G_UNLIKELY (!*previous || private->cookie != *cookie)) {
+    GstTypeNameData data;
+
+    if (*previous)
+      gst_plugin_feature_list_free (*previous);
+
+    data.type = type;
+    data.name = NULL;
+    *previous =
+        gst_filter_run (registry->features,
+        (GstFilterFunc) gst_plugin_feature_type_name_filter, FALSE, &data);
+    g_list_foreach (*previous, (GFunc) gst_object_ref, NULL);
+    *cookie = private->cookie;
+    res = TRUE;
+  }
+
+  return res;
+}
+
+static GList *
+gst_registry_get_element_factory_list (GstRegistry * registry)
+{
+  GList *list;
+
+  GST_OBJECT_LOCK (registry);
+
+  gst_registry_get_feature_list_or_create (registry,
+      &registry->private->element_factory_list, &registry->private->efl_cookie,
+      GST_TYPE_ELEMENT_FACTORY);
+
+  /* Return reffed copy */
+  list = gst_plugin_feature_list_copy (registry->private->element_factory_list);
+
+  GST_OBJECT_UNLOCK (registry);
+
+  return list;
+}
+
+static GList *
+gst_registry_get_typefind_factory_list (GstRegistry * registry)
+{
+  GList *list;
+
+  GST_OBJECT_LOCK (registry);
+
+  gst_registry_get_feature_list_or_create (registry,
+      &registry->private->typefind_factory_list,
+      &registry->private->tfl_cookie, GST_TYPE_TYPE_FIND_FACTORY);
+
+  /* Return reffed copy */
+  list =
+      gst_plugin_feature_list_copy (registry->private->typefind_factory_list);
+
+  GST_OBJECT_UNLOCK (registry);
+
+  return list;
+}
+
 /**
  * gst_registry_feature_filter:
  * @registry: registry to query
@@ -706,6 +796,12 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_PLUGIN_FEATURE), NULL);
+
+  /* Speed up */
+  if (type == GST_TYPE_ELEMENT_FACTORY)
+    return gst_registry_get_element_factory_list (registry);
+  else if (type == GST_TYPE_TYPE_FIND_FACTORY)
+    return gst_registry_get_typefind_factory_list (registry);
 
   data.type = type;
   data.name = NULL;
