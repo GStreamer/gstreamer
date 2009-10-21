@@ -133,7 +133,7 @@ static gboolean gst_auto_convert_internal_src_query (GstPad * pad,
 static const GstQueryType *gst_auto_convert_internal_src_query_type (GstPad *
     pad);
 
-static void gst_auto_convert_load_factories (GstAutoConvert * autoconvert);
+static GList *gst_auto_convert_load_factories (GstAutoConvert * autoconvert);
 
 static GQuark internal_srcpad_quark = 0;
 static GQuark internal_sinkpad_quark = 0;
@@ -728,13 +728,8 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
   factories = autoconvert->factories;
   GST_OBJECT_UNLOCK (autoconvert);
 
-  if (!factories) {
-    gst_auto_convert_load_factories (autoconvert);
-
-    GST_OBJECT_LOCK (autoconvert);
-    factories = autoconvert->factories;
-    GST_OBJECT_UNLOCK (autoconvert);
-  }
+  if (!factories)
+    factories = gst_auto_convert_load_factories (autoconvert);
 
   for (elem = factories; elem; elem = g_list_next (elem)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
@@ -892,10 +887,11 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
   return diff;
 }
 
-static void
+static GList *
 gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
 {
   GList *all_factories;
+  GList *out_factories;
 
   all_factories =
       gst_default_registry_feature_filter (gst_auto_convert_default_filter_func,
@@ -910,12 +906,15 @@ gst_auto_convert_load_factories (GstAutoConvert * autoconvert)
     autoconvert->factories = all_factories;
     all_factories = NULL;
   }
+  out_factories = autoconvert->factories;
   GST_OBJECT_UNLOCK (autoconvert);
 
   if (all_factories) {
     /* In this case, someone set the property while we were looking! */
     gst_plugin_feature_list_free (all_factories);
   }
+
+  return out_factories;
 }
 
 /* In this case, we should almost always have an internal element, because
@@ -1106,13 +1105,8 @@ gst_auto_convert_sink_getcaps (GstPad * pad)
   factories = autoconvert->factories;
   GST_OBJECT_UNLOCK (autoconvert);
 
-  if (!factories) {
-    gst_auto_convert_load_factories (autoconvert);
-
-    GST_OBJECT_LOCK (autoconvert);
-    factories = autoconvert->factories;
-    GST_OBJECT_UNLOCK (autoconvert);
-  }
+  if (!factories)
+    factories = gst_auto_convert_load_factories (autoconvert);
 
   for (elem = factories; elem; elem = g_list_next (elem)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
