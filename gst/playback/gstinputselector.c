@@ -562,6 +562,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime end_time, duration;
   GstSegment *seg;
   GstEvent *close_event = NULL, *start_event = NULL;
+  GstCaps *caps;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
@@ -647,6 +648,11 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   /* forward */
   GST_DEBUG_OBJECT (pad, "Forwarding buffer %p from pad %s:%s", buf,
       GST_DEBUG_PAD_NAME (pad));
+
+  if ((caps = GST_BUFFER_CAPS (buf))) {
+    if (GST_PAD_CAPS (sel->srcpad) != caps)
+      gst_pad_set_caps (sel->srcpad, caps);
+  }
 
   res = gst_pad_push (sel->srcpad, buf);
 
