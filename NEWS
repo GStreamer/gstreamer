@@ -1,4 +1,23 @@
-This is GStreamer Ugly Plug-ins 0.10.12 "Moving Along The Highway"
+This is GStreamer Ugly Plug-ins 0.10.13 "Appointed Point"
+
+Changes since 0.10.12:
+    
+      * Improve A52 decoder
+      * Add AMR-WB decoder and AMR-NB decoder/encoder based on OpenCore codecs
+      * ASF playback improvements
+      * Improve mp3 parser and seeking
+
+Bugs fixed since 0.10.12:
+     
+      * 519721 : [asfdemux] wma tags are not copied when converting to another format
+      * 584890 : AMR plugins based on Opencore codecs
+      * 585956 : [mp3parse] indexing improvements
+      * 590432 : It's only possible to build the mad plugin when building id3tag as well
+      * 591348 : AMR plugins should check for opencore-amr .pc files
+      * 592787 : a52dec: Allow liba52 to use djbfft based IMDCT transform
+      * 596517 : x264 element no longer compiles against changed upstream API
+      * 598272 : a52dec leaks input buffers
+      * 598370 : Properly detect pre-releases
 
 Changes since 0.10.11:
     

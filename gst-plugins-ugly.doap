@@ -36,6 +36,17 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.10.13</revision>
+   <branch>0.10</branch>
+   <name>Appointed Point</name>
+   <created>2009-10-21</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.13.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.13.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.12</revision>
    <branch>0.10</branch>
    <name>Moving Along The Highway</name>

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.12 "Moving Along The Highway"
+Release notes for GStreamer Ugly Plug-ins 0.10.13 "Appointed Point"
         
 
 The GStreamer team is proud to announce a new release
@@ -55,32 +55,22 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Real and WMS RTSP improvements
-      * Other cleanups and bug fixes
-      * Improve ASF file handling
-      * Large MPEG video file support
-      * Interlacing support for MPEG video
-      * New 'lamemp3dec' mp3 encoder element
-      * x264enc moved from -bad
-      * Remove id3mux in favour of the new id3tag element in -bad
+      * Improve A52 decoder
+      * Add AMR-WB decoder and AMR-NB decoder/encoder based on OpenCore codecs
+      * ASF playback improvements
+      * Improve mp3 parser and seeking
 
 Bugs fixed in this release
      
-      * 401173 : [asfdemux] Stream doesn't play, stuck on first frame
-      * 494528 : Simplifications of the LAME plugin
-      * 574461 : [mpeg2dec] Lower rank and make ffdec_mpeg2video PRIMARY
-      * 576305 : twolame plugin does not detet proper version
-      * 579058 : [asfdemux] proper handling of RTSP input
-      * 580803 : [PLUGIN-MOVE] Move x264enc to -ugly
-      * 580869 : dvdsubdec ARGB support
-      * 581341 : [lamemp3enc] doesn't build with LAME 3.97: implicit decla...
-      * 581756 : [id3mux] replace with something more reliable
-      * 582056 : [asfdemux] forcing an EOS on the pipeline doesn't work wi...
-      * 582375 : mpeg2dec not building in gst-plugins-ugly
-      * 583112 : [asfdemux] extract coverart (WM/Picture tag)
-      * 573720 : [mp3parse] Memory leak when playing shoutcast streams
-      * 581464 : xing data is being ignored
-      * 578524 : synaesthesia MSVC compatibility
+      * 519721 : [asfdemux] wma tags are not copied when converting to another format
+      * 584890 : AMR plugins based on Opencore codecs
+      * 585956 : [mp3parse] indexing improvements
+      * 590432 : It's only possible to build the mad plugin when building id3tag as well
+      * 591348 : AMR plugins should check for opencore-amr .pc files
+      * 592787 : a52dec: Allow liba52 to use djbfft based IMDCT transform
+      * 596517 : x264 element no longer compiles against changed upstream API
+      * 598272 : a52dec leaks input buffers
+      * 598370 : Properly detect pre-releases
 
 Download
 
@@ -109,23 +99,21 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
       * Christian Schaller
-      * David Hoyt
       * David Schleef
       * Edward Hervey
-      * Felipe Contreras
+      * Iago Toral
       * Jan Schmidt
-      * Janin Kolenc
-      * Josef Zlomek
       * Josep Torra
-      * Kapil Agrawal
-      * Marc-Andre Lureau
       * Mark Nauwelaerts
+      * Mart Raudsepp
+      * Marvin Schmidt
       * Michael Smith
-      * Michal Benes
+      * Olivier Crête
+      * René Stadler
       * Sebastian Dröge
       * Stefan Kost
+      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  
