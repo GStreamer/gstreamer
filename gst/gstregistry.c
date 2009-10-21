@@ -729,9 +729,6 @@ gst_registry_get_plugin_list (GstRegistry * registry)
 static GstPluginFeature *
 gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
 {
-  if (G_UNLIKELY (name == NULL))
-    return NULL;
-
   return g_hash_table_lookup (registry->feature_hash, name);
 }
 
