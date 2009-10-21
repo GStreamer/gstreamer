@@ -40,18 +40,6 @@
 
 #include "gsttypefindhelper.h"
 
-static gint
-type_find_factory_rank_cmp (const GstPluginFeature * fac1,
-    const GstPluginFeature * fac2)
-{
-  if (G_LIKELY (fac1->rank != fac2->rank))
-    return fac2->rank - fac1->rank;
-
-  /* to make the order in which things happen more deterministic,
-   * sort by name when the ranks are the same. */
-  return strcmp (fac1->name, fac2->name);
-}
-
 /* ********************** typefinding in pull mode ************************ */
 
 static void
@@ -279,10 +267,7 @@ gst_type_find_helper_get_range (GstObject * obj,
     find.get_length = helper_find_get_length;
   }
 
-  /* FIXME: we need to keep this list within the registry */
   type_list = gst_type_find_factory_get_list ();
-  type_list =
-      g_list_sort (type_list, (GCompareFunc) type_find_factory_rank_cmp);
 
   for (l = type_list; l; l = l->next) {
     helper.factory = GST_TYPE_FIND_FACTORY (l->data);
@@ -456,8 +441,6 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
   /* FIXME: we need to keep this list within the registry */
   type_list = gst_type_find_factory_get_list ();
-  type_list =
-      g_list_sort (type_list, (GCompareFunc) type_find_factory_rank_cmp);
 
   for (l = type_list; l; l = l->next) {
     helper.factory = GST_TYPE_FIND_FACTORY (l->data);
@@ -506,8 +489,6 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
   GST_LOG_OBJECT (obj, "finding caps for extension %s", extension);
 
   type_list = gst_type_find_factory_get_list ();
-  type_list =
-      g_list_sort (type_list, (GCompareFunc) type_find_factory_rank_cmp);
 
   for (l = type_list; l; l = g_list_next (l)) {
     GstTypeFindFactory *factory;

@@ -146,6 +146,9 @@ gst_type_find_factory_dispose (GObject * object)
  * Gets the list of all registered typefind factories. You must free the
  * list using gst_plugin_feature_list_free.
  *
+ * The returned factories are sorted by highest rank first, and then by
+ * factory name. (behaviour change since 0.10.26)
+ *
  * Returns: the list of all registered #GstTypeFindFactory.
  */
 GList *

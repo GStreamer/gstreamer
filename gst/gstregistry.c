@@ -635,6 +635,18 @@ gst_registry_get_feature_list_or_create (GstRegistry * registry,
   return res;
 }
 
+static gint
+type_find_factory_rank_cmp (const GstPluginFeature * fac1,
+    const GstPluginFeature * fac2)
+{
+  if (G_LIKELY (fac1->rank != fac2->rank))
+    return fac2->rank - fac1->rank;
+
+  /* to make the order in which things happen more deterministic,
+   * sort by name when the ranks are the same. */
+  return strcmp (fac1->name, fac2->name);
+}
+
 static GList *
 gst_registry_get_element_factory_list (GstRegistry * registry)
 {
@@ -661,9 +673,12 @@ gst_registry_get_typefind_factory_list (GstRegistry * registry)
 
   GST_OBJECT_LOCK (registry);
 
-  gst_registry_get_feature_list_or_create (registry,
-      &registry->private->typefind_factory_list,
-      &registry->private->tfl_cookie, GST_TYPE_TYPE_FIND_FACTORY);
+  if (G_UNLIKELY (gst_registry_get_feature_list_or_create (registry,
+              &registry->private->typefind_factory_list,
+              &registry->private->tfl_cookie, GST_TYPE_TYPE_FIND_FACTORY)))
+    registry->private->typefind_factory_list =
+        g_list_sort (registry->private->typefind_factory_list,
+        (GCompareFunc) type_find_factory_rank_cmp);
 
   /* Return reffed copy */
   list =
