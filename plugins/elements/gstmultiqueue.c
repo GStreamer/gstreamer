@@ -1335,13 +1335,13 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
-    GstSingleQueue *ssq = (GstSingleQueue *) tmp->data;
+    GstSingleQueue *oq = (GstSingleQueue *) tmp->data;
     GstDataQueueSize ssize;
 
-    GST_LOG_OBJECT (mq, "Checking Queue %d", ssq->id);
+    GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
 
-    if (gst_data_queue_is_empty (ssq->queue)) {
-      GST_LOG_OBJECT (mq, "Queue %d is empty", ssq->id);
+    if (gst_data_queue_is_empty (oq->queue)) {
+      GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
       if (IS_FILLED (sq, visible, size.visible)) {
         sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
@@ -1352,17 +1352,17 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       goto beach;
     }
     /* check if we reached the hard time/bytes limits */
-    gst_data_queue_get_level (ssq->queue, &ssize);
+    gst_data_queue_get_level (oq->queue, &ssize);
 
     GST_DEBUG_OBJECT (mq,
         "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
-        G_GUINT64_FORMAT, ssq->id, ssize.visible, sq->max_size.visible,
+        G_GUINT64_FORMAT, oq->id, ssize.visible, sq->max_size.visible,
         ssize.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
     /* if this queue is filled completely we must signal overrun */
     if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
         IS_FILLED (sq, time, sq->cur_time)) {
-      GST_LOG_OBJECT (mq, "Queue %d is filled", ssq->id);
+      GST_LOG_OBJECT (mq, "Queue %d is filled", oq->id);
       filled = TRUE;
     }
   }
@@ -1391,21 +1391,21 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
   for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
-    GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
+    GstSingleQueue *oq = (GstSingleQueue *) tmp->data;
 
-    if (gst_data_queue_is_full (sq->queue)) {
+    if (gst_data_queue_is_full (oq->queue)) {
       GstDataQueueSize size;
 
-      gst_data_queue_get_level (sq->queue, &size);
-      if (IS_FILLED (sq, visible, size.visible)) {
-        sq->max_size.visible = size.visible + 1;
+      gst_data_queue_get_level (oq->queue, &size);
+      if (IS_FILLED (oq, visible, size.visible)) {
+        oq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
-            "queue %d is filled, bumping its max visible to %d", sq->id,
-            sq->max_size.visible);
-        gst_data_queue_limits_changed (sq->queue);
+            "queue %d is filled, bumping its max visible to %d", oq->id,
+            oq->max_size.visible);
+        gst_data_queue_limits_changed (oq->queue);
       }
     }
-    if (!gst_data_queue_is_empty (sq->queue))
+    if (!gst_data_queue_is_empty (oq->queue))
       empty = FALSE;
   }
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
