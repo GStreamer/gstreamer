@@ -68,6 +68,11 @@ API/ABI
 
 - Remove the result format value in queries.
 
+- Try to minimize the amount of acceptcaps calls when pushing buffers around.
+  The element pushing the buffer usually negotiated already and decided on the
+  format.
+  The element receiving the buffer usually has to accept the caps anyway.
+
 
 IMPLEMENTATION
 --------------
