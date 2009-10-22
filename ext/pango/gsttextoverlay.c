@@ -1245,27 +1245,37 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   /* apply transformations */
   cairo_set_matrix (cr, &cairo_matrix);
 
-  /* draw text to cairo path */
-  pango_cairo_layout_path (cr, overlay->layout);
+  /* FIXME: We use show_layout everywhere except for the surface
+   * because it's really faster and internally does all kinds of
+   * caching. Unfortunately we have to paint to a cairo path for
+   * the outline and this is slow. Once Pango supports user fonts
+   * we should use them, see
+   * https://bugzilla.gnome.org/show_bug.cgi?id=598695
+   *
+   * Idea would the be, to create a cairo user font that
+   * does shadow, outline, text painting in the
+   * render_glyph function.
+   */
 
   /* draw shadow text */
   cairo_save (cr);
   cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
   cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
-  cairo_fill_preserve (cr);
+  pango_cairo_show_layout (cr, overlay->layout);
   cairo_restore (cr);
 
   /* draw outline text */
   cairo_save (cr);
   cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
   cairo_set_line_width (cr, overlay->outline_offset);
-  cairo_stroke_preserve (cr);
+  pango_cairo_layout_path (cr, overlay->layout);
+  cairo_stroke (cr);
   cairo_restore (cr);
 
   /* draw text */
   cairo_save (cr);
   cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-  cairo_fill (cr);
+  pango_cairo_show_layout (cr, overlay->layout);
   cairo_restore (cr);
 
   cairo_destroy (cr);
