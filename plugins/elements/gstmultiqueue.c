@@ -1499,17 +1499,19 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
     guint64 time, GstSingleQueue * sq)
 {
   gboolean res;
+  GstMultiQueue *mq = sq->mqueue;
 
-  GST_DEBUG ("queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT
-      "/%" G_GUINT64_FORMAT, sq->id, visible, sq->max_size.visible, bytes,
+  GST_DEBUG_OBJECT (mq,
+      "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
+      G_GUINT64_FORMAT, sq->id, visible, sq->max_size.visible, bytes,
       sq->max_size.bytes, sq->cur_time, sq->max_size.time);
 
   /* we are always filled on EOS */
   if (sq->is_eos)
     return TRUE;
 
-  /* we never go past the max visible items */
-  if (IS_FILLED (sq, visible, visible))
+  /* we never go past the max visible items unless we are in buffering mode */
+  if (!mq->use_buffering && IS_FILLED (sq, visible, visible))
     return TRUE;
 
   /* check time or bytes */
