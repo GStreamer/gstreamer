@@ -148,7 +148,6 @@ struct _GstSingleQueue
   GstDataQueueSize max_size, extra_size;
   GstClockTime cur_time;
   gboolean is_eos;
-  gboolean inextra;             /* TRUE if the queue is currently in extradata mode */
 
   /* Protected by global lock */
   guint32 nextid;               /* ID of the next object waiting to be pushed */
@@ -617,7 +616,6 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     sq->cur_time = 0;
     sq->max_size.visible = mq->max_size.visible;
     sq->is_eos = FALSE;
-    sq->inextra = FALSE;
     sq->nextid = 0;
     sq->oldid = 0;
     gst_data_queue_set_flushing (sq->queue, FALSE);
@@ -775,7 +773,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
         "SingleQueue %d : Pushing buffer %p with ts %" GST_TIME_FORMAT,
         sq->id, buffer, GST_TIME_ARGS (timestamp));
 
-    /* Set caps on pad before pushing, this avoids core calling the accpetcaps
+    /* Set caps on pad before pushing, this avoids core calling the acceptcaps
      * function on the srcpad, which will call acceptcaps upstream, which might
      * not accept these caps (anymore). */
     if (caps && caps != GST_PAD_CAPS (sq->srcpad))
