@@ -1271,9 +1271,10 @@ gst_avi_demux_get_buffer_info (GstAviDemux * avi, GstAviStream * stream,
 static gboolean
 gst_avi_demux_do_index_stats (GstAviDemux * avi)
 {
+  guint total_idx = 0;
   guint i;
 #ifndef GST_DISABLE_GST_DEBUG
-  guint total_idx = 0, total_max = 0;
+  guint total_max = 0;
 #endif
 
   /* get stream stats now */
@@ -1292,8 +1293,8 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
     gst_avi_demux_get_buffer_info (avi, stream, stream->idx_n - 1,
         NULL, &stream->idx_duration, NULL, NULL);
 
-#ifndef GST_DISABLE_GST_DEBUG
     total_idx += stream->idx_n;
+#ifndef GST_DISABLE_GST_DEBUG
     total_max += stream->idx_max;
 #endif
     GST_INFO_OBJECT (avi, "Stream %d, dur %" GST_TIME_FORMAT ", %6u entries, "
@@ -1303,8 +1304,8 @@ gst_avi_demux_do_index_stats (GstAviDemux * avi)
         (guint) (stream->idx_n * sizeof (GstAviIndexEntry)),
         (guint) (stream->idx_max * sizeof (GstAviIndexEntry)));
   }
-#ifndef GST_DISABLE_GST_DEBUG
   total_idx *= sizeof (GstAviIndexEntry);
+#ifndef GST_DISABLE_GST_DEBUG
   total_max *= sizeof (GstAviIndexEntry);
 #endif
   GST_INFO_OBJECT (avi, "%u bytes for index vs %u ideally, %u wasted",
