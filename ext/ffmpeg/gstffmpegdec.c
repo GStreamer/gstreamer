@@ -174,7 +174,6 @@ typedef struct _GstFFMpegDecClassParams GstFFMpegDecClassParams;
 struct _GstFFMpegDecClassParams
 {
   AVCodec *in_plugin;
-  GstCaps *srccaps, *sinkcaps;
 };
 
 #define GST_TYPE_FFMPEGDEC \
@@ -300,11 +299,15 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   GstFFMpegDecClassParams *params;
   GstElementDetails details;
   GstPadTemplate *sinktempl, *srctempl;
+  GstCaps *sinkcaps, *srccaps;
+  AVCodec *in_plugin;
 
   params =
       (GstFFMpegDecClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_FFDEC_PARAMS_QDATA);
   g_assert (params != NULL);
+
+  in_plugin = params->in_plugin;
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFmpeg %s decoder",
@@ -321,16 +324,32 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   g_free (details.klass);
   g_free (details.description);
 
+  /* get the caps */
+  sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
+  if (!sinkcaps) {
+    GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
+    sinkcaps = gst_caps_from_string ("unknown/unknown");
+  }
+  if (in_plugin->type == CODEC_TYPE_VIDEO) {
+    srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+  } else {
+    srccaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
+        in_plugin->id, FALSE, in_plugin);
+  }
+  if (!srccaps) {
+    GST_DEBUG ("Couldn't get source caps for decoder '%s'", in_plugin->name);
+    srccaps = gst_caps_from_string ("unknown/unknown");
+  }
+
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, params->sinkcaps);
-  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, params->srccaps);
+      GST_PAD_ALWAYS, sinkcaps);
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, srccaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
 
-  klass->in_plugin = params->in_plugin;
+  klass->in_plugin = in_plugin;
   klass->srctempl = srctempl;
   klass->sinktempl = sinktempl;
 }
@@ -2761,7 +2780,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
   while (in_plugin) {
     GstFFMpegDecClassParams *params;
-    GstCaps *srccaps = NULL, *sinkcaps = NULL;
     gchar *type_name;
     gchar *plugin_name;
 
@@ -2822,25 +2840,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* first make sure we've got a supported type */
-    sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
-    if (!sinkcaps) {
-      GST_DEBUG ("Couldn't get sink caps for decoder '%s', skipping codec",
-          in_plugin->name);
-      goto next;
-    }
-    if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
-    } else {
-      srccaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
-          in_plugin->id, FALSE, in_plugin);
-    }
-    if (!srccaps) {
-      GST_DEBUG ("Couldn't get source caps for decoder '%s', skipping codec",
-          in_plugin->name);
-      goto next;
-    }
-
     /* construct the type */
     plugin_name = g_strdup ((gchar *) in_plugin->name);
     g_strdelimit (plugin_name, NULL, '_');
@@ -2852,8 +2851,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     if (!type) {
       params = g_new0 (GstFFMpegDecClassParams, 1);
       params->in_plugin = in_plugin;
-      params->srccaps = gst_caps_ref (srccaps);
-      params->sinkcaps = gst_caps_ref (sinkcaps);
 
       /* create the gtype now */
       type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
@@ -2902,10 +2899,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     g_free (type_name);
 
   next:
-    if (sinkcaps)
-      gst_caps_unref (sinkcaps);
-    if (srccaps)
-      gst_caps_unref (srccaps);
     in_plugin = av_codec_next (in_plugin);
   }
 
