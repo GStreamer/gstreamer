@@ -394,8 +394,7 @@ gst_gl_colorscale_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   colorscale->display = gst_gl_display_new ();
 
   //init unvisible opengl context
-  gst_gl_display_create_context (colorscale->display,
-      colorscale->output_video_width, colorscale->output_video_height, 0);
+  gst_gl_display_create_context (colorscale->display, 0);
 
   //blocking call, init colorspace conversion if needed
   gst_gl_display_init_upload (colorscale->display,

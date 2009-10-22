@@ -283,11 +283,13 @@ gst_gl_upload_start (GstBaseTransform * bt)
   if (isPerformed) {
     const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
     if (G_VALUE_HOLDS_POINTER (id_value))
-      /* at least one gl element is before in our gl chain */
+      /* at least one gl element is after in our gl chain */
       upload->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else
+    else {
       /* this gl filter is a sink in terms of the gl chain */
       upload->display = gst_gl_display_new ();
+      gst_gl_display_create_context (upload->display, 0);
+    }
   }
 
   gst_query_unref (query);
@@ -492,10 +494,6 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GST_DEBUG ("caps connot be parsed");
     return FALSE;
   }
-
-  //init unvisible opengl context
-  gst_gl_display_create_context (upload->display,
-      upload->gl_width, upload->gl_height, upload->external_gl_context);
 
   //init colorspace conversion if needed
   gst_gl_display_init_upload (upload->display, upload->video_format,

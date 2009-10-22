@@ -66,6 +66,8 @@ gst_gl_shader_finalize (GObject * object)
   shader = GST_GL_SHADER (object);
   priv = shader->priv;
 
+  g_debug ("finalizing shader %ud", priv->program_handle);
+
   g_free (priv->vertex_src);
   g_free (priv->fragment_src);
 
@@ -80,6 +82,8 @@ gst_gl_shader_finalize (GObject * object)
     /* glGetObjectParameterivARB(priv->program_handle, GL_OBJECT_DELETE_STATUS_ARB, &status); */
     /* g_debug ("program deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
   }
+
+  g_debug ("shader deleted %ud", priv->program_handle);
 
   priv->fragment_handle = 0;
   priv->vertex_handle = 0;
@@ -536,6 +540,18 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
   g_return_val_if_fail (priv->program_handle != 0, 0);
 
   return glGetAttribLocationARB (priv->program_handle, name);
+}
+
+void
+gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index, const gchar * name)
+{
+  GstGLShaderPrivate *priv;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  glBindAttribLocationARB (priv->program_handle, index, name);
 }
 
 GQuark

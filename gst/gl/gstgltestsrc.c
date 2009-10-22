@@ -387,9 +387,6 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
         gltestsrc->width, gltestsrc->height,
         gltestsrc->rate_numerator, gltestsrc->rate_denominator);
 
-    gst_gl_display_create_context (gltestsrc->display,
-        gltestsrc->width, gltestsrc->height, 0);
-
     gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width,
         gltestsrc->height, &gltestsrc->fbo, &gltestsrc->depthbuffer);
   }
@@ -631,9 +628,11 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
     if (G_VALUE_HOLDS_POINTER (id_value))
       /* at least one gl element is before in our gl chain */
       src->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else
+    else {
       /* this gl filter is a sink in terms of the gl chain */
       src->display = gst_gl_display_new ();
+      gst_gl_display_create_context (src->display, 0);
+    }
   }
 
   gst_query_unref (query);

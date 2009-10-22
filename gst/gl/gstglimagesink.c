@@ -376,8 +376,12 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!glimage_sink->display)
+      if (!glimage_sink->display) {
         glimage_sink->display = gst_gl_display_new ();
+
+        /* init opengl context */
+        gst_gl_display_create_context (glimage_sink->display, 0);
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -469,10 +473,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   } else {
     is_gl = FALSE;
     ok = gst_video_format_parse_caps (caps, &format, &width, &height);
-
-    /* init opengl context */
-    gst_gl_display_create_context (glimage_sink->display,
-        width, height, 0);
 
     /* init colorspace conversion if needed */
     gst_gl_display_init_upload (glimage_sink->display, format,

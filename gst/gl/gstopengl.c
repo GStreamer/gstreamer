@@ -60,6 +60,7 @@ GType gst_gl_filter_cube_get_type (void);
 #include "gstgldeinterlace.h"
 #include "gstgleffects.h"
 #include "gstglbumper.h"
+#include "gstglmosaic.h"
 
 GType gst_gl_effects_get_type (void);
 GType gst_gl_deinterlace_get_type (void);
@@ -71,6 +72,7 @@ GType gst_gl_filter_glass_get_type (void);
 GType gst_gl_overlay_get_type (void);
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
+GType gst_gl_mosaic_get_type (void);
 #endif
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
@@ -158,6 +160,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glcolorscale",
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "glmosaic",
+          GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
     return FALSE;
   }
 #endif

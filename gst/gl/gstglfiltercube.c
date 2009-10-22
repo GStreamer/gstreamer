@@ -118,7 +118,7 @@ static const gchar *cube_v_src =
     "     -sin(zrot),  cos(zrot),        0.0, 0.0,                \n"
     "            0.0,        0.0,        1.0, 0.0,                \n"
     "            0.0,        0.0,        0.0, 1.0 );              \n"
-    "   gl_Position = matZ * matY * matX * u_matrix * a_position; \n"
+    "   gl_Position = u_matrix * matZ * matY * matX * a_position; \n"
     "   v_texCoord = a_texCoord;                                  \n"
     "}                                                            \n";
 
