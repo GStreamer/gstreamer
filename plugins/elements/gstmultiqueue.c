@@ -712,9 +712,10 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
     sink_time = sq->sinktime =
         gst_segment_to_running_time (&sq->sink_segment, GST_FORMAT_TIME,
         sq->sink_segment.last_stop);
-    if (sink_time == GST_CLOCK_TIME_NONE)
-      goto beach;
-    sq->sink_tainted = FALSE;
+
+    if (G_UNLIKELY (sink_time != GST_CLOCK_TIME_NONE))
+      /* if we have a time, we become untainted and use the time */
+      sq->sink_tainted = FALSE;
   } else
     sink_time = sq->sinktime;
 
@@ -722,9 +723,9 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
     src_time = sq->srctime =
         gst_segment_to_running_time (&sq->src_segment, GST_FORMAT_TIME,
         sq->src_segment.last_stop);
-    if (src_time == GST_CLOCK_TIME_NONE)
-      goto beach;
-    sq->src_tainted = FALSE;
+    /* if we have a time, we become untainted and use the time */
+    if (G_UNLIKELY (src_time != GST_CLOCK_TIME_NONE))
+      sq->src_tainted = FALSE;
   } else
     src_time = sq->srctime;
 
@@ -734,14 +735,61 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
 
   /* This allows for streams with out of order timestamping - sometimes the
    * emerging timestamp is later than the arriving one(s) */
-  if (sink_time < src_time)
-    goto beach;
+  if (G_LIKELY (sink_time != -1 && src_time != -1 && sink_time > src_time))
+    sq->cur_time = sink_time - src_time;
+  else
+    sq->cur_time = 0;
 
-  sq->cur_time = sink_time - src_time;
+  /* now calculate the buffering percent when we need to */
+  if (mq->use_buffering) {
+    GstDataQueueSize size;
+    gint percent, tmp;
+    gboolean post = FALSE;
+
+    gst_data_queue_get_level (sq->queue, &size);
+
+    GST_DEBUG_OBJECT (mq,
+        "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
+        G_GUINT64_FORMAT, sq->id, size.visible, sq->max_size.visible,
+        size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
+
+    /* get bytes and time percentages and take the max */
+    percent = (sq->cur_time * 100) / sq->max_size.time;
+    tmp = (size.bytes * 100) / sq->max_size.bytes;
+
+    percent = MAX (tmp, percent);
+    percent = MIN (percent, 100);
+
+    if (mq->buffering) {
+      post = TRUE;
+      if (percent >= mq->high_percent) {
+        mq->buffering = FALSE;
+      }
+    } else {
+      if (percent < mq->low_percent) {
+        mq->buffering = TRUE;
+        post = TRUE;
+      }
+    }
+    if (post) {
+      GstMessage *message;
+
+      /* scale to high percent so that it becomes the 100% mark */
+      percent = percent * 100 / mq->high_percent;
+      /* clip */
+      if (percent > 100)
+        percent = 100;
+
+      GST_DEBUG_OBJECT (mq, "buffering %d percent", percent);
+      message = gst_message_new_buffering (GST_OBJECT_CAST (mq), percent);
+
+      gst_element_post_message (GST_ELEMENT_CAST (mq), message);
+    } else {
+      GST_DEBUG_OBJECT (mq, "filled %d percent", percent);
+    }
+  }
+
   return;
-
-beach:
-  sq->cur_time = 0;
 }
 
 /* take a NEWSEGMENT event and apply the values to segment, updating the time
