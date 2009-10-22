@@ -495,9 +495,9 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
-  factory = GST_ELEMENT_FACTORY (feature);
+  factory = GST_ELEMENT_FACTORY_CAST (feature);
 
-  if (gst_element_factory_get_uri_type (factory) != entry->type)
+  if (factory->uri_type != entry->type)
     return FALSE;
 
   protocols = gst_element_factory_get_uri_protocols (factory);
@@ -606,7 +606,8 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
   possibilities = g_list_sort (possibilities, sort_by_rank);
   walk = possibilities;
   while (walk) {
-    if ((ret = gst_element_factory_create (GST_ELEMENT_FACTORY (walk->data),
+    if ((ret =
+            gst_element_factory_create (GST_ELEMENT_FACTORY_CAST (walk->data),
                 elementname)) != NULL) {
       GstURIHandler *handler = GST_URI_HANDLER (ret);
 
