@@ -1359,7 +1359,15 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         G_GUINT64_FORMAT, oq->id, ssize.visible, oq->max_size.visible,
         ssize.bytes, oq->max_size.bytes, oq->cur_time, oq->max_size.time);
 
-    /* if this queue is filled completely we must signal overrun */
+    /* if this queue is filled completely we must signal overrun.
+     * FIXME, this seems wrong in many ways
+     *  - we're comparing the filled level of this queue against the
+     *    values of the other one
+     *  - we should only do this after we found no empty queues, ie, move
+     *    this check outside of the loop
+     *  - the debug statement talks about a different queue than the one
+     *    we are checking here.
+     */
     if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
         IS_FILLED (sq, time, sq->cur_time)) {
       GST_LOG_OBJECT (mq, "Queue %d is filled", oq->id);
