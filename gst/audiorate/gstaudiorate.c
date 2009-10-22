@@ -175,6 +175,7 @@ gst_audio_rate_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_rate_src_template));
 }
+
 static void
 gst_audio_rate_class_init (GstAudioRateClass * klass)
 {
@@ -520,14 +521,15 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   in_samples = in_size / audiorate->bytes_per_sample;
   /* get duration from the size because we can and it's more accurate */
   in_duration =
-      gst_util_uint64_scale_int (in_samples, GST_SECOND, audiorate->rate);
+      gst_util_uint64_scale_int_round (in_samples, GST_SECOND, audiorate->rate);
   in_stop = in_time + in_duration;
 
   /* Figure out the total accumulated segment time. */
   run_time = in_time + audiorate->src_segment.accum;
 
   /* calculate the buffer offset */
-  in_offset = gst_util_uint64_scale_int (run_time, audiorate->rate, GST_SECOND);
+  in_offset = gst_util_uint64_scale_int_round (run_time, audiorate->rate,
+      GST_SECOND);
   in_offset_end = in_offset + in_samples;
 
   GST_LOG_OBJECT (audiorate,
