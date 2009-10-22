@@ -57,17 +57,17 @@ HRESULT CDshowFakeSink::CheckMediaType (const CMediaType * pmt)
 HRESULT CDshowFakeSink::DoRenderSample (IMediaSample * pMediaSample)
 {
   if (pMediaSample && m_callback) {
-    guint8 *pBuffer = NULL;
+    BYTE *
+        pBuffer = NULL;
+    LONGLONG
+        lStart = 0, lStop = 0;
     pMediaSample->GetPointer (&pBuffer);
-
-    guint size = pMediaSample->GetActualDataLength ();
-
-    GstClockTimeDiff lStart = 0;
-    GstClockTimeDiff lStop = 0;
+    long
+        size = pMediaSample->GetActualDataLength ();
     pMediaSample->GetTime (&lStart, &lStop);
-
-    GstClockTime duration = (lStop - lStart) * 100;
-    m_callback (pBuffer, size, m_data, duration);
+    lStart *= 100;
+    lStop *= 100;
+    m_callback (pBuffer, size, m_data, lStart, lStop);
   }
 
   return S_OK;

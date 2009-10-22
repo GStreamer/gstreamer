@@ -94,8 +94,8 @@ static void gst_dshowaudiosrc_reset (GstAudioSrc * asrc);
 /* utils */
 static GstCaps *gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc *
     src, IPin * pin, IAMStreamConfig * streamcaps);
-static gboolean gst_dshowaudiosrc_push_buffer (guint8 * buffer, guint size,
-    gpointer src_object, GstClockTime duration);
+static gboolean gst_dshowaudiosrc_push_buffer (byte * buffer, long size,
+    gpointer src_object, UINT64 start, UINT64 stop);
 
 static void
 gst_dshowaudiosrc_init_interfaces (GType type)
@@ -830,8 +830,8 @@ gst_dshowaudiosrc_getcaps_from_streamcaps (GstDshowAudioSrc * src, IPin * pin,
 }
 
 static gboolean
-gst_dshowaudiosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
-    GstClockTime duration)
+gst_dshowaudiosrc_push_buffer (byte * buffer, long size, gpointer src_object,
+    UINT64 start, UINT64 stop)
 {
   GstDshowAudioSrc *src = GST_DSHOWAUDIOSRC (src_object);
 
@@ -840,7 +840,7 @@ gst_dshowaudiosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
   }
 
   g_mutex_lock (src->gbarray_lock);
-  g_byte_array_prepend (src->gbarray, buffer, size);
+  g_byte_array_prepend (src->gbarray, (guint8 *) buffer, size);
   g_mutex_unlock (src->gbarray_lock);
 
   return TRUE;
