@@ -126,8 +126,11 @@ on_drag_data_received (GtkWidget * widget,
     GdkDragContext * context, int x, int y,
     GtkSelectionData * seldata, guint inf, guint time, gpointer data)
 {
-  GdkPixbufFormat *format;
   SourceData *userdata = g_new0 (SourceData, 1);
+#ifdef G_OS_WIN32
+  gchar *filename = g_filename_from_uri (seldata->data, NULL, NULL);
+#else
+  GdkPixbufFormat *format;
   gchar **uris = gtk_selection_data_get_uris (seldata);
   gchar *filename = NULL;
 
@@ -138,6 +141,8 @@ on_drag_data_received (GtkWidget * widget,
   g_return_if_fail (format);
   g_print ("received %s image: %s\n", filename,
       gdk_pixbuf_format_get_name (format));
+#endif
+
   userdata->nick = "location";
   userdata->value = g_strdup (filename);
   userdata->data = data;
