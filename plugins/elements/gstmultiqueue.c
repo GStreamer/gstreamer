@@ -700,6 +700,69 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
   return result;
 }
 
+static void
+update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
+{
+  GstDataQueueSize size;
+  gint percent, tmp;
+  gboolean post = FALSE;
+
+  /* nothing to dowhen we are not in buffering mode */
+  if (!mq->use_buffering)
+    return;
+
+  gst_data_queue_get_level (sq->queue, &size);
+
+  GST_DEBUG_OBJECT (mq,
+      "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
+      G_GUINT64_FORMAT, sq->id, size.visible, sq->max_size.visible,
+      size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
+
+  /* get bytes and time percentages and take the max */
+  if (sq->is_eos) {
+    percent = 100;
+  } else {
+    percent = 0;
+    if (sq->max_size.time > 0) {
+      tmp = (sq->cur_time * 100) / sq->max_size.time;
+      percent = MAX (percent, tmp);
+    }
+    if (sq->max_size.bytes > 0) {
+      tmp = (size.bytes * 100) / sq->max_size.bytes;
+      percent = MAX (percent, tmp);
+    }
+    percent = MIN (percent, 100);
+  }
+
+  if (mq->buffering) {
+    post = TRUE;
+    if (percent >= mq->high_percent) {
+      mq->buffering = FALSE;
+    }
+  } else {
+    if (percent < mq->low_percent) {
+      mq->buffering = TRUE;
+      post = TRUE;
+    }
+  }
+  if (post) {
+    GstMessage *message;
+
+    /* scale to high percent so that it becomes the 100% mark */
+    percent = percent * 100 / mq->high_percent;
+    /* clip */
+    if (percent > 100)
+      percent = 100;
+
+    GST_DEBUG_OBJECT (mq, "buffering %d percent", percent);
+    message = gst_message_new_buffering (GST_OBJECT_CAST (mq), percent);
+
+    gst_element_post_message (GST_ELEMENT_CAST (mq), message);
+  } else {
+    GST_DEBUG_OBJECT (mq, "filled %d percent", percent);
+  }
+}
+
 /* calculate the diff between running time on the sink and src of the queue.
  * This is the total amount of time in the queue. 
  * WITH LOCK TAKEN */
@@ -740,54 +803,8 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   else
     sq->cur_time = 0;
 
-  /* now calculate the buffering percent when we need to */
-  if (mq->use_buffering) {
-    GstDataQueueSize size;
-    gint percent, tmp;
-    gboolean post = FALSE;
-
-    gst_data_queue_get_level (sq->queue, &size);
-
-    GST_DEBUG_OBJECT (mq,
-        "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
-        G_GUINT64_FORMAT, sq->id, size.visible, sq->max_size.visible,
-        size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
-
-    /* get bytes and time percentages and take the max */
-    percent = (sq->cur_time * 100) / sq->max_size.time;
-    tmp = (size.bytes * 100) / sq->max_size.bytes;
-
-    percent = MAX (tmp, percent);
-    percent = MIN (percent, 100);
-
-    if (mq->buffering) {
-      post = TRUE;
-      if (percent >= mq->high_percent) {
-        mq->buffering = FALSE;
-      }
-    } else {
-      if (percent < mq->low_percent) {
-        mq->buffering = TRUE;
-        post = TRUE;
-      }
-    }
-    if (post) {
-      GstMessage *message;
-
-      /* scale to high percent so that it becomes the 100% mark */
-      percent = percent * 100 / mq->high_percent;
-      /* clip */
-      if (percent > 100)
-        percent = 100;
-
-      GST_DEBUG_OBJECT (mq, "buffering %d percent", percent);
-      message = gst_message_new_buffering (GST_OBJECT_CAST (mq), percent);
-
-      gst_element_post_message (GST_ELEMENT_CAST (mq), message);
-    } else {
-      GST_DEBUG_OBJECT (mq, "filled %d percent", percent);
-    }
-  }
+  /* updating the time level can change the buffering state */
+  update_buffering (mq, sq);
 
   return;
 }
@@ -1255,6 +1272,8 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   switch (type) {
     case GST_EVENT_EOS:
       sq->is_eos = TRUE;
+      /* EOS affects the buffering state */
+      update_buffering (mq, sq);
       single_queue_overrun_cb (sq->queue, sq);
       break;
     case GST_EVENT_NEWSEGMENT:
