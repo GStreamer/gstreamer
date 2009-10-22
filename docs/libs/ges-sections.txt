@@ -36,6 +36,11 @@ GES_TYPE_TRACK_TYPE
 <TITLE>GESTrackObject</TITLE>
 GESTrackObject
 GESTrackObjectClass
+GES_TRACK_OBJECT_DURATION
+GES_TRACK_OBJECT_INPOINT
+GES_TRACK_OBJECT_PRIORITY
+GES_TRACK_OBJECT_START
+ges_track_object_set_active
 <SUBSECTION Standard>
 ges_track_object_set_timeline_object
 ges_track_object_set_track
