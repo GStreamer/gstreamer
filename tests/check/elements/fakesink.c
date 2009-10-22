@@ -901,7 +901,7 @@ oob_source_init (OOBSource * src, OOBSourceClass * g_class)
   /* nothing to do */
 }
 
-#define NOTIFY_RACE_NUM_PIPELINES 20
+#define NOTIFY_RACE_NUM_PIPELINES 10
 
 typedef struct
 {
