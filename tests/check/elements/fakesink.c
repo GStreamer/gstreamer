@@ -914,6 +914,7 @@ typedef struct
 static void
 test_notify_race_setup_pipeline (NotifyRacePipeline * p)
 {
+  GST_DEBUG ("Creating pipeline");
   p->pipe = gst_pipeline_new ("pipeline");
   p->src = g_object_new (oob_source_get_type (), NULL);
 
@@ -926,8 +927,10 @@ test_notify_race_setup_pipeline (NotifyRacePipeline * p)
   gst_bin_add (GST_BIN (p->pipe), p->sink);
   gst_element_link_many (p->src, p->queue, p->sink, NULL);
 
+  GST_DEBUG ("Setting pipeline to PLAYING");
   fail_unless_equals_int (gst_element_set_state (p->pipe, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
+  GST_DEBUG ("Getting state");
   fail_unless_equals_int (gst_element_get_state (p->pipe, NULL, NULL, -1),
       GST_STATE_CHANGE_SUCCESS);
 }
@@ -948,12 +951,14 @@ GST_START_TEST (test_notify_race)
   int i;
 
   for (i = 0; i < G_N_ELEMENTS (pipelines); ++i) {
+    GST_DEBUG ("Starting up pipeline %d", i);
     test_notify_race_setup_pipeline (&pipelines[i]);
   }
 
   g_usleep (2 * G_USEC_PER_SEC);
 
   for (i = 0; i < G_N_ELEMENTS (pipelines); ++i) {
+    GST_DEBUG ("Cleaning up pipeline %d", i);
     test_notify_race_cleanup_pipeline (&pipelines[i]);
   }
 }
