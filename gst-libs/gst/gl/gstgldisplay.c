@@ -70,6 +70,7 @@ void gst_gl_display_thread_init_download (GstGLDisplay * display);
 void gst_gl_display_thread_do_download (GstGLDisplay * display);
 void gst_gl_display_thread_gen_fbo (GstGLDisplay * display);
 void gst_gl_display_thread_use_fbo (GstGLDisplay * display);
+void gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display);
 void gst_gl_display_thread_del_fbo (GstGLDisplay * display);
 void gst_gl_display_thread_gen_shader (GstGLDisplay * display);
 void gst_gl_display_thread_del_shader (GstGLDisplay * display);
@@ -123,7 +124,6 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   //gl context
   display->gl_thread = NULL;
   display->gl_window = NULL;
-  display->visible = FALSE;
   display->isAlive = TRUE;
   display->texture_pool = g_hash_table_new (g_direct_hash, g_direct_equal);
 
@@ -182,6 +182,7 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   display->use_fbo_width = 0;
   display->use_fbo_height = 0;
   display->use_fbo_scene_cb = NULL;
+  display->use_fbo_scene_cb_v2 = NULL;
   display->use_fbo_proj_param1 = 0;
   display->use_fbo_proj_param2 = 0;
   display->use_fbo_proj_param3 = 0;
@@ -522,6 +523,8 @@ gst_gl_display_finalize (GObject * object)
     display->clientDrawCallback = NULL;
   if (display->use_fbo_scene_cb)
     display->use_fbo_scene_cb = NULL;
+  if (display->use_fbo_scene_cb_v2)
+    display->use_fbo_scene_cb_v2 = NULL;
   if (display->use_fbo_stuff)
     display->use_fbo_stuff = NULL;
 }
@@ -538,9 +541,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   GLenum err = 0;
 
   gst_gl_display_lock (display);
-  display->gl_window =
-      gst_gl_window_new (display->upload_width, display->upload_height,
-      display->external_gl_context);
+  display->gl_window = gst_gl_window_new (display->external_gl_context);
 
   if (!display->gl_window) {
     display->isAlive = FALSE;
@@ -1654,6 +1655,47 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
 }
 
 
+/* Called in a gl thread
+ * Need full shader support */
+void
+gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display)
+{
+  GLint viewport_dim[4];
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->use_fbo);
+
+  //setup a texture to render to
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture);
+
+  //attach the texture to the FBO to renderer to
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+      GL_TEXTURE_RECTANGLE_ARB, display->use_fbo_texture, 0);
+
+  glGetIntegerv (GL_VIEWPORT, viewport_dim);
+
+  glViewport (0, 0, display->use_fbo_width, display->use_fbo_height);
+
+#ifndef OPENGL_ES2
+  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+#endif
+
+  glClearColor (0.0, 0.0, 0.0, 0.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  //the opengl scene
+  display->use_fbo_scene_cb_v2 (display->use_fbo_stuff);
+
+#ifndef OPENGL_ES2
+  glDrawBuffer (GL_NONE);
+#endif
+
+  glViewport (viewport_dim[0], viewport_dim[1], 
+    viewport_dim[2], viewport_dim[3]);
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+}
+
+
 /* Called in the gl thread */
 void
 gst_gl_display_thread_del_fbo (GstGLDisplay * display)
@@ -1807,7 +1849,8 @@ gst_gl_display_on_draw (GstGLDisplay * display)
         display->redisplay_texture_width, display->redisplay_texture_height);
 
     if (doRedisplay && display->gl_window)
-      gst_gl_window_draw_unlocked (display->gl_window);
+      gst_gl_window_draw_unlocked (display->gl_window,
+        display->redisplay_texture_width, display->redisplay_texture_height);
   }
   //default opengl scene
   else {
@@ -2064,24 +2107,22 @@ gst_gl_display_new (void)
 }
 
 
-/* Create an opengl context (one context for one GstGLDisplay)
- * Called by the first gl element of a video/x-raw-gl flow */
+/* Create an opengl context (one context for one GstGLDisplay) */
 void
-gst_gl_display_create_context (GstGLDisplay * display,
-    GLint width, GLint height, gulong external_gl_context)
+gst_gl_display_create_context (GstGLDisplay * display, gulong external_gl_context)
 {
   gst_gl_display_lock (display);
 
-  display->upload_width = width;
-  display->upload_height = height;
-  display->external_gl_context = external_gl_context;
+  if (!display->gl_window) {
+    display->external_gl_context = external_gl_context;
 
-  display->gl_thread = g_thread_create (
-      (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);
+    display->gl_thread = g_thread_create (
+        (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);
 
-  g_cond_wait (display->cond_create_context, display->mutex);
+    g_cond_wait (display->cond_create_context, display->mutex);
 
-  GST_INFO ("gl thread created");
+    GST_INFO ("gl thread created");
+  }
 
   gst_gl_display_unlock (display);
 }
@@ -2112,7 +2153,7 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
     }
     display->keep_aspect_ratio = keep_aspect_ratio;
     if (display->gl_window)
-      gst_gl_window_draw (display->gl_window);
+      gst_gl_window_draw (display->gl_window, width, height);
   }
   gst_gl_display_unlock (display);
 
@@ -2327,6 +2368,30 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
   return isAlive;
 }
 
+gboolean
+gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
+    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
+    GLuint texture_fbo, GLCB_V2 cb, gpointer * stuff)
+{
+  gboolean isAlive = TRUE;
+
+  gst_gl_display_lock (display);
+  isAlive = display->isAlive;
+  if (isAlive) {
+    display->use_fbo = fbo;
+    display->use_depth_buffer = depth_buffer;
+    display->use_fbo_texture = texture_fbo;
+    display->use_fbo_width = texture_fbo_width;
+    display->use_fbo_height = texture_fbo_height;
+    display->use_fbo_scene_cb_v2 = cb;
+    display->use_fbo_stuff = stuff;
+    gst_gl_window_send_message (display->gl_window,
+        GST_GL_WINDOW_CB (gst_gl_display_thread_use_fbo_v2), display);
+  }
+  gst_gl_display_unlock (display);
+
+  return isAlive;
+}
 
 /* Called by gltestsrc and glfilter */
 void
@@ -2400,6 +2465,27 @@ gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb)
   gst_gl_display_lock (display);
   display->clientDrawCallback = cb;
   gst_gl_display_unlock (display);
+}
+
+gulong
+gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
+{
+  gulong external_gl_context = 0;
+  gst_gl_display_lock (display);
+  external_gl_context = 
+    gst_gl_window_get_internal_gl_context (display->gl_window);
+  gst_gl_display_unlock (display);
+  return external_gl_context;
+}
+
+void
+gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
+{
+  if (!activate)
+    gst_gl_display_lock (display);
+  gst_gl_window_activate_gl_context (display->gl_window, activate);
+  if (activate)
+    gst_gl_display_unlock (display);
 }
 
 

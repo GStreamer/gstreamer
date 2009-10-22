@@ -136,7 +136,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, DWORD_PTR external_gl_context)
+gst_gl_window_new (DWORD_PTR external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -162,15 +162,11 @@ gst_gl_window_new (gint width, gint height, DWORD_PTR external_gl_context)
   priv->is_closed = FALSE;
   priv->visible = FALSE;
 
-  width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-  height +=
-      2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
-
   priv->internal_win_id = CreateWindowEx (0,
       "GSTGL",
       "OpenGL renderer",
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,
-      x, y, width, height, (HWND) NULL, (HMENU) NULL, hinstance, window);
+      x, y, 0, 0, (HWND) NULL, (HMENU) NULL, hinstance, window);
 
   if (!priv->internal_win_id) {
     g_debug ("failed to create gl window: %lud\n", (gulong) priv->internal_win_id);
@@ -191,6 +187,38 @@ GQuark
 gst_gl_window_error_quark (void)
 {
   return g_quark_from_static_string ("gst-gl-window-error");
+}
+
+gulong
+gst_gl_window_get_internal_gl_context (GstGLWindow *window)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  return (gulong) priv->gl_context;
+}
+
+
+void
+callback_activate_gl_context (GstGLWindowPrivate *priv)
+{
+  if (!wglMakeCurrent (priv->device, priv->gl_context))
+    g_debug ("failed to activate opengl context %lud\n", GetLastError ());
+}
+
+void
+callback_inactivate_gl_context (GstGLWindowPrivate *priv)
+{
+  if (!wglMakeCurrent (NULL, NULL))
+    g_debug ("failed to inactivate opengl context %lud\n", GetLastError ());
+}
+
+void
+gst_gl_window_activate_gl_context (GstGLWindow *window, gboolean activate)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  if (activate)
+    gst_gl_window_send_message (window, callback_activate_gl_context, priv);
+  else
+    gst_gl_window_send_message (window, callback_inactivate_gl_context, priv);
 }
 
 void
@@ -285,19 +313,30 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 void
-gst_gl_window_draw_unlocked (GstGLWindow * window)
+gst_gl_window_draw_unlocked (GstGLWindow * window, gint width, gint height)
 {
-  gst_gl_window_draw (window);
+  gst_gl_window_draw (window, width, height);
 }
 
 /* Thread safe */
 void
-gst_gl_window_draw (GstGLWindow * window)
+gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowPrivate *priv = window->priv;
 
   if (!priv->visible) {
+    HWND parent_id = GetProp (priv->internal_win_id, "gl_window_parent_id");
+    /* if no parent the real size has to be set now because this has not been done
+     * when at window creation */
+    if (!parent_id) {
+      RECT rect;
+      GetClientRect (priv->internal_win_id, &rect);
+      width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
+      height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
+      MoveWindow (priv->internal_win_id, rect.left, rect.top, width, height, FALSE);
+    }
     ShowWindowAsync (priv->internal_win_id, SW_SHOW);
+    
     priv->visible = TRUE;
   }
 
@@ -369,11 +408,11 @@ gst_gl_window_set_pixel_format (GstGLWindow * window)
   pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
   pfd.iPixelType = PFD_TYPE_RGBA;
   pfd.cColorBits = 24;
-  pfd.cRedBits = 0;
+  pfd.cRedBits = 8;
   pfd.cRedShift = 0;
-  pfd.cGreenBits = 0;
+  pfd.cGreenBits = 8;
   pfd.cGreenShift = 0;
-  pfd.cBlueBits = 0;
+  pfd.cBlueBits = 8;
   pfd.cBlueShift = 0;
   pfd.cAlphaBits = 0;
   pfd.cAlphaShift = 0;
@@ -382,7 +421,7 @@ gst_gl_window_set_pixel_format (GstGLWindow * window)
   pfd.cAccumGreenBits = 0;
   pfd.cAccumBlueBits = 0;
   pfd.cAccumAlphaBits = 0;
-  pfd.cDepthBits = 32;
+  pfd.cDepthBits = 24;
   pfd.cStencilBits = 8;
   pfd.cAuxBuffers = 0;
   pfd.iLayerType = PFD_MAIN_PLANE;
@@ -455,14 +494,15 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     g_assert (priv->internal_win_id == hWnd);
 
-    g_assert (priv->gl_context == wglGetCurrentContext ());
+    g_assert (!wglGetCurrentContext() || priv->gl_context == wglGetCurrentContext ());
 
     switch (uMsg) {
 
       case WM_SIZE:
       {
-        if (priv->resize_cb)
+        if (priv->resize_cb) {
           priv->resize_cb (priv->resize_data, LOWORD (lParam), HIWORD (lParam));
+        }
         break;
       }
 

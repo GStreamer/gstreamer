@@ -169,7 +169,7 @@ gst_gl_filter_src_query (GstPad * pad, GstQuery * query)
         /* this gl filter is a sink in terms of the gl chain */
         gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER, filter->display, NULL);
       } else {
-        /* at least one gl element is before in our gl chain */
+        /* at least one gl element is after in our gl chain */
         res = g_strcmp0 (gst_element_get_name (parent), gst_structure_get_name (structure)) == 0;
       }
       if (!res)
@@ -222,11 +222,13 @@ gst_gl_filter_start (GstBaseTransform * bt)
   if (isPerformed) {
     const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
     if (G_VALUE_HOLDS_POINTER (id_value))
-      /* at least one gl element is before in our gl chain */
+      /* at least one gl element is after in our gl chain */
       filter->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else
+    else {
       /* this gl filter is a sink in terms of the gl chain */
       filter->display = gst_gl_display_new ();
+      gst_gl_display_create_context (filter->display, 0);
+    }
   }
 
   gst_query_unref (query);

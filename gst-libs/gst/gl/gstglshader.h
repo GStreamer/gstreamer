@@ -99,6 +99,7 @@ void gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * n
   GLsizei count, GLboolean transpose, const GLfloat* value);
 
 GLint gst_gl_shader_get_attribute_location (GstGLShader *shader, const gchar *name);
+void gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index, const gchar * name);
 
 G_END_DECLS
 

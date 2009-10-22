@@ -95,6 +95,7 @@
 #define glUniformMatrix4fvARB glUniformMatrix4fv
 #define glGetUniformLocationARB glGetUniformLocation
 #define glGetAttribLocationARB glGetAttribLocation
+#define glBindAttribLocationARB glBindAttribLocation
 
 /* UNSUPPORTED */
 
