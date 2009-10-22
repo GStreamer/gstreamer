@@ -475,7 +475,7 @@ static GstFlowReturn
 gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudioRate *audiorate;
-  GstClockTime in_time, in_duration, in_stop, run_time;
+  GstClockTime in_time, in_duration, run_time;
   guint64 in_offset, in_offset_end, in_samples;
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -522,7 +522,6 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   /* get duration from the size because we can and it's more accurate */
   in_duration =
       gst_util_uint64_scale_int_round (in_samples, GST_SECOND, audiorate->rate);
-  in_stop = in_time + in_duration;
 
   /* Figure out the total accumulated segment time. */
   run_time = in_time + audiorate->src_segment.accum;
