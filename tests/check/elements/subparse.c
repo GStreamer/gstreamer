@@ -627,6 +627,23 @@ GST_START_TEST (test_subviewer2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_dks)
+{
+  SubParseInputChunk dks_input[] = {
+    {
+          "[00:00:07]THERE IS A PLACE ON EARTH WHERE IT[br]IS STILL THE MORNING OF LIFE...\n[00:00:12]\n",
+          7 * GST_SECOND, 12 * GST_SECOND,
+        "THERE IS A PLACE ON EARTH WHERE IT\nIS STILL THE MORNING OF LIFE..."}, {
+          "[00:00:13]AND THE GREAT HERDS RUN FREE.[br]SO WHAT?!\n[00:00:15]\n",
+          13 * GST_SECOND, 15 * GST_SECOND,
+        "AND THE GREAT HERDS RUN FREE.\nSO WHAT?!"}
+  };
+
+  do_test (dks_input, G_N_ELEMENTS (dks_input), "text/plain");
+}
+
+GST_END_TEST;
+
 #ifndef GST_DISABLE_XML
 GST_START_TEST (test_sami)
 {
@@ -692,6 +709,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_mpl2);
   tcase_add_test (tc_chain, test_subviewer);
   tcase_add_test (tc_chain, test_subviewer2);
+  tcase_add_test (tc_chain, test_dks);
 #ifndef GST_DISABLE_XML
   tcase_add_test (tc_chain, test_sami);
 #endif

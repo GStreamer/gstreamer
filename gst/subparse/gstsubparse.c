@@ -65,13 +65,14 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami; "
-        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2")
+        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
+        "application/x-subtitle-dks")
     );
 #else
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-subtitle")
+    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-dks")
     );
 #endif
 
@@ -390,6 +391,8 @@ gst_sub_parse_get_format_description (GstSubParseFormat format)
       return "MPL2";
     case GST_SUB_PARSE_FORMAT_SUBVIEWER:
       return "SubViewer";
+    case GST_SUB_PARSE_FORMAT_DKS:
+      return "DKS";
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       break;
@@ -933,7 +936,7 @@ parse_subrip (ParserState * state, const gchar * line)
 }
 
 static void
-subviewer_unescape_newlines (gchar * read)
+unescape_newlines_br (gchar * read)
 {
   gchar *write = read;
 
@@ -1007,7 +1010,7 @@ parse_subviewer (ParserState * state, const gchar * line)
       g_string_append (state->buf, line);
       if (strlen (line) == 0) {
         ret = g_strdup (state->buf->str);
-        subviewer_unescape_newlines (ret);
+        unescape_newlines_br (ret);
         strip_trailing_newlines (ret);
         g_string_truncate (state->buf, 0);
         state->state = 0;
@@ -1071,6 +1074,73 @@ parse_mpsub (ParserState * state, const gchar * line)
   }
 }
 
+static const gchar *
+dks_skip_timestamp (const gchar * line)
+{
+  while (*line && *line != ']')
+    line++;
+  if (*line == ']')
+    line++;
+  return line;
+}
+
+static gchar *
+parse_dks (ParserState * state, const gchar * line)
+{
+  guint h, m, s;
+
+  switch (state->state) {
+    case 0:
+      /* Looking for the start time and text */
+      if (sscanf (line, "[%u:%u:%u]", &h, &m, &s) == 3) {
+        const gchar *text;
+        state->start_time = (((guint64) h) * 3600 + m * 60 + s) * GST_SECOND;
+        text = dks_skip_timestamp (line);
+        if (*text) {
+          state->state = 1;
+          g_string_append (state->buf, text);
+        }
+      }
+      return NULL;
+    case 1:
+    {
+      gint64 clip_start = 0, clip_stop = 0;
+      gboolean in_seg;
+      gchar *ret;
+
+      /* Looking for the end time */
+      if (sscanf (line, "[%u:%u:%u]", &h, &m, &s) == 3) {
+        state->state = 0;
+        state->duration = (((guint64) h) * 3600 + m * 60 + s) * GST_SECOND -
+            state->start_time;
+      } else {
+        GST_WARNING ("Failed to parse subtitle end time");
+        return NULL;
+      }
+
+      /* Check if this subtitle is out of the current segment */
+      in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
+          state->start_time, state->start_time + state->duration,
+          &clip_start, &clip_stop);
+
+      if (!in_seg) {
+        return NULL;
+      }
+
+      state->start_time = clip_start;
+      state->duration = clip_stop - clip_start;
+
+      ret = g_strdup (state->buf->str);
+      g_string_truncate (state->buf, 0);
+      unescape_newlines_br (ret);
+      return ret;
+    }
+    default:
+      g_assert_not_reached ();
+      return NULL;
+  }
+}
+
 static void
 parser_state_init (ParserState * state)
 {
@@ -1109,6 +1179,7 @@ typedef enum
   GST_SUB_PARSE_REGEX_UNKNOWN = 0,
   GST_SUB_PARSE_REGEX_MDVDSUB = 1,
   GST_SUB_PARSE_REGEX_SUBRIP = 2,
+  GST_SUB_PARSE_REGEX_DKS = 3,
 } GstSubParseRegex;
 
 static gpointer
@@ -1135,6 +1206,14 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
         g_error_free (gerr);
       }
       break;
+    case GST_SUB_PARSE_REGEX_DKS:
+      result = (gpointer) g_regex_new ("^\[[0-9]+:[0-9]+:[0-9]+].*",
+          0, 0, &gerr);
+      if (result == NULL) {
+        g_warning ("Compilation of dks regex failed: %s", gerr->message);
+        g_error_free (gerr);
+      }
+      break;
     default:
       GST_WARNING ("Trying to allocate regex of unknown type %u", regtype);
   }
@@ -1154,9 +1233,11 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
 
   static GOnce mdvd_rx_once = G_ONCE_INIT;
   static GOnce subrip_rx_once = G_ONCE_INIT;
+  static GOnce dks_rx_once = G_ONCE_INIT;
 
   GRegex *mdvd_grx;
   GRegex *subrip_grx;
+  GRegex *dks_grx;
 
   g_once (&mdvd_rx_once,
       (GThreadFunc) gst_sub_parse_data_format_autodetect_regex_once,
@@ -1164,9 +1245,13 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
   g_once (&subrip_rx_once,
       (GThreadFunc) gst_sub_parse_data_format_autodetect_regex_once,
       (gpointer) GST_SUB_PARSE_REGEX_SUBRIP);
+  g_once (&dks_rx_once,
+      (GThreadFunc) gst_sub_parse_data_format_autodetect_regex_once,
+      (gpointer) GST_SUB_PARSE_REGEX_DKS);
 
   mdvd_grx = (GRegex *) mdvd_rx_once.retval;
   subrip_grx = (GRegex *) subrip_rx_once.retval;
+  dks_grx = (GRegex *) dks_rx_once.retval;
 
   if (g_regex_match (mdvd_grx, match_str, 0, NULL) == TRUE) {
     GST_LOG ("MicroDVD (frame based) format detected");
@@ -1175,6 +1260,10 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
   if (g_regex_match (subrip_grx, match_str, 0, NULL) == TRUE) {
     GST_LOG ("SubRip (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBRIP;
+  }
+  if (g_regex_match (dks_grx, match_str, 0, NULL) == TRUE) {
+    GST_LOG ("DKS (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_DKS;
   }
 
   if (!strncmp (match_str, "FORMAT=TIME", 11)) {
@@ -1252,6 +1341,9 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_MPL2:
       self->parse_line = parse_mpl2;
       return gst_caps_new_simple ("text/x-pango-markup", NULL);
+    case GST_SUB_PARSE_FORMAT_DKS:
+      self->parse_line = parse_dks;
+      return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_SUBVIEWER:
       self->parse_line = parse_subviewer;
       return gst_caps_new_simple ("text/plain", NULL);
@@ -1579,6 +1671,9 @@ static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
 #endif
 
+static GstStaticCaps dks_caps = GST_STATIC_CAPS ("application/x-subtitle-dks");
+#define DKS_CAPS (gst_static_caps_get (&dks_caps))
+
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
@@ -1680,6 +1775,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("SubViewer format detected");
       caps = SUB_CAPS;
       break;
+    case GST_SUB_PARSE_FORMAT_DKS:
+      GST_DEBUG ("DKS format detected");
+      caps = DKS_CAPS;
+      break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       GST_DEBUG ("no subtitle format detected");
@@ -1694,7 +1793,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", "smi", "txt",
-    NULL
+    "dks", NULL
   };
 
   GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
