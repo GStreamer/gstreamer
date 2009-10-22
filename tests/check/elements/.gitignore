@@ -36,6 +36,7 @@ rgvolume
 rtp-payloading
 rtpbin
 rtpbin_buffer_list
+rtpjitterbuffer
 souphttpsrc
 spectrum
 sunaudio

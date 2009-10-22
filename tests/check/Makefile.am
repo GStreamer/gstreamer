@@ -114,6 +114,7 @@ check_PROGRAMS = \
 	elements/rtp-payloading \
 	elements/rtpbin \
 	elements/rtpbin_buffer_list \
+	elements/rtpjitterbuffer \
 	elements/spectrum \
 	elements/udpsink \
 	elements/videocrop \

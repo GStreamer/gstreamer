@@ -1522,6 +1522,7 @@ again:
     if (!clock) {
       GST_OBJECT_UNLOCK (jitterbuffer);
       /* let's just push if there is no clock */
+      GST_DEBUG_OBJECT (jitterbuffer, "No clock, push right away");
       goto push_buffer;
     }
 
