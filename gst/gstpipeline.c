@@ -346,7 +346,6 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
-      GstClockTime new_base_time;
       GstClockTime now, start_time, last_start_time, delay;
       gboolean update_clock;
       GstClock *cur_clock;
@@ -407,20 +406,18 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
           gst_object_unref (clock);
 
         if (start_time != GST_CLOCK_TIME_NONE && now != GST_CLOCK_TIME_NONE) {
-          new_base_time = now - start_time + delay;
+          GstClockTime new_base_time = now - start_time + delay;
           GST_DEBUG_OBJECT (element,
               "start_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
               ", base_time %" GST_TIME_FORMAT,
               GST_TIME_ARGS (start_time), GST_TIME_ARGS (now),
               GST_TIME_ARGS (new_base_time));
-        } else
-          new_base_time = GST_CLOCK_TIME_NONE;
 
-        if (new_base_time != GST_CLOCK_TIME_NONE)
           gst_element_set_base_time (element, new_base_time);
-        else
+        } else {
           GST_DEBUG_OBJECT (pipeline,
               "NOT adjusting base_time because start_time is NONE");
+        }
       } else {
         GST_DEBUG_OBJECT (pipeline,
             "NOT adjusting base_time because we selected one before");
