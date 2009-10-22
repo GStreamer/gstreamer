@@ -2431,7 +2431,9 @@ gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
   return hdr;
 }
 
-#define DIRAC_PARSE_CODE_SEQUENCE 0x00
+#define DIRAC_PARSE_CODE_SEQUENCE_HEADER 0x00
+#define DIRAC_PARSE_CODE_END_OF_SEQUENCE 0x10
+#define DIRAC_PARSE_CODE_IS_PICTURE(x) ((x & 0x08) != 0)
 
 static GstBuffer *
 gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
@@ -2444,14 +2446,14 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   guint8 parse_code;
   guint32 next_parse_offset;
   GstBuffer *ret = NULL;
-  gboolean is_picture = FALSE;
+  gboolean is_muxing_unit = FALSE;
 
   if (GST_BUFFER_SIZE (buf) < 13) {
     gst_buffer_unref (buf);
     return ret;
   }
 
-  /* Check if this buffer contains a picture packet */
+  /* Check if this buffer contains a picture or end-of-sequence packet */
   while (size >= 13) {
     if (GST_READ_UINT32_BE (data) != 0x42424344 /* 'BBCD' */ ) {
       gst_buffer_unref (buf);
@@ -2459,13 +2461,14 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
     }
 
     parse_code = GST_READ_UINT8 (data + 4);
-    if (parse_code == DIRAC_PARSE_CODE_SEQUENCE) {
+    if (parse_code == DIRAC_PARSE_CODE_SEQUENCE_HEADER) {
       if (ctx->dirac_unit) {
         gst_buffer_unref (ctx->dirac_unit);
         ctx->dirac_unit = NULL;
       }
-    } else if (parse_code & 0x08) {
-      is_picture = TRUE;
+    } else if (DIRAC_PARSE_CODE_IS_PICTURE (parse_code) ||
+        parse_code == DIRAC_PARSE_CODE_END_OF_SEQUENCE) {
+      is_muxing_unit = TRUE;
       break;
     }
 
@@ -2483,7 +2486,7 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   else
     ctx->dirac_unit = gst_buffer_ref (buf);
 
-  if (is_picture) {
+  if (is_muxing_unit) {
     ret = gst_buffer_make_metadata_writable (ctx->dirac_unit);
     ctx->dirac_unit = NULL;
     gst_buffer_copy_metadata (ret, buf,
