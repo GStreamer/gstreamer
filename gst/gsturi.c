@@ -517,11 +517,8 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 }
 
 static gint
-sort_by_rank (gconstpointer a, gconstpointer b)
+sort_by_rank (GstPluginFeature * first, GstPluginFeature * second)
 {
-  GstPluginFeature *first = GST_PLUGIN_FEATURE (a);
-  GstPluginFeature *second = GST_PLUGIN_FEATURE (b);
-
   return gst_plugin_feature_get_rank (second) -
       gst_plugin_feature_get_rank (first);
 }
@@ -603,7 +600,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
     return NULL;
   }
 
-  possibilities = g_list_sort (possibilities, sort_by_rank);
+  possibilities = g_list_sort (possibilities, (GCompareFunc) sort_by_rank);
   walk = possibilities;
   while (walk) {
     if ((ret =
