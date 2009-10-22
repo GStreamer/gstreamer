@@ -1158,8 +1158,6 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
 {
   cairo_t *cr;
   cairo_surface_t *surface;
-  cairo_t *cr_shadow;
-  cairo_surface_t *surface_shadow;
   PangoRectangle ink_rect, logical_rect;
   cairo_matrix_t cairo_matrix;
   int width, height;
@@ -1227,67 +1225,51 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   } else {
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
-  /* clear shadow surface */
-  surface_shadow = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-  cr_shadow = cairo_create (surface_shadow);
 
-  cairo_set_operator (cr_shadow, CAIRO_OPERATOR_CLEAR);
-
-  cairo_paint (cr_shadow);
-  cairo_set_operator (cr_shadow, CAIRO_OPERATOR_OVER);
-
-  cairo_save (cr_shadow);
-  cairo_set_matrix (cr_shadow, &cairo_matrix);
-
-  cairo_save (cr_shadow);
-  /* draw shadow text */
-  cairo_set_source_rgba (cr_shadow, 0.0, 0.0, 0.0, 0.5);
-  cairo_translate (cr_shadow, overlay->shadow_offset, overlay->shadow_offset);
-  pango_cairo_show_layout (cr_shadow, overlay->layout);
-  cairo_restore (cr_shadow);
-
-  /* draw outline text */
-  cairo_save (cr_shadow);
-  cairo_set_source_rgb (cr_shadow, 0.0, 0.0, 0.0);
-  cairo_set_line_width (cr_shadow, overlay->outline_offset);
-  pango_cairo_layout_path (cr_shadow, overlay->layout);
-  cairo_stroke (cr_shadow);
-  cairo_restore (cr_shadow);
-
-  if (overlay->want_shading) {
-    cairo_paint_with_alpha (cr_shadow, overlay->shading_value);
-  }
-  cairo_restore (cr_shadow);
-  cairo_destroy (cr_shadow);
-
-  /* clear image surface */
+  /* reallocate surface */
   overlay->text_image = g_realloc (overlay->text_image, 4 * width * height);
 
   surface = cairo_image_surface_create_for_data (overlay->text_image,
       CAIRO_FORMAT_ARGB32, width, height, width * 4);
   cr = cairo_create (surface);
+
+  /* clear surface */
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
+
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-  /* set default color */
-  cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+  /* apply transformations */
+  cairo_set_matrix (cr, &cairo_matrix);
 
+  /* draw text to cairo path */
+  pango_cairo_layout_path (cr, overlay->layout);
+
+  /* draw shadow text */
   cairo_save (cr);
-  cairo_set_matrix (cr, &cairo_matrix);
-  /* draw text */
-  cairo_set_matrix (cr, &cairo_matrix);
-  /* draw text */
-  pango_cairo_show_layout (cr, overlay->layout);
+  cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
+  cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
+  cairo_fill_preserve (cr);
   cairo_restore (cr);
 
-  /* composite outline, shadow, and text */
-  cairo_set_operator (cr, CAIRO_OPERATOR_DEST_OVER);
-  cairo_set_source_surface (cr, surface_shadow, 0.0, 0.0);
-  cairo_paint (cr);
+  /* draw outline text */
+  cairo_save (cr);
+  cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+  cairo_set_line_width (cr, overlay->outline_offset);
+  cairo_stroke_preserve (cr);
+  cairo_restore (cr);
+
+  if (overlay->want_shading) {
+    cairo_paint_with_alpha (cr, overlay->shading_value);
+  }
+
+  /* draw text */
+  cairo_save (cr);
+  cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+  cairo_fill (cr);
+  cairo_restore (cr);
 
   cairo_destroy (cr);
-  cairo_surface_destroy (surface_shadow);
   cairo_surface_destroy (surface);
   overlay->image_width = width;
   overlay->image_height = height;
