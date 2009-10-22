@@ -101,8 +101,8 @@ static GstCaps *gst_dshowvideosrc_getcaps_from_streamcaps (GstDshowVideoSrc *
     src, IPin * pin);
 static GstCaps *gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc *
     src, IPin * pin);
-static gboolean gst_dshowvideosrc_push_buffer (byte * buffer, long size,
-    gpointer src_object, UINT64 start, UINT64 stop);
+static gboolean gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size,
+    gpointer src_object, GstClockTime duration);
 
 static void
 gst_dshowvideosrc_init_interfaces (GType type)
@@ -1005,11 +1005,11 @@ gst_dshowvideosrc_getcaps_from_enum_mediatypes (GstDshowVideoSrc * src, IPin * p
 }
 
 static gboolean
-gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
-    UINT64 start, UINT64 stop)
+gst_dshowvideosrc_push_buffer (guint8 * buffer, guint size, gpointer src_object,
+    GstClockTime duration)
 {
   GstDshowVideoSrc *src = GST_DSHOWVIDEOSRC (src_object);
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   IPin *pPin = NULL;
   HRESULT hres = S_FALSE;
   AM_MEDIA_TYPE *pMediaType = NULL;
@@ -1022,9 +1022,13 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
   buf = gst_buffer_new_and_alloc (size);
 
   GST_BUFFER_SIZE (buf) = size;
-  GST_BUFFER_TIMESTAMP (buf) = gst_clock_get_time (GST_ELEMENT (src)->clock);
-  GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (src)->base_time;
-  GST_BUFFER_DURATION (buf) = stop - start;
+
+  GstClock *clock = gst_element_get_clock (GST_ELEMENT (src));
+  GST_BUFFER_TIMESTAMP (buf) =
+    GST_CLOCK_DIFF (gst_element_get_base_time (GST_ELEMENT (src)), gst_clock_get_time (clock));
+  gst_object_unref (clock);
+
+  GST_BUFFER_DURATION (buf) = duration;
 
   if (src->is_rgb) {
     /* FOR RGB directshow decoder will return bottom-up BITMAP
@@ -1044,7 +1048,7 @@ gst_dshowvideosrc_push_buffer (byte * buffer, long size, gpointer src_object,
 
   GST_DEBUG ("push_buffer => pts %" GST_TIME_FORMAT "duration %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (stop - start));
+      GST_TIME_ARGS (duration));
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));

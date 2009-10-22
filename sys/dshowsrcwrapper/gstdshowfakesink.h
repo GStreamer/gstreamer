@@ -30,8 +30,8 @@ static const GUID CLSID_DshowFakeSink =
     0x73}
 };
 
-typedef bool (*push_buffer_func) (byte * buffer, long size, gpointer src_object,
-    UINT64 start, UINT64 stop);
+typedef bool (*push_buffer_func) (guint8 * buffer, guint size, gpointer src_object,
+    GstClockTime duration);
 
 class CDshowFakeSink:public CBaseRenderer
 {
