@@ -112,7 +112,7 @@ static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
 static GtkWidget *skip_checkbox, *video_window, *download_checkbox;
-static GtkWidget *rate_spinbutton;
+static GtkWidget *buffer_checkbox, *rate_spinbutton;
 
 static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
 
@@ -1740,6 +1740,15 @@ download_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+buffer_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, 8, state);
+}
+
+static void
 clear_streams (GstElement * pipeline)
 {
   gint i;
@@ -2759,6 +2768,7 @@ main (int argc, char **argv)
     text_checkbox = gtk_check_button_new_with_label ("Text");
     mute_checkbox = gtk_check_button_new_with_label ("Mute");
     download_checkbox = gtk_check_button_new_with_label ("Download");
+    buffer_checkbox = gtk_check_button_new_with_label ("Buffer");
     volume_label = gtk_label_new ("Volume");
     volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
@@ -2768,6 +2778,7 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), download_checkbox, TRUE, TRUE, 2);
+    gtk_box_pack_start (GTK_BOX (boxes), buffer_checkbox, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_label, TRUE, TRUE, 2);
     gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
@@ -2776,6 +2787,7 @@ main (int argc, char **argv)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (text_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_checkbox), FALSE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (download_checkbox), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (buffer_checkbox), FALSE);
     g_signal_connect (G_OBJECT (vis_checkbox), "toggled",
         G_CALLBACK (vis_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (audio_checkbox), "toggled",
@@ -2788,6 +2800,8 @@ main (int argc, char **argv)
         G_CALLBACK (mute_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (download_checkbox), "toggled",
         G_CALLBACK (download_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (buffer_checkbox), "toggled",
+        G_CALLBACK (buffer_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
     /* playbin2 panel for snapshot */
