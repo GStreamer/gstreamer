@@ -1282,9 +1282,10 @@ make_decoder (GstURIDecodeBin * decoder)
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
 
-  if (!decoder->is_download) {
+  if (!decoder->is_stream) {
     /* propagate the use-buffering property but only when we are not already
-     * doing download buffering. */
+     * doing stream buffering with queue2. FIXME, we might want to do stream
+     * buffering with the multiqueue buffering instead of queue2. */
     g_object_set (decodebin, "use-buffering", decoder->use_buffering, NULL);
 
     if (decoder->use_buffering) {
@@ -1323,6 +1324,8 @@ no_decodebin:
   }
 }
 
+/* signaled when we have a stream and we need to configure the download
+ * buffering or regular buffering */
 static void
 type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstURIDecodeBin * decoder)
