@@ -204,11 +204,24 @@ enum
   LAST_SIGNAL
 };
 
+/* automatic sizes, while prerolling we buffer up to 2MB, we ignore time
+ * and buffers in this case. */
+#define AUTO_PREROLL_SIZE_BYTES     2 * 1024 * 1024
+#define AUTO_PREROLL_SIZE_BUFFERS   0
+#define AUTO_PREROLL_SIZE_TIME      0
+
+/* whan playing, keep a max of 2MB of data but try to keep the number of buffers
+ * as low as possible (try to aim for 5 buffers) */
+#define AUTO_PLAY_SIZE_BYTES        2 * 1024 * 1024
+#define AUTO_PLAY_SIZE_BUFFERS      5
+#define AUTO_PLAY_SIZE_TIME         0
+
 #define DEFAULT_SUBTITLE_ENCODING NULL
 #define DEFAULT_USE_BUFFERING     FALSE
 #define DEFAULT_LOW_PERCENT       10
 #define DEFAULT_HIGH_PERCENT      99
-#define DEFAULT_MAX_SIZE_BYTES    2 * 1024 * 1024
+/* by default we use the automatic values above */
+#define DEFAULT_MAX_SIZE_BYTES    0
 #define DEFAULT_MAX_SIZE_BUFFERS  0
 #define DEFAULT_MAX_SIZE_TIME     0
 
@@ -744,43 +757,36 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * Max amount amount of bytes in the queue (0=automatic).
    * 
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (bytes)",
-          "Max. amount of bytes in the queue (0=automatic)"
-          " (not implemented)", 0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
+          "Max. amount of bytes in the queue (0=automatic)",
+          0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstDecodebin2:max-size-buffers
    *
    * Max amount amount of buffers in the queue (0=automatic).
    * 
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
-          "Max. number of buffers in the queue (0=automatic)"
-          " (not implemented)", 0, G_MAXUINT,
-          DEFAULT_MAX_SIZE_BUFFERS,
+          "Max. number of buffers in the queue (0=automatic)",
+          0, G_MAXUINT, DEFAULT_MAX_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstDecodebin2:max-size-time
    *
    * Max amount amount of time in the queue (in ns, 0=automatic).
    * 
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
-          "Max. amount of data in the queue (in ns, 0=automatic)"
-          " (not implemented)", 0, G_MAXUINT64,
+          "Max. amount of data in the queue (in ns, 0=automatic)",
+          0, G_MAXUINT64,
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->autoplug_continue =
@@ -2240,6 +2246,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 {
   GstDecodeGroup *group = g_slice_new0 (GstDecodeGroup);
   GstElement *mq;
+  guint max_bytes, max_buffers;
+  guint64 max_time;
 
   GST_DEBUG_OBJECT (dbin, "Creating new group %p with parent chain %p", group,
       parent);
@@ -2257,9 +2265,18 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
     return NULL;
   }
 
+  /* takes queue limits, initially we only queue up up to the max bytes limit,
+   * with a default of 2MB. */
+  if ((max_bytes = dbin->max_size_bytes) == 0)
+    max_bytes = AUTO_PREROLL_SIZE_BYTES;
+  if ((max_buffers = dbin->max_size_buffers) == 0)
+    max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
+  if ((max_time = dbin->max_size_time) == 0)
+    max_time = AUTO_PREROLL_SIZE_TIME;
+
   g_object_set (G_OBJECT (mq),
-      "max-size-bytes", (guint) 2 * 1024 * 1024,
-      "max-size-time", (guint64) 0, "max-size-buffers", (guint) 0, NULL);
+      "max-size-bytes", max_bytes, "max-size-time", max_time,
+      "max-size-buffers", max_buffers, NULL);
 
   group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
@@ -2859,6 +2876,9 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
 {
   GstDecodeGroup *group;
   GList *l;
+  guint max_bytes, max_buffers;
+  guint64 max_time;
+  GstDecodeBin *dbin;
 
   if (chain->deadend)
     return TRUE;
@@ -2876,14 +2896,25 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
   if (!group->no_more_pads && !group->overrun)
     return FALSE;
 
+  dbin = group->dbin;
+
   /* update runtime limits. At runtime, we try to keep the amount of buffers
    * in the queues as low as possible (but at least 5 buffers). */
+  if ((max_bytes = dbin->max_size_bytes) == 0)
+    max_bytes = AUTO_PLAY_SIZE_BYTES;
+  if ((max_buffers = dbin->max_size_buffers) == 0)
+    max_buffers = AUTO_PLAY_SIZE_BUFFERS;
+  if ((max_time = dbin->max_size_time) == 0)
+    max_time = AUTO_PLAY_SIZE_TIME;
+
   g_object_set (G_OBJECT (group->multiqueue),
-      "max-size-bytes", 2 * 1024 * 1024, "max-size-buffers", 5, NULL);
+      "max-size-bytes", max_bytes, "max-size-buffers", max_buffers,
+      "max-size-time", max_time, NULL);
+
   /* we can now disconnect any overrun signal, which is used to expose the
    * group. */
   if (group->overrunsig) {
-    GST_LOG_OBJECT (group->dbin, "Disconnecting overrun");
+    GST_LOG_OBJECT (dbin, "Disconnecting overrun");
     g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
     group->overrunsig = 0;
   }
