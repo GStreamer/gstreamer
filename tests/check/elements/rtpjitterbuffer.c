@@ -270,7 +270,9 @@ rtpjitterbuffer_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_push_forward_seq);
+  if (0) {
+    tcase_add_test (tc_chain, test_push_forward_seq);
+  }
 #if 0
   /* these don't work yet, buffers get dropped or never arrive in the buffers
    * list */
