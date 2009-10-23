@@ -340,7 +340,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use Buffering",
-          "Perform buffering on demuxed/parsed media (not implemented)",
+          "Perform buffering on demuxed/parsed media",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
