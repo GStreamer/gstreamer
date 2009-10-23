@@ -634,7 +634,7 @@ gst_schro_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
       (int) frame->system_frame_number,
       (int) frame->decode_frame_number, pt, dt, delay, dist);
 
-  granulepos_hi = (((uint64_t) pt - delay) << 9) | ((dist >> 8));
+  granulepos_hi = (((guint64) pt - delay) << 9) | ((dist >> 8));
   granulepos_low = (delay << 9) | (dist & 0xff);
   GST_DEBUG ("granulepos %" G_GINT64_FORMAT ":%" G_GINT64_FORMAT, granulepos_hi,
       granulepos_low);
