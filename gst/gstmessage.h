@@ -146,10 +146,10 @@ typedef enum
 /* the lock is used to handle the synchronous handling of messages,
  * the emiting thread is block until the handling thread processed
  * the message using this mutex/cond pair */
-#define GST_MESSAGE_GET_LOCK(message)   (GST_MESSAGE(message)->lock)
+#define GST_MESSAGE_GET_LOCK(message)   (GST_MESSAGE_CAST(message)->lock)
 #define GST_MESSAGE_LOCK(message)       g_mutex_lock(GST_MESSAGE_GET_LOCK(message))
 #define GST_MESSAGE_UNLOCK(message)     g_mutex_unlock(GST_MESSAGE_GET_LOCK(message))
-#define GST_MESSAGE_COND(message)       (GST_MESSAGE(message)->cond)
+#define GST_MESSAGE_COND(message)       (GST_MESSAGE_CAST(message)->cond)
 #define GST_MESSAGE_WAIT(message)       g_cond_wait(GST_MESSAGE_COND(message),GST_MESSAGE_GET_LOCK(message))
 #define GST_MESSAGE_SIGNAL(message)     g_cond_signal(GST_MESSAGE_COND(message))
 
@@ -159,7 +159,7 @@ typedef enum
  *
  * Get the #GstMessageType of @message.
  */
-#define GST_MESSAGE_TYPE(message)       (GST_MESSAGE(message)->type)
+#define GST_MESSAGE_TYPE(message)       (GST_MESSAGE_CAST(message)->type)
 /**
  * GST_MESSAGE_TYPE_NAME:
  * @message: a #GstMessage
@@ -176,14 +176,14 @@ typedef enum
  * Get the timestamp of @message. This is the timestamp when the message
  * was created.
  */
-#define GST_MESSAGE_TIMESTAMP(message)  (GST_MESSAGE(message)->timestamp)
+#define GST_MESSAGE_TIMESTAMP(message)  (GST_MESSAGE_CAST(message)->timestamp)
 /**
  * GST_MESSAGE_SRC:
  * @message: a #GstMessage
  *
  * Get the object that posted @message.
  */
-#define GST_MESSAGE_SRC(message)        (GST_MESSAGE(message)->src)
+#define GST_MESSAGE_SRC(message)        (GST_MESSAGE_CAST(message)->src)
 /**
  * GST_MESSAGE_SRC_NAME:
  * @message: a #GstMessage
@@ -337,7 +337,7 @@ G_INLINE_FUNC GstMessage * gst_message_copy (const GstMessage * msg);
 static inline GstMessage *
 gst_message_copy (const GstMessage * msg)
 {
-  return GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT_CAST (msg)));
+  return GST_MESSAGE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (msg)));
 }
 
 /**
@@ -349,7 +349,7 @@ gst_message_copy (const GstMessage * msg)
  *
  * MT safe
  */
-#define         gst_message_make_writable(msg)  GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
+#define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
 /* identifiers for events and messages */
 guint32         gst_message_get_seqnum          (GstMessage *message);
