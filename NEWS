@@ -1,4 +1,16 @@
-This is GStreamer Bad Plug-ins 0.10.15, "Ending the war"
+This is GStreamer Bad Plug-ins 0.10.16, "Sensible Precaution"
+
+Changes since 0.10.15:
+    
+      * Fix various bugs in the 0.10.15 release
+      * Fix a deadlock in starting DVD
+      * Fix compilation problems
+      * Allow libneon versions >= 29.x
+
+Bugs fixed since 0.10.15:
+     
+      * 599272 : faac check fails, undefined symbol
+      * 599332 : [neonhttpsrc] fails to compile with libneon 0.29.0
 
 Changes since 0.10.14:
     

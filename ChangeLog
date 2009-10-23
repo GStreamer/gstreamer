@@ -1,9 +1,215 @@
-=== release 0.10.15 ===
+=== release 0.10.16 ===
 
-2009-10-21  Jan Schmidt <jan.schmidt@sun.com>
+2009-10-23  Jan Schmidt <jan.schmidt@sun.com>
 
 	* configure.ac:
-	  releasing 0.10.15, "Ending the war"
+	  releasing 0.10.16, "Sensible Precaution"
+
+2009-10-23 11:00:53 +0300  Kaj-Michael Lang <milang@tal.org>
+
+	* ext/zbar/gstzbar.c:
+	  Fix start/stop typo
+
+2009-10-23 10:48:25 +0100  Thomas Green <tom78999@gmail.com>
+
+	* configure.ac:
+	  configure: also build neonhttpsrc with libneon-29.x
+	  Fixes #599332.
+
+2009-10-23 10:18:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/schroedinger/gstschroenc.c:
+	  schroenc: Use guint64 instead of uint64_t. Fixes #599355
+
+2009-10-22 14:00:10 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.cpp:
+	* sys/dshowsrcwrapper/gstdshowfakesink.cpp:
+	* sys/dshowsrcwrapper/gstdshowfakesink.h:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.cpp:
+	  Revert "dshowsrcwrapper: cleanup push buffer callback"
+	  gst-plugins-bad is still frozen for general commits.
+	  This reverts commit 2e4131926f2726fe8fee5c39dd9357f14764d0cb.
+
+2009-10-22 14:26:30 +0200  Julien Isorce <julien.isorce@gmail.com>
+
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.cpp:
+	* sys/dshowsrcwrapper/gstdshowfakesink.cpp:
+	* sys/dshowsrcwrapper/gstdshowfakesink.h:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.cpp:
+	  dshowsrcwrapper: cleanup push buffer callback
+
+2009-10-22 11:43:17 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegpsmux/Makefile.am:
+	  mpegpsmux: some minor build fixes
+	  CLFAGS -> CFLAGS, and fix order of variables while we're at it.
+
+2009-10-22 00:50:37 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/autoconvert/gstautoconvert.c:
+	  autoconvert: Take the object lock fewer times
+	  When starting up and creating the list of element factories, only
+	  take the object lock twice instead of 3 times.
+
+2009-10-21 23:06:56 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/autoconvert/gstautoconvert.c:
+	  autoconvert: Don't hold the object lock when pushing
+	  When pushing out cached events, don't hold the object lock. Avoids
+	  deadlocks starting up DVD playback.
+
+2009-10-22 11:10:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/faac/Makefile.am:
+	  faac: Link with libgstbase for GstAdapter
+	  Fixes bug #599272.
+
+=== release 0.10.15 ===
+
+2009-10-21 17:14:34 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-aacparse.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-aiffparse.xml:
+	* docs/plugins/inspect/plugin-alsaspdif.xml:
+	* docs/plugins/inspect/plugin-amrparse.xml:
+	* docs/plugins/inspect/plugin-apex.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-cdaudio.xml:
+	* docs/plugins/inspect/plugin-cdxaparse.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-dc1394.xml:
+	* docs/plugins/inspect/plugin-dccp.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dfbvideosink.xml:
+	* docs/plugins/inspect/plugin-dirac.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-fbdevsink.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-freeze.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-h264parse.xml:
+	* docs/plugins/inspect/plugin-hdvparse.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-kate.xml:
+	* docs/plugins/inspect/plugin-ladspa.xml:
+	* docs/plugins/inspect/plugin-legacyresample.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-metadata.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpeg4videoparse.xml:
+	* docs/plugins/inspect/plugin-mpegdemux2.xml:
+	* docs/plugins/inspect/plugin-mpegpsmux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpegvideoparse.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-musicbrainz.xml:
+	* docs/plugins/inspect/plugin-mve.xml:
+	* docs/plugins/inspect/plugin-mxf.xml:
+	* docs/plugins/inspect/plugin-mythtv.xml:
+	* docs/plugins/inspect/plugin-nas.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-nsfdec.xml:
+	* docs/plugins/inspect/plugin-nuvdemux.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-qtmux.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-real.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rsvg.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-selector.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-sndfile.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spcdec.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-stereo.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-tta.xml:
+	* docs/plugins/inspect/plugin-valve.xml:
+	* docs/plugins/inspect/plugin-vcdsrc.xml:
+	* docs/plugins/inspect/plugin-videomeasure.xml:
+	* docs/plugins/inspect/plugin-videosignal.xml:
+	* docs/plugins/inspect/plugin-vmnc.xml:
+	* docs/plugins/inspect/plugin-wildmidi.xml:
+	* docs/plugins/inspect/plugin-xdgmime.xml:
+	* docs/plugins/inspect/plugin-xvid.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  release 0.10.15
+
+2009-10-21 16:51:09 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2009-10-16 14:37:02 -0700  Michael Smith <msmith@songbirdnest.com>
 

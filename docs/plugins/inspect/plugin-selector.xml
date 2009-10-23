@@ -3,7 +3,7 @@
   <description>input/output stream selector elements</description>
   <filename>../../gst/selector/.libs/libgstselector.so</filename>
   <basename>libgstselector.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.16</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

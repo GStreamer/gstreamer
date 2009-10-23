@@ -3,7 +3,7 @@
   <description>Wildmidi Plugin</description>
   <filename>../../ext/timidity/.libs/libgstwildmidi.so</filename>
   <basename>libgstwildmidi.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.16</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

@@ -36,6 +36,17 @@ real live maintainer, or some actual wide use.
 
  <release>
   <Version>
+   <revision>0.10.16</revision>
+   <branch>0.10</branch>
+   <name>Sensible Precaution</name>
+   <created>2009-10-23</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.16.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.16.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.15</revision>
    <branch>0.10</branch>
    <name>Ending the war</name>

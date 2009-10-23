@@ -3,7 +3,7 @@
   <description>Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) demuxer and muxer</description>
   <filename>../../ext/metadata/.libs/libgstmetadata.so</filename>
   <basename>libgstmetadata.so</basename>
-  <version>0.10.15</version>
+  <version>0.10.16</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
