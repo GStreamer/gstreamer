@@ -1300,7 +1300,7 @@ AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
-  PKG_CHECK_MODULES(NEON, neon >= 0.26.0  neon <= 0.28.99, HAVE_NEON="yes", [
+  PKG_CHECK_MODULES(NEON, neon >= 0.26.0  neon <= 0.29.99, HAVE_NEON="yes", [
     HAVE_NEON="no"
     AC_MSG_RESULT(no)
   ])
