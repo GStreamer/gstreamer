@@ -715,14 +715,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * Activate buffering in decodebin2. This will instruct the multiqueues behind
    * decoders to emit BUFFERING messages.
 
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use Buffering",
-          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds"
-          " (not implemented)",
+          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
