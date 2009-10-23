@@ -2291,6 +2291,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   if (G_UNLIKELY (!group->multiqueue))
     goto missing_multiqueue;
 
+  g_object_set (mq, "use-buffering", dbin->use_buffering, NULL);
+
   /* configure queue sizes for preroll */
   decodebin_set_queue_size (dbin, mq, TRUE);
 
