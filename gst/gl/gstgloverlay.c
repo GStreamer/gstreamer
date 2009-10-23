@@ -213,23 +213,23 @@ gst_gl_overlay_draw_texture_video_on_png (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
-  size = (overlay->size_png) / 50.0;
-  posx = (overlay->pos_x_png - 50.0) / 50.0;
+  size = (overlay->size_png) / 50.0f;
+  posx = (overlay->pos_x_png - 50.0f) / 50.0f;
   posx =
-      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posx;
-  posy = (overlay->pos_y_png - 50.0) / 50.0;
+      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posx;
+  posy = (overlay->pos_y_png - 50.0f) / 50.0f;
   posy =
-      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posy;
+      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posy;
 
-  glTexCoord2f (0.0, 0.0);
+  glTexCoord2f (0.0f, 0.0f);
   glVertex2f (posx - (size / 2), posy - (size / 2));
-  glTexCoord2f (width, 0.0);
+  glTexCoord2f (width, 0.0f);
   glVertex2f (posx + (size / 2), posy - (size / 2));
   glTexCoord2f (width, height);
   glVertex2f (posx + (size / 2), posy + (size / 2));
-  glTexCoord2f (0.0, height);
+  glTexCoord2f (0.0f, height);
   glVertex2f (posx - (size / 2), posy + (size / 2));
 
   glEnd ();
@@ -242,15 +242,15 @@ gst_gl_overlay_draw_texture_video_on_png (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
-  size = (overlay->size_video) / 50.0;
-  posx = (overlay->pos_x_video - 50.0) / 50.0;
+  size = (overlay->size_video) / 50.0f;
+  posx = (overlay->pos_x_video - 50.0f) / 50.0f;
   posx =
-      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posx;
-  posy = (overlay->pos_y_video - 50.0) / 50.0;
+      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posx;
+  posy = (overlay->pos_y_video - 50.0f) / 50.0f;
   posy =
-      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posy;
+      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posy;
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (posx - (size / 2), posy - (size / 2));
@@ -282,15 +282,15 @@ gst_gl_overlay_draw_texture_png_on_video (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
-  size = (overlay->size_video) / 50.0;
-  posx = (overlay->pos_x_video - 50.0) / 50.0;
+  size = (overlay->size_video) / 50.0f;
+  posx = (overlay->pos_x_video - 50.0f) / 50.0f;
   posx =
-      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posx;
-  posy = (overlay->pos_y_video - 50.0) / 50.0;
+      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posx;
+  posy = (overlay->pos_y_video - 50.0f) / 50.0f;
   posy =
-      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posy;
+      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posy;
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (posx - (size / 2), posy - (size / 2));
@@ -319,17 +319,17 @@ gst_gl_overlay_draw_texture_png_on_video (GstGLOverlay * overlay, GLuint tex)
 
   glBegin (GL_QUADS);
 
-  size = (overlay->size_png) / 50.0;
-  posx = (overlay->pos_x_png - 50.0) / 50.0;
+  size = (overlay->size_png) / 50.0f;
+  posx = (overlay->pos_x_png - 50.0f) / 50.0f;
   posx =
-      (posx - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posx;
-  posy = (overlay->pos_y_png - 50.0) / 50.0;
+      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posx;
+  posy = (overlay->pos_y_png - 50.0f) / 50.0f;
   posy =
-      (posy - (size / 2) < -1.00) ? (-1.0 + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0 - size / 2) : posy;
+      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
+      1.00) ? (1.0f - size / 2) : posy;
 
-  glTexCoord2f (0.0, 0.0);
+  glTexCoord2f (0.0f, 0.0f);
   glVertex2f (posx - (size / 2), posy - (size / 2));
   glTexCoord2f (width, 0.0);
   glVertex2f (posx + (size / 2), posy - (size / 2));
@@ -354,11 +354,11 @@ gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
   overlay->pbuftexture = 0;
   overlay->width = 0;
   overlay->height = 0;
-  overlay->pos_x_png = 0.0;
-  overlay->pos_y_png = 0.0;
+  overlay->pos_x_png = 0;
+  overlay->pos_y_png = 0;
   overlay->size_png = 100;
-  overlay->pos_x_video = 0.0;
-  overlay->pos_y_video = 0.0;
+  overlay->pos_x_video = 0;
+  overlay->pos_y_video = 0;
   overlay->size_video = 100;
   overlay->video_top = FALSE;
 //  overlay->stretch = TRUE;
