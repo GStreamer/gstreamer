@@ -1288,12 +1288,17 @@ make_decoder (GstURIDecodeBin * decoder)
     g_object_set (decodebin, "use-buffering", decoder->use_buffering, NULL);
 
     if (decoder->use_buffering) {
+      guint max_bytes;
+      guint64 max_time;
+
       /* configure sizes when buffering */
-      if (decoder->buffer_size != -1)
-        g_object_set (decodebin, "max-size-bytes", decoder->buffer_size, NULL);
-      if (decoder->buffer_duration != -1)
-        g_object_set (decodebin, "max-size-time", decoder->buffer_duration,
-            NULL);
+      if ((max_bytes = decoder->buffer_size) == -1)
+        max_bytes = 2 * 1024 * 1024;
+      if ((max_time = decoder->buffer_duration) == -1)
+        max_time = 2 * GST_SECOND;
+
+      g_object_set (decodebin, "max-size-bytes", max_bytes, "max-size-time",
+          max_time, NULL);
     }
   }
 
