@@ -2256,14 +2256,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   group->parent = parent;
 
   mq = group->multiqueue = gst_element_factory_make ("multiqueue", NULL);
-  if (G_UNLIKELY (!group->multiqueue)) {
-    gst_element_post_message (GST_ELEMENT_CAST (dbin),
-        gst_missing_element_message_new (GST_ELEMENT_CAST (dbin),
-            "multiqueue"));
-    GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), ("no multiqueue!"));
-    g_slice_free (GstDecodeGroup, group);
-    return NULL;
-  }
+  if (G_UNLIKELY (!group->multiqueue))
+    goto missing_multiqueue;
 
   /* takes queue limits, initially we only queue up up to the max bytes limit,
    * with a default of 2MB. */
@@ -2285,6 +2279,17 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   gst_element_set_state (mq, GST_STATE_PAUSED);
 
   return group;
+
+  /* ERRORS */
+missing_multiqueue:
+  {
+    gst_element_post_message (GST_ELEMENT_CAST (dbin),
+        gst_missing_element_message_new (GST_ELEMENT_CAST (dbin),
+            "multiqueue"));
+    GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), ("no multiqueue!"));
+    g_slice_free (GstDecodeGroup, group);
+    return NULL;
+  }
 }
 
 /* gst_decode_group_control_demuxer_pad
