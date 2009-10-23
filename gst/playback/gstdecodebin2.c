@@ -2234,6 +2234,40 @@ gst_decode_group_hide (GstDecodeGroup * group)
   gst_decode_group_free_internal (group, TRUE);
 }
 
+/* configure queue sizes, this depends on the buffering method and if we are
+ * playing or prerolling. */
+static void
+decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
+    gboolean preroll)
+{
+  guint max_bytes, max_buffers;
+  guint64 max_time;
+
+  if (preroll || dbin->use_buffering) {
+    /* takes queue limits, initially we only queue up up to the max bytes limit,
+     * with a default of 2MB. we use the same values for buffering mode. */
+    if ((max_bytes = dbin->max_size_bytes) == 0)
+      max_bytes = AUTO_PREROLL_SIZE_BYTES;
+    if ((max_buffers = dbin->max_size_buffers) == 0)
+      max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
+    if ((max_time = dbin->max_size_time) == 0)
+      max_time = AUTO_PREROLL_SIZE_TIME;
+  } else {
+    /* update runtime limits. At runtime, we try to keep the amount of buffers
+     * in the queues as low as possible (but at least 5 buffers). */
+    if ((max_bytes = dbin->max_size_bytes) == 0)
+      max_bytes = AUTO_PLAY_SIZE_BYTES;
+    if ((max_buffers = dbin->max_size_buffers) == 0)
+      max_buffers = AUTO_PLAY_SIZE_BUFFERS;
+    if ((max_time = dbin->max_size_time) == 0)
+      max_time = AUTO_PLAY_SIZE_TIME;
+  }
+
+  g_object_set (multiqueue,
+      "max-size-bytes", max_bytes, "max-size-time", max_time,
+      "max-size-buffers", max_buffers, NULL);
+}
+
 /* gst_decode_group_new:
  * @dbin: Parent decodebin
  * @parent: Parent chain or %NULL
@@ -2246,8 +2280,6 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 {
   GstDecodeGroup *group = g_slice_new0 (GstDecodeGroup);
   GstElement *mq;
-  guint max_bytes, max_buffers;
-  guint64 max_time;
 
   GST_DEBUG_OBJECT (dbin, "Creating new group %p with parent chain %p", group,
       parent);
@@ -2259,18 +2291,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   if (G_UNLIKELY (!group->multiqueue))
     goto missing_multiqueue;
 
-  /* takes queue limits, initially we only queue up up to the max bytes limit,
-   * with a default of 2MB. */
-  if ((max_bytes = dbin->max_size_bytes) == 0)
-    max_bytes = AUTO_PREROLL_SIZE_BYTES;
-  if ((max_buffers = dbin->max_size_buffers) == 0)
-    max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
-  if ((max_time = dbin->max_size_time) == 0)
-    max_time = AUTO_PREROLL_SIZE_TIME;
-
-  g_object_set (G_OBJECT (mq),
-      "max-size-bytes", max_bytes, "max-size-time", max_time,
-      "max-size-buffers", max_buffers, NULL);
+  /* configure queue sizes for preroll */
+  decodebin_set_queue_size (dbin, mq, TRUE);
 
   group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
@@ -2881,8 +2903,6 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
 {
   GstDecodeGroup *group;
   GList *l;
-  guint max_bytes, max_buffers;
-  guint64 max_time;
   GstDecodeBin *dbin;
 
   if (chain->deadend)
@@ -2903,18 +2923,8 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
 
   dbin = group->dbin;
 
-  /* update runtime limits. At runtime, we try to keep the amount of buffers
-   * in the queues as low as possible (but at least 5 buffers). */
-  if ((max_bytes = dbin->max_size_bytes) == 0)
-    max_bytes = AUTO_PLAY_SIZE_BYTES;
-  if ((max_buffers = dbin->max_size_buffers) == 0)
-    max_buffers = AUTO_PLAY_SIZE_BUFFERS;
-  if ((max_time = dbin->max_size_time) == 0)
-    max_time = AUTO_PLAY_SIZE_TIME;
-
-  g_object_set (G_OBJECT (group->multiqueue),
-      "max-size-bytes", max_bytes, "max-size-buffers", max_buffers,
-      "max-size-time", max_time, NULL);
+  /* configure queues for playback */
+  decodebin_set_queue_size (dbin, group->multiqueue, FALSE);
 
   /* we can now disconnect any overrun signal, which is used to expose the
    * group. */
