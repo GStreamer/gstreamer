@@ -731,7 +731,6 @@ update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
       tmp = (size.bytes * 100) / sq->max_size.bytes;
       percent = MAX (percent, tmp);
     }
-    percent = MIN (percent, 100);
   }
 
   if (mq->buffering) {
@@ -739,9 +738,19 @@ update_buffering (GstMultiQueue * mq, GstSingleQueue * sq)
     if (percent >= mq->high_percent) {
       mq->buffering = FALSE;
     }
+    /* make sure it increases */
+    percent = MAX (mq->percent, percent);
+
+    if (percent == mq->percent)
+      /* don't post if nothing changed */
+      post = FALSE;
+    else
+      /* else keep last value we posted */
+      mq->percent = percent;
   } else {
     if (percent < mq->low_percent) {
       mq->buffering = TRUE;
+      mq->percent = percent;
       post = TRUE;
     }
   }

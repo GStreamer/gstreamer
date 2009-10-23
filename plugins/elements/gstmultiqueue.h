@@ -61,6 +61,7 @@ struct _GstMultiQueue {
   gboolean use_buffering;
   gint low_percent, high_percent;
   gboolean buffering;
+  gint percent;
 
   guint32  counter;	/* incoming object counter, protected with STREAM_LOCK */
   guint32  highid;	/* contains highest id of last outputted object */
