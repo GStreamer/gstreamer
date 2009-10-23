@@ -92,6 +92,17 @@
 #define IS_WRITABLE(caps) \
   (g_atomic_int_get (&(caps)->refcount) == 1)
 
+/* same as gst_caps_is_any () */
+#define CAPS_IS_ANY(caps)				\
+  ((caps)->flags & GST_CAPS_FLAGS_ANY)
+
+/* same as gst_caps_is_empty () */
+#define CAPS_IS_EMPTY(caps)				\
+  (!CAPS_IS_ANY(caps) && CAPS_IS_EMPTY_SIMPLE(caps))
+
+#define CAPS_IS_EMPTY_SIMPLE(caps)					\
+  (((caps)->structs == NULL) || ((caps)->structs->len == 0))
+
 /* quick way to get a caps structure at an index without doing a type or array
  * length check */
 #define gst_caps_get_structure_unchecked(caps, index) \
@@ -610,7 +621,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
 #endif
-  if (G_UNLIKELY (gst_caps_is_any (caps1) || gst_caps_is_any (caps2))) {
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
     /* FIXME: this leaks */
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = caps2->structs->len - 1; i >= 0; i--) {
@@ -652,12 +663,12 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
 #endif
-  if (G_UNLIKELY (gst_caps_is_any (caps1))) {
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1))) {
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
       gst_structure_free (structure);
     }
-  } else if (G_UNLIKELY (gst_caps_is_any (caps2))) {
+  } else if (G_UNLIKELY (CAPS_IS_ANY (caps2))) {
     caps1->flags |= GST_CAPS_FLAGS_ANY;
     for (i = caps1->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps1, i);
@@ -1112,13 +1123,13 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
   g_return_val_if_fail (subset != NULL, FALSE);
   g_return_val_if_fail (superset != NULL, FALSE);
 
-  if (gst_caps_is_empty (subset) || gst_caps_is_any (superset))
+  if (CAPS_IS_EMPTY (subset) || CAPS_IS_ANY (superset))
     return TRUE;
-  if (gst_caps_is_any (subset) || gst_caps_is_empty (superset))
+  if (CAPS_IS_ANY (subset) || CAPS_IS_EMPTY (superset))
     return FALSE;
 
   caps = gst_caps_subtract (subset, superset);
-  ret = gst_caps_is_empty (caps);
+  ret = CAPS_IS_EMPTY_SIMPLE (caps);
   gst_caps_unref (caps);
   return ret;
 }
@@ -1306,11 +1317,11 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
     return TRUE;
 
   /* empty caps on either side, return empty */
-  if (G_UNLIKELY (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)))
+  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
     return FALSE;
 
   /* one of the caps is any */
-  if (G_UNLIKELY (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)))
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2)))
     return TRUE;
 
   /* run zigzag on top line then right line, this preserves the caps order
@@ -1428,13 +1439,13 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
     return gst_caps_copy (caps1);
 
   /* empty caps on either side, return empty */
-  if (G_UNLIKELY (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)))
+  if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
     return gst_caps_new_empty ();
 
   /* one of the caps is any, just copy the other caps */
-  if (G_UNLIKELY (gst_caps_is_any (caps1)))
+  if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
     return gst_caps_copy (caps2);
-  if (G_UNLIKELY (gst_caps_is_any (caps2)))
+  if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
     return gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
@@ -1565,10 +1576,10 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   g_return_val_if_fail (minuend != NULL, NULL);
   g_return_val_if_fail (subtrahend != NULL, NULL);
 
-  if (gst_caps_is_empty (minuend) || gst_caps_is_any (subtrahend)) {
+  if (CAPS_IS_EMPTY (minuend) || CAPS_IS_ANY (subtrahend)) {
     return gst_caps_new_empty ();
   }
-  if (gst_caps_is_empty (subtrahend))
+  if (CAPS_IS_EMPTY_SIMPLE (subtrahend))
     return gst_caps_copy (minuend);
 
   /* FIXME: Do we want this here or above?
@@ -1576,7 +1587,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
      ANY means for specific types, so it's not possible to reduce ANY partially
      You can only remove everything or nothing and that is done above.
      Note: there's a test that checks this behaviour. */
-  g_return_val_if_fail (!gst_caps_is_any (minuend), NULL);
+  g_return_val_if_fail (!CAPS_IS_ANY (minuend), NULL);
   sublen = subtrahend->structs->len;
   g_assert (sublen > 0);
 
@@ -1610,7 +1621,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
         gst_caps_append_structure (dest, gst_structure_copy (min));
       }
     }
-    if (gst_caps_is_empty (dest)) {
+    if (CAPS_IS_EMPTY_SIMPLE (dest)) {
       gst_caps_unref (src);
       return dest;
     }
@@ -1641,13 +1652,13 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   g_return_val_if_fail (caps1 != NULL, NULL);
   g_return_val_if_fail (caps2 != NULL, NULL);
 
-  if (gst_caps_is_empty (caps1))
+  if (CAPS_IS_EMPTY (caps1))
     return gst_caps_copy (caps2);
 
-  if (gst_caps_is_empty (caps2))
+  if (CAPS_IS_EMPTY (caps2))
     return gst_caps_copy (caps1);
 
-  if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2))
+  if (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))
     return gst_caps_new_any ();
 
   dest1 = gst_caps_copy (caps1);
@@ -2015,10 +2026,10 @@ gst_caps_to_string (const GstCaps * caps)
   if (caps == NULL) {
     return g_strdup ("NULL");
   }
-  if (gst_caps_is_any (caps)) {
+  if (CAPS_IS_ANY (caps)) {
     return g_strdup ("ANY");
   }
-  if (gst_caps_is_empty (caps)) {
+  if (CAPS_IS_EMPTY_SIMPLE (caps)) {
     return g_strdup ("EMPTY");
   }
 
