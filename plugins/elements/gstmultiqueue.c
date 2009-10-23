@@ -363,40 +363,33 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * Enable the buffering option in multiqueue so that BUFFERING messages are
    * emited based on low-/high-percent thresholds.
    *
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use buffering",
-          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds"
-          " (not implemented yet)",
+          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds",
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiQueue:low-percent
    * 
    * Low threshold percent for buffering to start.
    *
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start (not implemented)", 0, 100,
+          "Low threshold for buffering to start", 0, 100,
           DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiQueue:high-percent
    * 
    * High threshold percent for buffering to finish.
    *
-   * Not implemented yet.
-   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish (not implemented)", 0, 100,
+          "High threshold for buffering to finish", 0, 100,
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
