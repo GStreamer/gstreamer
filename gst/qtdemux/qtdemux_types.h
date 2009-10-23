@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2009> STEricsson <benjamin.gaignard@stericsson.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,13 +22,14 @@
 #define __GST_QTDEMUX_TYPES_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbytereader.h>
 
-#include "qtatomparser.h"
 #include "qtdemux.h"
 
 G_BEGIN_DECLS
 
-typedef gboolean (*QtDumpFunc) (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+typedef gboolean (*QtDumpFunc) (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
 
 typedef struct _QtNodeType QtNodeType;
 

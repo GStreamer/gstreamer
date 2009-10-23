@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2009> STEricsson <benjamin.gaignard@stericsson.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,29 +25,46 @@
 #include <qtdemux.h>
 
 G_BEGIN_DECLS
-
-gboolean qtdemux_dump_mvhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_tkhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_elst (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_mdhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_hdlr (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_vmhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_dref (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stsd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stts (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stss (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stps (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stsc (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stsz (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_stco (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_co64 (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_dcom (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_cmvd (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_ctts (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
-gboolean qtdemux_dump_unknown (GstQTDemux * qtdemux, QtAtomParser * data, int depth);
+    gboolean qtdemux_dump_mvhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_tkhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_elst (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_mdhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_hdlr (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_vmhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_dref (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stsd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stts (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stss (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stps (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stsc (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stsz (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_stco (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_co64 (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_dcom (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_cmvd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_ctts (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
 
 gboolean qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 
 G_END_DECLS
-
 #endif /* __GST_QTDEMUX_DUMP_H__ */
