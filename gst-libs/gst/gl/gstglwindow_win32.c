@@ -216,9 +216,9 @@ gst_gl_window_activate_gl_context (GstGLWindow *window, gboolean activate)
 {
   GstGLWindowPrivate *priv = window->priv;
   if (activate)
-    gst_gl_window_send_message (window, callback_activate_gl_context, priv);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (callback_activate_gl_context), priv);
   else
-    gst_gl_window_send_message (window, callback_inactivate_gl_context, priv);
+    gst_gl_window_send_message (window, GST_GL_WINDOW_CB (callback_inactivate_gl_context), priv);
 }
 
 void
@@ -233,7 +233,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
       ShowWindow (priv->internal_win_id, SW_HIDE);
       priv->visible = FALSE;
    }
-  
+
   if (parent_id) {
     WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
@@ -336,7 +336,7 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
       MoveWindow (priv->internal_win_id, rect.left, rect.top, width, height, FALSE);
     }
     ShowWindowAsync (priv->internal_win_id, SW_SHOW);
-    
+
     priv->visible = TRUE;
   }
 
