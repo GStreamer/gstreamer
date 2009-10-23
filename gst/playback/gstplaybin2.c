@@ -2600,6 +2600,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 {
   GstElement *uridecodebin;
   GstElement *suburidecodebin = NULL;
+  GstPlayFlags flags;
 
   g_return_val_if_fail (group->valid, FALSE);
   g_return_val_if_fail (!group->active, FALSE);
@@ -2624,14 +2625,26 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   /* configure connection speed */
   g_object_set (uridecodebin, "connection-speed",
       playbin->connection_speed / 1000, NULL);
-  if (gst_play_sink_get_flags (playbin->playsink) & GST_PLAY_FLAG_DOWNLOAD)
+
+  flags = gst_play_sink_get_flags (playbin->playsink);
+
+  /* configure download buffering */
+  if (flags & GST_PLAY_FLAG_DOWNLOAD)
     g_object_set (uridecodebin, "download", TRUE, NULL);
   else
     g_object_set (uridecodebin, "download", FALSE, NULL);
+
+
   /* configure subtitle encoding */
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
+  /* configure buffering of demuxed/parsed data */
+  if (flags & GST_PLAY_FLAG_BUFFERING)
+    g_object_set (uridecodebin, "use-buffering", TRUE, NULL);
+  else
+    g_object_set (uridecodebin, "use-buffering", FALSE, NULL);
+  /* configure buffering parameters */
   g_object_set (uridecodebin, "buffer-duration", playbin->buffer_duration,
       NULL);
   g_object_set (uridecodebin, "buffer-size", playbin->buffer_size, NULL);

@@ -61,6 +61,8 @@ register_gst_play_flags (GType * id)
         "native-video"},
     {C_FLAGS (GST_PLAY_FLAG_DOWNLOAD), "Attempt progressive download buffering",
         "download"},
+    {C_FLAGS (GST_PLAY_FLAG_BUFFERING), "Buffer demuxed/parsed data",
+        "buffering"},
     {0, NULL, NULL}
   };
   *id = g_flags_register_static ("GstPlayFlags", values);
