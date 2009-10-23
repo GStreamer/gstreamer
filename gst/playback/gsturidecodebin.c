@@ -76,9 +76,10 @@ struct _GstURIDecodeBin
 
   gboolean is_stream;
   gboolean need_queue;
-  guint64 buffer_duration;      /* When streaming, buffer duration (ns) */
-  guint buffer_size;            /* When streaming, buffer size (bytes) */
+  guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
+  guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
+  gboolean use_buffering;
 
   GstElement *source;
   GstElement *typefind;
@@ -151,6 +152,7 @@ enum
 #define DEFAULT_BUFFER_DURATION     -1
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
+#define DEFAULT_USE_BUFFERING       FALSE
 
 enum
 {
@@ -163,6 +165,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
+  PROP_USE_BUFFERING,
   PROP_LAST
 };
 
@@ -305,19 +308,39 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
       g_param_spec_int ("buffer-size", "Buffer size (bytes)",
-          "Buffer size when buffering network streams (-1 queue2 default value)",
+          "Buffer size when buffering streams (-1 default value)",
           -1, G_MAXINT, DEFAULT_BUFFER_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BUFFER_DURATION,
       g_param_spec_int64 ("buffer-duration", "Buffer duration (ns)",
-          "Buffer duration when buffering network streams (-1 queue2 default value)",
+          "Buffer duration when buffering streams (-1 default value)",
           -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstURIDecodeBin::download:
+   *
+   * For certain media type, enable download buffering.
+   */
   g_object_class_install_property (gobject_class, PROP_DOWNLOAD,
       g_param_spec_boolean ("download", "Download",
           "Attempt download buffering when buffering network streams",
           DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstURIDecodeBin::use-buffering:
+   *
+   * Emit BUFFERING messages based on low-/high-percent thresholds of the
+   * demuxed or parsed data.
+   * When download buffering is activated and used for the current media
+   * type, this property does nothing. Otherwise perform buffering on the
+   * demuxed or parsed media.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
+      g_param_spec_boolean ("use-buffering", "Use Buffering",
+          "Perform buffering on demuxed/parsed media (not implemented)",
+          DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstURIDecodeBin::unknown-type:
@@ -455,6 +478,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
   dec->buffer_duration = DEFAULT_BUFFER_DURATION;
   dec->buffer_size = DEFAULT_BUFFER_SIZE;
   dec->download = DEFAULT_DOWNLOAD;
+  dec->use_buffering = DEFAULT_USE_BUFFERING;
 }
 
 static void
@@ -533,6 +557,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_DOWNLOAD:
       dec->download = g_value_get_boolean (value);
       break;
+    case PROP_USE_BUFFERING:
+      dec->use_buffering = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -583,6 +610,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DOWNLOAD:
       g_value_set_boolean (value, dec->download);
+      break;
+    case PROP_USE_BUFFERING:
+      g_value_set_boolean (value, dec->use_buffering);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
