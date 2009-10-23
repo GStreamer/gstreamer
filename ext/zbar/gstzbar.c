@@ -168,7 +168,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_stop);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_zbar_stop);
 }
 
 static void
