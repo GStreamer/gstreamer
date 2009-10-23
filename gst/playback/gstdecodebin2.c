@@ -134,6 +134,12 @@ struct _GstDecodeBin
   /* properties */
   GstCaps *caps;                /* caps on which to stop decoding */
   gchar *encoding;              /* encoding of subtitles */
+  gboolean use_buffering;       /* configure buffering on multiqueues */
+  gint low_percent;
+  gint high_percent;
+  guint max_size_bytes;
+  guint max_size_buffers;
+  guint64 max_size_time;
 
   GstElement *typefind;         /* this holds the typefind object */
 
@@ -198,6 +204,14 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SUBTITLE_ENCODING NULL
+#define DEFAULT_USE_BUFFERING     FALSE
+#define DEFAULT_LOW_PERCENT       10
+#define DEFAULT_HIGH_PERCENT      99
+#define DEFAULT_MAX_SIZE_BYTES    2 * 1024 * 1024
+#define DEFAULT_MAX_SIZE_BUFFERS  0
+#define DEFAULT_MAX_SIZE_TIME     0
+
 /* Properties */
 enum
 {
@@ -205,6 +219,12 @@ enum
   PROP_CAPS,
   PROP_SUBTITLE_ENCODING,
   PROP_SINK_CAPS,
+  PROP_USE_BUFFERING,
+  PROP_LOW_PERCENT,
+  PROP_HIGH_PERCENT,
+  PROP_MAX_SIZE_BYTES,
+  PROP_MAX_SIZE_BUFFERS,
+  PROP_MAX_SIZE_TIME,
   PROP_LAST
 };
 
@@ -676,6 +696,93 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           "The caps of the input data. (NULL = use typefind element)",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstDecodeBin2::use-buffering
+   *
+   * Activate buffering in decodebin2. This will instruct the multiqueues behind
+   * decoders to emit BUFFERING messages.
+
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_USE_BUFFERING,
+      g_param_spec_boolean ("use-buffering", "Use Buffering",
+          "Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds"
+          " (not implemented)",
+          DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstDecodebin2:low-percent
+   * 
+   * Low threshold percent for buffering to start.
+   *
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_LOW_PERCENT,
+      g_param_spec_int ("low-percent", "Low percent",
+          "Low threshold for buffering to start (not implemented)", 0, 100,
+          DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstDecodebin2:high-percent
+   * 
+   * High threshold percent for buffering to finish.
+   *
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_HIGH_PERCENT,
+      g_param_spec_int ("high-percent", "High percent",
+          "High threshold for buffering to finish (not implemented)", 0, 100,
+          DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstDecodebin2:max-size-bytes
+   *
+   * Max amount amount of bytes in the queue (0=automatic).
+   * 
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BYTES,
+      g_param_spec_uint ("max-size-bytes", "Max. size (bytes)",
+          "Max. amount of bytes in the queue (0=automatic)"
+          " (not implemented)", 0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstDecodebin2:max-size-buffers
+   *
+   * Max amount amount of buffers in the queue (0=automatic).
+   * 
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BUFFERS,
+      g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
+          "Max. number of buffers in the queue (0=automatic)"
+          " (not implemented)", 0, G_MAXUINT,
+          DEFAULT_MAX_SIZE_BUFFERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstDecodebin2:max-size-time
+   *
+   * Max amount amount of time in the queue (in ns, 0=automatic).
+   * 
+   * Not implemented yet.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_TIME,
+      g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
+          "Max. amount of data in the queue (in ns, 0=automatic)"
+          " (not implemented)", 0, G_MAXUINT64,
+          DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_continue);
   klass->autoplug_factories =
@@ -740,10 +847,18 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->shutdown = FALSE;
   decode_bin->blocked_pads = NULL;
 
+  decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps =
       gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb;video/x-raw-gray;"
       "audio/x-raw-int;audio/x-raw-float;" "text/plain;text/x-pango-markup;"
       "video/x-dvd-subpicture; subpicture/x-pgs");
+  decode_bin->use_buffering = DEFAULT_USE_BUFFERING;
+  decode_bin->low_percent = DEFAULT_LOW_PERCENT;
+  decode_bin->high_percent = DEFAULT_HIGH_PERCENT;
+
+  decode_bin->max_size_bytes = DEFAULT_MAX_SIZE_BYTES;
+  decode_bin->max_size_buffers = DEFAULT_MAX_SIZE_BUFFERS;
+  decode_bin->max_size_time = DEFAULT_MAX_SIZE_TIME;
 }
 
 static void
@@ -905,6 +1020,24 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_SINK_CAPS:
       gst_decode_bin_set_sink_caps (dbin, g_value_get_boxed (value));
       break;
+    case PROP_USE_BUFFERING:
+      dbin->use_buffering = g_value_get_boolean (value);
+      break;
+    case PROP_LOW_PERCENT:
+      dbin->low_percent = g_value_get_int (value);
+      break;
+    case PROP_HIGH_PERCENT:
+      dbin->high_percent = g_value_get_int (value);
+      break;
+    case PROP_MAX_SIZE_BYTES:
+      dbin->max_size_bytes = g_value_get_uint (value);
+      break;
+    case PROP_MAX_SIZE_BUFFERS:
+      dbin->max_size_buffers = g_value_get_uint (value);
+      break;
+    case PROP_MAX_SIZE_TIME:
+      dbin->max_size_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -927,6 +1060,24 @@ gst_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SINK_CAPS:
       g_value_take_boxed (value, gst_decode_bin_get_sink_caps (dbin));
+      break;
+    case PROP_USE_BUFFERING:
+      g_value_set_boolean (value, dbin->use_buffering);
+      break;
+    case PROP_LOW_PERCENT:
+      g_value_set_int (value, dbin->low_percent);
+      break;
+    case PROP_HIGH_PERCENT:
+      g_value_set_int (value, dbin->high_percent);
+      break;
+    case PROP_MAX_SIZE_BYTES:
+      g_value_set_uint (value, dbin->max_size_bytes);
+      break;
+    case PROP_MAX_SIZE_BUFFERS:
+      g_value_set_uint (value, dbin->max_size_buffers);
+      break;
+    case PROP_MAX_SIZE_TIME:
+      g_value_set_uint64 (value, dbin->max_size_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
