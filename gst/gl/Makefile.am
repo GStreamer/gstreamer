@@ -32,6 +32,8 @@ OPENGL_SOURCES =  \
 	gstgltestsrc.h \
 	gstgleffects.c \
 	gstgleffects.h \
+	gstglmosaic.c \
+	gstglmosaic.h \
         gstgloverlay.h \
 	effects/gstgleffectssources.c \
 	effects/gstgleffectssources.h \

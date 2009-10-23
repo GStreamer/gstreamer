@@ -169,6 +169,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   guchar *raw_data = NULL;
   guchar **rows = NULL;
   png_byte magic[8];
+  gint n_read = 0;
 
   if (!filter->display)
     return;
@@ -179,11 +180,10 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
     LOAD_ERROR ("file not found");
 
   /* Read magic number */
-  fread (magic, 1, sizeof (magic), fp);
+  n_read = fread (magic, 1, sizeof (magic), fp);
 
   /* Check for valid magic number */
-  if (!png_check_sig (magic, sizeof (magic)))
-  {
+  if (!png_check_sig (magic, sizeof (magic))) {
     fclose (fp);
     LOAD_ERROR ("not a valid PNG image");
   }

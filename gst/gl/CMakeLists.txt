@@ -11,7 +11,7 @@ include_directories(AFTER
   ../..
   .
   effects)
-  
+
 if (NOT GST_USING_BINARY_REGISTRY)
 include_directories(AFTER
   ${LIBXML2_INCLUDE_DIR}
@@ -41,6 +41,7 @@ add_library (gstopengl MODULE
   gstgldifferencematte.c
   gstglbumper.c
   gstgleffects.c
+  gstglmosaic.c
   effects/gstgleffectssources.c
   effects/gstgleffectidentity.c
   effects/gstgleffectmirror.c
@@ -56,7 +57,7 @@ add_library (gstopengl MODULE
   effects/gstgleffectsin.c
   effects/gstgleffectglow.c
   effects/gstgleffectxray.c)
-  
+
 target_link_libraries(gstopengl
   general gstgl
   general ${PNG_LIBRARY}

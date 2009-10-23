@@ -12,6 +12,7 @@ libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
 	gstgldisplay.c \
 	gstglbuffer.c \
 	gstglfilter.c \
+	gstglmixer.c \
 	gstglshader.c
 
 if GL_BACKEND_WIN32
@@ -33,10 +34,11 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 	gstgldisplay.h \
 	gstglbuffer.h \
 	gstglfilter.h \
+	gstglmixer.h \
 	gstglshader.h
 
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstcontroller-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(GL_LIBS)
 
