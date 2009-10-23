@@ -197,29 +197,30 @@ gst_gl_window_error_quark (void)
 }
 
 gulong
-gst_gl_window_get_internal_gl_context (GstGLWindow *window)
+gst_gl_window_get_internal_gl_context (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
   return (gulong) priv->gl_context;
 }
 
-
 void
-callback_activate_gl_context (GstGLWindowPrivate *priv)
+callback_activate_gl_context (GstGLWindowPrivate * priv)
 {
-  /*if (!wglMakeCurrent (priv->device, priv->gl_context))
-    g_debug ("failed to activate opengl context %lud\n", GetLastError ());*/
+  if (!eglMakeCurrent (priv->gl_display, priv->gl_surface, priv->gl_surface,
+          priv->gl_context))
+    g_debug ("failed to activate opengl context %lud\n", GetLastError ());
 }
 
 void
-callback_inactivate_gl_context (GstGLWindowPrivate *priv)
+callback_inactivate_gl_context (GstGLWindowPrivate * priv)
 {
-  /*if (!wglMakeCurrent (NULL, NULL))
-    g_debug ("failed to inactivate opengl context %lud\n", GetLastError ());*/
+  if (!eglMakeCurrent (priv->device, EGL_NO_SURFACE, EGL_NO_SURFACE,
+          EGL_NO_CONTEXT))
+    g_debug ("failed to inactivate opengl context %lud\n", GetLastError ());
 }
 
 void
-gst_gl_window_activate_gl_context (GstGLWindow *window, gboolean activate)
+gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
 {
   GstGLWindowPrivate *priv = window->priv;
   if (activate)
@@ -237,10 +238,10 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
   HWND parent_id = GetProp (priv->internal_win_id, "gl_window_parent_id");
 
   if (priv->visible) {
-      ShowWindow (priv->internal_win_id, SW_HIDE);
-      priv->visible = FALSE;
-   }
-  
+    ShowWindow (priv->internal_win_id, SW_HIDE);
+    priv->visible = FALSE;
+  }
+
   if (parent_id) {
     WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
@@ -254,7 +255,6 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
     RemoveProp (parent_id, "gl_window_parent_proc");
     RemoveProp (priv->internal_win_id, "gl_window_parent_id");
   }
-
   //not 0
   if (id) {
     WNDPROC window_parent_proc =
@@ -282,7 +282,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
   } else {
     //no parent so the internal window needs borders and system menu
     SetWindowLongPtr (priv->internal_win_id, GWL_STYLE,
-      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
+        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
   }
 }
 
@@ -339,8 +339,11 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
       RECT rect;
       GetClientRect (priv->internal_win_id, &rect);
       width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-      height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
-      MoveWindow (priv->internal_win_id, rect.left, rect.top, width, height, FALSE);
+      height +=
+          2 * GetSystemMetrics (SM_CYSIZEFRAME) +
+          GetSystemMetrics (SM_CYCAPTION);
+      MoveWindow (priv->internal_win_id, rect.left, rect.top, width, height,
+          FALSE);
     }
     ShowWindowAsync (priv->internal_win_id, SW_SHOW);
     priv->visible = TRUE;
@@ -471,11 +474,12 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           eglCreateContext (priv->display, config, priv->external_gl_context,
           contextAttribs);
       if (priv->gl_context != EGL_NO_CONTEXT)
-        g_debug ("gl context created: %lud, external: %lud\n", (gulong) priv->gl_context,
-            (gulong) priv->external_gl_context);
+        g_debug ("gl context created: %lud, external: %lud\n",
+            (gulong) priv->gl_context, (gulong) priv->external_gl_context);
       else
-        g_debug ("failed to create glcontext %lud, extenal: %lud, win: %lud, %s\n", 
-            (gulong) priv->gl_context, (gulong) priv->external_gl_context, 
+        g_debug
+            ("failed to create glcontext %lud, extenal: %lud, win: %lud, %s\n",
+            (gulong) priv->gl_context, (gulong) priv->external_gl_context,
             (gulong) hWnd, EGLErrorString ());
 
       ReleaseDC (hWnd, priv->display);

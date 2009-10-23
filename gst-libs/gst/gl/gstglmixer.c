@@ -1,5 +1,5 @@
 /* Generic video mixer plugin
-/* 
+ *
  * GStreamer
  * Copyright (C) 2009 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -58,8 +58,6 @@ static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
 static gboolean gst_gl_mixer_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_gl_mixer_sink_event (GstPad * pad, GstEvent * event);
 
-static void gst_gl_mixer_sort_pads (GstGLMixer * mix);
-
 
 enum
 {
@@ -110,7 +108,7 @@ gst_gl_mixer_set_master_geometry (GstGLMixer * mix)
   gint fps_n = 0;
   gint fps_d = 0;
   GstGLMixerPad *master = NULL;
- 
+
   while (walk) {
     GstGLMixerPad *mixpad = GST_GL_MIXER_PAD (walk->data);
 
@@ -129,9 +127,7 @@ gst_gl_mixer_set_master_geometry (GstGLMixer * mix)
   }
 
   /* set results */
-  if (mix->master != master || 
-      mix->fps_n != fps_n   ||
-      mix->fps_d != fps_d) {
+  if (mix->master != master || mix->fps_n != fps_n || mix->fps_d != fps_d) {
     mix->setcaps = TRUE;
     mix->sendseg = TRUE;
     mix->master = master;
@@ -146,7 +142,7 @@ gst_gl_mixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   GstGLMixer *mix = GST_GL_MIXER (gst_pad_get_parent (pad));
   GstGLMixerPad *mixpad = GST_GL_MIXER_PAD (pad);
   GstStructure *structure = gst_caps_get_structure (vscaps, 0);
-  gint width = 0; 
+  gint width = 0;
   gint height = 0;
   gboolean ret = FALSE;
   const GValue *framerate = gst_structure_get_value (structure, "framerate");
@@ -154,8 +150,7 @@ gst_gl_mixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   GST_INFO_OBJECT (mix, "Setting caps %" GST_PTR_FORMAT, vscaps);
 
   if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) ||
-      ! framerate)
+      !gst_structure_get_int (structure, "height", &height) || !framerate)
     goto beach;
 
   GST_GL_MIXER_STATE_LOCK (mix);
@@ -310,8 +305,7 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_gl_mixer_request_new_pad);
-  gstelement_class->release_pad =
-      GST_DEBUG_FUNCPTR (gst_gl_mixer_release_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mixer_release_pad);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gl_mixer_change_state);
 
@@ -379,8 +373,7 @@ gst_gl_mixer_init (GstGLMixer * mix, GstGLMixerClass * g_class)
   mix->collect = gst_collect_pads_new ();
 
   gst_collect_pads_set_function (mix->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_gl_mixer_collected),
-      mix);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_gl_mixer_collected), mix);
 
   mix->state_lock = g_mutex_new ();
 
@@ -599,14 +592,18 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
       GSList *walk = mix->sinkpads;
       GstStructure *structure = gst_query_get_structure (query);
 
-      const gchar* name = gst_structure_get_name (structure);
-      res = g_strcmp0 (gst_element_get_name (mix), gst_structure_get_name (structure)) == 0;
+      res =
+          g_strcmp0 (gst_element_get_name (mix),
+          gst_structure_get_name (structure)) == 0;
 
       if (!res) {
         /* id_value is set by upstream element of itself when going to paused state */
-        const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
-        GstGLDisplay *foreign_display = GST_GL_DISPLAY (g_value_get_pointer (id_value));
-        gulong foreign_gl_context = gst_gl_display_get_internal_gl_context (foreign_display);
+        const GValue *id_value =
+            gst_structure_get_value (structure, "gstgldisplay");
+        GstGLDisplay *foreign_display =
+            GST_GL_DISPLAY (g_value_get_pointer (id_value));
+        gulong foreign_gl_context =
+            gst_gl_display_get_internal_gl_context (foreign_display);
 
         /* iterate on each sink pad until reaching the gl element
          * that requested the query */
@@ -623,8 +620,9 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
 
           gst_gl_display_activate_gl_context (foreign_display, TRUE);
 
-          gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER, sink_pad->display, NULL);
-            
+          gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+              sink_pad->display, NULL);
+
           /* does not work:
            * res = gst_pad_query_default (GST_PAD_CAST (sink_pad), query);*/
           res = gst_pad_query (peer, query);
@@ -652,9 +650,10 @@ gst_gl_mixer_getcaps (GstPad * pad)
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_set (structure, "width", G_TYPE_INT, 8000, NULL);
-  gst_structure_set (structure, "height", G_TYPE_INT, /*G_MAXINT*/6000, NULL);
+  gst_structure_set (structure, "height", G_TYPE_INT, /*G_MAXINT */ 6000, NULL);
   if (mix->fps_d != 0)
-    gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, mix->fps_n, mix->fps_d, NULL);
+    gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, mix->fps_n,
+        mix->fps_d, NULL);
 
   gst_object_unref (mix);
 
@@ -667,7 +666,7 @@ gst_gl_mixer_setcaps (GstPad * pad, GstCaps * caps)
   GstGLMixer *mix = GST_GL_MIXER (gst_pad_get_parent_element (pad));
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint width = 0; 
+  gint width = 0;
   gint height = 0;
 
   GST_INFO_OBJECT (mix, "set src caps: %" GST_PTR_FORMAT, caps);
@@ -1010,9 +1009,8 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
   if (!ret)
     goto error;
-  
-  gl_outbuf = gst_gl_buffer_new (mix->display,
-    mix->width, mix->height);
+
+  gl_outbuf = gst_gl_buffer_new (mix->display, mix->width, mix->height);
 
   outbuf = GST_BUFFER (gl_outbuf);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mix->srcpad));
@@ -1217,21 +1215,24 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       GSList *walk = mix->sinkpads;
 
       GstElement *parent = GST_ELEMENT (gst_element_get_parent (mix));
-      GstStructure *structure = gst_structure_new (gst_element_get_name (mix), NULL);
+      GstStructure *structure =
+          gst_structure_new (gst_element_get_name (mix), NULL);
       GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
 
       /* retrieve the gldisplay that is owned by gl elements after the gl mixer */
       gboolean isPerformed = gst_element_query (parent, query);
 
       if (isPerformed) {
-        const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
+        const GValue *id_value =
+            gst_structure_get_value (structure, "gstgldisplay");
         if (G_VALUE_HOLDS_POINTER (id_value))
           /* at least one gl element is after in our gl chain */
-          mix->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+          mix->display =
+              g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
         else
           /* this gl filter is a sink in terms of the gl chain */
           mix->display = gst_gl_display_new ();
-          gst_gl_display_create_context (mix->display, 0);
+        gst_gl_display_create_context (mix->display, 0);
       }
 
       gst_query_unref (query);
@@ -1244,12 +1245,13 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         sink_pad->display = gst_gl_display_new ();
       }
       mix->array_buffers =
-        g_array_sized_new (FALSE, TRUE, sizeof (GstBuffer *), mix->next_sinkpad);
+          g_array_sized_new (FALSE, TRUE, sizeof (GstBuffer *),
+          mix->next_sinkpad);
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
     }
-    case GST_STATE_CHANGE_PAUSED_TO_READY: 
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       GSList *walk = mix->sinkpads;
       GST_LOG_OBJECT (mix, "stopping collectpads");

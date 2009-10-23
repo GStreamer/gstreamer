@@ -239,7 +239,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, gulong external_gl_context)
+gst_gl_window_new (gulong external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -348,12 +348,12 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 
   mask = CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask;
 
-  priv->internal_win_id = XCreateWindow (priv->device, priv->root, x, y,
-      width, height, 0, priv->visual_info->depth, InputOutput,
-      priv->visual_info->visual, mask, &win_attr);
-
   x += 20;
   y += 20;
+
+  priv->internal_win_id = XCreateWindow (priv->device, priv->root, x, y,
+      1, 1, 0, priv->visual_info->depth, InputOutput,
+      priv->visual_info->visual, mask, &win_attr);
 
   XSync (priv->device, FALSE);
 
@@ -361,7 +361,7 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 
   g_debug ("gl window id: %lud\n", (gulong) priv->internal_win_id);
 
-  g_debug ("gl window props: x:%d y:%d w:%d h:%d\n", x, y, width, height);
+  g_debug ("gl window props: x:%d y:%d\n", x, y);
 
   wm_atoms[0] = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
   if (wm_atoms[0] == None)
@@ -410,6 +410,7 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
   g_mutex_unlock (priv->x_lock);
 
   return window;
+
 no_display:
   g_mutex_unlock (priv->x_lock);
   g_object_unref (window);
@@ -420,6 +421,41 @@ GQuark
 gst_gl_window_error_quark (void)
 {
   return g_quark_from_static_string ("gst-gl-window-error");
+}
+
+gulong
+gst_gl_window_get_internal_gl_context (GstGLWindow * window)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  return (gulong) priv->gl_context;
+}
+
+void
+callback_activate_gl_context (GstGLWindowPrivate * priv)
+{
+  if (!glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context))
+    g_debug ("failed to activate opengl context %lud\n",
+        (gulong) priv->gl_context);
+}
+
+void
+callback_inactivate_gl_context (GstGLWindowPrivate * priv)
+{
+  if (!glXMakeCurrent (priv->device, None, NULL))
+    g_debug ("failed to inactivate opengl context %lud\n",
+        (gulong) priv->gl_context);
+}
+
+void
+gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  if (activate)
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (callback_activate_gl_context), priv);
+  else
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (callback_inactivate_gl_context), priv);
 }
 
 /* Not called by the gl thread */
@@ -494,7 +530,7 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 
 /* Called in the gl thread */
 void
-gst_gl_window_draw_unlocked (GstGLWindow * window)
+gst_gl_window_draw_unlocked (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -522,7 +558,7 @@ gst_gl_window_draw_unlocked (GstGLWindow * window)
 
 /* Not called by the gl thread */
 void
-gst_gl_window_draw (GstGLWindow * window)
+gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
 {
   if (window) {
     GstGLWindowPrivate *priv = window->priv;
@@ -533,12 +569,21 @@ gst_gl_window_draw (GstGLWindow * window)
       XEvent event;
       XWindowAttributes attr;
 
+      XGetWindowAttributes (priv->disp_send, priv->internal_win_id, &attr);
+
       if (!priv->visible) {
+
+        if (!priv->parent) {
+          attr.width = width;
+          attr.height = height;
+          XResizeWindow (priv->disp_send, priv->internal_win_id,
+              attr.width, attr.height);
+          XSync (priv->disp_send, FALSE);
+        }
+
         XMapWindow (priv->disp_send, priv->internal_win_id);
         priv->visible = TRUE;
       }
-
-      XGetWindowAttributes (priv->disp_send, priv->internal_win_id, &attr);
 
       if (priv->parent) {
         XWindowAttributes attr_parent;
