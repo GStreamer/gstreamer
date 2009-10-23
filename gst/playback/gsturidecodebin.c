@@ -75,6 +75,7 @@ struct _GstURIDecodeBin
   gchar *encoding;
 
   gboolean is_stream;
+  gboolean is_download;
   gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
@@ -1281,6 +1282,21 @@ make_decoder (GstURIDecodeBin * decoder)
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
 
+  if (!decoder->is_download) {
+    /* propagate the use-buffering property but only when we are not already
+     * doing download buffering. */
+    g_object_set (decodebin, "use-buffering", decoder->use_buffering, NULL);
+
+    if (decoder->use_buffering) {
+      /* configure sizes when buffering */
+      if (decoder->buffer_size != -1)
+        g_object_set (decodebin, "max-size-bytes", decoder->buffer_size, NULL);
+      if (decoder->buffer_duration != -1)
+        g_object_set (decodebin, "max-size-time", decoder->buffer_duration,
+            NULL);
+    }
+  }
+
   g_object_set_data (G_OBJECT (decodebin), "pending", "1");
   g_object_set (G_OBJECT (decodebin), "subtitle-encoding", decoder->encoding,
       NULL);
@@ -1312,6 +1328,12 @@ type_found (GstElement * typefind, guint probability,
 
   GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
 
+  s = gst_caps_get_structure (caps, 0);
+  media_type = gst_structure_get_name (s);
+
+  /* remember if we need download buffering */
+  decoder->is_download = IS_DOWNLOAD_MEDIA (media_type) && decoder->download;
+
   dec_elem = make_decoder (decoder);
   if (!dec_elem)
     goto no_decodebin;
@@ -1322,13 +1344,10 @@ type_found (GstElement * typefind, guint probability,
 
   g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
 
-  s = gst_caps_get_structure (caps, 0);
-  media_type = gst_structure_get_name (s);
-
   GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
       decoder->download);
 
-  if (IS_DOWNLOAD_MEDIA (media_type) && decoder->download) {
+  if (decoder->is_download) {
     gchar *temp_template, *filename;
     const gchar *tmp_dir, *prgname;
 
