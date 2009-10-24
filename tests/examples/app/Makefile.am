@@ -5,8 +5,8 @@ noinst_PROGRAMS = appsrc_ex appsrc-stream appsrc-stream2 appsrc-ra \
 appsrc_ex_SOURCES = appsrc_ex.c
 appsrc_ex_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 appsrc_ex_LDFLAGS = \
-    $(GST_LIBS) \
-    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la
+    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+    $(GST_LIBS)
 
 appsrc_stream_SOURCES = appsrc-stream.c
 appsrc_stream_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
@@ -27,6 +27,6 @@ appsrc_seekable_LDFLAGS = $(GST_LIBS)
 appsink_src_SOURCES = appsink-src.c
 appsink_src_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 appsink_src_LDFLAGS = \
-    $(GST_LIBS) \
-    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la
+    $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+    $(GST_LIBS)
 
