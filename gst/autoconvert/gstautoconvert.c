@@ -178,7 +178,7 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->dispose = gst_auto_convert_dispose;
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_auto_convert_dispose);
 
   gobject_class->set_property = gst_auto_convert_set_property;
   gobject_class->get_property = gst_auto_convert_get_property;
@@ -248,6 +248,11 @@ gst_auto_convert_dispose (GObject * object)
       NULL);
   g_list_free (autoconvert->cached_events);
   autoconvert->cached_events = NULL;
+
+  if (autoconvert->factories) {
+    gst_plugin_feature_list_free (autoconvert->factories);
+    autoconvert->factories = NULL;
+  }
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -949,6 +954,14 @@ gst_auto_convert_sink_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      GstElement *child = gst_auto_convert_get_subelement (autoconvert);
+      GST_DEBUG_OBJECT (autoconvert,
+          "Child element %" GST_PTR_FORMAT "returned flow %s", child,
+          gst_flow_get_name (ret));
+      if (child)
+        gst_object_unref (child);
+    }
   } else {
     GST_ERROR_OBJECT (autoconvert, "Got buffer without an negotiated element,"
         " returning not-negotiated");
@@ -1221,8 +1234,8 @@ gst_auto_convert_src_event (GstPad * pad, GstEvent * event)
     ret = gst_pad_push_event (internal_sinkpad, event);
     gst_object_unref (internal_sinkpad);
   } else {
-    GST_WARNING_OBJECT (autoconvert, "Got event while not element was selected,"
-        "letting through");
+    GST_WARNING_OBJECT (autoconvert,
+        "Got upstream event while no element was selected," "forwarding.");
     ret = gst_pad_push_event (autoconvert->sinkpad, event);
   }
 
@@ -1248,8 +1261,8 @@ gst_auto_convert_src_query (GstPad * pad, GstQuery * query)
     gst_object_unref (sub_srcpad);
     gst_object_unref (subelement);
   } else {
-    GST_WARNING_OBJECT (autoconvert, "Got query while not element was selected,"
-        "letting through");
+    GST_WARNING_OBJECT (autoconvert,
+        "Got upstream query while no element was selected," "forwarding.");
     ret = gst_pad_peer_query (autoconvert->sinkpad, query);
   }
 
