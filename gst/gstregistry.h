@@ -63,7 +63,7 @@ struct _GstRegistry {
   /* hash to speedup _lookup */
   GHashTable *basename_hash;
 
-  GstRegistryPrivate *private;
+  GstRegistryPrivate *priv;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING-3];

@@ -220,7 +220,7 @@ gst_registry_init (GstRegistry * registry)
 {
   registry->feature_hash = g_hash_table_new (g_str_hash, g_str_equal);
   registry->basename_hash = g_hash_table_new (g_str_hash, g_str_equal);
-  registry->private =
+  registry->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (registry, GST_TYPE_REGISTRY,
       GstRegistryPrivate);
 }
@@ -270,14 +270,14 @@ gst_registry_finalize (GObject * object)
   g_hash_table_destroy (registry->basename_hash);
   registry->basename_hash = NULL;
 
-  if (registry->private->element_factory_list) {
+  if (registry->priv->element_factory_list) {
     GST_DEBUG_OBJECT (registry, "Cleaning up cached element factory list");
-    gst_plugin_feature_list_free (registry->private->element_factory_list);
+    gst_plugin_feature_list_free (registry->priv->element_factory_list);
   }
 
-  if (registry->private->typefind_factory_list) {
+  if (registry->priv->typefind_factory_list) {
     GST_DEBUG_OBJECT (registry, "Cleaning up cached typefind factory list");
-    gst_plugin_feature_list_free (registry->private->typefind_factory_list);
+    gst_plugin_feature_list_free (registry->priv->typefind_factory_list);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -457,7 +457,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     }
     f = next;
   }
-  registry->private->cookie++;
+  registry->priv->cookie++;
 }
 
 /**
@@ -534,7 +534,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
 
   gst_object_ref_sink (feature);
 
-  registry->private->cookie++;
+  registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
 
   GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);
@@ -564,7 +564,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
   GST_OBJECT_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
   g_hash_table_remove (registry->feature_hash, feature->name);
-  registry->private->cookie++;
+  registry->priv->cookie++;
   GST_OBJECT_UNLOCK (registry);
   gst_object_unref (feature);
 }
@@ -614,9 +614,9 @@ gst_registry_get_feature_list_or_create (GstRegistry * registry,
     GList ** previous, guint32 * cookie, GType type)
 {
   gboolean res = FALSE;
-  GstRegistryPrivate *private = registry->private;
+  GstRegistryPrivate *priv = registry->priv;
 
-  if (G_UNLIKELY (!*previous || private->cookie != *cookie)) {
+  if (G_UNLIKELY (!*previous || priv->cookie != *cookie)) {
     GstTypeNameData data;
 
     if (*previous)
@@ -628,7 +628,7 @@ gst_registry_get_feature_list_or_create (GstRegistry * registry,
         gst_filter_run (registry->features,
         (GstFilterFunc) gst_plugin_feature_type_name_filter, FALSE, &data);
     g_list_foreach (*previous, (GFunc) gst_object_ref, NULL);
-    *cookie = private->cookie;
+    *cookie = priv->cookie;
     res = TRUE;
   }
 
@@ -655,11 +655,11 @@ gst_registry_get_element_factory_list (GstRegistry * registry)
   GST_OBJECT_LOCK (registry);
 
   gst_registry_get_feature_list_or_create (registry,
-      &registry->private->element_factory_list, &registry->private->efl_cookie,
+      &registry->priv->element_factory_list, &registry->priv->efl_cookie,
       GST_TYPE_ELEMENT_FACTORY);
 
   /* Return reffed copy */
-  list = gst_plugin_feature_list_copy (registry->private->element_factory_list);
+  list = gst_plugin_feature_list_copy (registry->priv->element_factory_list);
 
   GST_OBJECT_UNLOCK (registry);
 
@@ -674,15 +674,14 @@ gst_registry_get_typefind_factory_list (GstRegistry * registry)
   GST_OBJECT_LOCK (registry);
 
   if (G_UNLIKELY (gst_registry_get_feature_list_or_create (registry,
-              &registry->private->typefind_factory_list,
-              &registry->private->tfl_cookie, GST_TYPE_TYPE_FIND_FACTORY)))
-    registry->private->typefind_factory_list =
-        g_list_sort (registry->private->typefind_factory_list,
+              &registry->priv->typefind_factory_list,
+              &registry->priv->tfl_cookie, GST_TYPE_TYPE_FIND_FACTORY)))
+    registry->priv->typefind_factory_list =
+        g_list_sort (registry->priv->typefind_factory_list,
         (GCompareFunc) type_find_factory_rank_cmp);
 
   /* Return reffed copy */
-  list =
-      gst_plugin_feature_list_copy (registry->private->typefind_factory_list);
+  list = gst_plugin_feature_list_copy (registry->priv->typefind_factory_list);
 
   GST_OBJECT_UNLOCK (registry);
 
