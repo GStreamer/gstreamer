@@ -286,19 +286,6 @@ theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
   g_value_unset (&array);
 }
 
-/* FIXME: copy from libtheora, theora should somehow make this available for seeking */
-static int
-_theora_ilog (unsigned int v)
-{
-  int ret = 0;
-
-  while (v) {
-    ret++;
-    v >>= 1;
-  }
-  return (ret);
-}
-
 /* two tasks to do here: set the streamheader on the caps, and use libtheora to
    parse the headers */
 static void
@@ -307,6 +294,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
   GstCaps *caps;
   gint i;
   guint32 bitstream_version;
+  th_setup_info *setup = NULL;
 
   g_assert (!parse->streamheader_received);
 
@@ -333,16 +321,19 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     packet.packetno = i + 1;
     packet.e_o_s = 0;
     packet.b_o_s = (i == 0);
-    ret = theora_decode_header (&parse->info, &parse->comment, &packet);
+    ret = th_decode_headerin (&parse->info, &parse->comment, &setup, &packet);
     if (ret < 0) {
       GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d\n",
           i + 1, ret);
     }
   }
+  if (setup) {
+    th_setup_free (setup);
+  }
 
   parse->fps_n = parse->info.fps_numerator;
   parse->fps_d = parse->info.fps_denominator;
-  parse->shift = _theora_ilog (parse->info.keyframe_frequency_force - 1);
+  parse->shift = parse->info.keyframe_granule_shift;
 
   /* With libtheora-1.0beta1 the granulepos scheme was changed:
    * where earlier the granulepos refered to the index/beginning
@@ -760,7 +751,7 @@ theora_parse_src_convert (GstPad * pad,
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
           *dest_value = gst_util_uint64_scale_int (src_value, 2,
-              parse->info.height * parse->info.width * 3);
+              parse->info.pic_height * parse->info.pic_width * 3);
           break;
         case GST_FORMAT_TIME:
           /* seems like a rather silly conversion, implement me if you like */
@@ -771,7 +762,7 @@ theora_parse_src_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = 3 * (parse->info.width * parse->info.height) / 2;
+          scale = 3 * (parse->info.pic_width * parse->info.pic_height) / 2;
         case GST_FORMAT_DEFAULT:
           *dest_value = scale * gst_util_uint64_scale (src_value,
               parse->info.fps_numerator,
@@ -792,7 +783,7 @@ theora_parse_src_convert (GstPad * pad,
           break;
         case GST_FORMAT_BYTES:
           *dest_value = gst_util_uint64_scale_int (src_value,
-              3 * parse->info.width * parse->info.height, 2);
+              3 * parse->info.pic_width * parse->info.pic_height, 2);
           break;
         default:
           res = FALSE;
@@ -911,8 +902,8 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      theora_info_init (&parse->info);
-      theora_comment_init (&parse->comment);
+      th_info_init (&parse->info);
+      th_comment_init (&parse->comment);
       parse->send_streamheader = TRUE;
       parse->buffer_queue = g_queue_new ();
       parse->event_queue = g_queue_new ();
@@ -928,8 +919,8 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      theora_info_clear (&parse->info);
-      theora_comment_clear (&parse->comment);
+      th_info_clear (&parse->info);
+      th_comment_clear (&parse->comment);
       theora_parse_clear_queue (parse);
       g_queue_free (parse->buffer_queue);
       g_queue_free (parse->event_queue);

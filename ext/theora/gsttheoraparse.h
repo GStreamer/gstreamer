@@ -25,7 +25,7 @@
 
 
 #include <gst/gst.h>
-#include <theora/theora.h>
+#include <theora/theoradec.h>
 
 G_BEGIN_DECLS
 
@@ -62,8 +62,8 @@ struct _GstTheoraParse {
   GQueue *		event_queue;
   GQueue *		buffer_queue;
 
-  theora_info		info;
-  theora_comment	comment;
+  th_info		info;
+  th_comment            comment;
 
   gint64		prev_frame;
   gint64		prev_keyframe;
