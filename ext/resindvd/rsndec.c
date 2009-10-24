@@ -277,7 +277,8 @@ rsn_dec_change_state (GstElement * element, GstStateChange transition)
 
       new_child = gst_element_factory_make ("autoconvert", NULL);
       decoder_factories = klass->get_decoder_factories (klass);
-      g_object_set (G_OBJECT (new_child), "factories", decoder_factories, NULL);
+      g_object_set (G_OBJECT (new_child), "initial-identity", TRUE,
+          "factories", decoder_factories, NULL);
       if (new_child == NULL || !rsn_dec_set_child (self, new_child))
         ret = GST_STATE_CHANGE_FAILURE;
       break;
