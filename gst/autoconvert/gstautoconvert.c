@@ -227,6 +227,8 @@ gst_auto_convert_init (GstAutoConvert * autoconvert,
 
   gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->sinkpad);
   gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->srcpad);
+
+  gst_segment_init (&autoconvert->sink_segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -801,6 +803,19 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     autoconvert->current_internal_sinkpad = internal_sinkpad;
     GST_AUTOCONVERT_UNLOCK (autoconvert);
 
+    /* Send new-segment event if we have one */
+    if (autoconvert->sink_segment.format != GST_FORMAT_UNDEFINED) {
+      GstEvent *event;
+      GstSegment *seg = &autoconvert->sink_segment;
+      event = gst_event_new_new_segment_full (TRUE,
+          seg->rate, seg->applied_rate, seg->format, seg->start,
+          seg->stop, seg->time);
+
+      autoconvert->drop_newseg = TRUE;
+      gst_pad_push_event (internal_srcpad, event);
+      autoconvert->drop_newseg = FALSE;
+    }
+
     GST_INFO_OBJECT (autoconvert,
         "Selected element %s",
         GST_OBJECT_NAME (GST_OBJECT (autoconvert->current_subelement)));
@@ -987,6 +1002,26 @@ gst_auto_convert_sink_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
   GstAutoConvert *autoconvert = GST_AUTO_CONVERT (gst_pad_get_parent (pad));
   GstPad *internal_srcpad;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    GstFormat format;
+    gdouble rate, arate;
+    gint64 start, stop, time;
+    gboolean update;
+
+    gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+        &start, &stop, &time);
+
+    GST_DEBUG_OBJECT (autoconvert,
+        "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
+        ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+        update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+        GST_TIME_ARGS (time));
+
+    /* Store the values for feeding to sub-elements */
+    gst_segment_set_newsegment_full (&autoconvert->sink_segment, update,
+        rate, arate, format, start, stop, time);
+  }
 
   internal_srcpad = gst_auto_convert_get_internal_srcpad (autoconvert);
   if (internal_srcpad) {
@@ -1322,6 +1357,14 @@ gst_auto_convert_internal_sink_event (GstPad * pad, GstEvent * event)
   GstAutoConvert *autoconvert =
       GST_AUTO_CONVERT (g_object_get_qdata (G_OBJECT (pad),
           parent_quark));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    if (autoconvert->drop_newseg) {
+      GST_DEBUG_OBJECT (autoconvert, "Dropping primer newsegment event");
+      gst_event_unref (event);
+      return TRUE;
+    }
+  }
 
   return gst_pad_push_event (autoconvert->srcpad, event);
 }

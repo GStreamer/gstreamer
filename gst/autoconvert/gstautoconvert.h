@@ -54,6 +54,8 @@ struct _GstAutoConvert
   GstPad *current_internal_sinkpad;
 
   GList *cached_events;
+  GstSegment sink_segment;
+  gboolean drop_newseg;
 };
 
 struct _GstAutoConvertClass
