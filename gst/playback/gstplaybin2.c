@@ -2611,22 +2611,16 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   GST_SOURCE_GROUP_LOCK (group);
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
-    REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
-    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
-    gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
     uridecodebin = group->uridecodebin;
+    gst_element_set_state (uridecodebin, GST_STATE_READY);
+    gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (uridecodebin));
   } else {
     GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
     uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
     if (!uridecodebin)
       goto no_decodebin;
     gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
-    group->uridecodebin = uridecodebin;
+    group->uridecodebin = gst_object_ref (uridecodebin);
   }
 
   /* configure connection speed */
@@ -2653,6 +2647,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       G_CALLBACK (no_more_pads_cb), group);
   group->notify_source_id = g_signal_connect (uridecodebin, "notify::source",
       G_CALLBACK (notify_source_cb), group);
+
   /* we have 1 pending no-more-pads */
   group->pending = 1;
 
@@ -2667,18 +2662,17 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   group->autoplug_factories_id =
       g_signal_connect (uridecodebin, "autoplug-factories",
       G_CALLBACK (autoplug_factories_cb), group);
-  group->autoplug_select_id = g_signal_connect (uridecodebin, "autoplug-select",
+  group->autoplug_select_id =
+      g_signal_connect (uridecodebin, "autoplug-select",
       G_CALLBACK (autoplug_select_cb), group);
 
   if (group->suburi) {
     /* subtitles */
     if (group->suburidecodebin) {
       GST_DEBUG_OBJECT (playbin, "reusing existing suburidecodebin");
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
-      gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
       suburidecodebin = group->suburidecodebin;
+      gst_element_set_state (suburidecodebin, GST_STATE_READY);
+      gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (suburidecodebin));
     } else {
       GST_DEBUG_OBJECT (playbin, "making new suburidecodebin");
       suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);
@@ -2686,7 +2680,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
         goto no_decodebin;
 
       gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
-      group->suburidecodebin = suburidecodebin;
+      group->suburidecodebin = gst_object_ref (suburidecodebin);
     }
 
     /* configure connection speed */
@@ -2795,11 +2789,25 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->video_sink)
     gst_object_unref (group->video_sink);
   group->video_sink = NULL;
-  /* we still have the decodebins added to the playbin2 but we can't remove them
-   * yet or change their state because this function might be called from the
-   * streaming threads, instead block the state so that state changes on the
-   * playbin2 don't affect us anymore */
-  group_set_locked_state_unlocked (playbin, group, TRUE);
+
+  if (group->uridecodebin) {
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
+    gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
+  }
+
+  if (group->suburidecodebin) {
+    REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+    REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
+    REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+    gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
+  }
+
   GST_SOURCE_GROUP_UNLOCK (group);
 
   return TRUE;
@@ -2927,10 +2935,28 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
       GST_PLAY_BIN_DYN_UNLOCK (playbin);
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_READY_TO_NULL:{
+      guint i;
+
       /* unlock so that all groups go to NULL */
       groups_set_locked_state (playbin, FALSE);
+
+      for (i = 0; i < 2; i++) {
+        if (playbin->groups[i].uridecodebin) {
+          gst_element_set_state (playbin->groups[i].uridecodebin,
+              GST_STATE_NULL);
+          gst_object_unref (playbin->groups[i].uridecodebin);
+          playbin->groups[i].uridecodebin = NULL;
+        }
+        if (playbin->groups[i].suburidecodebin) {
+          gst_element_set_state (playbin->groups[i].suburidecodebin,
+              GST_STATE_NULL);
+          gst_object_unref (playbin->groups[i].suburidecodebin);
+          playbin->groups[i].suburidecodebin = NULL;
+        }
+      }
       break;
+    }
     default:
       break;
   }
