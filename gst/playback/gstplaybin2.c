@@ -2711,8 +2711,21 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 
   if (suburidecodebin) {
     if (gst_element_set_state (suburidecodebin,
-            target) == GST_STATE_CHANGE_FAILURE)
-      goto suburidecodebin_failure;
+            target) == GST_STATE_CHANGE_FAILURE) {
+      GST_DEBUG_OBJECT (playbin,
+          "failed state change of subtitle uridecodebin");
+      GST_SOURCE_GROUP_LOCK (group);
+
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+      /* Might already be removed because of an error message */
+      if (GST_OBJECT_PARENT (suburidecodebin) == GST_OBJECT_CAST (playbin))
+        gst_bin_remove (GST_BIN_CAST (playbin), suburidecodebin);
+      group->pending = 1;
+      gst_element_set_state (suburidecodebin, GST_STATE_READY);
+      GST_SOURCE_GROUP_UNLOCK (group);
+    }
   }
   if (gst_element_set_state (uridecodebin, target) == GST_STATE_CHANGE_FAILURE)
     goto uridecodebin_failure;
@@ -2729,11 +2742,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 no_decodebin:
   {
     GST_SOURCE_GROUP_UNLOCK (group);
-    return FALSE;
-  }
-suburidecodebin_failure:
-  {
-    GST_DEBUG_OBJECT (playbin, "failed state change of subtitle uridecodebin");
     return FALSE;
   }
 uridecodebin_failure:
