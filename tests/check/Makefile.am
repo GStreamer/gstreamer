@@ -109,6 +109,7 @@ check_PROGRAMS = \
 	$(check_kate)  \
 	elements/aacparse \
 	elements/amrparse \
+	elements/autoconvert \
 	elements/asfmux \
 	elements/capssetter \
 	elements/legacyresample \

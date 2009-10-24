@@ -2,6 +2,7 @@
 aacparse
 amrparse
 asfmux
+autoconvert
 camerabin
 capssetter
 deinterleave
