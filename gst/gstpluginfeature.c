@@ -267,6 +267,8 @@ gst_plugin_feature_list_free (GList * list)
  * when done with the list.
  *
  * Returns: a copy of @list, with each feature's reference count incremented.
+ *
+ * Since: 0.10.26
  */
 GList *
 gst_plugin_feature_list_copy (GList * list)
