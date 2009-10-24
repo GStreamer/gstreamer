@@ -439,7 +439,6 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
   find.suggest = buf_helper_find_suggest;
   find.get_length = NULL;
 
-  /* FIXME: we need to keep this list within the registry */
   type_list = gst_type_find_factory_get_list ();
 
   for (l = type_list; l; l = l->next) {
