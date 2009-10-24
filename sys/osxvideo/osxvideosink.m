@@ -204,6 +204,8 @@ gst_osx_video_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Creating our window and our image */
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 320;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 240;
@@ -222,9 +224,9 @@ gst_osx_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 0;
+      gst_osx_video_sink_osxwindow_destroy (osxvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_osx_video_sink_osxwindow_destroy (osxvideosink);
       break;
     default:
       break;
