@@ -1887,9 +1887,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       gst_object_ref (group->suburidecodebin);
       gst_bin_remove (bin, group->suburidecodebin);
       gst_element_set_locked_state (group->suburidecodebin, FALSE);
-      gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
-      gst_object_unref (group->suburidecodebin);
-      group->suburidecodebin = NULL;
+      gst_element_set_state (group->suburidecodebin, GST_STATE_READY);
 
       no_more_pads_cb (NULL, group);
     }
@@ -2813,7 +2811,10 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
-    gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
+
+    /* Might already be removed because of errors */
+    if (GST_OBJECT_PARENT (group->suburidecodebin) == GST_OBJECT_CAST (playbin))
+      gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
   }
 
   GST_SOURCE_GROUP_UNLOCK (group);
