@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRegistry GstRegistry;
 typedef struct _GstRegistryClass GstRegistryClass;
+typedef struct _GstRegistryPrivate GstRegistryPrivate;
 
 /**
  * GstRegistry:
@@ -62,8 +63,10 @@ struct _GstRegistry {
   /* hash to speedup _lookup */
   GHashTable *basename_hash;
 
+  GstRegistryPrivate *private;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-2];
+  gpointer _gst_reserved[GST_PADDING-3];
 };
 
 struct _GstRegistryClass {

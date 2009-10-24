@@ -116,6 +116,12 @@
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
+struct _GstRegistryPrivate
+{
+  /* updated whenever the feature list changes */
+  guint32 cookie;
+};
+
 /* the one instance of the default registry and the mutex protecting the
  * variable. */
 static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
@@ -166,6 +172,7 @@ gst_registry_class_init (GstRegistryClass * klass)
   gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+  g_type_class_add_private (klass, sizeof (GstRegistryPrivate));
 
   /**
    * GstRegistry::plugin-added:
@@ -201,6 +208,9 @@ gst_registry_init (GstRegistry * registry)
 {
   registry->feature_hash = g_hash_table_new (g_str_hash, g_str_equal);
   registry->basename_hash = g_hash_table_new (g_str_hash, g_str_equal);
+  registry->private =
+      G_TYPE_INSTANCE_GET_PRIVATE (registry, GST_TYPE_REGISTRY,
+      GstRegistryPrivate);
 }
 
 static void
@@ -425,6 +435,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
     }
     f = next;
   }
+  registry->private->cookie++;
 }
 
 /**
@@ -500,6 +511,8 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   }
 
   gst_object_ref_sink (feature);
+
+  registry->private->cookie++;
   GST_OBJECT_UNLOCK (registry);
 
   GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);
@@ -529,6 +542,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
   GST_OBJECT_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
   g_hash_table_remove (registry->feature_hash, feature->name);
+  registry->private->cookie++;
   GST_OBJECT_UNLOCK (registry);
   gst_object_unref (feature);
 }
