@@ -8,6 +8,8 @@ libgstwavparse_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs
 libgstwavparse_la_LIBADD = \
 	-lgstriff-@GST_MAJORMINOR@ \
+	-lgstaudio-@GST_MAJORMINOR@ \
+	-lgsttag-@GST_MAJORMINOR@ \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(LIBM)
