@@ -137,13 +137,11 @@ debug_dump_get_element_params (GstElement * element)
 
 static void
 debug_dump_pad (GstPad * pad, gchar * color_name, gchar * element_name,
-    FILE * out, const gint indent)
+    GstDebugGraphDetails details, FILE * out, const gint indent)
 {
   GstPadTemplate *pad_templ;
   GstPadPresence presence;
   gchar *pad_name, *style_name;
-  gchar pad_flags[6];
-  const gchar *activation_mode = "-><";
   const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
@@ -158,16 +156,28 @@ debug_dump_pad (GstPad * pad, gchar * color_name, gchar * element_name,
       style_name = "filled,dashed";
     }
   }
-  /* check if pad flags */
-  pad_flags[0] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED) ? 'B' : 'b';
-  pad_flags[1] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING) ? 'F' : 'f';
-  pad_flags[2] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS) ? 'G' : 'g';
-  pad_flags[3] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS) ? 's' : 's';
-  pad_flags[4] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING) ? 'B' : 'b';
-  pad_flags[5] = '\0';
+  if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
+    gchar pad_flags[6];
+    const gchar *activation_mode = "-><";
 
-  fprintf (out, "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]\", height=\"0.2\", style=\"%s\"];\n", spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad), activation_mode[pad->mode],      /* NONE/PUSH/PULL */
-      pad_flags, style_name);
+    /* check if pad flags */
+    pad_flags[0] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED) ? 'B' : 'b';
+    pad_flags[1] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING) ? 'F' : 'f';
+    pad_flags[2] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS) ? 'G' : 'g';
+    pad_flags[3] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS) ? 's' : 's';
+    pad_flags[4] = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING) ? 'B' : 'b';
+    pad_flags[5] = '\0';
+
+    fprintf (out,
+        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]\", height=\"0.2\", style=\"%s\"];\n",
+        spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
+        activation_mode[pad->mode], pad_flags, style_name);
+  } else {
+    fprintf (out,
+        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
+        spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
+        style_name);
+  }
 
   g_free (pad_name);
 }
@@ -198,8 +208,8 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
         } else {
           target_element_name = "";
         }
-        debug_dump_pad (target_pad, color_name, target_element_name, out,
-            indent);
+        debug_dump_pad (target_pad, color_name, target_element_name, details,
+            out, indent);
         if (target_element) {
           g_free (target_element_name);
           gst_object_unref (target_element);
@@ -214,7 +224,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
             GST_PAD_SINK) ? "#aaaaff" : "#cccccc");
   }
   /* pads */
-  debug_dump_pad (pad, color_name, element_name, out, indent);
+  debug_dump_pad (pad, color_name, element_name, details, out, indent);
   g_free (element_name);
 }
 
