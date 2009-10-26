@@ -633,8 +633,8 @@ gst_auto_convert_get_or_make_element_from_factory (GstAutoConvert * autoconvert,
  */
 
 static gboolean
-factory_can_intersect (GstElementFactory * factory, GstPadDirection direction,
-    GstCaps * caps)
+factory_can_intersect (GstAutoConvert * autoconvert,
+    GstElementFactory * factory, GstPadDirection direction, GstCaps * caps)
 {
   GList *templates;
   gint has_direction = FALSE;
@@ -650,18 +650,26 @@ factory_can_intersect (GstElementFactory * factory, GstPadDirection direction,
 
     if (template->direction == direction) {
       GstCaps *intersect = NULL;
+      GstCaps *tmpl_caps = NULL;
 
       /* If there is more than one pad in this direction, we return FALSE
        * Only transform elements (with one sink and one source pad)
        * are accepted
        */
-      if (has_direction)
+      if (has_direction) {
+        GST_DEBUG_OBJECT (autoconvert, "Factory %" GST_PTR_FORMAT
+            " has more than one static template with dir %d",
+            template, direction);
         return FALSE;
+      }
       has_direction = TRUE;
 
-      intersect =
-          gst_caps_intersect (gst_static_caps_get (&template->static_caps),
-          caps);
+      tmpl_caps = gst_static_caps_get (&template->static_caps);
+      intersect = gst_caps_intersect (tmpl_caps, caps);
+      GST_DEBUG_OBJECT (autoconvert, "Intersection of factory %" GST_PTR_FORMAT
+          " static caps %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT
+          " is %" GST_PTR_FORMAT, factory, tmpl_caps, caps, intersect);
+      gst_caps_unref (tmpl_caps);
 
       if (intersect) {
         if (!gst_caps_is_empty (intersect))
@@ -746,16 +754,17 @@ gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps)
     /* Lets first check if according to the static pad templates on the factory
      * these caps have any chance of success
      */
-    if (!factory_can_intersect (factory, GST_PAD_SINK, caps)) {
+    if (!factory_can_intersect (autoconvert, factory, GST_PAD_SINK, caps)) {
       GST_LOG_OBJECT (autoconvert, "Factory %s does not accept sink caps %"
           GST_PTR_FORMAT,
           gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)), caps);
       continue;
     }
     if (other_caps != NULL) {
-      if (!factory_can_intersect (factory, GST_PAD_SRC, other_caps)) {
-        GST_LOG_OBJECT (autoconvert, "Factory %s does not accept src caps %"
-            GST_PTR_FORMAT,
+      if (!factory_can_intersect (autoconvert, factory, GST_PAD_SRC,
+              other_caps)) {
+        GST_LOG_OBJECT (autoconvert,
+            "Factory %s does not accept src caps %" GST_PTR_FORMAT,
             gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
             other_caps);
         continue;
@@ -1128,9 +1137,10 @@ gst_auto_convert_sink_getcaps (GstPad * pad)
     GstPad *internal_srcpad = NULL;
 
     if (other_caps != NULL) {
-      if (!factory_can_intersect (factory, GST_PAD_SRC, other_caps)) {
-        GST_LOG_OBJECT (autoconvert, "Factory %s does not accept src caps %"
-            GST_PTR_FORMAT,
+      if (!factory_can_intersect (autoconvert, factory, GST_PAD_SRC,
+              other_caps)) {
+        GST_LOG_OBJECT (autoconvert,
+            "Factory %s does not accept src caps %" GST_PTR_FORMAT,
             gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
             other_caps);
         continue;
