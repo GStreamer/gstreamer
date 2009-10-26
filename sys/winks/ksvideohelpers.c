@@ -21,6 +21,7 @@
 
 #include "ksvideohelpers.h"
 
+#include <math.h>
 #include <uuids.h>
 #include "kshelpers.h"
 
@@ -269,10 +270,47 @@ guess_aspect (gint width, gint height, gint * par_width, gint * par_height)
   }
 }
 
+/* NOTE: would probably be better to use a continued fractions approach here */
+static void
+compress_fraction (gint64 in_num, gint64 in_den, gint64 * out_num,
+    gint64 * out_den)
+{
+  gdouble on, od, orig;
+  guint denominators[] = { 1, 2, 3, 5, 7 }, i;
+  const gdouble max_loss = 0.1;
+
+  on = in_num;
+  od = in_den;
+  orig = on / od;
+
+  for (i = 0; i < G_N_ELEMENTS (denominators); i++) {
+    gint64 cur_n, cur_d;
+    gdouble cur, loss;
+
+    cur_n = floor ((on / (od / (gdouble) denominators[i])) + 0.5);
+    cur_d = denominators[i];
+    cur = (gdouble) cur_n / (gdouble) cur_d;
+    loss = fabs (cur - orig);
+
+    if (loss <= max_loss) {
+      *out_num = cur_n;
+      *out_den = cur_d;
+
+      return;
+    }
+  }
+
+  *out_num = in_num;
+  *out_den = in_den;
+}
+
 static gboolean
 ks_video_append_video_stream_cfg_fields (GstStructure * structure,
     const KS_VIDEO_STREAM_CONFIG_CAPS * vscc)
 {
+  GValue val = { 0, };
+  gint64 max_n, max_d;
+
   g_return_val_if_fail (structure, FALSE);
   g_return_val_if_fail (vscc, FALSE);
 
@@ -297,16 +335,22 @@ ks_video_append_video_stream_cfg_fields (GstStructure * structure,
   }
 
   /* framerate */
+  compress_fraction (NANOSECONDS, vscc->MaxFrameInterval, &max_n, &max_d);
+
   if (vscc->MinFrameInterval == vscc->MaxFrameInterval) {
-    gst_structure_set (structure,
-        "framerate", GST_TYPE_FRACTION,
-        (gint) (10000000 / vscc->MaxFrameInterval), 1, NULL);
+    g_value_init (&val, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&val, max_n, max_d);
   } else {
-    gst_structure_set (structure,
-        "framerate", GST_TYPE_FRACTION_RANGE,
-        (gint) (10000000 / vscc->MaxFrameInterval), 1,
-        (gint) (10000000 / vscc->MinFrameInterval), 1, NULL);
+    gint64 min_n, min_d;
+
+    compress_fraction (NANOSECONDS, vscc->MinFrameInterval, &min_n, &min_d);
+
+    g_value_init (&val, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range_full (&val, max_n, max_d, min_n, min_d);
   }
+
+  gst_structure_set_value (structure, "framerate", &val);
+  g_value_unset (&val);
 
   {
     gint par_width, par_height;
@@ -609,57 +653,46 @@ gboolean
 ks_video_fixate_media_type (const KSDATARANGE * range,
     guint8 * format, gint width, gint height, gint fps_n, gint fps_d)
 {
-  DWORD dwRate = (width * height * fps_n) / fps_d;
+  KS_DATARANGE_VIDEO *vr;
+  KS_VIDEOINFOHEADER *vih;
+  KS_BITMAPINFOHEADER *bih;
+  DWORD dwRate;
 
   g_return_val_if_fail (format != NULL, FALSE);
 
   if (IsEqualGUID (&range->Specifier, &FORMAT_VideoInfo)) {
-    KS_VIDEOINFOHEADER *vih = (KS_VIDEOINFOHEADER *) format;
-
-    /* FIXME: Need to figure out how to properly handle ranges */
-    if (vih->bmiHeader.biWidth != width || vih->bmiHeader.biHeight != height)
-      return FALSE;
-
-    vih->AvgTimePerFrame = gst_util_uint64_scale_int (10000000, fps_d, fps_n);
-    vih->dwBitRate = dwRate * vih->bmiHeader.biBitCount;
+    bih = &((KS_VIDEOINFOHEADER *) format)->bmiHeader;
   } else if (IsEqualGUID (&range->Specifier, &FORMAT_VideoInfo2)) {
-    KS_VIDEOINFOHEADER2 *vih = (KS_VIDEOINFOHEADER2 *) format;
-
-    /* FIXME: see above */
-    if (vih->bmiHeader.biWidth != width || vih->bmiHeader.biHeight != height)
-      return FALSE;
-
-    vih->AvgTimePerFrame = gst_util_uint64_scale_int (10000000, fps_d, fps_n);
-    vih->dwBitRate = dwRate * vih->bmiHeader.biBitCount;
+    bih = &((KS_VIDEOINFOHEADER2 *) format)->bmiHeader;
   } else if (IsEqualGUID (&range->Specifier, &FORMAT_MPEGVideo)) {
-    KS_MPEG1VIDEOINFO *vih = (KS_MPEG1VIDEOINFO *) format;
-
-    /* FIXME: see above */
-    if (vih->hdr.bmiHeader.biWidth != width ||
-        vih->hdr.bmiHeader.biHeight != height)
-    {
-      return FALSE;
-    }
-
-    vih->hdr.AvgTimePerFrame =
-        gst_util_uint64_scale_int (10000000, fps_d, fps_n);
-    vih->hdr.dwBitRate = dwRate * vih->hdr.bmiHeader.biBitCount;
+    bih = &((KS_MPEG1VIDEOINFO *) format)->hdr.bmiHeader;
   } else if (IsEqualGUID (&range->Specifier, &FORMAT_MPEG2Video)) {
-    KS_MPEGVIDEOINFO2 *vih = (KS_MPEGVIDEOINFO2 *) format;
-
-    /* FIXME: see above */
-    if (vih->hdr.bmiHeader.biWidth != width ||
-        vih->hdr.bmiHeader.biHeight != height)
-    {
-      return FALSE;
-    }
-
-    vih->hdr.AvgTimePerFrame =
-        gst_util_uint64_scale_int (10000000, fps_d, fps_n);
-    vih->hdr.dwBitRate = dwRate * vih->hdr.bmiHeader.biBitCount;
+    bih = &((KS_MPEGVIDEOINFO2 *) format)->hdr.bmiHeader;
   } else {
     return FALSE;
   }
+
+  /* These formats' structures share the most basic stuff */
+  vr = (KS_DATARANGE_VIDEO *) range;
+  vih = (KS_VIDEOINFOHEADER *) format;
+
+  /* FIXME: Need to figure out how to properly handle ranges */
+  if (bih->biWidth != width || bih->biHeight != height)
+    return FALSE;
+
+  /* Framerate, clamped because of fraction conversion rounding errors */
+  vih->AvgTimePerFrame =
+      gst_util_uint64_scale_int_round (NANOSECONDS, fps_d, fps_n);
+  vih->AvgTimePerFrame =
+      MAX (vih->AvgTimePerFrame, vr->ConfigCaps.MinFrameInterval);
+  vih->AvgTimePerFrame =
+      MIN (vih->AvgTimePerFrame, vr->ConfigCaps.MaxFrameInterval);
+
+  /* Bitrate, clamped for the same reason as framerate */
+  dwRate = (width * height * fps_n) / fps_d;
+  vih->dwBitRate = dwRate * bih->biBitCount;
+  vih->dwBitRate = MAX (vih->dwBitRate, vr->ConfigCaps.MinBitsPerSecond);
+  vih->dwBitRate = MIN (vih->dwBitRate, vr->ConfigCaps.MaxBitsPerSecond);
 
   return TRUE;
 }
