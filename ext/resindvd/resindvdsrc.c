@@ -1581,6 +1581,10 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       } else if (g_str_equal (key, "bracketright")) {
         nav_res =
             rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_NEXT_ANGLE);
+      } else if (key && key[0] >= '1' && key[0] <= '8') {
+        gint new_stream = key[0] - '1';
+        GST_INFO_OBJECT (src, "Selecting audio stream %d", new_stream);
+        rsn_dvdsrc_prepare_audio_stream_event (src, new_stream, new_stream);
       }
       break;
     }
