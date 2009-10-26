@@ -111,6 +111,7 @@ enum
 struct _GstGLWindowPrivate
 {
   GstGLNSWindow *internal_win_id;
+  NSOpenGLContext *gl_context;
   NSOpenGLContext *external_gl_context;
   GstGLWindowCB draw_cb;
   gpointer draw_data;
@@ -226,17 +227,12 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
+  NSRect rect;
 
   NSAutoreleasePool *pool = nil;
-  NSRect rect;
-  
-  static gint x = 0;
-  static gint y = 0;
-
-  x += 20;
-  y += 20;
 
   priv->internal_win_id = nil;
+  priv->gl_context = nil;
   priv->external_gl_context = (NSOpenGLContext *) external_gl_context;
   priv->draw_cb = NULL;
   priv->draw_data = NULL;
@@ -255,29 +251,16 @@ gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 
   rect.origin.x = 0;
   rect.origin.y = 0;
-  rect.size.width = width;
-  rect.size.height = height;
+  rect.size.width = 1;
+  rect.size.height = 1;
 
   priv->internal_win_id =[[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
     (NSTitledWindowMask | NSClosableWindowMask |
     NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: priv];
 
-  if (priv->internal_win_id) {
-    NSRect windowRect;
-    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
-    g_debug ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x, (int) mainRect.origin.y, 
-      (int) mainRect.size.width, (int) mainRect.size.height);
+  g_debug ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
 
-    windowRect = [priv->internal_win_id frame];
-    g_debug ("window rect: %d %d %d %d\n", (int) windowRect.origin.x, (int) windowRect.origin.y, 
-      (int) windowRect.size.width, (int) windowRect.size.height);
-
-    windowRect.origin.x += x;
-    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
-    [priv->internal_win_id setFrame:windowRect display:NO];
-  }
-  
   priv->thread = [NSThread currentThread];
   
   [NSApp setDelegate: priv->internal_win_id];
@@ -293,6 +276,37 @@ GQuark
 gst_gl_window_error_quark (void)
 {
   return g_quark_from_static_string ("gst-gl-window-error");
+}
+
+gulong
+gst_gl_window_get_internal_gl_context (GstGLWindow * window)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  return (gulong) priv->gl_context;
+}
+
+void
+callback_activate_gl_context (GstGLWindowPrivate * priv)
+{
+  [priv->gl_context makeCurrentContext];
+}
+
+void
+callback_inactivate_gl_context (GstGLWindowPrivate * priv)
+{
+  [priv->gl_context clearCurrentContext];
+}
+
+void
+gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
+{
+  GstGLWindowPrivate *priv = window->priv;
+  if (activate)
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (callback_activate_gl_context), priv);
+  else
+    gst_gl_window_send_message (window,
+        GST_GL_WINDOW_CB (callback_inactivate_gl_context), priv);
 }
 
 void
@@ -352,14 +366,14 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 void
-gst_gl_window_draw_unlocked (GstGLWindow * window)
+gst_gl_window_draw_unlocked (GstGLWindow * window, gint width, gint height)
 {
-  gst_gl_window_draw (window);
+  gst_gl_window_draw (window, width, height);
 }
 
 /* Thread safe */
 void
-gst_gl_window_draw (GstGLWindow * window)
+gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -371,6 +385,27 @@ gst_gl_window_draw (GstGLWindow * window)
       onThread:priv->thread withObject:nil waitUntilDone:YES];
     
     if (!priv->parent && !priv->visible) {
+      static gint x = 0;
+      static gint y = 0;
+
+      NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+      NSRect windowRect = [priv->internal_win_id frame];
+
+      g_debug ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x, (int) mainRect.origin.y, 
+        (int) mainRect.size.width, (int) mainRect.size.height);
+
+      windowRect.origin.x += x;
+      windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
+      windowRect.size.width = width;
+      windowRect.size.height = height;
+      [priv->internal_win_id setFrame:windowRect display:NO];
+
+      g_debug ("window rect: %d %d %d %d\n", (int) windowRect.origin.x, (int) windowRect.origin.y, 
+        (int) windowRect.size.width, (int) windowRect.size.height);
+
+      x += 20;
+      y += 20;
+
       g_debug ("make the window available");
       [priv->internal_win_id makeMainWindow];
       [priv->internal_win_id orderFront:priv->internal_win_id];
@@ -508,6 +543,10 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   
   glContext = [[NSOpenGLContext alloc] initWithFormat:fmt 
     shareContext:m_priv->external_gl_context];
+
+  g_debug ("NSOpenGL context created: %lud\n", (gulong) glContext);
+
+  priv->gl_context = glContext;
   
   [glView setOpenGLContext:glContext];
 
