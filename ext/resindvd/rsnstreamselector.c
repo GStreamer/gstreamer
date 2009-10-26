@@ -416,7 +416,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* forward */
-  GST_DEBUG_OBJECT (sel, "Forwarding buffer %p from pad %s:%s", buf,
+  GST_LOG_OBJECT (sel, "Forwarding buffer %p from pad %s:%s", buf,
       GST_DEBUG_PAD_NAME (pad));
   res = gst_pad_push (sel->srcpad, buf);
 done:
