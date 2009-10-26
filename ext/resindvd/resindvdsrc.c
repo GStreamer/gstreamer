@@ -1562,15 +1562,11 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
         gint title = 0;
         gint part = 0;
 
-        if (dvdnav_current_title_info (src->dvdnav, &title, &part) && title > 0
-            && part > 1) {
-          if (dvdnav_part_play (src->dvdnav, title, part - 1) ==
-              DVDNAV_STATUS_ERR)
+        if (dvdnav_current_title_info (src->dvdnav, &title, &part)) {
+          if (title > 0 && part > 1) {
             dvdnav_prev_pg_search (src->dvdnav);
-          nav_res = RSN_NAV_RESULT_BRANCH;
-        } else {
-          dvdnav_prev_pg_search (src->dvdnav);
-          nav_res = RSN_NAV_RESULT_BRANCH;
+            nav_res = RSN_NAV_RESULT_BRANCH;
+          }
         }
       } else if (g_str_equal (key, "period")) {
         dvdnav_next_pg_search (src->dvdnav);
@@ -2250,7 +2246,7 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
   return TRUE;
 }
 
-/* Called with dvd_lock held */
+/* Called with dvd_lock held. NOTE: Releases dvd_lock briefly */
 static void
 rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
 {
@@ -2281,8 +2277,10 @@ rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
   GST_LOG_OBJECT (src, "Schedule nav pack for running TS %" GST_TIME_FORMAT,
       GST_TIME_ARGS (next_nav->running_ts));
 
+  g_mutex_unlock (src->dvd_lock);
   gst_clock_id_wait_async (src->nav_clock_id, rsn_dvdsrc_nav_clock_cb, src);
   gst_object_unref (clock);
+  g_mutex_lock (src->dvd_lock);
 }
 
 /* Called with dvd_lock held */
@@ -2649,10 +2647,10 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
      * everything up and flushing, we just need to step to the next
      * data block (below) so we know our new position */
     ret = TRUE;
+    /* HACK to make initial seek work: */
     src->first_seek = FALSE;
   } else {
-    /* FIXME: Handle other formats: Time, title, chapter, angle */
-    /* HACK to make initial seek work: */
+    /* Handle other formats: Time, title, chapter, angle */
     if (segment->format == GST_FORMAT_TIME) {
       g_mutex_lock (src->dvd_lock);
       src->discont = TRUE;
@@ -2733,8 +2731,12 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
 
     GST_LOG_OBJECT (src, "Entering prepare_next_block after seek."
         " Flushing = %d", src->flushing_seek);
-    if (rsn_dvdsrc_prepare_next_block (src, FALSE) != GST_FLOW_OK)
-      goto fail;
+    while (src->cur_start_ts == GST_CLOCK_TIME_NONE) {
+      if (rsn_dvdsrc_prepare_next_block (src, FALSE) != GST_FLOW_OK)
+        goto fail;
+      if (src->cur_start_ts == GST_CLOCK_TIME_NONE)
+        gst_buffer_replace (&src->next_buf, NULL);
+    }
     GST_LOG_OBJECT (src, "prepare_next_block after seek done");
 
     segment->format = GST_FORMAT_TIME;
