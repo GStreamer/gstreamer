@@ -3964,10 +3964,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           if (!gst_byte_reader_get_uint32_be (&stps, &n_sample_syncs))
             goto corrupt_file;
 
+          /* if there are no entries, the stss table contains the real
+           * sync samples */
           if (n_sample_syncs != 0) {
-            /* no entries, the stss table contains the real sync
-             * samples */
-          } else {
             /* make sure there's enough data */
             if (!qt_atom_parser_has_chunks (&stps, n_sample_syncs, 4))
               goto corrupt_file;
