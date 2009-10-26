@@ -333,8 +333,13 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
   if (G_UNLIKELY (stream == NULL)) {
     GST_WARNING_OBJECT (demux, "Payload for unknown stream %u, skipping",
         stream_num);
-    *p_data += payload_len;
-    *p_size -= payload_len;
+    if (*p_size < payload_len) {
+      *p_data += *p_size;
+      *p_size = 0;
+    } else {
+      *p_data += payload_len;
+      *p_size -= payload_len;
+    }
     return TRUE;
   }
 
@@ -447,6 +452,7 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+  GST_LOG_OBJECT (demux, "Buffer size: %u", size);
 
   /* need at least two payload flag bytes, send time, and duration */
   if (G_UNLIKELY (size < 2 + 4 + 2))
@@ -468,7 +474,7 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
           ec_len_type);
       ec_len = 2;
     }
-    GST_LOG ("packet has error correction (%u bytes)", ec_len);
+    GST_LOG_OBJECT (demux, "packet has error correction (%u bytes)", ec_len);
 
     /* still need at least two payload flag bytes, send time, and duration */
     if (size <= (1 + ec_len) + 2 + 4 + 2)
@@ -502,6 +508,7 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
   data += 4 + 2;
   size -= 4 + 2;
 
+  GST_LOG_OBJECT (demux, "flags            : 0x%x", flags1);
   GST_LOG_OBJECT (demux, "multiple payloads: %u", has_multiple_payloads);
   GST_LOG_OBJECT (demux, "packet length    : %u", packet.length);
   GST_LOG_OBJECT (demux, "sequence         : %u", packet.sequence);
@@ -520,7 +527,10 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
    * parsing than there is data in bytes (for sample see bug 431318) */
   if (G_UNLIKELY (packet.length != 0 && packet.length < demux->packet_size)) {
     GST_LOG_OBJECT (demux, "shortened packet, adjusting available data size");
-    size -= (demux->packet_size - packet.length);
+    if (size < demux->packet_size - packet.length)
+      goto short_packet;
+    else
+      size -= (demux->packet_size - packet.length);
   }
 
   if (has_multiple_payloads) {
@@ -538,7 +548,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     GST_LOG_OBJECT (demux, "num payloads     : %u", num);
 
     for (i = 0; i < num; ++i) {
-      GST_LOG_OBJECT (demux, "Parsing payload %u/%u", i + 1, num);
+      GST_LOG_OBJECT (demux, "Parsing payload %u/%u, size left: %u", i + 1, num,
+          size);
 
       ret = gst_asf_demux_parse_payload (demux, &packet, lentype, &data, &size);
 
