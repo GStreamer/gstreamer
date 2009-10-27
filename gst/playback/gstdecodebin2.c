@@ -724,36 +724,32 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodebin2:low-percent
-   * 
-   * Low threshold percent for buffering to start.
    *
-   * Not implemented yet.
+   * Low threshold percent for buffering to start.
    *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start (not implemented)", 0, 100,
+          "Low threshold for buffering to start", 0, 100,
           DEFAULT_LOW_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstDecodebin2:high-percent
-   * 
-   * High threshold percent for buffering to finish.
    *
-   * Not implemented yet.
+   * High threshold percent for buffering to finish.
    *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish (not implemented)", 0, 100,
+          "High threshold for buffering to finish", 0, 100,
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstDecodebin2:max-size-bytes
    *
    * Max amount amount of bytes in the queue (0=automatic).
-   * 
+   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BYTES,
@@ -765,7 +761,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodebin2:max-size-buffers
    *
    * Max amount amount of buffers in the queue (0=automatic).
-   * 
+   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BUFFERS,
@@ -777,7 +773,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodebin2:max-size-time
    *
    * Max amount amount of time in the queue (in ns, 0=automatic).
-   * 
+   *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_TIME,
@@ -2289,6 +2285,10 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
     goto missing_multiqueue;
 
   g_object_set (mq, "use-buffering", dbin->use_buffering, NULL);
+  if (dbin->use_buffering) {
+    g_object_set (mq, "low-percent", dbin->low_percent, NULL);
+    g_object_set (mq, "high-percent", dbin->high_percent, NULL);
+  }
 
   /* configure queue sizes for preroll */
   decodebin_set_queue_size (dbin, mq, TRUE);
