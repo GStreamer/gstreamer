@@ -124,7 +124,7 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
 GstBuffer *
 gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
 {
-  guint8 *data, *end;
+  guint8 *data, *end, tmp;
 
   buf = gst_buffer_make_writable (buf);
 
@@ -132,8 +132,10 @@ gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
   while ((data + 1) < end) {
-    /* byte-swap in an alignment-safe way */
-    GST_WRITE_UINT16_BE (data, GST_READ_UINT16_LE (data));
+    /* byte-swap */
+    tmp = data[0];
+    data[0] = data[1];
+    data[1] = tmp;
     data += sizeof (guint16);
   }
   return buf;
