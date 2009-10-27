@@ -169,13 +169,13 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
 }
 
 static void
-gst_asf_demux_reset (GstASFDemux * demux)
+gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
 {
   GST_LOG_OBJECT (demux, "resetting");
 
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   demux->segment_running = FALSE;
-  if (demux->adapter) {
+  if (demux->adapter && !chain_reset) {
     gst_adapter_clear (demux->adapter);
     g_object_unref (demux->adapter);
     demux->adapter = NULL;
@@ -215,7 +215,8 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->first_ts = GST_CLOCK_TIME_NONE;
   demux->segment_ts = GST_CLOCK_TIME_NONE;
   demux->in_gap = 0;
-  gst_segment_init (&demux->in_segment, GST_FORMAT_UNDEFINED);
+  if (!chain_reset)
+    gst_segment_init (&demux->in_segment, GST_FORMAT_UNDEFINED);
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->seekable = FALSE;
   demux->broadcast = FALSE;
@@ -225,6 +226,19 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->sidx_entries = NULL;
 
   demux->speed_packets = 1;
+
+  if (chain_reset) {
+    GST_LOG_OBJECT (demux, "Restarting");
+    gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+    demux->need_newsegment = TRUE;
+    demux->segment_running = FALSE;
+    demux->accurate = FALSE;
+    demux->metadata = gst_caps_new_empty ();
+    demux->global_metadata = gst_structure_empty_new ("metadata");
+    demux->data_size = 0;
+    demux->data_offset = 0;
+    demux->index_offset = 0;
+  }
 }
 
 static void
@@ -245,7 +259,7 @@ gst_asf_demux_init (GstASFDemux * demux, GstASFDemuxClass * klass)
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
   /* set initial state */
-  gst_asf_demux_reset (demux);
+  gst_asf_demux_reset (demux, FALSE);
 }
 
 static gboolean
@@ -720,9 +734,14 @@ typedef struct
   guint64 size;
 } AsfObject;
 
+
+/* expect is true when the user is expeting an object,
+ * when false, it will give no warnings if the object
+ * is not identified
+ */
 static gboolean
 asf_demux_peek_object (GstASFDemux * demux, const guint8 * data,
-    guint data_len, AsfObject * object)
+    guint data_len, AsfObject * object, gboolean expect)
 {
   ASFGuid guid;
 
@@ -738,7 +757,7 @@ asf_demux_peek_object (GstASFDemux * demux, const guint8 * data,
 
   /* FIXME: make asf_demux_identify_object_guid() */
   object->id = gst_asf_demux_identify_guid (asf_object_guids, &guid);
-  if (object->id == ASF_OBJ_UNDEFINED) {
+  if (object->id == ASF_OBJ_UNDEFINED && expect) {
     GST_WARNING_OBJECT (demux, "Unknown object %08x-%08x-%08x-%08x",
         guid.v1, guid.v2, guid.v3, guid.v4);
   }
@@ -759,7 +778,7 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   if (cdata == NULL)
     goto need_more_data;
 
-  asf_demux_peek_object (demux, cdata, ASF_OBJECT_HEADER_SIZE, &obj);
+  asf_demux_peek_object (demux, cdata, ASF_OBJECT_HEADER_SIZE, &obj, TRUE);
   if (obj.id != ASF_OBJ_HEADER)
     goto wrong_type;
 
@@ -890,7 +909,7 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
     GstFlowReturn flow;
     AsfObject obj;
 
-    asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj);
+    asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj, TRUE);
     gst_buffer_replace (&buf, NULL);
 
     /* check for sanity */
@@ -924,7 +943,7 @@ gst_asf_demux_parse_data_object_start (GstASFDemux * demux, guint8 * data)
 {
   AsfObject obj;
 
-  asf_demux_peek_object (demux, data, 50, &obj);
+  asf_demux_peek_object (demux, data, 50, &obj, TRUE);
   if (obj.id != ASF_OBJ_DATA) {
     GST_WARNING_OBJECT (demux, "headers not followed by a DATA object");
     return FALSE;
@@ -984,7 +1003,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   if (!gst_asf_demux_pull_data (demux, 0, 16 + 8, &buf, NULL))
     goto read_failed;
 
-  asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj);
+  asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj, TRUE);
   gst_buffer_replace (&buf, NULL);
 
   if (obj.id != ASF_OBJ_HEADER)
@@ -1509,6 +1528,27 @@ parse_error:
   }
 }
 
+#define GST_ASF_DEMUX_CHECK_HEADER_YES       0
+#define GST_ASF_DEMUX_CHECK_HEADER_NO        1
+#define GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA 2
+
+static gint
+gst_asf_demux_check_header (GstASFDemux * demux)
+{
+  AsfObject obj;
+  guint8 *cdata = (guint8 *) gst_adapter_peek (demux->adapter,
+      ASF_OBJECT_HEADER_SIZE);
+  if (cdata == NULL)            /* need more data */
+    return GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA;
+
+  asf_demux_peek_object (demux, cdata, ASF_OBJECT_HEADER_SIZE, &obj, FALSE);
+  if (obj.id != ASF_OBJ_HEADER) {
+    return GST_ASF_DEMUX_CHECK_HEADER_NO;
+  } else {
+    return GST_ASF_DEMUX_CHECK_HEADER_YES;
+  }
+}
+
 static GstFlowReturn
 gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -1537,6 +1577,24 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
   gst_adapter_push (demux->adapter, buf);
 
   switch (demux->state) {
+    case GST_ASF_DEMUX_STATE_INDEX:{
+      gint result = gst_asf_demux_check_header (demux);
+      if (result == GST_ASF_DEMUX_CHECK_HEADER_NEED_DATA)       /* need more data */
+        break;
+
+      if (result == GST_ASF_DEMUX_CHECK_HEADER_NO) {
+        /* we don't care about this, probably an index */
+        /* TODO maybe would be smarter to skip all the indices
+         * until we got a new header or EOS to decide */
+        GST_LOG_OBJECT (demux, "Received index object, its EOS");
+        goto eos;
+      } else {
+        GST_INFO_OBJECT (demux, "Chained asf starting");
+        /* cleanup and get ready for a chained asf */
+        gst_asf_demux_reset (demux, TRUE);
+        /* fall through */
+      }
+    }
     case GST_ASF_DEMUX_STATE_HEADER:{
       ret = gst_asf_demux_chain_headers (demux);
       if (demux->state != GST_ASF_DEMUX_STATE_DATA)
@@ -1552,10 +1610,22 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
       while (gst_adapter_available (demux->adapter) >= data_size) {
         GstBuffer *buf;
 
-        /* do not overshoot data section when streaming */
-        if (G_UNLIKELY (demux->num_packets != 0 && demux->packet >= 0
-                && demux->packet >= demux->num_packets))
-          goto eos;
+        /* we don't know the length of the stream
+         * check for a chained asf everytime */
+        if (demux->num_packets == 0) {
+          gint result = gst_asf_demux_check_header (demux);
+
+          if (result == GST_ASF_DEMUX_CHECK_HEADER_YES) {
+            GST_INFO_OBJECT (demux, "Chained asf starting");
+            /* cleanup and get ready for a chained asf */
+            gst_asf_demux_reset (demux, TRUE);
+            break;
+          }
+        } else if (G_UNLIKELY (demux->num_packets != 0 && demux->packet >= 0
+                && demux->packet >= demux->num_packets)) {
+          /* do not overshoot data section when streaming */
+          break;
+        }
 
         buf = gst_adapter_take_buffer (demux->adapter, data_size);
 
@@ -1571,6 +1641,10 @@ gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
 
         if (demux->packet >= 0)
           ++demux->packet;
+      }
+      if (G_UNLIKELY (demux->num_packets != 0 && demux->packet >= 0
+              && demux->packet >= demux->num_packets)) {
+        demux->state = GST_ASF_DEMUX_STATE_INDEX;
       }
       break;
     }
@@ -3130,7 +3204,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   }
 
   /* get size of the stream object */
-  if (!asf_demux_peek_object (demux, data, size, &stream_obj))
+  if (!asf_demux_peek_object (demux, data, size, &stream_obj, TRUE))
     goto not_enough_data;
 
   if (stream_obj.id != ASF_OBJ_STREAM)
@@ -3341,7 +3415,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
   if (*p_size < ASF_OBJECT_HEADER_SIZE)
     return ASF_FLOW_NEED_MORE_DATA;
 
-  asf_demux_peek_object (demux, *p_data, ASF_OBJECT_HEADER_SIZE, &obj);
+  asf_demux_peek_object (demux, *p_data, ASF_OBJECT_HEADER_SIZE, &obj, TRUE);
   gst_asf_demux_skip_bytes (ASF_OBJECT_HEADER_SIZE, p_data, p_size);
 
   obj_data_size = obj.size - ASF_OBJECT_HEADER_SIZE;
@@ -3738,7 +3812,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_asf_demux_reset (demux);
+      gst_asf_demux_reset (demux, FALSE);
       break;
     default:
       break;
