@@ -411,12 +411,17 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
     goto broken_header;
 
   GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
-  {
-    GstCaps *caps = gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
-        rate, "channels", G_TYPE_INT, chans, NULL);
+
+  if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans)) {
+    GstCaps *caps = gst_caps_new_simple ("audio/x-ac3",
+        "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
+        "channels", G_TYPE_INT, chans, NULL);
     gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
+
+    ac3parse->sample_rate = rate;
+    ac3parse->channels = chans;
   }
 
   return GST_FLOW_OK;
