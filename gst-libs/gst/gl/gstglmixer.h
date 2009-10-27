@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2009 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -42,11 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstGLMixer GstGLMixer;
 typedef struct _GstGLMixerClass GstGLMixerClass;
 
-typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer, 
+typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
   GstCaps* outcaps);
 typedef void (*GstGLMixerReset) (GstGLMixer *mixer);
 typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix,
-  GArray *buffers, GstBuffer *outbuf);
+  GPtrArray *buffers, GstBuffer *outbuf);
 
 struct _GstGLMixer
 {
@@ -62,7 +62,7 @@ struct _GstGLMixer
   /* sinkpads, a GSList of GstGLMixerPads */
   GSList *sinkpads;
 
-  GArray *array_buffers;
+  GPtrArray *array_buffers;
 
   gint numpads;
 
@@ -78,7 +78,7 @@ struct _GstGLMixer
 
   gint fps_n;
   gint fps_d;
-  
+
   /* Next available sinkpad index */
   gint next_sinkpad;
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2009 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -40,7 +40,7 @@ struct _GstGLMosaic
     GstGLMixer mixer;
 
     GstGLShader *shader;
-    GArray *input_gl_buffers;
+    GPtrArray *input_gl_buffers;
 };
 
 struct _GstGLMosaicClass
