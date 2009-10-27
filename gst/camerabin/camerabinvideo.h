@@ -24,7 +24,6 @@
 #include <gst/gstbin.h>
 
 G_BEGIN_DECLS
-//#define USE_TIMEOVERLAY 1
 #define ARG_DEFAULT_MUTE FALSE
 #define GST_TYPE_CAMERABIN_VIDEO             (gst_camerabin_video_get_type())
 #define GST_CAMERABIN_VIDEO_CAST(obj)        ((GstCameraBinVideo*)(obj))

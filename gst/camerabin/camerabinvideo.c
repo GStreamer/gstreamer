@@ -580,13 +580,6 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   vid->vid_tee_probe_id = gst_pad_add_buffer_probe (vid->tee_video_srcpad,
       G_CALLBACK (camerabin_video_pad_tee_src0_have_buffer), vid);
 
-#ifdef USE_TIMEOVERLAY
-  /* Add timeoverlay element to visualize elapsed time for debugging */
-  if (!(gst_camerabin_create_and_add_element (vidbin, "timeoverlay"))) {
-    goto error;
-  }
-#endif
-
   /* Add user set or default video encoder element */
   if (vid->user_vid_enc) {
     vid->vid_enc = vid->user_vid_enc;
