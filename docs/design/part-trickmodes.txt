@@ -136,17 +136,21 @@ client side forward trickmodes
 The seek happens as stated above. a NEW_SEGMENT event is sent downstream with a rate
 different from 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
 rate conversion of the media data (retimestamp video frames, resample audio, ...).
-A plugin should not drop frames unless the SKIP flag is set.  When the SKIP flag is
-set, a plugin can decide to drop frames in the case of fast playback or use a more
-efficient decoding algorithm (skip B frames, ...). If a plugin decides to resample
-or retimestamp, it should modify the NEW_SEGMENT with a rate of 1.0 and update the 
-applied rate so that downstream elements don't resample again but are aware that the
-media has been modified.
+
+If a plugin decides to resample or retimestamp, it should modify the NEW_SEGMENT with
+a rate of 1.0 and update the applied rate so that downstream elements don't resample
+again but are aware that the media has been modified.
 
 The GStreamer base audio and video sinks will resample automatically if they receive
 a NEW_SEGMENT event with a rate different from 1.0. The position reporting in the
 base audio and video sinks will also depend on the applied rate of the segment
 information.
+
+When the SKIP flag is set, frames can be dropped in the elements. If S is the
+speedup factor, a good algorithm for implementing frame skipping is to send audio in
+chunks of Nms (usualy 300ms is good) and then skip ((S-1) * Nns) of audio data.
+For the video we send only the keyframes in the (S * Nns) interval. In this
+case, the demuxer would scale the timestamps and would set an applied rate of S.
 
 
 client side backwards trickmode 
@@ -194,6 +198,9 @@ For plugins the following rules apply:
    and retimestamp the buffers. Any rate adjustments performed on the media must
    be added to the applied_rate and subtracted from the rate members in the
    NEWSEGMENT event.
+
+ In SKIP mode, the same algorithm as for forward SKIP mode can be used.
+
 
 Notes:
 
