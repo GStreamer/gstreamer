@@ -49,6 +49,7 @@ struct _RsnStreamSelector {
   guint padcount;
 
   GstSegment segment;
+  gboolean mark_discont;
 };
 
 struct _RsnStreamSelectorClass {

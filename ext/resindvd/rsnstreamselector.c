@@ -92,7 +92,6 @@ struct _RsnSelectorPad
 
   gboolean active;
   gboolean eos;
-  gboolean segment_pending;
   GstSegment segment;
   GstTagList *tags;
 };
@@ -270,10 +269,6 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
       gst_segment_set_newsegment_full (&selpad->segment, update,
           rate, arate, format, start, stop, time);
-      /* if we are not going to forward the segment, mark the segment as
-       * pending */
-      if (!forward)
-        selpad->segment_pending = TRUE;
       break;
     }
     case GST_EVENT_TAG:
@@ -388,6 +383,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   RsnSelectorPad *selpad;
   GstClockTime timestamp;
   GstSegment *seg;
+  gboolean discont;
 
   sel = RSN_STREAM_SELECTOR (gst_pad_get_parent (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
@@ -406,13 +402,16 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (pad != active_sinkpad)
     goto ignore;
 
-  /* if we have a pending segment, push it out now */
-  if (selpad->segment_pending) {
-    gst_pad_push_event (sel->srcpad, gst_event_new_new_segment_full (FALSE,
-            seg->rate, seg->applied_rate, seg->format, seg->start, seg->stop,
-            seg->time));
+  /* If we just switched pads, mark a discont buffer */
+  GST_OBJECT_LOCK (sel);
+  discont = sel->mark_discont;
+  sel->mark_discont = FALSE;
+  GST_OBJECT_UNLOCK (sel);
 
-    selpad->segment_pending = FALSE;
+  if (discont) {
+    GST_DEBUG_OBJECT (sel, "Marking buffer discont due to pad switch");
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
   /* forward */
@@ -711,6 +710,8 @@ rsn_stream_selector_set_active (RsnStreamSelector * sel, GstPad * pad)
       GST_DEBUG_OBJECT (sel, "New active pad is %" GST_PTR_FORMAT,
           sel->active_sinkpad);
     }
+    /* Mark the next buffer as discontinuous */
+    sel->mark_discont = TRUE;
   }
   GST_OBJECT_UNLOCK (GST_OBJECT_CAST (sel));
 }
