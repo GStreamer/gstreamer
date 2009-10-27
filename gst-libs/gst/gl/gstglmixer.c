@@ -910,7 +910,7 @@ gst_gl_mixer_process_buffers (GstGLMixer * mix, GstBuffer * outbuf)
         gst_object_sync_values (G_OBJECT (pad), stream_time);
 
       /* put buffer into array */
-      g_array_insert_val (mix->array_buffers, array_index, mixcol->buffer);
+      mix->array_buffers->pdata[array_index] = mixcol->buffer;
 
       if (pad == mix->master) {
         gint64 running_time;
@@ -1213,6 +1213,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
       GSList *walk = mix->sinkpads;
+      gint i = 0;
 
       GstElement *parent = GST_ELEMENT (gst_element_get_parent (mix));
       GstStructure *structure =
@@ -1244,9 +1245,10 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         walk = g_slist_next (walk);
         sink_pad->display = gst_gl_display_new ();
       }
-      mix->array_buffers =
-          g_array_sized_new (FALSE, TRUE, sizeof (GstBuffer *),
-          mix->next_sinkpad);
+      mix->array_buffers = g_ptr_array_sized_new (mix->next_sinkpad);
+      for (i = 0; i < mix->next_sinkpad; ++i) {
+        g_ptr_array_add (mix->array_buffers, NULL);
+      }
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
@@ -1256,7 +1258,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       GSList *walk = mix->sinkpads;
       GST_LOG_OBJECT (mix, "stopping collectpads");
       gst_collect_pads_stop (mix->collect);
-      g_array_free (mix->array_buffers, TRUE);
+      g_ptr_array_free (mix->array_buffers, TRUE);
       while (walk) {
         GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
         walk = g_slist_next (walk);
