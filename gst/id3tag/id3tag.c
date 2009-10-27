@@ -374,10 +374,11 @@ id3v2_frame_write_string (GstId3v2Frame * frame, int encoding,
 
     /* Write the BOM */
     id3v2_frame_write_bytes (frame, (const guint8 *) bom, 2);
-    /* NUL terminator is 2 bytes, if present */
-    terminator_length = null_terminate ? 2 : 0;
-    id3v2_frame_write_bytes (frame, (const guint8 *) utf16,
-        utf16len + terminator_length);
+    id3v2_frame_write_bytes (frame, (const guint8 *) utf16, utf16len);
+    if (null_terminate) {
+      /* NUL terminator is 2 bytes, if present. */
+      id3v2_frame_write_uint16 (frame, 0);
+    }
 
     g_free (utf16);
   } else {
