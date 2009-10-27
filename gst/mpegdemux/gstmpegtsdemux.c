@@ -834,18 +834,16 @@ mpegts_is_elem_pid (GstMpegTSDemux * demux, guint16 PID)
 }
 
 static gboolean
-gst_mpegts_demux_send_new_segment (GstMpegTSDemux * demux,
-    GstMpegTSStream * stream, gint64 pts)
+gst_mpegts_demux_setup_base_pts (GstMpegTSDemux * demux, gint64 pts)
 {
   GstMpegTSStream *PCR_stream;
   GstMpegTSStream *PMT_stream;
-  GstClockTime time;
   guint64 base_PCR;
 
   /* for the reference start time we need to consult the PCR_PID of the
    * current PMT */
   if (demux->current_PMT == 0)
-    goto no_pmt;
+    goto no_pmt_stream;
 
   PMT_stream = demux->streams[demux->current_PMT];
   if (PMT_stream == NULL)
@@ -870,10 +868,40 @@ gst_mpegts_demux_send_new_segment (GstMpegTSDemux * demux,
   }
   base_PCR = PCR_stream->base_PCR;
 
-  demux->base_pts = time = MPEGTIME_TO_GSTTIME (base_PCR);
+  demux->base_pts = MPEGTIME_TO_GSTTIME (base_PCR);
 
-  GST_DEBUG_OBJECT (demux, "segment PTS to (%" G_GUINT64_FORMAT ") time: %"
-      GST_TIME_FORMAT, base_PCR, GST_TIME_ARGS (time));
+  if (demux->base_pts == GST_CLOCK_TIME_NONE)
+    return FALSE;
+
+  return TRUE;
+
+no_pmt_stream:
+  {
+    GST_DEBUG_OBJECT (demux, "no PMT stream found");
+    return FALSE;
+  }
+no_pcr_stream:
+  {
+    GST_DEBUG_OBJECT (demux, "no PCR stream found");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_mpegts_demux_send_new_segment (GstMpegTSDemux * demux,
+    GstMpegTSStream * stream, gint64 pts)
+{
+  GstClockTime time;
+
+  /* base_pts needs to have been set up by a call to
+   * gst_mpegts_demux_setup_base_pts() before calling this function */
+  if (demux->base_pts == GST_CLOCK_TIME_NONE)
+    goto no_base_time;
+
+  time = demux->base_pts;
+
+  GST_DEBUG_OBJECT (demux, "segment PTS to time: %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
   if (demux->clock && demux->clock_base == GST_CLOCK_TIME_NONE) {
     demux->clock_base = gst_clock_get_time (demux->clock);
@@ -887,7 +915,7 @@ gst_mpegts_demux_send_new_segment (GstMpegTSDemux * demux,
   return TRUE;
 
   /* ERRORS */
-no_pmt:
+no_base_time:
   {
     /* check if it's in our partial ts pid list */
     if (mpegts_is_elem_pid (demux, stream->PID)) {
@@ -903,16 +931,7 @@ no_pmt:
     }
 
   }
-no_pmt_stream:
-  {
-    GST_DEBUG_OBJECT (demux, "no PMT stream found");
-    return FALSE;
-  }
-no_pcr_stream:
-  {
-    GST_DEBUG_OBJECT (demux, "no PCR stream found");
-    return FALSE;
-  }
+  return FALSE;
 }
 
 static void
@@ -1012,8 +1031,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-              PCR_PID]->discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+          discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1035,8 +1054,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-                PCR_PID]->last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+            last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
@@ -1110,6 +1129,10 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
 
   /* check if we have a pad already */
   if (srcpad == NULL) {
+    /* When adding a stream, require either a valid base PCR, or a valid PTS */
+    if (!gst_mpegts_demux_setup_base_pts (demux, pts))
+      goto bad_timestamp;
+
     /* fill in the last bits of the stream */
     /* if no stream type, then assume it based on the PES start code, 
      * needed for partial ts streams without PMT */
