@@ -353,6 +353,7 @@ static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
 
 static GstCaps *gst_queue_getcaps (GstPad * pad);
+static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_queue_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
@@ -465,6 +466,8 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
       GST_DEBUG_FUNCPTR (gst_queue_handle_sink_event));
   gst_pad_set_getcaps_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_acceptcaps_function (queue->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
   gst_pad_set_bufferalloc_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_bufferalloc));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
@@ -481,6 +484,8 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
       GST_DEBUG_FUNCPTR (gst_queue_src_checkgetrange_function));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
+  gst_pad_set_acceptcaps_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
   gst_pad_set_event_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
   gst_pad_set_query_function (queue->srcpad,
@@ -548,6 +553,21 @@ gst_queue_finalize (GObject * object)
   g_free (queue->temp_location);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gboolean
+gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstQueue *queue;
+  GstPad *otherpad;
+  gboolean result;
+
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+
+  otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
+  result = gst_pad_peer_accept_caps (otherpad, caps);
+
+  return result;
 }
 
 static GstCaps *
