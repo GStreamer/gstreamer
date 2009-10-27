@@ -1180,8 +1180,13 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
         glGenRenderbuffersEXT (1, &display->download_depth_buffer);
         glBindRenderbufferEXT (GL_RENDERBUFFER_EXT,
             display->download_depth_buffer);
+#ifndef OPENGL_ES2
         glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
             display->download_width, display->download_height);
+#else
+        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+            display->download_width, display->download_height);
+#endif
 
         //setup a first texture to render to
         glGenTextures (1, &display->download_texture);
@@ -1544,8 +1549,13 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
   //setup the render buffer for depth
   glGenRenderbuffersEXT (1, &display->generated_depth_buffer);
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, display->generated_depth_buffer);
+#ifndef OPENGL_ES2
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
       display->gen_fbo_width, display->gen_fbo_height);
+#else
+  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+      display->gen_fbo_width, display->gen_fbo_height);
+#endif
 
   //setup a texture to render to
   glGenTextures (1, &fake_texture);
@@ -1689,8 +1699,8 @@ gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display)
   glDrawBuffer (GL_NONE);
 #endif
 
-  glViewport (viewport_dim[0], viewport_dim[1], 
-    viewport_dim[2], viewport_dim[3]);
+  glViewport (viewport_dim[0], viewport_dim[1],
+      viewport_dim[2], viewport_dim[3]);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 }
@@ -1850,7 +1860,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
 
     if (doRedisplay && display->gl_window)
       gst_gl_window_draw_unlocked (display->gl_window,
-        display->redisplay_texture_width, display->redisplay_texture_height);
+          display->redisplay_texture_width, display->redisplay_texture_height);
   }
   //default opengl scene
   else {
@@ -2109,7 +2119,8 @@ gst_gl_display_new (void)
 
 /* Create an opengl context (one context for one GstGLDisplay) */
 void
-gst_gl_display_create_context (GstGLDisplay * display, gulong external_gl_context)
+gst_gl_display_create_context (GstGLDisplay * display,
+    gulong external_gl_context)
 {
   gst_gl_display_lock (display);
 
@@ -2117,7 +2128,8 @@ gst_gl_display_create_context (GstGLDisplay * display, gulong external_gl_contex
     display->external_gl_context = external_gl_context;
 
     display->gl_thread = g_thread_create (
-        (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);
+        (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE,
+        NULL);
 
     g_cond_wait (display->cond_create_context, display->mutex);
 
@@ -2472,8 +2484,8 @@ gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
 {
   gulong external_gl_context = 0;
   gst_gl_display_lock (display);
-  external_gl_context = 
-    gst_gl_window_get_internal_gl_context (display->gl_window);
+  external_gl_context =
+      gst_gl_window_get_internal_gl_context (display->gl_window);
   gst_gl_display_unlock (display);
   return external_gl_context;
 }
@@ -2513,8 +2525,13 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
     //setup the render buffer for depth
     glGenRenderbuffersEXT (1, &display->upload_depth_buffer);
     glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+#ifndef OPENGL_ES2
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
         display->upload_width, display->upload_height);
+#else
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+        display->upload_width, display->upload_height);
+#endif
 
     //a fake texture is attached to the upload FBO (cannot init without it)
     glGenTextures (1, &fake_texture);
