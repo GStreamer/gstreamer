@@ -3009,8 +3009,8 @@ skipping_done:
 
   if (avi->seek_event)
     gst_event_unref (avi->seek_event);
-  avi->seek_event = gst_event_new_new_segment
-      (FALSE, avi->segment.rate, GST_FORMAT_TIME,
+  avi->seek_event = gst_event_new_new_segment_full
+      (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
       avi->segment.start, stop, avi->segment.time);
 
   gst_avi_demux_check_seekability (avi);
@@ -3323,11 +3323,12 @@ skipping_done:
 
   /* do initial seek to the default segment values */
   gst_avi_demux_do_seek (avi, &avi->segment);
+
   /* prepare initial segment */
   if (avi->seek_event)
     gst_event_unref (avi->seek_event);
-  avi->seek_event = gst_event_new_new_segment
-      (FALSE, avi->segment.rate, GST_FORMAT_TIME,
+  avi->seek_event = gst_event_new_new_segment_full
+      (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
       avi->segment.start, stop, avi->segment.time);
 
   stamp = gst_util_get_timestamp () - stamp;
@@ -3620,8 +3621,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (avi, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, avi->segment.start, avi->segment.last_stop);
-    seg = gst_event_new_new_segment (TRUE,
-        avi->segment.rate, avi->segment.format,
+    seg = gst_event_new_new_segment_full (TRUE,
+        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.start, avi->segment.last_stop, avi->segment.time);
     gst_avi_demux_push_event (avi, seg);
   }
@@ -3645,13 +3646,13 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     gst_event_unref (avi->seek_event);
   if (avi->segment.rate > 0.0) {
     /* forwards goes from last_stop to stop */
-    avi->seek_event = gst_event_new_new_segment (FALSE,
-        avi->segment.rate, avi->segment.format,
+    avi->seek_event = gst_event_new_new_segment_full (FALSE,
+        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.last_stop, stop, avi->segment.time);
   } else {
     /* reverse goes from start to last_stop */
-    avi->seek_event = gst_event_new_new_segment (FALSE,
-        avi->segment.rate, avi->segment.format,
+    avi->seek_event = gst_event_new_new_segment_full (FALSE,
+        avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.start, avi->segment.last_stop, avi->segment.time);
   }
 
