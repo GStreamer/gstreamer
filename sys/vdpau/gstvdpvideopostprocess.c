@@ -626,6 +626,9 @@ gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
   vpp->interlaced = FALSE;
   vpp->field_duration = GST_CLOCK_TIME_NONE;
 
+  vpp->earliest_time = GST_CLOCK_TIME_NONE;
+  vpp->discont = FALSE;
+
   vpp->mixer = VDP_INVALID_HANDLE;
   vpp->device = NULL;
 
@@ -654,8 +657,9 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
   GstVdpVideoPostProcess *vpp =
       GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
 
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime qostime;
 
+  GstFlowReturn ret = GST_FLOW_OK;
   GstVdpPicture current_pic;
 
   guint32 video_surfaces_past_count;
@@ -663,6 +667,47 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
 
   guint32 video_surfaces_future_count;
   VdpVideoSurface video_surfaces_future[MAX_PICTURES];
+
+  /* can only do QoS if the segment is in TIME */
+  if (vpp->segment.format != GST_FORMAT_TIME)
+    goto no_qos;
+
+  /* QOS is done on the running time of the buffer, get it now */
+  qostime = gst_segment_to_running_time (&vpp->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+
+  if (qostime != -1) {
+    gboolean need_skip;
+    GstClockTime earliest_time;
+
+    /* lock for getting the QoS parameters that are set (in a different thread)
+     * with the QOS events */
+    GST_OBJECT_LOCK (vpp);
+    earliest_time = vpp->earliest_time;
+    /* check for QoS, don't perform conversion for buffers
+     * that are known to be late. */
+    need_skip = GST_CLOCK_TIME_IS_VALID (earliest_time) && qostime != -1 &&
+        qostime <= earliest_time;
+
+    GST_OBJECT_UNLOCK (vpp);
+
+    if (need_skip) {
+      GST_DEBUG_OBJECT (vpp, "skipping transform: qostime %"
+          GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+      /* mark discont for next buffer */
+      vpp->discont = TRUE;
+      gst_buffer_unref (buffer);
+      return GST_FLOW_OK;
+    }
+  }
+
+no_qos:
+
+  if (vpp->discont) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    vpp->discont = FALSE;
+  }
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (vpp, "Received discont buffer");
@@ -903,6 +948,35 @@ video_buffer_error:
 }
 
 static gboolean
+gst_vdp_vpp_src_event (GstPad * pad, GstEvent * event)
+{
+  GstVdpVideoPostProcess *vpp =
+      GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      GST_OBJECT_LOCK (vpp);
+      vpp->earliest_time = timestamp + diff;
+      GST_OBJECT_UNLOCK (vpp);
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+  }
+
+  gst_object_unref (vpp);
+
+  return res;
+}
+
+static gboolean
 gst_vdp_vpp_sink_event (GstPad * pad, GstEvent * event)
 {
   GstVdpVideoPostProcess *vpp =
@@ -918,6 +992,23 @@ gst_vdp_vpp_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (vpp->srcpad, event);
 
       break;
+    }
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate, applied_rate;
+      GstFormat format;
+      gint64 start, stop, time;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &time);
+
+      GST_OBJECT_LOCK (vpp);
+      gst_segment_set_newsegment_full (&vpp->segment, update, rate,
+          applied_rate, format, start, stop, time);
+      GST_OBJECT_UNLOCK (vpp);
+
+      res = gst_pad_push_event (vpp->srcpad, event);
     }
     default:
       res = gst_pad_event_default (pad, event);
@@ -1188,6 +1279,9 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   /* SRC PAD */
   vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (vpp), vpp->srcpad);
+
+  gst_pad_set_event_function (vpp->srcpad,
+      GST_DEBUG_FUNCPTR (gst_vdp_vpp_src_event));
 
   /* SINK PAD */
   sink_template =
