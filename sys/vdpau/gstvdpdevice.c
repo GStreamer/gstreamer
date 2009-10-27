@@ -123,7 +123,9 @@ gst_vdp_device_constructed (GObject * object)
     {VDP_FUNC_ID_PRESENTATION_QUEUE_BLOCK_UNTIL_SURFACE_IDLE,
         &device->vdp_presentation_queue_block_until_surface_idle},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_SET_BACKGROUND_COLOR,
-        &device->vdp_presentation_queue_set_background_color}
+        &device->vdp_presentation_queue_set_background_color},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_QUERY_SURFACE_STATUS,
+        &device->vdp_presentation_queue_query_surface_status}
   };
 
   device->display = XOpenDisplay (device->display_name);

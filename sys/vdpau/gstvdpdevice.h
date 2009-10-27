@@ -88,6 +88,7 @@ struct _GstVdpDevice
   VdpPresentationQueueDisplay                     *vdp_presentation_queue_display;
   VdpPresentationQueueBlockUntilSurfaceIdle       *vdp_presentation_queue_block_until_surface_idle;
   VdpPresentationQueueSetBackgroundColor          *vdp_presentation_queue_set_background_color;
+  VdpPresentationQueueQuerySurfaceStatus          *vdp_presentation_queue_query_surface_status;
 };
 
 GType gst_vdp_device_get_type (void) G_GNUC_CONST;
