@@ -652,14 +652,8 @@ gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
 }
 
 static GstFlowReturn
-gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
+gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
 {
-  GstVdpVideoPostProcess *vpp =
-      GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
-
-  GstClockTime qostime;
-
-  GstFlowReturn ret = GST_FLOW_OK;
   GstVdpPicture current_pic;
 
   guint32 video_surfaces_past_count;
@@ -667,6 +661,115 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
 
   guint32 video_surfaces_future_count;
   VdpVideoSurface video_surfaces_future[MAX_PICTURES];
+
+  GstFlowReturn ret;
+
+  while (gst_vdp_vpp_get_next_picture (vpp,
+          &current_pic,
+          &video_surfaces_past_count, video_surfaces_past,
+          &video_surfaces_future_count, video_surfaces_future)) {
+    GstVdpOutputBuffer *outbuf;
+
+    GstStructure *structure;
+    GstVideoRectangle src_r = { 0, }
+    , dest_r = {
+    0,};
+    VdpRect rect;
+
+    GstVdpDevice *device;
+    VdpStatus status;
+
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (vpp->srcpad, GST_BUFFER_OFFSET_NONE,
+        0, GST_PAD_CAPS (vpp->srcpad), (GstBuffer **) & outbuf);
+    if (ret != GST_FLOW_OK)
+      break;
+
+    src_r.w = vpp->width;
+    src_r.h = vpp->height;
+    if (vpp->got_par) {
+      gint new_width;
+
+      new_width = gst_util_uint64_scale_int (src_r.w, vpp->par_n, vpp->par_d);
+      src_r.x += (src_r.w - new_width) / 2;
+      src_r.w = new_width;
+    }
+
+    structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
+    if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
+        !gst_structure_get_int (structure, "height", &dest_r.h)) {
+      gst_buffer_unref (GST_BUFFER (outbuf));
+      goto invalid_caps;
+    }
+
+    if (vpp->force_aspect_ratio) {
+      GstVideoRectangle res_r;
+
+      gst_video_sink_center_rect (src_r, dest_r, &res_r, TRUE);
+      rect.x0 = res_r.x;
+      rect.x1 = res_r.w + res_r.x;
+      rect.y0 = res_r.y;
+      rect.y1 = res_r.h + res_r.y;
+    } else {
+      rect.x0 = 0;
+      rect.x1 = dest_r.w;
+      rect.y0 = 0;
+      rect.y1 = dest_r.h;
+    }
+
+    device = vpp->device;
+    status =
+        device->vdp_video_mixer_render (vpp->mixer, VDP_INVALID_HANDLE, NULL,
+        current_pic.structure, video_surfaces_past_count, video_surfaces_past,
+        current_pic.buf->surface, video_surfaces_future_count,
+        video_surfaces_future, NULL, outbuf->surface, NULL, &rect, 0, NULL);
+    if (status != VDP_STATUS_OK) {
+      gst_buffer_unref (GST_BUFFER (outbuf));
+      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
+          ("Could not postprocess frame"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+      return GST_FLOW_ERROR;
+    }
+
+    GST_BUFFER_TIMESTAMP (outbuf) = current_pic.timestamp;
+    if (gst_vdp_vpp_is_interlaced (vpp))
+      GST_BUFFER_DURATION (outbuf) = vpp->field_duration;
+    else
+      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (current_pic.buf);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_DISCONT))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_PREROLL))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_PREROLL);
+
+    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_GAP))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
+
+    ret = gst_pad_push (vpp->srcpad, GST_BUFFER (outbuf));
+    if (ret != GST_FLOW_OK)
+      break;
+
+    continue;
+  }
+
+  return ret;
+
+invalid_caps:
+  GST_ELEMENT_ERROR (vpp, STREAM, FAILED, ("Invalid output caps"), (NULL));
+  return GST_FLOW_ERROR;
+
+}
+
+static GstFlowReturn
+gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstVdpVideoPostProcess *vpp =
+      GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
+
+  GstClockTime qostime;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   /* can only do QoS if the segment is in TIME */
   if (vpp->segment.format != GST_FORMAT_TIME)
@@ -752,98 +855,7 @@ no_qos:
 
   gst_vdp_vpp_add_buffer (vpp, GST_VDP_VIDEO_BUFFER (buffer));
 
-  while (gst_vdp_vpp_get_next_picture (vpp,
-          &current_pic,
-          &video_surfaces_past_count, video_surfaces_past,
-          &video_surfaces_future_count, video_surfaces_future)) {
-    GstVdpOutputBuffer *outbuf;
-
-    GstStructure *structure;
-    GstVideoRectangle src_r = { 0, }
-    , dest_r = {
-    0,};
-    VdpRect rect;
-
-    GstVdpDevice *device;
-    VdpStatus status;
-
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (vpp->srcpad, GST_BUFFER_OFFSET_NONE,
-        0, GST_PAD_CAPS (vpp->srcpad), (GstBuffer **) & outbuf);
-    if (ret != GST_FLOW_OK)
-      break;
-
-    src_r.w = vpp->width;
-    src_r.h = vpp->height;
-    if (vpp->got_par) {
-      gint new_width;
-
-      new_width = gst_util_uint64_scale_int (src_r.w, vpp->par_n, vpp->par_d);
-      src_r.x += (src_r.w - new_width) / 2;
-      src_r.w = new_width;
-    }
-
-    structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
-    if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
-        !gst_structure_get_int (structure, "height", &dest_r.h))
-      goto invalid_caps;
-
-    if (vpp->force_aspect_ratio) {
-      GstVideoRectangle res_r;
-
-      gst_video_sink_center_rect (src_r, dest_r, &res_r, TRUE);
-      rect.x0 = res_r.x;
-      rect.x1 = res_r.w + res_r.x;
-      rect.y0 = res_r.y;
-      rect.y1 = res_r.h + res_r.y;
-    } else {
-      rect.x0 = 0;
-      rect.x1 = dest_r.w;
-      rect.y0 = 0;
-      rect.y1 = dest_r.h;
-    }
-
-    device = vpp->device;
-    status =
-        device->vdp_video_mixer_render (vpp->mixer, VDP_INVALID_HANDLE, NULL,
-        current_pic.structure, video_surfaces_past_count, video_surfaces_past,
-        current_pic.buf->surface, video_surfaces_future_count,
-        video_surfaces_future, NULL, outbuf->surface, NULL, &rect, 0, NULL);
-    if (status != VDP_STATUS_OK) {
-      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
-          ("Could not post process frame"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    GST_BUFFER_TIMESTAMP (outbuf) = current_pic.timestamp;
-    if (gst_vdp_vpp_is_interlaced (vpp))
-      GST_BUFFER_DURATION (outbuf) = vpp->field_duration;
-    else
-      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (current_pic.buf);
-
-    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_DISCONT))
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-
-    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_PREROLL))
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_PREROLL);
-
-    if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_GAP))
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-
-    ret = gst_pad_push (vpp->srcpad, GST_BUFFER (outbuf));
-    if (ret != GST_FLOW_OK)
-      break;
-
-    continue;
-
-  invalid_caps:
-    gst_buffer_unref (GST_BUFFER (outbuf));
-    ret = GST_FLOW_ERROR;
-    break;
-  }
+  ret = gst_vdp_vpp_drain (vpp);
 
 done:
   gst_object_unref (vpp);
@@ -966,6 +978,9 @@ gst_vdp_vpp_src_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (vpp);
       vpp->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (vpp);
+
+      res = gst_pad_event_default (pad, event);
+      break;
     }
     default:
       res = gst_pad_event_default (pad, event);
@@ -989,8 +1004,8 @@ gst_vdp_vpp_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (vpp, "flush stop");
 
       gst_vdp_vpp_flush (vpp);
-      res = gst_pad_push_event (vpp->srcpad, event);
 
+      res = gst_pad_event_default (pad, event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -1008,7 +1023,8 @@ gst_vdp_vpp_sink_event (GstPad * pad, GstEvent * event)
           applied_rate, format, start, stop, time);
       GST_OBJECT_UNLOCK (vpp);
 
-      res = gst_pad_push_event (vpp->srcpad, event);
+      res = gst_pad_event_default (pad, event);
+      break;
     }
     default:
       res = gst_pad_event_default (pad, event);
