@@ -896,8 +896,6 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
    * tags were with extra weird characters without it.
    */
   str_utf16 = g_convert (str, -1, "UTF-16LE", "UTF-8", NULL, &str_size, &error);
-  str_utf16[str_size + 1] = '\0';
-  str_utf16[str_size + 2] = '\0';
 
   /* sum up the null terminating char */
   str_size += 2;
@@ -912,7 +910,10 @@ gst_asf_mux_write_string_with_size (GstAsfMux * asfmux,
     g_free (error);
     memset (str_buf, 0, str_size);
   } else {
-    memcpy (str_buf, str_utf16, str_size);
+    /* HACK: g_convert seems to add only a single byte null char to
+     * the end of the stream, we force the second one */
+    memcpy (str_buf, str_utf16, str_size - 1);
+    str_buf[str_size - 1] = 0;
   }
   g_free (str_utf16);
   return str_size;
