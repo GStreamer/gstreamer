@@ -391,8 +391,8 @@ gst_init_get_option_group (void)
 
 /**
  * gst_init_check:
- * @argc: pointer to application's argc
- * @argv: pointer to application's argv
+ * @argc: (inout): pointer to application's argc
+ * @argv: (inout) (array length=argc) (allow-none): pointer to application's argv
  * @err: pointer to a #GError to which a message will be posted on error
  *
  * Initializes the GStreamer library, setting up internal path lists,
