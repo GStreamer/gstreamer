@@ -83,7 +83,8 @@
  *       contain a valid frame, this call must return FALSE and optionally
  *       set the @skipsize value to inform base class that how many bytes
  *       it needs to skip in order to find a valid frame. The passed buffer
- *       is read-only.
+ *       is read-only.  Note that @check_valid_frame might receive any small
+ *       amount of input data when leftover data is being drained (e.g. at EOS).
  *     </para></listitem>
  *     <listitem><para>
  *       After valid frame is found, it will be passed again to subclass with
@@ -214,6 +215,7 @@ struct _GstBaseParsePrivate
 
   gboolean discont;
   gboolean flushing;
+  gboolean drain;
 
   gint64 offset;
   GstClockTime next_ts;
@@ -1030,13 +1032,13 @@ gst_base_parse_drain (GstBaseParse * parse)
   guint avail;
 
   GST_DEBUG_OBJECT (parse, "draining");
+  parse->priv->drain = TRUE;
 
   for (;;) {
     avail = gst_adapter_available (parse->adapter);
     if (!avail)
       break;
 
-    gst_base_parse_set_min_frame_size (parse, avail);
     if (gst_base_parse_chain (parse->sinkpad, NULL) != GST_FLOW_OK) {
       break;
     }
@@ -1047,6 +1049,8 @@ gst_base_parse_drain (GstBaseParse * parse)
       gst_adapter_clear (parse->adapter);
     }
   }
+
+  parse->priv->drain = FALSE;
 }
 
 
@@ -1095,6 +1099,10 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       min_size = parse->priv->min_frame_size;
       GST_BASE_PARSE_UNLOCK (parse);
 
+      if (G_UNLIKELY (parse->priv->drain)) {
+        min_size = gst_adapter_available (parse->adapter);
+      }
+
       /* Collect at least min_frame_size bytes */
       if (gst_adapter_available (parse->adapter) < min_size) {
         GST_DEBUG_OBJECT (parse, "not enough data available (only %d bytes)",
@@ -1129,11 +1137,13 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
         gst_adapter_flush (parse->adapter, skip);
         parse->priv->offset += skip;
+        parse->priv->discont = TRUE;
       } else if (skip == -1) {
         /* subclass didn't touch this value. By default we skip 1 byte */
         GST_LOG_OBJECT (parse, "finding sync, skipping 1 byte");
         gst_adapter_flush (parse->adapter, 1);
         parse->priv->offset++;
+        parse->priv->discont = TRUE;
       }
       /* There is a possibility that subclass set the skip value to zero.
          This means that it has probably found a frame but wants to ask
@@ -1307,9 +1317,11 @@ gst_base_parse_loop (GstPad * pad)
     if (skip > 0) {
       GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
       parse->priv->offset += skip;
+      parse->priv->discont = TRUE;
     } else if (skip == -1) {
       GST_LOG_OBJECT (parse, "finding sync, skipping 1 byte");
       parse->priv->offset++;
+      parse->priv->discont = TRUE;
     }
     GST_DEBUG_OBJECT (parse, "finding sync...");
     gst_buffer_unref (buffer);
@@ -1423,7 +1435,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     GST_OBJECT_LOCK (parse);
     gst_segment_init (&parse->segment, GST_FORMAT_TIME);
     parse->priv->duration = -1;
-    parse->priv->discont = FALSE;
+    parse->priv->discont = TRUE;
     parse->priv->flushing = FALSE;
     parse->priv->offset = 0;
     parse->priv->update_interval = 0;
@@ -1644,6 +1656,52 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
       parse->priv->frame_duration / GST_MSECOND);
   GST_LOG_OBJECT (parse, "set update interval: %d", interval);
   GST_BASE_PARSE_UNLOCK (parse);
+}
+
+/**
+ * gst_base_transform_get_sync:
+ * @parse: the #GstBaseParse to query
+ *
+ * Returns TRUE if parser is considered 'in sync'.  That is, frames have been
+ * continuously successfully parsed and pushed.
+ */
+gboolean
+gst_base_parse_get_sync (GstBaseParse * parse)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (parse != NULL, FALSE);
+
+  GST_BASE_PARSE_LOCK (parse);
+  /* losing sync is pretty much a discont (and vice versa), no ? */
+  ret = !parse->priv->discont;
+  GST_BASE_PARSE_UNLOCK (parse);
+
+  GST_DEBUG_OBJECT (parse, "sync: %d", ret);
+  return ret;
+}
+
+/**
+ * gst_base_transform_get_drain:
+ * @parse: the #GstBaseParse to query
+ *
+ * Returns TRUE if parser is currently 'draining'.  That is, leftover data
+ * (e.g. in FLUSH or EOS situation) is being parsed.
+ */
+gboolean
+gst_base_parse_get_drain (GstBaseParse * parse)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (parse != NULL, FALSE);
+
+  GST_BASE_PARSE_LOCK (parse);
+  /* losing sync is pretty much a discont (and vice versa), no ? */
+  ret = parse->priv->drain;
+  GST_BASE_PARSE_UNLOCK (parse);
+
+  GST_DEBUG_OBJECT (parse, "drain: %d", ret);
+  return ret;
 }
 
 /**
