@@ -87,7 +87,7 @@ gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
   GstIndexFactory *factory;
 
   g_return_val_if_fail (name != NULL, NULL);
-  factory = GST_INDEX_FACTORY (g_object_new (GST_TYPE_INDEX_FACTORY, NULL));
+  factory = GST_INDEX_FACTORY (g_object_newv (GST_TYPE_INDEX_FACTORY, 0, NULL));
 
   GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
   if (factory->longdesc)
@@ -160,7 +160,7 @@ gst_index_factory_create (GstIndexFactory * factory)
   if (newfactory == NULL)
     return NULL;
 
-  new = GST_INDEX (g_object_new (newfactory->type, NULL));
+  new = GST_INDEX (g_object_newv (newfactory->type, 0, NULL));
 
   gst_object_unref (newfactory);
 

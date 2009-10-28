@@ -162,7 +162,7 @@ gst_task_pool_new (void)
 {
   GstTaskPool *pool;
 
-  pool = g_object_new (GST_TYPE_TASK_POOL, NULL);
+  pool = g_object_newv (GST_TYPE_TASK_POOL, 0, NULL);
 
   return pool;
 }

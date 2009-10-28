@@ -245,7 +245,7 @@ gst_plugin_register_static (gint major_version, gint minor_version,
   g_return_val_if_fail (_gst_plugin_inited != FALSE, FALSE);
 
   GST_LOG ("attempting to load static plugin \"%s\" now...", name);
-  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
   if (gst_plugin_register_func (plugin, &desc, NULL) != NULL) {
     GST_INFO ("registered static plugin \"%s\"", name);
     res = gst_default_registry_add_plugin (plugin);
@@ -314,7 +314,7 @@ gst_plugin_register_static_full (gint major_version, gint minor_version,
   g_return_val_if_fail (_gst_plugin_inited != FALSE, FALSE);
 
   GST_LOG ("attempting to load static plugin \"%s\" now...", name);
-  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
   if (gst_plugin_register_func (plugin, &desc, user_data) != NULL) {
     GST_INFO ("registered static plugin \"%s\"", name);
     res = gst_default_registry_add_plugin (plugin);
@@ -593,7 +593,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   }
 
   if (new_plugin) {
-    plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+    plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
     plugin->file_mtime = file_status.st_mtime;
     plugin->file_size = file_status.st_size;
     plugin->filename = g_strdup (filename);

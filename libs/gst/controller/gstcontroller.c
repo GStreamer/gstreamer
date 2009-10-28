@@ -227,7 +227,7 @@ gst_controller_add_property (GstController * self, GObject * object,
     if ((prop = gst_controlled_property_new (object, name))) {
       /* if we don't have a controller object yet, now is the time to create one */
       if (!self) {
-        self = g_object_new (GST_TYPE_CONTROLLER, NULL);
+        self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
         self->object = g_object_ref (object);
         /* store the controller */
         g_object_set_qdata (object, priv_gst_controller_key, self);

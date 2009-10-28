@@ -323,7 +323,7 @@ gst_task_create (GstTaskFunction func, gpointer data)
 {
   GstTask *task;
 
-  task = g_object_new (GST_TYPE_TASK, NULL);
+  task = g_object_newv (GST_TYPE_TASK, 0, NULL);
   task->func = func;
   task->data = data;
 

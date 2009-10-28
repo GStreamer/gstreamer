@@ -273,7 +273,7 @@ gst_bus_new (void)
 {
   GstBus *result;
 
-  result = g_object_new (gst_bus_get_type (), NULL);
+  result = g_object_newv (gst_bus_get_type (), 0, NULL);
   GST_DEBUG_OBJECT (result, "created new bus");
 
   return result;

@@ -246,7 +246,7 @@ gst_object_class_init (GstObjectClass * klass)
   klass->lock = g_new0 (GStaticRecMutex, 1);
   g_static_rec_mutex_init (klass->lock);
 
-  klass->signal_object = g_object_new (gst_signal_object_get_type (), NULL);
+  klass->signal_object = g_object_newv (gst_signal_object_get_type (), 0, NULL);
 
   /* see the comments at gst_object_dispatch_properties_changed */
   gobject_class->dispatch_properties_changed

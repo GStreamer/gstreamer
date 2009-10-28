@@ -115,7 +115,7 @@ gst_xml_dispose (GObject * object)
 GstXML *
 gst_xml_new (void)
 {
-  return GST_XML (g_object_new (GST_TYPE_XML, NULL));
+  return GST_XML (g_object_newv (GST_TYPE_XML, 0, NULL));
 }
 
 /**

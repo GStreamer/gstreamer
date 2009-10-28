@@ -320,7 +320,7 @@ static void
 plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
     PendingPluginEntry * entry)
 {
-  GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  GstPlugin *plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
 
   plugin->filename = g_strdup (entry->filename);
   plugin->file_mtime = entry->file_mtime;

@@ -514,7 +514,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     g_free (type_name);
     return FALSE;
   }
-  if (G_UNLIKELY ((feature = g_object_new (type, NULL)) == NULL)) {
+  if (G_UNLIKELY ((feature = g_object_newv (type, 0, NULL)) == NULL)) {
     GST_ERROR ("Can't create feature from type");
     g_free (type_name);
     return FALSE;
@@ -728,7 +728,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
       *in);
   unpack_element (*in, pe, GstRegistryChunkPluginElement, end, fail);
 
-  plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+  plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
 
   /* TODO: also set GST_PLUGIN_FLAG_CONST */
   plugin->flags |= GST_PLUGIN_FLAG_CACHED;

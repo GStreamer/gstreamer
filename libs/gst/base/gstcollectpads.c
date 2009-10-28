@@ -164,7 +164,7 @@ gst_collect_pads_new (void)
 {
   GstCollectPads *newcoll;
 
-  newcoll = g_object_new (GST_TYPE_COLLECT_PADS, NULL);
+  newcoll = g_object_newv (GST_TYPE_COLLECT_PADS, 0, NULL);
 
   return newcoll;
 }
