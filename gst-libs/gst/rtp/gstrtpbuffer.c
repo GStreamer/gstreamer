@@ -359,16 +359,21 @@ validate_data (guint8 * data, guint len, guint8 * payload, guint payload_len)
 wrong_length:
   {
     GST_DEBUG ("len < header_len check failed (%d < %d)", len, header_len);
-    return FALSE;
+    goto dump_packet;
   }
 wrong_version:
   {
     GST_DEBUG ("version check failed (%d != %d)", version, GST_RTP_VERSION);
-    return FALSE;
+    goto dump_packet;
   }
 wrong_padding:
   {
     GST_DEBUG ("padding check failed (%d - %d < %d)", len, header_len, padding);
+    goto dump_packet;
+  }
+dump_packet:
+  {
+    GST_MEMDUMP ("buffer", data, len);
     return FALSE;
   }
 }
