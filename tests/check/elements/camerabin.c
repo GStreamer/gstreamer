@@ -33,6 +33,7 @@
 #define SINGLE_IMAGE_FILENAME "image.cap"
 #define BURST_IMAGE_FILENAME "burst_image.cap"
 #define VIDEO_FILENAME "video.cap"
+#define VIDEO_PAUSE_FILENAME "video_pause.cap"
 #define CYCLE_IMAGE_FILENAME "cycle_image.cap"
 #define CYCLE_VIDEO_FILENAME "cycle_video.cap"
 #define MAX_BURST_IMAGES 10
@@ -623,7 +624,7 @@ GST_START_TEST (test_video_recording_pause)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
-      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
+      "filename", make_test_file_name (VIDEO_PAUSE_FILENAME), NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
@@ -699,6 +700,9 @@ GST_START_TEST (validate_captured_video_files)
 
   /* validate video recording */
   check_file_validity (VIDEO_FILENAME);
+
+  /* validate video recording with pause */
+  check_file_validity (VIDEO_PAUSE_FILENAME);
 
   /* validate cycled  video */
   check_file_validity (CYCLE_VIDEO_FILENAME);
