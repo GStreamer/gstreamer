@@ -98,8 +98,8 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ring_buffer_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ring_buffer_finalize);
+  gobject_class->dispose = gst_ring_buffer_dispose;
+  gobject_class->finalize = gst_ring_buffer_finalize;
 
   gstringbuffer_class->clear_all = GST_DEBUG_FUNCPTR (default_clear_all);
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);

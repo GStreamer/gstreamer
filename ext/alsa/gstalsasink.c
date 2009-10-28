@@ -177,6 +177,7 @@ gst_alsasink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&alsasink_sink_factory));
 }
+
 static void
 gst_alsasink_class_init (GstAlsaSinkClass * klass)
 {
@@ -190,9 +191,9 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_alsasink_finalise);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasink_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasink_set_property);
+  gobject_class->finalize = gst_alsasink_finalise;
+  gobject_class->get_property = gst_alsasink_get_property;
+  gobject_class->set_property = gst_alsasink_set_property;
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasink_getcaps);
 

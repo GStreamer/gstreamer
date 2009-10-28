@@ -622,7 +622,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gobject_klass->set_property = gst_play_bin_set_property;
   gobject_klass->get_property = gst_play_bin_get_property;
 
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_bin_finalize);
+  gobject_klass->finalize = gst_play_bin_finalize;
 
   /**
    * GstPlayBin2:uri

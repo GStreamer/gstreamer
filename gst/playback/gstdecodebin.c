@@ -232,10 +232,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_klass->set_property = GST_DEBUG_FUNCPTR (gst_decode_bin_set_property);
-  gobject_klass->get_property = GST_DEBUG_FUNCPTR (gst_decode_bin_get_property);
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_decode_bin_finalize);
+  gobject_klass->set_property = gst_decode_bin_set_property;
+  gobject_klass->get_property = gst_decode_bin_get_property;
+  gobject_klass->dispose = gst_decode_bin_dispose;
+  gobject_klass->finalize = gst_decode_bin_finalize;
 
   /**
    * GstDecodeBin::new-decoded-pad:

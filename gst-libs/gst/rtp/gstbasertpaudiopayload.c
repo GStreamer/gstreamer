@@ -163,8 +163,7 @@ gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  gobject_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_finalize);
+  gobject_class->finalize = gst_base_rtp_audio_payload_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_rtp_payload_audio_change_state);

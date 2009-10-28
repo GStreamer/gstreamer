@@ -346,7 +346,7 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ffmpegcsp_finalize);
+  gobject_class->finalize = gst_ffmpegcsp_finalize;
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_caps);

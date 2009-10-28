@@ -267,10 +267,10 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_sink_dispose);
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_sink_finalize);
-  gobject_klass->set_property = GST_DEBUG_FUNCPTR (gst_play_sink_set_property);
-  gobject_klass->get_property = GST_DEBUG_FUNCPTR (gst_play_sink_get_property);
+  gobject_klass->dispose = gst_play_sink_dispose;
+  gobject_klass->finalize = gst_play_sink_finalize;
+  gobject_klass->set_property = gst_play_sink_set_property;
+  gobject_klass->get_property = gst_play_sink_get_property;
 
 
   /**

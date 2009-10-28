@@ -162,11 +162,9 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstBaseAudioSrcPrivate));
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_base_audio_src_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_base_audio_src_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_src_dispose);
+  gobject_class->set_property = gst_base_audio_src_set_property;
+  gobject_class->get_property = gst_base_audio_src_get_property;
+  gobject_class->dispose = gst_base_audio_src_dispose;
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",

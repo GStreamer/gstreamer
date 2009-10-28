@@ -157,7 +157,7 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
       G_STRUCT_OFFSET (GstStreamInfoClass, muted), NULL, NULL,
       gst_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_stream_info_dispose);
+  gobject_klass->dispose = gst_stream_info_dispose;
 
   GST_DEBUG_CATEGORY_INIT (gst_streaminfo_debug, "streaminfo", 0,
       "Playbin Stream Info");

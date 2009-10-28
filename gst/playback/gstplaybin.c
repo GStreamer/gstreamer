@@ -414,7 +414,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Pango font description of font " "to be used for subtitle rendering",
           NULL, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
+  gobject_klass->dispose = gst_play_bin_dispose;
 
   gst_element_class_set_details (gstelement_klass, &gst_play_bin_details);
 

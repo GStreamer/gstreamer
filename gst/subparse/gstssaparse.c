@@ -116,7 +116,7 @@ gst_ssa_parse_class_init (GstSsaParseClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  object_class->dispose = GST_DEBUG_FUNCPTR (gst_ssa_parse_dispose);
+  object_class->dispose = gst_ssa_parse_dispose;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_ssa_parse_change_state);
 }

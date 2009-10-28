@@ -110,7 +110,7 @@ gst_gdp_depay_class_init (GstGDPDepayClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdp_depay_change_state);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gdp_depay_finalize);
+  gobject_class->finalize = gst_gdp_depay_finalize;
 }
 
 static void

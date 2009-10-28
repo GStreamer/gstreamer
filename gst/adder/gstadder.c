@@ -820,9 +820,9 @@ gst_adder_class_init (GstAdderClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_adder_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_adder_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_adder_dispose);
+  gobject_class->set_property = gst_adder_set_property;
+  gobject_class->get_property = gst_adder_get_property;
+  gobject_class->dispose = gst_adder_dispose;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_adder_src_template));

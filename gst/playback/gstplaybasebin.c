@@ -219,8 +219,8 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_base_bin_finalize);
+  gobject_klass->dispose = gst_play_base_bin_dispose;
+  gobject_klass->finalize = gst_play_base_bin_finalize;
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_base_bin_handle_message_func);
