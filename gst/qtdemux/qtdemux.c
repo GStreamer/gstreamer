@@ -271,9 +271,14 @@ struct _QtDemuxStream
   /* stts */
   guint32 n_sample_times;
   /* stss */
+  gboolean stss_present;
   guint32 n_sample_syncs;
   /* stps */
+  gboolean stps_present;
   guint32 n_sample_partial_syncs;
+  /* ctts */
+  gboolean ctts_present;
+  guint32 n_composition_times;
 };
 
 enum QtDemuxState
@@ -3734,26 +3739,93 @@ too_many_streams:
   }
 }
 
-/* collect all samples for @stream by reading the info from @stbl
- */
+/* initialise bytereaders for stbl sub-atoms */
 static gboolean
-qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GNode * stbl)
+qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 {
-  int sample_index = 0;
-  gint i, j, k;
-  int index = 0;
-  guint64 timestamp = 0;
+  /* time-to-sample atom */
+  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stts, &stream->stts))
+    goto corrupt_file;
 
-  /* sample to chunk */
+  /* skip version + flags */
+  if (!gst_byte_reader_skip (&stream->stts, 1 + 3) ||
+      !gst_byte_reader_get_uint32_be (&stream->stts, &stream->n_sample_times))
+    goto corrupt_file;
+  GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", stream->n_sample_times);
+
+  /* make sure there's enough data */
+  if (!qt_atom_parser_has_chunks (&stream->stts, stream->n_sample_times, 2 * 4))
+    goto corrupt_file;
+
+
+  /* sync sample atom */
+  stream->stps_present = FALSE;
+  if ((stream->stss_present =
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+              &stream->stss) ? TRUE : FALSE) == TRUE) {
+    /* skip version + flags */
+    if (!gst_byte_reader_skip (&stream->stss, 1 + 3) ||
+        !gst_byte_reader_get_uint32_be (&stream->stss, &stream->n_sample_syncs))
+      goto corrupt_file;
+
+    if (stream->n_sample_syncs) {
+      /* make sure there's enough data */
+      if (!qt_atom_parser_has_chunks (&stream->stss, stream->n_sample_syncs, 4))
+        goto corrupt_file;
+    }
+
+    /* partial sync sample atom */
+    if ((stream->stps_present =
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+                &stream->stps) ? TRUE : FALSE) == TRUE) {
+      /* skip version + flags */
+      if (!gst_byte_reader_skip (&stream->stps, 1 + 3) ||
+          !gst_byte_reader_get_uint32_be (&stream->stps,
+              &stream->n_sample_partial_syncs))
+        goto corrupt_file;
+
+      /* if there are no entries, the stss table contains the real
+       * sync samples */
+      if (stream->n_sample_partial_syncs) {
+        /* make sure there's enough data */
+        if (!qt_atom_parser_has_chunks (&stream->stps,
+                stream->n_sample_partial_syncs, 4))
+          goto corrupt_file;
+      }
+    }
+  }
+
+
+  /* sample-to-chunk atom */
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsc, &stream->stsc))
     goto corrupt_file;
+
+  /* skip version + flags */
+  if (!gst_byte_reader_skip (&stream->stsc, 1 + 3) ||
+      !gst_byte_reader_get_uint32_be (&stream->stsc,
+          &stream->n_samples_per_chunk))
+    goto corrupt_file;
+
+  GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %u",
+      stream->n_samples_per_chunk);
+
+  /* make sure there's enough data */
+  if (!qt_atom_parser_has_chunks (&stream->stsc, stream->n_samples_per_chunk,
+          12))
+    goto corrupt_file;
+
 
   /* sample size */
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsz, &stream->stsz))
     goto corrupt_file;
 
-  /* chunk offsets */
+  /* skip version + flags */
+  if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
+      !gst_byte_reader_get_uint32_be (&stream->stsz, &stream->sample_size))
+    goto corrupt_file;
+
+
+  /* chunk offset */
   if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stco, &stream->stco))
     stream->co_size = sizeof (guint32);
   else if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_co64,
@@ -3762,18 +3834,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   else
     goto corrupt_file;
 
-  /* sample time */
-  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stts, &stream->stts))
-    goto corrupt_file;
-
-  if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
-      !gst_byte_reader_get_uint32_be (&stream->stsz, &stream->sample_size))
-    goto corrupt_file;
-
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stco, 1 + 3))
     goto corrupt_file;
 
+  /* chunks_are_chunks == 0 means treat chunks as samples */
   stream->chunks_are_chunks = !stream->sample_size || stream->sampled;
   if (stream->chunks_are_chunks) {
     /* skip number of entries */
@@ -3782,37 +3847,85 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     if (!gst_byte_reader_get_uint32_be (&stream->stsz, &stream->n_samples))
       goto corrupt_file;
+
+    /* make sure there are enough data in the stsz atom */
+    if (!stream->sample_size) {
+      /* different sizes for each sample */
+      if (!qt_atom_parser_has_chunks (&stream->stsz, stream->n_samples, 4))
+        goto corrupt_file;
+    }
   } else {
     /* treat chunks as samples */
     if (!gst_byte_reader_get_uint32_be (&stream->stco, &stream->n_samples))
       goto corrupt_file;
   }
 
-  if (!stream->n_samples)
-    goto no_samples;
-
-  if (stream->chunks_are_chunks)
-    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0");
+  if (!stream->n_samples) {
+    GST_WARNING_OBJECT (qtdemux, "stream has no samples");
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u  (%u MB)",
       stream->n_samples,
       (guint) (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
 
   if (stream->n_samples >=
-      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
-    goto index_too_big;
+      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample)) {
+    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
+        "be larger than %uMB (broken file?)", stream->n_samples,
+        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
+    return FALSE;
+  }
 
   stream->samples = g_try_new0 (QtDemuxSample, stream->n_samples);
-  if (!stream->samples)
-    goto out_of_memory;
+  if (!stream->samples) {
+    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
+        stream->n_samples);
+    return FALSE;
+  }
+
+
+  /* composition time-to-sample */
+  if ((stream->ctts_present =
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+              &stream->ctts) ? TRUE : FALSE) == TRUE) {
+    /* skip version + flags */
+    if (!gst_byte_reader_skip (&stream->ctts, 1 + 3)
+        || !gst_byte_reader_get_uint32_be (&stream->ctts,
+            &stream->n_composition_times))
+      goto corrupt_file;
+
+    /* make sure there's enough data */
+    if (!qt_atom_parser_has_chunks (&stream->ctts, stream->n_composition_times,
+            4 + 4))
+      goto corrupt_file;
+  }
+
+
+  return TRUE;
+
+corrupt_file:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
+  }
+}
+
+/* collect all samples for @stream by reading the info from @stbl
+ */
+static gboolean
+qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  int sample_index = 0;
+  gint i, j, k;
+  int index = 0;
+  guint64 timestamp = 0;
 
   if (stream->chunks_are_chunks) {
     /* set the sample sizes */
     if (stream->sample_size == 0) {
       /* different sizes for each sample */
-      if (!qt_atom_parser_has_chunks (&stream->stsz, stream->n_samples, 4))
-        goto corrupt_file;
-
       for (i = 0; i < stream->n_samples; i++) {
         stream->samples[i].size =
             gst_byte_reader_get_uint32_be_unchecked (&stream->stsz);
@@ -3826,21 +3939,6 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         stream->samples[i].size = stream->sample_size;
     }
   }
-
-  /* set the sample offsets in the file */
-  if (!gst_byte_reader_skip (&stream->stsc, 1 + 3) ||
-      !gst_byte_reader_get_uint32_be (&stream->stsc,
-          &stream->n_samples_per_chunk))
-    goto corrupt_file;
-
-  if (!stream->chunks_are_chunks) {
-    GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %u",
-        stream->n_samples_per_chunk);
-  }
-
-  if (!qt_atom_parser_has_chunks (&stream->stsc, stream->n_samples_per_chunk,
-          12))
-    goto corrupt_file;
 
   for (i = 0; i < stream->n_samples_per_chunk; i++) {
     GstByteReader co_chunk;
@@ -3945,17 +4043,6 @@ done2:
   {
     guint32 time;
 
-    if (!gst_byte_reader_skip (&stream->stts, 4))
-      goto corrupt_file;
-    if (!gst_byte_reader_get_uint32_be (&stream->stts, &stream->n_sample_times))
-      goto corrupt_file;
-    GST_LOG_OBJECT (qtdemux, "%u timestamp blocks", stream->n_sample_times);
-
-    /* make sure there's enough data */
-    if (!qt_atom_parser_has_chunks (&stream->stts, stream->n_sample_times,
-            2 * 4))
-      goto corrupt_file;
-
     timestamp = 0;
     stream->min_duration = 0;
     time = 0;
@@ -4005,22 +4092,10 @@ done2:
 done3:
   {
     /* sample sync, can be NULL */
-    if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss, &stream->stss)) {
-
-      /* mark keyframes */
-      if (!gst_byte_reader_skip (&stream->stss, 4))
-        goto corrupt_file;
-      if (!gst_byte_reader_get_uint32_be (&stream->stss,
-              &stream->n_sample_syncs))
-        goto corrupt_file;
-
+    if (stream->stss_present == TRUE) {
       if (!stream->n_sample_syncs) {
         stream->all_keyframe = TRUE;
       } else {
-        /* make sure there's enough data */
-        if (!qt_atom_parser_has_chunks (&stream->stss, stream->n_sample_syncs,
-                4))
-          goto corrupt_file;
         for (i = 0; i < stream->n_sample_syncs; i++) {
           /* note that the first sample is index 1, not 0 */
           index = gst_byte_reader_get_uint32_be_unchecked (&stream->stss);
@@ -4028,23 +4103,12 @@ done3:
             stream->samples[index - 1].keyframe = TRUE;
         }
       }
+
       /* stps marks partial sync frames like open GOP I-Frames */
-      if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
-              &stream->stps)) {
-
-        if (!gst_byte_reader_skip (&stream->stps, 4))
-          goto corrupt_file;
-        if (!gst_byte_reader_get_uint32_be (&stream->stps,
-                &stream->n_sample_partial_syncs))
-          goto corrupt_file;
-
+      if (stream->stps_present == TRUE) {
         /* if there are no entries, the stss table contains the real
          * sync samples */
         if (stream->n_sample_partial_syncs) {
-          /* make sure there's enough data */
-          if (!qt_atom_parser_has_chunks (&stream->stps,
-                  stream->n_sample_partial_syncs, 4))
-            goto corrupt_file;
           for (i = 0; i < stream->n_sample_partial_syncs; i++) {
             /* note that the first sample is index 1, not 0 */
             index = gst_byte_reader_get_uint32_be_unchecked (&stream->stps);
@@ -4061,20 +4125,13 @@ done3:
 
 ctts:
   /* composition time to sample */
-  if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts, &stream->ctts)) {
-    guint32 n_entries;
+  if (stream->ctts_present == TRUE) {
     guint32 count;
     gint32 soffset;
 
-    gst_byte_reader_skip (&stream->ctts, 1 + 3);
-    n_entries = gst_byte_reader_get_uint32_be_unchecked (&stream->ctts);
-
-    if (!qt_atom_parser_has_chunks (&stream->ctts, n_entries, 4 + 4))
-      goto corrupt_file;
-
     /* Fill in the pts_offsets */
     index = 0;
-    for (i = 0; i < n_entries; i++) {
+    for (i = 0; i < stream->n_composition_times; i++) {
       count = gst_byte_reader_get_uint32_be_unchecked (&stream->ctts);
       soffset = gst_byte_reader_get_uint32_be_unchecked (&stream->ctts);
       for (j = 0; j < count; j++) {
@@ -4095,24 +4152,6 @@ corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
         (_("This file is corrupt and cannot be played.")), (NULL));
-    return FALSE;
-  }
-no_samples:
-  {
-    GST_WARNING_OBJECT (qtdemux, "stream has no samples");
-    return FALSE;
-  }
-out_of_memory:
-  {
-    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
-        stream->n_samples);
-    return FALSE;
-  }
-index_too_big:
-  {
-    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
-        "be larger than %uMB (broken file?)", stream->n_samples,
-        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
     return FALSE;
   }
 }
@@ -5177,7 +5216,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   /* collect sample information */
-  if (!qtdemux_parse_samples (qtdemux, stream, stbl))
+  if (!qtdemux_stbl_init (qtdemux, stream, stbl) ||
+      !qtdemux_parse_samples (qtdemux, stream))
     goto samples_failed;
 
   /* configure segments */
