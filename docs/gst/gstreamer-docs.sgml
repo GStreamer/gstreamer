@@ -124,4 +124,6 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
   </index>
 
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+
 </book>
