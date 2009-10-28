@@ -122,9 +122,9 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_get_property);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gdp_pay_finalize);
+  gobject_class->set_property = gst_gdp_pay_set_property;
+  gobject_class->get_property = gst_gdp_pay_get_property;
+  gobject_class->finalize = gst_gdp_pay_finalize;
 
   g_object_class_install_property (gobject_class, PROP_CRC_HEADER,
       g_param_spec_boolean ("crc-header", "CRC Header",
