@@ -422,6 +422,8 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
 
     ac3parse->sample_rate = rate;
     ac3parse->channels = chans;
+
+    gst_base_parse_set_frame_props (parse, rate, 256 * 6, 50);
   }
 
   return GST_FLOW_OK;
