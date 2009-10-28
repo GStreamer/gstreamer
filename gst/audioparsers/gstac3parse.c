@@ -372,6 +372,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
   gint off;
+  gboolean sync, drain;
 
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
       0, GST_BUFFER_SIZE (buf));
@@ -397,7 +398,33 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   }
 
   GST_LOG_OBJECT (parse, "got frame");
-  /* FIXME: do further/better checks here? */
+
+  sync = gst_base_parse_get_sync (parse);
+  drain = gst_base_parse_get_drain (parse);
+
+  if (!sync && !drain) {
+    guint16 word;
+
+    GST_DEBUG_OBJECT (ac3parse, "resyncing; checking next frame syncword");
+
+    if (!gst_byte_reader_skip (&reader, *framesize) ||
+        !gst_byte_reader_get_uint16_be (&reader, &word)) {
+      GST_DEBUG_OBJECT (ac3parse, "... but not sufficient data");
+      gst_base_parse_set_min_frame_size (parse, *framesize + 6);
+      *skipsize = 0;
+      return FALSE;
+    } else {
+      if (word != 0x0b77) {
+        GST_DEBUG_OBJECT (ac3parse, "0x%x not OK", word);
+        *skipsize = off + 2;
+        return FALSE;
+      } else {
+        /* ok, got sync now, let's assume constant frame size */
+        gst_base_parse_set_min_frame_size (parse, *framesize);
+      }
+    }
+  }
+
   return TRUE;
 }
 
