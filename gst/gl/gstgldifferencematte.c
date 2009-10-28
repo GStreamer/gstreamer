@@ -272,7 +272,7 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
   glGenTextures (1, &differencematte->newbgtexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-      filter->width, filter->height, 0,
+      (gint) differencematte->pbuf_width, (gint) differencematte->pbuf_height, 0,
       GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
 
   if (differencematte->savedbgtexture == 0) {
@@ -390,6 +390,7 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -409,6 +410,15 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
+                                "base_width", differencematte->pbuf_width);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
+                                "base_height", differencematte->pbuf_height);
+
+  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
+                                "final_width", filter->width);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
+                                "final_height", filter->height);
 
   glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -512,6 +522,7 @@ gst_gl_differencematte_loader (GstGLFilter * filter)
   png_FILE_p fp = NULL;
   guint y = 0;
   guchar **rows = NULL;
+  gint filler;
 
   if (!filter->display)
     return TRUE;
@@ -544,17 +555,22 @@ gst_gl_differencematte_loader (GstGLFilter * filter)
   png_get_IHDR (png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
       &interlace_type, int_p_NULL, int_p_NULL);
 
+  if (color_type == PNG_COLOR_TYPE_RGB) {
+    filler = 0xff;
+    png_set_filler (png_ptr, filler, PNG_FILLER_AFTER);
+    color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+  }
+
   if (color_type != PNG_COLOR_TYPE_RGB_ALPHA) {
     fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
     LOAD_ERROR ("color type is not rgb");
   }
 
-  filter->width = width;
-  filter->height = height;
+  differencematte->pbuf_width = width;
+  differencematte->pbuf_height = height;
 
-  differencematte->pixbuf =
-      (guchar *) malloc (sizeof (guchar) * width * height * 4);
+  differencematte->pixbuf = (guchar *) malloc (sizeof (guchar) * width * height * 4);
 
   rows = (guchar **) malloc (sizeof (guchar *) * height);
 

@@ -357,8 +357,20 @@ const gchar *texture_interp_fragment_source =
     "uniform sampler2DRect base;"
     "uniform sampler2DRect blend;"
     "uniform sampler2DRect alpha;"
+    "uniform float final_width, final_height;"
+    "uniform float base_width, base_height;"
+/*
+    "uniform float blend_width, blend_height;"
+    "uniform float alpha_width, alpha_height;"
+*/
     "void main () {"
-    "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
+    "vec2 base_scale = vec2 (base_width, base_height) / vec2 (final_width, final_height);"
+/*
+    "vec2 blend_scale = vec2 (blend_width, blend_height) / vec2 (final_width, final_height);"
+    "vec2 alpha_scale = vec2 (alpha_width, alpha_height) / vec2 (final_width, final_height);"
+*/
+
+    "vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st * base_scale);"
     "vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
     "vec4 alphacolor = texture2DRect (alpha, gl_TexCoord[0].st);"
 //  "gl_FragColor = alphacolor;"

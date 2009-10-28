@@ -43,6 +43,7 @@ struct _GstGLDifferenceMatte
   gboolean bg_has_changed;
 
   guchar *pixbuf;
+  gint pbuf_width, pbuf_height;
   GLuint savedbgtexture;
   GLuint newbgtexture;
   GLuint midtexture[4];
