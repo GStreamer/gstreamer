@@ -113,10 +113,13 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
-  trans_class->transform_caps = gst_capsfilter_transform_caps;
-  trans_class->transform_ip = gst_capsfilter_transform_ip;
-  trans_class->prepare_output_buffer = gst_capsfilter_prepare_buf;
-  trans_class->transform_size = gst_capsfilter_transform_size;
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_capsfilter_transform_caps);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_capsfilter_transform_ip);
+  trans_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_capsfilter_prepare_buf);
+  trans_class->transform_size =
+      GST_DEBUG_FUNCPTR (gst_capsfilter_transform_size);
 }
 
 static void
