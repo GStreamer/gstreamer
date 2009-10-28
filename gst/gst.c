@@ -24,8 +24,6 @@
  * SECTION:gst
  * @short_description: Media library supporting arbitrary formats and filter
  *                     graphs.
- * @see_also: Check out both <ulink url="http://www.cse.ogi.edu/sysl/">OGI's
- *            pipeline</ulink> and Microsoft's DirectShow for some background.
  *
  * GStreamer is a framework for constructing graphs of various filters
  * (termed elements here) that will handle streaming media.  Any discreet
@@ -34,11 +32,8 @@
  * a powerful negotiation framework.  Plugins are heavily used to provide for
  * all elements, allowing one to construct plugins outside of the GST
  * library, even released binary-only if license require (please don't).
- *
- * GStreamer borrows heavily from both the <ulink
- * url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
- * Microsoft's DirectShow, hopefully taking the best of both and leaving the
- * cruft behind. Its interface is slowly getting stable.
+ * GStreamer covers a wide range of use cases including: playback, recording,
+ * editing, serving streams, voice over ip and video calls.
  *
  * The <application>GStreamer</application> library should be initialized with
  * gst_init() before it can be used. You should pass pointers to the main argc
