@@ -20,7 +20,8 @@ libgstcamerabin_la_SOURCES = gstcamerabin.c             \
 			  camerabinvideo.c           \
 			  camerabingeneral.c         \
 			  camerabinpreview.c         \
-			  gstcamerabinphotography.c
+			  gstcamerabinphotography.c  \
+			  gstcamerabin-enum.c
 
 nodist_libgstcamerabin_la_SOURCES = $(built_sources)
 libgstcamerabin_la_CFLAGS = \
@@ -41,4 +42,5 @@ noinst_HEADERS = gstcamerabin.h             \
 		 camerabinvideo.h           \
 		 camerabingeneral.h         \
 		 camerabinpreview.h         \
-		 gstcamerabinphotography.h 
+		 gstcamerabinphotography.h  \
+		 gstcamerabin-enum.h

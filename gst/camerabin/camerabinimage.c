@@ -52,6 +52,7 @@
 
 #include "camerabinimage.h"
 #include "camerabingeneral.h"
+#include "gstcamerabin-enum.h"
 
 #include "string.h"
 
@@ -60,6 +61,7 @@
 #define DEFAULT_SINK "filesink"
 #define DEFAULT_ENC "jpegenc"
 #define DEFAULT_META_MUX "metadatamux"
+#define DEFAULT_FLAGS GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION
 
 enum
 {
@@ -157,6 +159,7 @@ gst_camerabin_image_init (GstCameraBinImage * img,
   gst_element_add_pad (GST_ELEMENT (img), img->sinkpad);
 
   img->elements_created = FALSE;
+  img->flags = DEFAULT_FLAGS;
 }
 
 static void
@@ -425,17 +428,15 @@ gst_camerabin_image_create_elements (GstCameraBinImage * img)
     img_sinkpad = gst_element_get_static_pad (img->post, "sink");
   }
 
-  /* Add colorspace converter */
-  if (!(csp =
-          gst_camerabin_create_and_add_element (imgbin, "ffmpegcolorspace"))) {
-    goto done;
-  }
-
-  /* Set up sink ghost pad for img bin */
-  if (!img_sinkpad) {
+  if (img->flags & GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION) {
+    /* Add colorspace converter */
+    if (!(csp =
+            gst_camerabin_create_and_add_element (imgbin,
+                "ffmpegcolorspace"))) {
+      goto done;
+    }
     img_sinkpad = gst_element_get_static_pad (csp, "sink");
   }
-  gst_ghost_pad_set_target (GST_GHOST_PAD (img->sinkpad), img_sinkpad);
 
   /* Create image encoder */
   if (img->user_enc) {
@@ -470,6 +471,12 @@ gst_camerabin_image_create_elements (GstCameraBinImage * img)
   }
   g_object_set (G_OBJECT (img->sink), "location", img->filename->str, "async", FALSE, "buffer-mode", 2, /* non buffered io */
       NULL);
+
+  /* Set up sink ghost pad for image bin */
+  if (!img_sinkpad) {
+    img_sinkpad = gst_element_get_static_pad (img->enc, "sink");
+  }
+  gst_ghost_pad_set_target (GST_GHOST_PAD (img->sinkpad), img_sinkpad);
 
   ret = TRUE;
 
@@ -533,6 +540,13 @@ gst_camerabin_image_set_postproc (GstCameraBinImage * img,
     gst_object_ref (postproc);
 
   img->post = postproc;
+}
+
+void
+gst_camerabin_image_set_flags (GstCameraBinImage * img, GstCameraBinFlags flags)
+{
+  GST_DEBUG_OBJECT (img, "setting image flags: %d", flags);
+  img->flags = flags;
 }
 
 GstElement *

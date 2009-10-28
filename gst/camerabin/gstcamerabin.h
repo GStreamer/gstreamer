@@ -28,6 +28,7 @@
 #include <gst/gstbin.h>
 #include <gst/interfaces/photography.h>
 
+#include "gstcamerabin-enum.h"
 #include "camerabinimage.h"
 #include "camerabinvideo.h"
 
@@ -58,9 +59,10 @@ struct _GstCameraBin
 
   /* private */
   GString *filename;
-  gint mode;                    /* MODE_IMAGE or MODE_VIDEO */
-  gboolean stop_requested;      /* TRUE if capturing stop needed */
-  gboolean paused;              /* TRUE if capturing paused */
+  gint mode;                      /* MODE_IMAGE or MODE_VIDEO */
+  GstCameraBinFlags flags;
+  gboolean stop_requested;        /* TRUE if capturing stop needed */
+  gboolean paused;                /* TRUE if capturing paused */
 
   /* resolution and frames per second of image captured by v4l2 device */
   gint width;

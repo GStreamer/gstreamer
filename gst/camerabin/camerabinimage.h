@@ -23,6 +23,8 @@
 
 #include <gst/gstbin.h>
 
+#include "gstcamerabin-enum.h"
+
 G_BEGIN_DECLS
 #define GST_TYPE_CAMERABIN_IMAGE             (gst_camerabin_image_get_type())
 #define GST_CAMERABIN_IMAGE_CAST(obj)        ((GstCameraBinImage*)(obj))
@@ -53,6 +55,7 @@ struct _GstCameraBinImage
   GstElement *sink;
 
   gboolean elements_created;
+  GstCameraBinFlags flags;
 };
 
 struct _GstCameraBinImageClass
@@ -68,6 +71,10 @@ gst_camerabin_image_set_encoder (GstCameraBinImage * img, GstElement * encoder);
 void
 gst_camerabin_image_set_postproc (GstCameraBinImage * img,
     GstElement * postproc);
+
+void
+gst_camerabin_image_set_flags (GstCameraBinImage * img,
+    GstCameraBinFlags flags);
 
 GstElement *gst_camerabin_image_get_encoder (GstCameraBinImage * img);
 

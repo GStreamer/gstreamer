@@ -23,6 +23,8 @@
 
 #include <gst/gstbin.h>
 
+#include "gstcamerabin-enum.h"
+
 G_BEGIN_DECLS
 #define ARG_DEFAULT_MUTE FALSE
 #define GST_TYPE_CAMERABIN_VIDEO             (gst_camerabin_video_get_type())
@@ -88,6 +90,7 @@ struct _GstCameraBinVideo
   gulong vid_sink_probe_id;
 
   gboolean mute;
+  GstCameraBinFlags flags;
 };
 
 struct _GstCameraBinVideoClass
@@ -119,6 +122,10 @@ gst_camerabin_video_set_muxer (GstCameraBinVideo * vid, GstElement * muxer);
 void
 gst_camerabin_video_set_audio_src (GstCameraBinVideo * vid,
     GstElement * audio_src);
+
+void
+gst_camerabin_video_set_flags (GstCameraBinVideo * vid,
+    GstCameraBinFlags flags);
 
 
 gboolean gst_camerabin_video_get_mute (GstCameraBinVideo * vid);

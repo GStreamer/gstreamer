@@ -71,7 +71,7 @@
 #define DEFAULT_MUX "oggmux"
 #define DEFAULT_SINK "filesink"
 
-#define USE_AUDIO_CONVERSION 1
+#define DEFAULT_FLAGS 0
 
 enum
 {
@@ -187,6 +187,7 @@ gst_camerabin_video_init (GstCameraBinVideo * vid,
   vid->pending_eos = NULL;
 
   vid->mute = ARG_DEFAULT_MUTE;
+  vid->flags = DEFAULT_FLAGS;
 
   vid->aud_src_probe_id = 0;
   vid->vid_src_probe_id = 0;
@@ -571,6 +572,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
 
   /* Add queue element for video */
   vid->tee_video_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
+
   if (!(vid->video_queue =
           gst_camerabin_create_and_add_element (vidbin, "queue"))) {
     goto error;
@@ -610,57 +612,59 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   g_object_set (G_OBJECT (vid->sink), "location", vid->filename->str, "buffer-mode", 2, /* non buffered io */
       NULL);
 
-  /* Add user set or default audio source element */
-  if (!(vid->aud_src = gst_camerabin_setup_default_element (vidbin,
-              vid->user_aud_src, "autoaudiosrc", DEFAULT_AUDIOSRC))) {
-    vid->aud_src = NULL;
-    goto error;
-  } else {
-    if (!gst_camerabin_add_element (vidbin, vid->aud_src))
+  if (!(vid->flags & GST_CAMERABIN_FLAG_DISABLE_AUDIO)) {
+    /* Add user set or default audio source element */
+    if (!(vid->aud_src = gst_camerabin_setup_default_element (vidbin,
+                vid->user_aud_src, "autoaudiosrc", DEFAULT_AUDIOSRC))) {
+      vid->aud_src = NULL;
       goto error;
-  }
+    } else {
+      if (!gst_camerabin_add_element (vidbin, vid->aud_src))
+        goto error;
+    }
 
-  /* Add queue element for audio */
-  if (!(gst_camerabin_create_and_add_element (vidbin, "queue"))) {
-    goto error;
-  }
-
-  /* Add optional audio conversion and volume elements and
-     raise no errors if adding them fails */
-#ifdef USE_AUDIO_CONVERSION
-  if (!gst_camerabin_try_add_element (vidbin,
-          gst_element_factory_make ("audioconvert", NULL))) {
-    GST_WARNING_OBJECT (vid, "unable to add audio conversion element");
-    /* gst_camerabin_try_add_element() destroyed the element */
-  }
-#endif
-  vid->volume = gst_element_factory_make ("volume", NULL);
-  if (!gst_camerabin_try_add_element (vidbin, vid->volume)) {
-    GST_WARNING_OBJECT (vid, "unable to add volume element");
-    /* gst_camerabin_try_add_element() destroyed the element */
-    vid->volume = NULL;
-  } else {
-    g_object_set (vid->volume, "mute", vid->mute, NULL);
-  }
-
-  /* Add user set or default audio encoder element */
-  if (vid->user_aud_enc) {
-    vid->aud_enc = vid->user_aud_enc;
-    if (!gst_camerabin_add_element (vidbin, vid->aud_enc)) {
+    /* Add queue element for audio */
+    if (!(gst_camerabin_create_and_add_element (vidbin, "queue"))) {
       goto error;
     }
-  } else if (!(vid->aud_enc =
-          gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC))) {
-    goto error;
-  }
 
-  /* Link audio part to the muxer */
-  if (!gst_element_link (vid->aud_enc, vid->muxer)) {
-    GST_ELEMENT_ERROR (vid, CORE, NEGOTIATION, (NULL),
-        ("linking audio encoder and muxer failed"));
-    goto error;
-  }
+    /* Add optional audio conversion and volume elements and
+       raise no errors if adding them fails */
+    if (vid->flags & GST_CAMERABIN_FLAG_AUDIO_CONVERSION) {
+      if (!gst_camerabin_try_add_element (vidbin,
+              gst_element_factory_make ("audioconvert", NULL))) {
+        GST_WARNING_OBJECT (vid, "unable to add audio conversion element");
+        /* gst_camerabin_try_add_element() destroyed the element */
+      }
+    }
 
+    vid->volume = gst_element_factory_make ("volume", NULL);
+    if (!gst_camerabin_try_add_element (vidbin, vid->volume)) {
+      GST_WARNING_OBJECT (vid, "unable to add volume element");
+      /* gst_camerabin_try_add_element() destroyed the element */
+      vid->volume = NULL;
+    } else {
+      g_object_set (vid->volume, "mute", vid->mute, NULL);
+    }
+
+    /* Add user set or default audio encoder element */
+    if (vid->user_aud_enc) {
+      vid->aud_enc = vid->user_aud_enc;
+      if (!gst_camerabin_add_element (vidbin, vid->aud_enc)) {
+        goto error;
+      }
+    } else if (!(vid->aud_enc =
+            gst_camerabin_create_and_add_element (vidbin, DEFAULT_AUD_ENC))) {
+      goto error;
+    }
+
+    /* Link audio part to the muxer */
+    if (!gst_element_link (vid->aud_enc, vid->muxer)) {
+      GST_ELEMENT_ERROR (vid, CORE, NEGOTIATION, (NULL),
+          ("linking audio encoder and muxer failed"));
+      goto error;
+    }
+  }
   /* Add queue leading out of the video bin and to view finder */
   vid->tee_vf_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
   if (!(queue = gst_camerabin_create_and_add_element (vidbin, "queue"))) {
@@ -678,11 +682,12 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
       G_CALLBACK (gst_camerabin_drop_eos_probe), vid);
   gst_object_unref (vid_srcpad);
 
-  pad = gst_element_get_static_pad (vid->aud_src, "src");
-  vid->aud_src_probe_id = gst_pad_add_buffer_probe (pad,
-      G_CALLBACK (camerabin_video_pad_aud_src_have_buffer), vid);
-  gst_object_unref (pad);
-
+  if (!(vid->flags & GST_CAMERABIN_FLAG_DISABLE_AUDIO)) {
+    pad = gst_element_get_static_pad (vid->aud_src, "src");
+    vid->aud_src_probe_id = gst_pad_add_buffer_probe (pad,
+        G_CALLBACK (camerabin_video_pad_aud_src_have_buffer), vid);
+    gst_object_unref (pad);
+  }
   GST_DEBUG ("created video elements");
 
   return TRUE;
@@ -840,6 +845,16 @@ gst_camerabin_video_set_audio_src (GstCameraBinVideo * vid,
   gst_object_replace ((GstObject **) user_aud_src, GST_OBJECT (audio_src));
   GST_OBJECT_UNLOCK (vid);
 }
+
+void
+gst_camerabin_video_set_flags (GstCameraBinVideo * vid, GstCameraBinFlags flags)
+{
+  GST_DEBUG_OBJECT (vid, "setting video flags: %d", flags);
+  GST_OBJECT_LOCK (vid);
+  vid->flags = flags;
+  GST_OBJECT_UNLOCK (vid);
+}
+
 
 gboolean
 gst_camerabin_video_get_mute (GstCameraBinVideo * vid)
