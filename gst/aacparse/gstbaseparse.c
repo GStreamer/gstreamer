@@ -95,7 +95,7 @@
  *       over again.
  *     </para></listitem>
  *     <listitem><para>
- *       During the parsing process GstBaseClass will handle both srcpad and
+ *       During the parsing process GstBaseParseClass will handle both srcpad and
  *       sinkpad events. They will be passed to subclass if @event or
  *       @src_event callbacks have been provided.
  *     </para></listitem>
@@ -1422,16 +1422,11 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
 
 /**
  * gst_base_transform_set_passthrough:
- * @trans: the #GstBaseTransform to set
+ * @trans: the #GstBaseParse to set
  * @passthrough: boolean indicating passthrough mode.
  *
- * Set passthrough mode for this filter by default. This is mostly
- * useful for filters that do not care about negotiation.
- *
- * Always TRUE for filters which don't implement either a transform
- * or transform_ip method.
- *
- * MT safe.
+ * Set passthrough mode for this parser.  If operating in passthrough,
+ * incoming buffers are pushed through unmodified.
  */
 void
 gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
