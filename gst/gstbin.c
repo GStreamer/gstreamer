@@ -390,8 +390,8 @@ gst_bin_class_init (GstBinClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstBinPrivate));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bin_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bin_get_property);
+  gobject_class->set_property = gst_bin_set_property;
+  gobject_class->get_property = gst_bin_get_property;
 
   /**
    * GstBin:async-handling
@@ -453,7 +453,7 @@ gst_bin_class_init (GstBinClass * klass)
       _gst_boolean_accumulator, NULL, gst_marshal_BOOLEAN__VOID,
       G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_bin_dispose);
+  gobject_class->dispose = gst_bin_dispose;
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_bin_save_thyself);

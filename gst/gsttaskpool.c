@@ -128,7 +128,7 @@ gst_task_pool_class_init (GstTaskPoolClass * klass)
   gobject_class = (GObjectClass *) klass;
   gsttaskpool_class = (GstTaskPoolClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_task_pool_finalize);
+  gobject_class->finalize = gst_task_pool_finalize;
 
   gsttaskpool_class->prepare = default_prepare;
   gsttaskpool_class->cleanup = default_cleanup;

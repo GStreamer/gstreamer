@@ -331,9 +331,9 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_src_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_src_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_src_get_property);
+  gobject_class->finalize = gst_base_src_finalize;
+  gobject_class->set_property = gst_base_src_set_property;
+  gobject_class->get_property = gst_base_src_get_property;
 
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",

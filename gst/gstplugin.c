@@ -147,7 +147,7 @@ gst_plugin_finalize (GObject * object)
 static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = GST_DEBUG_FUNCPTR (gst_plugin_finalize);
+  G_OBJECT_CLASS (klass)->finalize = gst_plugin_finalize;
 
   g_type_class_add_private (klass, sizeof (GstPluginPrivate));
 }

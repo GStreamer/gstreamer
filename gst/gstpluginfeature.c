@@ -52,8 +52,7 @@ gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
   parent_class = g_type_class_peek_parent (klass);
 
-  G_OBJECT_CLASS (klass)->finalize =
-      GST_DEBUG_FUNCPTR (gst_plugin_feature_finalize);
+  G_OBJECT_CLASS (klass)->finalize = gst_plugin_feature_finalize;
 }
 
 static void

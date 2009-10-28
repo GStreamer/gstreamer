@@ -212,7 +212,7 @@ gst_registry_class_init (GstRegistryClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRegistryClass, feature_added),
       NULL, NULL, gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_registry_finalize);
+  gobject_class->finalize = gst_registry_finalize;
 }
 
 static void

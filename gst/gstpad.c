@@ -251,10 +251,10 @@ gst_pad_class_init (GstPadClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pad_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pad_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pad_get_property);
+  gobject_class->dispose = gst_pad_dispose;
+  gobject_class->finalize = gst_pad_finalize;
+  gobject_class->set_property = gst_pad_set_property;
+  gobject_class->get_property = gst_pad_get_property;
 
   /**
    * GstPad::linked:

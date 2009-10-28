@@ -66,7 +66,7 @@ gst_xml_class_init (GstXMLClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_xml_dispose);
+  gobject_class->dispose = gst_xml_dispose;
 
   /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr
    * (ensonic) can't be fixed, as libxml does not use GObject (unfortunately)

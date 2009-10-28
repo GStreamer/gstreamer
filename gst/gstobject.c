@@ -173,8 +173,8 @@ gst_object_class_init (GstObjectClass * klass)
   _gst_object_trace = gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT));
 #endif
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
+  gobject_class->set_property = gst_object_set_property;
+  gobject_class->get_property = gst_object_get_property;
 
   g_object_class_install_property (gobject_class, ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",

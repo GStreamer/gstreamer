@@ -284,10 +284,8 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_multi_queue_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_multi_queue_get_property);
+  gobject_class->set_property = gst_multi_queue_set_property;
+  gobject_class->get_property = gst_multi_queue_get_property;
 
   /* SIGNALS */
 
@@ -393,7 +391,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
           DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_multi_queue_finalize);
+  gobject_class->finalize = gst_multi_queue_finalize;
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_multi_queue_request_new_pad);

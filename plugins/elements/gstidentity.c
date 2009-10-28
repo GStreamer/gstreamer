@@ -179,8 +179,8 @@ gst_identity_class_init (GstIdentityClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
+  gobject_class->set_property = gst_identity_set_property;
+  gobject_class->get_property = gst_identity_get_property;
 
   g_object_class_install_property (gobject_class, PROP_SLEEP_TIME,
       g_param_spec_uint ("sleep-time", "Sleep time",
@@ -263,7 +263,7 @@ gst_identity_class_init (GstIdentityClass * klass)
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_identity_finalize);
+  gobject_class->finalize = gst_identity_finalize;
 
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_identity_event);
   gstbasetrans_class->transform_ip =

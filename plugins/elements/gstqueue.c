@@ -249,8 +249,8 @@ gst_queue_class_init (GstQueueClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
+  gobject_class->set_property = gst_queue_set_property;
+  gobject_class->get_property = gst_queue_get_property;
 
   /* signals */
   /**
@@ -351,8 +351,7 @@ gst_queue_class_init (GstQueueClass * klass)
           GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* set several parent class virtual functions */
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
+  gobject_class->finalize = gst_queue_finalize;
 }
 
 static void

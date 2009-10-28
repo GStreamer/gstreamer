@@ -386,9 +386,9 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_sink_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_sink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_sink_get_property);
+  gobject_class->finalize = gst_base_sink_finalize;
+  gobject_class->set_property = gst_base_sink_set_property;
+  gobject_class->get_property = gst_base_sink_get_property;
 
   /* FIXME, this next value should be configured using an event from the
    * upstream element, ie, the BUFFER_SIZE event. */

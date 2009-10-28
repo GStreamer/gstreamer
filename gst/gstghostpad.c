@@ -93,8 +93,8 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstProxyPadPrivate));
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_proxy_pad_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_proxy_pad_finalize);
+  gobject_class->dispose = gst_proxy_pad_dispose;
+  gobject_class->finalize = gst_proxy_pad_finalize;
 
 #ifndef GST_DISABLE_LOADSAVE
   {
@@ -528,7 +528,7 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
+  gobject_class->dispose = gst_ghost_pad_dispose;
 }
 
 /* see gstghostpad design docs */

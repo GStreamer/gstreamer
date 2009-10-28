@@ -172,8 +172,8 @@ gst_pipeline_class_init (GstPipelineClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstPipelinePrivate));
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pipeline_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pipeline_get_property);
+  gobject_class->set_property = gst_pipeline_set_property;
+  gobject_class->get_property = gst_pipeline_get_property;
 
   /**
    * GstPipeline:delay
@@ -205,7 +205,7 @@ gst_pipeline_class_init (GstPipelineClass * klass)
           "from READY into NULL state", DEFAULT_AUTO_FLUSH_BUS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
+  gobject_class->dispose = gst_pipeline_dispose;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);

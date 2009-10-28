@@ -291,7 +291,7 @@ gst_file_src_class_init (GstFileSrcClass * klass)
           DEFAULT_SEQUENTIAL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
+  gobject_class->finalize = gst_file_src_finalize;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_file_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_file_src_stop);

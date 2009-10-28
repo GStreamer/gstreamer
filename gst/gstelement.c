@@ -223,8 +223,8 @@ gst_element_class_init (GstElementClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
       NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_element_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_element_finalize);
+  gobject_class->dispose = gst_element_dispose;
+  gobject_class->finalize = gst_element_finalize;
 
 #ifndef GST_DISABLE_LOADSAVE
   gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_element_save_thyself);

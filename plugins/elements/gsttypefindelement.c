@@ -192,13 +192,9 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   GObjectClass *gobject_class = G_OBJECT_CLASS (typefind_class);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (typefind_class);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_type_find_element_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_type_find_element_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_type_find_element_dispose);
-
-  typefind_class->have_type = gst_type_find_element_have_type;
+  gobject_class->set_property = gst_type_find_element_set_property;
+  gobject_class->get_property = gst_type_find_element_get_property;
+  gobject_class->dispose = gst_type_find_element_dispose;
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", _("caps"),
@@ -232,6 +228,9 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
       gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
       G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  typefind_class->have_type =
+      GST_DEBUG_FUNCPTR (gst_type_find_element_have_type);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_type_find_element_change_state);

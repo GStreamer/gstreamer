@@ -52,7 +52,7 @@ gst_index_factory_class_init (GstIndexFactoryClass * klass)
 
   factory_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_factory_finalize);
+  gobject_class->finalize = gst_index_factory_finalize;
 }
 
 static void

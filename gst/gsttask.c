@@ -125,7 +125,7 @@ gst_task_class_init (GstTaskClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstTaskPrivate));
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_task_finalize);
+  gobject_class->finalize = gst_task_finalize;
 
   init_klass_pool (klass);
 }

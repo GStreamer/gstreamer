@@ -181,8 +181,8 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_sink_class = GST_BASE_SINK_CLASS (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fake_sink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_sink_get_property);
+  gobject_class->set_property = gst_fake_sink_set_property;
+  gobject_class->get_property = gst_fake_sink_get_property;
   gobject_class->finalize = gst_fake_sink_finalize;
 
   g_object_class_install_property (gobject_class, PROP_STATE_ERROR,

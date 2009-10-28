@@ -157,7 +157,7 @@ gst_mem_index_class_init (GstMemIndexClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mem_index_finalize);
+  gobject_class->finalize = gst_mem_index_finalize;
 
   gstindex_class->add_entry = GST_DEBUG_FUNCPTR (gst_mem_index_add_entry);
   gstindex_class->get_assoc_entry =
