@@ -398,6 +398,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
       GST_DEBUG_FUNCPTR (gst_base_parse_get_querytypes));
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_query));
+  gst_pad_use_fixed_caps (parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   GST_DEBUG_OBJECT (parse, "src created");
 
