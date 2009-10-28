@@ -121,6 +121,7 @@ setup_camerabin_elements (GstElement * camera)
 {
   GstElement *vfsink, *audiosrc, *videosrc, *audioenc, *videoenc, *imageenc,
       *videomux;
+  GstCaps *audiocaps, *videocaps;
 
   /* Use fakesink for view finder */
   vfsink = gst_element_factory_make ("fakesink", NULL);
@@ -129,9 +130,15 @@ setup_camerabin_elements (GstElement * camera)
   g_object_set (audiosrc, "is-live", TRUE, NULL);
   videosrc = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (videosrc, "is-live", TRUE, NULL);
-  audioenc = gst_element_factory_make ("vorbisenc", NULL);
-  videoenc = gst_element_factory_make ("theoraenc", NULL);
-  videomux = gst_element_factory_make ("oggmux", NULL);
+  audioenc = gst_element_factory_make ("capsfilter", NULL);
+  audiocaps = gst_caps_from_string ("audio/x-raw-int");
+  g_object_set (audioenc, "caps", audiocaps, NULL);
+  gst_caps_unref (audiocaps);
+  videoenc = gst_element_factory_make ("capsfilter", NULL);
+  videocaps = gst_caps_from_string ("video/x-raw-yuv");
+  g_object_set (videoenc, "caps", videocaps, NULL);
+  gst_caps_unref (videocaps);
+  videomux = gst_element_factory_make ("avimux", NULL);
   imageenc = gst_element_factory_make ("jpegenc", NULL);
 
   if (vfsink && audiosrc && videosrc && audioenc && videoenc && videomux
