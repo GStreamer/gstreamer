@@ -239,6 +239,10 @@ void gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
 void gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
                                      guint fps_den, gint interval);
 
+gboolean gst_base_parse_get_sync (GstBaseParse * parse);
+
+gboolean gst_base_parse_get_drain (GstBaseParse * parse);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */
