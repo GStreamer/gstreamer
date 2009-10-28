@@ -456,6 +456,13 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  *
+ * Unless the plugin registry is disabled at compile time, the registry will be
+ * loaded. By default this will also check if the registry cache needs to be
+ * updated and rescan all plugins if needed. See gst_update_registry() for
+ * details and section
+ * <link linkend="gst-running">Running GStreamer Applications</link>
+ * for how to disable automatic registry updates.
+ *
  * This function should be called before calling any other GLib functions. If
  * this is not an option, your program must initialise the GLib thread system
  * using g_thread_init() before any other GLib functions are called.
