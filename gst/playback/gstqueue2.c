@@ -378,8 +378,8 @@ gst_queue_class_init (GstQueueClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
+  gobject_class->set_property = gst_queue_set_property;
+  gobject_class->get_property = gst_queue_get_property;
 
   /* properties */
   g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BYTES,
@@ -448,7 +448,7 @@ gst_queue_class_init (GstQueueClass * klass)
   gst_element_class_set_details (gstelement_class, &gst_queue_details);
 
   /* set several parent class virtual functions */
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
+  gobject_class->finalize = gst_queue_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue_change_state);
 }
