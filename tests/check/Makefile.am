@@ -131,11 +131,13 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 elements_camerabin_CFLAGS = \
         -I$(top_builddir)/gst-libs \
-        $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CHECK_CFLAGS) \
+        $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_CHECK_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 elements_camerabin_LDADD = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
-        $(GST_LIBS) $(GST_BASE_LIBS) $(GST_CHECK_LIBS) \
+        $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+        $(GST_CHECK_LIBS) \
          -lgstinterfaces-@GST_MAJORMINOR@
 elements_camerabin_SOURCES = elements/camerabin.c
 
