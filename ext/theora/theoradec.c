@@ -1174,9 +1174,9 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
         GST_BUFFER_DATA (*out) + gst_video_format_get_component_offset (format,
         plane, dec->width, dec->height);
     src = buf[plane].data;
-    src += ((height < dec->height) ? dec->offset_y : dec->offset_y / 2)
+    src += ((height == dec->height) ? dec->offset_y : dec->offset_y / 2)
         * buf[plane].stride;
-    src += (width < dec->width) ? dec->offset_x : dec->offset_x / 2;
+    src += (width == dec->width) ? dec->offset_x : dec->offset_x / 2;
 
     for (i = 0; i < height; i++) {
       memcpy (dest, src, width);
