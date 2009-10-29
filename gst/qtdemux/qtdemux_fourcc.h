@@ -149,6 +149,11 @@ G_BEGIN_DECLS
 #define FOURCC_text     GST_MAKE_FOURCC('t','e','x','t')
 #define FOURCC_tx3g     GST_MAKE_FOURCC('t','x','3','g')
 #define FOURCC_mp4s     GST_MAKE_FOURCC('m','p','4','s')
+#define FOURCC_gama     GST_MAKE_FOURCC('g','a','m','a')
+
+/* SVQ3 fourcc */
+#define FOURCC_SEQH     GST_MAKE_FOURCC('S','E','Q','H')
+#define FOURCC_SMI_     GST_MAKE_FOURCC('S','M','I',' ')
 
 /* 3gpp asset meta data fourcc */
 #define FOURCC_titl     GST_MAKE_FOURCC('t','i','t','l')
