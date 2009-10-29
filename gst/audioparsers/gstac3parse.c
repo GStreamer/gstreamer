@@ -141,6 +141,7 @@ static const struct
 
 static const guint fscod_rates[4] = { 48000, 44100, 32000, 0 };
 static const guint acmod_chans[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
+static const guint numblks[4] = { 1, 2, 3, 6 };
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -250,7 +251,7 @@ gst_ac3_parse_is_seekable (GstBaseParse * parse)
 
 static gboolean
 gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
-    guint * frame_size, guint * rate, guint * chans)
+    guint * frame_size, guint * rate, guint * chans, guint * blks, guint * sid)
 {
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint8 fscod, frmsizcod, bsid, bsmod, acmod, lfe_on;
@@ -289,17 +290,21 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     *rate = fscod_rates[fscod];
   if (chans)
     *chans = acmod_chans[acmod] + lfe_on;
+  if (blks)
+    *blks = 6;
+  if (sid)
+    *sid = 0;
 
   return TRUE;
 }
 
 static gboolean
 gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
-    guint * frame_size, guint * rate, guint * chans)
+    guint * frame_size, guint * rate, guint * chans, guint * blks, guint * sid)
 {
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
-  guint16 frmsiz, sample_rate;
-  guint8 strmtyp, fscod, fscod2, acmod, lfe_on;
+  guint16 frmsiz, sample_rate, blocks;
+  guint8 strmtyp, fscod, fscod2, acmod, lfe_on, strmid, numblkscod;
 
   gst_bit_reader_skip (&bits, 16 + 16);
   gst_bit_reader_get_bits_uint8 (&bits, &strmtyp, 2);   /* strmtyp     */
@@ -308,7 +313,7 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     return FALSE;
   }
 
-  gst_bit_reader_skip (&bits, 3);       /* substreamid */
+  gst_bit_reader_get_bits_uint8 (&bits, &strmid, 3);    /* substreamid */
   gst_bit_reader_get_bits_uint16 (&bits, &frmsiz, 11);  /* frmsiz      */
   gst_bit_reader_get_bits_uint8 (&bits, &fscod, 2);     /* fscod       */
   if (fscod == 3) {
@@ -318,9 +323,11 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
       return FALSE;
     }
     sample_rate = fscod_rates[fscod2] / 2;
+    blocks = 6;
   } else {
-    gst_bit_reader_skip (&bits, 2);     /* numblkscod  */
+    gst_bit_reader_get_bits_uint8 (&bits, &numblkscod, 2);      /* numblkscod  */
     sample_rate = fscod_rates[fscod];
+    blocks = numblks[numblkscod];
   }
 
   gst_bit_reader_get_bits_uint8 (&bits, &acmod, 3);     /* acmod       */
@@ -334,13 +341,17 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     *rate = sample_rate;
   if (chans)
     *chans = acmod_chans[acmod] + lfe_on;
+  if (blks)
+    *blks = blocks;
+  if (sid)
+    *sid = (strmtyp & 0x1) << 3 | strmid;
 
   return TRUE;
 }
 
 static gboolean
 gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
-    guint * framesize, guint * rate, guint * chans)
+    guint * framesize, guint * rate, guint * chans, guint * blocks, guint * sid)
 {
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint16 sync;
@@ -356,9 +367,11 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
     return FALSE;
 
   if (bsid <= 10) {
-    return gst_ac3_parse_frame_header_ac3 (parse, buf, framesize, rate, chans);
+    return gst_ac3_parse_frame_header_ac3 (parse, buf, framesize, rate, chans,
+        blocks, sid);
   } else if (bsid <= 16) {
-    return gst_ac3_parse_frame_header_eac3 (parse, buf, framesize, rate, chans);
+    return gst_ac3_parse_frame_header_eac3 (parse, buf, framesize, rate, chans,
+        blocks, sid);
   } else {
     GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
     return FALSE;
@@ -392,7 +405,8 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   }
 
   /* make sure the values in the frame header look sane */
-  if (!gst_ac3_parse_frame_header (ac3parse, buf, framesize, NULL, NULL)) {
+  if (!gst_ac3_parse_frame_header (ac3parse, buf, framesize, NULL, NULL,
+          NULL, NULL)) {
     *skipsize = off + 2;
     return FALSE;
   }
@@ -432,12 +446,18 @@ static GstFlowReturn
 gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
-  guint fsize, rate, chans;
+  guint fsize, rate, chans, blocks, sid;
 
-  if (!gst_ac3_parse_frame_header (ac3parse, buf, &fsize, &rate, &chans))
+  if (!gst_ac3_parse_frame_header (ac3parse, buf, &fsize, &rate, &chans,
+          &blocks, &sid))
     goto broken_header;
 
   GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
+
+  if (G_UNLIKELY (sid)) {
+    GST_LOG_OBJECT (parse, "sid: %d", sid);
+    GST_BUFFER_FLAG_SET (buf, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
+  }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans)) {
     GstCaps *caps = gst_caps_new_simple ("audio/x-ac3",
@@ -450,7 +470,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
     ac3parse->sample_rate = rate;
     ac3parse->channels = chans;
 
-    gst_base_parse_set_frame_props (parse, rate, 256 * 6, 50);
+    gst_base_parse_set_frame_props (parse, rate, 256 * blocks, 50);
   }
 
   return GST_FLOW_OK;
