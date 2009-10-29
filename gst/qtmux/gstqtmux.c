@@ -1776,6 +1776,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   VisualSampleEntry entry = { 0, };
   GstQTMuxFormat format;
   AtomInfo *ext_atom = NULL;
+  GList *ext_atom_list = NULL;
   gboolean sync = FALSE;
   int par_num, par_den;
 
@@ -1859,11 +1860,14 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
         break;
     }
   } else if (strcmp (mimetype, "video/x-h263") == 0) {
+    ext_atom = NULL;
     if (format == GST_QT_MUX_FORMAT_QT)
       entry.fourcc = FOURCC_h263;
     else
       entry.fourcc = FOURCC_s263;
     ext_atom = build_h263_extension ();
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
   } else if (strcmp (mimetype, "video/x-divx") == 0 ||
       strcmp (mimetype, "video/mpeg") == 0) {
     gint version = 0;
@@ -1880,6 +1884,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       ext_atom =
           build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG4_P2,
           ESDS_STREAM_TYPE_VISUAL, codec_data);
+      if (ext_atom != NULL)
+        ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
       if (!codec_data)
         GST_WARNING_OBJECT (qtmux, "no codec_data for MPEG4 video; "
             "output might not play in Apple QuickTime (try global-headers?)");
@@ -1890,6 +1896,42 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     if (!codec_data)
       GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
     ext_atom = build_codec_data_extension (FOURCC_avcC, codec_data);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+  } else if (strcmp (mimetype, "video/x-svq") == 0) {
+    gint version = 0;
+    const GstBuffer *seqh = NULL;
+    const GValue *seqh_value;
+    gdouble gamma = 0;
+
+    gst_structure_get_int (structure, "svqversion", &version);
+    if (version == 3) {
+      entry.fourcc = FOURCC_SVQ3;
+      entry.version = 3;
+      entry.depth = 32;
+      qtpad->is_out_of_order = TRUE;
+
+      seqh_value = gst_structure_get_value (structure, "seqh");
+      if (seqh_value) {
+        seqh = gst_value_get_buffer (seqh_value);
+        ext_atom = build_SMI_atom (seqh);
+        if (ext_atom)
+          ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+      }
+
+      /* we need to add the gamma anyway because quicktime might crash
+       * when it doesn't find it */
+      if (!gst_structure_get_double (structure, "applied-gamma", &gamma)) {
+        /* it seems that using 0 here makes it ignored */
+        gamma = 0.0;
+      }
+      ext_atom = build_gama_atom (gamma);
+      if (ext_atom)
+        ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
+    } else {
+      GST_WARNING_OBJECT (qtmux, "SVQ version %d not supported. Please file "
+          "a bug at http://bugzilla.gnome.org", version);
+    }
   } else if (strcmp (mimetype, "video/x-dv") == 0) {
     gint version = 0;
     gboolean pal = TRUE;
@@ -1924,6 +1966,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "image/x-j2c") == 0) {
     guint32 fourcc;
 
+    ext_atom = NULL;
     entry.fourcc = FOURCC_mjp2;
     sync = FALSE;
     if (!gst_structure_get_fourcc (structure, "fourcc", &fourcc) ||
@@ -1932,6 +1975,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       GST_DEBUG_OBJECT (qtmux, "missing or invalid fourcc in jp2 caps");
       goto refuse_caps;
     }
+    if (ext_atom)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
@@ -1955,7 +2000,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   qtpad->fourcc = entry.fourcc;
   qtpad->sync = sync;
   atom_trak_set_video_type (qtpad->trak, qtmux->context, &entry, rate,
-      ext_atom);
+      ext_atom_list);
 
   gst_object_unref (qtmux);
   return TRUE;

@@ -3055,7 +3055,7 @@ build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
 
 void
 atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
-    VisualSampleEntry * entry, guint32 scale, AtomInfo * ext)
+    VisualSampleEntry * entry, guint32 scale, GList * ext_atoms_list)
 {
   SampleTableEntryMP4V *ste;
   gint dwidth, dheight;
@@ -3087,14 +3087,15 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   trak->is_video = TRUE;
   trak->is_h264 = (entry->fourcc == FOURCC_avc1);
 
+  ste->version = entry->version;
   ste->width = entry->width;
   ste->height = entry->height;
   ste->depth = entry->depth;
   ste->color_table_id = entry->color_table_id;
   ste->frame_count = entry->frame_count;
 
-  if (ext)
-    ste->extension_atoms = g_list_prepend (ste->extension_atoms, ext);
+  if (ext_atoms_list)
+    ste->extension_atoms = g_list_concat (ste->extension_atoms, ext_atoms_list);
 
   /* QT spec has a pasp extension atom in stsd that can hold PAR */
   if (par_n && (context->flavor == ATOMS_TREE_FLAVOR_MOV)) {
@@ -3298,6 +3299,41 @@ build_h263_extension ()
   GST_WRITE_UINT8 (ext + 6, 0);
 
   res = build_codec_data_extension (GST_MAKE_FOURCC ('d', '2', '6', '3'), buf);
+  gst_buffer_unref (buf);
+  return res;
+}
+
+AtomInfo *
+build_gama_atom (gdouble gamma)
+{
+  AtomInfo *res;
+  guint32 gamma_fp;
+  GstBuffer *buf;
+
+  /* convert to uint32 from fixed point */
+  gamma_fp = (guint32) 65536 *gamma;
+
+  buf = gst_buffer_new_and_alloc (4);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), gamma_fp);
+  res = build_codec_data_extension (FOURCC_gama, buf);
+  gst_buffer_unref (buf);
+  return res;
+}
+
+AtomInfo *
+build_SMI_atom (const GstBuffer * seqh)
+{
+  AtomInfo *res;
+  GstBuffer *buf;
+
+  /* the seqh plus its size and fourcc */
+  buf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (seqh) + 8);
+
+  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf), FOURCC_SEQH);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 4, GST_BUFFER_SIZE (seqh));
+  memcpy (GST_BUFFER_DATA (buf) + 8, GST_BUFFER_DATA (seqh),
+      GST_BUFFER_SIZE (seqh));
+  res = build_codec_data_extension (FOURCC_SMI_, buf);
   gst_buffer_unref (buf);
   return res;
 }
