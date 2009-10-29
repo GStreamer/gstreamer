@@ -38,7 +38,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_osx_video_src, "osxvideosrc", 0,
-                           "osxvideosrc element");
+      "osxvideosrc element");
 
   return TRUE;
 }
