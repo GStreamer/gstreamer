@@ -261,9 +261,9 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
   GST_DEBUG_OBJECT (aacparse, "setcaps: %s", caps_str);
   g_free (caps_str);
 
-  // This is needed at least in case of RTP
-  // Parses the codec_data information to get ObjectType,
-  // number of channels and samplerate
+  /* This is needed at least in case of RTP
+   * Parses the codec_data information to get ObjectType,
+   * number of channels and samplerate */
   if (gst_structure_has_field (structure, "codec_data")) {
 
     const GValue *value = gst_structure_get_value (structure, "codec_data");
@@ -311,7 +311,6 @@ gst_aacparse_update_duration (GstAacParse * aacparse)
   if (!aacparse->framecount || !aacparse->frames_per_sec) {
     return;
   }
-  // info->length = (int)((filelength_filestream(file)/(((info->bitrate*8)/1024)*16))*1000);
 
   peer = gst_pad_get_peer (parse->sinkpad);
   if (peer) {
@@ -511,7 +510,7 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->header_type = DSPAAC_HEADER_ADIF;
     aacparse->mpegversion = 4;
 
-    // Skip the "ADIF" bytes
+    /* Skip the "ADIF" bytes */
     adif = data + i + 4;
 
     /* copyright string */
@@ -560,7 +559,7 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->frames_per_sec = aacparse->sample_rate / 1024.f;
     GST_INFO ("ADIF fps: %f", aacparse->frames_per_sec);
 
-    // FIXME: Can we assume this?
+    /* FIXME: Can we assume this? */
     aacparse->channels = 2;
 
     GST_INFO ("ADIF: br=%d, samplerate=%d, objtype=%d",
