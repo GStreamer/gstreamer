@@ -1091,6 +1091,18 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
 }
 
 static void
+notify_volume_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
+{
+  g_object_notify (G_OBJECT (playbin), "volume");
+}
+
+static void
+notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
+{
+  g_object_notify (G_OBJECT (playbin), "mute");
+}
+
+static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
   GstFactoryListType type;
@@ -1116,6 +1128,11 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
   gst_bin_add (GST_BIN_CAST (playbin), GST_ELEMENT_CAST (playbin->playsink));
   gst_play_sink_set_flags (playbin->playsink, DEFAULT_FLAGS);
+  /* Connect to notify::volume and notify::mute signals for proxying */
+  g_signal_connect (playbin->playsink, "notify::volume",
+      G_CALLBACK (notify_volume_cb), playbin);
+  g_signal_connect (playbin->playsink, "notify::mute",
+      G_CALLBACK (notify_mute_cb), playbin);
 
   playbin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
 
