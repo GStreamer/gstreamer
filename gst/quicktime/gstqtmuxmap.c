@@ -73,6 +73,11 @@
   "divxversion = (int) 5, "\
   COMMON_VIDEO_CAPS
 
+#define SVQ_CAPS \
+  "video/x-svq, " \
+  "svqversion = (int) 3, " \
+  COMMON_VIDEO_CAPS
+
 #define COMMON_AUDIO_CAPS(c, r) \
   "channels = (int) [ 1, " G_STRINGIFY (c) " ], " \
   "rate = (int) [ 1, " G_STRINGIFY (r) " ]"
@@ -141,6 +146,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             MPEG4V_CAPS "; "
             H263_CAPS "; "
             H264_CAPS "; "
+            SVQ_CAPS "; "
             "video/x-dv, "
             "systemstream = (boolean) false, "
             COMMON_VIDEO_CAPS "; "

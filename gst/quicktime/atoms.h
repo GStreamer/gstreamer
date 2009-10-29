@@ -628,6 +628,7 @@ void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);
 
 typedef struct
 {
+  guint16 version;
   guint32 fourcc;
   guint width;
   guint height;
@@ -659,9 +660,10 @@ typedef struct
 void atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
                                AudioSampleEntry * entry, guint32 scale,
                                AtomInfo * ext, gint sample_size);
+
 void atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
                                VisualSampleEntry * entry, guint32 rate,
-                               AtomInfo * ext);
+                               GList * ext_atoms_list);
 
 AtomInfo *   build_codec_data_extension  (guint32 fourcc, const GstBuffer * codec_data);
 AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data);
@@ -671,6 +673,8 @@ AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint heig
                                           guint32 fourcc);
 AtomInfo *   build_amr_extension         ();
 AtomInfo *   build_h263_extension        ();
+AtomInfo *   build_gama_atom             (gdouble gamma);
+AtomInfo *   build_SMI_atom              (const GstBuffer *seqh);
 
 
 /*
