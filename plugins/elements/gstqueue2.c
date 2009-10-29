@@ -74,13 +74,6 @@
 #include <unistd.h>
 #endif
 
-static const GstElementDetails gst_queue2_details =
-GST_ELEMENT_DETAILS ("Queue",
-    "Generic",
-    "Simple data queue",
-    "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -350,7 +343,11 @@ gst_queue2_class_init (GstQueue2Class * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (gstelement_class, &gst_queue2_details);
+  gst_element_class_set_details_simple (gstelement_class, "Queue",
+      "Generic",
+      "Simple data queue",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
