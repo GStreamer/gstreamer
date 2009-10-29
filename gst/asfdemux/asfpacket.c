@@ -101,8 +101,16 @@ asf_payload_find_previous_fragment (AsfPayload * payload, AsfStream * stream)
 
   if (G_UNLIKELY (ret->mo_size != payload->mo_size ||
           ret->mo_number != payload->mo_number || ret->mo_offset != 0)) {
-    GST_WARNING ("Previous fragment does not match continued fragment");
-    return NULL;
+    if (payload->mo_size != 0) {
+      GST_WARNING ("Previous fragment does not match continued fragment");
+      return NULL;
+    } else {
+      // Warn about this case, but accept it anyway: files in the wild sometimes
+      // have continued packets where the subsequent fragments say that they're
+      // zero-sized.
+      GST_WARNING ("Previous fragment found, but current fragment has "
+          "zero size, accepting anyway");
+    }
   }
 #if 0
   if (this_fragment->mo_offset + this_payload_len > first_fragment->mo_size) {
