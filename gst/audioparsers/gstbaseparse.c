@@ -942,7 +942,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* update stats */
   parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
-  parse->priv->framecount++;
+  parse->priv->framecount +=
+      !GST_BUFFER_FLAG_IS_SET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
+  GST_BUFFER_FLAG_UNSET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
   if (parse->priv->update_interval &&
       (parse->priv->framecount % parse->priv->update_interval) == 0)
     gst_base_parse_update_duration (parse);
