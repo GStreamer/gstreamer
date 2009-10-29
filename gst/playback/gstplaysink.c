@@ -1421,6 +1421,19 @@ gen_subp_chain (GstPlaySink * playsink)
   return chain;
 }
 
+static void
+notify_volume_cb (GObject * selector, GParamSpec * pspec,
+    GstPlaySink * playsink)
+{
+  g_object_notify (G_OBJECT (playsink), "volume");
+}
+
+static void
+notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlaySink * playsink)
+{
+  g_object_notify (G_OBJECT (playsink), "mute");
+}
+
 /* make the chain that contains the elements needed to perform
  * audio playback.
  *
@@ -1497,6 +1510,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   if (elem) {
     chain->volume = elem;
 
+    g_signal_connect (chain->volume, "notify::volume",
+        G_CALLBACK (notify_volume_cb), playsink);
+
     GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
     have_volume = TRUE;
     chain->sink_volume = TRUE;
@@ -1507,6 +1523,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
         gst_play_sink_find_property_sinks (playsink, chain->sink, "mute");
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
+      g_signal_connect (chain->mute, "notify::mute",
+          G_CALLBACK (notify_mute_cb), playsink);
     }
     /* use the sink to control the volume and mute */
     if (playsink->volume_changed) {
@@ -1574,6 +1592,11 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
                 "volume"), ("possibly a liboil version mismatch?"));
       } else {
         have_volume = TRUE;
+
+        g_signal_connect (chain->volume, "notify::volume",
+            G_CALLBACK (notify_volume_cb), playsink);
+        g_signal_connect (chain->mute, "notify::mute",
+            G_CALLBACK (notify_mute_cb), playsink);
 
         /* volume also has the mute property */
         chain->mute = chain->volume;
@@ -1687,6 +1710,9 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
       /* use the sink to control the volume */
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
     }
+
+    g_signal_connect (chain->volume, "notify::volume",
+        G_CALLBACK (notify_volume_cb), playsink);
     /* if the sink also has a mute property we can use this as well. We'll only
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
@@ -1694,12 +1720,22 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
         gst_play_sink_find_property_sinks (playsink, chain->sink, "mute");
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
+      g_signal_connect (chain->mute, "notify::mute",
+          G_CALLBACK (notify_mute_cb), playsink);
     }
   } else {
     /* no volume, we need to add a volume element when we can */
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
     if (!raw) {
       GST_LOG_OBJECT (playsink, "non-raw format, can't do soft volume control");
+
+      if (chain->volume)
+        g_signal_handlers_disconnect_by_func (chain->volume, notify_volume_cb,
+            playsink);
+      if (chain->mute)
+        g_signal_handlers_disconnect_by_func (chain->mute, notify_mute_cb,
+            playsink);
+
       chain->volume = NULL;
       chain->mute = NULL;
     } else {
