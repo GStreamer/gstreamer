@@ -128,7 +128,6 @@ gst_identity_get_type
 <FILE>element-queue</FILE>
 <TITLE>queue</TITLE>
 GstQueue
-GstQueueSize
 <SUBSECTION Standard>
 GstQueueClass
 GST_QUEUE
@@ -137,8 +136,26 @@ GST_QUEUE_CLASS
 GST_IS_QUEUE_CLASS
 GST_TYPE_QUEUE
 <SUBSECTION Private>
+GstQueueSize
 gst_queue_get_type
 GST_QUEUE_CLEAR_LEVEL
+</SECTION>
+
+<SECTION>
+<FILE>element-queue2</FILE>
+<TITLE>queue2</TITLE>
+GstQueue2
+<SUBSECTION Standard>
+GstQueue2Class
+GST_QUEUE2
+GST_QUEUE2_CAST
+GST_IS_QUEUE2
+GST_QUEUE2_CLASS
+GST_IS_QUEUE2_CLASS
+GST_TYPE_QUEUE2
+<SUBSECTION Private>
+GstQueue2Size
+gst_queue2_get_type
 </SECTION>
 
 <SECTION>

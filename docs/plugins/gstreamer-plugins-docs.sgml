@@ -27,6 +27,7 @@
     <xi:include href="xml/element-identity.xml" />
     <xi:include href="xml/element-multiqueue.xml" />
     <xi:include href="xml/element-queue.xml" />
+    <xi:include href="xml/element-queue2.xml" />
     <xi:include href="xml/element-tee.xml" />
     <xi:include href="xml/element-typefind.xml" />
   </chapter>

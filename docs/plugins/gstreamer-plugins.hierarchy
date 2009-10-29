@@ -22,6 +22,7 @@ GObject
         GstFdSink
         GstFileSink
       GstQueue
+      GstQueue2
       GstTee
       GstTypeFindElement
       GstMultiQueue

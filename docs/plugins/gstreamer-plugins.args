@@ -271,7 +271,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>
@@ -754,7 +754,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Extra Size (buffers)</NICK>
-<BLURB>Amount of buffers the queues can grow if one of them is empty (0=disable).</BLURB>
+<BLURB>Amount of buffers the queues can grow if one of them is empty (0=disable) (NOT IMPLEMENTED).</BLURB>
 <DEFAULT>5</DEFAULT>
 </ARG>
 
@@ -764,7 +764,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Extra Size (kB)</NICK>
-<BLURB>Amount of data the queues can grow if one of them is empty (bytes, 0=disable).</BLURB>
+<BLURB>Amount of data the queues can grow if one of them is empty (bytes, 0=disable) (NOT IMPLEMENTED).</BLURB>
 <DEFAULT>10485760</DEFAULT>
 </ARG>
 
@@ -774,7 +774,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Extra Size (ns)</NICK>
-<BLURB>Amount of time the queues can grow if one of them is empty (in ns, 0=disable).</BLURB>
+<BLURB>Amount of time the queues can grow if one of them is empty (in ns, 0=disable) (NOT IMPLEMENTED).</BLURB>
 <DEFAULT>3000000000</DEFAULT>
 </ARG>
 
@@ -809,6 +809,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiQueue::high-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High percent</NICK>
+<BLURB>High threshold for buffering to finish.</BLURB>
+<DEFAULT>99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::low-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low percent</NICK>
+<BLURB>Low threshold for buffering to start.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::use-buffering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use buffering</NICK>
+<BLURB>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstBin::async-handling</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -816,5 +846,125 @@
 <NICK>Async Handling</NICK>
 <BLURB>The bin will handle Asynchronous state changes.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::current-level-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (buffers)</NICK>
+<BLURB>Current number of buffers in the queue.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::current-level-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (kB)</NICK>
+<BLURB>Current amount of data in the queue (bytes).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::current-level-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (ns)</NICK>
+<BLURB>Current amount of data in the queue (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::high-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High percent</NICK>
+<BLURB>High threshold for buffering to finish.</BLURB>
+<DEFAULT>99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::low-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low percent</NICK>
+<BLURB>Low threshold for buffering to start.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::max-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
+<DEFAULT>2097152</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
+<DEFAULT>2000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::temp-location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporary File Location</NICK>
+<BLURB>Location to store temporary files in (Deprecated: Only read this property, use temp-tmpl to configure the name template).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::temp-template</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporary File Template</NICK>
+<BLURB>File template to store temporary files in, should contain directory and XXXXXX. (NULL == disabled).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::use-buffering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use buffering</NICK>
+<BLURB>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::use-rate-estimate</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Rate Estimate</NICK>
+<BLURB>Estimate the bitrate of the stream to calculate time level.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

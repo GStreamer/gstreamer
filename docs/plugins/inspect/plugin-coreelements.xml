@@ -3,10 +3,10 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.25</version>
+  <version>0.10.25.1</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer source release</package>
+  <package>GStreamer git/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -168,6 +168,27 @@
       <class>Generic</class>
       <description>Simple data queue</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>queue2</name>
+      <longname>Queue 2</longname>
+      <class>Generic</class>
+      <description>Simple data queue</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
