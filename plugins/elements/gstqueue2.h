@@ -28,24 +28,33 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_QUEUE \
-  (gst_queue_get_type())
-#define GST_QUEUE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUEUE,GstQueue))
-#define GST_QUEUE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUEUE,GstQueueClass))
-#define GST_IS_QUEUE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE))
-#define GST_IS_QUEUE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
-#define GST_QUEUE_CAST(obj) \
-  ((GstQueue *)(obj))
+#define GST_TYPE_QUEUE2 \
+  (gst_queue2_get_type())
+#define GST_QUEUE2(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUEUE2,GstQueue2))
+#define GST_QUEUE2_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUEUE2,GstQueue2Class))
+#define GST_IS_QUEUE2(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE2))
+#define GST_IS_QUEUE2_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE2))
+#define GST_QUEUE2_CAST(obj) \
+  ((GstQueue2 *)(obj))
 
-typedef struct _GstQueue GstQueue;
-typedef struct _GstQueueSize GstQueueSize;
-typedef struct _GstQueueClass GstQueueClass;
+typedef struct _GstQueue2 GstQueue2;
+typedef struct _GstQueue2Size GstQueue2Size;
+typedef struct _GstQueue2Class GstQueue2Class;
 
-struct _GstQueue
+/* used to keep track of sizes (current and max) */
+struct _GstQueue2Size
+{
+  guint buffers;
+  guint bytes;
+  guint64 time;
+  guint64 rate_time;
+};
+
+struct _GstQueue2
 {
   GstElement element;
 
@@ -65,8 +74,8 @@ struct _GstQueue
   /* the queue of data we're keeping our hands on */
   GQueue *queue;
 
-  GstQueueSize cur_level;       /* currently in the queue */
-  GstQueueSize max_level;       /* max. amount of data allowed in the queue */
+  GstQueue2Size cur_level;       /* currently in the queue */
+  GstQueue2Size max_level;       /* max. amount of data allowed in the queue */
   gboolean use_buffering;
   gboolean use_rate_estimate;
   GstClockTime buffering_interval;
@@ -111,10 +120,12 @@ struct _GstQueue
 
 };
 
-struct _GstQueueClass
+struct _GstQueue2Class
 {
   GstElementClass parent_class;
 };
+
+GType gst_queue2_get_type (void);
 
 G_END_DECLS
 

@@ -21,6 +21,7 @@ libgstcoreelements_la_SOURCES =	\
 	gstfilesrc.c		\
 	gstidentity.c		\
 	gstqueue.c		\
+	gstqueue2.c		\
 	gsttee.c		\
 	gsttypefindelement.c	\
 	gstmultiqueue.c
@@ -42,6 +43,7 @@ noinst_HEADERS =		\
 	gstfilesrc.h		\
 	gstidentity.h		\
 	gstqueue.h		\
+	gstqueue2.h		\
 	gsttee.h		\
 	gsttypefindelement.h	\
 	gstmultiqueue.h

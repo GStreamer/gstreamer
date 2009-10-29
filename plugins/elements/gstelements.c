@@ -36,6 +36,7 @@
 #include "gstfilesrc.h"
 #include "gstidentity.h"
 #include "gstqueue.h"
+#include "gstqueue2.h"
 #include "gsttee.h"
 #include "gsttypefindelement.h"
 #include "gstmultiqueue.h"
@@ -59,6 +60,7 @@ static struct _elements_entry _elements[] = {
   {"filesrc", GST_RANK_PRIMARY, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"queue", GST_RANK_NONE, gst_queue_get_type},
+  {"queue2", GST_RANK_NONE, gst_queue2_get_type},
   {"filesink", GST_RANK_PRIMARY, gst_file_sink_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
   {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
