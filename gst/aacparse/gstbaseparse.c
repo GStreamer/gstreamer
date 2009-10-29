@@ -1445,6 +1445,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->framecount = 0;
     parse->priv->bytecount = 0;
     parse->priv->next_ts = 0;
+    parse->priv->passthrough = FALSE;
 
     if (parse->pending_segment)
       gst_event_unref (parse->pending_segment);
