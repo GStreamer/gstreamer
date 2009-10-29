@@ -58,9 +58,10 @@
 #include "config.h"
 #endif
 
+#include "gstqueue2.h"
+
 #include <glib/gstdio.h>
 
-#include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
 #ifdef G_OS_WIN32
@@ -128,23 +129,6 @@ enum
   PROP_TEMP_LOCATION
 };
 
-#define GST_TYPE_QUEUE \
-  (gst_queue_get_type())
-#define GST_QUEUE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_QUEUE,GstQueue))
-#define GST_QUEUE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUEUE,GstQueueClass))
-#define GST_IS_QUEUE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE))
-#define GST_IS_QUEUE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
-#define GST_QUEUE_CAST(obj) \
-  ((GstQueue *)(obj))
-
-typedef struct _GstQueue GstQueue;
-typedef struct _GstQueueSize GstQueueSize;
-typedef struct _GstQueueClass GstQueueClass;
-
 /* used to keep track of sizes (current and max) */
 struct _GstQueueSize
 {
@@ -160,77 +144,6 @@ struct _GstQueueSize
   l.time = 0;                                           \
   l.rate_time = 0;                                      \
 } G_STMT_END
-
-struct _GstQueue
-{
-  GstElement element;
-
-  /*< private > */
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  /* segments to keep track of timestamps */
-  GstSegment sink_segment;
-  GstSegment src_segment;
-
-  /* flowreturn when srcpad is paused */
-  GstFlowReturn srcresult;
-  gboolean is_eos;
-  gboolean unexpected;
-
-  /* the queue of data we're keeping our hands on */
-  GQueue *queue;
-
-  GstQueueSize cur_level;       /* currently in the queue */
-  GstQueueSize max_level;       /* max. amount of data allowed in the queue */
-  gboolean use_buffering;
-  gboolean use_rate_estimate;
-  GstClockTime buffering_interval;
-  gint low_percent;             /* low/high watermarks for buffering */
-  gint high_percent;
-
-  /* current buffering state */
-  gboolean is_buffering;
-  guint buffering_iteration;
-
-  /* for measuring input/output rates */
-  GTimer *in_timer;
-  gboolean in_timer_started;
-  gdouble last_in_elapsed;
-  guint64 bytes_in;
-  gdouble byte_in_rate;
-
-  GTimer *out_timer;
-  gboolean out_timer_started;
-  gdouble last_out_elapsed;
-  guint64 bytes_out;
-  gdouble byte_out_rate;
-
-  GMutex *qlock;                /* lock for queue (vs object lock) */
-  gboolean waiting_add;
-  GCond *item_add;              /* signals buffers now available for reading */
-  gboolean waiting_del;
-  GCond *item_del;              /* signals space now available for writing */
-
-  /* temp location stuff */
-  gchar *temp_template;
-  gboolean temp_location_set;
-  gchar *temp_location;
-  FILE *temp_file;
-  guint64 writing_pos;
-  guint64 reading_pos;
-  guint64 max_reading_pos;
-  /* we need this to send the first new segment event of the stream
-   * because we can't save it on the file */
-  gboolean segment_event_received;
-  GstEvent *starting_segment;
-
-};
-
-struct _GstQueueClass
-{
-  GstElementClass parent_class;
-};
 
 #define STATUS(queue, pad, msg) \
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
