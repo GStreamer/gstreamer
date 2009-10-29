@@ -1171,6 +1171,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* FIXME: Would it be more efficient to make a subbuffer instead? */
     outbuf = gst_adapter_take_buffer (parse->adapter, fsize);
+    outbuf = gst_buffer_make_metadata_writable (outbuf);
 
     /* Subclass may want to know the data offset */
     GST_BUFFER_OFFSET (outbuf) = parse->priv->offset;
