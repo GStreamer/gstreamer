@@ -199,38 +199,12 @@ enum
 } G_STMT_END
 
 #define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (queue_debug, "queue2", 0, "queue element"); \
+    GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue2_dataflow", 0, \
+        "dataflow inside the queue element");
 
-/* can't use boilerplate as we need to register with Queue2 to avoid conflicts
- * with queue in core elements */
-static void gst_queue2_class_init (GstQueue2Class * klass);
-static void gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class);
-static GstElementClass *parent_class;
-
-GType
-gst_queue2_get_type (void)
-{
-  static GType gst_queue2_type = 0;
-
-  if (!gst_queue2_type) {
-    static const GTypeInfo gst_queue2_info = {
-      sizeof (GstQueue2Class),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_queue2_class_init,
-      NULL,
-      NULL,
-      sizeof (GstQueue2),
-      0,
-      (GInstanceInitFunc) gst_queue2_init,
-      NULL
-    };
-
-    gst_queue2_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstQueue22",
-        &gst_queue2_info, 0);
-  }
-  return gst_queue2_type;
-}
+GST_BOILERPLATE_FULL (GstQueue2, gst_queue2, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void gst_queue2_finalize (GObject * object);
 
@@ -267,6 +241,23 @@ static gboolean gst_queue2_is_empty (GstQueue2 * queue);
 static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 /* static guint gst_queue2_signals[LAST_SIGNAL] = { 0 }; */
+
+static void
+gst_queue2_base_init (gpointer g_class)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class, "Queue",
+      "Generic",
+      "Simple data queue",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
+}
 
 static void
 gst_queue2_class_init (GstQueue2Class * klass)
@@ -337,17 +328,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
           "Location to store temporary files in (Deprecated: Only read this "
           "property, use temp-tmpl to configure the name template)",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (gstelement_class, "Queue",
-      "Generic",
-      "Simple data queue",
-      "Erik Walthinsen <omega@cse.ogi.edu>, "
-      "Wim Taymans <wim.taymans@gmail.com>");
 
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
