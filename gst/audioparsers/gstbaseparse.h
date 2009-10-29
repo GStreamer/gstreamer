@@ -79,6 +79,17 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
 
 /**
+ * GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME:
+ *
+ * A #GstBufferFlag that can be set to have this buffer not counted as frame,
+ * e.g. if this frame is dependent on a previous one.  As it is not counted as
+ * a frame, bitrate increases but frame to time conversions are maintained.
+ *
+ * Since: 0.10.x
+ */
+#define GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME     GST_BUFFER_FLAG_LAST
+
+/**
  * GST_BASE_PARSE_LOCK:
  * @obj: base parse instance
  *
