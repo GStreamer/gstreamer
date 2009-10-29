@@ -104,8 +104,6 @@ typedef struct {
   GstElement *sink;
   GstCaps *caps;
   gulong signal_id;
-  /* FIXME: need to connect to "disposed" signal to clean up,
-   * but there is no such signal */
 } DelayedLink;
 
 typedef struct {
@@ -425,6 +423,15 @@ gst_parse_free_link (link_t *link)
 }
 
 static void
+gst_parse_free_delayed_link (DelayedLink *link)
+{
+  g_free (link->src_pad);
+  g_free (link->sink_pad);
+  if (link->caps) gst_caps_unref (link->caps);
+  g_free (link);
+}
+
+static void
 gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
   DelayedLink *link = (DelayedLink *) data;
@@ -441,10 +448,8 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
                	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
     g_signal_handler_disconnect (src, link->signal_id);
-    g_free (link->src_pad);
-    g_free (link->sink_pad);
-    if (link->caps) gst_caps_unref (link->caps);
-    g_free (link);
+    g_object_set_qdata (G_OBJECT (src),
+        g_quark_from_static_string ("GstParseDelayedLink"), NULL);
   }
 }
 /* both padnames and the caps may be NULL */
@@ -479,6 +484,9 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       }
       data->signal_id = g_signal_connect (src, "pad-added",
           G_CALLBACK (gst_parse_found_pad), data);
+      g_object_set_qdata_full (G_OBJECT (src),
+          g_quark_from_static_string ("GstParseDelayedLink"), data,
+	  (GDestroyNotify)gst_parse_free_delayed_link);
       return TRUE;
     }
   }
