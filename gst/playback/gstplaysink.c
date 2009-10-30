@@ -1422,15 +1422,24 @@ gen_subp_chain (GstPlaySink * playsink)
 }
 
 static void
-notify_volume_cb (GObject * selector, GParamSpec * pspec,
-    GstPlaySink * playsink)
+notify_volume_cb (GObject * object, GParamSpec * pspec, GstPlaySink * playsink)
 {
+  gdouble vol;
+
+  g_object_get (object, "volume", &vol, NULL);
+  playsink->volume = vol;
+
   g_object_notify (G_OBJECT (playsink), "volume");
 }
 
 static void
-notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlaySink * playsink)
+notify_mute_cb (GObject * object, GParamSpec * pspec, GstPlaySink * playsink)
 {
+  gboolean mute;
+
+  g_object_get (object, "mute", &mute, NULL);
+  playsink->mute = mute;
+
   g_object_notify (G_OBJECT (playsink), "mute");
 }
 
