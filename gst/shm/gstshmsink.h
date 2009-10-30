@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 
+#include "shmpipe.h"
+
 G_BEGIN_DECLS
 #define GST_TYPE_SHM_SINK \
   (gst_shm_sink_get_type())
@@ -43,16 +45,24 @@ struct _GstShmSink
 {
   GstBaseSink element;
 
-  gchar *shm_name;
+  gchar *socket_path;
 
-  int fd;
-  struct GstShmHeader *shm_area;
-  size_t shm_area_len;
-  gchar *opened_name;
+  ShmPipe *pipe;
 
   guint perms;
+  guint size;
 
-  guint caps_gen;
+  GList *clients;
+
+  GThread *pollthread;
+  GstPoll *poll;
+  GstPollFD serverpollfd;
+
+  gboolean wait_for_connection;
+  gboolean stop;
+  gboolean unlock;
+
+  GCond *cond;
 };
 
 struct _GstShmSinkClass
