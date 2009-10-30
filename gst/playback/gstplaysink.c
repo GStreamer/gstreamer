@@ -1538,6 +1538,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     /* use the sink to control the volume and mute */
     if (playsink->volume_changed) {
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+      playsink->volume_changed = FALSE;
     }
     if (playsink->mute_changed) {
       if (chain->mute) {
@@ -1546,6 +1547,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
         if (playsink->mute)
           g_object_set (chain->volume, "volume", (gdouble) 0.0, NULL);
       }
+      playsink->mute_changed = FALSE;
     }
   } else {
     /* no volume, we need to add a volume element when we can */
@@ -1718,6 +1720,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
           playsink->volume);
       /* use the sink to control the volume */
       g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+      playsink->volume_changed = FALSE;
     }
 
     g_signal_connect (chain->volume, "notify::volume",
