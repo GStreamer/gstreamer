@@ -1532,18 +1532,24 @@ convert_422_444 (CogFrame * frame, void *_dest, int component, int i)
 {
   uint8_t *dest = _dest;
   uint8_t *src;
+  int n_taps = frame->param1;
 
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
 
   if (component == 0) {
     orc_memcpy (dest, src, frame->width);
   } else {
-    cogorc_upsample_horiz_cosite_1tap (dest, src,
-        frame->components[component].width / 2 - 1);
-#if 0
-    cogorc_upsample_horiz_cosite (dest, src, src + 1,
-        frame->components[component].width / 2 - 1);
-#endif
+    switch (n_taps) {
+      default:
+      case 1:
+        cogorc_upsample_horiz_cosite_1tap (dest, src,
+            frame->components[component].width / 2 - 1);
+        break;
+      case 2:
+        cogorc_upsample_horiz_cosite (dest, src, src + 1,
+            frame->components[component].width / 2 - 1);
+        break;
+    }
     dest[frame->components[component].width - 2] =
         src[frame->components[component].width / 2 - 1];
     dest[frame->components[component].width - 1] =
@@ -1556,33 +1562,38 @@ convert_420_422 (CogFrame * frame, void *_dest, int component, int i)
 {
   uint8_t *dest = _dest;
   uint8_t *src;
+  int n_taps = frame->param1;
 
   if (component == 0) {
     src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
     orc_memcpy (dest, src, frame->components[component].width);
   } else {
-#if 0
-    if ((i & 1) && i < frame->components[component].height - 1) {
-      uint8_t *src2;
+    switch (n_taps) {
+      case 1:
+      default:
+        src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
+        orc_memcpy (dest, src, frame->components[component].width);
+        break;
+      case 2:
+        if ((i & 1) && i < frame->components[component].height - 1) {
+          uint8_t *src2;
 
-      src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
-      src2 = cog_virt_frame_get_line (frame->virt_frame1,
-          component, (i >> 1) + 1);
-      cogorc_upsample_vert_avgub (dest, src, src2,
-          frame->components[component].width);
-    } else {
-      src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
-      orc_memcpy (dest, src, frame->components[component].width);
+          src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
+          src2 = cog_virt_frame_get_line (frame->virt_frame1,
+              component, (i >> 1) + 1);
+          cogorc_upsample_vert_avgub (dest, src, src2,
+              frame->components[component].width);
+        } else {
+          src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
+          orc_memcpy (dest, src, frame->components[component].width);
+        }
+        break;
     }
-#else
-    src = cog_virt_frame_get_line (frame->virt_frame1, component, i >> 1);
-    orc_memcpy (dest, src, frame->components[component].width);
-#endif
   }
 }
 
 CogFrame *
-cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
+cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format, int n_taps)
 {
   CogFrame *virt_frame;
   CogFrameRenderFunc render_line;
@@ -1599,6 +1610,7 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
         vf->width, vf->height);
     virt_frame->virt_frame1 = vf;
     virt_frame->render_line = convert_444_422;
+    virt_frame->param1 = n_taps;
     vf = virt_frame;
 
     render_line = convert_422_420;
@@ -1614,6 +1626,7 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
         vf->width, vf->height);
     virt_frame->virt_frame1 = vf;
     virt_frame->render_line = convert_420_422;
+    virt_frame->param1 = n_taps;
     vf = virt_frame;
 
     render_line = convert_422_444;
@@ -1626,6 +1639,7 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format)
   }
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
+  virt_frame->param1 = n_taps;
   virt_frame->render_line = render_line;
 
   return virt_frame;

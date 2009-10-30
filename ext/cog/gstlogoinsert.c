@@ -261,13 +261,13 @@ gst_logoinsert_transform_ip (GstBaseTransform * base_transform, GstBuffer * buf)
     CogFrame *f;
 
     f = cog_virt_frame_extract_alpha (cog_frame_ref (li->ayuv_frame));
-    f = cog_virt_frame_new_subsample (f, frame->format);
+    f = cog_virt_frame_new_subsample (f, frame->format, 2);
     li->alpha_frame = cog_frame_realize (f);
 
     f = cog_virt_frame_new_unpack (cog_frame_ref (li->ayuv_frame));
     f = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (f, COG_COLOR_MATRIX_SDTV,
         8);
-    f = cog_virt_frame_new_subsample (f, frame->format);
+    f = cog_virt_frame_new_subsample (f, frame->format, 2);
     li->overlay_frame = cog_frame_realize (f);
   }
 

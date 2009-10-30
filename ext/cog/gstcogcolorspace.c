@@ -448,7 +448,8 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
         compress->color_matrix, 8);
   }
 
-  frame = cog_virt_frame_new_subsample (frame, new_subsample);
+  frame = cog_virt_frame_new_subsample (frame, new_subsample,
+      (compress->quality >= 3) ? 2 : 1);
 
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
