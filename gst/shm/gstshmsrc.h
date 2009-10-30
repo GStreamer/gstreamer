@@ -26,6 +26,8 @@
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gstbasesrc.h>
 
+#include "shmpipe.h"
+
 G_BEGIN_DECLS
 #define GST_TYPE_SHM_SRC \
   (gst_shm_src_get_type())
@@ -44,15 +46,14 @@ struct _GstShmSrc
 {
   GstPushSrc element;
 
-  gchar *shm_name;
+  gchar *socket_path;
 
-  int fd;
-  struct GstShmHeader *shm_area;
-  size_t shm_area_len;
+  ShmPipe *pipe;
+  GstPoll *poll;
+  GstPollFD pollfd;
 
-  guint caps_gen;
-  guint buffer_gen;
 
+  GstFlowReturn flow_return;
   gboolean unlocked;
 };
 
