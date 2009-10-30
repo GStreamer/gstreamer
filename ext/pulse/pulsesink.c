@@ -606,7 +606,10 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   const pa_buffer_attr *actual;
   pa_channel_map channel_map;
   pa_operation *o = NULL;
-  pa_cvolume v, *pv;
+#if HAVE_PULSE_0_9_20
+  pa_cvolume v;
+#endif
+  pa_cvolume *pv = NULL;
   pa_stream_flags_t flags;
   const gchar *name;
   GstAudioClock *clock;
@@ -677,6 +680,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (psink, "prebuf:    %d", wanted.prebuf);
   GST_INFO_OBJECT (psink, "minreq:    %d", wanted.minreq);
 
+#if HAVE_PULSE_0_9_20
   /* configure volume when we changed it, else we leave the default */
   if (psink->volume_set) {
     GST_LOG_OBJECT (psink, "have volume of %f", psink->volume);
@@ -686,6 +690,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   } else {
     pv = NULL;
   }
+#endif
 
   /* construct the flags */
   flags = PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
