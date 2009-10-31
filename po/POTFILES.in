@@ -10,7 +10,6 @@ gst/playback/gstdecodebin2.c
 gst/playback/gstplaybasebin.c
 gst/playback/gstplaybin.c
 gst/playback/gstplaysink.c
-gst/playback/gstqueue2.c
 gst/playback/gsturidecodebin.c
 gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c
