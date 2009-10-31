@@ -23,8 +23,6 @@
 
 
 #include <gst/gst.h>
-#include "gst/riff/riff-ids.h"
-#include "gst/riff/riff-read.h"
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS

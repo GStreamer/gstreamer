@@ -56,7 +56,7 @@
 #include <math.h>
 
 #include "aiffparse.h"
-#include "gst/audio/audio.h"
+#include <gst/audio/audio.h>
 #include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (aiffparse_debug);
