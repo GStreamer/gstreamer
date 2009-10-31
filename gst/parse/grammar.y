@@ -434,11 +434,14 @@ gst_parse_free_delayed_link (DelayedLink *link)
 static void
 gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
-  DelayedLink *link = (DelayedLink *) data;
-  
+  DelayedLink *link = g_object_get_qdata (G_OBJECT (src),
+      g_quark_from_static_string ("GstParseDelayedLink"));
+
   GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
                 GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                 GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
+
+  g_return_if_fail (link != NULL);
 
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink,
       link->sink_pad, link->caps)) {
@@ -482,11 +485,11 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       } else {
       	data->caps = NULL;
       }
-      data->signal_id = g_signal_connect (src, "pad-added",
-          G_CALLBACK (gst_parse_found_pad), data);
       g_object_set_qdata_full (G_OBJECT (src),
           g_quark_from_static_string ("GstParseDelayedLink"), data,
 	  (GDestroyNotify)gst_parse_free_delayed_link);
+      data->signal_id = g_signal_connect (src, "pad-added",
+          G_CALLBACK (gst_parse_found_pad), NULL);
       return TRUE;
     }
   }
