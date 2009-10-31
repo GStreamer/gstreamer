@@ -281,6 +281,10 @@ gst_level_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SIGNAL_INTERVAL:
       filter->interval = g_value_get_uint64 (value);
+      if (filter->rate) {
+        filter->interval_frames =
+            GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate);
+      }
       break;
     case PROP_PEAK_TTL:
       filter->decay_peak_ttl =
@@ -483,6 +487,9 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
     filter->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
   }
 
+  filter->interval_frames =
+      GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate);
+
   return TRUE;
 }
 
@@ -648,8 +655,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   filter->num_frames += num_frames;
 
   /* do we need to message ? */
-  if (filter->num_frames >=
-      GST_CLOCK_TIME_TO_FRAMES (filter->interval, filter->rate)) {
+  if (filter->num_frames >= filter->interval_frames) {
     if (filter->message) {
       GstMessage *m;
       GstClockTime duration =
