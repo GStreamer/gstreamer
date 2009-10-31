@@ -480,7 +480,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
         filter->decay_peak[i] = filter->decay_peak_base[i] = 0.0;
-    filter->decay_peak_age[i] = G_GINT64_CONSTANT (0);
+    filter->decay_peak_age[i] = G_GUINT64_CONSTANT (0);
   }
 
   return TRUE;
