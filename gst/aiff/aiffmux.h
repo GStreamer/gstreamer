@@ -1,5 +1,4 @@
-/*
- * GStreamer
+/* GStreamer AIFF muxer
  * Copyright (C) 2009 Robert Swain <robert.swain@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -47,7 +46,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
+
 #define GST_TYPE_AIFF_MUX \
   (gst_aiff_mux_get_type())
 #define GST_AIFF_MUX(obj) \
@@ -58,13 +57,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AIFF_MUX))
 #define GST_IS_AIFF_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AIFF_MUX))
+
 typedef struct _GstAiffMux GstAiffMux;
 typedef struct _GstAiffMuxClass GstAiffMuxClass;
 
+/**
+ * GstAiffMux:
+ *
+ * Opaque data structure.
+ */
 struct _GstAiffMux
 {
   GstElement element;
 
+  /*< private >*/
   GstPad *sinkpad;
   GstPad *srcpad;
 

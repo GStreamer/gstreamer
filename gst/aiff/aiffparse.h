@@ -55,8 +55,9 @@ typedef struct _GstAiffParseClass GstAiffParseClass;
 struct _GstAiffParse {
   GstElement parent;
 
-  /* pads */
-  GstPad *sinkpad,*srcpad;
+  /*< private >*/
+  GstPad      *sinkpad;
+  GstPad      *srcpad;
 
   GstCaps     *caps;
   GstEvent    *close_segment;

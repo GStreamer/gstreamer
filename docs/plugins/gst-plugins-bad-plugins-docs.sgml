@@ -18,6 +18,8 @@
   <chapter>
     <title>gst-plugins-bad Elements</title>
     <xi:include href="xml/element-aacparse.xml" />
+    <xi:include href="xml/element-aiffparse.xml" />
+    <xi:include href="xml/element-aiffmux.xml" />
     <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
@@ -90,6 +92,7 @@
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aacparse.xml" />
+    <xi:include href="xml/plugin-aiff.xml" />
     <xi:include href="xml/plugin-amrparse.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
