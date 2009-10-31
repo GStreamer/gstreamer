@@ -18,6 +18,7 @@ plugins/elements/gstfilesink.c
 plugins/elements/gstfilesrc.c
 plugins/elements/gstidentity.c
 plugins/elements/gstqueue.c
+plugins/elements/gstqueue2.c
 plugins/elements/gsttypefindelement.c
 tools/gst-inspect.c
 tools/gst-launch.c
