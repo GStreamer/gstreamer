@@ -427,7 +427,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   GstLevel *filter = GST_LEVEL (trans);
   const gchar *mimetype;
   GstStructure *structure;
-  int i;
+  gint i;
 
   structure = gst_caps_get_structure (in, 0);
   filter->rate = structure_get_int (structure, "rate");
@@ -469,11 +469,11 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   g_free (filter->decay_peak);
   g_free (filter->decay_peak_base);
   g_free (filter->decay_peak_age);
-  filter->CS = g_new (double, filter->channels);
-  filter->peak = g_new (double, filter->channels);
-  filter->last_peak = g_new (double, filter->channels);
-  filter->decay_peak = g_new (double, filter->channels);
-  filter->decay_peak_base = g_new (double, filter->channels);
+  filter->CS = g_new (gdouble, filter->channels);
+  filter->peak = g_new (gdouble, filter->channels);
+  filter->last_peak = g_new (gdouble, filter->channels);
+  filter->decay_peak = g_new (gdouble, filter->channels);
+  filter->decay_peak_base = g_new (gdouble, filter->channels);
 
   filter->decay_peak_age = g_new (GstClockTime, filter->channels);
 
