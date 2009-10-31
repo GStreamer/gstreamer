@@ -117,7 +117,7 @@ struct _AIFFParseClass {
   GstElementClass parent_class;
 };
 
-GType aiffparse_get_type(void);
+GType gst_aiffparse_get_type(void);
 
 G_END_DECLS
 

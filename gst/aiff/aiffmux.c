@@ -1,5 +1,4 @@
-/*
- * GStreamer
+/* GStreamer AIFF muxer
  * Copyright (C) 2009 Robert Swain <robert.swain@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -59,8 +58,8 @@
 
 #include "aiffmux.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_aiff_mux_debug);
-#define GST_CAT_DEFAULT gst_aiff_mux_debug
+GST_DEBUG_CATEGORY (aiffmux_debug);
+#define GST_CAT_DEFAULT aiffmux_debug
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -411,21 +410,3 @@ gst_aiff_mux_init (GstAiffMux * aiffmux, GstAiffMuxClass * gclass)
       gst_static_pad_template_get_caps (&src_factory));
   gst_element_add_pad (GST_ELEMENT (aiffmux), aiffmux->srcpad);
 }
-
-#if 0
-static gboolean
-aiff_mux_init (GstPlugin * aiffmux)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_aiff_mux_debug, "aiffmux", 0,
-      "AIFF muxer element");
-
-  return gst_element_register (aiffmux, "aiffmux", GST_RANK_NONE,
-      GST_TYPE_AIFF_MUX);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "aiffmux",
-    "Multiplex raw audio into AIFF",
-    aiff_mux_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
-#endif

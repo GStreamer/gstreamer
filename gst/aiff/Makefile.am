@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstaiff.la
 
-libgstaiff_la_SOURCES = aiffparse.c
+libgstaiff_la_SOURCES = aiff.c aiffmux.c aiffparse.c
 libgstaiff_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -11,4 +11,4 @@ libgstaiff_la_LIBADD = \
 libgstaiff_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaiff_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = aiffparse.h
+noinst_HEADERS = aiffmux.h aiffparse.h
