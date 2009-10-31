@@ -303,9 +303,6 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
        }
     }
     g_signal_handler_disconnect (child_proxy, set->signal_id);
-    g_free(set->name);
-    g_free(set->value_str);
-    g_slice_free(DelayedSet, set);
     if (!got_value)
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
@@ -324,6 +321,12 @@ error:
   goto out;
 }
 
+static void
+gst_parse_free_delayed_set (DelayedSet *set) {
+  g_free(set->name);
+  g_free(set->value_str);
+  g_slice_free(DelayedSet, set);
+}
 
 static void
 gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
@@ -386,7 +389,9 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
       data->parent = element;
       data->name = g_strdup(value);
       data->value_str = g_strdup(pos);
-      data->signal_id = g_signal_connect(element, "child-added", G_CALLBACK (gst_parse_new_child), data);
+      data->signal_id = g_signal_connect_data(element, "child-added",
+          G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
+          gst_parse_free_delayed_set, (GConnectFlags) 0);
     }
     else {
       SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
@@ -434,14 +439,11 @@ gst_parse_free_delayed_link (DelayedLink *link)
 static void
 gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 {
-  DelayedLink *link = g_object_get_qdata (G_OBJECT (src),
-      g_quark_from_static_string ("GstParseDelayedLink"));
+  DelayedLink *link = data;
 
   GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
                 GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                 GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
-
-  g_return_if_fail (link != NULL);
 
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink,
       link->sink_pad, link->caps)) {
@@ -451,8 +453,6 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
                	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
                	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
     g_signal_handler_disconnect (src, link->signal_id);
-    g_object_set_qdata (G_OBJECT (src),
-        g_quark_from_static_string ("GstParseDelayedLink"), NULL);
   }
 }
 /* both padnames and the caps may be NULL */
@@ -485,11 +485,9 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       } else {
       	data->caps = NULL;
       }
-      g_object_set_qdata_full (G_OBJECT (src),
-          g_quark_from_static_string ("GstParseDelayedLink"), data,
-	  (GDestroyNotify)gst_parse_free_delayed_link);
-      data->signal_id = g_signal_connect (src, "pad-added",
-          G_CALLBACK (gst_parse_found_pad), NULL);
+      data->signal_id = g_signal_connect_data (src, "pad-added",
+          G_CALLBACK (gst_parse_found_pad), data,
+          (GClosureNotify) gst_parse_free_delayed_link, (GConnectFlags) 0);
       return TRUE;
     }
   }
