@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer AIFF parser
  * Copyright (C) <2008> Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_AIFFPARSE_H__
-#define __GST_AIFFPARSE_H__
+#ifndef __GST_AIFF_PARSE_H__
+#define __GST_AIFF_PARSE_H__
 
 
 #include <gst/gst.h>
@@ -27,32 +27,32 @@
 
 G_BEGIN_DECLS
 
-#define TYPE_AIFFPARSE \
-  (gst_aiffparse_get_type())
-#define AIFFPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),TYPE_AIFFPARSE,AIFFParse))
-#define AIFFPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),TYPE_AIFFPARSE,AIFFParseClass))
-#define IS_AIFFPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),TYPE_AIFFPARSE))
-#define IS_AIFFPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),TYPE_AIFFPARSE))
+#define GST_TYPE_AIFF_PARSE \
+  (gst_aiff_parse_get_type())
+#define GST_AIFF_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AIFF_PARSE,GstAiffParse))
+#define GST_AIFF_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AIFF_PARSE,GstAiffParseClass))
+#define GST_IS_AIFF_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AIFF_PARSE))
+#define GST_IS_AIFF_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AIFF_PARSE))
 
 typedef enum {
-  AIFFPARSE_START,
-  AIFFPARSE_HEADER,
-  AIFFPARSE_DATA
-} AIFFParseState;
+  AIFF_PARSE_START,
+  AIFF_PARSE_HEADER,
+  AIFF_PARSE_DATA
+} GstAiffParseState;
 
-typedef struct _AIFFParse AIFFParse;
-typedef struct _AIFFParseClass AIFFParseClass;
+typedef struct _GstAiffParse GstAiffParse;
+typedef struct _GstAiffParseClass GstAiffParseClass;
 
 /**
- * AIFFParse:
+ * GstAiffParse:
  *
  * Opaque data structure.
  */
-struct _AIFFParse {
+struct _GstAiffParse {
   GstElement parent;
 
   /* pads */
@@ -63,7 +63,7 @@ struct _AIFFParse {
   GstEvent    *start_segment;
 
   /* AIFF decoding state */
-  AIFFParseState state;
+  GstAiffParseState state;
 
   /* format of audio, see defines below */
   gint format;
@@ -113,12 +113,12 @@ struct _AIFFParse {
   gboolean discont;
 };
 
-struct _AIFFParseClass {
+struct _GstAiffParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_aiffparse_get_type(void);
+GType gst_aiff_parse_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_AIFFPARSE_H__ */
+#endif /* __GST_AIFF_PARSE_H__ */
