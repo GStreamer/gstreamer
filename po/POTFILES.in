@@ -2,7 +2,7 @@ ext/resindvd/resindvdsrc.c
 ext/resindvd/rsnbasesrc.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
-gst/aiffparse/aiffparse.c
+gst/aiff/aiffparse.c
 gst/nuvdemux/gstnuvdemux.c
 sys/dvb/gstdvbsrc.c
 sys/oss4/oss4-mixer.c

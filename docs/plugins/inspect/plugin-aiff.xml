@@ -1,8 +1,8 @@
 <plugin>
-  <name>aiffparse</name>
+  <name>aiff</name>
   <description>Parse an .aiff file into raw audio</description>
-  <filename>../../gst/aiffparse/.libs/libgstaiffparse.so</filename>
-  <basename>libgstaiffparse.so</basename>
+  <filename>../../gst/aiffparse/.libs/libgstaiff.so</filename>
+  <basename>libgstaiff.so</basename>
   <version>0.10.16</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>

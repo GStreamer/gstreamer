@@ -99,7 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
 %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
-%{_libdir}/gstreamer-%{majorminor}/libgstaiffparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaiff.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
