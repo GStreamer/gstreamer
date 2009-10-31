@@ -621,7 +621,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       gdouble falloff;
       gdouble length;           /* length of falloff time in seconds */
 
-      length = (gdouble) (falloff_time / GST_SECOND);
+      length = (gdouble) falloff_time / (gdouble) GST_SECOND;
       falloff_dB = filter->decay_peak_falloff * length;
       falloff = pow (10, falloff_dB / -20.0);
 
