@@ -1127,7 +1127,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (volume == NULL)
     goto no_volume;
   g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
-  play_bin->volume_element = volume;
+  play_bin->volume_element = GST_ELEMENT_CAST (gst_object_ref (volume));
   gst_bin_add (GST_BIN_CAST (element), volume);
 
   res = gst_element_link_pads (conv, "src", scale, "sink");
@@ -1441,6 +1441,11 @@ remove_sinks (GstPlayBin * play_bin)
   if (play_bin->textoverlay_element) {
     gst_object_unref (play_bin->textoverlay_element);
     play_bin->textoverlay_element = NULL;
+  }
+
+  if (play_bin->volume_element) {
+    gst_object_unref (play_bin->volume_element);
+    play_bin->volume_element = NULL;
   }
 }
 
