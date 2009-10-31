@@ -64,7 +64,7 @@ link_t *__gst_parse_link_new ()
 {
   link_t *ret;
   __links++;
-  ret = g_new0 (link_t, 1);
+  ret = g_slice_new0 (link_t);
   /* g_print ("ALLOCATED LINK  (%3u): %p\n", __links, ret); */
   return ret;
 }
@@ -73,7 +73,7 @@ __gst_parse_link_free (link_t *data)
 {
   if (data) {
     /* g_print ("FREEING LINK    (%3u): %p\n", __links - 1, data); */
-    g_free (data);
+    g_slice_free (link_t, data);
     g_return_if_fail (__links > 0);
     __links--;
   }
@@ -83,7 +83,7 @@ __gst_parse_chain_new ()
 {
   chain_t *ret;
   __chains++;
-  ret = g_new0 (chain_t, 1);
+  ret = g_slice_new0 (chain_t);
   /* g_print ("ALLOCATED CHAIN (%3u): %p\n", __chains, ret); */
   return ret;
 }
@@ -91,7 +91,7 @@ void
 __gst_parse_chain_free (chain_t *data)
 {
   /* g_print ("FREEING CHAIN   (%3u): %p\n", __chains - 1, data); */
-  g_free (data);
+  g_slice_free (chain_t, data);
   g_return_if_fail (__chains > 0);
   __chains--;
 }
@@ -305,7 +305,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     g_signal_handler_disconnect (child_proxy, set->signal_id);
     g_free(set->name);
     g_free(set->value_str);
-    g_free(set);
+    g_slice_free(DelayedSet, set);
     if (!got_value)
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
@@ -381,7 +381,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   } else { 
     /* do a delayed set */
     if (GST_IS_CHILD_PROXY (element)) {
-      DelayedSet *data = g_new (DelayedSet, 1);
+      DelayedSet *data = g_slice_new0 (DelayedSet);
       
       data->parent = element;
       data->name = g_strdup(value);
@@ -428,7 +428,7 @@ gst_parse_free_delayed_link (DelayedLink *link)
   g_free (link->src_pad);
   g_free (link->sink_pad);
   if (link->caps) gst_caps_unref (link->caps);
-  g_free (link);
+  g_slice_free (DelayedLink, link);
 }
 
 static void
@@ -469,7 +469,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) &&
         (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
-      DelayedLink *data = g_new (DelayedLink, 1); 
+      DelayedLink *data = g_slice_new (DelayedLink); 
       
       /* TODO: maybe we should check if src_pad matches this template's names */
 
