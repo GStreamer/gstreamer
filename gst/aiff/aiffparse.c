@@ -59,8 +59,8 @@
 #include <gst/audio/audio.h>
 #include <gst/gst-i18n-plugin.h>
 
-GST_DEBUG_CATEGORY (aiff_parse_debug);
-#define GST_CAT_DEFAULT (aiff_parse_debug)
+GST_DEBUG_CATEGORY (aiffparse_debug);
+#define GST_CAT_DEFAULT (aiffparse_debug)
 
 static void gst_aiff_parse_dispose (GObject * object);
 
