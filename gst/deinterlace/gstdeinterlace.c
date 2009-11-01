@@ -733,8 +733,6 @@ gst_deinterlace_init (GstDeinterlace * self, GstDeinterlaceClass * klass)
       GST_DEBUG_FUNCPTR (gst_deinterlace_setcaps));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
-  gst_element_no_more_pads (GST_ELEMENT (self));
-
   self->mode = DEFAULT_MODE;
   gst_deinterlace_set_method (self, DEFAULT_METHOD);
   self->fields = DEFAULT_FIELDS;
