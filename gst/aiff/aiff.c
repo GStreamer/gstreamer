@@ -38,6 +38,7 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
+  GST_DEBUG_CATEGORY_INIT (aiff_debug, "aiff", 0, "AIFF plugin");
   GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser");
   GST_DEBUG_CATEGORY_INIT (aiffmux_debug, "aiffmux", 0, "AIFF muxer");
 
