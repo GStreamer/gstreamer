@@ -1310,22 +1310,29 @@ rsn_dvdsrc_create (RsnBaseSrc * bsrc, guint64 offset,
 
   if (src->need_segment) {
     /* Seamless segment update */
-    GstEvent *seek;
+    GstClockTime position = 0;
 
-    g_print ("Starting seamless segment update to %" GST_TIME_FORMAT " -> %"
-        GST_TIME_FORMAT " VOBU %" GST_TIME_FORMAT "\n",
+    if (src->cur_position != GST_CLOCK_TIME_NONE)
+      position += src->cur_position;
+    if (src->cur_vobu_base_ts != GST_CLOCK_TIME_NONE)
+      position += src->cur_vobu_base_ts;
+
+    GST_DEBUG_OBJECT (src,
+        "Starting seamless segment update to %" GST_TIME_FORMAT " -> %"
+        GST_TIME_FORMAT " VOBU %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
         GST_TIME_ARGS (src->cur_start_ts), GST_TIME_ARGS (src->cur_end_ts),
-        GST_TIME_ARGS (src->cur_vobu_base_ts));
-    seek = gst_event_new_seek (segment->rate, rsndvd_format,
-        GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1);
-    gst_element_send_event (GST_ELEMENT (src), seek);
+        GST_TIME_ARGS (src->cur_vobu_base_ts), GST_TIME_ARGS (position));
+
+    gst_base_src_new_seamless_segment (RSN_BASE_SRC (src),
+        src->cur_start_ts, -1, position);
+
     src->need_segment = FALSE;
   }
 
-  g_mutex_lock (src->dvd_lock);
-
   if (src->cur_end_ts != GST_CLOCK_TIME_NONE)
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
+
+  g_mutex_lock (src->dvd_lock);
 
   if (src->next_buf != NULL) {
     /* Now that we're in the new segment, we can enqueue any nav packet
