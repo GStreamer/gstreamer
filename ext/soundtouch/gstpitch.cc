@@ -181,8 +181,6 @@ gst_pitch_init (GstPitch * pitch, GstPitchClass * pitch_class)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_element_add_pad (GST_ELEMENT (pitch), pitch->srcpad);
 
-  gst_element_no_more_pads (GST_ELEMENT (pitch));
-
   pitch->priv->st = new soundtouch::SoundTouch ();
 
   pitch->tempo = 1.0;
