@@ -28,33 +28,32 @@
  *   send seeks to themselves. 
  *
  */
-
-#ifndef __GST_BASE_SRC_H__
-#define __GST_BASE_SRC_H__
+#ifndef __RSN_BASE_SRC_H__
+#define __RSN_BASE_SRC_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define RSN_TYPE_BASE_SRC		(rsn_base_src_get_type())
-#define GST_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_BASE_SRC,RsnBaseSrc))
-#define GST_BASE_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_BASE_SRC,RsnBaseSrcClass))
-#define GST_BASE_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), RSN_TYPE_BASE_SRC, RsnBaseSrcClass))
-#define GST_IS_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_BASE_SRC))
-#define GST_IS_BASE_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_BASE_SRC))
-#define GST_BASE_SRC_CAST(obj)		((RsnBaseSrc *)(obj))
+#define RSN_TYPE_BASE_SRC               (gst_base_src_get_type())
+#define RSN_BASE_SRC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_BASE_SRC,RsnBaseSrc))
+#define RSN_BASE_SRC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_BASE_SRC,RsnBaseSrcClass))
+#define RSN_BASE_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), RSN_TYPE_BASE_SRC, RsnBaseSrcClass))
+#define GST_IS_BASE_SRC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_BASE_SRC))
+#define GST_IS_BASE_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_BASE_SRC))
+#define RSN_BASE_SRC_CAST(obj)          ((RsnBaseSrc *)(obj))
 
 /**
  * RsnBaseSrcFlags:
- * @GST_BASE_SRC_STARTED: has source been started
- * @GST_BASE_SRC_FLAG_LAST: offset to define more flags
+ * @RSN_BASE_SRC_STARTED: has source been started
+ * @RSN_BASE_SRC_FLAG_LAST: offset to define more flags
  *
  * The #GstElement flags that a basesrc element may have.
  */
 typedef enum {
-  GST_BASE_SRC_STARTED           = (GST_ELEMENT_FLAG_LAST << 0),
+  RSN_BASE_SRC_STARTED           = (GST_ELEMENT_FLAG_LAST << 0),
   /* padding */
-  GST_BASE_SRC_FLAG_LAST         = (GST_ELEMENT_FLAG_LAST << 2)
+  RSN_BASE_SRC_FLAG_LAST         = (GST_ELEMENT_FLAG_LAST << 2)
 } RsnBaseSrcFlags;
 
 typedef struct _RsnBaseSrc RsnBaseSrc;
@@ -62,12 +61,12 @@ typedef struct _RsnBaseSrcClass RsnBaseSrcClass;
 typedef struct _RsnBaseSrcPrivate RsnBaseSrcPrivate;
 
 /**
- * GST_BASE_SRC_PAD:
+ * RSN_BASE_SRC_PAD:
  * @obj: base source instance
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC_CAST (obj)->srcpad)
+#define RSN_BASE_SRC_PAD(obj)                 (RSN_BASE_SRC_CAST (obj)->srcpad)
 
 
 /**
@@ -80,31 +79,31 @@ struct _RsnBaseSrc {
   GstElement     element;
 
   /*< protected >*/
-  GstPad	*srcpad;
+  GstPad        *srcpad;
 
   /* available to subclass implementations */
   /* MT-protected (with LIVE_LOCK) */
-  GMutex	*live_lock;
-  GCond		*live_cond;
-  gboolean	 is_live;
-  gboolean	 live_running;
+  GMutex        *live_lock;
+  GCond         *live_cond;
+  gboolean       is_live;
+  gboolean       live_running;
 
   /* MT-protected (with LOCK) */
-  gint		 blocksize;	/* size of buffers when operating push based */
-  gboolean	 can_activate_push;	/* some scheduling properties */
+  gint           blocksize;     /* size of buffers when operating push based */
+  gboolean       can_activate_push;     /* some scheduling properties */
   GstActivateMode pad_mode;
-  gboolean       seekable;
+  gboolean       seekable; /* not used anymore */
   gboolean       random_access;
 
-  GstClockID     clock_id;	/* for syncing */
+  GstClockID     clock_id;      /* for syncing */
   GstClockTime   end_time;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment     segment;
-  gboolean	 need_newsegment;
+  gboolean       need_newsegment;
 
-  guint64	 offset;	/* current offset in the resource, unused */
-  guint64        size;		/* total size of the resource, unused */
+  guint64        offset;        /* current offset in the resource, unused */
+  guint64        size;          /* total size of the resource, unused */
 
   gint           num_buffers;
   gint           num_buffers_left;
@@ -133,32 +132,32 @@ struct _RsnBaseSrc {
  * @start: Start processing. Subclasses should open resources and prepare
  *    to produce data.
  * @stop: Stop processing. Subclasses should use this to close resources.
- * @get_times: Given a buffer, return the start and stop time when it 
- *    should be pushed out. The base class will sync on the clock using 
- *    these times. 
+ * @get_times: Given a buffer, return the start and stop time when it
+ *    should be pushed out. The base class will sync on the clock using
+ *    these times.
  * @get_size: Return the total size of the resource, in the configured format.
  * @is_seekable: Check if the source can seek
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *    unblock any blocked function ASAP
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
- *    any state they set during unlock(), such as clearing command queues. 
+ *    any state they set during unlock(), such as clearing command queues.
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
  * @do_seek: Perform seeking on the resource to the indicated segment.
- * @prepare_seek_segment: Prepare the GstSegment that will be passed to the 
- *   do_seek vmethod for executing a seek request. Sub-classes should override 
- *   this if they support seeking in formats other than the configured native 
- *   format. By default, it tries to convert the seek arguments to the 
+ * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
+ *   do_seek vmethod for executing a seek request. Sub-classes should override
+ *   this if they support seeking in formats other than the configured native
+ *   format. By default, it tries to convert the seek arguments to the
  *   configured native format and prepare a segment in that format.
  *   Since: 0.10.13
- * @query: Handle a requested query. 
- * @check_get_range: Check whether the source would support pull-based 
- *   operation if it were to be opened now. This vfunc is optional, but 
- *   should be implemented if possible to avoid unnecessary start/stop 
- *   cycles. The default implementation will open and close the resource 
- *   to find out whether get_range is supported, and that is usually 
- *   undesirable. 
- * @fixate: Called during negotation if caps need fixating. Implement instead of
+ * @query: Handle a requested query.
+ * @check_get_range: Check whether the source would support pull-based
+ *   operation if it were to be opened now. This vfunc is optional, but
+ *   should be implemented if possible to avoid unnecessary start/stop
+ *   cycles. The default implementation will open and close the resource
+ *   to find out whether get_range is supported, and that is usually
+ *   undesirable.
+ * @fixate: Called during negotiation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
  *
  * Subclasses can override any of the available virtual methods or not, as
@@ -205,7 +204,7 @@ struct _RsnBaseSrcClass {
 
   /* ask the subclass to create a buffer with offset and size */
   GstFlowReturn (*create)       (RsnBaseSrc *src, guint64 offset, guint size,
-		                 GstBuffer **buf);
+                                 GstBuffer **buf);
 
   /* additions that change padding... */
   /* notify subclasses of a seek */
@@ -221,37 +220,40 @@ struct _RsnBaseSrcClass {
    * undesirable. */
   gboolean      (*check_get_range) (RsnBaseSrc *src);
 
-  /* called if, in negotation, caps need fixating */
-  void		(*fixate)	(RsnBaseSrc *src, GstCaps *caps);
+  /* called if, in negotiation, caps need fixating */
+  void          (*fixate)       (RsnBaseSrc *src, GstCaps *caps);
 
   /* Clear any pending unlock request, as we succeeded in unlocking */
   gboolean      (*unlock_stop)  (RsnBaseSrc *src);
 
   /* Prepare the segment on which to perform do_seek(), converting to the
    * current basesrc format. */
-  gboolean      (*prepare_seek_segment) (RsnBaseSrc *src, GstEvent *seek, 
-                                         GstSegment *segment); 
+  gboolean      (*prepare_seek_segment) (RsnBaseSrc *src, GstEvent *seek,
+                                         GstSegment *segment);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE - 6];
 };
 
-GType rsn_base_src_get_type (void);
+GType gst_base_src_get_type (void);
 
-GstFlowReturn   rsn_base_src_wait_playing  (RsnBaseSrc *src);
+GstFlowReturn   gst_base_src_wait_playing     (RsnBaseSrc *src);
 
-void		rsn_base_src_set_live	   (RsnBaseSrc *src, gboolean live);
-gboolean	rsn_base_src_is_live	   (RsnBaseSrc *src);
+void            gst_base_src_set_live         (RsnBaseSrc *src, gboolean live);
+gboolean        gst_base_src_is_live          (RsnBaseSrc *src);
 
-void		rsn_base_src_set_format	   (RsnBaseSrc *src, GstFormat format);
+void            gst_base_src_set_format       (RsnBaseSrc *src, GstFormat format);
 
-gboolean        rsn_base_src_query_latency (RsnBaseSrc *src, gboolean * live,
-                                            GstClockTime * min_latency, 
-					    GstClockTime * max_latency);
+gboolean        gst_base_src_query_latency    (RsnBaseSrc *src, gboolean * live,
+                                               GstClockTime * min_latency,
+                                               GstClockTime * max_latency);
 
-void		rsn_base_src_set_do_timestamp (RsnBaseSrc *src, gboolean live);
-gboolean	rsn_base_src_get_do_timestamp (RsnBaseSrc *src);
+void            gst_base_src_set_blocksize    (RsnBaseSrc *src, gulong blocksize);
+gulong          gst_base_src_get_blocksize    (RsnBaseSrc *src);
+
+void            gst_base_src_set_do_timestamp (RsnBaseSrc *src, gboolean timestamp);
+gboolean        gst_base_src_get_do_timestamp (RsnBaseSrc *src);
 
 G_END_DECLS
 
-#endif /* __GST_BASE_SRC_H__ */
+#endif /* __RSN_BASE_SRC_H__ */

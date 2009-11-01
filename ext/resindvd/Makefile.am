@@ -8,7 +8,6 @@ libresindvd_la_SOURCES = \
 	rsnaudiomunge.c \
 	rsndec.c \
 	rsnbasesrc.c \
-	rsnpushsrc.c \
 	rsnstreamselector.c \
         resindvdsrc.c  \
         gstmpegdesc.c   \
@@ -30,7 +29,6 @@ noinst_HEADERS = resindvdbin.h \
 	rsnaudiomunge.h \
 	rsndec.h \
 	rsnbasesrc.h \
-	rsnpushsrc.h \
 	rsnstreamselector.h \
         resindvdsrc.h \
         gstmpegdefs.h \
