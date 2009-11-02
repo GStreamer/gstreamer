@@ -1031,6 +1031,30 @@ gst_structure_map_in_place (GstStructure * structure,
 }
 
 /**
+ * gst_structure_id_has_field:
+ * @structure: a #GstStructure
+ * @field: #GQuark of the field name
+ *
+ * Check if @structure contains a field named @field.
+ *
+ * Returns: TRUE if the structure contains a field with the given name
+ *
+ * Since: 0.10.26
+ */
+gboolean
+gst_structure_id_has_field (const GstStructure * structure, GQuark field)
+{
+  GstStructureField *f;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (field != 0, FALSE);
+
+  f = gst_structure_id_get_field (structure, field);
+
+  return (f != NULL);
+}
+
+/**
  * gst_structure_has_field:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
@@ -1043,14 +1067,39 @@ gboolean
 gst_structure_has_field (const GstStructure * structure,
     const gchar * fieldname)
 {
-  GstStructureField *field;
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
 
-  g_return_val_if_fail (structure != NULL, 0);
-  g_return_val_if_fail (fieldname != NULL, 0);
+  return gst_structure_id_has_field (structure,
+      g_quark_from_string (fieldname));
+}
 
-  field = gst_structure_get_field (structure, fieldname);
+/**
+ * gst_structure_id_has_field_typed:
+ * @structure: a #GstStructure
+ * @field: #GQuark of the field name
+ * @type: the type of a value
+ *
+ * Check if @structure contains a field named @field and with GType @type.
+ *
+ * Returns: TRUE if the structure contains a field with the given name and type
+ *
+ * Since: 0.10.16
+ */
+gboolean
+gst_structure_id_has_field_typed (const GstStructure * structure,
+    GQuark field, GType type)
+{
+  GstStructureField *f;
 
-  return (field != NULL);
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (field != 0, FALSE);
+
+  f = gst_structure_id_get_field (structure, field);
+  if (f == NULL)
+    return FALSE;
+
+  return (G_VALUE_TYPE (&f->value) == type);
 }
 
 /**
@@ -1067,18 +1116,12 @@ gboolean
 gst_structure_has_field_typed (const GstStructure * structure,
     const gchar * fieldname, GType type)
 {
-  GstStructureField *field;
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
 
-  g_return_val_if_fail (structure != NULL, 0);
-  g_return_val_if_fail (fieldname != NULL, 0);
-
-  field = gst_structure_get_field (structure, fieldname);
-  if (field == NULL)
-    return FALSE;
-
-  return (G_VALUE_TYPE (&field->value) == type);
+  return gst_structure_id_has_field_typed (structure,
+      g_quark_from_string (fieldname), type);
 }
-
 
 /* utility functions */
 

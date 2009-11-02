@@ -172,6 +172,11 @@ gboolean                gst_structure_map_in_place         (GstStructure        
 							    gpointer                 user_data);
 gint                    gst_structure_n_fields             (const GstStructure      *structure);
 const gchar *           gst_structure_nth_field_name       (const GstStructure      *structure, guint index);
+gboolean                gst_structure_id_has_field         (const GstStructure      *structure,
+							    GQuark                   field);
+gboolean                gst_structure_id_has_field_typed   (const GstStructure      *structure,
+							    GQuark                   field,
+							    GType                    type);
 gboolean                gst_structure_has_field            (const GstStructure      *structure,
 							    const gchar             *fieldname);
 gboolean                gst_structure_has_field_typed      (const GstStructure      *structure,
