@@ -97,6 +97,7 @@ typedef struct
   GstElement *overlay;
   GstPad *videosinkpad;
   GstPad *textsinkpad;
+  GstPad *textsinkpad_target;
   GstPad *srcpad;               /* outgoing srcpad, used to connect to the next
                                  * chain */
   GstElement *sink;             /* custom sink to receive subtitle buffers */
@@ -1137,14 +1138,16 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
 /* make an element for playback of video with subtitles embedded.
  *
- *  +----------------------------------------------+
- *  | tbin                  +-------------+        |
- *  |          +-----+      | textoverlay |        |
- *  |          | csp | +--video_sink      |        |
- * sink-------sink  src+ +-text_sink     src--+    |
- *  |          +-----+   |  +-------------+   +-- src
- * text_sink-------------+                         |
- *  +----------------------------------------------+
+ *  +-------------------------------+
+ *  | tbin                          |
+ *  |        +-----------------+    |
+ *  |        | subtitleoverlay |    |
+ * video----video_sink         |    |
+ *  |        |                src--src
+ * text-----text_sink          |    |
+ *  |        +-----------------+    |
+ *  +-------------------------------+
+ *
  */
 static GstPlayTextChain *
 gen_text_chain (GstPlaySink * playsink)
@@ -1205,49 +1208,24 @@ gen_text_chain (GstPlaySink * playsink)
 
   if (textsinkpad == NULL) {
     if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
-      /* no custom sink, try to setup the colorspace and textoverlay elements */
-      chain->conv = gst_element_factory_make ("ffmpegcolorspace", "tconv");
-      if (chain->conv == NULL) {
-        /* not really needed, it might work without colorspace */
-        post_missing_element_message (playsink, "ffmpegcolorspace");
+      chain->overlay =
+          gst_element_factory_make ("subtitleoverlay", "suboverlay");
+      if (chain->overlay == NULL) {
+        post_missing_element_message (playsink, "subtitleoverlay");
         GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
             (_("Missing element '%s' - check your GStreamer installation."),
-                "ffmpegcolorspace"), ("subtitle rendering might fail"));
+                "subtitleoverlay"), ("subtitle rendering disabled"));
       } else {
-        gst_bin_add (bin, chain->conv);
-        videosinkpad = gst_element_get_static_pad (chain->conv, "sink");
-      }
-    }
+        gst_bin_add (bin, chain->overlay);
 
-    chain->overlay = gst_element_factory_make ("textoverlay", "overlay");
-    if (chain->overlay == NULL) {
-      post_missing_element_message (playsink, "textoverlay");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "textoverlay"), ("subtitle rendering disabled"));
-    } else {
-      gst_bin_add (bin, chain->overlay);
+        if (playsink->font_desc) {
+          g_object_set (G_OBJECT (chain->overlay), "font-desc",
+              playsink->font_desc, NULL);
+        }
 
-      /* Set some parameters */
-      g_object_set (G_OBJECT (chain->overlay),
-          "halign", "center", "valign", "bottom", NULL);
-      if (playsink->font_desc) {
-        g_object_set (G_OBJECT (chain->overlay), "font-desc",
-            playsink->font_desc, NULL);
-      }
-      g_object_set (G_OBJECT (chain->overlay), "wait-text", FALSE, NULL);
-
-      textsinkpad = gst_element_get_static_pad (chain->overlay, "text_sink");
-
-      srcpad = gst_element_get_static_pad (chain->overlay, "src");
-
-      if (videosinkpad) {
-        /* if we had a videosinkpad, we had a converter and we can link it, we
-         * know that this will work */
-        gst_element_link_pads (chain->conv, "src", chain->overlay,
-            "video_sink");
-      } else {
-        /* no videopad, expose our own video pad then */
+        textsinkpad =
+            gst_element_get_static_pad (chain->overlay, "subtitle_sink");
+        srcpad = gst_element_get_static_pad (chain->overlay, "src");
         videosinkpad =
             gst_element_get_static_pad (chain->overlay, "video_sink");
       }
@@ -1255,8 +1233,8 @@ gen_text_chain (GstPlaySink * playsink)
   }
 
   if (videosinkpad == NULL) {
-    /* if we still don't have a videosink, we don't have a converter nor an
-     * overlay. the only thing we can do is insert an identity and ghost the src
+    /* if we still don't have a videosink, we don't have an overlay. the only
+     * thing we can do is insert an identity and ghost the src
      * and sink pads. */
     chain->conv = gst_element_factory_make ("identity", "tidentity");
     g_object_set (chain->conv, "signal-handoffs", FALSE, NULL);
@@ -1264,13 +1242,6 @@ gen_text_chain (GstPlaySink * playsink)
     gst_bin_add (bin, chain->conv);
     srcpad = gst_element_get_static_pad (chain->conv, "src");
     videosinkpad = gst_element_get_static_pad (chain->conv, "sink");
-  } else {
-    /* we have a videosink but maybe not a srcpad because there was no
-     * overlay */
-    if (srcpad == NULL) {
-      /* ghost the source pad of the converter then */
-      srcpad = gst_element_get_static_pad (chain->conv, "src");
-    }
   }
 
   /* expose the ghostpads */
@@ -1281,6 +1252,7 @@ gen_text_chain (GstPlaySink * playsink)
   }
   if (textsinkpad) {
     chain->textsinkpad = gst_ghost_pad_new ("text_sink", textsinkpad);
+    chain->textsinkpad_target = textsinkpad;
     gst_object_unref (textsinkpad);
     gst_element_add_pad (chain->chain.bin, chain->textsinkpad);
   }
@@ -2016,16 +1988,27 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       playsink->textchain = gen_text_chain (playsink);
     }
     if (playsink->textchain) {
+      GstPad *target;
+
       GST_DEBUG_OBJECT (playsink, "adding text chain");
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
+
+      if (!(target =
+              gst_ghost_pad_get_target (GST_GHOST_PAD_CAST
+                  (playsink->textchain->textsinkpad)))) {
+        target = gst_object_ref (playsink->textchain->textsinkpad_target);
+        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->
+                textchain->textsinkpad), target);
+      }
+      gst_object_unref (target);
+
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
           playsink->textchain->textsinkpad);
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
           playsink->textchain->videosinkpad);
       gst_pad_link (playsink->textchain->srcpad, playsink->videochain->sinkpad);
+
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
-      if (playsink->textchain->overlay)
-        g_object_set (playsink->textchain->overlay, "silent", FALSE, NULL);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no text needed");
@@ -2039,8 +2022,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       } else {
         /* we have a chain and a textpad, turn the subtitles off */
         GST_DEBUG_OBJECT (playsink, "turning off the text");
-        if (playsink->textchain->overlay)
-          g_object_set (playsink->textchain->overlay, "silent", TRUE, NULL);
+        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->
+                textchain->textsinkpad), NULL);
       }
     }
     if (!need_video && playsink->video_pad)
