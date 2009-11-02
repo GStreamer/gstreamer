@@ -1912,8 +1912,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
       rsn_dvdsrc_prepare_audio_stream_event (src, i, phys_id);
     }
 #if 0
-    /* FIXME: Only output A52 streams for now, until the decoder switching
-     * is ready */
+    /* Old test code: Only output A52 streams */
     if (a->audio_format != 0) {
       GST_DEBUG_OBJECT (src, "Ignoring non-A52 stream %d, format %d", i,
           (int) a->audio_format);
@@ -2532,7 +2531,7 @@ rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
     return TRUE;
   }
 
-  /* Let basesrc handle other formats for now. FIXME: Implement angle */
+  /* Let basesrc handle other formats */
   ret = RSN_BASE_SRC_CLASS (parent_class)->prepare_seek_segment (bsrc,
       event, segment);
 

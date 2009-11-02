@@ -38,10 +38,6 @@
 GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
-#define USE_VIDEOQ 0
-#define USE_HARDCODED_VIDEODEC 0
-#define USE_HARDCODED_AUDIODEC 0
-
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
 #define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
 
@@ -397,17 +393,10 @@ create_elements (RsnDvdBin * dvdbin)
       "max-size-time", (7 * GST_SECOND / 10), "max-size-bytes", 0,
       "max-size-buffers", 0, NULL);
 
-#if USE_HARDCODED_VIDEODEC
-  if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, "mpeg2dec", 0, "viddec",
-          "video decoder"))
-    return FALSE;
-
-#else
   /* Decodebin will throw a missing element message to find an MPEG decoder */
   if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, NULL, RSN_TYPE_VIDEODEC,
           "viddec", "video decoder"))
     return FALSE;
-#endif
 
   if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, NULL, RSN_TYPE_RSNPARSETTER,
           "rsnparsetter", "Aspect ratio adjustment"))
@@ -423,29 +412,7 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (sink);
   src = sink = NULL;
 
-#if USE_VIDEOQ
-  /* Add a small amount of queueing after the video decoder. */
-  if (!try_create_piece (dvdbin, DVD_ELEM_VIDQ, "queue", 0, "vid_q",
-          "video decoder buffer"))
-    return FALSE;
-  g_object_set (dvdbin->pieces[DVD_ELEM_VIDQ],
-      "max-size-time", G_GUINT64_CONSTANT (0), "max-size-bytes", 0,
-      "max-size-buffers", 3, NULL);
-
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "src");
-  sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDQ], "sink");
-  if (src == NULL || sink == NULL)
-    goto failed_vidq_connect;
-  if (GST_PAD_LINK_FAILED (gst_pad_link (src, sink)))
-    goto failed_vidq_connect;
-  gst_object_unref (src);
-  gst_object_unref (sink);
-  src = sink = NULL;
-
-  src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDQ], "src");
-#else
-  src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "src");
-#endif
   if (src == NULL)
     goto failed_video_ghost;
   src_templ = gst_static_pad_template_get (&video_src_template);
@@ -462,11 +429,6 @@ create_elements (RsnDvdBin * dvdbin)
       _pad_block_destroy_notify);
   gst_object_unref (src);
   src = NULL;
-
-#if USE_HARDCODED_VIDEODEC
-  gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->video_pad);
-  dvdbin->video_added = TRUE;
-#endif
 
   if (!try_create_piece (dvdbin, DVD_ELEM_SPU_SELECT, NULL,
           RSN_TYPE_STREAM_SELECTOR, "subpselect", "Subpicture stream selector"))
@@ -513,15 +475,9 @@ create_elements (RsnDvdBin * dvdbin)
           RSN_TYPE_STREAM_SELECTOR, "audioselect", "Audio stream selector"))
     return FALSE;
 
-#if USE_HARDCODED_AUDIODEC
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, "a52dec", 0,
-          "auddec", "audio decoder"))
-    return FALSE;
-#else
   if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
           RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
     return FALSE;
-#endif
 
   /* rsnaudiomunge goes after the audio decoding to regulate the stream */
   if (!try_create_piece (dvdbin, DVD_ELEM_AUD_MUNGE, NULL,
@@ -584,12 +540,6 @@ failed_viddec_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD video decoder and aspect ratio adjuster"));
   goto error_out;
-#if USE_VIDEOQ
-failed_vidq_connect:
-  GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
-      ("Could not connect DVD aspect ratio adjuster and video buffer elements"));
-  goto error_out;
-#endif
 failed_video_ghost:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not ghost video output pad"));
