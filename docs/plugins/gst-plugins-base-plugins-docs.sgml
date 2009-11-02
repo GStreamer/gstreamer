@@ -44,6 +44,7 @@
     <xi:include href="xml/element-oggmux.xml" />
     <xi:include href="xml/element-playbin.xml" />
     <xi:include href="xml/element-playbin2.xml" />
+    <xi:include href="xml/element-subtitleoverlay.xml" />
     <xi:include href="xml/element-tcpclientsrc.xml" />
     <xi:include href="xml/element-tcpclientsink.xml" />
     <xi:include href="xml/element-tcpserversrc.xml" />

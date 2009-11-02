@@ -14,46 +14,10 @@ GObject
             GstPlayBin
           GstPlayBin2
         GstPlaySink
+        GstSubtitleOverlay
+        GstDecodeBin
         GstDecodeBin2
         GstURIDecodeBin
-        GstDecodeBin
-      GstBaseSink
-        GstGioBaseSink
-          GstGioSink
-          GstGioStreamSink
-        GstGnomeVFSSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
-        GstVideoSink
-          GstXvImageSink
-          GstXImageSink
-        GstTCPClientSink
-        GstMultiFdSink
-          GstTCPServerSink
-        GstAppSink
-      GstBaseSrc
-        GstGioBaseSrc
-          GstGioSrc
-          GstGioStreamSrc
-        GstPushSrc
-          GstCddaBaseSrc
-            GstCdParanoiaSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstAlsaSrc
-          GstV4lElement
-            GstV4lSrc
-          GstTCPClientSrc
-          GstTCPServerSrc
-          GstVideoTestSrc
-        GstGnomeVFSSrc
-        GstAppSrc
-        GstAudioTestSrc
-      GstVorbisEnc
-      GstVorbisDec
-      GstVorbisParse
-        GstVorbisTag
       GstOggDemux
       GstOggMux
       GstOgmParse
@@ -62,39 +26,75 @@ GObject
         GstOgmTextParse
       GstOggParse
       GstOggAviParse
-      GstVisual
-        GstVisualbumpscope
-        GstVisualcorona
-        GstVisualinfinite
-        GstVisualjakdaw
-        GstVisualjess
-        GstVisuallv_analyzer
-        GstVisuallv_scope
-        GstVisualoinksie
-      GstTheoraDec
-      GstTheoraEnc
-      GstTheoraParse
+      GstBaseSink
+        GstGioBaseSink
+          GstGioSink
+          GstGioStreamSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
+        GstGnomeVFSSink
+        GstVideoSink
+          GstXvImageSink
+          GstXImageSink
+        GstAppSink
+        GstTCPClientSink
+        GstMultiFdSink
+          GstTCPServerSink
+      GstBaseSrc
+        GstGioBaseSrc
+          GstGioSrc
+          GstGioStreamSrc
+        GstPushSrc
+          GstBaseAudioSrc
+            GstAudioSrc
+              GstAlsaSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
+          GstV4lElement
+            GstV4lSrc
+          GstTCPClientSrc
+          GstTCPServerSrc
+          GstVideoTestSrc
+        GstGnomeVFSSrc
+        GstAudioTestSrc
+        GstAppSrc
+      GstVorbisEnc
+      GstVorbisDec
+      GstVorbisParse
+        GstVorbisTag
       GstTextOverlay
         GstTimeOverlay
         GstClockOverlay
       GstTextRender
+      GstTheoraDec
+      GstTheoraEnc
+      GstTheoraParse
       GstAlsaMixerElement
-      GstGDPDepay
-      GstGDPPay
+      GstVisual
+        GstVisualjess
+        GstVisualbumpscope
+        GstVisualcorona
+        GstVisualinfinite
+        GstVisualjakdaw
+        GstVisuallv_analyzer
+        GstVisuallv_scope
+        GstVisualoinksie
+      GstSubParse
+      GstSsaParse
+      GstAudioRate
       GstBaseTransform
+        GstAudioConvert
         GstFFMpegCsp
-        GstVideoScale
         GstAudioFilter
           GstVolume
         GstAudioResample
-        GstAudioConvert
-      GstSubParse
-      GstSsaParse
+        GstVideoScale
       GstAdder
+      GstGDPDepay
+      GstGDPPay
       GstStreamSelector
       GstPlaybin2InputSelector
-      GstQueue2
-      GstAudioRate
       GstVideoRate
     GstBus
     GstTask
@@ -105,11 +105,10 @@ GObject
     GstPlugin
     GstRegistry
     GstRingBuffer
-      GstAudioSrcRingBuffer
       GstAudioSinkRingBuffer
+      GstAudioSrcRingBuffer
   GstSignalObject
   GstMixerTrack
-    GstMixerOptions
   GstStreamInfo
   GstColorBalanceChannel
   GstTunerNorm
@@ -118,21 +117,21 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
   PangoContext
-  GOutputStream
   GInputStream
+  GOutputStream
 GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GstTagSetter
   GstPreset
+  GstTagSetter
   GstImplementsInterface
   GstMixer
   GstPropertyProbe
-  GstTuner
+  GstNavigation
   GstXOverlay
   GstColorBalance
-  GstNavigation
+  GstTuner
   GstStreamVolume
   PangoCairoFontMap
   GFile

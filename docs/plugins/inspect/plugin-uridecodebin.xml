@@ -3,10 +3,10 @@
   <description>URI Decoder bin</description>
   <filename>../../gst/playback/.libs/libgstdecodebin2.so</filename>
   <basename>libgstdecodebin2.so</basename>
-  <version>0.10.25</version>
+  <version>0.10.25.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Decoder Bin</longname>
       <class>Generic/Bin/Decoder</class>
       <description>Autoplug and decode to raw media</description>
-      <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
+      <author>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>src%d</name>

@@ -455,6 +455,25 @@ GST_TYPE_PLAY_FLAGS
 </SECTION>
 
 <SECTION>
+<FILE>element-subtitleoverlay</FILE>
+<TITLE>subtitleoverlay</TITLE>
+GstSubtitleOverlay
+<SUBSECTION Standard>
+GstSubtitleOverlayClass
+
+GST_IS_SUBTITLE_OVERLAY
+GST_IS_SUBTITLE_OVERLAY_CLASS
+GST_SUBTITLE_OVERLAY
+GST_SUBTITLE_OVERLAY_CAST
+GST_SUBTITLE_OVERLAY_CLASS
+GST_SUBTITLE_OVERLAY_LOCK
+GST_SUBTITLE_OVERLAY_UNLOCK
+GST_TYPE_SUBTITLE_OVERLAY
+gst_subtitle_overlay_plugin_init
+gst_subtitle_overlay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-tcpclientsrc</FILE>
 <TITLE>tcpclientsrc</TITLE>
 GstTCPClientSrc

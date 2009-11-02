@@ -3,10 +3,10 @@
   <description>various playback elements</description>
   <filename>../../gst/playback/.libs/libgstplaybin.so</filename>
   <basename>libgstplaybin.so</basename>
-  <version>0.10.25</version>
+  <version>0.10.25.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -71,6 +71,33 @@
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>subtitleoverlay</name>
+      <longname>Subtitle Overlay</longname>
+      <class>Video/Overlay/Subtitle</class>
+      <description>Overlays a video stream with subtitles</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>subtitle_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb; video/x-raw-yuv</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb; video/x-raw-yuv</details>
         </caps>
       </pads>
     </element>

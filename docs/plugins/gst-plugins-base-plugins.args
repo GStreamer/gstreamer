@@ -641,7 +641,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
 <BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
@@ -661,7 +661,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-soft-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -751,7 +751,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers min</NICK>
 <BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
@@ -781,7 +781,7 @@
 <ARG>
 <NAME>GstMultiFdSink::bytes-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bytes min</NICK>
 <BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
@@ -791,7 +791,7 @@
 <ARG>
 <NAME>GstMultiFdSink::time-min</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Time min</NICK>
 <BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
@@ -811,7 +811,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units max</NICK>
 <BLURB>max number of units to queue (-1 = no limit).</BLURB>
@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-soft-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -831,7 +831,7 @@
 <ARG>
 <NAME>GstMultiFdSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,63]</RANGE>
+<RANGE>[G_MAXULONG,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -1011,7 +1011,7 @@
 <ARG>
 <NAME>GstVorbisEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Bitrate</NICK>
 <BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
@@ -1041,7 +1041,7 @@
 <ARG>
 <NAME>GstVorbisEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Bitrate</NICK>
 <BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
@@ -1051,7 +1051,7 @@
 <ARG>
 <NAME>GstVorbisEnc::min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Bitrate</NICK>
 <BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
@@ -1094,7 +1094,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Border</NICK>
-<BLURB>Border color to add when sizes not multiple of 16.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>Black Border</DEFAULT>
 </ARG>
 
@@ -1104,7 +1104,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Center</NICK>
-<BLURB>Center image when sizes not multiple of 16.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1144,7 +1144,7 @@
 <RANGE>[1,32768]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe mindistance</NICK>
-<BLURB>Keyframe mindistance.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>8</DEFAULT>
 </ARG>
 
@@ -1154,7 +1154,7 @@
 <RANGE>[0,32768]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe threshold</NICK>
-<BLURB>Keyframe threshold.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>80</DEFAULT>
 </ARG>
 
@@ -1164,7 +1164,7 @@
 <RANGE>[0,32768]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Noise sensitivity</NICK>
-<BLURB>Noise sensitivity.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1175,7 +1175,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Video quality.</BLURB>
-<DEFAULT>16</DEFAULT>
+<DEFAULT>48</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1184,7 +1184,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quick</NICK>
-<BLURB>Quick encoding.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1194,7 +1194,7 @@
 <RANGE>[0,2]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sharpness</NICK>
-<BLURB>Sharpness.</BLURB>
+<BLURB>ignored and kept for API compat only.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1981,7 +1981,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at specified speed.</BLURB>
@@ -1991,7 +1991,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::search-overlap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,75]</RANGE>
+<RANGE>[G_MAXULONG,75]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
@@ -2001,7 +2001,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::cache-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Cache size</NICK>
 <BLURB>Set CD cache size to n sectors (-1 = auto).</BLURB>
@@ -2089,6 +2089,66 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecodeBin2::high-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High percent</NICK>
+<BLURB>High threshold for buffering to finish.</BLURB>
+<DEFAULT>99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::low-percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low percent</NICK>
+<BLURB>Low threshold for buffering to start.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::max-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (bytes)</NICK>
+<BLURB>Max. amount of bytes in the queue (0=automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::use-buffering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Buffering</NICK>
+<BLURB>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURIDecodeBin::uri</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2141,20 +2201,20 @@
 <ARG>
 <NAME>GstURIDecodeBin::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer duration (ns)</NICK>
-<BLURB>Buffer duration when buffering network streams (-1 queue2 default value).</BLURB>
+<BLURB>Buffer duration when buffering streams (-1 default value).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstURIDecodeBin::buffer-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer size (bytes)</NICK>
-<BLURB>Buffer size when buffering network streams (-1 queue2 default value).</BLURB>
+<BLURB>Buffer size when buffering streams (-1 default value).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -2165,6 +2225,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Download</NICK>
 <BLURB>Attempt download buffering when buffering network streams.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin::use-buffering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Buffering</NICK>
+<BLURB>Perform buffering on demuxed/parsed media.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -2331,7 +2401,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-audio</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current audio</NICK>
 <BLURB>Currently playing audio stream (-1 = auto).</BLURB>
@@ -2341,7 +2411,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-text</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Text</NICK>
 <BLURB>Currently playing text stream (-1 = auto).</BLURB>
@@ -2351,7 +2421,7 @@
 <ARG>
 <NAME>GstPlayBin2::current-video</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Current Video</NICK>
 <BLURB>Currently playing video stream (-1 = auto).</BLURB>
@@ -2501,7 +2571,7 @@
 <ARG>
 <NAME>GstPlayBin2::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer duration (ns)</NICK>
 <BLURB>Buffer duration when buffering network streams.</BLURB>
@@ -2511,7 +2581,7 @@
 <ARG>
 <NAME>GstPlayBin2::buffer-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer size (bytes)</NICK>
 <BLURB>Buffer size when buffering network streams.</BLURB>
@@ -2871,7 +2941,7 @@
 <ARG>
 <NAME>GstAppSrc::max-latency</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Latency</NICK>
 <BLURB>The maximum latency (-1 = unlimited).</BLURB>
@@ -2881,7 +2951,7 @@
 <ARG>
 <NAME>GstAppSrc::min-latency</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Min Latency</NICK>
 <BLURB>The minimum latency (-1 = default).</BLURB>
@@ -2891,7 +2961,7 @@
 <ARG>
 <NAME>GstAppSrc::size</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Size</NICK>
 <BLURB>The size of the data stream in bytes (-1 if unknown).</BLURB>
