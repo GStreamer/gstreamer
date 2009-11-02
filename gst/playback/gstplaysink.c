@@ -93,7 +93,8 @@ typedef struct
 {
   GstPlayChain chain;
   GstPad *sinkpad;
-  GstElement *conv;
+  GstElement *queue;
+  GstElement *identity;
   GstElement *overlay;
   GstPad *videosinkpad;
   GstPad *textsinkpad;
@@ -1138,15 +1139,15 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
 /* make an element for playback of video with subtitles embedded.
  *
- *  +-------------------------------+
- *  | tbin                          |
- *  |        +-----------------+    |
- *  |        | subtitleoverlay |    |
- * video----video_sink         |    |
- *  |        |                src--src
- * text-----text_sink          |    |
- *  |        +-----------------+    |
- *  +-------------------------------+
+ *  +--------------------------------------------+
+ *  | tbin                                       |
+ *  |     +--------+      +-----------------+    |
+ *  |     | queue  |      | subtitleoverlay |    |
+ * video--src     sink---video_sink         |    |
+ *  |     +--------+     |                src--src
+ * text------------------text_sink          |    |
+ *  |                     +-----------------+    |
+ *  +--------------------------------------------+
  *
  */
 static GstPlayTextChain *
@@ -1208,6 +1209,13 @@ gen_text_chain (GstPlaySink * playsink)
 
   if (textsinkpad == NULL) {
     if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
+      /* make a little queue */
+      chain->queue = gst_element_factory_make ("queue", "vqueue");
+      g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+          "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+      gst_bin_add (bin, chain->queue);
+      videosinkpad = gst_element_get_static_pad (chain->queue, "sink");
+
       chain->overlay =
           gst_element_factory_make ("subtitleoverlay", "suboverlay");
       if (chain->overlay == NULL) {
@@ -1223,11 +1231,12 @@ gen_text_chain (GstPlaySink * playsink)
               playsink->font_desc, NULL);
         }
 
+        gst_element_link_pads (chain->queue, "src", chain->overlay,
+            "video_sink");
+
         textsinkpad =
             gst_element_get_static_pad (chain->overlay, "subtitle_sink");
         srcpad = gst_element_get_static_pad (chain->overlay, "src");
-        videosinkpad =
-            gst_element_get_static_pad (chain->overlay, "video_sink");
       }
     }
   }
@@ -1236,12 +1245,12 @@ gen_text_chain (GstPlaySink * playsink)
     /* if we still don't have a videosink, we don't have an overlay. the only
      * thing we can do is insert an identity and ghost the src
      * and sink pads. */
-    chain->conv = gst_element_factory_make ("identity", "tidentity");
-    g_object_set (chain->conv, "signal-handoffs", FALSE, NULL);
-    g_object_set (chain->conv, "silent", TRUE, NULL);
-    gst_bin_add (bin, chain->conv);
-    srcpad = gst_element_get_static_pad (chain->conv, "src");
-    videosinkpad = gst_element_get_static_pad (chain->conv, "sink");
+    chain->identity = gst_element_factory_make ("identity", "tidentity");
+    g_object_set (chain->identity, "signal-handoffs", FALSE, NULL);
+    g_object_set (chain->identity, "silent", TRUE, NULL);
+    gst_bin_add (bin, chain->identity);
+    srcpad = gst_element_get_static_pad (chain->identity, "src");
+    videosinkpad = gst_element_get_static_pad (chain->identity, "sink");
   }
 
   /* expose the ghostpads */
@@ -1921,10 +1930,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     /* we try to set the sink async=FALSE when we need vis, this way we can
      * avoid a queue in the audio chain. */
     async = !need_vis;
-    /* put a little queue in front of the video but only if we are not doing
-     * subpictures because then we will add the queue in front of the subpicture
-     * mixer to minimize latency. */
-    queue = (need_subp == FALSE);
+
+    /* If subtitles are requested there already is a queue in the video chain */
+    queue = (need_text == FALSE);
 
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
