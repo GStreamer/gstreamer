@@ -85,8 +85,8 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   GST_DEBUG_OBJECT (factory, "using new typefind factory for %s", name);
   g_assert (GST_IS_TYPE_FIND_FACTORY (factory));
 
-  gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
-  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), rank);
+  gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
+  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE_CAST (factory), rank);
 
   if (factory->extensions)
     g_strfreev (factory->extensions);
@@ -97,11 +97,11 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   factory->user_data = data;
   factory->user_data_notify = data_notify;
   if (plugin && plugin->desc.name) {
-    GST_PLUGIN_FEATURE (factory)->plugin_name = plugin->desc.name;      /* interned string */
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = plugin->desc.name; /* interned string */
   } else {
-    GST_PLUGIN_FEATURE (factory)->plugin_name = "NULL";
+    GST_PLUGIN_FEATURE_CAST (factory)->plugin_name = "NULL";
   }
-  GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
+  GST_PLUGIN_FEATURE_CAST (factory)->loaded = TRUE;
 
   gst_registry_add_feature (gst_registry_get_default (),
       GST_PLUGIN_FEATURE (factory));
