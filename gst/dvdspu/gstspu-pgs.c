@@ -529,6 +529,7 @@ parse_set_window (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
   dump_bytes (payload, len);
 
   win_count = payload[0];
+  payload++;
 
   for (i = 0; i < win_count; i++) {
     if (payload + 9 > end)
