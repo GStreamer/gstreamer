@@ -65,12 +65,6 @@ struct _GstFFMpegMux
   int max_delay;
 };
 
-typedef struct _GstFFMpegMuxClassParams
-{
-  AVOutputFormat *in_plugin;
-  GstCaps *srccaps, *videosinkcaps, *audiosinkcaps;
-} GstFFMpegMuxClassParams;
-
 typedef struct _GstFFMpegMuxClass GstFFMpegMuxClass;
 
 struct _GstFFMpegMuxClass
@@ -133,6 +127,10 @@ static void gst_ffmpegmux_set_property (GObject * object, guint prop_id,
 static void gst_ffmpegmux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstCaps *gst_ffmpegmux_get_id_caps (enum CodecID *id_list);
+static void gst_ffmpeg_mux_simple_caps_set_int_list (GstCaps * caps,
+    const gchar * field, guint num, const gint * values);
+
 #define GST_FFMUX_PARAMS_QDATA g_quark_from_static_string("ffmux-params")
 
 static GstElementClass *parent_class = NULL;
@@ -145,20 +143,21 @@ gst_ffmpegmux_base_init (gpointer g_class)
   GstFFMpegMuxClass *klass = (GstFFMpegMuxClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstElementDetails details;
-  GstFFMpegMuxClassParams *params;
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
+  AVOutputFormat *in_plugin;
+  GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
+  enum CodecID *video_ids = NULL, *audio_ids = NULL;
 
-  params =
-      (GstFFMpegMuxClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+  in_plugin =
+      (AVOutputFormat *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_FFMUX_PARAMS_QDATA);
-  g_assert (params != NULL);
+  g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFmpeg %s muxer",
-      params->in_plugin->long_name);
+  details.longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
   details.klass = g_strdup ("Codec/Muxer");
   details.description = g_strdup_printf ("FFmpeg %s muxer",
-      params->in_plugin->long_name);
+      in_plugin->long_name);
   details.author = "Wim Taymans <wim.taymans@chello.be>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
@@ -166,24 +165,58 @@ gst_ffmpegmux_base_init (gpointer g_class)
   g_free (details.klass);
   g_free (details.description);
 
+  /* Try to find the caps that belongs here */
+  srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
+  if (!srccaps) {
+    GST_DEBUG ("Couldn't get source caps for muxer '%s', skipping format",
+        in_plugin->name);
+    goto beach;
+  }
+
+  if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
+          &video_ids, &audio_ids, in_plugin)) {
+    gst_caps_unref (srccaps);
+    GST_DEBUG
+        ("Couldn't get sink caps for muxer '%s'. Most likely because no input format mapping exists.",
+        in_plugin->name);
+    goto beach;
+  }
+
+  videosinkcaps = video_ids ? gst_ffmpegmux_get_id_caps (video_ids) : NULL;
+  audiosinkcaps = audio_ids ? gst_ffmpegmux_get_id_caps (audio_ids) : NULL;
+
+  /* fix up allowed caps for some muxers */
+  /* FIXME : This should be in gstffmpegcodecmap.c ! */
+  if (strcmp (in_plugin->name, "flv") == 0) {
+    const gint rates[] = { 44100, 22050, 11025 };
+
+    gst_ffmpeg_mux_simple_caps_set_int_list (audiosinkcaps, "rate", 3, rates);
+  } else if (strcmp (in_plugin->name, "gif") == 0) {
+    if (videosinkcaps)
+      gst_caps_unref (videosinkcaps);
+
+    videosinkcaps =
+        gst_caps_from_string ("video/x-raw-rgb, bpp=(int)24, depth=(int)24");
+  }
+
   /* pad templates */
-  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, params->srccaps);
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, srccaps);
   gst_element_class_add_pad_template (element_class, srctempl);
 
-  if (params->audiosinkcaps) {
+  if (audiosinkcaps) {
     audiosinktempl = gst_pad_template_new ("audio_%d",
-        GST_PAD_SINK, GST_PAD_REQUEST, params->audiosinkcaps);
+        GST_PAD_SINK, GST_PAD_REQUEST, audiosinkcaps);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
   }
 
-  if (params->videosinkcaps) {
+  if (videosinkcaps) {
     videosinktempl = gst_pad_template_new ("video_%d",
-        GST_PAD_SINK, GST_PAD_REQUEST, params->videosinkcaps);
+        GST_PAD_SINK, GST_PAD_REQUEST, videosinkcaps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
   }
 
-  klass->in_plugin = params->in_plugin;
+beach:
+  klass->in_plugin = in_plugin;
 }
 
 static void
@@ -707,8 +740,8 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-GstCaps *
-gst_ffmpegmux_get_id_caps (enum CodecID * id_list)
+static GstCaps *
+gst_ffmpegmux_get_id_caps (enum CodecID *id_list)
 {
   GstCaps *caps, *t;
   gint i;
@@ -770,7 +803,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   };
   GType type;
   AVOutputFormat *in_plugin;
-  GstFFMpegMuxClassParams *params;
 
   in_plugin = av_oformat_next (NULL);
 
@@ -779,8 +811,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   while (in_plugin) {
     gchar *type_name;
     gchar *p;
-    GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
-    enum CodecID *video_ids = NULL, *audio_ids = NULL;
 
     if ((!strncmp (in_plugin->name, "u16", 3)) ||
         (!strncmp (in_plugin->name, "s16", 3)) ||
@@ -806,23 +836,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* Try to find the caps that belongs here */
-    srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
-    if (!srccaps) {
-      GST_DEBUG ("Couldn't get source caps for muxer '%s', skipping format",
-          in_plugin->name);
-      goto next;
-    }
-    if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
-            &video_ids, &audio_ids, in_plugin)) {
-      gst_caps_unref (srccaps);
-      GST_DEBUG
-          ("Couldn't get sink caps for muxer '%s'. Most likely because no input format mapping exists.",
-          in_plugin->name);
-      goto next;
-    }
-    videosinkcaps = video_ids ? gst_ffmpegmux_get_id_caps (video_ids) : NULL;
-    audiosinkcaps = audio_ids ? gst_ffmpegmux_get_id_caps (audio_ids) : NULL;
+    /* FIXME : We need a fast way to know whether we have mappings for this
+     * muxer type. */
 
     /* construct the type */
     type_name = g_strdup_printf ("ffmux_%s", in_plugin->name);
@@ -835,44 +850,17 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       p++;
     }
 
-    /* fix up allowed caps for some muxers */
-    if (strcmp (in_plugin->name, "flv") == 0) {
-      const gint rates[] = { 44100, 22050, 11025 };
-
-      gst_ffmpeg_mux_simple_caps_set_int_list (audiosinkcaps, "rate", 3, rates);
-    } else if (strcmp (in_plugin->name, "gif") == 0) {
-      if (videosinkcaps)
-        gst_caps_unref (videosinkcaps);
-
-      videosinkcaps =
-          gst_caps_from_string ("video/x-raw-rgb, bpp=(int)24, depth=(int)24");
-    }
-
     type = g_type_from_name (type_name);
 
     if (!type) {
-      /* create a cache for these properties */
-      params = g_new0 (GstFFMpegMuxClassParams, 1);
-      params->in_plugin = in_plugin;
-      params->srccaps = srccaps;
-      params->videosinkcaps = videosinkcaps;
-      params->audiosinkcaps = audiosinkcaps;
-
       /* create the type now */
       type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-      g_type_set_qdata (type, GST_FFMUX_PARAMS_QDATA, (gpointer) params);
+      g_type_set_qdata (type, GST_FFMUX_PARAMS_QDATA, (gpointer) in_plugin);
       g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-    } else {
-      gst_caps_replace (&srccaps, NULL);
-      gst_caps_replace (&audiosinkcaps, NULL);
-      gst_caps_replace (&videosinkcaps, NULL);
     }
 
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);
-      gst_caps_replace (&srccaps, NULL);
-      gst_caps_replace (&audiosinkcaps, NULL);
-      gst_caps_replace (&videosinkcaps, NULL);
       return FALSE;
     }
 
