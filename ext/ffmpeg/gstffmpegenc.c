@@ -123,22 +123,22 @@ static void
 gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstFFMpegEncClassParams *params;
+  AVCodec *in_plugin;
   GstElementDetails details;
-  GstPadTemplate *srctempl, *sinktempl;
+  GstPadTemplate *srctempl = NULL, *sinktempl = NULL;
+  GstCaps *srccaps = NULL, *sinkcaps = NULL;
 
-  params =
-      (GstFFMpegEncClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+  in_plugin =
+      (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_FFENC_PARAMS_QDATA);
-  g_assert (params != NULL);
+  g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFmpeg %s encoder",
-      params->in_plugin->long_name);
+      in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Encoder/%s",
-      (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
-  details.description = g_strdup_printf ("FFmpeg %s encoder",
-      params->in_plugin->name);
+      (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
+  details.description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
   details.author = "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
@@ -146,19 +146,37 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   g_free (details.klass);
   g_free (details.description);
 
+  if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
+    GST_DEBUG ("Couldn't get source caps for encoder '%s'", in_plugin->name);
+    srccaps = gst_caps_new_simple ("unknown/unknown", NULL);
+  }
+
+  if (in_plugin->type == CODEC_TYPE_VIDEO) {
+    sinkcaps = gst_caps_from_string
+        ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
+  } else {
+    sinkcaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
+        in_plugin->id, TRUE, in_plugin);
+  }
+  if (!sinkcaps) {
+    GST_DEBUG ("Couldn't get sink caps for encoder '%s'", in_plugin->name);
+    sinkcaps = gst_caps_new_simple ("unknown/unknown", NULL);
+  }
+
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, params->sinkcaps);
-  srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, params->srccaps);
+      GST_PAD_ALWAYS, sinkcaps);
+  srctempl = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, srccaps);
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
 
-  klass->in_plugin = params->in_plugin;
+  klass->in_plugin = in_plugin;
   klass->srctempl = srctempl;
   klass->sinktempl = sinktempl;
   klass->sinkcaps = NULL;
+
+  return;
 }
 
 static void
@@ -1162,8 +1180,6 @@ gst_ffmpegenc_register (GstPlugin * plugin)
   in_plugin = av_codec_next (NULL);
   while (in_plugin) {
     gchar *type_name;
-    GstCaps *srccaps = NULL, *sinkcaps = NULL;
-    GstFFMpegEncClassParams *params;
 
     /* no quasi codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
@@ -1188,6 +1204,9 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    /* FIXME : We should have a method to know cheaply whether we have a mapping
+     * for the given plugin or not */
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
@@ -1197,39 +1216,16 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* first make sure we've got a supported type */
-    if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
-      GST_DEBUG ("Couldn't get source caps for encoder '%s', skipping codec",
-          in_plugin->name);
-      goto next;
-    }
-
-    if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      sinkcaps = gst_caps_from_string
-          ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
-    } else {
-      sinkcaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
-          in_plugin->id, TRUE, in_plugin);
-    }
-    if (!sinkcaps) {
-      GST_DEBUG ("Couldn't get sink caps for encoder '%s', skipping codec",
-          in_plugin->name);
-      goto next;
-    }
     /* construct the type */
     type_name = g_strdup_printf ("ffenc_%s", in_plugin->name);
 
     type = g_type_from_name (type_name);
 
     if (!type) {
-      params = g_new0 (GstFFMpegEncClassParams, 1);
-      params->in_plugin = in_plugin;
-      params->srccaps = gst_caps_ref (srccaps);
-      params->sinkcaps = gst_caps_ref (sinkcaps);
 
       /* create the glib type now */
       type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-      g_type_set_qdata (type, GST_FFENC_PARAMS_QDATA, (gpointer) params);
+      g_type_set_qdata (type, GST_FFENC_PARAMS_QDATA, (gpointer) in_plugin);
 
       {
         static const GInterfaceInfo preset_info = {
@@ -1249,10 +1245,6 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     g_free (type_name);
 
   next:
-    if (sinkcaps)
-      gst_caps_unref (sinkcaps);
-    if (srccaps)
-      gst_caps_unref (srccaps);
     in_plugin = av_codec_next (in_plugin);
   }
 

@@ -87,12 +87,6 @@ struct _GstFFMpegEncClass
   GstCaps *sinkcaps;
 };
 
-typedef struct
-{
-  AVCodec *in_plugin;
-  GstCaps *srccaps, *sinkcaps;
-} GstFFMpegEncClassParams;
-
 #define GST_TYPE_FFMPEGENC \
   (gst_ffmpegenc_get_type())
 #define GST_FFMPEGENC(obj) \
