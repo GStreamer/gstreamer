@@ -289,9 +289,10 @@ gst_auto_convert_set_property (GObject * object,
       break;
     case PROP_FACTORIES:
       GST_AUTOCONVERT_LOCK (autoconvert);
-      if (autoconvert->factories == NULL)
-        autoconvert->factories = g_value_get_pointer (value);
-      else
+      if (autoconvert->factories == NULL) {
+        GList *factories = g_value_get_pointer (value);
+        autoconvert->factories = gst_plugin_feature_list_copy (factories);
+      } else
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
             " have been set or auto-discovered");
       GST_AUTOCONVERT_UNLOCK (autoconvert);
