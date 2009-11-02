@@ -169,13 +169,6 @@ struct _GstFFMpegDecClass
   GstPadTemplate *srctempl, *sinktempl;
 };
 
-typedef struct _GstFFMpegDecClassParams GstFFMpegDecClassParams;
-
-struct _GstFFMpegDecClassParams
-{
-  AVCodec *in_plugin;
-};
-
 #define GST_TYPE_FFMPEGDEC \
   (gst_ffmpegdec_get_type())
 #define GST_FFMPEGDEC(obj) \
@@ -296,26 +289,22 @@ static void
 gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstFFMpegDecClassParams *params;
   GstElementDetails details;
   GstPadTemplate *sinktempl, *srctempl;
   GstCaps *sinkcaps, *srccaps;
   AVCodec *in_plugin;
 
-  params =
-      (GstFFMpegDecClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+  in_plugin =
+      (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_FFDEC_PARAMS_QDATA);
-  g_assert (params != NULL);
-
-  in_plugin = params->in_plugin;
+  g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFmpeg %s decoder",
-      params->in_plugin->long_name);
+      in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Decoder/%s",
-      (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
-  details.description = g_strdup_printf ("FFmpeg %s decoder",
-      params->in_plugin->name);
+      (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
+  details.description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
   details.author = "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
       "Edward Hervey <bilboed@bilboed.com>";
@@ -2779,7 +2768,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
   GST_LOG ("Registering decoders");
 
   while (in_plugin) {
-    GstFFMpegDecClassParams *params;
     gchar *type_name;
     gchar *plugin_name;
 
@@ -2849,12 +2837,9 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     type = g_type_from_name (type_name);
 
     if (!type) {
-      params = g_new0 (GstFFMpegDecClassParams, 1);
-      params->in_plugin = in_plugin;
-
       /* create the gtype now */
       type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-      g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) params);
+      g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) in_plugin);
     }
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
