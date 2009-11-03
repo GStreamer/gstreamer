@@ -80,10 +80,7 @@ plugin_init (GstPlugin * plugin)
       "Kate Tiger renderer");
 #endif
 
-  /* if we don't build tiger, we'll want to autoplug and convert to text,
-     but if we do build tiger, we'll want to use it preferentially as it
-     can play non text streams too */
-  if (!gst_element_register (plugin, "katedec", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "katedec", GST_RANK_PRIMARY,
           GST_TYPE_KATE_DEC))
     return FALSE;
 
@@ -100,7 +97,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
 #ifdef HAVE_TIGER
-  if (!gst_element_register (plugin, "tiger", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "tiger", GST_RANK_PRIMARY,
           GST_TYPE_KATE_TIGER))
     return FALSE;
 #endif
