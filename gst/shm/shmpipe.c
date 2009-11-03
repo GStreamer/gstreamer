@@ -530,11 +530,11 @@ sp_writer_send_buf (ShmPipe * self, gchar * buf, size_t size)
 }
 
 static int
-read_command (int fd, struct CommandBuffer *cb)
+recv_command (int fd, struct CommandBuffer *cb)
 {
   int retval;
 
-  retval = recv (fd, cb, sizeof (struct CommandBuffer), 0);
+  retval = recv (fd, cb, sizeof (struct CommandBuffer), MSG_DONTWAIT);
   if (retval == sizeof (struct CommandBuffer)) {
     return 1;
   } else {
@@ -549,8 +549,9 @@ sp_client_recv (ShmPipe * self, char **buf)
   ShmArea *newarea, *oldarea;
   ShmArea *area;
   struct CommandBuffer cb;
+  int retval;
 
-  if (!read_command (self->main_socket, &cb))
+  if (!recv_command (self->main_socket, &cb))
     return -1;
 
   switch (cb.type) {
@@ -559,9 +560,11 @@ sp_client_recv (ShmPipe * self, char **buf)
       assert (cb.payload.new_shm_area.size > 0);
 
       area_name = malloc (cb.payload.new_shm_area.path_size);
-      if (read (self->main_socket, area_name, cb.payload.new_shm_area.path_size)
-          != cb.payload.new_shm_area.path_size) {
+      retval = recv (self->main_socket, area_name,
+          cb.payload.new_shm_area.path_size, 0);
+      if (retval != cb.payload.new_shm_area.path_size) {
         free (area_name);
+        g_debug ("retval: %d, errno: %d", retval, errno);
         return -3;
       }
 
@@ -610,7 +613,7 @@ sp_writer_recv (ShmPipe * self, ShmClient * client)
   ShmBuffer *buf = NULL, *prev_buf = NULL;
   struct CommandBuffer cb;
 
-  if (!read_command (client->fd, &cb))
+  if (!recv_command (client->fd, &cb))
     return -1;
 
   switch (cb.type) {
@@ -662,7 +665,6 @@ ShmPipe *
 sp_client_open (const char *path)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
-  int flags;
   struct sockaddr_un sun;
 
   memset (self, 0, sizeof (ShmPipe));
@@ -680,14 +682,6 @@ sp_client_open (const char *path)
           sizeof (struct sockaddr_un)) < 0)
     goto error;
 
-  flags = fcntl (self->main_socket, F_GETFL, 0);
-  if (flags < 0)
-    goto error;
-
-  flags |= O_NONBLOCK | FD_CLOEXEC;
-  if (fcntl (self->main_socket, F_SETFL, flags) < 0)
-    goto error;
-
   return self;
 
 error:
@@ -701,19 +695,11 @@ sp_writer_accept_client (ShmPipe * self)
 {
   ShmClient *client = NULL;
   int fd;
-  int flags;
   struct CommandBuffer cb;
   int pathlen = strlen (self->shm_area->shm_area_name) + 1;
 
 
   fd = accept (self->main_socket, NULL, NULL);
-
-  flags = fcntl (fd, F_GETFL, 0);
-  if (flags < 0)
-    goto error;
-  flags |= O_NONBLOCK | FD_CLOEXEC;
-  if (fcntl (fd, F_SETFL, flags) < 0)
-    goto error;
 
   cb.payload.new_shm_area.size = self->shm_area->shm_area_len;
   cb.payload.new_shm_area.path_size = pathlen;
