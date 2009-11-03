@@ -103,7 +103,7 @@ qtdemux_dump_tkhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_elst (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
