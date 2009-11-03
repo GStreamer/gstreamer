@@ -112,7 +112,7 @@ enum
 };
 
 static GstStaticPadTemplate kate_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("kate_sink",
+    GST_STATIC_PAD_TEMPLATE ("subtitle_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("subtitle/x-kate; application/x-kate")
@@ -171,7 +171,7 @@ gst_kate_tiger_base_init (gpointer gclass)
 {
   static GstElementDetails element_details =
       GST_ELEMENT_DETAILS ("Kate stream renderer",
-      "Codec/Decoder/Video/Overlay",
+      "Codec/Decoder/Video/Overlay/Subtitle",
       "Decodes and renders Kate streams on top of a video",
       "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
