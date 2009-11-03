@@ -58,7 +58,8 @@ noinst_HEADERS = \
 	gstinputselector.h \
 	gstplay-enum.h \
 	gstscreenshot.h \
-	gststreamselector.h
+	gststreamselector.h \
+	gstrawcaps.h
 
 noinst_PROGRAMS = test decodetest test2 test3 test4 test5 test6 test7
 

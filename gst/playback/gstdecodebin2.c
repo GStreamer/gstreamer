@@ -90,6 +90,7 @@
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 #include "gstfactorylists.h"
+#include "gstrawcaps.h"
 
 /* generic templates */
 static GstStaticPadTemplate decoder_bin_sink_template =
@@ -250,6 +251,8 @@ GST_ELEMENT_DETAILS ("Decoder Bin",
     "Autoplug and decode to raw media",
     "Edward Hervey <edward.hervey@collabora.co.uk>, "
     "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
 
 static void do_async_start (GstDecodeBin * dbin);
 static void do_async_done (GstDecodeBin * dbin);
@@ -847,10 +850,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->blocked_pads = NULL;
 
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
-  decode_bin->caps =
-      gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb;video/x-raw-gray;"
-      "audio/x-raw-int;audio/x-raw-float;" "text/plain;text/x-pango-markup;"
-      "video/x-dvd-subpicture; subpicture/x-pgs");
+  decode_bin->caps = gst_static_caps_get (&default_raw_caps);
   decode_bin->use_buffering = DEFAULT_USE_BUFFERING;
   decode_bin->low_percent = DEFAULT_LOW_PERCENT;
   decode_bin->high_percent = DEFAULT_HIGH_PERCENT;
