@@ -55,6 +55,14 @@
  *   the deteted bar code data.
  *   </para>
  * </listitem>
+ * <listitem>
+ *   <para>
+ *   gint
+ *   <classname>&quot;quality&quot;</classname>:
+ *   an unscaled, relative quantity: larger values are better than smaller
+ *   values.
+ *   </para>
+ * </listitem>
  * </itemizedlist>
  *
  * <refsect2>
@@ -275,9 +283,13 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   for (; symbol; symbol = zbar_symbol_next (symbol)) {
     zbar_symbol_type_t typ = zbar_symbol_get_type (symbol);
     const char *data = zbar_symbol_get_data (symbol);
+    gint quality = zbar_symbol_get_quality (symbol);
 
-    GST_DEBUG_OBJECT (zbar, "decoded %s symbol \"%s\"",
-        zbar_get_symbol_name (typ), data);
+    GST_DEBUG_OBJECT (zbar, "decoded %s symbol \"%s\" at quality %d",
+        zbar_get_symbol_name (typ), data, quality);
+
+    if (zbar_symbol_get_count (symbol) != 0)
+      continue;
 
     if (zbar->message) {
       GstMessage *m;
@@ -287,7 +299,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       s = gst_structure_new ("barcode",
           "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (outbuf),
           "type", G_TYPE_STRING, zbar_get_symbol_name (typ),
-          "symbol", G_TYPE_STRING, data, NULL);
+          "symbol", G_TYPE_STRING, data, "quality", G_TYPE_INT, quality, NULL);
       m = gst_message_new_element (GST_OBJECT (zbar), s);
       gst_element_post_message (GST_ELEMENT (zbar), m);
     }
