@@ -46,7 +46,6 @@ GST_ELEMENT_DETAILS ("Input selector",
     "Generic",
     "N-to-1 input stream selectoring",
     "Julien Moutte <julien@moutte.net>\n"
-    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@mad.scientist.com>\n"
     "Wim Taymans <wim.taymans@gmail.com>");
 
