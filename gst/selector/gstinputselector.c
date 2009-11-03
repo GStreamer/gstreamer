@@ -1202,13 +1202,10 @@ gst_input_selector_getcaps (GstPad * pad)
 }
 
 /* check if the pad is the active sinkpad */
-static gboolean
+static inline gboolean
 gst_input_selector_is_active_sinkpad (GstInputSelector * sel, GstPad * pad)
 {
-  GstSelectorPad *selpad;
   gboolean res;
-
-  selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
   res = (pad == sel->active_sinkpad);
