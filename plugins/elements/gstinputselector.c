@@ -318,17 +318,19 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 
 /* strictly get the linked pad from the sinkpad. If the pad is active we return
  * the srcpad else we return NULL */
-
 static GstIterator *
 gst_selector_pad_iterate_linked_pads (GstPad * pad)
 {
   GstInputSelector *sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  GstPad *opad = gst_input_selector_get_linked_pad (pad, TRUE);
-  GstIterator *it = gst_iterator_new_single (GST_TYPE_PAD, opad,
+  GstPad *otherpad;
+  GstIterator *it;
+
+  otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
+  it = gst_iterator_new_single (GST_TYPE_PAD, otherpad,
       (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
 
-  if (opad)
-    gst_object_unref (opad);
+  if (otherpad)
+    gst_object_unref (otherpad);
   gst_object_unref (sel);
 
   return it;
