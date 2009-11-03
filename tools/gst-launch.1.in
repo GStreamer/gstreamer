@@ -315,7 +315,19 @@ Play both video and audio portions of an MPEG movie
 .B
         gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer  demuxer. ! queue ! mpeg2dec ! ffmpegcolorspace ! sdlvideosink   demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
 .br
-Play an AVI movie
+Play an AVI movie with an external text subtitle stream
+
+This example also shows how to refer to specific pads by name if an element
+(here: textoverlay) has multiple sink or source pads.
+
+.B
+        gst\-launch textoverlay name=overlay ! ffmpegcolorspace ! videoscale ! autovideosink   filesrc location=movie.avi ! decodebin2 ! ffmpegcolorspace ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
+
+.br
+Play an AVI movie with an external text subtitle stream using playbin2
+
+.B
+        gst\-launch playbin2 uri=file:///path/to/movie.avi suburi=file:///path/to/movie.srt
 
 .B Network streaming
 
