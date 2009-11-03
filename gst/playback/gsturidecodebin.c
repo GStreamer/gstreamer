@@ -36,6 +36,7 @@
 #include "gstfactorylists.h"
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
+#include "gstrawcaps.h"
 
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
@@ -124,6 +125,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
+static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
+
 GST_DEBUG_CATEGORY_STATIC (gst_uri_decode_bin_debug);
 #define GST_CAT_DEFAULT gst_uri_decode_bin_debug
 
@@ -148,7 +151,7 @@ enum
 #define DEFAULT_PROP_URI            NULL
 #define DEFAULT_PROP_SOURCE         NULL
 #define DEFAULT_CONNECTION_SPEED    0
-#define DEFAULT_CAPS                NULL
+#define DEFAULT_CAPS                (gst_static_caps_get (&default_raw_caps))
 #define DEFAULT_SUBTITLE_ENCODING   NULL
 #define DEFAULT_BUFFER_DURATION     -1
 #define DEFAULT_BUFFER_SIZE         -1
