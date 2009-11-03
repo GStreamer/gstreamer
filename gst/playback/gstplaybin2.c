@@ -233,6 +233,7 @@
 #include "gstfactorylists.h"
 #include "gstinputselector.h"
 #include "gstscreenshot.h"
+#include "gstsubtitleoverlay.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_CAT_DEFAULT gst_play_bin_debug
@@ -253,7 +254,8 @@ typedef struct _GstSourceSelect GstSourceSelect;
 /* has the info for a selector and provides the link to the sink */
 struct _GstSourceSelect
 {
-  const gchar *media_list[3];   /* the media types for the selector */
+  const gchar *media_list[8];   /* the media types for the selector */
+  GstCaps *media_caps;          /* more complex caps for the selector */
   GstPlaySinkType type;         /* the sink pad type of the selector */
 
   GstElement *selector;         /* the selector */
@@ -1052,7 +1054,13 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
   group->selector[1].channels = group->audio_channels;
   group->selector[2].media_list[0] = "text/";
-  group->selector[2].media_list[1] = "video/x-dvd-subpicture";
+  group->selector[2].media_list[1] = "application/x-subtitle";
+  group->selector[2].media_list[2] = "application/x-ssa";
+  group->selector[2].media_list[3] = "application/x-ass";
+  group->selector[2].media_list[4] = "video/x-dvd-subpicture";
+  group->selector[2].media_list[5] = "subpicture/";
+  group->selector[2].media_list[6] = "subtitle/";
+  group->selector[2].media_caps = gst_subtitle_overlay_create_factory_caps ();
   group->selector[2].type = GST_PLAY_SINK_TYPE_TEXT;
   group->selector[2].channels = group->text_channels;
   group->selector[3].media_list[0] = "video/x-raw-";
@@ -1070,6 +1078,11 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
+
+  if (group->selector[2].media_caps)
+    gst_caps_unref (group->selector[2].media_caps);
+  group->selector[2].media_caps = NULL;
+
   g_mutex_free (group->lock);
   if (group->audio_sink)
     gst_object_unref (group->audio_sink);
@@ -2050,6 +2063,10 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     if (array_has_value (group->selector[i].media_list, name)) {
       select = &group->selector[i];
       break;
+    } else if (group->selector[i].media_caps
+        && gst_caps_can_intersect (group->selector[i].media_caps, caps)) {
+      select = &group->selector[i];
+      break;
     }
   }
   /* no selector found for the media type, don't bother linking it to a
@@ -2630,12 +2647,20 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     gst_element_set_state (uridecodebin, GST_STATE_READY);
     gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (uridecodebin));
   } else {
+    GstCaps *rawcaps, *caps;
+
     GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
     uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
     if (!uridecodebin)
       goto no_decodebin;
     gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
     group->uridecodebin = gst_object_ref (uridecodebin);
+
+    g_object_get (G_OBJECT (uridecodebin), "caps", &rawcaps, NULL);
+    caps = gst_caps_union (group->selector[2].media_caps, rawcaps);
+    g_object_set (G_OBJECT (uridecodebin), "caps", caps, NULL);
+    gst_caps_unref (rawcaps);
+    gst_caps_unref (caps);
   }
 
   /* configure connection speed */
@@ -2708,6 +2733,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 
       gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
       group->suburidecodebin = gst_object_ref (suburidecodebin);
+      g_object_set (G_OBJECT (suburidecodebin), "caps",
+          group->selector[2].media_caps, NULL);
     }
 
     /* configure connection speed */
@@ -2955,11 +2982,23 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   playbin = GST_PLAY_BIN (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_NULL_TO_READY: {
+      guint i;
+
       g_mutex_lock (playbin->elements_lock);
       gst_play_bin_update_elements_list (playbin);
       g_mutex_unlock (playbin->elements_lock);
+
+      /* Update subtitle factory caps, might have changed because
+       * of newly installed plugins */
+      for (i = 0; i < 2; i++) {
+        if (playbin->groups[i].selector[2].media_caps)
+          gst_caps_unref (playbin->groups[i].selector[2].media_caps);
+        playbin->groups[i].selector[2].media_caps =
+            gst_subtitle_overlay_create_factory_caps ();
+      }
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 0);
