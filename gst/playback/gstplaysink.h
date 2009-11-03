@@ -46,7 +46,6 @@ G_BEGIN_DECLS
  * @GST_PLAY_SINK_TYPE_VIDEO: a non-raw video pad
  * @GST_PLAY_SINK_TYPE_VIDEO_RAW: a raw video pad
  * @GST_PLAY_SINK_TYPE_TEXT: a raw text pad
- * @GST_PLAY_SINK_TYPE_SUBPIC: a subpicture pad
  * @GST_PLAY_SINK_TYPE_LAST: the last type
  * @GST_PLAY_SINK_TYPE_FLUSHING: a flushing pad, used when shutting down
  *
@@ -58,11 +57,10 @@ typedef enum {
   GST_PLAY_SINK_TYPE_VIDEO     = 2,
   GST_PLAY_SINK_TYPE_VIDEO_RAW = 3,
   GST_PLAY_SINK_TYPE_TEXT      = 4,
-  GST_PLAY_SINK_TYPE_SUBPIC    = 5,
-  GST_PLAY_SINK_TYPE_LAST      = 6,
+  GST_PLAY_SINK_TYPE_LAST      = 5,
 
   /* this is a dummy pad */
-  GST_PLAY_SINK_TYPE_FLUSHING  = 7
+  GST_PLAY_SINK_TYPE_FLUSHING  = 6
 } GstPlaySinkType;
 
 typedef struct _GstPlaySink GstPlaySink;

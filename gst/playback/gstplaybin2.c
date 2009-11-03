@@ -286,7 +286,6 @@ struct _GstSourceGroup
   GPtrArray *video_channels;    /* links to selector pads */
   GPtrArray *audio_channels;    /* links to selector pads */
   GPtrArray *text_channels;     /* links to selector pads */
-  GPtrArray *subp_channels;     /* links to selector pads */
 
   GstElement *audio_sink;       /* autoplugged audio and video sinks */
   GstElement *video_sink;
@@ -383,7 +382,6 @@ struct _GstPlayBin
 
   GstElement *audio_sink;       /* configured audio sink, or NULL      */
   GstElement *video_sink;       /* configured video sink, or NULL      */
-  GstElement *subpic_sink;      /* configured subpicture sink, or NULL */
   GstElement *text_sink;        /* configured text sink, or NULL       */
 };
 
@@ -436,7 +434,6 @@ struct _GstPlayBinClass
 #define DEFAULT_VIDEO_SINK        NULL
 #define DEFAULT_VIS_PLUGIN        NULL
 #define DEFAULT_TEXT_SINK         NULL
-#define DEFAULT_SUBPIC_SINK       NULL
 #define DEFAULT_VOLUME            1.0
 #define DEFAULT_MUTE              FALSE
 #define DEFAULT_FRAME             NULL
@@ -463,7 +460,6 @@ enum
   PROP_VIDEO_SINK,
   PROP_VIS_PLUGIN,
   PROP_TEXT_SINK,
-  PROP_SUBPIC_SINK,
   PROP_VOLUME,
   PROP_MUTE,
   PROP_FRAME,
@@ -741,10 +737,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
       g_param_spec_object ("text-sink", "Text plugin",
           "the text output element to use (NULL = default textoverlay)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_klass, PROP_SUBPIC_SINK,
-      g_param_spec_object ("subpic-sink", "Subpicture plugin",
-          "the subpicture output element to use (NULL = default dvdspu)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1046,7 +1038,6 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->video_channels = g_ptr_array_new ();
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
-  group->subp_channels = g_ptr_array_new ();
   group->lock = g_mutex_new ();
   /* init selectors. The selector is found by finding the first prefix that
    * matches the media. */
@@ -1060,19 +1051,16 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[1].media_list[0] = "audio/";
   group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
   group->selector[1].channels = group->audio_channels;
-  group->selector[2].media_list[0] = "video/x-raw-";
-  group->selector[2].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
-  group->selector[2].channels = group->video_channels;
-  group->selector[3].media_list[0] = "video/x-dvd-subpicture";
-  group->selector[3].media_list[1] = "subpicture/x-pgs";
-  group->selector[3].type = GST_PLAY_SINK_TYPE_SUBPIC;
-  group->selector[3].channels = group->subp_channels;
+  group->selector[2].media_list[0] = "text/";
+  group->selector[2].media_list[1] = "video/x-dvd-subpicture";
+  group->selector[2].type = GST_PLAY_SINK_TYPE_TEXT;
+  group->selector[2].channels = group->text_channels;
+  group->selector[3].media_list[0] = "video/x-raw-";
+  group->selector[3].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
+  group->selector[3].channels = group->video_channels;
   group->selector[4].media_list[0] = "video/";
   group->selector[4].type = GST_PLAY_SINK_TYPE_VIDEO;
   group->selector[4].channels = group->video_channels;
-  group->selector[5].media_list[0] = "text/";
-  group->selector[5].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[5].channels = group->text_channels;
 }
 
 static void
@@ -1082,7 +1070,6 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
-  g_ptr_array_free (group->subp_channels, TRUE);
   g_mutex_free (group->lock);
   if (group->audio_sink)
     gst_object_unref (group->audio_sink);
@@ -1178,8 +1165,6 @@ gst_play_bin_finalize (GObject * object)
     gst_object_unref (playbin->audio_sink);
   if (playbin->text_sink)
     gst_object_unref (playbin->text_sink);
-  if (playbin->subpic_sink)
-    gst_object_unref (playbin->subpic_sink);
 
   g_value_array_free (playbin->elements);
   g_free (playbin->encoding);
@@ -1632,10 +1617,6 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_sink (playbin, &playbin->text_sink, "text",
           g_value_get_object (value));
       break;
-    case PROP_SUBPIC_SINK:
-      gst_play_bin_set_sink (playbin, &playbin->subpic_sink, "subpicture",
-          g_value_get_object (value));
-      break;
     case PROP_VOLUME:
       gst_play_sink_set_volume (playbin->playsink, g_value_get_double (value));
       break;
@@ -1799,11 +1780,6 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
           gst_play_bin_get_current_sink (playbin, &playbin->text_sink,
               "text", GST_PLAY_SINK_TYPE_TEXT));
       break;
-    case PROP_SUBPIC_SINK:
-      g_value_take_object (value,
-          gst_play_bin_get_current_sink (playbin, &playbin->subpic_sink,
-              "subpicture", GST_PLAY_SINK_TYPE_SUBPIC));
-      break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
       break;
@@ -1841,7 +1817,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
 /* mime types we are not handling on purpose right now, don't post a
  * missing-plugin message for these */
 static const gchar *blacklisted_mimes[] = {
-  "video/x-dvd-subpicture", "subpicture/x-pgs", NULL
+  NULL
 };
 
 static void
@@ -2198,7 +2174,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
         g_object_set (sinkpad, "always-ok", always_ok, NULL);
         signal = SIGNAL_TEXT_CHANGED;
         break;
-      case GST_PLAY_SINK_TYPE_SUBPIC:
       default:
         signal = -1;
     }
@@ -2388,8 +2363,6 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     }
     gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_TEXT,
         playbin->text_sink);
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_SUBPIC,
-        playbin->subpic_sink);
     GST_SOURCE_GROUP_UNLOCK (group);
 
     GST_LOG_OBJECT (playbin, "reconfigure sink");
