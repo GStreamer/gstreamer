@@ -25,6 +25,7 @@
 #define __GST_QUEUE2_H__
 
 #include <gst/gst.h>
+#include <stdio.h>
 
 G_BEGIN_DECLS
 
