@@ -190,10 +190,8 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   gobject_class->finalize = gst_selector_pad_finalize;
 
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_selector_pad_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_selector_pad_set_property);
+  gobject_class->get_property = gst_selector_pad_get_property;
+  gobject_class->set_property = gst_selector_pad_set_property;
 
   g_object_class_install_property (gobject_class, PROP_PAD_RUNNING_TIME,
       g_param_spec_int64 ("running-time", "Running time",
@@ -763,10 +761,8 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
 
   gobject_class->dispose = gst_input_selector_dispose;
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_input_selector_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_input_selector_get_property);
+  gobject_class->set_property = gst_input_selector_set_property;
+  gobject_class->get_property = gst_input_selector_get_property;
 
   g_object_class_install_property (gobject_class, PROP_N_PADS,
       g_param_spec_uint ("n-pads", "Number of Pads",
