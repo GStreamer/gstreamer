@@ -542,7 +542,8 @@ gst_shm_sink_event (GstBaseSink * bsink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (self);
-      while (sp_writer_pending_writes (self->pipe) && !self->unlock)
+      while (self->wait_for_connection && sp_writer_pending_writes (self->pipe)
+          && !self->unlock)
         g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
       GST_OBJECT_UNLOCK (self);
       break;
