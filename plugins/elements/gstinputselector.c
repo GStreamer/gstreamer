@@ -91,8 +91,8 @@ enum
 };
 static guint gst_input_selector_signals[LAST_SIGNAL] = { 0 };
 
-static gboolean gst_input_selector_is_active_sinkpad (GstInputSelector * sel,
-    GstPad * pad);
+static inline gboolean gst_input_selector_is_active_sinkpad (GstInputSelector *
+    sel, GstPad * pad);
 static GstPad *gst_input_selector_activate_sinkpad (GstInputSelector * sel,
     GstPad * pad);
 static GstPad *gst_input_selector_get_linked_pad (GstPad * pad,
