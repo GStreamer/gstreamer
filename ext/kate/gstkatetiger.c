@@ -171,7 +171,7 @@ gst_kate_tiger_base_init (gpointer gclass)
 {
   static GstElementDetails element_details =
       GST_ELEMENT_DETAILS ("Kate stream renderer",
-      "Codec/Decoder/Video/Overlay/Subtitle",
+      "Mixer/Video/Overlay/Subtitle",
       "Decodes and renders Kate streams on top of a video",
       "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
