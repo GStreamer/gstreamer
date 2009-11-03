@@ -183,6 +183,8 @@ gst_shm_sink_finalize (GObject * object)
   GstShmSink *self = GST_SHM_SINK (object);
 
   g_cond_free (self->cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /*
@@ -274,6 +276,9 @@ gst_shm_sink_start (GstBaseSink * bsink)
         ("Could not open socket."), (NULL));
     return FALSE;
   }
+
+  GST_DEBUG_OBJECT (self, "Creating new socket at %s"
+      " with shared memory of %d bytes", self->socket_path, self->size);
 
   self->pipe = sp_writer_create (self->socket_path, self->size, self->perms);
 

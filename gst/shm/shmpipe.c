@@ -409,7 +409,7 @@ sp_writer_resize (ShmPipe * self, size_t size)
   pathlen = strlen (newarea->shm_area_name) + 1;
 
   for (client = self->clients; client; client = client->next) {
-    struct CommandBuffer cb;
+    struct CommandBuffer cb = { 0 };
 
     if (!send_command (client->fd, &cb, COMMAND_CLOSE_SHM_AREA,
             old_current->id))
@@ -504,7 +504,7 @@ sp_writer_send_buf (ShmPipe * self, gchar * buf, size_t size)
   sb->block = block;
 
   for (client = self->clients; client; client = client->next) {
-    struct CommandBuffer cb;
+    struct CommandBuffer cb = { 0 };
     cb.payload.buffer.offset = offset;
     cb.payload.buffer.size = bsize;
     if (!send_command (client->fd, &cb, COMMAND_NEW_BUFFER, self->shm_area->id))
@@ -644,7 +644,7 @@ sp_client_recv_finish (ShmPipe * self, char *buf)
 {
   ShmArea *shm_area = NULL;
   unsigned long offset;
-  struct CommandBuffer cb;
+  struct CommandBuffer cb = { 0 };
 
   for (shm_area = self->shm_area; shm_area; shm_area = shm_area->next) {
     if (buf >= shm_area->shm_area &&
@@ -695,7 +695,7 @@ sp_writer_accept_client (ShmPipe * self)
 {
   ShmClient *client = NULL;
   int fd;
-  struct CommandBuffer cb;
+  struct CommandBuffer cb = { 0 };
   int pathlen = strlen (self->shm_area->shm_area_name) + 1;
 
 
