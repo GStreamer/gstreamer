@@ -1264,18 +1264,18 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   pango_cairo_show_layout (cr, overlay->layout);
   cairo_restore (cr);
 
+  /* draw text */
+  cairo_save (cr);
+  cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+  pango_cairo_show_layout (cr, overlay->layout);
+  cairo_restore (cr);
+
   /* draw outline text */
   cairo_save (cr);
   cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
   cairo_set_line_width (cr, overlay->outline_offset);
   pango_cairo_layout_path (cr, overlay->layout);
   cairo_stroke (cr);
-  cairo_restore (cr);
-
-  /* draw text */
-  cairo_save (cr);
-  cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
-  pango_cairo_show_layout (cr, overlay->layout);
   cairo_restore (cr);
 
   cairo_destroy (cr);
