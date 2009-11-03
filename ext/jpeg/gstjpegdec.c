@@ -148,11 +148,18 @@ static void
 gst_jpeg_dec_finalize (GObject * object)
 {
   GstJpegDec *dec = GST_JPEG_DEC (object);
+  gint i;
 
   jpeg_destroy_decompress (&dec->cinfo);
 
   if (dec->tempbuf)
     gst_buffer_unref (dec->tempbuf);
+
+  for (i = 0; i < 16; i++) {
+    g_free (dec->idr_y[i]);
+    g_free (dec->idr_u[i]);
+    g_free (dec->idr_v[i]);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -679,26 +686,32 @@ static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v, gint r_h)
 {
-  /* FIXME: these are too large now that MAX_WIDTH is 64k! Allocating 3MB on
-   * the stack is not very nice... */
-  guchar y[16][MAX_WIDTH];
-  guchar u[16][MAX_WIDTH];
-  guchar v[16][MAX_WIDTH];
-  guchar *y_rows[16] = { y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7],
-    y[8], y[9], y[10], y[11], y[12], y[13], y[14], y[15]
-  };
-  guchar *u_rows[16] = { u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
-    u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]
-  };
-  guchar *v_rows[16] = { v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7],
-    v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]
-  };
+  guchar *y_rows[16], *u_rows[16], *v_rows[16];
   guchar **scanarray[3] = { y_rows, u_rows, v_rows };
   gint i, j, k;
   gint lines;
 
   GST_DEBUG_OBJECT (dec,
       "unadvantageous width or r_h, taking slow route involving memcpy");
+
+  if (G_UNLIKELY (!dec->idr_allocated)) {
+    gboolean res = TRUE;
+
+    for (i = 0; ((i < 16) && res); i++) {
+      res &= ((dec->idr_y[i] = g_try_malloc (MAX_WIDTH)) != NULL);
+      res &= ((dec->idr_u[i] = g_try_malloc (MAX_WIDTH)) != NULL);
+      res &= ((dec->idr_v[i] = g_try_malloc (MAX_WIDTH)) != NULL);
+    }
+    if (!res) {
+      GST_WARNING_OBJECT (dec, "out of memory");
+      return;
+    }
+    dec->idr_allocated = TRUE;
+  }
+
+  memcpy (y_rows, dec->idr_y, 16 * sizeof (gpointer));
+  memcpy (u_rows, dec->idr_u, 16 * sizeof (gpointer));
+  memcpy (v_rows, dec->idr_v, 16 * sizeof (gpointer));
 
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     lines = jpeg_read_raw_data (&dec->cinfo, scanarray, r_v * DCTSIZE);

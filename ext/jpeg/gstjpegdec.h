@@ -106,6 +106,10 @@ struct _GstJpegDec {
   struct jpeg_decompress_struct cinfo;
   struct GstJpegDecErrorMgr     jerr;
   struct GstJpegDecSourceMgr    jsrc;
+
+  /* arrays for indirect decoding */
+  gboolean idr_allocated;
+  guchar *idr_y[16],*idr_u[16],*idr_v[16];
 };
 
 struct _GstJpegDecClass {
