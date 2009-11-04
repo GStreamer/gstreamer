@@ -1033,7 +1033,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
       templ_found = TRUE;
   } else {
     /* there is no % in the name, try to find a matching template */
-    list = gst_element_class_get_pad_template_list (class);
+    list = class->padtemplates;
     while (!templ_found && list) {
       templ = (GstPadTemplate *) list->data;
       if (templ->presence == GST_PAD_REQUEST) {
@@ -1322,7 +1322,7 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
   g_return_val_if_fail (GST_IS_ELEMENT_CLASS (element_class), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  padlist = gst_element_class_get_pad_template_list (element_class);
+  padlist = element_class->padtemplates;
 
   while (padlist) {
     GstPadTemplate *padtempl = (GstPadTemplate *) padlist->data;
