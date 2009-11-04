@@ -369,8 +369,8 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
           event_time = gst_util_uint64_scale (ticks, 1024 * GST_SECOND, 90000);
 
           GST_DEBUG_OBJECT (dec,
-              "Next DCSQ at offset %" G_GINT64_FORMAT
-              ", delay %g secs (%d ticks)", buf - start,
+              "Next DCSQ at offset %u, delay %g secs (%d ticks)",
+              (guint) (buf - start),
               gst_util_guint64_to_gdouble (event_time / GST_SECOND), ticks);
 
           dec->parse_pos = buf;
