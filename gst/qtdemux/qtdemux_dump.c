@@ -61,8 +61,8 @@ gboolean
 qtdemux_dump_tkhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
   guint64 duration, ctime, mtime;
-  guint32 version, track_id, iwidth, iheight;
-  guint16 layer, alt_group, ivol;
+  guint32 version = 0, track_id = 0, iwidth = 0, iheight = 0;
+  guint16 layer = 0, alt_group = 0, ivol = 0;
   guint value_size;
 
   if (!qt_atom_parser_get_uint32 (data, &version))
@@ -126,10 +126,10 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_mdhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 version;
+  guint32 version = 0;
   guint64 duration, ctime, mtime;
-  guint32 time_scale;
-  guint16 language, quality;
+  guint32 time_scale = 0;
+  guint16 language = 0, quality = 0;
   guint value_size;
 
   if (!qt_atom_parser_get_uint32 (data, &version))
@@ -212,7 +212,7 @@ qtdemux_dump_vmhd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_dref (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -221,7 +221,7 @@ qtdemux_dump_dref (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
   GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
   GST_LOG ("%*s  n entries:     %u", depth, "", num_entries);
   for (i = 0; i < num_entries; i++) {
-    guint32 size, fourcc;
+    guint32 size = 0, fourcc;
 
     if (!qt_atom_parser_get_uint32 (data, &size) ||
         !qt_atom_parser_get_fourcc (data, &fourcc) || size < 8 ||
@@ -238,7 +238,7 @@ qtdemux_dump_dref (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stsd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -249,7 +249,7 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 
   for (i = 0; i < num_entries; i++) {
     QtAtomParser sub;
-    guint32 size, fourcc;
+    guint32 size = 0, fourcc;
 
     if (!qt_atom_parser_get_uint32 (data, &size) ||
         !qt_atom_parser_get_fourcc (data, &fourcc))
@@ -292,7 +292,7 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -314,7 +314,7 @@ qtdemux_dump_stts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stps (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -335,7 +335,7 @@ qtdemux_dump_stps (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stss (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -356,7 +356,7 @@ qtdemux_dump_stss (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stsc (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -379,7 +379,7 @@ qtdemux_dump_stsc (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stsz (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, sample_size, num_entries;
+  guint32 ver_flags = 0, sample_size = 0, num_entries = 0;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &sample_size))
@@ -407,7 +407,7 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_stco (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -428,7 +428,7 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_ctts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i, count, offset;
+  guint32 ver_flags = 0, num_entries = 0, i, count, offset;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
@@ -451,7 +451,7 @@ qtdemux_dump_ctts (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 gboolean
 qtdemux_dump_co64 (GstQTDemux * qtdemux, QtAtomParser * data, int depth)
 {
-  guint32 ver_flags, num_entries, i;
+  guint32 ver_flags = 0, num_entries = 0, i;
 
   if (!qt_atom_parser_get_uint32 (data, &ver_flags) ||
       !qt_atom_parser_get_uint32 (data, &num_entries))
