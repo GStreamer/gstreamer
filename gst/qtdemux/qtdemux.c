@@ -1527,6 +1527,20 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
           g_free (stream->segments);
         if (stream->pending_tags)
           gst_tag_list_free (stream->pending_tags);
+        if (stream->stco.data)
+          g_free ((gpointer) stream->stco.data);
+        if (stream->stsz.data)
+          g_free ((gpointer) stream->stsz.data);
+        if (stream->stsc.data)
+          g_free ((gpointer) stream->stsc.data);
+        if (stream->stts.data)
+          g_free ((gpointer) stream->stts.data);
+        if (stream->stss.data)
+          g_free ((gpointer) stream->stss.data);
+        if (stream->stps.data)
+          g_free ((gpointer) stream->stps.data);
+        if (stream->ctts.data)
+          g_free ((gpointer) stream->ctts.data);
         g_free (stream);
       }
       qtdemux->major_brand = 0;
@@ -3771,6 +3785,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stts, &stream->stts))
     goto corrupt_file;
 
+  /* copy atom data into a new buffer for later use */
+  stream->stts.data = g_memdup (stream->stts.data, stream->stts.size);
+
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stts, 1 + 3) ||
       !gst_byte_reader_get_uint32_be (&stream->stts, &stream->n_sample_times))
@@ -3787,6 +3804,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if ((stream->stss_present =
           !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
+    /* copy atom data into a new buffer for later use */
+    stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
+
     /* skip version + flags */
     if (!gst_byte_reader_skip (&stream->stss, 1 + 3) ||
         !gst_byte_reader_get_uint32_be (&stream->stss, &stream->n_sample_syncs))
@@ -3802,6 +3822,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     if ((stream->stps_present =
             !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
+      /* copy atom data into a new buffer for later use */
+      stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
+
       /* skip version + flags */
       if (!gst_byte_reader_skip (&stream->stps, 1 + 3) ||
           !gst_byte_reader_get_uint32_be (&stream->stps,
@@ -3824,6 +3847,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsc, &stream->stsc))
     goto corrupt_file;
 
+  /* copy atom data into a new buffer for later use */
+  stream->stsc.data = g_memdup (stream->stsc.data, stream->stsc.size);
+
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stsc, 1 + 3) ||
       !gst_byte_reader_get_uint32_be (&stream->stsc,
@@ -3843,6 +3869,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsz, &stream->stsz))
     goto corrupt_file;
 
+  /* copy atom data into a new buffer for later use */
+  stream->stsz.data = g_memdup (stream->stsz.data, stream->stsz.size);
+
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
       !gst_byte_reader_get_uint32_be (&stream->stsz, &stream->sample_size))
@@ -3857,6 +3886,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     stream->co_size = sizeof (guint64);
   else
     goto corrupt_file;
+
+  /* copy atom data into a new buffer for later use */
+  stream->stco.data = g_memdup (stream->stco.data, stream->stco.size);
 
   /* skip version + flags */
   if (!gst_byte_reader_skip (&stream->stco, 1 + 3))
@@ -3913,6 +3945,9 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if ((stream->ctts_present =
           !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
+    /* copy atom data into a new buffer for later use */
+    stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
+
     /* skip version + flags */
     if (!gst_byte_reader_skip (&stream->ctts, 1 + 3)
         || !gst_byte_reader_get_uint32_be (&stream->ctts,
@@ -5329,12 +5364,40 @@ error_encrypted:
 samples_failed:
   {
     /* we posted an error already */
+    if (stream->stco.data)
+      g_free ((gpointer) stream->stco.data);
+    if (stream->stsz.data)
+      g_free ((gpointer) stream->stsz.data);
+    if (stream->stsc.data)
+      g_free ((gpointer) stream->stsc.data);
+    if (stream->stts.data)
+      g_free ((gpointer) stream->stts.data);
+    if (stream->stss.data)
+      g_free ((gpointer) stream->stss.data);
+    if (stream->stps.data)
+      g_free ((gpointer) stream->stps.data);
+    if (stream->ctts.data)
+      g_free ((gpointer) stream->ctts.data);
     g_free (stream);
     return FALSE;
   }
 segments_failed:
   {
     /* we posted an error already */
+    if (stream->stco.data)
+      g_free ((gpointer) stream->stco.data);
+    if (stream->stsz.data)
+      g_free ((gpointer) stream->stsz.data);
+    if (stream->stsc.data)
+      g_free ((gpointer) stream->stsc.data);
+    if (stream->stts.data)
+      g_free ((gpointer) stream->stts.data);
+    if (stream->stss.data)
+      g_free ((gpointer) stream->stss.data);
+    if (stream->stps.data)
+      g_free ((gpointer) stream->stps.data);
+    if (stream->ctts.data)
+      g_free ((gpointer) stream->ctts.data);
     g_free (stream);
     return FALSE;
   }
