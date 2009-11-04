@@ -13,10 +13,10 @@ libgstdeinterlace_la_SOURCES = \
 	tvtime/linearblend.c \
 	tvtime/scalerbob.c
 
-libgstdeinterlace_la_CFLAGS = $(GST_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
-libgstdeinterlace_la_LIBADD = $(GST_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LIBOIL_LIBS)
+libgstdeinterlace_la_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBOIL_CFLAGS)
+libgstdeinterlace_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
 libgstdeinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdeinterlace_la_LIBTOOLFLAGS = --tag=disable-static
 
