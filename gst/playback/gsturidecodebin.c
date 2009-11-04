@@ -1448,7 +1448,7 @@ setup_streaming (GstURIDecodeBin * decoder)
 
   gst_bin_add (GST_BIN_CAST (decoder), typefind);
 
-  if (!gst_element_link (decoder->source, typefind))
+  if (!gst_element_link_pads (decoder->source, NULL, typefind, "sink"))
     goto could_not_link;
 
   decoder->typefind = typefind;
@@ -1525,7 +1525,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
     goto no_decodebin;
 
   /* and link to decoder */
-  if (!gst_element_link (bin->source, decoder))
+  if (!gst_element_link_pads (bin->source, NULL, decoder, "sink"))
     goto could_not_link;
 
   GST_DEBUG_OBJECT (bin, "linked decoder to new pad");
@@ -1629,7 +1629,7 @@ setup_source (GstURIDecodeBin * decoder)
       if (!dec_elem)
         goto no_decoder;
 
-      if (!gst_element_link (decoder->source, dec_elem))
+      if (!gst_element_link_pads (decoder->source, NULL, dec_elem, "sink"))
         goto could_not_link;
     }
   }
