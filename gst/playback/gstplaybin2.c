@@ -1526,9 +1526,36 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
     GstObject *selector;
 
     if ((selector = gst_pad_get_parent (sinkpad))) {
-      /* activate the selected pad */
-      g_object_set (selector, "active-pad", sinkpad, NULL);
+      GstPad *old_sinkpad;
+
+      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+
+      if (old_sinkpad != sinkpad) {
+        GstPad *src, *peer;
+
+        /* activate the selected pad */
+        g_object_set (selector, "active-pad", sinkpad, NULL);
+
+        src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
+        peer = gst_pad_get_peer (src);
+        if (peer) {
+          GstStructure *s;
+          GstEvent *event;
+          /* Flush the subtitle renderer to remove any
+           * currently displayed subtitles. This event will
+           * never travel outside subtitleoverlay!
+           */
+          s = gst_structure_empty_new ("subtitleoverlay-flush-subtitle");
+          event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
+          gst_pad_send_event (peer, event);
+          gst_object_unref (peer);
+        }
+        gst_object_unref (src);
+      }
       gst_object_unref (selector);
+
+      if (old_sinkpad)
+        gst_object_unref (old_sinkpad);
     }
     gst_object_unref (sinkpad);
   }
