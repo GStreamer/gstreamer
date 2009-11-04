@@ -42,6 +42,6 @@ EXTRA_LOCALE_CATEGORIES =
 
 # Avoid line numbers in *.po, but keep them in *.pot.
 MSGMERGE = msgmerge --no-location
-MSGMERGE_UPDATE = msgmerge --no-location --update
+MSGMERGE_UPDATE = msgmerge --no-location --update --backup=off
 MSGFILTER = msgfilter --no-location
 
