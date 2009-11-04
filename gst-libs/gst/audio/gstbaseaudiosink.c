@@ -58,6 +58,9 @@ struct _GstBaseAudioSinkPrivate
   GstClockTime eos_time;
 
   gboolean do_time_offset;
+  /* number of microseconds we alow timestamps or clock slaving to drift
+   * before resyncing */
+  guint64 drift_tolerance;
 };
 
 /* BaseAudioSink signals and args */
@@ -85,14 +88,22 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
+/* when timestamps or clock slaving drift for more than 10ms we resync. This is
+ * a reasonable default */
+#define DEFAULT_DRIFT_TOLERANCE   ((20 * GST_MSECOND) / GST_USECOND)
+
 enum
 {
   PROP_0,
+
   PROP_BUFFER_TIME,
   PROP_LATENCY_TIME,
   PROP_PROVIDE_CLOCK,
   PROP_SLAVE_METHOD,
-  PROP_CAN_ACTIVATE_PULL
+  PROP_CAN_ACTIVATE_PULL,
+  PROP_DRIFT_TOLERANCE,
+
+  PROP_LAST
 };
 
 GType
@@ -208,6 +219,19 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       g_param_spec_boolean ("can-activate-pull", "Allow Pull Scheduling",
           "Allow pull-based scheduling", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseAudioSink:drift-tolerance
+   *
+   * Controls the amount of time in milliseconds that timestamps or clocks are allowed
+   * to drift before resynchronisation happens.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_DRIFT_TOLERANCE,
+      g_param_spec_int64 ("drift-tolerance", "Drift Tolerance",
+          "Tolerance for timestamp and clock drift in microseconds", 1,
+          G_MAXINT64, DEFAULT_DRIFT_TOLERANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
@@ -252,6 +276,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
 
   GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
   GST_BASE_SINK (baseaudiosink)->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
+  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
 
   /* install some custom pad_query functions */
   gst_pad_set_query_function (GST_BASE_SINK_PAD (baseaudiosink),
@@ -605,6 +630,9 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     case PROP_CAN_ACTIVATE_PULL:
       GST_BASE_SINK (sink)->can_activate_pull = g_value_get_boolean (value);
       break;
+    case PROP_DRIFT_TOLERANCE:
+      sink->priv->drift_tolerance = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -634,6 +662,9 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CAN_ACTIVATE_PULL:
       g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_pull);
+      break;
+    case PROP_DRIFT_TOLERANCE:
+      g_value_set_int64 (value, sink->priv->drift_tolerance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -952,8 +983,8 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
 {
   GstClockTime cinternal, cexternal, crate_num, crate_denom;
   GstClockTime etime, itime;
-  GstClockTimeDiff skew, segtime, segtime2;
-  gint segsamples;
+  GstClockTimeDiff skew, mdrift, mdrift2;
+  gint driftsamples;
   gint64 last_align;
 
   /* get calibration parameters to compensate for offsets */
@@ -990,56 +1021,52 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
       GST_TIME_FORMAT " skew %" G_GINT64_FORMAT " avg %" G_GINT64_FORMAT,
       GST_TIME_ARGS (itime), GST_TIME_ARGS (etime), skew, sink->priv->avg_skew);
 
-  /* the max drift we allow is the length of a segment */
-  segtime = sink->ringbuffer->spec.latency_time * 1000;
-  segtime2 = segtime / 2;
+  /* the max drift we allow */
+  mdrift = sink->priv->drift_tolerance * 1000;
+  mdrift2 = mdrift / 2;
 
   /* adjust playout pointer based on skew */
-  if (sink->priv->avg_skew > segtime2) {
+  if (sink->priv->avg_skew > mdrift2) {
     /* master is running slower, move internal time forward */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, segtime2);
-    cexternal = cexternal > segtime ? cexternal - segtime : 0;
-    sink->priv->avg_skew -= segtime;
+        sink->priv->avg_skew, mdrift2);
+    cexternal = cexternal > mdrift ? cexternal - mdrift : 0;
+    sink->priv->avg_skew -= mdrift;
 
-    segsamples =
-        sink->ringbuffer->spec.segsize /
-        sink->ringbuffer->spec.bytes_per_sample;
+    driftsamples = (sink->ringbuffer->spec.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what we
      * will correct, resync */
-    if (last_align < 0 || last_align > segsamples)
+    if (last_align < 0 || last_align > driftsamples)
       sink->next_sample = -1;
 
     GST_DEBUG_OBJECT (sink,
-        "last_align %" G_GINT64_FORMAT " segsamples %u, next %"
-        G_GUINT64_FORMAT, last_align, segsamples, sink->next_sample);
+        "last_align %" G_GINT64_FORMAT " driftsamples %u, next %"
+        G_GUINT64_FORMAT, last_align, driftsamples, sink->next_sample);
 
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
         crate_num, crate_denom);
-  } else if (sink->priv->avg_skew < -segtime2) {
+  } else if (sink->priv->avg_skew < -mdrift2) {
     /* master is running faster, move external time forwards */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " < %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, -segtime2);
-    cexternal += segtime;
-    sink->priv->avg_skew += segtime;
+        sink->priv->avg_skew, -mdrift2);
+    cexternal += mdrift;
+    sink->priv->avg_skew += mdrift;
 
-    segsamples =
-        sink->ringbuffer->spec.segsize /
-        sink->ringbuffer->spec.bytes_per_sample;
+    driftsamples = (sink->ringbuffer->spec.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
     /* if we were aligning in the wrong direction or we aligned more than what we
      * will correct, resync */
-    if (last_align > 0 || -last_align > segsamples)
+    if (last_align > 0 || -last_align > driftsamples)
       sink->next_sample = -1;
 
     GST_DEBUG_OBJECT (sink,
-        "last_align %" G_GINT64_FORMAT " segsamples %u, next %"
-        G_GUINT64_FORMAT, last_align, segsamples, sink->next_sample);
+        "last_align %" G_GINT64_FORMAT " driftsamples %u, next %"
+        G_GUINT64_FORMAT, last_align, driftsamples, sink->next_sample);
 
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
         crate_num, crate_denom);
@@ -1248,6 +1275,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFlowReturn ret;
   GstSegment clip_seg;
   gint64 time_offset;
+  gint64 maxdrift;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1482,26 +1510,20 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   else
     diff = sink->next_sample - sample_offset;
 
-  /* we tollerate half a second diff before we start resyncing. This
-   * should be enough to compensate for various rounding errors in the timestamp
-   * and sample offset position. We always resync if we got a discont anyway and
-   * non-discont should be aligned by definition. */
-  if (G_LIKELY (diff < ringbuf->spec.rate / DIFF_TOLERANCE)) {
+  /* calculate the max allowed drift in units of samples. By default this is
+   * 20ms and should be anough to compensate for timestamp rounding errors. */
+  maxdrift = (ringbuf->spec.rate * sink->priv->drift_tolerance) / GST_MSECOND;
+
+  if (G_LIKELY (diff < maxdrift)) {
     /* calc align with previous sample */
     align = sink->next_sample - sample_offset;
     GST_DEBUG_OBJECT (sink,
-        "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %d", align,
-        ringbuf->spec.rate / DIFF_TOLERANCE);
+        "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
+        G_GINT64_FORMAT, align, maxdrift);
   } else {
-    /* bring sample diff to seconds for error message */
-    diff = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
-    /* timestamps drifted apart from previous samples too much, we need to
-     * resync. We log this as an element warning. */
-    GST_ELEMENT_WARNING (sink, CORE, CLOCK,
-        ("Compensating for audio synchronisation problems"),
-        ("Unexpected discontinuity in audio timestamps of more "
-            "than half a second (%" GST_TIME_FORMAT "), resyncing",
-            GST_TIME_ARGS (diff)));
+    GST_DEBUG_OBJECT (sink,
+        "discont timestamp (%" G_GINT64_FORMAT ") >= %" G_GINT64_FORMAT, diff,
+        maxdrift);
     align = 0;
   }
   sink->priv->last_align = align;
