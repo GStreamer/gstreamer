@@ -1182,6 +1182,8 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   GstPadLinkReturn lret;
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
+  g_return_val_if_fail (GST_PAD_CAST (gpad) != newtarget, FALSE);
+  g_return_val_if_fail (newtarget != GST_PROXY_PAD_INTERNAL (gpad), FALSE);
 
   /* no need for locking, the internal pad's lifecycle is directly linked to the
    * ghostpad's */
