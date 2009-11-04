@@ -91,8 +91,8 @@ enum
 };
 static guint gst_input_selector_signals[LAST_SIGNAL] = { 0 };
 
-static gboolean gst_input_selector_is_active_sinkpad (GstInputSelector * sel,
-    GstPad * pad);
+static inline gboolean gst_input_selector_is_active_sinkpad (GstInputSelector *
+    sel, GstPad * pad);
 static GstPad *gst_input_selector_activate_sinkpad (GstInputSelector * sel,
     GstPad * pad);
 static GstPad *gst_input_selector_get_linked_pad (GstPad * pad,
@@ -579,6 +579,8 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   /* update the segment on the srcpad */
   end_time = GST_BUFFER_TIMESTAMP (buf);
   if (GST_CLOCK_TIME_IS_VALID (end_time)) {
+    GST_DEBUG_OBJECT (pad, "received start time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (end_time));
     duration = GST_BUFFER_DURATION (buf);
     if (GST_CLOCK_TIME_IS_VALID (duration))
       end_time += duration;
@@ -598,7 +600,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     GstSegment *cseg = &sel->segment;
 
     GST_DEBUG_OBJECT (sel,
-        "pushing NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "pushing close NEWSEGMENT update %d, rate %lf, applied rate %lf, "
         "format %d, "
         "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
         G_GINT64_FORMAT, TRUE, cseg->rate, cseg->applied_rate, cseg->format,
@@ -613,7 +615,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   /* if we have a pending segment, push it out now */
   if (G_UNLIKELY (selpad->segment_pending)) {
     GST_DEBUG_OBJECT (pad,
-        "pushing NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "pushing pending NEWSEGMENT update %d, rate %lf, applied rate %lf, "
         "format %d, "
         "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
         G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
