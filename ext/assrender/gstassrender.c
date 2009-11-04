@@ -68,6 +68,9 @@ static void gst_assrender_get_property (GObject * object, guint prop_id,
 
 static void gst_assrender_finalize (GObject * object);
 
+static GstStateChangeReturn gst_assrender_change_state (GstElement * element,
+    GstStateChange transition);
+
 GST_BOILERPLATE (Gstassrender, gst_assrender, GstElement, GST_TYPE_ELEMENT);
 
 static GstCaps *gst_assrender_getcaps (GstPad * pad);
@@ -122,6 +125,9 @@ gst_assrender_class_init (GstassrenderClass * klass)
       g_param_spec_boolean ("embeddedfonts", "Use embedded fonts",
           "Extract and use fonts embedded in the stream", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_assrender_change_state);
 }
 
 static void
@@ -160,6 +166,9 @@ gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
   render->width = 0;
   render->height = 0;
 
+  render->subtitle_mutex = g_mutex_new ();
+  render->subtitle_cond = g_cond_new ();
+
   render->renderer_init_ok = FALSE;
   render->track_init_ok = FALSE;
   render->enable = TRUE;
@@ -186,6 +195,12 @@ static void
 gst_assrender_finalize (GObject * object)
 {
   Gstassrender *render = GST_ASSRENDER (object);
+
+  if (render->subtitle_mutex)
+    g_mutex_free (render->subtitle_mutex);
+
+  if (render->subtitle_cond)
+    g_cond_free (render->subtitle_cond);
 
   if (render->ass_track) {
     ass_free_track (render->ass_track);
@@ -238,6 +253,49 @@ gst_assrender_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstStateChangeReturn
+gst_assrender_change_state (GstElement * element, GstStateChange transition)
+{
+  Gstassrender *render = GST_ASSRENDER (element);
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    default:
+      break;
+
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (render->subtitle_mutex);
+      if (render->subtitle_pending)
+        gst_buffer_unref (render->subtitle_pending);
+      render->subtitle_pending = NULL;
+      g_cond_signal (render->subtitle_cond);
+      g_mutex_unlock (render->subtitle_mutex);
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (render->ass_track)
+        ass_free_track (render->ass_track);
+      render->ass_track = NULL;
+      render->track_init_ok = FALSE;
+      render->renderer_init_ok = FALSE;
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+    default:
+      break;
+  }
+
+
+  return ret;
 }
 
 static GstCaps *
@@ -388,6 +446,23 @@ gst_assrender_setcaps_text (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
+
+static void
+gst_assrender_process_text (Gstassrender * render, GstBuffer * buffer)
+{
+  char *data = (gchar *) GST_BUFFER_DATA (buffer);
+  guint size = GST_BUFFER_SIZE (buffer);
+  double pts_start, pts_end;
+
+  pts_start = GST_BUFFER_TIMESTAMP (buffer);
+  pts_start /= GST_MSECOND;
+  pts_end = GST_BUFFER_DURATION (buffer);
+  pts_end /= GST_MSECOND;
+
+  ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
+  gst_buffer_unref (buffer);
+}
+
 static GstFlowReturn
 gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
 {
@@ -439,6 +514,23 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
 
   gst_segment_set_last_stop (&render->video_segment, GST_FORMAT_TIME,
       clip_start);
+
+  g_mutex_lock (render->subtitle_mutex);
+  if (render->subtitle_pending) {
+    if (GST_BUFFER_TIMESTAMP (render->subtitle_pending) <=
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)) {
+      gst_assrender_process_text (render, render->subtitle_pending);
+      render->subtitle_pending = NULL;
+      g_cond_signal (render->subtitle_cond);
+    } else if (GST_BUFFER_TIMESTAMP (render->subtitle_pending) +
+        GST_BUFFER_DURATION (render->subtitle_pending) <=
+        GST_BUFFER_TIMESTAMP (buffer)) {
+      gst_buffer_unref (render->subtitle_pending);
+      render->subtitle_pending = NULL;
+      g_cond_signal (render->subtitle_cond);
+    }
+  }
+  g_mutex_unlock (render->subtitle_mutex);
 
   /* now start rendering subtitles, if all conditions are met */
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
@@ -516,27 +608,25 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   Gstassrender *render;
-  gchar *data;
-  guint size;
-  double pts_start;
-  double pts_end;
+  GstClockTime timestamp;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
-  data = (gchar *) GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
-  pts_start = GST_BUFFER_TIMESTAMP (buffer);
-  pts_start = pts_start / GST_MSECOND;
-  pts_end = GST_BUFFER_DURATION (buffer);
-  pts_end = pts_end / GST_MSECOND;
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
+  if (timestamp > render->video_segment.last_stop) {
+    g_assert (render->subtitle_pending == NULL);
+    g_mutex_lock (render->subtitle_mutex);
+    render->subtitle_pending = buffer;
+    g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
+    g_mutex_unlock (render->subtitle_mutex);
+  } else {
+    gst_assrender_process_text (render, buffer);
+  }
 
   GST_DEBUG_OBJECT (render,
       "processed text packet with timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-
-  gst_buffer_unref (buffer);
+      GST_TIME_ARGS (timestamp));
 
   return ret;
 }

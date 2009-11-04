@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008 Benjamin Schmitz <vortex@wolpzone.de>
+ * Copyright (c) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public License
@@ -50,6 +51,10 @@ struct _Gstassrender
   GstSegment video_segment;
 
   gint width, height;
+
+  GMutex *subtitle_mutex;
+  GCond *subtitle_cond;
+  GstBuffer *subtitle_pending;
 
   ASS_Library *ass_library;
   ASS_Renderer *ass_renderer;
