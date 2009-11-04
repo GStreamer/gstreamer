@@ -1979,7 +1979,7 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
   GstAviPad *avipad, *best_pad;
   GSList *node;
   GstBuffer *buffer;
-  GstClockTime time, best_time;
+  GstClockTime time, best_time, delay;
 
   node = avimux->sinkpads;
   best_pad = NULL;
@@ -1996,12 +1996,14 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
     time = GST_BUFFER_TIMESTAMP (buffer);
     gst_buffer_unref (buffer);
 
+    delay = avipad->is_video ? GST_SECOND / 2 : 0;
+
     /* invalid timestamp buffers pass first,
      * these are probably initialization buffers */
     if (best_pad == NULL || !GST_CLOCK_TIME_IS_VALID (time)
-        || (GST_CLOCK_TIME_IS_VALID (best_time) && time < best_time)) {
+        || (GST_CLOCK_TIME_IS_VALID (best_time) && time + delay < best_time)) {
       best_pad = avipad;
-      best_time = time;
+      best_time = time + delay;
     }
   }
 
