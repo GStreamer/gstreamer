@@ -621,6 +621,7 @@ update_buffering (GstQueue2 * queue)
   if (post) {
     GstMessage *message;
     GstBufferingMode mode;
+    gint64 buffering_left = -1;
 
     /* scale to high percent so that it becomes the 100% mark */
     percent = percent * 100 / queue->high_percent;
@@ -628,15 +629,27 @@ update_buffering (GstQueue2 * queue)
     if (percent > 100)
       percent = 100;
 
-    if (QUEUE_IS_USING_TEMP_FILE (queue))
+    if (QUEUE_IS_USING_TEMP_FILE (queue)) {
+      GstFormat fmt = GST_FORMAT_BYTES;
+      gint64 duration;
+
       mode = GST_BUFFERING_DOWNLOAD;
-    else
+      if (queue->byte_in_rate > 0) {
+        if (gst_pad_query_peer_duration (queue->sinkpad, &fmt, &duration))
+          buffering_left =
+              (gdouble) ((duration -
+                  queue->writing_pos) * 1000) / queue->byte_in_rate;
+      } else {
+        buffering_left = G_MAXINT64;
+      }
+    } else {
       mode = GST_BUFFERING_STREAM;
+    }
 
     GST_DEBUG_OBJECT (queue, "buffering %d percent", percent);
     message = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
     gst_message_set_buffering_stats (message, mode,
-        queue->byte_in_rate, queue->byte_out_rate, -1);
+        queue->byte_in_rate, queue->byte_out_rate, buffering_left);
 
     gst_element_post_message (GST_ELEMENT_CAST (queue), message);
 
