@@ -2352,7 +2352,7 @@ gst_base_src_default_negotiate (RsnBaseSrc * basesrc)
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
-  thiscaps = gst_pad_get_caps_refed (RSN_BASE_SRC_PAD (basesrc));
+  thiscaps = gst_pad_get_caps (RSN_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   /* nothing or anything is allowed, we're done */
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
@@ -2362,7 +2362,7 @@ gst_base_src_default_negotiate (RsnBaseSrc * basesrc)
     goto no_caps;
 
   /* get the peer caps */
-  peercaps = gst_pad_peer_get_caps_refed (RSN_BASE_SRC_PAD (basesrc));
+  peercaps = gst_pad_peer_get_caps (RSN_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     GstCaps *icaps;
