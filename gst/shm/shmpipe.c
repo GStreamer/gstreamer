@@ -703,12 +703,16 @@ sp_writer_accept_client (ShmPipe * self)
 
   cb.payload.new_shm_area.size = self->shm_area->shm_area_len;
   cb.payload.new_shm_area.path_size = pathlen;
-  if (!send_command (fd, &cb, COMMAND_NEW_SHM_AREA, self->shm_area->id))
+  if (!send_command (fd, &cb, COMMAND_NEW_SHM_AREA, self->shm_area->id)) {
+    fprintf (stderr, "Sending new shm area failed: %s", strerror (errno));
     goto error;
+  }
 
   if (send (fd, self->shm_area->shm_area_name, pathlen, MSG_NOSIGNAL) !=
-      pathlen)
+      pathlen) {
+    fprintf (stderr, "Sending new shm area path failed: %s", strerror (errno));
     goto error;
+  }
 
   client = spalloc_new (ShmClient);
   client->fd = fd;
