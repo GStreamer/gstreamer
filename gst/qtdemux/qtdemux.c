@@ -3912,21 +3912,28 @@ corrupt_file:
   }
 }
 
-/* collect all samples for @stream by reading the info from @stbl
+/* collect samples up to sample @n for @stream by reading the info from @stbl
  */
 static gboolean
-qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream)
+qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 {
   int sample_index = 0;
   gint i, j, k;
   int index = 0;
   guint64 timestamp = 0;
 
+  if (n >= stream->n_samples) {
+    GST_LOG_OBJECT (qtdemux,
+        "Tried to parse up to sample %u but there are only %u samples", n + 1,
+        stream->n_samples);
+    goto corrupt_file;
+  }
+
   if (stream->chunks_are_chunks) {
     /* set the sample sizes */
     if (stream->sample_size == 0) {
       /* different sizes for each sample */
-      for (i = 0; i < stream->n_samples; i++) {
+      for (i = 0; i <= n; i++) {
         stream->samples[i].size =
             gst_byte_reader_get_uint32_be_unchecked (&stream->stsz);
         GST_LOG_OBJECT (qtdemux, "sample %d has size %u", i,
@@ -3935,7 +3942,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream)
     } else {
       /* samples have the same size */
       GST_LOG_OBJECT (qtdemux, "all samples have size %u", stream->sample_size);
-      for (i = 0; i < stream->n_samples; i++)
+      for (i = 0; i <= n; i++)
         stream->samples[i].size = stream->sample_size;
     }
   }
@@ -4000,13 +4007,13 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream)
           stream->samples[index].offset = chunk_offset;
           chunk_offset += stream->samples[index].size;
           index++;
-          if (G_UNLIKELY (index >= stream->n_samples))
+          if (G_UNLIKELY (index > n))
             goto done2;
         }
       }
     } else {
       for (j = first_chunk; j < last_chunk; j++) {
-        if (j >= stream->n_samples)
+        if (j > n)
           goto done;
 
         stream->samples[j].offset =
@@ -4048,19 +4055,19 @@ done2:
     time = 0;
     index = 0;
     for (i = 0; i < stream->n_sample_times; i++) {
-      guint32 n;
+      guint32 stts_samples;
       guint32 duration;
 
-      n = gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
+      stts_samples = gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
       duration = gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
-      GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u ", i, n,
-          duration);
+      GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u ", i,
+          stts_samples, duration);
 
       /* take first duration for fps */
       if (G_UNLIKELY (stream->min_duration == 0))
         stream->min_duration = duration;
 
-      for (j = 0; j < n; j++) {
+      for (j = 0; j < stts_samples; j++) {
         GST_DEBUG_OBJECT (qtdemux,
             "sample %d: index %d, timestamp %" GST_TIME_FORMAT, index, j,
             GST_TIME_ARGS (timestamp));
@@ -4073,7 +4080,7 @@ done2:
             timestamp - stream->samples[index].timestamp;
 
         index++;
-        if (G_UNLIKELY (index >= stream->n_samples))
+        if (G_UNLIKELY (index > n))
           goto done3;
       }
     }
@@ -4097,6 +4104,9 @@ done3:
         stream->all_keyframe = TRUE;
       } else {
         for (i = 0; i < stream->n_sample_syncs; i++) {
+          if (G_UNLIKELY (gst_byte_reader_peek_uint32_be_unchecked
+                  (&stream->stss) > n))
+            break;
           /* note that the first sample is index 1, not 0 */
           index = gst_byte_reader_get_uint32_be_unchecked (&stream->stss);
           if (G_LIKELY (index > 0 && index <= stream->n_samples))
@@ -4110,6 +4120,9 @@ done3:
          * sync samples */
         if (stream->n_sample_partial_syncs) {
           for (i = 0; i < stream->n_sample_partial_syncs; i++) {
+            if (G_UNLIKELY (gst_byte_reader_peek_uint32_be_unchecked
+                    (&stream->stps) > n))
+              break;
             /* note that the first sample is index 1, not 0 */
             index = gst_byte_reader_get_uint32_be_unchecked (&stream->stps);
             if (G_LIKELY (index > 0 && index <= stream->n_samples))
@@ -4139,7 +4152,7 @@ ctts:
         stream->samples[index].pts_offset =
             soffset * GST_SECOND / stream->timescale;
         index++;
-        if (G_UNLIKELY (index >= stream->n_samples))
+        if (G_UNLIKELY (index > n))
           goto done;
       }
     }
@@ -5217,7 +5230,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* collect sample information */
   if (!qtdemux_stbl_init (qtdemux, stream, stbl) ||
-      !qtdemux_parse_samples (qtdemux, stream))
+      !qtdemux_parse_samples (qtdemux, stream, stream->n_samples - 1))
     goto samples_failed;
 
   /* configure segments */
