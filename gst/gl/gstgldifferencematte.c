@@ -411,14 +411,14 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "base_width", differencematte->pbuf_width);
+                                "base_width", (gfloat) differencematte->pbuf_width);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "base_height", differencematte->pbuf_height);
+                                "base_height", (gfloat) differencematte->pbuf_height);
 
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "final_width", filter->width);
+                                "final_width", (gfloat) filter->width);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "final_height", filter->height);
+                                "final_height", (gfloat) filter->height);
 
   glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
