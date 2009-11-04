@@ -967,7 +967,7 @@ has_all_raw_caps (GstPad * pad, gboolean * all_raw)
   guint i, num_raw = 0;
   gboolean res = FALSE;
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_get_caps_refed (pad);
   if (caps == NULL)
     return FALSE;
 
