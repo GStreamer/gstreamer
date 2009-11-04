@@ -486,6 +486,8 @@ put_packet (GstPluginLoader * l, guint type, guint32 tag,
   guint len = payload_len + HEADER_SIZE;
 
   if (l->tx_buf_write + len >= l->tx_buf_size) {
+    GST_LOG ("Expanding tx buf from %d to %d for packet of size %d",
+        l->tx_buf_size, l->tx_buf_write + len + BUF_GROW_EXTRA, len);
     l->tx_buf_size = l->tx_buf_write + len + BUF_GROW_EXTRA;
     l->tx_buf = g_realloc (l->tx_buf, l->tx_buf_size);
   }
@@ -520,8 +522,12 @@ put_chunk (GstPluginLoader * l, GstRegistryChunk * chunk, guint * pos)
 
   len = padsize + chunk->size;
 
-  if (l->tx_buf_write + len >= l->tx_buf_size) {
-    l->tx_buf_size = l->tx_buf_write + len + BUF_GROW_EXTRA;
+  if (G_UNLIKELY (l->tx_buf_write + len >= l->tx_buf_size)) {
+    guint new_size = MAX (l->tx_buf_write + len,
+        l->tx_buf_size + l->tx_buf_size / 4) + BUF_GROW_EXTRA;
+    GST_LOG ("Expanding tx buf from %d to %d for chunk of size %d",
+        l->tx_buf_size, new_size, chunk->size);
+    l->tx_buf_size = new_size;
     l->tx_buf = g_realloc (l->tx_buf, l->tx_buf_size);
   }
 
@@ -568,15 +574,15 @@ write_one (GstPluginLoader * l)
 
   do {
     res = write (l->fd_w.fd, out, to_write);
-    if (res > 0) {
-      to_write -= res;
-      out += res;
+    if (G_UNLIKELY (res < 0)) {
+      if (errno == EAGAIN || errno == EINTR)
+        continue;
+      /* Failed to write -> child died */
+      goto fail_and_cleanup;
     }
-  } while (to_write > 0 && res < 0 && (errno == EAGAIN || errno == EINTR));
-  if (res < 0) {
-    /* Failed to write -> child died */
-    goto fail_and_cleanup;
-  }
+    to_write -= res;
+    out += res;
+  } while (to_write > 0);
 
   if (l->tx_buf_read == l->tx_buf_write) {
     gst_poll_fd_ctl_write (l->fdset, &l->fd_w, FALSE);
@@ -837,16 +843,15 @@ read_one (GstPluginLoader * l)
   in = l->rx_buf;
   do {
     res = read (l->fd_r.fd, in, to_read);
-    if (res > 0) {
-      to_read -= res;
-      in += res;
+    if (G_UNLIKELY (res < 0)) {
+      if (errno == EAGAIN || errno == EINTR)
+        continue;
+      GST_LOG ("Failed reading packet header");
+      return FALSE;
     }
-  } while (to_read > 0 && res < 0 && (errno == EAGAIN || errno == EINTR));
-
-  if (res < 0) {
-    GST_LOG ("Failed reading packet header");
-    return FALSE;
-  }
+    to_read -= res;
+    in += res;
+  } while (to_read > 0);
 
   magic = GST_READ_UINT32_BE (l->rx_buf + 8);
   if (magic != HEADER_MAGIC) {
@@ -861,28 +866,33 @@ read_one (GstPluginLoader * l)
         ("Received excessively large packet for plugin scanner subprocess");
     return FALSE;
   }
+  tag = GST_READ_UINT24_BE (l->rx_buf + 1);
 
-  if (packet_len + HEADER_SIZE >= l->rx_buf_size) {
-    l->rx_buf_size = packet_len + HEADER_SIZE + BUF_GROW_EXTRA;
-    l->rx_buf = g_realloc (l->rx_buf, l->rx_buf_size);
-  }
+  if (packet_len > 0) {
+    if (packet_len + HEADER_SIZE >= l->rx_buf_size) {
+      GST_LOG ("Expanding rx buf from %d to %d",
+          l->rx_buf_size, packet_len + HEADER_SIZE + BUF_GROW_EXTRA);
+      l->rx_buf_size = packet_len + HEADER_SIZE + BUF_GROW_EXTRA;
+      l->rx_buf = g_realloc (l->rx_buf, l->rx_buf_size);
+    }
 
-  in = l->rx_buf + HEADER_SIZE;
-  to_read = packet_len;
-  do {
-    res = read (l->fd_r.fd, in, to_read);
-    if (res > 0) {
+    in = l->rx_buf + HEADER_SIZE;
+    to_read = packet_len;
+    do {
+      res = read (l->fd_r.fd, in, to_read);
+      if (G_UNLIKELY (res < 0)) {
+        if (errno == EAGAIN || errno == EINTR)
+          continue;
+        GST_ERROR ("Packet payload read failed");
+        return FALSE;
+      }
       to_read -= res;
       in += res;
-    }
-  } while (to_read > 0 && res < 0 && (errno == EAGAIN || errno == EINTR));
-
-  if (res < 0) {
-    GST_ERROR ("Packet payload read failed");
-    return FALSE;
+    } while (to_read > 0);
+  } else {
+    GST_LOG ("No payload to read for 0 length packet type %d tag %u",
+        l->rx_buf[0], tag);
   }
-
-  tag = GST_READ_UINT24_BE (l->rx_buf + 1);
 
   return handle_rx_packet (l, l->rx_buf[0], tag,
       l->rx_buf + HEADER_SIZE, packet_len);

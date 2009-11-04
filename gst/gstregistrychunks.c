@@ -223,7 +223,9 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
         walk = g_list_next (walk), ef->ninterfaces++) {
       gst_registry_chunks_save_const_string (list, (gchar *) walk->data);
     }
-    GST_DEBUG ("Saved %d Interfaces", ef->ninterfaces);
+    GST_DEBUG ("Feature %s: saved %d interfaces %d pad templates",
+        feature->name, ef->ninterfaces, ef->npadtemplates);
+
     /* save uritypes */
     if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
       if (factory->uri_protocols && *factory->uri_protocols) {
@@ -495,6 +497,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
   GstRegistryChunkPluginFeature *pf = NULL;
   GstPluginFeature *feature = NULL;
   gchar *type_name = NULL, *str;
+  gchar *feature_name;
   GType type;
   guint i;
 
@@ -506,27 +509,32 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     return FALSE;
   }
 
-  GST_DEBUG ("Plugin '%s' feature typename : '%s'", plugin_name, type_name);
+  /* unpack more plugin feature strings */
+  unpack_string (*in, feature_name, end, fail);
+
+  GST_DEBUG ("Plugin '%s' feature '%s' typename : '%s'", plugin_name,
+      feature_name, type_name);
 
   if (G_UNLIKELY (!(type = g_type_from_name (type_name)))) {
     GST_ERROR ("Unknown type from typename '%s' for plugin '%s'", type_name,
         plugin_name);
     g_free (type_name);
+    g_free (feature_name);
     return FALSE;
   }
   if (G_UNLIKELY ((feature = g_object_newv (type, 0, NULL)) == NULL)) {
     GST_ERROR ("Can't create feature from type");
     g_free (type_name);
+    g_free (feature_name);
     return FALSE;
   }
+
+  feature->name = feature_name;
 
   if (G_UNLIKELY (!GST_IS_PLUGIN_FEATURE (feature))) {
     GST_ERROR ("typename : '%s' is not a plugin feature", type_name);
     goto fail;
   }
-
-  /* unpack more plugin feature strings */
-  unpack_string (*in, feature->name, end, fail);
 
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstRegistryChunkElementFactory *ef;
@@ -722,6 +730,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   GstPlugin *plugin = NULL;
   gchar *cache_str = NULL;
   guint i, n;
+  gchar *start = *in;
 
   align (*in);
   GST_LOG ("Reading/casting for GstRegistryChunkPluginElement at address %p",
@@ -801,6 +810,6 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
 
   /* Errors */
 fail:
-  GST_INFO ("Reading plugin failed");
+  GST_INFO ("Reading plugin failed after %d bytes", end - start);
   return FALSE;
 }
