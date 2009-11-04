@@ -2159,20 +2159,26 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   if (changed) {
     int signal;
+    gboolean always_ok = (decodebin == group->suburidecodebin);
+
     switch (select->type) {
       case GST_PLAY_SINK_TYPE_VIDEO:
       case GST_PLAY_SINK_TYPE_VIDEO_RAW:
-        /* we want to return NOT_LINKED for unselected pads but only for audio
-         * and video pads because text pads might come from an external file. */
-        g_object_set (sinkpad, "always-ok", FALSE, NULL);
+        /* we want to return NOT_LINKED for unselected pads but only for pads
+         * from the normal uridecodebin. This makes sure that subtitle streams
+         * are not raced past audio/video from decodebin2's multiqueue.
+         * For pads from suburidecodebin OK should always be returned, otherwise
+         * it will most likely stop. */
+        g_object_set (sinkpad, "always-ok", always_ok, NULL);
         signal = SIGNAL_VIDEO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_AUDIO:
       case GST_PLAY_SINK_TYPE_AUDIO_RAW:
-        g_object_set (sinkpad, "always-ok", FALSE, NULL);
+        g_object_set (sinkpad, "always-ok", always_ok, NULL);
         signal = SIGNAL_AUDIO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_TEXT:
+        g_object_set (sinkpad, "always-ok", always_ok, NULL);
         signal = SIGNAL_TEXT_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_SUBPIC:
