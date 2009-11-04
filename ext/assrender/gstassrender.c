@@ -262,8 +262,10 @@ gst_assrender_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      render->subtitle_flushing = FALSE;
+      break;
+    case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;
@@ -612,6 +614,9 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
+  if (render->subtitle_flushing)
+    return GST_FLOW_WRONG_STATE;
+
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   if (timestamp > render->video_segment.last_stop) {
@@ -741,6 +746,7 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+      render->subtitle_flushing = FALSE;
       gst_event_unref (event);
       ret = TRUE;
       break;
@@ -761,6 +767,7 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
       if (render->subtitle_pending)
         gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
+      render->subtitle_flushing = TRUE;
       g_cond_signal (render->subtitle_cond);
       g_mutex_unlock (render->subtitle_mutex);
       gst_event_unref (event);
