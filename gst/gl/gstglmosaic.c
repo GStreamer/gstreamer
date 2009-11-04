@@ -220,8 +220,7 @@ gst_gl_mosaic_callback (gpointer stuff)
     0, 2, 3
   };
 
-
-  gint count = 0;
+  guint count = 0;
   gboolean do_next = TRUE;
 
   gst_gl_shader_use (NULL);
