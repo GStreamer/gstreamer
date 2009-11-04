@@ -2253,9 +2253,9 @@ asf_demux_parse_picture_tag (GstTagList * tags, const guint8 * tag_data,
     guint tag_data_len)
 {
   GstByteReader r;
-  const guint8 *img_data;
-  guint32 img_data_len;
-  guint8 pic_type;
+  const guint8 *img_data = NULL;
+  guint32 img_data_len = 0;
+  guint8 pic_type = 0;
 
   gst_byte_reader_init (&r, tag_data, tag_data_len);
 
