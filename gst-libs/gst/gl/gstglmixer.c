@@ -597,12 +597,22 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
           gst_structure_get_name (structure)) == 0;
 
       if (!res) {
-        /* id_value is set by upstream element of itself when going to paused state */
-        const GValue *id_value =
+        GstGLDisplay *foreign_display = NULL;
+        gulong foreign_gl_context = 0;
+
+        if (mix->display) {
+          /* this gl filter is a sink in terms of the gl chain */
+          foreign_display = mix->display;
+        } else {
+          /* at least one gl element is after in our gl chain */
+          /* id_value is set by upstream element of itself when going
+           * to paused state */
+          const GValue *id_value =
             gst_structure_get_value (structure, "gstgldisplay");
-        GstGLDisplay *foreign_display =
-            GST_GL_DISPLAY (g_value_get_pointer (id_value));
-        gulong foreign_gl_context =
+          foreign_display = GST_GL_DISPLAY (g_value_get_pointer (id_value));
+        }
+        
+        foreign_gl_context =
             gst_gl_display_get_internal_gl_context (foreign_display);
 
         /* iterate on each sink pad until reaching the gl element
@@ -1230,10 +1240,11 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
           /* at least one gl element is after in our gl chain */
           mix->display =
               g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-        else
+        else {
           /* this gl filter is a sink in terms of the gl chain */
           mix->display = gst_gl_display_new ();
-        gst_gl_display_create_context (mix->display, 0);
+          gst_gl_display_create_context (mix->display, 0);
+        }
       }
 
       gst_query_unref (query);
