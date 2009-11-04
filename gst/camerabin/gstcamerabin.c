@@ -298,6 +298,8 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps);
 static void gst_camerabin_finish_image_capture (GstCameraBin * camera);
 static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
     GstCaps * new_caps);
+static void gst_camerabin_configure_format (GstCameraBin * camera,
+    GstCaps * caps);
 
 /*
  * GObject callback functions declaration
@@ -1392,19 +1394,9 @@ gst_camerabin_rewrite_tags (GstCameraBin * camera)
 static void
 gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps)
 {
-  GstStructure *st;
-
   GST_INFO_OBJECT (camera, "new_caps:%" GST_PTR_FORMAT, new_caps);
 
-  st = gst_caps_get_structure (new_caps, 0);
-
-  gst_structure_get_int (st, "width", &camera->width);
-  gst_structure_get_int (st, "height", &camera->height);
-
-  if (gst_structure_has_field (st, "framerate")) {
-    gst_structure_get_fraction (st, "framerate", &camera->fps_n,
-        &camera->fps_d);
-  }
+  gst_camerabin_configure_format (camera, new_caps);
 
   /* Update zoom */
   gst_camerabin_setup_zoom (camera);
@@ -2332,6 +2324,30 @@ gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
 }
 
 /*
+ * gst_camerabin_configure_format:
+ * @camera: camerabin object
+ * @caps: caps describing new format
+ *
+ * Configure internal video format for camerabin.
+ *
+ */
+static void
+gst_camerabin_configure_format (GstCameraBin * camera, GstCaps * caps)
+{
+  GstStructure *st;
+
+  st = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (st, "width", &camera->width);
+  gst_structure_get_int (st, "height", &camera->height);
+
+  if (gst_structure_has_field_typed (st, "framerate", GST_TYPE_FRACTION)) {
+    gst_structure_get_fraction (st, "framerate", &camera->fps_n,
+        &camera->fps_d);
+  }
+}
+
+/*
  * GObject callback functions implementation
  */
 
@@ -2976,9 +2992,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       gst_caps_replace (&camera->view_finder_caps,
           (GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (camera);
-      if (GST_STATE (camera) != GST_STATE_NULL) {
-        gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
-      }
+      gst_camerabin_configure_format (camera, camera->view_finder_caps);
       break;
     case ARG_PREVIEW_CAPS:
     {
