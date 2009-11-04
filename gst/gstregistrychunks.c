@@ -810,6 +810,6 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
 
   /* Errors */
 fail:
-  GST_INFO ("Reading plugin failed after %d bytes", end - start);
+  GST_INFO ("Reading plugin failed after %u bytes", (guint) (end - start));
   return FALSE;
 }
