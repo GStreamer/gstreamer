@@ -342,6 +342,8 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
   } else {
     GstAviAudioPad *audpad = (GstAviAudioPad *) avipad;
 
+    audpad->samples = 0;
+
     avipad->hdr.type = GST_MAKE_FOURCC ('a', 'u', 'd', 's');
     if (audpad->auds_codec_data) {
       gst_buffer_unref (audpad->auds_codec_data);
@@ -1467,8 +1469,8 @@ gst_avi_mux_riff_get_header (GstAviPad * avipad, guint32 video_frame_size)
 
 /* write an odml index chunk in the movi list */
 static GstFlowReturn
-gst_avi_mux_write_avix_index (GstAviMux * avimux, gchar * code,
-    gchar * chunk, gst_avi_superindex_entry * super_index,
+gst_avi_mux_write_avix_index (GstAviMux * avimux, GstAviPad * avipad,
+    gchar * code, gchar * chunk, gst_avi_superindex_entry * super_index,
     gint * super_index_count)
 {
   GstFlowReturn res;
@@ -1477,6 +1479,17 @@ gst_avi_mux_write_avix_index (GstAviMux * avimux, gchar * code,
   gst_riff_index_entry *entry;
   gint i;
   guint32 size, entry_count;
+  gboolean is_pcm = FALSE;
+  guint32 pcm_samples = 0;
+
+  /* check if it is pcm */
+  if (avipad && !avipad->is_video) {
+    GstAviAudioPad *audiopad = (GstAviAudioPad *) avipad;
+    if (audiopad->auds.format == GST_RIFF_WAVE_FORMAT_PCM) {
+      pcm_samples = audiopad->samples;
+      is_pcm = TRUE;
+    }
+  }
 
   /* allocate the maximum possible */
   buffer = gst_buffer_new_and_alloc (32 + 8 * avimux->idx_index);
@@ -1528,7 +1541,11 @@ gst_avi_mux_write_avix_index (GstAviMux * avimux, gchar * code,
     i = *super_index_count;
     super_index[i].offset = GUINT64_TO_LE (avimux->total_data);
     super_index[i].size = GUINT32_TO_LE (size);
-    super_index[i].duration = GUINT32_TO_LE (entry_count);
+    if (is_pcm) {
+      super_index[i].duration = GUINT32_TO_LE (pcm_samples);
+    } else {
+      super_index[i].duration = GUINT32_TO_LE (entry_count);
+    }
     (*super_index_count)++;
   } else
     GST_WARNING_OBJECT (avimux, "No more room in superindex of stream %s",
@@ -1547,15 +1564,26 @@ gst_avi_mux_write_avix_index (GstAviMux * avimux, gchar * code,
 /* some other usable functions (thankyou xawtv ;-) ) */
 
 static void
-gst_avi_mux_add_index (GstAviMux * avimux, gchar * code, guint32 flags,
+gst_avi_mux_add_index (GstAviMux * avimux, GstAviPad * avipad, guint32 flags,
     guint32 size)
 {
+  gchar *code = avipad->tag;
   if (avimux->idx_index == avimux->idx_count) {
     avimux->idx_count += 256;
     avimux->idx =
         g_realloc (avimux->idx,
         avimux->idx_count * sizeof (gst_riff_index_entry));
   }
+
+  /* in case of pcm audio, we need to count the number of samples for
+   * putting in the indx entries */
+  if (!avipad->is_video) {
+    GstAviAudioPad *audiopad = (GstAviAudioPad *) avipad;
+    if (audiopad->auds.format == GST_RIFF_WAVE_FORMAT_PCM) {
+      audiopad->samples += size / audiopad->auds.blockalign;
+    }
+  }
+
   memcpy (&(avimux->idx[avimux->idx_index].id), code, 4);
   avimux->idx[avimux->idx_index].flags = GUINT32_TO_LE (flags);
   avimux->idx[avimux->idx_index].offset = GUINT32_TO_LE (avimux->idx_offset);
@@ -1615,7 +1643,7 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
 
     node = node->next;
 
-    res = gst_avi_mux_write_avix_index (avimux, avipad->tag,
+    res = gst_avi_mux_write_avix_index (avimux, avipad, avipad->tag,
         avipad->idx_tag, avipad->idx, &avipad->idx_index);
     if (res != GST_FLOW_OK)
       return res;
@@ -1657,6 +1685,15 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
   avimux->numx_frames = 0;
   avimux->datax_size = 4;       /* movi tag */
   avimux->idx_index = 0;
+  node = avimux->sinkpads;
+  while (node) {
+    GstAviPad *avipad = (GstAviPad *) node->data;
+    node = node->next;
+    if (!avipad->is_video) {
+      GstAviAudioPad *audiopad = (GstAviAudioPad *) avipad;
+      audiopad->samples = 0;
+    }
+  }
 
   header = gst_avi_mux_riff_get_avix_header (0);
   avimux->total_data += GST_BUFFER_SIZE (header);
@@ -1946,7 +1983,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
     audpad->audio_time += GST_BUFFER_DURATION (data);
   }
 
-  gst_avi_mux_add_index (avimux, avipad->tag, flags, GST_BUFFER_SIZE (data));
+  gst_avi_mux_add_index (avimux, avipad, flags, GST_BUFFER_SIZE (data));
 
   /* prepare buffers for sending */
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));

@@ -115,6 +115,12 @@ typedef struct _GstAviAudioPad {
   /* audio info for bps calculation */
   guint32 audio_size;
   guint64 audio_time;
+
+  /* counts the number of samples to put in indx chunk
+   * useful for raw audio where usually there are more than
+   * 1 sample in each GstBuffer */
+  gint samples;
+
   /* extra data */
   GstBuffer *auds_codec_data;
 } GstAviAudioPad;
