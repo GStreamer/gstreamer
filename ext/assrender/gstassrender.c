@@ -757,6 +757,12 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
         GST_OBJECT_UNLOCK (render);
         GST_DEBUG_OBJECT (render, "done flushing");
       }
+      g_mutex_lock (render->subtitle_mutex);
+      if (render->subtitle_pending)
+        gst_buffer_unref (render->subtitle_pending);
+      render->subtitle_pending = NULL;
+      g_cond_signal (render->subtitle_cond);
+      g_mutex_unlock (render->subtitle_mutex);
       gst_event_unref (event);
       ret = TRUE;
       break;
