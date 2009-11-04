@@ -292,6 +292,7 @@ gst_auto_convert_set_property (GObject * object,
       if (autoconvert->factories == NULL) {
         GList *factories = g_value_get_pointer (value);
         autoconvert->factories = g_list_copy (factories);
+        g_list_foreach (autoconvert->factories, (GFunc) g_object_ref, NULL);
       } else
         GST_WARNING_OBJECT (object, "Can not reset factories after they"
             " have been set or auto-discovered");
