@@ -261,6 +261,7 @@ gst_gl_download_start (GstBaseTransform * bt)
   GstGLDownload* download = GST_GL_DOWNLOAD (bt);
 
   download->display = gst_gl_display_new ();
+  gst_gl_display_create_context (download->display, 0);
 
   return TRUE;
 }
