@@ -407,6 +407,10 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
   GST_EVENT_SEQNUM (event) = seqnum;
 }
 
+/* FIXME 0.11: It would be nice to have flush events
+ * that don't reset the running time in the sinks
+ */
+
 /**
  * gst_event_new_flush_start:
  *
