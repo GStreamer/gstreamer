@@ -3722,7 +3722,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GstByteReader stsz;
   GstByteReader stsc;
   GstByteReader stts;
-  GNode *ctts;
+  GstByteReader ctts;
   guint32 sample_size = 0;
   guint32 n_samples = 0;
   guint32 n_samples_per_chunk = 0;
@@ -4101,24 +4101,22 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   /* composition time to sample */
-  if ((ctts = qtdemux_tree_get_child_by_type (stbl, FOURCC_ctts))) {
-    const guint8 *ctts_data, *ctts_p;
+  if (qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts, &ctts)) {
     guint32 n_entries;
     guint32 count;
     gint32 soffset;
 
-    ctts_data = (const guint8 *) ctts->data;
-    n_entries = QT_UINT32 (ctts_data + 12);
+    gst_byte_reader_skip (&ctts, 1 + 3);
+    n_entries = gst_byte_reader_get_uint32_be_unchecked (&ctts);
+
+    if (!qt_atom_parser_has_chunks (&ctts, n_entries, 4 + 4))
+      goto corrupt_file;
 
     /* Fill in the pts_offsets */
     index = 0;
-    ctts_p = ctts_data + 16;
-    /* FIXME: make sure we don't read beyond the atom size/boundary */
     for (i = 0; i < n_entries; i++) {
-      count = QT_UINT32 (ctts_p);
-      ctts_p += 4;
-      soffset = QT_UINT32 (ctts_p);
-      ctts_p += 4;
+      count = gst_byte_reader_get_uint32_be_unchecked (&ctts);
+      soffset = gst_byte_reader_get_uint32_be_unchecked (&ctts);
       for (j = 0; j < count; j++) {
         /* we operate with very small soffset values here, it shouldn't overflow */
         samples[index].pts_offset = soffset * GST_SECOND / stream->timescale;
