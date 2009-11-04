@@ -490,7 +490,7 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (a52dec,
             "Pushing newseg rate %g, applied rate %g, format %d, start %"
             G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %"
-            G_GINT64_FORMAT, rate, arate, fmt, start, end, time);
+            G_GINT64_FORMAT, rate, arate, fmt, start, end, pos);
 
         ret = gst_pad_push_event (a52dec->srcpad, event);
       }
