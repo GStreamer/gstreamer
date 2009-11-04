@@ -605,7 +605,6 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
   }
 #endif
 
-
   newplugin = gst_plugin_load_file ((gchar *) filename, NULL);
   if (newplugin) {
     guint hdr_pos;
@@ -733,7 +732,8 @@ handle_rx_packet (GstPluginLoader * l,
           tag, payload_len);
 
       /* Assume that tagged details come back in the order
-       * we requested, and delete anything before this one */
+       * we requested, and delete anything before (but not
+       * including) this one */
       cur = l->pending_plugins;
       while (cur) {
         PendingPluginEntry *e = (PendingPluginEntry *) (cur->data);
@@ -741,24 +741,30 @@ handle_rx_packet (GstPluginLoader * l,
         if (e->tag > tag)
           break;
 
-        cur = g_list_delete_link (cur, cur);
-
         if (e->tag == tag) {
           entry = e;
           break;
         } else {
+          cur = g_list_delete_link (cur, cur);
           g_free (e->filename);
           g_free (e);
         }
       }
+
       l->pending_plugins = cur;
       if (cur == NULL)
         l->pending_plugins_tail = NULL;
 
       if (payload_len > 0) {
-        GstPlugin *newplugin;
-        _priv_gst_registry_chunks_load_plugin (l->registry, &tmp,
-            tmp + payload_len, &newplugin);
+        GstPlugin *newplugin = NULL;
+        if (!_priv_gst_registry_chunks_load_plugin (l->registry, &tmp,
+                tmp + payload_len, &newplugin)) {
+          /* Got garbage from the child, so fail and trigger replay of plugins */
+          GST_ERROR_OBJECT (l->registry,
+              "Problems loading plugin details with tag %u from scanner", tag);
+          return FALSE;
+        }
+
         newplugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
         GST_LOG_OBJECT (l->registry,
             "marking plugin %p as registered as %s", newplugin,
@@ -777,6 +783,14 @@ handle_rx_packet (GstPluginLoader * l,
         g_free (entry->filename);
         g_free (entry);
       }
+
+      /* Remove the plugin entry we just loaded */
+      cur = l->pending_plugins;
+      if (cur != NULL)
+        cur = g_list_delete_link (cur, cur);
+      l->pending_plugins = cur;
+      if (cur == NULL)
+        l->pending_plugins_tail = NULL;
 
       break;
     }
@@ -895,13 +909,12 @@ exchange_packets (GstPluginLoader * l)
       if (gst_poll_fd_has_error (l->fdset, &l->fd_r) ||
           gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
         GST_LOG ("read fd %d closed/errored", l->fd_r.fd);
-        plugin_loader_cleanup_child (l);
-        return FALSE;
+        goto fail_and_cleanup;
       }
 
       if (gst_poll_fd_can_read (l->fdset, &l->fd_r)) {
         if (!read_one (l))
-          return FALSE;
+          goto fail_and_cleanup;
       }
     }
 
@@ -909,15 +922,17 @@ exchange_packets (GstPluginLoader * l)
       if (gst_poll_fd_has_error (l->fdset, &l->fd_w) ||
           gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
         GST_ERROR ("write fd %d closed/errored", l->fd_w.fd);
-        plugin_loader_cleanup_child (l);
-        return FALSE;
+        goto fail_and_cleanup;
       }
       if (gst_poll_fd_can_write (l->fdset, &l->fd_w)) {
         if (!write_one (l))
-          return FALSE;
+          goto fail_and_cleanup;
       }
     }
   } while (l->tx_buf_read < l->tx_buf_write);
 
   return TRUE;
+fail_and_cleanup:
+  plugin_loader_cleanup_child (l);
+  return FALSE;
 }
