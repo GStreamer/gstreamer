@@ -83,8 +83,38 @@ enum
 {
   PROP_GAIN = 1,
   PROP_FREQ,
-  PROP_BANDWIDTH
+  PROP_BANDWIDTH,
+  PROP_TYPE
 };
+
+typedef enum
+{
+  BAND_TYPE_PEAK = 0,
+  BAND_TYPE_LOW_SHELF,
+  BAND_TYPE_HIGH_SHELF
+} GstIirEqualizerBandType;
+
+#define GST_TYPE_IIR_EQUALIZER_BAND_TYPE (gst_iir_equalizer_band_type_get_type ())
+static GType
+gst_iir_equalizer_band_type_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {BAND_TYPE_PEAK, "Peak filter (default for inner bands)", "peak"},
+      {BAND_TYPE_LOW_SHELF, "Low shelf filter (default for first band)",
+          "low-shelf"},
+      {BAND_TYPE_HIGH_SHELF, "High shelf filter (default for last band)",
+          "high-shelf"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstIirEqualizerBandType", values);
+  }
+  return gtype;
+}
+
 
 typedef struct _GstIirEqualizerBandClass GstIirEqualizerBandClass;
 
@@ -108,6 +138,7 @@ struct _GstIirEqualizerBand
   gdouble freq;
   gdouble gain;
   gdouble width;
+  GstIirEqualizerBandType type;
 
   /* second order iir filter */
   gdouble b1, b2;               /* IIR coefficients for outputs */
@@ -177,6 +208,22 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_TYPE:{
+      GstIirEqualizerBandType type;
+
+      type = g_value_get_enum (value);
+      GST_DEBUG_OBJECT (band, "type = %d -> %d", band->type, type);
+      if (type != band->type) {
+        GstIirEqualizer *equ =
+            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
+
+        equ->need_new_coefficients = TRUE;
+        band->type = type;
+        gst_object_unref (equ);
+        GST_DEBUG_OBJECT (band, "changed type = %d ", band->type);
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -198,6 +245,9 @@ gst_iir_equalizer_band_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BANDWIDTH:
       g_value_set_double (value, band->width);
+      break;
+    case PROP_TYPE:
+      g_value_set_enum (value, band->type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -230,6 +280,12 @@ gst_iir_equalizer_band_class_init (GstIirEqualizerBandClass * klass)
           "difference between bandedges in Hz",
           0.0, 100000.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_TYPE,
+      g_param_spec_enum ("type", "Type",
+          "Filter type", GST_TYPE_IIR_EQUALIZER_BAND_TYPE,
+          BAND_TYPE_PEAK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 }
 
 static void
@@ -239,6 +295,7 @@ gst_iir_equalizer_band_init (GstIirEqualizerBand * band,
   band->freq = 0.0;
   band->gain = 0.0;
   band->width = 1.0;
+  band->type = BAND_TYPE_PEAK;
 }
 
 static GType
@@ -545,11 +602,14 @@ update_coefficients (GstIirEqualizer * equ)
 {
   gint i, n = equ->freq_band_count;
 
-  setup_low_shelf_filter (equ, equ->bands[0]);
   for (i = 1; i < n - 1; i++) {
-    setup_peak_filter (equ, equ->bands[i]);
+    if (equ->bands[i]->type == BAND_TYPE_PEAK)
+      setup_peak_filter (equ, equ->bands[i]);
+    else if (equ->bands[i]->type == BAND_TYPE_LOW_SHELF)
+      setup_low_shelf_filter (equ, equ->bands[i]);
+    else
+      setup_high_shelf_filter (equ, equ->bands[i]);
   }
-  setup_high_shelf_filter (equ, equ->bands[n - 1]);
 
   equ->need_new_coefficients = FALSE;
 }
@@ -614,6 +674,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   freq0 = LOWEST_FREQ;
   for (i = 0; i < new_count; i++) {
     freq1 = freq0 * step;
+    equ->bands[i]->type = BAND_TYPE_PEAK;
     equ->bands[i]->freq = freq0 + ((freq1 - freq0) / 2.0);
     equ->bands[i]->width = freq1 - freq0;
     GST_DEBUG ("band[%2d] = '%lf'", i, equ->bands[i]->freq);
@@ -627,6 +688,8 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
      */
     freq0 = freq1;
   }
+  equ->bands[0]->type = BAND_TYPE_LOW_SHELF;
+  equ->bands[new_count - 1]->type = BAND_TYPE_HIGH_SHELF;
 
   equ->need_new_coefficients = TRUE;
 }
