@@ -456,7 +456,7 @@ gst_selector_pad_getcaps (GstPad * pad)
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (sel, "Getting caps of srcpad peer");
-  caps = gst_pad_peer_get_caps (sel->srcpad);
+  caps = gst_pad_peer_get_caps_reffed (sel->srcpad);
   if (caps == NULL)
     caps = gst_caps_new_any ();
 
@@ -1192,7 +1192,7 @@ gst_input_selector_getcaps (GstPad * pad)
         GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (otherpad));
     /* if the peer has caps, use those. If the pad is not linked, this function
      * returns NULL and we return ANY */
-    if (!(caps = gst_pad_peer_get_caps (otherpad)))
+    if (!(caps = gst_pad_peer_get_caps_reffed (otherpad)))
       caps = gst_caps_new_any ();
     gst_object_unref (otherpad);
   }
