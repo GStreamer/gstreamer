@@ -272,6 +272,7 @@ gst_assrender_change_state (GstElement * element, GstStateChange transition)
 
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       g_mutex_lock (render->subtitle_mutex);
+      render->subtitle_flushing = TRUE;
       if (render->subtitle_pending)
         gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
@@ -622,6 +623,12 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
   if (timestamp > render->video_segment.last_stop) {
     g_assert (render->subtitle_pending == NULL);
     g_mutex_lock (render->subtitle_mutex);
+    if (G_UNLIKELY (render->subtitle_flushing)) {
+      GST_DEBUG_OBJECT (render, "Text pad flushing");
+      gst_object_unref (buffer);
+      g_mutex_unlock (render->subtitle_mutex);
+      return GST_FLOW_WRONG_STATE;
+    }
     render->subtitle_pending = buffer;
     g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
     g_mutex_unlock (render->subtitle_mutex);
