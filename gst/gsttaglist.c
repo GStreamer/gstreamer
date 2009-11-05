@@ -650,13 +650,17 @@ GstTagCopyData;
 
 static void
 gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
-    GQuark tag, const GValue * value)
+    GQuark tag, const GValue * value, GstTagInfo * info)
 {
-  GstTagInfo *info = gst_tag_lookup (tag);
-
   const GValue *value2;
 
-  g_assert (info != NULL);
+  if (info == NULL) {
+    info = gst_tag_lookup (tag);
+    if (G_UNLIKELY (info == NULL)) {
+      g_warning ("unknown tag '%s'", g_quark_to_string (tag));
+      return;
+    }
+  }
 
   if (info->merge_func
       && (value2 = gst_structure_id_get_value (list, tag)) != NULL) {
@@ -710,7 +714,7 @@ gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
 {
   GstTagCopyData *copy = (GstTagCopyData *) user_data;
 
-  gst_tag_list_add_value_internal (copy->list, copy->mode, tag, value);
+  gst_tag_list_add_value_internal (copy->list, copy->mode, tag, value, NULL);
 
   return TRUE;
 }
@@ -913,9 +917,10 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
 
     quark = g_quark_from_string (tag);
     info = gst_tag_lookup (quark);
-    if (info == NULL)
-      g_warning ("no GstTag for %s", tag);
-    g_return_if_fail (info != NULL);
+    if (G_UNLIKELY (info == NULL)) {
+      g_warning ("unknown tag '%s'", tag);
+      return;
+    }
     g_value_init (&value, info->type);
     G_VALUE_COLLECT (&value, var_args, 0, &error);
     if (error) {
@@ -926,7 +931,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
        */
       return;
     }
-    gst_tag_list_add_value_internal (list, mode, quark, &value);
+    gst_tag_list_add_value_internal (list, mode, quark, &value, info);
     g_value_unset (&value);
     tag = va_arg (var_args, gchar *);
   }
@@ -959,7 +964,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     quark = g_quark_from_string (tag);
     g_return_if_fail (gst_tag_lookup (quark) != NULL);
     gst_tag_list_add_value_internal (list, mode, quark, va_arg (var_args,
-            GValue *));
+            GValue *), NULL);
     tag = va_arg (var_args, gchar *);
   }
 }
@@ -984,7 +989,7 @@ gst_tag_list_add_value (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (tag != NULL);
 
   gst_tag_list_add_value_internal (list, mode, g_quark_from_string (tag),
-      value);
+      value, NULL);
 }
 
 /**
