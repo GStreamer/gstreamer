@@ -2199,6 +2199,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
     "WM/AlbumArtist", GST_TAG_ARTIST}, {
     "WM/Picture", GST_TAG_IMAGE}, {
     "WM/Track", GST_TAG_TRACK_NUMBER}, {
+    "WM/TrackNumber", GST_TAG_TRACK_NUMBER}, {
     "WM/Year", GST_TAG_DATE}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
