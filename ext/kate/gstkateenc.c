@@ -407,7 +407,7 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
   buffer = gst_buffer_try_new_and_alloc (kp->nbytes);
   if (G_UNLIKELY (!buffer)) {
     GST_WARNING_OBJECT (ke, "Failed to allocate buffer for %u bytes",
-        kp->nbytes);
+        (guint) kp->nbytes);
     return NULL;
   }
 
@@ -459,12 +459,12 @@ gst_kate_enc_push_and_free_kate_packet (GstKateEnc * ke, kate_packet * kp,
 {
   GstBuffer *buffer;
 
-  GST_LOG_OBJECT (ke, "Creating buffer, %u bytes", kp->nbytes);
+  GST_LOG_OBJECT (ke, "Creating buffer, %u bytes", (guint) kp->nbytes);
   buffer =
       gst_kate_enc_create_buffer (ke, kp, granpos, timestamp, duration, header);
   if (G_UNLIKELY (!buffer)) {
     GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-        ("Failed to create buffer, %u bytes", kp->nbytes));
+        ("Failed to create buffer, %u bytes", (guint) kp->nbytes));
     kate_packet_clear (kp);
     return GST_FLOW_ERROR;
   }
@@ -609,7 +609,7 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
       buffer = gst_kate_enc_create_buffer (ke, &kp, 0, 0, 0, TRUE);
       if (!buffer) {
         GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-            ("Failed to create buffer, %u bytes", kp.nbytes));
+            ("Failed to create buffer, %u bytes", (guint) kp.nbytes));
         rflow = GST_FLOW_ERROR;
         break;
       }
@@ -861,8 +861,10 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
       }
     }
 #endif
-    GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f",
-        kbitmap->width, kbitmap->height, GST_BUFFER_SIZE (buf), t0, t1);
+    GST_DEBUG_OBJECT (ke, "Encoding %ux%u SPU: (%u bytes) from %f to %f",
+        (guint) kbitmap->width, (guint) kbitmap->height,
+        GST_BUFFER_SIZE (buf), t0, t1);
+
     ret = kate_encode_set_region (&ke->k, kregion);
     if (G_UNLIKELY (ret < 0)) {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),

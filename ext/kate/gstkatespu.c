@@ -484,7 +484,7 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   ptr = GST_BUFFER_DATA (buf) + next_command_sequence;
   sz = GST_BUFFER_SIZE (buf) - next_command_sequence;
   GST_DEBUG_OBJECT (ke, "next command sequence at %u for %u",
-      next_command_sequence, sz);
+      next_command_sequence, (guint) sz);
 
   rflow = gst_kate_spu_decode_command_sequence (ke, buf, next_command_sequence);
   if (G_UNLIKELY (rflow != GST_FLOW_OK))
@@ -552,7 +552,8 @@ gst_kate_spu_decode_spu (GstKateEnc * ke, GstBuffer * buf, kate_region * kr,
   }
 
   GST_LOG_OBJECT (ke, "%u/%u bytes left in the data packet",
-      max_nybbles[0] - nybble_offset[0], max_nybbles[1] - nybble_offset[1]);
+      (guint) (max_nybbles[0] - nybble_offset[0]),
+      (guint) (max_nybbles[1] - nybble_offset[1]));
 
   /* some streams seem to have huge uncropped SPUs, fix those up */
   x = ke->spu_left;
