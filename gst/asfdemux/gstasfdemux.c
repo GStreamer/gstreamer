@@ -2445,9 +2445,16 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
           break;
         }
         case ASF_DEMUX_DATA_TYPE_DWORD:{
+          guint uint_val = GST_READ_UINT32_LE (value);
+
           /* this is the track number */
           g_value_init (&tag_value, G_TYPE_UINT);
-          g_value_set_uint (&tag_value, (guint) GST_READ_UINT32_LE (value));
+
+          /* WM/Track counts from 0 */
+          if (!strcmp (name_utf8, "WM/Track"))
+            ++uint_val;
+
+          g_value_set_uint (&tag_value, uint_val);
           break;
         }
         default:{
