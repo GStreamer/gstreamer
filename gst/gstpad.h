@@ -890,7 +890,7 @@ void			gst_pad_set_setcaps_function		(GstPad *pad, GstPadSetCapsFunction setcaps
 G_CONST_RETURN GstCaps*	gst_pad_get_pad_template_caps		(GstPad *pad);
 
 /* capsnego function for linked/unlinked pads */
-GstCaps *		gst_pad_get_caps_reffed		(GstPad * pad);
+GstCaps *		gst_pad_get_caps_reffed                 (GstPad * pad);
 GstCaps *		gst_pad_get_caps			(GstPad * pad);
 void			gst_pad_fixate_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
