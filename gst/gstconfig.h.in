@@ -156,6 +156,32 @@
  * header files so we know whether we can use G_GNUC_PRINTF or not */
 @GST_USING_PRINTF_EXTENSION_DEFINE@
 
+/* GST_DISABLE_PRINTF_EXTENSION:
+ *
+ * Define this to debug your debug log messages and make gcc spew warnings
+ * if printf format string and arguments don't match up (this is usually
+ * not the case when libc and gcc are used because printf format warnings
+ * have to be disabled when the printf extension mechanism is in use).
+ *
+ * Note that using this option disables 'pretty logging' of GStreamer objects
+ * like caps, tags, structures, events, pads etc., so that only their address
+ * will be printed in the log.
+ *
+ * This define only disables use of the special registered printf format
+ * extensions in the code compiled with it defined. It does not stop
+ * GStreamer from registering these extensions in the first place if it
+ * was compiled against a libc that supports this.
+ *
+ * (not official API)
+ */
+#ifdef GST_DISABLE_PRINTF_EXTENSION
+  #undef GST_PTR_FORMAT
+  #define GST_PTR_FORMAT "p"
+  #undef GST_SEGMENT_FORMAT
+  #define GST_SEGMENT_FORMAT "p"
+  #undef GST_USING_PRINTF_EXTENSION
+#endif
+
 /* whether or not the CPU supports unaligned access */
 @GST_HAVE_UNALIGNED_ACCESS_DEFINE@
 
