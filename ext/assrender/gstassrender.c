@@ -175,6 +175,7 @@ gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
   render->embeddedfonts = TRUE;
 
   gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
+  gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
 
   render->ass_library = ass_library_init ();
   ass_set_fonts_dir (render->ass_library, "./");
@@ -264,6 +265,8 @@ gst_assrender_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       render->subtitle_flushing = FALSE;
+      gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
+      gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
       break;
     case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -451,17 +454,22 @@ gst_assrender_setcaps_text (GstPad * pad, GstCaps * caps)
 
 
 static void
-gst_assrender_process_text (Gstassrender * render, GstBuffer * buffer)
+gst_assrender_process_text (Gstassrender * render, GstBuffer * buffer,
+    GstClockTime running_time, GstClockTime duration)
 {
   char *data = (gchar *) GST_BUFFER_DATA (buffer);
   guint size = GST_BUFFER_SIZE (buffer);
   double pts_start, pts_end;
 
-  pts_start = GST_BUFFER_TIMESTAMP (buffer);
+  pts_start = running_time;
   pts_start /= GST_MSECOND;
-  pts_end = GST_BUFFER_DURATION (buffer);
+  pts_end = duration;
   pts_end /= GST_MSECOND;
 
+  GST_DEBUG_OBJECT (render,
+      "Processing subtitles with running time %" GST_TIME_FORMAT
+      " and duration %" GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
+      GST_TIME_ARGS (duration));
   ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
   gst_buffer_unref (buffer);
 }
@@ -473,8 +481,6 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean in_seg = FALSE;
   gint64 start, stop, clip_start = 0, clip_stop = 0;
-  double timestamp;
-  double step;
   ASS_Image *ass_image;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
@@ -520,14 +526,25 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
 
   g_mutex_lock (render->subtitle_mutex);
   if (render->subtitle_pending) {
-    if (GST_BUFFER_TIMESTAMP (render->subtitle_pending) <=
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)) {
-      gst_assrender_process_text (render, render->subtitle_pending);
+    GstClockTime sub_running_time, vid_running_time;
+    GstClockTime sub_duration, vid_duration;
+
+    sub_running_time =
+        gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (render->subtitle_pending));
+    vid_running_time =
+        gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buffer));
+
+    sub_duration = GST_BUFFER_DURATION (render->subtitle_pending);
+    vid_duration = GST_BUFFER_DURATION (buffer);
+
+    if (sub_running_time <= vid_running_time + vid_duration) {
+      gst_assrender_process_text (render, render->subtitle_pending,
+          sub_running_time, sub_duration);
       render->subtitle_pending = NULL;
       g_cond_signal (render->subtitle_cond);
-    } else if (GST_BUFFER_TIMESTAMP (render->subtitle_pending) +
-        GST_BUFFER_DURATION (render->subtitle_pending) <=
-        GST_BUFFER_TIMESTAMP (buffer)) {
+    } else if (sub_running_time + sub_duration <= vid_running_time) {
       gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
       g_cond_signal (render->subtitle_cond);
@@ -538,19 +555,24 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
   /* now start rendering subtitles, if all conditions are met */
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
     int counter;
+    GstClockTime running_time;
+    double timestamp;
+    double step;
 
-    timestamp = GST_BUFFER_TIMESTAMP (buffer);
-    GST_DEBUG_OBJECT (render, "rendering frame for timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+    running_time =
+        gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buffer));
+    GST_DEBUG_OBJECT (render,
+        "rendering frame for running time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (running_time));
     /* libass needs timestamps in ms */
-    timestamp = timestamp / GST_MSECOND;
+    timestamp = running_time / GST_MSECOND;
 
     /* only for testing right now. could possibly be used for optimizations? */
     step = ass_step_sub (render->ass_track, timestamp, 1);
-    GST_DEBUG_OBJECT (render, "Current timestamp: %" GST_TIME_FORMAT
+    GST_DEBUG_OBJECT (render, "Current running time: %" GST_TIME_FORMAT
         " // Next event: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-        GST_TIME_ARGS (step * GST_MSECOND));
+        GST_TIME_ARGS (running_time), GST_TIME_ARGS (step * GST_MSECOND));
 
     /* not sure what the last parameter to this call is for (detect_change) */
     ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
@@ -612,6 +634,7 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   Gstassrender *render;
   GstClockTime timestamp, duration;
+  GstClockTime sub_running_time, vid_running_time;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
@@ -629,7 +652,14 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  if (timestamp > render->video_segment.last_stop) {
+  sub_running_time =
+      gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
+      timestamp);
+  vid_running_time =
+      gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
+      render->video_segment.last_stop);
+
+  if (sub_running_time > vid_running_time) {
     g_assert (render->subtitle_pending == NULL);
     g_mutex_lock (render->subtitle_mutex);
     if (G_UNLIKELY (render->subtitle_flushing)) {
@@ -642,12 +672,12 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
     render->subtitle_pending = buffer;
     g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
     g_mutex_unlock (render->subtitle_mutex);
-  } else if (timestamp + duration < render->video_segment.last_stop) {
+  } else if (sub_running_time + duration < vid_running_time) {
     GST_DEBUG_OBJECT (render, "Too late text buffer, dropping");
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
   } else {
-    gst_assrender_process_text (render, buffer);
+    gst_assrender_process_text (render, buffer, sub_running_time, duration);
   }
 
   GST_DEBUG_OBJECT (render,
