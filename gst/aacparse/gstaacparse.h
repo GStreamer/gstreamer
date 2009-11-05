@@ -88,18 +88,10 @@ struct _GstAacParse {
   gint           sample_rate;
   gint           channels;
   gint           mpegversion;
-  gfloat         frames_per_sec;
 
   GstAacHeaderType header_type;
 
-  guint64 framecount;
-  guint64 bytecount;
   gboolean src_caps_set;
-  gboolean sync;
-  gboolean eos;
-
-  GstClockTime duration;
-  GstClockTime ts;
 };
 
 /**

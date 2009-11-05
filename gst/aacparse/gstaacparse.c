@@ -156,8 +156,6 @@ gst_aacparse_class_init (GstAacParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_aacparse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_aacparse_stop);
-  parse_class->event = GST_DEBUG_FUNCPTR (gst_aacparse_event);
-  parse_class->convert = GST_DEBUG_FUNCPTR (gst_aacparse_convert);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_aacparse_sink_setcaps);
   parse_class->is_seekable = GST_DEBUG_FUNCPTR (gst_aacparse_is_seekable);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_aacparse_parse_frame);
@@ -177,7 +175,6 @@ gst_aacparse_init (GstAacParse * aacparse, GstAacParseClass * klass)
 {
   /* init rest */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
-  aacparse->ts = 0;
   GST_DEBUG ("initialized");
 }
 
@@ -295,41 +292,6 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 
 
 /**
- * gst_aacparse_update_duration:
- * @aacparse: #GstAacParse.
- *
- */
-static void
-gst_aacparse_update_duration (GstAacParse * aacparse)
-{
-  GstPad *peer;
-  GstBaseParse *parse;
-
-  parse = GST_BASE_PARSE (aacparse);
-
-  /* Cannot estimate duration. No data has been passed to us yet */
-  if (!aacparse->framecount || !aacparse->frames_per_sec) {
-    return;
-  }
-
-  peer = gst_pad_get_peer (parse->sinkpad);
-  if (peer) {
-    GstFormat pformat = GST_FORMAT_BYTES;
-    guint64 bpf = aacparse->bytecount / aacparse->framecount;
-    gboolean qres = FALSE;
-    gint64 ptot;
-
-    qres = gst_pad_query_duration (peer, &pformat, &ptot);
-    gst_object_unref (GST_OBJECT (peer));
-    if (qres && bpf) {
-      gst_base_parse_set_duration (parse, GST_FORMAT_TIME,
-          AAC_FRAME_DURATION (aacparse) * ptot / bpf);
-    }
-  }
-}
-
-
-/**
  * gst_aacparse_adts_get_frame_len:
  * @data: block of data containing an ADTS header.
  *
@@ -384,7 +346,7 @@ gst_aacparse_check_adts_frame (GstAacParse * aacparse,
     *framesize = gst_aacparse_adts_get_frame_len (data);
 
     /* In EOS mode this is enough. No need to examine the data further */
-    if (aacparse->eos) {
+    if (gst_base_parse_get_drain (GST_BASE_PARSE (aacparse))) {
       return TRUE;
     }
 
@@ -408,7 +370,6 @@ gst_aacparse_check_adts_frame (GstAacParse * aacparse,
       return TRUE;
     }
   }
-  aacparse->sync = FALSE;
   return FALSE;
 }
 
@@ -484,13 +445,13 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
     aacparse->bitrate = ((data[5] & 0x1f) << 6) | ((data[6] & 0xfc) >> 2);
 
-    aacparse->frames_per_sec = aacparse->sample_rate / 1024.f;
+    gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
+        aacparse->sample_rate, 1024, 50);
 
-    GST_DEBUG ("ADTS: samplerate %d, channels %d, bitrate %d, objtype %d, "
-        "fps %f", aacparse->sample_rate, aacparse->channels,
-        aacparse->bitrate, aacparse->object_type, aacparse->frames_per_sec);
+    GST_DEBUG ("ADTS: samplerate %d, channels %d, bitrate %d, objtype %d",
+        aacparse->sample_rate, aacparse->channels, aacparse->bitrate,
+        aacparse->object_type);
 
-    aacparse->sync = TRUE;
     return TRUE;
   } else if (need_data) {
     /* This tells the parent class not to skip any data */
@@ -556,8 +517,8 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
        be based on this */
     aacparse->sample_rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
 
-    aacparse->frames_per_sec = aacparse->sample_rate / 1024.f;
-    GST_INFO ("ADIF fps: %f", aacparse->frames_per_sec);
+    /* baseparse is not given any fps,
+     * so it will give up on timestamps, seeking, etc */
 
     /* FIXME: Can we assume this? */
     aacparse->channels = 2;
@@ -568,7 +529,6 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 512);
 
     *framesize = avail;
-    aacparse->sync = TRUE;
     return TRUE;
   }
 
@@ -596,14 +556,12 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
   const guint8 *data;
   GstAacParse *aacparse;
   gboolean ret = FALSE;
+  gboolean sync;
 
   aacparse = GST_AACPARSE (parse);
   data = GST_BUFFER_DATA (buffer);
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    /* Discontinuous stream -> drop the sync */
-    aacparse->sync = FALSE;
-  }
+  sync = gst_base_parse_get_sync (parse);
 
   if (aacparse->header_type == DSPAAC_HEADER_ADIF ||
       aacparse->header_type == DSPAAC_HEADER_NONE) {
@@ -611,8 +569,7 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
     *framesize = GST_BUFFER_SIZE (buffer);
     ret = TRUE;
 
-  } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED ||
-      aacparse->sync == FALSE) {
+  } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED || sync == FALSE) {
 
     ret = gst_aacparse_detect_stream (aacparse, data, GST_BUFFER_SIZE (buffer),
         framesize, skipsize);
@@ -656,32 +613,6 @@ gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 
   aacparse = GST_AACPARSE (parse);
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gint64 btime;
-    gboolean r = gst_aacparse_convert (parse, GST_FORMAT_BYTES,
-        GST_BUFFER_OFFSET (buffer),
-        GST_FORMAT_TIME, &btime);
-    if (r) {
-      /* FIXME: What to do if the conversion fails? */
-      aacparse->ts = btime;
-    }
-  }
-
-  /* ADIF: only send an initial 0 timestamp downstream,
-   * then admit we have no idea and let downstream (decoder) handle it */
-  if (aacparse->header_type != DSPAAC_HEADER_ADIF || !aacparse->ts) {
-    GST_BUFFER_DURATION (buffer) = AAC_FRAME_DURATION (aacparse);
-    GST_BUFFER_TIMESTAMP (buffer) = aacparse->ts;
-  }
-
-  if (GST_CLOCK_TIME_IS_VALID (aacparse->ts))
-    aacparse->ts += GST_BUFFER_DURATION (buffer);
-
-  if (!(++aacparse->framecount % 50)) {
-    gst_aacparse_update_duration (aacparse);
-  }
-  aacparse->bytecount += GST_BUFFER_SIZE (buffer);
-
   if (!aacparse->src_caps_set) {
     if (!gst_aacparse_set_src_caps (aacparse,
             GST_PAD_CAPS (GST_BASE_PARSE (aacparse)->sinkpad))) {
@@ -712,11 +643,6 @@ gst_aacparse_start (GstBaseParse * parse)
   aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("start");
   aacparse->src_caps_set = FALSE;
-  aacparse->framecount = 0;
-  aacparse->bytecount = 0;
-  aacparse->ts = 0;
-  aacparse->sync = FALSE;
-  aacparse->eos = FALSE;
   gst_base_parse_set_passthrough (parse, FALSE);
   return TRUE;
 }
@@ -737,106 +663,7 @@ gst_aacparse_stop (GstBaseParse * parse)
 
   aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("stop");
-  aacparse->ts = -1;
   return TRUE;
-}
-
-
-/**
- * gst_aacparse_event:
- * @parse: #GstBaseParse.
- * @event: #GstEvent.
- *
- * Implementation of "event" vmethod in #GstBaseParse class.
- *
- * Returns: TRUE if the event was handled and can be dropped.
- */
-gboolean
-gst_aacparse_event (GstBaseParse * parse, GstEvent * event)
-{
-  GstAacParse *aacparse;
-
-  aacparse = GST_AACPARSE (parse);
-  GST_DEBUG ("event");
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      aacparse->eos = TRUE;
-      GST_DEBUG ("EOS event");
-      break;
-    default:
-      break;
-  }
-
-  return parent_class->event (parse, event);
-}
-
-
-/**
- * gst_aacparse_convert:
- * @parse: #GstBaseParse.
- * @src_format: #GstFormat describing the source format.
- * @src_value: Source value to be converted.
- * @dest_format: #GstFormat defining the converted format.
- * @dest_value: Pointer where the conversion result will be put.
- *
- * Implementation of "convert" vmethod in #GstBaseParse class.
- *
- * Returns: TRUE if conversion was successful.
- */
-gboolean
-gst_aacparse_convert (GstBaseParse * parse,
-    GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
-{
-  gboolean ret = FALSE;
-  GstAacParse *aacparse;
-  gfloat bpf;
-
-  aacparse = GST_AACPARSE (parse);
-
-  /* We are not able to do any estimations until some data has been passed */
-  if (!aacparse->framecount)
-    return FALSE;
-
-  bpf = (gfloat) aacparse->bytecount / aacparse->framecount;
-
-  if (src_format == GST_FORMAT_BYTES) {
-    if (dest_format == GST_FORMAT_TIME) {
-      /* BYTES -> TIME conversion */
-      GST_DEBUG ("converting bytes -> time");
-
-      if (aacparse->framecount && aacparse->frames_per_sec) {
-        *dest_value = AAC_FRAME_DURATION (aacparse) * src_value / bpf;
-        GST_DEBUG ("conversion result: %" G_GINT64_FORMAT " ms",
-            *dest_value / GST_MSECOND);
-        ret = TRUE;
-      }
-    } else if (dest_format == GST_FORMAT_BYTES) {
-      /* Parent class may ask us to convert from BYTES to BYTES */
-      *dest_value = src_value;
-      ret = TRUE;
-    }
-  } else if (src_format == GST_FORMAT_TIME) {
-    GST_DEBUG ("converting time -> bytes");
-    if (dest_format == GST_FORMAT_BYTES) {
-      if (aacparse->framecount && aacparse->frames_per_sec) {
-        *dest_value = bpf * src_value / AAC_FRAME_DURATION (aacparse);
-        GST_DEBUG ("time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
-            src_value / GST_MSECOND, *dest_value);
-        ret = TRUE;
-      }
-    }
-  } else if (src_format == GST_FORMAT_DEFAULT) {
-    /* DEFAULT == frame-based */
-    if (dest_format == GST_FORMAT_TIME && aacparse->frames_per_sec) {
-      *dest_value = src_value * AAC_FRAME_DURATION (aacparse);
-      ret = TRUE;
-    } else if (dest_format == GST_FORMAT_BYTES) {
-    }
-  }
-
-  return ret;
 }
 
 
