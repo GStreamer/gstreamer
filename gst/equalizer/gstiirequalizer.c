@@ -693,10 +693,22 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   freq0 = LOWEST_FREQ;
   for (i = 0; i < new_count; i++) {
     freq1 = freq0 * step;
-    equ->bands[i]->type = BAND_TYPE_PEAK;
+
+    if (i == 0)
+      equ->bands[i]->type = BAND_TYPE_LOW_SHELF;
+    else if (i == new_count - 1)
+      equ->bands[i]->type = BAND_TYPE_HIGH_SHELF;
+    else
+      equ->bands[i]->type = BAND_TYPE_PEAK;
+
     equ->bands[i]->freq = freq0 + ((freq1 - freq0) / 2.0);
     equ->bands[i]->width = freq1 - freq0;
     GST_DEBUG ("band[%2d] = '%lf'", i, equ->bands[i]->freq);
+
+    g_object_notify (G_OBJECT (equ->bands[i]), "bandwidth");
+    g_object_notify (G_OBJECT (equ->bands[i]), "freq");
+    g_object_notify (G_OBJECT (equ->bands[i]), "type");
+
     /*
        if(equ->bands[i]->freq<10000.0)
        sprintf (name,"%dHz",(gint)equ->bands[i]->freq);
@@ -707,8 +719,6 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
      */
     freq0 = freq1;
   }
-  equ->bands[0]->type = BAND_TYPE_LOW_SHELF;
-  equ->bands[new_count - 1]->type = BAND_TYPE_HIGH_SHELF;
 
   equ->need_new_coefficients = TRUE;
   BANDS_UNLOCK (equ);
