@@ -307,7 +307,6 @@ static void
 gst_iir_equalizer_base_init (gpointer g_class)
 {
   GstAudioFilterClass *audiofilter_class = GST_AUDIO_FILTER_CLASS (g_class);
-
   GstCaps *caps;
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
@@ -319,13 +318,10 @@ static void
 gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
 {
   GstAudioFilterClass *audio_filter_class = (GstAudioFilterClass *) klass;
-
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
-
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->finalize = gst_iir_equalizer_finalize;
-
   audio_filter_class->setup = gst_iir_equalizer_setup;
   btrans_class->transform_ip = gst_iir_equalizer_transform_ip;
 }
@@ -340,7 +336,6 @@ static void
 gst_iir_equalizer_finalize (GObject * object)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
-
   gint i;
 
   for (i = 0; i < equ->freq_band_count; i++) {
@@ -535,7 +530,6 @@ static void
 set_passthrough (GstIirEqualizer * equ)
 {
   gint i;
-
   gboolean passthrough = TRUE;
 
   for (i = 0; i < equ->freq_band_count; i++) {
@@ -746,9 +740,7 @@ static GstFlowReturn
 gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 {
   GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
-
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (btrans);
-
   GstClockTime timestamp;
 
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
