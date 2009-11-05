@@ -283,6 +283,23 @@ gst_dtmf_src_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-dtmfdetect</FILE>
+<TITLE>dtmfdetect</TITLE>
+GstDtmfDetect
+<SUBSECTION Standard>
+GstDtmfDetectClass
+GST_TYPE_DTMF_DETECT
+GST_DTMF_DETECT
+GST_DTMF_DETECT_CAST
+GST_DTMF_DETECT_CLASS
+GST_DTMF_DETECT_GET_CLASS
+GST_IS_DTMF_DETECT
+GST_IS_DTMF_DETECT_CLASS
+gst_dtmf_detect_get_type
+gst_dtmf_detect_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-dtsdec</FILE>
 <TITLE>dtsdec</TITLE>
 GstDtsDec
@@ -848,7 +865,6 @@ GST_TYPE_RTP_MUX
 GstRTPMuxClass
 gst_rtp_mux_get_type
 gst_rtp_mux_plugin_init
-gst_rtp_session_set_ssrc
 </SECTION>
 
 <SECTION>

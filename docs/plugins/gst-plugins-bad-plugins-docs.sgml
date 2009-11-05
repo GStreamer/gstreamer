@@ -34,6 +34,7 @@
     <xi:include href="xml/element-dccpserversrc.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-directdrawsink.xml" />
+    <xi:include href="xml/element-dtmfdetect.xml" />
     <xi:include href="xml/element-dtmfsrc.xml" />
     <xi:include href="xml/element-dtsdec.xml" />
     <xi:include href="xml/element-dvbsrc.xml" />
