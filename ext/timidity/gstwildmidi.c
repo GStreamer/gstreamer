@@ -647,9 +647,8 @@ gst_wildmidi_get_buffer (GstWildmidi * wildmidi)
       gst_util_uint64_scale_int (segment->last_stop, GST_SECOND,
       WILDMIDI_RATE) - GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_DEBUG_OBJECT (wildmidi,
-      "buffer ts: %" GST_TIME_FORMAT ", dur: %" GST_TIME_FORMAT
-      " (%d samples)",
+  GST_DEBUG_OBJECT (wildmidi, "buffer ts: %" GST_TIME_FORMAT ", "
+      "duration: %" GST_TIME_FORMAT " (%" G_GINT64_FORMAT " samples)",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), samples);
 
