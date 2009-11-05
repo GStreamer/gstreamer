@@ -948,9 +948,9 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
     GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
         picture->linesize[1], picture->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0,
-        picture->data[1] - picture->data[0],
-        picture->data[2] - picture->data[0]);
+    GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
+        (guint) (picture->data[1] - picture->data[0]),
+        (guint) (picture->data[2] - picture->data[0]));
     return res;
   }
 
@@ -1507,8 +1507,9 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
 
     GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", outpic->linesize[0],
         outpic->linesize[1], outpic->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0,
-        outpic->data[1] - outpic->data[0], outpic->data[2] - outpic->data[0]);
+    GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
+        (guint) (outpic->data[1] - outpic->data[0]),
+        (guint) (outpic->data[2] - outpic->data[0]));
 
     av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt, width, height);
   }
