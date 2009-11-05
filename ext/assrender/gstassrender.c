@@ -721,6 +721,9 @@ gst_assrender_event_video (GstPad * pad, GstEvent * event)
 
         gst_segment_set_newsegment (&render->video_segment, update, rate,
             format, start, stop, time);
+
+        GST_DEBUG_OBJECT (render, "VIDEO SEGMENT after: %" GST_SEGMENT_FORMAT,
+            &render->video_segment);
         ret = gst_pad_push_event (render->srcpad, event);
       } else {
         GST_ELEMENT_WARNING (render, STREAM, MUX, (NULL),
@@ -813,6 +816,10 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
 
         gst_segment_set_newsegment (&render->subtitle_segment, update, rate,
             format, start, stop, time);
+
+        GST_DEBUG_OBJECT (render,
+            "SUBTITLE SEGMENT after: %" GST_SEGMENT_FORMAT,
+            &render->subtitle_segment);
         ret = TRUE;
         gst_event_unref (event);
       } else {
