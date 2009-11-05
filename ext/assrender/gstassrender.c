@@ -611,7 +611,7 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   Gstassrender *render;
-  GstClockTime timestamp;
+  GstClockTime timestamp, duration;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
@@ -619,6 +619,15 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_WRONG_STATE;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp)
+          || !GST_CLOCK_TIME_IS_VALID (duration))) {
+    GST_WARNING_OBJECT (render,
+        "Text buffer without valid timestamp" " or duration, dropping");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 
   if (timestamp > render->video_segment.last_stop) {
     g_assert (render->subtitle_pending == NULL);
@@ -629,16 +638,22 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
       g_mutex_unlock (render->subtitle_mutex);
       return GST_FLOW_WRONG_STATE;
     }
+    GST_DEBUG_OBJECT (render, "Too early buffer, waiting");
     render->subtitle_pending = buffer;
     g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
     g_mutex_unlock (render->subtitle_mutex);
+  } else if (timestamp + duration < render->video_segment.last_stop) {
+    GST_DEBUG_OBJECT (render, "Too late text buffer, dropping");
+    gst_buffer_unref (buffer);
+    ret = GST_FLOW_OK;
   } else {
     gst_assrender_process_text (render, buffer);
   }
 
   GST_DEBUG_OBJECT (render,
-      "processed text packet with timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
+      "processed text packet with timestamp %" GST_TIME_FORMAT
+      " and duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
 
   return ret;
 }
