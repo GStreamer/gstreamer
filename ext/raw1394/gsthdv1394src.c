@@ -438,7 +438,7 @@ gst_hdv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   g_assert (dv1394src->outoffset);
 
-  GST_LOG ("We have some frames (%d bytes)", dv1394src->outoffset);
+  GST_LOG ("We have some frames (%u bytes)", (guint) dv1394src->outoffset);
 
   /* Create the buffer */
   *buf = gst_buffer_new ();

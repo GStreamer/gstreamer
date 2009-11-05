@@ -127,7 +127,7 @@ gst_1394_clock_get_internal_time (GstClock * clock)
     result = (((guint64) _1394clock->cycle_timer_hi) << 32) | cycle_timer;
     result *= 40;
 
-    GST_LOG_OBJECT (clock, "result %lld", result);
+    GST_LOG_OBJECT (clock, "result %" G_GINT64_FORMAT, result);
   } else {
     result = GST_CLOCK_TIME_NONE;
   }
