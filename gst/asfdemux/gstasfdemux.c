@@ -2465,8 +2465,18 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
 
       if (G_IS_VALUE (&tag_value)) {
         if (gst_tag_name) {
-          gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-              gst_tag_name, &tag_value, NULL);
+          GstTagMergeMode merge_mode = GST_TAG_MERGE_APPEND;
+
+          /* WM/TrackNumber is more reliable than WM/Track, since the latter
+           * is supposed to have a 0 base but is often wrongly written to start
+           * from 1 as well, so prefer WM/TrackNumber when we have it: either
+           * replace the value added earlier from WM/Track or put it first in
+           * the list, so that it will get picked up by _get_uint() */
+          if (strcmp (name_utf8, "WM/TrackNumber") == 0)
+            merge_mode = GST_TAG_MERGE_REPLACE;
+
+          gst_tag_list_add_values (taglist, merge_mode, gst_tag_name,
+              &tag_value, NULL);
 
           g_value_unset (&tag_value);
         } else {
