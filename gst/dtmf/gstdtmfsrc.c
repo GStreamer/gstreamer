@@ -218,7 +218,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, "
         "depth = (int) 16, "
         "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (bool) true, " "rate = (int) 8000, " "channels = (int) 1")
+        "signed = (bool) true, rate = (int) [1, MAX], channels = (int) 1")
     );
 
 GST_BOILERPLATE (GstDTMFSrc, gst_dtmf_src, GstBaseSrc, GST_TYPE_BASE_SRC);
@@ -804,63 +804,32 @@ gst_dtmf_src_unlock_stop (GstBaseSrc * src)
 static gboolean
 gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
 {
-  GstCaps *srccaps, *peercaps;
   GstDTMFSrc *dtmfsrc = GST_DTMF_SRC (basesrc);
-  gboolean ret = FALSE;
+  GstCaps *caps;
+  GstStructure *s;
+  gboolean ret;
 
-  srccaps = gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE, "channels", G_TYPE_INT, 1, NULL);
+  caps = gst_pad_get_allowed_caps (GST_BASE_SRC_PAD (basesrc));
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  if (!caps)
+    caps =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
+            (basesrc)));
 
-  if (peercaps == NULL) {
-    /* no peer caps, just add the other properties */
-    gst_caps_set_simple (srccaps,
-        "rate", G_TYPE_INT, dtmfsrc->sample_rate, NULL);
-  } else {
-    GstStructure *s;
-    gint sample_rate;
-    GstCaps *temp = NULL;
+  gst_caps_truncate (caps);
+  s = gst_caps_get_structure (caps, 0);
 
-    /* peer provides caps we can use to fixate, intersect. This always returns a
-     * writable caps. */
-    temp = gst_caps_intersect (srccaps, peercaps);
-    gst_caps_unref (srccaps);
-    gst_caps_unref (peercaps);
+  gst_structure_fixate_field_nearest_int (s, "rate", DEFAULT_SAMPLE_RATE);
 
-    if (!temp) {
-      GST_DEBUG_OBJECT (dtmfsrc, "Could not get intersection with peer caps");
-      return FALSE;
-    }
-
-    if (gst_caps_is_empty (temp)) {
-      GST_DEBUG_OBJECT (dtmfsrc, "Intersection with peer caps is empty");
-      gst_caps_unref (temp);
-      return FALSE;
-    }
-
-    /* now fixate, start by taking the first caps */
-    gst_caps_truncate (temp);
-    srccaps = temp;
-
-    /* get first structure */
-    s = gst_caps_get_structure (srccaps, 0);
-
-    if (gst_structure_get_int (s, "rate", &sample_rate)) {
-      dtmfsrc->sample_rate = sample_rate;
-      GST_LOG_OBJECT (dtmfsrc, "using rate from caps %d", dtmfsrc->sample_rate);
-    } else {
-      GST_LOG_OBJECT (dtmfsrc, "using existing rate %d", dtmfsrc->sample_rate);
-    }
-    gst_structure_set (s, "rate", G_TYPE_INT, dtmfsrc->sample_rate, NULL);
+  if (!gst_structure_get_int (s, "rate", &dtmfsrc->sample_rate)) {
+    GST_ERROR_OBJECT (dtmfsrc, "Could not get rate");
+    gst_caps_unref (caps);
+    return FALSE;
   }
 
-  ret = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), srccaps);
+  ret = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
 
-  gst_caps_unref (srccaps);
+  gst_caps_unref (caps);
 
   return ret;
 }
