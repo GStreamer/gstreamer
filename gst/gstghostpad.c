@@ -991,7 +991,7 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
   if (!gst_ghost_pad_construct (ret))
     goto construct_failed;
 
-  return GST_PAD (ret);
+  return GST_PAD_CAST (ret);
 
 construct_failed:
   /* already logged */
