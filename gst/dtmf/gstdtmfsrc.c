@@ -814,6 +814,9 @@ gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
         gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
             (basesrc)));
 
+  if (gst_caps_is_empty (caps))
+    return FALSE;
+
   gst_caps_truncate (caps);
   s = gst_caps_get_structure (caps, 0);
 
