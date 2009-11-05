@@ -555,7 +555,7 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
       rate = 1.0;
       //gst_event_unref (event);
       event = gst_event_new_new_segment_full (update, rate, applied_rate,
-          format, start, stop, position);
+          format, start, (stop - start) / applied_rate + start, position);
       gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (trans), event);
       return FALSE;
     }
