@@ -2182,7 +2182,7 @@ done:
  * gst_caps_make_writable() explicitely where needed
  */
 /**
- * gst_pad_get_caps_refed:
+ * gst_pad_get_caps_reffed:
  * @pad: a  #GstPad to get the capabilities of.
  *
  * Gets the capabilities this pad can produce or consume. Preferred function if
@@ -2193,7 +2193,7 @@ done:
  * Since: 0.10.26
  */
 GstCaps *
-gst_pad_get_caps_refed (GstPad * pad)
+gst_pad_get_caps_reffed (GstPad * pad)
 {
   GstCaps *result = NULL;
 
@@ -2228,7 +2228,7 @@ gst_pad_get_caps_refed (GstPad * pad)
 GstCaps *
 gst_pad_get_caps (GstPad * pad)
 {
-  GstCaps *result = gst_pad_get_caps_refed (pad);
+  GstCaps *result = gst_pad_get_caps_reffed (pad);
 
   /* be sure that we have a copy */
   if (G_LIKELY (result))
@@ -2241,7 +2241,7 @@ gst_pad_get_caps (GstPad * pad)
  * gst_caps_make_writable() explicitely where needed
  */
 /**
- * gst_pad_peer_get_caps_refed:
+ * gst_pad_peer_get_caps_reffed:
  * @pad: a  #GstPad to get the capabilities of.
  *
  * Gets the capabilities of the peer connected to this pad. Preferred function
@@ -2252,7 +2252,7 @@ gst_pad_get_caps (GstPad * pad)
  * Since: 0.10.26
  */
 GstCaps *
-gst_pad_peer_get_caps_refed (GstPad * pad)
+gst_pad_peer_get_caps_reffed (GstPad * pad)
 {
   GstPad *peerpad;
   GstCaps *result = NULL;
@@ -2270,7 +2270,7 @@ gst_pad_peer_get_caps_refed (GstPad * pad)
   gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
-  result = gst_pad_get_caps_refed (peerpad);
+  result = gst_pad_get_caps_reffed (peerpad);
 
   gst_object_unref (peerpad);
 
@@ -2441,7 +2441,7 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
 
-  allowed = gst_pad_get_caps_refed (pad);
+  allowed = gst_pad_get_caps_reffed (pad);
   if (!allowed)
     goto nothing_allowed;
 
@@ -2777,9 +2777,9 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
-  mycaps = gst_pad_get_caps_refed (pad);
+  mycaps = gst_pad_get_caps_reffed (pad);
 
-  peercaps = gst_pad_get_caps_refed (peer);
+  peercaps = gst_pad_get_caps_reffed (peer);
   gst_object_unref (peer);
 
   caps = gst_caps_intersect (mycaps, peercaps);

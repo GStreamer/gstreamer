@@ -224,7 +224,7 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
 
   if (target) {
     /* if we have a real target, proxy the call */
-    res = gst_pad_get_caps_refed (target);
+    res = gst_pad_get_caps_reffed (target);
 
     GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (target), res);

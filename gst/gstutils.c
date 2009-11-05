@@ -2634,7 +2634,7 @@ intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
     GstCaps *peercaps, *existing;
 
     existing = g_value_get_pointer (ret);
-    peercaps = gst_pad_peer_get_caps_refed (pad);
+    peercaps = gst_pad_peer_get_caps_reffed (pad);
     if (G_LIKELY (peercaps)) {
       g_value_set_pointer (ret, gst_caps_intersect (existing, peercaps));
       gst_caps_unref (existing);

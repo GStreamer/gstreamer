@@ -611,7 +611,7 @@ gst_base_transform_getcaps (GstPad * pad)
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
   /* we can do what the peer can */
-  caps = gst_pad_peer_get_caps_refed (otherpad);
+  caps = gst_pad_peer_get_caps_reffed (otherpad);
   if (caps) {
     GstCaps *temp;
     const GstCaps *templ;
@@ -854,7 +854,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
     GST_DEBUG_OBJECT (trans, "othercaps now %" GST_PTR_FORMAT, othercaps);
 
-    peercaps = gst_pad_get_caps_refed (otherpeer);
+    peercaps = gst_pad_get_caps_reffed (otherpeer);
     intersect = gst_caps_intersect (peercaps, othercaps);
     gst_caps_unref (peercaps);
     gst_caps_unref (othercaps);
@@ -1000,7 +1000,7 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (pad, "non fixed accept caps %" GST_PTR_FORMAT, caps);
 
     /* get all the formats we can handle on this pad */
-    allowed = gst_pad_get_caps_refed (pad);
+    allowed = gst_pad_get_caps_reffed (pad);
     if (!allowed) {
       GST_DEBUG_OBJECT (pad, "gst_pad_get_caps() failed");
       goto no_transform_possible;

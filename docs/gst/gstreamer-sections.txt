@@ -1344,7 +1344,7 @@ gst_pad_is_linked
 gst_pad_can_link
 
 gst_pad_get_caps
-gst_pad_get_caps_refed
+gst_pad_get_caps_reffed
 gst_pad_get_allowed_caps
 gst_pad_get_negotiated_caps
 gst_pad_get_pad_template_caps
@@ -1352,7 +1352,7 @@ gst_pad_set_caps
 
 gst_pad_get_peer
 gst_pad_peer_get_caps
-gst_pad_peer_get_caps_refed
+gst_pad_peer_get_caps_reffed
 gst_pad_use_fixed_caps
 
 gst_pad_is_active

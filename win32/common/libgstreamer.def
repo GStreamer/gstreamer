@@ -587,7 +587,7 @@ EXPORTS
 	gst_pad_flags_get_type
 	gst_pad_get_allowed_caps
 	gst_pad_get_caps
-	gst_pad_get_caps_refed
+	gst_pad_get_caps_reffed
 	gst_pad_get_direction
 	gst_pad_get_element_private
 	gst_pad_get_fixed_caps_func
@@ -617,7 +617,7 @@ EXPORTS
 	gst_pad_pause_task
 	gst_pad_peer_accept_caps
 	gst_pad_peer_get_caps
-	gst_pad_peer_get_caps_refed
+	gst_pad_peer_get_caps_reffed
 	gst_pad_peer_query
 	gst_pad_presence_get_type
 	gst_pad_proxy_getcaps
