@@ -34,6 +34,9 @@
 GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
+#define BANDS_LOCK(equ) g_mutex_lock(equ->bands_lock)
+#define BANDS_UNLOCK(equ) g_mutex_unlock(equ->bands_lock)
+
 static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
     gpointer iface_data);
 
@@ -157,6 +160,8 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstIirEqualizerBand *band = GST_IIR_EQUALIZER_BAND (object);
+  GstIirEqualizer *equ =
+      GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
 
   switch (prop_id) {
     case PROP_GAIN:{
@@ -165,13 +170,10 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       gain = g_value_get_double (value);
       GST_DEBUG_OBJECT (band, "gain = %lf -> %lf", band->gain, gain);
       if (gain != band->gain) {
-        GstIirEqualizer *equ =
-            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
-
+        BANDS_LOCK (equ);
         equ->need_new_coefficients = TRUE;
         band->gain = gain;
-
-        gst_object_unref (equ);
+        BANDS_UNLOCK (equ);
         GST_DEBUG_OBJECT (band, "changed gain = %lf ", band->gain);
       }
       break;
@@ -182,12 +184,10 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       freq = g_value_get_double (value);
       GST_DEBUG_OBJECT (band, "freq = %lf -> %lf", band->freq, freq);
       if (freq != band->freq) {
-        GstIirEqualizer *equ =
-            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
-
+        BANDS_LOCK (equ);
         equ->need_new_coefficients = TRUE;
         band->freq = freq;
-        gst_object_unref (equ);
+        BANDS_UNLOCK (equ);
         GST_DEBUG_OBJECT (band, "changed freq = %lf ", band->freq);
       }
       break;
@@ -198,12 +198,10 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       width = g_value_get_double (value);
       GST_DEBUG_OBJECT (band, "width = %lf -> %lf", band->width, width);
       if (width != band->width) {
-        GstIirEqualizer *equ =
-            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
-
+        BANDS_LOCK (equ);
         equ->need_new_coefficients = TRUE;
         band->width = width;
-        gst_object_unref (equ);
+        BANDS_UNLOCK (equ);
         GST_DEBUG_OBJECT (band, "changed width = %lf ", band->width);
       }
       break;
@@ -214,12 +212,10 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       type = g_value_get_enum (value);
       GST_DEBUG_OBJECT (band, "type = %d -> %d", band->type, type);
       if (type != band->type) {
-        GstIirEqualizer *equ =
-            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
-
+        BANDS_LOCK (equ);
         equ->need_new_coefficients = TRUE;
         band->type = type;
-        gst_object_unref (equ);
+        BANDS_UNLOCK (equ);
         GST_DEBUG_OBJECT (band, "changed type = %d ", band->type);
       }
       break;
@@ -228,6 +224,8 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  gst_object_unref (equ);
 }
 
 static void
@@ -329,11 +327,19 @@ gst_iir_equalizer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     guint index)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (child_proxy);
+  GstObject *ret;
 
-  g_return_val_if_fail (index < equ->freq_band_count, NULL);
+  BANDS_LOCK (equ);
+  if (G_UNLIKELY (index >= equ->freq_band_count)) {
+    BANDS_UNLOCK (equ);
+    g_return_val_if_fail (index < equ->freq_band_count, NULL);
+  }
 
-  GST_LOG ("return child[%d] '%s'", index, GST_OBJECT_NAME (equ->bands[index]));
-  return (gst_object_ref (equ->bands[index]));
+  ret = gst_object_ref (equ->bands[index]);
+  BANDS_UNLOCK (equ);
+
+  GST_LOG ("return child[%d] '%s'", index, ret);
+  return ret;
 }
 
 static guint
@@ -342,7 +348,7 @@ gst_iir_equalizer_child_proxy_get_children_count (GstChildProxy * child_proxy)
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (child_proxy);
 
   GST_LOG ("we have %d children", equ->freq_band_count);
-  return (equ->freq_band_count);
+  return equ->freq_band_count;
 }
 
 static void
@@ -386,6 +392,7 @@ gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
 static void
 gst_iir_equalizer_init (GstIirEqualizer * eq, GstIirEqualizerClass * g_class)
 {
+  eq->bands_lock = g_mutex_new ();
   eq->need_new_coefficients = TRUE;
 }
 
@@ -404,6 +411,8 @@ gst_iir_equalizer_finalize (GObject * object)
 
   g_free (equ->bands);
   g_free (equ->history);
+
+  g_mutex_free (equ->bands_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -583,6 +592,7 @@ setup_high_shelf_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
   }
 }
 
+/* Must be called with bands_lock and transform lock! */
 static void
 set_passthrough (GstIirEqualizer * equ)
 {
@@ -597,6 +607,7 @@ set_passthrough (GstIirEqualizer * equ)
   GST_DEBUG ("Passthrough mode: %d\n", passthrough);
 }
 
+/* Must be called with bands_lock and transform lock! */
 static void
 update_coefficients (GstIirEqualizer * equ)
 {
@@ -614,6 +625,7 @@ update_coefficients (GstIirEqualizer * equ)
   equ->need_new_coefficients = FALSE;
 }
 
+/* Must be called with transform lock! */
 static void
 alloc_history (GstIirEqualizer * equ)
 {
@@ -633,6 +645,13 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 
   if (equ->freq_band_count == new_count)
     return;
+
+  BANDS_LOCK (equ);
+
+  if (G_UNLIKELY (equ->freq_band_count == new_count)) {
+    BANDS_UNLOCK (equ);
+    return;
+  }
 
   old_count = equ->freq_band_count;
   equ->freq_band_count = new_count;
@@ -692,6 +711,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   equ->bands[new_count - 1]->type = BAND_TYPE_HIGH_SHELF;
 
   equ->need_new_coefficients = TRUE;
+  BANDS_UNLOCK (equ);
 }
 
 /* start of code that is type specific */
@@ -809,10 +829,12 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
+  BANDS_LOCK (equ);
   if (equ->need_new_coefficients) {
     update_coefficients (equ);
     set_passthrough (equ);
   }
+  BANDS_UNLOCK (equ);
 
   if (gst_base_transform_is_passthrough (btrans))
     return GST_FLOW_OK;

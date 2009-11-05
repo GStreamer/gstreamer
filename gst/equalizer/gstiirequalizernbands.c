@@ -142,8 +142,6 @@ gst_iir_equalizer_nbands_set_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
-  GST_BASE_TRANSFORM_LOCK (equ);
-  GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case PROP_NUM_BANDS:
       gst_iir_equalizer_compute_frequencies (equ, g_value_get_uint (value));
@@ -152,8 +150,6 @@ gst_iir_equalizer_nbands_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (equ);
-  GST_BASE_TRANSFORM_UNLOCK (equ);
 }
 
 static void

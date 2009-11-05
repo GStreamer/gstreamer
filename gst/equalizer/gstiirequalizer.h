@@ -52,6 +52,7 @@ struct _GstIirEqualizer
 
   /*< private >*/
 
+  GMutex *bands_lock;
   GstIirEqualizerBand **bands;
 
   /* properties */
