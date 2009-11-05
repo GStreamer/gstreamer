@@ -1243,7 +1243,6 @@ link_failed:
         lret);
     /* and unset target again */
     gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), NULL);
-    GST_PROXY_UNLOCK (gpad);
     return FALSE;
   }
 }
