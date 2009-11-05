@@ -936,8 +936,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
           {
 #ifndef OPENGL_ES2
             gchar text_shader_upload_I420_YV12[2048];
-            if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR),
-                    3) == 0)
+            if ((g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR),
+                        3) == 0)
+                && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
+                        (gchar *) glGetString (GL_RENDERER), 22) != 0)
+                && (g_ascii_strncasecmp ("ATI Radeon HD",
+                        (gchar *) glGetString (GL_RENDERER), 13) != 0))
               sprintf (text_shader_upload_I420_YV12,
                   display->text_shader_upload_I420_YV12, "*0.5", "");
             else
