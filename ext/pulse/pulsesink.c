@@ -1228,8 +1228,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     towrite = avail * bps;
 
-    GST_LOG_OBJECT (psink, "writing %d samples at offset %" G_GUINT64_FORMAT,
-        avail, offset);
+    GST_LOG_OBJECT (psink, "writing %u samples at offset %" G_GUINT64_FORMAT,
+        (guint) avail, offset);
 
     if (G_LIKELY (inr == outr && !reverse)) {
       /* no rate conversion, simply write out the samples */
