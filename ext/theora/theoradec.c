@@ -1346,8 +1346,8 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
     dec->last_timestamp = -1;
   }
 
-  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, granule pos=%"
-      G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%" G_GINT64_FORMAT ", "
+      "granule pos=%" G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
       packet.bytes ? packet.packet[0] : -1, packet.packetno,
       (gint64) packet.granulepos, GST_TIME_ARGS (dec->last_timestamp));
 
