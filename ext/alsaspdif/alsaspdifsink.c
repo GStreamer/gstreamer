@@ -312,9 +312,9 @@ alsaspdifsink_get_time (GstClock * clock, gpointer user_data)
     samples = 0;
 
   result = gst_util_uint64_scale_int (samples, GST_SECOND, sink->rate);
-  GST_LOG_OBJECT (sink,
-      "Samples raw: %d, delay: %d, real: %d, Time: %" GST_TIME_FORMAT, raw,
-      delay, samples, GST_TIME_ARGS (result));
+  GST_LOG_OBJECT (sink, "Samples raw: %d, delay: %d, real: %d, "
+      "Time: %" GST_TIME_FORMAT, (int) raw, (int) delay, (int) samples,
+      GST_TIME_ARGS (result));
   return result;
 }
 
