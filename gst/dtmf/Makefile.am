@@ -1,14 +1,18 @@
 plugin_LTLIBRARIES = libgstdtmf.la
 
 libgstdtmf_la_SOURCES = gstdtmfsrc.c \
+                        gstdtmfdetect.c \
                         gstrtpdtmfsrc.c \
                         gstrtpdtmfdepay.c \
+                        tone_detect.c \
                         gstdtmf.c
 
 noinst_HEADERS = gstdtmfsrc.h \
+                 gstdtmfdetect.h \
                  gstrtpdtmfsrc.h \
                  gstrtpdtmfdepay.h \
-                 gstrtpdtmfcommon.h
+                 gstrtpdtmfcommon.h \
+                 tone_detect.h
 
 libgstdtmf_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS) -DEXTERN_BUF -DRTP_SUPPORT
 libgstdtmf_la_LIBADD = $(GST_LIBS_LIBS) -lm
