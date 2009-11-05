@@ -56,6 +56,7 @@ struct _Gstassrender
   GCond *subtitle_cond;
   GstBuffer *subtitle_pending;
   gboolean subtitle_flushing;
+  GstSegment subtitle_segment;
 
   ASS_Library *ass_library;
   ASS_Renderer *ass_renderer;

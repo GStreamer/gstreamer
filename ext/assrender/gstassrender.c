@@ -764,8 +764,30 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
-      gst_event_unref (event);
-      ret = TRUE;
+      GstFormat format;
+      gdouble rate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      GST_DEBUG_OBJECT (render, "received new segment");
+
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
+          &stop, &time);
+
+      if (format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (render, "SUBTITLE SEGMENT now: %" GST_SEGMENT_FORMAT,
+            &render->subtitle_segment);
+
+        gst_segment_set_newsegment (&render->subtitle_segment, update, rate,
+            format, start, stop, time);
+        ret = TRUE;
+        gst_event_unref (event);
+      } else {
+        GST_ELEMENT_WARNING (render, STREAM, MUX, (NULL),
+            ("received non-TIME newsegment event on subtitle input"));
+        ret = FALSE;
+        gst_event_unref (event);
+      }
       break;
     }
     case GST_EVENT_FLUSH_STOP:
