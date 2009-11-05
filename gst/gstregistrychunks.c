@@ -632,8 +632,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
 
   feature->rank = pf->rank;
 
-  /* should already be the interned string, but better make sure */
-  feature->plugin_name = g_intern_string (plugin_name);
+  feature->plugin_name = plugin_name;
 
   gst_registry_add_feature (registry, feature);
   GST_DEBUG ("Added feature %s", feature->name);
