@@ -295,8 +295,8 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
             g_param_spec_get_nick (pspec), g_param_spec_get_blurb (pspec),
             pspec->value_type, src_pspec->default_value, pspec->flags);
       } else {
-        GST_ERROR ("Unsupported property type %d for property %s",
-            param_type, g_param_spec_get_name (pspec));
+        GST_ERROR ("Unsupported property type %s for property %s",
+            g_type_name (param_type), g_param_spec_get_name (pspec));
         ++walk;
         continue;
       }
