@@ -431,8 +431,8 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   return ret;
 
 read_error:
-  GST_ELEMENT_ERROR (src, RESOURCE, READ,
-      (NULL), ("Could not read any bytes (%i, %s)", read, src->uri_name));
+  GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+      ("Could not read any bytes (%d, %s)", result, src->uri_name));
   return GST_FLOW_ERROR;
 }
 
@@ -453,7 +453,7 @@ gst_mythtv_src_get_position (GstMythtvSrc * src)
       src->content_size = size_tmp;
     else if (size_tmp > 0 && --max_tries > 0)
       goto get_file_pos;
-    GST_LOG_OBJECT (src, "GET_POSITION: file_position = %lld", size_tmp);
+    GST_LOG_OBJECT (src, "file_position = %" G_GINT64_FORMAT, size_tmp);
     /*
      * sets the last content size amount before it can be updated 
      */
@@ -476,9 +476,8 @@ gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
     ret = FALSE;
     goto done;
   }
-  GST_LOG_OBJECT (src,
-      "Trying to seek at the value (actual_seek = %lld, read_offset = %lld)",
-      actual_seek, src->read_offset);
+  GST_LOG_OBJECT (src, "actual_seek = %" G_GINT64_FORMAT ", read_offset = "
+      "%" G_GINT64_FORMAT, actual_seek, src->read_offset);
   /*
    * verify if it needs to seek 
    */
@@ -617,9 +616,9 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
     goto begin_req_failed;
   }
 
-  GST_INFO_OBJECT (src,
-      "MythTV FileTransfer filesize = %lld, content_size = %lld!",
-      gmyth_file_get_filesize (src->file), src->content_size);
+  GST_INFO_OBJECT (src, "MythTV FileTransfer filesize = %" G_GINT64_FORMAT ", "
+      "content_size = %" G_GINT64_FORMAT, gmyth_file_get_filesize (src->file),
+      src->content_size);
 
   src->content_size = gmyth_file_get_filesize (src->file);
 
@@ -715,7 +714,7 @@ gst_mythtv_src_get_size (GstBaseSrc * bsrc, guint64 * size)
   }
 
   *size = src->content_size;
-  GST_LOG_OBJECT (src, "Content size = %lld", src->content_size);
+  GST_LOG_OBJECT (src, "Content size = %" G_GINT64_FORMAT, src->content_size);
   return ret;
 }
 
