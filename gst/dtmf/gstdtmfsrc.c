@@ -580,7 +580,7 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   gboolean send_silence = FALSE;
   GstPad *srcpad = GST_BASE_SRC_PAD (dtmfsrc);
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
+  GST_LOG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
       DTMF_KEYS[event->event_number].event_name);
 
   /* create buffer to hold the tone */
@@ -591,11 +591,11 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   }
 
   if (send_silence) {
-    GST_DEBUG_OBJECT (dtmfsrc, "Generating silence");
+    GST_LOG_OBJECT (dtmfsrc, "Generating silence");
     gst_dtmf_src_generate_silence (buf, dtmfsrc->interval,
         dtmfsrc->sample_rate);
   } else {
-    GST_DEBUG_OBJECT (dtmfsrc, "Generating tone");
+    GST_LOG_OBJECT (dtmfsrc, "Generating tone");
     gst_dtmf_src_generate_tone (event, DTMF_KEYS[event->event_number],
         dtmfsrc->interval, buf, dtmfsrc->sample_rate);
   }
@@ -703,7 +703,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     }
   } while (dtmfsrc->last_event == NULL);
 
-  GST_DEBUG_OBJECT (dtmfsrc, "end event check, now wait for the proper time");
+  GST_LOG_OBJECT (dtmfsrc, "end event check, now wait for the proper time");
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
 
@@ -738,11 +738,9 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Created buffer of size %d",
-      GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (dtmfsrc, "Created buffer of size %d", GST_BUFFER_SIZE (buf));
   *buffer = buf;
 
-  GST_DEBUG_OBJECT (dtmfsrc, "returning a buffer");
   return GST_FLOW_OK;
 
 paused_locked:
