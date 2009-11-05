@@ -1399,8 +1399,16 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GST_BUFFER_SIZE (buffer) += 12;
     buffdata = GST_BUFFER_DATA (buffer) + highmark;
 
-    /* update list size */
-    GST_WRITE_UINT32_LE (ptr, highmark - startsize - 4);
+    if (highmark - startsize - 4 == 4) {
+      /* no tags writen, remove the empty INFO LIST as it is useless
+       * and prevents playback in vlc */
+      highmark -= 12;
+      buffdata = GST_BUFFER_DATA (buffer) + highmark;
+      /* no need to erase the writen data, it will be overwriten anyway */
+    } else {
+      /* update list size */
+      GST_WRITE_UINT32_LE (ptr, highmark - startsize - 4);
+    }
   }
 
   /* avi data header */
