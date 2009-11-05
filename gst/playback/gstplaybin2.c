@@ -2044,7 +2044,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   playbin = group->playbin;
 
-  caps = gst_pad_get_caps_refed (pad);
+  caps = gst_pad_get_caps_reffed (pad);
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 

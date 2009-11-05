@@ -1624,7 +1624,7 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
     GstPad *pad = GST_PAD_CAST (pads->data);
     GstCaps *caps;
 
-    caps = gst_pad_get_caps_refed (pad);
+    caps = gst_pad_get_caps_reffed (pad);
     analyze_new_pad (dbin, element, pad, caps, chain);
     if (caps)
       gst_caps_unref (caps);
@@ -1728,7 +1728,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
 
-  caps = gst_pad_get_caps_refed (pad);
+  caps = gst_pad_get_caps_reffed (pad);
   analyze_new_pad (dbin, element, pad, caps, chain);
   if (caps)
     gst_caps_unref (caps);
@@ -2604,8 +2604,8 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   GstStructure *sa, *sb;
   const gchar *namea, *nameb;
 
-  capsa = gst_pad_get_caps_refed (GST_PAD (da));
-  capsb = gst_pad_get_caps_refed (GST_PAD (db));
+  capsa = gst_pad_get_caps_reffed (GST_PAD (da));
+  capsb = gst_pad_get_caps_reffed (GST_PAD (db));
 
   sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
   sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
@@ -2746,7 +2746,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   /* Caps that resulted in this chain */
   caps = gst_pad_get_negotiated_caps (chain->pad);
   if (!caps) {
-    caps = gst_pad_get_caps_refed (chain->pad);
+    caps = gst_pad_get_caps_reffed (chain->pad);
     if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {
       GST_ERROR_OBJECT (chain->pad,
           "Couldn't get fixed caps, got %" GST_PTR_FORMAT, caps);
