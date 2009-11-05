@@ -293,8 +293,8 @@ G_BEGIN_DECLS
 
 /**
  * GstValueCompareFunc:
- * @value1: first value for comparission
- * @value2: second value for comparission
+ * @value1: first value for comparison
+ * @value2: second value for comparison
  *
  * Used together with gst_value_compare() to compare #GValues.
  *
