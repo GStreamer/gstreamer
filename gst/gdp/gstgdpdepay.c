@@ -160,8 +160,13 @@ gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
+      /* forward flush start */
+      res = gst_pad_push_event (this->srcpad, event);
+      break;
     case GST_EVENT_FLUSH_STOP:
-      /* forward flush start and stop */
+      /* clear adapter on flush */
+      gst_adapter_clear (this->adapter);
+      /* forward flush stop */
       res = gst_pad_push_event (this->srcpad, event);
       break;
     case GST_EVENT_EOS:
@@ -458,6 +463,7 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
         gst_caps_unref (this->caps);
         this->caps = NULL;
       }
+      gst_adapter_clear (this->adapter);
       break;
     default:
       break;
