@@ -288,8 +288,8 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
       return FALSE;
     }
     start = mmsx_get_current_pos (mmssrc->connection);
-    GST_LOG_OBJECT (mmssrc, "sought to %f sec, offset after seek: %lld\n",
-        (double) segment->start / GST_SECOND, start);
+    GST_INFO_OBJECT (mmssrc, "sought to %" GST_TIME_FORMAT ", offset after "
+        "seek: %" G_GINT64_FORMAT, GST_TIME_ARGS (segment->start), start);
   } else if (segment->format == GST_FORMAT_BYTES) {
     start = mmsx_seek (NULL, mmssrc->connection, segment->start, SEEK_SET);
     /* mmsx_seek will close and reopen the connection when seeking with the
@@ -298,12 +298,11 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
       GST_DEBUG_OBJECT (mmssrc, "connection broken during seek");
       return FALSE;
     }
-    GST_DEBUG_OBJECT (mmssrc,
-        "sought to: %" G_GINT64_FORMAT " bytes, result: %lld", segment->start,
-        start);
+    GST_INFO_OBJECT (mmssrc, "sought to: %" G_GINT64_FORMAT " bytes, "
+        "result: %" G_GINT64_FORMAT, segment->start, start);
   } else {
-    GST_DEBUG_OBJECT (mmssrc, "unsupported seek segment format: %d",
-        (int) segment->format);
+    GST_DEBUG_OBJECT (mmssrc, "unsupported seek segment format: %s",
+        GST_STR_NULL (gst_format_get_name (segment->format)));
     return FALSE;
   }
   gst_segment_init (segment, GST_FORMAT_BYTES);
