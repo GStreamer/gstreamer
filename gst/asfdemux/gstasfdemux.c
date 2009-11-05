@@ -2477,18 +2477,19 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
 
           gst_tag_list_add_values (taglist, merge_mode, gst_tag_name,
               &tag_value, NULL);
-
-          g_value_unset (&tag_value);
         } else {
           GST_DEBUG ("Setting global metadata %s", name_utf8);
           gst_structure_set_value (demux->global_metadata, name_utf8,
               &tag_value);
         }
+
+        g_value_unset (&tag_value);
       }
     }
 
     g_free (name);
     g_free (value);
+    g_free (name_utf8);
   }
 
   gst_asf_demux_add_global_tags (demux, taglist);
