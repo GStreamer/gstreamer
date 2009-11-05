@@ -81,9 +81,9 @@ GST_BOILERPLATE_FULL (GstIirEqualizer, gst_iir_equalizer,
 
 enum
 {
-  ARG_GAIN = 1,
-  ARG_FREQ,
-  ARG_BANDWIDTH
+  PROP_GAIN = 1,
+  PROP_FREQ,
+  PROP_BANDWIDTH
 };
 
 typedef struct _GstIirEqualizerBandClass GstIirEqualizerBandClass;
@@ -128,7 +128,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
   GstIirEqualizerBand *band = GST_IIR_EQUALIZER_BAND (object);
 
   switch (prop_id) {
-    case ARG_GAIN:{
+    case PROP_GAIN:{
       gdouble gain;
 
       gain = g_value_get_double (value);
@@ -145,7 +145,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case ARG_FREQ:{
+    case PROP_FREQ:{
       gdouble freq;
 
       freq = g_value_get_double (value);
@@ -161,7 +161,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case ARG_BANDWIDTH:{
+    case PROP_BANDWIDTH:{
       gdouble width;
 
       width = g_value_get_double (value);
@@ -190,13 +190,13 @@ gst_iir_equalizer_band_get_property (GObject * object, guint prop_id,
   GstIirEqualizerBand *band = GST_IIR_EQUALIZER_BAND (object);
 
   switch (prop_id) {
-    case ARG_GAIN:
+    case PROP_GAIN:
       g_value_set_double (value, band->gain);
       break;
-    case ARG_FREQ:
+    case PROP_FREQ:
       g_value_set_double (value, band->freq);
       break;
-    case ARG_BANDWIDTH:
+    case PROP_BANDWIDTH:
       g_value_set_double (value, band->width);
       break;
     default:
@@ -213,20 +213,23 @@ gst_iir_equalizer_band_class_init (GstIirEqualizerBandClass * klass)
   gobject_class->set_property = gst_iir_equalizer_band_set_property;
   gobject_class->get_property = gst_iir_equalizer_band_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_GAIN,
+  g_object_class_install_property (gobject_class, PROP_GAIN,
       g_param_spec_double ("gain", "gain",
           "gain for the frequency band ranging from -24.0 dB to +12.0 dB",
-          -24.0, 12.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          -24.0, 12.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  g_object_class_install_property (gobject_class, ARG_FREQ,
+  g_object_class_install_property (gobject_class, PROP_FREQ,
       g_param_spec_double ("freq", "freq",
           "center frequency of the band",
-          0.0, 100000.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0, 100000.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  g_object_class_install_property (gobject_class, ARG_BANDWIDTH,
+  g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "bandwidth",
           "difference between bandedges in Hz",
-          0.0, 100000.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0, 100000.0, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 }
 
 static void

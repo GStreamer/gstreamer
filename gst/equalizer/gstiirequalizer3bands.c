@@ -40,9 +40,9 @@
 
 enum
 {
-  ARG_BAND0 = 1,
-  ARG_BAND1,
-  ARG_BAND2,
+  PROP_BAND0 = 1,
+  PROP_BAND1,
+  PROP_BAND2,
 };
 
 static void gst_iir_equalizer_3bands_set_property (GObject * object,
@@ -76,13 +76,10 @@ static void
 gst_iir_equalizer_3bands_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  const GstElementDetails iir_equalizer_details =
-      GST_ELEMENT_DETAILS ("3 Band Equalizer",
-      "Filter/Effect/Audio",
-      "Direct Form 3 band IIR equalizer",
-      "Stefan Kost <ensonic@users.sf.net>");
 
-  gst_element_class_set_details (element_class, &iir_equalizer_details);
+  gst_element_class_set_details_simple (element_class, "3 Band Equalizer",
+      "Filter/Effect/Audio",
+      "Direct Form 3 band IIR equalizer", "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void
@@ -93,18 +90,21 @@ gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
   gobject_class->set_property = gst_iir_equalizer_3bands_set_property;
   gobject_class->get_property = gst_iir_equalizer_3bands_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_BAND0,
+  g_object_class_install_property (gobject_class, PROP_BAND0,
       g_param_spec_double ("band0", "110 Hz",
           "gain for the frequency band 100 Hz, ranging from -24.0 to +12.0",
-          -24.0, 12.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_BAND1,
+          -24.0, 12.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_BAND1,
       g_param_spec_double ("band1", "1100 Hz",
           "gain for the frequency band 1100 Hz, ranging from -24.0 to +12.0",
-          -24.0, 12.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-  g_object_class_install_property (gobject_class, ARG_BAND2,
+          -24.0, 12.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_BAND2,
       g_param_spec_double ("band2", "11 kHz",
           "gain for the frequency band 11 kHz, ranging from -24.0 to +12.0",
-          -24.0, 12.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          -24.0, 12.0, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 }
 
 static void
@@ -123,13 +123,13 @@ gst_iir_equalizer_3bands_set_property (GObject * object, guint prop_id,
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
   switch (prop_id) {
-    case ARG_BAND0:
+    case PROP_BAND0:
       gst_child_proxy_set_property (GST_OBJECT (equ), "band0::gain", value);
       break;
-    case ARG_BAND1:
+    case PROP_BAND1:
       gst_child_proxy_set_property (GST_OBJECT (equ), "band1::gain", value);
       break;
-    case ARG_BAND2:
+    case PROP_BAND2:
       gst_child_proxy_set_property (GST_OBJECT (equ), "band2::gain", value);
       break;
     default:
@@ -145,13 +145,13 @@ gst_iir_equalizer_3bands_get_property (GObject * object, guint prop_id,
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
   switch (prop_id) {
-    case ARG_BAND0:
+    case PROP_BAND0:
       gst_child_proxy_get_property (GST_OBJECT (equ), "band0::gain", value);
       break;
-    case ARG_BAND1:
+    case PROP_BAND1:
       gst_child_proxy_get_property (GST_OBJECT (equ), "band1::gain", value);
       break;
-    case ARG_BAND2:
+    case PROP_BAND2:
       gst_child_proxy_get_property (GST_OBJECT (equ), "band2::gain", value);
       break;
     default:

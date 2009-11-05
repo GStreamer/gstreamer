@@ -86,7 +86,7 @@
 
 enum
 {
-  ARG_NUM_BANDS = 1
+  PROP_NUM_BANDS = 1
 };
 
 static void gst_iir_equalizer_nbands_set_property (GObject * object,
@@ -106,13 +106,11 @@ static void
 gst_iir_equalizer_nbands_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  const GstElementDetails iir_equalizer_details =
-      GST_ELEMENT_DETAILS ("N Band Equalizer",
+
+  gst_element_class_set_details_simple (element_class, "N Band Equalizer",
       "Filter/Effect/Audio",
       "Direct Form IIR equalizer",
       "Benjamin Otte <otte@gnome.org>," " Stefan Kost <ensonic@users.sf.net>");
-
-  gst_element_class_set_details (element_class, &iir_equalizer_details);
 }
 
 static void
@@ -123,10 +121,10 @@ gst_iir_equalizer_nbands_class_init (GstIirEqualizerNBandsClass * klass)
   gobject_class->set_property = gst_iir_equalizer_nbands_set_property;
   gobject_class->get_property = gst_iir_equalizer_nbands_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_NUM_BANDS,
+  g_object_class_install_property (gobject_class, PROP_NUM_BANDS,
       g_param_spec_uint ("num-bands", "num-bands",
           "number of different bands to use", 1, 64, 10,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -147,7 +145,7 @@ gst_iir_equalizer_nbands_set_property (GObject * object, guint prop_id,
   GST_BASE_TRANSFORM_LOCK (equ);
   GST_OBJECT_LOCK (equ);
   switch (prop_id) {
-    case ARG_NUM_BANDS:
+    case PROP_NUM_BANDS:
       gst_iir_equalizer_compute_frequencies (equ, g_value_get_uint (value));
       break;
     default:
@@ -165,7 +163,7 @@ gst_iir_equalizer_nbands_get_property (GObject * object, guint prop_id,
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
   switch (prop_id) {
-    case ARG_NUM_BANDS:
+    case PROP_NUM_BANDS:
       g_value_set_uint (value, equ->freq_band_count);
       break;
     default:
