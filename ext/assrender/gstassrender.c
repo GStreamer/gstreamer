@@ -638,6 +638,9 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
+  gst_segment_set_last_stop (&render->subtitle_segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+
   if (render->subtitle_flushing)
     return GST_FLOW_WRONG_STATE;
 
