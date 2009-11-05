@@ -688,12 +688,13 @@ gst_assrender_event_video (GstPad * pad, GstEvent * event)
 
         gst_segment_set_newsegment (&render->video_segment, update, rate,
             format, start, stop, time);
+        ret = gst_pad_push_event (render->srcpad, event);
       } else {
         GST_ELEMENT_WARNING (render, STREAM, MUX, (NULL),
             ("received non-TIME newsegment event on video input"));
+        ret = FALSE;
+        gst_event_unref (event);
       }
-
-      ret = gst_pad_event_default (pad, event);
       break;
     }
     case GST_EVENT_TAG:
