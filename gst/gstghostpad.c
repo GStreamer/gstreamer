@@ -1242,7 +1242,9 @@ link_failed:
     GST_WARNING_OBJECT (gpad, "could not link internal and target, reason:%d",
         lret);
     /* and unset target again */
+    GST_PROXY_LOCK (gpad);
     gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), NULL);
+    GST_PROXY_UNLOCK (gpad);
     return FALSE;
   }
 }
