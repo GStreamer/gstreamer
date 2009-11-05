@@ -602,7 +602,7 @@ update_coefficients (GstIirEqualizer * equ)
 {
   gint i, n = equ->freq_band_count;
 
-  for (i = 1; i < n - 1; i++) {
+  for (i = 0; i < n; i++) {
     if (equ->bands[i]->type == BAND_TYPE_PEAK)
       setup_peak_filter (equ, equ->bands[i]);
     else if (equ->bands[i]->type == BAND_TYPE_LOW_SHELF)
