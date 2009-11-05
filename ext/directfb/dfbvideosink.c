@@ -270,8 +270,8 @@ gst_dfbvideosink_surface_create (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
      or we are going to run into serious stride issues */
   if (GST_BUFFER_SIZE (surface) != size) {
     GST_WARNING_OBJECT (dfbvideosink, "DirectFB surface size (%dx%d=%d) "
-        "differs from GStreamer requested size %d", pitch, surface->height,
-        GST_BUFFER_SIZE (surface), size);
+        "differs from GStreamer requested size %u", pitch, surface->height,
+        GST_BUFFER_SIZE (surface), (guint) size);
     goto fallback;
   }
 
@@ -298,8 +298,8 @@ fallback:
     surface->surface->Release (surface->surface);
     surface->surface = NULL;
   }
-  GST_DEBUG_OBJECT (dfbvideosink, "allocating a buffer (%p) of %d bytes",
-      surface, size);
+  GST_DEBUG_OBJECT (dfbvideosink, "allocating a buffer (%p) of %u bytes",
+      surface, (guint) size);
 
   succeeded = TRUE;
 
@@ -694,7 +694,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
           GstColorBalanceChannel *channel = NULL;
 
           GST_DEBUG_OBJECT (dfbvideosink, "adding %s as a colorbalance channel",
-              walk->data);
+              (const char *) walk->data);
 
           channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
           channel->label = g_strdup (walk->data);
@@ -1703,8 +1703,8 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
 
-  GST_DEBUG_OBJECT (dfbvideosink, "a buffer of %d bytes was requested "
-      "with caps %" GST_PTR_FORMAT " and offset %llu", size, caps, offset);
+  GST_LOG_OBJECT (dfbvideosink, "a buffer of %u bytes was requested with caps "
+      "%" GST_PTR_FORMAT " and offset %" G_GUINT64_FORMAT, size, caps, offset);
 
   if (G_UNLIKELY (!dfbvideosink->setup)) {
     GST_DEBUG_OBJECT (dfbvideosink, "we are not setup yet, can't allocate!");
