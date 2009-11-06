@@ -527,25 +527,33 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
   g_mutex_lock (render->subtitle_mutex);
   if (render->subtitle_pending) {
     GstClockTime sub_running_time, vid_running_time;
-    GstClockTime sub_duration, vid_duration;
+    GstClockTime sub_running_time_end, vid_running_time_end;
 
     sub_running_time =
         gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (render->subtitle_pending));
+    sub_running_time_end =
+        gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (render->subtitle_pending) +
+        GST_BUFFER_DURATION (render->subtitle_pending));
     vid_running_time =
         gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buffer));
+    vid_running_time_end =
+        gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer));
 
-    sub_duration = GST_BUFFER_DURATION (render->subtitle_pending);
-    vid_duration = GST_BUFFER_DURATION (buffer);
-
-    if (sub_running_time <= vid_running_time + vid_duration) {
+    if (sub_running_time <= vid_running_time_end) {
       gst_assrender_process_text (render, render->subtitle_pending,
-          sub_running_time, sub_duration);
+          sub_running_time, sub_running_time_end - sub_running_time);
       render->subtitle_pending = NULL;
       g_cond_signal (render->subtitle_cond);
-    } else if (sub_running_time + sub_duration <= vid_running_time) {
+    } else if (sub_running_time_end < vid_running_time) {
       gst_buffer_unref (render->subtitle_pending);
+      GST_DEBUG_OBJECT (render,
+          "Too late text buffer, dropping (%" GST_TIME_FORMAT " < %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time_end),
+          GST_TIME_ARGS (vid_running_time));
       render->subtitle_pending = NULL;
       g_cond_signal (render->subtitle_cond);
     }
@@ -635,6 +643,7 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
   Gstassrender *render;
   GstClockTime timestamp, duration;
   GstClockTime sub_running_time, vid_running_time;
+  GstClockTime sub_running_time_end;
 
   render = GST_ASSRENDER (GST_PAD_PARENT (pad));
 
@@ -658,6 +667,9 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
   sub_running_time =
       gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
       timestamp);
+  sub_running_time_end =
+      gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
+      timestamp + duration);
   vid_running_time =
       gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
       render->video_segment.last_stop);
@@ -671,16 +683,23 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
       g_mutex_unlock (render->subtitle_mutex);
       return GST_FLOW_WRONG_STATE;
     }
-    GST_DEBUG_OBJECT (render, "Too early buffer, waiting");
+    GST_DEBUG_OBJECT (render,
+        "Too early text buffer, waiting (%" GST_TIME_FORMAT " > %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time),
+        GST_TIME_ARGS (vid_running_time));
     render->subtitle_pending = buffer;
     g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
     g_mutex_unlock (render->subtitle_mutex);
-  } else if (sub_running_time + duration < vid_running_time) {
-    GST_DEBUG_OBJECT (render, "Too late text buffer, dropping");
+  } else if (sub_running_time_end < vid_running_time) {
+    GST_DEBUG_OBJECT (render,
+        "Too late text buffer, dropping (%" GST_TIME_FORMAT " < %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time_end),
+        GST_TIME_ARGS (vid_running_time));
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
   } else {
-    gst_assrender_process_text (render, buffer, sub_running_time, duration);
+    gst_assrender_process_text (render, buffer, sub_running_time,
+        sub_running_time_end - sub_running_time);
   }
 
   GST_DEBUG_OBJECT (render,
