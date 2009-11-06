@@ -1737,6 +1737,7 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       overlay->text_flushing = FALSE;
       overlay->text_eos = FALSE;
       gst_text_overlay_pop_text (overlay);
+      gst_segment_init (&overlay->text_segment, GST_FORMAT_TIME);
       GST_OBJECT_UNLOCK (overlay);
       gst_event_unref (event);
       ret = TRUE;
@@ -1828,6 +1829,7 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
       GST_INFO_OBJECT (overlay, "video flush stop");
       overlay->video_flushing = FALSE;
       overlay->video_eos = FALSE;
+      gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
       GST_OBJECT_UNLOCK (overlay);
       ret = gst_pad_event_default (pad, event);
       break;
@@ -1911,7 +1913,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
     else
       stop = GST_CLOCK_TIME_NONE;
 
-    in_seg = gst_segment_clip (&overlay->segment, GST_FORMAT_TIME,
+    in_seg = gst_segment_clip (&overlay->text_segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buffer), stop, &clip_start, &clip_stop);
   } else {
     in_seg = TRUE;
@@ -1935,6 +1937,10 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
         goto beach;
       }
     }
+
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+      gst_segment_set_last_stop (&overlay->text_segment, GST_FORMAT_TIME,
+          clip_start);
 
     overlay->text_buffer = buffer;
     /* That's a new text buffer we need to render */
@@ -2250,6 +2256,8 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
       overlay->video_flushing = FALSE;
       overlay->video_eos = FALSE;
       overlay->text_eos = FALSE;
+      gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
+      gst_segment_init (&overlay->text_segment, GST_FORMAT_TIME);
       GST_OBJECT_UNLOCK (overlay);
       break;
     default:
