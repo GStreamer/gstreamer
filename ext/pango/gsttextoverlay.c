@@ -1850,16 +1850,6 @@ gst_text_overlay_pop_text (GstTextOverlay * overlay)
   g_return_if_fail (GST_IS_TEXT_OVERLAY (overlay));
 
   if (overlay->text_buffer) {
-    /* update text_segment's last stop */
-    if (overlay->text_segment.format == GST_FORMAT_TIME &&
-        GST_BUFFER_TIMESTAMP_IS_VALID (overlay->text_buffer)) {
-      overlay->text_segment.last_stop =
-          GST_BUFFER_TIMESTAMP (overlay->text_buffer);
-      if (GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer)) {
-        overlay->text_segment.last_stop +=
-            GST_BUFFER_DURATION (overlay->text_buffer);
-      }
-    }
     GST_DEBUG_OBJECT (overlay, "releasing text buffer %p",
         overlay->text_buffer);
     gst_buffer_unref (overlay->text_buffer);
@@ -2067,8 +2057,12 @@ wait_for_text_buf:
   } else {
     /* Text pad linked, check if we have a text buffer queued */
     if (overlay->text_buffer) {
-      gboolean pop_text = FALSE;
-      gint64 text_start, text_end;
+      gboolean pop_text = FALSE, valid_text_time = TRUE;
+      GstClockTime text_start = GST_CLOCK_TIME_NONE;
+      GstClockTime text_end = GST_CLOCK_TIME_NONE;
+      GstClockTime text_running_time = GST_CLOCK_TIME_NONE;
+      GstClockTime text_running_time_end = GST_CLOCK_TIME_NONE;
+      GstClockTime vid_running_time, vid_running_time_end;
 
       /* if the text buffer isn't stamped right, pop it off the
        * queue and display it for the current video frame only */
@@ -2076,28 +2070,46 @@ wait_for_text_buf:
           !GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer)) {
         GST_WARNING_OBJECT (overlay,
             "Got text buffer with invalid timestamp or duration");
-        text_start = start;
-        text_end = stop;
         pop_text = TRUE;
+        valid_text_time = FALSE;
       } else {
         text_start = GST_BUFFER_TIMESTAMP (overlay->text_buffer);
         text_end = text_start + GST_BUFFER_DURATION (overlay->text_buffer);
       }
 
+      vid_running_time =
+          gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
+          start);
+      vid_running_time_end =
+          gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
+          stop);
+
+      /* If timestamp and duration are valid */
+      if (valid_text_time) {
+        text_running_time =
+            gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
+            text_start);
+        text_running_time_end =
+            gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
+            text_end);
+      }
+
       GST_LOG_OBJECT (overlay, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (text_start), GST_TIME_ARGS (text_end));
+          GST_TIME_ARGS (text_running_time),
+          GST_TIME_ARGS (text_running_time_end));
       GST_LOG_OBJECT (overlay, "V: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+          GST_TIME_ARGS (vid_running_time),
+          GST_TIME_ARGS (vid_running_time_end));
 
       /* Text too old or in the future */
-      if (text_end <= start) {
+      if (valid_text_time && text_running_time_end <= vid_running_time) {
         /* text buffer too old, get rid of it and do nothing  */
         GST_LOG_OBJECT (overlay, "text buffer too old, popping");
         pop_text = FALSE;
         gst_text_overlay_pop_text (overlay);
         GST_OBJECT_UNLOCK (overlay);
         goto wait_for_text_buf;
-      } else if (stop <= text_start) {
+      } else if (valid_text_time && vid_running_time_end <= text_running_time) {
         GST_LOG_OBJECT (overlay, "text in future, pushing video buf");
         GST_OBJECT_UNLOCK (overlay);
         /* Push the video frame */
@@ -2148,7 +2160,7 @@ wait_for_text_buf:
         GST_OBJECT_UNLOCK (overlay);
         ret = gst_text_overlay_push_frame (overlay, buffer);
 
-        if (text_end <= stop) {
+        if (valid_text_time && text_running_time_end <= vid_running_time_end) {
           GST_LOG_OBJECT (overlay, "text buffer not needed any longer");
           pop_text = TRUE;
         }
@@ -2169,8 +2181,23 @@ wait_for_text_buf:
 
       /* Text pad linked, but no text buffer available - what now? */
       if (overlay->text_segment.format == GST_FORMAT_TIME) {
-        if (GST_BUFFER_TIMESTAMP (buffer) < overlay->text_segment.start ||
-            GST_BUFFER_TIMESTAMP (buffer) < overlay->text_segment.last_stop) {
+        GstClockTime text_start_running_time, text_last_stop_running_time;
+        GstClockTime vid_running_time;
+
+        vid_running_time =
+            gst_segment_to_running_time (&overlay->segment, GST_FORMAT_TIME,
+            GST_BUFFER_TIMESTAMP (buffer));
+        text_start_running_time =
+            gst_segment_to_running_time (&overlay->text_segment,
+            GST_FORMAT_TIME, overlay->text_segment.start);
+        text_last_stop_running_time =
+            gst_segment_to_running_time (&overlay->text_segment,
+            GST_FORMAT_TIME, overlay->text_segment.last_stop);
+
+        if ((GST_CLOCK_TIME_IS_VALID (text_start_running_time) &&
+                vid_running_time < text_start_running_time) ||
+            (GST_CLOCK_TIME_IS_VALID (text_last_stop_running_time) &&
+                vid_running_time < text_last_stop_running_time)) {
           wait_for_text_buf = FALSE;
         }
       }
