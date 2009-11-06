@@ -907,7 +907,10 @@ gst_input_selector_dispose (GObject * object)
 static gint64
 gst_segment_get_timestamp (GstSegment * segment, gint64 running_time)
 {
-  return (running_time - segment->accum) * segment->abs_rate + segment->start;
+  if (running_time <= segment->accum)
+    return segment->start;
+  else
+    return (running_time - segment->accum) * segment->abs_rate + segment->start;
 }
 
 static void
