@@ -489,11 +489,6 @@ gst_text_overlay_finalize (GObject * object)
     overlay->layout = NULL;
   }
 
-  if (overlay->segment) {
-    gst_segment_free (overlay->segment);
-    overlay->segment = NULL;
-  }
-
   if (overlay->text_buffer) {
     gst_buffer_unref (overlay->text_buffer);
     overlay->text_buffer = NULL;
@@ -592,13 +587,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
   overlay->cond = g_cond_new ();
-  overlay->segment = gst_segment_new ();
-  if (overlay->segment) {
-    gst_segment_init (overlay->segment, GST_FORMAT_TIME);
-  } else {
-    GST_WARNING_OBJECT (overlay, "segment creation failed");
-    g_assert_not_reached ();
-  }
+  gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
 }
 
 static void
@@ -1807,9 +1796,9 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
 
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (overlay, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
-            overlay->segment);
+            &overlay->segment);
 
-        gst_segment_set_newsegment (overlay->segment, update, rate, format,
+        gst_segment_set_newsegment (&overlay->segment, update, rate, format,
             start, stop, time);
       } else {
         GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
@@ -1909,7 +1898,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   GST_LOG_OBJECT (overlay, "%" GST_SEGMENT_FORMAT "  BUFFER: ts=%"
-      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, overlay->segment,
+      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, &overlay->segment,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer) +
           GST_BUFFER_DURATION (buffer)));
@@ -1922,7 +1911,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
     else
       stop = GST_CLOCK_TIME_NONE;
 
-    in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
+    in_seg = gst_segment_clip (&overlay->segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buffer), stop, &clip_start, &clip_stop);
   } else {
     in_seg = TRUE;
@@ -1988,15 +1977,15 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   GST_LOG_OBJECT (overlay, "%" GST_SEGMENT_FORMAT "  BUFFER: ts=%"
-      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, overlay->segment,
+      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, &overlay->segment,
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
   /* segment_clip() will adjust start unconditionally to segment_start if
    * no stop time is provided, so handle this ourselves */
-  if (stop == GST_CLOCK_TIME_NONE && start < overlay->segment->start)
+  if (stop == GST_CLOCK_TIME_NONE && start < overlay->segment.start)
     goto out_of_segment;
 
-  in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME, start, stop,
+  in_seg = gst_segment_clip (&overlay->segment, GST_FORMAT_TIME, start, stop,
       &clip_start, &clip_stop);
 
   if (!in_seg)
@@ -2043,7 +2032,7 @@ wait_for_text_buf:
     ret = gst_pad_push (overlay->srcpad, buffer);
 
     /* Update last_stop */
-    gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
+    gst_segment_set_last_stop (&overlay->segment, GST_FORMAT_TIME, clip_start);
 
     return ret;
   }
@@ -2197,7 +2186,7 @@ wait_for_text_buf:
   g_free (text);
 
   /* Update last_stop */
-  gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
+  gst_segment_set_last_stop (&overlay->segment, GST_FORMAT_TIME, clip_start);
 
   return ret;
 

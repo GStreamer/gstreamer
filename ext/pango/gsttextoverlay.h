@@ -92,7 +92,7 @@ struct _GstTextOverlay {
     GstPad                  *text_sinkpad;
     GstPad                  *srcpad;
 
-    GstSegment              *segment;
+    GstSegment               segment;
     GstSegment               text_segment;
     GstBuffer               *text_buffer;
     gboolean                text_linked;
