@@ -305,6 +305,57 @@ atom_wave_free (AtomWAVE * wave)
 }
 
 static void
+atom_elst_init (AtomELST * elst)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+  atom_full_init (&elst->header, FOURCC_elst, 0, 0, 0, flags);
+  elst->entries = 0;
+}
+
+static void
+atom_elst_clear (AtomELST * elst)
+{
+  GSList *walker;
+
+  atom_full_clear (&elst->header);
+  walker = elst->entries;
+  while (walker) {
+    g_free ((EditListEntry *) walker->data);
+    walker = g_slist_next (walker);
+  }
+  g_slist_free (elst->entries);
+}
+
+static void
+atom_edts_init (AtomEDTS * edts)
+{
+  atom_header_set (&edts->header, FOURCC_edts, 0, 0);
+  atom_elst_init (&edts->elst);
+}
+
+static void
+atom_edts_clear (AtomEDTS * edts)
+{
+  atom_clear (&edts->header);
+  atom_elst_clear (&edts->elst);
+}
+
+AtomEDTS *
+atom_edts_new ()
+{
+  AtomEDTS *edts = g_new0 (AtomEDTS, 1);
+  atom_edts_init (edts);
+  return edts;
+}
+
+void
+atom_edts_free (AtomEDTS * edts)
+{
+  atom_edts_clear (edts);
+  g_free (edts);
+}
+
+static void
 atom_sample_entry_init (SampleTableEntry * se, guint32 type)
 {
   atom_header_set (&se->header, type, 0, 0);
@@ -963,6 +1014,7 @@ atom_trak_init (AtomTRAK * trak, AtomsContext * context)
   atom_header_set (&trak->header, FOURCC_trak, 0, 0);
 
   atom_tkhd_init (&trak->tkhd, context);
+  trak->edts = NULL;
   atom_mdia_init (&trak->mdia, context);
 }
 
@@ -980,6 +1032,8 @@ atom_trak_free (AtomTRAK * trak)
 {
   atom_clear (&trak->header);
   atom_tkhd_clear (&trak->tkhd);
+  if (trak->edts)
+    atom_edts_free (trak->edts);
   atom_mdia_clear (&trak->mdia);
   g_free (trak);
 }
@@ -2055,6 +2109,45 @@ atom_mdia_copy_data (AtomMDIA * mdia, guint8 ** buffer, guint64 * size,
 }
 
 static guint64
+atom_elst_copy_data (AtomELST * elst, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+  GSList *walker;
+
+  if (!atom_full_copy_data (&elst->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  prop_copy_uint32 (g_slist_length (elst->entries), buffer, size, offset);
+
+  for (walker = elst->entries; walker != NULL; walker = g_slist_next (walker)) {
+    EditListEntry *entry = (EditListEntry *) walker->data;
+    prop_copy_uint32 (entry->duration, buffer, size, offset);
+    prop_copy_uint32 (entry->media_time, buffer, size, offset);
+    prop_copy_uint32 (entry->media_rate, buffer, size, offset);
+  }
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
+atom_edts_copy_data (AtomEDTS * edts, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_copy_data (&(edts->header), buffer, size, offset))
+    return 0;
+
+  if (!atom_elst_copy_data (&(edts->elst), buffer, size, offset))
+    return 0;
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
 atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -2065,6 +2158,11 @@ atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
   }
   if (!atom_tkhd_copy_data (&trak->tkhd, buffer, size, offset)) {
     return 0;
+  }
+  if (trak->edts) {
+    if (!atom_edts_copy_data (trak->edts, buffer, size, offset)) {
+      return 0;
+    }
   }
 
   if (!atom_mdia_copy_data (&trak->mdia, buffer, size, offset)) {

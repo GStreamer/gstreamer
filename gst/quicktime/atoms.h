@@ -466,6 +466,29 @@ typedef struct _AtomMINF
   AtomSTBL stbl;
 } AtomMINF;
 
+typedef struct _EditListEntry
+{
+  /* duration in movie's timescale */
+  guint32 duration;
+  /* start time in media's timescale, -1 for empty */
+  guint32 media_time;
+  guint32 media_rate;  /* fixed point 32 bit */
+} EditListEntry;
+
+typedef struct _AtomELST
+{
+  AtomFull header;
+
+  /* number of entries is implicit */
+  GSList *entries;
+} AtomELST;
+
+typedef struct _AtomEDTS
+{
+  Atom header;
+  AtomELST elst;
+} AtomEDTS;
+
 typedef struct _AtomMDIA
 {
   Atom header;
@@ -521,6 +544,7 @@ typedef struct _AtomTRAK
   Atom header;
 
   AtomTKHD tkhd;
+  AtomEDTS *edts;
   AtomMDIA mdia;
 
   /* some helper info for structural conformity checks */
@@ -549,7 +573,6 @@ typedef struct _AtomWAVE
   /* list of AtomInfo */
   GList *extension_atoms;
 } AtomWAVE;
-
 
 /*
  * Function to serialize an atom
