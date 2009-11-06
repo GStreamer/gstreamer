@@ -141,6 +141,7 @@ struct _GstDecodeBin
   guint max_size_bytes;
   guint max_size_buffers;
   guint64 max_size_time;
+  gboolean post_stream_topology;
 
   GstElement *typefind;         /* this holds the typefind object */
 
@@ -226,6 +227,7 @@ enum
 #define DEFAULT_MAX_SIZE_BYTES    0
 #define DEFAULT_MAX_SIZE_BUFFERS  0
 #define DEFAULT_MAX_SIZE_TIME     0
+#define DEFAULT_POST_STREAM_TOPOLOGY FALSE
 
 /* Properties */
 enum
@@ -240,6 +242,7 @@ enum
   PROP_MAX_SIZE_BYTES,
   PROP_MAX_SIZE_BUFFERS,
   PROP_MAX_SIZE_TIME,
+  PROP_POST_STREAM_TOPOLOGY,
   PROP_LAST
 };
 
@@ -803,6 +806,21 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           0, G_MAXUINT64,
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstDecodeBin2::post-stream-topology
+   *
+   * Post stream-topology messages on the bus every time the topology changes.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_klass, PROP_POST_STREAM_TOPOLOGY,
+      g_param_spec_boolean ("post-stream-topology", "Post Stream Topology",
+          "Post stream-topology messages",
+          DEFAULT_POST_STREAM_TOPOLOGY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
+
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_continue);
   klass->autoplug_factories =
@@ -1062,6 +1080,9 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_MAX_SIZE_TIME:
       dbin->max_size_time = g_value_get_uint64 (value);
       break;
+    case PROP_POST_STREAM_TOPOLOGY:
+      dbin->post_stream_topology = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1102,6 +1123,9 @@ gst_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_SIZE_TIME:
       g_value_set_uint64 (value, dbin->max_size_time);
+      break;
+    case PROP_POST_STREAM_TOPOLOGY:
+      g_value_set_boolean (value, dbin->post_stream_topology);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2895,7 +2919,8 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
   gst_element_no_more_pads (GST_ELEMENT (dbin));
 
   /* 5. Send a custom element message with the stream topology */
-  gst_decode_bin_post_topology_message (dbin);
+  if (dbin->post_stream_topology)
+    gst_decode_bin_post_topology_message (dbin);
 
   /* 6. Unblock internal pads. The application should have connected stuff now
    * so that streaming can continue. */
