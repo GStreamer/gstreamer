@@ -611,6 +611,8 @@ AtomTRAK*  atom_trak_new               (AtomsContext *context);
 void       atom_trak_add_samples       (AtomTRAK * trak, guint32 nsamples, guint32 delta,
                                         guint32 size, guint64 chunk_offset, gboolean sync,
                                         gboolean do_pts, gint64 pts_offset);
+void       atom_trak_add_elst_entry    (AtomTRAK * trak, guint32 duration,
+                                        guint32 media_time, guint32 rate);
 guint32    atom_trak_get_timescale     (AtomTRAK *trak);
 
 AtomMOOV*  atom_moov_new               (AtomsContext *context);

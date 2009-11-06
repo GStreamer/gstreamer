@@ -113,6 +113,7 @@ enum
 
 /* some spare for header size as well */
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
+#define MAX_TOLERATED_LATENESS          (GST_SECOND / 10)
 
 #define DEFAULT_LARGE_FILE              FALSE
 #define DEFAULT_MOVIE_TIMESCALE         1000
@@ -248,6 +249,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->sample_size = 0;
   qtpad->sync = FALSE;
   qtpad->last_dts = 0;
+  qtpad->first_ts = GST_CLOCK_TIME_NONE;
 
   if (qtpad->last_buf)
     gst_buffer_replace (&qtpad->last_buf, NULL);
@@ -1113,6 +1115,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   GSList *walk;
   gboolean large_file;
   guint32 timescale;
+  GstClockTime first_ts = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (qtmux, "Updating remaining values and sending last data");
 
@@ -1145,6 +1148,44 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   atom_moov_update_timescale (qtmux->moov, timescale);
   atom_moov_set_64bits (qtmux->moov, large_file);
   atom_moov_update_duration (qtmux->moov);
+
+  /* check for late streams */
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qtpad = (GstQTPad *) cdata;
+
+    if (!GST_CLOCK_TIME_IS_VALID (first_ts) ||
+        (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) &&
+            qtpad->first_ts < first_ts)) {
+      first_ts = qtpad->first_ts;
+    }
+  }
+  GST_DEBUG_OBJECT (qtmux, "Media first ts selected: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (first_ts));
+  /* add EDTSs for late streams */
+  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstQTPad *qtpad = (GstQTPad *) cdata;
+    guint32 lateness;
+    guint32 duration;
+
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) &&
+        qtpad->first_ts > first_ts + MAX_TOLERATED_LATENESS) {
+      GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
+          GST_PAD_NAME (qtpad->collect.pad),
+          GST_TIME_ARGS (qtpad->first_ts - first_ts));
+      lateness = gst_util_uint64_scale_round (qtpad->first_ts - first_ts,
+          timescale, GST_SECOND);
+      duration = qtpad->trak->tkhd.duration;
+      atom_trak_add_elst_entry (qtpad->trak, lateness, (guint32) - 1,
+          (guint32) (1 * 65536.0));
+      atom_trak_add_elst_entry (qtpad->trak, duration, 0,
+          (guint32) (1 * 65536.0));
+
+      /* need to add the empty time to the trak duration */
+      qtpad->trak->tkhd.duration += lateness;
+    }
+  }
 
   /* tags into file metadata */
   gst_qt_mux_setup_metadata (qtmux);
@@ -1368,6 +1409,20 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (qtmux, "New longest chunk found: %" GST_TIME_FORMAT
         ", pad %s", GST_TIME_ARGS (duration), GST_PAD_NAME (pad->collect.pad));
     qtmux->longest_chunk = duration;
+  }
+
+  /* if this is the first buffer, store the timestamp */
+  if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
+    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (last_buf))) {
+      pad->first_ts = GST_BUFFER_TIMESTAMP (last_buf);
+    } else {
+      GST_DEBUG_OBJECT (qtmux, "First buffer for pad %s has no timestamp, "
+          "using 0 as first timestamp");
+      pad->first_ts = 0;
+    }
+    GST_DEBUG_OBJECT (qtmux, "Stored first timestamp for pad %s %"
+        GST_TIME_FORMAT, GST_PAD_NAME (pad->collect.pad),
+        GST_TIME_ARGS (pad->first_ts));
   }
 
   /* now we go and register this buffer/sample all over */

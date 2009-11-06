@@ -2889,6 +2889,34 @@ atom_tkhd_set_video (AtomTKHD * tkhd, AtomsContext * context, guint32 width,
   tkhd->height = height;
 }
 
+static void
+atom_edts_add_entry (AtomEDTS * edts, EditListEntry * entry)
+{
+  edts->elst.entries = g_slist_append (edts->elst.entries, entry);
+}
+
+/* 
+ * Adds a new entry to this trak edits list
+ * duration is in the moov's timescale
+ * media_time is the offset in the media time to start from (media's timescale)
+ * rate is a 32 bits fixed-point
+ */
+void
+atom_trak_add_elst_entry (AtomTRAK * trak, guint32 duration, guint32 media_time,
+    guint32 rate)
+{
+  EditListEntry *entry = g_new (EditListEntry, 1);
+
+  entry->duration = duration;
+  entry->media_time = media_time;
+  entry->media_rate = rate;
+
+  if (trak->edts == NULL) {
+    trak->edts = atom_edts_new ();
+  }
+  atom_edts_add_entry (trak->edts, entry);
+}
+
 /* re-negotiation is prevented at top-level, so only 1 entry expected.
  * Quite some more care here and elsewhere may be needed to
  * support several entries */
