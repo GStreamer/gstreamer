@@ -699,32 +699,38 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
 
   /* assume we can append to the previous sample */
   sample = src->next_sample;
-  /* no previous sample, try to read from position 0 */
-  if (sample == -1)
-    sample = 0;
 
   sps = src->ringbuffer->samples_per_seg;
   segtotal = src->ringbuffer->spec.segtotal;
-
-  /* figure out the segment and the offset inside the segment where
-   * the sample should be read from. */
-  readseg = sample / sps;
 
   /* get the currently processed segment */
   segdone = g_atomic_int_get (&src->ringbuffer->segdone)
       - src->ringbuffer->segbase;
 
-  GST_DEBUG_OBJECT (src, "reading from %d, we are at %d", readseg, segdone);
+  if (sample != -1) {
+    GST_DEBUG_OBJECT (src, "at sample %" G_GUINT64_FORMAT, segdone, sample);
+    /* figure out the segment and the offset inside the segment where
+     * the sample should be read from. */
+    readseg = sample / sps;
 
-  /* see how far away it is from the read segment, normally segdone (where new
-   * data is written in the ringbuffer) is bigger than readseg (where we are
-   * reading). */
-  diff = segdone - readseg;
-  if (diff >= segtotal) {
-    GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
-    /* sample would be dropped, position to next playable position */
+    /* see how far away it is from the read segment, normally segdone (where new
+     * data is written in the ringbuffer) is bigger than readseg (where we are
+     * reading). */
+    diff = segdone - readseg;
+    if (diff >= segtotal) {
+      GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
+      /* sample would be dropped, position to next playable position */
+      sample = ((guint64) (segdone)) * sps;
+    }
+  } else {
+    /* no previous sample, go to the current position */
+    GST_DEBUG_OBJECT (src, "first sample, align to current %d", segdone);
     sample = ((guint64) (segdone)) * sps;
   }
+
+  GST_DEBUG_OBJECT (src,
+      "reading from %d, we are at %d, sample %" G_GUINT64_FORMAT, readseg,
+      segdone, sample);
 
   return sample;
 }
