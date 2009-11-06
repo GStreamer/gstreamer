@@ -1,6 +1,9 @@
 /* GStreamer h264 parser
  * Copyright (C) 2005 Michal Benes <michal.benes@itonis.tv>
  *           (C) 2008 Wim Taymans <wim.taymans@gmail.com>
+ *           (C) 2009 Mark Nauwelaerts <mnauw users sf net>
+ *           (C) 2009 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * gsth264parse.c:
  *
@@ -212,6 +215,20 @@ gst_nal_bs_read_ue (GstNalBs * bs)
   return ((1 << i) - 1 + gst_nal_bs_read (bs, i));
 }
 
+/* read signed Exp-Golomb code */
+static gint
+gst_nal_bs_read_se (GstNalBs * bs)
+{
+  gint i = 0;
+
+  i = gst_nal_bs_read_ue (bs);
+  /* (-1)^(i+1) Ceil (i / 2) */
+  i = (i + 1) / 2 * (i & 1 ? 1 : -1);
+
+  return i;
+}
+
+
 /* SEI type */
 typedef enum
 {
@@ -276,6 +293,9 @@ struct _GstH264Sps
 
   gboolean pic_struct_present_flag;
   /* And more...  */
+
+  /* derived values */
+  gint width, height;
 };
 /* PPS: pic parameter sets */
 struct _GstH264Pps
@@ -469,6 +489,11 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
   guint8 profile_idc, level_idc;
   guint8 sps_id;
   GstH264Sps *sps = NULL;
+  guint subwc[] = { 1, 2, 2, 1 };
+  guint subhc[] = { 1, 2, 1, 1 };
+  guint chroma;
+  guint fc_top, fc_bottom, fc_left, fc_right;
+  gint width, height;
 
   profile_idc = gst_nal_bs_read (bs, 8);
   gst_nal_bs_read (bs, 1);      /* constraint_set0_flag */
@@ -489,15 +514,41 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
   if (profile_idc == 100 || profile_idc == 110 || profile_idc == 122
       || profile_idc == 244 || profile_idc == 44 ||
       profile_idc == 83 || profile_idc == 86) {
-    if (gst_nal_bs_read_ue (bs) == 3) { /* chroma_format_idc */
-      gst_nal_bs_read (bs, 1);  /* separate_colour_plane_flag */
+    gint scp_flag = 0;
+
+    if ((chroma = gst_nal_bs_read_ue (bs)) == 3) {      /* chroma_format_idc */
+      scp_flag = gst_nal_bs_read (bs, 1);       /* separate_colour_plane_flag */
     }
     gst_nal_bs_read_ue (bs);    /* bit_depth_luma_minus8 */
     gst_nal_bs_read_ue (bs);    /* bit_depth_chroma_minus8 */
     gst_nal_bs_read (bs, 1);    /* qpprime_y_zero_transform_bypass_flag */
     if (gst_nal_bs_read (bs, 1)) {      /* seq_scaling_matrix_present_flag */
-      /* TODO: unfinished */
+      gint i, j, m, d;
+
+      m = (chroma != 3) ? 8 : 12;
+      for (i = 0; i < m; i++) {
+        /* seq_scaling_list_present_flag[i] */
+        d = gst_nal_bs_read (bs, 1);
+        if (d) {
+          gint lastScale = 8, nextScale = 8, deltaScale;
+
+          j = (i < 6) ? 16 : 64;
+          for (; j > 0; j--) {
+            if (nextScale != 0) {
+              deltaScale = gst_nal_bs_read_se (bs);
+              nextScale = (lastScale + deltaScale + 256) % 256;
+            }
+            if (nextScale != 0)
+              lastScale = nextScale;
+          }
+        }
+      }
     }
+    if (scp_flag)
+      chroma = 0;
+  } else {
+    /* inferred value */
+    chroma = 1;
   }
 
   sps->log2_max_frame_num_minus4 = gst_nal_bs_read_ue (bs);     /* between 0 and 12 */
@@ -511,35 +562,45 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
   if (sps->pic_order_cnt_type == 0) {
     sps->log2_max_pic_order_cnt_lsb_minus4 = gst_nal_bs_read_ue (bs);
   } else if (sps->pic_order_cnt_type == 1) {
-    /* TODO: unfinished */
-    /*
-       delta_pic_order_always_zero_flag = gst_nal_bs_read (bs, 1);
-       offset_for_non_ref_pic = gst_nal_bs_read_se (bs);
-       offset_for_top_to_bottom_field = gst_nal_bs_read_se (bs);
+    gint d;
 
-       num_ref_frames_in_pic_order_cnt_cycle = gst_nal_bs_read_ue (bs);
-       for( i = 0; i < num_ref_frames_in_pic_order_cnt_cycle; i++ )
-       offset_for_ref_frame[i] = gst_nal_bs_read_se (bs);
-     */
+    /* delta_pic_order_always_zero_flag */
+    gst_nal_bs_read (bs, 1);
+    /* offset_for_non_ref_pic */
+    gst_nal_bs_read_ue (bs);
+    /* offset_for_top_to_bottom_field */
+    gst_nal_bs_read_ue (bs);
+    /* num_ref_frames_in_pic_order_cnt_cycle */
+    d = gst_nal_bs_read_ue (bs);
+    for (; d > 0; d--) {
+      /* offset_for_ref_frame[i] */
+      gst_nal_bs_read_ue (bs);
+    }
   }
 
   gst_nal_bs_read_ue (bs);      /* max_num_ref_frames */
   gst_nal_bs_read (bs, 1);      /* gaps_in_frame_num_value_allowed_flag */
-  gst_nal_bs_read_ue (bs);      /* pic_width_in_mbs_minus1 */
-  gst_nal_bs_read_ue (bs);      /* pic_height_in_map_units_minus1 */
+  width = gst_nal_bs_read_ue (bs);      /* pic_width_in_mbs_minus1 */
+  height = gst_nal_bs_read_ue (bs);     /* pic_height_in_map_units_minus1 */
 
   sps->frame_mbs_only_flag = gst_nal_bs_read (bs, 1);
   if (!sps->frame_mbs_only_flag) {
     gst_nal_bs_read (bs, 1);    /* mb_adaptive_frame_field_flag */
   }
 
+  width++;
+  width *= 16;
+  height++;
+  height *= 16 * (2 - sps->frame_mbs_only_flag);
+
   gst_nal_bs_read (bs, 1);      /* direct_8x8_inference_flag */
   if (gst_nal_bs_read (bs, 1)) {        /* frame_cropping_flag */
-    gst_nal_bs_read_ue (bs);    /* frame_crop_left_offset */
-    gst_nal_bs_read_ue (bs);    /* frame_crop_right_offset */
-    gst_nal_bs_read_ue (bs);    /* frame_crop_top_offset */
-    gst_nal_bs_read_ue (bs);    /* frame_crop_bottom_offset */
-  }
+    fc_left = gst_nal_bs_read_ue (bs);  /* frame_crop_left_offset */
+    fc_right = gst_nal_bs_read_ue (bs); /* frame_crop_right_offset */
+    fc_top = gst_nal_bs_read_ue (bs);   /* frame_crop_top_offset */
+    fc_bottom = gst_nal_bs_read_ue (bs);        /* frame_crop_bottom_offset */
+  } else
+    fc_left = fc_right = fc_top = fc_bottom = 0;
 
   GST_DEBUG_OBJECT (h, "Decoding SPS: profile_idc = %d, "
       "level_idc = %d, "
@@ -549,6 +610,25 @@ gst_nal_decode_sps (GstH264Parse * h, GstNalBs * bs)
       sps->profile_idc,
       sps->level_idc,
       sps_id, sps->pic_order_cnt_type, sps->frame_mbs_only_flag);
+
+  /* calculate width and height */
+  GST_DEBUG_OBJECT (h, "initial width=%d, height=%d", width, height);
+  GST_DEBUG_OBJECT (h, "crop (%d,%d)(%d,%d)",
+      fc_left, fc_top, fc_right, fc_bottom);
+  if (chroma > 3) {
+    GST_DEBUG_OBJECT (h, "chroma=%d in SPS is out of range", chroma);
+    return FALSE;
+  }
+  width -= (fc_left + fc_right) * subwc[chroma];
+  height -=
+      (fc_top + fc_bottom) * subhc[chroma] * (2 - sps->frame_mbs_only_flag);
+  if (width < 0 || height < 0) {
+    GST_DEBUG_OBJECT (h, "invalid width/height in SPS");
+    return FALSE;
+  }
+  GST_DEBUG_OBJECT (h, "final width=%u, height=%u", width, height);
+  sps->width = width;
+  sps->height = height;
 
   sps->vui_parameters_present_flag = gst_nal_bs_read (bs, 1);
   if (sps->vui_parameters_present_flag) {
