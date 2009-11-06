@@ -1126,7 +1126,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
         GST_PAD_NAME (qtpad->collect.pad));
     ret = gst_qt_mux_add_buffer (qtmux, qtpad, NULL);
     if (ret != GST_FLOW_OK)
-      GST_DEBUG_OBJECT (qtmux, "Failed to send last buffer for %s, "
+      GST_WARNING_OBJECT (qtmux, "Failed to send last buffer for %s, "
           "flow return: %s", GST_PAD_NAME (qtpad->collect.pad),
           gst_flow_get_name (ret));
   }
@@ -1405,7 +1405,8 @@ not_negotiated:
     GST_ELEMENT_ERROR (qtmux, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before buffer flow on pad %s",
             GST_PAD_NAME (pad->collect.pad)));
-    gst_buffer_unref (buf);
+    if (buf)
+      gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
