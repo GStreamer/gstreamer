@@ -82,6 +82,10 @@ typedef struct _GstQTPad
   /* dts of last_buf */
   GstClockTime last_dts;
 
+  /* store the first timestamp for comparing with other streams and
+   * know if there are late streams */
+  GstClockTime first_ts;
+
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
   AtomTRAK *trak;
