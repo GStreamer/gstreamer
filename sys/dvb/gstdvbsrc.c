@@ -1287,6 +1287,9 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
         feparams.frequency = freq;
 #if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
+        feparams.delsys.dvbs.fec = object->code_rate_hp;
+        feparams.delsys.dvbs.modulation = object->modulation;
+        feparams.delsys.dvbs.symbol_rate = sym_rate;
 #else
         feparams.u.ofdm.bandwidth = object->bandwidth;
         feparams.u.ofdm.code_rate_HP = object->code_rate_hp;
@@ -1305,14 +1308,24 @@ gst_dvbsrc_tune (GstDvbSrc * object)
             sym_rate);
         feparams.frequency = freq;
         feparams.inversion = object->inversion;
+#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
+        feparams.delsys.dvbs.fec = object->code_rate_hp;
+        feparams.delsys.dvbs.modulation = object->modulation;
+        feparams.delsys.dvbs.symbol_rate = sym_rate;
+#else
         feparams.u.qam.fec_inner = object->code_rate_hp;
         feparams.u.qam.modulation = object->modulation;
         feparams.u.qam.symbol_rate = sym_rate;
+#endif
         break;
       case FE_ATSC:
         GST_INFO_OBJECT (object, "Tuning ATSC to %d", freq);
         feparams.frequency = freq;
+#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
+        feparams.delsys.atsc.modulation = object->modulation;
+#else
         feparams.u.vsb.modulation = object->modulation;
+#endif
         break;
       default:
         g_error ("Unknown frontend type: %d", object->adapter_type);
