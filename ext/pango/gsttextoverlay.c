@@ -1914,14 +1914,25 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer) +
           GST_BUFFER_DURATION (buffer)));
 
-  in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer),
-      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
-      &clip_start, &clip_stop);
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))) {
+    GstClockTime stop;
+
+    if (G_LIKELY (GST_BUFFER_DURATION_IS_VALID (buffer)))
+      stop = GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+    else
+      stop = GST_CLOCK_TIME_NONE;
+
+    in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buffer), stop, &clip_start, &clip_stop);
+  } else {
+    in_seg = TRUE;
+  }
 
   if (in_seg) {
-    GST_BUFFER_TIMESTAMP (buffer) = clip_start;
-    GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+      GST_BUFFER_TIMESTAMP (buffer) = clip_start;
+    else if (GST_BUFFER_DURATION_IS_VALID (buffer))
+      GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
 
     /* Wait for the previous buffer to go away */
     while (overlay->text_buffer != NULL) {
