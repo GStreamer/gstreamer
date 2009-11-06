@@ -150,8 +150,9 @@ struct _GstDecodeBin
 
   GValueArray *factories;       /* factories we can use for selecting elements */
 
+  GMutex *subtitle_lock;        /* Protects changes to subtitles and encoding */
   GList *subtitles;             /* List of elements with subtitle-encoding,
-                                 * protected by object lock! */
+                                 * protected by above mutex! */
 
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
@@ -314,6 +315,23 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
 		    "dynunlocking from thread %p",			\
 		    g_thread_self ());					\
     g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->dyn_lock);		\
+} G_STMT_END
+
+#define SUBTITLE_LOCK(dbin) G_STMT_START {				\
+    GST_LOG_OBJECT (dbin,						\
+		    "subtitle locking from thread %p",			\
+		    g_thread_self ());					\
+    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
+    GST_LOG_OBJECT (dbin,						\
+		    "subtitle lock from thread %p",			\
+		    g_thread_self ());					\
+} G_STMT_END
+
+#define SUBTITLE_UNLOCK(dbin) G_STMT_START {				\
+    GST_LOG_OBJECT (dbin,						\
+		    "subtitle unlocking from thread %p",		\
+		    g_thread_self ());					\
+    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
 } G_STMT_END
 
 /* GstDecodeGroup
@@ -849,6 +867,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->shutdown = FALSE;
   decode_bin->blocked_pads = NULL;
 
+  decode_bin->subtitle_lock = g_mutex_new ();
+
   decode_bin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
   decode_bin->caps = gst_static_caps_get (&default_raw_caps);
   decode_bin->use_buffering = DEFAULT_USE_BUFFERING;
@@ -903,6 +923,11 @@ gst_decode_bin_finalize (GObject * object)
   if (decode_bin->dyn_lock) {
     g_mutex_free (decode_bin->dyn_lock);
     decode_bin->dyn_lock = NULL;
+  }
+
+  if (decode_bin->subtitle_lock) {
+    g_mutex_free (decode_bin->subtitle_lock);
+    decode_bin->subtitle_lock = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -975,7 +1000,7 @@ gst_decode_bin_set_subs_encoding (GstDecodeBin * dbin, const gchar * encoding)
 
   GST_DEBUG_OBJECT (dbin, "Setting new encoding: %s", GST_STR_NULL (encoding));
 
-  GST_OBJECT_LOCK (dbin);
+  SUBTITLE_LOCK (dbin);
   g_free (dbin->encoding);
   dbin->encoding = g_strdup (encoding);
 
@@ -984,7 +1009,7 @@ gst_decode_bin_set_subs_encoding (GstDecodeBin * dbin, const gchar * encoding)
     g_object_set (G_OBJECT (walk->data), "subtitle-encoding", dbin->encoding,
         NULL);
   }
-  GST_OBJECT_UNLOCK (dbin);
+  SUBTITLE_UNLOCK (dbin);
 }
 
 static gchar *
@@ -994,9 +1019,9 @@ gst_decode_bin_get_subs_encoding (GstDecodeBin * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Getting currently set encoding");
 
-  GST_OBJECT_LOCK (dbin);
+  SUBTITLE_LOCK (dbin);
   encoding = g_strdup (dbin->encoding);
-  GST_OBJECT_UNLOCK (dbin);
+  SUBTITLE_UNLOCK (dbin);
 
   return encoding;
 }
@@ -1488,10 +1513,12 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* try to configure the subtitle encoding property when we can */
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
             "subtitle-encoding")) {
+      SUBTITLE_LOCK (dbin);
       GST_DEBUG_OBJECT (dbin,
           "setting subtitle-encoding=%s to element", dbin->encoding);
       g_object_set (G_OBJECT (element), "subtitle-encoding", dbin->encoding,
           NULL);
+      SUBTITLE_UNLOCK (dbin);
       subtitle = TRUE;
     } else
       subtitle = FALSE;
@@ -1518,11 +1545,11 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
       continue;
     }
     if (subtitle) {
-      GST_OBJECT_LOCK (dbin);
+      SUBTITLE_LOCK (dbin);
       /* we added the element now, add it to the list of subtitle-encoding
        * elements when we can set the property */
       dbin->subtitles = g_list_prepend (dbin->subtitles, element);
-      GST_OBJECT_UNLOCK (dbin);
+      SUBTITLE_UNLOCK (dbin);
     }
 
     res = TRUE;
@@ -2022,10 +2049,10 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
       gst_element_set_state (element, GST_STATE_NULL);
     }
 
-    GST_OBJECT_LOCK (chain->dbin);
+    SUBTITLE_LOCK (chain->dbin);
     /* remove possible subtitle element */
     chain->dbin->subtitles = g_list_remove (chain->dbin->subtitles, element);
-    GST_OBJECT_UNLOCK (chain->dbin);
+    SUBTITLE_UNLOCK (chain->dbin);
 
     if (!hide) {
       gst_object_unref (element);
