@@ -120,6 +120,10 @@ extern GType gst_type_find_factory_get_type (void);
 extern GType gst_element_factory_get_type (void);
 #define GST_TYPE_ELEMENT_FACTORY                 (gst_element_factory_get_type())
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+extern HMODULE _priv_gst_dll_handle;
+#endif
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
