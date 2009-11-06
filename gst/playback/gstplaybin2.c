@@ -526,6 +526,11 @@ static void no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group);
 static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
     GstSourceGroup * group);
 
+static void gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
+    gboolean block);
+static void gst_play_bin_suburidecodebin_seek_to_start (GstElement *
+    suburidecodebin);
+
 static GstElementClass *parent_class;
 
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
@@ -1233,8 +1238,24 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 static void
 gst_play_bin_set_flags (GstPlayBin * playbin, GstPlayFlags flags)
 {
+  GstPlayFlags oldflags = gst_play_sink_get_flags (playbin->playsink);
+  GstSourceGroup *group = playbin->curr_group;
+  gboolean unblock = FALSE;
+
+  if (group && group->suburidecodebin) {
+    if ((oldflags & GST_PLAY_FLAG_TEXT) && !(flags & GST_PLAY_FLAG_TEXT)) {
+      gst_play_bin_suburidecodebin_block (group->suburidecodebin, TRUE);
+    } else if (!(oldflags & GST_PLAY_FLAG_TEXT) && (flags & GST_PLAY_FLAG_TEXT)) {
+      gst_play_bin_suburidecodebin_seek_to_start (group->suburidecodebin);
+      unblock = TRUE;
+    }
+  }
+
   gst_play_sink_set_flags (playbin->playsink, flags);
   gst_play_sink_reconfigure (playbin->playsink);
+
+  if (unblock)
+    gst_play_bin_suburidecodebin_block (group->suburidecodebin, FALSE);
 }
 
 static GstPlayFlags
@@ -1499,6 +1520,72 @@ no_channels:
   }
 }
 
+static void
+_suburidecodebin_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  GST_DEBUG_OBJECT (pad, "Pad blocked: %d", blocked);
+}
+
+static void
+gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
+{
+  GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
+  GstPad *sinkpad;
+
+  if (it && gst_iterator_next (it, (gpointer) & sinkpad) == GST_ITERATOR_OK
+      && sinkpad) {
+    GstEvent *event;
+
+    event =
+        gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1);
+    if (!gst_pad_send_event (sinkpad, event)) {
+      event =
+          gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+          GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1);
+      if (!gst_pad_send_event (sinkpad, event))
+        GST_DEBUG_OBJECT (suburidecodebin, "Seeking to the beginning failed!");
+    }
+  }
+
+  if (it)
+    gst_iterator_free (it);
+}
+
+static void
+gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
+    gboolean block)
+{
+  GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
+  gboolean done = FALSE;
+
+  GST_DEBUG_OBJECT (suburidecodebin, "Blocking suburidecodebin: %d", block);
+
+  if (!it)
+    return;
+  while (!done) {
+    GstPad *sinkpad;
+
+    switch (gst_iterator_next (it, (gpointer) & sinkpad)) {
+      case GST_ITERATOR_OK:
+        gst_pad_set_blocked_async (sinkpad, block, _suburidecodebin_blocked_cb,
+            NULL);
+        gst_object_unref (sinkpad);
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (it);
+}
+
 static gboolean
 gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
 {
@@ -1531,7 +1618,42 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
       g_object_get (selector, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
-        GstPad *src, *peer;
+        gboolean need_unblock, need_block, need_seek;
+        GstPad *src, *peer = NULL, *oldpeer = NULL;
+        GstElement *parent_element = NULL, *old_parent_element = NULL;
+
+        /* Now check if we need to seek the suburidecodebin to the beginning
+         * or if we need to block all suburidecodebin sinkpads or if we need
+         * to unblock all suburidecodebin sinkpads
+         */
+        if (sinkpad)
+          peer = gst_pad_get_peer (sinkpad);
+        if (old_sinkpad)
+          oldpeer = gst_pad_get_peer (old_sinkpad);
+
+        if (peer)
+          parent_element = gst_pad_get_parent_element (peer);
+        if (oldpeer)
+          old_parent_element = gst_pad_get_parent_element (oldpeer);
+
+        need_block = (old_parent_element == group->suburidecodebin
+            && parent_element != old_parent_element);
+        need_unblock = (parent_element == group->suburidecodebin
+            && parent_element != old_parent_element);
+        need_seek = (parent_element == group->suburidecodebin);
+
+        if (peer)
+          gst_object_unref (peer);
+        if (oldpeer)
+          gst_object_unref (oldpeer);
+        if (parent_element)
+          gst_object_unref (parent_element);
+        if (old_parent_element)
+          gst_object_unref (old_parent_element);
+
+        /* Block all suburidecodebin sinkpads */
+        if (need_block)
+          gst_play_bin_suburidecodebin_block (group->suburidecodebin, TRUE);
 
         /* activate the selected pad */
         g_object_set (selector, "active-pad", sinkpad, NULL);
@@ -1551,6 +1673,14 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           gst_object_unref (peer);
         }
         gst_object_unref (src);
+
+        /* Unblock pads if necessary */
+        if (need_unblock)
+          gst_play_bin_suburidecodebin_block (group->suburidecodebin, FALSE);
+
+        /* seek to the beginning */
+        if (need_seek)
+          gst_play_bin_suburidecodebin_seek_to_start (group->suburidecodebin);
       }
       gst_object_unref (selector);
 
