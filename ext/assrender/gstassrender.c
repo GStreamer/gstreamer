@@ -776,6 +776,8 @@ gst_assrender_event_video (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
     default:
       ret = gst_pad_event_default (pad, event);
       break;
@@ -831,6 +833,7 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
       render->subtitle_flushing = FALSE;
       gst_event_unref (event);
       ret = TRUE;
