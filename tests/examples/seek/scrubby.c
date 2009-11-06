@@ -300,8 +300,9 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   }
 
   if (changed_id == 0) {
-    changed_id = g_signal_connect (GTK_OBJECT (hscale),
-        "value_changed", G_CALLBACK (seek_cb), pipeline);
+    changed_id =
+        g_signal_connect (hscale, "value_changed", G_CALLBACK (seek_cb),
+        pipeline);
   }
 
   GST_DEBUG ("start seek");
@@ -407,8 +408,9 @@ bus_message (GstBus * bus, GstMessage * message, gpointer data)
       GST_DEBUG ("segment_done, doing next seek");
       if (!do_seek (hscale, FALSE, update_id == 0)) {
         if (changed_id == 0) {
-          changed_id = g_signal_connect (GTK_OBJECT (hscale),
-              "value_changed", G_CALLBACK (seek_cb), pipeline);
+          changed_id =
+              g_signal_connect (hscale, "value_changed", G_CALLBACK (seek_cb),
+              pipeline);
         }
       }
       break;
@@ -513,15 +515,16 @@ main (int argc, char **argv)
   gtk_scale_set_digits (GTK_SCALE (shscale), 2);
   gtk_range_set_update_policy (GTK_RANGE (shscale), GTK_UPDATE_CONTINUOUS);
 
-  schanged_id = g_signal_connect (GTK_OBJECT (shscale),
-      "value_changed", G_CALLBACK (speed_cb), pipeline);
+  schanged_id =
+      g_signal_connect (shscale, "value_changed", G_CALLBACK (speed_cb),
+      pipeline);
 
-  g_signal_connect (GTK_OBJECT (hscale),
-      "button_press_event", G_CALLBACK (start_seek), pipeline);
-  g_signal_connect (GTK_OBJECT (hscale),
-      "button_release_event", G_CALLBACK (stop_seek), pipeline);
-  g_signal_connect (GTK_OBJECT (hscale),
-      "format_value", G_CALLBACK (format_value), pipeline);
+  g_signal_connect (hscale, "button_press_event", G_CALLBACK (start_seek),
+      pipeline);
+  g_signal_connect (hscale, "button_release_event", G_CALLBACK (stop_seek),
+      pipeline);
+  g_signal_connect (hscale, "format_value", G_CALLBACK (format_value),
+      pipeline);
 
   /* do the packing stuff ... */
   gtk_window_set_default_size (GTK_WINDOW (window), 96, 96);

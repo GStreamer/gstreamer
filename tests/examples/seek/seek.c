@@ -1412,8 +1412,9 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   }
 
   if (changed_id == 0 && flush_seek && scrub) {
-    changed_id = g_signal_connect (GTK_OBJECT (hscale),
-        "value_changed", G_CALLBACK (seek_cb), pipeline);
+    changed_id =
+        g_signal_connect (hscale, "value_changed", G_CALLBACK (seek_cb),
+        pipeline);
   }
 
   return FALSE;
@@ -1423,7 +1424,7 @@ static gboolean
 stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   if (changed_id) {
-    g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
+    g_signal_handler_disconnect (hscale, changed_id);
     changed_id = 0;
   }
 
@@ -2703,8 +2704,8 @@ main (int argc, char **argv)
     shuttle_checkbox = gtk_check_button_new_with_label ("Shuttle");
     gtk_box_pack_start (GTK_BOX (hbox), shuttle_checkbox, FALSE, FALSE, 2);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (shuttle_checkbox), FALSE);
-    g_signal_connect (GTK_OBJECT (shuttle_checkbox),
-        "toggled", G_CALLBACK (shuttle_toggled), pipeline);
+    g_signal_connect (shuttle_checkbox, "toggled", G_CALLBACK (shuttle_toggled),
+        pipeline);
 
     shuttle_adjustment =
         GTK_ADJUSTMENT (gtk_adjustment_new (0.0, -3.00, 4.0, 0.1, 1.0, 1.0));
@@ -2713,9 +2714,9 @@ main (int argc, char **argv)
     gtk_scale_set_value_pos (GTK_SCALE (shuttle_hscale), GTK_POS_TOP);
     gtk_range_set_update_policy (GTK_RANGE (shuttle_hscale),
         GTK_UPDATE_CONTINUOUS);
-    g_signal_connect (GTK_OBJECT (shuttle_hscale), "value_changed",
+    g_signal_connect (shuttle_hscale, "value_changed",
         G_CALLBACK (shuttle_value_changed), pipeline);
-    g_signal_connect (GTK_OBJECT (shuttle_hscale), "format_value",
+    g_signal_connect (shuttle_hscale, "format_value",
         G_CALLBACK (shuttle_format_value), pipeline);
 
     gtk_box_pack_start (GTK_BOX (hbox), shuttle_hscale, TRUE, TRUE, 2);
@@ -2735,12 +2736,12 @@ main (int argc, char **argv)
 #endif
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
-  g_signal_connect (GTK_OBJECT (hscale),
-      "button_press_event", G_CALLBACK (start_seek), pipeline);
-  g_signal_connect (GTK_OBJECT (hscale),
-      "button_release_event", G_CALLBACK (stop_seek), pipeline);
-  g_signal_connect (GTK_OBJECT (hscale),
-      "format_value", G_CALLBACK (format_value), pipeline);
+  g_signal_connect (hscale, "button_press_event", G_CALLBACK (start_seek),
+      pipeline);
+  g_signal_connect (hscale, "button_release_event", G_CALLBACK (stop_seek),
+      pipeline);
+  g_signal_connect (hscale, "format_value", G_CALLBACK (format_value),
+      pipeline);
 
   if (pipeline_type == 16) {
     /* the playbin2 panel controls for the video/audio/subtitle tracks */
