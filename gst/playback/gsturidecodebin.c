@@ -838,12 +838,6 @@ static const gchar *no_media_mimes[] = {
 };
 #endif
 
-/* media types we consider raw media */
-static const gchar *raw_media[] = {
-  "audio/x-raw", "video/x-raw", "text/plain", "text/x-pango-markup",
-  "video/x-dvd-subpicture", "subpicture/x-", NULL
-};
-
 /* media types we can download */
 static const gchar *download_media[] = {
   "video/quicktime", "video/x-flv", NULL
@@ -853,7 +847,6 @@ static const gchar *download_media[] = {
 #define IS_QUEUE_URI(uri)           (array_has_uri_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_uri_value (blacklisted_uris, uri))
 #define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
-#define IS_RAW_MEDIA(media)         (array_has_value (raw_media, media))
 #define IS_DOWNLOAD_MEDIA(media)    (array_has_value (download_media, media))
 
 /*
@@ -960,11 +953,10 @@ no_source:
  * Returns: %FALSE @pad has no caps. Else TRUE and @all_raw set t the result.
  */
 static gboolean
-has_all_raw_caps (GstPad * pad, gboolean * all_raw)
+has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
 {
-  GstCaps *caps;
+  GstCaps *caps, *intersection;
   gint capssize;
-  guint i, num_raw = 0;
   gboolean res = FALSE;
 
   caps = gst_pad_get_caps_reffed (pad);
@@ -978,21 +970,11 @@ has_all_raw_caps (GstPad * pad, gboolean * all_raw)
   if (capssize == 0 || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
     goto done;
 
-  /* count the number of raw formats in the caps */
-  for (i = 0; i < capssize; ++i) {
-    GstStructure *s;
-    const gchar *media_type;
+  intersection = gst_caps_intersect (caps, rawcaps);
+  *all_raw = !gst_caps_is_empty (intersection)
+      && (gst_caps_get_size (intersection) == capssize);
+  gst_caps_unref (intersection);
 
-    s = gst_caps_get_structure (caps, i);
-    media_type = gst_structure_get_name (s);
-
-    GST_DEBUG_OBJECT (pad, "check media-type %s", media_type);
-
-    if (IS_RAW_MEDIA (media_type))
-      ++num_raw;
-  }
-
-  *all_raw = (num_raw == capssize);
   res = TRUE;
 
 done:
@@ -1028,10 +1010,15 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   GstIterator *pads_iter;
   gboolean done = FALSE;
   gboolean res = TRUE;
+  GstCaps *rawcaps;
 
   *have_out = FALSE;
   *is_raw = FALSE;
   *is_dynamic = FALSE;
+
+  g_object_get (decoder, "caps", &rawcaps, NULL);
+  if (!rawcaps)
+    rawcaps = DEFAULT_CAPS;
 
   pads_iter = gst_element_iterate_src_pads (decoder->source);
   while (!done) {
@@ -1056,7 +1043,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, is_raw)) {
+        if (!has_all_raw_caps (pad, rawcaps, is_raw)) {
           gst_object_unref (pad);
           break;
         }
@@ -1089,6 +1076,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
     }
   }
   gst_iterator_free (pads_iter);
+  gst_caps_unref (rawcaps);
 
   if (!*have_out) {
     GstElementClass *elemclass;
@@ -1506,18 +1494,25 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
 {
   GstElement *decoder;
   gboolean is_raw;
+  GstCaps *rawcaps;
 
   GST_URI_DECODE_BIN_LOCK (bin);
   GST_DEBUG_OBJECT (bin, "Found new pad %s.%s in source element %s",
       GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
 
+  g_object_get (bin, "caps", &rawcaps, NULL);
+  if (!rawcaps)
+    rawcaps = DEFAULT_CAPS;
+
   /* if this is a pad with all raw caps, we can expose it */
-  if (has_all_raw_caps (pad, &is_raw) && is_raw) {
+  if (has_all_raw_caps (pad, rawcaps, &is_raw) && is_raw) {
     /* it's all raw, create output pads. */
     GST_URI_DECODE_BIN_UNLOCK (bin);
+    gst_caps_unref (rawcaps);
     new_decoded_pad_cb (element, pad, FALSE, bin);
     return;
   }
+  gst_caps_unref (rawcaps);
 
   /* not raw, create decoder */
   decoder = make_decoder (bin);
