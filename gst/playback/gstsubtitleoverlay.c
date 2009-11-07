@@ -532,7 +532,7 @@ _setup_passthrough (GstSubtitleOverlay * self)
 
   /* Send segment to the identity. This is dropped because identity
    * is not linked downstream yet */
-  if (!self->video_segment_pending) {
+  if (self->video_segment.format != GST_FORMAT_UNDEFINED) {
     GstEvent *event1, *event2;
 
     _generate_update_newsegment_event (&self->video_segment, &event1, &event2);
@@ -914,7 +914,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
       /* Send segments to the parser/overlay if necessary. These are not sent
        * outside this element because of the proxy pad event function */
-      if (!self->video_segment_pending) {
+      if (self->video_segment.format != GST_FORMAT_UNDEFINED) {
         GstEvent *event1, *event2;
 
         sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
@@ -937,7 +937,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
         gst_object_unref (sink);
       }
 
-      if (!self->subtitle_segment_pending) {
+      if (self->subtitle_segment.format != GST_FORMAT_UNDEFINED) {
         GstEvent *event1, *event2;
 
         sink = gst_element_get_static_pad (element, "sink");
@@ -1078,7 +1078,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
       /* Send segments to the renderer if necessary. These are not sent
        * outside this element because of the proxy pad event handler */
-      if (!self->video_segment_pending) {
+      if (self->video_segment.format != GST_FORMAT_UNDEFINED) {
         GstEvent *event1, *event2;
 
         sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
@@ -1100,7 +1100,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
         gst_object_unref (sink);
       }
 
-      if (!self->subtitle_segment_pending) {
+      if (self->subtitle_segment.format != GST_FORMAT_UNDEFINED) {
         GstEvent *event1, *event2;
 
         sink = _get_sub_pad (element);
@@ -1206,8 +1206,6 @@ gst_subtitle_overlay_change_state (GstElement * element,
 
       self->fps_n = self->fps_d = 0;
 
-      self->video_segment_pending = FALSE;
-      self->subtitle_segment_pending = FALSE;
       self->subtitle_flush = FALSE;
 
       do_async_start (self);
@@ -1478,7 +1476,15 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
-  gboolean is_newsegment_event = FALSE;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    GST_DEBUG_OBJECT (pad,
+        "Resetting video segment because of flush-stop event");
+    gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
+    self->fps_n = self->fps_d = 0;
+  }
+
+  ret = self->video_sink_event (pad, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
     gboolean update;
@@ -1505,19 +1511,9 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
         applied_rate, format, start, stop, position);
     GST_DEBUG_OBJECT (pad, "New video segment: %" GST_SEGMENT_FORMAT,
         &self->video_segment);
-    is_newsegment_event = TRUE;
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    GST_DEBUG_OBJECT (pad,
-        "Resetting video segment because of flush-stop event");
-    gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
-    self->fps_n = self->fps_d = 0;
   }
 
-  if (is_newsegment_event)
-    self->video_segment_pending = TRUE;
-  ret = self->video_sink_event (pad, event);
-  self->video_segment_pending = FALSE;
-
+  gst_event_unref (event);
   gst_object_unref (self);
   return ret;
 }
@@ -1666,35 +1662,9 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
-  gboolean is_newsegment = FALSE;
+  GstFormat format;
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
-    gboolean update;
-    gdouble rate, applied_rate;
-    GstFormat format;
-    gint64 start, stop, position;
-
-    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT,
-        event->structure);
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-        &format, &start, &stop, &position);
-
-    GST_DEBUG_OBJECT (pad, "Old subtitle segment: %" GST_SEGMENT_FORMAT,
-        &self->subtitle_segment);
-    if (self->subtitle_segment.format != format) {
-      GST_DEBUG_OBJECT (pad, "Subtitle segment format changed: %s -> %s",
-          gst_format_get_name (self->subtitle_segment.format),
-          gst_format_get_name (format));
-      gst_segment_init (&self->subtitle_segment, format);
-    }
-
-    gst_segment_set_newsegment_full (&self->subtitle_segment, update, rate,
-        applied_rate, format, start, stop, position);
-    GST_DEBUG_OBJECT (pad, "New subtitle segment: %" GST_SEGMENT_FORMAT,
-        &self->subtitle_segment);
-
-    is_newsegment = TRUE;
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB &&
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB &&
       event->structure
       && strcmp (gst_structure_get_name (event->structure),
           "subtitleoverlay-flush-subtitle") == 0) {
@@ -1715,6 +1685,16 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
     event = NULL;
     ret = TRUE;
     goto out;
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    gst_event_parse_new_segment_full (event, NULL, NULL, NULL,
+        &format, NULL, NULL, NULL);
+    if (self->subtitle_segment.format != GST_FORMAT_UNDEFINED &&
+        self->subtitle_segment.format != format) {
+      GST_DEBUG_OBJECT (pad, "Subtitle segment format changed: %s -> %s",
+          gst_format_get_name (self->subtitle_segment.format),
+          gst_format_get_name (format));
+      gst_segment_init (&self->subtitle_segment, GST_FORMAT_UNDEFINED);
+    }
   }
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1744,10 +1724,33 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  if (is_newsegment)
-    self->subtitle_segment_pending = TRUE;
-  ret = self->subtitle_sink_event (pad, event);
-  self->subtitle_segment_pending = FALSE;
+  ret = self->subtitle_sink_event (pad, gst_event_ref (event));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    gboolean update;
+    gdouble rate, applied_rate;
+    gint64 start, stop, position;
+
+    GST_DEBUG_OBJECT (pad, "Newsegment event: %" GST_PTR_FORMAT,
+        event->structure);
+    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+        &format, &start, &stop, &position);
+
+    GST_DEBUG_OBJECT (pad, "Old subtitle segment: %" GST_SEGMENT_FORMAT,
+        &self->subtitle_segment);
+    if (self->subtitle_segment.format != format) {
+      GST_DEBUG_OBJECT (pad, "Subtitle segment format changed: %s -> %s",
+          gst_format_get_name (self->subtitle_segment.format),
+          gst_format_get_name (format));
+      gst_segment_init (&self->subtitle_segment, format);
+    }
+
+    gst_segment_set_newsegment_full (&self->subtitle_segment, update, rate,
+        applied_rate, format, start, stop, position);
+    GST_DEBUG_OBJECT (pad, "New subtitle segment: %" GST_SEGMENT_FORMAT,
+        &self->subtitle_segment);
+  }
+  gst_event_unref (event);
 
 out:
   gst_object_unref (self);

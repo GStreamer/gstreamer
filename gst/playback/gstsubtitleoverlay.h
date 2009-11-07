@@ -75,7 +75,6 @@ struct _GstSubtitleOverlay
   GstPadEventFunction video_sink_event;
   gboolean video_sink_blocked;
   GstSegment video_segment;
-  gboolean video_segment_pending;
   gint fps_n, fps_d;
 
   GstPad *subtitle_sinkpad;
@@ -86,7 +85,6 @@ struct _GstSubtitleOverlay
   GstPadSetCapsFunction subtitle_sink_setcaps;
   gboolean subtitle_sink_blocked;
   GstSegment subtitle_segment;
-  gboolean subtitle_segment_pending;
   gboolean subtitle_flush;
 
   GList *factories;
