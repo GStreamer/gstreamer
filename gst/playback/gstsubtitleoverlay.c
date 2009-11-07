@@ -68,6 +68,7 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_sink",
 enum
 {
   PROP_0,
+  PROP_SILENT,
   PROP_FONT_DESC
 };
 
@@ -488,6 +489,7 @@ _setup_passthrough (GstSubtitleOverlay * self)
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->video_sinkpad), NULL);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad), NULL);
+  self->silent_property = NULL;
   _remove_element (self, &self->post_colorspace);
   _remove_element (self, &self->overlay);
   _remove_element (self, &self->parser);
@@ -589,6 +591,32 @@ gst_subtitle_overlay_set_fps (GstSubtitleOverlay * self)
   g_object_set (self->parser, "video-fps", self->fps_n, self->fps_d, NULL);
 }
 
+static const gchar *
+_get_silent_property (GstElement * element, gboolean * invert)
+{
+  static const struct
+  {
+    const gchar *name;
+    gboolean invert;
+  } properties[] = { {
+  "silent", FALSE}, {
+  "enable", TRUE}};
+  GObjectClass *gobject_class;
+  GParamSpec *pspec;
+  guint i;
+
+  gobject_class = G_OBJECT_GET_CLASS (element);
+
+  for (i = 0; i < G_N_ELEMENTS (properties); i++) {
+    pspec = g_object_class_find_property (gobject_class, properties[i].name);
+    if (pspec && pspec->value_type == G_TYPE_BOOLEAN) {
+      *invert = properties[i].invert;
+      return properties[i].name;
+    }
+  }
+  return NULL;
+}
+
 static void
 _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 {
@@ -641,6 +669,12 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     GST_ELEMENT_WARNING (self, CORE, NEGOTIATION, (NULL),
         ("Subtitle sink is blocked but we have no subtitle caps"));
     subcaps = NULL;
+  }
+
+  if (self->silent && !self->silent_property) {
+    _setup_passthrough (self);
+    do_async_done (self);
+    goto out;
   }
 
   /* Now do something with the caps */
@@ -716,6 +750,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->video_sinkpad), NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->subtitle_sinkpad),
         NULL);
+    self->silent_property = NULL;
     _remove_element (self, &self->post_colorspace);
     _remove_element (self, &self->overlay);
     _remove_element (self, &self->parser);
@@ -780,6 +815,8 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
         continue;
       }
       overlay = self->overlay;
+      self->silent_property = "silent";
+      self->silent_property_invert = FALSE;
 
       /* Set some properties */
       g_object_set (G_OBJECT (overlay),
@@ -962,6 +999,11 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
             "halign", "center", "valign", "bottom", "wait-text", FALSE, NULL);
         if (self->font_desc)
           g_object_set (G_OBJECT (element), "font-desc", self->font_desc, NULL);
+        self->silent_property = "silent";
+        self->silent_property_invert = FALSE;
+      } else {
+        self->silent_property =
+            _get_silent_property (element, &self->silent_property_invert);
       }
 
       /* First link everything internally */
@@ -1235,6 +1277,7 @@ gst_subtitle_overlay_change_state (GstElement * element,
       }
 
       /* Remove elements */
+      self->silent_property = NULL;
       _remove_element (self, &self->post_colorspace);
       _remove_element (self, &self->overlay);
       _remove_element (self, &self->parser);
@@ -1253,12 +1296,57 @@ gst_subtitle_overlay_change_state (GstElement * element,
 }
 
 static void
+gst_subtitle_overlay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY_CAST (object);
+
+  switch (prop_id) {
+    case PROP_SILENT:
+      g_value_set_boolean (value, self->silent);
+      break;
+    case PROP_FONT_DESC:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      g_value_set_string (value, self->font_desc);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY_CAST (object);
 
   switch (prop_id) {
+    case PROP_SILENT:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      self->silent = g_value_get_boolean (value);
+      if (self->silent_property) {
+        gboolean silent = self->silent;
+
+        if (self->silent_property_invert)
+          silent = !silent;
+
+        if (self->overlay)
+          g_object_set (self->overlay, self->silent_property, silent, NULL);
+        else if (self->renderer)
+          g_object_set (self->renderer, self->silent_property, silent, NULL);
+      } else {
+        gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+            _pad_blocked_cb, gst_object_ref (self),
+            (GDestroyNotify) gst_object_unref);
+
+        gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+            _pad_blocked_cb, gst_object_ref (self),
+            (GDestroyNotify) gst_object_unref);
+      }
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
     case PROP_FONT_DESC:
       GST_SUBTITLE_OVERLAY_LOCK (self);
       g_free (self->font_desc);
@@ -1298,13 +1386,20 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
 
   gobject_class->finalize = gst_subtitle_overlay_finalize;
   gobject_class->set_property = gst_subtitle_overlay_set_property;
+  gobject_class->get_property = gst_subtitle_overlay_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_SILENT,
+      g_param_spec_boolean ("silent",
+          "Silent",
+          "Whether to show subtitles", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FONT_DESC,
       g_param_spec_string ("font-desc",
           "Subtitle font description",
           "Pango font description of font "
           "to be used for subtitle rendering", NULL,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_change_state);

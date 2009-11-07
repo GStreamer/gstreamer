@@ -60,8 +60,10 @@ struct _GstSubtitleOverlay
 {
   GstBin parent;
 
+  gboolean silent;
   gchar *font_desc;
 
+  /* < private > */
   gboolean do_async;
 
   GstPad *srcpad;
@@ -102,6 +104,9 @@ struct _GstSubtitleOverlay
   GstElement *overlay;
 
   GstElement *renderer;
+
+  const gchar *silent_property;
+  gboolean silent_property_invert;
 };
 
 struct _GstSubtitleOverlayClass
