@@ -191,11 +191,11 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_VIDEOFPS,
-      g_param_spec_double ("video-fps", "Video framerate",
+      gst_param_spec_fraction ("video-fps", "Video framerate",
           "Framerate of the video stream. This is needed by some subtitle "
           "formats to synchronize subtitles and video properly. If not set "
           "and the subtitle format requires it subtitles may be out of sync.",
-          0.0, 100.0, 0.0, G_PARAM_READWRITE));
+          0, 1, G_MAXINT, 1, 24000, 1001, G_PARAM_READWRITE));
 }
 
 static void
@@ -223,6 +223,9 @@ gst_sub_parse_init (GstSubParse * subparse)
   subparse->encoding = g_strdup (DEFAULT_ENCODING);
   subparse->detected_encoding = NULL;
   subparse->adapter = gst_adapter_new ();
+
+  subparse->fps_n = 24000;
+  subparse->fps_d = 1001;
 }
 
 /*
@@ -358,8 +361,15 @@ gst_sub_parse_set_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEOFPS:
     {
-      subparse->fps = g_value_get_double (value);
-      GST_DEBUG_OBJECT (object, "video framerate set to %.2f", subparse->fps);
+      subparse->fps_n = gst_value_get_fraction_numerator (value);
+      subparse->fps_d = gst_value_get_fraction_denominator (value);
+      GST_DEBUG_OBJECT (object, "video framerate set to %d/%d", subparse->fps_n,
+          subparse->fps_d);
+
+      if (!subparse->state.have_internal_fps) {
+        subparse->state.fps_n = subparse->fps_n;
+        subparse->state.fps_d = subparse->fps_d;
+      }
       break;
     }
     default:
@@ -381,7 +391,7 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, subparse->encoding);
       break;
     case PROP_VIDEOFPS:
-      g_value_set_double (value, subparse->fps);
+      gst_value_set_fraction (value, subparse->fps_n, subparse->fps_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -573,6 +583,7 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   gboolean italic;
   gboolean bold;
   guint fontsize;
+  gdouble fps = 0.0;
 
   if (sscanf (line, "{%u}{%u}", &start_frame, &end_frame) != 2) {
     g_warning ("Parse of the following line, assumed to be in microdvd .sub"
@@ -585,27 +596,40 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   line = strchr (line, '}') + 1;
 
   /* see if there's a first line with a framerate */
-  if (state->fps == 0.0 && start_frame == 1 && end_frame == 1) {
+  if (start_frame == 1 && end_frame == 1) {
     gchar *rest, *end = NULL;
 
     rest = g_strdup (line);
     g_strdelimit (rest, ",", '.');
-    state->fps = g_ascii_strtod (rest, &end);
-    if (end == rest)
-      state->fps = 0.0;
-    GST_INFO ("framerate from file: %f ('%s')", state->fps, rest);
+    fps = g_ascii_strtod (rest, &end);
+    if (end != rest) {
+      GValue d = { 0, };
+      GValue f = { 0, };
+
+      /* Use double->fraction conversion from gstvalue.c */
+      g_value_init (&d, G_TYPE_DOUBLE);
+      g_value_init (&f, GST_TYPE_FRACTION);
+      g_value_set_double (&d, fps);
+      if (g_value_transform (&d, &f)) {
+        state->have_internal_fps = TRUE;
+        state->fps_n = gst_value_get_fraction_numerator (&f);
+        state->fps_d = gst_value_get_fraction_denominator (&f);
+        GST_INFO ("framerate from file: %d/%d ('%s')", state->fps_n,
+            state->fps_d, rest);
+      }
+      g_value_unset (&d);
+      g_value_unset (&f);
+    }
     g_free (rest);
     return NULL;
   }
 
-  if (state->fps == 0.0) {
-    /* FIXME: hardcoded for now, is there a better way/assumption? */
-    state->fps = 24000.0 / 1001.0;
-    GST_INFO ("no framerate specified, assuming %f", state->fps);
-  }
-
-  state->start_time = start_frame / state->fps * GST_SECOND;
-  state->duration = (end_frame - start_frame) / state->fps * GST_SECOND;
+  state->start_time =
+      gst_util_uint64_scale (start_frame, GST_SECOND * state->fps_d,
+      state->fps_n);
+  state->duration =
+      gst_util_uint64_scale (end_frame - start_frame, GST_SECOND * state->fps_d,
+      state->fps_n);
 
   /* Check our segment start/stop */
   in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
@@ -1432,7 +1456,8 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         detect_encoding ((gchar *) GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
     self->first_buffer = FALSE;
-    self->state.fps = self->fps;
+    self->state.fps_n = self->fps_n;
+    self->state.fps_d = self->fps_d;
   }
 
   feed_textbuf (self, buf);
