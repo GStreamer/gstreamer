@@ -570,6 +570,25 @@ out:
   return TRUE;
 }
 
+/* Must be called with subtitleoverlay lock! */
+static void
+gst_subtitle_overlay_set_fps (GstSubtitleOverlay * self)
+{
+  GObjectClass *gobject_class;
+  GParamSpec *pspec;
+
+  if (!self->parser || self->fps_d == 0)
+    return;
+
+  gobject_class = G_OBJECT_GET_CLASS (self->parser);
+  pspec = g_object_class_find_property (gobject_class, "video-fps");
+  if (!pspec || pspec->value_type != GST_TYPE_FRACTION)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Updating video-fps property in parser");
+  g_object_set (self->parser, "video-fps", self->fps_n, self->fps_d, NULL);
+}
+
 static void
 _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 {
@@ -721,6 +740,39 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
      * Else link the renderer to the output colorspace */
     if (!is_renderer) {
       GstElement *overlay;
+      GstPad *video_peer;
+
+      /* Try to get the latest video framerate */
+      video_peer = gst_pad_get_peer (self->video_sinkpad);
+      if (video_peer) {
+        GstCaps *video_caps;
+        gint fps_n, fps_d;
+
+        video_caps = gst_pad_get_negotiated_caps (video_peer);
+        if (!video_caps) {
+          video_caps = gst_pad_get_caps (video_peer);
+          if (!gst_caps_is_fixed (video_caps)) {
+            gst_caps_unref (video_caps);
+            video_caps = NULL;
+          }
+        }
+
+        if (video_caps
+            && gst_video_parse_caps_framerate (video_caps, &fps_n, &fps_d)) {
+          if (self->fps_n != fps_n || self->fps_d != fps_d) {
+            GST_DEBUG_OBJECT (self, "New video fps: %d/%d", fps_n, fps_d);
+            self->fps_n = fps_n;
+            self->fps_d = fps_d;
+          }
+        }
+
+        if (video_caps)
+          gst_caps_unref (video_caps);
+        gst_object_unref (video_peer);
+      }
+
+      /* Try to set video fps on the parser */
+      gst_subtitle_overlay_set_fps (self);
 
       /* First link everything internally */
       if (G_UNLIKELY (!_create_element (self, &self->overlay, "textoverlay",
@@ -1110,6 +1162,8 @@ gst_subtitle_overlay_change_state (GstElement * element,
       gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (&self->subtitle_segment, GST_FORMAT_UNDEFINED);
 
+      self->fps_n = self->fps_d = 0;
+
       self->video_segment_pending = FALSE;
       self->subtitle_segment_pending = FALSE;
       self->subtitle_flush = FALSE;
@@ -1294,6 +1348,37 @@ out:
 }
 
 static gboolean
+gst_subtitle_overlay_video_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+  gint fps_n, fps_d;
+
+  GST_DEBUG_OBJECT (pad, "Setting caps: %" GST_PTR_FORMAT, caps);
+
+  if (!gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
+    GST_ERROR_OBJECT (pad, "Failed to parse framerate from caps");
+    ret = FALSE;
+    goto out;
+  }
+
+  GST_SUBTITLE_OVERLAY_LOCK (self);
+  if (self->fps_n != fps_n || self->fps_d != fps_d) {
+    GST_DEBUG_OBJECT (self, "New video fps: %d/%d", fps_n, fps_d);
+    self->fps_n = fps_n;
+    self->fps_d = fps_d;
+    gst_subtitle_overlay_set_fps (self);
+  }
+  GST_SUBTITLE_OVERLAY_UNLOCK (self);
+
+  ret = self->video_sink_setcaps (pad, caps);
+
+out:
+  gst_object_unref (self);
+  return ret;
+}
+
+static gboolean
 gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
@@ -1330,6 +1415,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (pad,
         "Resetting video segment because of flush-stop event");
     gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
+    self->fps_n = self->fps_d = 0;
   }
 
   if (is_newsegment_event)
@@ -1607,6 +1693,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   self->video_sink_event = GST_PAD_EVENTFUNC (self->video_sinkpad);
   gst_pad_set_event_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_event));
+  self->video_sink_setcaps = GST_PAD_SETCAPSFUNC (self->video_sinkpad);
+  gst_pad_set_setcaps_function (self->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_setcaps));
 
   proxypad = NULL;
   it = gst_pad_iterate_internal_links (self->video_sinkpad);
@@ -1655,6 +1744,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   self->subtitle_block_pad = proxypad;
 
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->subtitle_sinkpad);
+
+  self->fps_n = 0;
+  self->fps_d = 0;
 }
 
 gboolean
