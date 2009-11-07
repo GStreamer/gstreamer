@@ -65,7 +65,7 @@ typedef struct {
   guint64  max_duration; /* to clamp duration, 0 = no limit (used by tmplayer parser) */
   GstSegment *segment;
   gpointer user_data;
-  gdouble  fps;          /* used by microdvd parser */
+  gdouble  fps;          /* used by frame based parsers */
 } ParserState;
 
 typedef gchar* (*Parser) (ParserState *state, const gchar *line);
@@ -102,6 +102,9 @@ struct _GstSubParse {
   gchar   *encoding;
 
   gboolean first_buffer;
+
+  /* used by frame based parsers */
+  gdouble  fps;          
 };
 
 struct _GstSubParseClass {

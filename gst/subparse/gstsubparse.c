@@ -42,7 +42,8 @@ GST_DEBUG_CATEGORY (sub_parse_debug);
 enum
 {
   PROP_0,
-  PROP_ENCODING
+  PROP_ENCODING,
+  PROP_VIDEOFPS
 };
 
 static void
@@ -188,6 +189,13 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
           "variable will be checked for an encoding to use. If that is not set "
           "either, ISO-8859-15 will be assumed.", DEFAULT_ENCODING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_VIDEOFPS,
+      g_param_spec_double ("video-fps", "Video framerate",
+          "Framerate of the video stream. This is needed by some subtitle "
+          "formats to synchronize subtitles and video properly. If not set "
+          "and the subtitle format requires it subtitles may be out of sync.",
+          0.0, 100.0, 0.0, G_PARAM_READWRITE));
 }
 
 static void
@@ -348,6 +356,12 @@ gst_sub_parse_set_property (GObject * object, guint prop_id,
       GST_LOG_OBJECT (object, "subtitle encoding set to %s",
           GST_STR_NULL (subparse->encoding));
       break;
+    case PROP_VIDEOFPS:
+    {
+      subparse->fps = g_value_get_double (value);
+      GST_DEBUG_OBJECT (object, "video framerate set to %.2f", subparse->fps);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -365,6 +379,9 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ENCODING:
       g_value_set_string (value, subparse->encoding);
+      break;
+    case PROP_VIDEOFPS:
+      g_value_set_double (value, subparse->fps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1415,6 +1432,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         detect_encoding ((gchar *) GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
     self->first_buffer = FALSE;
+    self->state.fps = self->fps;
   }
 
   feed_textbuf (self, buf);
