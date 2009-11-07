@@ -98,7 +98,6 @@ typedef struct
   GstElement *overlay;
   GstPad *videosinkpad;
   GstPad *textsinkpad;
-  GstPad *textsinkpad_target;
   GstPad *srcpad;               /* outgoing srcpad, used to connect to the next
                                  * chain */
   GstElement *sink;             /* custom sink to receive subtitle buffers */
@@ -1189,6 +1188,7 @@ gen_text_chain (GstPlaySink * playsink)
       } else {
         gst_bin_add (bin, chain->overlay);
 
+        g_object_set (G_OBJECT (chain->overlay), "silent", FALSE, NULL);
         if (playsink->font_desc) {
           g_object_set (G_OBJECT (chain->overlay), "font-desc",
               playsink->font_desc, NULL);
@@ -1224,7 +1224,6 @@ gen_text_chain (GstPlaySink * playsink)
   }
   if (textsinkpad) {
     chain->textsinkpad = gst_ghost_pad_new ("text_sink", textsinkpad);
-    chain->textsinkpad_target = textsinkpad;
     gst_object_unref (textsinkpad);
     gst_element_add_pad (chain->chain.bin, chain->textsinkpad);
   }
@@ -1825,19 +1824,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       playsink->textchain = gen_text_chain (playsink);
     }
     if (playsink->textchain) {
-      GstPad *target;
-
       GST_DEBUG_OBJECT (playsink, "adding text chain");
+      g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", FALSE,
+          NULL);
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
-
-      if (!(target =
-              gst_ghost_pad_get_target (GST_GHOST_PAD_CAST
-                  (playsink->textchain->textsinkpad)))) {
-        target = gst_object_ref (playsink->textchain->textsinkpad_target);
-        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->
-                textchain->textsinkpad), target);
-      }
-      gst_object_unref (target);
 
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
           playsink->textchain->textsinkpad);
@@ -1859,8 +1849,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       } else {
         /* we have a chain and a textpad, turn the subtitles off */
         GST_DEBUG_OBJECT (playsink, "turning off the text");
-        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->
-                textchain->textsinkpad), NULL);
+        g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", TRUE,
+            NULL);
       }
     }
     if (!need_video && playsink->video_pad)

@@ -1238,24 +1238,8 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 static void
 gst_play_bin_set_flags (GstPlayBin * playbin, GstPlayFlags flags)
 {
-  GstPlayFlags oldflags = gst_play_sink_get_flags (playbin->playsink);
-  GstSourceGroup *group = playbin->curr_group;
-  gboolean unblock = FALSE;
-
-  if (group && group->suburidecodebin) {
-    if ((oldflags & GST_PLAY_FLAG_TEXT) && !(flags & GST_PLAY_FLAG_TEXT)) {
-      gst_play_bin_suburidecodebin_block (group->suburidecodebin, TRUE);
-    } else if (!(oldflags & GST_PLAY_FLAG_TEXT) && (flags & GST_PLAY_FLAG_TEXT)) {
-      gst_play_bin_suburidecodebin_seek_to_start (group->suburidecodebin);
-      unblock = TRUE;
-    }
-  }
-
   gst_play_sink_set_flags (playbin->playsink, flags);
   gst_play_sink_reconfigure (playbin->playsink);
-
-  if (unblock)
-    gst_play_bin_suburidecodebin_block (group->suburidecodebin, FALSE);
 }
 
 static GstPlayFlags
