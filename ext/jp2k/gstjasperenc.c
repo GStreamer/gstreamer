@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_jasper_enc_debug);
 
 static const GstElementDetails plugin_details =
 GST_ELEMENT_DETAILS ("Jasper JPEG2000 image encoder",
-    "Codec/Decoder/Image",
+    "Codec/Encoder/Image",
     "Encodes video to JPEG2000 using jasper",
     "Mark Nauwelaerts <mnauw@users.sf.net>");
 
