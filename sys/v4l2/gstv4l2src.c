@@ -89,6 +89,9 @@ GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
 
+static void gst_v4l2src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
+
 static gboolean
 gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
@@ -128,6 +131,12 @@ gst_v4l2src_interface_init (GstImplementsInterfaceClass * klass)
 void
 gst_v4l2src_init_interfaces (GType type)
 {
+  static const GInterfaceInfo urihandler_info = {
+    gst_v4l2src_uri_handler_init,
+    NULL,
+    NULL
+  };
+
   static const GInterfaceInfo v4l2iface_info = {
     (GInterfaceInitFunc) gst_v4l2src_interface_init,
     NULL,
@@ -161,6 +170,7 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
   };
 
+  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
   g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
@@ -949,4 +959,56 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     GST_BUFFER_DURATION (*buf) = duration;
   }
   return ret;
+}
+
+
+/* GstURIHandler interface */
+static GstURIType
+gst_v4l2src_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+gst_v4l2src_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "v4l2", NULL };
+
+  return protocols;
+}
+
+static const gchar *
+gst_v4l2src_uri_get_uri (GstURIHandler * handler)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (handler);
+
+  if (v4l2src->v4l2object->videodev)
+    return g_strdup_printf ("v4l2://%s", v4l2src->v4l2object->videodev);
+  return "v4l2://";
+}
+
+static gboolean
+gst_v4l2src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (handler);
+  const gchar *device = DEFAULT_PROP_DEVICE;
+
+  if (strcmp (uri, "v4l2://") != 0) {
+    device = uri + 7;
+  }
+  g_object_set (v4l2src, "device", device, NULL);
+
+  return TRUE;
+}
+
+
+static void
+gst_v4l2src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_v4l2src_uri_get_type;
+  iface->get_protocols = gst_v4l2src_uri_get_protocols;
+  iface->get_uri = gst_v4l2src_uri_get_uri;
+  iface->set_uri = gst_v4l2src_uri_set_uri;
 }
