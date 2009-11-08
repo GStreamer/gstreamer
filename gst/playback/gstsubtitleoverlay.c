@@ -648,7 +648,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     if (peer) {
       subcaps = gst_pad_get_negotiated_caps (peer);
       if (!subcaps) {
-        subcaps = gst_pad_get_caps (peer);
+        subcaps = gst_pad_get_caps_reffed (peer);
         if (!gst_caps_is_fixed (subcaps)) {
           gst_caps_unref (subcaps);
           subcaps = NULL;
@@ -785,7 +785,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
         video_caps = gst_pad_get_negotiated_caps (video_peer);
         if (!video_caps) {
-          video_caps = gst_pad_get_caps (video_peer);
+          video_caps = gst_pad_get_caps_reffed (video_peer);
           if (!gst_caps_is_fixed (video_caps)) {
             gst_caps_unref (video_caps);
             video_caps = NULL;
@@ -1598,7 +1598,7 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
 
   caps = gst_pad_get_negotiated_caps (peer);
   if (!caps) {
-    caps = gst_pad_get_caps (peer);
+    caps = gst_pad_get_caps_reffed (peer);
     if (!gst_caps_is_fixed (caps)) {
       gst_caps_unref (caps);
       caps = NULL;
