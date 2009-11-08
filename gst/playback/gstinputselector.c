@@ -557,7 +557,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstPad *active_sinkpad;
   GstPad *prev_active_sinkpad;
   GstSelectorPad *selpad;
-  GstClockTime start_time, end_time, duration;
+  GstClockTime start_time;
   GstSegment *seg;
   GstEvent *close_event = NULL, *start_event = NULL;
   GstCaps *caps;
@@ -581,11 +581,9 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (start_time)) {
     GST_DEBUG_OBJECT (pad, "received start time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start_time));
-    duration = GST_BUFFER_DURATION (buf);
-    if (GST_CLOCK_TIME_IS_VALID (duration))
-      end_time += duration;
-    GST_DEBUG_OBJECT (pad, "received end time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (end_time));
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      GST_DEBUG_OBJECT (pad, "received end time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start_time + GST_BUFFER_DURATION (buf)));
 
     GST_OBJECT_LOCK (pad);
     gst_segment_set_last_stop (seg, seg->format, start_time);
