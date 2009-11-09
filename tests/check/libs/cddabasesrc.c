@@ -460,6 +460,46 @@ GST_START_TEST (test_uri_parsing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_properties)
+{
+  GstElement *foosrc;
+  gchar *device;
+  guint track;
+
+  fail_unless (gst_element_register (NULL, "cdfoosrc", GST_RANK_SECONDARY,
+          GST_TYPE_CD_FOO_SRC));
+
+  foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
+
+  g_object_set (foosrc, "device", "/dev/cdrom", NULL);
+  g_object_get (foosrc, "device", &device, "track", &track, NULL);
+  fail_unless (g_str_equal (device, "/dev/cdrom"));
+  fail_unless_equals_int (track, 1);
+  g_free (device);
+
+  g_object_set (foosrc, "device", "/dev/cdrom1", "track", 17, NULL);
+  g_object_get (foosrc, "device", &device, "track", &track, NULL);
+  fail_unless (g_str_equal (device, "/dev/cdrom1"));
+  fail_unless_equals_int (track, 17);
+  g_free (device);
+
+  g_object_set (foosrc, "track", 17, "device", "/dev/cdrom1", NULL);
+  g_object_get (foosrc, "device", &device, "track", &track, NULL);
+  fail_unless (g_str_equal (device, "/dev/cdrom1"));
+  fail_unless_equals_int (track, 17);
+  g_free (device);
+
+  g_object_set (foosrc, "track", 12, NULL);
+  g_object_get (foosrc, "device", &device, "track", &track, NULL);
+  fail_unless (g_str_equal (device, "/dev/cdrom1"));
+  fail_unless_equals_int (track, 12);
+  g_free (device);
+
+  gst_object_unref (foosrc);
+}
+
+GST_END_TEST;
+
 static Suite *
 cddabasesrc_suite (void)
 {
@@ -470,6 +510,7 @@ cddabasesrc_suite (void)
   tcase_add_test (tc_chain, test_discid_calculations);
   tcase_add_test (tc_chain, test_buffer_timestamps);
   tcase_add_test (tc_chain, test_uri_parsing);
+  tcase_add_test (tc_chain, test_properties);
 
   return s;
 }
