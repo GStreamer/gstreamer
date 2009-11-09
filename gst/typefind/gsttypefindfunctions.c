@@ -1143,7 +1143,7 @@ static const struct ac3_frmsize ac3_frmsizecod_tbl[] = {
 static void
 ac3_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 5);
+  guint8 *data = gst_type_find_peek (tf, 0, 1024);
   gint offset = 0;
 
   /* Search for an ac3 frame; not neccesarily right at the start, but give it
@@ -1179,7 +1179,6 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
       }
     }
     offset++;
-    data = gst_type_find_peek (tf, offset, 5);
   }
 }
 
