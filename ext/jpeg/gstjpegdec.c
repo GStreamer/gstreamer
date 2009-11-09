@@ -148,18 +148,11 @@ static void
 gst_jpeg_dec_finalize (GObject * object)
 {
   GstJpegDec *dec = GST_JPEG_DEC (object);
-  gint i;
 
   jpeg_destroy_decompress (&dec->cinfo);
 
   if (dec->tempbuf)
     gst_buffer_unref (dec->tempbuf);
-
-  for (i = 0; i < 16; i++) {
-    g_free (dec->idr_y[i]);
-    g_free (dec->idr_u[i]);
-    g_free (dec->idr_v[i]);
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -680,6 +673,23 @@ hresamplecpy1 (guint8 * dest, const guint8 * src, guint len)
     ++src;
     ++src;
   }
+}
+
+static void
+gst_jpeg_dec_free_buffers (GstJpegDec * dec)
+{
+  gint i;
+
+  for (i = 0; i < 16; i++) {
+    g_free (dec->idr_y[i]);
+    g_free (dec->idr_u[i]);
+    g_free (dec->idr_v[i]);
+    dec->idr_y[i] = NULL;
+    dec->idr_u[i] = NULL;
+    dec->idr_v[i] = NULL;
+  }
+
+  dec->idr_width_allocated = 0;
 }
 
 static inline gboolean
@@ -1430,6 +1440,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (dec->tempbuf);
         dec->tempbuf = NULL;
       }
+      gst_jpeg_dec_free_buffers (dec);
       break;
     default:
       break;
