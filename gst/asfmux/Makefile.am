@@ -15,7 +15,7 @@ libgstasfmux_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFL
 libgstasfmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
                          -lgstrtp-@GST_MAJORMINOR@
 libgstasfmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-#libgstasfmux_la_LIBTOOLFLAGS = --tag=disable-static
+libgstasfmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = gstasfmux.h \
