@@ -714,11 +714,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     GST_OBJECT_UNLOCK (ffmpegdec);
     gst_ffmpegdec_drain (ffmpegdec);
     GST_OBJECT_LOCK (ffmpegdec);
-  }
-  gst_ffmpegdec_close (ffmpegdec);
+    gst_ffmpegdec_close (ffmpegdec);
 
-  /* set defaults */
-  avcodec_get_context_defaults (ffmpegdec->context);
+    /* and reset the defaults that were set when a context is created */
+    avcodec_get_context_defaults (ffmpegdec->context);
+  }
 
   /* set buffer functions */
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
