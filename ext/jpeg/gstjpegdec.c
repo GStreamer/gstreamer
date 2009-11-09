@@ -682,6 +682,31 @@ hresamplecpy1 (guint8 * dest, const guint8 * src, guint len)
   }
 }
 
+static inline gboolean
+gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
+{
+  gint i;
+
+  if (G_LIKELY (dec->idr_width_allocated == maxrowbytes))
+    return TRUE;
+
+  /* FIXME: maybe just alloc one or three blocks altogether? */
+  for (i = 0; i < 16; i++) {
+    dec->idr_y[i] = g_try_realloc (dec->idr_y[i], maxrowbytes);
+    dec->idr_u[i] = g_try_realloc (dec->idr_u[i], maxrowbytes);
+    dec->idr_v[i] = g_try_realloc (dec->idr_v[i], maxrowbytes);
+
+    if (G_UNLIKELY (!dec->idr_y[i] || !dec->idr_u[i] || !dec->idr_v[i])) {
+      GST_WARNING_OBJECT (dec, "out of memory, i=%d, bytes=%u", i, maxrowbytes);
+      return FALSE;
+    }
+  }
+
+  dec->idr_width_allocated = maxrowbytes;
+  GST_LOG_OBJECT (dec, "allocated temp memory, %u bytes/row", maxrowbytes);
+  return TRUE;
+}
+
 static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v, gint r_h)
@@ -694,20 +719,8 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   GST_DEBUG_OBJECT (dec,
       "unadvantageous width or r_h, taking slow route involving memcpy");
 
-  if (G_UNLIKELY (!dec->idr_allocated)) {
-    gboolean res = TRUE;
-
-    for (i = 0; ((i < 16) && res); i++) {
-      res &= ((dec->idr_y[i] = g_try_malloc (MAX_WIDTH)) != NULL);
-      res &= ((dec->idr_u[i] = g_try_malloc (MAX_WIDTH)) != NULL);
-      res &= ((dec->idr_v[i] = g_try_malloc (MAX_WIDTH)) != NULL);
-    }
-    if (!res) {
-      GST_WARNING_OBJECT (dec, "out of memory");
-      return;
-    }
-    dec->idr_allocated = TRUE;
-  }
+  if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
+    return;
 
   memcpy (y_rows, dec->idr_y, 16 * sizeof (gpointer));
   memcpy (u_rows, dec->idr_u, 16 * sizeof (gpointer));

@@ -108,7 +108,7 @@ struct _GstJpegDec {
   struct GstJpegDecSourceMgr    jsrc;
 
   /* arrays for indirect decoding */
-  gboolean idr_allocated;
+  gboolean idr_width_allocated;
   guchar *idr_y[16],*idr_u[16],*idr_v[16];
 };
 
