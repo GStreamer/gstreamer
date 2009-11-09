@@ -4,7 +4,7 @@ BufferPools
 This document proposes a mechnism to build pools of reusable buffers. The
 proposal should improve performance and help to implement zero-copy usecases.
 
-Last edited: 2009-09.01 Stefan Kost
+Last edited: 2009-09-01 Stefan Kost
 
 
 Current Behaviour
