@@ -227,6 +227,7 @@ struct _GstPluginClass {
  * The macro uses a define named PACKAGE for the #GstPluginDesc,source field.
  */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
+G_BEGIN_DECLS \
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   major,						\
   minor,						\
@@ -239,7 +240,8 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   package,						\
   origin,						\
   GST_PADDING_INIT				        \
-};
+}; \
+G_END_DECLS
 
 /**
  * GST_PLUGIN_DEFINE_STATIC:
