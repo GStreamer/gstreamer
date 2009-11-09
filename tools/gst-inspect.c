@@ -1434,6 +1434,23 @@ print_plugin_automatic_install_info (GstPlugin * plugin)
   g_list_free (features);
 }
 
+static void
+print_all_plugin_automatic_install_info (void)
+{
+  GList *plugins, *orig_plugins;
+
+  orig_plugins = plugins = gst_default_registry_get_plugin_list ();
+  while (plugins) {
+    GstPlugin *plugin;
+
+    plugin = (GstPlugin *) (plugins->data);
+    plugins = g_list_next (plugins);
+
+    print_plugin_automatic_install_info (plugin);
+  }
+  gst_plugin_list_free (orig_plugins);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1450,7 +1467,7 @@ main (int argc, char *argv[])
         N_("Print list of blacklisted files"), NULL},
     {"print-plugin-auto-install-info", '\0', 0, G_OPTION_ARG_NONE, &print_aii,
         N_("Print a machine-parsable list of features the specified plugin "
-              "provides.\n                                       "
+              "or all plugins provide.\n                                       "
               "Useful in connection with external automatic plugin "
               "installation mechanisms"), NULL},
     {"plugin", '\0', 0, G_OPTION_ARG_NONE, &plugin_name,
@@ -1506,8 +1523,12 @@ main (int argc, char *argv[])
   } else if (argc == 1 || print_all) {
     if (do_print_blacklist)
       print_blacklist ();
-    else
-      print_element_list (print_all);
+    else {
+      if (print_aii)
+        print_all_plugin_automatic_install_info ();
+      else
+        print_element_list (print_all);
+    }
   } else {
     /* else we try to get a factory */
     GstElementFactory *factory;
