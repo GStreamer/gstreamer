@@ -320,8 +320,6 @@ gst_cdda_base_src_set_device (GstCddaBaseSrc * src, const gchar * device)
 #ifdef __sun
   }
 #endif
-
-  src->uri_track = 1;
 }
 
 static void
