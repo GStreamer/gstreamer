@@ -1060,6 +1060,11 @@ gst_flv_mux_write_index (GstFlvMux * mux)
   }
   script_tag = gst_buffer_join (script_tag, tmp);
 
+  tmp = gst_buffer_new_and_alloc (3);
+  data = GST_BUFFER_DATA (tmp);
+  GST_WRITE_UINT24_BE (data, 9);        /* finish the ECMA array */
+  script_tag = gst_buffer_join (script_tag, tmp);
+
   tmp = gst_buffer_new_and_alloc (4);
   data = GST_BUFFER_DATA (tmp);
   GST_WRITE_UINT32_BE (data, GST_BUFFER_SIZE (script_tag));
