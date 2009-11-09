@@ -834,9 +834,6 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   if (flow != GST_FLOW_OK)
     goto parse_failed;
 
-  /* release old pads (only happens on chained asfs) */
-  gst_asf_demux_release_old_pads (demux);
-
   /* calculate where the packet data starts */
   demux->data_offset = obj.size + 50;
 
@@ -1066,9 +1063,6 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
     goto parse_failed;
   }
 
-  /* release old pads (only happens on chained asfs) */
-  gst_asf_demux_release_old_pads (demux);
-
   /* calculate where the packet data starts */
   demux->data_offset = demux->base_offset + obj.size + 50;
 
@@ -1208,6 +1202,8 @@ gst_asf_demux_check_activate_streams (GstASFDemux * demux, gboolean force)
       GST_LOG_OBJECT (stream->pad, "no data, ignoring stream");
     }
   }
+
+  gst_asf_demux_release_old_pads (demux);
 
   demux->activated_streams = TRUE;
   GST_LOG_OBJECT (demux, "signalling no more pads");
