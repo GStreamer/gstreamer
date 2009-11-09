@@ -31,20 +31,16 @@ static gint
 compare_ranks (GValue * v1, GValue * v2)
 {
   gint diff;
-  const gchar *rname1, *rname2;
   GstPluginFeature *f1, *f2;
 
   f1 = g_value_get_object (v1);
   f2 = g_value_get_object (v2);
 
-  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
+  diff = f2->rank - f1->rank;
   if (diff != 0)
     return diff;
 
-  rname1 = gst_plugin_feature_get_name (f1);
-  rname2 = gst_plugin_feature_get_name (f2);
-
-  diff = strcmp (rname2, rname1);
+  diff = strcmp (f1->name, f2->name);
 
   return diff;
 }
