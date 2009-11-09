@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (aiff_debug);
 #define GST_CAT_DEFAULT (aiff_debug)
 
 GST_DEBUG_CATEGORY_EXTERN (aiffparse_debug);
-GST_DEBUG_CATEGORY_EXTERN (aiffmux_debug);
+/* GST_DEBUG_CATEGORY_EXTERN (aiffmux_debug); */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -40,7 +40,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (aiff_debug, "aiff", 0, "AIFF plugin");
   GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser");
-  GST_DEBUG_CATEGORY_INIT (aiffmux_debug, "aiffmux", 0, "AIFF muxer");
+  /* GST_DEBUG_CATEGORY_INIT (aiffmux_debug, "aiffmux", 0, "AIFF muxer"); */
 
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -51,8 +51,10 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "aiffparse", GST_RANK_PRIMARY,
       GST_TYPE_AIFF_PARSE);
-  ret &= gst_element_register (plugin, "aiffmux", GST_RANK_NONE,
-      GST_TYPE_AIFF_MUX);
+  /*
+     ret &= gst_element_register (plugin, "aiffmux", GST_RANK_NONE,
+     GST_TYPE_AIFF_MUX);
+   */
 
   return ret;
 }
