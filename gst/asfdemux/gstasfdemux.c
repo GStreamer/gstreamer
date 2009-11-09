@@ -203,6 +203,23 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
       NULL);
   g_slist_free (demux->ext_stream_props);
   demux->ext_stream_props = NULL;
+
+  while (demux->old_num_streams > 0) {
+    gst_asf_demux_free_stream (demux,
+        &demux->old_stream[demux->old_num_streams - 1]);
+    --demux->old_num_streams;
+  }
+  memset (demux->old_stream, 0, sizeof (demux->old_stream));
+  demux->old_num_streams = 0;
+
+  /* when resetting for a new chained asf, we don't want to remove the pads
+   * before adding the new ones */
+  if (chain_reset) {
+    memcpy (demux->old_stream, demux->stream, sizeof (demux->stream));
+    demux->old_num_streams = demux->num_streams;
+    demux->num_streams = 0;
+  }
+
   while (demux->num_streams > 0) {
     gst_asf_demux_free_stream (demux, &demux->stream[demux->num_streams - 1]);
     --demux->num_streams;
@@ -795,6 +812,17 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
   flow = gst_asf_demux_process_object (demux, &header_data, &header_size);
   if (flow != GST_FLOW_OK)
     goto parse_failed;
+
+  /* release old pads (only happens on chained asfs) */
+  while (demux->old_num_streams > 0) {
+    gst_pad_push_event (demux->old_stream[demux->old_num_streams - 1].pad,
+        gst_event_new_eos ());
+    gst_asf_demux_free_stream (demux,
+        &demux->old_stream[demux->old_num_streams - 1]);
+    --demux->old_num_streams;
+  }
+  memset (demux->old_stream, 0, sizeof (demux->old_stream));
+  demux->old_num_streams = 0;
 
   /* calculate where the packet data starts */
   demux->data_offset = obj.size + 50;

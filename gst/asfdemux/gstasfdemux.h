@@ -158,6 +158,11 @@ struct _GstASFDemux {
   AsfStream            stream[GST_ASF_DEMUX_NUM_STREAMS];
   gboolean             activated_streams;
 
+  /* for chained asf handling, we need to hold the old asf streams until
+   * we detect the new ones */
+  AsfStream            old_stream[GST_ASF_DEMUX_NUM_STREAMS];
+  gboolean             old_num_streams;
+
   GstClockTime         first_ts;        /* first timestamp found        */
 
   guint32              packet_size;
