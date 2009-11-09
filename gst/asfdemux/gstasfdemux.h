@@ -132,7 +132,11 @@ struct _GstASFDemux {
   GstAdapter        *adapter;
   GstTagList        *taglist;
   GstAsfDemuxState   state;
-  
+
+  /* byte offset where the asf starts, which might not be zero on chained
+   * asfs, index_offset and data_offset already are 'offseted' by base_offset */
+  guint64            base_offset;
+
   guint64            index_offset; /* byte offset where index might be, or 0   */
   guint64            data_offset;  /* byte offset where packets start          */
   guint64            data_size;    /* total size of packet data in bytes, or 0 */

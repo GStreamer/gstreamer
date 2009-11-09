@@ -225,8 +225,11 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     --demux->num_streams;
   }
   memset (demux->stream, 0, sizeof (demux->stream));
-  demux->num_audio_streams = 0;
-  demux->num_video_streams = 0;
+  if (!chain_reset) {
+    /* do not remove those for not adding pads with same name */
+    demux->num_audio_streams = 0;
+    demux->num_video_streams = 0;
+  }
   demux->num_streams = 0;
   demux->activated_streams = FALSE;
   demux->first_ts = GST_CLOCK_TIME_NONE;
@@ -255,6 +258,8 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     demux->data_size = 0;
     demux->data_offset = 0;
     demux->index_offset = 0;
+  } else {
+    demux->base_offset = 0;
   }
 }
 
@@ -782,6 +787,22 @@ asf_demux_peek_object (GstASFDemux * demux, const guint8 * data,
   return TRUE;
 }
 
+static void
+gst_asf_demux_release_old_pads (GstASFDemux * demux)
+{
+  GST_DEBUG_OBJECT (demux, "Releasing old pads");
+
+  while (demux->old_num_streams > 0) {
+    gst_pad_push_event (demux->old_stream[demux->old_num_streams - 1].pad,
+        gst_event_new_eos ());
+    gst_asf_demux_free_stream (demux,
+        &demux->old_stream[demux->old_num_streams - 1]);
+    --demux->old_num_streams;
+  }
+  memset (demux->old_stream, 0, sizeof (demux->old_stream));
+  demux->old_num_streams = 0;
+}
+
 static GstFlowReturn
 gst_asf_demux_chain_headers (GstASFDemux * demux)
 {
@@ -814,15 +835,7 @@ gst_asf_demux_chain_headers (GstASFDemux * demux)
     goto parse_failed;
 
   /* release old pads (only happens on chained asfs) */
-  while (demux->old_num_streams > 0) {
-    gst_pad_push_event (demux->old_stream[demux->old_num_streams - 1].pad,
-        gst_event_new_eos ());
-    gst_asf_demux_free_stream (demux,
-        &demux->old_stream[demux->old_num_streams - 1]);
-    --demux->old_num_streams;
-  }
-  memset (demux->old_stream, 0, sizeof (demux->old_stream));
-  demux->old_num_streams = 0;
+  gst_asf_demux_release_old_pads (demux);
 
   /* calculate where the packet data starts */
   demux->data_offset = obj.size + 50;
@@ -1028,7 +1041,7 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   GST_LOG_OBJECT (demux, "reading headers");
 
   /* pull HEADER object header, so we know its size */
-  if (!gst_asf_demux_pull_data (demux, 0, 16 + 8, &buf, NULL))
+  if (!gst_asf_demux_pull_data (demux, demux->base_offset, 16 + 8, &buf, NULL))
     goto read_failed;
 
   asf_demux_peek_object (demux, GST_BUFFER_DATA (buf), 16 + 8, &obj, TRUE);
@@ -1040,7 +1053,8 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
   GST_LOG_OBJECT (demux, "header size = %u", (guint) obj.size);
 
   /* pull HEADER object */
-  if (!gst_asf_demux_pull_data (demux, 0, obj.size, &buf, NULL))
+  if (!gst_asf_demux_pull_data (demux, demux->base_offset, obj.size, &buf,
+          NULL))
     goto read_failed;
 
   size = obj.size;              /* don't want obj.size changed */
@@ -1052,11 +1066,15 @@ gst_asf_demux_pull_headers (GstASFDemux * demux)
     goto parse_failed;
   }
 
+  /* release old pads (only happens on chained asfs) */
+  gst_asf_demux_release_old_pads (demux);
+
   /* calculate where the packet data starts */
-  demux->data_offset = obj.size + 50;
+  demux->data_offset = demux->base_offset + obj.size + 50;
 
   /* now pull beginning of DATA object before packet data */
-  if (!gst_asf_demux_pull_data (demux, obj.size, 50, &buf, NULL))
+  if (!gst_asf_demux_pull_data (demux, demux->base_offset + obj.size, 50, &buf,
+          NULL))
     goto read_failed;
 
   if (!gst_asf_demux_parse_data_object_start (demux, GST_BUFFER_DATA (buf)))
@@ -1400,6 +1418,52 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
   return gst_asf_demux_aggregate_flow_return (demux);
 }
 
+static gboolean
+gst_asf_demux_check_buffer_is_header (GstASFDemux * demux, GstBuffer * buf)
+{
+  AsfObject obj;
+  g_assert (buf != NULL);
+
+  GST_LOG_OBJECT (demux, "Checking if buffer is a header");
+
+  /* we return false on buffer too small */
+  if (GST_BUFFER_SIZE (buf) < ASF_OBJECT_HEADER_SIZE)
+    return FALSE;
+
+  /* check if it is a header */
+  asf_demux_peek_object (demux, GST_BUFFER_DATA (buf),
+      ASF_OBJECT_HEADER_SIZE, &obj, TRUE);
+  if (obj.id == ASF_OBJ_HEADER) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_asf_demux_check_chained_asf (GstASFDemux * demux)
+{
+  guint64 off = demux->data_offset + (demux->packet * demux->packet_size);
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *buf = NULL;
+  gboolean header = FALSE;
+
+  /* TODO maybe we should skip index objects after the data and look
+   * further for a new header */
+  if (gst_asf_demux_pull_data (demux, off, ASF_OBJECT_HEADER_SIZE, &buf, &ret)) {
+    g_assert (buf != NULL);
+    /* check if it is a header */
+    if (gst_asf_demux_check_buffer_is_header (demux, buf)) {
+      GST_DEBUG_OBJECT (demux, "new base offset: %" G_GUINT64_FORMAT, off);
+      demux->base_offset = off;
+      header = TRUE;
+    }
+
+    gst_buffer_unref (buf);
+  }
+
+  return header;
+}
+
 static void
 gst_asf_demux_loop (GstASFDemux * demux)
 {
@@ -1442,8 +1506,20 @@ gst_asf_demux_loop (GstASFDemux * demux)
   if (G_LIKELY (demux->speed_packets == 1)) {
     /* FIXME: maybe we should just skip broken packets and error out only
      * after a few broken packets in a row? */
-    if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, buf)))
+    if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, buf))) {
+      /* when we don't know when the data object ends, we should check
+       * for a chained asf */
+      if (demux->num_packets == 0) {
+        if (gst_asf_demux_check_buffer_is_header (demux, buf)) {
+          GST_INFO_OBJECT (demux, "Chained asf found");
+          demux->base_offset = off;
+          gst_asf_demux_reset (demux, TRUE);
+          gst_buffer_unref (buf);
+          return;
+        }
+      }
       goto parse_error;
+    }
 
     flow = gst_asf_demux_push_complete_payloads (demux, FALSE);
 
@@ -1459,8 +1535,21 @@ gst_asf_demux_loop (GstASFDemux * demux)
           demux->packet_size);
       /* FIXME: maybe we should just skip broken packets and error out only
        * after a few broken packets in a row? */
-      if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub)))
+      if (G_UNLIKELY (!gst_asf_demux_parse_packet (demux, sub))) {
+        /* when we don't know when the data object ends, we should check
+         * for a chained asf */
+        if (demux->num_packets == 0) {
+          if (gst_asf_demux_check_buffer_is_header (demux, sub)) {
+            GST_INFO_OBJECT (demux, "Chained asf found");
+            demux->base_offset = off + n * demux->packet_size;
+            gst_asf_demux_reset (demux, TRUE);
+            gst_buffer_unref (sub);
+            gst_buffer_unref (buf);
+            return;
+          }
+        }
         goto parse_error;
+      }
 
       gst_buffer_unref (sub);
 
@@ -1513,7 +1602,13 @@ eos:
       gst_element_post_message (GST_ELEMENT_CAST (demux),
           gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
               stop));
-    } else {
+    } else if (flow != GST_FLOW_UNEXPECTED) {
+      /* check if we have a chained asf, in case, we don't eos yet */
+      if (gst_asf_demux_check_chained_asf (demux)) {
+        GST_INFO_OBJECT (demux, "Chained ASF starting");
+        gst_asf_demux_reset (demux, TRUE);
+        return;
+      }
       /* normal playback, send EOS to all linked pads */
       GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
       gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
@@ -3827,6 +3922,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->data_size = 0;
       demux->data_offset = 0;
       demux->index_offset = 0;
+      demux->base_offset = 0;
       break;
     }
     default:
