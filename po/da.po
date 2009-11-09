@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-12 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -22,6 +22,10 @@ msgstr "Kunne ikke skabe kontakt til lyd-serveren"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Listning af lydservers egenskaber fejlede"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
@@ -44,6 +48,9 @@ msgstr "Denne fil indeholder ingen spilbar strøm."
 msgid "This file is incomplete and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Denne fil er ødelagt og kan ikke afspilles."
+
 msgid "The video in this file might not play correctly."
 msgstr "Videoen i denne fil afspilles måske ikke korrekt."
 
@@ -54,9 +61,6 @@ msgstr "Videoen i denne fil afspilles måske ikke korrekt."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Denne fil indeholder for mange strømme. Afspil først kun %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Denne fil er ødelagt og kan ikke afspilles."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -64,9 +68,11 @@ msgstr ""
 "Ingen understøttet strøm blev fundet. Du skal måske installere et "
 "udvidelsesmodul for GStreamer RTSP til Real media-strømme."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Ingen understøttet strøm blev fundet. Du mangler måske det korrekte "
 "udvidelsesmodul for GStreamer RTSP."

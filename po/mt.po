@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -20,6 +20,10 @@ msgstr "Kuntatt mas-sound server ma ġiex stabbilit"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Mhux possibli t-tfittxija għall-kapaċita tas-sound server"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Problema interna fid-data stream"
@@ -42,6 +46,9 @@ msgstr "Il-fajl ma fiħ l-ebda stream li tista tindaqq."
 msgid "This file is incomplete and cannot be played."
 msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Il-fajl huwa korrott u ma jistax jinfetaħ."
+
 msgid "The video in this file might not play correctly."
 msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
 
@@ -49,17 +56,15 @@ msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Il-fajl fiħ aktar streams milli suppost. Ser indoqq l-ewwel %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Il-fajl huwa korrott u ma jistax jinfetaħ."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 
 msgid "Internal data flow error."

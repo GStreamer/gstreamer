@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-06-01 19:29+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -22,6 +22,10 @@ msgstr "サウンドサーバーへの接続に失敗しました"
 
 msgid "Failed to query sound server capabilities"
 msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
@@ -45,6 +49,9 @@ msgstr "このファイルには再生不可能なストリームが含まれて
 msgid "This file is incomplete and cannot be played."
 msgstr "このファイルは正常ではないため、再生することができません"
 
+msgid "This file is corrupt and cannot be played."
+msgstr "このファイルは壊れているため再生することができません"
+
 msgid "The video in this file might not play correctly."
 msgstr "このファイルの中の動画は正しく再生できないかもしれません"
 
@@ -54,9 +61,6 @@ msgstr ""
 "このファイルには多くのストリームが格納されているため、最初の %d 個のみ再生し"
 "ます"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "このファイルは壊れているため再生することができません"
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -64,9 +68,11 @@ msgstr ""
 "サポートしているストリームが見つかりません。Real メディアストリームのための"
 "GStreamer RTSP 拡張プラグインをインストールする必要があるかもしれません。"
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "サポートしているストリームが見つかりません。正しい GStreamer RTSP 拡張プラグ"
 "インをインストールする必要があるかもしれません。"

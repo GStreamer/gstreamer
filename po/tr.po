@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-12 19:50+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -18,6 +18,10 @@ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Ses sunucusu olanakları sorgulanamadı"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "İç veri akım hatası."
@@ -40,15 +44,15 @@ msgstr "Dosya çalınabilir akışlar içermiyor."
 msgid "This file is incomplete and cannot be played."
 msgstr "Dosya eksik ve oynatılamaz."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Bu dosya bozuk ve oynatılamaz."
+
 msgid "The video in this file might not play correctly."
 msgstr "Bu dosyadaki vidyo doğru oynatılamıyabilir."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Bu dosya çok fazla akış içeriyor. Sadece ilki oynatılıyor %d"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Bu dosya bozuk ve oynatılamaz."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -57,9 +61,11 @@ msgstr ""
 "Desteklenen bir akış bulunamadı. Real Media akışları için bir GStreamer RTSP "
 "uzantı eklentisi kurmalısınız."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Desteklenen akış bulunamadı. Doğru GStreamer RTSP uzantı eklentisi kayıp "
 "olabilir."

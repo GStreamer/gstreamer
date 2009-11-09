@@ -1,16 +1,16 @@
 # Translation of gst-plugins-good to French
-# Copyright (C) 2003-2008 GStreamer core team
+# Copyright (C) 2003-2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008.
+# Claude Paroz <claude@2xlibre.net>, 2008-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
-"PO-Revision-Date: 2008-10-21 09:30+0200\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
+"PO-Revision-Date: 2009-09-22 19:36+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
@@ -23,6 +23,10 @@ msgstr "Impossible d'établir une connexion vers le serveur de son"
 msgid "Failed to query sound server capabilities"
 msgstr ""
 "Échec lors de l'interrogation du serveur de son au sujet de ses capacités"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
@@ -45,6 +49,9 @@ msgstr "Ce fichier ne contient aucun flux exploitable."
 msgid "This file is incomplete and cannot be played."
 msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Ce fichier est corrompu et ne peut pas être lu."
+
 msgid "The video in this file might not play correctly."
 msgstr ""
 "Il est possible que la vidéo de ce fichier ne puisse pas être lue "
@@ -54,18 +61,21 @@ msgstr ""
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ce fichier contient trop de flux. Seuls les %d premiers seront lus."
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Ce fichier est corrompu et ne peut pas être lu."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Aucun flux pris en charge n'a été trouvé. Il faut peut-être installer un "
+"greffon d'extension GStreamer RTSP pour les flux Real media."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
+"Aucun flux pris en charge n'a été trouvé. Il manque peut-être le bon greffon "
+"d'extension GStreamer RTSP."
 
 msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
@@ -152,7 +162,6 @@ msgstr ""
 "Impossible d'ouvrir le périphérique audio pour la lecture. Le périphérique "
 "est utilisé par une autre application."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -163,7 +172,6 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Impossible d'ouvrir le périphérique audio pour la lecture."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -177,26 +185,25 @@ msgstr "Impossible d'ouvrir le périphérique audio pour l'enregistrement."
 msgid "Gain"
 msgstr "Gain"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Haut-parleur"
+msgstr "Haut-parleur interne"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Écouteurs"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Sortie ligne"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Sortie SPDIF"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Sortie AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Sortie AUX 2"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
@@ -204,7 +211,7 @@ msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Taille de trame imprévue de %u à la place de %u."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
@@ -249,9 +256,9 @@ msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture
 msgid "Device '%s' is not a capture device."
 msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
+msgstr "Le périphérique « %s » n'est pas un périphérique de sortie."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -331,67 +338,3 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr ""
-#~ "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Impossible d'énumérer les formats vidéo que le périphérique « %s » sait "
-#~ "gérer"
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Le type de tampon n'est pas pris en charge ou l'index est hors limites, "
-#~ "ou aucun tampon n'a été alloué, ou les paramètres userptr ou length ne "
-#~ "sont pas valides. périphérique %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "L'obtention de trames vidéo à partir du périphérique « %s » a échoué. "
-#~ "Mémoire insuffisante."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "mémoire insuffisante pour mettre en file d'attente un tampon de pointeur "
-#~ "utilisateur. périphérique %s."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Aucun tampon libre dans la réserve à l'index %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Le périphérique « %s » ne gère par l'enregistrement vidéo"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Le périphérique « %s » ne peut pas enregistrer à %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr ""
-#~ "Le périphérique « %s » ne peut pas enregistrer dans le format indiqué"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Impossible d'accéder aux tampons du périphérique « %s »."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr ""
-#~ "Impossible d'accéder à suffisamment de tampons du périphérique « %s »."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr ""
-#~ "Erreur lors du démarrage d'enregistrement de flux sur le périphérique « %"
-#~ "s »."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr ""
-#~ "Erreur lors de l'arrêt d'enregistrement de flux sur le périphérique « %s »."
-
-#~ msgid "Could not read from CD."
-#~ msgstr "Impossible de lire le CD."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Ce fichier est chiffré et ne peut pas être lu."

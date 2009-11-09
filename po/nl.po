@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-12 22:49+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -21,6 +21,10 @@ msgstr "Kan geen verbinding maken met de geluidsserver"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
@@ -43,6 +47,9 @@ msgstr "Dit bestand bevat geen afspeelbare stromen."
 msgid "This file is incomplete and cannot be played."
 msgstr "Dit bestand is incompleet en kan niet afgespeeld worden."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Dit bestand is beschadigd en kan niet afgespeeld worden."
+
 msgid "The video in this file might not play correctly."
 msgstr "De video in dit bestand zal mogelijk niet correct afgespeeld worden."
 
@@ -51,9 +58,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Dit bestand bevat te veel stromen. Alleen de eerste %d worden afgespeeld."
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Dit bestand is beschadigd en kan niet afgespeeld worden."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -61,9 +65,11 @@ msgstr ""
 "Er is geen ondersteunde stroom gevonden. Misschien moet er een GStreamer "
 "RTSP extensie-plugin voor Real-media-streams geïnstalleerd worden."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Er is geen ondersteunde stroom gevonden. Misschien ontbreekt de juiste "
 "GStreamer RTSP extensie-plugin."

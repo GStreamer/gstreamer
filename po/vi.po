@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
-"PO-Revision-Date: 2009-05-12 21:30+0930\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
+"PO-Revision-Date: 2009-09-18 23:10+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -22,6 +22,10 @@ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm t
 
 msgid "Failed to query sound server capabilities"
 msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
@@ -46,15 +50,15 @@ msgstr "Tập tin này không chứa luồng có thể phát."
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Tập tin này bị hỏng nên không thể phát."
+
 msgid "The video in this file might not play correctly."
 msgstr "Ảnh động trong tập tin này có thể không phát đúng."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Tập tin này bị hỏng nên không thể phát."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -63,9 +67,11 @@ msgstr ""
 "Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần phải cài đặt một "
 "phần bổ sung RTSP Gstreamer để xử lý luồng nhạc/phim loại Real."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Không tìm thấy luồng được hỗ trợ. Người dùng có thể chưa cài đặt phần bổ "
 "sung RTSP Gstreamer đúng."
@@ -177,24 +183,23 @@ msgstr "Không thể mở thiết bị âm thanh để thu."
 msgid "Gain"
 msgstr "Khuếch đại"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Loa"
+msgstr "Loa dựng sẵn"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Tai nghe"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Dây Ra"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF Ra"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 Ra"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 Ra"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -248,9 +253,9 @@ msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
 msgid "Device '%s' is not a capture device."
 msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -320,49 +325,3 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Lỗi liệt kê những định dạng ảnh động có thể chạy trên thiết bị « %s »"
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Không hỗ trợ kiểu bộ đệm, hoặc chỉ thị ở ngoại phạm vị, hoặc chưa cấp "
-#~ "phát bộ đệm, hoặc con trở người dùng hay độ dài không hợp lệ. Thiết bị %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s ». Không đủ bộ nhớ."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "Không đủ bộ nhớ để phụ thêm con bộ đếm trỏ người dùng vào hàng đợi. Thiết "
-#~ "bị %s."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Không tìm thấy bộ đệm còn rảnh trong vũng ở chỉ mục %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Thiết bị « %s » không hỗ trợ khả năng bắt ảnh động."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Thiết bị « %s » không thể bắt theo %d×%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Thiết bị « %s » không thể bắt theo định dạng đã ghi rõ."
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Không thể lấy các bộ đệm từ thiết bị « %s »."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Không thể lấy đủ bộ đệm từ thiết bị « %s »."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Lỗi bắt đầu việc bắt luồng từ thiết bị « %s »."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Lỗi kết thúc việc bắt luồng từ thiết bị « %s »."

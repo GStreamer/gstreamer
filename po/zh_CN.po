@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-02-09 15:35中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -21,6 +21,10 @@ msgstr "无法建立与音频服务器的连接"
 
 msgid "Failed to query sound server capabilities"
 msgstr "查寻音频服务器的服务失败"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
@@ -43,6 +47,9 @@ msgstr "此文件不包含可播放的流。"
 msgid "This file is incomplete and cannot be played."
 msgstr "此文件不完整且无法播放。"
 
+msgid "This file is corrupt and cannot be played."
+msgstr "此文件已损坏，无法播放。"
+
 msgid "The video in this file might not play correctly."
 msgstr "此文件中的视频可能无法正确播放。"
 
@@ -50,17 +57,15 @@ msgstr "此文件中的视频可能无法正确播放。"
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "此文件包含了太多的流。只播放前面 %d 个"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "此文件已损坏，无法播放。"
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 
 msgid "Internal data flow error."

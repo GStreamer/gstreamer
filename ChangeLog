@@ -1,9 +1,2235 @@
-=== release 0.10.16 ===
+2009-11-09 15:20:00 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
-2009-08-29  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: free temporary buffer when changing state to NULL
+	  Free temporary allocations in the state change function and not
+	  only when the object is finalised.
+
+2009-11-09 11:40:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	  jpegdec: only allocate as much temporary memory as needed for indirect decoding
+	  When we can't decode directly into the output buffer, make our temp buffers
+	  only as big as needed instead of allocating for the worst case scenario (well,
+	  we still alloc more than strictly needed for some cases, but significantly
+	  less than before).
+
+2009-11-05 23:46:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: printf format fix
+
+2009-11-05 23:44:27 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/raw1394/gst1394clock.c:
+	* ext/raw1394/gsthdv1394src.c:
+	  raw1394: printf format fixes
+
+2009-11-05 23:40:15 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: printf format fix
+
+2009-11-05 12:13:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	  avimux: do not write empty INFO list
+	  avoid writing an empty INFO list chunk, both because
+	  it is useless and because vlc refuses to play the
+	  resulting file.
+
+2009-11-05 10:54:12 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: Notify about band property changes caused by changing number of bands
+
+2009-11-05 10:45:59 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer.h:
+	* gst/equalizer/gstiirequalizernbands.c:
+	  equalizer: Make changes to band properties and the number of bands threadsafe
+
+2009-11-05 10:30:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: Fix stupid off by two bug
+
+2009-11-05 08:18:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: Add band property to select the band filter type
+	  This allows per band configuration of a peak, low shelf or
+	  high shelf filter, which can be very useful if the band frequencies
+	  and widths are manually configured.
+
+2009-11-05 08:17:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: Fix code style
+
+2009-11-05 08:03:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/equalizer/gstiirequalizernbands.c:
+	  equalizer: Some cleanup
+
+2009-10-07 09:31:19 -0400  Gabriel Millaire <gabriel.millaire@collabora.co.uk>
+
+	* gst/rtp/gstrtpceltdepay.c:
+	* gst/rtp/gstrtpceltpay.c:
+	  celtpay/depay : change GST_DEBUG_OBJECT to GST_LOG_OBJECT in pay_handle_buffer and depay_process
+
+2009-10-02 17:04:43 -0400  Gabriel Millaire <gabriel.millaire@collabora.co.uk>
+
+	* gst/rtp/gstrtpceltdepay.c:
+	* gst/rtp/gstrtpceltdepay.h:
+	* gst/rtp/gstrtpceltpay.c:
+	  celtpay/depay: Negotiate parameters through caps
+	  celtdepay : added default framesize(480) channels(1) and clockrate(32000)
+	  depay_setcaps : now gets channels and framesize from string with default value
+	  depay_process : now adds timestamp to outbuf
+	  Added frame_size to GstRtpCeltDepay
+	  Changed some GST_DEBUG to GST_DEBUG_OBJECT or GST_LOG_OBJECT
+	  celtpay : getcaps : gets channel and framesize and sets caps
+	  Added frame-size to static caps for audio/x-celt
+
+2009-11-04 15:58:34 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/deinterlace/Makefile.am:
+	  deinterlace: Pull in CFLAGS and LIBS flags from -base before core before system.
+
+2009-10-15 16:33:24 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/Makevars:
+	  po: Don't create backup .po files
+	  As well as preventing creation of useless backup files, it works
+	  around a bug in gettext 0.17 on OS/X
+
+2009-11-04 16:47:42 +0100  Edward Hervey <bilboed@ihatesteve.local>
+
+	* gst/qtdemux/qtdemux_dump.c:
+	  qtdemux: init variables to make compiler on osx build bot happy
+
+2009-11-03 16:04:37 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux_dump.c:
+	  qtdemux: init variables to make compiler on osx build bot happy
+
+2009-11-03 17:35:15 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	  jpegdec: don't allocate big arrays on the stack
+	  Add the arrays to the instance data and allocate on first use.
+
+2009-11-01 15:57:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: remove pointless call to gst_element_no_more_pads()
+
+2009-11-01 00:29:57 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: fix decay to be smooth
+	  The length not having any fractional part as it was promoted to gdouble after
+	  dividing two guint64.
+
+2009-11-01 00:29:24 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	* gst/level/gstlevel.h:
+	  level: calculate the message-intervall when it changes
+
+2009-11-01 00:14:08 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: clocktime is a guint64, use right macro to init fields
+
+2009-11-01 00:10:01 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: use more g-style types
+
+2009-10-30 09:27:59 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.16, "Secret Handshakes"
+	* ext/pulse/pulsesink.c:
+	  pulsesink: Only set the volume on stream connection if pulse >= 0.9.20 is available
+	  In older versions the volume set during stream connection had
+	  no defined sematic and usually it was a relative volume. What
+	  was needed for our use case is an absolute volume though, otherwise
+	  the volume will be always decreased on stream connection if it's
+	  less than 100%.
+	  Since pulse 0.9.20 that volume is always an absolute volume if
+	  flat volumes are used and relative otherwise, which is the same
+	  as for pa_context_set_sink_input_volume().
+	  Relevant pulse changesets:
+	  http://git.0pointer.de/?p=pulseaudio.git;a=commit;h=f27a50691c8fe45bac7dd6b21fac91a359def3a1
+	  http://git.0pointer.de/?p=pulseaudio.git;a=commit;h=2501687579e359d5032a4d165b2ffc8f5b1b8ba6
+
+2009-10-27 18:07:18 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: use segment_full when we can
+	  Use segment_full so that we can pass the applied rate to the segment values. We
+	  will change the applied rate when we implement skip mode.
+
+2009-10-18 00:16:06 +0100  Robert Swain <robert.swain@gmail.com>
+
+	* gst/wavenc/gstwavenc.c:
+	  wavenc: Fix buffer offset by moving length incrementation
+
+2009-10-23 18:31:14 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: Create the video NSView in READY->PAUSED rather than NULL->READY
+
+2009-10-23 18:28:22 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxvideo/Makefile.am:
+	  osxvideo: explicitly link to GST_LIBS
+
+2009-10-23 18:09:43 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/avi/Makefile.am:
+	* gst/matroska/Makefile.am:
+	* gst/wavparse/Makefile.am:
+	  Add dependencies of gstriff to things that link to gstriff, needed on Win32.
+
+2009-10-23 17:25:17 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* tests/examples/rtp/client-PCMA.c:
+	* tests/examples/rtp/server-alsasrc-PCMA.c:
+	  rtp examples: remove executable bits from C files.
+
+2009-10-23 11:21:44 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: disable all jitterbuffer tests for now
+	  Since even the one enabled seems to fail.
+
+2009-10-22 13:39:58 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: also include the new test for prev commit
+
+2009-10-22 13:19:07 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	  tests: add a jitterbuffer test
+	  Tests pushing a few buffers in various order and asserting the order sent by the
+	  jitterbuffer. Contains two disabled tests that need more work.
+
+2009-10-22 12:30:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Dirac "muxing" units end on EOS too
+	  A Dirac muxing unit are all non-picture, non-end-of-sequence
+	  packets up to and including the first picture or eos packet.
+	  See http://www.diracvideo.org/wiki/index.php/ContainerFormatMappingGuidelines
+
+2009-10-22 02:09:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: fix compilation with debugging disabled
+	  total_idx is always evaluated.
+
+2009-10-19 21:59:46 +0300  Priit Laes <plaes@plaes.org>
+
+	* ext/libcaca/gstcacasink.h:
+	  cacasink: minor cleanups for header.
+	  Use G_BEGIN_DECLS macros, remove unused variables and fix typo.
+	  See #599018.
+
+2009-10-19 21:59:23 +0300  Priit Laes <plaes@plaes.org>
+
+	* ext/libcaca/gstcacasink.c:
+	  cacasink: exit properly when invalid driver has been selected.
+	  See #599018.
+
+2009-10-20 18:23:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Stop scanning at the last entry... and not the one before :)
+	  This ensures we actually push out everything
+
+2009-10-20 17:20:55 +0200  Andy Wingo <wingo@oblong.net>
+
+	  qtdemux: unpack more information into image/x-j2c caps
+	  * gst/qtdemux/qtdemux_fourcc.h: Add new fourccs for use by the mj2
+	  unpacker.
+	  * gst/qtdemux/qtdemux.c (qtdemux_parse_trak): Unpack JPEG2000 component
+	  mapping and channel definitions from the jp2h header. Will add
+	  component-map and channel-definitions elements to the caps if the
+	  component maps or channel definitions are nonstandard, where standard
+	  order means RGB, 444 packed YUV, or greyscale, with no alpha channel.
+	  Fixes #598915.
+
+2009-10-20 17:33:41 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/check/elements/deinterleave.c:
+	  tests: include stdio.h for sscanf
+
+2009-10-19 15:21:57 +0100  Bastien Nocera <hadess@hadess.net>
+
+	* ext/pulse/pulsesink.c:
+	  Fix the StreamVolume interface not being advertised
+	  gst_pulsesink_interface_supported() was missing a check for it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=598933
+
+2009-10-16 21:14:14 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: code cleanup
+	  Use gdouble instead of double. Calculate falloff_time once instead of twice.
+
+2009-10-18 15:52:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: MEMDUMP the junk blobs
+	  It will only actually pull the junk blobs from upstream if the memdump
+	  level is activated
+
+2009-10-18 15:51:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Some avi files have INFO lists in the headers.
+
+2009-10-18 16:02:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Don't seek on empty streams
+
+2009-10-18 15:50:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Ensure _calculate_durations_from_index only uses valid streams
+
+2009-10-18 15:49:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Only call convert function if we have strf.auds
+
+2009-10-18 15:48:06 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: Use first indexed stream for seeking.
+	  In the future, main_stream can be adjusted to contain the optimal stream
+	  as mentionned in the FIXME line 3440
+
+2009-10-18 15:46:48 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: Only expose streams that actually have something in it.
+	  This guarantees that in pull-mode, all streams have a valid index to
+	  work with.
+
+2009-10-18 15:40:37 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Properly mark presence of index.
+	  Instead of blindly saying we have an index, only do so if we have a
+	  non-empty index.
+
+2009-10-17 02:18:53 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulse: never apply volume more than once
+	  Generally decisions on the volume of the stream should be done inside of
+	  PA, not inside of Gst. Only PA knows how volumes translate between
+	  devices and s on.
+	  This patch makes sure that all volumes set via the volume property are
+	  only applied *once* to the underlying stream. After applying them the
+	  client side will not store them anymore. This should make sure that
+	  really only user-triggered volume changes are forwarded to server, but
+	  the client never tries to save/restore the volume internally.
+	  Fixes bug #595231.
+
+2009-10-17 08:55:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/plugin.c:
+	  pulsesink: Initialize gettext for the translated strings in plugin_init()
+
+2009-10-17 00:10:30 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulse: use 'performer' as a fallback for 'artist' tag
+
+2009-10-17 00:09:36 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsesink.c:
+	* po/POTFILES.in:
+	  pulse: when constructing a stream title from tag data make sure it is translatable
+
+2009-10-17 00:06:15 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	  pulse: loop while connecting to server
+	  pthread does not guarantee that there are no spurious condition variable
+	  wakeups, neither does pa_threaded_mainloop_xxx() which is a wrapper
+	  around it. So we need to loop around the _wait() function to make sure
+	  we get the right wakeup.
+	  Also, unify the order of the wait loops across the file.
+
+2009-10-17 00:05:10 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	* ext/pulse/pulseprobe.c:
+	  pulse: mainloop creation can fail too, so handle that
+
+2009-10-17 00:03:06 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	  pulse: adjust CHECK_DEAD_GOTO macro to glib style
+
+2009-10-16 17:28:42 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	* ext/pulse/pulsemixerctrl.h:
+	* ext/pulse/pulseprobe.c:
+	* ext/pulse/pulseprobe.h:
+	* ext/pulse/pulsesink.c:
+	* ext/pulse/pulsesink.h:
+	* ext/pulse/pulsesrc.h:
+	  pulse: make a few things smaller by making them bitfields
+
+2009-10-16 17:26:41 +0200  Lennart Poettering <lennart@poettering.net>
+
+	* configure.ac:
+	  pulse: bump minimum libpulse version to 0.9.10
+	  Older versions than 0.9.10 are really really old and buggy. Drop
+	  compatibility with them. Nobody should run anything that old.
+	  Also see: https://bugzilla.gnome.org/show_bug.cgi?id=595029
+
+2009-10-16 18:18:31 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/debugutils/gstdebug.c:
+	  debugutils: register pushfilesrc element
+
+2009-10-16 17:28:09 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	* gst/avi/gstavimux.h:
+	  avimux: support (some) VBR audio muxing
+	  AVI format can handle VBR audio provided audio chunks are of fixed duration
+	  (cfr fixed duration video frames).  Apply this approach to (always) parsed
+	  raw AAC and (if parsed) to MPEG-1/2 audio.
+	  See #368681.
+
+2009-10-16 13:41:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix branch hints
+	  Remove inappropriate branching hints and add some new ones.
+
+2009-10-16 12:33:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix regression in indirect decode path
+	  Revert variable name back to what it was before the G_LIKELY was
+	  added (in commit 69c24fb9). The code works better that way.
+
+2009-10-16 02:47:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix regression with certain formats
+	  Fix regression introduced by previous commit (#598517).
+
+2009-10-15 19:49:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: don't use decompress structure members we shouldn't be using
+
+2009-10-14 17:53:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.h:
+	  jpegdec: remove some unused members from jpegdec instance structure
+
+2009-10-16 11:53:38 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtpmanager/Makefile.am:
+	* gst/udp/Makefile.am:
+	  build: use gst-glib-gen.mak to fix the glib build rules.
+	  The build rules in glib-gen.mak were using pattern rules in a non save way.
+
+2009-10-16 10:15:35 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 85d1530 to 0702fe1
+
+2009-10-15 21:04:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: adjust flow return aggregation to updated loop_data
+	  In particular, each stream is now treated separately, and one stream's
+	  EOS should not lead to overall EOS.
+
+2009-10-15 11:52:35 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: check some more atom sizes prior to parsing
+
+2009-10-15 13:19:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: handle events in TCP mode
+	  We need to handle events in TCP mode so that we can reply to the LATENCY event
+	  with TRUE.
+
+2009-10-15 11:24:45 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: add missing argument in debug message
+
+2009-10-14 18:58:06 +0200  Marvin Schmidt <marv@exherbo.org>
+
+	* tests/check/elements/flvmux.c:
+	  flvmux: Use loop test to prevent timeout on slow machines
+	  Partially fixes bug #597739.
+
+2009-10-14 16:15:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: forward events into the rtpbin
+	  Only catch the SEEK event on the srcpad and let other events enter the rtpbin.
+
+2009-10-14 11:33:24 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Fix late tags finding
+	  Use the correct taglist variable when notifying of late tags.
+
+2009-10-14 13:09:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: use GstIndex for (limited) seeking in push mode
+	  ... but disable this for now.  Although it basically works fine,
+	  user experience might be shaky (depending on taste), since there
+	  is no keyframe info in push mode.
+
+2009-10-14 13:08:47 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: add GstIndex support
+
+2009-10-14 11:55:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: also determine duration in push mode
+
+2009-10-14 11:54:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	  qtdemux: add GstIndex support
+
+2009-10-14 07:38:26 -0300  Thiago Santos <thiagoss@embedded.ufcg.edu.br>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2src: Set duration on buffers
+	  Use framerate to estimate duration of buffers.
+	  Fixes #590362
+
+2009-10-14 12:28:55 +0200  Håvard Graff <havard.graff at tandberg.com>
+
+	* gst/rtpmanager/gstrtpptdemux.c:
+	  rtpptdemux: only forward the lost-event to the last seen pt-number
+	  forward all events on all pads except for the PacketLost event, which we want to
+	  forward to the last seen pt pad.
+	  Fixes #598377
+
+2009-10-06 22:28:50 +0300  René Stadler <mail@renestadler.de>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: set desired minreq value to segsize/latency-time
+	  If we let the daemon decide freely by passing -1, we end up always getting 20ms.
+	  We want to set this value because in some cases we want to select a higher
+	  latency-time in order to save power.
+	  Fixes #597601
+
+2009-10-14 10:41:21 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a3e3ce4 to 85d1530
+
+2009-10-13 18:33:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/pipelines/flacdec.c:
+	  tests/pipeline/flac: Fix build on macosx 10.5
+
+2009-10-13 18:19:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: demote some warnings to debug
+
+2009-10-13 17:47:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/avi-ids.h:
+	  avi: add new avi flag we might want to use
+
+2009-10-13 17:46:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	  avimux: calculate suggested buffer size
+	  Calculate the suggested buffer size based on the largest chunk in the file.
+	  See #597847
+
+2009-10-13 17:45:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	  avimux: add jpeg2000 to allowed caps
+
+2009-10-13 17:41:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: add debug for the superindex offsets
+
+2009-10-13 16:02:37 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Fix uninitialized variable warning
+	  Fix another bogus may-be-used-uninitialized warning in qtdemux
+
+2009-10-13 13:08:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	* gst/avi/gstavimux.h:
+	  avi: lower max file size
+	  Make a constant of the max file size and lower the value to what ffmpeg does,
+	  hopefully improving compatibility with windows media player.
+	  See #597847
+
+2009-10-13 01:02:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix bogus warning about discont flag on first buffer
+	  The very first buffer should always have the DISCONT flag set, no
+	  need to warn about that. Only warn if we get a DISCONT buffer in
+	  non-packetised mode and we already have some data.
+
+2009-10-13 00:41:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix crash for unusual vertical chroma subsampling factors
+	  Fixes #597351.
+
+2009-10-13 00:12:42 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Fix uninitialized variable warnings
+	  The gcc on the OS/X buildbot complains about these variables not being
+	  initialized, even though they can't possibly actually be used
+	  uninitialized.
+
+2009-10-10 00:37:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fixes warning building in snow leopard
+
+2009-10-09 17:12:46 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: also consider Quicktime text subtitles
+
+2009-10-09 17:02:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: provide language tag for stream
+
+2009-10-09 16:30:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: refactor common parts in track parsing
+
+2009-10-09 16:21:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	  qtdemux: refactor buffer processing and sending
+	  ... so it can be used in both pull and push based mode.
+
+2009-10-08 13:39:25 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: extract palette data for dvd subpicture streams
+	  ... and send it downstream using custom dvd event
+
+2009-10-07 14:03:17 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	  qtdemux: support 3GPP timed text subtitles
+	  In particular, also make subtitle support less subp(icture)-centric.
+
+2009-10-07 16:15:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: NULL is not a valid taglist
+
+2009-09-23 17:20:25 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	  qtdemux: recognize some more encypted track cases
+
+2009-10-09 15:59:25 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/id3demux/id3tags.c:
+	  id3: fixes warnings building on macosx
+	  Another round on the formating of that debug line.
+
+2009-10-09 14:44:02 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/id3demux/id3tags.c:
+	  id3: cast pointer math results to glong
+
+2009-10-09 14:37:32 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/flac/gstflacdec.c:
+	  flac: apparently on some platforms a FLAC__uint64!=guint64
+
+2009-10-09 14:21:09 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtp/gstrtph263pay.c:
+	* gst/rtp/gstrtpvrawpay.c:
+	  buikd: explicitely cast, to tell some compilers that this is not long int
+
+2009-10-09 13:38:17 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/flac/gstflacdec.c:
+	* gst/id3demux/id3tags.c:
+	* gst/rtp/gstrtph263pay.c:
+	* gst/rtp/gstrtpvrawpay.c:
+	  build: don't cast, but use the right format specified instead
+	  This correct some of the previous macos fixes.
+
+2009-10-09 12:40:47 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/dv/gstdvdemux.c:
+	  dv: fix warnings on macosx
+
+2009-10-09 12:25:19 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/flac/gstflacdec.c:
+	* ext/flac/gstflacenc.c:
+	  flac: fix warnings on macosx
+
+2009-10-09 12:19:35 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmlenc.c:
+	  annodex: fix warnings in macosx
+
+2009-10-09 12:14:22 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxvideo/cocoawindow.m:
+	  osxvideo: fix a warning doing a cast
+
+2009-10-09 12:11:12 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxringbuffer.c:
+	  osxaudio: fix warnings on macosx
+
+2009-10-09 12:01:10 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  rtpvrawpay: fix warning on macosx
+
+2009-10-09 11:57:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/rtp/gstrtph263pay.c:
+	  rtph263pay: fix warning on macosx
+
+2009-10-09 11:54:03 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: fix warnings building on macosx
+
+2009-10-09 11:42:36 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/id3demux/id3tags.c:
+	  id3demux: fix printf warnings on macosx
+
+2009-10-09 11:30:00 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: fix warning in macosx making the format portable
+
+2009-10-09 10:51:29 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/audiofx/audiofxbasefirfilter.c:
+	  audiofx: use G_GUINT64_FORMAT to fix warnings on OSX
+
+2009-10-09 10:11:38 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxringbuffer.c:
+	  osxaudio: Fixes build on macosx snow leopard.
+
+2009-10-09 11:34:16 +0200  Pau Garcia i Quiles <pgquiles@elpauer.org>
+
+	* sys/v4l2/gstv4l2object.h:
+	  v4l2: Include sys/ioctl.h for the V4L ioctl requests
+	  Old videodevice2.h kernel headers used ioctl stuff without
+	  including ioctl.h, making compilation fail on older systems.
+	  Note: Including ioctl.h here is only a workaround for old kernel
+	  headers, should be removed once everybody has new enough headers.
+	  Fixes bug #597867.
+
+2009-10-09 00:14:07 +0100  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* tests/check/elements/level.c:
+	  check: Make the level unit test succeed on Solaris 10
+	  Add a configure check for functional isinf() and fpclass(), and
+	  use fpclass() where possible when isinf() is not available.
+
+2009-05-16 13:52:50 +0300  René Stadler <rene.stadler@nokia.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: fix strstr() usage on possibly unterminated string
+
+2009-10-08 16:16:14 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/level.c:
+	  check: Link against LIBM and include math.h for isinf()
+
+2009-10-07 21:51:38 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* sys/oss/gstossaudio.c:
+	  oss: Downgrade the rank of osssrc to SECONDARY
+	  which is the same rank as osssink has.
+	  Fixes bug #597730.
+
+2009-10-08 10:59:53 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 19fa4f3 to a3e3ce4
+
+2009-10-08 10:20:09 +0100  Jan Schmidt <jan.schmidt@sun.com>
+
+	* gst/avi/gstavidemux.c:
+	* gst/wavparse/gstwavparse.c:
+	  avi/wav: Fix some compiler warnings about incompatible pointers.
+
+2009-10-05 17:36:55 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/multifile/gstmultifile.c:
+	  multifile: Fix plugin description
+
+2009-10-07 14:03:20 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/annodex/gstcmmlutils.c:
+	* ext/jpeg/gstjpegdec.h:
+	* ext/jpeg/gstjpegenc.h:
+	* gst/apetag/gstapedemux.c:
+	* gst/debugutils/tests.c:
+	* gst/id3demux/id3v2frames.c:
+	* gst/qtdemux/qtdemux.c:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtpjpegdepay.c:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtsp/gstrtpdec.c:
+	* tests/examples/spectrum/demo-audiotest.c:
+	* tests/examples/spectrum/demo-osssrc.c:
+	* tests/examples/spectrum/spectrum-example.c:
+	  build: fprintf, sprintf, sscanf need stdio.h
+
+2009-10-07 00:33:49 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: use shelfing filters for first and last band
+	  Refactor the filter setup. Add two new filters with shelf characteristics for
+	  first and last band. Change gain calculation as recommended in the quoted
+	  document (no qrt needed). Rename variables to match the formulas in the
+	  document.
+
+2009-10-02 23:51:29 +0300  René Stadler <mail@renestadler.de>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: guard fragment size with a lower limit based on latency-time
+	  In case that the pulse daemon runs the source device at a relatively low fixed
+	  fragment size compared to the requested latency-time, configure the ring buffer
+	  segsize to the largest integer multiple of the fragment size that is still
+	  smaller than or equal to the requested latency-time.
+	  Fixes bug #597463.
+
+2009-10-06 17:40:47 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: comment/logging cleanups and more branch guides
+
+2009-10-05 22:43:11 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/equalizer/gstiirequalizer.c:
+	  equalizer: fix filter history usage. Fixes #597397
+	  The process functions where overwriting the history for each channel. Also pull
+	  some static things out of the inner loop.
+
+2009-10-05 16:07:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: use locking around the sessions
+
+2009-10-05 11:46:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: make sure compatible brands buffer exists before dereferencing it
+
+2009-10-04 21:59:24 +0200  Robert Swain <robert.swain@gmail.com>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: fix printf warnings on OSX
+	  Cast variables passed to printf to avoid warnings about incorrect
+	  formats (most likely caused by sizeof returning a size_t).
+	  Fixes #597348.
+
+2009-10-02 00:23:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: remove internal genre table
+	  No need to maintain our own genre table in qtdemux. The genres are
+	  identical to the ID3 genres, so we can just use libgsttag's
+	  gst_tag_id3_genre_get() to look them up.
+
+2009-10-03 17:18:28 +0200  Robert Swain <robert.swain@gmail.com>
+
+	* gst/avi/gstavidemux.c:
+	  Fix printf formats to avoid warnings in avidemux. Fixes #597214
+	  https://bugzilla.gnome.org/show_bug.cgi?id=597214
+
+2009-10-03 09:52:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Change one GST_WARNING to a GST_DEBUG
+
+2009-10-02 14:37:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c:
+	  flvdemux: If there's no audio stream after 6 seconds of video signal no-more-pads
+	  ...and the other way around. Also ignore any audio/video streams that appear
+	  after no-more-pads.
+	  Fixes bug #597091.
+
+2009-10-02 14:37:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c:
+	  flvdemux: Make sure to only signal no-more-pads a single time
+
+2009-10-02 22:55:45 +0300  René Stadler <mail@renestadler.de>
+
+	* ext/pulse/pulsesink.c:
+	* ext/pulse/pulsesrc.c:
+	  pulse: rename pa_buffer_attr variables
+	  Makes it much easier to see what is going on and is a lot less error prone.
+
+2009-10-02 18:25:16 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  rtp: add missing include to fix the build
+
+2009-10-02 13:15:59 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/videofilter/gstgamma.c:
+	* gst/videofilter/gstvideobalance.c:
+	  videofilter: add G_OBJECT_WARN_INVALID_PROPERTY_ID to property setter
+
+2009-10-02 13:10:44 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: don't give wrong number of fields in the message docs
+
+2009-10-01 12:52:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: cache latency in nanoseconds
+	  Cache the latency in nanoseconds units to avoid having to convert the
+	  milliseconds value to nanoseconds all the time.
+
+2009-10-01 12:12:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: handle -1 input timestamps
+	  Don't try to check a -1 timestamp against the max delay.
+
+2009-10-01 10:54:55 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	  avi: don't misues perf-category and remove unused ext category
+	  The performance category is meant to be used to audit codepaths that lead to bad
+	  performance (e.g. copies, conversion that can be avoided).
+	  Remove the event category which is not used.
+
+2009-09-16 14:23:24 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729depay.c:
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay/depay: Demote per-buffer debug messages to log level
+
+2009-09-16 14:16:27 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay: Don't leak incoming buffers after subbuffering them
+
+2009-09-16 13:57:05 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729depay.c:
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay/depay: Add debug categories
+
+2009-09-16 13:55:19 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay: Remove long unneeded define replacement
+
+2009-09-30 18:06:07 +0100  Christian F.K. Schaller <christian.schaller@collabora.co.uk>
+
+	* ext/dv/Makefile.am:
+	  Update makefile with missing header file
+
+2009-09-30 18:45:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/examples/rtp/client-H263p-AMR.sh:
+	* tests/examples/rtp/client-H263p-PCMA.sh:
+	* tests/examples/rtp/client-H264-PCMA.sh:
+	* tests/examples/rtp/client-PCMA.sh:
+	* tests/examples/rtp/server-alsasrc-PCMA.sh:
+	* tests/examples/rtp/server-v4l2-H263p-alsasrc-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	  rtp: Use autoaudio{sink,src} instead of alsa in the examples
+
+2009-09-29 17:51:04 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: don't leak output buffers on decoding errors
+	  The setjmp handles libjpeg error. Free the outputbffer if we don't need it.
+
+2009-09-29 00:01:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix 'unused variable' compiler warning when compiling with GST_DISABLE_GST_DEBUG
+
+2009-09-23 14:25:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: small cleanups
+
+2009-09-23 13:57:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix timestamping in some audio streams
+	  For vbr audio streams we need to use the number of blocks to calculate the
+	  timestamps.
+	  When the allocation of additional index memory fails, don't throw away what
+	  we had before.
+	  Various cleanups.
+
+2009-09-23 12:56:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: add support for ODML indexes again
+
+2009-09-22 22:12:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avi: implement index scanning
+	  Implement scanning of the file when we can parse the index.
+	  Some refactoring of common code.
+	  Cleanups and comments.
+	  Remove some reimplemented code.
+	  Remove index massage code and put a FIXME where we should do something
+	  equivalent later.
+
+2009-09-22 18:18:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix reverse playback
+
+2009-09-22 17:42:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix prev keyframe search and cleanups
+
+2009-09-22 14:51:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: remove code that got converted
+
+2009-09-22 14:44:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avi: more cleanups
+	  Remove some duplicate counters.
+	  Be smarter when updateing the current the timestamp and offset in the stream
+	  because we can reuse previously calculated values when simply go forward one
+	  step.
+	  Correctly set metadata on outgoing buffers.
+
+2009-09-22 12:35:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: small cleanups
+
+2009-09-22 01:28:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix read offset and cleanups
+
+2009-09-21 18:04:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avi: rewrite index playback
+	  disable code, start on reimplementing loop based operation.
+	  Rewrite the index handling so that all streams use their own index for decoding
+	  media.
+
+2009-09-21 15:35:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: add new index parsing code
+	  Add a new function and datastructure to parse and hold the index entries on a
+	  per stream base. Also avoid doing too much work trying to figure out the
+	  timestamps and durations as we can trivially do that later.
+	  Less information in the entries makes them 2 times smaller and not doing too
+	  much work makes this code about 12 times faster than the regular case.
+	  Hook in the new function alongside the existing function for comparison until
+	  the rest of the code is updated to handle the new index datastructure.
+
+2009-09-28 16:29:45 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpeg: handle more libjpeg return values, add some more branch hints
+	  Also remove unused size variable in _chain().
+
+2009-09-25 19:21:32 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: some optional QT specified stsd MPEG-4 atoms also apply to H264
+	  Fixes #596319.
+
+2009-09-25 16:40:31 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: only send tag events downstream after newsegment
+
+2009-09-25 14:14:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: if transport protocol unsupported, try another one
+	  Also change error message to more accurately reflect cases in which
+	  it can occur.
+
+2009-09-25 11:54:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: add durations modulo 1<<32
+	  For calculating the durations of each sample, we are supposed to add each
+	  duration modulo 1<<32 so make the elapsed time counter a uint32.
+	  Fixes #595942
+
+2009-09-24 20:38:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: small cleanup
+
+2009-09-24 19:33:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	  qtdemux: don't use core API that doesn't exist yet
+	  There's no gst_byte_reader_has_remaining() yet. Fixes build.
+
+2009-09-24 13:20:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	  qtdemux: map some atomparser functions to their new bytereader equivalents
+	  Now that GstByteReader has unchecked and inlined variants as well, map
+	  atomparser functions to their respective bytereader equivalents.
+
+2009-08-25 12:11:28 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux_dump.c:
+	  qtdemux: add qt_atom_parser_has_chunks() and fix indentation
+
+2009-08-20 18:21:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: bail out instead of trying to alloc silly index sizes
+	  If it looks like we would be allocating a silly size for our sample
+	  index, just bail out instead of trying to allocate it. Helps with
+	  broken or fuzzed files where we might end up trying to malloc a
+	  couple of hundred MBs otherwise.
+
+2009-08-20 16:47:25 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: error out correctly if we don't even have enough bytes for an atom header
+
+2009-08-20 15:39:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: init fourcc to 0 as well to avoid invalid reads when printf'ing error message
+
+2009-08-20 01:39:17 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux_dump.c:
+	  qtdemux: add qt_atom_parse_has_remaining() to avoid overflows with _get_remaining()
+
+2009-08-20 01:21:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: use GstByteReader when parsing tkhd atom
+
+2009-08-19 19:13:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: use unsigned ints for node length and do more sanity checking of the atom length
+
+2009-08-19 01:36:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	* gst/qtdemux/qtdemux_dump.c:
+	* gst/qtdemux/qtdemux_dump.h:
+	* gst/qtdemux/qtdemux_types.h:
+	  qtdemux: use GstByteReader for atom dumping and fix a few bugs
+
+2009-08-21 14:21:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: move stco, stts, stss and stps atom parsing over to GstByteReader
+	  Make sure we don't read beyond the atom boundary. Note that the code
+	  behaves slightly differently in the corner case where there is not
+	  enough atom data for the specified number of samples (n_samples_time)
+	  in the atom, but still enough data to fill the pre-allocated index of
+	  n_samples entries: before we would just stop parsing the stts data
+	  and continue, whereas now we will likely error out. This should not
+	  be a problem in practice though. We could maintain the old behaviour
+	  by doing reads with a size check inside the loop if needed.
+
+2009-06-30 19:51:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: use bytereader to parse stsz and stsc atoms
+	  Use GstByteReader to parse stsz and stsc chunks, and check size of
+	  available data before parsing it, instead of blindly assuming there
+	  will be enough data. Fixes crashes with some fuzzed/broken files.
+
+2009-08-15 20:38:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/qtatomparser.h:
+	  qtdemux: add qt_atom_parser_get_offset() and optimise _peek_sub()
+
+2009-07-01 13:49:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/qtatomparser.h:
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: add QtAtomParser, an inlined GstByteReader variant
+
+2009-09-23 17:19:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: use proper order for no-more-pads and newsegment and tag sending
+
+2009-09-23 09:50:37 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: sprinkle a few branch prediction macros
+
+2009-09-22 15:03:20 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/jpeg/gstjpegdec.c:
+	* gst/avi/gstavidemux.c:
+	* gst/flv/gstflvparse.c:
+	* gst/id3demux/id3v2frames.c:
+	  Fix compile warnings with gcc 4.0.1.
+
+2009-09-22 11:48:50 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: Don't get stuck in an infinite loop with Dirac
+	  At the end, Dirac streams have an EOS packet with 0 length.
+	  Don't ever sit in an infinite loop when processing one. Allows
+	  muxing Dirac into mkv to complete successfully.
+
+2009-09-22 11:03:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	  Update .gitignore
+
+2009-09-22 11:02:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/videomixer/Makefile.am:
+	  videomixer: fix up Makefile some more
+	  Remove CFLAGS from LIBADD and make order of the various CFLAGS and
+	  LIBS at least consistent with each other.
+
+2009-09-22 08:02:48 +0200  Brian Cameron <brian.cameron@sun.com>
+
+	* gst/videomixer/Makefile.am:
+	  videomixer: Add $(GST_PLUGINS_BASE_LIBS) to LDFLAGS for linking libgstvideo
+	  Fixes bug #595897.
+
+2009-09-21 18:09:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix timestamps in push mode
+
+2009-09-18 17:26:42 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: add a G_UNLIKELY and put perf-cat log to code path that copies
+
+2009-09-21 12:32:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: add some performance measurements
+	  Measure the performance of various index and header parsing steps to the
+	  PERFORMANCE debug category.
+
+2009-09-18 11:53:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/speex/gstspeexdec.c:
+	  speexdec: allow for unknown varying number of frames per buffer
+	  In particular, this caters for RTP payloads with multiple frames
+	  per packet.
+
+2009-09-18 11:45:06 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/speex/gstspeexdec.c:
+	  speexdec: use correct sample size in conversions
+
+2009-09-18 11:43:46 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/speex/gstspeexenc.c:
+	  speexenc: fix buffer time and duration for multiple frames per packet
+
+2009-09-18 14:22:02 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: some logging cleanup to help understanding the index parsing overhead
+
+2009-09-16 13:28:27 -0700  David Schleef <ds@schleef.org>
+
+	* sys/osxaudio/Makefile.am:
+	  osxaudio: link against GST_BASE_LIBS
+
+2009-09-15 17:24:24 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtpg729pay.c:
+	  rtpg729pay: Fix adapter leak
+	  The adapter would be leaked if it was empty and the data could be pushed out directly.
+
+2009-09-15 10:04:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Don't dereference NULL pointers
+	  pa_stream_get_timing_info() can return NULL.
+	  Fixes bug #595220.
+
+2009-09-15 10:01:54 +0200  David Henningsson <gnome.web@epost.diwic.se>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: Don't dereference NULL pointers
+	  pa_stream_get_timing_info() can return NULL.
+	  Fixes bug #595220.
+
+2009-09-14 16:05:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: handle stream events
+	  Handle stream events and request a PAUSE/PLAY state change from the application
+	  when we receive a CORK/UNCORK event.
+
+2009-09-13 12:30:34 -0700  David Schleef <ds@schleef.org>
+
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesink.h:
+	  multifilesink: Add next-file property
+	  Add a property to allow control over what event causes a file
+	  to finish being written and a new file start.  The default is
+	  the same as before -- each buffer causes a new file to be
+	  written.  Added is a case where buffers are written to the
+	  same file until a discontinuity in the stream.
+
+2009-09-13 15:55:02 -0700  David Schleef <ds@schleef.org>
+
+	* ext/dv/gstdvdemux.c:
+	* ext/dv/gstdvdemux.h:
+	  dvdemux: Use values from decoder structure directly
+	  Don't store the same values in the GstDvDemux.  This
+	  fixes a bug where dvdemux would detect a stream as PAL
+	  instead of NTSC, and silently parse it wrong.
+
+2009-09-13 12:20:23 -0700  David Schleef <ds@schleef.org>
+
+	* ext/dv/Makefile.am:
+	* ext/dv/gstsmptetimecode.c:
+	* ext/dv/gstsmptetimecode.h:
+	* ext/dv/smpte_test.c:
+	  dvdemux: Add code to parse SMPTE time codes
+	  Code to convert time codes to/from timestamps and frame numbers.
+
+2009-09-13 12:01:27 -0700  David Schleef <ds@schleef.org>
+
+	* ext/dv/gstdvdemux.c:
+	* ext/dv/gstdvdemux.h:
+	  dvdemux: Fix detection of new media
+	  There are 5 or 6 AAUX source control packs in a frame, and any
+	  of them could have REC_ST cleared, indicating a recording start
+	  point.  libdv only checks the first.
+
+2009-09-12 19:25:36 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/dv/gstdvdemux.c:
+	  dvdemux: Set DISCONT flag on buffers when REC_ST flag is set.
+	  Also add a few branch prediction macros
+
+2009-09-12 00:13:04 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* tests/check/elements/souphttpsrc.c:
+	* tests/check/elements/y4menc.c:
+	  check: Fix a couple of tests.
+	  The souphttpsrc test wasn't compiling. The soup-misc.h header is needed for
+	  soup_ssl_supported.
+	  Fix the y4menc test to use a 'progressive' header for the test data now that
+	  the element outputs correct interlacing info.
+
+2009-09-11 13:32:39 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: treat a zero-sized data chunk as extending to the end of the file.
+	  This fixes playback of some files that don't have a valid data chunk length,
+	  apparently some program creates these.
+
+2009-09-11 22:24:47 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	  v4l2src: add a function pointer for get_frame function and optimize a bit
+	  Use a function-pointer for mmap/read, as this can't change during capture. Also
+	  sprinkle a few G_LIKELY/UNLIKELY to improve the error-less code path.
+
+2009-09-11 22:15:01 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2.c:
+	* sys/v4l2/v4l2src_calls.c:
+	  v4l2: log buffer copies on queue underrun in perf category
+	  v4l2src has a slow path where it does buffer-copies when it runs out of queued
+	  buffers. Log this to performance category to help monitoring it.
+
+2009-09-11 15:14:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: Implement GstStreamVolume interface
+
+2009-09-11 16:09:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	* ext/pulse/pulsesink.h:
+	  pulsesink: Implement mute property
+
+2009-09-11 13:33:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
+	  gdkpixbufsink: fix docs refering to send-messages
+
+2009-09-11 13:28:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/spectrum/gstspectrum.c:
+	* gst/spectrum/gstspectrum.h:
+	  spectrum: add post-messages property
+	  Add a post-messages property and deprecate the less descriptive message
+	  property.
+
+2009-09-11 13:20:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
+	* ext/gdk_pixbuf/gstgdkpixbufsink.h:
+	  pixbufsink: add post-messages property
+	  Add post-messages and deprecate send-messages as the former is more
+	  descriptive of what actually happens.
+
+2009-09-11 13:12:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesink.h:
+	  multifilesink: rename silent to post-messages
+	  Use the post-messages property name instead of silent as it is more
+	  descriptive.
+
+2009-09-11 12:16:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesink.h:
+	  multifilesink: post messages for each buffer
+	  Add a silent property that can be set to FALSE to post messages on the bus for
+	  each written file.
+	  Do some more cleanups.
+	  Add some docs.
+	  Fixes #594663
+
+2009-09-09 18:13:29 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtp/gstrtph263pay.c:
+	  rtph263pay: Allocate Boundry structs on the stack instead of the heap to avoid leaks
+	  Fixes bug #594691.
+
+2009-09-10 10:28:48 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	  docs: fix gtk-doc warnings
+
+2009-09-10 10:26:23 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2sink.c:
+	* sys/v4l2/gstv4l2sink.h:
+	  docs: fix gtk-doc warnings
+
+2009-09-09 17:51:19 -0700  David Schleef <ds@schleef.org>
+
+	* ext/raw1394/Makefile.am:
+	* ext/raw1394/gst1394clock.c:
+	* ext/raw1394/gst1394clock.h:
+	* ext/raw1394/gstdv1394src.c:
+	* ext/raw1394/gstdv1394src.h:
+	  dv1394src: Add a clock based on isochronous cycle counter
+	  Partial fix for #169383.
+
+2009-09-09 16:02:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Fix AYUV->I420 conversion
+	  For this fix the averaging of the chroma values. It should't be (a/2 + b)/2
+	  but just (a + b)/2.
+	  Fixes bug #594599.
+
+2009-09-09 16:25:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* ext/pulse/pulsesink.c:
+	  pulsesink: remove ringbuffer reset compensation
+	  Remove the code to deal with a ringbuffer reset as this code is now in the base
+	  class.
+	  Bump the -base requirement as we need the new baseaudiosink code to function
+	  properly.
+
+2009-09-09 16:24:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesink.h:
+	  pulsesink: whitespace fixes
+
+2009-09-09 10:27:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2colorbalance.h:
+	  whitespace fixes
+
+2009-09-08 19:34:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsemixer.c:
+	* ext/pulse/pulsemixerctrl.c:
+	* ext/pulse/pulseprobe.c:
+	  pulse: small cleanups
+	  Add some debug info
+	  Fix the state changes
+
+2009-09-08 18:29:35 +0200  Marc-André Lureau <mlureau@flumotion.com>
+
+	* gst/multipart/multipartmux.c:
+	  multipartmux: mark data buffer as delta-unit
+	  So that multifdsink always start sending header buffer first
+	  Fixes #594520
+
+2009-09-08 17:37:15 +0200  Marc Leeman <marc.leeman@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	  rtpbin: add ignore-pt parameter
+	  Add a parameter 'ignore-pt' that disables creating a gstrtpptdemux module and
+	  ghosts the pads of gstrtpjitterbuffer instead of the ones of gstrtpptdemux.
+	  Fixes #594490
+
+2009-09-04 13:51:37 +0200  Marvin Schmidt <marvin_schmidt@gmx.net>
+
+	* tests/check/elements/souphttpsrc.c:
+	  checks: only run HTTPS test if libsoup has SSL support
+
+2009-09-08 13:59:56 +0200  Håvard Graff <havard.graff@tandberg.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	  rtpbin: propagate payload-type-change signal from demuxer
+	  fixes #594254
+
+2009-08-31 18:46:25 +0200  Havard Graff <havard.graff@tandberg.com>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: change severity of clock-rate change debug
+	  Make log GST_DEBUG under normal circumstances, GST_WARNING otherwise.
+	  Fixes #594253
+
+2009-09-08 13:39:31 +0200  Håvard Graff <havard.graff@tandberg.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: avoid throwing reordered buffers with same timestamps
+	  When we receive a reordered packet with the same timestamp as the previous one
+	  (which can happen for fragmented packets) don't consider the packet as lost but
+	  instead wait for the reordered packet to arrive.
+	  Switch the warning-level, so that a reordering does not get a warning, only
+	  an actual produced lost-packet.
+	  Fixes #594251
+
+2009-08-31 21:16:54 +0200  Havard Graff <havard.graff@tandberg.com>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  rtpjpegdepay: add missing math.h include
+	  Fixes #594247
+
+2009-09-08 13:30:29 +0200  Arnout Vandecappelle <arnout@mind.be>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix memory leak
+	  In gst_rtspsrc_parse_digest_challenge(), rtspsrc does a g_strndup of the auth
+	  header items and then passes them to gst_rtsp_connection_set_auth_param()
+	  without freeing.
+	  Fixes #594133
+
+2009-09-08 13:18:29 +0200  Stig Sandnes <stig.sandnes@tandberg.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: make free_session() remove stream references
+	  When receiving a sync-packet, all sessions with the same cname will be compared
+	  and synced together. In this process, there could still be references to a
+	  session that has been shut down in the meanwhile.
+	  This patch makes sure that these references are removed when shutting down a
+	  session, so that the syncing can be done safely.
+	  Fixes #594283
+
+2009-08-31 18:46:51 +0200  Havard Graff <havard.graff@tandberg.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: use locked state on internal bins
+	  Set the locked state on internal elements to make sure that they don't change
+	  back to another state when shutting down.
+	  Fixes #594248
+
+2009-09-07 18:28:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2src_calls.c:
+	  v4l2src: add support for mpeg formats
+
+2009-09-05 20:51:14 -0700  Zaheer Merali <zaheerabbas@merali.org>
+
+	* gst/y4m/gsty4mencode.c:
+	* gst/y4m/gsty4mencode.h:
+	  y4menc: Add interlaced support
+	  Fixes #591713
+	  Signed-off-by: David Schleef <ds@schleef.org>
+
+2009-08-24 13:42:42 -0700  David Schleef <ds@schleef.org>
+
+	* ext/gconf/gstgconfaudiosink.c:
+	* ext/gconf/gstgconfaudiosrc.c:
+	* ext/gconf/gstgconfvideosink.c:
+	* ext/gconf/gstgconfvideosrc.c:
+	* gst/apetag/gstapedemux.c:
+	* gst/autodetect/gstautoaudiosink.c:
+	* gst/autodetect/gstautoaudiosrc.c:
+	* gst/autodetect/gstautovideosink.c:
+	* gst/autodetect/gstautovideosrc.c:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavimux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	* sys/v4l2/gstv4l2src.c:
+	  Remove Ronald Bultje from Authors field
+	  Replaced with "GStreamer maintainers
+	  <gstreamer-devel@lists.sourceforge.net>" or just removed,
+	  depending on the number of other authors.
+
+2009-09-05 10:21:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 00a859e to 19fa4f3
+
+2009-09-04 13:42:43 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: prevent a spurious debug warning
+
+2009-09-04 09:32:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Define V4L2_FMT_FLAG_EMULATED if it's not defined yet
+	  libv4l2 already uses this flag, even on Linux kernel versions
+	  before 2.6.32.
+
+2009-09-04 07:10:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Correctly handle NULL GstIndex
+
+2009-09-03 20:40:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Fix stupid typo in last commit
+
+2009-09-03 20:38:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: Put emulated formats behind native formats
+	  Fixes bug #593764.
+
+2009-09-03 19:37:10 +0200  Laurent Glayal <spglegle at yahoo.fr>
+
+	* gst/rtpmanager/rtpsource.c:
+	  rtpsource: fix memleak
+	  Don't leak the input buffer when the received and expected seqnum are different when
+	  in probation.
+	  fixes #594039
+
+2009-09-02 15:21:02 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Lock clock_rate variable
+	  The priv->clock_rate variable could become -1 between when its checked to not
+	  be -1 and when its used, causing an assertion. Fixed by taking the mutex
+	  earlier in the chain() function.
+	  Fixes #593955
+
+2009-09-03 19:12:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c:
+	  rtpsource: whitespace fixes
+
+2009-09-03 19:09:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpmpapay.c:
+	  rtpmpapay: whitespace fixes
+
+2009-09-03 19:08:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: whitespace fixes
+
+2009-09-03 17:33:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Avoid unnecessary processing until we have a full picture.
+	  This is for non-packetized mode, when we know the upstream size in bytes.
+
+2009-09-03 14:40:20 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/flv/gstflvmux.c:
+	  flvmux: fully use tagsetter to manage the tags. Fixes #563221
+	  There is no need to manage a separate taglist.
+
+2009-09-03 14:13:43 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/speex/gstspeexenc.c:
+	  speexenc: small taglist handling cleanup
+	  Don't eventualy leak the list and instead assert (like in other elements).
+
+2009-09-02 23:12:41 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: also guard reseting subscribe callback with ifdefs
+	  It is conditionaly set, so do the same when unsetting.
+
+2009-09-01 15:06:46 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: Fixed a copy & paste error
+
+2009-09-01 13:21:23 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: Removed unused variable priv
+	  The variable priv was initialized in a lot of functions but then never
+	  used for anything.
+
+2009-09-01 13:03:57 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: A little clean up
+	  Make the code flow of gst_rtp_session_send_rtcp() and
+	  gst_rtp_session_sync_rtcp() identical.
+
+2009-09-01 12:47:51 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: Make sure that used caps are not freed already (take 2)
+	  This reintroduces the fix for bug #593391. It also applies it in
+	  gst_rtp_session_sync_rtcp() which has very similar code to
+	  gst_rtp_session_send_rtcp().
+
+2009-09-01 12:41:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  jitterbuffer: make sure time does not go backwards
+	  When we construct a timestamp that would result in a timestamp that is earlier
+	  than when the packet was received, reset the skew calculation as this is
+	  probably a sign that the sender restarted or paused.
+	  Fixes #593354
+
+2009-09-01 11:32:41 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: Set caps in gst_rtp_session_send_rtcp() correctly again
+	  The test for when to set an RTCP caps on the output pad in
+	  gst_rtp_session_send_rtcp() accidentally got inverted in the last commit.
+
+2009-09-01 10:26:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Add support for QCELP audio
+	  Fixes bug #593757.
+
+2009-08-31 18:10:11 +0200  Peter Kjellerstedt <pkj@axis.com>
+
+	* gst/effectv/gstaging.c:
+	* gst/effectv/gstedge.c:
+	* gst/effectv/gstop.c:
+	* gst/effectv/gstradioac.c:
+	* gst/effectv/gstrev.c:
+	* gst/effectv/gstshagadelic.c:
+	* gst/effectv/gstvertigo.c:
+	  effectv: Fix compilation with gcc 3
+	  Recent changes in gst-plugins-good/gst/effectv prevents it from being compiled
+	  with gcc 3. The problem is that the new code uses preprocessor conditionals
+	  within a macro call which does not work with older versions of gcc.
+	  Fixes bug #593688.
+
+2009-08-31 16:20:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	  docs: small clean-ups in -sections.txt
+	  Remove duplicate entry for warptv; there is no taglibmux element.
+
+2009-08-27 15:46:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	  rtpmp4gdepay: consider (optional) auxiliary data when parsing
+
+2009-08-27 15:46:15 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gdepay.h:
+	  rtpmp4gdepay: handle broken AU-Index in non-interleaved streams
+	  In case of non-interleaved (= sequentially payloaded) streams,
+	  the AU-Index serves little purpose (that is not already covered by
+	  RTP fields).  (Broken) Payloaders might consider this field then
+	  to be disregarded and have non spec compliant values, e.g. each
+	  RTP packet having AU-Index 2 (rather than 0).  As such, ensure/force
+	  simple sequential sending of non-interleaved streams.
+
+2009-08-18 17:17:28 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: also extract ftyp info in push mode
+
+2009-08-13 16:11:59 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	  qtdemux: consider 3gpp style tag parsing in some more cases
+	  3GPP specs define a number of tags along with precise layout. While these
+	  are normally expected to be found in a container whose major brand is a
+	  3GPP brand, this may also happen when a 3GPP brand is only mentioned as a
+	  compatible brand.  Apply some checks, heuristic and fallbacks to extract
+	  such tags as well.
+
+2009-08-11 13:56:43 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: reflow exit, and fix some leaks
+
+2009-08-11 13:54:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: push mode; add pad if needed so downstream gets EOS
+
+2009-08-10 16:19:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	* gst/wavparse/gstwavparse.h:
+	  wavparse: push mode; fix/improve chunk handling
+	  Handle large, invalid or otherwise unusual chunk sizes.
+	  Verify some chunk sizes to be at least the size they are
+	  expected to be and round up some sizes to even number for
+	  e.g. offset administration, which must also be properly
+	  tracked in push mode.
+
+2009-08-08 21:54:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: push mode; cater for unusual chunk sizes
+
+2009-08-31 16:34:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: use proper locking for pads and caps
+	  Use the sesion lock and shotdown variable to protect and ref the pads we are
+	  going to push on.
+	  fixes #561825
+
+2009-08-31 16:33:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: whitespace fixes
+
+2009-08-31 13:38:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: clean up adapter properly
+	  Reflow code so we don't try to clear or re-use an already-freed adapter.
+
+2009-08-31 13:07:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/flac/gstflactag.c:
+	* gst/wavparse/gstwavparse.c:
+	  flactag, wavparse: GstAdapter is not a GstObject
+
+2009-08-31 12:28:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobalance.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	  docs: update plugin docs to git version
+
+2009-08-31 11:32:39 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Fix tests warning from setting a NULL index
+	  Setting a null index in the tests was causing warnings by unreffing
+	  NULL pointers. This is a bug exposed by a recent change in core, it
+	  seems.
+
+2009-08-31 13:02:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: add slope estimation code and debug
+	  Add some code to measure the sender speed vs the receiver speed. This can be
+	  used to detect bursts.
+
+2009-08-31 12:57:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: reset skew when timestamps change
+	  Refactor the jitterbuffer resync code.
+	  Reset the skew correction when we detect a big timestamp discont.
+	  See #593354
+
+2009-08-31 12:47:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: make sure time never goes invalid
+	  Since the skew can be negative, we might end up with invalid timestamps. Check
+	  for negative results and clamp to 0.
+	  See #593354
+
+2009-08-31 12:16:01 +0200  Jarkko Palviainen <jarkko.palviainen at sesca.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	* gst/udp/gstudpnetutils.c:
+	  udpsink: Add ttl multicast property
+	  Add a new ttl-mc property to control the TTL on multicast addresses.
+	  Fixes #588245
+
+2009-08-31 12:13:07 +0200  Jarkko Palviainen <jarkko.palviainen at sesca.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstudpnetutils.c:
+	* gst/udp/gstudpnetutils.h:
+	  udp: split out TTL and loop options
+	  Split setting the TTL and loop parameters in 2 methods as they are not related.
+	  Fix setting the TTL correctly for multicast streams.
+	  See #588245
+
+2009-08-27 12:36:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtp/gstrtpamrpay.c:
+	  rtp: whitespace fixes
+
+2009-08-14 13:45:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	  videobox: Correctly add to the docs
+
+2009-08-14 13:40:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videobox/Makefile.am:
+	* gst/videobox/gstvideobox.c:
+	* gst/videobox/gstvideobox.h:
+	  videobox: Split declarations into a header file and add autocrop stuff to the docs
+
+2009-08-14 13:26:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Reconfigure basetransform if something changes again
+	  For this invent a new lock and don't abuse the basetransform lock,
+	  otherwise we'll end up in deadlocks.
+
+2009-08-14 13:15:57 +0200  Stephen Jungels <stephen@jungels.net>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Add support for autocropping according to the caps
+	  Fixes bug #582238.
+
+2009-08-30 21:57:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: Make sure that used caps are not freed already
+	  Fixes bug #593391.
+
+2009-08-26 17:02:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/rtpmanager/rtpstats.c:
+	  rtp: Use new gst_iterator_new_single() for the internal linked pads iteration
+
+2009-08-19 16:57:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: Use iterate internal links instead of deprecated get internal links
+
+2009-08-19 16:48:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: Use iterate internal links instead of deprecated get internal links
+
+2009-08-19 16:37:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	  rtpssrcdemux: Use iterate internal links instead of deprecated get internal links
+
+2009-08-30 23:27:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Update common
+
+2009-08-30 23:26:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to hacking -> 0.10.16.1
+
+=== release 0.10.16 ===
+
+2009-08-29 12:05:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobalance.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Release 0.10.16
 
 2009-08-26 00:58:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

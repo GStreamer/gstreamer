@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-12 22:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -19,6 +19,10 @@ msgstr "Nie udało się nawiązać połączenia z serwerem dźwięku"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Nie udało się odpytać o możliwości serwera dźwięku"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
@@ -41,15 +45,15 @@ msgstr "Ten plik nie zawiera strumieni nadających się do odtworzenia."
 msgid "This file is incomplete and cannot be played."
 msgstr "Ten plik jest niekompletny i nie może być odtworzony."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Ten plik jest uszkodzony i nie może być odtworzony."
+
 msgid "The video in this file might not play correctly."
 msgstr "Obraz w tym pliku może nie być odtwarzany prawidłowo."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ten plik zawiera zbyt dużo strumieni. Odtwarzanie tylko %d pierwszych"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Ten plik jest uszkodzony i nie może być odtworzony."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -58,9 +62,11 @@ msgstr ""
 "Nie znaleziono obsługiwanego strumienia. Być może trzeba zainstalować "
 "wtyczkę rozszerzenia GStreamera RTSP dla strumieni Real media."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Nie znaleziono obsługiwanego strumienia. Brakuje odpowiedniej wtyczki "
 "rozszerzenia GStreamera RTSP."

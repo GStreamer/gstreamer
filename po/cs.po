@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-17 01:30+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -22,6 +22,10 @@ msgstr "Nezdařilo se navázání spojení se zvukovým serverem"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Nezdařil se dotaz na schopnosti zvukového serveru"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Vnitřní chyba datového proudu."
@@ -44,15 +48,15 @@ msgstr "Tento soubor neobsahuje hratelné proudy."
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento soubor není úplný a nelze jej přehrát."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Tento soubor je poškozen a nelze jej přehrát."
+
 msgid "The video in this file might not play correctly."
 msgstr "Video v tomto souboru se nemusí přehrát správně."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Tento soubor obsahuje příliš mnoho proudů. Přehrává se pouze první %d"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Tento soubor je poškozen a nelze jej přehrát."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -61,9 +65,11 @@ msgstr ""
 "Nebyl nalezen žádný podporovaný proud. Bude patrně nutné nainstalovat "
 "zásuvný modul rozšíření GStreamer RTSP pro multimediální proudy Real."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Nebyl nalezen žádný podporovaný proud. Patrně schází zásuvný modul rozšíření "
 "GStreamer RTSP pro multimediální proudy Real."

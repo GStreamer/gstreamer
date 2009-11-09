@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
-"PO-Revision-Date: 2009-05-15 22:41+0300\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
+"PO-Revision-Date: 2009-09-19 13:02+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -21,6 +21,10 @@ msgstr "Не може да се осъществи връзка към звук�
 
 msgid "Failed to query sound server capabilities"
 msgstr "Неуспех при запитването за възможностите на звуковия сървър."
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
@@ -43,6 +47,9 @@ msgstr "Този файл не съдържа изпълними потоци."
 msgid "This file is incomplete and cannot be played."
 msgstr "Този файл е непълен и не може да бъде изпълнен."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Този файл е повреден и не може да бъде изпълнен."
+
 msgid "The video in this file might not play correctly."
 msgstr "Видео потокът в този файл може да не се покаже правилно."
 
@@ -51,9 +58,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Този файл съдържа прекалено много потоци. Изпълняват се само първите %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Този файл е повреден и не може да бъде изпълнен."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -61,9 +65,11 @@ msgstr ""
 "Не е открит поддържан поток. Може да трябва да инсталирате приставката на "
 "GStreamer — RTSP, който поддържа потоци на Real."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Не е открит поддържан поток. Може би липсва приставката на GStreamer — RTSP."
 
@@ -173,24 +179,23 @@ msgstr "Аудио устройството не може да се отвори
 msgid "Gain"
 msgstr "Усилване"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Високоговорител"
+msgstr "Вграден високоговорител"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Слушалки"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Изход"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Изход SPDIF"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Изход AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Изход AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -245,9 +250,9 @@ msgstr "Устройството „%s“ не може да се отвори �
 msgid "Device '%s' is not a capture device."
 msgstr "Устройството „%s“ не е устройство за запис."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Устройството „%s“ не е устройство за запис."
+msgstr "Устройството „%s“ не е изходно устройство."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -323,53 +328,3 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Неуспех при изброяването на възможните видео формати, с които устройство "
-#~ "„%s“ може да работи."
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Този вид буфер не се поддържа, индексът е извън границите, не са заделени "
-#~ "буфери или дължината или указателят към потребител са неправилни. "
-#~ "Устройство „%s“."
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Неуспех при получаване на видео кадрите от устройство „%s“. Няма "
-#~ "достатъчно памет."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "Недостатъчно памет за подреждането на буфер с потребителски указатели в "
-#~ "опашка. Устройство „%s“."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Няма свободни буфери в пула при индекс %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Устройството „%s“ не поддържа видео запис."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr ""
-#~ "Устройството „%s“ не може да записва при разделителна способност %d×%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Устройството „%s“ не може да записва в указания формат"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Не могат да се получат буферите от устройството „%s“."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Не могат да се получат достатъчно буфери от устройство „%s“."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Грешка при започването на поточен запис от устройство „%s“."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Грешка при спирането на поточен запис от устройство „%s“."

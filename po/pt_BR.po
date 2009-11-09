@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-20 23:46-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -25,6 +25,10 @@ msgstr "Não foi possível estabelecer uma conexão com servidor de som"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Falha ao examinar os recursos do servidor de som"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Erro interno no fluxo de dados."
@@ -47,15 +51,15 @@ msgstr "Este arquivo não contêm fluxos reproduzíveis."
 msgid "This file is incomplete and cannot be played."
 msgstr "Este arquivo está incompleto e não pôde ser reproduzido."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Este arquivo está corrompido e não pôde ser reproduzido."
+
 msgid "The video in this file might not play correctly."
 msgstr "O vídeo neste arquivo pode não ser reproduzido corretamente."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Este arquivo contêm muitos fluxos. Apenas reproduzindo o primeiro %d"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Este arquivo está corrompido e não pôde ser reproduzido."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -64,9 +68,11 @@ msgstr ""
 "Nenhum fluxo com suporte foi localizado. Você pode precisar instalar um plug-"
 "in de extensão GStreamer RTSP para fluxos Real media."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Nenhum fluxo com suporte foi localizado. Você pode estar com o plug-in de "
 "extensão GStreamer RTSP incorreto."

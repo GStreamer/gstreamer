@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -20,6 +20,10 @@ msgid "Could not establish connection to sound server"
 msgstr ""
 
 msgid "Failed to query sound server capabilities"
+msgstr ""
+
+#, c-format
+msgid "'%s' by '%s'"
 msgstr ""
 
 msgid "Internal data stream error."
@@ -44,14 +48,14 @@ msgstr ""
 msgid "This file is incomplete and cannot be played."
 msgstr ""
 
+msgid "This file is corrupt and cannot be played."
+msgstr ""
+
 msgid "The video in this file might not play correctly."
 msgstr ""
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-
-msgid "This file is corrupt and cannot be played."
 msgstr ""
 
 msgid ""
@@ -60,8 +64,9 @@ msgid ""
 msgstr ""
 
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 
 msgid "Internal data flow error."

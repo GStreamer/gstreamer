@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-24 11:15-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -19,6 +19,10 @@ msgstr "Tak dapat membangun koneksi ke server suara"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Gagal untuk kueri kemampuan server suara"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
@@ -41,15 +45,15 @@ msgstr "Berkas ini tidak berisi arus yang dapat diputar."
 msgid "This file is incomplete and cannot be played."
 msgstr "Berkas ini tidak lengkap dan tak dapat diputar."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Berkas ini rusak dan tak dapat diputar."
+
 msgid "The video in this file might not play correctly."
 msgstr "Video di berkas ini mungkin tak dapat diputar dengan benar."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Berkas ini rusak dan tak dapat diputar."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -58,9 +62,11 @@ msgstr ""
 "Tak ada arus didukung yang ditemukan. Anda mungkin perlu menginstal plugin "
 "ekstensi GStreamer RTSP untuk arus Real media."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Tak ada arus didukung yang ditemukan. Anda mungkin kehilangan plugin "
 "ekstensi GStreamer RTSP yang benar."

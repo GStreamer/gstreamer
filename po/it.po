@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-13 10:51+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -20,6 +20,10 @@ msgstr "Impossibile stabilire la connessione al server audio"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Interrogazione delle funzionalità del server audio non riuscita"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Errore interno nello stream dei dati."
@@ -42,15 +46,15 @@ msgstr "Questo file non contiene alcuno stream riproducibile."
 msgid "This file is incomplete and cannot be played."
 msgstr "Questo file è incompleto e non può essere riprodotto."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Questo file è alterato e non può essere riprodotto."
+
 msgid "The video in this file might not play correctly."
 msgstr "Il video in questo file potrebbe non essere riprodotto correttamente."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Questo file contiene troppi stream. Riprodotti solo i primi %d"
-
-msgid "This file is corrupt and cannot be played."
-msgstr "Questo file è alterato e non può essere riprodotto."
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -60,9 +64,11 @@ msgstr ""
 "installare un plugin GStreamer di tipo estensione RTSP  per gli stream Real "
 "media."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Non è stato trovato alcuno stream supportato. Forse non è presente il "
 "corretto plugin GStreamer di tipo estensione RTSP "

@@ -5,10 +5,10 @@
 # Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
-"PO-Revision-Date: 2009-06-11 14:02+0200\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
+"PO-Revision-Date: 2009-08-30 13:11+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -22,6 +22,10 @@ msgstr "No se pudo establecer la conexión con el servidor de sonido"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Falló al preguntar al servidor de sonido sus capacidades"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Error interno de flujo de datos."
@@ -44,6 +48,9 @@ msgstr "Este archivo no contiene flujos reproducibles."
 msgid "This file is incomplete and cannot be played."
 msgstr "Este archivo está incompleto y no se puede reproducir."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Este archivo está corrupto y no se puede reproducir."
+
 msgid "The video in this file might not play correctly."
 msgstr ""
 "Puede que el vídeo en este archivo no se pueda reproducir correctamente."
@@ -53,9 +60,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Este archivo está corrupto y no se puede reproducir."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -63,9 +67,11 @@ msgstr ""
 "No se encontró un flujo soportado. Puede que necesite instalar una extensión "
 "RTSP de GStreamer para los formatos de flujo Real."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "No se encontró un flujo soportado. Puede que le falte la extensión correcta "
 "de RTSP de GStreamer."
@@ -178,24 +184,23 @@ msgstr "No se pudo abrir el dispositivo para grabar."
 msgid "Gain"
 msgstr "Ganancia"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Altavoz"
+msgstr "Altavoz integrado"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Auriculares"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Línea de salida"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "Salida S/PDIF"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "Saluda AUX 1"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "Salida AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -250,9 +255,9 @@ msgstr "No se pudo abrir el dispositivo «%s» para lectura y escritura."
 msgid "Device '%s' is not a capture device."
 msgstr "El dispositivo «%s» no es un dispositivo de captura."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "El dispositivo «%s» no es un dispositivo de captura."
+msgstr "El dispositivo «%s» no es un dispositivo de salida."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.7.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2008-07-09 13:37+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -21,6 +21,10 @@ msgstr "Nepavyko prisijungti prie garso serverio"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Nepavyko užklausti garso serverio galimybių"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Vidinė duomenų srauto klaida."
@@ -44,6 +48,9 @@ msgstr "Šiame faile nėra srautų, kuriuos būtų galima groti."
 msgid "This file is incomplete and cannot be played."
 msgstr "Failas neužbaigtas ir negali būti pagrotas."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Šis failas sugadintas ir negali būti pagrotas."
+
 msgid "The video in this file might not play correctly."
 msgstr "Video įrašas šiame faile gali būti rodomas nekorektiškai."
 
@@ -51,17 +58,15 @@ msgstr "Video įrašas šiame faile gali būti rodomas nekorektiškai."
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Šiame faile per daug srautų. Grojami tik pirmieji %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Šis failas sugadintas ir negali būti pagrotas."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 
 msgid "Internal data flow error."

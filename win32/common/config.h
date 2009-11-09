@@ -40,13 +40,16 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
+
+/* I know the API is subject to change. */
+#undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
 
 /* Define to enable aalib ASCII Art library (used by aasink). */
 #undef HAVE_AALIB
@@ -126,6 +129,9 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* define for working do while(0) macros */
+#undef HAVE_DOWHILE_MACROS
+
 /* Define to enable raw1394 and avc1394 library (used by 1394). */
 #undef HAVE_DV1394
 
@@ -146,6 +152,9 @@
 
 /* Define to enable FLAC lossless audio (used by flac). */
 #undef HAVE_FLAC
+
+/* Define to 1 if you have the `fpclass' function. */
+#undef HAVE_FPCLASS
 
 /* Define if compiler supports gcc inline assembly */
 #undef HAVE_GCC_ASM
@@ -168,6 +177,9 @@
 /* Define to enable Video 4 Linux 2 (used by v4l2src). */
 #undef HAVE_GST_V4L2
 
+/* Whether gudev is available for device detection */
+#undef HAVE_GUDEV
+
 /* Define to enable HAL libraries (used by halelements). */
 #undef HAVE_HAL
 
@@ -179,6 +191,9 @@
 
 /* Define if we have struct ip_mreqn */
 #undef HAVE_IP_MREQN
+
+/* Define to 1 if you have the `isinf' function. */
+#undef HAVE_ISINF
 
 /* Define to enable jpeg library (used by jpeg). */
 #undef HAVE_JPEG
@@ -239,6 +254,12 @@
 
 /* defined if pulseaudio >= 0.9.13 is available */
 #undef HAVE_PULSE_0_9_13
+
+/* defined if pulseaudio >= 0.9.15 is available */
+#undef HAVE_PULSE_0_9_15
+
+/* defined if pulseaudio >= 0.9.20 is available */
+#undef HAVE_PULSE_0_9_20
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
@@ -335,13 +356,16 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.15.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.16.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.15.1"
+#define PACKAGE_VERSION "0.10.16.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -372,7 +396,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.15.1"
+#define VERSION "0.10.16.2"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

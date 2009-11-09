@@ -1,304 +1,434 @@
-# Basque translation of gst-plugins-good.
-# Copyright (C) 2005 Free Software Foundation, Inc.
+# translation of gst-plugins-good.master.po to Basque
+# Copyright (C) 2004, 2005, 2006, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Mikel Olasagasti <hey_neken@mundurat.net>, 2005
-#, fuzzy
+#
+# Iñaki Larrañaga Murgoitio <dooteo@euskalgnu.org>, 2009.
+# Mikel Olasagasti Uranga <hey_neken@mundurat.net>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.9.7\n"
+"Project-Id-Version: gst-plugins-good-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
-"PO-Revision-Date: 2005-12-02 16:50+0100\n"
-"Last-Translator: Mikel Olasagasti <hey_neken@mundurat.net>\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
+"PO-Revision-Date: 2009-08-29 13:08+0200\n"
+"Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not establish connection to sound server"
-msgstr ""
+msgstr "Ezin izan da konexioa ezarri soinu-zerbitzariarekin"
 
 msgid "Failed to query sound server capabilities"
+msgstr "Huts egin du soinu-zerbitzariaren ahalmena kontsultatzean"
+
+#, c-format
+msgid "'%s' by '%s'"
 msgstr ""
 
 msgid "Internal data stream error."
-msgstr "Barne datu korronte errorea."
+msgstr "Datu-korrontearen barne-errorea."
 
 msgid "Failed to decode JPEG image"
-msgstr ""
+msgstr "Huts egin du JPEG irudia deskodetzean"
 
 msgid "Could not connect to server"
-msgstr ""
+msgstr "Ezin izan da konektatu zerbitzariarekin"
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
-"Baliogabeko audio sarrera edo honen eza, AVI korrentea hondatu egingo da."
+"Ez dago audio-sarrerarik, edo baliogabea da. AVI korrontea hondatua egongo "
+"da."
 
 msgid "This file is invalid and cannot be played."
-msgstr ""
+msgstr "Fitxategi hau ez da baliozkoa eta ezin da erreproduzitu."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Fitxategi horretan ez dago erreproduzi daitekeen korronterik."
 
 msgid "This file is incomplete and cannot be played."
-msgstr ""
+msgstr "Fitxategi hau osatu gabea dago, eta ezin da erreproduzitu."
+
+msgid "This file is corrupt and cannot be played."
+msgstr "Fitxategi hau hondatua dago, eta ezin da erreproduzitu."
 
 msgid "The video in this file might not play correctly."
 msgstr ""
+"Litekeena da fitxategi honetako bideoa ez behar bezala erreproduzitzea."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
-
-msgid "This file is corrupt and cannot be played."
-msgstr ""
+"Fitxategi horrek korronte gehiegi ditu. Erreproduzitu soilik lehen %d(r)ak"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-
-msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
-msgstr ""
+"Ez da onartutako korronterik aurkitu. GStreamer RTSP hedapena instalatu "
+"beharko duzu Real multimediako korronteentzako."
 
 #, fuzzy
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Ez da onartutako korronterik aurkitu. GStreamer RTSP hedapen egokia falta "
+"zaizu."
+
 msgid "Internal data flow error."
-msgstr "Barne datu korronte errorea."
+msgstr "Datu-fluxuaren barne-errorea."
 
 msgid "Volume"
-msgstr ""
+msgstr "Bolumena"
 
 msgid "Bass"
-msgstr ""
+msgstr "Baxua"
 
 msgid "Treble"
-msgstr ""
+msgstr "Altua"
 
 msgid "Synth"
-msgstr ""
+msgstr "Sintetizadorea"
 
 msgid "PCM"
-msgstr ""
+msgstr "PCM"
 
 msgid "Speaker"
-msgstr ""
+msgstr "Bozgorailua"
 
 msgid "Line-in"
-msgstr ""
+msgstr "Linea-sarrera"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofonoa"
 
 msgid "CD"
-msgstr ""
+msgstr "CDa"
 
 msgid "Mixer"
-msgstr ""
+msgstr "Nahastailea"
 
 msgid "PCM-2"
-msgstr ""
+msgstr "PCM-2"
 
 msgid "Record"
-msgstr ""
+msgstr "Grabazioa"
 
 msgid "In-gain"
-msgstr ""
+msgstr "Sarrerako irabazia"
 
 msgid "Out-gain"
-msgstr ""
+msgstr "Irteerako irabazia"
 
 msgid "Line-1"
-msgstr ""
+msgstr "1. linea"
 
 msgid "Line-2"
-msgstr ""
+msgstr "2. linea"
 
 msgid "Line-3"
-msgstr ""
+msgstr "3. linea"
 
 msgid "Digital-1"
-msgstr ""
+msgstr "1. digitala"
 
 msgid "Digital-2"
-msgstr ""
+msgstr "2. digitala"
 
 msgid "Digital-3"
-msgstr ""
+msgstr "3. digitala"
 
 msgid "Phone-in"
-msgstr ""
+msgstr "Aurikularren sarrera"
 
 msgid "Phone-out"
-msgstr ""
+msgstr "Aurikularren irteera"
 
 msgid "Video"
-msgstr ""
+msgstr "Bideoa"
 
 msgid "Radio"
-msgstr ""
+msgstr "Irratia"
 
 msgid "Monitor"
-msgstr ""
+msgstr "Monitorea"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Ezin izan da audioaren gailua ireki erreproduzitzeko. Beste aplikazio batek "
+"darabil gailua."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Ezin izan da audioaren gailua ireki erreproduzitzeko. Ez duzu baimenik "
+"gailua irekitzeko."
 
 msgid "Could not open audio device for playback."
-msgstr ""
+msgstr "Ezin izan da audioaren gailua ireki erreproduzitzeko."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
+"Ezin izan da audioaren gailua ireki grabatzeko. Ez duzu baimenik gailua "
+"irekitzeko."
 
 msgid "Could not open audio device for recording."
-msgstr ""
+msgstr "Ezin izan da audioaren gailua ireki grabatzeko."
 
 msgid "Gain"
-msgstr ""
+msgstr "Irabazia"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "Barneko bozgorailua"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Entzungailua"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Irteerako linea"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF irteera"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "1. irteera lagungarria"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "2. irteera lagungarria"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr ""
+msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."
 
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
+msgstr "Ustekabeko fotograma-tamaina jaso da (%u), %u ordez."
 
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr ""
+msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
+"Errorea gertatu da '%s' gailuaren ahalmena eskuratzean: Ez da v4l2 "
+"kontrolatzaile bat. Begiratu v4l1 kontrolatzaile bat den."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "Huts egin du %2$s gailuko %1$d. sarreraren atributuak kontsultatzean"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr ""
+"Huts egin du '%2$s' gailuko %1$d. sintonizadorearen ezarpenak eskuratzean."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "Huts egin du '%s' gailuaren araua kontsultatzean."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr ""
+msgstr "Huts egin dut '%s' gailuaren kontrol-atributuak eskuratzean."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr ""
+msgstr "Ezin da '%s' gailua identifikatu."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr ""
+msgstr "Hau ez da '%s' gailu bat."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr ""
+msgstr "Ezin izan da '%s' gailua ireki irakurtzeko eta idazteko."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr ""
+msgstr "'%s' gailua ez da kaptura-gailu bat."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr ""
+msgstr "'%s' gailua ez da irteerako gailu bat."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr ""
+msgstr "Huts egin du '%s' gailuaren araua ezartzean."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
+"Huts egin du '%s' gailuaren uneko sintonizazio-frekuentzia eskuratzean."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
+"Huts egin du '%s' gailuaren uneko sintonizazio-frekuentzia %lu Hz-tan "
+"ezartzean."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "Huts egin du '%s' gailuaren seinalearen indarra eskuratzean."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr ""
+msgstr "Huts egin du '%2$s' gailuko %1$d. kontrolaren balioa eskuratzean."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
+"Huts egin du '%3$s' gailuko %2$d. kontrolaren %1$d. balioa eskuratzean."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
+"Huts egin du '%s' gailuko uneko sarrera eskuratzean. Litekeena da irrati-"
+"gailu bat izatea."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
+msgstr "Huts egin du '%2$s' gailuko %1$d. sarrera ezartzean."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
+msgstr "Ezin izan dira bufferrak ilaran jarri '%s' gailuan."
 
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
+msgstr "Huts egin du '%s' gailutik bideo-fotogramak eskuratzen saiatzean."
 
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
+msgstr "Huts egin du %d saio eta gero. %s gailua. Sistema-errorea: %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr ""
+msgstr "Ezin izan dira '%s' gailuaren parametroak eskuratu"
 
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
+"Bideoaren sarrerako gailuak ez du fotograma-tamainaren ezarpen berria "
+"onartzen."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr ""
+msgstr "Ezin izan dira '%s' gailuaren bufferrak mapatu."
 
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
+"'%s' gailuaren kontrolatzaileak ez du onartzen kaptura-metodo ezagunik."
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
+msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
-msgstr ""
+msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Describes the selected input element."
+#~ msgstr "Sarrerako elementu hautatua deskribatzen du."
+
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr ""
+#~ "Audio-/Bideo-konferentziak egiteko irteerako elementu hautatua "
+#~ "deskribatzen du."
+
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Musikaren eta filmen irteerako elementu hautatua deskribatzen du."
+
+#~ msgid "Describes the selected output element."
+#~ msgstr "Irteerako elementu hautatua deskribatzen du."
+
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Audio-/Bideo-konferentziak egiteko GStreamen audio-kolektorea"
+
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "Musikaren eta filmen GStreamer audio-kolektorea"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Hainbat irteerako elementu erabiliz erreproduzi dezake audioa GStreamer-"
+#~ "ek. Hala nola osssink, esdsink eta alsasink. Audio-kolektorea kanalizazio "
+#~ "partzial bat izan daiteke, elementu bat izan beharrean."
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Hainbat irteerako elementu erabiliz erreproduzi dezake bideoa GStreamer-"
+#~ "ek. Hala nola xvimagesink, ximagesink, sdlvideosink eta aasink. Bideo-"
+#~ "kolektorea kanalizazio partzial bat izan daiteke, elementu bat izan "
+#~ "beharrean."
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "stream in video frames. Default is goom but more visualization plugins "
+#~ "will be ported soon. The visualization plugin can be a partial pipeline "
+#~ "instead of just one element."
+#~ msgstr ""
+#~ "Kanalizazioetan bistaratzeko plugin-ak jar ditzake GStreamer-ek, audio-"
+#~ "korronteak bideo-fotograma bihurtzeko. Goom da lehenetsia, baina laster "
+#~ "izango da bistaratzeko plugin gehiago. Bistaratzeko plugina kanalizazio "
+#~ "partzial bat izan daiteke, elementu bat izan beharrean."
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Hainbat sarrerako elementu erabiliz graba dezake audioa GStreamer-ek. "
+#~ "Hala nola osssrc, esdsrc eta alsasrc. Audio-iturburua kanalizazio "
+#~ "partzial bat izan daiteke, elementu bat izan beharrean."
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Hainbat sarrerako elementu erabiliz graba dezake bideoa GStreamer-ek. "
+#~ "Hala nola v4lsrc eta videotestsrc. Bideo-iturburua kanalizazio partzial "
+#~ "bat izan daiteke, elementu bat izan beharrean."
+
+#~ msgid "default GStreamer audio source"
+#~ msgstr "GStreamer audio-iturburu lehenetsia"
+
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "GStreamer audio-kolektore lehenetsia"
+
+#~ msgid "default GStreamer video source"
+#~ msgstr "GStreamer bideo-iturburu lehenetsia"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "GStreamer bideo-kolektore lehenetsia"
+
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "GStreamer bistaratzeko plugin lehenetsia"
+
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "Audio-/Bideo-konferentziak egiteko GStreamen audio-kolektorearen "
+#~ "deskribapena"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "Musikaren eta filmen GStreamer audio-kolektorearen deskribapena"
+
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "GStreamer audio-kolektore lehenetsiaren deskribapena"
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "GStreamer audiosrc lehenetsiaren deskribapena"

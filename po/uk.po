@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2007-07-05 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -20,6 +20,10 @@ msgstr "Не вдається встановити з'єднання із зву
 
 msgid "Failed to query sound server capabilities"
 msgstr "Помилка при запиті можливостей звукового сервера"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Внутрішня помилка потоку даних."
@@ -43,6 +47,9 @@ msgstr "Файл містить потоки, які неможливо відт
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл неповний або не може відтворюватись."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Файл пошкоджений та не може бути відтворений."
+
 msgid "The video in this file might not play correctly."
 msgstr "Потік відео у цьому файлі неможливо коректно відтворити."
 
@@ -50,17 +57,15 @@ msgstr "Потік відео у цьому файлі неможливо кор
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Файл містить надто багато потоків. Відтворюються перші %d"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Файл пошкоджений та не може бути відтворений."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
 
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 
 msgid "Internal data flow error."

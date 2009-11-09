@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-12 23:38+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -25,6 +25,10 @@ msgstr "Nem hozható létre kapcsolat a hangkiszolgálóhoz"
 
 msgid "Failed to query sound server capabilities"
 msgstr "A hangkiszolgáló képességeinek lekérdezése meghiúsult"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
@@ -47,6 +51,9 @@ msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
 msgid "This file is incomplete and cannot be played."
 msgstr "A fájl nem teljes és nem játszható le."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "A fájl sérült és nem játszható le."
+
 msgid "The video in this file might not play correctly."
 msgstr "A fájlban található videó lehet, hogy nem játszható le megfelelően."
 
@@ -55,9 +62,6 @@ msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
 
-msgid "This file is corrupt and cannot be played."
-msgstr "A fájl sérült és nem játszható le."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -65,9 +69,11 @@ msgstr ""
 "Nem található támogatott adatfolyam. Telepítse a GStreamer RTSP bővítményt a "
 "Real media adatfolyamokhoz."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Nem található támogatott adatfolyam. Lehet, hogy hiányzik a megfelelő "
 "GStreamer RTSP bővítmény."

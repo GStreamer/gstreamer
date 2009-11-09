@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-28 23:17+0100\n"
+"POT-Creation-Date: 2009-11-09 19:49+0000\n"
 "PO-Revision-Date: 2009-08-22 17:03+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -29,6 +29,10 @@ msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
 
 msgid "Failed to query sound server capabilities"
 msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
 
 msgid "Internal data stream error."
 msgstr "Interner Datenstromfehler."
@@ -51,6 +55,9 @@ msgstr "Diese Datei enthält keine abspielbaren Ströme."
 msgid "This file is incomplete and cannot be played."
 msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."
 
+msgid "This file is corrupt and cannot be played."
+msgstr "Diese Datei ist beschädigt und kann nicht wiedergegeben werden."
+
 msgid "The video in this file might not play correctly."
 msgstr "Das Video in dieser Datei wird vielleicht nicht korrekt wiedergegeben."
 
@@ -60,9 +67,6 @@ msgstr ""
 "Diese Datei enthält zu viele Ströme. Es werden nur die ersten %d "
 "wiedergegeben"
 
-msgid "This file is corrupt and cannot be played."
-msgstr "Diese Datei ist beschädigt und kann nicht wiedergegeben werden."
-
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
@@ -70,9 +74,11 @@ msgstr ""
 "Es wurde kein unterstützter Strom gefunden. Sie müssen vielleicht ein Plugin "
 "zur RTSP-Erweiterung von GStreamer für »Real«-Medienströme installieren."
 
+#, fuzzy
 msgid ""
-"No supported stream was found. You might be missing the right GStreamer RTSP "
-"extension plugin."
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
 msgstr ""
 "Es wurde kein unterstützter Strom gefunden. Es fehlt vielleicht das richtige "
 "Plugin zur RTSP-Erweiterung."
