@@ -40,7 +40,7 @@ compare_ranks (GValue * v1, GValue * v2)
   if (diff != 0)
     return diff;
 
-  diff = strcmp (f1->name, f2->name);
+  diff = strcmp (f2->name, f1->name);
 
   return diff;
 }
