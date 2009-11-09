@@ -937,7 +937,9 @@ gst_cdda_base_src_uri_get_uri (GstURIHandler * handler)
   g_free (src->uri);
 
   if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_STARTED)) {
-    src->uri = g_strdup_printf ("cdda://%s#%d", src->device, src->uri_track);
+    src->uri =
+        g_strdup_printf ("cdda://%s#%d", src->device,
+        (src->uri_track > 0) ? src->uri_track : 1);
   } else {
     src->uri = g_strdup ("cdda://1");
   }
