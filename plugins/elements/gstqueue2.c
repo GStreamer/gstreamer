@@ -646,7 +646,7 @@ update_buffering (GstQueue2 * queue)
       mode = GST_BUFFERING_STREAM;
     }
 
-    GST_DEBUG_OBJECT (queue, "buffering %d percent", percent);
+    GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
     message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
         (gint) percent);
     gst_message_set_buffering_stats (message, mode,
@@ -655,7 +655,7 @@ update_buffering (GstQueue2 * queue)
     gst_element_post_message (GST_ELEMENT_CAST (queue), message);
 
   } else {
-    GST_DEBUG_OBJECT (queue, "filled %d percent", percent);
+    GST_DEBUG_OBJECT (queue, "filled %d percent", (gint) percent);
   }
 
 #undef GET_PERCENT
