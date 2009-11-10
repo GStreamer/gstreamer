@@ -725,11 +725,13 @@ gboolean
 _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
     gchar * end, GstPlugin ** out_plugin)
 {
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar *start = *in;
+#endif
   GstRegistryChunkPluginElement *pe;
   GstPlugin *plugin = NULL;
   gchar *cache_str = NULL;
   guint i, n;
-  gchar *start = *in;
 
   align (*in);
   GST_LOG ("Reading/casting for GstRegistryChunkPluginElement at address %p",
