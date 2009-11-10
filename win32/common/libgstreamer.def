@@ -827,6 +827,7 @@ EXPORTS
 	gst_registry_get_default
 	gst_registry_get_feature_list
 	gst_registry_get_feature_list_by_plugin
+	gst_registry_get_feature_list_cookie
 	gst_registry_get_path_list
 	gst_registry_get_plugin_list
 	gst_registry_get_type

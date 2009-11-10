@@ -1945,6 +1945,7 @@ gst_buffering_mode_get_type
 GstRegistry
 gst_registry_get_default
 gst_registry_get_feature_list
+gst_registry_get_feature_list_cookie
 gst_registry_get_feature_list_by_plugin
 gst_registry_get_path_list
 gst_registry_get_plugin_list
@@ -1972,6 +1973,7 @@ gst_default_registry_add_path
 gst_default_registry_find_plugin
 gst_default_registry_find_feature
 gst_default_registry_get_plugin_list
+gst_default_registry_get_feature_list_cookie
 gst_default_registry_feature_filter
 <SUBSECTION Standard>
 GstRegistryClass

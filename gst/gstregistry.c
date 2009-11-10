@@ -1653,3 +1653,21 @@ gst_update_registry (void)
 
   return res;
 }
+
+/**
+ * gst_registry_get_feature_list_cookie:
+ *
+ * Returns the registrys feature list cookie. This changes
+ * every time a feature is added or removed from the registry.
+ *
+ * Returns: the feature list cookie.
+ *
+ * Since: 0.10.26
+ */
+guint32
+gst_registry_get_feature_list_cookie (GstRegistry * registry)
+{
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), 0);
+
+  return registry->priv->cookie;
+}
