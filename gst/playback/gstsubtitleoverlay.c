@@ -115,6 +115,16 @@ gst_subtitle_overlay_finalize (GObject * object)
     self->lock = NULL;
   }
 
+  if (self->factories_lock) {
+    g_mutex_free (self->factories_lock);
+    self->factories_lock = NULL;
+  }
+
+  if (self->factories)
+    gst_plugin_feature_list_free (self->factories);
+  self->factories = NULL;
+  gst_caps_replace (&self->factory_caps, NULL);
+
   if (self->font_desc) {
     g_free (self->font_desc);
     self->font_desc = NULL;
@@ -268,10 +278,13 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
   }
 }
 
+/* Call with factories_lock! */
 static gboolean
-gst_subtitle_overlay_create_factory_list (GstSubtitleOverlay * self)
+gst_subtitle_overlay_update_factory_list (GstSubtitleOverlay * self)
 {
-  if (g_once_init_enter ((gsize *) & self->factories)) {
+  if (!self->factories
+      || self->factories_cookie !=
+      gst_default_registry_get_feature_list_cookie ()) {
     GstCaps *subcaps;
     GList *factories;
 
@@ -282,7 +295,10 @@ gst_subtitle_overlay_create_factory_list (GstSubtitleOverlay * self)
     GST_DEBUG_OBJECT (self, "Created factory caps: %" GST_PTR_FORMAT, subcaps);
     gst_caps_replace (&self->factory_caps, subcaps);
     gst_caps_unref (subcaps);
-    g_once_init_leave ((gsize *) & self->factories, (gsize) factories);
+    if (self->factories)
+      gst_plugin_feature_list_free (self->factories);
+    self->factories = factories;
+    self->factories_cookie = gst_default_registry_get_feature_list_cookie ();
   }
 
   return (self->factories != NULL);
@@ -312,6 +328,9 @@ _filter_factories_for_caps (GstElementFactory * factory, const GstCaps * caps)
 
   if (fcaps)
     gst_caps_unref (fcaps);
+
+  if (ret)
+    gst_object_ref (factory);
   return ret;
 }
 
@@ -713,6 +732,8 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
   self->subtitle_flush = FALSE;
 
   /* Find our factories */
+  g_mutex_lock (self->factories_lock);
+  gst_subtitle_overlay_update_factory_list (self);
   if (subcaps) {
     factories = gst_filter_run (self->factories,
         (GstFilterFunc) _filter_factories_for_caps, FALSE, subcaps);
@@ -726,6 +747,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       subcaps = NULL;
     }
   }
+  g_mutex_unlock (self->factories_lock);
 
   if (!subcaps) {
     _setup_passthrough (self);
@@ -1172,7 +1194,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 
 out:
   if (factories)
-    g_list_free (factories);
+    gst_plugin_feature_list_free (factories);
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
 }
 
@@ -1186,8 +1208,12 @@ gst_subtitle_overlay_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG_OBJECT (self, "State change NULL->READY");
-      if (G_UNLIKELY (!gst_subtitle_overlay_create_factory_list (self)))
+      g_mutex_lock (self->factories_lock);
+      if (G_UNLIKELY (!gst_subtitle_overlay_update_factory_list (self))) {
+        g_mutex_unlock (self->factories_lock);
         return GST_STATE_CHANGE_FAILURE;
+      }
+      g_mutex_unlock (self->factories_lock);
 
       GST_SUBTITLE_OVERLAY_LOCK (self);
       /* Set the internal pads to blocking */
@@ -1246,11 +1272,6 @@ gst_subtitle_overlay_change_state (GstElement * element,
       GstPad *pad;
 
       GST_DEBUG_OBJECT (self, "State change READY->NULL");
-
-      if (self->factories)
-        gst_plugin_feature_list_free (self->factories);
-      self->factories = NULL;
-      gst_caps_replace (&self->factory_caps, NULL);
 
       GST_SUBTITLE_OVERLAY_LOCK (self);
       gst_caps_replace (&self->subcaps, NULL);
@@ -1524,10 +1545,12 @@ gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad)
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   GstCaps *ret;
 
-  if (G_UNLIKELY (!gst_subtitle_overlay_create_factory_list (self)))
+  g_mutex_lock (self->factories_lock);
+  if (G_UNLIKELY (!gst_subtitle_overlay_update_factory_list (self)))
     ret = GST_CAPS_NONE;
   else
     ret = gst_caps_ref (self->factory_caps);
+  g_mutex_unlock (self->factories_lock);
 
   GST_DEBUG_OBJECT (pad, "Returning subtitle caps %" GST_PTR_FORMAT, ret);
 
@@ -1766,6 +1789,7 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   GstPad *proxypad = NULL;
 
   self->lock = g_mutex_new ();
+  self->factories_lock = g_mutex_new ();
 
   templ = gst_static_pad_template_get (&srctemplate);
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);

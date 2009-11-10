@@ -87,7 +87,9 @@ struct _GstSubtitleOverlay
   GstSegment subtitle_segment;
   gboolean subtitle_flush;
 
+  GMutex *factories_lock;
   GList *factories;
+  guint32 factories_cookie;
   GstCaps *factory_caps;
 
   GMutex *lock;
