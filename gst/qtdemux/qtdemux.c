@@ -4055,7 +4055,9 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
     GST_LOG_OBJECT (qtdemux,
         "Tried to parse up to sample %u but there are only %u samples", n + 1,
         stream->n_samples);
-    goto corrupt_file;
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
   }
 
   if (n <= stream->stbl_index) {
@@ -4095,9 +4097,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       gst_byte_reader_skip_unchecked (&stream->stsc, 4);
 
       /* chunk numbers are counted from 1 it seems */
-      if (G_UNLIKELY (stream->first_chunk == 0))
-        goto corrupt_file;
-      else
+      if (G_UNLIKELY (stream->first_chunk == 0)) {
+        GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+            (_("This file is corrupt and cannot be played.")), (NULL));
+        return FALSE;
+      } else
         --stream->first_chunk;
 
       /* the last chunk of each entry is calculated by taking the first chunk
@@ -4108,9 +4112,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       } else {
         stream->last_chunk =
             gst_byte_reader_peek_uint32_be_unchecked (&stream->stsc);
-        if (G_UNLIKELY (stream->last_chunk == 0))
-          goto corrupt_file;
-        else
+        if (G_UNLIKELY (stream->last_chunk == 0)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+              (_("This file is corrupt and cannot be played.")), (NULL));
+          return FALSE;
+        } else
           --stream->last_chunk;
       }
 
@@ -4118,20 +4124,29 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
           "entry %d has first_chunk %d, last_chunk %d, samples_per_chunk %d", i,
           stream->first_chunk, stream->last_chunk, stream->samples_per_chunk);
 
-      if (G_UNLIKELY (stream->last_chunk < stream->first_chunk))
-        goto corrupt_file;
+      if (G_UNLIKELY (stream->last_chunk < stream->first_chunk)) {
+        GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+            (_("This file is corrupt and cannot be played.")), (NULL));
+        return FALSE;
+      }
 
       if (stream->last_chunk != G_MAXUINT32) {
         if (!qt_atom_parser_peek_sub (&stream->stco,
                 stream->first_chunk * stream->co_size,
                 (stream->last_chunk - stream->first_chunk) * stream->co_size,
-                &stream->co_chunk))
-          goto corrupt_file;
+                &stream->co_chunk)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+              (_("This file is corrupt and cannot be played.")), (NULL));
+          return FALSE;
+        }
       } else {
         stream->co_chunk = stream->stco;
         if (!gst_byte_reader_skip (&stream->co_chunk,
-                stream->first_chunk * stream->co_size))
-          goto corrupt_file;
+                stream->first_chunk * stream->co_size)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+              (_("This file is corrupt and cannot be played.")), (NULL));
+          return FALSE;
+        }
       }
 
       stream->stsc_chunk_index = stream->first_chunk;
@@ -4141,8 +4156,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       for (j = stream->stsc_chunk_index; j < stream->last_chunk; j++) {
         if (!stream->stsc_sample_index
             && !qt_atom_parser_get_offset (&stream->co_chunk, stream->co_size,
-                &stream->chunk_offset))
-          goto corrupt_file;
+                &stream->chunk_offset)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+              (_("This file is corrupt and cannot be played.")), (NULL));
+          return FALSE;
+        }
 
         for (k = stream->stsc_sample_index; k < stream->samples_per_chunk; k++) {
           GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %"
@@ -4324,14 +4342,6 @@ done:
   stream->stbl_index = n;
 
   return TRUE;
-
-/* ERRORS */
-corrupt_file:
-  {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
-        (_("This file is corrupt and cannot be played.")), (NULL));
-    return FALSE;
-  }
 }
 
 /* collect all segment info for @stream.
