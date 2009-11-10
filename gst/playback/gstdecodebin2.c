@@ -149,6 +149,7 @@ struct _GstDecodeBin
   GstDecodeChain *decode_chain; /* Top level decode chain */
   gint nbpads;                  /* unique identifier for source pads */
 
+  guint32 factories_cookie;     /* Cookie from last time when factories was updated */
   GValueArray *factories;       /* factories we can use for selecting elements */
 
   GMutex *subtitle_lock;        /* Protects changes to subtitles and encoding */
@@ -845,6 +846,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   /* first filter out the interesting element factories */
   decode_bin->factories =
       gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+  decode_bin->factories_cookie =
+      gst_default_registry_get_feature_list_cookie ();
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -3229,6 +3232,15 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (dbin->typefind == NULL)
         goto missing_typefind;
+      if (dbin->factories_cookie !=
+          gst_default_registry_get_feature_list_cookie ()) {
+        if (dbin->factories)
+          g_value_array_free (dbin->factories);
+        dbin->factories =
+            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+        dbin->factories_cookie =
+            gst_default_registry_get_feature_list_cookie ();
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       DYN_LOCK (dbin);

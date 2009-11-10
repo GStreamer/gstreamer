@@ -68,6 +68,7 @@ struct _GstURIDecodeBin
 
   GMutex *lock;                 /* lock for constructing */
 
+  guint32 factories_cookie;
   GValueArray *factories;       /* factories we can use for selecting elements */
 
   gchar *uri;
@@ -471,6 +472,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
   /* first filter out the interesting element factories */
   dec->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+  dec->factories_cookie = gst_default_registry_get_feature_list_cookie ();
 
   dec->lock = g_mutex_new ();
 
@@ -2040,6 +2042,17 @@ gst_uri_decode_bin_change_state (GstElement * element,
   decoder = GST_URI_DECODE_BIN (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (decoder->factories_cookie !=
+          gst_default_registry_get_feature_list_cookie ()) {
+        if (decoder->factories)
+          g_value_array_free (decoder->factories);
+        decoder->factories =
+            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+        decoder->factories_cookie =
+            gst_default_registry_get_feature_list_cookie ();
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_source (decoder))
         goto source_failed;

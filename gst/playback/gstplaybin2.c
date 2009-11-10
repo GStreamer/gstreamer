@@ -373,6 +373,7 @@ struct _GstPlayBin
   /* if we are shutting down or not */
   gint shutdown;
 
+  guint32 elements_cookie;
   GValueArray *elements;        /* factories we can use for selecting elements */
 
   gboolean have_selector;       /* set to FALSE when we fail to create an
@@ -1122,6 +1123,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   /* first filter out the interesting element factories */
   type = GST_FACTORY_LIST_DECODER | GST_FACTORY_LIST_SINK;
   playbin->elements = gst_factory_list_get_elements (type);
+  playbin->elements_cookie = gst_default_registry_get_feature_list_cookie ();
   gst_factory_list_debug (playbin->elements);
 
   /* add sink */
@@ -2962,6 +2964,17 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   playbin = GST_PLAY_BIN (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (playbin->elements_cookie !=
+          gst_default_registry_get_feature_list_cookie ()) {
+        if (playbin->elements)
+          g_value_array_free (playbin->elements);
+        playbin->elements =
+            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+        playbin->elements_cookie =
+            gst_default_registry_get_feature_list_cookie ();
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 0);
