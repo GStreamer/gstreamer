@@ -7,12 +7,13 @@
  resample.c        
  speex_resampler.h 
 
-are taken from http://git.xiph.org/speex.git/ as of 2008-10-28.
+are taken from http://git.xiph.org/speex.git/ as of 2009-11-10.
 
 The only changes are:
 
---- arch.h	2008-11-28 09:57:15.000000000 +0100
-+++ arch.h	2008-11-28 09:57:37.000000000 +0100
+diff -Naur old/arch.h new/arch.h
+--- old/arch.h	2009-11-10 12:18:29.000000000 +0100
++++ new/arch.h	2009-11-10 12:19:09.000000000 +0100
 @@ -78,7 +78,10 @@
  #include "../include/speex/speex_types.h"
  #endif
@@ -61,8 +62,9 @@ The only changes are:
  
  #define QCONST16(x,bits) (x)
  #define QCONST32(x,bits) (x)
---- resample.c	2008-11-28 09:56:42.000000000 +0100
-+++ resample.c	2008-11-01 20:38:35.000000000 +0100
+diff -Naur old/resample.c new/resample.c
+--- old/resample.c	2009-11-10 12:18:51.000000000 +0100
++++ new/resample.c	2009-11-10 12:19:09.000000000 +0100
 @@ -63,22 +63,27 @@
  
  #ifdef OUTSIDE_SPEEX
@@ -151,7 +153,7 @@ The only changes are:
  static int
  resampler_basic_direct_single (SpeexResamplerState * st,
      spx_uint32_t channel_index, const spx_word16_t * in, spx_uint32_t * in_len,
-@@ -421,6 +441,7 @@
+@@ -428,6 +448,7 @@
    st->samp_frac_num[channel_index] = samp_frac_num;
    return out_sample;
  }
@@ -159,7 +161,7 @@ The only changes are:
  
  #ifdef FIXED_POINT
  #else
-@@ -476,6 +497,7 @@
+@@ -483,6 +504,7 @@
  }
  #endif
  
@@ -167,7 +169,7 @@ The only changes are:
  static int
  resampler_basic_interpolate_single (SpeexResamplerState * st,
      spx_uint32_t channel_index, const spx_word16_t * in, spx_uint32_t * in_len,
-@@ -554,6 +576,7 @@
+@@ -562,6 +584,7 @@
    st->samp_frac_num[channel_index] = samp_frac_num;
    return out_sample;
  }
@@ -175,7 +177,7 @@ The only changes are:
  
  #ifdef FIXED_POINT
  #else
-@@ -584,10 +607,16 @@
+@@ -592,10 +615,16 @@
          PDIV32 (SHL32 ((samp_frac_num * st->oversample) % st->den_rate, 15),
          st->den_rate);
  #else
@@ -192,7 +194,7 @@ The only changes are:
      spx_word16_t interp[4];
  
  
-@@ -688,20 +717,27 @@
+@@ -696,20 +725,27 @@
        spx_int32_t j;
        for (j = 0; j < st->filt_len; j++) {
          st->sinc_table[i * st->filt_len + j] =
@@ -222,7 +224,7 @@ The only changes are:
      /*fprintf (stderr, "resampler uses direct sinc table and normalised cutoff %f\n", cutoff); */
    } else {
      spx_int32_t i;
-@@ -717,16 +753,24 @@
+@@ -725,16 +761,24 @@
      }
      for (i = -4; i < (spx_int32_t) (st->oversample * st->filt_len + 4); i++)
        st->sinc_table[i + 4] =
@@ -247,7 +249,7 @@ The only changes are:
      /*fprintf (stderr, "resampler uses interpolated sinc table and normalised cutoff %f\n", cutoff); */
    }
    st->int_advance = st->num_rate / st->den_rate;
-@@ -956,11 +1000,18 @@
+@@ -964,11 +1008,18 @@
      spx_uint32_t channel_index, const spx_int16_t * in, spx_uint32_t * in_len,
      spx_int16_t * out, spx_uint32_t * out_len)
  #else
@@ -266,7 +268,7 @@ The only changes are:
  {
    int j;
    spx_uint32_t ilen = *in_len;
-@@ -1078,9 +1129,16 @@
+@@ -1086,9 +1137,16 @@
    return RESAMPLER_ERR_SUCCESS;
  }
  
@@ -283,8 +285,9 @@ The only changes are:
  {
    spx_uint32_t i;
    int istride_save, ostride_save;
---- speex_resampler.h	2008-11-28 09:57:15.000000000 +0100
-+++ speex_resampler.h	2008-11-28 09:57:37.000000000 +0100
+diff -Naur old/speex_resampler.h new/speex_resampler.h
+--- old/speex_resampler.h	2009-11-10 12:18:09.000000000 +0100
++++ new/speex_resampler.h	2009-11-10 12:19:09.000000000 +0100
 @@ -77,10 +77,10 @@
  #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
  #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
@@ -297,39 +300,47 @@ The only changes are:
 +#define spx_int32_t gint32
 +#define spx_uint16_t guint16
 +#define spx_uint32_t guint32
- 
+       
  #else /* OUTSIDE_SPEEX */
  
-@@ -162,10 +162,17 @@
+@@ -166,12 +166,21 @@
   * @param out Output buffer
   * @param out_len Size of the output buffer. Returns the number of samples written
   */
 +#ifdef DOUBLE_PRECISION
-+  int speex_resampler_process_float (SpeexResamplerState * st,
-+      spx_uint32_t channel_index,
-+      const double *in,
-+      spx_uint32_t * in_len, double *out, spx_uint32_t * out_len);
++int speex_resampler_process_float(SpeexResamplerState *st, 
++                                   spx_uint32_t channel_index, 
++                                   const double *in, 
++                                   spx_uint32_t *in_len, 
++                                   double *out, 
++                                   spx_uint32_t *out_len);
 +#else
-   int speex_resampler_process_float (SpeexResamplerState * st,
-       spx_uint32_t channel_index,
-       const float *in,
-       spx_uint32_t * in_len, float *out, spx_uint32_t * out_len);
+ int speex_resampler_process_float(SpeexResamplerState *st, 
+                                    spx_uint32_t channel_index, 
+                                    const float *in, 
+                                    spx_uint32_t *in_len, 
+                                    float *out, 
+                                    spx_uint32_t *out_len);
 +#endif
  
  /** Resample an int array. The input and output buffers must *not* overlap.
   * @param st Resampler state
-@@ -191,9 +198,15 @@
+@@ -199,11 +208,19 @@
   * @param out_len Size of the output buffer. Returns the number of samples written.
   * This is all per-channel.
   */
 +#ifdef DOUBLE_PRECISION
-+  int speex_resampler_process_interleaved_float (SpeexResamplerState * st,
-+      const double *in,
-+      spx_uint32_t * in_len, double *out, spx_uint32_t * out_len);
++int speex_resampler_process_interleaved_float(SpeexResamplerState *st, 
++                                               const double *in, 
++                                               spx_uint32_t *in_len, 
++                                               double *out, 
++                                               spx_uint32_t *out_len);
 +#else
-   int speex_resampler_process_interleaved_float (SpeexResamplerState * st,
-       const float *in,
-       spx_uint32_t * in_len, float *out, spx_uint32_t * out_len);
+ int speex_resampler_process_interleaved_float(SpeexResamplerState *st, 
+                                                const float *in, 
+                                                spx_uint32_t *in_len, 
+                                                float *out, 
+                                                spx_uint32_t *out_len);
 +#endif
  
  /** Resample an interleaved int array. The input and output buffers must *not* overlap.

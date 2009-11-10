@@ -91,7 +91,7 @@ static inline double inner_product_double(const float *a, const float *b, unsign
       sum = _mm_add_pd(sum, _mm_cvtps_pd(t));
       sum = _mm_add_pd(sum, _mm_cvtps_pd(_mm_movehl_ps(t, t)));
    }
-   sum = _mm_add_sd(sum, (__m128d) _mm_movehl_ps((__m128) sum, (__m128) sum));
+   sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
    _mm_store_sd(&ret, sum);
    return ret;
 }
@@ -120,7 +120,7 @@ static inline double interpolate_product_double(const float *a, const float *b, 
   sum1 = _mm_mul_pd(f1, sum1);
   sum2 = _mm_mul_pd(f2, sum2);
   sum = _mm_add_pd(sum1, sum2);
-  sum = _mm_add_sd(sum, (__m128d) _mm_movehl_ps((__m128) sum, (__m128) sum));
+  sum = _mm_add_sd(sum, _mm_unpackhi_pd(sum, sum));
   _mm_store_sd(&ret, sum);
   return ret;
 }
