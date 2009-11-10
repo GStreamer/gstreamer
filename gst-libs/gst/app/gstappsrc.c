@@ -836,6 +836,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
   if (res) {
     GST_DEBUG_OBJECT (appsrc, "flushing queue");
     gst_app_src_flush_queued (appsrc);
+    appsrc->priv->is_eos = FALSE;
   } else {
     GST_WARNING_OBJECT (appsrc, "seek failed");
   }
