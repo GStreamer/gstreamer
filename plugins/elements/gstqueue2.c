@@ -580,7 +580,7 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment)
 static void
 update_buffering (GstQueue2 * queue)
 {
-  gint percent;
+  gint64 percent;
   gboolean post = FALSE;
 
   if (!queue->use_buffering || queue->high_percent <= 0)
@@ -647,7 +647,8 @@ update_buffering (GstQueue2 * queue)
     }
 
     GST_DEBUG_OBJECT (queue, "buffering %d percent", percent);
-    message = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
+    message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
+        (gint) percent);
     gst_message_set_buffering_stats (message, mode,
         queue->byte_in_rate, queue->byte_out_rate, buffering_left);
 
