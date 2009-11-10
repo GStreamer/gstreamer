@@ -201,7 +201,7 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
         "framerate", GST_TYPE_FRACTION,
         context->time_base.den / context->ticks_per_frame,
         context->time_base.num, NULL);
-  } else if (context) {
+  } else {
     /* so we are after restricted caps in this case */
     switch (codec_id) {
       case CODEC_ID_H261:
