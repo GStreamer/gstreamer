@@ -591,7 +591,7 @@ update_buffering (GstQueue2 * queue)
 
   if (queue->is_eos) {
     /* on EOS we are always 100% full, we set the var here so that it we can
-     * resue the logic below to stop buffering */
+     * reuse the logic below to stop buffering */
     percent = 100;
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
