@@ -1606,11 +1606,11 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
         g_signal_connect (chain->volume, "notify::volume",
             G_CALLBACK (notify_volume_cb), playsink);
-        g_signal_connect (chain->mute, "notify::mute",
-            G_CALLBACK (notify_mute_cb), playsink);
 
         /* volume also has the mute property */
         chain->mute = chain->volume;
+        g_signal_connect (chain->mute, "notify::mute",
+            G_CALLBACK (notify_mute_cb), playsink);
 
         /* configure with the latest volume and mute */
         g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume,
