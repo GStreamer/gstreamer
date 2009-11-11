@@ -31,7 +31,7 @@
 static GstElementDetails gst_rtpbvpay_details = {
   "RTP BV Payloader",
   "Codec/Payloader/Network",
-  "Packetize BroadcomVoice audio streams into RTP packets",
+  "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
   "Wim Taymans <wim.taymans@collabora.co.uk>"
 };
 
