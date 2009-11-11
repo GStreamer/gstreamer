@@ -1044,10 +1044,12 @@ gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstEvent * event)
 }
 
 /*
- * Must be called with JBUF_LOCK held
+ * Must be called with JBUF_LOCK held, will release the LOCK when emiting the
+ * signal. The function returns GST_FLOW_ERROR when a parsing error happened and
+ * GST_FLOW_WRONG_STATE when the element is shutting down. On success
+ * GST_FLOW_OK is returned.
  */
-
-static gboolean
+static GstFlowReturn
 gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
     guint8 pt)
 {
@@ -1064,8 +1066,10 @@ gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
   g_value_init (&ret, GST_TYPE_CAPS);
   g_value_set_boxed (&ret, NULL);
 
+  JBUF_UNLOCK (jitterbuffer->priv);
   g_signal_emitv (args, gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP], 0,
       &ret);
+  JBUF_LOCK_CHECK (jitterbuffer->priv, out_flushing);
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
@@ -1075,16 +1079,28 @@ gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
     goto no_caps;
 
   res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
-
   gst_caps_unref (caps);
 
-  return res;
+  if (G_UNLIKELY (!res))
+    goto parse_failed;
+
+  return GST_FLOW_OK;
 
   /* ERRORS */
 no_caps:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "could not get caps");
-    return FALSE;
+    return GST_FLOW_ERROR;
+  }
+out_flushing:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
+    return GST_FLOW_WRONG_STATE;
+  }
+parse_failed:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer, "parse failed");
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -1144,7 +1160,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY (priv->clock_rate == -1)) {
     /* no clock rate given on the caps, try to get one with the signal */
-    gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
+    if (gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer,
+            pt) == GST_FLOW_WRONG_STATE)
+      goto out_flushing;
+
     if (G_UNLIKELY (priv->clock_rate == -1))
       goto no_clock_rate;
   }
