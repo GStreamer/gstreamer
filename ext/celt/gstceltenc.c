@@ -591,17 +591,29 @@ gst_celt_enc_setup (GstCeltEnc * enc)
 
   enc->setup = FALSE;
 
+#ifdef HAVE_CELT_0_7
+  enc->mode = celt_mode_create (enc->rate, enc->frame_size, &error);
+#else
   enc->mode =
       celt_mode_create (enc->rate, enc->channels, enc->frame_size, &error);
+#endif
   if (!enc->mode)
     goto mode_initialization_failed;
 
   celt_mode_info (enc->mode, CELT_GET_FRAME_SIZE, &enc->frame_size);
 
+#ifdef HAVE_CELT_0_7
+  celt_header_init (&enc->header, enc->mode, enc->channels);
+#else
   celt_header_init (&enc->header, enc->mode);
+#endif
   enc->header.nb_channels = enc->channels;
 
+#ifdef HAVE_CELT_0_7
+  enc->state = celt_encoder_create (enc->mode, enc->channels, &error);
+#else
   enc->state = celt_encoder_create (enc->mode);
+#endif
   if (!enc->state)
     goto encoder_creation_failed;
 
@@ -624,7 +636,11 @@ mode_initialization_failed:
   return FALSE;
 
 encoder_creation_failed:
+#ifdef HAVE_CELT_0_7
+  GST_ERROR_OBJECT (enc, "Encoder creation failed: %d", error);
+#else
   GST_ERROR_OBJECT (enc, "Encoder creation failed");
+#endif
   return FALSE;
 }
 

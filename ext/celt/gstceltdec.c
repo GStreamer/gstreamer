@@ -497,14 +497,24 @@ celt_dec_chain_parse_header (GstCeltDec * dec, GstBuffer * buf)
   if (memcmp (dec->header.codec_id, "CELT    ", 8) != 0)
     goto invalid_header;
 
+#ifdef HAVE_CELT_0_7
+  dec->mode =
+      celt_mode_create (dec->header.sample_rate,
+      dec->header.frame_size, &error);
+#else
   dec->mode =
       celt_mode_create (dec->header.sample_rate, dec->header.nb_channels,
       dec->header.frame_size, &error);
+#endif
   if (!dec->mode)
     goto mode_init_failed;
 
   /* initialize the decoder */
+#ifdef HAVE_CELT_0_7
+  dec->state = celt_decoder_create (dec->mode, dec->header.nb_channels, &error);
+#else
   dec->state = celt_decoder_create (dec->mode);
+#endif
   if (!dec->state)
     goto init_failed;
 
@@ -545,8 +555,13 @@ mode_init_failed:
   }
 init_failed:
   {
+#ifdef HAVE_CELT_0_7
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't initialize decoder: %d", error));
+#else
     GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
         (NULL), ("couldn't initialize decoder"));
+#endif
     return GST_FLOW_ERROR;
   }
 nego_failed:
