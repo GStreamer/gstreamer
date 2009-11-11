@@ -304,18 +304,32 @@ gst_subtitle_overlay_update_factory_list (GstSubtitleOverlay * self)
   return (self->factories != NULL);
 }
 
+G_LOCK_DEFINE_STATIC (_factory_caps);
+static GstCaps *_factory_caps = NULL;
+static guint32 _factory_caps_cookie = 0;
+
 GstCaps *
 gst_subtitle_overlay_create_factory_caps (void)
 {
   GList *factories;
-  GstCaps *subcaps;
+  GstCaps *subcaps = NULL;
 
-  subcaps = gst_caps_new_empty ();
+  G_LOCK (_factory_caps);
+  if (!_factory_caps
+      || _factory_caps_cookie !=
+      gst_default_registry_get_feature_list_cookie ()) {
+    if (_factory_caps)
+      gst_caps_unref (_factory_caps);
+    _factory_caps = gst_caps_new_empty ();
 
-  factories = gst_default_registry_feature_filter (
-      (GstPluginFeatureFilter) _factory_filter, FALSE, &subcaps);
-  GST_DEBUG ("Created factory caps: %" GST_PTR_FORMAT, subcaps);
-  gst_plugin_feature_list_free (factories);
+    factories = gst_default_registry_feature_filter (
+        (GstPluginFeatureFilter) _factory_filter, FALSE, &_factory_caps);
+    GST_DEBUG ("Created factory caps: %" GST_PTR_FORMAT, _factory_caps);
+    gst_plugin_feature_list_free (factories);
+    _factory_caps_cookie = gst_default_registry_get_feature_list_cookie ();
+  }
+  subcaps = gst_caps_ref (_factory_caps);
+  G_UNLOCK (_factory_caps);
 
   return subcaps;
 }
