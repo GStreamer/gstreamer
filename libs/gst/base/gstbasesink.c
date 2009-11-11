@@ -4294,7 +4294,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   GstClock *clock;
   gboolean res = FALSE;
   GstFormat oformat, tformat;
-  GstClockTime now, base, latency;
+  GstClockTime now, latency;
+  GstClockTimeDiff base;
   gint64 time, accum, duration;
   gdouble rate;
   gint64 last;
@@ -4375,9 +4376,10 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
    * rate and applied rate. */
   base += accum;
   base += latency;
-  base = MIN (now, base);
+  if (GST_CLOCK_DIFF (base, now) < 0)
+    base = -now;
 
-  /* for negative rates we need to count back from from the segment
+  /* for negative rates we need to count back from the segment
    * duration. */
   if (rate < 0.0)
     time += duration;
