@@ -251,17 +251,21 @@ typedef struct _GstPlayBinClass GstPlayBinClass;
 typedef struct _GstSourceGroup GstSourceGroup;
 typedef struct _GstSourceSelect GstSourceSelect;
 
+typedef GstCaps *(*SourceSelectGetMediaCapsFunc) (void);
+
 /* has the info for a selector and provides the link to the sink */
 struct _GstSourceSelect
 {
   const gchar *media_list[8];   /* the media types for the selector */
-  GstCaps *media_caps;          /* more complex caps for the selector */
+  SourceSelectGetMediaCapsFunc get_media_caps;  /* more complex caps for the selector */
   GstPlaySinkType type;         /* the sink pad type of the selector */
 
   GstElement *selector;         /* the selector */
   GPtrArray *channels;
   GstPad *srcpad;               /* the source pad of the selector */
-  GstPad *sinkpad;              /* the sinkpad of the sink when the selector is linked */
+  GstPad *sinkpad;              /* the sinkpad of the sink when the selector
+                                 * is linked
+                                 */
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
@@ -304,10 +308,12 @@ struct _GstSourceGroup
   gulong drained_id;
   gulong autoplug_factories_id;
   gulong autoplug_select_id;
+  gulong autoplug_continue_id;
 
   gulong sub_pad_added_id;
   gulong sub_pad_removed_id;
   gulong sub_no_more_pads_id;
+  gulong sub_autoplug_continue_id;
 
   /* selectors for different streams */
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
@@ -1065,7 +1071,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[2].media_list[4] = "video/x-dvd-subpicture";
   group->selector[2].media_list[5] = "subpicture/";
   group->selector[2].media_list[6] = "subtitle/";
-  group->selector[2].media_caps = gst_subtitle_overlay_create_factory_caps ();
+  group->selector[2].get_media_caps = gst_subtitle_overlay_create_factory_caps;
   group->selector[2].type = GST_PLAY_SINK_TYPE_TEXT;
   group->selector[2].channels = group->text_channels;
   group->selector[3].media_list[0] = "video/x-raw-";
@@ -1083,10 +1089,6 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
-
-  if (group->selector[2].media_caps)
-    gst_caps_unref (group->selector[2].media_caps);
-  group->selector[2].media_caps = NULL;
 
   g_mutex_free (group->lock);
   if (group->audio_sink)
@@ -2020,6 +2022,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
 
       it = gst_element_iterate_src_pads (group->suburidecodebin);
       while (it && !done) {
@@ -2204,10 +2207,15 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     if (array_has_value (group->selector[i].media_list, name)) {
       select = &group->selector[i];
       break;
-    } else if (group->selector[i].media_caps
-        && gst_caps_can_intersect (group->selector[i].media_caps, caps)) {
-      select = &group->selector[i];
-      break;
+    } else if (group->selector[i].get_media_caps) {
+      GstCaps *media_caps = group->selector[i].get_media_caps ();
+
+      if (media_caps && gst_caps_can_intersect (media_caps, caps)) {
+        select = &group->selector[i];
+        gst_caps_unref (media_caps);
+        break;
+      }
+      gst_caps_unref (media_caps);
     }
   }
   /* no selector found for the media type, don't bother linking it to a
@@ -2624,6 +2632,28 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
+/* autoplug-continue decides, if a pad has raw caps that can be exposed
+ * directly or if further decoding is necessary. We use this to expose
+ * supported subtitles directly */
+static gboolean
+autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
+    GstSourceGroup * group)
+{
+  GstCaps *subcaps;
+  gboolean ret = FALSE;
+  GstPlayBin *playbin = group->playbin;
+
+  subcaps = gst_subtitle_overlay_create_factory_caps ();
+  ret = !gst_caps_can_intersect (subcaps, caps);
+  gst_caps_unref (subcaps);
+
+  GST_DEBUG_OBJECT (playbin,
+      "continue autoplugging group %p for %s:%s, %" GST_PTR_FORMAT ": %d",
+      group, GST_DEBUG_PAD_NAME (pad), caps, ret);
+
+  return ret;
+}
+
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
  * READY. If the sink works, we return SELECT_EXPOSE to make decodebin
@@ -2788,20 +2818,12 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     gst_element_set_state (uridecodebin, GST_STATE_READY);
     gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (uridecodebin));
   } else {
-    GstCaps *rawcaps, *caps;
-
     GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
     uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
     if (!uridecodebin)
       goto no_decodebin;
     gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
     group->uridecodebin = gst_object_ref (uridecodebin);
-
-    g_object_get (G_OBJECT (uridecodebin), "caps", &rawcaps, NULL);
-    caps = gst_caps_union (group->selector[2].media_caps, rawcaps);
-    g_object_set (G_OBJECT (uridecodebin), "caps", caps, NULL);
-    gst_caps_unref (rawcaps);
-    gst_caps_unref (caps);
   }
 
   /* configure connection speed */
@@ -2858,6 +2880,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   group->autoplug_select_id =
       g_signal_connect (uridecodebin, "autoplug-select",
       G_CALLBACK (autoplug_select_cb), group);
+  group->autoplug_continue_id =
+      g_signal_connect (uridecodebin, "autoplug-continue",
+      G_CALLBACK (autoplug_continue_cb), group);
 
   if (group->suburi) {
     /* subtitles */
@@ -2874,8 +2899,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 
       gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
       group->suburidecodebin = gst_object_ref (suburidecodebin);
-      g_object_set (G_OBJECT (suburidecodebin), "caps",
-          group->selector[2].media_caps, NULL);
     }
 
     /* configure connection speed */
@@ -2894,6 +2917,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
         "pad-removed", G_CALLBACK (pad_removed_cb), group);
     group->sub_no_more_pads_id = g_signal_connect (suburidecodebin,
         "no-more-pads", G_CALLBACK (no_more_pads_cb), group);
+
+    group->sub_autoplug_continue_id =
+        g_signal_connect (suburidecodebin, "autoplug-continue",
+        G_CALLBACK (autoplug_continue_cb), group);
 
     /* we have 2 pending no-more-pads */
     group->pending = 2;
@@ -2914,6 +2941,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
       /* Might already be removed because of an error message */
       if (GST_OBJECT_PARENT (suburidecodebin) == GST_OBJECT_CAST (playbin))
         gst_bin_remove (GST_BIN_CAST (playbin), suburidecodebin);
@@ -3001,6 +3029,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_continue_id);
     gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
   }
 
@@ -3008,6 +3037,7 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
     REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+    REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
 
     /* Might already be removed because of errors */
     if (GST_OBJECT_PARENT (group->suburidecodebin) == GST_OBJECT_CAST (playbin))
@@ -3123,23 +3153,11 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   playbin = GST_PLAY_BIN (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY: {
-      guint i;
-
+    case GST_STATE_CHANGE_NULL_TO_READY:
       g_mutex_lock (playbin->elements_lock);
       gst_play_bin_update_elements_list (playbin);
       g_mutex_unlock (playbin->elements_lock);
-
-      /* Update subtitle factory caps, might have changed because
-       * of newly installed plugins */
-      for (i = 0; i < 2; i++) {
-        if (playbin->groups[i].selector[2].media_caps)
-          gst_caps_unref (playbin->groups[i].selector[2].media_caps);
-        playbin->groups[i].selector[2].media_caps =
-            gst_subtitle_overlay_create_factory_caps ();
-      }
       break;
-    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 0);
