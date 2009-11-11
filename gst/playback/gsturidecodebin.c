@@ -68,6 +68,7 @@ struct _GstURIDecodeBin
 
   GMutex *lock;                 /* lock for constructing */
 
+  GMutex *factories_lock;
   guint32 factories_cookie;
   GValueArray *factories;       /* factories we can use for selecting elements */
 
@@ -250,18 +251,34 @@ gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
   return TRUE;
 }
 
+/* Must be called with factories lock! */
+static void
+gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
+{
+  if (!dec->factories ||
+      dec->factories_cookie !=
+      gst_default_registry_get_feature_list_cookie ()) {
+    if (dec->factories)
+      g_value_array_free (dec->factories);
+    dec->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+    dec->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+  }
+}
+
 static GValueArray *
 gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
   GValueArray *result;
+  GstURIDecodeBin *dec = GST_URI_DECODE_BIN_CAST (element);
 
   GST_DEBUG_OBJECT (element, "finding factories");
 
   /* return all compatible factories for caps */
-  result =
-      gst_factory_list_filter (GST_URI_DECODE_BIN_CAST (element)->factories,
-      caps);
+  g_mutex_lock (dec->factories_lock);
+  gst_uri_decode_bin_update_factories_list (dec);
+  result = gst_factory_list_filter (dec->factories, caps);
+  g_mutex_unlock (dec->factories_lock);
 
   GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
 
@@ -471,8 +488,8 @@ static void
 gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
   /* first filter out the interesting element factories */
-  dec->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
-  dec->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+  dec->factories_lock = g_mutex_new ();
+  gst_uri_decode_bin_update_factories_list (dec);
 
   dec->lock = g_mutex_new ();
 
@@ -494,6 +511,7 @@ gst_uri_decode_bin_finalize (GObject * obj)
 
   remove_decoders (dec, TRUE);
   g_mutex_free (dec->lock);
+  g_mutex_free (dec->factories_lock);
   g_free (dec->uri);
   g_free (dec->encoding);
   if (dec->factories)
@@ -2043,15 +2061,9 @@ gst_uri_decode_bin_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (decoder->factories_cookie !=
-          gst_default_registry_get_feature_list_cookie ()) {
-        if (decoder->factories)
-          g_value_array_free (decoder->factories);
-        decoder->factories =
-            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
-        decoder->factories_cookie =
-            gst_default_registry_get_feature_list_cookie ();
-      }
+      g_mutex_lock (decoder->factories_lock);
+      gst_uri_decode_bin_update_factories_list (decoder);
+      g_mutex_unlock (decoder->factories_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_source (decoder))

@@ -373,6 +373,7 @@ struct _GstPlayBin
   /* if we are shutting down or not */
   gint shutdown;
 
+  GMutex *elements_lock;
   guint32 elements_cookie;
   GValueArray *elements;        /* factories we can use for selecting elements */
 
@@ -1103,11 +1104,25 @@ notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
   g_object_notify (G_OBJECT (playbin), "mute");
 }
 
+/* Must be called with elements lock! */
+static void
+gst_play_bin_update_elements_list (GstPlayBin * playbin)
+{
+  if (!playbin->elements ||
+      playbin->elements_cookie !=
+      gst_default_registry_get_feature_list_cookie ()) {
+    if (playbin->elements)
+      g_value_array_free (playbin->elements);
+    playbin->elements =
+        gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER |
+        GST_FACTORY_LIST_SINK);
+    playbin->elements_cookie = gst_default_registry_get_feature_list_cookie ();
+  }
+}
+
 static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
-  GstFactoryListType type;
-
   playbin->lock = g_mutex_new ();
   playbin->dyn_lock = g_mutex_new ();
 
@@ -1121,9 +1136,8 @@ gst_play_bin_init (GstPlayBin * playbin)
   init_group (playbin, &playbin->groups[1]);
 
   /* first filter out the interesting element factories */
-  type = GST_FACTORY_LIST_DECODER | GST_FACTORY_LIST_SINK;
-  playbin->elements = gst_factory_list_get_elements (type);
-  playbin->elements_cookie = gst_default_registry_get_feature_list_cookie ();
+  playbin->elements_lock = g_mutex_new ();
+  gst_play_bin_update_elements_list (playbin);
   gst_factory_list_debug (playbin->elements);
 
   /* add sink */
@@ -1171,6 +1185,7 @@ gst_play_bin_finalize (GObject * object)
   g_free (playbin->encoding);
   g_mutex_free (playbin->lock);
   g_mutex_free (playbin->dyn_lock);
+  g_mutex_free (playbin->elements_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2467,7 +2482,10 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
       group, GST_DEBUG_PAD_NAME (pad), caps);
 
   /* filter out the elements based on the caps. */
+  g_mutex_lock (playbin->elements_lock);
+  gst_play_bin_update_elements_list (playbin);
   result = gst_factory_list_filter (playbin->elements, caps);
+  g_mutex_unlock (playbin->elements_lock);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", result);
   gst_factory_list_debug (result);
@@ -2965,15 +2983,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (playbin->elements_cookie !=
-          gst_default_registry_get_feature_list_cookie ()) {
-        if (playbin->elements)
-          g_value_array_free (playbin->elements);
-        playbin->elements =
-            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
-        playbin->elements_cookie =
-            gst_default_registry_get_feature_list_cookie ();
-      }
+      g_mutex_lock (playbin->elements_lock);
+      gst_play_bin_update_elements_list (playbin);
+      g_mutex_unlock (playbin->elements_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");

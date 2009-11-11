@@ -149,6 +149,7 @@ struct _GstDecodeBin
   GstDecodeChain *decode_chain; /* Top level decode chain */
   gint nbpads;                  /* unique identifier for source pads */
 
+  GMutex *factories_lock;
   guint32 factories_cookie;     /* Cookie from last time when factories was updated */
   GValueArray *factories;       /* factories we can use for selecting elements */
 
@@ -840,14 +841,26 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
 }
 
+/* Must be called with factories lock! */
+static void
+gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
+{
+  if (!dbin->factories
+      || dbin->factories_cookie !=
+      gst_default_registry_get_feature_list_cookie ()) {
+    if (dbin->factories)
+      g_value_array_free (dbin->factories);
+    dbin->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+    dbin->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+  }
+}
+
 static void
 gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
   /* first filter out the interesting element factories */
-  decode_bin->factories =
-      gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
-  decode_bin->factories_cookie =
-      gst_default_registry_get_feature_list_cookie ();
+  decode_bin->factories_lock = g_mutex_new ();
+  gst_decode_bin_update_factories_list (decode_bin);
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -949,6 +962,11 @@ gst_decode_bin_finalize (GObject * object)
   if (decode_bin->subtitle_lock) {
     g_mutex_free (decode_bin->subtitle_lock);
     decode_bin->subtitle_lock = NULL;
+  }
+
+  if (decode_bin->factories_lock) {
+    g_mutex_free (decode_bin->factories_lock);
+    decode_bin->factories_lock = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1155,12 +1173,15 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
   GValueArray *result;
+  GstDecodeBin *dbin = GST_DECODE_BIN_CAST (element);
 
   GST_DEBUG_OBJECT (element, "finding factories");
 
   /* return all compatible factories for caps */
-  result =
-      gst_factory_list_filter (GST_DECODE_BIN_CAST (element)->factories, caps);
+  g_mutex_lock (dbin->factories_lock);
+  gst_decode_bin_update_factories_list (dbin);
+  result = gst_factory_list_filter (dbin->factories, caps);
+  g_mutex_unlock (dbin->factories_lock);
 
   GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
 
@@ -3232,15 +3253,9 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (dbin->typefind == NULL)
         goto missing_typefind;
-      if (dbin->factories_cookie !=
-          gst_default_registry_get_feature_list_cookie ()) {
-        if (dbin->factories)
-          g_value_array_free (dbin->factories);
-        dbin->factories =
-            gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
-        dbin->factories_cookie =
-            gst_default_registry_get_feature_list_cookie ();
-      }
+      g_mutex_lock (dbin->factories_lock);
+      gst_decode_bin_update_factories_list (dbin);
+      g_mutex_unlock (dbin->factories_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       DYN_LOCK (dbin);
