@@ -94,10 +94,13 @@ struct _GstStreamEncodingProfile {
  * @profile: common #GstEncodingProfile part.
  * @pass: The pass number if this is part of a multi-pass profile. Starts at 1
  * for multi-pass. Set to 0 if this is not part of a multi-pass profile.
+ * @variable_framerate: Do not enforce framerate on incoming raw stream. Default
+ * is FALSE.
  */
 struct _GstVideoEncodingProfile {
   GstStreamEncodingProfile      profile;
   guint                         pass;
+  gboolean                      variable_framerate;
 };
 
 /* Generic helper API */
@@ -117,6 +120,14 @@ GList *gst_profile_list_target_categories ();
 
 gboolean gst_profile_target_save (GstProfileTarget *target);
 
+/**
+ * gst_encoding_profile_get_input_caps:
+ * @profile: a #GstEncodingProfile
+ *
+ * Returns: the list of all caps the profile can accept. Caller must call
+ * gst_cap_unref on all unwanted caps once it is done with the list.
+ */
+GList * gst_profile_get_input_caps (GstEncodingProfile *profile);
 
 /*
  * Application convenience methods (possibly to be added in gst-pb-utils)
