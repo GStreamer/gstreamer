@@ -595,7 +595,6 @@ gst_object_set_name_default (GstObject * object)
   const gchar *type_name;
   gint count;
   gchar *name, *tmp;
-  gboolean result;
   GQuark q;
 
   /* to ensure guaranteed uniqueness across threads, only one thread
@@ -620,10 +619,22 @@ gst_object_set_name_default (GstObject * object)
   name = g_ascii_strdown (tmp, -1);
   g_free (tmp);
 
-  result = gst_object_set_name (object, name);
-  g_free (name);
+  GST_OBJECT_LOCK (object);
+  if (G_UNLIKELY (object->parent != NULL))
+    goto had_parent;
+  g_free (object->name);
+  object->name = name;
 
-  return result;
+  GST_OBJECT_UNLOCK (object);
+
+  return TRUE;
+
+had_parent:
+  {
+    GST_WARNING ("parented objects can't be renamed");
+    GST_OBJECT_UNLOCK (object);
+    return FALSE;
+  }
 }
 
 /**
