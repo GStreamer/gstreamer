@@ -166,6 +166,8 @@ enum
   PROP_DO_RTCP,
   PROP_PROXY,
   PROP_RTP_BLOCKSIZE,
+  PROP_USER_ID,
+  PROP_USER_PW,
   PROP_LAST
 };
 
@@ -387,6 +389,16 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, 65536, DEFAULT_RTP_BLOCKSIZE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (gobject_class,
+      PROP_USER_ID,
+      g_param_spec_string ("user-id", "user-id",
+          "RTSP location URI user id for authentication", NULL,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_USER_PW,
+      g_param_spec_string ("user-pw", "user-pw",
+          "RTSP location URI user password for authentication", NULL,
+          G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -442,6 +454,8 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->location);
   g_free (rtspsrc->req_location);
   gst_rtsp_url_free (rtspsrc->url);
+  g_free (rtspsrc->user_id);
+  g_free (rtspsrc->user_pw);
 
   /* free locks */
   g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
@@ -565,6 +579,16 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_RTP_BLOCKSIZE:
       rtspsrc->rtp_blocksize = g_value_get_uint (value);
       break;
+    case PROP_USER_ID:
+      if (rtspsrc->user_id)
+        g_free (rtspsrc->user_id);
+      rtspsrc->user_id = g_value_dup_string (value);
+      break;
+    case PROP_USER_PW:
+      if (rtspsrc->user_pw)
+        g_free (rtspsrc->user_pw);
+      rtspsrc->user_pw = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -631,6 +655,12 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case PROP_RTP_BLOCKSIZE:
       g_value_set_uint (value, rtspsrc->rtp_blocksize);
+      break;
+    case PROP_USER_ID:
+      g_value_set_string (value, rtspsrc->user_id);
+      break;
+    case PROP_USER_PW:
+      g_value_set_string (value, rtspsrc->user_pw);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3601,12 +3631,18 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
   url = gst_rtsp_connection_get_url (src->connection);
 
   /* Do we have username and password available? */
-  if (url != NULL && !src->tried_url_auth) {
+  if (url != NULL && !src->tried_url_auth && url->user != NULL
+      && url->passwd != NULL) {
     user = url->user;
     pass = url->passwd;
     src->tried_url_auth = TRUE;
     GST_DEBUG_OBJECT (src,
         "Attempting authentication using credentials from the URL");
+  } else {
+    user = src->user_id;
+    pass = src->user_pw;
+    GST_DEBUG_OBJECT (src,
+        "Attempting authentication using credentials from the properties");
   }
 
   /* FIXME: If the url didn't contain username and password or we tried them

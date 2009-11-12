@@ -194,6 +194,8 @@ struct _GstRTSPSrc {
   gchar            *proxy_user;
   gchar            *proxy_passwd;
   guint             rtp_blocksize;
+  gchar            *user_id;
+  gchar            *user_pw;
 
   /* state */
   GstRTSPState       state;
