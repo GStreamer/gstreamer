@@ -1297,7 +1297,7 @@ gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
 
 
 /**
- * gst_element_factory_can_src_caps :
+ * gst_element_factory_can_src_caps:
  * @factory: factory to query
  * @caps: the caps to check
  *
@@ -1331,7 +1331,7 @@ gst_element_factory_can_src_caps (GstElementFactory * factory,
 }
 
 /**
- * gst_element_factory_can_sink_caps :
+ * gst_element_factory_can_sink_caps:
  * @factory: factory to query
  * @caps: the caps to check
  *
