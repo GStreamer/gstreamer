@@ -1333,15 +1333,15 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 
   GST_LOG_OBJECT (dec, "decode buffer of size %ld", packet.bytes);
 
-  if (dec->have_header) {
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
+  } else if (dec->have_header) {
     if (packet.granulepos != -1) {
       dec->granulepos = packet.granulepos;
       dec->last_timestamp = _theora_granule_start_time (dec, packet.granulepos);
     } else if (dec->last_timestamp != -1) {
       dec->last_timestamp = _theora_granule_start_time (dec, dec->granulepos);
     }
-    if (dec->last_timestamp == -1 && GST_BUFFER_TIMESTAMP_IS_VALID (buf))
-      dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
   } else {
     dec->last_timestamp = -1;
   }
