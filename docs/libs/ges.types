@@ -1,3 +1,6 @@
+#include <gst/gst.h>
+#include <ges/ges.h>
+
 ges_track_get_type
 ges_track_type_get_type
 ges_track_object_get_type

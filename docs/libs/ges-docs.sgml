@@ -27,21 +27,22 @@ applications.
 platform as well as Windows. It is released under the GNU Library General Public License
 (GNU LGPL).
     </para>
-  <xi:include href="xml/ges.xml"/>
+  <xi:include href="architecture.xml"/>
+  <xi:include href="xml/ges-common.xml"/>
   </chapter>
 
   <chapter>
     <title>Base Classes</title>
-    <xi:include href="xml/ges-track.xml"/>
-    <xi:include href="xml/ges-track-object.xml"/>
-    <xi:include href="xml/ges-track-source.xml"/>
-    <xi:include href="xml/ges-track-filesource.xml"/>
     <xi:include href="xml/ges-timeline.xml"/>
     <xi:include href="xml/ges-timeline-layer.xml"/>
     <xi:include href="xml/ges-timeline-object.xml"/>
     <xi:include href="xml/ges-timeline-source.xml"/>
     <xi:include href="xml/ges-timeline-filesource.xml"/>
     <xi:include href="xml/ges-timeline-transition.xml"/>
+    <xi:include href="xml/ges-track.xml"/>
+    <xi:include href="xml/ges-track-object.xml"/>
+    <xi:include href="xml/ges-track-source.xml"/>
+    <xi:include href="xml/ges-track-filesource.xml"/>
   </chapter>
 
   <chapter>

@@ -1,8 +1,8 @@
 <INCLUDE>ges/ges.h</INCLUDE>
 
 <SECTION>
-<FILE>ges</FILE>
-<TITLE>GStreamer Editing Services</TITLE>
+<FILE>ges-common</FILE>
+<TITLE>Initialization</TITLE>
 ges_init
 </SECTION>
 

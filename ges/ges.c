@@ -23,7 +23,7 @@
 GST_DEBUG_CATEGORY (ges_debug);
 
 /**
- * SECTION:ges
+ * SECTION:ges-common
  * @short_description: Initialization.
  */
 
