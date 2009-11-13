@@ -2017,6 +2017,8 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       new_msg = gst_message_new_warning (msg->src, err, debug);
 
       gst_message_unref (msg);
+      g_error_free (err);
+      g_free (debug);
       msg = new_msg;
 
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
