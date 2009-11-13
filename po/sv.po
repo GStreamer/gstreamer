@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-09 19:49+0000\n"
-"PO-Revision-Date: 2009-08-12 20:04+0100\n"
+"POT-Creation-Date: 2009-11-13 02:04+0000\n"
+"PO-Revision-Date: 2009-11-11 20:50+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr "Misslyckades med att fråga efter ljudserverförmågor"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "\"%s\" av \"%s\""
 
 msgid "Internal data stream error."
 msgstr "Internt fel i dataström."
@@ -65,14 +65,14 @@ msgstr ""
 "Ingen ström som stöds hittades. Du kanske behöver installera en GStreamer-"
 "insticksmodul för RTSP för Real Media-strömmar."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Ingen ström som stöds hittades. Du kanske saknar den rätta GStreamer-"
-"insticksmodulen för RTSP."
+"Ingen ström som stöds hittades. Du kanske behöver tillåta fler "
+"transportprotokoll eller så saknar du kanske det rätta GStreamer-tillägget "
+"för RTSP."
 
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."

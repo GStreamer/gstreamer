@@ -3,10 +3,10 @@
 # Server Acim <serveracim@gmail.com>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-09 19:49+0000\n"
-"PO-Revision-Date: 2009-08-12 19:50+0200\n"
+"POT-Creation-Date: 2009-11-13 02:04+0000\n"
+"PO-Revision-Date: 2009-11-12 00:27+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,7 @@ msgstr "Ses sunucusu olanakları sorgulanamadı"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' tarafından '%s'"
 
 msgid "Internal data stream error."
 msgstr "İç veri akım hatası."
@@ -61,14 +61,13 @@ msgstr ""
 "Desteklenen bir akış bulunamadı. Real Media akışları için bir GStreamer RTSP "
 "uzantı eklentisi kurmalısınız."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Desteklenen akış bulunamadı. Doğru GStreamer RTSP uzantı eklentisi kayıp "
-"olabilir."
+"Desteklenen akış bulunamadı. Daha fazla aktarım protokolüne izin vermeniz "
+"veya doğru GStreamer RTSP uzantı eklentisine onay vermeniz gerekebilir."
 
 msgid "Internal data flow error."
 msgstr "İç veri akış hatası."

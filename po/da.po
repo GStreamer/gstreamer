@@ -1,5 +1,5 @@
 # Danish translation of gst-plugins-good.
-# Copyright (C) 2008 gst.
+# Copyright (C) 2009 gst.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good-0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-09 19:49+0000\n"
-"PO-Revision-Date: 2009-08-12 23:54+0200\n"
+"POT-Creation-Date: 2009-11-13 02:04+0000\n"
+"PO-Revision-Date: 2009-11-11 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgstr "Listning af lydservers egenskaber fejlede"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' af '%s'"
 
 msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
@@ -68,14 +68,14 @@ msgstr ""
 "Ingen understøttet strøm blev fundet. Du skal måske installere et "
 "udvidelsesmodul for GStreamer RTSP til Real media-strømme."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Ingen understøttet strøm blev fundet. Du mangler måske det korrekte "
-"udvidelsesmodul for GStreamer RTSP."
+"Ingen understøttet strøm blev fundet. Du mangler måske at tillade yderligere "
+"transportprotokoller eller mangler måske det korrekte udvidelsesmodul for "
+"GStreamer RTSP."
 
 msgid "Internal data flow error."
 msgstr "Intern datastrømsfejl."

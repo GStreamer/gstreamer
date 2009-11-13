@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-09 19:49+0000\n"
-"PO-Revision-Date: 2009-08-12 22:01+0200\n"
+"POT-Creation-Date: 2009-11-13 02:04+0000\n"
+"PO-Revision-Date: 2009-11-11 22:18+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -22,7 +22,7 @@ msgstr "Nie udało się odpytać o możliwości serwera dźwięku"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' autorstwa '%s'"
 
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."
@@ -62,14 +62,14 @@ msgstr ""
 "Nie znaleziono obsługiwanego strumienia. Być może trzeba zainstalować "
 "wtyczkę rozszerzenia GStreamera RTSP dla strumieni Real media."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Nie znaleziono obsługiwanego strumienia. Brakuje odpowiedniej wtyczki "
-"rozszerzenia GStreamera RTSP."
+"Nie znaleziono obsługiwanego strumienia. Być może trzeba zezwolić na więcej "
+"protokołów transportu, albo może brakować właściwej wtyczki rozszerzenia "
+"RTSP GStreamera."
 
 msgid "Internal data flow error."
 msgstr "Błąd wewnętrzny przepływu danych."
