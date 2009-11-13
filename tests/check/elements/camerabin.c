@@ -31,9 +31,12 @@
 #include <gst/interfaces/photography.h>
 
 #define SINGLE_IMAGE_FILENAME "image.cap"
+#define SINGLE_IMAGE_WITH_FLAGS_FILENAME "image_with_flags.cap"
 #define BURST_IMAGE_FILENAME "burst_image.cap"
 #define VIDEO_FILENAME "video.cap"
+#define VIDEO_WITH_FLAGS_FILENAME "video_with_flags.cap"
 #define VIDEO_PAUSE_FILENAME "video_pause.cap"
+#define VIDEO_NOAUDIO_FILENAME "video_noaudio.cap"
 #define CYCLE_IMAGE_FILENAME "cycle_image.cap"
 #define CYCLE_VIDEO_FILENAME "cycle_video.cap"
 #define MAX_BURST_IMAGES 10
@@ -438,7 +441,6 @@ test_photography_properties (GstElement * cam)
     orig_iso_speed = iso_speed;
     g_object_set (GST_PHOTOGRAPHY (cam), "iso-speed", iso_speed, NULL);
     g_object_get (GST_PHOTOGRAPHY (cam), "iso-speed", &iso_speed, NULL);
-    GST_INFO ("iso speed %d", iso_speed);
     fail_if (iso_speed < 0 || iso_speed > 800,
         "setting photography iso speed failed");
     iso_speed = orig_iso_speed;
@@ -578,6 +580,30 @@ GST_START_TEST (test_single_image_capture)
   test_photography_properties (camera);
   test_camerabin_properties (camera);
 
+  /* set flags to disable additional elements */
+  g_object_set (camera, "flags", 0, NULL);
+
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "capture-start", NULL);
+
+  g_main_loop_run (main_loop);
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_single_image_capture_with_flags)
+{
+  if (!camera)
+    return;
+
+  /* set flags to enable modifier elements */
+  g_object_set (camera, "flags", 79, NULL);
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 0,
+      "filename", make_test_file_name (SINGLE_IMAGE_WITH_FLAGS_FILENAME), NULL);
+
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
 
@@ -594,6 +620,42 @@ GST_START_TEST (test_video_recording)
 
   if (!camera)
     return;
+
+  /* set flags to disable additional elements */
+  g_object_set (camera, "flags", 0, NULL);
+
+  /* Set video recording mode */
+  g_object_set (camera, "mode", 1,
+      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
+
+  /* Set preview-caps */
+  g_object_set (camera, "preview-caps", preview_caps, NULL);
+
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "capture-start", NULL);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
+  g_signal_emit_by_name (camera, "capture-stop", NULL);
+
+  /* check if receiving the preview-image message */
+  fail_if (!received_preview_msg,
+      "creating video recording preview image failed");
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_recording_with_flags)
+{
+  GstCaps *preview_caps;
+  preview_caps = gst_caps_from_string ("video/x-raw-rgb,width=320,height=240");
+
+  if (!camera)
+    return;
+
+  /* set flags to enable modifier elements */
+  g_object_set (camera, "flags", 95, NULL);
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
@@ -646,6 +708,39 @@ GST_START_TEST (test_video_recording_pause)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_recording_no_audio)
+{
+  GstCaps *preview_caps;
+  preview_caps = gst_caps_from_string ("video/x-raw-rgb,width=320,height=240");
+
+  if (!camera)
+    return;
+
+  /* set flags to disable audio elements */
+  g_object_set (camera, "flags", 32, NULL);
+
+  /* Set video recording mode */
+  g_object_set (camera, "mode", 1,
+      "filename", make_test_file_name (VIDEO_NOAUDIO_FILENAME), NULL);
+
+  /* Set preview-caps */
+  g_object_set (camera, "preview-caps", preview_caps, NULL);
+
+  GST_INFO ("starting capture");
+  g_signal_emit_by_name (camera, "capture-start", NULL);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
+  g_signal_emit_by_name (camera, "capture-stop", NULL);
+
+  /* check if receiving the preview-image message */
+  fail_if (!received_preview_msg,
+      "creating video recording preview image failed");
+
+  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_image_video_cycle)
 {
   if (!camera)
@@ -673,6 +768,8 @@ GST_START_TEST (validate_captured_image_files)
 
   /* validate single image */
   check_file_validity (SINGLE_IMAGE_FILENAME);
+  /* validate single image with flags */
+  check_file_validity (SINGLE_IMAGE_WITH_FLAGS_FILENAME);
 
 /* burst capture is not supported in camerabin for the moment */
 #ifdef ENABLE_BURST_CAPTURE
@@ -700,10 +797,12 @@ GST_START_TEST (validate_captured_video_files)
 
   /* validate video recording */
   check_file_validity (VIDEO_FILENAME);
-
+  /* validate video recording */
+  check_file_validity (VIDEO_WITH_FLAGS_FILENAME);
   /* validate video recording with pause */
   check_file_validity (VIDEO_PAUSE_FILENAME);
-
+  /* validate video recording without audio */
+  check_file_validity (VIDEO_NOAUDIO_FILENAME);
   /* validate cycled  video */
   check_file_validity (CYCLE_VIDEO_FILENAME);
 }
@@ -723,8 +822,11 @@ camerabin_suite (void)
   tcase_set_timeout (tc_basic, 20);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
   tcase_add_test (tc_basic, test_single_image_capture);
+  tcase_add_test (tc_basic, test_single_image_capture_with_flags);
   tcase_add_test (tc_basic, test_video_recording);
+  tcase_add_test (tc_basic, test_video_recording_with_flags);
   tcase_add_test (tc_basic, test_video_recording_pause);
+  tcase_add_test (tc_basic, test_video_recording_no_audio);
   tcase_add_test (tc_basic, test_image_video_cycle);
 
   /* Validate captured files */
