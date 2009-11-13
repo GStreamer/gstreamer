@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-09 19:16+0000\n"
+"POT-Creation-Date: 2009-08-11 17:42+0100\n"
 "PO-Revision-Date: 2009-08-12 20:29+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -15,417 +15,520 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Kunde inte läsa titelinformation för dvd."
 
+#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
 
+#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
+#: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Internt klockfel."
 
+#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Internt fel i dataflöde."
 
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angavs för skrivning."
 
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Internt fel i dataström."
 
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
+#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunde inte öppna framändsenheten \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunde inte få inställningar från framändsenheten \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
+#: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
 msgstr "Kunde inte öppna ljudenheten för mixningshantering."
 
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open "
-"Sound System stöds inte av detta element."
+#: sys/oss4/oss4-mixer.c:316
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open Sound System stöds inte av detta element."
 
+#: sys/oss4/oss4-mixer.c:721
 msgid "Volume"
 msgstr "Volym"
 
+#: sys/oss4/oss4-mixer.c:722
 msgid "Master"
 msgstr "Övergripande"
 
+#: sys/oss4/oss4-mixer.c:723
 msgid "Front"
 msgstr "Fram"
 
+#: sys/oss4/oss4-mixer.c:724
 msgid "Rear"
 msgstr "Bak"
 
+#: sys/oss4/oss4-mixer.c:725
 msgid "Headphones"
 msgstr "Hörlurar"
 
 # LFE=lågfrekvenseffekter
+#: sys/oss4/oss4-mixer.c:726
 msgid "Center"
 msgstr "Center"
 
+#: sys/oss4/oss4-mixer.c:727
 msgid "LFE"
 msgstr "LFE"
 
+#: sys/oss4/oss4-mixer.c:728
 msgid "Surround"
 msgstr "Surround"
 
+#: sys/oss4/oss4-mixer.c:729
 msgid "Side"
 msgstr "Sida"
 
+#: sys/oss4/oss4-mixer.c:730
 msgid "Built-in Speaker"
 msgstr "Inbyggd högtalare"
 
+#: sys/oss4/oss4-mixer.c:731
 msgid "AUX 1 Out"
 msgstr "AUX 1 ut"
 
+#: sys/oss4/oss4-mixer.c:732
 msgid "AUX 2 Out"
 msgstr "AUX 2 ut"
 
+#: sys/oss4/oss4-mixer.c:733
 msgid "AUX Out"
 msgstr "AUX ut"
 
+#: sys/oss4/oss4-mixer.c:734
 msgid "Bass"
 msgstr "Bas"
 
+#: sys/oss4/oss4-mixer.c:735
 msgid "Treble"
 msgstr "Diskant"
 
+#: sys/oss4/oss4-mixer.c:736
 msgid "3D Depth"
 msgstr "3D-djup"
 
+#: sys/oss4/oss4-mixer.c:737
 msgid "3D Center"
 msgstr "3D-center"
 
+#: sys/oss4/oss4-mixer.c:738
 msgid "3D Enhance"
 msgstr "3D-förbättring"
 
+#: sys/oss4/oss4-mixer.c:739
 msgid "Telephone"
 msgstr "Telefon"
 
+#: sys/oss4/oss4-mixer.c:740
 msgid "Microphone"
 msgstr "Mikrofon"
 
+#: sys/oss4/oss4-mixer.c:741
 msgid "Line Out"
 msgstr "Linje ut"
 
+#: sys/oss4/oss4-mixer.c:742 sys/oss4/oss4-mixer.c:743
 msgid "Line In"
 msgstr "Linje in"
 
+#: sys/oss4/oss4-mixer.c:744
 msgid "Internal CD"
 msgstr "Intern cd"
 
+#: sys/oss4/oss4-mixer.c:745
 msgid "Video In"
 msgstr "Video in"
 
+#: sys/oss4/oss4-mixer.c:746
 msgid "AUX 1 In"
 msgstr "AUX 1 in"
 
+#: sys/oss4/oss4-mixer.c:747
 msgid "AUX 2 In"
 msgstr "AUX 2 in"
 
+#: sys/oss4/oss4-mixer.c:748
 msgid "AUX In"
 msgstr "AUX in"
 
+#: sys/oss4/oss4-mixer.c:749
 msgid "PCM"
 msgstr "PCM"
 
+#: sys/oss4/oss4-mixer.c:750 sys/oss4/oss4-mixer.c:751
 msgid "Record Gain"
 msgstr "Inspelningsförstärkning"
 
+#: sys/oss4/oss4-mixer.c:752
 msgid "Output Gain"
 msgstr "Utgångsförstärkning"
 
+#: sys/oss4/oss4-mixer.c:753
 msgid "Microphone Boost"
 msgstr "Mikrofonförstärkning"
 
+#: sys/oss4/oss4-mixer.c:754
 msgid "Loopback"
 msgstr "Vändslinga"
 
+#: sys/oss4/oss4-mixer.c:755
 msgid "Diagnostic"
 msgstr "Diagnostik"
 
+#: sys/oss4/oss4-mixer.c:756
 msgid "Bass Boost"
 msgstr "Basförstärkning"
 
+#: sys/oss4/oss4-mixer.c:757
 msgid "Playback Ports"
 msgstr "Uppspelningsportar"
 
+#: sys/oss4/oss4-mixer.c:758
 msgid "Input"
 msgstr "Ingång"
 
+#: sys/oss4/oss4-mixer.c:759 sys/oss4/oss4-mixer.c:760
 msgid "Record Source"
 msgstr "Inspelningskälla"
 
+#: sys/oss4/oss4-mixer.c:761
 msgid "Monitor Source"
 msgstr "Monitorkälla"
 
+#: sys/oss4/oss4-mixer.c:762
 msgid "Keyboard Beep"
 msgstr "Tangentbordspip"
 
+#: sys/oss4/oss4-mixer.c:763
 msgid "Monitor"
 msgstr "Monitor"
 
+#: sys/oss4/oss4-mixer.c:764
 msgid "Simulate Stereo"
 msgstr "Simulera stereo"
 
+#: sys/oss4/oss4-mixer.c:765 sys/oss4/oss4-mixer.c:785
 msgid "Stereo"
 msgstr "Stereo"
 
+#: sys/oss4/oss4-mixer.c:766
 msgid "Surround Sound"
 msgstr "Surroundljud"
 
+#: sys/oss4/oss4-mixer.c:767
 msgid "Microphone Gain"
 msgstr "Mikrofonförstärkning"
 
+#: sys/oss4/oss4-mixer.c:768
 msgid "Speaker Source"
 msgstr "Högtalarkälla"
 
+#: sys/oss4/oss4-mixer.c:769
 msgid "Microphone Source"
 msgstr "Mikrofonkälla"
 
+#: sys/oss4/oss4-mixer.c:770
 msgid "Jack"
 msgstr "Jack"
 
 # LFE=lågfrekvenseffekter
+#: sys/oss4/oss4-mixer.c:771
 msgid "Center / LFE"
 msgstr "Center / LFE"
 
+#: sys/oss4/oss4-mixer.c:772
 msgid "Stereo Mix"
 msgstr "Stereomix"
 
+#: sys/oss4/oss4-mixer.c:773
 msgid "Mono Mix"
 msgstr "Monomix"
 
+#: sys/oss4/oss4-mixer.c:774
 msgid "Input Mix"
 msgstr "Ingångsmix"
 
+#: sys/oss4/oss4-mixer.c:775
 msgid "SPDIF In"
 msgstr "SPDIF in"
 
+#: sys/oss4/oss4-mixer.c:776
 msgid "SPDIF Out"
 msgstr "SPDIF ut"
 
+#: sys/oss4/oss4-mixer.c:777
 msgid "Microphone 1"
 msgstr "Mikrofon 1"
 
+#: sys/oss4/oss4-mixer.c:778
 msgid "Microphone 2"
 msgstr "Mikrofon 2"
 
+#: sys/oss4/oss4-mixer.c:779
 msgid "Digital Out"
 msgstr "Digital ut"
 
+#: sys/oss4/oss4-mixer.c:780
 msgid "Digital In"
 msgstr "Digital in"
 
+#: sys/oss4/oss4-mixer.c:781
 msgid "HDMI"
 msgstr "HDMI"
 
+#: sys/oss4/oss4-mixer.c:782
 msgid "Modem"
 msgstr "Modem"
 
 # Denna är svår att tolka
+#: sys/oss4/oss4-mixer.c:783
 msgid "Handset"
 msgstr "Telefonlur"
 
+#: sys/oss4/oss4-mixer.c:784
 msgid "Other"
 msgstr "Annan"
 
+#: sys/oss4/oss4-mixer.c:786
 msgid "None"
 msgstr "Ingen"
 
+#: sys/oss4/oss4-mixer.c:787
 msgid "On"
 msgstr "På"
 
+#: sys/oss4/oss4-mixer.c:788
 msgid "Off"
 msgstr "Av"
 
+#: sys/oss4/oss4-mixer.c:789
 msgid "Mute"
 msgstr "Tyst"
 
+#: sys/oss4/oss4-mixer.c:790
 msgid "Fast"
 msgstr "Snabb"
 
+#: sys/oss4/oss4-mixer.c:791
 msgid "Very Low"
 msgstr "Mycket låg"
 
+#: sys/oss4/oss4-mixer.c:792
 msgid "Low"
 msgstr "Låg"
 
+#: sys/oss4/oss4-mixer.c:793
 msgid "Medium"
 msgstr "Medel"
 
+#: sys/oss4/oss4-mixer.c:794
 msgid "High"
 msgstr "Hög"
 
+#: sys/oss4/oss4-mixer.c:795 sys/oss4/oss4-mixer.c:796
 msgid "Very High"
 msgstr "Mycket hög"
 
+#: sys/oss4/oss4-mixer.c:797
 msgid "Production"
 msgstr "Produktion"
 
+#: sys/oss4/oss4-mixer.c:798
 msgid "Front Panel Microphone"
 msgstr "Frontpanelsmikrofon"
 
+#: sys/oss4/oss4-mixer.c:799
 msgid "Front Panel Line In"
 msgstr "Linje-in på frontpanel"
 
+#: sys/oss4/oss4-mixer.c:800
 msgid "Front Panel Headphones"
 msgstr "Hörlurar på frontpanel"
 
+#: sys/oss4/oss4-mixer.c:801
 msgid "Front Panel Line Out"
 msgstr "Linje-ut på frontpanel"
 
+#: sys/oss4/oss4-mixer.c:802
 msgid "Green Connector"
 msgstr "Grön kontakt"
 
+#: sys/oss4/oss4-mixer.c:803
 msgid "Pink Connector"
 msgstr "Rosa kontakt"
 
+#: sys/oss4/oss4-mixer.c:804
 msgid "Blue Connector"
 msgstr "Blå kontakt"
 
+#: sys/oss4/oss4-mixer.c:805
 msgid "White Connector"
 msgstr "Vit kontakt"
 
+#: sys/oss4/oss4-mixer.c:806
 msgid "Black Connector"
 msgstr "Svart kontakt"
 
+#: sys/oss4/oss4-mixer.c:807
 msgid "Gray Connector"
 msgstr "Grå kontakt"
 
+#: sys/oss4/oss4-mixer.c:808
 msgid "Orange Connector"
 msgstr "Orange kontakt"
 
+#: sys/oss4/oss4-mixer.c:809
 msgid "Red Connector"
 msgstr "Röd kontakt"
 
+#: sys/oss4/oss4-mixer.c:810
 msgid "Yellow Connector"
 msgstr "Gul kontakt"
 
+#: sys/oss4/oss4-mixer.c:811
 msgid "Green Front Panel Connector"
 msgstr "Grön frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:812
 msgid "Pink Front Panel Connector"
 msgstr "Rosa frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:813
 msgid "Blue Front Panel Connector"
 msgstr "Blå frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:814
 msgid "White Front Panel Connector"
 msgstr "Vit frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:815
 msgid "Black Front Panel Connector"
 msgstr "Svart frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:816
 msgid "Gray Front Panel Connector"
 msgstr "Grå frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:817
 msgid "Orange Front Panel Connector"
 msgstr "Orange frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:818
 msgid "Red Front Panel Connector"
 msgstr "Röd frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:819
 msgid "Yellow Front Panel Connector"
 msgstr "Gul frontpanelskontakt"
 
+#: sys/oss4/oss4-mixer.c:820
 msgid "Spread Output"
 msgstr "Spridd utgång"
 
+#: sys/oss4/oss4-mixer.c:821
 msgid "Downmix"
 msgstr "Nedmixning"
 
+#: sys/oss4/oss4-mixer.c:868
 msgid "Virtual Mixer Input"
 msgstr "Virtuell mixeringång"
 
+#: sys/oss4/oss4-mixer.c:870
 msgid "Virtual Mixer Output"
 msgstr "Virtuell mixerutgång"
 
+#: sys/oss4/oss4-mixer.c:872
 msgid "Virtual Mixer Channels"
 msgstr "Virtuella mixerkanaler"
 
+#: sys/oss4/oss4-mixer.c:888
 #, c-format
 msgid "%s Function"
 msgstr "%s-funktion"
 
+#: sys/oss4/oss4-mixer.c:904
 #, c-format
 msgid "%s %d"
 msgstr "%s %d"
 
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat "
-"program."
+#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat program."
 
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att "
-"öppna enheten."
+#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att öppna enheten."
 
+#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Kunde inte öppna ljudenheten för uppspelning."
 
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound "
-"System stöds inte av detta element."
+#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound System stöds inte av detta element."
 
+#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
 msgstr "Uppspelning stöds inte av denna ljudenhet."
 
+#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
 msgstr "Fel vid ljuduppspelning."
 
+#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
 msgstr "Inspelning stöds inte av denna ljudenhet."
 
+#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Fel vid inspelning från ljudenhet."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina "
-#~ "kodningsparametrar."
+#~ msgstr "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina kodningsparametrar."
 
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
-#~ "Bitfrekvensen ändrades till %d kbit/s."
+#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+#~ msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
