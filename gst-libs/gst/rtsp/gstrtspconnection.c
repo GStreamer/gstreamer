@@ -114,9 +114,15 @@ typedef struct
   guint coutl;
 } DecodeCtx;
 
+#ifdef MSG_NOSIGNAL
+#define SEND_FLAGS MSG_NOSIGNAL
+#else
+#define SEND_FLAGS 0
+#endif
+
 #ifdef G_OS_WIN32
 #define READ_SOCKET(fd, buf, len) recv (fd, (char *)buf, len, 0)
-#define WRITE_SOCKET(fd, buf, len) send (fd, (const char *)buf, len, 0)
+#define WRITE_SOCKET(fd, buf, len) send (fd, (const char *)buf, len, SEND_FLAGS)
 #define SETSOCKOPT(sock, level, name, val, len) setsockopt (sock, level, name, (const char *)val, len)
 #define CLOSE_SOCKET(sock) closesocket (sock)
 #define ERRNO_IS_EAGAIN (WSAGetLastError () == WSAEWOULDBLOCK)
@@ -126,7 +132,7 @@ typedef struct
 #define ERRNO_IS_EINPROGRESS (WSAGetLastError () == WSAEWOULDBLOCK)
 #else
 #define READ_SOCKET(fd, buf, len) read (fd, buf, len)
-#define WRITE_SOCKET(fd, buf, len) write (fd, buf, len)
+#define WRITE_SOCKET(fd, buf, len) send (fd, buf, len, SEND_FLAGS)
 #define SETSOCKOPT(sock, level, name, val, len) setsockopt (sock, level, name, val, len)
 #define CLOSE_SOCKET(sock) close (sock)
 #define ERRNO_IS_EAGAIN (errno == EAGAIN)
