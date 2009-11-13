@@ -22,7 +22,7 @@
  * SECTION:gstminiobject
  * @short_description: Lightweight base class for the GStreamer object hierarchy
  *
- * #GstMiniObject is a baseclass like #GObject, but has been stripped down of 
+ * #GstMiniObject is a baseclass like #GObject, but has been stripped down of
  * features to be fast and small.
  * It offers sub-classing and ref-counting in the same way as #GObject does.
  * It has no properties and no signal-support though.
@@ -291,7 +291,7 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
  * Increase the reference count of the mini-object.
  *
  * Note that the refcount affects the writeability
- * of @mini-object, see gst_mini_object_is_writable(). It is 
+ * of @mini-object, see gst_mini_object_is_writable(). It is
  * important to note that keeping additional references to
  * GstMiniObject instances can potentially increase the number
  * of memcpy operations in a pipeline, especially if the miniobject
@@ -303,8 +303,9 @@ GstMiniObject *
 gst_mini_object_ref (GstMiniObject * mini_object)
 {
   g_return_val_if_fail (mini_object != NULL, NULL);
-  /* we cannot assert that the refcount > 0 since a bufferalloc
-   * function might resurrect an object
+  /* we can't assert that the refcount > 0 since the _free functions
+   * increments the refcount from 0 to 1 again to allow resurecting
+   * the object
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 #ifdef DEBUG_REFCOUNT
@@ -326,12 +327,17 @@ gst_mini_object_free (GstMiniObject * mini_object)
 {
   GstMiniObjectClass *mo_class;
 
+  /* At this point, the refcount of the object is 0. We increase the refcount
+   * here because if a subclass recycles the object and gives out a new
+   * reference we don't want to free the instance anymore. */
+  gst_mini_object_ref (mini_object);
+
   mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
   mo_class->finalize (mini_object);
 
-  /* if the refcount is still 0 we can really free the
-   * object, else the finalize method recycled the object */
-  if (g_atomic_int_get (&mini_object->refcount) == 0) {
+  /* decrement the refcount again, if the subclass recycled the object we don't
+   * want to free the instance anymore */
+  if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
 #ifndef GST_DISABLE_TRACE
     gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif

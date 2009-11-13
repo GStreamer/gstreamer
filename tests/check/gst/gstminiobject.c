@@ -175,6 +175,180 @@ GST_START_TEST (test_unref_threaded)
 
 GST_END_TEST;
 
+/* ======== recycle test ======== */
+
+static gint recycle_buffer_count = 10;
+
+#define MY_TYPE_RECYCLE_BUFFER (my_recycle_buffer_get_type ())
+
+#define MY_IS_RECYCLE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
+    MY_TYPE_RECYCLE_BUFFER))
+#define MY_RECYCLE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
+    MY_TYPE_RECYCLE_BUFFER, MyRecycleBuffer))
+#define MY_RECYCLE_BUFFER_CAST(obj) ((MyRecycleBuffer *) (obj))
+
+typedef struct _MyBufferPool MyBufferPool;
+typedef struct _MyRecycleBuffer MyRecycleBuffer;
+typedef struct _MyRecycleBufferClass MyRecycleBufferClass;
+
+struct _MyBufferPool
+{
+  GSList *buffers;
+
+  volatile gboolean is_closed;
+};
+
+struct _MyRecycleBuffer
+{
+  GstBuffer buffer;
+
+  MyBufferPool *pool;
+};
+
+struct _MyRecycleBufferClass
+{
+  GstBufferClass parent_class;
+};
+
+static void my_recycle_buffer_destroy (MyRecycleBuffer * buf);
+
+static MyBufferPool *
+my_buffer_pool_new (void)
+{
+  return g_new0 (MyBufferPool, 1);
+}
+
+static void
+my_buffer_pool_free (MyBufferPool * self)
+{
+  while (self->buffers != NULL) {
+    my_recycle_buffer_destroy (self->buffers->data);
+    self->buffers = g_slist_delete_link (self->buffers, self->buffers);
+  }
+
+  g_free (self);
+}
+
+static void
+my_buffer_pool_add (MyBufferPool * self, GstBuffer * buf)
+{
+  g_mutex_lock (mutex);
+  self->buffers = g_slist_prepend (self->buffers, gst_buffer_ref (buf));
+  g_mutex_unlock (mutex);
+}
+
+static GstBuffer *
+my_buffer_pool_drain_one (MyBufferPool * self)
+{
+  GstBuffer *buf = NULL;
+
+  g_mutex_lock (mutex);
+  if (self->buffers != NULL) {
+    buf = self->buffers->data;
+    self->buffers = g_slist_delete_link (self->buffers, self->buffers);
+  }
+  g_mutex_unlock (mutex);
+
+  return buf;
+}
+
+G_DEFINE_TYPE (MyRecycleBuffer, my_recycle_buffer, GST_TYPE_BUFFER);
+
+static void my_recycle_buffer_finalize (GstMiniObject * mini_object);
+
+static void
+my_recycle_buffer_class_init (MyRecycleBufferClass * klass)
+{
+  GstMiniObjectClass *miniobject_class = GST_MINI_OBJECT_CLASS (klass);
+
+  miniobject_class->finalize = my_recycle_buffer_finalize;
+}
+
+static void
+my_recycle_buffer_init (MyRecycleBuffer * self)
+{
+}
+
+static void
+my_recycle_buffer_finalize (GstMiniObject * mini_object)
+{
+  MyRecycleBuffer *self = MY_RECYCLE_BUFFER_CAST (mini_object);
+
+  if (self->pool != NULL) {
+    my_buffer_pool_add (self->pool, GST_BUFFER_CAST (self));
+    g_usleep (G_USEC_PER_SEC / 100);
+  } else {
+    GST_MINI_OBJECT_CLASS (my_recycle_buffer_parent_class)->finalize
+        (mini_object);
+  }
+}
+
+static GstBuffer *
+my_recycle_buffer_new (MyBufferPool * pool)
+{
+  MyRecycleBuffer *buf;
+
+  buf = MY_RECYCLE_BUFFER (gst_mini_object_new (MY_TYPE_RECYCLE_BUFFER));
+  buf->pool = pool;
+
+  return GST_BUFFER_CAST (buf);
+}
+
+static void
+my_recycle_buffer_destroy (MyRecycleBuffer * buf)
+{
+  buf->pool = NULL;
+  gst_buffer_unref (GST_BUFFER_CAST (buf));
+}
+
+static void
+thread_buffer_producer (MyBufferPool * pool)
+{
+  int j;
+
+  THREAD_START ();
+
+  for (j = 0; j < recycle_buffer_count; ++j) {
+    GstBuffer *buf = my_recycle_buffer_new (pool);
+    gst_buffer_unref (buf);
+  }
+
+  pool->is_closed = TRUE;
+}
+
+static void
+thread_buffer_consumer (MyBufferPool * pool)
+{
+  THREAD_START ();
+
+  do {
+    GstBuffer *buf;
+
+    buf = my_buffer_pool_drain_one (pool);
+    if (buf != NULL)
+      my_recycle_buffer_destroy (MY_RECYCLE_BUFFER_CAST (buf));
+
+    THREAD_SWITCH ();
+  }
+  while (!pool->is_closed);
+}
+
+GST_START_TEST (test_recycle_threaded)
+{
+  MyBufferPool *pool;
+
+  pool = my_buffer_pool_new ();
+
+  MAIN_START_THREADS (1, thread_buffer_producer, pool);
+  MAIN_START_THREADS (1, thread_buffer_consumer, pool);
+
+  MAIN_STOP_THREADS ();
+
+  my_buffer_pool_free (pool);
+}
+
+GST_END_TEST;
+
 /* ======== value collection test ======== */
 typedef struct _MyFoo
 {
@@ -286,6 +460,7 @@ gst_mini_object_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_ref_threaded);
   tcase_add_test (tc_chain, test_unref_threaded);
+  tcase_add_test (tc_chain, test_recycle_threaded);
   tcase_add_test (tc_chain, test_value_collection);
   return s;
 }
