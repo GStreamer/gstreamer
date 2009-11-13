@@ -1915,25 +1915,32 @@ gst_structure_parse_field (gchar * str,
   while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
   name = s;
-  if (G_UNLIKELY (!gst_structure_parse_simple_string (s, &name_end)))
+  if (G_UNLIKELY (!gst_structure_parse_simple_string (s, &name_end))) {
+    GST_WARNING ("failed to parse simple string, str=%s", str);
     return FALSE;
+  }
 
   s = name_end;
   while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
 
-  if (G_UNLIKELY (*s != '='))
+  if (G_UNLIKELY (*s != '=')) {
+    GST_WARNING ("missing assignment operator in the field, str=%s", str);
     return FALSE;
+  }
   s++;
 
   c = *name_end;
   *name_end = '\0';
   field->name = g_quark_from_string (name);
+  GST_DEBUG ("trying field name '%s'", name);
   *name_end = c;
 
   if (G_UNLIKELY (!gst_structure_parse_value (s, &s, &field->value,
-              G_TYPE_INVALID)))
+              G_TYPE_INVALID))) {
+    GST_WARNING ("failed to parse value %s", str);
     return FALSE;
+  }
 
   *after = s;
   return TRUE;
@@ -1977,10 +1984,13 @@ gst_structure_parse_value (gchar * str,
     c = *type_end;
     *type_end = 0;
     type = gst_structure_gtype_from_abbr (type_name);
+    GST_DEBUG ("trying type name '%s'", type_name);
     *type_end = c;
 
-    if (G_UNLIKELY (type == G_TYPE_INVALID))
+    if (G_UNLIKELY (type == G_TYPE_INVALID)) {
+      GST_WARNING ("invalid type");
       return FALSE;
+    }
   }
 
   while (g_ascii_isspace (*s))
@@ -2106,8 +2116,10 @@ gst_structure_from_string (const gchar * string, gchar ** end)
       r++;
 
     memset (&field, 0, sizeof (field));
-    if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field)))
+    if (G_UNLIKELY (!gst_structure_parse_field (r, &r, &field))) {
+      GST_WARNING ("Failed to parse field, r=%s", r);
       goto error;
+    }
     gst_structure_set_field (structure, &field);
   } while (TRUE);
 
