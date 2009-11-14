@@ -395,7 +395,7 @@ GST_START_TEST (test_async_sync_interaction)
     /* While this is sleeping, the async3 id should fire and unschedule it */
     result = gst_clock_id_wait (td.sync_id, &jitter);
     fail_unless (result == GST_CLOCK_UNSCHEDULED || result == GST_CLOCK_EARLY,
-        "Waiting did not return UNSCHEDULED");
+        "Waiting did not return UNSCHEDULED (was %d)", result);
 
     gst_clock_id_unschedule (td.async_id3);
     g_mutex_lock (td.lock);
