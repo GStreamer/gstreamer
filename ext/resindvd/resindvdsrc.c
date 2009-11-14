@@ -2591,6 +2591,9 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
 
   /* Get the time map */
   title_tmap = vts_tmapt->tmap + vts_ttn - 1;
+  if (title_tmap->tmu == 0)
+    return -1;
+
   entry = ts / (title_tmap->tmu * GST_SECOND);
   if (entry == 0)
     return 0;
