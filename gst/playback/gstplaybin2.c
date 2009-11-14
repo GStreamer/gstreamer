@@ -300,6 +300,7 @@ struct _GstSourceGroup
   GstElement *uridecodebin;
   GstElement *suburidecodebin;
   gint pending;
+  gboolean sub_pending;
 
   gulong pad_added_id;
   gulong pad_removed_id;
@@ -2001,7 +2002,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
   group = playbin->curr_group;
   /* If we get an error of the subtitle uridecodebin transform
    * them into warnings and disable the subtitles */
-  if (group && group->pending && group->suburidecodebin) {
+  if (group && group->suburidecodebin) {
     GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
 
     if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
@@ -2056,9 +2057,11 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       gst_object_ref (group->suburidecodebin);
       gst_bin_remove (bin, group->suburidecodebin);
       gst_element_set_locked_state (group->suburidecodebin, FALSE);
-      gst_element_set_state (group->suburidecodebin, GST_STATE_READY);
 
-      no_more_pads_cb (NULL, group);
+      if (group->sub_pending) {
+        group->sub_pending = FALSE;
+        no_more_pads_cb (NULL, group);
+      }
     }
 
     if (srcparent)
@@ -2493,6 +2496,9 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   if (group->pending > 0)
     group->pending--;
 
+  if (group->suburidecodebin == decodebin)
+    group->sub_pending = FALSE;
+
   if (group->pending == 0) {
     /* we are the last group to complete, we will configure the output and then
      * signal the other waiters. */
@@ -2926,6 +2932,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 
     /* we have 2 pending no-more-pads */
     group->pending = 2;
+    group->sub_pending = TRUE;
+  } else {
+    group->sub_pending = FALSE;
   }
 
   /* release the group lock before setting the state of the decodebins, they
@@ -2947,7 +2956,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       /* Might already be removed because of an error message */
       if (GST_OBJECT_PARENT (suburidecodebin) == GST_OBJECT_CAST (playbin))
         gst_bin_remove (GST_BIN_CAST (playbin), suburidecodebin);
-      group->pending = 1;
+      if (group->sub_pending) {
+        group->pending--;
+        group->sub_pending = FALSE;
+      }
       gst_element_set_state (suburidecodebin, GST_STATE_READY);
       GST_SOURCE_GROUP_UNLOCK (group);
     }
