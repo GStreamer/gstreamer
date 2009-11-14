@@ -386,6 +386,8 @@ static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
 static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data,
     gchar ** codec_name);
+static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, guint32 n);
 
 GType
 gst_qtdemux_get_type (void)
@@ -732,7 +734,8 @@ find_func (QtDemuxSample * s1, guint64 * media_time, gpointer user_data)
   return -1;
 }
 
-/* find the index of the sample that includes the data for @media_time
+/* find the index of the sample that includes the data for @media_time using a
+ * binary search
  *
  * Returns the index of the sample.
  */
@@ -751,6 +754,37 @@ gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
     index = result - str->samples;
   else
     index = 0;
+
+  return index;
+}
+
+/* find the index of the sample that includes the data for @media_time using a
+ * linear search
+ *
+ * Returns the index of the sample.
+ */
+static guint32
+gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
+    guint64 media_time)
+{
+  QtDemuxSample *result = str->samples;
+  guint32 index = 0;
+
+  if (media_time == result->timestamp)
+    return index;
+
+  result++;
+  while (index < str->n_samples - 1) {
+    if (index + 1 > str->stbl_index
+        && !qtdemux_parse_samples (qtdemux, str, index + 1)) {
+      GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!", index + 1);
+      return -1;
+    }
+    if (media_time < result->timestamp)
+      break;
+    index++;
+    result++;
+  }
 
   return index;
 }
@@ -1218,9 +1252,21 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
+  guint i;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      /* Build complete index for seeking */
+      for (i = 0; i < qtdemux->n_streams; i++) {
+        if (!qtdemux_parse_samples (qtdemux, qtdemux->streams[i],
+                qtdemux->streams[i]->n_samples - 1)) {
+          GST_LOG_OBJECT (qtdemux,
+              "Building complete index of stream %u for seeking failed!", i);
+          res = FALSE;
+          gst_event_unref (event);
+          break;
+        }
+      }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
       } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams) {
@@ -1963,18 +2009,23 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* and move to the keyframe before the indicated media time of the
    * segment */
   if (qtdemux->segment.rate >= 0) {
-    index = gst_qtdemux_find_index (qtdemux, stream, start);
+    index = gst_qtdemux_find_index_linear (qtdemux, stream, start);
     stream->to_sample = stream->n_samples;
     GST_DEBUG_OBJECT (qtdemux, "moving data pointer to %" GST_TIME_FORMAT
         ", index: %u, pts %" GST_TIME_FORMAT, GST_TIME_ARGS (start), index,
         GST_TIME_ARGS (stream->samples[index].timestamp));
   } else {
-    index = gst_qtdemux_find_index (qtdemux, stream, stop);
+    index = gst_qtdemux_find_index_linear (qtdemux, stream, stop);
     stream->to_sample = index;
     GST_DEBUG_OBJECT (qtdemux, "moving data pointer to %" GST_TIME_FORMAT
         ", index: %u, pts %" GST_TIME_FORMAT, GST_TIME_ARGS (stop), index,
         GST_TIME_ARGS (stream->samples[index].timestamp));
   }
+
+  /* gst_qtdemux_parse_sample () called from gst_qtdemux_find_index_linear ()
+   * encountered an error and printed a message so we return appropriately */
+  if (index == -1)
+    return FALSE;
 
   /* we're at the right spot */
   if (index == stream->sample_index) {
@@ -2055,11 +2106,23 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   /* now get the info for the sample we're at */
   sample = &stream->samples[stream->sample_index];
 
+  if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
+    GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!",
+        stream->sample_index);
+    return FALSE;
+  }
+
   *timestamp = sample->timestamp + sample->pts_offset;
   *offset = sample->offset;
   *size = sample->size;
   *duration = sample->duration;
   *keyframe = stream->all_keyframe || sample->keyframe;
+
+  /* update dummy segment duration */
+  if (stream->sample_index == stream->n_samples - 1 && stream->n_segments == 1) {
+    stream->segments[0].duration = stream->segments[0].stop_time =
+        stream->segments[0].media_stop = *timestamp + *duration;
+  }
 
   return TRUE;
 
@@ -2101,6 +2164,12 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
   /* get next sample */
   sample = &stream->samples[stream->sample_index];
+
+  if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
+    GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!",
+        stream->sample_index);
+    return;
+  }
 
   /* see if we are past the segment */
   if (G_UNLIKELY (sample->timestamp >= segment->media_stop))
@@ -4361,18 +4430,11 @@ done:
 
   /* no segments, create one to play the complete trak */
   if (stream->n_segments == 0) {
-    GstClockTime stream_duration = 0;
+    GstClockTime stream_duration =
+        gst_util_uint64_scale (stream->duration, GST_SECOND, stream->timescale);
 
     if (stream->segments == NULL)
       stream->segments = g_new (QtDemuxSegment, 1);
-
-    /* samples know best */
-    if (stream->n_samples > 0) {
-      stream_duration =
-          stream->samples[stream->n_samples - 1].timestamp +
-          stream->samples[stream->n_samples - 1].pts_offset +
-          stream->samples[stream->n_samples - 1].duration;
-    }
 
     stream->segments[0].time = 0;
     stream->segments[0].stop_time = stream_duration;
@@ -5325,8 +5387,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   /* collect sample information */
-  if (!qtdemux_stbl_init (qtdemux, stream, stbl) ||
-      !qtdemux_parse_samples (qtdemux, stream, stream->n_samples - 1))
+  if (!qtdemux_stbl_init (qtdemux, stream, stbl)
+      || !qtdemux_parse_samples (qtdemux, stream, 0))
     goto samples_failed;
 
   /* configure segments */
