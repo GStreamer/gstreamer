@@ -48,6 +48,12 @@
 GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
 #define GST_CAT_DEFAULT subtitle_overlay_debug
 
+#define IS_SUBTITLE_CHAIN_IGNORE_ERROR(flow) \
+  G_UNLIKELY (flow == GST_FLOW_ERROR || flow == GST_FLOW_NOT_NEGOTIATED)
+
+#define IS_VIDEO_CHAIN_IGNORE_ERROR(flow) \
+  G_UNLIKELY (flow == GST_FLOW_ERROR)
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -704,7 +710,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
     subcaps = NULL;
   }
 
-  if (self->silent && !self->silent_property) {
+  if (self->subtitle_error || (self->silent && !self->silent_property)) {
     _setup_passthrough (self);
     do_async_done (self);
     goto out;
@@ -759,6 +765,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN, (NULL),
           ("no suitable subtitle plugin found"));
       subcaps = NULL;
+      self->subtitle_error = TRUE;
     }
   }
   g_mutex_unlock (self->factories_lock);
@@ -1193,6 +1200,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
   if (G_UNLIKELY (l == NULL)) {
     GST_ELEMENT_WARNING (self, CORE, FAILED, (NULL),
         ("Failed to find any usable factories"));
+    self->subtitle_error = TRUE;
     _setup_passthrough (self);
     do_async_done (self);
   } else {
@@ -1247,6 +1255,9 @@ gst_subtitle_overlay_change_state (GstElement * element,
       self->fps_n = self->fps_d = 0;
 
       self->subtitle_flush = FALSE;
+      self->subtitle_error = FALSE;
+
+      self->downstream_chain_error = FALSE;
 
       do_async_start (self);
       ret = GST_STATE_CHANGE_ASYNC;
@@ -1326,6 +1337,57 @@ gst_subtitle_overlay_change_state (GstElement * element,
   }
 
   return ret;
+}
+
+static void
+gst_subtitle_overlay_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY_CAST (bin);
+
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+    GstObject *src = GST_MESSAGE_SRC (message);
+
+    /* Convert error messages from the subtitle pipeline to
+     * warnings and switch to passthrough mode */
+    if (src && (
+            (self->overlay
+                && gst_object_has_ancestor (src,
+                    GST_OBJECT_CAST (self->overlay))) || (self->parser
+                && gst_object_has_ancestor (src,
+                    GST_OBJECT_CAST (self->parser))) || (self->renderer
+                && gst_object_has_ancestor (src,
+                    GST_OBJECT_CAST (self->renderer))))) {
+      GError *err = NULL;
+      gchar *debug = NULL;
+      GstMessage *wmsg;
+
+      gst_message_parse_error (message, &err, &debug);
+      GST_DEBUG_OBJECT (self,
+          "Got error message from subtitle element %s: %s (%s)",
+          GST_MESSAGE_SRC_NAME (message), GST_STR_NULL (err->message),
+          GST_STR_NULL (debug));
+
+      wmsg = gst_message_new_warning (src, err, debug);
+      gst_message_unref (message);
+      g_error_free (err);
+      g_free (debug);
+      message = wmsg;
+
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      self->subtitle_error = TRUE;
+
+      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+          _pad_blocked_cb, gst_object_ref (self),
+          (GDestroyNotify) gst_object_unref);
+
+      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+          _pad_blocked_cb, gst_object_ref (self),
+          (GDestroyNotify) gst_object_unref);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+    }
+  }
+
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static void
@@ -1416,6 +1478,7 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = (GstElementClass *) klass;
+  GstBinClass *bin_class = (GstBinClass *) klass;
 
   gobject_class->finalize = gst_subtitle_overlay_finalize;
   gobject_class->set_property = gst_subtitle_overlay_set_property;
@@ -1436,6 +1499,42 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_change_state);
+
+  bin_class->handle_message =
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_handle_message);
+}
+
+static GstFlowReturn
+gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstBuffer * buffer)
+{
+  GstPad *ghostpad;
+  GstSubtitleOverlay *self;
+  GstFlowReturn ret;
+
+  ghostpad = GST_PAD_CAST (gst_pad_get_parent (proxypad));
+  if (G_UNLIKELY (!ghostpad)) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
+  }
+  self = GST_SUBTITLE_OVERLAY_CAST (gst_pad_get_parent (ghostpad));
+  if (G_UNLIKELY (!self || self->srcpad != ghostpad)) {
+    gst_buffer_unref (buffer);
+    gst_object_unref (ghostpad);
+    return GST_FLOW_ERROR;
+  }
+
+  ret = self->src_proxy_chain (proxypad, buffer);
+
+  if (IS_VIDEO_CHAIN_IGNORE_ERROR (ret)) {
+    GST_ERROR_OBJECT (self, "Downstream chain error: %s",
+        gst_flow_get_name (ret));
+    self->downstream_chain_error = TRUE;
+  }
+
+  gst_object_unref (self);
+  gst_object_unref (ghostpad);
+
+  return ret;
 }
 
 static gboolean
@@ -1553,6 +1652,66 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static GstFlowReturn
+gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (GST_PAD_PARENT (pad));
+  GstFlowReturn ret = self->video_sink_chain (pad, buffer);
+
+  if (G_UNLIKELY (self->downstream_chain_error) || self->passthrough_identity) {
+    return ret;
+  } else if (IS_VIDEO_CHAIN_IGNORE_ERROR (ret)) {
+    GST_DEBUG_OBJECT (self, "Subtitle renderer produced chain error: %s",
+        gst_flow_get_name (ret));
+    GST_SUBTITLE_OVERLAY_LOCK (self);
+    self->subtitle_error = TRUE;
+    gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+        _pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+
+    gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+        _pad_blocked_cb, gst_object_ref (self),
+        (GDestroyNotify) gst_object_unref);
+    GST_SUBTITLE_OVERLAY_UNLOCK (self);
+
+    return GST_FLOW_OK;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (GST_PAD_PARENT (pad));
+
+  if (self->subtitle_error) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  } else {
+    GstFlowReturn ret = self->subtitle_sink_chain (pad, buffer);
+
+    if (IS_SUBTITLE_CHAIN_IGNORE_ERROR (ret)) {
+      GST_DEBUG_OBJECT (self, "Subtitle chain error: %s",
+          gst_flow_get_name (ret));
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      self->subtitle_error = TRUE;
+      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+          _pad_blocked_cb, gst_object_ref (self),
+          (GDestroyNotify) gst_object_unref);
+
+      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+          _pad_blocked_cb, gst_object_ref (self),
+          (GDestroyNotify) gst_object_unref);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+
+      return GST_FLOW_OK;
+    }
+
+    return ret;
+  }
+}
+
 static GstCaps *
 gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad)
 {
@@ -1608,6 +1767,8 @@ gst_subtitle_overlay_subtitle_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "Target did not accept caps");
 
+  self->subtitle_error = FALSE;
+
   gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
       _pad_blocked_cb, gst_object_ref (self),
       (GDestroyNotify) gst_object_unref);
@@ -1647,6 +1808,8 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
     GST_DEBUG_OBJECT (pad, "Have fixed peer caps: %" GST_PTR_FORMAT, caps);
     gst_caps_replace (&self->subcaps, caps);
 
+    self->subtitle_error = FALSE;
+
     gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
@@ -1680,6 +1843,8 @@ gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
   self->subtitle_sink_unlink (pad);
 
   GST_SUBTITLE_OVERLAY_LOCK (self);
+  self->subtitle_error = FALSE;
+
   if (self->subtitle_block_pad)
     gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
         _pad_blocked_cb, gst_object_ref (self),
@@ -1708,6 +1873,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (pad, "Custom subtitle flush event");
     GST_SUBTITLE_OVERLAY_LOCK (self);
     self->subtitle_flush = TRUE;
+    self->subtitle_error = FALSE;
     if (self->subtitle_block_pad)
       gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
           _pad_blocked_cb, gst_object_ref (self),
@@ -1816,6 +1982,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
     self->src_proxy_event = GST_PAD_EVENTFUNC (proxypad);
     gst_pad_set_event_function (proxypad,
         GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_event));
+    self->src_proxy_chain = GST_PAD_CHAINFUNC (proxypad);
+    gst_pad_set_chain_function (proxypad,
+        GST_DEBUG_FUNCPTR (gst_subtitle_overlay_src_proxy_chain));
     gst_object_unref (proxypad);
   }
   if (it)
@@ -1832,6 +2001,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   self->video_sink_setcaps = GST_PAD_SETCAPSFUNC (self->video_sinkpad);
   gst_pad_set_setcaps_function (self->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_setcaps));
+  self->video_sink_chain = GST_PAD_CHAINFUNC (self->video_sinkpad);
+  gst_pad_set_chain_function (self->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_video_sink_chain));
 
   proxypad = NULL;
   it = gst_pad_iterate_internal_links (self->video_sinkpad);
@@ -1861,6 +2033,9 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self,
   self->subtitle_sink_setcaps = GST_PAD_SETCAPSFUNC (self->subtitle_sinkpad);
   gst_pad_set_setcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_setcaps));
+  self->subtitle_sink_chain = GST_PAD_CHAINFUNC (self->subtitle_sinkpad);
+  gst_pad_set_chain_function (self->subtitle_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_chain));
   gst_pad_set_getcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_getcaps));
   gst_pad_set_acceptcaps_function (self->subtitle_sinkpad,
