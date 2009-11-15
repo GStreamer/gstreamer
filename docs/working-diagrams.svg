@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1052.3622"
+   height="744.09448"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.46"
+   sodipodi:docname="working-diagrams.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend"
+       style="overflow:visible">
+      <path
+         id="path3227"
+         style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.97309,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lend"
+       style="overflow:visible">
+      <path
+         id="path3209"
+         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.8,0,0,-0.8,-10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path3206"
+         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(0.8,0,0,0.8,10,0)" />
+    </marker>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     gridtolerance="10000"
+     guidetolerance="10"
+     objecttolerance="10"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.0637252"
+     inkscape:cx="437.49869"
+     inkscape:cy="271.41459"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1680"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:snap-global="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2383"
+       visible="true"
+       enabled="true" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.5;fill:#aaeeff;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect2385"
+       width="339.37469"
+       height="310.25867"
+       x="360.35718"
+       y="373.7818"
+       rx="9.689147"
+       ry="12.085826"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;stroke-miterlimit:4;stroke-dasharray:none"
+       x="370"
+       y="394.09448"
+       id="text2391"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"><tspan
+         sodipodi:role="line"
+         id="tspan2393"
+         x="370"
+         y="394.09448">GESTimeline</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3165"
+       style="font-size:18px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"><flowRegion
+         id="flowRegion3167"><rect
+           id="rect3169"
+           width="288"
+           height="208"
+           x="50"
+           y="129.36218" /></flowRegion><flowPara
+         id="flowPara3171"></flowPara></flowRoot>    <rect
+       style="opacity:0.54696129;fill:#aaeeff;fill-opacity:1;stroke:#000000;stroke-width:1.70694268;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3173"
+       width="275.89612"
+       height="166.93259"
+       x="-288.13577"
+       y="265.79001"
+       rx="7.8768334"
+       ry="6.5026975" />
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="-290"
+       y="292.36218"
+       id="text3175"><tspan
+         sodipodi:role="line"
+         id="tspan3177"
+         x="-290"
+         y="292.36218">GESTimelinePipeline</tspan></text>
+    <g
+       id="g5556"
+       transform="translate(350,-110.4115)"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"
+       style="stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none">
+      <rect
+         y="532.77368"
+         x="29.296322"
+         height="49.58847"
+         width="300.70367"
+         id="rect3179"
+         style="opacity:1;fill:#aa87de;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         id="text3181"
+         y="564.86188"
+         x="139.24094"
+         style="font-size:28px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;stroke-miterlimit:4;stroke-dasharray:none"
+         xml:space="preserve"><tspan
+           y="564.86188"
+           x="139.24094"
+           id="tspan3183"
+           sodipodi:role="line">Layer</tspan></text>
+    </g>
+    <rect
+       style="fill:#8dd35f;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3185"
+       width="299.99881"
+       height="49.589645"
+       x="379.99942"
+       y="532.36157"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+    <text
+       xml:space="preserve"
+       style="font-size:28px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;stroke-miterlimit:4;stroke-dasharray:none"
+       x="493.75223"
+       y="567.59491"
+       id="text3187"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"><tspan
+         sodipodi:role="line"
+         id="tspan3189"
+         x="493.75223"
+         y="567.59491">Track</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow2Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 679.87067,556.85631 L 739.40008,556.85631"
+       id="path3201"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+    <rect
+       style="fill:#8dd35f;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect3195"
+       width="299.99881"
+       height="49.589645"
+       x="379.99942"
+       y="612.36157"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+    <text
+       xml:space="preserve"
+       style="font-size:28px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans;stroke-miterlimit:4;stroke-dasharray:none"
+       x="493.75223"
+       y="647.59491"
+       id="text3197"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"><tspan
+         sodipodi:role="line"
+         id="tspan3199"
+         x="493.75223"
+         y="647.59491">Track</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="-446.94547"
+       y="319.29633"
+       id="text5573"
+       transform="matrix(0,-1,1,0,0,0)"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"><tspan
+         sodipodi:role="line"
+         id="tspan5575"
+         x="-446.94547"
+         y="319.29633">User</tspan><tspan
+         sodipodi:role="line"
+         x="-446.94547"
+         y="341.79633"
+         id="tspan5577">visible</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="-590.63367"
+       y="330"
+       id="text5579"
+       transform="matrix(0,-1,1,0,0,0)"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575"><tspan
+         sodipodi:role="line"
+         x="-590.63367"
+         y="330"
+         id="tspan5583">Medias</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow2Lend);stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 679.60671,637.52077 L 739.13612,637.52077"
+       id="path5615"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+    <path
+       style="opacity:0.5;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.91023302;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:8.73069881, 2.91023294;stroke-dashoffset:0;stroke-opacity:1"
+       d="M 360,499.09448 L 699.02232,499.09448"
+       id="path5619"
+       inkscape:export-filename="/home/bilboed/work/devel/gst-editing-services/docs/libs/layer_track_overview.png"
+       inkscape:export-xdpi="149.87575"
+       inkscape:export-ydpi="149.87575" />
+  </g>
+</svg>

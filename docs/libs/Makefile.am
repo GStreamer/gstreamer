@@ -8,7 +8,7 @@ DOC_MODULE=$(MODULE)
 
 # for upload-doc.mak
 DOC=$(MODULE)
-FORMATS=html
+FORMATS=html ps pdf
 html: html-build.stamp
 include $(top_srcdir)/common/upload-doc.mak
 
@@ -85,7 +85,7 @@ EXTRA_HFILES = \
 HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files = architecture.xml
+content_files = architecture.xml  layer_track_overview.png
 
 # Other files to distribute.
 extra_files =
