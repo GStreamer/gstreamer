@@ -96,8 +96,7 @@ gst_signal_processor_pad_template_get_type (void)
  */
 void
 gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
-    const gchar * name, GstPadDirection direction, guint index, guint channels,
-    const GstAudioChannelPosition * pos)
+    const gchar * name, GstPadDirection direction, guint index, guint channels)
 {
   GstPadTemplate *new;
   GstCaps *caps;
@@ -110,8 +109,9 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, 32, "channels", G_TYPE_INT, channels, NULL);
 
-  if (pos)
-    gst_audio_set_caps_channel_positions_list (caps, pos, channels);
+  /*if (pos)
+     gst_audio_set_caps_channel_positions_list (caps, pos, channels);
+   */
 
   new = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD_TEMPLATE,
       "name", name, "name-template", name,

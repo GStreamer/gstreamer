@@ -179,7 +179,6 @@ gst_lv2_base_init (gpointer g_class)
   SLV2Values values, sub_values;
   GstLV2Group *group = NULL;
   GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID;
-  GstAudioChannelPosition mono_position = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
   GstAudioChannelPosition *positions = NULL;
   guint j, in_pad_index = 0, out_pad_index = 0;
   gchar *klass_tags;
@@ -296,6 +295,11 @@ gst_lv2_base_init (gpointer g_class)
   gsp_class->num_control_in = klass->control_in_ports->len;
   gsp_class->num_control_out = klass->control_out_ports->len;
 
+  /* FIXME: see bug #601775
+   * we should set the positions in gst_signal_processor_setup vmethod
+   * but this should pass the caps then as a parameter
+   */
+
   /* add input group pad templates */
   for (j = 0; j < gsp_class->num_group_in; ++j) {
     group = &g_array_index (klass->in_groups, GstLV2Group, j);
@@ -304,8 +308,8 @@ gst_lv2_base_init (gpointer g_class)
     }
 
     gst_signal_processor_class_add_pad_template (gsp_class,
-        slv2_value_as_string (group->symbol),
-        GST_PAD_SINK, j, group->ports->len, positions);
+        slv2_value_as_string (group->symbol), GST_PAD_SINK, j, group->ports->len
+        /*, positions */ );
 
     if (group->has_roles) {
       free (positions);
@@ -321,8 +325,8 @@ gst_lv2_base_init (gpointer g_class)
     }
 
     gst_signal_processor_class_add_pad_template (gsp_class,
-        slv2_value_as_string (group->symbol),
-        GST_PAD_SRC, j, group->ports->len, positions);
+        slv2_value_as_string (group->symbol), GST_PAD_SRC, j, group->ports->len
+        /*, positions */ );
 
     if (group->has_roles) {
       free (positions);
@@ -338,7 +342,7 @@ gst_lv2_base_init (gpointer g_class)
     const gchar *name =
         slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port));
     gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SINK,
-        j, 1, &mono_position);
+        j, 1);
   }
 
   /* add non-grouped output port pad templates */
@@ -349,7 +353,7 @@ gst_lv2_base_init (gpointer g_class)
     const gchar *name =
         slv2_value_as_string (slv2_port_get_symbol (lv2plugin, port));
     gst_signal_processor_class_add_pad_template (gsp_class, name, GST_PAD_SRC,
-        j, 1, &mono_position);
+        j, 1);
   }
 
   /* construct the element details struct */

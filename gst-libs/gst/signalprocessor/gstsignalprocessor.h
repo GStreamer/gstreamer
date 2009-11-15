@@ -132,8 +132,7 @@ struct _GstSignalProcessorClass {
 
 GType gst_signal_processor_get_type (void);
 void gst_signal_processor_class_add_pad_template (GstSignalProcessorClass *klass,
-    const gchar *name, GstPadDirection direction, guint index, guint channels,
-    const GstAudioChannelPosition *pos);
+    const gchar *name, GstPadDirection direction, guint index, guint channels);
 
 
 
