@@ -424,6 +424,9 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       if (strcmp (event_type, "dvd-still") == 0) {
         gboolean in_still;
 
+        /* Forward the event before handling */
+        res = gst_pad_event_default (pad, event);
+
         if (gst_structure_get_boolean (structure, "still-state", &in_still)) {
           GstBuffer *to_push = NULL;
 
@@ -451,8 +454,6 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
           if (to_push)
             gst_pad_push (dvdspu->srcpad, to_push);
         }
-        gst_event_unref (event);
-        res = TRUE;
       } else {
         GST_DEBUG_OBJECT (dvdspu,
             "DVD event of type %s on video pad", event_type);
