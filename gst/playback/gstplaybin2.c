@@ -316,6 +316,8 @@ struct _GstSourceGroup
   gulong sub_no_more_pads_id;
   gulong sub_autoplug_continue_id;
 
+  gint stream_changed_pending;
+
   /* selectors for different streams */
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
 };
@@ -1997,78 +1999,89 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       }
     }
     g_free (detail);
-  }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT) {
+    const GstStructure *s = gst_message_get_structure (msg);
 
-  group = playbin->curr_group;
-  /* If we get an error of the subtitle uridecodebin transform
-   * them into warnings and disable the subtitles */
-  if (group && group->suburidecodebin) {
-    GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
-
-    if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
-                (group->suburidecodebin))
-            && GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)) {
-      GError *err;
-      gchar *debug = NULL;
-      GstMessage *new_msg;
-      GstIterator *it;
-      gboolean done = FALSE;
-
-      gst_message_parse_error (msg, &err, &debug);
-      new_msg = gst_message_new_warning (msg->src, err, debug);
-
-      gst_message_unref (msg);
-      g_error_free (err);
-      g_free (debug);
-      msg = new_msg;
-
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
-
-      it = gst_element_iterate_src_pads (group->suburidecodebin);
-      while (it && !done) {
-        GstPad *p = NULL;
-        GstIteratorResult res;
-
-        res = gst_iterator_next (it, (gpointer) & p);
-
-        switch (res) {
-          case GST_ITERATOR_DONE:
-            done = TRUE;
-            break;
-          case GST_ITERATOR_OK:
-            pad_removed_cb (NULL, p, group);
-            gst_object_unref (p);
-            break;
-
-          case GST_ITERATOR_RESYNC:
-            gst_iterator_resync (it);
-            break;
-          case GST_ITERATOR_ERROR:
-            done = TRUE;
-            break;
-        }
-      }
-      if (it)
-        gst_iterator_free (it);
-
-      gst_object_ref (group->suburidecodebin);
-      gst_bin_remove (bin, group->suburidecodebin);
-      gst_element_set_locked_state (group->suburidecodebin, FALSE);
-
-      if (group->sub_pending) {
-        group->sub_pending = FALSE;
-        no_more_pads_cb (NULL, group);
+    /* Drop all stream-changed messages except the last one */
+    if (strcmp ("playbin2-stream-changed", gst_structure_get_name (s)) == 0) {
+      group = playbin->curr_group;
+      if (!g_atomic_int_dec_and_test (&group->stream_changed_pending)) {
+        gst_message_unref (msg);
+        msg = NULL;
       }
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    /* If we get an error of the subtitle uridecodebin transform
+     * them into warnings and disable the subtitles */
+    group = playbin->curr_group;
+    if (group && group->suburidecodebin) {
 
-    if (srcparent)
-      gst_object_unref (srcparent);
+      GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
+      if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
+                  (group->suburidecodebin)))) {
+        GError *err;
+        gchar *debug = NULL;
+        GstMessage *new_msg;
+        GstIterator *it;
+        gboolean done = FALSE;
+
+        gst_message_parse_error (msg, &err, &debug);
+        new_msg = gst_message_new_warning (msg->src, err, debug);
+
+        gst_message_unref (msg);
+        g_error_free (err);
+        g_free (debug);
+        msg = new_msg;
+
+        REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+        REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
+        REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
+        REMOVE_SIGNAL (group->suburidecodebin, group->sub_autoplug_continue_id);
+
+        it = gst_element_iterate_src_pads (group->suburidecodebin);
+        while (it && !done) {
+          GstPad *p = NULL;
+          GstIteratorResult res;
+
+          res = gst_iterator_next (it, (gpointer) & p);
+
+          switch (res) {
+            case GST_ITERATOR_DONE:
+              done = TRUE;
+              break;
+            case GST_ITERATOR_OK:
+              pad_removed_cb (NULL, p, group);
+              gst_object_unref (p);
+              break;
+
+            case GST_ITERATOR_RESYNC:
+              gst_iterator_resync (it);
+              break;
+            case GST_ITERATOR_ERROR:
+              done = TRUE;
+              break;
+          }
+        }
+        if (it)
+          gst_iterator_free (it);
+
+        gst_object_ref (group->suburidecodebin);
+        gst_bin_remove (bin, group->suburidecodebin);
+        gst_element_set_locked_state (group->suburidecodebin, FALSE);
+
+        if (group->sub_pending) {
+          group->sub_pending = FALSE;
+          no_more_pads_cb (NULL, group);
+        }
+      }
+
+      if (srcparent)
+        gst_object_unref (srcparent);
+    }
   }
 
-  GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+  if (msg)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 static void
@@ -2549,6 +2562,25 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
+      /* Wait for stream-changed messages on all selectors except
+       * the text selector because of the sparse nature of text streams.
+       */
+      if (select->sinkpad && select->type != GST_PLAY_SINK_TYPE_TEXT) {
+        GstStructure *s;
+        GstMessage *msg;
+        GstEvent *event;
+
+        s = gst_structure_new ("playbin2-stream-changed", "uri", G_TYPE_STRING,
+            group->uri, NULL);
+        if (group->suburi)
+          gst_structure_set (s, "suburi", G_TYPE_STRING, group->suburi, NULL);
+        msg = gst_message_new_element (GST_OBJECT_CAST (playbin), s);
+        event = gst_event_new_sink_message (msg);
+        g_atomic_int_inc (&group->stream_changed_pending);
+        gst_pad_send_event (select->sinkpad, event);
+        gst_message_unref (msg);
+      }
+
       if (select->srcpad) {
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
@@ -2820,6 +2852,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   GST_DEBUG_OBJECT (playbin, "activating group %p", group);
 
   GST_SOURCE_GROUP_LOCK (group);
+  group->stream_changed_pending = 0;
+
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
     uridecodebin = group->uridecodebin;
