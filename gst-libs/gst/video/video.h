@@ -317,6 +317,8 @@ gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value);
 
+GstEvent *gst_video_event_new_still_frame (gboolean in_still);
+gboolean gst_video_event_parse_still_frame (GstEvent *event, gboolean *in_still);
 
 G_END_DECLS
 

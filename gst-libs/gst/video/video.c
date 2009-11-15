@@ -1500,3 +1500,71 @@ done:
 
   return ret;
 }
+
+#define GST_VIDEO_EVENT_STILL_STATE_NAME "GstEventStillFrame"
+
+/**
+ * gst_video_event_new_still_frame:
+ * @in_still: boolean value for the still-frame state of the event.
+ *
+ * Creates a new Still Frame event. If @in_still is %TRUE, then the event
+ * represents the start of a still frame sequence. If it is %FALSE, then
+ * the event ends a still frame sequence.
+ *
+ * To parse an event created by gst_video_event_new_still_frame() use
+ * gst_video_event_parse_still_frame().
+ *
+ * Returns: The new GstEvent
+ * Since: 0.10.26
+ */
+GstEvent *
+gst_video_event_new_still_frame (gboolean in_still)
+{
+  GstEvent *still_event;
+  GstStructure *s;
+
+  s = gst_structure_new (GST_VIDEO_EVENT_STILL_STATE_NAME,
+      "still-state", G_TYPE_BOOLEAN, in_still, NULL);
+  still_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+
+  return still_event;
+}
+
+/**
+ * gst_video_event_parse_still_frame:
+ * @event: A #GstEvent to parse
+ * @in_still: A boolean to receive the still-frame status from the event, or NULL
+ *
+ * Parse a #GstEvent, identify if it is a Still Frame event, and
+ * return the still-frame state from the event if it is.
+ * If the event represents the start of a still frame, the in_still
+ * variable will be set to TRUE, otherwise FALSE. It is OK to pass NULL for the
+ * in_still variable order to just check whether the event is a valid still-frame
+ * event.
+ *
+ * Create a still frame event using gst_video_event_new_still_frame()
+ *
+ * Returns: %TRUE if the event is a valid still-frame event. %FALSE if not
+ * Since: 0.10.26
+ */
+gboolean
+gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
+{
+  const GstStructure *s;
+  gboolean ev_still_state;
+
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_CUSTOM_DOWNSTREAM)
+    return FALSE;               /* Not a still frame event */
+
+  s = gst_event_get_structure (event);
+  if (s == NULL
+      || !gst_structure_has_name (s, GST_VIDEO_EVENT_STILL_STATE_NAME))
+    return FALSE;               /* Not a still frame event */
+  if (!gst_structure_get_boolean (s, "still-state", &ev_still_state))
+    return FALSE;               /* Not a still frame event */
+  if (in_still)
+    *in_still = ev_still_state;
+  return TRUE;
+}
