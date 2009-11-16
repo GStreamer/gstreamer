@@ -205,15 +205,12 @@ close_library (GstRealAudioDec * dec, GstRADecLibrary * lib)
     if (lib->RACloseCodec)
       lib->RACloseCodec (lib->context);
     /* lib->RAFreeDecoder (lib->context); */
-    lib->context = NULL;
-    lib->module = NULL;
-    lib->RACloseCodec = NULL;
   }
   if (lib->module) {
     GST_LOG_OBJECT (dec, "closing library module");
     g_module_close (lib->module);
-    lib->module = NULL;
   }
+  memset (lib, 0, sizeof (GstRADecLibrary));
 }
 
 static gboolean
