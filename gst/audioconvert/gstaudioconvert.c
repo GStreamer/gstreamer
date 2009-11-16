@@ -164,8 +164,6 @@ GST_STATIC_CAPS ( \
     "signed = (boolean) { true, false } " \
 )
 
-static GstAudioChannelPosition *supported_positions;
-
 static GstStaticPadTemplate gst_audio_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -241,16 +239,10 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
-  gint i;
 
   gobject_class->dispose = gst_audio_convert_dispose;
   gobject_class->set_property = gst_audio_convert_set_property;
   gobject_class->get_property = gst_audio_convert_get_property;
-
-  supported_positions = g_new0 (GstAudioChannelPosition,
-      GST_AUDIO_CHANNEL_POSITION_NUM);
-  for (i = 0; i < GST_AUDIO_CHANNEL_POSITION_NUM; i++)
-    supported_positions[i] = i;
 
   g_object_class_install_property (gobject_class, ARG_DITHERING,
       g_param_spec_enum ("dithering", "Dithering",
