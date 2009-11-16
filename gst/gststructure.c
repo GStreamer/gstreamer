@@ -216,9 +216,7 @@ gst_structure_new (const gchar * name, const gchar * firstfield, ...)
   g_return_val_if_fail (name != NULL, NULL);
 
   va_start (varargs, firstfield);
-
   structure = gst_structure_new_valist (name, firstfield, varargs);
-
   va_end (varargs);
 
   return structure;
@@ -486,9 +484,7 @@ gst_structure_set (GstStructure * structure, const gchar * field, ...)
   g_return_if_fail (structure != NULL);
 
   va_start (varargs, field);
-
   gst_structure_set_valist (structure, field, varargs);
-
   va_end (varargs);
 }
 
@@ -835,9 +831,7 @@ gst_structure_remove_fields (GstStructure * structure,
   /* mutability checked in remove_field */
 
   va_start (varargs, fieldname);
-
   gst_structure_remove_fields_valist (structure, fieldname, varargs);
-
   va_end (varargs);
 }
 
