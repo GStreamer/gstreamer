@@ -603,22 +603,9 @@ parse_mdvdsub (ParserState * state, const gchar * line)
     g_strdelimit (rest, ",", '.');
     fps = g_ascii_strtod (rest, &end);
     if (end != rest) {
-      GValue d = { 0, };
-      GValue f = { 0, };
-
-      /* Use double->fraction conversion from gstvalue.c */
-      g_value_init (&d, G_TYPE_DOUBLE);
-      g_value_init (&f, GST_TYPE_FRACTION);
-      g_value_set_double (&d, fps);
-      if (g_value_transform (&d, &f)) {
-        state->have_internal_fps = TRUE;
-        state->fps_n = gst_value_get_fraction_numerator (&f);
-        state->fps_d = gst_value_get_fraction_denominator (&f);
-        GST_INFO ("framerate from file: %d/%d ('%s')", state->fps_n,
-            state->fps_d, rest);
-      }
-      g_value_unset (&d);
-      g_value_unset (&f);
+      gst_util_double_to_fraction (fps, &state->fps_n, &state->fps_d);
+      GST_INFO ("framerate from file: %d/%d ('%s')", state->fps_n,
+          state->fps_d, rest);
     }
     g_free (rest);
     return NULL;
