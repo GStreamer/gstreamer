@@ -1056,9 +1056,12 @@ EXPORTS
 	gst_uri_protocol_is_valid
 	gst_uri_type_get_type
 	gst_util_array_binary_search
+	gst_util_double_to_fraction
 	gst_util_dump_mem
+	gst_util_fraction_to_double
 	gst_util_gdouble_to_guint64
 	gst_util_get_timestamp
+	gst_util_greatest_common_divisor
 	gst_util_guint64_to_gdouble
 	gst_util_seqnum_compare
 	gst_util_seqnum_next

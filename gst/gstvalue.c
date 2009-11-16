@@ -43,6 +43,7 @@
 #include "glib-compat-private.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
+#include "gstutils.h"
 
 typedef struct _GstValueUnionInfo GstValueUnionInfo;
 struct _GstValueUnionInfo
@@ -81,7 +82,6 @@ static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
 
 /* Forward declarations */
-static gint gst_greatest_common_divisor (gint a, gint b);
 static gchar *gst_value_serialize_fraction (const GValue * value);
 
 static GstValueCompareFunc gst_value_get_compare_func (const GValue * value1);
@@ -3476,23 +3476,6 @@ gst_value_is_fixed (const GValue * value)
  ************/
 
 /* helper functions */
-
-/* Finds the greatest common divisor.
- * Returns 1 if none other found.
- * This is Euclid's algorithm. */
-static gint
-gst_greatest_common_divisor (gint a, gint b)
-{
-  while (b != 0) {
-    int temp = a;
-
-    a = b;
-    b = temp % b;
-  }
-
-  return ABS (a);
-}
-
 static void
 gst_value_init_fraction (GValue * value)
 {
@@ -3564,7 +3547,7 @@ gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
   }
 
   /* check for reduction */
-  gcd = gst_greatest_common_divisor (numerator, denominator);
+  gcd = gst_util_greatest_common_divisor (numerator, denominator);
   if (gcd) {
     numerator /= gcd;
     denominator /= gcd;
@@ -3633,10 +3616,10 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
   d1 = factor1->data[1].v_int;
   d2 = factor2->data[1].v_int;
 
-  gcd = gst_greatest_common_divisor (n1, d2);
+  gcd = gst_util_greatest_common_divisor (n1, d2);
   n1 /= gcd;
   d2 /= gcd;
-  gcd = gst_greatest_common_divisor (n2, d1);
+  gcd = gst_util_greatest_common_divisor (n2, d1);
   n2 /= gcd;
   d1 /= gcd;
 
@@ -3759,85 +3742,26 @@ gst_value_transform_string_fraction (const GValue * src_value,
     gst_value_set_fraction (dest_value, 0, 1);
 }
 
-#define MAX_TERMS       30
-#define MIN_DIVISOR     1.0e-10
-#define MAX_ERROR       1.0e-20
-
-/* use continued fractions to transform a double into a fraction,
- * see http://mathforum.org/dr.math/faq/faq.fractions.html#decfrac.
- * This algorithm takes care of overflows.
- */
 static void
 gst_value_transform_double_fraction (const GValue * src_value,
     GValue * dest_value)
 {
-  gdouble V, F;                 /* double being converted */
-  gint N, D;                    /* will contain the result */
-  gint A;                       /* current term in continued fraction */
-  gint64 N1, D1;                /* numerator, denominator of last approx */
-  gint64 N2, D2;                /* numerator, denominator of previous approx */
-  gint i;
-  gboolean negative = FALSE;
+  gdouble src = g_value_get_double (src_value);
+  gint n, d;
 
-  /* initialize fraction being converted */
-  F = src_value->data[0].v_double;
-  if (F < 0.0) {
-    F = -F;
-    negative = TRUE;
-  }
+  gst_util_double_to_fraction (src, &n, &d);
+  gst_value_set_fraction (dest_value, n, d);
+}
 
-  V = F;
-  /* initialize fractions with 1/0, 0/1 */
-  N1 = 1;
-  D1 = 0;
-  N2 = 0;
-  D2 = 1;
-  N = 1;
-  D = 1;
+static void
+gst_value_transform_float_fraction (const GValue * src_value,
+    GValue * dest_value)
+{
+  gfloat src = g_value_get_float (src_value);
+  gint n, d;
 
-  for (i = 0; i < MAX_TERMS; i++) {
-    /* get next term */
-    A = (gint) F;               /* no floor() needed, F is always >= 0 */
-    /* get new divisor */
-    F = F - A;
-
-    /* calculate new fraction in temp */
-    N2 = N1 * A + N2;
-    D2 = D1 * A + D2;
-
-    /* guard against overflow */
-    if (N2 > G_MAXINT || D2 > G_MAXINT) {
-      break;
-    }
-
-    N = N2;
-    D = D2;
-
-    /* save last two fractions */
-    N2 = N1;
-    D2 = D1;
-    N1 = N;
-    D1 = D;
-
-    /* quit if dividing by zero or close enough to target */
-    if (F < MIN_DIVISOR || fabs (V - ((gdouble) N) / D) < MAX_ERROR) {
-      break;
-    }
-
-    /* Take reciprocal */
-    F = 1 / F;
-  }
-  /* fix for overflow */
-  if (D == 0) {
-    N = G_MAXINT;
-    D = 1;
-  }
-  /* fix for negative */
-  if (negative)
-    N = -N;
-
-  /* will also simplify */
-  gst_value_set_fraction (dest_value, N, D);
+  gst_util_double_to_fraction (src, &n, &d);
+  gst_value_set_fraction (dest_value, n, d);
 }
 
 static void
@@ -3846,6 +3770,14 @@ gst_value_transform_fraction_double (const GValue * src_value,
 {
   dest_value->data[0].v_double = ((double) src_value->data[0].v_int) /
       ((double) src_value->data[1].v_int);
+}
+
+static void
+gst_value_transform_fraction_float (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_float = ((float) src_value->data[0].v_int) /
+      ((float) src_value->data[1].v_int);
 }
 
 static gint
@@ -4354,8 +4286,12 @@ _gst_value_initialize (void)
       gst_value_transform_string_fraction);
   g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_DOUBLE,
       gst_value_transform_fraction_double);
+  g_value_register_transform_func (GST_TYPE_FRACTION, G_TYPE_FLOAT,
+      gst_value_transform_fraction_float);
   g_value_register_transform_func (G_TYPE_DOUBLE, GST_TYPE_FRACTION,
       gst_value_transform_double_fraction);
+  g_value_register_transform_func (G_TYPE_FLOAT, GST_TYPE_FRACTION,
+      gst_value_transform_float_fraction);
   g_value_register_transform_func (GST_TYPE_DATE, G_TYPE_STRING,
       gst_value_transform_date_string);
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_DATE,

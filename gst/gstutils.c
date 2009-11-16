@@ -39,6 +39,7 @@
 #include "gstparse.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
+#include <math.h>
 
 /**
  * gst_util_dump_mem:
@@ -3797,4 +3798,155 @@ gst_util_array_binary_search (gpointer array, guint num_elements,
       }
     }
   }
+}
+
+/* Finds the greatest common divisor.
+ * Returns 1 if none other found.
+ * This is Euclid's algorithm. */
+
+/** gst_util_greatest_common_divisor:
+ * @a: First value as #gint
+ * @b: Second value as #gint
+ *
+ * Calculates the greatest common divisor of @a
+ * and @b.
+ *
+ * Returns: Greatest common divisor of @a and @b
+ *
+ * Since: 0.10.26
+ */
+gint
+gst_util_greatest_common_divisor (gint a, gint b)
+{
+  while (b != 0) {
+    int temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  return ABS (a);
+}
+
+/** gst_util_fraction_to_double:
+ * @src_n: Fraction numerator as #gint
+ * @src_d: Fraction denominator #gint
+ * @dest: pointer to a #gdouble for the result
+ *
+ * Transforms a #gdouble to a #GstFraction and simplifies
+ * the result.
+ *
+ * Since: 0.10.26
+ */
+void
+gst_util_fraction_to_double (gint src_n, gint src_d, gdouble * dest)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src_d != 0);
+
+  *dest = ((gdouble) src_n) / ((gdouble) src_d);
+}
+
+#define MAX_TERMS       30
+#define MIN_DIVISOR     1.0e-10
+#define MAX_ERROR       1.0e-20
+
+/* use continued fractions to transform a double into a fraction,
+ * see http://mathforum.org/dr.math/faq/faq.fractions.html#decfrac.
+ * This algorithm takes care of overflows.
+ */
+
+/** gst_util_double_to_fraction:
+ * @src: #gdouble to transform
+ * @dest_n: pointer to a #gint to hold the result numerator
+ * @dest_d: pointer to a #gint to hold the result denominator
+ *
+ * Transforms a #gdouble to a #GstFraction and simplifies
+ * the result.
+ *
+ * Since: 0.10.26
+ */
+void
+gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
+{
+
+  gdouble V, F;                 /* double being converted */
+  gint N, D;                    /* will contain the result */
+  gint A;                       /* current term in continued fraction */
+  gint64 N1, D1;                /* numerator, denominator of last approx */
+  gint64 N2, D2;                /* numerator, denominator of previous approx */
+  gint i;
+  gint gcd;
+  gboolean negative = FALSE;
+
+  g_return_if_fail (dest_n != NULL);
+  g_return_if_fail (dest_d != NULL);
+
+  /* initialize fraction being converted */
+  F = src;
+  if (F < 0.0) {
+    F = -F;
+    negative = TRUE;
+  }
+
+  V = F;
+  /* initialize fractions with 1/0, 0/1 */
+  N1 = 1;
+  D1 = 0;
+  N2 = 0;
+  D2 = 1;
+  N = 1;
+  D = 1;
+
+  for (i = 0; i < MAX_TERMS; i++) {
+    /* get next term */
+    A = (gint) F;               /* no floor() needed, F is always >= 0 */
+    /* get new divisor */
+    F = F - A;
+
+    /* calculate new fraction in temp */
+    N2 = N1 * A + N2;
+    D2 = D1 * A + D2;
+
+    /* guard against overflow */
+    if (N2 > G_MAXINT || D2 > G_MAXINT) {
+      break;
+    }
+
+    N = N2;
+    D = D2;
+
+    /* save last two fractions */
+    N2 = N1;
+    D2 = D1;
+    N1 = N;
+    D1 = D;
+
+    /* quit if dividing by zero or close enough to target */
+    if (F < MIN_DIVISOR || fabs (V - ((gdouble) N) / D) < MAX_ERROR) {
+      break;
+    }
+
+    /* Take reciprocal */
+    F = 1 / F;
+  }
+  /* fix for overflow */
+  if (D == 0) {
+    N = G_MAXINT;
+    D = 1;
+  }
+  /* fix for negative */
+  if (negative)
+    N = -N;
+
+  /* simplify */
+  gcd = gst_util_greatest_common_divisor (N, D);
+  if (gcd) {
+    N /= gcd;
+    D /= gcd;
+  }
+
+  /* set results */
+  *dest_n = N;
+  *dest_d = D;
 }

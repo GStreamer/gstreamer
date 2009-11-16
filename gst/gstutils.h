@@ -1166,6 +1166,10 @@ gpointer                gst_util_array_binary_search      (gpointer array, guint
 							   GstSearchMode mode, gconstpointer search_data,
 							   gpointer user_data);
 
+gint gst_util_greatest_common_divisor (gint a, gint b);
+void gst_util_fraction_to_double (gint src_n, gint src_d, gdouble *dest);
+void gst_util_double_to_fraction (gdouble src, gint *dest_n, gint *dest_d);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */
