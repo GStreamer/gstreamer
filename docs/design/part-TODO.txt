@@ -14,15 +14,6 @@ API/ABI
 
 - query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.
 
-- add some sort of time/frame stepping functionality, either with a flag on
-  the seek event or some new seek event type. The idea would be to operate on
-  the current playback position instead of the current configured segment when
-  doing the seek.
-  Idea is that frame stepping forwards can be done in the sinks, ie, just
-  dropping N frames/time, sending more complicated queries upstream which can
-  ideally handle those cases more efficiently too. Some ideas are in
-  docs/design/draft-framestep.txt
-
 - use | instead of + as divider in serialization of Flags
   (gstvalue/gststructure)
 
