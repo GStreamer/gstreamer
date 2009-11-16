@@ -126,7 +126,7 @@ export GST_PLUGIN_SYSTEM_PATH=
 rm -f $GST/gstreamer/registry.xml 2>/dev/null
 export GST_REGISTRY=$GST/gstreamer/registry.dat
 # Point at the uninstalled plugin scanner
-export GST_PLUGIN_SCANNER=$GST/gstreamer/libs/gst/helpers/plugin-scanner
+export GST_PLUGIN_SCANNER=$GST/gstreamer/libs/gst/helpers/gst-plugin-scanner
 
 # once MANPATH is set, it needs at least an "empty"component to keep pulling
 # in the system-configured man paths from man.config

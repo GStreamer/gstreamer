@@ -687,9 +687,9 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugi
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 dnl plugin scanner locations
-AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/plugin-scanner)
+AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/gstreamer-$GST_MAJORMINOR/gst-plugin-scanner)
 AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
-    "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed plugin-scanner])
+    "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 
 SHAVE_INIT([common],[enable])
 

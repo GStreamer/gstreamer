@@ -345,7 +345,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
   char *argv[] = { location, "-l", NULL };
 
-  GST_LOG ("Trying to spawn plugin-scanner helper at %s", location);
+  GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
   if (!g_spawn_async_with_pipes (NULL, argv, NULL,
           G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
           NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
@@ -377,7 +377,7 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
   if (loader->child_running)
     return TRUE;
 
-  /* Find the plugin-scanner, first try installed then by env-var */
+  /* Find the gst-plugin-scanner, first try installed then by env-var */
   helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
   res = gst_plugin_loader_try_helper (loader, helper_bin);
   g_free (helper_bin);
@@ -392,8 +392,8 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
       res = gst_plugin_loader_try_helper (loader, helper_bin);
       g_free (helper_bin);
     } else {
-      GST_LOG ("Installed plugin scanner failed and "
-          "GST_PLUGIN_SCANNER env var not set. No plugin-scanner available");
+      GST_LOG ("Installed plugin scanner failed and GST_PLUGIN_SCANNER "
+          " env var not set. No gst-plugin-scanner available");
     }
   }
 

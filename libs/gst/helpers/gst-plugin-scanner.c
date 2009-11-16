@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2008 Jan Schmidt <jan.schmidt@sun.com>
  *
- * plugin-scanner.c: tool to load plugins out of process for scanning
+ * gst-plugin-scanner.c: tool to load plugins out of process for scanning
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

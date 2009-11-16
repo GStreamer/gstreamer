@@ -21,7 +21,7 @@ REGISTRY_ENVIRONMENT = \
 
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
-        GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/plugin-scanner \
+        GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/gst-plugin-scanner \
         GST_PLUGIN_SYSTEM_PATH=                                 \
         GST_PLUGIN_PATH=$(top_builddir)/plugins
 
