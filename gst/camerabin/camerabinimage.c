@@ -432,7 +432,8 @@ gst_camerabin_image_create_elements (GstCameraBinImage * img)
                 "ffmpegcolorspace"))) {
       goto done;
     }
-    img_sinkpad = gst_element_get_static_pad (csp, "sink");
+    if (!img_sinkpad)
+      img_sinkpad = gst_element_get_static_pad (csp, "sink");
   }
 
   if (img->app_enc) {
