@@ -36,10 +36,8 @@ typedef struct _GstGLOverlayClass GstGLOverlayClass;
 struct _GstGLOverlay
 {
   GstGLFilter filter;
-
   gchar *location;
   gboolean pbuf_has_changed;
-
   gint8 pos_x_png;
   gint8 pos_y_png;
   guint8 size_png;
@@ -47,6 +45,10 @@ struct _GstGLOverlay
   gint8 pos_y_video;
   guint8 size_video;
   gboolean video_top;
+  guint8 rotate_png;
+  guint8 rotate_video;
+  gint8 angle_png;
+  gint8 angle_video;
   guchar *pixbuf;
   gint width, height;
   GLuint pbuftexture;
