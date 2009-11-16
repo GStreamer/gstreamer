@@ -1448,8 +1448,6 @@ gst_structure_get_enum (const GstStructure * structure,
 
   if (field == NULL)
     return FALSE;
-  if (!G_VALUE_HOLDS_ENUM (&field->value))
-    return FALSE;
   if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, enumtype))
     return FALSE;
 
