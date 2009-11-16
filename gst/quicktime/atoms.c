@@ -1909,11 +1909,15 @@ atom_stsd_copy_data (AtomSTSD * stsd, guint8 ** buffer, guint64 * size,
         break;
       default:
         if (se->kind == VIDEO) {
-          size += sample_entry_mp4v_copy_data ((SampleTableEntryMP4V *)
-              walker->data, buffer, size, offset);
+          if (!sample_entry_mp4v_copy_data ((SampleTableEntryMP4V *)
+                  walker->data, buffer, size, offset)) {
+            return 0;
+          }
         } else if (se->kind == AUDIO) {
-          size += sample_entry_mp4a_copy_data ((SampleTableEntryMP4A *)
-              walker->data, buffer, size, offset);
+          if (!sample_entry_mp4a_copy_data ((SampleTableEntryMP4A *)
+                  walker->data, buffer, size, offset)) {
+            return 0;
+          }
         } else {
           if (!atom_hint_sample_entry_copy_data (
                   (AtomHintSampleEntry *) walker->data, buffer, size, offset)) {
