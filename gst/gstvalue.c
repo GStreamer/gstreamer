@@ -3606,7 +3606,8 @@ gboolean
 gst_value_fraction_multiply (GValue * product, const GValue * factor1,
     const GValue * factor2)
 {
-  gint gcd, n1, n2, d1, d2;
+  gint n1, n2, d1, d2;
+  gint res_n, res_d;
 
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor1), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor2), FALSE);
@@ -3616,17 +3617,10 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
   d1 = factor1->data[1].v_int;
   d2 = factor2->data[1].v_int;
 
-  gcd = gst_util_greatest_common_divisor (n1, d2);
-  n1 /= gcd;
-  d2 /= gcd;
-  gcd = gst_util_greatest_common_divisor (n2, d1);
-  n2 /= gcd;
-  d1 /= gcd;
+  if (!gst_util_fraction_multiply (n1, d1, n2, d2, &res_n, &res_d))
+    return FALSE;
 
-  g_return_val_if_fail (n1 == 0 || G_MAXINT / ABS (n1) >= ABS (n2), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (d2), FALSE);
-
-  gst_value_set_fraction (product, n1 * n2, d1 * d2);
+  gst_value_set_fraction (product, res_n, res_d);
 
   return TRUE;
 }
@@ -3646,6 +3640,7 @@ gst_value_fraction_subtract (GValue * dest,
     const GValue * minuend, const GValue * subtrahend)
 {
   gint n1, n2, d1, d2;
+  gint res_n, res_d;
 
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (minuend), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (subtrahend), FALSE);
@@ -3655,20 +3650,9 @@ gst_value_fraction_subtract (GValue * dest,
   d1 = minuend->data[1].v_int;
   d2 = subtrahend->data[1].v_int;
 
-  if (n1 == 0) {
-    gst_value_set_fraction (dest, -n2, d2);
-    return TRUE;
-  }
-  if (n2 == 0) {
-    gst_value_set_fraction (dest, n1, d1);
-    return TRUE;
-  }
-
-  g_return_val_if_fail (n1 == 0 || G_MAXINT / ABS (n1) >= ABS (d2), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (n2), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (d2), FALSE);
-
-  gst_value_set_fraction (dest, (n1 * d2) - (n2 * d1), d1 * d2);
+  if (!gst_util_fraction_add (n1, d1, -n2, d2, &res_n, &res_d))
+    return FALSE;
+  gst_value_set_fraction (dest, res_n, res_d);
 
   return TRUE;
 }

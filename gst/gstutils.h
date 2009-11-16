@@ -1169,6 +1169,8 @@ gpointer                gst_util_array_binary_search      (gpointer array, guint
 gint gst_util_greatest_common_divisor (gint a, gint b);
 void gst_util_fraction_to_double (gint src_n, gint src_d, gdouble *dest);
 void gst_util_double_to_fraction (gdouble src, gint *dest_n, gint *dest_d);
+gboolean gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d, gint *res_n, gint *res_d);
+gboolean gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint *res_n, gint *res_d);
 
 G_END_DECLS
 

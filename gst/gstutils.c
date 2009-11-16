@@ -3950,3 +3950,96 @@ gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
   *dest_n = N;
   *dest_d = D;
 }
+
+/** gst_util_fraction_multiply:
+ * @a_n: Numerator of first value
+ * @a_d: Denominator of first value
+ * @b_n: Numerator of second value
+ * @b_d: Denominator of second value
+ * @res_n: Pointer to #gint to hold the result numerator
+ * @res_d: Pointer to #gint to hold the result denominator
+ *
+ * Multiplies the fractions @a_n/@a_d and @b_n/@b_d and stores
+ * the result in @res_n and @res_d.
+ *
+ * Returns: %FALSE on overflow, %TRUE otherwise.
+ *
+ * Since: 0.10.26
+ */
+gboolean
+gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
+    gint * res_n, gint * res_d)
+{
+  gint gcd;
+
+  g_return_val_if_fail (res_n != NULL, FALSE);
+  g_return_val_if_fail (res_d != NULL, FALSE);
+  g_return_val_if_fail (a_d != 0, FALSE);
+  g_return_val_if_fail (b_d != 0, FALSE);
+
+  gcd = gst_util_greatest_common_divisor (a_n, b_d);
+  a_n /= gcd;
+  b_d /= gcd;
+  gcd = gst_util_greatest_common_divisor (a_d, b_n);
+  a_d /= gcd;
+  b_n /= gcd;
+
+  g_return_val_if_fail (a_n == 0 || G_MAXINT / ABS (a_n) >= ABS (b_n), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
+
+  *res_n = a_n * b_n;
+  *res_d = a_d * b_d;
+
+  return TRUE;
+}
+
+/** gst_util_fraction_add:
+ * @a_n: Numerator of first value
+ * @a_d: Denominator of first value
+ * @b_n: Numerator of second value
+ * @b_d: Denominator of second value
+ * @res_n: Pointer to #gint to hold the result numerator
+ * @res_d: Pointer to #gint to hold the result denominator
+ *
+ * Adds the fractions @a_n/@a_d and @b_n/@b_d and stores
+ * the result in @res_n and @res_d.
+ *
+ * Returns: %FALSE on overflow, %TRUE otherwise.
+ *
+ * Since: 0.10.26
+ */
+gboolean
+gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
+    gint * res_d)
+{
+  gint gcd;
+
+  g_return_val_if_fail (res_n != NULL, FALSE);
+  g_return_val_if_fail (res_d != NULL, FALSE);
+  g_return_val_if_fail (a_d != 0, FALSE);
+  g_return_val_if_fail (b_d != 0, FALSE);
+
+  if (a_n == 0) {
+    *res_n = b_n;
+    *res_d = b_d;
+    return TRUE;
+  }
+  if (b_n == 0) {
+    *res_n = a_n;
+    *res_d = a_d;
+    return TRUE;
+  }
+
+  g_return_val_if_fail (a_n == 0 || G_MAXINT / ABS (a_n) >= ABS (b_n), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
+
+  *res_n = (a_n * b_d) + (a_d * b_n);
+  *res_d = a_d * b_d;
+
+  gcd = gst_util_greatest_common_divisor (*res_n, *res_d);
+  *res_n /= gcd;
+  *res_d /= gcd;
+
+  return TRUE;
+}
