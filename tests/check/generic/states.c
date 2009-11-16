@@ -219,6 +219,13 @@ states_suite (void)
   Suite *s = suite_create ("states");
   TCase *tc_chain = tcase_create ("general");
 
+#if defined(HAVE_LADSPA) || defined(HAVE_LV2)
+  /* timeout after 60s, not the default 3
+   * we have wrapper plugins enabled
+   */
+  tcase_set_timeout (tc_chain, 60);
+#endif
+
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_state_changes_up_and_down_seq);
