@@ -296,11 +296,9 @@ gst_structure_copy (const GstStructure * structure)
 
   g_return_val_if_fail (structure != NULL, NULL);
 
-  new_structure =
-      gst_structure_id_empty_new_with_size (structure->name,
-      structure->fields->len);
-
   len = structure->fields->len;
+  new_structure = gst_structure_id_empty_new_with_size (structure->name, len);
+
   for (i = 0; i < len; i++) {
     GstStructureField new_field = { 0 };
 
