@@ -578,9 +578,8 @@ gst_ladspa_setup (GstSignalProcessor * gsp, GstCaps * caps)
 
   GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz", sample_rate);
 
-  ladspa->handle = desc->instantiate (desc, sample_rate);
-
-  g_return_val_if_fail (ladspa->handle != NULL, FALSE);
+  if (!(ladspa->handle = desc->instantiate (desc, sample_rate)))
+    goto no_instance;
 
   /* connect the control ports */
   for (i = 0; i < gsp_class->num_control_in; i++)
@@ -595,6 +594,11 @@ gst_ladspa_setup (GstSignalProcessor * gsp, GstCaps * caps)
 no_sample_rate:
   {
     GST_WARNING_OBJECT (gsp, "got no sample-rate");
+    return FALSE;
+  }
+no_instance:
+  {
+    GST_WARNING_OBJECT (gsp, "could not create instance");
     return FALSE;
   }
 }
