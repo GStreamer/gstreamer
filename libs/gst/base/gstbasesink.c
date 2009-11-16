@@ -1854,6 +1854,7 @@ do_times:
                 &rstart, &rstop))) {
       /* step is still busy, we discard data when we are flushing */
       *stepped = step->flush;
+      GST_DEBUG_OBJECT (basesink, "stepping busy");
     }
   }
   /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
@@ -2254,19 +2255,19 @@ again:
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto preroll_failed;
 
-  /* After rendering we store the position of the last buffer so that we can use
-   * it to report the position. We need to take the lock here. */
-  GST_OBJECT_LOCK (basesink);
-  priv->current_sstart = sstart;
-  priv->current_sstop = (GST_CLOCK_TIME_IS_VALID (sstop) ? sstop : sstart);
-  GST_OBJECT_UNLOCK (basesink);
-
   /* update the segment with a pending step if the current one is invalid and we
    * have a new pending one. We only accept new step updates after a preroll */
   if (G_UNLIKELY (pending->valid && !current->valid)) {
     start_stepping (basesink, &basesink->segment, pending, current);
     goto do_step;
   }
+
+  /* After rendering we store the position of the last buffer so that we can use
+   * it to report the position. We need to take the lock here. */
+  GST_OBJECT_LOCK (basesink);
+  priv->current_sstart = sstart;
+  priv->current_sstop = (GST_CLOCK_TIME_IS_VALID (sstop) ? sstop : sstart);
+  GST_OBJECT_UNLOCK (basesink);
 
   if (!do_sync)
     goto done;
