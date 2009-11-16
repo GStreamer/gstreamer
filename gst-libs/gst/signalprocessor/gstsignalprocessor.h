@@ -78,14 +78,10 @@ struct _GstSignalProcessorGroup {
 struct _GstSignalProcessor {
   GstElement     element;
 
+  /* state */
   GstCaps *caps;
-
-  guint sample_rate;
-
   GstSignalProcessorState state;
-
   GstFlowReturn flow_state;
-
   GstActivateMode mode;
 
   /* pending inputs before processing can take place */
@@ -121,7 +117,7 @@ struct _GstSignalProcessorClass {
 
   /* virtual methods for subclasses */
 
-  gboolean      (*setup)        (GstSignalProcessor *self, guint sample_rate);
+  gboolean      (*setup)        (GstSignalProcessor *self, GstCaps *caps);
   gboolean      (*start)        (GstSignalProcessor *self);
   void          (*stop)         (GstSignalProcessor *self);
   void          (*cleanup)      (GstSignalProcessor *self);

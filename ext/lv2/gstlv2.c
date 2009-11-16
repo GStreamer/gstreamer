@@ -53,7 +53,7 @@ static void gst_lv2_set_property (GObject * object,
 static void gst_lv2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_lv2_setup (GstSignalProcessor * sigproc, guint sample_rate);
+static gboolean gst_lv2_setup (GstSignalProcessor * sigproc, GstCaps * caps);
 static gboolean gst_lv2_start (GstSignalProcessor * sigproc);
 static void gst_lv2_stop (GstSignalProcessor * sigproc);
 static void gst_lv2_cleanup (GstSignalProcessor * sigproc);
@@ -591,11 +591,13 @@ gst_lv2_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
+gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
 {
   GstLV2 *lv2;
   GstLV2Class *oclass;
   GstSignalProcessorClass *gsp_class;
+  GstStructure *s;
+  gint sample_rate;
   gint i;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
@@ -603,6 +605,10 @@ gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
   oclass = (GstLV2Class *) gsp_class;
 
   g_return_val_if_fail (lv2->activated == FALSE, FALSE);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (s, "rate", &sample_rate))
+    goto no_sample_rate;
 
   GST_DEBUG_OBJECT (lv2, "instantiating the plugin at %d Hz", sample_rate);
 
@@ -621,6 +627,12 @@ gst_lv2_setup (GstSignalProcessor * gsp, guint sample_rate)
         &(gsp->control_out[i]));
 
   return TRUE;
+
+no_sample_rate:
+  {
+    GST_WARNING_OBJECT (gsp, "got no sample-rate");
+    return FALSE;
+  }
 }
 
 static gboolean

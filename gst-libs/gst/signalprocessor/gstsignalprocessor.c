@@ -278,8 +278,6 @@ gst_signal_processor_init (GstSignalProcessor * self,
   /* init */
   self->pending_in = klass->num_group_in + klass->num_audio_in;
   self->pending_out = 0;
-
-  self->sample_rate = 0;
 }
 
 static void
@@ -304,7 +302,7 @@ gst_signal_processor_finalize (GObject * object)
 }
 
 static gboolean
-gst_signal_processor_setup (GstSignalProcessor * self, guint sample_rate)
+gst_signal_processor_setup (GstSignalProcessor * self, GstCaps * caps)
 {
   GstSignalProcessorClass *klass;
   gboolean ret = TRUE;
@@ -316,7 +314,7 @@ gst_signal_processor_setup (GstSignalProcessor * self, guint sample_rate)
   g_return_val_if_fail (self->state == GST_SIGNAL_PROCESSOR_STATE_NULL, FALSE);
 
   if (klass->setup)
-    ret = klass->setup (self, sample_rate);
+    ret = klass->setup (self, caps);
 
   if (!ret)
     goto setup_failed;
@@ -327,7 +325,7 @@ gst_signal_processor_setup (GstSignalProcessor * self, guint sample_rate)
 
 setup_failed:
   {
-    GST_INFO_OBJECT (self, "setup() failed at %u Hz", sample_rate);
+    GST_INFO_OBJECT (self, "setup() failed for caps: %" GST_PTR_FORMAT, caps);
     return ret;
   }
 }
@@ -476,28 +474,16 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
   /* the whole processor has one caps; if the sample rate changes, let subclass
      implementations know */
   if (!gst_caps_is_equal (caps, self->caps)) {
-    GstStructure *s;
-    gint sample_rate;
-
     GST_DEBUG_OBJECT (pad, "got caps %" GST_PTR_FORMAT, caps);
-
-    s = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (s, "rate", &sample_rate)) {
-      GST_WARNING ("got no sample-rate");
-      goto impossible;
-    }
-
-    GST_DEBUG_OBJECT (self, "Got rate=%d", sample_rate);
 
     if (GST_SIGNAL_PROCESSOR_IS_RUNNING (self))
       gst_signal_processor_stop (self);
     if (GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self))
       gst_signal_processor_cleanup (self);
 
-    if (!gst_signal_processor_setup (self, sample_rate))
+    if (!gst_signal_processor_setup (self, caps))
       goto start_or_setup_failed;
 
-    self->sample_rate = sample_rate;
     gst_caps_replace (&self->caps, caps);
   } else {
     GST_DEBUG_OBJECT (self, "skipping, have caps already");
@@ -509,7 +495,7 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
      sample rate (e.g., when having gone PLAYING->READY->PLAYING). make sure
      when we leave that the processor is RUNNING. */
   if (!GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self)
-      && !gst_signal_processor_setup (self, self->sample_rate))
+      && !gst_signal_processor_setup (self, self->caps))
     goto start_or_setup_failed;
   if (!GST_SIGNAL_PROCESSOR_IS_RUNNING (self)
       && !gst_signal_processor_start (self))
@@ -526,12 +512,6 @@ start_or_setup_failed:
   }
 setcaps_pull_failed:
   {
-    gst_object_unref (self);
-    return FALSE;
-  }
-impossible:
-  {
-    g_critical ("something impossible happened");
     gst_object_unref (self);
     return FALSE;
   }

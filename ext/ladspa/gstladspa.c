@@ -60,8 +60,7 @@ static void gst_ladspa_set_property (GObject * object, guint prop_id,
 static void gst_ladspa_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_ladspa_setup (GstSignalProcessor * sigproc,
-    guint sample_rate);
+static gboolean gst_ladspa_setup (GstSignalProcessor * sigproc, GstCaps * caps);
 static gboolean gst_ladspa_start (GstSignalProcessor * sigproc);
 static void gst_ladspa_stop (GstSignalProcessor * sigproc);
 static void gst_ladspa_cleanup (GstSignalProcessor * sigproc);
@@ -557,13 +556,15 @@ gst_ladspa_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_ladspa_setup (GstSignalProcessor * gsp, guint sample_rate)
+gst_ladspa_setup (GstSignalProcessor * gsp, GstCaps * caps)
 {
   GstLADSPA *ladspa;
   GstLADSPAClass *oclass;
   GstSignalProcessorClass *gsp_class;
   LADSPA_Descriptor *desc;
-  int i;
+  GstStructure *s;
+  gint sample_rate;
+  gint i;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
   ladspa = (GstLADSPA *) gsp;
@@ -572,6 +573,10 @@ gst_ladspa_setup (GstSignalProcessor * gsp, guint sample_rate)
 
   g_return_val_if_fail (ladspa->handle == NULL, FALSE);
   g_return_val_if_fail (ladspa->activated == FALSE, FALSE);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (s, "rate", &sample_rate))
+    goto no_sample_rate;
 
   GST_DEBUG_OBJECT (ladspa, "instantiating the plugin at %d Hz", sample_rate);
 
@@ -588,6 +593,12 @@ gst_ladspa_setup (GstSignalProcessor * gsp, guint sample_rate)
         oclass->control_out_portnums[i], &(gsp->control_out[i]));
 
   return TRUE;
+
+no_sample_rate:
+  {
+    GST_WARNING_OBJECT (gsp, "got no sample-rate");
+    return FALSE;
+  }
 }
 
 static gboolean
