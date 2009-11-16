@@ -1394,15 +1394,8 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
   res =
       gst_segment_clip (&dec->segment, GST_FORMAT_TIME, in_ts, stop, &cstart,
       &cstop);
-  if (G_UNLIKELY (!res && in_ts != dec->segment.stop))
+  if (G_UNLIKELY (!res))
     goto beach;
-
-  /* Special case: last buffer has zero duration */
-  if (G_UNLIKELY (in_ts == dec->segment.stop)) {
-    res = TRUE;
-    cstart = in_ts - 1;
-    stop = cstop = in_ts;
-  }
 
   /* we're pretty sure the duration of this buffer is not till the end of this
    * segment (which _clip will assume when the stop is -1) */
