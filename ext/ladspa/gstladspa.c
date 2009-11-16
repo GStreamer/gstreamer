@@ -476,8 +476,6 @@ gst_ladspa_class_init (GstLADSPAClass * klass, LADSPA_Descriptor * desc)
 static void
 gst_ladspa_init (GstLADSPA * ladspa, GstLADSPAClass * klass)
 {
-  /* whoopee, nothing to do */
-
   ladspa->descriptor = klass->descriptor;
   ladspa->activated = FALSE;
   ladspa->inplace_broken =
