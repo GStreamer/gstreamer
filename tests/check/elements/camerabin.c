@@ -122,11 +122,29 @@ capture_done (GstElement * elem, const gchar * filename, gpointer user_data)
 
 /* configuration */
 
+static gboolean
+set_and_check_camerabin_element (GstElement * camera, const char *property,
+    GstElement * element)
+{
+  GstElement *element_check;
+  gboolean ret = FALSE;
+
+  if (element) {
+    g_object_set (camera, property, element, NULL);
+    g_object_get (camera, property, &element_check, NULL);
+    if (element_check == element)
+      ret = TRUE;
+    if (element_check)
+      g_object_unref (element_check);
+  }
+  return ret;
+}
+
 static void
 setup_camerabin_elements (GstElement * camera)
 {
   GstElement *vfsink, *audiosrc, *videosrc, *audioenc, *videoenc, *imageenc,
-      *videomux, *viewfinder_filter;
+      *videomux, *viewfinder_filter, *imagepp, *videopp;
   GstCaps *audiocaps, *videocaps;
 
   /* Use fakesink for view finder */
@@ -148,13 +166,23 @@ setup_camerabin_elements (GstElement * camera)
   videomux = gst_element_factory_make ("avimux", NULL);
   imageenc = gst_element_factory_make ("jpegenc", NULL);
   viewfinder_filter = gst_element_factory_make ("identity", NULL);
+  imagepp = gst_element_factory_make ("identity", NULL);
+  videopp = gst_element_factory_make ("identity", NULL);
 
-  if (vfsink && audiosrc && videosrc && audioenc && videoenc && videomux
-      && imageenc && viewfinder_filter) {
-    g_object_set (camera, "viewfinder-sink", vfsink, "audio-source", audiosrc,
-        "video-source", videosrc, "audio-encoder", audioenc, "video-encoder",
-        videoenc, "image-encoder", imageenc, "video-muxer", videomux,
-        "viewfinder-filter", viewfinder_filter, NULL);
+  if (set_and_check_camerabin_element (camera, "viewfinder-sink", vfsink)
+      && set_and_check_camerabin_element (camera, "audio-source", audiosrc)
+      && set_and_check_camerabin_element (camera, "video-source", videosrc)
+      && set_and_check_camerabin_element (camera, "audio-encoder", audioenc)
+      && set_and_check_camerabin_element (camera, "video-encoder", videoenc)
+      && set_and_check_camerabin_element (camera, "image-encoder", imageenc)
+      && set_and_check_camerabin_element (camera, "video-muxer", videomux)
+      && set_and_check_camerabin_element (camera, "viewfinder-filter",
+          viewfinder_filter)
+      && set_and_check_camerabin_element (camera, "image-post-processing",
+          imagepp)
+      && set_and_check_camerabin_element (camera, "video-post-processing",
+          videopp)) {
+    GST_INFO ("element properties set and checked");
   } else {
     GST_WARNING ("error setting up test plugins");
   }
@@ -570,10 +598,6 @@ GST_START_TEST (test_single_image_capture)
   if (!camera)
     return;
 
-  /* set still image mode */
-  g_object_set (camera, "mode", 0,
-      "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
-
   /* Test photography iface settings */
   gst_element_get_state (GST_ELEMENT (camera), NULL, NULL, (2 * GST_SECOND));
   test_photography_settings (camera);
@@ -582,6 +606,10 @@ GST_START_TEST (test_single_image_capture)
 
   /* set flags to disable additional elements */
   g_object_set (camera, "flags", 0, NULL);
+
+  /* set still image mode */
+  g_object_set (camera, "mode", 0,
+      "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
