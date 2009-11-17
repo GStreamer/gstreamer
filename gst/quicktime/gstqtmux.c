@@ -221,18 +221,19 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_DO_CTTS,
       g_param_spec_boolean ("presentation-time",
           "Include presentation-time info",
-          "Calculate and include presentation/composition time (in addition to decoding time)"
-          " (use with caution)", DEFAULT_DO_CTTS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Calculate and include presentation/composition time "
+          "(in addition to decoding time) (use with caution)",
+          DEFAULT_DO_CTTS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_FAST_START,
       g_param_spec_boolean ("faststart", "Format file to faststart",
           "If the file should be formated for faststart (headers first). ",
           DEFAULT_FAST_START, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_FAST_START_TEMP_FILE,
       g_param_spec_string ("faststart-file", "File to use for storing buffers",
-          "File that will be used temporarily to store data from the stream when "
-          "creating a faststart file. If null a filepath will be created automatically",
-          DEFAULT_FAST_START_TEMP_FILE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "File that will be used temporarily to store data from the stream "
+          "when creating a faststart file. If null a filepath will be "
+          "created automatically", DEFAULT_FAST_START_TEMP_FILE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
@@ -434,6 +435,7 @@ gst_qt_mux_add_mp4_date (GstQTMux * qtmux, const GstTagList * list,
   GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
       GST_FOURCC_ARGS (fourcc), str);
   atom_moov_add_str_tag (qtmux->moov, fourcc, str);
+  g_free (str);
 }
 
 static void
