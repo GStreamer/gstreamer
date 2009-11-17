@@ -154,8 +154,28 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Index</NICK>
-<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
+<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer written.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSink::next-file</NAME>
+<TYPE>GstMultiFileSinkNext</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Next File</NICK>
+<BLURB>When to start a new file.</BLURB>
+<DEFAULT>New file for each buffer</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFileSink::post-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Messages</NICK>
+<BLURB>Post a message for each file with information of the buffer.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -234,7 +254,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Message</NICK>
-<BLURB>Whether to post a 'spectrum' element message on the bus for each passed interval.</BLURB>
+<BLURB>Whether to post a 'spectrum' element message on the bus for each passed interval (deprecated, use post-messages).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -266,6 +286,16 @@
 <NICK>Phase</NICK>
 <BLURB>Whether to add a 'phase' field to the structure of any 'spectrum' element messages posted on the bus.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::post-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Messages</NICK>
+<BLURB>Whether to post a 'spectrum' element message on the bus for each passed interval.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -421,7 +451,7 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
@@ -471,7 +501,7 @@
 <ARG>
 <NAME>GstUDPSrc::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP reception. (-1 = no socket).</BLURB>
@@ -1521,7 +1551,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -1741,7 +1771,7 @@
 <ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>allowed timestamp deviation</NICK>
 <BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1751,7 +1781,7 @@
 <ARG>
 <NAME>GstTest::buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>buffer count</NICK>
 <BLURB>number of buffers in stream.</BLURB>
@@ -1761,7 +1791,7 @@
 <ARG>
 <NAME>GstTest::expected-buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected buffer count</NICK>
 <BLURB>expected number of buffers in stream.</BLURB>
@@ -1771,7 +1801,7 @@
 <ARG>
 <NAME>GstTest::expected-length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected length</NICK>
 <BLURB>expected length of stream.</BLURB>
@@ -1791,7 +1821,7 @@
 <ARG>
 <NAME>GstTest::length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>length</NICK>
 <BLURB>length of stream.</BLURB>
@@ -1811,7 +1841,7 @@
 <ARG>
 <NAME>GstTest::timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>timestamp deviation</NICK>
 <BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1881,7 +1911,7 @@
 <ARG>
 <NAME>GstBreakMyData::set-to</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,255]</RANGE>
+<RANGE>[-1,255]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>set-to</NICK>
 <BLURB>set changed bytes to this value (-1 means random value.</BLURB>
@@ -2211,7 +2241,7 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,32767]</RANGE>
+<RANGE>[-1,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2281,7 +2311,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP sending. (-1 == no socket).</BLURB>
@@ -2291,7 +2321,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2321,7 +2351,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,63]</RANGE>
+<RANGE>[-1,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -2333,9 +2363,19 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,255]</RANGE>
 <FLAGS>rw</FLAGS>
+<NICK>Unicast TTL</NICK>
+<BLURB>Used for setting the unicast TTL parameter.</BLURB>
+<DEFAULT>64</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::ttl-mc</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
 <NICK>Multicast TTL</NICK>
 <BLURB>Used for setting the multicast TTL parameter.</BLURB>
-<DEFAULT>64</DEFAULT>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2891,7 +2931,7 @@
 <ARG>
 <NAME>GstV4l2Src::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
@@ -3111,7 +3151,7 @@
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
 <TYPE>glong</TYPE>
-<RANGE>[1,G_MAXINT]</RANGE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>maximum</NICK>
 <BLURB>maximum buffer size.</BLURB>
@@ -3121,7 +3161,7 @@
 <ARG>
 <NAME>GstRndBufferSize::min</NAME>
 <TYPE>glong</TYPE>
-<RANGE>[0,G_MAXINT]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>mininum</NICK>
 <BLURB>mininum buffer size.</BLURB>
@@ -3131,7 +3171,7 @@
 <ARG>
 <NAME>GstRndBufferSize::seed</NAME>
 <TYPE>gulong</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>random number seed</NICK>
 <BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
@@ -3214,6 +3254,16 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Send Messages</NICK>
+<BLURB>Whether to post messages containing pixbufs on the bus  (deprecated, use post-messages).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufSink::post-messages</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Messages</NICK>
 <BLURB>Whether to post messages containing pixbufs on the bus.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
@@ -19494,8 +19544,18 @@
 <RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
-<BLURB>Volume of this stream, 1.0=100%.</BLURB>
+<BLURB>Linear volume of this stream, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSink::mute</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mute</NICK>
+<BLURB>Mute state of this stream.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19741,7 +19801,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -20199,6 +20259,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::ignore-pt</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore PT</NICK>
+<BLURB>Do not demultiplex based on PT values.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20321,7 +20391,7 @@
 <ARG>
 <NAME>GstV4l2Sink::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>

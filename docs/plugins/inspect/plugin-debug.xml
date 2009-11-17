@@ -3,10 +3,10 @@
   <description>elements for testing and debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebug.so</filename>
   <basename>libgstdebug.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -67,6 +67,21 @@
         <caps>
           <name>sink</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>pushfilesrc</name>
+      <longname>Push File Source</longname>
+      <class>Testing</class>
+      <description>Implements pushfile:// URI-handler for push-based file access</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>

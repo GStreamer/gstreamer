@@ -3,10 +3,10 @@
   <description>Plugin contains auto-detection plugins for video/audio in- and outputs</description>
   <filename>../../gst/autodetect/.libs/libgstautodetect.so</filename>
   <basename>libgstautodetect.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,8 +14,7 @@
       <longname>Auto audio sink</longname>
       <class>Sink/Audio</class>
       <description>Wrapper audio sink for automatically detected audio sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -30,8 +29,7 @@
       <longname>Auto audio source</longname>
       <class>Source/Audio</class>
       <description>Wrapper audio source for automatically detected audio source</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net&gt;
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;
     Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
@@ -47,8 +45,7 @@
       <longname>Auto video sink</longname>
       <class>Sink/Video</class>
       <description>Wrapper video sink for automatically detected video sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -63,8 +60,7 @@
       <longname>Auto video source</longname>
       <class>Source/Video</class>
       <description>Wrapper video source for automatically detected video source</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Jan Schmidt &lt;thaytan@noraisin.net&gt;
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;
     Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>

@@ -3,10 +3,10 @@
   <description>annodex stream manipulation (info about annodex: http://www.annodex.net)</description>
   <filename>../../ext/annodex/.libs/libgstannodex.so</filename>
   <basename>libgstannodex.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

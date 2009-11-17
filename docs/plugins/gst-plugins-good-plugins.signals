@@ -470,6 +470,15 @@ GstRtpBin *gstrtpbin
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::payload-type-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>

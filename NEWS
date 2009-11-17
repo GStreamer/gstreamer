@@ -1,4 +1,80 @@
-This is GStreamer Good Plug-ins 0.10.16, "Secret Handshakes"
+This is GStreamer Good Plug-ins 0.10.17, "They used to sparkle"
+
+Changes since 0.10.16:
+    
+      * RTP improvements
+      * Support automatic cropping in videobox
+      * Add TTL multicast UDP property
+      * AVI demux push mode fixes and performance improvements
+      * Support large and unusual chunks sizes in wav
+      * Quicktime demuxer improvements
+      * JPEG decode fixes and speedups
+      * Support interlaced Y4M file output
+      * DV demuxer improvements
+      * Pulseaudio fixes and improvements
+      * Support Pulseaudio PLAY/PAUSE requests
+      * speexdec improvements
+      * FLV demuxer improvements
+      * Fix audio noise in the Equalizer plugin, and other improvements
+      * Fix compilation on OS/X Snow Leopard
+      * AVI muxer fixes
+      * Support MPEG V4L2 devices and improve timestamping
+      * Better jpeg2k support
+      * Many other bug fixes and improvements
+
+Bugs fixed since 0.10.16:
+     
+      * 597848 : " Media Player Classic " won't play certain files produced by avimux.
+      * 588245 : TTL is never applied with udpsink/udpmultisink
+      * 368681 : avimux + vbr lame  always out of sync
+      * 458629 : [avidemux] high memory usage for many index entries
+      * 561825 : Problem with RTCP thread using freed objects
+      * 581334 : [qtdemux]  Add support for embedded subtitles
+      * 582238 : [videobox] Add support for autocrop to caps
+      * 590362 : [v4l2src] x264enc ! qtmux fails because of missing frame duration
+      * 591713 : [y4menc] interlaced support
+      * 593354 : rtpjitterbuffer sometimes outputs packets with timestamps in the past
+      * 593391 : [rtpsession] : rtp_session_on_timeout : Invalid read of size 4
+      * 593688 : effectv can no longer be compiled with gcc 3
+      * 593757 : [qtdemux] Lack of support for QualComm PureVoice
+      * 593764 : [v4l2src] format ordering: put emulated formats behind native formats
+      * 593955 : rtpjitterbuffer: clock_rate can change between its check and its use
+      * 594039 : missing unref in rtpsource / leak
+      * 594133 : [rtspsrc] leaks authentication info
+      * 594247 : missing math.h include in rtpjpegdepay
+      * 594248 : Use locked-state on internal rtp-bin to avoid shutdown-state-race
+      * 594251 : Avoid throwing out reordered packets with the same timestamp
+      * 594253 : jitterbuf: Only post a warning of clock-rate changed if it is changed from something initialized
+      * 594254 : propagate the pt-type-changed signal
+      * 594283 : rtpbin: make free_session() remove dangling stream references
+      * 594298 : Check if libsoup has SSL support before running HTTPS test in souphttpsrc testsuite
+      * 594490 : gstrtpbin always uses pt to demux
+      * 594520 : multipartmux: mark data buffer as delta-unit
+      * 594599 : videobox: converts AYUV to I420 incorrectly
+      * 594663 : Patch for multifilesink
+      * 594691 : rtph263pay: leak
+      * 595029 : pulse elements fail to connect to pulse 0.9.9
+      * 595220 : gstreamer crashes on pulseaudio latency change
+      * 595231 : [pulsesink] Lowers volume after every new track
+      * 595888 : qtdemux plugin should not return value from void function
+      * 595897 : Problem linking videomixer
+      * 595942 : [qtdemux] issue with corrupted 3gp file
+      * 596319 : [qtdemux] fails to parse pixel aspect ratio data
+      * 597091 : [flvdemux] not outputting no-more-pads causes playbin2 to fail badly on streamed single-stream flv
+      * 597214 : [avidemux] Fix printf formats to avoid warnings in avidemux
+      * 597348 : [qtdemux] Cast variables passed to printf to avoid warnings about incorrect formats
+      * 597351 : [jpegdec] segfaults on a specific picture
+      * 597397 : equalizer is non deterministic
+      * 597463 : [pulsesrc] has no lower bound for fragment size
+      * 597601 : [pulsesink] needs to take control of minreq value
+      * 597730 : osssrc rank should be secondary, just like osssink
+      * 597847 : Windows Media Player won't play large files produced by avimux
+      * 597867 : Plugins good do not build on Ubuntu Hardy (kernel 2.6.24)
+      * 598377 : rtpmanager: only forward the lost event to the last seen payloadnumber
+      * 598517 : [jpegdec] Regression supporting 4:2:2 jpeg videos
+      * 598810 : wavenc: Fix buffer offset by moving length incrementation
+      * 598933 : [pulse] Fix the StreamVolume interface not being advertised
+      * 601381 : v4l2: Make sure to initialize variables before using them
 
 Changes since 0.10.15:
 

@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -173,7 +173,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ], frame-size=(int)[ 64, 512 ]</details>
         </caps>
       </pads>
     </element>

@@ -3,10 +3,10 @@
   <description>APEv1/2 tag reader</description>
   <filename>../../gst/apetag/.libs/libgstapetag.so</filename>
   <basename>libgstapetag.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>APE tag demuxer</longname>
       <class>Codec/Demuxer/Metadata</class>
       <description>Read and output APE tags while demuxing the contents</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

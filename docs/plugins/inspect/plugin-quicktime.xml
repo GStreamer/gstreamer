@@ -3,10 +3,10 @@
   <description>Quicktime support</description>
   <filename>../../gst/qtdemux/.libs/libgstqtdemux.so</filename>
   <basename>libgstqtdemux.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -16,6 +16,12 @@
       <description>Demultiplex a QuickTime file into audio and video streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
+        <caps>
+          <name>subtitle_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
         <caps>
           <name>audio_%02d</name>
           <direction>source</direction>

@@ -3,10 +3,10 @@
   <description>Matroska stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>0.10.16.1</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git/prerelease</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Matroska demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demuxes a Matroska Stream into video/audio/subtitles</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -47,7 +47,7 @@
       <longname>Matroska muxer</longname>
       <class>Codec/Muxer</class>
       <description>Muxes video/audio/subtitle streams into a matroska stream</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>
