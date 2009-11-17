@@ -216,6 +216,7 @@ gst_asf_mux_reset (GstAsfMux * asfmux)
   asfmux->total_data_packets = 0;
   asfmux->file_size = 0;
   asfmux->packet_size = 0;
+  asfmux->first_ts = GST_CLOCK_TIME_NONE;
 
   if (asfmux->payloads) {
     GSList *walk;
@@ -1763,8 +1764,12 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
     gst_asf_payload_free (payload);
     return GST_FLOW_ERROR;
   }
+
+  g_assert (GST_CLOCK_TIME_IS_VALID (asfmux->first_ts));
+  g_assert (GST_CLOCK_TIME_IS_VALID (pad->first_ts));
+
   payload->presentation_time = asfmux->preroll +
-      (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
+      ((GST_BUFFER_TIMESTAMP (buf) - asfmux->first_ts) / GST_MSECOND);
 
   /* update counting values */
   pad->media_object_number = (pad->media_object_number + 1) % 256;
@@ -1833,6 +1838,21 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
       continue;
     }
     time = GST_BUFFER_TIMESTAMP (buf);
+
+    /* check the ts for getting the first time */
+    if (!GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
+        GST_CLOCK_TIME_IS_VALID (time)) {
+      GST_DEBUG_OBJECT (asfmux, "First ts for stream number %" G_GUINT16_FORMAT
+          ": %" GST_TIME_FORMAT, pad->stream_number, GST_TIME_ARGS (time));
+      pad->first_ts = time;
+      if (!GST_CLOCK_TIME_IS_VALID (asfmux->first_ts) ||
+          time < asfmux->first_ts) {
+        GST_DEBUG_OBJECT (asfmux, "New first ts for file %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time));
+        asfmux->first_ts = time;
+      }
+    }
+
     gst_buffer_unref (buf);
 
     if (best_pad == NULL || !GST_CLOCK_TIME_IS_VALID (time) ||
@@ -1886,6 +1906,8 @@ gst_asf_mux_pad_reset (GstAsfPad * pad)
   if (pad->taglist)
     gst_tag_list_free (pad->taglist);
   pad->taglist = NULL;
+
+  pad->first_ts = GST_CLOCK_TIME_NONE;
 
   if (pad->is_audio) {
     GstAsfAudioPad *audiopad = (GstAsfAudioPad *) pad;

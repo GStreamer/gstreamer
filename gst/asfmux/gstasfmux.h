@@ -65,6 +65,7 @@ struct _GstAsfPad
   guint32 bitrate;
 
   GstClockTime play_duration;
+  GstClockTime first_ts;
 
   GstBuffer *codec_data;
 
@@ -135,6 +136,8 @@ struct _GstAsfMux
   guint32 packet_size;
   guint64 preroll;              /* milisecs */
   gboolean merge_stream_tags;
+
+  GstClockTime first_ts;
 
   /* pads */
   GstPad *srcpad;
