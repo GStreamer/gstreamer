@@ -1,13 +1,13 @@
 # Slovak translations for gst-plugins-good.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-13 02:04+0000\n"
-"PO-Revision-Date: 2008-11-04 09:23+0100\n"
+"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"PO-Revision-Date: 2009-11-13 10:28+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -62,12 +62,17 @@ msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Nenašiel sa žiaden podporovaný prúd údajov. Možno je potrebné nainštalovať "
+"zásuvný modul GStreamer RTSP pre prúdy Real media.."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
+"Nenašiel sa žiaden podporovaný prúd údajov. Možno by ste mali povoliť "
+"viacero prenosových protokolov, alebo vám možno chýba správny zásuvný modul "
+"GStreamer RTSP."
 
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba toku údajov."
@@ -154,7 +159,6 @@ msgstr ""
 "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie už "
 "používa iná aplikácia."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -165,7 +169,6 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie vrežime prehrávania."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -179,26 +182,25 @@ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
 msgid "Gain"
 msgstr "Zisk"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Reproduktor"
+msgstr "PC reproduktor"
 
 msgid "Headphone"
-msgstr ""
+msgstr "Slúchadlá"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linkový výstup"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF výstup"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 výstup"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 výstup"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 
@@ -206,7 +208,7 @@ msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."
 
@@ -250,9 +252,9 @@ msgstr "Nepodarilo sa otvoriť zariadenie '%s' pre čítanie a zápis."
 msgid "Device '%s' is not a capture device."
 msgstr "Zariadenie '%s' nie je určené pre zachytávanie."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Zariadenie '%s' nie je určené pre zachytávanie."
+msgstr "Zariadenie '%s' nie je určené pre výstup."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."

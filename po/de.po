@@ -9,13 +9,13 @@
 # Stream = Strom
 #
 # Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
-#
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-13 02:04+0000\n"
-"PO-Revision-Date: 2009-08-22 17:03+0200\n"
+"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"PO-Revision-Date: 2009-11-13 23:01+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -32,7 +32,7 @@ msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "»%s« durch »%s«"
 
 msgid "Internal data stream error."
 msgstr "Interner Datenstromfehler."
@@ -74,14 +74,14 @@ msgstr ""
 "Es wurde kein unterstützter Strom gefunden. Sie müssen vielleicht ein Plugin "
 "zur RTSP-Erweiterung von GStreamer für »Real«-Medienströme installieren."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Es wurde kein unterstützter Strom gefunden. Es fehlt vielleicht das richtige "
-"Plugin zur RTSP-Erweiterung."
+"Es wurde kein unterstützter Strom gefunden. Sie müssen eventuell zusätzliche "
+"Transport-Protokolle erlauben oder es fehlt vielleicht das richtige Plugin "
+"zur RTSP-Erweiterung."
 
 msgid "Internal data flow error."
 msgstr "Interner Datenstromfehler."

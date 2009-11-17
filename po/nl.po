@@ -1,13 +1,13 @@
-# translation of gst-plugins-good-0.10.15.2.nl.po to Dutch
+# translation of gst-plugins-good-0.10.16.2.nl.po to Dutch
 # This file is put in the public domain.
 #
 # Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-13 02:04+0000\n"
-"PO-Revision-Date: 2009-08-12 22:49+0200\n"
+"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"PO-Revision-Date: 2009-11-15 22:55+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr "Kan de eigenschappen van de geluidsserver niet opvragen"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' door '%s'"
 
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
@@ -65,14 +65,14 @@ msgstr ""
 "Er is geen ondersteunde stroom gevonden. Misschien moet er een GStreamer "
 "RTSP extensie-plugin voor Real-media-streams geïnstalleerd worden."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Er is geen ondersteunde stroom gevonden. Misschien ontbreekt de juiste "
-"GStreamer RTSP extensie-plugin."
+"Er is geen ondersteunde stroom gevonden. Misschien moet u meer "
+"overdrachtsprotocollen toestaan of anders ontbreekt de juiste GStreamer RTSP "
+"extensie-plugin."
 
 msgid "Internal data flow error."
 msgstr "Interne fout in de gegevensdoorvoer."

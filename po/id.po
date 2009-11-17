@@ -1,17 +1,18 @@
 # Indonesian translations for gst-plugins-good package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2008.
+#
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-13 02:04+0000\n"
-"PO-Revision-Date: 2009-08-24 11:15-0400\n"
+"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"PO-Revision-Date: 2009-11-14 05:38+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not establish connection to sound server"
@@ -22,7 +23,7 @@ msgstr "Gagal untuk kueri kemampuan server suara"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' oleh '%s'"
 
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
@@ -62,14 +63,14 @@ msgstr ""
 "Tak ada arus didukung yang ditemukan. Anda mungkin perlu menginstal plugin "
 "ekstensi GStreamer RTSP untuk arus Real media."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Tak ada arus didukung yang ditemukan. Anda mungkin kehilangan plugin "
-"ekstensi GStreamer RTSP yang benar."
+"Tak ada arus didukung yang ditemukan. Anda mungkin ingin mengizinkan lebih "
+"banyak transportasi atau kehilangan plugin ekstensi GStreamer RTSP yang "
+"benar."
 
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
