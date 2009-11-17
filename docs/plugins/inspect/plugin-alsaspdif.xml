@@ -3,7 +3,7 @@
   <description>Alsa plugin for S/PDIF output</description>
   <filename>../../ext/alsaspdif/.libs/libgstalsaspdif.so</filename>
   <basename>libgstalsaspdif.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

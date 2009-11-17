@@ -19,6 +19,7 @@ GObject
       GstBz2enc
       GstBz2dec
       GstGmeDec
+      GstModPlug
       GstMplex
       GstBaseSrc
         GstPushSrc
@@ -73,14 +74,13 @@ GObject
         GstBayer2RGB
         GstScaletempo
         GstHDVParse
-        GstDeinterlace
         GstVideoFilter
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
         GstCapsSetter
-        GstIIR
         GstLegacyresample
+        GstDtmfDetect
         GstMeasureCollector
       GstSignalProcessor
         ladspa-noise-white
@@ -93,6 +93,14 @@ GObject
         ladspa-sine-fcac
         ladspa-lpf
         ladspa-hpf
+      GstBaseVideoCodec
+        GstBaseVideoDecoder
+          GstSchroDec
+        GstBaseVideoParse
+          GstSchroParse
+        GstBaseVideoEncoder
+          GstSchroEnc
+          GstDiracEnc
       GstXvidEnc
       GstXvidDec
       GstPitch
@@ -105,9 +113,6 @@ GObject
       GstFaac
       GstDtsDec
       Gstassrender
-      GstBaseVideoCodec
-        GstBaseVideoEncoder
-          GstDiracEnc
       GstTRM
       GstBaseMetadata
         GstMetadataDemux
@@ -120,7 +125,6 @@ GObject
         GstRtpAsfPay
       GstAsfParse
       GstFestival
-      GstModPlug
       ADPCMDec
       GstMveDemux
       GstMveMux
@@ -149,6 +153,7 @@ GObject
       GstMP4Mux
       GstGPPMux
       GstMJ2Mux
+      GstAiffParse
       MpegVideoParse
       GstH264Parse
       GstMXFDemux
@@ -158,7 +163,6 @@ GObject
       GstId3BaseMux
         GstId3Mux
       GstDVDSpu
-      AIFFParse
       GstTtaParse
       GstTtaDec
       GstLiveAdder
@@ -171,12 +175,9 @@ GObject
       GstPnmdec
       GstPnmenc
       GstShapeWipe
-      GstFLVDemux
-      GstFlvMux
       GstMpegPSDemux
       GstMpegTSDemux
       MpegTSParse
-      GstDeinterlace2
     GstBus
     GstTask
     GstTaskPool

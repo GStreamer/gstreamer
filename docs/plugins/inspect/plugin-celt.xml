@@ -3,7 +3,7 @@
   <description>CELT plugin library</description>
   <filename>../../ext/celt/.libs/libgstcelt.so</filename>
   <basename>libgstcelt.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ], frame-size=(int)[ 64, 512 ]</details>
         </caps>
       </pads>
     </element>

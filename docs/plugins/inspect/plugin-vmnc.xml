@@ -3,7 +3,7 @@
   <description>VMnc video plugin library</description>
   <filename>../../gst/vmnc/.libs/libgstvmnc.so</filename>
   <basename>libgstvmnc.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

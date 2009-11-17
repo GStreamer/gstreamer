@@ -202,6 +202,55 @@ GstCameraBin *gstcamerabin
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstCameraBin::capture-pause</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::capture-start</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::capture-stop</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::image-done</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstCameraBin *gstcamerabin
+gchar *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::set-image-resolution</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+gint  arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::set-video-resolution-fps</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+gint  arg1
+gint  arg2
+gint  arg3
+gint  arg4
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRTPDTMFMux::locking</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

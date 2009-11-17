@@ -1095,7 +1095,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
 <BLURB>MPEG/AAC encoding profile.</BLURB>
-<DEFAULT>MAIN</DEFAULT>
+<DEFAULT>LC</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1105,7 +1105,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Block type</NICK>
 <BLURB>Block type encorcing.</BLURB>
-<DEFAULT>SHORTCTL_NOSHORT</DEFAULT>
+<DEFAULT>SHORTCTL_NORMAL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22160,7 +22160,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Frame Size</NICK>
 <BLURB>The number of samples per frame.</BLURB>
-<DEFAULT>256</DEFAULT>
+<DEFAULT>480</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23054,6 +23054,106 @@
 </ARG>
 
 <ARG>
+<NAME>GstCameraBin::audio-encoder</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio encoder</NICK>
+<BLURB>Audio encoder GStreamer element (default is vorbisenc).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::audio-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio source element</NICK>
+<BLURB>Audio source GStreamer element (NULL = default audio src).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-encoder</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image encoder</NICK>
+<BLURB>Image encoder GStreamer element (default is jpegenc).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-post-processing</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image post processing element</NICK>
+<BLURB>Image Post-Processing GStreamer element (default is NULL).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-encoder</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video encoder</NICK>
+<BLURB>Video encoder GStreamer element (default is theoraenc).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-muxer</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video muxer</NICK>
+<BLURB>Video muxer GStreamer element (default is oggmux).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-post-processing</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video post processing element</NICK>
+<BLURB>Video post processing GStreamer element (default is NULL).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video source element</NICK>
+<BLURB>Video source GStreamer element (NULL = default video src).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-source-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Video source caps</NICK>
+<BLURB>The allowed modes of the video source operation.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::viewfinder-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Viewfinder sink</NICK>
+<BLURB>Viewfinder sink GStreamer element (NULL = default video sink).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDTMFSrc::interval</NAME>
 <TYPE>guint</TYPE>
 <RANGE>[10,50]</RANGE>
@@ -23241,6 +23341,16 @@
 <NICK>GList of GstElementFactory</NICK>
 <BLURB>GList of GstElementFactory objects to pick from (the element takes ownership of the list (NULL means it will go through all possible elements), can only be set once.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoConvert::initial-identity</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Install identity initially</NICK>
+<BLURB>If true, then the identity element will be installed initially and used for event passing until the first data buffer arrives .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27490,7 +27600,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>enable_hierarchical_estimation</NICK>
 <BLURB>enable_hierarchical_estimation.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27991,6 +28101,26 @@
 <NICK>vert_slices</NICK>
 <BLURB>vert_slices.</BLURB>
 <DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::codeblock-size</NAME>
+<TYPE>SchroEncoderSettingEnum_codeblock_size</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>codeblock_size</NICK>
+<BLURB>codeblock_size.</BLURB>
+<DEFAULT>automatic</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-scan-distance</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_scan_distance</NICK>
+<BLURB>magic_scan_distance.</BLURB>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>

@@ -199,7 +199,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.16.3"
+#define VERSION "0.10.17"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

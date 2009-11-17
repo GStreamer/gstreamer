@@ -3,7 +3,7 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>
@@ -20,13 +20,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -41,25 +41,25 @@
           <name>Output_-Right-</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input_-Right-</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Output_-Left-</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input_-Left-</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -74,13 +74,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -95,13 +95,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -116,13 +116,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Input</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -137,7 +137,7 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -152,19 +152,19 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Amplitude</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Frequency_-Hz-</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -179,13 +179,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Frequency_-Hz-</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -200,13 +200,13 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>Amplitude</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -221,7 +221,7 @@
           <name>Output</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>

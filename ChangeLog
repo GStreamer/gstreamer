@@ -1,9 +1,119 @@
-2009-11-09 19:20:21 +0000  Jan Schmidt <thaytan@noraisin.net>
+=== release 0.10.17 ===
+
+2009-11-17  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.17, "Anny bobany"
+
+2009-11-17 01:13:36 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
+
+2009-11-15 21:46:01 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/ladspa/gstladspa.c:
+	* ext/lv2/gstlv2.c:
+	* gst-libs/gst/signalprocessor/gstsignalprocessor.c:
+	* gst-libs/gst/signalprocessor/gstsignalprocessor.h:
+	  signalprocessor: don't set channel positions in template-caps, Fixes #601775
+	  Revert the changes that added audio positions to template caps. We have an un-
+	  fortunate limitation in core that does not allow to do it. Keep a few things
+	  commented out, so that the channel position can later on be set in setcaps.
+
+2009-11-13 02:18:31 +0000  Jan Schmidt <thaytan@noraisin.net>
 
 	* configure.ac:
 	* po/ky.po:
 	* po/lv.po:
 	* po/sv.po:
+	* win32/common/config.h:
+	  0.10.16.3 pre-release
+
+2009-11-11 10:58:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltenc.c:
+	  celt: Port to 0.7 API
+	  Fixes bug #600724.
+
+2009-11-11 10:54:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/celt/gstceltenc.c:
+	  celt: Make celt version checks better extensible
+
+2009-11-09 19:20:21 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
 	* win32/common/config.h:
 	  0.10.16.2 pre-release
 

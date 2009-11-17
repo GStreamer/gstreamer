@@ -3,7 +3,7 @@
   <description>Resin DVD playback elements</description>
   <filename>../../ext/resindvd/.libs/libresindvd.so</filename>
   <basename>libresindvd.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>

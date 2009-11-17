@@ -3,7 +3,7 @@
   <description>Adaptive Multi-Rate Parser</description>
   <filename>../../gst/amrparse/.libs/libgstamrparse.so</filename>
   <basename>libgstamrparse.so</basename>
-  <version>0.10.16</version>
+  <version>0.10.17</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins prerelease</package>

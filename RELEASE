@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.16 "Sensible Precaution"
+Release notes for GStreamer Bad Plug-ins 0.10.17 "Anny bobany"
         
 
 
@@ -60,15 +60,31 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Fix various bugs in the 0.10.15 release
-      * Fix a deadlock in starting DVD
-      * Fix compilation problems
-      * Allow libneon versions >= 29.x
+      * Fix DVD playback
+      * New elements: DTMF tone source and detector
+      * ASS subtitle support improvements
+      * Fix compilation on OS/X Snow Leopard
+      * Support DVB 3.3 API
+      * Inputselector fixes
 
 Bugs fixed in this release
      
-      * 599272 : faac check fails, undefined symbol
-      * 599332 : [neonhttpsrc] fails to compile with libneon 0.29.0
+      * 602106 : Bad atom size calculation
+      * 574434 : [camerabin] Changing default video/audio source for Windows
+      * 584361 : gppmux Support for 3gr6
+      * 586929 : [midi] Doesn't handle push
+      * 595161 : [mpegtsdemux] Internal dataflow problem with some streams.
+      * 598552 : faac: Clean up defaults
+      * 598763 : New plugin: aiffmux
+      * 598808 : mpegpsmux: Fix CLFAGS typo and reorder flags
+      * 599050 : [mpegvideoparse] Does not check width/height range
+      * 599469 : resindvd: problems pre-rolling in the absence of audio
+      * 600454 : aacparse detecting aac file as mpegversion=2 instead of 4
+      * 600461 : [zbar] Over-eager detection of barcodes
+      * 600662 : [assrender] Doesn't synchronize subtitle buffers
+      * 600707 : autoconvert depends on function from core 0.10.26
+      * 600724 : celt: fails to build against celt-0.7
+      * 599903 : Scaletempo plugin stops early when playing slowly
 
 Download
 
@@ -97,11 +113,22 @@ Applications
   
 Contributors to this release
     
+      * Bastian Hecht
+      * Chris Hills
+      * David Schleef
       * Edward Hervey
+      * Gabriel Millaire
       * Jan Schmidt
       * Julien Isorce
-      * Kaj-Michael Lang
+      * Michael Smith
+      * Olivier Crête
+      * René Stadler
+      * Robert Swain
       * Sebastian Dröge
-      * Thomas Green
+      * Stefan Kost
+      * Teemu Katajisto
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Tommi Myöhänen
+      * Wim Taymans
  
