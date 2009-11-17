@@ -119,6 +119,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},
   {GST_EVENT_LATENCY, "latency", 0},
+  {GST_EVENT_STEP, "step", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
