@@ -248,7 +248,7 @@ main (int argc, char **argv)
   GMainLoop *loop = NULL;
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
-  GstElement *glupload = NULL;
+  GstElement *glfilter = NULL;
   GstElement *fakesink = NULL;
   GstState state;
   GAsyncQueue *queue_input_buf = NULL;
@@ -304,10 +304,10 @@ main (int argc, char **argv)
   gst_object_unref (bus);
 
   /* sdl_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
-  glupload = gst_bin_get_by_name (GST_BIN (pipeline), "glupload0");
-  g_object_set (G_OBJECT (glupload), "external-opengl-context",
+  glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "gleffects0");
+  g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       sdl_gl_context, NULL);
-  g_object_unref (glupload);
+  g_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the sdl one */

@@ -44,6 +44,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
     );
 
+/* Properties */
+enum
+{
+  PROP_0,
+  PROP_EXTERNAL_OPENGL_CONTEXT
+};
+
 #define DEBUG_INIT(bla)							\
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0, "glfilter element");
 
@@ -107,6 +114,12 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
       gst_gl_filter_prepare_output_buffer;
 
+  g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
+      g_param_spec_ulong ("external_opengl_context",
+          "External OpenGL context",
+          "Give an external OpenGL context with which to share textures",
+          0, G_MAXULONG, 0, G_PARAM_WRITABLE));
+
   klass->set_caps = NULL;
   klass->filter = NULL;
   klass->display_init_cb = NULL;
@@ -132,9 +145,14 @@ static void
 gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //GstGLFilter *filter = GST_GL_FILTER (object);
+  GstGLFilter *filter = GST_GL_FILTER (object);
 
   switch (prop_id) {
+    case PROP_EXTERNAL_OPENGL_CONTEXT:
+    {
+      filter->external_gl_context = g_value_get_ulong (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -209,6 +227,7 @@ gst_gl_filter_reset (GstGLFilter * filter)
   filter->height = 0;
   filter->fbo = 0;
   filter->depthbuffer = 0;
+  filter->external_gl_context = 0;
 }
 
 static gboolean
@@ -233,7 +252,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       filter->display = gst_gl_display_new ();
-      gst_gl_display_create_context (filter->display, 0);
+      gst_gl_display_create_context (filter->display, filter->external_gl_context);
     }
   }
 

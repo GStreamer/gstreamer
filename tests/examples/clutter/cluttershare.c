@@ -224,7 +224,7 @@ main (int argc, char *argv[])
 #endif
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
-  GstElement *glupload = NULL;
+  GstElement *glfilter = NULL;
   GstState state = 0;
   ClutterActor *stage = NULL;
   ClutterActor *clutter_texture = NULL;
@@ -287,10 +287,10 @@ main (int argc, char *argv[])
 
   /* clutter_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
 
-  glupload = gst_bin_get_by_name (GST_BIN (pipeline), "glupload0");
-  g_object_set (G_OBJECT (glupload), "external-opengl-context",
+  glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "glfilter0");
+  g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       clutter_gl_context, NULL);
-  g_object_unref (glupload);
+  g_object_unref (glfilter);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the clutter one */
@@ -359,7 +359,7 @@ main (int argc, char *argv[])
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_object_unref (pipeline);
 
-  /* make sure there is no pending gst gl buffer in the communication queues 
+  /* make sure there is no pending gst gl buffer in the communication queues
    * between clutter and gst-gl
    */
 
