@@ -149,6 +149,10 @@ export MONO_PATH=$GST/gstreamer-sharp/gstreamer-sharp:$MONO_PATH
 export LD_LIBRARY_PATH=$GST/gstreamer-sharp/gstreamer-sharp/glue/.libs:$LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GST/gstreamer-sharp/gstreamer-sharp/glue/.libs:$DYLD_LIBRARY_PATH
 
+# gst-qa-system
+export PYTHONPATH=$GST/gst-qa-system:$PYTHONPATH
+export PATH=$GST/gst-qa-system/bin:$PATH
+
 # if we got a command, run it, else start a shell
 if test ! -z "$1";
 then
