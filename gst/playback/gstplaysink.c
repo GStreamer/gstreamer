@@ -720,8 +720,11 @@ add_chain (GstPlayChain * chain, gboolean add)
 
   if (add)
     gst_bin_add (GST_BIN_CAST (chain->playsink), chain->bin);
-  else
+  else {
     gst_bin_remove (GST_BIN_CAST (chain->playsink), chain->bin);
+    /* we don't want to lose our sink status */
+    GST_OBJECT_FLAG_SET (chain->playsink, GST_ELEMENT_IS_SINK);
+  }
 
   chain->added = add;
 
