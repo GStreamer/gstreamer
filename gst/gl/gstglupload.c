@@ -288,7 +288,7 @@ gst_gl_upload_start (GstBaseTransform * bt)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       upload->display = gst_gl_display_new ();
-      gst_gl_display_create_context (upload->display, 0);
+      gst_gl_display_create_context (upload->display, upload->external_gl_context);
     }
   }
 
