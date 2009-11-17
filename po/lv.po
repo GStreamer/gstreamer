@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-08-11 17:42+0100\n"
+"POT-Creation-Date: 2009-11-17 01:13+0000\n"
 "PO-Revision-Date: 2009-08-12 20:33+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -15,511 +15,403 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Latvian\n"
 "X-Poedit-Country: LATVIA\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
+"2);\n"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nevarēja nolasīt virsrakstu informāciju no DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Neizdevās atvērt DVD ierīci '%s'."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Neizdevās uzstādīt PCG balstīto meklēšanu."
 
-#: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Iekšējā pulksteņa kļūda."
 
-#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Iekšējā datu plūsmas kļūda."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens faila nosaukums."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nav iespējams atvērt failu \"%s\" ierakstīšanai."
 
-#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
 
-#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nevarēja ierakstīt failā \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:706 sys/dvb/gstdvbsrc.c:799
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Ierīce \"%s\" neeksistē."
 
-#: sys/dvb/gstdvbsrc.c:710
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nav iespējams atvērt priekšējo ierīci \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:722
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nav iespējams iegūt uzstādījumus no priekšējās ierīces  \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:803
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
 
-#: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
 msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai."
 
-#: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis elements neatbalsta šo Open Sound System versiju."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis elements "
+"neatbalsta šo Open Sound System versiju."
 
-#: sys/oss4/oss4-mixer.c:721
 msgid "Volume"
 msgstr "Skaļums"
 
-#: sys/oss4/oss4-mixer.c:722
 msgid "Master"
 msgstr "Galvenais"
 
-#: sys/oss4/oss4-mixer.c:723
 msgid "Front"
 msgstr "Priekšpuse"
 
-#: sys/oss4/oss4-mixer.c:724
 msgid "Rear"
 msgstr "Aizmugure"
 
-#: sys/oss4/oss4-mixer.c:725
 msgid "Headphones"
 msgstr "Austiņas"
 
-#: sys/oss4/oss4-mixer.c:726
 msgid "Center"
 msgstr "Centrāls"
 
-#: sys/oss4/oss4-mixer.c:727
 msgid "LFE"
 msgstr "LFE"
 
-#: sys/oss4/oss4-mixer.c:728
 msgid "Surround"
 msgstr "Ieskaujošs"
 
-#: sys/oss4/oss4-mixer.c:729
 msgid "Side"
 msgstr "Puse"
 
-#: sys/oss4/oss4-mixer.c:730
 msgid "Built-in Speaker"
 msgstr "Iebūvētais skaļrunis"
 
-#: sys/oss4/oss4-mixer.c:731
 msgid "AUX 1 Out"
 msgstr "AUX 1 izeja"
 
-#: sys/oss4/oss4-mixer.c:732
 msgid "AUX 2 Out"
 msgstr "AUX 2 izeja"
 
-#: sys/oss4/oss4-mixer.c:733
 msgid "AUX Out"
 msgstr "AUX izeja"
 
-#: sys/oss4/oss4-mixer.c:734
 msgid "Bass"
 msgstr "Basi"
 
-#: sys/oss4/oss4-mixer.c:735
 msgid "Treble"
 msgstr "Diskants"
 
-#: sys/oss4/oss4-mixer.c:736
 msgid "3D Depth"
 msgstr "3D dziļums"
 
-#: sys/oss4/oss4-mixer.c:737
 msgid "3D Center"
 msgstr "3D centrēts"
 
-#: sys/oss4/oss4-mixer.c:738
 msgid "3D Enhance"
 msgstr "3D aptverošs"
 
-#: sys/oss4/oss4-mixer.c:739
 msgid "Telephone"
 msgstr "Telefons"
 
-#: sys/oss4/oss4-mixer.c:740
 msgid "Microphone"
 msgstr "Mikrofons"
 
-#: sys/oss4/oss4-mixer.c:741
 msgid "Line Out"
 msgstr "Skaņas izeja"
 
-#: sys/oss4/oss4-mixer.c:742 sys/oss4/oss4-mixer.c:743
 msgid "Line In"
 msgstr "Skaņas ieeja"
 
-#: sys/oss4/oss4-mixer.c:744
 msgid "Internal CD"
 msgstr "Iekšējais CD"
 
-#: sys/oss4/oss4-mixer.c:745
 msgid "Video In"
 msgstr "Video ieeja"
 
-#: sys/oss4/oss4-mixer.c:746
 msgid "AUX 1 In"
 msgstr "AUX 1 ieeja"
 
-#: sys/oss4/oss4-mixer.c:747
 msgid "AUX 2 In"
 msgstr "AUX 2 ieeja"
 
-#: sys/oss4/oss4-mixer.c:748
 msgid "AUX In"
 msgstr "AUX ieeja"
 
-#: sys/oss4/oss4-mixer.c:749
 msgid "PCM"
 msgstr "PCM"
 
-#: sys/oss4/oss4-mixer.c:750 sys/oss4/oss4-mixer.c:751
 msgid "Record Gain"
 msgstr "Ierakstīšanas pieaugums"
 
-#: sys/oss4/oss4-mixer.c:752
 msgid "Output Gain"
 msgstr "Izvades pieaugums"
 
-#: sys/oss4/oss4-mixer.c:753
 msgid "Microphone Boost"
 msgstr "Mikrofona pastiprinājums"
 
-#: sys/oss4/oss4-mixer.c:754
 msgid "Loopback"
 msgstr "Atkārtošana"
 
-#: sys/oss4/oss4-mixer.c:755
 msgid "Diagnostic"
 msgstr "Diagnostika"
 
-#: sys/oss4/oss4-mixer.c:756
 msgid "Bass Boost"
 msgstr "Basu pastiprinājums"
 
-#: sys/oss4/oss4-mixer.c:757
 msgid "Playback Ports"
 msgstr "Atskaņošanas porti"
 
-#: sys/oss4/oss4-mixer.c:758
 msgid "Input"
 msgstr "Ievade"
 
-#: sys/oss4/oss4-mixer.c:759 sys/oss4/oss4-mixer.c:760
 msgid "Record Source"
 msgstr "Ierakstīšanas avots"
 
-#: sys/oss4/oss4-mixer.c:761
 msgid "Monitor Source"
 msgstr "Monitora avots"
 
-#: sys/oss4/oss4-mixer.c:762
 msgid "Keyboard Beep"
 msgstr "Klaviatūras pīkstiens"
 
-#: sys/oss4/oss4-mixer.c:763
 msgid "Monitor"
 msgstr "Monitors"
 
-#: sys/oss4/oss4-mixer.c:764
 msgid "Simulate Stereo"
 msgstr "Simulēt stereo"
 
-#: sys/oss4/oss4-mixer.c:765 sys/oss4/oss4-mixer.c:785
 msgid "Stereo"
 msgstr "Stereo"
 
-#: sys/oss4/oss4-mixer.c:766
 msgid "Surround Sound"
 msgstr "Ieskaujoša skaņa"
 
-#: sys/oss4/oss4-mixer.c:767
 msgid "Microphone Gain"
 msgstr "Mikrofona pieaugums"
 
-#: sys/oss4/oss4-mixer.c:768
 msgid "Speaker Source"
 msgstr "Skaļruņa avots"
 
-#: sys/oss4/oss4-mixer.c:769
 msgid "Microphone Source"
 msgstr "Mikrofona avots"
 
-#: sys/oss4/oss4-mixer.c:770
 msgid "Jack"
 msgstr "Ligzda"
 
-#: sys/oss4/oss4-mixer.c:771
 msgid "Center / LFE"
 msgstr "Centrālais / LFE"
 
-#: sys/oss4/oss4-mixer.c:772
 msgid "Stereo Mix"
 msgstr "Stereo jaukšana"
 
-#: sys/oss4/oss4-mixer.c:773
 msgid "Mono Mix"
 msgstr "Mono jaukšana"
 
-#: sys/oss4/oss4-mixer.c:774
 msgid "Input Mix"
 msgstr "Ievades jaukšana"
 
-#: sys/oss4/oss4-mixer.c:775
 msgid "SPDIF In"
 msgstr "SPDIF ieeja"
 
-#: sys/oss4/oss4-mixer.c:776
 msgid "SPDIF Out"
 msgstr "SPDIF izeja"
 
-#: sys/oss4/oss4-mixer.c:777
 msgid "Microphone 1"
 msgstr "Mikrofons 1"
 
-#: sys/oss4/oss4-mixer.c:778
 msgid "Microphone 2"
 msgstr "Mikrofons 2"
 
-#: sys/oss4/oss4-mixer.c:779
 msgid "Digital Out"
 msgstr "Digitālā izeja"
 
-#: sys/oss4/oss4-mixer.c:780
 msgid "Digital In"
 msgstr "Digitālā ieeja"
 
-#: sys/oss4/oss4-mixer.c:781
 msgid "HDMI"
 msgstr "HDMI"
 
-#: sys/oss4/oss4-mixer.c:782
 msgid "Modem"
 msgstr "Modems"
 
-#: sys/oss4/oss4-mixer.c:783
 msgid "Handset"
 msgstr "Papildierīce"
 
-#: sys/oss4/oss4-mixer.c:784
 msgid "Other"
 msgstr "Cits"
 
-#: sys/oss4/oss4-mixer.c:786
 msgid "None"
 msgstr "Nav"
 
-#: sys/oss4/oss4-mixer.c:787
 msgid "On"
 msgstr "Ieslēgts"
 
-#: sys/oss4/oss4-mixer.c:788
 msgid "Off"
 msgstr "Izslēgts"
 
-#: sys/oss4/oss4-mixer.c:789
 msgid "Mute"
 msgstr "Klusums"
 
-#: sys/oss4/oss4-mixer.c:790
 msgid "Fast"
 msgstr "Ātrs"
 
-#: sys/oss4/oss4-mixer.c:791
 msgid "Very Low"
 msgstr "Ļoti zems"
 
-#: sys/oss4/oss4-mixer.c:792
 msgid "Low"
 msgstr "Zems"
 
-#: sys/oss4/oss4-mixer.c:793
 msgid "Medium"
 msgstr "Vidējs"
 
-#: sys/oss4/oss4-mixer.c:794
 msgid "High"
 msgstr "Augsts"
 
-#: sys/oss4/oss4-mixer.c:795 sys/oss4/oss4-mixer.c:796
 msgid "Very High"
 msgstr "Ļoti augsts"
 
-#: sys/oss4/oss4-mixer.c:797
 msgid "Production"
 msgstr "Izstrāde"
 
-#: sys/oss4/oss4-mixer.c:798
 msgid "Front Panel Microphone"
 msgstr "Priekšējā paneļa nikrofons"
 
-#: sys/oss4/oss4-mixer.c:799
 msgid "Front Panel Line In"
 msgstr "Priekšējā paneļa skaņas ieeja"
 
-#: sys/oss4/oss4-mixer.c:800
 msgid "Front Panel Headphones"
 msgstr "Priekšējā paneļa austiņas"
 
-#: sys/oss4/oss4-mixer.c:801
 msgid "Front Panel Line Out"
 msgstr "Priekšējā paneļa skaņas izeja"
 
-#: sys/oss4/oss4-mixer.c:802
 msgid "Green Connector"
 msgstr "Zaļais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:803
 msgid "Pink Connector"
 msgstr "Rozā savienotājs"
 
-#: sys/oss4/oss4-mixer.c:804
 msgid "Blue Connector"
 msgstr "Zilais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:805
 msgid "White Connector"
 msgstr "Baltais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:806
 msgid "Black Connector"
 msgstr "Melnais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:807
 msgid "Gray Connector"
 msgstr "Pelēkais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:808
 msgid "Orange Connector"
 msgstr "Oranžais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:809
 msgid "Red Connector"
 msgstr "Sarkanais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:810
 msgid "Yellow Connector"
 msgstr "Dzeltenais savienotājs"
 
-#: sys/oss4/oss4-mixer.c:811
 msgid "Green Front Panel Connector"
 msgstr "Zaļais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:812
 msgid "Pink Front Panel Connector"
 msgstr "Rozā priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:813
 msgid "Blue Front Panel Connector"
 msgstr "Zilais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:814
 msgid "White Front Panel Connector"
 msgstr "Baltais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:815
 msgid "Black Front Panel Connector"
 msgstr "Melnais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:816
 msgid "Gray Front Panel Connector"
 msgstr "Pelēkais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:817
 msgid "Orange Front Panel Connector"
 msgstr "Oranžais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:818
 msgid "Red Front Panel Connector"
 msgstr "Sarkanais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:819
 msgid "Yellow Front Panel Connector"
 msgstr "Dzeltenais priekšējā paneļa savienotājs"
 
-#: sys/oss4/oss4-mixer.c:820
 msgid "Spread Output"
 msgstr "Sadalīt izvadi"
 
-#: sys/oss4/oss4-mixer.c:821
 msgid "Downmix"
 msgstr "Pazeminātā jaukšana"
 
-#: sys/oss4/oss4-mixer.c:868
 msgid "Virtual Mixer Input"
 msgstr "Virtuālā jaucēja ievads"
 
-#: sys/oss4/oss4-mixer.c:870
 msgid "Virtual Mixer Output"
 msgstr "Virtuālā jaucēja izvads"
 
-#: sys/oss4/oss4-mixer.c:872
 msgid "Virtual Mixer Channels"
 msgstr "Virtuālā jaucēja kanāli"
 
-#: sys/oss4/oss4-mixer.c:888
 #, c-format
 msgid "%s Function"
 msgstr "%s funkcija"
 
-#: sys/oss4/oss4-mixer.c:904
 #, c-format
 msgid "%s %d"
 msgstr "%s %d"
 
-#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita programma."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
+"programma."
 
-#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās atļaujas, lai atvērtu ierīci."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās "
+"atļaujas, lai atvērtu ierīci."
 
-#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Nav iespējams atvērt audio ierīci atskaņošanai."
 
-#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta šo Open Sound System versiju."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta šo "
+"Open Sound System versiju."
 
-#: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
 msgstr "Šī audio ierīce neatbalsta atskaņošanu."
 
-#: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
 msgstr "Audio atskaņošanas kļūda."
 
-#: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
 msgstr "Šī audio ierīce neatbalsta ierakstīšanu."
 
-#: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Radās kļūda ierakstot no audio ierīces."
 
