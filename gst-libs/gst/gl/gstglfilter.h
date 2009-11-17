@@ -63,6 +63,8 @@ struct _GstGLFilter
   gint height;
   GLuint fbo;
   GLuint depthbuffer;
+
+  gulong external_gl_context;
 };
 
 struct _GstGLFilterClass
