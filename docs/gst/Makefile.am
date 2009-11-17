@@ -91,6 +91,9 @@ GTKDOC_LIBS = $(GST_OBJ_LIBS) $(SCANOBJ_DEPS)
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
 
+GTKDOC_EXTRA_ENVIRONMENT= \
+    GST_PLUGIN_SCANNER=$(top_builddir)/libs/gst/helpers/plugin-scanner
+
 # If you need to override some of the declarations, place them in this file
 # and uncomment this line.
 DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
