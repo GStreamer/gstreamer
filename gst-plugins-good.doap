@@ -35,6 +35,17 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.10.17</revision>
+   <branch>0.10</branch>
+   <name>They used to sparkle</name>
+   <created>2009-11-17</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.17.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.17.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.16</revision>
    <branch>0.10</branch>
    <name>Secret Handshakes</name>
