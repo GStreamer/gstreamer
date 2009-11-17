@@ -329,7 +329,6 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->flags = DEFAULT_FLAGS;
 
   g_static_rec_mutex_init (&playsink->lock);
-  playsink->need_async_start = TRUE;
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
 }
 
@@ -842,8 +841,10 @@ do_async_start (GstPlaySink * playsink)
 {
   GstMessage *message;
 
-  if (!playsink->need_async_start)
+  if (!playsink->need_async_start) {
+    GST_INFO_OBJECT (playsink, "no async_start needed");
     return;
+  }
 
   playsink->async_pending = TRUE;
 
@@ -2441,6 +2442,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      playsink->need_async_start = TRUE;
       /* we want to go async to PAUSED until we managed to configure and add the
        * sinks */
       do_async_start (playsink);
