@@ -239,6 +239,7 @@ _do_init (GType object_type)
     NULL
   };
 
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixer", 0, "opengl mixer");
   g_type_add_interface_static (object_type, GST_TYPE_CHILD_PROXY,
       &child_proxy_info);
   GST_INFO ("GstChildProxy interface registered");
