@@ -1609,36 +1609,28 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
-      const GstStructure *s = gst_event_get_structure (event);
+      gboolean still_state;
 
-      if (gst_structure_has_name (s, "application/x-gst-dvd")) {
-        const gchar *event_type;
-        gboolean still_state;
+      if (gst_video_event_parse_still_frame (event, &still_state)) {
+        GST_DEBUG_OBJECT (self, "Received still frame event, state %d",
+            still_state);
 
-        GST_DEBUG_OBJECT (self, "Received DVD event: %" GST_PTR_FORMAT, s);
+        if (still_state) {
+          GstFlowReturn ret;
 
-        event_type = gst_structure_get_string (s, "event");
-        if (event_type && !strcmp (event_type, "dvd-still") &&
-            gst_structure_get_boolean (s, "still-state", &still_state)) {
-
-          if (still_state) {
-            GstFlowReturn ret;
-
-            GST_DEBUG_OBJECT (self, "Handling still frame");
-            self->still_frame_mode = TRUE;
-            if (self->last_buffer) {
-              ret =
-                  gst_pad_push (self->srcpad,
-                  gst_buffer_ref (self->last_buffer));
-              GST_DEBUG_OBJECT (self, "Pushed still frame, result: %s",
-                  gst_flow_get_name (ret));
-            } else {
-              GST_WARNING_OBJECT (self, "No pending buffer!");
-            }
+          GST_DEBUG_OBJECT (self, "Handling still frame");
+          self->still_frame_mode = TRUE;
+          if (self->last_buffer) {
+            ret =
+                gst_pad_push (self->srcpad, gst_buffer_ref (self->last_buffer));
+            GST_DEBUG_OBJECT (self, "Pushed still frame, result: %s",
+                gst_flow_get_name (ret));
           } else {
-            GST_DEBUG_OBJECT (self, "Ending still frames");
-            self->still_frame_mode = FALSE;
+            GST_WARNING_OBJECT (self, "No pending buffer!");
           }
+        } else {
+          GST_DEBUG_OBJECT (self, "Ending still frames");
+          self->still_frame_mode = FALSE;
         }
       }
     }
