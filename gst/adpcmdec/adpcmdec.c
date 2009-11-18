@@ -161,7 +161,8 @@ adpcmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
 
   if (!gst_structure_get_int (structure, "block_align", &dec->blocksize))
-    return FALSE;
+    dec->blocksize = -1;        /* Not provided */
+
   if (!gst_structure_get_int (structure, "rate", &dec->rate))
     return FALSE;
   if (!gst_structure_get_int (structure, "channels", &dec->channels))
@@ -382,16 +383,64 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
 }
 
 static GstFlowReturn
+adpcmdec_decode_block (ADPCMDec * dec, guint8 * data, int blocksize)
+{
+  gboolean res;
+  GstBuffer *outbuf = NULL;
+  int outsize;
+  int samples;
+
+  if (dec->layout == LAYOUT_ADPCM_MICROSOFT) {
+    /* Each block has a 3 byte header per channel, plus 4 bytes per channel to
+       give two initial sample values per channel. Then the remainder gives
+       two samples per byte */
+    if (blocksize < 7 * dec->channels)
+      return GST_FLOW_ERROR;
+    samples = (blocksize - 7 * dec->channels) * 2 + 2 * dec->channels;
+    outsize = 2 * samples;
+    outbuf = gst_buffer_new_and_alloc (outsize);
+
+    res = adpcmdec_decode_ms_block (dec, samples, data,
+        (gint16 *) (GST_BUFFER_DATA (outbuf)));
+  } else if (dec->layout == LAYOUT_ADPCM_DVI) {
+    /* Each block has a 4 byte header per channel, include an initial sample.
+       Then the remainder gives two samples per byte */
+    if (blocksize < 4 * dec->channels)
+      return GST_FLOW_ERROR;
+    samples = (blocksize - 4 * dec->channels) * 2 + dec->channels;
+    outsize = 2 * samples;
+    outbuf = gst_buffer_new_and_alloc (outsize);
+
+    res = adpcmdec_decode_ima_block (dec, samples, data,
+        (gint16 *) (GST_BUFFER_DATA (outbuf)));
+  } else {
+    GST_WARNING_OBJECT (dec, "Unknown layout");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!res) {
+    gst_buffer_unref (outbuf);
+    GST_WARNING_OBJECT (dec, "Decode of block failed");
+    return GST_FLOW_ERROR;
+  }
+
+  gst_buffer_set_caps (outbuf, dec->output_caps);
+  GST_BUFFER_TIMESTAMP (outbuf) = dec->timestamp;
+  dec->out_samples += samples / dec->channels;
+  dec->timestamp = dec->base_timestamp +
+      gst_util_uint64_scale_int (dec->out_samples, GST_SECOND, dec->rate);
+  GST_BUFFER_DURATION (outbuf) = dec->timestamp - GST_BUFFER_TIMESTAMP (outbuf);
+
+  return gst_pad_push (dec->srcpad, outbuf);
+}
+
+static GstFlowReturn
 adpcmdec_chain (GstPad * pad, GstBuffer * buf)
 {
   ADPCMDec *dec = (ADPCMDec *) gst_pad_get_parent (pad);
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 *data;
-  GstBuffer *outbuf = NULL;
   GstBuffer *databuf = NULL;
-  int outsize;
-  int samples;
-  gboolean res;
 
   if (!dec->is_setup)
     adpcmdec_setup (dec);
@@ -403,58 +452,26 @@ adpcmdec_chain (GstPad * pad, GstBuffer * buf)
     dec->timestamp = dec->base_timestamp;
   }
 
-  gst_adapter_push (dec->adapter, buf);
+  if (dec->blocksize > 0) {
+    gst_adapter_push (dec->adapter, buf);
 
-  while (gst_adapter_available (dec->adapter) >= dec->blocksize) {
-    databuf = gst_adapter_take_buffer (dec->adapter, dec->blocksize);
-    data = GST_BUFFER_DATA (databuf);
+    while (gst_adapter_available (dec->adapter) >= dec->blocksize) {
+      databuf = gst_adapter_take_buffer (dec->adapter, dec->blocksize);
+      data = GST_BUFFER_DATA (databuf);
 
-    if (dec->layout == LAYOUT_ADPCM_MICROSOFT) {
-      /* Each block has a 3 byte header per channel, plus 4 bytes per channel to
-         give two initial sample values per channel. Then the remainder gives
-         two samples per byte */
-      samples = (dec->blocksize - 7 * dec->channels) * 2 + 2 * dec->channels;
-      outsize = 2 * samples;
-      outbuf = gst_buffer_new_and_alloc (outsize);
+      ret = adpcmdec_decode_block (dec, data, dec->blocksize);
 
-      res = adpcmdec_decode_ms_block (dec, samples, data,
-          (gint16 *) (GST_BUFFER_DATA (outbuf)));
-    } else if (dec->layout == LAYOUT_ADPCM_DVI) {
-      /* Each block has a 4 byte header per channel, include an initial sample.
-         Then the remainder gives two samples per byte */
-      samples = (dec->blocksize - 4 * dec->channels) * 2 + dec->channels;
-      outsize = 2 * samples;
-      outbuf = gst_buffer_new_and_alloc (outsize);
+      /* Done with input data, free it */
+      gst_buffer_unref (databuf);
 
-      res = adpcmdec_decode_ima_block (dec, samples, data,
-          (gint16 *) (GST_BUFFER_DATA (outbuf)));
-    } else {
-      GST_WARNING_OBJECT (dec, "Unknown layout");
-      ret = GST_FLOW_ERROR;
-      goto done;
+      if (ret != GST_FLOW_OK)
+        goto done;
     }
-
-    /* Done with input data, free it */
-    gst_buffer_unref (databuf);
-
-    if (!res) {
-      gst_buffer_unref (outbuf);
-      GST_WARNING_OBJECT (dec, "Decode of block failed");
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    gst_buffer_set_caps (outbuf, dec->output_caps);
-    GST_BUFFER_TIMESTAMP (outbuf) = dec->timestamp;
-    dec->out_samples += samples / dec->channels;
-    dec->timestamp = dec->base_timestamp +
-        gst_util_uint64_scale_int (dec->out_samples, GST_SECOND, dec->rate);
-    GST_BUFFER_DURATION (outbuf) =
-        dec->timestamp - GST_BUFFER_TIMESTAMP (outbuf);
-
-    ret = gst_pad_push (dec->srcpad, outbuf);
-    if (ret != GST_FLOW_OK)
-      goto done;
+  } else {
+    /* No explicit blocksize; we just process one input buffer at a time */
+    ret = adpcmdec_decode_block (dec, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (buf);
   }
 
 done:
