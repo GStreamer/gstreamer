@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "rsnaudiomunge.h"
 
@@ -234,31 +235,6 @@ rsn_audiomunge_make_audio (RsnAudioMunge * munge,
   return ret;
 }
 
-static void
-rsn_audiomunge_handle_dvd_event (RsnAudioMunge * munge, GstEvent * event)
-{
-  const GstStructure *s;
-  const gchar *event_type;
-
-  s = gst_event_get_structure (event);
-  event_type = gst_structure_get_string (s, "event");
-  if (event_type == NULL)
-    return;
-
-  if (strcmp (event_type, "dvd-still") == 0) {
-    gboolean in_still;
-
-    if (!gst_structure_get_boolean (s, "still-state", &in_still))
-      return;
-
-    /* Remember the still-frame state, so we can generate a pre-roll buffer
-     * when a new-segment arrives */
-    munge->in_still = in_still;
-
-    GST_INFO_OBJECT (munge, "AUDIO MUNGE: still-state now %d", munge->in_still);
-  }
-}
-
 static gboolean
 rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -346,10 +322,15 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
-      const GstStructure *s = gst_event_get_structure (event);
+      gboolean in_still;
 
-      if (s && gst_structure_has_name (s, "application/x-gst-dvd"))
-        rsn_audiomunge_handle_dvd_event (munge, event);
+      if (gst_video_event_parse_still_frame (event, &in_still)) {
+        /* Remember the still-frame state, so we can generate a pre-roll
+         * buffer when a new-segment arrives */
+        munge->in_still = in_still;
+        GST_INFO_OBJECT (munge, "AUDIO MUNGE: still-state now %d",
+            munge->in_still);
+      }
 
       ret = gst_pad_push_event (munge->srcpad, event);
       break;

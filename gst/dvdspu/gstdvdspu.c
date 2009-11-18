@@ -33,6 +33,7 @@
 #endif
 
 #include <gst/gst-i18n-plugin.h>
+#include <gst/video/video.h>
 
 #include <string.h>
 
@@ -402,61 +403,38 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     {
-      const GstStructure *structure = gst_event_get_structure (event);
-      const char *event_type;
+      gboolean in_still;
 
-      if (structure == NULL) {
-        res = gst_pad_event_default (pad, event);
-        break;
-      }
-
-      if (!gst_structure_has_name (structure, "application/x-gst-dvd")) {
-        res = gst_pad_event_default (pad, event);
-        break;
-      }
-
-      event_type = gst_structure_get_string (structure, "event");
-      if (event_type == NULL) {
-        res = gst_pad_event_default (pad, event);
-        break;
-      }
-
-      if (strcmp (event_type, "dvd-still") == 0) {
-        gboolean in_still;
+      if (gst_video_event_parse_still_frame (event, &in_still)) {
+        GstBuffer *to_push = NULL;
 
         /* Forward the event before handling */
         res = gst_pad_event_default (pad, event);
 
-        if (gst_structure_get_boolean (structure, "still-state", &in_still)) {
-          GstBuffer *to_push = NULL;
+        GST_DEBUG_OBJECT (dvdspu,
+            "Still frame event on video pad: in-still = %d", in_still);
 
-          GST_DEBUG_OBJECT (dvdspu,
-              "DVD event of type %s on video pad: in-still = %d", event_type,
-              in_still);
-
-          DVD_SPU_LOCK (dvdspu);
-          if (in_still) {
-            state->flags |= SPU_STATE_STILL_FRAME;
-            /* Entering still. Advance the SPU to make sure the state is 
-             * up to date */
-            gst_dvd_spu_check_still_updates (dvdspu);
-            /* And re-draw the still frame to make sure it appears on
-             * screen, otherwise the last frame  might have been discarded 
-             * by QoS */
-            gst_dvd_spu_redraw_still (dvdspu, TRUE);
-            to_push = dvdspu->pending_frame;
-            dvdspu->pending_frame = NULL;
-
-          } else {
-            state->flags &= ~(SPU_STATE_STILL_FRAME);
-          }
-          DVD_SPU_UNLOCK (dvdspu);
-          if (to_push)
-            gst_pad_push (dvdspu->srcpad, to_push);
+        DVD_SPU_LOCK (dvdspu);
+        if (in_still) {
+          state->flags |= SPU_STATE_STILL_FRAME;
+          /* Entering still. Advance the SPU to make sure the state is 
+           * up to date */
+          gst_dvd_spu_check_still_updates (dvdspu);
+          /* And re-draw the still frame to make sure it appears on
+           * screen, otherwise the last frame  might have been discarded 
+           * by QoS */
+          gst_dvd_spu_redraw_still (dvdspu, TRUE);
+          to_push = dvdspu->pending_frame;
+          dvdspu->pending_frame = NULL;
+        } else {
+          state->flags &= ~(SPU_STATE_STILL_FRAME);
         }
+        DVD_SPU_UNLOCK (dvdspu);
+        if (to_push)
+          gst_pad_push (dvdspu->srcpad, to_push);
       } else {
         GST_DEBUG_OBJECT (dvdspu,
-            "DVD event of type %s on video pad", event_type);
+            "Custom event %" GST_PTR_FORMAT " on video pad", event);
         res = gst_pad_event_default (pad, event);
       }
       break;

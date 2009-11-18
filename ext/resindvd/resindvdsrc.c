@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2008 Jan Schmidt <thaytan@noraisin.net>
+ * Copyright (C) 2008-2009 Jan Schmidt <thaytan@noraisin.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/interfaces/navigation.h>
+#include <gst/video/video.h>
 
 #include "resindvdsrc.h"
 
@@ -597,7 +598,6 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
   GstEvent *still_event;
   GstEvent *hl_event;
   gboolean cmds_changed;
-  GstStructure *s;
   GstEvent *seg_event;
   GstSegment *segment = &(RSN_BASE_SRC (src)->segment);
 
@@ -610,12 +610,9 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     else
       src->still_time_remaining = GST_SECOND * duration;
 
-    /* Send a close-segment event, and a dvd-still start
+    /* Send a close-segment event, and a still-frame start
      * event, then sleep */
-    s = gst_structure_new ("application/x-gst-dvd",
-        "event", G_TYPE_STRING, "dvd-still",
-        "still-state", G_TYPE_BOOLEAN, TRUE, NULL);
-    still_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+    still_event = gst_video_event_new_still_frame (TRUE);
 
     gst_segment_set_last_stop (segment, GST_FORMAT_TIME, src->cur_end_ts);
 
@@ -734,10 +731,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
 
     /* Tell downstream the still is over.
      * We only do this if the still isn't interrupted: */
-    s = gst_structure_new ("application/x-gst-dvd",
-        "event", G_TYPE_STRING, "dvd-still",
-        "still-state", G_TYPE_BOOLEAN, FALSE, NULL);
-    still_event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+    still_event = gst_video_event_new_still_frame (FALSE);
 
     /* If the segment was too short in a timed still, it may need extending */
     if (segment->last_stop < segment->start + GST_SECOND * duration)
