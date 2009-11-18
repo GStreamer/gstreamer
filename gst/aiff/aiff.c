@@ -51,7 +51,7 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "aiffparse", GST_RANK_PRIMARY,
       GST_TYPE_AIFF_PARSE);
-  ret &= gst_element_register (plugin, "aiffmux", GST_RANK_NONE,
+  ret &= gst_element_register (plugin, "aiffmux", GST_RANK_PRIMARY,
       GST_TYPE_AIFF_MUX);
 
   return ret;
