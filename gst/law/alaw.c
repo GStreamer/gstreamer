@@ -61,7 +61,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "alawenc",
-          GST_RANK_NONE, GST_TYPE_ALAW_ENC) ||
+          GST_RANK_PRIMARY, GST_TYPE_ALAW_ENC) ||
       !gst_element_register (plugin, "alawdec",
           GST_RANK_PRIMARY, GST_TYPE_ALAW_DEC))
     return FALSE;
