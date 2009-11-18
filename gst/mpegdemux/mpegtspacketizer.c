@@ -584,6 +584,16 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
           gst_structure_set (stream_info, "component-tag", G_TYPE_UINT,
               component_tag, NULL);
         }
+        desc_data = gst_mpeg_descriptor_find (desc, DESC_ISO_639_LANGUAGE);
+        if (desc_data && DESC_ISO_639_LANGUAGE_codes_n (desc_data)) {
+          gchar *lang_code;
+          gchar *language_n = (gchar *)
+              DESC_ISO_639_LANGUAGE_language_code_nth (desc_data, 0);
+          lang_code = g_strndup (language_n, 3);
+          gst_structure_set (stream_info, "lang-code", G_TYPE_STRING,
+              lang_code, NULL);
+        }
+
         gst_mpeg_descriptor_free (desc);
       }
 
