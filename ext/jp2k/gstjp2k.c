@@ -36,7 +36,7 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_JASPER_DEC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "jp2kenc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "jp2kenc", GST_RANK_MARGINAL,
           GST_TYPE_JASPER_ENC))
     return FALSE;
 
