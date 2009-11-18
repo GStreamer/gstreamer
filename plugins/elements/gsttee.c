@@ -455,7 +455,7 @@ retry:
     GST_OBJECT_UNLOCK (tee);
 
     GST_TEE_DYN_LOCK (tee);
-    data = g_object_get_qdata (G_OBJECT (pad), push_data);
+    data = g_object_get_qdata ((GObject *) pad, push_data);
     if (!data->removed)
       res = gst_pad_alloc_buffer (pad, offset, size, caps, buf);
     else
@@ -482,7 +482,7 @@ retry:
       /* we have a buffer, keep the pad for later and exit the loop. */
       tee->allocpad = pad;
       GST_OBJECT_UNLOCK (tee);
-      g_object_notify (G_OBJECT (tee), "alloc-pad");
+      g_object_notify ((GObject *) tee, "alloc-pad");
       GST_OBJECT_LOCK (tee);
       break;
     }
@@ -501,7 +501,7 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn res;
   GstPad *allocpad;
 
-  tee = GST_TEE (GST_PAD_PARENT (pad));
+  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
 
   res = GST_FLOW_NOT_LINKED;
 
@@ -517,7 +517,7 @@ gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GST_OBJECT_UNLOCK (tee);
 
     GST_TEE_DYN_LOCK (tee);
-    data = g_object_get_qdata (G_OBJECT (allocpad), push_data);
+    data = g_object_get_qdata ((GObject *) allocpad, push_data);
     if (!data->removed)
       res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
     else
@@ -548,7 +548,7 @@ gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   gboolean res, done;
   GstIterator *it;
 
-  tee = GST_TEE (GST_PAD_PARENT (pad));
+  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
 
   it = gst_element_iterate_src_pads (GST_ELEMENT_CAST (tee));
 
@@ -623,7 +623,7 @@ clear_pads (GstPad * pad, GstTee * tee)
 {
   PushData *data;
 
-  data = g_object_get_qdata (G_OBJECT (pad), push_data);
+  data = g_object_get_qdata ((GObject *) pad, push_data);
 
   /* the data must be there or we have a screwed up internal state */
   g_assert (data != NULL);
@@ -676,7 +676,7 @@ restart:
 
     /* get the private data, something is really wrong with the internal state
      * when it is not there */
-    pdata = g_object_get_qdata (G_OBJECT (pad), push_data);
+    pdata = g_object_get_qdata ((GObject *) pad, push_data);
     g_assert (pdata != NULL);
 
     if (!pdata->pushed) {
@@ -751,15 +751,13 @@ gst_tee_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE_CAST (GST_OBJECT_PARENT (pad));
 
   GST_DEBUG_OBJECT (tee, "received buffer %p", buffer);
 
   res = gst_tee_handle_data (tee, buffer, FALSE);
 
   GST_DEBUG_OBJECT (tee, "handled buffer %s", gst_flow_get_name (res));
-
-  gst_object_unref (tee);
 
   return res;
 }
@@ -770,7 +768,7 @@ gst_tee_chain_list (GstPad * pad, GstBufferList * list)
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE_CAST (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (tee, "received list %p", list);
 
