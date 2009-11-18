@@ -1330,8 +1330,8 @@ gst_asf_mux_add_simple_index_entry (GstAsfMux * asfmux,
 {
   SimpleIndexEntry *entry = NULL;
   GST_DEBUG_OBJECT (asfmux, "Adding new simple index entry "
-      "packet number:%" G_GUINT32_FORMAT ", "
-      "packet count:%" G_GUINT16_FORMAT,
+      "packet number: %" G_GUINT32_FORMAT ", "
+      "packet count: %" G_GUINT16_FORMAT,
       videopad->last_keyframe_packet, videopad->last_keyframe_packet_count);
   entry = g_malloc0 (sizeof (SimpleIndexEntry));
   entry->packet_number = videopad->last_keyframe_packet;
@@ -1359,6 +1359,8 @@ gst_asf_mux_send_packet (GstAsfMux * asfmux, GstBuffer * buf)
   GST_LOG_OBJECT (asfmux,
       "Pushing a packet of size %u and timestamp %" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+  GST_LOG_OBJECT (asfmux, "Total data packets: %" G_GUINT64_FORMAT,
+      asfmux->total_data_packets);
   return gst_asf_mux_push_buffer (asfmux, buf);
 }
 
@@ -1389,7 +1391,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   if (asfmux->payloads == NULL)
     return GST_FLOW_OK;         /* nothing to send is ok */
 
-  GST_DEBUG_OBJECT (asfmux, "Flushing payloads");
+  GST_LOG_OBJECT (asfmux, "Flushing payloads");
 
   buf = gst_buffer_new_and_alloc (asfmux->packet_size);
   memset (GST_BUFFER_DATA (buf), 0, asfmux->packet_size);
@@ -1426,24 +1428,35 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
     }
 
     /* serialize our payload */
-    GST_DEBUG_OBJECT (asfmux, "Serializing a payload into the packet. "
-        "Stream number:%" G_GUINT16_FORMAT
-        ", media object number:%" G_GUINT16_FORMAT
-        ", offset into media object:%" G_GUINT32_FORMAT
-        ", replicated data length:%" G_GUINT16_FORMAT
-        ", media object size:%" G_GUINT32_FORMAT
-        ", presentation time:%" G_GUINT32_FORMAT
-        ", payload size:%" G_GUINT16_FORMAT,
-        payload->stream_number & 0x7F,
-        (guint16) payload->media_obj_num, payload->offset_in_media_obj,
-        (guint16) payload->replicated_data_length,
-        payload->media_object_size,
-        payload->presentation_time, (guint16) GST_BUFFER_SIZE (payload->data));
+    GST_DEBUG_OBJECT (asfmux, "Serializing payload into packet");
+    GST_DEBUG_OBJECT (asfmux, "stream number: %d", pad->stream_number & 0x7F);
+    GST_DEBUG_OBJECT (asfmux, "media object number: %d",
+        (gint) payload->media_obj_num);
+    GST_DEBUG_OBJECT (asfmux, "offset into media object: %" G_GUINT16_FORMAT,
+        payload->offset_in_media_obj);
+    GST_DEBUG_OBJECT (asfmux, "media object size: %" G_GUINT32_FORMAT,
+        payload->media_object_size);
+    GST_DEBUG_OBJECT (asfmux, "replicated data length: %d",
+        (gint) payload->replicated_data_length);
+    GST_DEBUG_OBJECT (asfmux, "payload size: %u",
+        GST_BUFFER_SIZE (payload->data));
+    GST_DEBUG_OBJECT (asfmux, "presentation time: %" G_GUINT32_FORMAT " (%"
+        GST_TIME_FORMAT ")", payload->presentation_time,
+        GST_TIME_ARGS (payload->presentation_time * GST_MSECOND));
+    GST_DEBUG_OBJECT (asfmux, "keyframe: %s",
+        (payload->stream_number & 0x80 ? "yes" : "no"));
+    GST_DEBUG_OBJECT (asfmux, "buffer timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->data)));
+    GST_DEBUG_OBJECT (asfmux, "buffer duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_DURATION (payload->data)));
+
     gst_asf_put_payload (data, payload);
     if (!payload->has_packet_info) {
       payload->has_packet_info = TRUE;
       payload->packet_number = asfmux->total_data_packets;
     }
+    GST_DEBUG_OBJECT (asfmux, "packet number: %" G_GUINT32_FORMAT,
+        payload->packet_number);
 
     if (ASF_PAYLOAD_IS_KEYFRAME (payload)) {
       has_keyframe = TRUE;
