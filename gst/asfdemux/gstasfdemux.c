@@ -2396,13 +2396,15 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
     "WM/Year", GST_TAG_DATE}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
-  gsize out = strlen (name_utf8);
+  gsize out;
   guint i;
 
   if (name_utf8 == NULL) {
     GST_WARNING ("Failed to convert name to UTF8, skipping");
     return NULL;
   }
+
+  out = strlen (name_utf8);
 
   for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
     if (strncmp (tags[i].asf_name, name_utf8, out) == 0) {
