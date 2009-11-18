@@ -2301,5 +2301,5 @@ gboolean
 gst_asf_mux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "asfmux",
-      GST_RANK_NONE, GST_TYPE_ASF_MUX);
+      GST_RANK_PRIMARY, GST_TYPE_ASF_MUX);
 }
