@@ -1237,7 +1237,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       }
     }
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
+    if (!gst_element_register (plugin, type_name, GST_RANK_SECONDARY, type)) {
       g_free (type_name);
       return FALSE;
     }

@@ -859,7 +859,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
     }
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
+    if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type)) {
       g_free (type_name);
       return FALSE;
     }
