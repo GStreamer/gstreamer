@@ -394,6 +394,13 @@ struct _GstPlayBin
   GstElement *audio_sink;       /* configured audio sink, or NULL      */
   GstElement *video_sink;       /* configured video sink, or NULL      */
   GstElement *text_sink;        /* configured text sink, or NULL       */
+
+  struct
+  {
+    gboolean valid;
+    GstFormat format;
+    gint64 duration;
+  } duration[5];                /* cached durations */
 };
 
 struct _GstPlayBinClass
@@ -514,6 +521,7 @@ static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_play_bin_handle_message (GstBin * bin, GstMessage * message);
+static gboolean gst_play_bin_query (GstElement * element, GstQuery * query);
 
 static GstTagList *gst_play_bin_get_video_tags (GstPlayBin * playbin,
     gint stream);
@@ -1042,6 +1050,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
+  gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_play_bin_query);
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
@@ -1971,6 +1980,99 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_play_bin_update_cached_duration_from_query (GstPlayBin * playbin,
+    gboolean valid, GstQuery * query)
+{
+  GstFormat fmt;
+  gint64 duration;
+  gint i;
+
+  GST_DEBUG_OBJECT (playbin, "Updating cached duration from query");
+  gst_query_parse_duration (query, &fmt, &duration);
+
+  for (i = 0; i < G_N_ELEMENTS (playbin->duration); i++) {
+    if (playbin->duration[i].format == 0 || fmt == playbin->duration[i].format) {
+      playbin->duration[i].valid = valid;
+      playbin->duration[i].format = fmt;
+      playbin->duration[i].duration = valid ? duration : -1;
+      break;
+    }
+  }
+}
+
+static void
+gst_play_bin_update_cached_duration (GstPlayBin * playbin)
+{
+  const GstFormat formats[] =
+      { GST_FORMAT_TIME, GST_FORMAT_BYTES, GST_FORMAT_DEFAULT };
+  gboolean ret;
+  GstQuery *query;
+  gint i;
+
+  GST_DEBUG_OBJECT (playbin, "Updating cached durations before group switch");
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+    query = gst_query_new_duration (formats[i]);
+    ret =
+        GST_ELEMENT_CLASS (parent_class)->query (GST_ELEMENT_CAST (playbin),
+        query);
+    gst_play_bin_update_cached_duration_from_query (playbin, ret, query);
+    gst_query_unref (query);
+  }
+}
+
+static gboolean
+gst_play_bin_query (GstElement * element, GstQuery * query)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (element);
+  gboolean ret;
+
+  /* During a group switch we shouldn't allow duration queries
+   * because it's not clear if the old or new group's duration
+   * is returned and if the sinks are already playing new data
+   * or old data. See bug #585969
+   *
+   * While we're at it, also don't do any other queries during
+   * a group switch or any other event that causes topology changes
+   * by taking the playbin lock in any case.
+   */
+  GST_PLAY_BIN_LOCK (playbin);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
+    GstSourceGroup *group = playbin->curr_group;
+    GST_SOURCE_GROUP_LOCK (group);
+    if (group->pending || group->stream_changed_pending) {
+      GstFormat fmt;
+      gint i;
+
+      ret = FALSE;
+      gst_query_parse_duration (query, &fmt, NULL);
+      for (i = 0; i < G_N_ELEMENTS (playbin->duration); i++) {
+        if (fmt == playbin->duration[i].format) {
+          ret = playbin->duration[i].valid;
+          gst_query_set_duration (query, fmt,
+              (ret ? playbin->duration[i].duration : -1));
+          break;
+        }
+      }
+      GST_DEBUG_OBJECT (playbin,
+          "Taking cached duration because of pending group switch: %d", ret);
+      GST_SOURCE_GROUP_UNLOCK (group);
+      GST_PLAY_BIN_UNLOCK (playbin);
+      return ret;
+    }
+    GST_SOURCE_GROUP_UNLOCK (group);
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION)
+    gst_play_bin_update_cached_duration_from_query (playbin, ret, query);
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  return ret;
 }
 
 /* mime types we are not handling on purpose right now, don't post a
@@ -3116,6 +3218,7 @@ setup_next_source (GstPlayBin * playbin, GstState target)
   /* first unlink the current source, if any */
   old_group = playbin->curr_group;
   if (old_group && old_group->valid) {
+    gst_play_bin_update_cached_duration (playbin);
     /* unlink our pads with the sink */
     deactivate_group (playbin, old_group);
     old_group->valid = FALSE;
@@ -3205,9 +3308,11 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       g_mutex_lock (playbin->elements_lock);
       gst_play_bin_update_elements_list (playbin);
       g_mutex_unlock (playbin->elements_lock);
+      memset (&playbin->duration, 0, sizeof (playbin->duration));
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
+      memset (&playbin->duration, 0, sizeof (playbin->duration));
       g_atomic_int_set (&playbin->shutdown, 0);
       if (!setup_next_source (playbin, GST_STATE_READY))
         goto source_failed;
@@ -3216,6 +3321,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* FIXME unlock our waiting groups */
       GST_LOG_OBJECT (playbin, "setting shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 1);
+      memset (&playbin->duration, 0, sizeof (playbin->duration));
 
       /* wait for all callbacks to end by taking the lock.
        * No dynamic (critical) new callbacks will
@@ -3226,6 +3332,8 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:{
       guint i;
+
+      memset (&playbin->duration, 0, sizeof (playbin->duration));
 
       /* unlock so that all groups go to NULL */
       groups_set_locked_state (playbin, FALSE);
