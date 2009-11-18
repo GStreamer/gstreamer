@@ -482,7 +482,7 @@ paused_mode_task (gpointer data)
     GstBuffer *buffer;
     GstEvent *event = NULL;
 
-    buffer = gst_buffer_try_new_and_alloc (TCP_HEADER_SIZE);
+    buffer = gst_buffer_new_and_alloc (TCP_HEADER_SIZE);
     GST_BUFFER_TIMESTAMP (buffer) = mimenc->last_buffer + PAUSED_MODE_INTERVAL;
     gst_mim_enc_create_tcp_header (mimenc, buffer, 0, FALSE, TRUE);
 
