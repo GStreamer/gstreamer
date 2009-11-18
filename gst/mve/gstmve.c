@@ -32,10 +32,10 @@ static gboolean
 mve_plugin_init (GstPlugin * plugin)
 {
 
-  return gst_element_register (plugin, "mvedemux",
-      GST_RANK_PRIMARY,
-      GST_TYPE_MVE_DEMUX) &&
-      gst_element_register (plugin, "mvemux", GST_RANK_NONE, GST_TYPE_MVE_MUX);
+  return gst_element_register (plugin, "mvedemux", GST_RANK_PRIMARY,
+      GST_TYPE_MVE_DEMUX)
+      && gst_element_register (plugin, "mvemux", GST_RANK_PRIMARY,
+      GST_TYPE_MVE_MUX);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
