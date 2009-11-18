@@ -34,7 +34,7 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (dirac_debug, "dirac", 0, "Dirac elements");
 
-  if (!gst_element_register (plugin, "diracenc", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "diracenc", GST_RANK_MARGINAL,
           gst_dirac_enc_get_type ())) {
     return FALSE;
   }
