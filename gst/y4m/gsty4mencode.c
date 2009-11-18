@@ -348,7 +348,7 @@ gst_y4m_encode_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "y4menc", GST_RANK_NONE,
+  return gst_element_register (plugin, "y4menc", GST_RANK_PRIMARY,
       GST_TYPE_Y4M_ENCODE);
 }
 
