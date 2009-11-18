@@ -5237,7 +5237,7 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
     g_free (name);
   }
 
-  if (len <= offset + 2 + 4 + 4 + 4)
+  if (len < offset + 2 + 4 + 4 + 4)
     goto short_read;
 
   /* +1 +1 = skip null-terminator and location role byte */
