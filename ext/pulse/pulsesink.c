@@ -566,6 +566,35 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
       info->sink_usec, sink_usec);
 }
 
+static void
+gst_pulsering_stream_suspended_cb (pa_stream * p, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  if (pa_stream_is_suspended (p))
+    GST_DEBUG_OBJECT (psink, "stream suspended");
+  else
+    GST_DEBUG_OBJECT (psink, "stream resumed");
+}
+
+#if HAVE_PULSE_0_9_11
+static void
+gst_pulsering_stream_started_cb (pa_stream * p, void *userdata)
+{
+  GstPulseSink *psink;
+  GstPulseRingBuffer *pbuf;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  GST_DEBUG_OBJECT (psink, "stream started");
+}
+#endif
+
 #if HAVE_PULSE_0_9_15
 static void
 gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
@@ -662,6 +691,12 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_overflow_cb, pbuf);
   pa_stream_set_latency_update_callback (pbuf->stream,
       gst_pulsering_stream_latency_cb, pbuf);
+  pa_stream_set_suspended_callback (pbuf->stream,
+      gst_pulsering_stream_suspended_cb, pbuf);
+#if HAVE_PULSE_0_9_11
+  pa_stream_set_started_callback (pbuf->stream,
+      gst_pulsering_stream_started_cb, pbuf);
+#endif
 #if HAVE_PULSE_0_9_15
   pa_stream_set_event_callback (pbuf->stream,
       gst_pulsering_stream_event_cb, pbuf);
