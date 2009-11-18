@@ -1591,7 +1591,7 @@ gst_pulsesink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   GstPulseRingBuffer *pbuf;
   pa_usec_t time;
 
-  if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
+  if (!sink->ringbuffer || !sink->ringbuffer->acquired)
     return GST_CLOCK_TIME_NONE;
 
   pbuf = GST_PULSERING_BUFFER_CAST (sink->ringbuffer);
