@@ -2771,6 +2771,14 @@ again:
           gst_base_sink_configure_segment (basesink, pad, event,
               &basesink->segment);
           break;
+        case GST_EVENT_SINK_MESSAGE:{
+          GstMessage *msg = NULL;
+
+          gst_event_parse_sink_message (event, &msg);
+
+          if (msg)
+            gst_element_post_message (GST_ELEMENT_CAST (basesink), msg);
+        }
         default:
           break;
       }
