@@ -6640,11 +6640,9 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case 0x1100736d:
     case 0x6d730011:
-      _codec ("IMA Loki SDL MJPEG ADPCM");
-      /* Loki ADPCM, See #550288 for a file that only decodes
-       * with the smjpeg variant of the ADPCM decoder. */
+      _codec ("DVI/IMA ADPCM");
       caps = gst_caps_new_simple ("audio/x-adpcm",
-          "layout", G_TYPE_STRING, "smjpeg", NULL);
+          "layout", G_TYPE_STRING, "dvi", NULL);
       break;
     case 0x1700736d:
     case 0x6d730017:
