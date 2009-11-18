@@ -29,7 +29,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "gsmenc", GST_RANK_NONE, GST_TYPE_GSMENC))
+  if (!gst_element_register (plugin, "gsmenc", GST_RANK_PRIMARY,
+          GST_TYPE_GSMENC))
     return FALSE;
   if (!gst_element_register (plugin, "gsmdec", GST_RANK_PRIMARY,
           GST_TYPE_GSMDEC))
