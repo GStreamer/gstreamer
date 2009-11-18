@@ -1,8 +1,10 @@
 /*
  * GStreamer
  * Copyright (c) 2005 INdT.
+ * Copyright (c) 2009 Collabora Ltd.
  * @author Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  * @author Philippe Khalaf <burger@speedy.org>
+ * @author Olivier Crête <olivier.crete@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +27,13 @@
  *
  * The MIMIC codec is used by MSN Messenger's webcam support. It creates the
  * TCP header for the MIMIC codec.
+ *
+ * When using it to communicate directly with MSN Messenger, if the sender
+ * wants to stop sending, he has to send a special buffer every 4 seconds.
+ * When the "paused-mode" property is set to TRUE, if the element receives no
+ * buffer on its sink pad for 4 seconds, it will produced a special paused
+ * frame and will continue doing so every 4 seconds until a new buffer is
+ *u received on its sink pad.
  *
  * Its fourcc is ML20.
  */
