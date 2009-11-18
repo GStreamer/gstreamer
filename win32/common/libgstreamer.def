@@ -365,6 +365,7 @@ EXPORTS
 	gst_event_new_new_segment_full
 	gst_event_new_qos
 	gst_event_new_seek
+	gst_event_new_sink_message
 	gst_event_new_step
 	gst_event_new_tag
 	gst_event_parse_buffer_size
@@ -373,6 +374,7 @@ EXPORTS
 	gst_event_parse_new_segment_full
 	gst_event_parse_qos
 	gst_event_parse_seek
+	gst_event_parse_sink_message
 	gst_event_parse_step
 	gst_event_parse_tag
 	gst_event_set_seqnum

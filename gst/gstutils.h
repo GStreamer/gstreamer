@@ -1172,6 +1172,19 @@ void gst_util_double_to_fraction (gdouble src, gint *dest_n, gint *dest_d);
 gboolean gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d, gint *res_n, gint *res_d);
 gboolean gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint *res_n, gint *res_d);
 
+
+/* sink message event
+ *
+ * FIXME: This should be in gstevent.h but can't because
+ * it needs GstMessage and this would introduce circular
+ * header includes. And forward declarations of typedefs
+ * are unfortunately not possible. The implementation of
+ * these functions is in gstevent.c.
+ */
+GstEvent*       gst_event_new_sink_message      (struct _GstMessage *msg);
+void            gst_event_parse_sink_message    (GstEvent *event, struct _GstMessage **msg);
+
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

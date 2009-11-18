@@ -758,6 +758,9 @@ gst_event_parse_latency
 
 gst_event_new_step
 gst_event_parse_step
+
+gst_event_new_sink_message
+gst_event_parse_sink_message
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT

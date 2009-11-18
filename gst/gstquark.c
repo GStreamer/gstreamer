@@ -47,7 +47,8 @@ static const gchar *_quark_strings[] = {
   "GstQueryPosition", "GstQueryDuration", "GstQueryLatency", "GstQueryConvert",
   "GstQuerySegment", "GstQuerySeeking", "GstQueryFormats", "GstQueryBuffering",
   "GstQueryURI", "GstEventStep", "GstMessageStepDone", "amount", "flush",
-  "intermediate", "GstMessageStepStart", "active", "eos"
+  "intermediate", "GstMessageStepStart", "active", "eos", "sink-message",
+  "message"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];
