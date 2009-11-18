@@ -295,6 +295,7 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
     if (strcmp (gst_plugin_feature_get_name (feature), "pulsesink") == 0) {
       if (!gst_plugin_feature_check_version (feature, 0, 10, 17)) {
         /* we're dealing with an old pulsesink, we need to disable time corection */
+        GST_DEBUG ("disable time offset");
         baseaudiosink->priv->do_time_offset = FALSE;
       }
     }
@@ -1196,6 +1197,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
    * time of the external clock) */
   etime = GST_ELEMENT_CAST (sink)->base_time + time;
   itime = gst_audio_clock_get_time (sink->provided_clock);
+  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
 
   if (status == GST_CLOCK_EARLY) {
     /* when we prerolled late, we have to take into account the lateness */
@@ -1457,10 +1459,16 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         &render_start, &render_stop);
   }
 
+  GST_DEBUG_OBJECT (sink,
+      "final timestamps: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
+
   /* bring to position in the ringbuffer */
   if (sink->priv->do_time_offset) {
     time_offset =
         GST_AUDIO_CLOCK_CAST (sink->provided_clock)->abidata.ABI.time_offset;
+    GST_DEBUG_OBJECT (sink,
+        "time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
     if (render_start > time_offset)
       render_start -= time_offset;
     else
