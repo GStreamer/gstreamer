@@ -425,6 +425,13 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
 
+  if (rtp_mux->ssrc == -1) {
+    if (gst_structure_has_field_typed (structure, "ssrc", G_TYPE_UINT)) {
+      rtp_mux->current_ssrc = g_value_get_uint
+          (gst_structure_get_value (structure, "ssrc"));
+    }
+  }
+
   if (ret) {
     GST_OBJECT_LOCK (rtp_mux);
     padpriv = gst_pad_get_element_private (pad);
