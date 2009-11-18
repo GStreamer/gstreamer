@@ -720,7 +720,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "wavenc", GST_RANK_NONE,
+  return gst_element_register (plugin, "wavenc", GST_RANK_PRIMARY,
       GST_TYPE_WAVENC);
 }
 
