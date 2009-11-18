@@ -726,6 +726,7 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
     /* no previous sample, go to the current position */
     GST_DEBUG_OBJECT (src, "first sample, align to current %d", segdone);
     sample = ((guint64) (segdone)) * sps;
+    readseg = segdone;
   }
 
   GST_DEBUG_OBJECT (src,
