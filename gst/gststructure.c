@@ -1404,6 +1404,8 @@ gst_structure_get_string (const GstStructure * structure,
 
   if (field == NULL)
     return NULL;
+  if (!G_VALUE_HOLDS_STRING (&field->value))
+    return NULL;
 
   return g_value_get_string (&field->value);
 }
