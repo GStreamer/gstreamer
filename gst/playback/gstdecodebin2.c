@@ -266,6 +266,9 @@ static void do_async_done (GstDecodeBin * dbin);
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
+static void decodebin_set_queue_size (GstDecodeBin * dbin,
+    GstElement * multiqueue, gboolean preroll);
+
 static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
     GstPad * pad, GstCaps * caps);
 static GValueArray *gst_decode_bin_autoplug_factories (GstElement *
@@ -1874,6 +1877,11 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (element, "Setting group %p to complete", group);
 
   group->no_more_pads = TRUE;
+  /* this group has prerolled enough to not need more pads,
+   * we can probably set its buffering state to playing now */
+  GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
+      "'playing' buffering mode", group);
+  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE);
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
