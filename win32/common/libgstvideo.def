@@ -1,5 +1,7 @@
 EXPORTS
 	gst_video_calculate_display_ratio
+	gst_video_event_new_still_frame
+	gst_video_event_parse_still_frame
 	gst_video_filter_get_type
 	gst_video_format_convert
 	gst_video_format_from_fourcc
