@@ -796,9 +796,9 @@ gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
 
   GstBuffer *buf = NULL;
 
-  if (offset + size >= wvparse->upstream_length) {
+  if (offset + size > wvparse->upstream_length) {
     wvparse->upstream_length = gst_wavpack_parse_get_upstream_length (wvparse);
-    if (offset + size >= wvparse->upstream_length) {
+    if (offset + size > wvparse->upstream_length) {
       GST_DEBUG_OBJECT (wvparse, "EOS: %" G_GINT64_FORMAT " + %u > %"
           G_GINT64_FORMAT, offset, size, wvparse->upstream_length);
       flow_ret = GST_FLOW_UNEXPECTED;
