@@ -819,6 +819,7 @@ gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
   } else {
     GST_LOG_OBJECT (qtmux, "downstream");
 
+    buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf, GST_PAD_CAPS (qtmux->srcpad));
     res = gst_pad_push (qtmux->srcpad, buf);
   }
