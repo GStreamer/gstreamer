@@ -109,10 +109,6 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, 32, "channels", G_TYPE_INT, channels, NULL);
 
-  /*if (pos)
-     gst_audio_set_caps_channel_positions_list (caps, pos, channels);
-   */
-
   new = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD_TEMPLATE,
       "name", name, "name-template", name,
       "direction", direction, "presence", GST_PAD_ALWAYS, "caps", caps, NULL);
