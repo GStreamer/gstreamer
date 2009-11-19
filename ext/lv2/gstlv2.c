@@ -153,16 +153,15 @@ gst_lv2_class_find_group (GArray * groups, SLV2Value uri)
 static GstAudioChannelPosition *
 gst_lv2_build_positions (GstLV2Group * group)
 {
-  int i;
   GstAudioChannelPosition *positions = NULL;
-  if (group->has_roles) {
-    positions = malloc (group->ports->len * sizeof (GstAudioChannelPosition));
+
+  /* don't do anything for mono */
+  if (group->ports->len > 1) {
+    gint i;
+
+    positions = g_new (GstAudioChannelPosition, group->ports->len);
     for (i = 0; i < group->ports->len; ++i)
       positions[i] = g_array_index (group->ports, GstLV2Port, i).position;
-
-    // Fix up mono groups (see WARNING above)
-    if (group->ports->len == 1)
-      positions[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
   }
   return positions;
 }
@@ -179,7 +178,6 @@ gst_lv2_base_init (gpointer g_class)
   SLV2Values values, sub_values;
   GstLV2Group *group = NULL;
   GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID;
-  GstAudioChannelPosition *positions = NULL;
   guint j, in_pad_index = 0, out_pad_index = 0;
   gchar *klass_tags;
 
@@ -295,43 +293,22 @@ gst_lv2_base_init (gpointer g_class)
   gsp_class->num_control_in = klass->control_in_ports->len;
   gsp_class->num_control_out = klass->control_out_ports->len;
 
-  /* FIXME: see bug #601775
-   * we should set the positions in gst_signal_processor_setup vmethod
-   * but this should pass the caps then as a parameter
-   */
-
   /* add input group pad templates */
   for (j = 0; j < gsp_class->num_group_in; ++j) {
     group = &g_array_index (klass->in_groups, GstLV2Group, j);
-    if (group->has_roles) {
-      positions = gst_lv2_build_positions (group);
-    }
 
     gst_signal_processor_class_add_pad_template (gsp_class,
-        slv2_value_as_string (group->symbol), GST_PAD_SINK, j, group->ports->len
-        /*, positions */ );
-
-    if (group->has_roles) {
-      free (positions);
-      positions = NULL;
-    }
+        slv2_value_as_string (group->symbol), GST_PAD_SINK, j,
+        group->ports->len);
   }
 
   /* add output group pad templates */
   for (j = 0; j < gsp_class->num_group_out; ++j) {
     group = &g_array_index (klass->out_groups, GstLV2Group, j);
-    if (group->has_roles) {
-      positions = gst_lv2_build_positions (group);
-    }
 
     gst_signal_processor_class_add_pad_template (gsp_class,
-        slv2_value_as_string (group->symbol), GST_PAD_SRC, j, group->ports->len
-        /*, positions */ );
-
-    if (group->has_roles) {
-      free (positions);
-      positions = NULL;
-    }
+        slv2_value_as_string (group->symbol), GST_PAD_SRC, j,
+        group->ports->len);
   }
 
   /* add non-grouped input port pad templates */
@@ -599,6 +576,10 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
   GstStructure *s;
   gint sample_rate;
   gint i;
+  GstLV2Group *group = NULL;
+  GstAudioChannelPosition *positions = NULL;
+  GstPad *pad;
+  GstCaps *pad_caps;
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
   lv2 = (GstLV2 *) gsp;
@@ -626,6 +607,44 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
         g_array_index (oclass->control_out_ports, GstLV2Port, i).index,
         &(gsp->control_out[i]));
 
+  /* set input group pad audio channel position */
+  for (i = 0; i < gsp_class->num_group_in; ++i) {
+    group = &g_array_index (oclass->in_groups, GstLV2Group, i);
+    if (group->has_roles) {
+      if ((positions = gst_lv2_build_positions (group))) {
+        if ((pad = gst_element_get_static_pad (GST_ELEMENT (gsp),
+                    slv2_value_as_string (group->symbol)))) {
+          GST_INFO_OBJECT (lv2, "set audio channel positions on sink pad %s",
+              slv2_value_as_string (group->symbol));
+          pad_caps = GST_PAD_CAPS (pad);
+          s = gst_caps_get_structure (caps, 0);
+          gst_audio_set_channel_positions (s, positions);
+          gst_object_unref (pad);
+        }
+        g_free (positions);
+        positions = NULL;
+      }
+    }
+  }
+  /* set output group pad audio channel position */
+  for (i = 0; i < gsp_class->num_group_out; ++i) {
+    group = &g_array_index (oclass->out_groups, GstLV2Group, i);
+    if (group->has_roles) {
+      if ((positions = gst_lv2_build_positions (group))) {
+        if ((pad = gst_element_get_static_pad (GST_ELEMENT (gsp),
+                    slv2_value_as_string (group->symbol)))) {
+          GST_INFO_OBJECT (lv2, "set audio channel positions on src pad %s",
+              slv2_value_as_string (group->symbol));
+          pad_caps = GST_PAD_CAPS (pad);
+          s = gst_caps_get_structure (caps, 0);
+          gst_audio_set_channel_positions (s, positions);
+          gst_object_unref (pad);
+        }
+        g_free (positions);
+        positions = NULL;
+      }
+    }
+  }
   return TRUE;
 
 no_sample_rate:
@@ -739,10 +758,13 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 static gboolean
 lv2_plugin_discover (void)
 {
-  guint i;
+  guint i, j;
   SLV2Plugins plugins = slv2_world_get_all_plugins (world);
+
   for (i = 0; i < slv2_plugins_size (plugins); ++i) {
     SLV2Plugin lv2plugin = slv2_plugins_get_at (plugins, i);
+    gint num_audio_ports = 0;
+    gchar *type_name;
     GTypeInfo typeinfo = {
       sizeof (GstLV2Class),
       (GBaseInitFunc) gst_lv2_base_init,
@@ -754,17 +776,28 @@ lv2_plugin_discover (void)
       0,
       (GInstanceInitFunc) gst_lv2_init,
     };
-
     GType type;
 
     /* construct the type name from plugin URI */
-    gchar *type_name = g_strdup_printf ("%s",
+    type_name = g_strdup_printf ("%s",
         slv2_value_as_uri (slv2_plugin_get_uri (lv2plugin)));
     g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
 
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name))
       goto next;
+
+    /* check if this has any audio ports */
+    for (j = 0; j < slv2_plugin_get_num_ports (lv2plugin); j++) {
+      const SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
+      if (slv2_port_is_a (lv2plugin, port, audio_class)) {
+        num_audio_ports++;
+      }
+    }
+    if (!num_audio_ports) {
+      GST_INFO ("plugin %s has no audio ports", type_name);
+      goto next;
+    }
 
     /* create the type */
     type =
@@ -823,6 +856,10 @@ plugin_init (GstPlugin * plugin)
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   gst_lv2_plugin = plugin;
+
+  /* ensure GstAudioChannelPosition type is registered */
+  if (!gst_audio_channel_position_get_type ())
+    return FALSE;
 
   return lv2_plugin_discover ();
 }
