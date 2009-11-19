@@ -1114,8 +1114,8 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_list_free (group->stream_changed_pending);
   group->stream_changed_pending = NULL;
 
-  if (group->stream_changed_pending_lock);
-  g_mutex_free (group->stream_changed_pending_lock);
+  if (group->stream_changed_pending_lock)
+    g_mutex_free (group->stream_changed_pending_lock);
   group->stream_changed_pending_lock = NULL;
 }
 
