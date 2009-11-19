@@ -4386,7 +4386,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   base += accum;
   base += latency;
   if (GST_CLOCK_DIFF (base, now) < 0)
-    base = -now;
+    base = now;
 
   /* for negative rates we need to count back from the segment
    * duration. */
