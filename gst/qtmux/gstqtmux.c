@@ -1420,7 +1420,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       pad->first_ts = GST_BUFFER_TIMESTAMP (last_buf);
     } else {
       GST_DEBUG_OBJECT (qtmux, "First buffer for pad %s has no timestamp, "
-          "using 0 as first timestamp");
+          "using 0 as first timestamp", GST_PAD_NAME (pad->collect.pad));
       pad->first_ts = 0;
     }
     GST_DEBUG_OBJECT (qtmux, "Stored first timestamp for pad %s %"
