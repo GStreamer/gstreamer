@@ -316,7 +316,8 @@ struct _GstSourceGroup
   gulong sub_no_more_pads_id;
   gulong sub_autoplug_continue_id;
 
-  gint stream_changed_pending;
+  GMutex *stream_changed_pending_lock;
+  GList *stream_changed_pending;
 
   /* selectors for different streams */
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
@@ -1109,6 +1110,13 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->video_sink)
     gst_object_unref (group->video_sink);
   group->video_sink = NULL;
+
+  g_list_free (group->stream_changed_pending);
+  group->stream_changed_pending = NULL;
+
+  if (group->stream_changed_pending_lock);
+  g_mutex_free (group->stream_changed_pending_lock);
+  group->stream_changed_pending_lock = NULL;
 }
 
 static void
@@ -2042,8 +2050,17 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
     GstSourceGroup *group = playbin->curr_group;
+    gboolean pending;
+
     GST_SOURCE_GROUP_LOCK (group);
-    if (group->pending || group->stream_changed_pending) {
+    if (group->stream_changed_pending_lock) {
+      g_mutex_lock (group->stream_changed_pending_lock);
+      pending = group->pending || group->stream_changed_pending;
+      g_mutex_unlock (group->stream_changed_pending_lock);
+    } else {
+      pending = group->pending;
+    }
+    if (pending) {
       GstFormat fmt;
       gint i;
 
@@ -2106,11 +2123,25 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 
     /* Drop all stream-changed messages except the last one */
     if (strcmp ("playbin2-stream-changed", gst_structure_get_name (s)) == 0) {
+      guint32 seqnum = gst_message_get_seqnum (msg);
+      GList *l;
+
       group = playbin->curr_group;
-      if (!g_atomic_int_dec_and_test (&group->stream_changed_pending)) {
-        gst_message_unref (msg);
-        msg = NULL;
+      g_mutex_lock (group->stream_changed_pending_lock);
+      for (l = group->stream_changed_pending; l; l = l->next) {
+        guint32 l_seqnum = GPOINTER_TO_UINT (l->data);
+
+        if (l_seqnum == seqnum) {
+          group->stream_changed_pending =
+              g_list_delete_link (group->stream_changed_pending, l);
+          if (group->stream_changed_pending) {
+            gst_message_unref (msg);
+            msg = NULL;
+            break;
+          }
+        }
       }
+      g_mutex_unlock (group->stream_changed_pending_lock);
     }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_START ||
       GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
@@ -2683,14 +2714,20 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
         GstStructure *s;
         GstMessage *msg;
         GstEvent *event;
+        guint32 seqnum;
 
         s = gst_structure_new ("playbin2-stream-changed", "uri", G_TYPE_STRING,
             group->uri, NULL);
         if (group->suburi)
           gst_structure_set (s, "suburi", G_TYPE_STRING, group->suburi, NULL);
         msg = gst_message_new_element (GST_OBJECT_CAST (playbin), s);
+        seqnum = gst_message_get_seqnum (msg);
         event = gst_event_new_sink_message (msg);
-        g_atomic_int_inc (&group->stream_changed_pending);
+        g_mutex_lock (group->stream_changed_pending_lock);
+        group->stream_changed_pending =
+            g_list_prepend (group->stream_changed_pending,
+            GUINT_TO_POINTER (seqnum));
+        g_mutex_unlock (group->stream_changed_pending_lock);
         gst_pad_send_event (select->sinkpad, event);
         gst_message_unref (msg);
       }
@@ -2966,7 +3003,11 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   GST_DEBUG_OBJECT (playbin, "activating group %p", group);
 
   GST_SOURCE_GROUP_LOCK (group);
-  group->stream_changed_pending = 0;
+
+  g_list_free (group->stream_changed_pending);
+  group->stream_changed_pending = NULL;
+  if (!group->stream_changed_pending_lock)
+    group->stream_changed_pending_lock = g_mutex_new ();
 
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
