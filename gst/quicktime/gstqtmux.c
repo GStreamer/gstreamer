@@ -1209,7 +1209,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     if (!atom_moov_copy_data (qtmux->moov, NULL, &size, &offset))
       goto serialize_error;
     GST_DEBUG_OBJECT (qtmux, "calculated moov atom size %" G_GUINT64_FORMAT,
-        size);
+        offset);
     offset += qtmux->header_size + (large_file ? 16 : 8);
   } else
     offset = qtmux->header_size;
