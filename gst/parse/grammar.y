@@ -113,7 +113,7 @@ typedef struct {
   gulong signal_id;
 } DelayedSet;
 
-/*** define SET_ERROR and ERROR macros/functions */
+/*** define SET_ERROR macro/function */
 
 #ifdef G_HAVE_ISO_VARARGS
 
@@ -125,9 +125,6 @@ G_STMT_START { \
   } \
 } G_STMT_END
 
-#  define ERROR(type, ...) \
-  SET_ERROR (graph->error, (type), __VA_ARGS__ )
-
 #elif defined(G_HAVE_GNUC_VARARGS)
 
 #  define SET_ERROR(error, type, args...) \
@@ -137,9 +134,6 @@ G_STMT_START { \
     g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
   } \
 } G_STMT_END
-
-#  define ERROR(type, args...) \
-  SET_ERROR (graph->error,(type) , args )
 
 #else
 
