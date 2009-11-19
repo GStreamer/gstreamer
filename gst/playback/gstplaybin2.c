@@ -2112,13 +2112,28 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
         msg = NULL;
       }
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_START ||
+      GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
+    GstObject *src = GST_OBJECT_CAST (msg->src);
+
+    /* Ignore async state changes from the uridecodebin children,
+     * see bug #602000. */
+    group = playbin->curr_group;
+    if (src && (group = playbin->curr_group) &&
+        ((group->uridecodebin && src == GST_OBJECT_CAST (group->uridecodebin))
+            || (group->suburidecodebin
+                && src == GST_OBJECT_CAST (group->suburidecodebin)))) {
+      GST_DEBUG_OBJECT (playbin,
+          "Ignoring async state change of uridecodebin: %s",
+          GST_OBJECT_NAME (src));
+      gst_message_unref (msg);
+      msg = NULL;
+    }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     /* If we get an error of the subtitle uridecodebin transform
      * them into warnings and disable the subtitles */
     group = playbin->curr_group;
     if (group && group->suburidecodebin) {
-
-      GstObject *srcparent = gst_object_get_parent (GST_OBJECT_CAST (msg->src));
       if (G_UNLIKELY (gst_object_has_ancestor (msg->src, GST_OBJECT_CAST
                   (group->suburidecodebin)))) {
         GError *err;
@@ -2176,9 +2191,6 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
           no_more_pads_cb (NULL, group);
         }
       }
-
-      if (srcparent)
-        gst_object_unref (srcparent);
     }
   }
 
@@ -3224,13 +3236,14 @@ setup_next_source (GstPlayBin * playbin, GstState target)
     old_group->valid = FALSE;
   }
 
+  /* swap old and new */
+  playbin->curr_group = new_group;
+  playbin->next_group = old_group;
+
   /* activate the new group */
   if (!activate_group (playbin, new_group, target))
     goto activate_failed;
 
-  /* swap old and new */
-  playbin->curr_group = new_group;
-  playbin->next_group = old_group;
   GST_PLAY_BIN_UNLOCK (playbin);
 
   return TRUE;
