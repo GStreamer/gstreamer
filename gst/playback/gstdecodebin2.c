@@ -108,6 +108,7 @@ GST_STATIC_PAD_TEMPLATE ("src%d",
 GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 #define GST_CAT_DEFAULT gst_decode_bin_debug
 
+typedef struct _GstPendingPad GstPendingPad;
 typedef struct _GstDecodeChain GstDecodeChain;
 typedef struct _GstDecodeGroup GstDecodeGroup;
 typedef struct _GstDecodePad GstDecodePad;
@@ -342,6 +343,13 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->subtitle_lock);		\
 } G_STMT_END
 
+struct _GstPendingPad
+{
+  GstPad *pad;
+  GstDecodeChain *chain;
+  gulong event_probe_id;
+};
+
 /* GstDecodeGroup
  *
  * Streams belonging to the same group/chain of a media file
@@ -396,6 +404,7 @@ struct _GstDecodeChain
   GstDecodePad *endpad;         /* Pad of this chain that could be exposed */
   gboolean deadend;             /* This chain is incomplete and can't be completed,
                                    e.g. no suitable decoder could be found
+                                   e.g. stream got EOS without buffers
                                  */
   GstCaps *endcaps;             /* Caps that were used when linking to the endpad
                                    or that resulted in the deadend
@@ -415,7 +424,7 @@ static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
 static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
 static void gst_decode_chain_handle_eos (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
-    GList ** endpads);
+    GList ** endpads, gboolean * missing_plugin);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
 static gboolean gst_decode_group_is_complete (GstDecodeGroup * group);
 static GstPad *gst_decode_group_control_demuxer_pad (GstDecodeGroup * group,
@@ -466,6 +475,9 @@ static void gst_decode_pad_activate (GstDecodePad * dpad,
     GstDecodeChain * chain);
 static void gst_decode_pad_unblock (GstDecodePad * dpad);
 static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked);
+
+static void gst_pending_pad_free (GstPendingPad * ppad);
+static gboolean pad_event_cb (GstPad * pad, GstEvent * event, gpointer data);
 
 /********************************
  * Standard GObject boilerplate *
@@ -1406,12 +1418,18 @@ any_caps:
   }
 setup_caps_delay:
   {
+    GstPendingPad *ppad;
+
     /* connect to caps notification */
     CHAIN_MUTEX_LOCK (chain);
     GST_LOG_OBJECT (dbin, "Chain %p has now %d dynamic pads", chain,
         g_list_length (chain->pending_pads));
-    chain->pending_pads =
-        g_list_prepend (chain->pending_pads, gst_object_ref (pad));
+    ppad = g_slice_new0 (GstPendingPad);
+    ppad->pad = gst_object_ref (pad);
+    ppad->chain = chain;
+    ppad->event_probe_id =
+        gst_pad_add_event_probe (pad, (GCallback) pad_event_cb, ppad);
+    chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
     CHAIN_MUTEX_UNLOCK (chain);
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
@@ -1796,6 +1814,33 @@ exit:
   return;
 }
 
+static gboolean
+pad_event_cb (GstPad * pad, GstEvent * event, gpointer data)
+{
+  GstPendingPad *ppad = (GstPendingPad *) data;
+  GstDecodeChain *chain = ppad->chain;
+  GstDecodeBin *dbin = chain->dbin;
+
+  g_assert (ppad);
+  g_assert (chain);
+  g_assert (dbin);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_DEBUG_OBJECT (dbin, "Received EOS on a non final pad, this stream "
+          "ended too early");
+      chain->deadend = TRUE;
+      /* we don't set the endcaps because NULL endcaps means early EOS */
+      EXPOSE_LOCK (dbin);
+      if (gst_decode_chain_is_complete (dbin->decode_chain))
+        gst_decode_bin_expose (dbin);
+      EXPOSE_UNLOCK (dbin);
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}
+
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 {
@@ -1832,11 +1877,12 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
    * removed when the group's multiqueue is drained */
   CHAIN_MUTEX_LOCK (chain);
   for (l = chain->pending_pads; l; l = l->next) {
-    GstPad *opad = l->data;
+    GstPendingPad *ppad = l->data;
+    GstPad *opad = ppad->pad;
 
     if (pad == opad) {
       g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, chain);
-      gst_object_unref (pad);
+      gst_pending_pad_free (ppad);
       chain->pending_pads = g_list_delete_link (chain->pending_pads, l);
       break;
     }
@@ -1907,8 +1953,9 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeChain * chain)
 
   CHAIN_MUTEX_LOCK (chain);
   for (l = chain->pending_pads; l; l = l->next) {
-    if (l->data == pad) {
-      gst_object_unref (GST_OBJECT_CAST (l->data));
+    GstPendingPad *ppad = l->data;
+    if (ppad->pad == pad) {
+      gst_pending_pad_free (ppad);
       chain->pending_pads = g_list_delete_link (chain->pending_pads, l);
       break;
     }
@@ -2083,10 +2130,11 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
   }
 
   for (l = chain->pending_pads; l; l = l->next) {
-    GstPad *pad = GST_PAD (l->data);
+    GstPendingPad *ppad = l->data;
+    GstPad *pad = ppad->pad;
 
     g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, chain);
-    gst_object_unref (pad);
+    gst_pending_pad_free (ppad);
     l->data = NULL;
   }
   g_list_free (chain->pending_pads);
@@ -2861,6 +2909,7 @@ static gboolean
 gst_decode_bin_expose (GstDecodeBin * dbin)
 {
   GList *tmp, *endpads = NULL;
+  gboolean missing_plugin = FALSE;
   gboolean already_exposed = TRUE;
 
   GST_DEBUG_OBJECT (dbin, "Exposing currently active chains/groups");
@@ -2875,7 +2924,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
   DYN_UNLOCK (dbin);
 
   /* Get the pads that we're going to expose and mark things as exposed */
-  if (!gst_decode_chain_expose (dbin->decode_chain, &endpads)) {
+  if (!gst_decode_chain_expose (dbin->decode_chain, &endpads, &missing_plugin)) {
     g_list_foreach (endpads, (GFunc) gst_object_unref, NULL);
     g_list_free (endpads);
     GST_ERROR_OBJECT (dbin, "Broken chain/group tree");
@@ -2883,9 +2932,17 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     return FALSE;
   }
   if (endpads == NULL) {
-    GST_WARNING_OBJECT (dbin, "No suitable plugins found");
-    GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL),
-        ("no suitable plugins found"));
+    if (missing_plugin) {
+      GST_WARNING_OBJECT (dbin, "No suitable plugins found");
+      GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL),
+          ("no suitable plugins found"));
+    } else {
+      /* in this case, the stream ended without buffers,
+       * just post a warning */
+      GST_WARNING_OBJECT (dbin, "All streams finished without buffers");
+      GST_ELEMENT_ERROR (dbin, STREAM, FAILED, (NULL),
+          ("all streams without buffers"));
+    }
     return FALSE;
   }
 
@@ -2982,14 +3039,18 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
  * Not MT-safe, call with decodebin expose lock! *
  */
 static gboolean
-gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
+gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
+    gboolean * missing_plugin)
 {
   GstDecodeGroup *group;
   GList *l;
   GstDecodeBin *dbin;
 
-  if (chain->deadend)
+  if (chain->deadend) {
+    if (chain->endcaps)
+      *missing_plugin = TRUE;
     return TRUE;
+  }
 
   if (chain->endpad) {
     if (!chain->endpad->blocked && !chain->endpad->exposed)
@@ -3020,7 +3081,7 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads)
   for (l = group->children; l; l = l->next) {
     GstDecodeChain *childchain = l->data;
 
-    if (!gst_decode_chain_expose (childchain, endpads))
+    if (!gst_decode_chain_expose (childchain, endpads, missing_plugin))
       return FALSE;
   }
 
@@ -3166,6 +3227,17 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeChain * chain)
   return dpad;
 }
 
+static void
+gst_pending_pad_free (GstPendingPad * ppad)
+{
+  g_assert (ppad);
+  g_assert (ppad->pad);
+
+  if (ppad->event_probe_id != 0)
+    gst_pad_remove_event_probe (ppad->pad, ppad->event_probe_id);
+  gst_object_unref (ppad->pad);
+  g_slice_free (GstPendingPad, ppad);
+}
 
 /*****
  * Element add/remove
