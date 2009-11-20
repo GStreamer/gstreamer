@@ -850,6 +850,7 @@ gst_nal_decode_slice_header (GstH264Parse * h, GstNalBs * bs)
 
 GST_BOILERPLATE (GstH264Parse, gst_h264_parse, GstElement, GST_TYPE_ELEMENT);
 
+static void gst_h264_parse_reset (GstH264Parse * h264parse);
 static void gst_h264_parse_finalize (GObject * object);
 static void gst_h264_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -905,7 +906,6 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
 static void
 gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
 {
-  gint i;
   h264parse->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_chain_function (h264parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_h264_parse_chain));
@@ -924,9 +924,24 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
   h264parse->merge = DEFAULT_ACCESS_UNIT;
   h264parse->picture_adapter = gst_adapter_new ();
 
-  for (i = 0; i < MAX_SPS_COUNT; i++)
-    h264parse->sps_buffers[i] = NULL;
+  gst_h264_parse_reset (h264parse);
+}
+
+static void
+gst_h264_parse_reset (GstH264Parse * h264parse)
+{
+  gint i;
+
+  for (i = 0; i < MAX_SPS_COUNT; i++) {
+    if (h264parse->sps_buffers[i])
+      g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
+  }
+  for (i = 0; i < MAX_PPS_COUNT; i++) {
+    if (h264parse->pps_buffers[i])
+      g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
+  }
   h264parse->sps = NULL;
+  h264parse->pps = NULL;
 
   h264parse->first_mb_in_slice = -1;
   h264parse->slice_type = -1;
