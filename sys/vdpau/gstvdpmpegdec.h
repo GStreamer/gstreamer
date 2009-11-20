@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "gstvdpdevice.h"
+#include "gstvdpvideobuffer.h"
 
 G_BEGIN_DECLS
 
@@ -51,12 +51,6 @@ struct _GstVdpMpegDec
   GstPad *src;
   GstPad *sink;
 
-  /* properties */
-  gchar *display;
-  
-  gboolean yuv_output;
-
-  GstVdpDevice *device;
   VdpDecoderProfile profile;
   VdpDecoder decoder;
   
@@ -79,8 +73,8 @@ struct _GstVdpMpegDec
   guint64 gop_frame;
   
   /* forward and backward reference */
-  GstBuffer *f_buffer;
-  GstBuffer *b_buffer;
+  GstVdpVideoBuffer *f_buffer;
+  GstVdpVideoBuffer *b_buffer;
 
   /* calculated timestamp, size and duration */
   GstClockTime next_timestamp;

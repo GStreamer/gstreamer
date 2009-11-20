@@ -257,22 +257,9 @@ error:
 }
 
 gboolean
-gst_vdp_video_buffer_calculate_size (GstCaps * caps, guint * size)
+gst_vdp_video_buffer_calculate_size (guint32 fourcc, gint width, gint height,
+    guint * size)
 {
-  GstStructure *structure;
-  gint width, height;
-  guint fourcc;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &width))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "height", &height))
-    return FALSE;
-
-  if (!gst_structure_get_fourcc (structure, "format", &fourcc))
-    return FALSE;
-
   switch (fourcc) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
     {
@@ -345,11 +332,8 @@ gst_vdp_video_buffer_parse_yuv_caps (GstCaps * yuv_caps,
 
 gboolean
 gst_vdp_video_buffer_download (GstVdpVideoBuffer * video_buf,
-    GstBuffer * outbuf, GstCaps * outcaps)
+    GstBuffer * outbuf, guint32 fourcc, gint width, gint height)
 {
-  GstStructure *structure;
-  gint width, height;
-  guint fourcc;
 
   guint8 *data[3];
   guint32 stride[3];
@@ -360,18 +344,6 @@ gst_vdp_video_buffer_download (GstVdpVideoBuffer * video_buf,
 
   g_return_val_if_fail (GST_IS_VDP_VIDEO_BUFFER (video_buf), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (outbuf), FALSE);
-  g_return_val_if_fail (GST_IS_CAPS (outcaps), FALSE);
-
-  structure = gst_caps_get_structure (outcaps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &width))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "height", &height))
-    return FALSE;
-
-  structure = gst_caps_get_structure (outcaps, 0);
-  if (!gst_structure_get_fourcc (structure, "format", &fourcc))
-    return FALSE;
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):

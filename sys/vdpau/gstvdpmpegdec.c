@@ -41,7 +41,7 @@
 #include <string.h>
 
 #include "mpegutil.h"
-#include "gstvdputils.h"
+#include "gstvdpvideosrcpad.h"
 #include "gstvdpvideobuffer.h"
 
 #include "gstvdpmpegdec.h"
@@ -172,12 +172,12 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
   gst_pad_fixate_caps (mpeg_dec->src, src_caps);
 
   structure = gst_caps_get_structure (src_caps, 0);
-  mpeg_dec->yuv_output = gst_structure_has_name (structure, "video/x-raw-yuv");
 
   GST_DEBUG_OBJECT (mpeg_dec, "Setting source caps to %" GST_PTR_FORMAT,
       src_caps);
 
-  res = gst_pad_set_caps (mpeg_dec->src, src_caps);
+  res = gst_vdp_video_src_pad_set_caps
+      (GST_VDP_VIDEO_SRC_PAD (mpeg_dec->src), src_caps);
   gst_caps_unref (src_caps);
   if (!res)
     goto done;
@@ -258,36 +258,9 @@ error:
 
 GstFlowReturn
 gst_vdp_mpeg_dec_push_video_buffer (GstVdpMpegDec * mpeg_dec,
-    GstVdpVideoBuffer * buffer)
+    GstVdpVideoBuffer * buf)
 {
-  GstBuffer *buf;
-  GstFlowReturn ret;
   gint64 byterate;
-
-  if (mpeg_dec->yuv_output) {
-    GstCaps *caps;
-    guint size;
-
-    caps = GST_PAD_CAPS (mpeg_dec->src);
-    if (!gst_vdp_video_buffer_calculate_size (caps, &size))
-      goto size_error;
-
-    ret = gst_pad_alloc_buffer (mpeg_dec->src, GST_BUFFER_OFFSET_NONE, size,
-        caps, &buf);
-    if (ret != GST_FLOW_OK)
-      goto error;
-
-    if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (buf)))
-      goto wrong_caps;
-
-    if (!gst_vdp_video_buffer_download (buffer, buf, caps))
-      goto download_error;
-
-    gst_buffer_copy_metadata (buf, (const GstBuffer *) buffer,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-    gst_buffer_unref (GST_BUFFER (buffer));
-  } else
-    buf = GST_BUFFER (buffer);
 
   if (GST_BUFFER_TIMESTAMP (buf) == GST_CLOCK_TIME_NONE
       && GST_CLOCK_TIME_IS_VALID (mpeg_dec->next_timestamp)) {
@@ -325,87 +298,31 @@ gst_vdp_mpeg_dec_push_video_buffer (GstVdpMpegDec * mpeg_dec,
     mpeg_dec->byterate = (mpeg_dec->byterate + byterate) / 2;
   }
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mpeg_dec->src));
-
   GST_DEBUG_OBJECT (mpeg_dec,
       "Pushing buffer with timestamp: %" GST_TIME_FORMAT
       " frame_nr: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_BUFFER_OFFSET (buffer));
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf));
 
-  return gst_pad_push (mpeg_dec->src, buf);
-
-size_error:
-  GST_ELEMENT_ERROR (mpeg_dec, STREAM, FAILED,
-      ("Couldn't calculate buffer size for caps"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-wrong_caps:
-  GST_ELEMENT_ERROR (mpeg_dec, STREAM, FAILED,
-      ("Sink element returned buffer with wrong caps"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-download_error:
-  GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
-      ("Couldn't convert from GstVdpVideoBuffer to the requested format"),
-      (NULL));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
-error:
-  gst_buffer_unref (GST_BUFFER (buffer));
-  return ret;
+  return gst_vdp_video_src_pad_push ((GstVdpVideoSrcPad *) mpeg_dec->src, buf);
 }
 
 static GstFlowReturn
-gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
+gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec,
+    GstVdpVideoBuffer ** outbuf)
 {
-  GstCaps *caps;
+  GstVdpVideoSrcPad *vdp_pad;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  caps = GST_PAD_CAPS (mpeg_dec->src);
-
-  if (mpeg_dec->yuv_output) {
-    GstVdpDevice *device;
-    GstStructure *structure;
-    gint width, height;
-
-    if (G_UNLIKELY (!mpeg_dec->device)) {
-      mpeg_dec->device = gst_vdp_get_device (mpeg_dec->display);
-      if (G_UNLIKELY (!mpeg_dec->device))
-        goto device_error;
-    }
-    device = mpeg_dec->device;
-
-    structure = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (structure, "width", &width))
-      goto invalid_caps;
-    if (!gst_structure_get_int (structure, "height", &height))
-      goto invalid_caps;
-
-    *outbuf = (GstBuffer *) gst_vdp_video_buffer_new (device,
-        VDP_CHROMA_TYPE_420, width, height);
-    if (!*outbuf)
-      goto video_buffer_error;
-  } else {
-    ret = gst_pad_alloc_buffer (mpeg_dec->src, 0, 0, caps, outbuf);
-    if (ret != GST_FLOW_OK)
-      goto done;
-
-    if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*outbuf)))
-      goto wrong_caps;
-
-    if (G_UNLIKELY (!mpeg_dec->device))
-      mpeg_dec->device = g_object_ref (GST_VDP_VIDEO_BUFFER (*outbuf)->device);
-  }
+  vdp_pad = (GstVdpVideoSrcPad *) mpeg_dec->src;
+  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, outbuf);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   if (mpeg_dec->decoder == VDP_INVALID_HANDLE) {
     GstVdpDevice *device;
     VdpStatus status;
 
-    device = mpeg_dec->device;
+    device = GST_VDP_VIDEO_BUFFER (*outbuf)->device;
 
     status = device->vdp_decoder_create (device->device, mpeg_dec->profile,
         mpeg_dec->width, mpeg_dec->height, 2, &mpeg_dec->decoder);
@@ -414,42 +331,12 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec, GstBuffer ** outbuf)
           ("Could not create vdpau decoder"),
           ("Error returned from vdpau was: %s",
               device->vdp_get_error_string (status)));
-      goto decoder_error;
+      gst_buffer_unref (GST_BUFFER_CAST (*outbuf));
+      return GST_FLOW_ERROR;
     }
   }
 
-done:
-  return ret;
-
-device_error:
-  GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, OPEN_READ,
-      ("Couldn't create GstVdpDevice"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto done;
-
-video_buffer_error:
-  GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
-      ("Couldn't create GstVdpVideoBuffer"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto done;
-
-invalid_caps:
-  GST_ELEMENT_ERROR (mpeg_dec, STREAM, FAILED, ("Invalid caps"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto done;
-
-wrong_caps:
-  GST_ELEMENT_ERROR (mpeg_dec, STREAM, FAILED,
-      ("Sink element returned buffer with wrong caps"), (NULL));
-  ret = GST_FLOW_ERROR;
-  gst_buffer_unref (*outbuf);
-  goto done;
-
-decoder_error:
-  ret = GST_FLOW_ERROR;
-  gst_buffer_unref (*outbuf);
-  goto done;
-
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -458,7 +345,7 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
 {
   VdpPictureInfoMPEG1Or2 *info;
   GstBuffer *buffer;
-  GstBuffer *outbuf;
+  GstVdpVideoBuffer *outbuf;
   VdpVideoSurface surface;
   GstVdpDevice *device;
   VdpBitstreamBuffer vbit[1];
@@ -468,13 +355,12 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
 
   if (info->picture_coding_type != B_FRAME) {
     if (info->backward_reference != VDP_INVALID_HANDLE) {
-      gst_buffer_ref (mpeg_dec->b_buffer);
-      gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec,
-          GST_VDP_VIDEO_BUFFER (mpeg_dec->b_buffer));
+      gst_buffer_ref (GST_BUFFER_CAST (mpeg_dec->b_buffer));
+      gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec, mpeg_dec->b_buffer);
     }
 
     if (info->forward_reference != VDP_INVALID_HANDLE) {
-      gst_buffer_unref (mpeg_dec->f_buffer);
+      gst_buffer_unref (GST_BUFFER_CAST (mpeg_dec->f_buffer));
       info->forward_reference = VDP_INVALID_HANDLE;
     }
 
@@ -526,17 +412,16 @@ gst_vdp_mpeg_dec_decode (GstVdpMpegDec * mpeg_dec,
         ("Error returned from vdpau was: %s",
             device->vdp_get_error_string (status)));
 
-    gst_buffer_unref (GST_BUFFER (outbuf));
+    gst_buffer_unref (GST_BUFFER_CAST (outbuf));
 
     return GST_FLOW_ERROR;
   }
 
   if (info->picture_coding_type == B_FRAME) {
-    gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec,
-        GST_VDP_VIDEO_BUFFER (outbuf));
+    gst_vdp_mpeg_dec_push_video_buffer (mpeg_dec, outbuf);
   } else {
     info->backward_reference = surface;
-    mpeg_dec->b_buffer = GST_BUFFER (outbuf);
+    mpeg_dec->b_buffer = outbuf;
   }
 
   return GST_FLOW_OK;
@@ -692,9 +577,9 @@ static void
 gst_vdp_mpeg_dec_flush (GstVdpMpegDec * mpeg_dec)
 {
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-    gst_buffer_unref (mpeg_dec->f_buffer);
+    gst_buffer_unref (GST_BUFFER_CAST (mpeg_dec->f_buffer));
   if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
-    gst_buffer_unref (mpeg_dec->b_buffer);
+    gst_buffer_unref (GST_BUFFER_CAST (mpeg_dec->b_buffer));
 
   gst_adapter_clear (mpeg_dec->adapter);
 
@@ -707,7 +592,6 @@ gst_vdp_mpeg_dec_start (GstVdpMpegDec * mpeg_dec)
 {
   gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
 
-  mpeg_dec->device = NULL;
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
 
   mpeg_dec->state = GST_VDP_MPEG_DEC_NEED_SEQUENCE;
@@ -722,11 +606,13 @@ gst_vdp_mpeg_dec_start (GstVdpMpegDec * mpeg_dec)
 static void
 gst_vdp_mpeg_dec_stop (GstVdpMpegDec * mpeg_dec)
 {
-  if (mpeg_dec->device) {
-    if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
-      mpeg_dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
+  GstVdpDevice *device;
 
-    g_object_unref (mpeg_dec->device);
+  if ((device =
+          gst_vdp_video_src_pad_get_device (GST_VDP_VIDEO_SRC_PAD
+              (mpeg_dec->src)))) {
+    if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
+      device->vdp_decoder_destroy (mpeg_dec->decoder);
   }
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
@@ -831,31 +717,6 @@ done:
   gst_object_unref (mpeg_dec);
 
   return ret;
-}
-
-static GstCaps *
-gst_vdp_mpeg_dec_src_getcaps (GstPad * pad)
-{
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (gst_pad_get_parent (pad));
-  GstElementClass *eclass = GST_ELEMENT_GET_CLASS (mpeg_dec);
-  GstCaps *caps, *templ_caps;
-
-  templ_caps =
-      gst_pad_template_get_caps (gst_element_class_get_pad_template (eclass,
-          "src"));
-
-  if (mpeg_dec->device) {
-    GstCaps *yuv_caps, *video_caps;
-
-    video_caps = gst_vdp_video_buffer_get_allowed_video_caps (mpeg_dec->device);
-    yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (mpeg_dec->device);
-    gst_caps_append (video_caps, yuv_caps);
-    caps = gst_caps_intersect (video_caps, templ_caps);
-    gst_caps_unref (video_caps);
-  } else
-    caps = gst_caps_copy (templ_caps);
-
-  return caps;
 }
 
 static gboolean
@@ -1175,33 +1036,33 @@ gst_vdp_mpeg_dec_finalize (GObject * object)
 }
 
 static void
-gst_vdp_mpeg_dec_get_property (GObject * object, guint property_id,
+gst_vdp_mpeg_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
 
-  switch (property_id) {
+  switch (prop_id) {
     case PROP_DISPLAY:
-      g_value_set_string (value, mpeg_dec->display);
+      g_object_get_property (G_OBJECT (mpeg_dec->src), "display", value);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_vdp_mpeg_dec_set_property (GObject * object, guint property_id,
+gst_vdp_mpeg_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
 
-  switch (property_id) {
+  switch (prop_id) {
     case PROP_DISPLAY:
-      mpeg_dec->display = g_value_dup_string (value);
+      g_object_set_property (G_OBJECT (mpeg_dec->src), "display", value);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -1211,7 +1072,6 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  GstCaps *caps;
   GstPadTemplate *src_template;
 
   gst_element_class_set_details_simple (element_class,
@@ -1224,9 +1084,7 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      caps);
+  src_template = gst_vdp_video_src_pad_get_pad_template ();
   gst_element_class_add_pad_template (element_class, src_template);
 }
 
@@ -1271,11 +1129,7 @@ gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
 static void
 gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
 {
-  mpeg_dec->src =
-      gst_pad_new_from_template (gst_element_class_get_pad_template
-      (GST_ELEMENT_CLASS (gclass), "src"), "src");
-  gst_pad_set_getcaps_function (mpeg_dec->src,
-      GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_getcaps));
+  mpeg_dec->src = GST_PAD (gst_vdp_video_src_pad_new ());
   gst_pad_set_event_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_event));
   gst_pad_set_query_function (mpeg_dec->src,
@@ -1292,8 +1146,6 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
   gst_pad_set_event_function (mpeg_dec->sink,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (mpeg_dec), mpeg_dec->sink);
-
-  mpeg_dec->display = NULL;
 
   mpeg_dec->adapter = gst_adapter_new ();
   mpeg_dec->mutex = g_mutex_new ();
