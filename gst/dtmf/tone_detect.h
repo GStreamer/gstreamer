@@ -30,6 +30,11 @@
         detriment.
 */
 
+#ifndef __TONE_DETECT_H__
+#define __TONE_DETECT_H__
+
+#include <stdint.h>
+
 typedef struct
 {
     float v2;
@@ -82,5 +87,7 @@ int zap_dtmf_detect (dtmf_detect_state_t *s,
 int zap_dtmf_get (dtmf_detect_state_t *s,
               char *buf,
               int max);
+
+#endif /* __TONE_DETECT_H__ */
 
 /*- End of file ------------------------------------------------------------*/
