@@ -345,7 +345,7 @@ gst_deinterlace_modes_get_type (void)
 
   static const GEnumValue modes_types[] = {
     {GST_DEINTERLACE_MODE_AUTO, "Auto detection", "auto"},
-    {GST_DEINTERLACE_MODE_INTERLACED, "Enfore deinterlacing", "interlaced"},
+    {GST_DEINTERLACE_MODE_INTERLACED, "Force deinterlacing", "interlaced"},
     {GST_DEINTERLACE_MODE_DISABLED, "Run in passthrough mode", "disabled"},
     {0, NULL, NULL},
   };
