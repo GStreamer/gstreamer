@@ -1408,16 +1408,14 @@ color_matrix_YCbCr_to_RGB_8bit (CogFrame * frame, void *_dest, int component,
 
   switch (component) {
     case 0:
-      orc_matrix2_11_u8 (dest, src1, src3,
-          matrix[0], matrix[2], 128, 8, frame->width);
+      orc_matrix2_11_u8 (dest, src1, src3, matrix[0], matrix[2], frame->width);
       break;
     case 1:
       orc_matrix3_100_u8 (dest, src1, src2, src3,
-          matrix[4], matrix[5], matrix[6], 128, 8, frame->width);
+          matrix[4], matrix[5], matrix[6], frame->width);
       break;
     case 2:
-      orc_matrix2_12_u8 (dest, src1, src2,
-          matrix[8], matrix[9], 128, 8, frame->width);
+      orc_matrix2_12_u8 (dest, src1, src2, matrix[8], matrix[9], frame->width);
       break;
     default:
       break;
