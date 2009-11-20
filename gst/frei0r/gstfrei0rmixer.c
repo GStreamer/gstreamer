@@ -39,6 +39,7 @@ static void
 gst_frei0r_mixer_reset (GstFrei0rMixer * self)
 {
   GstFrei0rMixerClass *klass = GST_FREI0R_MIXER_GET_CLASS (self);
+  GstEvent **p_ev;
 
   if (self->f0r_instance) {
     klass->ftable->destruct (self->f0r_instance);
@@ -51,7 +52,8 @@ gst_frei0r_mixer_reset (GstFrei0rMixer * self)
   self->property_cache = NULL;
 
   gst_caps_replace (&self->caps, NULL);
-  gst_event_replace (&self->newseg_event, NULL);
+  p_ev = &self->newseg_event;
+  gst_event_replace (p_ev, NULL);
 
   self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
   self->width = self->height = 0;
@@ -510,13 +512,15 @@ gst_frei0r_mixer_sink0_event (GstPad * pad, GstEvent * event)
 {
   GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
   gboolean ret = FALSE;
+  GstEvent **p_ev;
 
   GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
       GST_DEBUG_PAD_NAME (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      gst_event_replace (&self->newseg_event, event);
+      p_ev = &self->newseg_event;
+      gst_event_replace (p_ev, event);
       break;
     default:
       break;
