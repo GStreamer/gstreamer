@@ -21,7 +21,7 @@
  * SECTION:element-gstrtpbin
  * @see_also: gstrtpjitterbuffer, gstrtpsession, gstrtpptdemux, gstrtpssrcdemux
  *
- * RTP bin combines the functions of #GstRtpSession, #GstRtpsSrcDemux,
+ * RTP bin combines the functions of #GstRtpSession, #GstRtpSsrcDemux,
  * #GstRtpJitterBuffer and #GstRtpPtDemux in one element. It allows for multiple
  * RTP sessions that will be synchronized together using RTCP SR packets.
  *
@@ -30,11 +30,11 @@
  *
  * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
  * number must be specified in the pad name.
- * Data received on the recv_rtp_sink_%%d pad will be processed in the gstrtpsession
- * manager and after being validated forwarded on #GstRtpsSrcDemux element. Each
+ * Data received on the recv_rtp_sink_%%d pad will be processed in the #GstRtpSession
+ * manager and after being validated forwarded on #GstRtpSsrcDemux element. Each
  * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
  * the packets are released from the jitterbuffer, they will be forwarded to a
- * #GstRtpsSrcDemux element. The #GstRtpsSrcDemux element will demux the packets based
+ * #GstRtpSsrcDemux element. The #GstRtpSsrcDemux element will demux the packets based
  * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
@@ -130,7 +130,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 /* elementfactory information */
 static const GstElementDetails rtpbin_details = GST_ELEMENT_DETAILS ("RTP Bin",
     "Filter/Network/RTP",
-    "Implement an RTP bin",
+    "Real-Time Transport Protocol bin",
     "Wim Taymans <wim.taymans@gmail.com>");
 
 /* sink pads */
