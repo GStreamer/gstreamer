@@ -314,15 +314,18 @@ static void
 gst_base_parse_finalize (GObject * object)
 {
   GstBaseParse *parse = GST_BASE_PARSE (object);
+  GstEvent **p_ev;
 
   g_mutex_free (parse->parse_lock);
   g_object_unref (parse->adapter);
 
   if (parse->pending_segment) {
-    gst_event_replace (&parse->pending_segment, NULL);
+    p_ev = &parse->pending_segment;
+    gst_event_replace (p_ev, NULL);
   }
   if (parse->close_segment) {
-    gst_event_replace (&parse->close_segment, NULL);
+    p_ev = &parse->close_segment;
+    gst_event_replace (p_ev, NULL);
   }
 
   if (parse->priv->cache) {
