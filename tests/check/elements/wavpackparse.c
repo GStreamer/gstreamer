@@ -198,7 +198,7 @@ GST_START_TEST (test_parsing_valid_frames)
 
   fail_unless (gst_element_query_position (wavpackparse, &format, &pos),
       "Position query failed");
-  fail_unless_equals_int (pos, 25600);
+  fail_unless_equals_int (pos, 51200);
   fail_unless (gst_element_query_duration (wavpackparse, &format, NULL),
       "Duration query failed");
 
