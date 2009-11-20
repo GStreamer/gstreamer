@@ -27,7 +27,7 @@
  */
 
 #include "config.h"
-#include "stdint.h"
+#include "_stdint.h"
 
 #include "d3des.h"
 
