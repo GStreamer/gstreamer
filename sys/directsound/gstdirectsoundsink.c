@@ -99,12 +99,12 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
+        "signed = (boolean) TRUE, "
         "width = (int) 16, "
         "depth = (int) 16, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
         "audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
+        "signed = (boolean) FALSE, "
         "width = (int) 8, "
         "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
