@@ -441,6 +441,8 @@ gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
       sps->num_units_in_tick = num_units_in_tick;
       sps->time_scale = time_scale;
       sps->fixed_frame_rate_flag = gst_nal_bs_read (bs, 1);
+      GST_DEBUG_OBJECT (h, "timing info: dur=%d/%d fixed=%d",
+          num_units_in_tick, time_scale, sps->fixed_frame_rate_flag);
     }
 
     GST_DEBUG_OBJECT (h,
@@ -1013,23 +1015,84 @@ gst_h264_parse_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
+gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
+{
+  GstH264Sps *sps;
+  GstCaps *src_caps = NULL;
+
+  g_return_val_if_fail (caps != NULL, FALSE);
+
+  sps = h264parse->sps;
+
+  src_caps = gst_caps_ref (caps);
+
+  /* if some upstream metadata missing, fill in from parsed stream */
+  /* width / height */
+  if (sps && (!h264parse->width || !h264parse->height)) {
+    gint width, height;
+
+    width = h264parse->width = sps->width;
+    height = h264parse->height = sps->height;
+
+    GST_DEBUG_OBJECT (h264parse, "updating caps w/h %dx%d", width, height);
+    gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
+    gst_caps_unref (src_caps);
+    gst_caps_set_simple (src_caps, "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, NULL);
+  }
+
+  /* framerate */
+  if (sps && (!h264parse->fps_num && !h264parse->fps_den)) {
+    gint fps_num, fps_den;
+
+    fps_num = sps->time_scale;
+    fps_den = sps->num_units_in_tick;
+
+    /* FIXME verify / also handle other cases */
+    if (fps_num && fps_den &&
+        sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag) {
+      src_caps = gst_caps_copy (caps);
+      GST_DEBUG_OBJECT (h264parse, "updating caps fps %d/%d", fps_num, fps_den);
+      gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
+      gst_caps_unref (src_caps);
+      gst_caps_set_simple (src_caps,
+          "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
+    }
+  }
+
+  /* release extra ref */
+  if (src_caps == caps)
+    gst_caps_unref (src_caps);
+
+  return src_caps != GST_PAD_CAPS (h264parse->srcpad) ?
+      gst_pad_set_caps (h264parse->srcpad, src_caps) : TRUE;
+}
+
+static gboolean
 gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  gboolean res;
   GstH264Parse *h264parse;
   GstStructure *str;
   const GValue *value;
   guint8 *data;
-  guint size;
+  guint size, num_sps, num_pps;
 
   h264parse = GST_H264PARSE (GST_PAD_PARENT (pad));
 
   str = gst_caps_get_structure (caps, 0);
 
+  /* accept upstream info if provided */
+  gst_structure_get_int (str, "width", &h264parse->width);
+  gst_structure_get_int (str, "height", &h264parse->height);
+  gst_structure_get_fraction (str, "framerate", &h264parse->fps_num,
+      &h264parse->fps_den);
+
   /* packetized video has a codec_data */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
     GstBuffer *buffer;
     gint profile;
+    GstNalBs bs;
+    gint i, len;
 
     GST_DEBUG_OBJECT (h264parse, "have packetized h264");
     h264parse->packetized = TRUE;
@@ -1057,7 +1120,30 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
     h264parse->nal_length_size = (data[4] & 0x03) + 1;
     GST_DEBUG_OBJECT (h264parse, "nal length %u", h264parse->nal_length_size);
 
-    /* FIXME, PPS, SPS have vital info for detecting new I-frames */
+    num_sps = data[5] & 0x1f;
+    data += 6;
+    size -= 6;
+    for (i = 0; i < num_sps; i++) {
+      len = GST_READ_UINT16_BE (data);
+      if (size < len + 2)
+        goto avcc_too_small;
+      gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
+      gst_nal_decode_sps (h264parse, &bs);
+      data += len + 2;
+      size -= len + 2;
+    }
+    num_pps = data[0];
+    data++;
+    size++;
+    for (i = 0; i < num_pps; i++) {
+      len = GST_READ_UINT16_BE (data);
+      if (size < len + 2)
+        goto avcc_too_small;
+      gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
+      gst_nal_decode_pps (h264parse, &bs);
+      data += len + 2;
+      size -= len + 2;
+    }
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     h264parse->packetized = FALSE;
@@ -1066,9 +1152,7 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   /* forward the caps */
-  res = gst_pad_set_caps (h264parse->srcpad, caps);
-
-  return res;
+  return gst_h264_parse_update_src_caps (h264parse, caps);
 
   /* ERRORS */
 avcc_too_small:
@@ -1302,6 +1386,8 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         case NAL_SPS:
           GST_DEBUG_OBJECT (h264parse, "we have an SPS NAL");
           gst_nal_decode_sps (h264parse, &bs);
+          gst_h264_parse_update_src_caps (h264parse,
+              GST_PAD_CAPS (h264parse->srcpad));
           break;
         case NAL_PPS:
           GST_DEBUG_OBJECT (h264parse, "we have a PPS NAL");

@@ -66,11 +66,15 @@ struct _GstH264Parse
   GstPad *srcpad;
 
   gboolean split_packetized;
+  gboolean merge;
   guint nal_length_size;
 
   GstSegment segment;
   gboolean packetized;
   gboolean discont;
+
+  gint width, height;
+  gint fps_num, fps_den;
 
   /* gather/decode queues for reverse playback */
   GList *gather;
