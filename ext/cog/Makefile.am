@@ -46,9 +46,9 @@ CLEANFILES = cogorc.c cogorc.h
 
 EXTRA_DIST=cog.orc
 
-cogorc.c: cog.orc
-	$(ORCC) --implementation -o cogorc.c cog.orc
+cogorc.c: $(srcdir)/cog.orc
+	$(ORCC) --implementation -o cogorc.c $(srcdir)/cog.orc
 
-cogorc.h: cog.orc
-	$(ORCC) --header -o cogorc.h cog.orc
+cogorc.h: $(srcdir)/cog.orc
+	$(ORCC) --header -o cogorc.h $(srcdir)/cog.orc
 

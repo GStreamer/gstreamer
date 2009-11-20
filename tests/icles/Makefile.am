@@ -40,6 +40,21 @@ else
 GST_METADATA_TESTS =
 endif
 
+if USE_COG
+COG_TESTS = cog-test
+else
+COG_TESTS =
+endif
+
+BUILT_SOURCES = cog-test.c
+CLEANFILES = cog-test.c
+
+cog-test.c: $(srcdir)/../../ext/cog/cog.orc
+	$(ORCC) --test -o cog-test.c $(srcdir)/../../ext/cog/cog.orc
+
+cog_test_SOURCES = cog-test.c
+cog_test_CFLAGS = $(COG_CFLAGS)
+cog_test_LDADD = -lorc-test-0.4 $(COG_LIBS)
 
 equalizer_test_SOURCES = equalizer-test.c
 equalizer_test_CFLAGS  = $(GST_CFLAGS)
@@ -58,5 +73,6 @@ output_selector_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 
 noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) $(GST_METADATA_TESTS) $(OSS4_TESTS) \
+	$(COG_TESTS) \
 	equalizer-test output-selector-test
 
