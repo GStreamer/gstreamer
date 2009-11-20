@@ -437,12 +437,15 @@ gst_byte_writer_ensure_free_space (GstByteWriter * writer, guint size)
 gboolean \
 gst_byte_writer_put_##name (GstByteWriter *writer, type val) \
 { \
+  guint8 *write_data; \
+  \
   g_return_val_if_fail (writer != NULL, FALSE); \
   \
   if (G_UNLIKELY (!gst_byte_writer_ensure_free_space(writer, bits/8))) \
     return FALSE; \
   \
-  write_func ((guint8 *) &writer->parent.data[writer->parent.byte], val); \
+  write_data = (guint8 *) writer->parent.data + writer->parent.byte; \
+  write_func (write_data, val); \
   writer->parent.byte += bits/8; \
   writer->parent.size = MAX (writer->parent.size, writer->parent.byte); \
   \
