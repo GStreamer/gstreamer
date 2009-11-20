@@ -33,7 +33,7 @@
 #ifndef __TONE_DETECT_H__
 #define __TONE_DETECT_H__
 
-#include <stdint.h>
+#include "_stdint.h"
 
 typedef struct
 {
