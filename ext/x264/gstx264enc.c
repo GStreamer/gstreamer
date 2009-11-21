@@ -490,7 +490,6 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->buffer_size = 100000;
   encoder->buffer = g_malloc (encoder->buffer_size);
 
-  encoder->i_type = X264_TYPE_AUTO;
   x264_param_default (&encoder->x264param);
 
   /* log callback setup; part of parameters */
@@ -507,6 +506,11 @@ gst_x264_enc_reset (GstX264Enc * encoder)
   encoder->x264enc = NULL;
   encoder->width = 0;
   encoder->height = 0;
+
+  GST_OBJECT_LOCK (encoder);
+  encoder->i_type = X264_TYPE_AUTO;
+  encoder->send_forcekeyunit = FALSE;
+  GST_OBJECT_UNLOCK (encoder);
 }
 
 static void
@@ -873,8 +877,9 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
 {
-  gboolean ret;
+  gboolean ret = TRUE;
   GstX264Enc *encoder;
+  gboolean forward = TRUE;
 
   encoder = GST_X264_ENC (gst_pad_get_parent (pad));
 
@@ -884,7 +889,12 @@ gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         /* Set I frame request */
+        GST_OBJECT_LOCK (encoder);
         encoder->i_type = X264_TYPE_I;
+        encoder->send_forcekeyunit = TRUE;
+        GST_OBJECT_UNLOCK (encoder);
+        forward = FALSE;
+        gst_event_unref (event);
       }
       break;
     }
@@ -892,7 +902,8 @@ gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = gst_pad_push_event (encoder->sinkpad, event);
+  if (forward)
+    ret = gst_pad_push_event (encoder->sinkpad, event);
 
   gst_object_unref (encoder);
   return ret;
@@ -916,7 +927,9 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
       const GstStructure *s;
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        GST_OBJECT_LOCK (encoder);
         encoder->i_type = X264_TYPE_I;
+        GST_OBJECT_UNLOCK (encoder);
       }
       break;
     }
@@ -961,10 +974,12 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
     pic_in.img.i_stride[i] = encoder->stride[i];
   }
 
+  GST_OBJECT_LOCK (encoder);
   pic_in.i_type = encoder->i_type;
 
   /* Reset encoder forced picture type */
   encoder->i_type = X264_TYPE_AUTO;
+  GST_OBJECT_UNLOCK (encoder);
 
   pic_in.i_pts = GST_BUFFER_TIMESTAMP (buf);
 
@@ -1008,6 +1023,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GstClockTime timestamp;
   GstClockTime duration;
   guint8 *data;
+  gboolean send_forcekeyunit;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
@@ -1085,6 +1101,17 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   } else {
     GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
+
+  GST_OBJECT_LOCK (encoder);
+  send_forcekeyunit = encoder->send_forcekeyunit;
+  encoder->send_forcekeyunit = FALSE;
+  GST_OBJECT_UNLOCK (encoder);
+  if (send_forcekeyunit)
+    gst_pad_push_event (encoder->srcpad,
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+            gst_structure_new ("GstForceKeyUnit",
+                "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (out_buf),
+                NULL)));
 
   return gst_pad_push (encoder->srcpad, out_buf);
 }

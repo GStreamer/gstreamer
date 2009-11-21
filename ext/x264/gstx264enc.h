@@ -98,6 +98,7 @@ struct _GstX264Enc
   gulong buffer_size;
 
   gint i_type;
+  gboolean send_forcekeyunit;
 };
 
 struct _GstX264EncClass
