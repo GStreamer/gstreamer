@@ -697,6 +697,69 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
   return res;
 }
 
+/**
+ * gst_base_src_new_seamless_segment:
+ * @src: The source
+ * @start: The new start value for the segment
+ * @stop: Stop value for the new segment
+ * @position: The position value for the new segent
+ *
+ * Prepare a new seamless segment for emission downstream. This function must
+ * only be called by derived sub-classes, and only from the create() function,
+ * as the stream-lock needs to be held.
+ *
+ * The format for the new segment will be the current format of the source, as
+ * configured with gst_base_src_set_format()
+ *
+ * Returns: %TRUE if preparation of the seamless segment succeeded.
+ *
+ * Since: 0.10.26
+ */
+gboolean
+gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
+    gint64 position)
+{
+  gboolean res = TRUE;
+
+  GST_DEBUG_OBJECT (src,
+      "Starting new seamless segment. Start %" GST_TIME_FORMAT " stop %"
+      GST_TIME_FORMAT " position %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
+
+  if (src->data.ABI.running) {
+    if (src->priv->close_segment)
+      gst_event_unref (src->priv->close_segment);
+    src->priv->close_segment =
+        gst_event_new_new_segment_full (TRUE,
+        src->segment.rate, src->segment.applied_rate, src->segment.format,
+        src->segment.start, src->segment.last_stop, src->segment.time);
+  }
+
+  gst_segment_set_newsegment_full (&src->segment, FALSE, src->segment.rate,
+      src->segment.applied_rate, src->segment.format, start, stop, position);
+
+  if (src->priv->start_segment)
+    gst_event_unref (src->priv->start_segment);
+  if (src->segment.rate >= 0.0) {
+    /* forward, we send data from last_stop to stop */
+    src->priv->start_segment =
+        gst_event_new_new_segment_full (FALSE,
+        src->segment.rate, src->segment.applied_rate, src->segment.format,
+        src->segment.last_stop, stop, src->segment.time);
+  } else {
+    /* reverse, we send data from last_stop to start */
+    src->priv->start_segment =
+        gst_event_new_new_segment_full (FALSE,
+        src->segment.rate, src->segment.applied_rate, src->segment.format,
+        src->segment.start, src->segment.last_stop, src->segment.time);
+  }
+
+  src->priv->discont = TRUE;
+  src->data.ABI.running = TRUE;
+
+  return res;
+}
+
 static gboolean
 gst_base_src_setcaps (GstPad * pad, GstCaps * caps)
 {
