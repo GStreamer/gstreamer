@@ -156,6 +156,7 @@ enum
   ARG_DISPLAY,
   PROP_CLIENT_RESHAPE_CALLBACK,
   PROP_CLIENT_DRAW_CALLBACK,
+  PROP_CLIENT_DATA,
   PROP_FORCE_ASPECT_RATIO
 };
 
@@ -226,6 +227,10 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       g_param_spec_pointer ("client_draw_callback", "Client draw callback",
           "Define a custom draw callback in a client code", G_PARAM_WRITABLE));
 
+  g_object_class_install_property (gobject_class, PROP_CLIENT_DATA,
+      g_param_spec_pointer ("client_data", "Client data",
+          "Pass data to the draw and reshape callbacks", G_PARAM_WRITABLE));
+
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
@@ -254,6 +259,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
   glimage_sink->stored_buffer = NULL;
   glimage_sink->clientReshapeCallback = NULL;
   glimage_sink->clientDrawCallback = NULL;
+  glimage_sink->client_data = NULL;
   glimage_sink->keep_aspect_ratio = FALSE;
 }
 
@@ -282,6 +288,11 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
     case PROP_CLIENT_DRAW_CALLBACK:
     {
       glimage_sink->clientDrawCallback = g_value_get_pointer (value);
+      break;
+    }
+    case PROP_CLIENT_DATA:
+    {
+      glimage_sink->client_data = g_value_get_pointer (value);
       break;
     }
     case PROP_FORCE_ASPECT_RATIO:
@@ -484,6 +495,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_gl_display_set_client_draw_callback (glimage_sink->display,
       glimage_sink->clientDrawCallback);
+
+  gst_gl_display_set_client_data (glimage_sink->display,
+      glimage_sink->client_data);
 
   ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
   ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
