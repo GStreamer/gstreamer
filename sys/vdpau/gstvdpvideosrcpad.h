@@ -42,6 +42,7 @@ struct _GstVdpVideoSrcPad
 {
   GstPad pad;
 
+  GstCaps *caps;
   GstVdpDevice *device;
 
   gboolean yuv_output;

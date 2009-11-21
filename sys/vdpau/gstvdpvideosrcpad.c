@@ -90,6 +90,22 @@ gst_vdp_video_src_pad_push (GstVdpVideoSrcPad * vdp_pad,
   return gst_pad_push (pad, out_buf);
 }
 
+static void
+gst_vdp_video_src_pad_update_caps (GstVdpVideoSrcPad * vdp_pad)
+{
+  GstCaps *yuv_caps, *video_caps, *caps;
+
+  video_caps = gst_vdp_video_buffer_get_allowed_video_caps (vdp_pad->device);
+  yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (vdp_pad->device);
+  gst_caps_append (video_caps, yuv_caps);
+  caps = gst_caps_intersect (video_caps, vdp_pad->caps);
+
+  gst_caps_unref (video_caps);
+
+  gst_caps_unref (vdp_pad->caps);
+  vdp_pad->caps = caps;
+}
+
 GstFlowReturn
 gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpVideoBuffer ** video_buf)
@@ -110,6 +126,8 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
       vdp_pad->device = gst_vdp_get_device (vdp_pad->display);
       if (G_UNLIKELY (!vdp_pad->device))
         goto device_error;
+
+      gst_vdp_video_src_pad_update_caps (vdp_pad);
     }
     device = vdp_pad->device;
 
@@ -126,9 +144,12 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*video_buf)))
       goto wrong_caps;
 
-    if (G_UNLIKELY (!vdp_pad->device))
+    if (G_UNLIKELY (!vdp_pad->device)) {
       vdp_pad->device =
           g_object_ref (GST_VDP_VIDEO_BUFFER (*video_buf)->device);
+
+      gst_vdp_video_src_pad_update_caps (vdp_pad);
+    }
   }
 
   return GST_FLOW_OK;
@@ -208,24 +229,8 @@ static GstCaps *
 gst_vdp_video_src_pad_getcaps (GstPad * pad)
 {
   GstVdpVideoSrcPad *vdp_pad = (GstVdpVideoSrcPad *) pad;
-  GstCaps *templ_caps, *caps;
 
-  templ_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-
-  if (vdp_pad->device) {
-    GstCaps *yuv_caps, *video_caps;
-
-    video_caps = gst_vdp_video_buffer_get_allowed_video_caps (vdp_pad->device);
-    yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (vdp_pad->device);
-    gst_caps_append (video_caps, yuv_caps);
-    caps = gst_caps_intersect (video_caps, templ_caps);
-
-    gst_caps_unref (templ_caps);
-    gst_caps_unref (video_caps);
-  } else
-    caps = templ_caps;
-
-  return caps;
+  return gst_caps_ref (vdp_pad->caps);
 }
 
 static gboolean
@@ -237,6 +242,9 @@ gst_vdp_video_src_pad_activate_push (GstPad * pad, gboolean active)
     if (vdp_pad->device)
       g_object_unref (vdp_pad->device);
     vdp_pad->device = NULL;
+
+    g_object_unref (vdp_pad->caps);
+    vdp_pad->caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
   }
 
   return TRUE;
@@ -298,6 +306,8 @@ gst_vdp_video_src_pad_init (GstVdpVideoSrcPad * vdp_pad)
 
   vdp_pad->device = NULL;
   vdp_pad->display = NULL;
+
+  vdp_pad->caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_video_src_pad_getcaps));
