@@ -30,17 +30,10 @@ OPENGL_SOURCES =  \
 	gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
-	gstgleffects.c \
-	gstgleffects.h \
 	gstglmosaic.c \
 	gstglmosaic.h \
         gstgloverlay.h \
-	effects/gstgleffectssources.c \
-	effects/gstgleffectssources.h \
 	effects/gstgleffectscurves.h \
-	effects/gstgleffectidentity.c \
-	effects/gstgleffectmirror.c \
-	effects/gstgleffectsqueeze.c \
 	effects/gstgleffectstretch.c \
 	effects/gstgleffecttunnel.c \
 	effects/gstgleffectfisheye.c \
@@ -65,6 +58,13 @@ libgstopengl_la_SOURCES = \
 	gstgldownload.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
+	gstgleffects.c \
+	gstgleffects.h \
+	effects/gstgleffectssources.c \
+	effects/gstgleffectssources.h \
+	effects/gstgleffectidentity.c \
+	effects/gstgleffectmirror.c \
+	effects/gstgleffectsqueeze.c \
 	$(OPENGL_SOURCES)
 
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around

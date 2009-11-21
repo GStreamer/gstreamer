@@ -21,6 +21,8 @@
 #ifndef __GST_GL_EFFECTS_SOURCES_H__
 #define __GST_GL_EFFECTS_SOURCES_H__
 
+extern const gchar *vertex_shader_source;
+extern const gchar *identity_fragment_source;
 extern const gchar *mirror_fragment_source;
 extern const gchar *squeeze_fragment_source;
 extern const gchar *stretch_fragment_source;

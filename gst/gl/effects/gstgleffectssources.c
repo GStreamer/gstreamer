@@ -24,29 +24,71 @@
 /* A common file for sources is needed since shader sources can be
  * generic and reused by several effects */
 
+/* Vertex shader */
+const gchar *vertex_shader_source =
+      "attribute vec4 a_position;"
+      "attribute vec2 a_texCoord;"
+      "varying vec2 v_texCoord;"
+      "void main()"
+      "{"
+      "   gl_Position = a_position;"
+      "   v_texCoord = a_texCoord;" 
+      "}";
+
+/* Identity effect */
+const gchar *identity_fragment_source =
+      "precision mediump float;"
+      "varying vec2 v_texCoord;"
+      "uniform sampler2D tex;"
+      "void main()" 
+      "{"
+      "  gl_FragColor = texture2D(tex, v_texCoord);"
+      "}";
 
 /* Mirror effect */
 const gchar *mirror_fragment_source =
+#ifndef OPENGL_ES2
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;"
     "uniform float width, height;"
+#else
+    "precision mediump float;"
+    "varying vec2 v_texCoord;"
+    "uniform sampler2D tex;"
+#endif
     "void main () {"
+#ifndef OPENGL_ES2
     "  vec2 tex_size = vec2 (width, height);"
     "  vec2 texturecoord = gl_TexCoord[0].xy;"
     "  vec2 normcoord;"
     "  normcoord = texturecoord / tex_size - 1.0;"
     "  normcoord.x *= sign (normcoord.x);"
     "  texturecoord = (normcoord + 1.0) * tex_size;"
-    "  vec4 color = texture2DRect (tex, texturecoord); "
-    "  gl_FragColor = color * gl_Color;" "}";
+    "  vec4 color = texture2DRect (tex, texturecoord);"
+    "  gl_FragColor = color * gl_Color;"
+#else
+    "  vec2 texturecoord = v_texCoord.xy;"
+    "  float normcoord = texturecoord.x - 0.5;"
+    "  normcoord *= sign (normcoord);"
+    "  texturecoord.x = (normcoord + 0.5);"
+    "  gl_FragColor = texture2D (tex, texturecoord);"
+#endif
+    "}";
 
 
 /* Squeeze effect */
 const gchar *squeeze_fragment_source =
+#ifndef OPENGL_ES2
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;"
     "uniform float width, height;"
+#else
+    "precision mediump float;"
+    "varying vec2 v_texCoord;"
+    "uniform sampler2D tex;"
+#endif
     "void main () {"
+#ifndef OPENGL_ES2
     "  vec2 tex_size = vec2 (width, height);"
     "  vec2 texturecoord = gl_TexCoord[0].xy;"
     "  vec2 normcoord;"
@@ -56,7 +98,17 @@ const gchar *squeeze_fragment_source =
     "  normcoord = normcoord / r;"
     "  texturecoord = (normcoord + 1.0) * tex_size;"
     "  vec4 color = texture2DRect (tex, texturecoord); "
-    "  gl_FragColor = color * gl_Color;" "}";
+    "  gl_FragColor = color * gl_Color;"
+#else
+    "  vec2 texturecoord = v_texCoord.xy;"
+    "  vec2 normcoord = texturecoord - 0.5;"
+    "  float r = length (normcoord);"
+    "  r = pow(r, 0.40)*1.3;"
+    "  normcoord = normcoord / r;"
+    "  texturecoord = (normcoord + 0.5);"
+    "  gl_FragColor = texture2D (tex, texturecoord);"
+#endif
+    "}";
 
 
 /* Stretch Effect */

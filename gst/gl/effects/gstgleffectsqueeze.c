@@ -33,13 +33,36 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "squeeze0", shader);
+
+#ifdef OPENGL_ES2
+    if (shader) {
+      GError *error = NULL;
+      gst_gl_shader_set_vertex_source (shader, vertex_shader_source);
+      gst_gl_shader_set_fragment_source (shader, squeeze_fragment_source);
+
+      gst_gl_shader_compile (shader, &error);
+      if (error) {
+        GST_ERROR ("%s", error->message);
+        g_error_free (error);
+        error = NULL;
+        gst_gl_shader_use (NULL);
+      } else {
+        effects->draw_attr_position_loc =
+            gst_gl_shader_get_attribute_location (shader, "a_position");
+        effects->draw_attr_texture_loc =
+            gst_gl_shader_get_attribute_location (shader, "a_texCoord");
+      }
+    }
+#endif
   }
 
+#ifndef OPENGL_ES2
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
           squeeze_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
+#endif
 
   gst_gl_shader_use (shader);
 
@@ -49,8 +72,10 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
+#ifndef OPENGL_ES2
   gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
   gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
+#endif
 
   gst_gl_effects_draw_texture (effects, texture);
 }
