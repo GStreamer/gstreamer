@@ -74,6 +74,8 @@ struct _GstFFMpegEnc
   /* other settings are copied over straight,
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
+
+  gboolean force_keyframe;
 };
 
 typedef struct _GstFFMpegEncClass GstFFMpegEncClass;

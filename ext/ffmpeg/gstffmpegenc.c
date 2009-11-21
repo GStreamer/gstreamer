@@ -686,10 +686,19 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
   GstBuffer *outbuf;
   gint ret_size = 0, frame_size;
+  gboolean force_keyframe;
 
   GST_DEBUG_OBJECT (ffmpegenc,
       "Received buffer of time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
+
+  GST_OBJECT_LOCK (ffmpegenc);
+  force_keyframe = ffmpegenc->force_keyframe;
+  ffmpegenc->force_keyframe = FALSE;
+  GST_OBJECT_UNLOCK (ffmpegenc);
+
+  if (force_keyframe)
+    ffmpegenc->picture->pict_type = FF_I_TYPE;
 
   frame_size = gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
       GST_BUFFER_DATA (inbuf),
@@ -750,6 +759,14 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   /* Reset frame type */
   if (ffmpegenc->picture->pict_type)
     ffmpegenc->picture->pict_type = 0;
+
+  if (force_keyframe) {
+    gst_pad_push_event (ffmpegenc->srcpad,
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+            gst_structure_new ("GstForceKeyUnit",
+                "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (outbuf),
+                NULL)));
+  }
 
   return gst_pad_push (ffmpegenc->srcpad, outbuf);
 }
@@ -1028,13 +1045,18 @@ static gboolean
 gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+  gboolean forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:{
       const GstStructure *s;
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
-        ffmpegenc->picture->pict_type = FF_I_TYPE;
+        GST_OBJECT_LOCK (ffmpegenc);
+        ffmpegenc->force_keyframe = TRUE;
+        GST_OBJECT_UNLOCK (ffmpegenc);
+        forward = FALSE;
+        gst_event_unref (event);
       }
       break;
     }
@@ -1043,7 +1065,10 @@ gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_push_event (ffmpegenc->sinkpad, event);
+  if (forward)
+    return gst_pad_push_event (ffmpegenc->sinkpad, event);
+  else
+    return TRUE;
 }
 
 static void
