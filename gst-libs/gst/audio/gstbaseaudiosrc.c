@@ -708,7 +708,8 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
       - src->ringbuffer->segbase;
 
   if (sample != -1) {
-    GST_DEBUG_OBJECT (src, "at sample %" G_GUINT64_FORMAT, segdone, sample);
+    GST_DEBUG_OBJECT (src, "at segment %d and sample %" G_GUINT64_FORMAT,
+        segdone, sample);
     /* figure out the segment and the offset inside the segment where
      * the sample should be read from. */
     readseg = sample / sps;
