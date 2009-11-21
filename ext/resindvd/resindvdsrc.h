@@ -21,7 +21,7 @@
 
 #include <gst/gst.h>
 
-#include "rsnbasesrc.h"
+#include <gst/base/gstbasesrc.h>
 
 #include "_stdint.h"
 
@@ -46,7 +46,7 @@ typedef struct _resinDvdSrcClass resinDvdSrcClass;
 
 struct _resinDvdSrc
 {
-  RsnBaseSrc parent;
+  GstBaseSrc parent;
 
   gboolean	faststart;
 
@@ -147,7 +147,7 @@ struct _resinDvdSrc
 
 struct _resinDvdSrcClass 
 {
-  RsnBaseSrcClass parent_class;
+  GstBaseSrcClass parent_class;
 };
 
 GType rsn_dvdsrc_get_type (void);

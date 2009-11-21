@@ -7,7 +7,6 @@ libresindvd_la_SOURCES = \
         resindvdbin.c \
 	rsnaudiomunge.c \
 	rsndec.c \
-	rsnbasesrc.c \
 	rsnstreamselector.c \
         resindvdsrc.c  \
         gstmpegdesc.c   \
@@ -28,7 +27,6 @@ libresindvd_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = resindvdbin.h \
 	rsnaudiomunge.h \
 	rsndec.h \
-	rsnbasesrc.h \
 	rsnstreamselector.h \
         resindvdsrc.h \
         gstmpegdefs.h \
