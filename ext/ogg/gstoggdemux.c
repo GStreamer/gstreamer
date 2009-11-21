@@ -460,6 +460,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstOggDemux *ogg = pad->ogg;
   gint64 current_time;
   GstOggChain *chain;
+  gint64 duration;
 
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08x", pad, pad->map.serialno);
@@ -476,10 +477,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   /* copy packet in buffer */
   memcpy (buf->data, packet->packet, packet->bytes);
 
-  GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_get_packet_start_time (&pad->map,
-      packet);
-  GST_BUFFER_DURATION (buf) = gst_ogg_stream_get_packet_duration (&pad->map,
-      packet);
+  duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
+
+  GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+      pad->current_granule);
+  pad->current_granule += duration;
+  GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+      pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
+
   GST_BUFFER_OFFSET (buf) = -1;
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
