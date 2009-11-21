@@ -64,7 +64,8 @@ GstFlowReturn gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad *vdp_pad, Gs
 GstVdpDevice *gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad *vdp_pad);
 
 gboolean gst_vdp_video_src_pad_set_caps (GstVdpVideoSrcPad *vdp_pad, GstCaps *caps);
-GstPadTemplate *gst_vdp_video_src_pad_get_pad_template ();
+
+GstCaps *gst_vdp_video_src_pad_get_template_caps ();
 
 GstVdpVideoSrcPad *gst_vdp_video_src_pad_new ();
 GType gst_vdp_video_src_pad_get_type (void) G_GNUC_CONST;

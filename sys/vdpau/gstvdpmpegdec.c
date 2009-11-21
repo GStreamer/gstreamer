@@ -1072,6 +1072,7 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
+  GstCaps *src_caps;
   GstPadTemplate *src_template;
 
   gst_element_class_set_details_simple (element_class,
@@ -1084,7 +1085,10 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  src_template = gst_vdp_video_src_pad_get_pad_template ();
+  src_caps = gst_vdp_video_src_pad_get_template_caps ();
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      src_caps);
+
   gst_element_class_add_pad_template (element_class, src_template);
 }
 

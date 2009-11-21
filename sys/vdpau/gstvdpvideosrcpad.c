@@ -22,13 +22,20 @@
 
 #include "gstvdpvideosrcpad.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_video_src_pad_debug);
+#define GST_CAT_DEFAULT gst_vdp_video_src_pad_debug
+
 enum
 {
   PROP_0,
   PROP_DISPLAY
 };
 
-G_DEFINE_TYPE (GstVdpVideoSrcPad, gst_vdp_video_src_pad, GST_TYPE_PAD);
+#define DEBUG_INIT(bla) \
+GST_DEBUG_CATEGORY_INIT (gst_vdp_video_src_pad_debug, "vdpvideosrcpad", 0, "GstVdpVideoSrcPad");
+
+G_DEFINE_TYPE_WITH_CODE (GstVdpVideoSrcPad, gst_vdp_video_src_pad, GST_TYPE_PAD,
+    DEBUG_INIT ());
 
 GstFlowReturn
 gst_vdp_video_src_pad_push (GstVdpVideoSrcPad * vdp_pad,
@@ -212,17 +219,10 @@ gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad)
   return vdp_pad->device;
 }
 
-GstPadTemplate *
-gst_vdp_video_src_pad_get_pad_template ()
+GstCaps *
+gst_vdp_video_src_pad_get_template_caps ()
 {
-  GstCaps *caps;
-  GstPadTemplate *src_template;
-
-  caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      caps);
-
-  return src_template;
+  return gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
 }
 
 static GstCaps *
@@ -243,7 +243,7 @@ gst_vdp_video_src_pad_activate_push (GstPad * pad, gboolean active)
       g_object_unref (vdp_pad->device);
     vdp_pad->device = NULL;
 
-    g_object_unref (vdp_pad->caps);
+    gst_caps_unref (vdp_pad->caps);
     vdp_pad->caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
   }
 
