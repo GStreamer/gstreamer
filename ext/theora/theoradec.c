@@ -1348,7 +1348,7 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (dec, "header=%02x packetno=%" G_GINT64_FORMAT ", "
       "granule pos=%" G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
-      packet.bytes ? packet.packet[0] : -1, packet.packetno,
+      packet.bytes ? packet.packet[0] : -1, (gint64) packet.packetno,
       (gint64) packet.granulepos, GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type. A zero byte packet is always a data
