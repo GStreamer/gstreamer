@@ -30,6 +30,9 @@ enum
   PROP_LAST
 };
 
+GST_DEBUG_CATEGORY (rtsp_media_debug);
+#define GST_CAT_DEFAULT rtsp_media_debug
+
 static void gst_rtsp_media_factory_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_media_factory_set_property (GObject *object, guint propid,
@@ -81,6 +84,8 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
   klass->construct = default_construct;
   klass->configure = default_configure;
   klass->create_pipeline = default_create_pipeline;
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 }
 
 static void
@@ -340,7 +345,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
   if (key)
     g_free (key);
 
-  g_message ("constructed media %p for url %s", media, url->abspath);
+  GST_INFO ("constructed media %p for url %s", media, url->abspath);
 
   return media;
 }
@@ -375,7 +380,7 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 
   if (error != NULL) {
     /* a recoverable error was encountered */
-    g_warning ("recoverable parsing error: %s", error->message);
+    GST_WARNING ("recoverable parsing error: %s", error->message);
     g_error_free (error);
   }
   return element;
@@ -424,7 +429,7 @@ gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstR
       stream = g_new0 (GstRTSPMediaStream, 1);
       stream->payloader = elem;
 
-      g_message ("found stream %d with payloader %p", i, elem);
+      GST_INFO ("found stream %d with payloader %p", i, elem);
 
       pad = gst_element_get_static_pad (elem, "src");
 
@@ -444,7 +449,7 @@ gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory, const GstR
     if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
       /* a stream that will dynamically create pads to provide RTP packets */
 
-      g_message ("found dynamic element %d, %p", i, elem);
+      GST_INFO ("found dynamic element %d, %p", i, elem);
 
       media->dynamic = g_list_prepend (media->dynamic, elem);
 

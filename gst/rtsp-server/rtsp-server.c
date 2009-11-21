@@ -37,6 +37,9 @@ enum
 
 G_DEFINE_TYPE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
 
+GST_DEBUG_CATEGORY_STATIC (rtsp_server_debug);
+#define GST_CAT_DEFAULT rtsp_server_debug
+
 static void gst_rtsp_server_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_server_set_property (GObject *object, guint propid,
@@ -102,6 +105,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           GST_TYPE_RTSP_MEDIA_MAPPING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->accept_client = default_accept_client;
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_server_debug, "rtspserver", 0, "GstRTSPServer");
 }
 
 static void
@@ -399,7 +404,7 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
       "listened on server socket %d, returning from connection setup",
       server->server_sock.fd);
 
-  g_message ("listening on port %d", server->port);
+  GST_INFO_OBJECT (server, "listening on port %d", server->port);
 
   return TRUE;
 
@@ -474,7 +479,7 @@ default_accept_client (GstRTSPServer *server, GIOChannel *channel)
   /* ERRORS */
 accept_failed:
   {
-    g_error ("Could not accept client on server socket %d: %s (%d)",
+    GST_ERROR_OBJECT (server, "Could not accept client on server socket %d: %s (%d)",
             server->server_sock.fd, g_strerror (errno), errno);
     gst_object_unref (client);
     return NULL;
@@ -511,7 +516,7 @@ gst_rtsp_server_io_func (GIOChannel *channel, GIOCondition condition, GstRTSPSer
     gst_object_unref (client);
   }
   else {
-    g_print ("received unknown event %08x", condition);
+    GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
   return TRUE;
 

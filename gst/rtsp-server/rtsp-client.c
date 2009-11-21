@@ -36,6 +36,9 @@ enum
   PROP_LAST
 };
 
+GST_DEBUG_CATEGORY_STATIC (rtsp_client_debug);
+#define GST_CAT_DEFAULT rtsp_client_debug
+
 static void gst_rtsp_client_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec);
 static void gst_rtsp_client_set_property (GObject * object, guint propid,
@@ -73,6 +76,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
   tunnels_lock = g_mutex_new ();
+
+  GST_DEBUG_CATEGORY_INIT (rtsp_client_debug, "rtspclient", 0, "GstRTSPClient");
 }
 
 static void
@@ -87,7 +92,7 @@ gst_rtsp_client_finalize (GObject * obj)
   GstRTSPClient *client = GST_RTSP_CLIENT (obj);
   GList *walk;
 
-  g_message ("finalize client %p", client);
+  GST_INFO ("finalize client %p", client);
 
   /* remove weak-ref from sessions */
   for (walk = client->sessions; walk; walk = g_list_next (walk)) {
@@ -259,7 +264,7 @@ find_media (GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPMessage * request)
   } else {
     /* we have seen this uri before, used cached media */
     media = client->media;
-    g_message ("reusing cached media %p", media);
+    GST_INFO ("reusing cached media %p", media);
   }
 
   if (media)
@@ -601,7 +606,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPUrl * uri,
     sstream = gst_rtsp_session_media_get_stream (media, i);
     /* get the transport, if there is no transport configured, skip this stream */
     if (!(tr = sstream->trans.transport)) {
-      g_message ("stream %d is not configured", i);
+      GST_INFO ("stream %d is not configured", i);
       continue;
     }
 
@@ -633,7 +638,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
       infocount++;
     } else {
-      g_warning ("RTP-Info cannot be determined for stream %d", i);
+      GST_WARNING ("RTP-Info cannot be determined for stream %d", i);
     }
   }
 
@@ -685,7 +690,7 @@ invalid_state:
 static void
 do_keepalive (GstRTSPSession * session)
 {
-  g_message ("keep session %p alive", session);
+  GST_INFO ("keep session %p alive", session);
   gst_rtsp_session_touch (session);
 }
 
@@ -1023,7 +1028,7 @@ static void
 client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
 {
   if (!(client->sessions = g_list_remove (client->sessions, session))) {
-    g_message ("all sessions finalized, close the connection");
+    GST_INFO ("all sessions finalized, close the connection");
     g_source_destroy ((GSource *) client->watch);
   }
 }
@@ -1041,7 +1046,7 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
       return;
   }
 
-  g_message ("watching session %p", session);
+  GST_INFO ("watching session %p", session);
 
   g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
       client);
@@ -1063,7 +1068,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   gst_rtsp_message_dump (request);
 #endif
 
-  g_message ("client %p: received a request", client);
+  GST_INFO ("client %p: received a request", client);
 
   gst_rtsp_message_parse_request (request, &method, &uristr, &version);
 
@@ -1327,7 +1332,7 @@ message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
   
   client = GST_RTSP_CLIENT (user_data);
 
-  /* g_message ("client %p: sent a message with cseq %d", client, cseq); */
+  /* GST_INFO ("client %p: sent a message with cseq %d", client, cseq); */
 
   return GST_RTSP_OK;
 }
@@ -1338,7 +1343,7 @@ closed (GstRTSPWatch * watch, gpointer user_data)
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   const gchar *tunnelid;
 
-  g_message ("client %p: connection closed", client);
+  GST_INFO ("client %p: connection closed", client);
 
   if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
     g_mutex_lock (tunnels_lock);
@@ -1359,7 +1364,7 @@ error (GstRTSPWatch * watch, GstRTSPResult result, gpointer user_data)
   gchar *str;
 
   str = gst_rtsp_strresult (result);
-  g_message ("client %p: received an error %s", client, str);
+  GST_INFO ("client %p: received an error %s", client, str);
   g_free (str);
 
   return GST_RTSP_OK;
@@ -1373,14 +1378,14 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
 
   client = GST_RTSP_CLIENT (user_data);
 
-  g_message ("client %p: tunnel start", client);
+  GST_INFO ("client %p: tunnel start", client);
 
   /* store client in the pending tunnels */
   tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
   if (tunnelid == NULL)
     goto no_tunnelid;
 
-  g_message ("client %p: inserting %s", client, tunnelid);
+  GST_INFO ("client %p: inserting %s", client, tunnelid);
 
   /* we can't have two clients connecting with the same tunnelid */
   g_mutex_lock (tunnels_lock);
@@ -1395,13 +1400,13 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
   /* ERRORS */
 no_tunnelid:
   {
-    g_message ("client %p: no tunnelid provided", client);
+    GST_INFO ("client %p: no tunnelid provided", client);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 tunnel_existed:
   {
     g_mutex_unlock (tunnels_lock);
-    g_message ("client %p: tunnel session %s existed", client, tunnelid);
+    GST_INFO ("client %p: tunnel session %s existed", client, tunnelid);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 }
@@ -1413,7 +1418,7 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   GstRTSPClient *oclient;
 
-  g_message ("client %p: tunnel complete", client);
+  GST_INFO ("client %p: tunnel complete", client);
 
   /* find previous tunnel */
   tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
@@ -1430,7 +1435,7 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   g_hash_table_remove (tunnels, tunnelid);
   g_mutex_unlock (tunnels_lock);
 
-  g_message ("client %p: found tunnel %p", client, oclient);
+  GST_INFO ("client %p: found tunnel %p", client, oclient);
 
   /* merge the tunnels into the first client */
   gst_rtsp_connection_do_tunnel (oclient->connection, client->connection);
@@ -1446,13 +1451,13 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   /* ERRORS */
 no_tunnelid:
   {
-    g_message ("client %p: no tunnelid provided", client);
+    GST_INFO ("client %p: no tunnelid provided", client);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 no_tunnel:
   {
     g_mutex_unlock (tunnels_lock);
-    g_message ("client %p: tunnel session %s not found", client, tunnelid);
+    GST_INFO ("client %p: tunnel session %s not found", client, tunnelid);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 }
@@ -1494,7 +1499,7 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
   GST_RTSP_CHECK (gst_rtsp_connection_accept (sock, &conn), accept_failed);
 
   url = gst_rtsp_connection_get_url (conn);
-  g_message ("added new client %p ip %s:%d", client, url->host, url->port);
+  GST_INFO ("added new client %p ip %s:%d", client, url->host, url->port);
 
   client->connection = conn;
 
@@ -1508,7 +1513,7 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
   else
     context = NULL;
 
-  g_message ("attaching to context %p", context);
+  GST_INFO ("attaching to context %p", context);
 
   client->watchid = gst_rtsp_watch_attach (client->watch, context);
   gst_rtsp_watch_unref (client->watch);
@@ -1520,7 +1525,7 @@ accept_failed:
   {
     gchar *str = gst_rtsp_strresult (res);
 
-    g_error ("Could not accept client on server socket %d: %s", sock, str);
+    GST_ERROR ("Could not accept client on server socket %d: %s", sock, str);
     g_free (str);
     return FALSE;
   }

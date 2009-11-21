@@ -21,6 +21,9 @@
 
 G_DEFINE_TYPE (GstRTSPMediaMapping, gst_rtsp_media_mapping, G_TYPE_OBJECT);
 
+GST_DEBUG_CATEGORY_EXTERN (rtsp_media_debug);
+#define GST_CAT_DEFAULT rtsp_media_debug
+
 static void gst_rtsp_media_mapping_finalize (GObject * obj);
 
 static GstRTSPMediaFactory * find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url);
@@ -76,7 +79,7 @@ find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
   if (result) 
     g_object_ref (result);
 
-  g_message ("found media %p for url abspath %s", result, url->abspath);
+  GST_INFO ("found media %p for url abspath %s", result, url->abspath);
 
   return result;
 }

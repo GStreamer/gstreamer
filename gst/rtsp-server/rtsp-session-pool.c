@@ -30,6 +30,9 @@ enum
   PROP_LAST
 };
 
+GST_DEBUG_CATEGORY (rtsp_session_debug);
+#define GST_CAT_DEFAULT rtsp_session_debug
+
 static void gst_rtsp_session_pool_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_session_pool_set_property (GObject *object, guint propid,
@@ -59,6 +62,7 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
 
   klass->create_session_id = create_session_id;
 
+  GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsession", 0, "GstRTSPSession");
 }
 
 static void
@@ -300,24 +304,24 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
   /* ERRORS */
 no_function:
   {
-    g_warning ("no create_session_id vmethod in GstRTSPSessionPool %p", pool);
+    GST_WARNING ("no create_session_id vmethod in GstRTSPSessionPool %p", pool);
     return NULL;
   }
 no_session:
   {
-    g_warning ("can't create session id with GstRTSPSessionPool %p", pool);
+    GST_WARNING ("can't create session id with GstRTSPSessionPool %p", pool);
     return NULL;
   }
 collision:
   {
-    g_warning ("can't find unique sessionid for GstRTSPSessionPool %p", pool);
+    GST_WARNING ("can't find unique sessionid for GstRTSPSessionPool %p", pool);
     g_mutex_unlock (pool->lock);
     g_free (id);
     return NULL;
   }
 too_many_sessions:
   {
-    g_warning ("session pool reached max sessions of %d", pool->max_sessions);
+    GST_WARNING ("session pool reached max sessions of %d", pool->max_sessions);
     g_mutex_unlock (pool->lock);
     g_free (id);
     return NULL;
@@ -464,7 +468,7 @@ collect_timeout (gchar *sessionid, GstRTSPSession *sess, GstPoolSource *psrc)
   g_source_get_current_time ((GSource*)psrc, &now);
 
   timeout = gst_rtsp_session_next_timeout (sess, &now);
-  g_message ("%p: next timeout: %d", sess, timeout);
+  GST_INFO ("%p: next timeout: %d", sess, timeout);
   if (psrc->timeout == -1 || timeout < psrc->timeout)
     psrc->timeout = timeout;
 }
@@ -487,7 +491,7 @@ gst_pool_source_prepare (GSource * source, gint * timeout)
 
   result = psrc->timeout == 0;
 
-  g_message ("prepare %d, %d", psrc->timeout, result);
+  GST_INFO ("prepare %d, %d", psrc->timeout, result);
 
   return result;
 }
@@ -495,7 +499,7 @@ gst_pool_source_prepare (GSource * source, gint * timeout)
 static gboolean
 gst_pool_source_check (GSource * source)
 {
-  g_message ("check");
+  GST_INFO ("check");
 
   return gst_pool_source_prepare (source, NULL);
 }
@@ -508,7 +512,7 @@ gst_pool_source_dispatch (GSource * source, GSourceFunc callback,
   GstPoolSource *psrc = (GstPoolSource *) source;
   GstRTSPSessionPoolFunc func = (GstRTSPSessionPoolFunc) callback;
 
-  g_message ("dispatch");
+  GST_INFO ("dispatch");
 
   if (func)
     res = func (psrc->pool, user_data);
@@ -523,7 +527,7 @@ gst_pool_source_finalize (GSource * source)
 {
   GstPoolSource *psrc = (GstPoolSource *) source;
 
-  g_message ("finalize %p", psrc);
+  GST_INFO ("finalize %p", psrc);
 
   g_object_unref (psrc->pool);
   psrc->pool = NULL;

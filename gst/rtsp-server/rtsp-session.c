@@ -32,6 +32,9 @@ enum
   PROP_LAST
 };
 
+GST_DEBUG_CATEGORY_EXTERN (rtsp_session_debug);
+#define GST_CAT_DEFAULT rtsp_session_debug
+
 static void gst_rtsp_session_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_session_set_property (GObject *object, guint propid,
@@ -72,7 +75,7 @@ gst_rtsp_session_init (GstRTSPSession * session)
 static void
 gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 {
-  g_message ("free session stream %p", stream);
+  GST_INFO ("free session stream %p", stream);
 
   /* remove callbacks now */
   gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
@@ -91,7 +94,7 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session
 
   size = media->streams->len;
 
-  g_message ("free session media %p", media);
+  GST_INFO ("free session media %p", media);
 
   gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
@@ -121,7 +124,7 @@ gst_rtsp_session_finalize (GObject * obj)
 
   session = GST_RTSP_SESSION (obj);
 
-  g_message ("finalize session %p", session);
+  GST_INFO ("finalize session %p", session);
 
   /* free all media */
   g_list_foreach (session->medias, (GFunc) gst_rtsp_session_free_media,
@@ -208,7 +211,7 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
 
   sess->medias = g_list_prepend (sess->medias, result);
 
-  g_message ("manage new media %p in session %p", media, result);
+  GST_INFO ("manage new media %p in session %p", media, result);
 
   return result;
 }
