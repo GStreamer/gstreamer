@@ -206,7 +206,7 @@ gst_gl_window_get_internal_gl_context (GstGLWindow * window)
 void
 callback_activate_gl_context (GstGLWindowPrivate * priv)
 {
-  if (!eglMakeCurrent (priv->gl_display, priv->gl_surface, priv->gl_surface,
+  if (!eglMakeCurrent (priv->display, priv->surface, priv->surface,
           priv->gl_context))
     g_debug ("failed to activate opengl context %lud\n", GetLastError ());
 }
@@ -214,7 +214,7 @@ callback_activate_gl_context (GstGLWindowPrivate * priv)
 void
 callback_inactivate_gl_context (GstGLWindowPrivate * priv)
 {
-  if (!eglMakeCurrent (priv->device, EGL_NO_SURFACE, EGL_NO_SURFACE,
+  if (!eglMakeCurrent (priv->display, EGL_NO_SURFACE, EGL_NO_SURFACE,
           EGL_NO_CONTEXT))
     g_debug ("failed to inactivate opengl context %lud\n", GetLastError ());
 }
