@@ -23,8 +23,6 @@
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
 
-#define DEBUG
-
 static GMutex *tunnels_lock;
 static GHashTable *tunnels;
 
@@ -191,9 +189,10 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
 
     gst_rtsp_message_take_header (response, GST_RTSP_HDR_SESSION, str);
   }
-#ifdef DEBUG
-  gst_rtsp_message_dump (response);
-#endif
+
+  if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
+    gst_rtsp_message_dump (response);
+  }
 
   gst_rtsp_watch_send_message (client->watch, response, NULL);
   gst_rtsp_message_unset (response);
@@ -1064,9 +1063,9 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPSession *session;
   gchar *sessid;
 
-#ifdef DEBUG
-  gst_rtsp_message_dump (request);
-#endif
+  if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
+    gst_rtsp_message_dump (request);
+  }
 
   GST_INFO ("client %p: received a request", client);
 
