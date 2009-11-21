@@ -150,6 +150,7 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   //client callbacks
   display->clientReshapeCallback = NULL;
   display->clientDrawCallback = NULL;
+  display->client_data = NULL;
 
   //upload
   display->upload_fbo = 0;
@@ -521,6 +522,8 @@ gst_gl_display_finalize (GObject * object)
     display->clientReshapeCallback = NULL;
   if (display->clientDrawCallback)
     display->clientDrawCallback = NULL;
+  if (display->client_data)
+    display->client_data = NULL;
   if (display->use_fbo_scene_cb)
     display->use_fbo_scene_cb = NULL;
   if (display->use_fbo_scene_cb_v2)
@@ -1808,7 +1811,7 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 {
   //check if a client reshape callback is registered
   if (display->clientReshapeCallback)
-    display->clientReshapeCallback (width, height);
+    display->clientReshapeCallback (width, height, display->client_data);
 
   //default reshape
   else {
@@ -1860,7 +1863,8 @@ gst_gl_display_on_draw (GstGLDisplay * display)
   if (display->clientDrawCallback) {
     gboolean doRedisplay =
         display->clientDrawCallback (display->redisplay_texture,
-        display->redisplay_texture_width, display->redisplay_texture_height);
+        display->redisplay_texture_width, display->redisplay_texture_height,
+        display->client_data);
 
     if (doRedisplay && display->gl_window)
       gst_gl_window_draw_unlocked (display->gl_window,
@@ -2480,6 +2484,14 @@ gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb)
 {
   gst_gl_display_lock (display);
   display->clientDrawCallback = cb;
+  gst_gl_display_unlock (display);
+}
+
+void
+gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data)
+{
+  gst_gl_display_lock (display);
+  display->client_data = data;
   gst_gl_display_unlock (display);
 }
 
