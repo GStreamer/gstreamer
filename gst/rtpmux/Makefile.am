@@ -2,9 +2,11 @@ plugin_LTLIBRARIES = libgstrtpmux.la
 
 libgstrtpmux_la_SOURCES = gstrtpmuxer.c gstrtpmux.c gstrtpdtmfmux.c
 
-libgstrtpmux_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS) -DEXTERN_BUF -DRTP_SUPPORT
-libgstrtpmux_la_LIBADD = $(GST_LIBS_LIBS)
-libgstrtpmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@
+libgstrtpmux_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	-DEXTERN_BUF -DRTP_SUPPORT
+libgstrtpmux_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) $(GST_LIBS)
+libgstrtpmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstrtpmux.h gstrtpdtmfmux.h
