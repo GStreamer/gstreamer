@@ -47,6 +47,7 @@
 
 #include "gstvdputils.h"
 #include "gstvdpoutputbuffer.h"
+#include "gstvdpoutputsrcpad.h"
 
 #include "gstvdpvideopostprocess.h"
 
@@ -71,15 +72,6 @@ enum
   PROP_SHARPENING,
   PROP_INVERSE_TELECINE
 };
-
-/* the capabilities of the inputs and outputs.
- *
- * describe the real formats here.
- */
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VDP_OUTPUT_CAPS));
 
 #define DEBUG_INIT(bla) \
 GST_DEBUG_CATEGORY_INIT (gst_vdp_vpp_debug, "vdpauvideopostprocess", 0, "VDPAU video surface to output surface");
@@ -361,12 +353,27 @@ gst_vdp_vpp_add_buffer (GstVdpVideoPostProcess * vpp, GstVdpVideoBuffer * buf)
 }
 
 static GstFlowReturn
-gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
+gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
+{
+  GstFlowReturn ret;
+
+  GST_DEBUG ("open_device");
+
+  ret =
+      gst_vdp_output_src_pad_get_device (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
+      &vpp->device);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp)
 {
 #define VDP_NUM_MIXER_PARAMETER 3
 #define MAX_NUM_FEATURES 5
 
   VdpStatus status;
+  GstVdpDevice *device;
 
   VdpVideoMixerFeature features[5];
   guint n_features = 0;
@@ -393,6 +400,10 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
   if (vpp->inverse_telecine)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_INVERSE_TELECINE;
 
+  if (G_UNLIKELY (!vpp->device))
+    gst_vdp_vpp_open_device (vpp);
+  device = vpp->device;
+
   status =
       device->vdp_video_mixer_create (device->device, n_features, features,
       VDP_NUM_MIXER_PARAMETER, parameters, parameter_values, &vpp->mixer);
@@ -404,8 +415,6 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
     return GST_FLOW_ERROR;
   }
 
-  vpp->device = g_object_ref (device);
-
   if (vpp->noise_reduction > 0.0) {
     gst_vdp_vpp_set_attribute_float (vpp,
         VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL, vpp->noise_reduction);
@@ -416,56 +425,6 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp, GstVdpDevice * device)
   }
 
   return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
-{
-  GstCaps *src_caps;
-  GstStructure *src_structure;
-  GstFlowReturn ret;
-
-  src_caps = gst_pad_get_allowed_caps (vpp->srcpad);
-  if (G_UNLIKELY (!src_caps))
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  if (G_UNLIKELY (gst_caps_is_empty (src_caps))) {
-    gst_caps_unref (src_caps);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  gst_caps_truncate (src_caps);
-  gst_pad_fixate_caps (vpp->srcpad, src_caps);
-
-  src_structure = gst_caps_get_structure (src_caps, 0);
-  if (gst_structure_has_name (src_structure, "video/x-vdpau-output")) {
-    GstVdpOutputBuffer *outbuf;
-
-    /* we allocate a buffer from downstream to get a GstVdpDevice */
-    ret = gst_pad_alloc_buffer (vpp->srcpad, GST_BUFFER_OFFSET_NONE, 0,
-        src_caps, (GstBuffer **) & outbuf);
-    if (ret != GST_FLOW_OK)
-      goto error;
-    vpp->device = g_object_ref (outbuf->device);
-    gst_buffer_unref (GST_BUFFER (outbuf));
-  } else {
-    vpp->device = gst_vdp_get_device (vpp->display);
-    if (!vpp->device)
-      goto device_error;
-  }
-
-  ret = GST_FLOW_OK;
-
-error:
-  gst_caps_unref (src_caps);
-  return ret;
-
-device_error:
-  GST_ELEMENT_ERROR (vpp, RESOURCE, OPEN_READ,
-      ("Couldn't create GstVdpDevice"), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto error;
-
 }
 
 static gint
@@ -554,6 +513,7 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 
     output_caps = gst_vdp_yuv_to_output_caps (caps);
   }
+  GST_DEBUG ("output_caps: %" GST_PTR_FORMAT, output_caps);
 
   allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
   GST_DEBUG ("allowed_caps: %" GST_PTR_FORMAT, allowed_caps);
@@ -568,13 +528,13 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_caps_unref (output_caps);
   gst_caps_unref (allowed_caps);
 
-  if (gst_caps_is_empty (src_caps))
-    goto done;
-  gst_caps_truncate (src_caps);
+  if (gst_caps_is_empty (src_caps)) {
+    gst_caps_unref (src_caps);
+    goto not_negotiated;
+  }
   gst_pad_fixate_caps (vpp->srcpad, src_caps);
 
-  GST_DEBUG ("output_caps: %" GST_PTR_FORMAT " allowed_caps: %" GST_PTR_FORMAT
-      " src_caps: %" GST_PTR_FORMAT, output_caps, allowed_caps, src_caps);
+  GST_DEBUG ("src_caps: %" GST_PTR_FORMAT, src_caps);
 
   if (gst_vdp_vpp_is_interlaced (vpp)) {
     gint fps_n, fps_d;
@@ -591,7 +551,8 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_remove_field (structure, "interlaced");
   }
 
-  res = gst_pad_set_caps (vpp->srcpad, src_caps);
+  res = gst_vdp_output_src_pad_set_caps (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
+      src_caps);
 
 done:
   gst_object_unref (vpp);
@@ -599,6 +560,11 @@ done:
 
 allowed_caps_error:
   gst_caps_unref (output_caps);
+  goto done;
+
+not_negotiated:
+  GST_DEBUG_OBJECT (vpp, "Couldn't find suitable output format");
+  res = FALSE;
   goto done;
 }
 
@@ -645,8 +611,6 @@ gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
 {
   if (vpp->mixer != VDP_INVALID_HANDLE)
     vpp->device->vdp_video_mixer_destroy (vpp->mixer);
-  if (vpp->device)
-    g_object_unref (vpp->device);
 
   gst_vdp_vpp_flush (vpp);
 }
@@ -680,10 +644,13 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     VdpStatus status;
 
     ret =
-        gst_pad_alloc_buffer_and_set_caps (vpp->srcpad, GST_BUFFER_OFFSET_NONE,
-        0, GST_PAD_CAPS (vpp->srcpad), (GstBuffer **) & outbuf);
+        gst_vdp_output_src_pad_alloc_buffer ((GstVdpOutputSrcPad *) vpp->srcpad,
+        &outbuf);
     if (ret != GST_FLOW_OK)
       break;
+
+    gst_vdp_output_src_pad_set_caps ((GstVdpOutputSrcPad *) vpp->srcpad,
+        GST_BUFFER_CAPS (outbuf));
 
     src_r.w = vpp->width;
     src_r.h = vpp->height;
@@ -747,7 +714,9 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_GAP))
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
 
-    ret = gst_pad_push (vpp->srcpad, GST_BUFFER (outbuf));
+    ret =
+        gst_vdp_output_src_pad_push ((GstVdpOutputSrcPad *) vpp->srcpad,
+        outbuf);
     if (ret != GST_FLOW_OK)
       break;
 
@@ -770,6 +739,8 @@ gst_vdp_vpp_chain (GstPad * pad, GstBuffer * buffer)
 
   GstClockTime qostime;
   GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_DEBUG ("chain");
 
   /* can only do QoS if the segment is in TIME */
   if (vpp->segment.format != GST_FORMAT_TIME)
@@ -820,11 +791,8 @@ no_qos:
   if (!vpp->native_input) {
     GstVdpVideoBuffer *video_buf;
 
-    if (G_UNLIKELY (!vpp->device)) {
-      ret = gst_vdp_vpp_open_device (vpp);
-      if (ret != GST_FLOW_OK)
-        goto error;
-    }
+    if (G_UNLIKELY (!vpp->device))
+      gst_vdp_vpp_open_device (vpp);
 
     video_buf = gst_vdp_video_buffer_new (vpp->device, vpp->chroma_type,
         vpp->width, vpp->height);
@@ -847,8 +815,8 @@ no_qos:
     buffer = GST_BUFFER (video_buf);
   }
 
-  if (vpp->mixer == VDP_INVALID_HANDLE) {
-    ret = gst_vdp_vpp_create_mixer (vpp, vpp->device);
+  if (G_UNLIKELY (vpp->mixer == VDP_INVALID_HANDLE)) {
+    ret = gst_vdp_vpp_create_mixer (vpp);
     if (ret != GST_FLOW_OK)
       goto error;
   }
@@ -910,6 +878,7 @@ gst_vdp_vpp_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstStructure *structure;
 
+  GST_DEBUG ("buffer_alloc");
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (structure, "video/x-vdpau-video")) {
     gint width, height;
@@ -918,7 +887,7 @@ gst_vdp_vpp_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
     if (G_UNLIKELY (!vpp->device)) {
       ret = gst_vdp_vpp_open_device (vpp);
       if (ret != GST_FLOW_OK)
-        goto done;
+        return ret;
     }
 
     if (!gst_structure_get_int (structure, "width", &width) ||
@@ -1073,7 +1042,7 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
 
   switch (property_id) {
     case PROP_DISPLAY:
-      g_value_set_string (value, vpp->display);
+      g_object_get_property (G_OBJECT (vpp->srcpad), "display", value);
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, vpp->force_aspect_ratio);
@@ -1108,7 +1077,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_DISPLAY:
-      vpp->display = g_value_dup_string (value);
+      g_object_set_property (G_OBJECT (vpp->srcpad), "display", value);
       break;
     case PROP_FORCE_ASPECT_RATIO:
       vpp->force_aspect_ratio = g_value_get_boolean (value);
@@ -1125,11 +1094,11 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       if (oldvalue == vpp->method)
         break;
 
-      if (vpp->device) {
+      if (vpp->mixer != VDP_INVALID_HANDLE) {
         if (oldvalue != GST_VDP_DEINTERLACE_METHOD_BOB)
           gst_vdp_vpp_activate_deinterlace_method (vpp, oldvalue, FALSE);
 
-        if (vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB && vpp->device)
+        if (vpp->method != GST_VDP_DEINTERLACE_METHOD_BOB)
           gst_vdp_vpp_activate_deinterlace_method (vpp, oldvalue, TRUE);
       }
       break;
@@ -1143,7 +1112,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       if (vpp->noise_reduction == old_value)
         break;
 
-      if (vpp->device) {
+      if (vpp->mixer != VDP_INVALID_HANDLE) {
         if (vpp->noise_reduction == 0.0)
           gst_vdp_vpp_activate_feature (vpp,
               VDP_VIDEO_MIXER_FEATURE_NOISE_REDUCTION, FALSE);
@@ -1167,7 +1136,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       if (vpp->sharpening == old_value)
         break;
 
-      if (vpp->device) {
+      if (vpp->mixer != VDP_INVALID_HANDLE) {
         if (vpp->sharpening == 0.0)
           gst_vdp_vpp_activate_feature (vpp,
               VDP_VIDEO_MIXER_FEATURE_SHARPNESS, FALSE);
@@ -1185,7 +1154,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
     {
       vpp->inverse_telecine = g_value_get_boolean (value);
 
-      if (vpp->device) {
+      if (vpp->mixer != VDP_INVALID_HANDLE) {
         gst_vdp_vpp_activate_feature (vpp,
             VDP_VIDEO_MIXER_FEATURE_INVERSE_TELECINE, vpp->inverse_telecine);
       }
@@ -1203,8 +1172,8 @@ static void
 gst_vdp_vpp_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  GstCaps *caps;
-  GstPadTemplate *sink_template;
+  GstCaps *src_caps, *sink_caps;
+  GstPadTemplate *src_template, *sink_template;
 
   gst_element_class_set_details_simple (element_class,
       "VdpauVideoPostProcess",
@@ -1212,13 +1181,17 @@ gst_vdp_vpp_base_init (gpointer gclass)
       "Post process GstVdpVideoBuffers and output GstVdpOutputBuffers",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
-  caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      caps);
-  gst_element_class_add_pad_template (element_class, sink_template);
+  /* SRC PAD */
+  src_caps = gst_vdp_output_buffer_get_template_caps ();
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      src_caps);
+  gst_element_class_add_pad_template (element_class, src_template);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  /* SINK PAD */
+  sink_caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      sink_caps);
+  gst_element_class_add_pad_template (element_class, sink_template);
 }
 
 /* initialize the vdpaumpegdecoder's class */
@@ -1279,7 +1252,7 @@ static void
 gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
     GstVdpVideoPostProcessClass * gclass)
 {
-  GstPadTemplate *sink_template;
+  GstPadTemplate *src_template, *sink_template;
 
   vpp->device = NULL;
 
@@ -1293,7 +1266,12 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   vpp->sharpening = 0.0;
 
   /* SRC PAD */
-  vpp->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  src_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (gclass), "src");
+
+  vpp->srcpad =
+      GST_PAD (gst_vdp_output_src_pad_new (gst_pad_template_get_caps
+          (src_template)));
   gst_element_add_pad (GST_ELEMENT (vpp), vpp->srcpad);
 
   gst_pad_set_event_function (vpp->srcpad,

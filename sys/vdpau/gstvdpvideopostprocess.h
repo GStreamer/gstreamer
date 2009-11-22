@@ -81,7 +81,7 @@ struct _GstVdpVideoPostProcess
   GstSegment segment;
   GstClockTime earliest_time;
   gboolean discont;
-  
+
   GstVdpDevice *device;
   VdpVideoMixer mixer;
 
