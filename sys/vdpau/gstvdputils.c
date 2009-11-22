@@ -29,11 +29,18 @@ gst_vdp_yuv_to_output_caps (GstCaps * caps)
   gint i;
 
   result = gst_caps_copy (caps);
-  for (i = 0; i < gst_caps_get_size (result); i++) {
-    GstStructure *structure = gst_caps_get_structure (result, i);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure, *rgb_structure;
+
+    structure = gst_caps_get_structure (result, i);
+    rgb_structure = gst_structure_copy (structure);
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "format");
+
+    gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
+    gst_structure_remove_field (rgb_structure, "format");
+    gst_caps_append_structure (result, rgb_structure);
   }
 
   return result;
@@ -46,9 +53,13 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
   gint i;
 
   result = gst_caps_copy (caps);
-  for (i = 0; i < gst_caps_get_size (result); i++) {
-    GstStructure *structure = gst_caps_get_structure (result, i);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+
+    GstStructure *structure, *rgb_structure;
     gint par_n, par_d;
+
+    structure = gst_caps_get_structure (result, i);
+    rgb_structure = gst_structure_copy (structure);
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "chroma-type");
@@ -63,6 +74,10 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
 
       gst_structure_remove_field (structure, "pixel-aspect-ratio");
     }
+
+    gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
+    gst_structure_remove_field (rgb_structure, "chroma-type");
+    gst_caps_append_structure (result, rgb_structure);
   }
 
   return result;
