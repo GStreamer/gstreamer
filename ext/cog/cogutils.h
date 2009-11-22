@@ -12,7 +12,7 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 #endif
 #else
-#include <stdint.h>
+#include "_stdint.h"
 #endif
 
 #ifndef TRUE
