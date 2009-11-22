@@ -55,13 +55,41 @@ GST_ELEMENT_DETAILS ("H264Parse",
 
 #define DEFAULT_SPLIT_PACKETIZED     FALSE
 #define DEFAULT_ACCESS_UNIT          FALSE
+#define DEFAULT_OUTPUT_FORMAT        GST_H264_PARSE_FORMAT_INPUT
 
 enum
 {
   PROP_0,
   PROP_SPLIT_PACKETIZED,
-  PROP_ACCESS_UNIT
+  PROP_ACCESS_UNIT,
+  PROP_OUTPUT_FORMAT
 };
+
+enum
+{
+  GST_H264_PARSE_FORMAT_SAMPLE = 0,
+  GST_H264_PARSE_FORMAT_BYTE,
+  GST_H264_PARSE_FORMAT_INPUT
+};
+
+#define GST_H264_PARSE_FORMAT_TYPE (gst_h264_parse_format_get_type())
+static GType
+gst_h264_parse_format_get_type (void)
+{
+  static GType format_type = 0;
+
+  static const GEnumValue format_types[] = {
+    {GST_H264_PARSE_FORMAT_SAMPLE, "AVC Sample Format", "sample"},
+    {GST_H264_PARSE_FORMAT_BYTE, "Bytestream Format", "byte"},
+    {GST_H264_PARSE_FORMAT_INPUT, "Input Format", "input"},
+    {0, NULL, NULL}
+  };
+
+  if (!format_type) {
+    format_type = g_enum_register_static ("GstH264ParseFormat", format_types);
+  }
+  return format_type;
+}
 
 typedef enum
 {
@@ -899,6 +927,11 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
       g_param_spec_boolean ("access-unit", "Access Units",
           "Output Acess Units rather than NALUs", DEFAULT_ACCESS_UNIT,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_OUTPUT_FORMAT,
+      g_param_spec_enum ("output-format", "Output Format",
+          "Output Format of stream (bytestream or otherwise)",
+          GST_H264_PARSE_FORMAT_TYPE, DEFAULT_OUTPUT_FORMAT,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_h264_parse_change_state;
 }
@@ -924,6 +957,8 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
   h264parse->merge = DEFAULT_ACCESS_UNIT;
   h264parse->picture_adapter = gst_adapter_new ();
 
+  h264parse->format = GST_H264_PARSE_FORMAT_INPUT;
+
   gst_h264_parse_reset (h264parse);
 }
 
@@ -931,14 +966,17 @@ static void
 gst_h264_parse_reset (GstH264Parse * h264parse)
 {
   gint i;
+  GSList *list;
 
   for (i = 0; i < MAX_SPS_COUNT; i++) {
     if (h264parse->sps_buffers[i])
       g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
+    gst_buffer_replace (&h264parse->sps_nals[i], NULL);
   }
   for (i = 0; i < MAX_PPS_COUNT; i++) {
     if (h264parse->pps_buffers[i])
       g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
+    gst_buffer_replace (&h264parse->pps_nals[i], NULL);
   }
   h264parse->sps = NULL;
   h264parse->pps = NULL;
@@ -961,6 +999,16 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
   h264parse->cur_duration = 0;
   h264parse->last_outbuf_dts = GST_CLOCK_TIME_NONE;
+
+  list = h264parse->codec_nals;
+  while (list) {
+    gst_buffer_unref (list->data);
+    list = g_slist_next (list);
+  }
+  g_slist_free (h264parse->codec_nals);
+  h264parse->codec_nals = NULL;
+
+  gst_caps_replace (&h264parse->src_caps, NULL);
 }
 
 static void
@@ -1002,6 +1050,9 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
     case PROP_ACCESS_UNIT:
       parse->merge = g_value_get_boolean (value);
       break;
+    case PROP_OUTPUT_FORMAT:
+      parse->format = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1023,10 +1074,99 @@ gst_h264_parse_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ACCESS_UNIT:
       g_value_set_boolean (value, parse->merge);
       break;
+    case PROP_OUTPUT_FORMAT:
+      g_value_set_enum (value, parse->format);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+/* make a buffer consisting of a 4-byte start code following by
+ * (a copy of) given nal data */
+static GstBuffer *
+gst_h264_parse_make_nal (GstH264Parse * h264parse, const guint8 * data,
+    guint len)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new_and_alloc (4 + len);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), 1);
+  memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
+
+  return buf;
+}
+
+/* byte together avc codec data based on collected pps and sps so far */
+static GstBuffer *
+gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
+{
+  GstBuffer *buf, *nal;
+  gint i, sps_size = 0, pps_size = 0, num_sps = 0, num_pps = 0;
+  guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
+  gboolean found = FALSE;
+  guint8 *data;
+
+  /* sps_nals and pps_nals contain start code */
+
+  for (i = 0; i < MAX_SPS_COUNT; i++) {
+    if ((nal = h264parse->sps_nals[i])) {
+      num_sps++;
+      /* size bytes also count */
+      sps_size += GST_BUFFER_SIZE (nal) - 4 + 2;
+      if (GST_BUFFER_SIZE (nal) >= 7) {
+        found = TRUE;
+        profile_idc = (GST_BUFFER_DATA (nal))[4];
+        profile_comp = (GST_BUFFER_DATA (nal))[5];
+        level_idc = (GST_BUFFER_DATA (nal))[6];
+      }
+    }
+  }
+  for (i = 0; i < MAX_PPS_COUNT; i++) {
+    if ((nal = h264parse->pps_nals[i])) {
+      num_pps++;
+      /* size bytes also count */
+      pps_size += GST_BUFFER_SIZE (nal) - 4 + 2;
+    }
+  }
+
+  GST_DEBUG_OBJECT (h264parse,
+      "constructing codec_data: num_sps=%d, num_pps=%d", num_sps, num_pps);
+
+  if (!found || !num_pps)
+    return NULL;
+
+  buf = gst_buffer_new_and_alloc (5 + 1 + sps_size + 1 + pps_size);
+  data = GST_BUFFER_DATA (buf);
+
+  data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
+  data[1] = profile_idc;        /* profile_idc                             */
+  data[2] = profile_comp;       /* profile_compability                     */
+  data[3] = level_idc;          /* level_idc                               */
+  data[4] = 0xfc | (4 - 1);     /* nal_length_size_minus1                  */
+  data[5] = 0xe0 | num_sps;     /* number of SPSs */
+
+  data += 6;
+  for (i = 0; i < MAX_SPS_COUNT; i++) {
+    if ((nal = h264parse->sps_nals[i])) {
+      GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (nal) - 4);
+      memcpy (data + 2, GST_BUFFER_DATA (nal) + 4, GST_BUFFER_SIZE (nal) - 4);
+      data += 2 + GST_BUFFER_SIZE (nal) - 4;
+    }
+  }
+
+  data[0] = num_pps;
+  data++;
+  for (i = 0; i < MAX_PPS_COUNT; i++) {
+    if ((nal = h264parse->pps_nals[i])) {
+      GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (nal) - 4);
+      memcpy (data + 2, GST_BUFFER_DATA (nal) + 4, GST_BUFFER_SIZE (nal) - 4);
+      data += 2 + GST_BUFFER_SIZE (nal) - 4;
+    }
+  }
+
+  return buf;
 }
 
 static gboolean
@@ -1035,11 +1175,15 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   GstH264Sps *sps;
   GstCaps *src_caps = NULL;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
-
   sps = h264parse->sps;
 
-  src_caps = gst_caps_ref (caps);
+  src_caps = h264parse->src_caps;
+  if (G_UNLIKELY (src_caps == NULL))
+    src_caps = caps;
+
+  g_return_val_if_fail (src_caps != NULL, FALSE);
+  gst_caps_ref (src_caps);
+  caps = src_caps;
 
   /* if some upstream metadata missing, fill in from parsed stream */
   /* width / height */
@@ -1075,12 +1219,39 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     }
   }
 
-  /* release extra ref */
-  if (src_caps == caps)
-    gst_caps_unref (src_caps);
+  /* transforming to non-bytestream needs to make codec-data */
+  if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
+    GstBuffer *buf;
+    GstStructure *structure;
+    const GValue *value = NULL;
+    const GstBuffer *codec_data = NULL;
 
-  return src_caps != GST_PAD_CAPS (h264parse->srcpad) ?
-      gst_pad_set_caps (h264parse->srcpad, src_caps) : TRUE;
+    structure = gst_caps_get_structure (caps, 0);
+    value = gst_structure_get_value (structure, "codec_data");
+    if (value != NULL)
+      codec_data = gst_value_get_buffer (value);
+    buf = gst_h264_parse_make_codec_data (h264parse);
+    if (buf) {
+      if (!codec_data || GST_BUFFER_SIZE (buf) != GST_BUFFER_SIZE (codec_data)
+          || memcmp (GST_BUFFER_DATA (buf), GST_BUFFER_DATA (codec_data),
+              GST_BUFFER_SIZE (buf))) {
+        GST_DEBUG_OBJECT (h264parse, "setting new codec_data");
+        gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
+        gst_caps_unref (src_caps);
+        gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER, buf,
+            NULL);
+        gst_buffer_unref (buf);
+      }
+    } else {
+      GST_DEBUG_OBJECT (h264parse, "no codec_data yet");
+    }
+  }
+
+  /* save as new caps, caps will be set when pushing data */
+  gst_caps_replace (&h264parse->src_caps, src_caps);
+  gst_caps_unref (src_caps);
+
+  return TRUE;
 }
 
 static gboolean
@@ -1108,6 +1279,7 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
     gint profile;
     GstNalBs bs;
     gint i, len;
+    GSList *nlist = NULL;
 
     GST_DEBUG_OBJECT (h264parse, "have packetized h264");
     h264parse->packetized = TRUE;
@@ -1144,6 +1316,9 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
         goto avcc_too_small;
       gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
       gst_nal_decode_sps (h264parse, &bs);
+      if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE)
+        nlist = g_slist_append (nlist,
+            gst_h264_parse_make_nal (h264parse, data + 2, len));
       data += len + 2;
       size -= len + 2;
     }
@@ -1156,9 +1331,13 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
         goto avcc_too_small;
       gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
       gst_nal_decode_pps (h264parse, &bs);
+      if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE)
+        nlist = g_slist_append (nlist,
+            gst_h264_parse_make_nal (h264parse, data + 2, len));
       data += len + 2;
       size -= len + 2;
     }
+    h264parse->codec_nals = nlist;
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     h264parse->packetized = FALSE;
@@ -1182,6 +1361,87 @@ wrong_version:
   }
 }
 
+/* if forced output mode,
+ * ensures that NALU @nal starts with start code or length
+ * takes ownership of nal and returns buffer
+ */
+static GstBuffer *
+gst_h264parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
+{
+  guint nal_length = h264parse->nal_length_size;
+
+  g_assert (nal_length <= 4);
+
+  /* ensure proper transformation on prefix if needed */
+  if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
+    nal = gst_buffer_make_writable (nal);
+    switch (nal_length) {
+      case 1:
+        GST_WRITE_UINT8 (GST_BUFFER_DATA (nal),
+            GST_BUFFER_SIZE (nal) - nal_length);
+        break;
+      case 2:
+        GST_WRITE_UINT16_BE (GST_BUFFER_DATA (nal),
+            GST_BUFFER_SIZE (nal) - nal_length);
+        break;
+      case 3:
+        GST_WRITE_UINT24_BE (GST_BUFFER_DATA (nal),
+            GST_BUFFER_SIZE (nal) - nal_length);
+        break;
+      case 4:
+        GST_WRITE_UINT32_BE (GST_BUFFER_DATA (nal),
+            GST_BUFFER_SIZE (nal) - nal_length);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  } else if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    if (nal_length == 4) {
+      nal = gst_buffer_make_writable (nal);
+      GST_WRITE_UINT32_BE (GST_BUFFER_DATA (nal), 0x01);
+    } else {
+      gst_buffer_replace (&nal,
+          gst_h264_parse_make_nal (h264parse,
+              GST_BUFFER_DATA (nal) + nal_length,
+              GST_BUFFER_SIZE (nal) - nal_length));
+      gst_buffer_unref (nal);
+    }
+  }
+
+  /* in any case, ensure metadata can be messed with later on */
+  nal = gst_buffer_make_metadata_writable (nal);
+
+  return nal;
+}
+
+/* sends buffer downstream, inserting codec_data NALUs if needed */
+static GstFlowReturn
+gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  /* start of picture is good time to slip in codec_data NALUs
+   * (when outputting NALS and transforming to bytestream) */
+  if (G_UNLIKELY (h264parse->codec_nals && h264parse->picture_start)) {
+    GSList *nals = h264parse->codec_nals;
+    while (nals) {
+      GST_DEBUG_OBJECT (h264parse, "pushing codec_nal of size %d",
+          GST_BUFFER_SIZE (nals->data));
+      GST_BUFFER_TIMESTAMP (nals->data) = GST_BUFFER_TIMESTAMP (buf);
+      GST_BUFFER_DURATION (nals->data) = 0;
+
+      gst_buffer_set_caps (nals->data, h264parse->src_caps);
+      ret = gst_pad_push (h264parse->srcpad, nals->data);
+      nals = g_slist_delete_link (nals, nals);
+    }
+    h264parse->codec_nals = NULL;
+  }
+
+  gst_buffer_set_caps (buf, h264parse->src_caps);
+  return gst_pad_push (h264parse->srcpad, buf);
+}
+
 /* takes over ownership of nal and returns fresh buffer */
 static GstBuffer *
 gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
@@ -1202,6 +1462,7 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
 
   /* determine if AU complete */
   nal_type = data[nal_length] & 0x1f;
+  GST_LOG_OBJECT (h264parse, "nal type: %d", nal_type);
   h264parse->picture_start |= (nal_type == 1 || nal_type == 2 || nal_type == 5);
   if (G_UNLIKELY (!next_nal)) {
     complete = TRUE;
@@ -1214,13 +1475,62 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
      * and also works with broken frame_num in NAL
      * (where spec-wise would fail) */
     nal_type = next_nal[nal_length] & 0x1f;
+    GST_LOG_OBJECT (h264parse, "next nal type: %d", nal_type);
     complete = h264parse->picture_start && (nal_type >= 6 && nal_type <= 9);
     complete |= h264parse->picture_start &&
         (nal_type == 1 || nal_type == 2 || nal_type == 5) &&
         (next_nal[nal_length + 1] & 0x80);
   }
 
+  /* collect SPS and PPS NALUs to make up codec_data, if so needed */
+  nal_type = data[nal_length] & 0x1f;
+  if (G_UNLIKELY (nal_type == NAL_SPS)) {
+    GstNalBs bs;
+    guint id;
+
+    gst_nal_bs_init (&bs, data + nal_length + 1, size - nal_length - 1);
+    gst_nal_bs_read (&bs, 24);  /* profile_idc, profile_compatibility, level_idc */
+    id = gst_nal_bs_read_ue (&bs);
+    if (!gst_nal_bs_eos (&bs) && id < MAX_SPS_COUNT) {
+      GST_DEBUG_OBJECT (h264parse, "storing SPS id %d", id);
+      gst_buffer_replace (&h264parse->sps_nals[id], NULL);
+      h264parse->sps_nals[id] =
+          gst_h264_parse_make_nal (h264parse, data + nal_length,
+          size - nal_length);
+      gst_h264_parse_update_src_caps (h264parse, NULL);
+    }
+  } else if (G_UNLIKELY (nal_type == NAL_PPS)) {
+    GstNalBs bs;
+    guint id;
+
+    gst_nal_bs_init (&bs, data + nal_length + 1, size - nal_length - 1);
+    id = gst_nal_bs_read_ue (&bs);
+    if (!gst_nal_bs_eos (&bs) && id < MAX_PPS_COUNT) {
+      GST_DEBUG_OBJECT (h264parse, "storing PPS id %d", id);
+      gst_buffer_replace (&h264parse->pps_nals[id], NULL);
+      h264parse->pps_nals[id] =
+          gst_h264_parse_make_nal (h264parse, data + nal_length,
+          size - nal_length);
+      gst_h264_parse_update_src_caps (h264parse, NULL);
+    }
+  }
+
   if (h264parse->merge) {
+    /* proper prefix */
+    nal = gst_h264parse_write_nal_prefix (h264parse, nal);
+
+    /* start of a picture is a good time to insert codec SPS and PPS */
+    if (G_UNLIKELY (h264parse->codec_nals && h264parse->picture_start)) {
+      while (h264parse->codec_nals) {
+        GST_DEBUG_OBJECT (h264parse, "inserting codec_nal of size %d into AU",
+            GST_BUFFER_SIZE (h264parse->codec_nals->data));
+        gst_adapter_push (h264parse->picture_adapter,
+            h264parse->codec_nals->data);
+        h264parse->codec_nals =
+            g_slist_delete_link (h264parse->codec_nals, h264parse->codec_nals);
+      }
+    }
+
     /* regardless, collect this NALU */
     gst_adapter_push (h264parse->picture_adapter, nal);
 
@@ -1231,18 +1541,15 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
       ts = gst_adapter_prev_timestamp (h264parse->picture_adapter, NULL);
       outsize = gst_adapter_available (h264parse->picture_adapter);
       outbuf = gst_adapter_take_buffer (h264parse->picture_adapter, outsize);
+      outbuf = gst_buffer_make_metadata_writable (outbuf);
       GST_BUFFER_TIMESTAMP (outbuf) = ts;
     }
   } else {
-    outbuf = nal;
+    outbuf = gst_h264parse_write_nal_prefix (h264parse, nal);
   }
 
   if (_start)
     *_start = (h264parse->picture_start != start);
-
-  /* ensure metadata can be messed with later on */
-  if (G_LIKELY (outbuf))
-    outbuf = gst_buffer_make_metadata_writable (outbuf);
 
   return outbuf;
 }
@@ -1401,8 +1708,6 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
         case NAL_SPS:
           GST_DEBUG_OBJECT (h264parse, "we have an SPS NAL");
           gst_nal_decode_sps (h264parse, &bs);
-          gst_h264_parse_update_src_caps (h264parse,
-              GST_PAD_CAPS (h264parse->srcpad));
           break;
         case NAL_PPS:
           GST_DEBUG_OBJECT (h264parse, "we have a PPS NAL");
@@ -1572,8 +1877,7 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       else
         GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (h264parse->srcpad));
-      res = gst_pad_push (h264parse->srcpad, outbuf);
+      res = gst_h264_parse_push_buffer (h264parse, outbuf);
     } else {
       /* NALU can not be parsed yet, we wait for more data in the adapter. */
       break;
@@ -1624,6 +1928,7 @@ gst_h264_parse_flush_decode (GstH264Parse * h264parse)
     GST_DEBUG_OBJECT (h264parse, "pushing buffer %p, ts %" GST_TIME_FORMAT,
         buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
+    gst_buffer_set_caps (buf, h264parse->src_caps);
     res = gst_pad_push (h264parse->srcpad, buf);
 
   }
@@ -1889,14 +2194,10 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   h264parse = GST_H264PARSE (GST_PAD_PARENT (pad));
 
-  if (!GST_PAD_CAPS (h264parse->srcpad)) {
+  if (!h264parse->src_caps) {
     /* Set default caps if the sink caps were not negotiated, this is when we
      * are reading from a file or so */
     caps = gst_caps_new_simple ("video/x-h264", NULL);
-
-    /* Set source caps */
-    if (!gst_pad_set_caps (h264parse->srcpad, caps))
-      goto caps_failed;
 
     /* we assume the bytestream format. If the data turns out to be packetized,
      * we have a problem because we don't know the length of the nalu_size
@@ -1904,7 +2205,7 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
     h264parse->packetized = FALSE;
     h264parse->nal_length_size = 4;
 
-    gst_caps_unref (caps);
+    h264parse->src_caps = caps;
   }
 
   discont = GST_BUFFER_IS_DISCONT (buffer);
@@ -1918,15 +2219,6 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
     res = gst_h264_parse_chain_reverse (h264parse, discont, buffer);
 
   return res;
-
-  /* ERRORS */
-caps_failed:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (h264parse),
-        CORE, NEGOTIATION, (NULL), ("failed to set caps"));
-    gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
-  }
 }
 
 static gboolean
@@ -2005,6 +2297,7 @@ gst_h264_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_h264_parse_clear_queues (h264parse);
+      gst_h264_parse_reset (h264parse);
       break;
     default:
       break;
