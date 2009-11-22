@@ -545,10 +545,15 @@ gst_vdp_sink_calculate_par (Display * display)
 static GstCaps *
 gst_vdp_sink_get_allowed_caps (GstVdpDevice * device, GValue * par)
 {
-  GstCaps *caps;
+  GstCaps *templ_caps, *allowed_caps, *caps;
   gint i;
 
-  caps = gst_vdp_output_buffer_get_allowed_caps (device);
+  allowed_caps = gst_vdp_output_buffer_get_allowed_caps (device);
+  templ_caps = gst_static_pad_template_get_caps (&sink_template);
+  caps = gst_caps_intersect (allowed_caps, templ_caps);
+
+  gst_caps_unref (allowed_caps);
+  gst_caps_unref (templ_caps);
 
   if (!par)
     par = gst_vdp_sink_calculate_par (device->display);
