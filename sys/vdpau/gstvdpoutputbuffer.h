@@ -35,6 +35,9 @@ struct _GstVdpOutputBuffer {
   GstBuffer buffer;
 
   GstVdpDevice *device;
+  VdpRGBAFormat rgba_format;
+  gint width, height;
+  
   VdpOutputSurface surface;
 };
 
@@ -42,7 +45,12 @@ GType gst_vdp_output_buffer_get_type (void);
 
 GstVdpOutputBuffer* gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format, gint width, gint height);
 
+GstCaps *gst_vdp_output_buffer_get_template_caps ();
 GstCaps *gst_vdp_output_buffer_get_allowed_caps (GstVdpDevice *device);
+gboolean gst_vdp_caps_to_rgba_format (GstCaps *caps, VdpRGBAFormat *rgba_format);
+
+gboolean gst_vdp_output_buffer_calculate_size (GstVdpOutputBuffer *output_buf, guint *size);
+gboolean gst_vdp_output_buffer_download (GstVdpOutputBuffer *output_buf, GstBuffer *outbuf);
 
 #define GST_VDP_OUTPUT_CAPS \
   "video/x-vdpau-output, " \
