@@ -51,6 +51,7 @@ struct _GstVdpVideoSrcPad
 
   /* properties */
   gchar *display;
+  GstCaps *templ_caps;
 };
 
 struct _GstVdpVideoSrcPadClass
@@ -67,7 +68,7 @@ gboolean gst_vdp_video_src_pad_set_caps (GstVdpVideoSrcPad *vdp_pad, GstCaps *ca
 
 GstCaps *gst_vdp_video_src_pad_get_template_caps ();
 
-GstVdpVideoSrcPad *gst_vdp_video_src_pad_new ();
+GstVdpVideoSrcPad *gst_vdp_video_src_pad_new (GstCaps *templ_caps);
 GType gst_vdp_video_src_pad_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS

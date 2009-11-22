@@ -1085,7 +1085,7 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  src_caps = gst_vdp_video_src_pad_get_template_caps ();
+  src_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
 
@@ -1133,7 +1133,15 @@ gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
 static void
 gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
 {
-  mpeg_dec->src = GST_PAD (gst_vdp_video_src_pad_new ());
+  GstPadTemplate *src_template;
+
+  /* SRC PAD */
+  src_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (gclass), "src");
+  mpeg_dec->src =
+      GST_PAD (gst_vdp_video_src_pad_new (gst_pad_template_get_caps
+          (src_template)));
+
   gst_pad_set_event_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_event));
   gst_pad_set_query_function (mpeg_dec->src,
