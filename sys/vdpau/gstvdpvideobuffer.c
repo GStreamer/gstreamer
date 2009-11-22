@@ -431,7 +431,7 @@ gst_vdp_video_buffer_download (GstVdpVideoBuffer * video_buf,
   GST_LOG_OBJECT (video_buf, "Entering vdp_video_surface_get_bits_ycbcr");
   status =
       device->vdp_video_surface_get_bits_ycbcr (surface,
-      VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
+      format, (void *) data, stride);
   GST_LOG_OBJECT (video_buf,
       "Got status %d from vdp_video_surface_get_bits_ycbcr", status);
   if (G_UNLIKELY (status != VDP_STATUS_OK)) {
