@@ -22,6 +22,23 @@
 
 #include "gstvdputils.h"
 
+static void
+gst_vdp_video_remove_pixel_aspect_ratio (GstStructure * structure)
+{
+  gint par_n, par_d;
+
+  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
+          &par_d)) {
+    gint width;
+
+    gst_structure_get_int (structure, "width", &width);
+    width = gst_util_uint64_scale_int (width, par_n, par_d);
+    gst_structure_set (structure, "width", G_TYPE_INT, width, NULL);
+
+    gst_structure_remove_field (structure, "pixel-aspect-ratio");
+  }
+}
+
 GstCaps *
 gst_vdp_yuv_to_output_caps (GstCaps * caps)
 {
@@ -37,9 +54,11 @@ gst_vdp_yuv_to_output_caps (GstCaps * caps)
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "format");
+    gst_vdp_video_remove_pixel_aspect_ratio (structure);
 
     gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
     gst_structure_remove_field (rgb_structure, "format");
+    gst_vdp_video_remove_pixel_aspect_ratio (rgb_structure);
     gst_caps_append_structure (result, rgb_structure);
   }
 
@@ -56,27 +75,17 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
 
     GstStructure *structure, *rgb_structure;
-    gint par_n, par_d;
 
     structure = gst_caps_get_structure (result, i);
     rgb_structure = gst_structure_copy (structure);
 
     gst_structure_set_name (structure, "video/x-vdpau-output");
     gst_structure_remove_field (structure, "chroma-type");
-
-    if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
-            &par_d)) {
-      gint width;
-
-      gst_structure_get_int (structure, "width", &width);
-      width = gst_util_uint64_scale_int (width, par_n, par_d);
-      gst_structure_set (structure, "width", G_TYPE_INT, width, NULL);
-
-      gst_structure_remove_field (structure, "pixel-aspect-ratio");
-    }
+    gst_vdp_video_remove_pixel_aspect_ratio (structure);
 
     gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
-    gst_structure_remove_field (rgb_structure, "chroma-type");
+    gst_structure_remove_field (structure, "chroma-type");
+    gst_vdp_video_remove_pixel_aspect_ratio (rgb_structure);
     gst_caps_append_structure (result, rgb_structure);
   }
 
