@@ -51,11 +51,13 @@ GST_ELEMENT_DETAILS ("H264Parse",
     "Wim Taymans <wim.taymans@gmail.com>");
 
 #define DEFAULT_SPLIT_PACKETIZED     FALSE
+#define DEFAULT_ACCESS_UNIT          FALSE
 
 enum
 {
   PROP_0,
-  PROP_SPLIT_PACKETIZED
+  PROP_SPLIT_PACKETIZED,
+  PROP_ACCESS_UNIT
 };
 
 typedef enum
@@ -740,6 +742,8 @@ gst_nal_decode_slice_header (GstH264Parse * h, GstNalBs * bs)
   /* FIXME: note that pps might be uninitialized */
   sps_id = h->pps->sps_id;
   h->sps = gst_h264_parse_get_sps (h, sps_id);
+  if (!h->sps)
+    return FALSE;
   /* FIXME: in some streams sps/pps may not be ready before the first slice
    * header. In this case it is not a good idea to _get_sps()/_pps() at this
    * point
@@ -808,6 +812,10 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
       g_param_spec_boolean ("split-packetized", "Split packetized",
           "Split NAL units of packetized streams", DEFAULT_SPLIT_PACKETIZED,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_ACCESS_UNIT,
+      g_param_spec_boolean ("access-unit", "Access Units",
+          "Output Acess Units rather than NALUs", DEFAULT_ACCESS_UNIT,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_h264_parse_change_state;
 }
@@ -830,6 +838,9 @@ gst_h264_parse_init (GstH264Parse * h264parse, GstH264ParseClass * g_class)
 
   h264parse->split_packetized = DEFAULT_SPLIT_PACKETIZED;
   h264parse->adapter = gst_adapter_new ();
+
+  h264parse->merge = DEFAULT_ACCESS_UNIT;
+  h264parse->picture_adapter = gst_adapter_new ();
 
   for (i = 0; i < MAX_SPS_COUNT; i++)
     h264parse->sps_buffers[i] = NULL;
@@ -864,6 +875,7 @@ gst_h264_parse_finalize (GObject * object)
   h264parse = GST_H264PARSE (object);
 
   g_object_unref (h264parse->adapter);
+  g_object_unref (h264parse->picture_adapter);
 
   for (i = 0; i < MAX_SPS_COUNT; i++) {
     if (h264parse->sps_buffers[i] != NULL)
@@ -890,6 +902,9 @@ gst_h264_parse_set_property (GObject * object, guint prop_id,
     case PROP_SPLIT_PACKETIZED:
       parse->split_packetized = g_value_get_boolean (value);
       break;
+    case PROP_ACCESS_UNIT:
+      parse->merge = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -907,6 +922,9 @@ gst_h264_parse_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_SPLIT_PACKETIZED:
       g_value_set_boolean (value, parse->split_packetized);
+      break;
+    case PROP_ACCESS_UNIT:
+      g_value_set_boolean (value, parse->merge);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -985,6 +1003,71 @@ wrong_version:
   }
 }
 
+/* takes over ownership of nal and returns fresh buffer */
+static GstBuffer *
+gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
+    guint8 * next_nal, gboolean * _start)
+{
+  gint nal_type;
+  guint8 *data;
+  GstBuffer *outbuf = NULL;
+  guint outsize, size, nal_length = h264parse->nal_length_size;
+  gboolean start = h264parse->picture_start;
+  gboolean complete;
+
+  data = GST_BUFFER_DATA (nal);
+  size = GST_BUFFER_SIZE (nal);
+
+  /* caller ensures number of bytes available */
+  g_return_val_if_fail (size >= nal_length + 1, NULL);
+
+  /* determine if AU complete */
+  nal_type = data[nal_length] & 0x1f;
+  h264parse->picture_start |= (nal_type == 1 || nal_type == 2 || nal_type == 5);
+  if (G_UNLIKELY (!next_nal)) {
+    complete = TRUE;
+  } else {
+    /* consider a coded slices (IDR or not) to start a picture,
+     * (so ending the previous one) if first_mb_in_slice == 0
+     * (non-0 is part of previous one) */
+    /* NOTE this is not entirely according to Access Unit specs in 7.4.1.2.4,
+     * but in practice it works in sane cases, needs not much parsing,
+     * and also works with broken frame_num in NAL
+     * (where spec-wise would fail) */
+    nal_type = next_nal[nal_length] & 0x1f;
+    complete = h264parse->picture_start && (nal_type >= 6 && nal_type <= 9);
+    complete |= h264parse->picture_start &&
+        (nal_type == 1 || nal_type == 2 || nal_type == 5) &&
+        (next_nal[nal_length + 1] & 0x80);
+  }
+
+  if (h264parse->merge) {
+    /* regardless, collect this NALU */
+    gst_adapter_push (h264parse->picture_adapter, nal);
+
+    if (complete) {
+      GstClockTime ts;
+
+      h264parse->picture_start = FALSE;
+      ts = gst_adapter_prev_timestamp (h264parse->picture_adapter, NULL);
+      outsize = gst_adapter_available (h264parse->picture_adapter);
+      outbuf = gst_adapter_take_buffer (h264parse->picture_adapter, outsize);
+      GST_BUFFER_TIMESTAMP (outbuf) = ts;
+    }
+  } else {
+    outbuf = nal;
+  }
+
+  if (_start)
+    *_start = (h264parse->picture_start != start);
+
+  /* ensure metadata can be messed with later on */
+  if (G_LIKELY (outbuf))
+    outbuf = gst_buffer_make_metadata_writable (outbuf);
+
+  return outbuf;
+}
+
 static void
 gst_h264_parse_clear_queues (GstH264Parse * h264parse)
 {
@@ -1003,6 +1086,8 @@ gst_h264_parse_clear_queues (GstH264Parse * h264parse)
   }
   gst_adapter_clear (h264parse->adapter);
   h264parse->have_i_frame = FALSE;
+  gst_adapter_clear (h264parse->picture_adapter);
+  h264parse->picture_start = FALSE;
 }
 
 static GstFlowReturn
@@ -1027,7 +1112,7 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     gboolean got_frame = FALSE;
 
     avail = gst_adapter_available (h264parse->adapter);
-    if (avail < h264parse->nal_length_size + 1)
+    if (avail < h264parse->nal_length_size + 2)
       break;
     data = gst_adapter_peek (h264parse->adapter, avail);
 
@@ -1155,9 +1240,22 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     if (next_nalu_pos > 0) {
       GstBuffer *outbuf;
       GstClockTime outbuf_dts = GST_CLOCK_TIME_NONE;
+      gboolean start;
+      guint8 *next_data;
 
       outbuf = gst_adapter_take_buffer (h264parse->adapter, next_nalu_pos);
       outbuf_dts = gst_adapter_prev_timestamp (h264parse->adapter, NULL);       /* Better value for the second parameter? */
+
+      /* packetized will have no next data, which serves fine here */
+      next_data = (guint8 *) gst_adapter_peek (h264parse->adapter, 6);
+      outbuf = gst_h264_parse_push_nal (h264parse, outbuf, next_data, &start);
+      if (!outbuf) {
+        /* no complete unit yet, go for next round */
+        continue;
+      } else {
+        if (h264parse->merge)
+          start = TRUE;
+      }
 
       /* Ignore upstream dts that stalls or goes backward. Upstream elements
        * like filesrc would keep on writing timestamp=0.  XXX: is this correct?
@@ -1167,7 +1265,7 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
           && outbuf_dts <= h264parse->last_outbuf_dts)
         outbuf_dts = GST_CLOCK_TIME_NONE;
 
-      if (got_frame || delta_unit) {
+      if ((got_frame || delta_unit) && start) {
         GstH264Sps *sps = h264parse->sps;
         gint duration = 1;
 
@@ -1316,8 +1414,17 @@ gst_h264_parse_flush_decode (GstH264Parse * h264parse)
     link = h264parse->decode;
     buf = link->buffer;
 
+    h264parse->decode = gst_nal_list_delete_head (h264parse->decode);
+    h264parse->decode_len--;
+
     GST_DEBUG_OBJECT (h264parse, "have type: %d, I frame: %d", link->nal_type,
         link->i_frame);
+
+    buf = gst_h264_parse_push_nal (h264parse, buf,
+        h264parse->decode ? GST_BUFFER_DATA (h264parse->decode->buffer) : NULL,
+        NULL);
+    if (!buf)
+      continue;
 
     if (first) {
       /* first buffer has discont */
@@ -1338,8 +1445,6 @@ gst_h264_parse_flush_decode (GstH264Parse * h264parse)
 
     res = gst_pad_push (h264parse->srcpad, buf);
 
-    h264parse->decode = gst_nal_list_delete_head (h264parse->decode);
-    h264parse->decode_len--;
   }
   /* the i frame is gone now */
   h264parse->have_i_frame = FALSE;

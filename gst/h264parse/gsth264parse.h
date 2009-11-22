@@ -116,6 +116,10 @@ struct _GstH264Parse
 
   /* for debug purpose */ 
   guint32 frame_cnt;
+
+  /* NALU AU */
+  GstAdapter *picture_adapter;
+  gboolean picture_start;
 };
 
 struct _GstH264ParseClass
