@@ -28,14 +28,16 @@ libgstvdp_@GST_MAJORMINOR@_la_SOURCES = \
 	gstvdpdevice.c \
 	gstvdpvideobuffer.c \
 	gstvdpoutputbuffer.c \
-	gstvdpvideosrcpad.c
+	gstvdpvideosrcpad.c \
+	gstvdpoutputsrcpad.c
 	
 libgstvdp_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vdpau
 libgstvdp_@GST_MAJORMINOR@include_HEADERS = \
 	gstvdpdevice.h \
 	gstvdpvideobuffer.h \
 	gstvdpoutputbuffer.h \
-	gstvdpvideosrcpad.h
+	gstvdpvideosrcpad.h \
+	gstvdpoutputsrcpad.h
  
 libgstvdp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(VDPAU_CFLAGS) $(X11_CFLAGS)
 libgstvdp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(VDPAU_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR)

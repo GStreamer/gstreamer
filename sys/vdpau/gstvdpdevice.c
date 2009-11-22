@@ -112,6 +112,8 @@ gst_vdp_device_constructed (GObject * object)
     {VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &device->vdp_output_surface_destroy},
     {VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES,
         &device->vdp_output_surface_query_capabilities},
+    {VDP_FUNC_ID_OUTPUT_SURFACE_GET_BITS_NATIVE,
+        &device->vdp_output_surface_get_bits_native},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
         &device->vdp_presentation_queue_target_create_x11},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_CREATE,

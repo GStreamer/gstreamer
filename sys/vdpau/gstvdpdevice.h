@@ -81,6 +81,7 @@ struct _GstVdpDevice
   VdpOutputSurfaceCreate                          *vdp_output_surface_create;
   VdpOutputSurfaceDestroy                         *vdp_output_surface_destroy;
   VdpOutputSurfaceQueryCapabilities               *vdp_output_surface_query_capabilities;
+  VdpOutputSurfaceGetBitsNative                   *vdp_output_surface_get_bits_native;
 
   VdpPresentationQueueTargetCreateX11             *vdp_presentation_queue_target_create_x11;  
   VdpPresentationQueueCreate                      *vdp_presentation_queue_create;
