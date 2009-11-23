@@ -387,6 +387,9 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   gint off;
   gboolean sync, drain;
 
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 6))
+    return FALSE;
+
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
       0, GST_BUFFER_SIZE (buf));
 
