@@ -149,6 +149,16 @@
  *   <listitem><para>
  *      Update the duration information with @gst_base_parse_set_duration
  *   </para></listitem>
+ *   <listitem><para>
+ *      Alternatively, parsing (or specs) might yield a frames per seconds rate
+ *      which can be provided to GstBaseParse to enable it to cater for
+ *      buffer time metadata (which will be taken from upstream as much as possible).
+ *      Internally keeping track of frames and respective
+ *      sizes that have been pushed provides GstBaseParse which a bytes per frame
+ *      rate.  A default @convert (used if not overriden) will then use these
+ *      rates to perform obvious conversions.  These rates are also used to update
+ *      (estimated) duration at regular frame intervals.
+ *   </para></listitem>
  * </itemizedlist>
  *
  */
@@ -162,10 +172,7 @@
  *  - Accurate seeking
  *  - In push mode provide a queue of adapter-"queued" buffers for upstream
  *    buffer metadata
- *  - Timestamp tracking and setting
- *  - Handle upstream timestamps
  *  - Queue buffers/events until caps are set
- *  - Bitrate tracking => inaccurate seeking, inaccurate duration calculation
  *  - Let subclass decide if frames outside the segment should be dropped
  *  - Send queries upstream
  */
@@ -202,11 +209,19 @@ struct _GstBaseParsePrivate
 
   guint min_frame_size;
   gboolean passthrough;
+  guint fps_num, fps_den;
+  guint update_interval;
 
   gboolean discont;
   gboolean flushing;
 
   gint64 offset;
+  GstClockTime next_ts;
+  GstClockTime prev_ts;
+  GstClockTime frame_duration;
+
+  guint64 framecount;
+  guint64 bytecount;
 
   GList *pending_events;
 
@@ -283,6 +298,9 @@ static gboolean gst_base_parse_src_eventfunc (GstBaseParse * parse,
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
+gboolean gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
+
 static void gst_base_parse_drain (GstBaseParse * parse);
 
 static void
@@ -357,6 +375,7 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   klass->event = gst_base_parse_sink_eventfunc;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->is_seekable = gst_base_parse_is_seekable;
+  klass->convert = gst_base_parse_convert;
 }
 
 static void
@@ -451,9 +470,14 @@ gst_base_parse_check_frame (GstBaseParse * parse,
 static GstFlowReturn
 gst_base_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 {
-  /* FIXME: Could we even _try_ to do something clever here? */
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)) {
+    GST_BUFFER_TIMESTAMP (buffer) = parse->priv->next_ts;
+  }
+  if (!GST_BUFFER_DURATION_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
+    GST_BUFFER_DURATION (buffer) = parse->priv->frame_duration;
+  }
   return GST_FLOW_OK;
 }
 
@@ -611,6 +635,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_base_parse_drain (parse);
       gst_adapter_clear (parse->adapter);
       parse->priv->offset = offset;
+      parse->priv->next_ts = start;
       break;
     }
 
@@ -722,6 +747,110 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
   return TRUE;
 }
 
+/**
+ * gst_base_parse_convert:
+ * @parse: #GstBaseParse.
+ * @src_format: #GstFormat describing the source format.
+ * @src_value: Source value to be converted.
+ * @dest_format: #GstFormat defining the converted format.
+ * @dest_value: Pointer where the conversion result will be put.
+ *
+ * Implementation of "convert" vmethod in #GstBaseParse class.
+ *
+ * Returns: TRUE if conversion was successful.
+ */
+gboolean
+gst_base_parse_convert (GstBaseParse * parse,
+    GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
+{
+  gboolean ret = FALSE;
+
+  if (src_format == dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  /* need data and frame info (having num means den also ok) */
+  if (!parse->priv->framecount || !parse->priv->fps_num)
+    return FALSE;
+
+  if (src_format == GST_FORMAT_BYTES) {
+    if (dest_format == GST_FORMAT_TIME) {
+      /* BYTES -> TIME conversion */
+      GST_DEBUG_OBJECT (parse, "converting bytes -> time");
+
+      *dest_value = gst_util_uint64_scale (src_value,
+          parse->priv->framecount * parse->priv->fps_den * 1000,
+          parse->priv->bytecount * parse->priv->fps_num);
+      *dest_value *= GST_MSECOND;
+      GST_DEBUG_OBJECT (parse, "conversion result: %" G_GINT64_FORMAT " ms",
+          *dest_value / GST_MSECOND);
+      ret = TRUE;
+    }
+  } else if (src_format == GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (parse, "converting time -> bytes");
+    if (dest_format == GST_FORMAT_BYTES) {
+      *dest_value = gst_util_uint64_scale (src_value / GST_MSECOND,
+          parse->priv->fps_num * parse->priv->bytecount,
+          parse->priv->fps_den * 1000 * parse->priv->framecount);
+      GST_DEBUG_OBJECT (parse,
+          "time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
+          src_value / GST_MSECOND, *dest_value);
+      ret = TRUE;
+    }
+  } else if (src_format == GST_FORMAT_DEFAULT) {
+    if (dest_format == GST_FORMAT_TIME) {
+      /* DEFAULT == frame-based */
+      *dest_value = gst_util_uint64_scale (src_value,
+          GST_SECOND * parse->priv->fps_den, parse->priv->fps_num);
+      ret = TRUE;
+    } else if (dest_format == GST_FORMAT_BYTES) {
+    }
+  }
+
+  return ret;
+}
+
+/**
+ * gst_base_parse_update_duration:
+ * @parse: #GstBaseParse.
+ *
+ */
+static void
+gst_base_parse_update_duration (GstBaseParse * aacparse)
+{
+  GstPad *peer;
+  GstBaseParse *parse;
+
+  parse = GST_BASE_PARSE (aacparse);
+
+  /* need frame info */
+  if (!parse->priv->fps_den || !parse->priv->fps_num) {
+    return;
+  }
+
+  /* Cannot estimate duration. No data has been passed to us yet */
+  if (!parse->priv->framecount || !parse->priv->bytecount) {
+    return;
+  }
+
+  peer = gst_pad_get_peer (parse->sinkpad);
+  if (peer) {
+    GstFormat pformat = GST_FORMAT_BYTES;
+    gboolean qres = FALSE;
+    gint64 ptot;
+
+    qres = gst_pad_query_duration (peer, &pformat, &ptot);
+    gst_object_unref (GST_OBJECT (peer));
+    if (qres) {
+      gst_base_parse_set_duration (parse, GST_FORMAT_TIME,
+          gst_util_uint64_scale (ptot,
+              parse->priv->framecount * parse->priv->fps_den * GST_SECOND,
+              parse->priv->bytecount * parse->priv->fps_num));
+    }
+  }
+}
 
 /**
  * gst_base_parse_handle_and_push_buffer:
@@ -750,9 +879,18 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
 
   ret = klass->parse_frame (parse, buffer);
 
-  /* FIXME: Check the output buffer for any missing metadata,
-   *        keep track of timestamp and calculate everything possible
-   *        if not set already */
+  /* re-use default handler to add missing metadata as-much-as-possible */
+  gst_base_parse_parse_frame (parse, buffer);
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+      GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    parse->priv->next_ts =
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+  } else {
+    /* we lost track, do not produce bogus time next time around
+     * (probably means parser subclass has given up on parsing as well) */
+    GST_DEBUG_OBJECT (parse, "no next fallback timestamp");
+    parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+  }
 
   /* First buffers are dropped, this means that the subclass needs more
    * frames to decide on the format and queues them internally */
@@ -793,6 +931,19 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
+
+  GST_LOG_OBJECT (parse,
+      "processing buffer of size %d with ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+
+  /* update stats */
+  parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
+  parse->priv->framecount++;
+  if (parse->priv->update_interval &&
+      (parse->priv->framecount % parse->priv->update_interval) == 0)
+    gst_base_parse_update_duration (parse);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     last_stop = GST_BUFFER_TIMESTAMP (buffer);
@@ -918,6 +1069,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   gint skip = -1;
   const guint8 *data;
   guint min_size;
+  GstClockTime timestamp;
 
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -1013,6 +1165,14 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     /* Subclass may want to know the data offset */
     GST_BUFFER_OFFSET (outbuf) = parse->priv->offset;
     parse->priv->offset += fsize;
+
+    /* move along with upstream timestamp (if any),
+     * but interpolate in between */
+    timestamp = gst_adapter_prev_timestamp (parse->adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
+        (parse->priv->prev_ts != timestamp)) {
+      parse->priv->prev_ts = parse->priv->next_ts = timestamp;
+    }
 
     ret = gst_base_parse_handle_and_push_buffer (parse, bclass, outbuf);
     GST_PAD_STREAM_UNLOCK (parse->srcpad);
@@ -1266,6 +1426,12 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->discont = FALSE;
     parse->priv->flushing = FALSE;
     parse->priv->offset = 0;
+    parse->priv->update_interval = 0;
+    parse->priv->fps_num = parse->priv->fps_den = 0;
+    parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
+    parse->priv->framecount = 0;
+    parse->priv->bytecount = 0;
+    parse->priv->next_ts = 0;
 
     if (parse->pending_segment)
       gst_event_unref (parse->pending_segment);
@@ -1439,6 +1605,46 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
+/**
+ * gst_base_transform_set_frame_props:
+ * @parse: the #GstBaseParse to set
+ * @fps_num: frames per second (numerator).
+ * @fps_den: frames per second (denominator).
+ * @interval: duration update interval in frames.
+ *
+ * If frames per second is configured, parser can provide for default @convert
+ * between GST_FORMAT_TIME and GST_FORMAT_BYTES, as well as buffer duration
+ * and timestamping.  However, even if this frame information is provided,
+ * subclass can still choose to provide for a @convert and set buffer metadata.
+ * If #interval is non-zero (default), then stream duration is determined
+ * based on frame and byte counts, and updated every #interval frames.
+ */
+void
+gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
+    guint fps_den, gint interval)
+{
+  g_return_if_fail (parse != NULL);
+
+  GST_BASE_PARSE_LOCK (parse);
+  parse->priv->fps_num = fps_num;
+  parse->priv->fps_den = fps_den;
+  parse->priv->update_interval = interval;
+  if (!fps_num || !fps_den) {
+    GST_DEBUG_OBJECT (parse, "invalid fps (%d/%d), ignoring parameters",
+        fps_num, fps_den);
+    fps_num = fps_den = 0;
+    interval = 0;
+    parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
+  } else {
+    parse->priv->frame_duration =
+        gst_util_uint64_scale (GST_SECOND, parse->priv->fps_den,
+        parse->priv->fps_num);
+  }
+  GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %d ms", fps_num, fps_den,
+      parse->priv->frame_duration / GST_MSECOND);
+  GST_LOG_OBJECT (parse, "set update interval: %d", interval);
+  GST_BASE_PARSE_UNLOCK (parse);
+}
 
 /**
  * gst_base_parse_get_querytypes:
@@ -1749,6 +1955,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       GST_DEBUG_OBJECT (parse,
           "mark DISCONT, we did a seek to another position");
       parse->priv->discont = TRUE;
+      parse->priv->next_ts = parse->segment.last_stop;
     }
 
     /* Start streaming thread if paused */
