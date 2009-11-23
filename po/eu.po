@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-29 12:38+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -28,12 +28,6 @@ msgstr "Huts egin du '%s' DVD gailua irekitzean."
 msgid "Failed to set PGC based seeking."
 msgstr "Huts egin du PGC oinarriko kokapena ezartzean."
 
-msgid "Internal clock error."
-msgstr "Erlojuaren barne-errorea."
-
-msgid "Internal data flow error."
-msgstr "Datu-korrontearen barne-errorea."
-
 msgid "No file name specified for writing."
 msgstr "Ez da fitxategi-izenik zehaztu idazteko."
 
@@ -47,6 +41,9 @@ msgstr "Datu-korrontearen barne-errorea."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Ezin izan da idatzi \"%s\" fitxategian."
+
+msgid "Internal data flow error."
+msgstr "Datu-korrontearen barne-errorea."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -414,3 +411,6 @@ msgstr "Audio gailu honek ez du grabatzea onartzen."
 
 msgid "Error recording from audio device."
 msgstr "Errorea audioko gailutik grabatzean."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Erlojuaren barne-errorea."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -27,12 +27,6 @@ msgstr "Не могу да затворим управљачки уређај �
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-msgid "Internal clock error."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr ""
-
 #, fuzzy
 msgid "No file name specified for writing."
 msgstr "Име датотеке није задато."
@@ -47,6 +41,9 @@ msgstr ""
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
+
+msgid "Internal data flow error."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."

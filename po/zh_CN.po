@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-01-14 12:04+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -28,12 +28,6 @@ msgstr "无法打开 DVD 设备“%s”。"
 msgid "Failed to set PGC based seeking."
 msgstr "无法设置基于 PGC 的检索。"
 
-msgid "Internal clock error."
-msgstr "内部时钟错误。"
-
-msgid "Internal data flow error."
-msgstr "内部数据流错误。"
-
 msgid "No file name specified for writing."
 msgstr "未指定写入文件名。"
 
@@ -47,6 +41,9 @@ msgstr "内部数据流错误。"
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "无法写入文件“%s”。"
+
+msgid "Internal data flow error."
+msgstr "内部数据流错误。"
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -446,6 +443,9 @@ msgstr "此音频设备不支持录音。"
 
 msgid "Error recording from audio device."
 msgstr "从音频设备录音时发生错误。"
+
+#~ msgid "Internal clock error."
+#~ msgstr "内部时钟错误。"
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr "无法配置 TwoLAME 编码器。请检查您的编码参数。"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-06-01 20:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -26,12 +26,6 @@ msgstr "DVD デバイス '%s' のオープンに失敗しました"
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-msgid "Internal clock error."
-msgstr "内部クロックエラー"
-
-msgid "Internal data flow error."
-msgstr "内部データフローエラー"
-
 msgid "No file name specified for writing."
 msgstr "書き込み用にファイル名が指定されていません"
 
@@ -45,6 +39,9 @@ msgstr "内部データフローエラー"
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "ファイル \"%s\" へ書き込むことができませんでした。"
+
+msgid "Internal data flow error."
+msgstr "内部データフローエラー"
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -448,6 +445,9 @@ msgstr "録音はこのオーディオデバイスによってサポートされ
 
 msgid "Error recording from audio device."
 msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
+
+#~ msgid "Internal clock error."
+#~ msgstr "内部クロックエラー"
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

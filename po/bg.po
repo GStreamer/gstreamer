@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-09-24 15:33+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -26,12 +26,6 @@ msgstr "Устройството за DVD „%s“ не може да бъде �
 msgid "Failed to set PGC based seeking."
 msgstr "Неуспех при задаване на търсене чрез PGC."
 
-msgid "Internal clock error."
-msgstr "Вътрешна грешка в часовника."
-
-msgid "Internal data flow error."
-msgstr "Вътрешна грешка в потока от данни."
-
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл, в който да се пише."
 
@@ -45,6 +39,9 @@ msgstr "Вътрешна грешка в потока от данни."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Във файла „%s“ не може да се пише."
+
+msgid "Internal data flow error."
+msgstr "Вътрешна грешка в потока от данни."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -413,3 +410,6 @@ msgstr "Това аудио устройство не поддържа запи�
 
 msgid "Error recording from audio device."
 msgstr "Грешка при записа от аудио устройството."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Вътрешна грешка в часовника."

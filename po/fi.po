@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-12 22:13+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -31,12 +31,6 @@ msgstr "DVD-laitetta \"%s\" ei voitu avata."
 msgid "Failed to set PGC based seeking."
 msgstr "PGC-pohjaisen kelauksen asetus epäonnistui."
 
-msgid "Internal clock error."
-msgstr "Sisäinen kellovirhe."
-
-msgid "Internal data flow error."
-msgstr "Sisäinen tietovirtavirhe."
-
 msgid "No file name specified for writing."
 msgstr "Kirjoitettavaa tiedostonimeä ei annettu."
 
@@ -50,6 +44,9 @@ msgstr "Sisäisen tietovirran virhe."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Tiedostoon \"%s\" ei voitu kirjoittaa."
+
+msgid "Internal data flow error."
+msgstr "Sisäinen tietovirtavirhe."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -417,6 +414,9 @@ msgstr "Tämä äänilaite ei tue nauhoitusta."
 
 msgid "Error recording from audio device."
 msgstr "Virhe nauhoitettaessa äänilaitteelta."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Sisäinen kellovirhe."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

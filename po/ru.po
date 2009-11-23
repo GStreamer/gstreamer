@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-02-12 15:00+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -25,12 +25,6 @@ msgstr "Не удалось открыть DVD-устройство «%s»."
 msgid "Failed to set PGC based seeking."
 msgstr "Не удалось включить PGC-позиционирование."
 
-msgid "Internal clock error."
-msgstr "Внутренняя ошибка синхронизации."
-
-msgid "Internal data flow error."
-msgstr "Внутренняя ошибка передачи данных."
-
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
 
@@ -44,6 +38,9 @@ msgstr "Внутренняя ошибка потока данных."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не удалось осуществить запись в файл «%s»."
+
+msgid "Internal data flow error."
+msgstr "Внутренняя ошибка передачи данных."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -450,6 +447,9 @@ msgstr "Запись не поддерживается данным аудио-�
 
 msgid "Error recording from audio device."
 msgstr "Ошибка записи с аудио-устройства."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Внутренняя ошибка синхронизации."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-14 00:12+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -25,12 +25,6 @@ msgstr "Apertura del device DVD «%s» non riuscita."
 msgid "Failed to set PGC based seeking."
 msgstr "Impostazione del posizionamento basato su PGC non riuscita"
 
-msgid "Internal clock error."
-msgstr "Errore interno del clock."
-
-msgid "Internal data flow error."
-msgstr "Errore interno nel flusso di dati."
-
 msgid "No file name specified for writing."
 msgstr "Nessun nome di file specificato per la scrittura."
 
@@ -44,6 +38,9 @@ msgstr "Errore interno nello stream di dati."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Impossibile scrivere sul file «%s»."
+
+msgid "Internal data flow error."
+msgstr "Errore interno nel flusso di dati."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -420,3 +417,6 @@ msgstr "Questo dispositivo audio non supporta la registrazione."
 
 msgid "Error recording from audio device."
 msgstr "Errore nel registrare dal dispositivo audio."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Errore interno del clock."

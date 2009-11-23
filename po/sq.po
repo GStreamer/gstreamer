@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2008-08-15 16:07+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <translation-team-sq@lists.sourceforge.net>\n"
@@ -25,14 +25,6 @@ msgstr "E pamundur hapja e dispozitivit frontend \"%s\"."
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-#, fuzzy
-msgid "Internal clock error."
-msgstr "Gabim i brendshëm tek stream i të dhënave."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Gabim i brendshëm tek stream i të dhënave."
-
 msgid "No file name specified for writing."
 msgstr "Asnjë emër file specifikuar për shkrim."
 
@@ -46,6 +38,10 @@ msgstr "Gabim i brendshëm tek stream i të dhënave."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "I pamundur shkrimi tek file \"%s\"."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Gabim i brendshëm tek stream i të dhënave."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -425,6 +421,10 @@ msgstr ""
 
 msgid "Error recording from audio device."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Internal clock error."
+#~ msgstr "Gabim i brendshëm tek stream i të dhënave."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."

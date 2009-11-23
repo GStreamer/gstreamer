@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.6.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2008-05-14 02:13+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -28,14 +28,6 @@ msgstr "Nepavyko atverti išorinės pusės įrenginio „%s“."
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-#, fuzzy
-msgid "Internal clock error."
-msgstr "Vidinė duomenų srauto klaida."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Vidinė duomenų srauto klaida."
-
 msgid "No file name specified for writing."
 msgstr "Nenurodytas failo rašymui pavadinimas."
 
@@ -49,6 +41,10 @@ msgstr "Vidinė duomenų srauto klaida."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nepavyko rašyti į failą „%s“."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Vidinė duomenų srauto klaida."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -410,3 +406,7 @@ msgstr ""
 
 msgid "Error recording from audio device."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Internal clock error."
+#~ msgstr "Vidinė duomenų srauto klaida."

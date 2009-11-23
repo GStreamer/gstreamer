@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-12 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -26,12 +26,6 @@ msgstr "Kunne ikke åbne dvd-enhed »%s«."
 msgid "Failed to set PGC based seeking."
 msgstr "Kunne ikke indstille PGC-baseret søgning."
 
-msgid "Internal clock error."
-msgstr "Intern urfejl."
-
-msgid "Internal data flow error."
-msgstr "Intern datastrømfejl."
-
 msgid "No file name specified for writing."
 msgstr "Intet filnavn er angivet til skrivning."
 
@@ -45,6 +39,9 @@ msgstr "Intern datastrømfejl."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil »%s«."
+
+msgid "Internal data flow error."
+msgstr "Intern datastrømfejl."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -421,6 +418,9 @@ msgstr "Optagelse er ikke understøttet af denne lydenhed."
 
 msgid "Error recording from audio device."
 msgstr "Fejl under optagelse fra lydenhed."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Intern urfejl."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

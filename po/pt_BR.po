@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-20 23:50-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -27,12 +27,6 @@ msgstr "Falha ao abrir o dispositivo de DVD \"%s\"."
 msgid "Failed to set PGC based seeking."
 msgstr "Falha ao definir busca baseada em PGC."
 
-msgid "Internal clock error."
-msgstr "Erro interno do temporizador."
-
-msgid "Internal data flow error."
-msgstr "Erro interno de fluxo de dados."
-
 msgid "No file name specified for writing."
 msgstr "Nenhum nome de arquivo especificado para gravação."
 
@@ -46,6 +40,9 @@ msgstr "Erro interno de fluxo de dados."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Não foi possível gravar no arquivo \"%s\"."
+
+msgid "Internal data flow error."
+msgstr "Erro interno de fluxo de dados."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -416,6 +413,9 @@ msgstr "Não há suporte a gravação neste dispositivo de áudio."
 
 msgid "Error recording from audio device."
 msgstr "Erro ao gravar deste dispositivo de áudio."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Erro interno do temporizador."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

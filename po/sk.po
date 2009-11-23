@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-09-21 10:23+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -30,12 +30,6 @@ msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
 msgid "Failed to set PGC based seeking."
 msgstr "Nepodarilo sa nastaviť PGC posun."
 
-msgid "Internal clock error."
-msgstr "Vnútorná chyba časovača."
-
-msgid "Internal data flow error."
-msgstr "Vnútorná chyba prúdu údajov."
-
 msgid "No file name specified for writing."
 msgstr "Nebolo zadané žiadne meno súboru pre zápis."
 
@@ -49,6 +43,9 @@ msgstr "Vnútorná chyba prúdu údajov."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
+
+msgid "Internal data flow error."
+msgstr "Vnútorná chyba prúdu údajov."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -417,6 +414,9 @@ msgstr "Toto zvukové zariadenie nepodporuje záznam."
 
 msgid "Error recording from audio device."
 msgstr "Chyba pri zázname zo zvukového zariadenia."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Vnútorná chyba časovača."
 
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""

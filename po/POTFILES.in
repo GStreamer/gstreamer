@@ -1,5 +1,4 @@
 ext/resindvd/resindvdsrc.c
-ext/resindvd/rsnbasesrc.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
 gst/aiff/aiffparse.c

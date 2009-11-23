@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-24 11:38-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -24,12 +24,6 @@ msgstr "Gagal membuka divais DVD '%s'."
 msgid "Failed to set PGC based seeking."
 msgstr "Gagal mengatur pencarian berbasis PGC."
 
-msgid "Internal clock error."
-msgstr "Galat jam internal."
-
-msgid "Internal data flow error."
-msgstr "Galat arus data internal."
-
 msgid "No file name specified for writing."
 msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
 
@@ -43,6 +37,9 @@ msgstr "Galat arus data internal."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Tak dapat menulis ke berkas \"%s\"."
+
+msgid "Internal data flow error."
+msgstr "Galat arus data internal."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -410,6 +407,9 @@ msgstr "Perekaman tak didukung oleh divais audio ini."
 
 msgid "Error recording from audio device."
 msgstr "Galat ketika merekam dari divais audio."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Galat jam internal."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

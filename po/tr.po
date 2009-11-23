@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-12 19:51+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -25,12 +25,6 @@ msgstr "DVD aygıtı açılamadı '%s'."
 msgid "Failed to set PGC based seeking."
 msgstr "PGC temelli arama ayarı yapılamadı."
 
-msgid "Internal clock error."
-msgstr "İç saat hatası."
-
-msgid "Internal data flow error."
-msgstr "İç veri akış hatası."
-
 msgid "No file name specified for writing."
 msgstr "Yazmak için dosya adı belirtilmedi."
 
@@ -44,6 +38,9 @@ msgstr "İç veri akım hatası."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Dosya yazılamıyor \"%s\"."
+
+msgid "Internal data flow error."
+msgstr "İç veri akış hatası."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -409,6 +406,9 @@ msgstr "Bu ses aygıtı kayıt işlevini desteklemiyor."
 
 msgid "Error recording from audio device."
 msgstr "Ses aygıtı ile kayıtta hata."
+
+#~ msgid "Internal clock error."
+#~ msgstr "İç saat hatası."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"

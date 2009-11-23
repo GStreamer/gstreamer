@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-13 00:06+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -28,12 +28,6 @@ msgstr "Kan het DVD-apparaat '%s' niet openen."
 msgid "Failed to set PGC based seeking."
 msgstr "Het instellen van het zoeken op basis van PGC is mislukt."
 
-msgid "Internal clock error."
-msgstr "Interne fout met de klok."
-
-msgid "Internal data flow error."
-msgstr "Interne fout met gegevensdoorvoer."
-
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 
@@ -47,6 +41,9 @@ msgstr "Interne fout in gegevensstroom."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kan niet in bestand \"%s\" schrijven."
+
+msgid "Internal data flow error."
+msgstr "Interne fout met gegevensdoorvoer."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -414,3 +411,6 @@ msgstr "Opnemen wordt door dit audio-apparaat niet ondersteund."
 
 msgid "Error recording from audio device."
 msgstr "Fout bij opnemen met dit audio-apparaat."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Interne fout met de klok."

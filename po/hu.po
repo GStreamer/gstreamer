@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-12 23:33+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -27,12 +27,6 @@ msgstr "Nem nyitható meg a DVD eszköz („%s”)."
 msgid "Failed to set PGC based seeking."
 msgstr "A PGC-alapú keresés beállítása meghiúsult."
 
-msgid "Internal clock error."
-msgstr "Belső órahiba."
-
-msgid "Internal data flow error."
-msgstr "Belső adatfolyamhiba."
-
 msgid "No file name specified for writing."
 msgstr "Nincs megadva fájlnév az íráshoz."
 
@@ -46,6 +40,9 @@ msgstr "Belső adatfolyamhiba."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nem lehet írni a fájlba („%s”)."
+
+msgid "Internal data flow error."
+msgstr "Belső adatfolyamhiba."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -413,3 +410,6 @@ msgstr "A hangeszköz nem támogatja a felvételt."
 
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Belső órahiba."

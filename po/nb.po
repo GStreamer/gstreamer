@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2007-11-03 14:46+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -25,14 +25,6 @@ msgstr "Kunne ikke åpne frontenhet «%s»."
 msgid "Failed to set PGC based seeking."
 msgstr ""
 
-#, fuzzy
-msgid "Internal clock error."
-msgstr "Intern feil i datastrøm."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Intern feil i datastrøm."
-
 msgid "No file name specified for writing."
 msgstr "Ingen filnavn oppgitt for skriving."
 
@@ -46,6 +38,10 @@ msgstr "Intern feil i datastrøm."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil «%s»."
+
+#, fuzzy
+msgid "Internal data flow error."
+msgstr "Intern feil i datastrøm."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -407,3 +403,7 @@ msgstr ""
 
 msgid "Error recording from audio device."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Internal clock error."
+#~ msgstr "Intern feil i datastrøm."

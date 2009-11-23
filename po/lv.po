@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 01:13+0000\n"
+"POT-Creation-Date: 2009-11-23 10:32+0100\n"
 "PO-Revision-Date: 2009-08-12 20:33+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -28,12 +28,6 @@ msgstr "Neizdevās atvērt DVD ierīci '%s'."
 msgid "Failed to set PGC based seeking."
 msgstr "Neizdevās uzstādīt PCG balstīto meklēšanu."
 
-msgid "Internal clock error."
-msgstr "Iekšējā pulksteņa kļūda."
-
-msgid "Internal data flow error."
-msgstr "Iekšējā datu plūsmas kļūda."
-
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens faila nosaukums."
 
@@ -47,6 +41,9 @@ msgstr "Iekšējās datu plūsmas kļūda."
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nevarēja ierakstīt failā \"%s\"."
+
+msgid "Internal data flow error."
+msgstr "Iekšējā datu plūsmas kļūda."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -414,6 +411,9 @@ msgstr "Šī audio ierīce neatbalsta ierakstīšanu."
 
 msgid "Error recording from audio device."
 msgstr "Radās kļūda ierakstot no audio ierīces."
+
+#~ msgid "Internal clock error."
+#~ msgstr "Iekšējā pulksteņa kļūda."
 
 #~ msgid "PCM 1"
 #~ msgstr "PCM 1"
