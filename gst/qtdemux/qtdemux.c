@@ -3008,7 +3008,7 @@ invalid_state:
 no_moov:
   {
     GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-        (NULL), ("no 'moov' atom withing first 10 MB"));
+        (NULL), ("no 'moov' atom within the first 10 MB"));
     ret = GST_FLOW_ERROR;
     goto done;
   }
