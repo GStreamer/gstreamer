@@ -292,7 +292,7 @@ Memory management
   NONE in the MetaTiming structures.
 
   The init/free functions can also be used to implement refcounting for a metadata
-  structure. This can be useful is a structure is shared between buffers.
+  structure. This can be useful when a structure is shared between buffers.
 
   When the free_size of the GstBuffer is exhausted, we will allocate new memory
   for each newly added BufferMeta and use the next pointers to point to this. It
