@@ -31,12 +31,12 @@
  * core.
  * Query types can be used to perform queries on pads and elements.
  *
- * Queries can be created using the gst_query_new_xxx() functions.  
- * Query values can be set using gst_query_set_xxx(), and parsed using 
+ * Queries can be created using the gst_query_new_xxx() functions.
+ * Query values can be set using gst_query_set_xxx(), and parsed using
  * gst_query_parse_xxx() helpers.
  *
  * The following example shows how to query the duration of a pipeline:
- * 
+ *
  * <example>
  *  <title>Query duration on a pipeline</title>
  *  <programlisting>
@@ -329,7 +329,7 @@ gst_query_type_get_details (GstQueryType type)
 /**
  * gst_query_type_iterate_definitions:
  *
- * Get a #GstIterator of all the registered query types. The definitions 
+ * Get a #GstIterator of all the registered query types. The definitions
  * iterated over are read only.
  *
  * Returns: A #GstIterator of #GstQueryTypeDefinition.
@@ -447,7 +447,7 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
  * gst_query_new_duration:
  * @format: the #GstFormat for this duration query
  *
- * Constructs a new stream duration query object to query in the given format. 
+ * Constructs a new stream duration query object to query in the given format.
  * Use gst_query_unref() when done with it. A duration query will give the
  * total length of the stream.
  *
@@ -518,7 +518,7 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
 /**
  * gst_query_new_latency:
  *
- * Constructs a new latency query object. 
+ * Constructs a new latency query object.
  * Use gst_query_unref() when done with it. A latency query is usually performed
  * by sinks to compensate for additional latency introduced by elements in the
  * pipeline.
@@ -572,11 +572,11 @@ gst_query_set_latency (GstQuery * query, gboolean live,
 /**
  * gst_query_parse_latency:
  * @query: a #GstQuery
- * @live: storage for live or NULL 
+ * @live: storage for live or NULL
  * @min_latency: the storage for the min latency or NULL
  * @max_latency: the storage for the max latency or NULL
  *
- * Parse a latency query answer. 
+ * Parse a latency query answer.
  *
  * Since: 0.10.12
  */
@@ -731,9 +731,9 @@ gst_query_new_segment (GstFormat format)
  * 1.0. If a seek was performed on the pipeline to play a different
  * segment, this query will return the range specified in the last seek.
  *
- * @start_value and @stop_value will respectively contain the configured 
- * playback range start and stop values expressed in @format. 
- * The values are always between 0 and the duration of the media and 
+ * @start_value and @stop_value will respectively contain the configured
+ * playback range start and stop values expressed in @format.
+ * The values are always between 0 and the duration of the media and
  * @start_value <= @stop_value. @rate will contain the playback rate. For
  * negative rates, playback will actually happen from @stop_value to
  * @start_value.
@@ -762,7 +762,7 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
  * @start_value: the storage for the start value, or NULL
  * @stop_value: the storage for the stop value, or NULL
  *
- * Parse a segment query answer. Any of @rate, @format, @start_value, and 
+ * Parse a segment query answer. Any of @rate, @format, @start_value, and
  * @stop_value may be NULL, which will cause this value to be omitted.
  *
  * See gst_query_set_segment() for an explanation of the function arguments.
@@ -831,7 +831,7 @@ gst_query_get_structure (GstQuery * query)
  * @format: the default #GstFormat for the new query
  *
  * Constructs a new query object for querying seeking properties of
- * the stream. 
+ * the stream.
  *
  * Returns: A #GstQuery
  */
@@ -886,7 +886,7 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
  * @segment_start: the segment_start to set
  * @segment_end: the segment_end to set
  *
- * Parse a seeking query, writing the format into @format, and 
+ * Parse a seeking query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
  * are non-NULL
  */
@@ -917,7 +917,7 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
  * gst_query_new_formats:
  *
  * Constructs a new query object for querying formats of
- * the stream. 
+ * the stream.
  *
  * Returns: A #GstQuery
  *
@@ -1015,7 +1015,7 @@ gst_query_set_formatsv (GstQuery * query, gint n_formats, GstFormat * formats)
  * @query: a #GstQuery
  * @n_formats: the number of formats in this query.
  *
- * Parse the number of formats in the formats @query. 
+ * Parse the number of formats in the formats @query.
  *
  * Since: 0.10.4
  */
@@ -1044,7 +1044,7 @@ gst_query_parse_formats_length (GstQuery * query, guint * n_formats)
  * @nth: the nth format to retrieve.
  * @format: a pointer to store the nth format
  *
- * Parse the format query and retrieve the @nth format from it into 
+ * Parse the format query and retrieve the @nth format from it into
  * @format. If the list contains less elements than @nth, @format will be
  * set to GST_FORMAT_UNDEFINED.
  *
@@ -1159,7 +1159,7 @@ gst_query_parse_buffering_percent (GstQuery * query, gboolean * busy,
 /**
  * gst_query_set_buffering_stats:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @mode: a buffering mode 
+ * @mode: a buffering mode
  * @avg_in: the average input rate
  * @avg_out: the average output rate
  * @buffering_left: amount of buffering time left
@@ -1184,7 +1184,7 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
 /**
  * gst_query_parse_buffering_stats:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @mode: a buffering mode 
+ * @mode: a buffering mode
  * @avg_in: the average input rate
  * @avg_out: the average output rate
  * @buffering_left: amount of buffering time left
@@ -1224,7 +1224,7 @@ gst_query_parse_buffering_stats (GstQuery * query,
  * @stop: the stop to set
  * @estimated_total: estimated total amount of download time
  *
- * Set the available query result fields in @query. 
+ * Set the available query result fields in @query.
  *
  * Since: 0.10.20
  */
@@ -1252,7 +1252,7 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
  * @stop: the stop to set
  * @estimated_total: estimated total amount of download time
  *
- * Parse an available query, writing the format into @format, and 
+ * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
  * are non-NULL
  *
