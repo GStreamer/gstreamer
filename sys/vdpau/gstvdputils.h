@@ -22,7 +22,7 @@
 #define _GST_VDP_UTILS_H_
 
 #include <gst/gst.h>
-#include <gst/vdpau/gstvdpdevice.h>
+#include "gstvdpdevice.h"
 
 GstCaps *gst_vdp_video_to_output_caps (GstCaps * caps);
 GstCaps *gst_vdp_yuv_to_output_caps (GstCaps *caps);

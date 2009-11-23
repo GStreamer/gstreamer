@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/vdpau/gstvdpvideobuffer.h>
+#include "gstvdpvideobuffer.h"
 
 #include "gstvdputils.h"
 
