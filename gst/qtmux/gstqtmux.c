@@ -1304,11 +1304,12 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* fall back to duration if:
    * - last bufer
-   * - this format has out of order buffers (e.g. MPEG-4),
+   * - the buffers are out of order,
    * - lack of valid time forces fall back */
-  if (buf == NULL || pad->is_out_of_order ||
+  if (buf == NULL ||
       !GST_BUFFER_TIMESTAMP_IS_VALID (last_buf) ||
-      !GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      !GST_BUFFER_TIMESTAMP_IS_VALID (buf) ||
+      GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf)) {
     if (!GST_BUFFER_DURATION_IS_VALID (last_buf)) {
       /* be forgiving for some possibly last upstream flushed buffer */
       if (buf)
