@@ -378,6 +378,34 @@ gst_multiudpsink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gboolean
+socket_error_is_ignorable ()
+{
+#ifdef G_OS_WIN32
+  /* Windows doesn't seem to have an EAGAIN for sockets */
+  return WSAGetLastError () == WSAEINTR;
+#else
+  return errno == EINTR || errno == EAGAIN;
+#endif
+}
+
+static int
+socket_last_error_code ()
+{
+#ifdef G_OS_WIN32
+  return WSAGetLastError ();
+#else
+  return errno;
+#endif
+}
+
+static gchar *
+socket_last_error_message ()
+{
+  /* TODO: windows version using FormatMessage() */
+  return g_strdup (g_strerror (errno));
+}
+
 static GstFlowReturn
 gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -420,9 +448,11 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
       if (ret < 0) {
         /* some error, just warn, it's likely recoverable and we don't want to
          * break streaming. We break so that we stop retrying for this client. */
-        if (errno != EINTR && errno != EAGAIN) {
+        if (!socket_error_is_ignorable ()) {
+          gchar *errormessage = socket_last_error_message ();
           GST_WARNING_OBJECT (sink, "client %p gave error %d (%s)", client,
-              errno, g_strerror (errno));
+              socket_last_error_code (), errormessage);
+          g_free (errormessage);
           break;
         }
       } else {
@@ -501,7 +531,7 @@ gst_multiudpsink_render_list (GstBaseSink * bsink, GstBufferList * list)
         ret = sendmsg (*client->sock, &msg, 0);
 
         if (ret < 0) {
-          if (errno != EINTR && errno != EAGAIN) {
+          if (!socket_error_is_ignorable ()) {
             break;
           }
         } else {
@@ -605,12 +635,16 @@ gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink)
   tos = (sink->qos_dscp & 0x3f) << 2;
 
   if (setsockopt (sink->sock, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
-    GST_ERROR_OBJECT (sink, "could not set TOS: %s", g_strerror (errno));
+    gchar *errormessage = socket_last_error_message ();
+    GST_ERROR_OBJECT (sink, "could not set TOS: %s", errormessage);
+    g_free (errormessage);
   }
 #ifdef IPV6_TCLASS
   if (setsockopt (sink->sock, IPPROTO_IPV6, IPV6_TCLASS, &tos,
           sizeof (tos)) < 0) {
-    GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
+    gchar *errormessage = socket_last_error_message ();
+    GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", errormessage);
+    g_free (errormessage);
   }
 #endif
 }
@@ -763,39 +797,53 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   /* ERRORS */
 no_socket:
   {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
     GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
-        ("Could not create socket (%d): %s", errno, g_strerror (errno)));
+        ("Could not create socket (%d): %s", errorcode, errormessage));
+    g_free (errormessage);
     return FALSE;
   }
 no_broadcast:
   {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
     CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not set broadcast socket option (%d): %s", errno,
-            g_strerror (errno)));
+        ("Could not set broadcast socket option (%d): %s",
+            errorcode, errormessage));
+    g_free (errormessage);
     return FALSE;
   }
 join_group_failed:
   {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
     CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not join multicast group (%d): %s", errno, g_strerror (errno)));
+        ("Could not join multicast group (%d): %s", errorcode, errormessage));
+    g_free (errormessage);
     return FALSE;
   }
 ttl_failed:
   {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
     CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not set TTL socket option (%d): %s", errno,
-            g_strerror (errno)));
+        ("Could not set TTL socket option (%d): %s", errorcode, errormessage));
+    g_free (errormessage);
     return FALSE;
   }
 loop_failed:
   {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
     CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not set loopback socket option (%d): %s", errno,
-            g_strerror (errno)));
+        ("Could not set loopback socket option (%d): %s",
+            errorcode, errormessage));
+    g_free (errormessage);
     return FALSE;
   }
 }
