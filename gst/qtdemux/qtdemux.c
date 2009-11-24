@@ -467,6 +467,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->todrop = 0;
   qtdemux->adapter = gst_adapter_new ();
   qtdemux->offset = 0;
+  qtdemux->first_mdat = -1;
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -1541,6 +1542,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->todrop = 0;
       qtdemux->pullbased = FALSE;
       qtdemux->offset = 0;
+      qtdemux->first_mdat = -1;
       qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
       if (qtdemux->mdatbuffer)
         gst_buffer_unref (qtdemux->mdatbuffer);
@@ -2865,6 +2867,24 @@ gst_qtdemux_post_progress (GstQTDemux * demux, gint num, gint denom)
           gst_structure_new ("progress", "percent", G_TYPE_INT, perc, NULL)));
 }
 
+static gboolean
+qtdemux_do_push_seek (GstQTDemux * demux, guint64 offset)
+{
+  GstEvent *event;
+  gboolean res = 0;
+
+  GST_DEBUG_OBJECT (demux, "Seeking to %" G_GUINT64_FORMAT, offset);
+
+  event =
+      gst_event_new_seek (1.0, GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
+      GST_SEEK_TYPE_NONE, -1);
+
+  res = gst_pad_push_event (demux->sinkpad, event);
+
+  return res;
+}
+
 /* FIXME, unverified after edit list updates */
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
@@ -2919,24 +2939,52 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         }
         if (fourcc == FOURCC_mdat) {
           if (demux->n_streams > 0) {
+            /* we have the headers, start playback */
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry_size (demux);
           } else {
+            /* no headers yet, try to get them */
             guint bs;
+            gboolean res;
+            guint64 old, target;
 
           buffer_data:
-            /* there may be multiple mdat (or alike) buffers */
-            /* sanity check */
-            if (demux->mdatbuffer)
-              bs = GST_BUFFER_SIZE (demux->mdatbuffer);
-            else
-              bs = 0;
-            if (size + bs > 10 * (1 << 20))
-              goto no_moov;
-            demux->state = QTDEMUX_STATE_BUFFER_MDAT;
-            demux->neededbytes = size;
-            if (!demux->mdatbuffer)
-              demux->mdatoffset = demux->offset;
+            old = demux->offset;
+            target = old + size;
+
+            /* try to jump over the atom with a seek */
+            res = qtdemux_do_push_seek (demux, target);
+
+            if (res) {
+              GST_DEBUG_OBJECT (demux, "seek success");
+              /* remember the offset fo the first mdat so we can seek back to it
+               * after we have the headers */
+              if (fourcc == FOURCC_mdat && demux->first_mdat == -1) {
+                demux->first_mdat = old;
+                GST_DEBUG_OBJECT (demux, "first mdat at %" G_GUINT64_FORMAT,
+                    demux->first_mdat);
+              }
+              /* seek worked, continue reading */
+              demux->offset = target;
+              demux->neededbytes = 16;
+              demux->state = QTDEMUX_STATE_INITIAL;
+            } else {
+              /* seek failed, need to buffer */
+              demux->offset = old;
+              GST_DEBUG_OBJECT (demux, "seek failed");
+              /* there may be multiple mdat (or alike) buffers */
+              /* sanity check */
+              if (demux->mdatbuffer)
+                bs = GST_BUFFER_SIZE (demux->mdatbuffer);
+              else
+                bs = 0;
+              if (size + bs > 10 * (1 << 20))
+                goto no_moov;
+              demux->state = QTDEMUX_STATE_BUFFER_MDAT;
+              demux->neededbytes = size;
+              if (!demux->mdatbuffer)
+                demux->mdatoffset = demux->offset;
+            }
           }
         } else if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
           GST_ELEMENT_ERROR (demux, STREAM, DECODE,
@@ -3006,7 +3054,20 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         } else {
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
           gst_adapter_flush (demux->adapter, demux->neededbytes);
-          demux->offset += demux->neededbytes;
+
+          if (demux->first_mdat != -1) {
+            gboolean res;
+
+            /* we need to seek back */
+            res = qtdemux_do_push_seek (demux, demux->first_mdat);
+            if (res) {
+              demux->offset = demux->first_mdat;
+            } else {
+              GST_DEBUG_OBJECT (demux, "Seek back failed");
+            }
+          } else {
+            demux->offset += demux->neededbytes;
+          }
           demux->neededbytes = 16;
           demux->state = QTDEMUX_STATE_INITIAL;
         }
