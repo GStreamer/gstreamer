@@ -402,8 +402,20 @@ socket_last_error_code ()
 static gchar *
 socket_last_error_message ()
 {
-  /* TODO: windows version using FormatMessage() */
+#ifdef G_OS_WIN32
+  int errorcode = WSAGetLastError ();
+  wchar_t buf[1024];
+  DWORD result =
+      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL, errorcode, 0, buf, sizeof (buf) / sizeof (wchar_t), NULL);
+  if (FAILED (result)) {
+    return g_strdup ("failed to get error message from system");
+  } else {
+    return g_convert (buf, "UTF-16", "UTF-8", NULL, NULL, NULL);
+  }
+#else
   return g_strdup (g_strerror (errno));
+#endif
 }
 
 static GstFlowReturn
