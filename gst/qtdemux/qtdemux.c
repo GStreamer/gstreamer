@@ -2247,8 +2247,8 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
     /* only act if some gap */
     end_time = stream->segments[stream->n_segments - 1].stop_time;
     GST_LOG_OBJECT (demux, "current position: %" GST_TIME_FORMAT
-        ", stream end: %" GST_TIME_FORMAT, GST_TIME_ARGS (end_time),
-        GST_TIME_ARGS (demux->segment.last_stop));
+        ", stream end: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.last_stop), GST_TIME_ARGS (end_time));
     if (end_time + 2 * GST_SECOND < demux->segment.last_stop) {
       GST_DEBUG_OBJECT (demux, "sending EOS for stream %s",
           GST_PAD_NAME (stream->pad));
