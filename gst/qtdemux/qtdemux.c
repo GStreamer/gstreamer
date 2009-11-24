@@ -2814,6 +2814,13 @@ next_entry_size (GstQTDemux * demux)
       continue;
     }
 
+    if ((stream->sample_index > stream->stbl_index)
+        && !qtdemux_parse_samples (demux, stream, stream->sample_index)) {
+      GST_LOG_OBJECT (demux, "Parsing of index %u from stbl atom failed!",
+          stream->sample_index);
+      return -1;
+    }
+
     sample = &stream->samples[stream->sample_index];
 
     GST_LOG_OBJECT (demux,
