@@ -394,7 +394,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
 
       jpeg_set_defaults (&jpegenc->cinfo);
-      /* thsese are set in _chain()
+      /* these are set in _chain()
          jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
          jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
          jpegenc->cinfo.dct_method = jpegenc->idct_method;
