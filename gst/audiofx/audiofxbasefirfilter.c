@@ -137,7 +137,7 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
 
 #define DEFINE_PROCESS_FUNC(width,ctype) \
 static void \
-process_##width (GstAudioFXBaseFIRFilter * self, g##ctype * src, g##ctype * dst, guint input_samples) \
+process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype * dst, guint input_samples) \
 { \
   gint kernel_length = self->kernel_length; \
   gint i, j, k, l; \

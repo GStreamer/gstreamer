@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioFXBaseFIRFilter GstAudioFXBaseFIRFilter;
 typedef struct _GstAudioFXBaseFIRFilterClass GstAudioFXBaseFIRFilterClass;
 
-typedef void (*GstAudioFXBaseFIRFilterProcessFunc) (GstAudioFXBaseFIRFilter *, guint8 *, guint8 *, guint);
+typedef void (*GstAudioFXBaseFIRFilterProcessFunc) (GstAudioFXBaseFIRFilter *, const guint8 *, guint8 *, guint);
 
 /**
  * GstAudioFXBaseFIRFilter:
