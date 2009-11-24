@@ -246,7 +246,7 @@ gst_metadata_mux_base_init (gpointer gclass)
 /* *INDENT-OFF* */
   static GstElementDetails element_details = {
     "Metadata muxer",
-    "Muxer/Extracter/Metadata",
+    "Muxer/Formatter/Metadata",
     "Write metadata (EXIF, IPTC and XMP) into a image stream",
     "Edgard Lima <edgard.lima@indt.org.br>"
   };
