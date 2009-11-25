@@ -39,6 +39,11 @@
       type being either <classname>GST_URI_SRC</classname> for a source
       element, or <classname>GST_URI_SINK</classname> for a sink element.
     </para>
+    <para>
+      You can convert filenames to and from URIs using GLib's
+      <function>g_filename_to_uri ()</function> and
+      <function>g_uri_to_filename ()</function>.
+    </para>
   </sect1>
 
   <sect1 id="section-interfaces-mixer">
@@ -61,6 +66,22 @@
       (osssrc, osssink, ossmixer) and the ALSA plugins (alsasrc, alsasink
       and alsamixer).
     </para>
+    <para>
+      You should not use this interface for volume control in a playback
+      application. Either use a <classname>volume</classname> element or use
+      <classname>playbin</classname>'s <quote>volume</quote> property, or use
+      the audiosink's <quote>volume</quote> property (if it has one).
+    </para>
+    <note>
+      <para>
+        In order for the <classname>GstMixer</classname> interface to be
+        usable, the element implementing it needs to be in the right state,
+        so that the underlying mixer device is open. This usually means the
+        element needs to be at least in <classname>GST_STATE_READY</classname>
+        before you can use this interface. You will get confusing warnings
+        if the element is not in the right state when the interface is used.
+      </para>
+    </note>
   </sect1>
 
   <sect1 id="section-interfaces-tuner">
@@ -81,6 +102,16 @@
       This interface is currently only implemented by the Video4linux and
       Video4linux2 elements.
     </para>
+    <note>
+      <para>
+        In order for the <classname>GstTuner</classname> interface to be
+        usable, the element implementing it needs to be in the right state,
+        so that the underlying device is open. This usually means the
+        element needs to be at least in <classname>GST_STATE_READY</classname>
+        before you can use this interface. You will get confusing warnings
+        if the element is not in the right state when the interface is used.
+      </para>
+    </note>
   </sect1>
 
   <sect1 id="section-interfaces-colorbalance">
