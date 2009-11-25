@@ -1660,6 +1660,7 @@ gst_update_registry (void)
 
 /**
  * gst_registry_get_feature_list_cookie:
+ * @registry: the registry
  *
  * Returns the registrys feature list cookie. This changes
  * every time a feature is added or removed from the registry.
