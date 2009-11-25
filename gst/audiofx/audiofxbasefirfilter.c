@@ -78,9 +78,9 @@ gst_audio_fx_base_fir_filter_dispose (GObject * object)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
 
-  if (self->residue) {
-    g_free (self->residue);
-    self->residue = NULL;
+  if (self->buffer) {
+    g_free (self->buffer);
+    self->buffer = NULL;
   }
 
   if (self->kernel) {
@@ -124,7 +124,7 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
     GstAudioFXBaseFIRFilterClass * g_class)
 {
   self->kernel = NULL;
-  self->residue = NULL;
+  self->buffer = NULL;
 
   self->next_ts = GST_CLOCK_TIME_NONE;
   self->next_off = GST_BUFFER_OFFSET_NONE;
@@ -152,7 +152,7 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
     for (j = 0; j < kernel_length; j++) \
       if (l < j) \
         dst[i] += \
-            self->residue[(kernel_length + l - j) * channels + \
+            self->buffer[(kernel_length + l - j) * channels + \
             k] * self->kernel[j]; \
       else \
         dst[i] += src[(l - j) * channels + k] * self->kernel[j]; \
@@ -167,13 +167,13 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
     res_start = 0; \
   \
   for (i = 0; i < res_start; i++) \
-    self->residue[i] = self->residue[i + input_samples]; \
+    self->buffer[i] = self->buffer[i + input_samples]; \
   for (i = res_start; i < kernel_length * channels; i++) \
-    self->residue[i] = src[input_samples - kernel_length * channels + i]; \
+    self->buffer[i] = src[input_samples - kernel_length * channels + i]; \
   \
-  self->residue_length += kernel_length * channels - res_start; \
-  if (self->residue_length > kernel_length * channels) \
-    self->residue_length = kernel_length * channels; \
+  self->buffer_fill += kernel_length * channels - res_start; \
+  if (self->buffer_fill > kernel_length * channels) \
+    self->buffer_fill = kernel_length * channels; \
 }
 
 DEFINE_PROCESS_FUNC (32, float);
@@ -193,23 +193,23 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   guint8 *in, *out;
 
   if (channels == 0 || rate == 0) {
-    self->residue_length = 0;
+    self->buffer_fill = 0;
     return;
   }
 
   /* Calculate the number of samples and their memory size that
    * should be pushed from the residue */
-  outsamples = MIN (self->latency, self->residue_length / channels);
+  outsamples = MIN (self->latency, self->buffer_fill / channels);
   outsize = outsamples * channels * (GST_AUDIO_FILTER (self)->format.width / 8);
   if (outsize == 0) {
-    self->residue_length = 0;
+    self->buffer_fill = 0;
     return;
   }
 
   /* Process the difference between latency and residue_length samples
    * to start at the actual data instead of starting at the zeros before
    * when we only got one buffer smaller than latency */
-  diffsamples = self->latency - self->residue_length / channels;
+  diffsamples = self->latency - self->buffer_fill / channels;
   diffsize =
       diffsamples * channels * (GST_AUDIO_FILTER (self)->format.width / 8);
   if (diffsize > 0) {
@@ -226,7 +226,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (self, "failed allocating buffer of %d bytes", outsize);
-    self->residue_length = 0;
+    self->buffer_fill = 0;
     return;
   }
 
@@ -264,7 +264,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     GST_WARNING_OBJECT (self, "failed to push residue");
   }
 
-  self->residue_length = 0;
+  self->buffer_fill = 0;
 }
 
 /* GstAudioFilter vmethod implementations */
@@ -277,11 +277,11 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
   gboolean ret = TRUE;
 
-  if (self->residue) {
+  if (self->buffer) {
     gst_audio_fx_base_fir_filter_push_residue (self);
-    g_free (self->residue);
-    self->residue = NULL;
-    self->residue_length = 0;
+    g_free (self->buffer);
+    self->buffer = NULL;
+    self->buffer_fill = 0;
     self->next_ts = GST_CLOCK_TIME_NONE;
     self->next_off = GST_BUFFER_OFFSET_NONE;
   }
@@ -322,18 +322,18 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   g_return_val_if_fail (self->kernel != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (channels != 0, GST_FLOW_ERROR);
 
-  if (!self->residue)
-    self->residue = g_new0 (gdouble, self->kernel_length * channels);
+  if (!self->buffer)
+    self->buffer = g_new0 (gdouble, self->kernel_length * channels);
 
   /* Reset the residue if already existing on discont buffers */
   if (GST_BUFFER_IS_DISCONT (inbuf) || (GST_CLOCK_TIME_IS_VALID (self->next_ts)
           && timestamp - gst_util_uint64_scale (MIN (self->latency,
-                  self->residue_length / channels), GST_SECOND,
+                  self->buffer_fill / channels), GST_SECOND,
               rate) - self->next_ts > 5 * GST_MSECOND)) {
     GST_DEBUG_OBJECT (self, "Discontinuity detected - flushing");
     if (GST_CLOCK_TIME_IS_VALID (self->next_ts))
       gst_audio_fx_base_fir_filter_push_residue (self);
-    self->residue_length = 0;
+    self->buffer_fill = 0;
     self->next_ts = timestamp;
     self->next_off = GST_BUFFER_OFFSET (inbuf);
   } else if (!GST_CLOCK_TIME_IS_VALID (self->next_ts)) {
@@ -343,7 +343,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
 
   /* Calculate the number of samples we can push out now without outputting
    * latency zeros in the beginning */
-  diff = self->latency * channels - self->residue_length;
+  diff = self->latency * channels - self->buffer_fill;
   if (diff > 0)
     output_samples -= diff;
 
@@ -388,7 +388,7 @@ gst_audio_fx_base_fir_filter_start (GstBaseTransform * base)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 
-  self->residue_length = 0;
+  self->buffer_fill = 0;
   self->next_ts = GST_CLOCK_TIME_NONE;
   self->next_off = GST_BUFFER_OFFSET_NONE;
 
@@ -400,8 +400,8 @@ gst_audio_fx_base_fir_filter_stop (GstBaseTransform * base)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 
-  g_free (self->residue);
-  self->residue = NULL;
+  g_free (self->buffer);
+  self->buffer = NULL;
 
   return TRUE;
 }
@@ -497,24 +497,24 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   g_return_if_fail (self != NULL);
 
   GST_BASE_TRANSFORM_LOCK (self);
-  if (self->residue) {
+  if (self->buffer) {
     gst_audio_fx_base_fir_filter_push_residue (self);
     self->next_ts = GST_CLOCK_TIME_NONE;
     self->next_off = GST_BUFFER_OFFSET_NONE;
-    self->residue_length = 0;
+    self->buffer_fill = 0;
   }
 
   g_free (self->kernel);
-  g_free (self->residue);
+  g_free (self->buffer);
 
   self->kernel = kernel;
   self->kernel_length = kernel_length;
 
   if (GST_AUDIO_FILTER (self)->format.channels) {
-    self->residue =
+    self->buffer =
         g_new0 (gdouble,
         kernel_length * GST_AUDIO_FILTER (self)->format.channels);
-    self->residue_length = 0;
+    self->buffer_fill = 0;
   }
 
   if (self->latency != latency) {

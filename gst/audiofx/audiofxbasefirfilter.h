@@ -57,10 +57,11 @@ struct _GstAudioFXBaseFIRFilter {
   /* < private > */
   GstAudioFXBaseFIRFilterProcessFunc process;
 
-  gdouble *kernel;              /* filter kernel */
-  guint kernel_length;           /* length of the filter kernel */
-  gdouble *residue;             /* buffer for left-over samples from previous buffer */
-  guint residue_length;
+  gdouble *kernel;              /* filter kernel -- time domain */
+  guint kernel_length;          /* length of the filter kernel -- time domain */
+
+  gdouble *buffer;              /* buffer for storing samples of previous buffers */
+  guint buffer_fill;            /* fill level of buffer */
 
   guint64 latency;
 
