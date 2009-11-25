@@ -30,7 +30,7 @@ public class DecodeBinTranscoder : IDisposable {
   private FileSink filesink;
   private Element audioconvert;
   private Element encoder;
-  private DecodeBin decodebin;
+  private DecodeBin2 decodebin;
 
   private uint progress_timeout;
 
@@ -87,7 +87,7 @@ public class DecodeBinTranscoder : IDisposable {
     filesink = ElementFactory.Make ("filesink", "filesink") as FileSink;
     audioconvert = ElementFactory.Make ("audioconvert", "audioconvert");
     encoder = ElementFactory.Make ("wavenc", "wavenc");
-    decodebin = ElementFactory.Make ("decodebin", "decodebin") as DecodeBin;
+    decodebin = ElementFactory.Make ("decodebin2", "decodebin") as DecodeBin2;
     decodebin.NewDecodedPad += OnNewDecodedPad;
 
     pipeline.Add (filesrc, decodebin, audioconvert, encoder, filesink);
@@ -99,7 +99,7 @@ public class DecodeBinTranscoder : IDisposable {
     pipeline.Bus.AddWatch (new BusFunc (OnBusMessage));
   }
 
-  private void OnNewDecodedPad (object o, DecodeBin.NewDecodedPadArgs args) {
+  private void OnNewDecodedPad (object o, DecodeBin2.NewDecodedPadArgs args) {
     Pad sinkpad = audioconvert.GetStaticPad ("sink");
 
     if (sinkpad.IsLinked) {

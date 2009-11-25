@@ -7,7 +7,7 @@ public class PlayBinPlayer {
   private static MainLoop loop;
   private static string[] songs;
   private static int song_idx = 0;
-  private static PlayBin play;
+  private static PlayBin2 play;
 
   public static void Main (string[] args) {
     if (args.Length < 1) {
@@ -20,7 +20,7 @@ public class PlayBinPlayer {
     Gst.Application.Init ();
     loop = new MainLoop ();
 
-    play = ElementFactory.Make ("playbin", "play") as PlayBin;
+    play = ElementFactory.Make ("playbin2", "play") as PlayBin2;
 
     if (play == null) {
       Console.WriteLine ("error creating a playbin gstreamer object");
