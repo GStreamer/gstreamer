@@ -1,5 +1,5 @@
 <Type Name="PlayBin2" FullName="Gst.BasePlugins.PlayBin2">
-  <TypeSignature Language="C#" Value="public sealed class PlayBin2 : Gst.Pipeline" />
+  <TypeSignature Language="C#" Value="public sealed class PlayBin2 : Gst.Pipeline, Gst.Interfaces.StreamVolume" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -9,7 +9,11 @@
   <Base>
     <BaseTypeName>Gst.Pipeline</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+    <Interface>
+      <InterfaceName>Gst.Interfaces.StreamVolume</InterfaceName>
+    </Interface>
+  </Interfaces>
   <Attributes>
     <Attribute>
       <AttributeName>Gst.GTypeName("GstPlayBin2")</AttributeName>
@@ -219,6 +223,29 @@
       </Parameters>
       <Docs>
         <param name="caps">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ConvertVolume">
+      <MemberSignature Language="C#" Value="public static double ConvertVolume (Gst.Interfaces.StreamVolumeFormat from, Gst.Interfaces.StreamVolumeFormat to, double val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Double</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="from" Type="Gst.Interfaces.StreamVolumeFormat" />
+        <Parameter Name="to" Type="Gst.Interfaces.StreamVolumeFormat" />
+        <Parameter Name="val" Type="System.Double" />
+      </Parameters>
+      <Docs>
+        <param name="from">To be added.</param>
+        <param name="to">To be added.</param>
+        <param name="val">To be added.</param>
         <summary>To be added.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
@@ -438,6 +465,25 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetVolume">
+      <MemberSignature Language="C#" Value="public double GetVolume (Gst.Interfaces.StreamVolumeFormat format);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Double</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="Gst.Interfaces.StreamVolumeFormat" />
+      </Parameters>
+      <Docs>
+        <param name="format">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Gst.ChildProxy.ChildrenCount">
       <MemberSignature Language="C#" Value="uint Gst.ChildProxy.ChildrenCount { get; }" />
       <MemberType>Property</MemberType>
@@ -584,11 +630,6 @@
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
       </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>Gst.GLib.Property("mute")</AttributeName>
-        </Attribute>
-      </Attributes>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
@@ -683,6 +724,26 @@
       <Docs>
         <summary>To be added.</summary>
         <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetVolume">
+      <MemberSignature Language="C#" Value="public void SetVolume (Gst.Interfaces.StreamVolumeFormat format, double val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="Gst.Interfaces.StreamVolumeFormat" />
+        <Parameter Name="val" Type="System.Double" />
+      </Parameters>
+      <Docs>
+        <param name="format">To be added.</param>
+        <param name="val">To be added.</param>
+        <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

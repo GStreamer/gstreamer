@@ -72,6 +72,26 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="Append">
+      <MemberSignature Language="C#" Value="public bool Append { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("append")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="BufferMode">
       <MemberSignature Language="C#" Value="public Gst.CorePlugins.FileSink.BufferModeType BufferMode { set; get; }" />
       <MemberType>Property</MemberType>

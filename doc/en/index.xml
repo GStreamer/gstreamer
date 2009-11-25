@@ -249,13 +249,6 @@
       <Type Name="TypeFindHelperGetRangeFunction" Kind="Delegate" />
     </Namespace>
     <Namespace Name="Gst.BasePlugins">
-      <Type Name="DecodeBin" Kind="Class" />
-      <Type Name="DecodeBin+NewDecodedPadArgs" Kind="Class" />
-      <Type Name="DecodeBin+NewDecodedPadHandler" Kind="Delegate" />
-      <Type Name="DecodeBin+RemovedDecodedPadArgs" Kind="Class" />
-      <Type Name="DecodeBin+RemovedDecodedPadHandler" Kind="Delegate" />
-      <Type Name="DecodeBin+UnknownTypeArgs" Kind="Class" />
-      <Type Name="DecodeBin+UnknownTypeHandler" Kind="Delegate" />
       <Type Name="DecodeBin2" Kind="Class" />
       <Type Name="DecodeBin2+AutoplugContinueArgs" Kind="Class" />
       <Type Name="DecodeBin2+AutoplugContinueHandler" Kind="Delegate" />
@@ -271,11 +264,6 @@
       <Type Name="DecodeBin2+RemovedDecodedPadHandler" Kind="Delegate" />
       <Type Name="DecodeBin2+UnknownTypeArgs" Kind="Class" />
       <Type Name="DecodeBin2+UnknownTypeHandler" Kind="Delegate" />
-      <Type Name="PlayBin" Kind="Class" />
-      <Type Name="PlayBin+StreamInfo" Kind="Class" />
-      <Type Name="PlayBin+StreamInfo+MutedArgs" Kind="Class" />
-      <Type Name="PlayBin+StreamInfo+MutedHandler" Kind="Delegate" />
-      <Type Name="PlayBin+StreamInfo+StreamType" Kind="Enumeration" />
       <Type Name="PlayBin2" Kind="Class" />
       <Type Name="PlayBin2+AudioTagsChangedArgs" Kind="Class" />
       <Type Name="PlayBin2+AudioTagsChangedHandler" Kind="Delegate" />
@@ -284,6 +272,7 @@
       <Type Name="PlayBin2+TextTagsChangedHandler" Kind="Delegate" />
       <Type Name="PlayBin2+VideoTagsChangedArgs" Kind="Class" />
       <Type Name="PlayBin2+VideoTagsChangedHandler" Kind="Delegate" />
+      <Type Name="XImageSink" Kind="Class" />
       <Type Name="XvImageSink" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Cdda">
