@@ -995,6 +995,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
   itime = gst_audio_clock_get_time (sink->provided_clock);
+  itime = gst_audio_clock_adjust (sink->provided_clock, itime);
 
   GST_DEBUG_OBJECT (sink,
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
