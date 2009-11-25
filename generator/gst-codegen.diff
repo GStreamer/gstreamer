@@ -1,5 +1,6 @@
+diff -Naur generator-upstream/BoxedGen.cs generator/BoxedGen.cs
 --- generator-upstream/BoxedGen.cs	2009-01-04 23:29:56.000000000 +0100
-+++ generator/BoxedGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/BoxedGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -40,16 +40,16 @@
  
  			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (Name);
@@ -20,8 +21,9 @@
  			sw.WriteLine ("\t\t{");
  
  			sw.WriteLine ("\t\t\treturn (" + QualifiedName + ") val.Val;");
+diff -Naur generator-upstream/ByRefGen.cs generator/ByRefGen.cs
 --- generator-upstream/ByRefGen.cs	2008-02-26 17:29:14.000000000 +0100
-+++ generator/ByRefGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ByRefGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -46,7 +46,7 @@
  
  		public string AllocNative (string var_name)
@@ -31,8 +33,9 @@
  		}
  
  		public override string FromNative (string var_name)
+diff -Naur generator-upstream/CallbackGen.cs generator/CallbackGen.cs
 --- generator-upstream/CallbackGen.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/CallbackGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/CallbackGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -140,7 +140,7 @@
  			sw.WriteLine ();
  			sw.WriteLine ("\t\t" + Name + "Native native_cb;");
@@ -60,8 +63,9 @@
  			if (fatal) {
  				sw.WriteLine ("\t\t\t\t// NOTREACHED: Above call does not return.");
  				sw.WriteLine ("\t\t\t\tthrow e;");
+diff -Naur generator-upstream/ConstFilenameGen.cs generator/ConstFilenameGen.cs
 --- generator-upstream/ConstFilenameGen.cs	2007-09-21 18:37:04.000000000 +0200
-+++ generator/ConstFilenameGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ConstFilenameGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -35,17 +35,17 @@
  		
  		public override string FromNative (string var)
@@ -83,8 +87,9 @@
  		}
  	}
  }
+diff -Naur generator-upstream/ConstStringGen.cs generator/ConstStringGen.cs
 --- generator-upstream/ConstStringGen.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/ConstStringGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ConstStringGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -37,17 +37,17 @@
  		
  		public override string FromNative (string var)
@@ -106,8 +111,9 @@
  		}
  	}
  }
+diff -Naur generator-upstream/Ctor.cs generator/Ctor.cs
 --- generator-upstream/Ctor.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Ctor.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/Ctor.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -32,14 +32,16 @@
  		private bool preferred;
  		private string name;
@@ -158,8 +164,9 @@
  							sw.WriteLine ("\t\t\t\treturn;");
  						} else
  							sw.WriteLine ("\t\t\t\tthrow new InvalidOperationException (\"Can't override this constructor.\");");
+diff -Naur generator-upstream/DefaultSignalHandler.cs generator/DefaultSignalHandler.cs
 --- generator-upstream/DefaultSignalHandler.cs	2009-04-13 19:44:48.000000000 +0200
-+++ generator/DefaultSignalHandler.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/DefaultSignalHandler.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -68,13 +68,13 @@
  		{
  			GenerateMethodBody (sw, implementor);
@@ -245,8 +252,9 @@
  				default:
  					throw new Exception (retval.CSType);
  				}
+diff -Naur generator-upstream/EnumGen.cs generator/EnumGen.cs
 --- generator-upstream/EnumGen.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/EnumGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/EnumGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -98,7 +98,7 @@
  			if (Elem.GetAttribute("type") == "flags")
  				sw.WriteLine ("\t[Flags]");
@@ -268,8 +276,9 @@
  				sw.WriteLine ("\t\t\t}");
  				sw.WriteLine ("\t\t}");
  				sw.WriteLine ("\t}");
+diff -Naur generator-upstream/FieldBase.cs generator/FieldBase.cs
 --- generator-upstream/FieldBase.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/FieldBase.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/FieldBase.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -89,7 +89,7 @@
  		void CheckGlue ()
  		{
@@ -290,8 +299,10 @@
  
  			if (Getter != null) {
  				sw.Write (indent + "\tget ");
+diff -Naur generator-upstream/gapi3-codegen.in generator/gapi3-codegen.in
+diff -Naur generator-upstream/GObjectVM.cs generator/GObjectVM.cs
 --- generator-upstream/GObjectVM.cs	2009-08-09 01:42:15.000000000 +0200
-+++ generator/GObjectVM.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/GObjectVM.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -154,17 +154,17 @@
  				sw.WriteLine ("\t\tpublic static " + Name + "Delegate " + Name + "Handler {");
  				sw.WriteLine ("\t\t\tset {");
@@ -331,8 +342,12 @@
  					return "G_TYPE_NONE";
  				default:
  					return val;
+diff -Naur generator-upstream/gst-codegen.diff generator/gst-codegen.diff
+diff -Naur generator-upstream/gst-gapi_codegen.exe generator/gst-gapi_codegen.exe
+diff -Naur generator-upstream/gst-gapi_codegen.exe.mdb generator/gst-gapi_codegen.exe.mdb
+diff -Naur generator-upstream/InterfaceGen.cs generator/InterfaceGen.cs
 --- generator-upstream/InterfaceGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/InterfaceGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/InterfaceGen.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -60,7 +60,7 @@
  
  		public override string CallByName (string var, bool owned)
@@ -453,8 +468,12 @@
  			sw.WriteLine ();
  			
  			foreach (Signal sig in sigs.Values) {
+diff -Naur generator-upstream/Makefile generator/Makefile
+diff -Naur generator-upstream/Makefile.am generator/Makefile.am
+diff -Naur generator-upstream/Makefile.in generator/Makefile.in
+diff -Naur generator-upstream/ManagedCallString.cs generator/ManagedCallString.cs
 --- generator-upstream/ManagedCallString.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/ManagedCallString.cs	2009-10-03 11:57:28.000000000 +0200
++++ generator/ManagedCallString.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -50,12 +50,15 @@
  					error_param = p.Name;
  					continue;
@@ -514,8 +533,9 @@
  			return ret;
  		}
  	}
+diff -Naur generator-upstream/MethodBody.cs generator/MethodBody.cs
 --- generator-upstream/MethodBody.cs	2009-01-07 18:10:08.000000000 +0100
-+++ generator/MethodBody.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/MethodBody.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -111,7 +111,7 @@
  						sw.WriteLine (indent + "\t\t\t\t{0} = null;", parameters [i + 2].Name);
  						sw.WriteLine (indent + "\t\t\t} else {");
@@ -534,8 +554,9 @@
  		}
  		
  		public bool ThrowsException {
+diff -Naur generator-upstream/Method.cs generator/Method.cs
 --- generator-upstream/Method.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Method.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/Method.cs	2009-11-25 08:07:47.000000000 +0100
 @@ -118,7 +118,7 @@
  
  			if (Name == "ToString" && Parameters.Count == 0)
@@ -545,6 +566,7 @@
  				sw.Write("new ");
  			else if (Modifiers == "new " || (dup != null && ((dup.Signature != null && Signature != null && dup.Signature.ToString() == Signature.ToString()) || (dup.Signature == null && Signature == null))))
  				sw.Write("new ");
+diff -Naur generator-upstream/MiniObjectGen.cs generator/MiniObjectGen.cs
 --- generator-upstream/MiniObjectGen.cs	1970-01-01 01:00:00.000000000 +0100
 +++ generator/MiniObjectGen.cs	2009-10-03 11:56:16.000000000 +0200
 @@ -0,0 +1,326 @@
@@ -874,8 +896,10 @@
 +	}
 +}
 +
+diff -Naur generator-upstream/MiniObjectGen.cs.rej generator/MiniObjectGen.cs.rej
+diff -Naur generator-upstream/ObjectBase.cs generator/ObjectBase.cs
 --- generator-upstream/ObjectBase.cs	2009-08-05 08:24:27.000000000 +0200
-+++ generator/ObjectBase.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ObjectBase.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -164,7 +164,7 @@
  
  		public override string FromNative (string var, bool owned)
@@ -885,8 +909,9 @@
  		}
  
  		public string ClassStructName {
+diff -Naur generator-upstream/ObjectGen.cs generator/ObjectGen.cs
 --- generator-upstream/ObjectGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/ObjectGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ObjectGen.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -253,7 +253,7 @@
  				gen_info.Writer.WriteLine();
  				gen_info.Writer.WriteLine("\t\tprotected " + Name + "() : base(IntPtr.Zero)");
@@ -936,8 +961,9 @@
  			}
  					
  			sw.WriteLine ("\t\t}");
+diff -Naur generator-upstream/OpaqueGen.cs generator/OpaqueGen.cs
 --- generator-upstream/OpaqueGen.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/OpaqueGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/OpaqueGen.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -32,7 +32,7 @@
  	
  		public override string FromNative(string var, bool owned)
@@ -977,8 +1003,9 @@
  				sw.WriteLine ("\t\t\tresult.Owned = true;");
  				sw.WriteLine ("\t\t\treturn result;");
  				sw.WriteLine ("\t\t}");
+diff -Naur generator-upstream/Parameters.cs generator/Parameters.cs
 --- generator-upstream/Parameters.cs	2009-07-13 00:01:52.000000000 +0200
-+++ generator/Parameters.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/Parameters.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -263,9 +263,9 @@
  				} else if (gen is IManualMarshaler)
  					call_parm = "native_" + CallName;
@@ -991,8 +1018,9 @@
  			
  				return call_parm;
  			}
+diff -Naur generator-upstream/Parser.cs generator/Parser.cs
 --- generator-upstream/Parser.cs	2009-04-13 19:44:48.000000000 +0200
-+++ generator/Parser.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/Parser.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -138,6 +138,9 @@
  				case "object":
  					result.Add (new ObjectGen (ns, elem));
@@ -1003,8 +1031,9 @@
  				case "class":
  					result.Add (new ClassGen (ns, elem));
  					break;
+diff -Naur generator-upstream/Property.cs generator/Property.cs
 --- generator-upstream/Property.cs	2008-09-17 01:21:50.000000000 +0200
-+++ generator/Property.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/Property.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -64,7 +64,7 @@
  		}
  
@@ -1060,8 +1089,9 @@
  					if (v_type != "" && !(table.IsObject (CType) || table.IsInterface (CType) || table.IsOpaque (CType))) {
  						sw.Write(v_type + " ");
  					}
+diff -Naur generator-upstream/ReturnValue.cs generator/ReturnValue.cs
 --- generator-upstream/ReturnValue.cs	2009-09-23 23:27:15.000000000 +0200
-+++ generator/ReturnValue.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/ReturnValue.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -114,7 +114,9 @@
  			get {
  				if (IGen == null)
@@ -1106,8 +1136,9 @@
  				return var + " == null ? IntPtr.Zero : " + var + ".OwnedHandle";
  			else if (IGen is OpaqueGen && owned)
  				return var + " == null ? IntPtr.Zero : " + var + ".OwnedCopy";
---- generator-upstream/Signal.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/Signal.cs	2009-10-03 11:56:16.000000000 +0200
+diff -Naur generator-upstream/Signal.cs generator/Signal.cs
+--- generator-upstream/Signal.cs	2009-11-23 18:19:46.000000000 +0100
++++ generator/Signal.cs	2009-11-25 08:08:27.000000000 +0100
 @@ -204,7 +204,7 @@
  			}
  			sw.WriteLine("\t\t\t} catch (Exception) {");
@@ -1136,7 +1167,7 @@
  			sw.WriteLine("\t\t\t}");
  			GenArgsCleanup (sw, finish);
  			sw.WriteLine("\t\t}");
-@@ -266,7 +266,7 @@
+@@ -266,13 +266,13 @@
  			sw.WriteLine ();
  			sw.WriteLine ("\tpublic delegate void " + EventHandlerName + "(object o, " + EventArgsName + " args);");
  			sw.WriteLine ();
@@ -1145,7 +1176,14 @@
  			for (int i = 0; i < parms.Count; i++) {
  				sw.WriteLine ("\t\tpublic " + parms[i].CSType + " " + parms[i].StudlyName + "{");
  				if (parms[i].PassAs != "out") {
-@@ -296,17 +296,17 @@
+ 					sw.WriteLine ("\t\t\tget {");
+ 					if (SymbolTable.Table.IsInterface (parms [i].CType))
+-						sw.WriteLine ("\t\t\t\treturn {0}Adapter.GetObject (Args [{1}] as GLib.Object);", parms [i].CSType, i);
++						sw.WriteLine ("\t\t\t\treturn {0}Adapter.GetObject (Args [{1}] as Gst.GLib.Object);", parms [i].CSType, i);
+ 					else
+ 						sw.WriteLine ("\t\t\t\treturn ({0}) Args [{1}];", parms [i].CSType, i);
+ 					sw.WriteLine ("\t\t\t}");
+@@ -302,17 +302,17 @@
  				args_type = ", new " + DelegateName + "(" + CallbackName + ")";
  			}
  
@@ -1166,8 +1204,10 @@
  			sw.WriteLine("\t\t\t\tsig.RemoveDelegate (value);");
  			sw.WriteLine("\t\t\t}");
  			sw.WriteLine("\t\t}");
+diff -Naur generator-upstream/Signal.cs.orig generator/Signal.cs.orig
+diff -Naur generator-upstream/StructBase.cs generator/StructBase.cs
 --- generator-upstream/StructBase.cs	2009-08-19 18:13:17.000000000 +0200
-+++ generator/StructBase.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/StructBase.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -92,7 +92,7 @@
  		
  		public string AllocNative (string var)
@@ -1177,8 +1217,9 @@
  		}
  
  		public string ReleaseNative (string var)
+diff -Naur generator-upstream/StructGen.cs generator/StructGen.cs
 --- generator-upstream/StructGen.cs	2005-08-05 22:34:45.000000000 +0200
-+++ generator/StructGen.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/StructGen.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -36,8 +36,8 @@
  			StreamWriter sw = gen_info.Writer = gen_info.OpenStream (Name);
  			base.Generate (gen_info);
@@ -1190,8 +1231,9 @@
  				sw.WriteLine ("\t\t}");
  			}
  			sw.WriteLine ("#endregion");
+diff -Naur generator-upstream/SymbolTable.cs generator/SymbolTable.cs
 --- generator-upstream/SymbolTable.cs	2009-08-13 16:46:33.000000000 +0200
-+++ generator/SymbolTable.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/SymbolTable.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -108,23 +108,24 @@
  			AddType (new ConstStringGen ("const-xmlChar"));
  			AddType (new ConstStringGen ("const-char"));
@@ -1250,8 +1292,9 @@
  				return true;
  
  			return false;
+diff -Naur generator-upstream/VirtualMethod.cs generator/VirtualMethod.cs
 --- generator-upstream/VirtualMethod.cs	2009-09-03 21:50:53.000000000 +0200
-+++ generator/VirtualMethod.cs	2009-10-03 11:56:16.000000000 +0200
++++ generator/VirtualMethod.cs	2009-11-25 08:07:54.000000000 +0100
 @@ -92,7 +92,7 @@
  				else
  					type = this.container_type.Name;
