@@ -84,6 +84,10 @@ ges_tl_filesource_dispose (GObject * object)
 static void
 ges_tl_filesource_finalize (GObject * object)
 {
+  GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
+
+  if (tfs->uri)
+    g_free (tfs->uri);
   G_OBJECT_CLASS (ges_tl_filesource_parent_class)->finalize (object);
 }
 
