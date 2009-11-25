@@ -87,7 +87,7 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
  *    one or more other #GstDebugGraphDetails flags.
  * @file_name: output base filename (e.g. "myplayer")
  *
- * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
+ * This works like GST_DEBUG_BIN_TO_DOT_FILE(), but adds the current timestamp
  * to the filename, so that it can be used to take multiple snapshots.
  *
  * Since: 0.10.15

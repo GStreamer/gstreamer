@@ -25,7 +25,7 @@
 /**
  * SECTION:gstinfo
  * @short_description: Debugging and logging facilities
- * @see_also: #GstConfig, #Gst for command line parameters
+ * @see_also: #gstreamer-gstconfig, #gstreamer-Gst for command line parameters
  * and environment variables that affect the debugging output.
  *
  * GStreamer's debugging subsystem is an easy way to get information about what

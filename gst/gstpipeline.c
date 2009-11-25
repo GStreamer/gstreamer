@@ -553,7 +553,8 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
  * gst_pipeline_get_bus:
  * @pipeline: a #GstPipeline
  *
- * Gets the #GstBus of @pipeline. The bus allows applications to receive #GstMessages.
+ * Gets the #GstBus of @pipeline. The bus allows applications to receive
+ * #GstMessage packets.
  *
  * Returns: a #GstBus, unref after usage.
  *

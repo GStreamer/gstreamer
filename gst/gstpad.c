@@ -3522,7 +3522,7 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
 /**
  * gst_pad_dispatcher:
  * @pad: a #GstPad to dispatch.
- * @dispatch: the #GstDispatcherFunction to call.
+ * @dispatch: the #GstPadDispatcherFunction to call.
  * @data: gpointer user data passed to the dispatcher function.
  *
  * Invokes the given dispatcher function on each respective peer of

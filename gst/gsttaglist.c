@@ -376,7 +376,7 @@ gst_tag_lookup (GQuark entry)
  * merge function was supplied and if so which one.
  *
  * Two default merge functions are provided: gst_tag_merge_use_first() and
- * gst_tag_merge_strings_with_commas().
+ * gst_tag_merge_strings_with_comma().
  */
 void
 gst_tag_register (const gchar * name, GstTagFlag flag, GType type,

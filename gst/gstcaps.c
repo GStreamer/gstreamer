@@ -377,8 +377,8 @@ gst_caps_make_writable (GstCaps * caps)
  * gst_caps_make_writable(), it is guaranteed that the caps object will not
  * change. This means its structures won't change, etc. To use a #GstCaps
  * object, you must always have a refcount on it -- either the one made
- * implicitly by gst_caps_new(), or via taking one explicitly with this
- * function.
+ * implicitly by e.g. gst_caps_new_simple(), or via taking one explicitly with
+ * this function.
  *
  * Returns: the same #GstCaps object.
  */
@@ -814,7 +814,7 @@ gst_caps_get_size (const GstCaps * caps)
  * are writable, either because you have just copied them or made
  * them writable with gst_caps_make_writable(), you may modify the
  * structure returned in the usual way, e.g. with functions like
- * gst_structure_set_simple().
+ * gst_structure_set().
  *
  * You do not need to free or unref the structure returned, it
  * belongs to the #GstCaps.

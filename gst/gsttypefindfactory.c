@@ -180,7 +180,7 @@ gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
  *
  * Gets the extensions associated with a #GstTypeFindFactory. The returned
  * array should not be changed. If you need to change stuff in it, you should
- * copy it using g_stdupv().  This function may return NULL to indicate
+ * copy it using g_strdupv().  This function may return NULL to indicate
  * a 0-length list.
  *
  * Returns: a NULL-terminated array of extensions associated with this factory

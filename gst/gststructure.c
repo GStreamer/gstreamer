@@ -1230,9 +1230,9 @@ gst_structure_get_uint (const GstStructure * structure,
  * gst_structure_get_fourcc:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @value: a pointer to a #GstFourcc to set
+ * @value: a pointer to a 32bit unsigned int to set
  *
- * Sets the #GstFourcc pointed to by @value corresponding to the value of the
+ * Sets the Fourcc pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
@@ -1344,7 +1344,7 @@ gst_structure_get_clock_time (const GstStructure * structure,
  * gst_structure_get_double:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @value: a pointer to a #GstFourcc to set
+ * @value: a pointer to a gdouble to set
  *
  * Sets the double pointed to by @value corresponding to the value of the
  * given field.  Caller is responsible for making sure the field exists

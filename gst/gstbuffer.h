@@ -447,7 +447,7 @@ GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
  * @nbuf: pointer to a #GstBuffer that will replace the buffer pointed to by
  *        @obuf.
  *
- * Modifies a pointer to a #Gstbuffer to point to a different #GstBuffer. The
+ * Modifies a pointer to a #GstBuffer to point to a different #GstBuffer. The
  * modification is done atomically (so this is useful for ensuring thread safety
  * in some cases), and the reference counts are updated appropriately (the old
  * buffer is unreffed, the new is reffed).
@@ -473,7 +473,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 
 /**
  * gst_value_set_buffer:
- * @v: a #GstValue to receive the data
+ * @v: a #GValue to receive the data
  * @b: a #GstBuffer to assign to the GstValue
  *
  * Sets @b as the value of @v.  Caller retains reference to buffer.
@@ -481,7 +481,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 #define         gst_value_set_buffer(v,b)       gst_value_set_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
  * gst_value_take_buffer:
- * @v: a #GstValue to receive the data
+ * @v: a #GValue to receive the data
  * @b: a #GstBuffer to assign to the GstValue
  *
  * Sets @b as the value of @v.  Caller gives away reference to buffer.
@@ -489,7 +489,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
 #define         gst_value_take_buffer(v,b)      gst_value_take_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
  * gst_value_get_buffer:
- * @v: a #GstValue to qeury
+ * @v: a #GValue to query
  *
  * Receives a #GstBuffer as the value of @v. Does not return a reference to
  * the buffer, so the pointer is only valid for as long as the caller owns

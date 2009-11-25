@@ -24,7 +24,7 @@
  * @short_description: Asynchronous message bus subsystem
  * @see_also: #GstMessage, #GstElement
  *
- * The #GstBus is an object responsible for delivering #GstMessages in
+ * The #GstBus is an object responsible for delivering #GstMessage packets in
  * a first-in first-out way from the streaming threads to the application.
  *
  * Since the application typically only wants to deal with delivery of these
@@ -44,8 +44,8 @@
  *
  * The bus can be polled with the gst_bus_poll() method. This methods blocks
  * up to the specified timeout value until one of the specified messages types
- * is posted on the bus. The application can then _pop() the messages from the
- * bus to handle them.
+ * is posted on the bus. The application can then gst_bus_pop() the messages
+ * from the bus to handle them.
  * Alternatively the application can register an asynchronous bus function
  * using gst_bus_add_watch_full() or gst_bus_add_watch(). This function will
  * install a #GSource in the default glib main loop and will deliver messages 

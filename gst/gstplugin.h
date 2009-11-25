@@ -101,11 +101,12 @@ typedef enum {
 
 /**
  * GstPluginInitFunc:
- * @plugin: The plugin object that can be used to register #GstPluginFeatures for this plugin.
+ * @plugin: The plugin object
  *
  * A plugin should provide a pointer to a function of this type in the
  * plugin_desc struct.
- * This function will be called by the loader at startup.
+ * This function will be called by the loader at startup. One would then
+ * register each #GstPluginFeature.
  *
  * Returns: %TRUE if plugin initialised successfully
  */
@@ -113,12 +114,12 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 
 /**
  * GstPluginInitFullFunc:
- * @plugin: The plugin object that can be used to register #GstPluginFeatures for this plugin.
- * @user_data: The user data.
+ * @plugin: The plugin object
  *
  * A plugin should provide a pointer to a function of either #GstPluginInitFunc
  * or this type in the plugin_desc struct.
- * The function will be called by the loader at startup. This version allows
+ * The function will be called by the loader at startup. One would then
+ * register each #GstPluginFeature. This version allows
  * user data to be passed to init function (useful for bindings).
  *
  * Returns: %TRUE if plugin initialised successfully

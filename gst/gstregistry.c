@@ -31,7 +31,7 @@
  * <emphasis role="bold">Design:</emphasis>
  *
  * The #GstRegistry object is a list of plugins and some functions for dealing
- * with them. #GstPlugins are matched 1-1 with a file on disk, and may or may
+ * with them. Each #GstPlugin is matched 1-1 with a file on disk, and may or may
  * not be loaded at a given time. There may be multiple #GstRegistry objects,
  * but the "default registry" is the only object that has any meaning to the
  * core.

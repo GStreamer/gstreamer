@@ -226,8 +226,7 @@ gst_query_unref (GstQuery * q)
  * gst_query_copy:
  * @q: a #GstQuery to copy.
  *
- * Copies the given query using the copy function of the parent #GstData
- * structure.
+ * Copies the given query using the copy function of the parent #GstStructure.
  *
  * Returns: a new copy of @q.
  */

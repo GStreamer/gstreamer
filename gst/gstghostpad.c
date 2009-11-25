@@ -29,10 +29,10 @@
  *
  * GhostPads are useful when organizing pipelines with #GstBin like elements.
  * The idea here is to create hierarchical element graphs. The bin element
- * contains a sub-graph. Now one would like to treat the bin-element like other
- * #GstElements. This is where GhostPads come into play. A GhostPad acts as a
- * proxy for another pad. Thus the bin can have sink and source ghost-pads that
- * are associated with sink and source pads of the child elements.
+ * contains a sub-graph. Now one would like to treat the bin-element like any
+ * other #GstElement. This is where GhostPads come into play. A GhostPad acts as
+ * a proxy for another pad. Thus the bin can have sink and source ghost-pads
+ * that are associated with sink and source pads of the child elements.
  *
  * If the target pad is known at creation time, gst_ghost_pad_new() is the
  * function to use to get a ghost-pad. Otherwise one can use gst_ghost_pad_new_no_target()
@@ -1140,9 +1140,9 @@ gst_ghost_pad_new_no_target_from_template (const gchar * name,
 
 /**
  * gst_ghost_pad_get_target:
- * @gpad: the #GstGhostpad
+ * @gpad: the #GstGhostPad
  *
- * Get the target pad of #gpad. Unref target pad after usage.
+ * Get the target pad of @gpad. Unref target pad after usage.
  *
  * Returns: the target #GstPad, can be NULL if the ghostpad
  * has no target set. Unref target pad after usage.
@@ -1163,7 +1163,7 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
 
 /**
  * gst_ghost_pad_set_target:
- * @gpad: the #GstGhostpad
+ * @gpad: the #GstGhostPad
  * @newtarget: the new pad target
  *
  * Set the new target of the ghostpad @gpad. Any existing target

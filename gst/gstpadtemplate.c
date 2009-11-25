@@ -41,7 +41,7 @@
  * GST_PAD_TEMPLATE_DIRECTION().
  *
  * The GST_PAD_TEMPLATE_NAME_TEMPLATE () is important for GST_PAD_REQUEST pads
- * because it has to be used as the name in the gst_element_request_pad_by_name()
+ * because it has to be used as the name in the gst_element_get_request_pad()
  * call to instantiate a pad from this template.
  *
  * Padtemplates can be created with gst_pad_template_new() or with 

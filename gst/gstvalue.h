@@ -296,7 +296,7 @@ G_BEGIN_DECLS
  * @value1: first value for comparison
  * @value2: second value for comparison
  *
- * Used together with gst_value_compare() to compare #GValues.
+ * Used together with gst_value_compare() to compare #GValue items.
  *
  * Returns: one of GST_VALUE_LESS_THAN, GST_VALUE_EQUAL, GST_VALUE_GREATER_THAN
  * or GST_VALUE_UNORDERED
@@ -351,7 +351,7 @@ typedef gboolean (* GstValueUnionFunc)       (GValue       *dest,
  * type. If the intersection is non-empty, the result is
  * placed in @dest and TRUE is returned.  If the intersection is
  * empty, @dest is unmodified and FALSE is returned.
- * Register a new implementation with gst_value_register_intersection_func().
+ * Register a new implementation with gst_value_register_intersect_func().
  *
  * Returns: %TRUE if the values can intersect
  */

@@ -31,7 +31,7 @@
  *     if (node) {
  *       result = GST_OBJECT (node->data);
  *       gst_object_ref (result);
- *       gst_list_free (node);
+ *       g_list_free (node);
  *     }
  *   </programlisting>
  * </example>

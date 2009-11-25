@@ -24,8 +24,8 @@
  *
  * GValue implementations specific to GStreamer.
  *
- * Note that operations on the same GstValue (or GValue) from multiple
- * threads may lead to undefined behaviour. 
+ * Note that operations on the same #GValue from multiple threads may lead to
+ * undefined behaviour.
  *
  * Last reviewed on 2008-03-11 (0.10.18)
  */
@@ -2904,7 +2904,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
  * If @value1 is less than @value2, GST_VALUE_LESS_THAN is returned.
  * If the values are equal, GST_VALUE_EQUAL is returned.
  *
- * Returns: A #GstValueCompareType value
+ * Returns: comparison result
  */
 gint
 gst_value_compare (const GValue * value1, const GValue * value2)
@@ -2934,7 +2934,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
  * gst_value_compare() but allows to save time determining the compare function
  * a multiple times. 
  *
- * Returns: A #GstValueCompareType value
+ * Returns: comparison result
  */
 static gint
 gst_value_compare_with_func (const GValue * value1, const GValue * value2,
@@ -3032,7 +3032,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
  * @type2: another type to union
  * @func: a function that implments creating a union between the two types
  *
- * Registers a union function that can create a union between GValues
+ * Registers a union function that can create a union between #GValue items
  * of the type @type1 and @type2.
  *
  * Union functions should be registered at startup before any pipelines are
@@ -3061,7 +3061,7 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
  * Determines if intersecting two values will produce a valid result.
  * Two values will produce a valid intersection if they have the same
  * type, or if there is a method (registered by
- * gst_value_register_intersection_func()) to calculate the intersection.
+ * gst_value_register_intersect_func()) to calculate the intersection.
  *
  * Returns: TRUE if the values can intersect
  */
@@ -3310,7 +3310,7 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
  * gst_value_register:
  * @table: structure containing functions to register
  *
- * Registers functions to perform calculations on #GValues of a given
+ * Registers functions to perform calculations on #GValue items of a given
  * type. Each type can only be added once.
  */
 void
@@ -3597,7 +3597,7 @@ gst_value_get_fraction_denominator (const GValue * value)
  * @factor1: a GValue initialized to #GST_TYPE_FRACTION
  * @factor2: a GValue initialized to #GST_TYPE_FRACTION
  *
- * Multiplies the two GValues containing a GstFraction and sets @product
+ * Multiplies the two #GValue items containing a #GstFraction and sets @product
  * to the product of the two fractions.
  *
  * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.

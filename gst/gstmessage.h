@@ -201,7 +201,7 @@ typedef enum
  * @GST_STRUCTURE_CHANGE_TYPE_PAD_LINK: Pad linking is starting or done.
  * @GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK: Pad unlinking is starting or done.
  *
- * The type of a #GstMessageStructureChange.
+ * The type of a %GST_MESSAGE_STRUCTURE_CHANGE.
  *
  * Since: 0.10.22
  */
@@ -220,7 +220,7 @@ typedef enum {
  * @GST_STREAM_STATUS_TYPE_PAUSE: a thread is paused
  * @GST_STREAM_STATUS_TYPE_STOP: a thread is stopped
  *
- * The type of a #GstMessageStreamStatus. The stream status messages inform the
+ * The type of a %GST_MESSAGE_STREAM_STATUS. The stream status messages inform the
  * application of new streaming threads and their status.
  *
  * Since: 0.10.24

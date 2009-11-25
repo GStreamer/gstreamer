@@ -2269,7 +2269,7 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
  * pad. This way the function will always return the negotiated caps
  * or in case the pad is not negotiated, the padtemplate caps.
  *
- * Use this function on a pad that, once _set_caps() has been called
+ * Use this function on a pad that, once gst_pad_set_caps() has been called
  * on it, cannot be renegotiated to something else.
  */
 void
@@ -3649,7 +3649,7 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
  * Registers type_name as the name of a new static type derived from
  * parent_type. The value of flags determines the nature (e.g. abstract or
  * not) of the type. It works by filling a GTypeInfo struct and calling
- * g_type_info_register_static().
+ * g_type_register_static().
  *
  * Returns: A #GType for the newly-registered type.
  *
@@ -3835,7 +3835,7 @@ gst_util_greatest_common_divisor (gint a, gint b)
  * @src_d: Fraction denominator #gint
  * @dest: pointer to a #gdouble for the result
  *
- * Transforms a #gdouble to a #GstFraction and simplifies
+ * Transforms a #gdouble to a GstFraction and simplifies
  * the result.
  *
  * Since: 0.10.26
@@ -3864,7 +3864,7 @@ gst_util_fraction_to_double (gint src_n, gint src_d, gdouble * dest)
  * @dest_n: pointer to a #gint to hold the result numerator
  * @dest_d: pointer to a #gint to hold the result denominator
  *
- * Transforms a #gdouble to a #GstFraction and simplifies
+ * Transforms a #gdouble to a fraction and simplifies
  * the result.
  *
  * Since: 0.10.26

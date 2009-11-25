@@ -99,7 +99,7 @@ typedef enum
 #define GST_OBJECT_LOCK(obj)                   g_mutex_lock(GST_OBJECT_GET_LOCK(obj))
 /**
  * GST_OBJECT_TRYLOCK:
- * @obj: a #Object.
+ * @obj: a #GstObject.
  *
  * This macro will try to obtain a lock on the object, but will return with
  * FALSE if it can't get it immediately.

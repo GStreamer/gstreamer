@@ -83,7 +83,7 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
  * get_protocols_full.
  *      Since: 0.10.15
  *
- * #GstElements using this interface should implement these methods.
+ * Any #GstElement using this interface should implement these methods.
  */
 struct _GstURIHandlerInterface {
   GTypeInterface	parent;

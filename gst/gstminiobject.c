@@ -629,7 +629,7 @@ gst_param_spec_mini_object_get_type (void)
  * @name: the canonical name of the property
  * @nick: the nickname of the property
  * @blurb: a short description of the property
- * @object_type: the #GstMiniObjectType for the property
+ * @object_type: the #GstMiniObject #GType for the property
  * @flags: a combination of #GParamFlags
  *
  * Creates a new #GParamSpec instance that hold #GstMiniObject references.
