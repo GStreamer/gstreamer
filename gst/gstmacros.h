@@ -16,13 +16,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/**
- * SECTION:gstmacros
- * @short_description: Various portabillity helper macros
- *
- * A set of macros complementing the glib portability macros.
- */
-
 #ifndef __GST_MACROS_H__
 #define __GST_MACROS_H__
 
