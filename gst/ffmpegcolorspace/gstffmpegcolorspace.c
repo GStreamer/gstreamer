@@ -133,6 +133,28 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
   return caps;
 }
 
+
+static gboolean
+gst_ffmpegcsp_structure_is_alpha (GstStructure * s)
+{
+  const gchar *name;
+
+  name = gst_structure_get_name (s);
+
+  if (g_str_equal (name, "video/x-raw-rgb")) {
+    return gst_structure_has_field (s, "alpha_mask");
+  } else if (g_str_equal (name, "video/x-raw-yuv")) {
+    guint32 fourcc;
+
+    if (!gst_structure_get_fourcc (s, "format", &fourcc))
+      return FALSE;
+
+    return (fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'));
+  }
+
+  return FALSE;
+}
+
 /* The caps can be transformed into any other caps with format info removed.
  * However, we should prefer passthrough, so if passthrough is possible,
  * put it first in the list. */
@@ -141,13 +163,54 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCaps *template;
+  GstCaps *tmp, *tmp2;
   GstCaps *result;
+  guint i, n;
+  gboolean is_alpha;
+  GstStructure *s;
+  GstCaps *alpha, *non_alpha;
+
+  s = gst_caps_get_structure (caps, 0);
+  is_alpha = gst_ffmpegcsp_structure_is_alpha (s);
 
   template = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
   result = gst_caps_intersect (caps, template);
-  gst_caps_unref (template);
 
-  gst_caps_append (result, gst_ffmpegcsp_caps_remove_format_info (caps));
+  /* Get all possible caps that we can transform to */
+  tmp = gst_ffmpegcsp_caps_remove_format_info (caps);
+  tmp2 = gst_caps_intersect (tmp, template);
+  gst_caps_unref (template);
+  gst_caps_unref (tmp);
+  tmp = tmp2;
+
+  /* Now move alpha formats to the beginning if caps is an alpha format
+   * or at the end if caps is no alpha format */
+  n = gst_caps_get_size (tmp);
+
+  alpha = gst_caps_new_empty ();
+  non_alpha = gst_caps_new_empty ();
+
+  for (i = 0; i < n; i++) {
+    s = gst_caps_get_structure (tmp, i);
+
+    if (gst_ffmpegcsp_structure_is_alpha (s))
+      gst_caps_append_structure (alpha, gst_structure_copy (s));
+    else
+      gst_caps_append_structure (non_alpha, gst_structure_copy (s));
+  }
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_caps_unref (tmp);
+
+  if (gst_ffmpegcsp_structure_is_alpha (s)) {
+    gst_caps_append (alpha, non_alpha);
+    tmp = alpha;
+  } else {
+    gst_caps_append (non_alpha, alpha);
+    tmp = non_alpha;
+  }
+
+  gst_caps_append (result, tmp);
 
   GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
       GST_PTR_FORMAT, caps, result);
