@@ -3597,8 +3597,8 @@ gst_value_get_fraction_denominator (const GValue * value)
  * @factor1: a GValue initialized to #GST_TYPE_FRACTION
  * @factor2: a GValue initialized to #GST_TYPE_FRACTION
  *
- * Multiplies the two #GValue items containing a #GstFraction and sets @product
- * to the product of the two fractions.
+ * Multiplies the two #GValue items containing a #GST_TYPE_FRACTION and sets
+ * @product to the product of the two fractions.
  *
  * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.
  */

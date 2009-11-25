@@ -3835,8 +3835,7 @@ gst_util_greatest_common_divisor (gint a, gint b)
  * @src_d: Fraction denominator #gint
  * @dest: pointer to a #gdouble for the result
  *
- * Transforms a #gdouble to a GstFraction and simplifies
- * the result.
+ * Transforms a #gdouble to a fraction and simplifies the result.
  *
  * Since: 0.10.26
  */

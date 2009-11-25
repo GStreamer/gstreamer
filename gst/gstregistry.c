@@ -48,9 +48,9 @@
  * consuming process, so we cache information in the registry.xml file.
  *
  * On startup, plugins are searched for in the plugin search path. This path can
- * be set directly using the %GST_PLUGIN_PATH environment variable. The registry
+ * be set directly using the GST_PLUGIN_PATH environment variable. The registry
  * file is loaded from ~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.xml or the
- * file listed in the %GST_REGISTRY env var. The only reason to change the
+ * file listed in the GST_REGISTRY env var. The only reason to change the
  * registry location is for testing.
  *
  * For each plugin that is found in the plugin search path, there could be 3

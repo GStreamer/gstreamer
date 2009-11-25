@@ -418,7 +418,7 @@ GstDebugCategory *_gst_debug_get_category (const gchar *name);
  * @name: log category name
  *
  * Lookup an exiting #GstDebugCategory by its @name and sets @cat. If category
- * is not found, but %GST_CAT_DEFAULT is defined, that is assigned to @cat.
+ * is not found, but GST_CAT_DEFAULT is defined, that is assigned to @cat.
  * Otherwise cat will be NULL.
  *
  * |[
