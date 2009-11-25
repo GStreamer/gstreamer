@@ -355,6 +355,7 @@ gst_ogg_pad_reset (GstOggPad * pad)
 
   pad->last_ret = GST_FLOW_OK;
   pad->last_stop = GST_CLOCK_TIME_NONE;
+  pad->current_granule = -1;
 }
 
 /* called when the skeleton fishead is found. Caller ensures the packet is
@@ -527,7 +528,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     goto done;
 
   /* store current granule pos */
-  ogg->current_granule = packet->granulepos;
+  ogg->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+      packet->granulepos);
 
   /* convert to time */
   current_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
@@ -595,7 +597,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     gst_ogg_pad_parse_skeleton_fisbone (pad, packet);
   }
 
-  granule = packet->granulepos;
+  granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+      packet->granulepos);
   if (granule != -1) {
     GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
     ogg->current_granule = granule;
