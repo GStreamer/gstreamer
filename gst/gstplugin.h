@@ -71,7 +71,13 @@ typedef enum
   GST_PLUGIN_ERROR_NAME_MISMATCH
 } GstPluginError;
 
-
+/**
+ * GstPluginFlags:
+ * @GST_PLUGIN_FLAG_CACHED: Temporarily loaded plugins
+ * @GST_PLUGIN_FLAG_BLACKLISTED: The plugin won't be scanned (again)
+ *
+ * The plugin loading state
+ */
 typedef enum
 {
   GST_PLUGIN_FLAG_CACHED = (1<<0),

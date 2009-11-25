@@ -1749,6 +1749,7 @@ gst_plugin_list_free
 gst_plugin_register_static
 gst_plugin_register_static_full
 <SUBSECTION>
+GstPluginFlags
 GstPluginDependencyFlags
 gst_plugin_add_dependency
 gst_plugin_add_dependency_simple
@@ -1762,7 +1763,6 @@ GST_TYPE_PLUGIN
 GST_TYPE_PLUGIN_ERROR
 GST_IS_PLUGIN
 GST_IS_PLUGIN_CLASS
-GstPluginFlags
 GST_TYPE_PLUGIN_FLAGS
 GST_TYPE_PLUGIN_DEPENDENCY_FLAGS
 GstPluginPrivate
