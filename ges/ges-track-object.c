@@ -326,11 +326,10 @@ void
 gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
-  guint64 priority;
+  guint32 priority;
   g_object_get (gnlobject, "priority", &priority, NULL);
 
-  GST_DEBUG ("gnlobject priority : %" GST_TIME_FORMAT " current : %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (priority), GST_TIME_ARGS (obj->priority));
+  GST_DEBUG ("gnlobject priority : %d current : %d", priority, obj->priority);
 
   if (priority != obj->priority) {
     obj->priority = priority;
