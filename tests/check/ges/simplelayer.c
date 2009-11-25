@@ -53,7 +53,7 @@ GST_START_TEST (test_gsl_add)
 
   source = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (source != NULL);
-  g_object_set (source, "duration", GST_SECOND, "start", 42, NULL);
+  g_object_set (source, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source), GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source), 42);
 
@@ -90,11 +90,11 @@ GST_START_TEST (test_gsl_move_simple)
 
   /* Create two 1s sources */
   source1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
-  g_object_set (source1, "duration", GST_SECOND, "start", 42, NULL);
+  g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
       GST_SECOND);
   source2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
-  g_object_set (source2, "duration", GST_SECOND, "start", 42, NULL);
+  g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
       GST_SECOND);
 
@@ -129,7 +129,7 @@ GST_START_TEST (test_gsl_move_simple)
           GES_TIMELINE_OBJECT (source1)));
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
 
-  g_object_set (source1, "start", 42, NULL);
+  g_object_set (source1, "start", (guint64) 42, NULL);
 
   /* re-add source1... using the normal API, it should be added to the end */
   fail_unless (ges_timeline_layer_add_object (layer,

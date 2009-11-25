@@ -66,7 +66,8 @@ GST_START_TEST (test_object_properties)
   fail_unless (object != NULL);
 
   /* Set some properties */
-  g_object_set (object, "start", 42, "duration", 51, "in-point", 12, NULL);
+  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
+      "in-point", (guint64) 12, NULL);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 42);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
@@ -84,7 +85,8 @@ GST_START_TEST (test_object_properties)
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
   /* Change more properties, see if they propagate */
-  g_object_set (object, "start", 420, "duration", 510, "in-point", 120, NULL);
+  g_object_set (object, "start", (guint64) 420, "duration", (guint64) 510,
+      "in-point", (guint64) 120, NULL);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 420);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 510);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 120);
