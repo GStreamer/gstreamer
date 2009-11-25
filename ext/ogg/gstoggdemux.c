@@ -479,14 +479,34 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
   duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
 
-  GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-      pad->current_granule);
-  pad->current_granule += duration;
-  GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-      pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
+  if (packet->b_o_s) {
+    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (buf) = 0;
+    GST_BUFFER_OFFSET_END (buf) = -1;
+  } else {
+    GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+        pad->current_granule);
+    GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+        pad->current_granule + duration) - GST_BUFFER_TIMESTAMP (buf);
 
-  GST_BUFFER_OFFSET (buf) = -1;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+    pad->current_granule += duration;
+    if (packet->granulepos != -1) {
+      gint64 granule;
+      granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+          packet->granulepos);
+      if (granule != pad->current_granule) {
+        GST_WARNING ("calculated granule didn't match actual (%lld != %lld)",
+            pad->current_granule, granule);
+      }
+      pad->current_granule = granule;
+    }
+    GST_BUFFER_OFFSET_END (buf) =
+        gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
+        pad->current_granule);
+    GST_BUFFER_OFFSET (buf) =
+        gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
+  }
 
   /* Mark discont on the buffer */
   if (pad->discont) {
@@ -586,7 +606,11 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     pad->current_granule = granule;
   }
 
-  if (!gst_ogg_stream_packet_is_header (&pad->map, packet)) {
+  /* Overload the value of b_o_s in ogg_packet with a flag whether or
+   * not this is a header packet.  Maybe some day this could be cleaned
+   * up.  */
+  packet->b_o_s = gst_ogg_stream_packet_is_header (&pad->map, packet);
+  if (!packet->b_o_s) {
     if (pad->start_time == GST_CLOCK_TIME_NONE) {
       gint64 duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
       if (duration != -1) {
@@ -602,6 +626,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
         pad->start_time = gst_ogg_stream_granule_to_time (&pad->map,
             start_granule);
+        GST_DEBUG ("start time %" G_GINT64_FORMAT, pad->start_time);
+      } else {
+        packet->granulepos = gst_ogg_stream_granule_to_granulepos (&pad->map,
+            pad->map.accumulated_granule, pad->map.accumulated_granule);
       }
     }
   } else {
@@ -848,6 +876,7 @@ gst_ogg_chain_mark_discont (GstOggChain * chain)
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
     pad->discont = TRUE;
+    pad->map.last_size = 0;
   }
 }
 
@@ -880,6 +909,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   ret->discont = TRUE;
+  ret->map.last_size = 0;
 
   ret->chain = chain;
   ret->ogg = chain->ogg;
@@ -1420,6 +1450,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
       /* mark discont */
       pad->discont = TRUE;
+      pad->map.last_size = 0;
       pad->last_ret = GST_FLOW_OK;
 
       pad->is_sparse =

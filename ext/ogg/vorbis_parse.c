@@ -94,8 +94,6 @@ parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet)
   pad->short_size = short_size;
   pad->long_size = long_size;
   pad->nsn_increment = short_size >> 1;
-
-  pad->accumulated_granule = -long_size / 2;
 }
 
 void
