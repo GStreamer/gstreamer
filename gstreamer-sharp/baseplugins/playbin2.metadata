@@ -11,4 +11,5 @@
   <attr path="/element/element-signals/signal/name[child::text()='audio-tags-changed']/../params/type[1]" name="name">index</attr>
   <attr path="/element/element-signals/signal/name[child::text()='text-tags-changed']/../params/type[1]" name="name">index</attr>
   <add-node path="/element/element-properties/element-property/name[child::text()='flags']/.."><managed_name>PlayFlags</managed_name></add-node>
+  <remove-node path="/element/element-properties/element-property/name[child::text()='mute']/.." />
 </metadata>

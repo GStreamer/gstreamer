@@ -81,6 +81,14 @@
    <range min="0" max="4294967295"/>
    <default>65536</default>
   </element-property>
+  <element-property>
+   <name>append</name>
+   <type>gboolean</type>
+   <nick>Append</nick>
+   <blurb>Append to an already existing file</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
  </element-properties>
  <element-signals>
  </element-signals>

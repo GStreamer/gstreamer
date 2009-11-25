@@ -20,6 +20,7 @@
  </object>
  <interfaces>
   <interface name="GstChildProxy" />
+  <interface name="GstStreamVolume" />
  </interfaces>
  <pad-templates>
  </pad-templates>
@@ -190,7 +191,7 @@
    <blurb>The audio volume, 1.0=100%</blurb>
    <flags>RW</flags>
    <range min="0" max="10"/>
-   <default>1,000000</default>
+   <default>1.000000</default>
   </element-property>
   <element-property>
    <name>mute</name>

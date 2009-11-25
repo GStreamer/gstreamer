@@ -154,7 +154,7 @@ coreplugins/generated: $(API) $(srcdir)/coreplugins/*.metadata $(srcdir)/coreplu
 	$(MAKE) -C coreplugins
 
 baseplugins/generated/*.cs: $(API) $(builddir)/baseplugins/generated
-baseplugins/generated: $(API) $(srcdir)/baseplugins/*.custom $(srcdir)/baseplugins/*.metadata $(srcdir)/baseplugins/inspect/*.raw
+baseplugins/generated: $(API) $(srcdir)/baseplugins/*.metadata $(srcdir)/baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk

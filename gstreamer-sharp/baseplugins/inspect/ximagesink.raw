@@ -1,12 +1,12 @@
 <element>
- <name>xvimagesink</name>
+ <name>ximagesink</name>
  <details>
   <long-name>Video sink</long-name>
   <class>Sink/Video</class>
-  <description>A Xv based videosink</description>
+  <description>A standard X based videosink</description>
   <authors>Julien Moutte &lt;julien@moutte.net&gt;</authors>
  </details>
- <object name="GstXvImageSink">
+ <object name="GstXImageSink">
   <object name="GstVideoSink">
    <object name="GstBaseSink">
     <object name="GstElement">
@@ -22,21 +22,19 @@
   <interface name="GstImplementsInterface" />
   <interface name="GstNavigation" />
   <interface name="GstXOverlay" />
-  <interface name="GstColorBalance" />
-  <interface name="GstPropertyProbe" />
  </interfaces>
  <pad-templates>
   <pad-template>
    <name>sink</name>
    <direction>sink</direction>
    <presence>always</presence>
-   <caps>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</caps>
+   <caps>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</caps>
   </pad-template>
  </pad-templates>
  <element-flags>
  </element-flags>
  <element-implementation>
-  <state-change function="gst_xvimagesink_change_state"/>
+  <state-change function="0x2b81a6fc5480"/>
   <save function="gst_element_save_thyself"/>
   <load function="gst_element_restore_thyself"/>
  </element-implementation>
@@ -62,42 +60,6 @@
    <blurb>Whether to render video frames during preroll</blurb>
    <flags>RW</flags>
    <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>contrast</name>
-   <type>gint</type>
-   <nick>Contrast</nick>
-   <blurb>The contrast of the video</blurb>
-   <flags>RW</flags>
-   <range min="-1000" max="1000"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>brightness</name>
-   <type>gint</type>
-   <nick>Brightness</nick>
-   <blurb>The brightness of the video</blurb>
-   <flags>RW</flags>
-   <range min="-1000" max="1000"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>hue</name>
-   <type>gint</type>
-   <nick>Hue</nick>
-   <blurb>The hue of the video</blurb>
-   <flags>RW</flags>
-   <range min="-1000" max="1000"/>
-   <default>0</default>
-  </element-property>
-  <element-property>
-   <name>saturation</name>
-   <type>gint</type>
-   <nick>Saturation</nick>
-   <blurb>The saturation of the video</blurb>
-   <flags>RW</flags>
-   <range min="-1000" max="1000"/>
-   <default>0</default>
   </element-property>
   <element-property>
    <name>display</name>
@@ -127,7 +89,7 @@
    <name>force-aspect-ratio</name>
    <type>gboolean</type>
    <nick>Force aspect ratio</nick>
-   <blurb>When enabled, scaling will respect original aspect ratio</blurb>
+   <blurb>When enabled, reverse caps negotiation (scaling) will respect original aspect ratio</blurb>
    <flags>RW</flags>
    <default>FALSE</default>
   </element-property>
@@ -140,59 +102,10 @@
    <default>TRUE</default>
   </element-property>
   <element-property>
-   <name>device</name>
-   <type>gchararray</type>
-   <nick>Adaptor number</nick>
-   <blurb>The number of the video adaptor</blurb>
-   <flags>RW</flags>
-   <default>&quot;0&quot;</default>
-  </element-property>
-  <element-property>
-   <name>device-name</name>
-   <type>gchararray</type>
-   <nick>Adaptor name</nick>
-   <blurb>The name of the video adaptor</blurb>
-   <flags>R</flags>
-   <default>NULL</default>
-  </element-property>
-  <element-property>
    <name>handle-expose</name>
    <type>gboolean</type>
    <nick>Handle expose</nick>
    <blurb>When enabled, the current frame will always be drawn in response to X Expose events</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>double-buffer</name>
-   <type>gboolean</type>
-   <nick>Double-buffer</nick>
-   <blurb>Whether to double-buffer the output</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>autopaint-colorkey</name>
-   <type>gboolean</type>
-   <nick>Autofill with colorkey</nick>
-   <blurb>Whether to autofill overlay with colorkey</blurb>
-   <flags>RW</flags>
-   <default>TRUE</default>
-  </element-property>
-  <element-property>
-   <name>colorkey</name>
-   <type>gint</type>
-   <nick>Colorkey</nick>
-   <blurb>Color to use for the overlay mask</blurb>
-   <flags>RW</flags>
-   <range min="-2147483648" max="2147483647"/>
-   <default>526352</default>
-  </element-property>
-  <element-property>
-   <name>draw-borders</name>
-   <type>gboolean</type>
-   <nick>Colorkey</nick>
-   <blurb>Draw black borders to fill unused area in force-aspect-ratio mode</blurb>
    <flags>RW</flags>
    <default>TRUE</default>
   </element-property>

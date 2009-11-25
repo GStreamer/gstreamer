@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<metadata>
-  <attr path="/element/element-signals/signal/name[child::text()='new-decoded-pad']/../params/type[1]" name="name">Pad</attr>
-  <remove-node path="/element/element-signals/signal/name[child::text()='new-decoded-pad']/../params/type[2]" />
-  <attr path="/element/element-signals/signal/name[child::text()='removed-decoded-pad']/../params/type[1]" name="name">Pad</attr>
-  <attr path="/element/element-signals/signal/name[child::text()='unknown-type']/../params/type[1]" name="name">Pad</attr>
-  <attr path="/element/element-signals/signal/name[child::text()='unknown-type']/../params/type[2]" name="name">Caps</attr>
-</metadata>

@@ -87,8 +87,8 @@
    <nick>Drop Probability</nick>
    <blurb>The Probability a buffer is dropped</blurb>
    <flags>RW</flags>
-   <range min="0,000000" max="1,000000"/>
-   <default>0,000000</default>
+   <range min="0.000000" max="1.000000"/>
+   <default>0.000000</default>
   </element-property>
   <element-property>
    <name>datarate</name>

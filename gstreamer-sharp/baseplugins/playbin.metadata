@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<metadata>
-  <attr path="/element/element-properties/element-property/name[child::text()='stream-info']/.." name="hidden">1</attr>
-  <attr path="/element/element-properties/element-property/name[child::text()='stream-info-value-array']/.." name="hidden">1</attr>
-</metadata>

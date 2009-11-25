@@ -1,13 +1,12 @@
-ELEMENTS = decodebin playbin xvimagesink decodebin2 playbin2
+ELEMENTS = ximagesink xvimagesink decodebin2 playbin2
 
 NAMESPACE = Gst.BasePlugins
 INSPECT_FILES = $(patsubst %,$(srcdir)/inspect/%.raw,$(ELEMENTS))
-CUSTOM_FILES = $(srcdir)/playbin.custom
-METADATA_FILES = $(srcdir)/decodebin.metadata $(srcdir)/playbin.metadata $(srcdir)/decodebin2.metadata $(srcdir)/playbin2.metadata
+METADATA_FILES = $(srcdir)/decodebin2.metadata $(srcdir)/playbin2.metadata
 CS_FILES = $(patsubst %,$(builddir)/generated/%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,$(builddir)/%.xml,$(ELEMENTS))
 
-EXTRA_DIST = $(METADATA_FILES) $(CUSTOM_FILES) $(INSPECT_FILES)
+EXTRA_DIST = $(METADATA_FILES) $(INSPECT_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
 
 plugins-update: $(patsubst $(srcdir)/inspect/%.raw, inspect-%, $(INSPECT_FILES))
@@ -17,7 +16,7 @@ inspect-%:
 all: $(XML_FILES) $(CS_FILES)
 	touch generated
 
-generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(top_builddir)/gstreamer-sharp/gstreamer-api.xml $(CUSTOM_FILES) $(builddir)/%.xml
+generated/%.cs: $(top_builddir)/elementgen/element-gen.exe $(top_builddir)/gstreamer-sharp/gstreamer-api.xml $(builddir)/%.xml
 	@mkdir -p generated
 	$(MONO) $(top_builddir)/elementgen/element-gen.exe --namespace=$(NAMESPACE) \
 		--api=$(top_builddir)/gstreamer-sharp/gstreamer-api.xml --input=$(patsubst generated/%.cs,$(builddir)/%.xml,$@) --customfile=$(patsubst generated/%.cs,$(srcdir)/%.custom,$@) --interfacesdir=$(top_srcdir)/elementgen/interfaces > $@
