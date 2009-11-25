@@ -137,6 +137,16 @@ gst_ogg_stream_granulepos_to_granule (GstOggStream * pad, gint64 granulepos)
 }
 
 gint64
+gst_ogg_stream_granulepos_to_key_granule (GstOggStream * pad, gint64 granulepos)
+{
+  if (granulepos == -1 || granulepos == 0) {
+    return granulepos;
+  }
+
+  return granulepos >> pad->granuleshift;
+}
+
+gint64
 gst_ogg_stream_granule_to_granulepos (GstOggStream * pad, gint64 granule,
     gint64 keyframe_granule)
 {
@@ -215,6 +225,7 @@ granulepos_to_granule_default (GstOggStream * pad, gint64 granulepos)
     return granulepos;
   }
 }
+
 
 static gint64
 granule_to_granulepos_default (GstOggStream * pad, gint64 granule,

@@ -117,6 +117,7 @@ struct _GstOggPad
   //gint serialno;
   gint64 packetno;
   gint64 current_granule;
+  gint64 keyframe_granule;
 
   GstClockTime start_time;      /* the timestamp of the first sample */
 

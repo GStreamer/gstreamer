@@ -73,6 +73,7 @@ GstClockTime gst_ogg_stream_get_start_time_for_granulepos (GstOggStream *pad,
     gint64 granulepos);
 GstClockTime gst_ogg_stream_granule_to_time (GstOggStream *pad, gint64 granule);
 gint64 gst_ogg_stream_granulepos_to_granule (GstOggStream * pad, gint64 granulepos);
+gint64 gst_ogg_stream_granulepos_to_key_granule (GstOggStream * pad, gint64 granulepos);
 gint64 gst_ogg_stream_granule_to_granulepos (GstOggStream * pad, gint64 granule, gint64 keyframe_granule);
 GstClockTime gst_ogg_stream_get_packet_start_time (GstOggStream *pad,
     ogg_packet *packet);

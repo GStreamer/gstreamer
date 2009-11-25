@@ -485,25 +485,21 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_OFFSET (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) = -1;
   } else {
-    GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-        pad->current_granule);
-    GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-        pad->current_granule + duration) - GST_BUFFER_TIMESTAMP (buf);
-
     pad->current_granule += duration;
     if (packet->granulepos != -1) {
-      gint64 granule;
-      granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+      pad->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
           packet->granulepos);
-      if (granule != pad->current_granule) {
-        GST_WARNING ("calculated granule didn't match actual (%lld != %lld)",
-            pad->current_granule, granule);
-      }
-      pad->current_granule = granule;
+      pad->keyframe_granule =
+          gst_ogg_stream_granulepos_to_key_granule (&pad->map,
+          packet->granulepos);
     }
+    GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+        pad->current_granule - duration);
+    GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+        pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
     GST_BUFFER_OFFSET_END (buf) =
         gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
-        pad->current_granule);
+        pad->keyframe_granule);
     GST_BUFFER_OFFSET (buf) =
         gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
   }
@@ -629,7 +625,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         GST_DEBUG ("start time %" G_GINT64_FORMAT, pad->start_time);
       } else {
         packet->granulepos = gst_ogg_stream_granule_to_granulepos (&pad->map,
-            pad->map.accumulated_granule, pad->map.accumulated_granule);
+            pad->map.accumulated_granule, pad->keyframe_granule);
       }
     }
   } else {
