@@ -32,14 +32,14 @@
 #include "ges-timeline-source.h"
 
 G_DEFINE_TYPE (GESCustomTimelineSource, ges_cust_timeline_src,
-    GES_TYPE_TIMELINE_SOURCE)
+    GES_TYPE_TIMELINE_SOURCE);
 
-     static gboolean
-         ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
+static gboolean
+ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj);
 
-     static void
-         ges_cust_timeline_src_get_property (GObject * object,
+static void
+ges_cust_timeline_src_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
