@@ -217,7 +217,7 @@ GST_END_TEST;
 GST_START_TEST (test_push_backward_seq)
 {
   GstElement *jitterbuffer;
-  const guint num_buffers = 3;
+  const guint num_buffers = 4;
   GstBuffer *buffer;
   GList *node;
 
@@ -226,8 +226,11 @@ GST_START_TEST (test_push_backward_seq)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  /* push buffers: 2,1,0 */
-  for (node = g_list_last (inbuffers); node; node = g_list_previous (node)) {
+  /* push buffers: 0,3,2,1 */
+  buffer = (GstBuffer *) inbuffers->data;
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  for (node = g_list_last (inbuffers); node != inbuffers;
+      node = g_list_previous (node)) {
     buffer = (GstBuffer *) node->data;
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -244,7 +247,7 @@ GST_END_TEST;
 GST_START_TEST (test_push_unordered)
 {
   GstElement *jitterbuffer;
-  const guint num_buffers = 3;
+  const guint num_buffers = 4;
   GstBuffer *buffer;
 
   jitterbuffer = setup_jitterbuffer (num_buffers);
@@ -252,12 +255,14 @@ GST_START_TEST (test_push_unordered)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  /* push buffers; 0,2,1 */
+  /* push buffers; 0,2,1,3 */
   buffer = (GstBuffer *) inbuffers->data;
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   buffer = g_list_nth_data (inbuffers, 2);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   buffer = g_list_nth_data (inbuffers, 1);
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = g_list_nth_data (inbuffers, 3);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
   /* check the buffer list */
@@ -268,6 +273,45 @@ GST_START_TEST (test_push_unordered)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_basetime)
+{
+  GstElement *jitterbuffer;
+  const guint num_buffers = 3;
+  GstBuffer *buffer;
+  GList *node;
+  GstClockTime tso = gst_util_uint64_scale (RTP_FRAME_SIZE, GST_SECOND, 8000);
+  guint test_duration = GST_TIME_AS_USECONDS (num_buffers * tso);
+
+  jitterbuffer = setup_jitterbuffer (num_buffers);
+  fail_unless (gst_element_set_state (jitterbuffer,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* push buffers: 2,1,0 */
+  for (node = g_list_last (inbuffers); node; node = g_list_previous (node)) {
+    buffer = (GstBuffer *) node->data;
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* sleep for twice the duration of the tested buffers */
+  g_usleep (2 * test_duration);
+
+  /* if this fails, not all buffers have been processed */
+  fail_unless_equals_int ((g_list_length (buffers) + num_dropped), num_buffers);
+
+  /* check the buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  buffer = (GstBuffer *) buffers->data;
+  fail_unless (GST_BUFFER_TIMESTAMP (buffer) != (num_buffers * tso));
+
+  /* cleanup */
+  cleanup_jitterbuffer (jitterbuffer);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtpjitterbuffer_suite (void)
@@ -282,6 +326,7 @@ rtpjitterbuffer_suite (void)
        elements/rtpjitterbuffer.c:168:F:general:test_push_backward_seq:0: 'g_list_length (buffers)' (1) is not equal to 'num_buffers' (3)
        0:00:00.113317818   761  0x9a74008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
        0:00:00.113547177   761  0x9a74008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
+       and now we actually sent the first one always first to get a basetime set
      */
     tcase_add_test (tc_chain, test_push_backward_seq);
   }
@@ -292,6 +337,15 @@ rtpjitterbuffer_suite (void)
        0:00:00.090674798  1216  0x9096008 WARN      gstrtpjitterbuffer gstrtpjitterbuffer.c:1309:gst_rtp_jitter_buffer_chain:<gstrtpjitterbuffer> Packet #7204 too late as #7206 was already popped, dropping
      */
     tcase_add_test (tc_chain, test_push_unordered);
+  }
+  if (0) {
+    /* this shows that there is a bug in jitterbuffers, as the way this sometimes failes would mean that test_push_backward_seq() should work
+       https://bugzilla.gnome.org/show_bug.cgi?id=602940
+       elements/rtpjitterbuffer.c:303:F:general:test_basetime:0: 'g_list_length (buffers)' (3) is not equal to '1' (1)
+       0:00:00.104181601 23943  0x99f1008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
+       0:00:00.104412426 23943  0x99f1008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
+     */
+    tcase_add_test (tc_chain, test_basetime);
   }
 
   /* FIXME: test buffer lists */
