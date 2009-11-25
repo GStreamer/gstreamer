@@ -1638,7 +1638,7 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->latency = g_value_get_uint (value);
       GST_RTP_BIN_UNLOCK (rtpbin);
-      /* propegate the property down to the jitterbuffer */
+      /* propagate the property down to the jitterbuffer */
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "latency", value);
       break;
     case PROP_SDES:
