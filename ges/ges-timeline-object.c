@@ -187,7 +187,8 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
 
   if (res) {
     GST_DEBUG
-        ("Got a TrackObject : %p , setting the timeline object as its creator");
+        ("Got a TrackObject : %p , setting the timeline object as its creator",
+        res);
     ges_track_object_set_timeline_object (res, object);
 
     GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
