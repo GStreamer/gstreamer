@@ -1637,7 +1637,7 @@ push_buffer:
 
   /* update the elapsed time when we need to check against the npt stop time. */
   if (priv->npt_stop != -1 && priv->ext_timestamp != -1
-      && priv->clock_base != -1) {
+      && priv->clock_base != -1 && priv->clock_rate > 0) {
     guint64 ext_time, elapsed, estimated;
     guint32 rtp_time;
 
