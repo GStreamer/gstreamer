@@ -84,6 +84,9 @@ typedef enum {
  * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements
+ * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
+ *                          send messages that should be emitted in sync with
+ *                          rendering.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements are being starved of or
  *                 flooded with data.
