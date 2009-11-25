@@ -23,6 +23,11 @@ public class MainWindow : Gtk.Window {
     MainWindow window = new MainWindow ();
     window.ShowAll ();
 
+#if HAVE_GTK_2_17_3
+    if (!gdk_window_ensure_native (window._da.GdkWindow.Handle)) {
+        Console.WriteLine ("Can't ensure a native window for the drawing area");
+    }
+#endif
     switch (System.Environment.OSVersion.Platform) {
       case PlatformID.Unix:
         window._xWindowId = gdk_x11_drawable_get_xid (window._da.GdkWindow.Handle);
@@ -241,4 +246,9 @@ public class MainWindow : Gtk.Window {
 
   [DllImport ("libgdk-win32-2.0-0.dll") ]
   static extern IntPtr gdk_win32_drawable_get_handle (IntPtr handle);
+
+#if HAVE_GTK_2_17_3
+  [DllImport ("libgdk-win32-2.0-0.dll") ]
+  static extern bool gdk_window_ensure_native (IntPtr handle);
+#endif
 }
