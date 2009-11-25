@@ -126,8 +126,9 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
   self->kernel = NULL;
   self->buffer = NULL;
 
-  self->next_ts = GST_CLOCK_TIME_NONE;
-  self->next_off = GST_BUFFER_OFFSET_NONE;
+  self->start_ts = GST_CLOCK_TIME_NONE;
+  self->start_off = GST_BUFFER_OFFSET_NONE;
+  self->nsamples = 0;
 
   gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
       gst_audio_fx_base_fir_filter_query);
@@ -237,19 +238,22 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 
   /* Set timestamp, offset, etc from the values we
    * saved when processing the regular buffers */
-  if (GST_CLOCK_TIME_IS_VALID (self->next_ts))
-    GST_BUFFER_TIMESTAMP (outbuf) = self->next_ts;
+  if (GST_CLOCK_TIME_IS_VALID (self->start_ts))
+    GST_BUFFER_TIMESTAMP (outbuf) = self->start_ts;
   else
     GST_BUFFER_TIMESTAMP (outbuf) = 0;
-  GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale (outsamples, GST_SECOND, rate);
-  self->next_ts += gst_util_uint64_scale (outsamples, GST_SECOND, rate);
+  GST_BUFFER_TIMESTAMP (outbuf) +=
+      gst_util_uint64_scale_round (self->nsamples, GST_SECOND, rate);
 
-  if (self->next_off != GST_BUFFER_OFFSET_NONE) {
-    GST_BUFFER_OFFSET (outbuf) = self->next_off;
-    GST_BUFFER_OFFSET_END (outbuf) = self->next_off + outsamples;
-    self->next_off = GST_BUFFER_OFFSET_END (outbuf);
+  GST_BUFFER_DURATION (outbuf) =
+      gst_util_uint64_scale_round (outsamples, GST_SECOND, rate);
+
+  if (self->start_off != GST_BUFFER_OFFSET_NONE) {
+    GST_BUFFER_OFFSET (outbuf) = self->start_off + self->nsamples;
+    GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET (outbuf) + outsamples;
   }
+
+  self->nsamples += outsamples;
 
   GST_DEBUG_OBJECT (self, "Pushing residue buffer of size %d with timestamp: %"
       GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
@@ -282,8 +286,9 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     g_free (self->buffer);
     self->buffer = NULL;
     self->buffer_fill = 0;
-    self->next_ts = GST_CLOCK_TIME_NONE;
-    self->next_off = GST_BUFFER_OFFSET_NONE;
+    self->start_ts = GST_CLOCK_TIME_NONE;
+    self->start_off = GST_BUFFER_OFFSET_NONE;
+    self->nsamples = 0;
   }
 
   if (format->width == 32)
@@ -303,7 +308,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
-  GstClockTime timestamp;
+  GstClockTime timestamp, expected_timestamp;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
   gint rate = GST_AUDIO_FILTER (self)->format.rate;
   gint input_samples =
@@ -312,7 +317,8 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   gint diff = 0;
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
-  if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp)
+      && !GST_CLOCK_TIME_IS_VALID (self->start_ts)) {
     GST_ERROR_OBJECT (self, "Invalid timestamp");
     return GST_FLOW_ERROR;
   }
@@ -325,20 +331,29 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   if (!self->buffer)
     self->buffer = g_new0 (gdouble, self->kernel_length * channels);
 
+  if (GST_CLOCK_TIME_IS_VALID (self->start_ts))
+    expected_timestamp =
+        self->start_ts + gst_util_uint64_scale_round (self->nsamples,
+        GST_SECOND, rate);
+  else
+    expected_timestamp = GST_CLOCK_TIME_NONE;
+
   /* Reset the residue if already existing on discont buffers */
-  if (GST_BUFFER_IS_DISCONT (inbuf) || (GST_CLOCK_TIME_IS_VALID (self->next_ts)
-          && timestamp - gst_util_uint64_scale (MIN (self->latency,
+  if (GST_BUFFER_IS_DISCONT (inbuf)
+      || (GST_CLOCK_TIME_IS_VALID (expected_timestamp)
+          && timestamp - gst_util_uint64_scale_round (MIN (self->latency,
                   self->buffer_fill / channels), GST_SECOND,
-              rate) - self->next_ts > 5 * GST_MSECOND)) {
+              rate) - expected_timestamp > 5 * GST_MSECOND)) {
     GST_DEBUG_OBJECT (self, "Discontinuity detected - flushing");
-    if (GST_CLOCK_TIME_IS_VALID (self->next_ts))
+    if (GST_CLOCK_TIME_IS_VALID (expected_timestamp))
       gst_audio_fx_base_fir_filter_push_residue (self);
     self->buffer_fill = 0;
-    self->next_ts = timestamp;
-    self->next_off = GST_BUFFER_OFFSET (inbuf);
-  } else if (!GST_CLOCK_TIME_IS_VALID (self->next_ts)) {
-    self->next_ts = timestamp;
-    self->next_off = GST_BUFFER_OFFSET (inbuf);
+    expected_timestamp = self->start_ts = timestamp;
+    self->start_off = GST_BUFFER_OFFSET (inbuf);
+    self->nsamples = 0;
+  } else if (!GST_CLOCK_TIME_IS_VALID (self->start_ts)) {
+    expected_timestamp = self->start_ts = timestamp;
+    self->start_off = GST_BUFFER_OFFSET (inbuf);
   }
 
   /* Calculate the number of samples we can push out now without outputting
@@ -354,14 +369,17 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     return GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
 
-  GST_BUFFER_TIMESTAMP (outbuf) = self->next_ts;
+  GST_BUFFER_TIMESTAMP (outbuf) = expected_timestamp;
   GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale (output_samples / channels, GST_SECOND, rate);
-  GST_BUFFER_OFFSET (outbuf) = self->next_off;
-  if (GST_BUFFER_OFFSET_IS_VALID (outbuf))
-    GST_BUFFER_OFFSET_END (outbuf) = self->next_off + output_samples / channels;
-  else
+      gst_util_uint64_scale_round (output_samples / channels, GST_SECOND, rate);
+  if (self->start_off != GST_BUFFER_OFFSET_NONE) {
+    GST_BUFFER_OFFSET (outbuf) = self->start_off + self->nsamples;
+    GST_BUFFER_OFFSET_END (outbuf) =
+        self->start_off + output_samples / channels;
+  } else {
+    GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+  }
 
   if (output_samples < input_samples) {
     GST_BUFFER_DATA (outbuf) +=
@@ -370,8 +388,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
         diff * (GST_AUDIO_FILTER (self)->format.width / 8);
   }
 
-  self->next_ts += GST_BUFFER_DURATION (outbuf);
-  self->next_off = GST_BUFFER_OFFSET_END (outbuf);
+  self->nsamples += output_samples / channels;
 
   GST_DEBUG_OBJECT (self, "Pushing buffer of size %d with timestamp: %"
       GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
@@ -389,8 +406,9 @@ gst_audio_fx_base_fir_filter_start (GstBaseTransform * base)
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 
   self->buffer_fill = 0;
-  self->next_ts = GST_CLOCK_TIME_NONE;
-  self->next_off = GST_BUFFER_OFFSET_NONE;
+  self->start_ts = GST_CLOCK_TIME_NONE;
+  self->start_off = GST_BUFFER_OFFSET_NONE;
+  self->nsamples = 0;
 
   return TRUE;
 }
@@ -433,7 +451,8 @@ gst_audio_fx_base_fir_filter_query (GstPad * pad, GstQuery * query)
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
           /* add our own latency */
-          latency = gst_util_uint64_scale (self->latency, GST_SECOND, rate);
+          latency =
+              gst_util_uint64_scale_round (self->latency, GST_SECOND, rate);
 
           GST_DEBUG_OBJECT (self, "Our latency: %"
               GST_TIME_FORMAT, GST_TIME_ARGS (latency));
@@ -479,8 +498,9 @@ gst_audio_fx_base_fir_filter_event (GstBaseTransform * base, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       gst_audio_fx_base_fir_filter_push_residue (self);
-      self->next_ts = GST_CLOCK_TIME_NONE;
-      self->next_off = GST_BUFFER_OFFSET_NONE;
+      self->start_ts = GST_CLOCK_TIME_NONE;
+      self->start_off = GST_BUFFER_OFFSET_NONE;
+      self->nsamples = 0;
       break;
     default:
       break;
@@ -499,8 +519,9 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   GST_BASE_TRANSFORM_LOCK (self);
   if (self->buffer) {
     gst_audio_fx_base_fir_filter_push_residue (self);
-    self->next_ts = GST_CLOCK_TIME_NONE;
-    self->next_off = GST_BUFFER_OFFSET_NONE;
+    self->start_ts = GST_CLOCK_TIME_NONE;
+    self->start_off = GST_BUFFER_OFFSET_NONE;
+    self->nsamples = 0;
     self->buffer_fill = 0;
   }
 

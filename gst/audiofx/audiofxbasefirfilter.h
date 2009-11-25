@@ -65,8 +65,9 @@ struct _GstAudioFXBaseFIRFilter {
 
   guint64 latency;
 
-  GstClockTime next_ts;
-  guint64 next_off;
+  GstClockTime start_ts;        /* start timestamp after a discont */
+  guint64 start_off;            /* start offset after a discont */
+  guint64 nsamples;             /* number of samples since last discont */
 };
 
 struct _GstAudioFXBaseFIRFilterClass {
