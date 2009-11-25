@@ -61,6 +61,7 @@ namespace Gst.GLib {
 				// Both branches remove our delegate from the
 				// managed list of handlers, but only
 				// Source.Remove will remove it from the
+				// unmanaged list also.
 
 				if (disposing)
 					Remove ();

@@ -552,7 +552,7 @@ namespace Gst.GLib {
 				else if (type == GType.UInt64.Val)
 					g_value_set_uint64 (ref this, (ulong) value);
 				else if (type == GType.ULong.Val)
-					SetULongForPlatform ((ulong) value);
+					SetULongForPlatform (Convert.ToUInt64 (value));
 				else if (GType.Is (type, GType.Enum))
 					g_value_set_enum (ref this, (int)value);
 				else if (GType.Is (type, GType.Flags))

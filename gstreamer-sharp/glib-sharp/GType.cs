@@ -230,8 +230,8 @@ namespace Gst.GLib {
 					foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
 						if (ref_name.Name != asm_name)
 							continue;
-						string asm_dir = Path.GetDirectoryName (asm.Location);
 						try {
+							string asm_dir = Path.GetDirectoryName (asm.Location);
 							Assembly ref_asm;
 							if (File.Exists (Path.Combine (asm_dir, ref_name.Name + ".dll")))
 								ref_asm = Assembly.LoadFrom (Path.Combine (asm_dir, ref_name.Name + ".dll"));
