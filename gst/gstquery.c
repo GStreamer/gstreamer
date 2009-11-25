@@ -31,9 +31,9 @@
  * core.
  * Query types can be used to perform queries on pads and elements.
  *
- * Queries can be created using the gst_query_new_xxx() functions.
- * Query values can be set using gst_query_set_xxx(), and parsed using
- * gst_query_parse_xxx() helpers.
+ * Queries can be created using the gst_query_new_*() functions.
+ * Query values can be set using gst_query_set_*(), and parsed using
+ * gst_query_parse_*() helpers.
  *
  * The following example shows how to query the duration of a pipeline:
  *
