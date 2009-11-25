@@ -458,6 +458,10 @@
       <Type Name="PropertyProbeImplementor" Kind="Interface" />
       <Type Name="SignalChangedArgs" Kind="Class" />
       <Type Name="SignalChangedHandler" Kind="Delegate" />
+      <Type Name="StreamVolume" Kind="Interface" />
+      <Type Name="StreamVolumeAdapter" Kind="Class" />
+      <Type Name="StreamVolumeFormat" Kind="Enumeration" />
+      <Type Name="StreamVolumeImplementor" Kind="Interface" />
       <Type Name="Tuner" Kind="Interface" />
       <Type Name="TunerAdapter" Kind="Class" />
       <Type Name="TunerChannel" Kind="Class" />

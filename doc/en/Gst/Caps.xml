@@ -156,6 +156,25 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="CanIntersect">
+      <MemberSignature Language="C#" Value="public bool CanIntersect (Gst.Caps caps2);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="caps2" Type="Gst.Caps" />
+      </Parameters>
+      <Docs>
+        <param name="caps2">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Copy">
       <MemberSignature Language="C#" Value="public Gst.Caps Copy ();" />
       <MemberType>Method</MemberType>

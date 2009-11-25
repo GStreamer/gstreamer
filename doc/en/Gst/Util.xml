@@ -191,6 +191,98 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="ScaleUInt64Ceil">
+      <MemberSignature Language="C#" Value="public static ulong ScaleUInt64Ceil (ulong val, int num, int denom);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.UInt64" />
+        <Parameter Name="num" Type="System.Int32" />
+        <Parameter Name="denom" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <param name="num">To be added.</param>
+        <param name="denom">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScaleUInt64Ceil">
+      <MemberSignature Language="C#" Value="public static ulong ScaleUInt64Ceil (ulong val, ulong num, ulong denom);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.UInt64" />
+        <Parameter Name="num" Type="System.UInt64" />
+        <Parameter Name="denom" Type="System.UInt64" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <param name="num">To be added.</param>
+        <param name="denom">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScaleUInt64Round">
+      <MemberSignature Language="C#" Value="public static ulong ScaleUInt64Round (ulong val, int num, int denom);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.UInt64" />
+        <Parameter Name="num" Type="System.Int32" />
+        <Parameter Name="denom" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <param name="num">To be added.</param>
+        <param name="denom">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScaleUInt64Round">
+      <MemberSignature Language="C#" Value="public static ulong ScaleUInt64Round (ulong val, ulong num, ulong denom);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.2.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.UInt64" />
+        <Parameter Name="num" Type="System.UInt64" />
+        <Parameter Name="denom" Type="System.UInt64" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <param name="num">To be added.</param>
+        <param name="denom">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SeqnumNext">
       <MemberSignature Language="C#" Value="public static uint SeqnumNext ();" />
       <MemberType>Method</MemberType>

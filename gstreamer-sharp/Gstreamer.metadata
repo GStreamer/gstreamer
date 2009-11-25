@@ -1014,6 +1014,10 @@
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_object_arg']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale']" name="name">ScaleUInt64</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int']" name="name">ScaleUInt64</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_round']" name="name">ScaleUInt64Round</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int_round']" name="name">ScaleUInt64Round</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_ceil']" name="name">ScaleUInt64Ceil</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int_ceil']" name="name">ScaleUInt64Ceil</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_value_from_string']" name="hidden">1</attr>
 
   <!-- We implement this ourselves -->
@@ -1100,14 +1104,62 @@
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint32_be']" name="name">GetUInt32Be</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint64_le']" name="name">GetUint64Le</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint64_be']" name="name">GetUInt64Be</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_float32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_float32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_float64_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_float64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_float32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_float32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_float64_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_float64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int8_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int16_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int16_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int24_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int24_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_int64_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint8_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint16_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint16_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint24_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint24_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_uint64_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int8_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int16_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int16_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int24_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int24_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_int64_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint8_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint16_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint16_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint24_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint24_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint32_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint32_be_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint64_le_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_uint64_be_unchecked']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_data_unchecked']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_data_unchecked']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_dup_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_dup_data_unchecked']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_data']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_dup_string_utf8']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_dup_string_utf16']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_skip_string_utf16']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_dup_string_utf32']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_skip_string_utf32']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_skip_unchecked']" name="hidden">1</attr>
 
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_skip_string_utf8']" name="name">SkipString</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_get_string_utf8']" name="name">GetString</attr>
@@ -1283,6 +1335,7 @@
   <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_mouse_move_event']" name="hidden">1</attr>
   <attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_event_parse_command']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/interface[@cname='GstStreamVolume']/property" name="hidden">1</attr>
 
   <remove-node path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']/parameters/parameter[@name='tuner']" />
   <remove-attr path="/api/namespace/interface[@cname='GstTuner']/method[@cname='gst_tuner_norm_changed']" name="shared" />

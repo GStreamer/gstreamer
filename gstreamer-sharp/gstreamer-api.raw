@@ -3626,10 +3626,10 @@
       <method name="GetFixedCapsFunc" cname="gst_pad_get_fixed_caps_func">
         <return-type type="GstCaps*" />
       </method>
-      <method name="GetInternalLinks" cname="gst_pad_get_internal_links">
+      <method name="GetInternalLinks" cname="gst_pad_get_internal_links" deprecated="1">
         <return-type type="GList*" />
       </method>
-      <method name="GetInternalLinksDefault" cname="gst_pad_get_internal_links_default">
+      <method name="GetInternalLinksDefault" cname="gst_pad_get_internal_links_default" deprecated="1">
         <return-type type="GList*" />
       </method>
       <method name="GetNegotiatedCaps" cname="gst_pad_get_negotiated_caps">
@@ -3955,7 +3955,7 @@
           <parameter type="GstPadGetRangeFunction" name="get" />
         </parameters>
       </method>
-      <method name="SetInternalLinkFunction" cname="gst_pad_set_internal_link_function">
+      <method name="SetInternalLinkFunction" cname="gst_pad_set_internal_link_function" deprecated="1">
         <return-type type="void" />
         <parameters>
           <parameter type="GstPadIntLinkFunction" name="intlink" />
@@ -5016,6 +5016,12 @@
         <return-type type="void" />
         <parameters>
           <parameter type="GstStructure*" name="structure" />
+        </parameters>
+      </method>
+      <method name="CanIntersect" cname="gst_caps_can_intersect">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-GstCaps*" name="caps2" />
         </parameters>
       </method>
       <method name="Copy" cname="gst_caps_copy">
@@ -6614,12 +6620,44 @@
           <parameter type="guint64" name="denom" />
         </parameters>
       </method>
+      <method name="Uint64ScaleCeil" cname="gst_util_uint64_scale_ceil" shared="true">
+        <return-type type="guint64" />
+        <parameters>
+          <parameter type="guint64" name="val" />
+          <parameter type="guint64" name="num" />
+          <parameter type="guint64" name="denom" />
+        </parameters>
+      </method>
       <method name="Uint64ScaleInt" cname="gst_util_uint64_scale_int" shared="true">
         <return-type type="guint64" />
         <parameters>
           <parameter type="guint64" name="val" />
           <parameter type="gint" name="num" />
           <parameter type="gint" name="denom" />
+        </parameters>
+      </method>
+      <method name="Uint64ScaleIntCeil" cname="gst_util_uint64_scale_int_ceil" shared="true">
+        <return-type type="guint64" />
+        <parameters>
+          <parameter type="guint64" name="val" />
+          <parameter type="gint" name="num" />
+          <parameter type="gint" name="denom" />
+        </parameters>
+      </method>
+      <method name="Uint64ScaleIntRound" cname="gst_util_uint64_scale_int_round" shared="true">
+        <return-type type="guint64" />
+        <parameters>
+          <parameter type="guint64" name="val" />
+          <parameter type="gint" name="num" />
+          <parameter type="gint" name="denom" />
+        </parameters>
+      </method>
+      <method name="Uint64ScaleRound" cname="gst_util_uint64_scale_round" shared="true">
+        <return-type type="guint64" />
+        <parameters>
+          <parameter type="guint64" name="val" />
+          <parameter type="guint64" name="num" />
+          <parameter type="guint64" name="denom" />
         </parameters>
       </method>
     </class>
@@ -7494,6 +7532,12 @@
           <parameter type="guint8**" name="val" />
         </parameters>
       </method>
+      <method name="DupDataUnchecked" cname="gst_byte_reader_dup_data_unchecked">
+        <return-type type="guint8*" />
+        <parameters>
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
       <method name="DupStringUtf16" cname="gst_byte_reader_dup_string_utf16">
         <return-type type="gboolean" />
         <parameters>
@@ -7522,11 +7566,20 @@
           <parameter type="const-guint8**" name="val" />
         </parameters>
       </method>
+      <method name="GetDataUnchecked" cname="gst_byte_reader_get_data_unchecked">
+        <return-type type="const-guint8*" />
+        <parameters>
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
       <method name="GetFloat32Be" cname="gst_byte_reader_get_float32_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gfloat*" name="val" />
         </parameters>
+      </method>
+      <method name="GetFloat32BeUnchecked" cname="gst_byte_reader_get_float32_be_unchecked">
+        <return-type type="gfloat" />
       </method>
       <method name="GetFloat32Le" cname="gst_byte_reader_get_float32_le">
         <return-type type="gboolean" />
@@ -7534,11 +7587,17 @@
           <parameter type="gfloat*" name="val" />
         </parameters>
       </method>
+      <method name="GetFloat32LeUnchecked" cname="gst_byte_reader_get_float32_le_unchecked">
+        <return-type type="gfloat" />
+      </method>
       <method name="GetFloat64Be" cname="gst_byte_reader_get_float64_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gdouble*" name="val" />
         </parameters>
+      </method>
+      <method name="GetFloat64BeUnchecked" cname="gst_byte_reader_get_float64_be_unchecked">
+        <return-type type="gdouble" />
       </method>
       <method name="GetFloat64Le" cname="gst_byte_reader_get_float64_le">
         <return-type type="gboolean" />
@@ -7546,11 +7605,17 @@
           <parameter type="gdouble*" name="val" />
         </parameters>
       </method>
+      <method name="GetFloat64LeUnchecked" cname="gst_byte_reader_get_float64_le_unchecked">
+        <return-type type="gdouble" />
+      </method>
       <method name="GetInt16Be" cname="gst_byte_reader_get_int16_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint16*" name="val" />
         </parameters>
+      </method>
+      <method name="GetInt16BeUnchecked" cname="gst_byte_reader_get_int16_be_unchecked">
+        <return-type type="gint16" />
       </method>
       <method name="GetInt16Le" cname="gst_byte_reader_get_int16_le">
         <return-type type="gboolean" />
@@ -7558,11 +7623,17 @@
           <parameter type="gint16*" name="val" />
         </parameters>
       </method>
+      <method name="GetInt16LeUnchecked" cname="gst_byte_reader_get_int16_le_unchecked">
+        <return-type type="gint16" />
+      </method>
       <method name="GetInt24Be" cname="gst_byte_reader_get_int24_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint32*" name="val" />
         </parameters>
+      </method>
+      <method name="GetInt24BeUnchecked" cname="gst_byte_reader_get_int24_be_unchecked">
+        <return-type type="gint32" />
       </method>
       <method name="GetInt24Le" cname="gst_byte_reader_get_int24_le">
         <return-type type="gboolean" />
@@ -7570,11 +7641,17 @@
           <parameter type="gint32*" name="val" />
         </parameters>
       </method>
+      <method name="GetInt24LeUnchecked" cname="gst_byte_reader_get_int24_le_unchecked">
+        <return-type type="gint32" />
+      </method>
       <method name="GetInt32Be" cname="gst_byte_reader_get_int32_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint32*" name="val" />
         </parameters>
+      </method>
+      <method name="GetInt32BeUnchecked" cname="gst_byte_reader_get_int32_be_unchecked">
+        <return-type type="gint32" />
       </method>
       <method name="GetInt32Le" cname="gst_byte_reader_get_int32_le">
         <return-type type="gboolean" />
@@ -7582,11 +7659,17 @@
           <parameter type="gint32*" name="val" />
         </parameters>
       </method>
+      <method name="GetInt32LeUnchecked" cname="gst_byte_reader_get_int32_le_unchecked">
+        <return-type type="gint32" />
+      </method>
       <method name="GetInt64Be" cname="gst_byte_reader_get_int64_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint64*" name="val" />
         </parameters>
+      </method>
+      <method name="GetInt64BeUnchecked" cname="gst_byte_reader_get_int64_be_unchecked">
+        <return-type type="gint64" />
       </method>
       <method name="GetInt64Le" cname="gst_byte_reader_get_int64_le">
         <return-type type="gboolean" />
@@ -7594,11 +7677,17 @@
           <parameter type="gint64*" name="val" />
         </parameters>
       </method>
+      <method name="GetInt64LeUnchecked" cname="gst_byte_reader_get_int64_le_unchecked">
+        <return-type type="gint64" />
+      </method>
       <method name="GetInt8" cname="gst_byte_reader_get_int8">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint8*" name="val" />
         </parameters>
+      </method>
+      <method name="GetInt8Unchecked" cname="gst_byte_reader_get_int8_unchecked">
+        <return-type type="gint8" />
       </method>
       <method name="GetPos" cname="gst_byte_reader_get_pos">
         <return-type type="guint" />
@@ -7618,11 +7707,17 @@
           <parameter type="guint16*" name="val" />
         </parameters>
       </method>
+      <method name="GetUint16BeUnchecked" cname="gst_byte_reader_get_uint16_be_unchecked">
+        <return-type type="guint16" />
+      </method>
       <method name="GetUint16Le" cname="gst_byte_reader_get_uint16_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint16*" name="val" />
         </parameters>
+      </method>
+      <method name="GetUint16LeUnchecked" cname="gst_byte_reader_get_uint16_le_unchecked">
+        <return-type type="guint16" />
       </method>
       <method name="GetUint24Be" cname="gst_byte_reader_get_uint24_be">
         <return-type type="gboolean" />
@@ -7630,11 +7725,17 @@
           <parameter type="guint32*" name="val" />
         </parameters>
       </method>
+      <method name="GetUint24BeUnchecked" cname="gst_byte_reader_get_uint24_be_unchecked">
+        <return-type type="guint32" />
+      </method>
       <method name="GetUint24Le" cname="gst_byte_reader_get_uint24_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint32*" name="val" />
         </parameters>
+      </method>
+      <method name="GetUint24LeUnchecked" cname="gst_byte_reader_get_uint24_le_unchecked">
+        <return-type type="guint32" />
       </method>
       <method name="GetUint32Be" cname="gst_byte_reader_get_uint32_be">
         <return-type type="gboolean" />
@@ -7642,11 +7743,17 @@
           <parameter type="guint32*" name="val" />
         </parameters>
       </method>
+      <method name="GetUint32BeUnchecked" cname="gst_byte_reader_get_uint32_be_unchecked">
+        <return-type type="guint32" />
+      </method>
       <method name="GetUint32Le" cname="gst_byte_reader_get_uint32_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint32*" name="val" />
         </parameters>
+      </method>
+      <method name="GetUint32LeUnchecked" cname="gst_byte_reader_get_uint32_le_unchecked">
+        <return-type type="guint32" />
       </method>
       <method name="GetUint64Be" cname="gst_byte_reader_get_uint64_be">
         <return-type type="gboolean" />
@@ -7654,17 +7761,26 @@
           <parameter type="guint64*" name="val" />
         </parameters>
       </method>
+      <method name="GetUint64BeUnchecked" cname="gst_byte_reader_get_uint64_be_unchecked">
+        <return-type type="guint64" />
+      </method>
       <method name="GetUint64Le" cname="gst_byte_reader_get_uint64_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint64*" name="val" />
         </parameters>
       </method>
+      <method name="GetUint64LeUnchecked" cname="gst_byte_reader_get_uint64_le_unchecked">
+        <return-type type="guint64" />
+      </method>
       <method name="GetUint8" cname="gst_byte_reader_get_uint8">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint8*" name="val" />
         </parameters>
+      </method>
+      <method name="GetUint8Unchecked" cname="gst_byte_reader_get_uint8_unchecked">
+        <return-type type="guint8" />
       </method>
       <method name="Init" cname="gst_byte_reader_init">
         <return-type type="void" />
@@ -7706,11 +7822,17 @@
           <parameter type="const-guint8**" name="val" />
         </parameters>
       </method>
+      <method name="PeekDataUnchecked" cname="gst_byte_reader_peek_data_unchecked">
+        <return-type type="const-guint8*" />
+      </method>
       <method name="PeekFloat32Be" cname="gst_byte_reader_peek_float32_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gfloat*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekFloat32BeUnchecked" cname="gst_byte_reader_peek_float32_be_unchecked">
+        <return-type type="gfloat" />
       </method>
       <method name="PeekFloat32Le" cname="gst_byte_reader_peek_float32_le">
         <return-type type="gboolean" />
@@ -7718,11 +7840,17 @@
           <parameter type="gfloat*" name="val" />
         </parameters>
       </method>
+      <method name="PeekFloat32LeUnchecked" cname="gst_byte_reader_peek_float32_le_unchecked">
+        <return-type type="gfloat" />
+      </method>
       <method name="PeekFloat64Be" cname="gst_byte_reader_peek_float64_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gdouble*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekFloat64BeUnchecked" cname="gst_byte_reader_peek_float64_be_unchecked">
+        <return-type type="gdouble" />
       </method>
       <method name="PeekFloat64Le" cname="gst_byte_reader_peek_float64_le">
         <return-type type="gboolean" />
@@ -7730,11 +7858,17 @@
           <parameter type="gdouble*" name="val" />
         </parameters>
       </method>
+      <method name="PeekFloat64LeUnchecked" cname="gst_byte_reader_peek_float64_le_unchecked">
+        <return-type type="gdouble" />
+      </method>
       <method name="PeekInt16Be" cname="gst_byte_reader_peek_int16_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint16*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekInt16BeUnchecked" cname="gst_byte_reader_peek_int16_be_unchecked">
+        <return-type type="gint16" />
       </method>
       <method name="PeekInt16Le" cname="gst_byte_reader_peek_int16_le">
         <return-type type="gboolean" />
@@ -7742,11 +7876,17 @@
           <parameter type="gint16*" name="val" />
         </parameters>
       </method>
+      <method name="PeekInt16LeUnchecked" cname="gst_byte_reader_peek_int16_le_unchecked">
+        <return-type type="gint16" />
+      </method>
       <method name="PeekInt24Be" cname="gst_byte_reader_peek_int24_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint32*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekInt24BeUnchecked" cname="gst_byte_reader_peek_int24_be_unchecked">
+        <return-type type="gint32" />
       </method>
       <method name="PeekInt24Le" cname="gst_byte_reader_peek_int24_le">
         <return-type type="gboolean" />
@@ -7754,11 +7894,17 @@
           <parameter type="gint32*" name="val" />
         </parameters>
       </method>
+      <method name="PeekInt24LeUnchecked" cname="gst_byte_reader_peek_int24_le_unchecked">
+        <return-type type="gint32" />
+      </method>
       <method name="PeekInt32Be" cname="gst_byte_reader_peek_int32_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint32*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekInt32BeUnchecked" cname="gst_byte_reader_peek_int32_be_unchecked">
+        <return-type type="gint32" />
       </method>
       <method name="PeekInt32Le" cname="gst_byte_reader_peek_int32_le">
         <return-type type="gboolean" />
@@ -7766,11 +7912,17 @@
           <parameter type="gint32*" name="val" />
         </parameters>
       </method>
+      <method name="PeekInt32LeUnchecked" cname="gst_byte_reader_peek_int32_le_unchecked">
+        <return-type type="gint32" />
+      </method>
       <method name="PeekInt64Be" cname="gst_byte_reader_peek_int64_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint64*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekInt64BeUnchecked" cname="gst_byte_reader_peek_int64_be_unchecked">
+        <return-type type="gint64" />
       </method>
       <method name="PeekInt64Le" cname="gst_byte_reader_peek_int64_le">
         <return-type type="gboolean" />
@@ -7778,11 +7930,17 @@
           <parameter type="gint64*" name="val" />
         </parameters>
       </method>
+      <method name="PeekInt64LeUnchecked" cname="gst_byte_reader_peek_int64_le_unchecked">
+        <return-type type="gint64" />
+      </method>
       <method name="PeekInt8" cname="gst_byte_reader_peek_int8">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gint8*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekInt8Unchecked" cname="gst_byte_reader_peek_int8_unchecked">
+        <return-type type="gint8" />
       </method>
       <method name="PeekStringUtf8" cname="gst_byte_reader_peek_string_utf8">
         <return-type type="gboolean" />
@@ -7796,11 +7954,17 @@
           <parameter type="guint16*" name="val" />
         </parameters>
       </method>
+      <method name="PeekUint16BeUnchecked" cname="gst_byte_reader_peek_uint16_be_unchecked">
+        <return-type type="guint16" />
+      </method>
       <method name="PeekUint16Le" cname="gst_byte_reader_peek_uint16_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint16*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekUint16LeUnchecked" cname="gst_byte_reader_peek_uint16_le_unchecked">
+        <return-type type="guint16" />
       </method>
       <method name="PeekUint24Be" cname="gst_byte_reader_peek_uint24_be">
         <return-type type="gboolean" />
@@ -7808,11 +7972,17 @@
           <parameter type="guint32*" name="val" />
         </parameters>
       </method>
+      <method name="PeekUint24BeUnchecked" cname="gst_byte_reader_peek_uint24_be_unchecked">
+        <return-type type="guint32" />
+      </method>
       <method name="PeekUint24Le" cname="gst_byte_reader_peek_uint24_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint32*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekUint24LeUnchecked" cname="gst_byte_reader_peek_uint24_le_unchecked">
+        <return-type type="guint32" />
       </method>
       <method name="PeekUint32Be" cname="gst_byte_reader_peek_uint32_be">
         <return-type type="gboolean" />
@@ -7820,11 +7990,17 @@
           <parameter type="guint32*" name="val" />
         </parameters>
       </method>
+      <method name="PeekUint32BeUnchecked" cname="gst_byte_reader_peek_uint32_be_unchecked">
+        <return-type type="guint32" />
+      </method>
       <method name="PeekUint32Le" cname="gst_byte_reader_peek_uint32_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint32*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekUint32LeUnchecked" cname="gst_byte_reader_peek_uint32_le_unchecked">
+        <return-type type="guint32" />
       </method>
       <method name="PeekUint64Be" cname="gst_byte_reader_peek_uint64_be">
         <return-type type="gboolean" />
@@ -7832,17 +8008,26 @@
           <parameter type="guint64*" name="val" />
         </parameters>
       </method>
+      <method name="PeekUint64BeUnchecked" cname="gst_byte_reader_peek_uint64_be_unchecked">
+        <return-type type="guint64" />
+      </method>
       <method name="PeekUint64Le" cname="gst_byte_reader_peek_uint64_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint64*" name="val" />
         </parameters>
       </method>
+      <method name="PeekUint64LeUnchecked" cname="gst_byte_reader_peek_uint64_le_unchecked">
+        <return-type type="guint64" />
+      </method>
       <method name="PeekUint8" cname="gst_byte_reader_peek_uint8">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="guint8*" name="val" />
         </parameters>
+      </method>
+      <method name="PeekUint8Unchecked" cname="gst_byte_reader_peek_uint8_unchecked">
+        <return-type type="guint8" />
       </method>
       <method name="SetPos" cname="gst_byte_reader_set_pos">
         <return-type type="gboolean" />
@@ -7864,6 +8049,12 @@
       </method>
       <method name="SkipStringUtf8" cname="gst_byte_reader_skip_string_utf8">
         <return-type type="gboolean" />
+      </method>
+      <method name="SkipUnchecked" cname="gst_byte_reader_skip_unchecked">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="guint" name="nbytes" />
+        </parameters>
       </method>
     </struct>
   </namespace>
@@ -8599,6 +8790,8 @@
       <member cname="GST_MIXER_TRACK_NO_RECORD" name="NoRecord" value="1 &lt;&lt; 6" />
       <member cname="GST_MIXER_TRACK_NO_MUTE" name="NoMute" value="1 &lt;&lt; 7" />
       <member cname="GST_MIXER_TRACK_WHITELIST" name="Whitelist" value="1 &lt;&lt; 8" />
+      <member cname="GST_MIXER_TRACK_READONLY" name="Readonly" value="1 &lt;&lt; 9" />
+      <member cname="GST_MIXER_TRACK_WRITEONLY" name="Writeonly" value="1 &lt;&lt; 10" />
     </enum>
     <enum name="MixerType" cname="GstMixerType" gtype="gst_mixer_type_get_type" type="enum">
       <member cname="GST_MIXER_HARDWARE" name="Hardware" />
@@ -8640,6 +8833,11 @@
       <member cname="GST_NAVIGATION_QUERY_INVALID" name="Invalid" />
       <member cname="GST_NAVIGATION_QUERY_COMMANDS" name="Commands" value="1" />
       <member cname="GST_NAVIGATION_QUERY_ANGLES" name="Angles" value="2" />
+    </enum>
+    <enum name="StreamVolumeFormat" cname="GstStreamVolumeFormat" gtype="gst_stream_volume_format_get_type" type="enum">
+      <member cname="GST_STREAM_VOLUME_FORMAT_LINEAR" name="Linear" />
+      <member cname="GST_STREAM_VOLUME_FORMAT_CUBIC" name="Cubic" />
+      <member cname="GST_STREAM_VOLUME_FORMAT_DB" name="Db" />
     </enum>
     <enum name="TunerChannelFlags" cname="GstTunerChannelFlags" gtype="gst_tuner_channel_flags_get_type" type="flags">
       <member cname="GST_TUNER_CHANNEL_INPUT" name="Input" value="1 &lt;&lt; 0" />
@@ -9191,6 +9389,47 @@
         </parameters>
       </method>
     </interface>
+    <interface name="StreamVolume" cname="GstStreamVolume">
+      <class_struct cname="GstStreamVolumeInterface">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
+      <property name="Volume" cname="volume" type="gdouble" readable="true" writeable="true" />
+      <property name="Mute" cname="mute" type="gboolean" readable="true" writeable="true" />
+      <method name="ConvertVolume" cname="gst_stream_volume_convert_volume" shared="true">
+        <return-type type="gdouble" />
+        <parameters>
+          <parameter type="GstStreamVolumeFormat" name="from" />
+          <parameter type="GstStreamVolumeFormat" name="to" />
+          <parameter type="gdouble" name="val" />
+        </parameters>
+      </method>
+      <method name="GetMute" cname="gst_stream_volume_get_mute">
+        <return-type type="gboolean" />
+      </method>
+      <method name="GetType" cname="gst_stream_volume_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
+      <method name="GetVolume" cname="gst_stream_volume_get_volume">
+        <return-type type="gdouble" />
+        <parameters>
+          <parameter type="GstStreamVolumeFormat" name="format" />
+        </parameters>
+      </method>
+      <method name="SetMute" cname="gst_stream_volume_set_mute">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="gboolean" name="mute" />
+        </parameters>
+      </method>
+      <method name="SetVolume" cname="gst_stream_volume_set_volume">
+        <return-type type="void" />
+        <parameters>
+          <parameter type="GstStreamVolumeFormat" name="format" />
+          <parameter type="gdouble" name="val" />
+        </parameters>
+      </method>
+    </interface>
     <interface name="Tuner" cname="GstTuner">
       <class_struct cname="GstTunerClass">
         <field name="Klass" cname="klass" type="GTypeInterface" />
@@ -9679,11 +9918,19 @@
     <object name="VideoSink" cname="GstVideoSink" parent="GstBaseSink">
       <class_struct cname="GstVideoSinkClass">
         <field name="ParentClass" cname="parent_class" type="GstBaseSinkClass" />
-        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+        <method vm="show_frame" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING - 1" />
       </class_struct>
       <field name="Width" cname="width" type="gint" />
       <field name="Height" cname="height" type="gint" />
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
+      <field name="Priv" cname="priv" type="GstVideoSinkPrivate*" />
+      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING - 1" type="gpointer" />
+      <virtual_method name="ShowFrame" cname="show_frame">
+        <return-type type="GstFlowReturn" />
+        <parameters>
+          <parameter type="GstBuffer*" name="buf" />
+        </parameters>
+      </virtual_method>
       <method name="CenterRect" cname="gst_video_sink_center_rect" shared="true">
         <return-type type="void" />
         <parameters>

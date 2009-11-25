@@ -1,0 +1,22 @@
+<Type Name="StreamVolumeImplementor" FullName="Gst.Interfaces.StreamVolumeImplementor">
+  <TypeSignature Language="C#" Value="public interface StreamVolumeImplementor : Gst.GLib.IWrapper" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.2.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>Gst.GLib.IWrapper</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Attributes>
+    <Attribute>
+      <AttributeName>Gst.GLib.GInterface(typeof(Gst.Interfaces.StreamVolumeAdapter))</AttributeName>
+    </Attribute>
+  </Attributes>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members />
+</Type>
