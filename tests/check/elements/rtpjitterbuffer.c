@@ -27,6 +27,7 @@
 static GstPad *mysrcpad, *mysinkpad;
 /* we also have a list of src buffers */
 static GList *inbuffers = NULL;
+static gint num_dropped = 0;
 
 #define RTP_CAPS_STRING    \
     "application/x-rtp, "               \
@@ -49,6 +50,16 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) [ 1, 2147483647 ]")
     );
 
+static void
+buffer_dropped (gpointer mem)
+{
+  if (mem) {
+    GST_DEBUG ("dropping buffer: data=%p", mem);
+    g_free (mem);
+    num_dropped++;
+  }
+}
+
 static GstElement *
 setup_jitterbuffer (gint num_buffers)
 {
@@ -56,7 +67,7 @@ setup_jitterbuffer (gint num_buffers)
   GstClock *clock;
   GstBuffer *buffer;
   GstCaps *caps;
-  /* generated with
+  /* a 20 sample audio block (2,5 ms) generated with
    * gst-launch audiotestsrc wave=silence blocksize=40 num-buffers=3 ! 
    *    "audio/x-raw-int,channels=1,rate=8000" ! mulawenc ! rtppcmupay !
    *     fakesink dump=1
@@ -68,7 +79,7 @@ setup_jitterbuffer (gint num_buffers)
   };
   GstClockTime ts = G_GUINT64_CONSTANT (0);
   GstClockTime tso = gst_util_uint64_scale (RTP_FRAME_SIZE, GST_SECOND, 8000);
-  /*guint latency = GST_TIME_AS_MSECONDS (num_buffers*tso); */
+  /*guint latency = GST_TIME_AS_MSECONDS (num_buffers * tso); */
   gint i;
 
   GST_DEBUG ("setup_jitterbuffer");
@@ -96,6 +107,8 @@ setup_jitterbuffer (gint num_buffers)
     gst_buffer_set_caps (buffer, caps);
     GST_BUFFER_TIMESTAMP (buffer) = ts;
     GST_BUFFER_DURATION (buffer) = tso;
+    GST_BUFFER_FREE_FUNC (buffer) = buffer_dropped;
+    GST_DEBUG ("created buffer: %p, data=%p", buffer, GST_BUFFER_DATA (buffer));
 
     if (!i)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -109,6 +122,7 @@ setup_jitterbuffer (gint num_buffers)
     ts += tso;
   }
   gst_caps_unref (caps);
+  num_dropped = 0;
 
   return jitterbuffer;
 }
@@ -139,9 +153,18 @@ check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
   GList *node;
   GstClockTime ts = G_GUINT64_CONSTANT (0);
   GstClockTime tso = gst_util_uint64_scale (RTP_FRAME_SIZE, GST_SECOND, 8000);
+  guint test_duration = GST_TIME_AS_USECONDS (num_buffers * tso);
   guint8 *data;
   guint16 prev_sn = 0, cur_sn;
   guint32 prev_ts = 0, cur_ts;
+
+  /* sleep for twice the duration of the tested buffers */
+  g_usleep (2 * test_duration);
+
+  GST_INFO ("of %d buffer %d/%d received/dropped", num_buffers,
+      g_list_length (buffers), num_dropped);
+  /* if this fails, not all buffers have been processed */
+  fail_unless_equals_int ((g_list_length (buffers) + num_dropped), num_buffers);
 
   /* check the buffer list */
   fail_unless_equals_int (g_list_length (buffers), num_buffers);
@@ -191,7 +214,6 @@ GST_START_TEST (test_push_forward_seq)
 
 GST_END_TEST;
 
-#if 0
 GST_START_TEST (test_push_backward_seq)
 {
   GstElement *jitterbuffer;
@@ -210,13 +232,6 @@ GST_START_TEST (test_push_backward_seq)
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
 
-  /* attempt to flush the jitterbuffer */
-#if 0
-  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
-  gst_element_set_state (jitterbuffer, GST_STATE_READY);
-  gst_element_get_state (jitterbuffer, NULL, NULL, GST_CLOCK_TIME_NONE);
-#endif
-
   /* check the buffer list */
   check_jitterbuffer_results (jitterbuffer, num_buffers);
 
@@ -225,7 +240,6 @@ GST_START_TEST (test_push_backward_seq)
 }
 
 GST_END_TEST;
-
 
 GST_START_TEST (test_push_unordered)
 {
@@ -246,13 +260,6 @@ GST_START_TEST (test_push_unordered)
   buffer = g_list_nth_data (inbuffers, 1);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
-  /* attempt to flush the jitterbuffer */
-#if 0
-  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
-  gst_element_set_state (jitterbuffer, GST_STATE_READY);
-  gst_element_get_state (jitterbuffer, NULL, NULL, GST_CLOCK_TIME_NONE);
-#endif
-
   /* check the buffer list */
   check_jitterbuffer_results (jitterbuffer, num_buffers);
 
@@ -261,7 +268,6 @@ GST_START_TEST (test_push_unordered)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 rtpjitterbuffer_suite (void)
@@ -270,15 +276,23 @@ rtpjitterbuffer_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_push_forward_seq);
   if (0) {
-    tcase_add_test (tc_chain, test_push_forward_seq);
+    /* this one does not work yet (bug in test or jitter buffer?), sometimes I get
+       elements/rtpjitterbuffer.c:168:F:general:test_push_backward_seq:0: 'g_list_length (buffers)' (1) is not equal to 'num_buffers' (3)
+       0:00:00.113317818   761  0x9a74008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
+       0:00:00.113547177   761  0x9a74008 WARN         rtpjitterbuffer rtpjitterbuffer.c:249:calculate_skew: backward timestamps at server, taking new base time
+     */
+    tcase_add_test (tc_chain, test_push_backward_seq);
   }
-#if 0
-  /* these don't work yet, buffers get dropped or never arrive in the buffers
-   * list */
-  tcase_add_test (tc_chain, test_push_backward_seq);
-  tcase_add_test (tc_chain, test_push_unordered);
-#endif
+  if (0) {
+    /* this one does not work yet (bug in test or jitter buffer?), sometimes I get
+       elements/rtpjitterbuffer.c:168:F:general:test_push_unordered:0: 'g_list_length (buffers)' (2) is not equal to 'num_buffers' (3)
+       0:00:00.090439642  1216  0x9096008 WARN      gstrtpjitterbuffer gstrtpjitterbuffer.c:1309:gst_rtp_jitter_buffer_chain:<gstrtpjitterbuffer> Packet #7205 too late as #7206 was already popped, dropping
+       0:00:00.090674798  1216  0x9096008 WARN      gstrtpjitterbuffer gstrtpjitterbuffer.c:1309:gst_rtp_jitter_buffer_chain:<gstrtpjitterbuffer> Packet #7204 too late as #7206 was already popped, dropping
+     */
+    tcase_add_test (tc_chain, test_push_unordered);
+  }
 
   /* FIXME: test buffer lists */
 
