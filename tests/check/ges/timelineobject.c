@@ -97,6 +97,8 @@ GST_START_TEST (test_object_properties)
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
 
+  ges_timeline_object_release_track_object (object, trackobject);
+
   g_object_unref (object);
   g_object_unref (track);
 }
