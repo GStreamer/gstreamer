@@ -3804,7 +3804,8 @@ gst_util_array_binary_search (gpointer array, guint num_elements,
  * Returns 1 if none other found.
  * This is Euclid's algorithm. */
 
-/** gst_util_greatest_common_divisor:
+/**
+ * gst_util_greatest_common_divisor:
  * @a: First value as #gint
  * @b: Second value as #gint
  *
@@ -3828,7 +3829,8 @@ gst_util_greatest_common_divisor (gint a, gint b)
   return ABS (a);
 }
 
-/** gst_util_fraction_to_double:
+/**
+ * gst_util_fraction_to_double:
  * @src_n: Fraction numerator as #gint
  * @src_d: Fraction denominator #gint
  * @dest: pointer to a #gdouble for the result
@@ -3856,7 +3858,8 @@ gst_util_fraction_to_double (gint src_n, gint src_d, gdouble * dest)
  * This algorithm takes care of overflows.
  */
 
-/** gst_util_double_to_fraction:
+/**
+ * gst_util_double_to_fraction:
  * @src: #gdouble to transform
  * @dest_n: pointer to a #gint to hold the result numerator
  * @dest_d: pointer to a #gint to hold the result denominator
@@ -3951,7 +3954,8 @@ gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
   *dest_d = D;
 }
 
-/** gst_util_fraction_multiply:
+/**
+ * gst_util_fraction_multiply:
  * @a_n: Numerator of first value
  * @a_d: Denominator of first value
  * @b_n: Numerator of second value
@@ -3993,7 +3997,8 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
   return TRUE;
 }
 
-/** gst_util_fraction_add:
+/**
+ * gst_util_fraction_add:
  * @a_n: Numerator of first value
  * @a_d: Denominator of first value
  * @b_n: Numerator of second value
