@@ -273,9 +273,9 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 {
+#ifndef OPENGL_ES2
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-#ifndef OPENGL_ES2
   glActiveTexture (GL_TEXTURE0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
@@ -295,31 +295,31 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 #else
 
   const GLfloat vVertices[] = { -1.0f, -1.0f, 0.0f,
-      0.0f, 0.0f,
-      1.0, -1.0f, 0.0f,
-      1.0f, 0.0f,
-      1.0f, 1.0f, 0.0f,
-      1.0f, 1.0f,
-      -1.0f, 1.0f, 0.0f,
-      0.0f, 1.0f
-    };
+    0.0f, 0.0f,
+    1.0, -1.0f, 0.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f
+  };
 
-    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-    //glClear (GL_COLOR_BUFFER_BIT);
+  //glClear (GL_COLOR_BUFFER_BIT);
 
-    //Load the vertex position
-    glVertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+  //Load the vertex position
+  glVertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
-    //Load the texture coordinate
-    glVertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+  //Load the texture coordinate
+  glVertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-    glEnableVertexAttribArray (effects->draw_attr_position_loc);
-    glEnableVertexAttribArray (effects->draw_attr_texture_loc);
+  glEnableVertexAttribArray (effects->draw_attr_position_loc);
+  glEnableVertexAttribArray (effects->draw_attr_texture_loc);
 
-    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 #endif
 
 }
@@ -329,6 +329,7 @@ set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
 //  GstGLEffects *effects = GST_GL_EFFECTS (data);
 
+#ifndef OPENGL_ES2
   const double mirrormatrix[16] = {
     -1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
@@ -336,7 +337,6 @@ set_horizontal_swap (GstGLDisplay * display, gpointer data)
     0.0, 0.0, 0.0, 1.0
   };
 
-#ifndef OPENGL_ES2
   glMatrixMode (GL_MODELVIEW);
   glLoadMatrixd (mirrormatrix);
 #endif
