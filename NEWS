@@ -1,6 +1,8 @@
-This is GStreamer C# bindings 0.9.1 "(Almost) nothing new here"
+This is GStreamer C# bindings 0.9.2 "One more step to completion"
 
-	* Update bindings to GStreamer 0.10.24
-	* Update internal glib-sharp copy to latest SVN trunk
-	* Some cleanup
+      * Update core/base bindings to 0.10.25
+      * Improve Gst.Buffer bindings and add ByteReader/BitReader bindings
+      * PbUtils bindings (missing codec installation, ...)
+      * Improved support for subclassing BaseTransform
+      * Various bugfixes
 

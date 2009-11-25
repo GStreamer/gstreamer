@@ -1,3 +1,859 @@
+=== release 0.9.2 ===
+
+2009-11-25  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  releasing 0.9.2, "One more step to completion"
+
+2009-11-25 11:17:39 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Update ChangeLog, NEWS, RELEASE and version number
+
+2009-11-25 10:10:52 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* samples/DecodeBinTranscoder.cs:
+	* samples/PlayBinPlayer.cs:
+	  Update samples to use decodebin2/playbin2
+
+2009-11-25 10:08:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* doc/en/Gst.BasePlugins/DecodeBin+NewDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+NewDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+RemovedDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+RemovedDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+UnknownTypeArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+UnknownTypeHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+MutedArgs.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+MutedHandler.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+StreamType.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo.xml:
+	* doc/en/Gst.BasePlugins/PlayBin.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2.xml:
+	* doc/en/Gst.BasePlugins/XImageSink.xml:
+	* doc/en/Gst.BasePlugins/XvImageSink.xml:
+	* doc/en/Gst.CorePlugins/FileSink.xml:
+	* doc/en/index.xml:
+	  Update docs
+
+2009-11-25 10:07:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Makefile.am:
+	* gstreamer-sharp/baseplugins/Makefile.am:
+	* gstreamer-sharp/baseplugins/decodebin.metadata:
+	* gstreamer-sharp/baseplugins/inspect/decodebin.raw:
+	* gstreamer-sharp/baseplugins/inspect/playbin.raw:
+	* gstreamer-sharp/baseplugins/inspect/playbin2.raw:
+	* gstreamer-sharp/baseplugins/inspect/ximagesink.raw:
+	* gstreamer-sharp/baseplugins/inspect/xvimagesink.raw:
+	* gstreamer-sharp/baseplugins/playbin.custom:
+	* gstreamer-sharp/baseplugins/playbin.metadata:
+	* gstreamer-sharp/baseplugins/playbin2.metadata:
+	* gstreamer-sharp/coreplugins/inspect/filesink.raw:
+	* gstreamer-sharp/coreplugins/inspect/identity.raw:
+	  Update plugin bindings, remove playbin/decodebin bindings and add ximagesink bindings
+
+2009-11-25 09:53:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* doc/en/Gst.Interfaces/MixerTrackFlags.xml:
+	* doc/en/Gst.Interfaces/StreamVolume.xml:
+	* doc/en/Gst.Interfaces/StreamVolumeAdapter.xml:
+	* doc/en/Gst.Interfaces/StreamVolumeFormat.xml:
+	* doc/en/Gst.Interfaces/StreamVolumeImplementor.xml:
+	* doc/en/Gst.Video/VideoSink.xml:
+	* doc/en/Gst/Caps.xml:
+	* doc/en/Gst/Tag.xml:
+	* doc/en/Gst/Util.xml:
+	* doc/en/index.xml:
+	* elementgen/interfaces/GstStreamVolume.cs:
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/Tag.custom:
+	* gstreamer-sharp/gstreamer-api.raw:
+	  Update bindings for 0.10.25 API
+
+2009-11-25 08:16:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* samples/GtkVideoPlayer.cs:
+	  If GTK 2.18 is used, make sure that the DrawingArea has a native window attached
+
+2009-11-25 08:15:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/glib-sharp/GType.cs:
+	* gstreamer-sharp/glib-sharp/Idle.cs:
+	* gstreamer-sharp/glib-sharp/Value.cs:
+	  Update glib-sharp from trunk
+	  Fixes bug #595377.
+
+2009-11-25 08:10:39 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* generator/Signal.cs:
+	* generator/gst-codegen.diff:
+	  Update code generator from gtk-sharp trunk
+
+2009-10-03 12:03:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Makefile.am:
+	* gstreamer-sharp/glib-sharp/Idle.cs:
+	* gstreamer-sharp/glib-sharp/Timeout.cs:
+	* gstreamer-sharp/glib-sharp/Value.cs:
+	* gstreamer-sharp/glib-sharp/gst-glib-sharp.diff:
+	  Update glib-sharp from gtk-sharp trunk
+
+2009-10-03 11:59:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* generator/ReturnValue.cs:
+	* generator/gst-codegen.diff:
+	  Update code generator from gtk-sharp trunk
+
+2009-10-03 11:51:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* samples/Makefile.am:
+	  Ship samples/TransformSample.cs in the tarballs
+
+2009-10-03 11:49:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/gstreamer-sharp.dll.config.in:
+	  Add pbutils library to the dllmaps
+
+2009-10-03 11:48:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* .gitignore:
+	  Update .gitignore
+
+2009-10-03 11:47:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* doc/en/Gst.Base/BitReader.xml:
+	* doc/en/Gst.Base/ByteReader.xml:
+	* doc/en/Gst.PbUtils/Descriptions.xml:
+	* doc/en/Gst.PbUtils/Install.xml:
+	* doc/en/Gst.PbUtils/InstallPluginsContext.xml:
+	* doc/en/Gst.PbUtils/InstallPluginsResultFunc.xml:
+	* doc/en/Gst.PbUtils/InstallPluginsReturn.xml:
+	* doc/en/Gst.PbUtils/MissingDetail.xml:
+	* doc/en/Gst/Object.xml:
+	* doc/en/index.xml:
+	* doc/en/ns-Gst.PbUtils.xml:
+	  Update docs
+
+2009-10-03 11:43:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Makefile.am:
+	* gstreamer-sharp/MissingPluginMessage.cs:
+	  Finish PbUtils bindings
+
+2009-10-03 11:34:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Add more PbUtils bindings
+
+2009-10-03 11:19:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/gstreamer-api.raw:
+	  Fix PbUtils bindings
+
+2009-10-03 11:09:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Move global PbUtils functions to the Gst.PbUtils.Descriptions static class
+
+2009-10-03 10:14:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* samples/GtkVideoPlayer.cs:
+	  Improve debugging in the gtk-video-player sample and set force-aspect-ratio to TRUE if available
+
+2009-10-03 10:14:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Object.custom:
+	  Add Object.HasProperty()
+
+2009-10-03 09:29:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Application.cs:
+	* gstreamer-sharp/gstreamer-api.raw:
+	* source/gstreamer-sharp-source.xml:
+	  First step of adding gstpbutils bindings
+	  Fixes bug #596110.
+
+2009-10-03 09:12:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/BitReader.custom:
+	* gstreamer-sharp/ByteReader.custom:
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/Makefile.am:
+	  Make sure that the Bit/BitReader buffer is not GC'd before we stop using it
+	  Also add a property to get the used buffer.
+
+2009-10-02 15:50:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* doc/en/Gst.App/AppSink.xml:
+	* doc/en/Gst.App/AppSrc.xml:
+	* doc/en/Gst.App/AppStreamType.xml:
+	* doc/en/Gst.App/NeedDataArgs.xml:
+	* doc/en/Gst.App/NeedDataHandler.xml:
+	* doc/en/Gst.App/NewBufferListArgs.xml:
+	* doc/en/Gst.App/NewBufferListHandler.xml:
+	* doc/en/Gst.App/SeekDataArgs.xml:
+	* doc/en/Gst.App/SeekDataHandler.xml:
+	* doc/en/Gst.Base/Adapter.xml:
+	* doc/en/Gst.Base/BaseSink.xml:
+	* doc/en/Gst.Base/BaseSrc.xml:
+	* doc/en/Gst.Base/BaseSrcFlags.xml:
+	* doc/en/Gst.Base/BaseTransform.xml:
+	* doc/en/Gst.Base/BitReader.xml:
+	* doc/en/Gst.Base/ByteReader.xml:
+	* doc/en/Gst.Base/PushSrc.xml:
+	* doc/en/Gst.Base/TypeFindHelper.xml:
+	* doc/en/Gst.Base/TypeFindHelperGetRangeFunction.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+NewDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+NewDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+RemovedDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+RemovedDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+UnknownTypeArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin+UnknownTypeHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugContinueArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugContinueHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugFactoriesArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugFactoriesHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugSelectArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugSelectHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugSortArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+AutoplugSortHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+NewDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+NewDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+RemovedDecodedPadArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+RemovedDecodedPadHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+UnknownTypeArgs.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2+UnknownTypeHandler.xml:
+	* doc/en/Gst.BasePlugins/DecodeBin2.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+MutedArgs.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+MutedHandler.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo+StreamType.xml:
+	* doc/en/Gst.BasePlugins/PlayBin+StreamInfo.xml:
+	* doc/en/Gst.BasePlugins/PlayBin.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+AudioTagsChangedArgs.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+AudioTagsChangedHandler.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+PlayFlagsType.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+TextTagsChangedArgs.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+TextTagsChangedHandler.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+VideoTagsChangedArgs.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2+VideoTagsChangedHandler.xml:
+	* doc/en/Gst.BasePlugins/PlayBin2.xml:
+	* doc/en/Gst.BasePlugins/XvImageSink.xml:
+	* doc/en/Gst.Cdda/CddaBaseSrc.xml:
+	* doc/en/Gst.Cdda/CddaBaseSrcMode.xml:
+	* doc/en/Gst.Cdda/CddaBaseSrcTrack.xml:
+	* doc/en/Gst.Controller/ControlSource+GetValueArrayCallback.xml:
+	* doc/en/Gst.Controller/ControlSource+GetValueCallback.xml:
+	* doc/en/Gst.Controller/ControlSource.xml:
+	* doc/en/Gst.Controller/Controller.xml:
+	* doc/en/Gst.Controller/InterpolateMode.xml:
+	* doc/en/Gst.Controller/InterpolationControlSource.xml:
+	* doc/en/Gst.Controller/LFOControlSource.xml:
+	* doc/en/Gst.Controller/LFOWaveform.xml:
+	* doc/en/Gst.CorePlugins/CapsFilter.xml:
+	* doc/en/Gst.CorePlugins/FakeSink+HandoffArgs.xml:
+	* doc/en/Gst.CorePlugins/FakeSink+HandoffHandler.xml:
+	* doc/en/Gst.CorePlugins/FakeSink+PrerollHandoffArgs.xml:
+	* doc/en/Gst.CorePlugins/FakeSink+PrerollHandoffHandler.xml:
+	* doc/en/Gst.CorePlugins/FakeSink+StateErrorType.xml:
+	* doc/en/Gst.CorePlugins/FakeSink.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc+DataTypeType.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc+FillTypeType.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc+HandoffArgs.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc+HandoffHandler.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc+SizeTypeType.xml:
+	* doc/en/Gst.CorePlugins/FakeSrc.xml:
+	* doc/en/Gst.CorePlugins/FdSink.xml:
+	* doc/en/Gst.CorePlugins/FdSrc.xml:
+	* doc/en/Gst.CorePlugins/FileIndex.xml:
+	* doc/en/Gst.CorePlugins/FileSink+BufferModeType.xml:
+	* doc/en/Gst.CorePlugins/FileSink.xml:
+	* doc/en/Gst.CorePlugins/FileSrc.xml:
+	* doc/en/Gst.CorePlugins/Identity+HandoffArgs.xml:
+	* doc/en/Gst.CorePlugins/Identity+HandoffHandler.xml:
+	* doc/en/Gst.CorePlugins/Identity.xml:
+	* doc/en/Gst.CorePlugins/MemIndex.xml:
+	* doc/en/Gst.CorePlugins/MultiQueue.xml:
+	* doc/en/Gst.CorePlugins/Queue+LeakyType.xml:
+	* doc/en/Gst.CorePlugins/Queue.xml:
+	* doc/en/Gst.CorePlugins/Tee+PullModeType.xml:
+	* doc/en/Gst.CorePlugins/Tee.xml:
+	* doc/en/Gst.CorePlugins/TypeFindElement+HaveTypeArgs.xml:
+	* doc/en/Gst.CorePlugins/TypeFindElement+HaveTypeHandler.xml:
+	* doc/en/Gst.CorePlugins/TypeFindElement.xml:
+	* doc/en/Gst.GLib/Argv.xml:
+	* doc/en/Gst.GLib/Boxed.xml:
+	* doc/en/Gst.GLib/CDeclCallbackAttribute.xml:
+	* doc/en/Gst.GLib/ClassInitializerAttribute.xml:
+	* doc/en/Gst.GLib/ConnectBeforeAttribute.xml:
+	* doc/en/Gst.GLib/ConnectFlags.xml:
+	* doc/en/Gst.GLib/DefaultSignalHandlerAttribute.xml:
+	* doc/en/Gst.GLib/DelegateWrapper.xml:
+	* doc/en/Gst.GLib/DestroyHelper.xml:
+	* doc/en/Gst.GLib/DestroyNotify.xml:
+	* doc/en/Gst.GLib/EnumWrapper.xml:
+	* doc/en/Gst.GLib/ExceptionManager.xml:
+	* doc/en/Gst.GLib/FileUtils.xml:
+	* doc/en/Gst.GLib/Format.xml:
+	* doc/en/Gst.GLib/GException.xml:
+	* doc/en/Gst.GLib/GInterfaceAdapter.xml:
+	* doc/en/Gst.GLib/GInterfaceAttribute.xml:
+	* doc/en/Gst.GLib/GInterfaceInitHandler.xml:
+	* doc/en/Gst.GLib/GSourceFunc.xml:
+	* doc/en/Gst.GLib/GString.xml:
+	* doc/en/Gst.GLib/GType.xml:
+	* doc/en/Gst.GLib/GTypeAttribute.xml:
+	* doc/en/Gst.GLib/Global.xml:
+	* doc/en/Gst.GLib/IOChannel.xml:
+	* doc/en/Gst.GLib/IOChannelError.xml:
+	* doc/en/Gst.GLib/IOCondition.xml:
+	* doc/en/Gst.GLib/IOFlags.xml:
+	* doc/en/Gst.GLib/IOFunc.xml:
+	* doc/en/Gst.GLib/IOStatus.xml:
+	* doc/en/Gst.GLib/IWrapper.xml:
+	* doc/en/Gst.GLib/Idle.xml:
+	* doc/en/Gst.GLib/IdleHandler.xml:
+	* doc/en/Gst.GLib/IgnoreClassInitializersAttribute.xml:
+	* doc/en/Gst.GLib/InitiallyUnowned.xml:
+	* doc/en/Gst.GLib/List.xml:
+	* doc/en/Gst.GLib/ListBase+FilenameString.xml:
+	* doc/en/Gst.GLib/ListBase.xml:
+	* doc/en/Gst.GLib/Log.xml:
+	* doc/en/Gst.GLib/LogFunc.xml:
+	* doc/en/Gst.GLib/LogLevelFlags.xml:
+	* doc/en/Gst.GLib/MainContext.xml:
+	* doc/en/Gst.GLib/MainLoop.xml:
+	* doc/en/Gst.GLib/Markup.xml:
+	* doc/en/Gst.GLib/Marshaller.xml:
+	* doc/en/Gst.GLib/MissingIntPtrCtorException.xml:
+	* doc/en/Gst.GLib/NotifyArgs.xml:
+	* doc/en/Gst.GLib/NotifyHandler.xml:
+	* doc/en/Gst.GLib/Object.xml:
+	* doc/en/Gst.GLib/ObjectManager.xml:
+	* doc/en/Gst.GLib/Opaque.xml:
+	* doc/en/Gst.GLib/ParamSpec.xml:
+	* doc/en/Gst.GLib/PrintFunc.xml:
+	* doc/en/Gst.GLib/Priority.xml:
+	* doc/en/Gst.GLib/Process.xml:
+	* doc/en/Gst.GLib/PropertyAttribute.xml:
+	* doc/en/Gst.GLib/PtrArray.xml:
+	* doc/en/Gst.GLib/SList.xml:
+	* doc/en/Gst.GLib/SeekType.xml:
+	* doc/en/Gst.GLib/Signal+EmissionHook.xml:
+	* doc/en/Gst.GLib/Signal+EmissionHookMarshaler.xml:
+	* doc/en/Gst.GLib/Signal+EmissionHookNative.xml:
+	* doc/en/Gst.GLib/Signal+Flags.xml:
+	* doc/en/Gst.GLib/Signal+InvocationHint.xml:
+	* doc/en/Gst.GLib/Signal.xml:
+	* doc/en/Gst.GLib/SignalArgs.xml:
+	* doc/en/Gst.GLib/SignalAttribute.xml:
+	* doc/en/Gst.GLib/SignalCallback.xml:
+	* doc/en/Gst.GLib/Source.xml:
+	* doc/en/Gst.GLib/SpawnChildSetupFunc.xml:
+	* doc/en/Gst.GLib/SpawnError.xml:
+	* doc/en/Gst.GLib/SpawnFlags.xml:
+	* doc/en/Gst.GLib/Thread.xml:
+	* doc/en/Gst.GLib/Timeout.xml:
+	* doc/en/Gst.GLib/TimeoutHandler.xml:
+	* doc/en/Gst.GLib/TypeConverter.xml:
+	* doc/en/Gst.GLib/TypeFundamentals.xml:
+	* doc/en/Gst.GLib/TypeInitializerAttribute.xml:
+	* doc/en/Gst.GLib/TypeResolutionHandler.xml:
+	* doc/en/Gst.GLib/UnhandledExceptionArgs.xml:
+	* doc/en/Gst.GLib/UnhandledExceptionHandler.xml:
+	* doc/en/Gst.GLib/UnwrappedObject.xml:
+	* doc/en/Gst.GLib/Value.xml:
+	* doc/en/Gst.GLib/ValueArray.xml:
+	* doc/en/Gst.Interfaces/ChannelChangedArgs.xml:
+	* doc/en/Gst.Interfaces/ChannelChangedHandler.xml:
+	* doc/en/Gst.Interfaces/ColorBalance.xml:
+	* doc/en/Gst.Interfaces/ColorBalanceAdapter.xml:
+	* doc/en/Gst.Interfaces/ColorBalanceChannel.xml:
+	* doc/en/Gst.Interfaces/ColorBalanceImplementor.xml:
+	* doc/en/Gst.Interfaces/ColorBalanceType.xml:
+	* doc/en/Gst.Interfaces/FrequencyChangedArgs.xml:
+	* doc/en/Gst.Interfaces/FrequencyChangedHandler.xml:
+	* doc/en/Gst.Interfaces/Mixer.xml:
+	* doc/en/Gst.Interfaces/MixerAdapter.xml:
+	* doc/en/Gst.Interfaces/MixerFlags.xml:
+	* doc/en/Gst.Interfaces/MixerImplementor.xml:
+	* doc/en/Gst.Interfaces/MixerMessage.xml:
+	* doc/en/Gst.Interfaces/MixerMessageType.xml:
+	* doc/en/Gst.Interfaces/MixerOptions.xml:
+	* doc/en/Gst.Interfaces/MixerTrack.xml:
+	* doc/en/Gst.Interfaces/MixerTrackFlags.xml:
+	* doc/en/Gst.Interfaces/MixerType.xml:
+	* doc/en/Gst.Interfaces/Navigation.xml:
+	* doc/en/Gst.Interfaces/NavigationAdapter.xml:
+	* doc/en/Gst.Interfaces/NavigationCommand.xml:
+	* doc/en/Gst.Interfaces/NavigationEvent.xml:
+	* doc/en/Gst.Interfaces/NavigationEventType.xml:
+	* doc/en/Gst.Interfaces/NavigationImplementor.xml:
+	* doc/en/Gst.Interfaces/NavigationMessage.xml:
+	* doc/en/Gst.Interfaces/NavigationMessageType.xml:
+	* doc/en/Gst.Interfaces/NavigationQuery.xml:
+	* doc/en/Gst.Interfaces/NavigationQueryType.xml:
+	* doc/en/Gst.Interfaces/NormChangedArgs.xml:
+	* doc/en/Gst.Interfaces/NormChangedHandler.xml:
+	* doc/en/Gst.Interfaces/ProbeNeededArgs.xml:
+	* doc/en/Gst.Interfaces/ProbeNeededHandler.xml:
+	* doc/en/Gst.Interfaces/PropertyProbe.xml:
+	* doc/en/Gst.Interfaces/PropertyProbeAdapter.xml:
+	* doc/en/Gst.Interfaces/PropertyProbeImplementor.xml:
+	* doc/en/Gst.Interfaces/SignalChangedArgs.xml:
+	* doc/en/Gst.Interfaces/SignalChangedHandler.xml:
+	* doc/en/Gst.Interfaces/Tuner.xml:
+	* doc/en/Gst.Interfaces/TunerAdapter.xml:
+	* doc/en/Gst.Interfaces/TunerChannel.xml:
+	* doc/en/Gst.Interfaces/TunerChannelFlags.xml:
+	* doc/en/Gst.Interfaces/TunerImplementor.xml:
+	* doc/en/Gst.Interfaces/TunerNorm.xml:
+	* doc/en/Gst.Interfaces/ValueChangedArgs.xml:
+	* doc/en/Gst.Interfaces/ValueChangedHandler.xml:
+	* doc/en/Gst.Interfaces/VideoOrientation.xml:
+	* doc/en/Gst.Interfaces/VideoOrientationAdapter.xml:
+	* doc/en/Gst.Interfaces/VideoOrientationImplementor.xml:
+	* doc/en/Gst.Interfaces/XOverlay.xml:
+	* doc/en/Gst.Interfaces/XOverlayAdapter.xml:
+	* doc/en/Gst.Interfaces/XOverlayImplementor.xml:
+	* doc/en/Gst.Video/VideoFilter.xml:
+	* doc/en/Gst.Video/VideoFormat.xml:
+	* doc/en/Gst.Video/VideoRectangle.xml:
+	* doc/en/Gst.Video/VideoSink.xml:
+	* doc/en/Gst.Video/VideoUtil.xml:
+	* doc/en/Gst/ActivateMode.xml:
+	* doc/en/Gst/Application.xml:
+	* doc/en/Gst/Array.xml:
+	* doc/en/Gst/AssocFlags.xml:
+	* doc/en/Gst/Bin.xml:
+	* doc/en/Gst/BinFlags.xml:
+	* doc/en/Gst/Buffer.xml:
+	* doc/en/Gst/BufferCopyFlags.xml:
+	* doc/en/Gst/BufferFlags.xml:
+	* doc/en/Gst/BufferList.xml:
+	* doc/en/Gst/BufferListDoFunction.xml:
+	* doc/en/Gst/BufferListFunc.xml:
+	* doc/en/Gst/BufferListItem.xml:
+	* doc/en/Gst/BufferListIterator.xml:
+	* doc/en/Gst/BufferingMode.xml:
+	* doc/en/Gst/Bus.xml:
+	* doc/en/Gst/BusFlags.xml:
+	* doc/en/Gst/BusFunc.xml:
+	* doc/en/Gst/BusSyncHandler.xml:
+	* doc/en/Gst/BusSyncReply.xml:
+	* doc/en/Gst/Caps.xml:
+	* doc/en/Gst/ChildAddedArgs.xml:
+	* doc/en/Gst/ChildAddedHandler.xml:
+	* doc/en/Gst/ChildProxy.xml:
+	* doc/en/Gst/ChildProxyAdapter.xml:
+	* doc/en/Gst/ChildProxyImplementor.xml:
+	* doc/en/Gst/ChildRemovedArgs.xml:
+	* doc/en/Gst/ChildRemovedHandler.xml:
+	* doc/en/Gst/Clock.xml:
+	* doc/en/Gst/ClockCallback.xml:
+	* doc/en/Gst/ClockEntry.xml:
+	* doc/en/Gst/ClockEntryType.xml:
+	* doc/en/Gst/ClockFlags.xml:
+	* doc/en/Gst/ClockReturn.xml:
+	* doc/en/Gst/ClockType.xml:
+	* doc/en/Gst/CoreError.xml:
+	* doc/en/Gst/Date.xml:
+	* doc/en/Gst/DoLatencyArgs.xml:
+	* doc/en/Gst/DoLatencyHandler.xml:
+	* doc/en/Gst/DoubleRange.xml:
+	* doc/en/Gst/DynamicSignal.xml:
+	* doc/en/Gst/Element.xml:
+	* doc/en/Gst/ElementAddedArgs.xml:
+	* doc/en/Gst/ElementAddedHandler.xml:
+	* doc/en/Gst/ElementFactory.xml:
+	* doc/en/Gst/ElementFlags.xml:
+	* doc/en/Gst/ElementRemovedArgs.xml:
+	* doc/en/Gst/ElementRemovedHandler.xml:
+	* doc/en/Gst/EntryAddedArgs.xml:
+	* doc/en/Gst/EntryAddedHandler.xml:
+	* doc/en/Gst/EnumInfo.xml:
+	* doc/en/Gst/EnumValue.xml:
+	* doc/en/Gst/Event.xml:
+	* doc/en/Gst/EventType.xml:
+	* doc/en/Gst/EventTypeFlags.xml:
+	* doc/en/Gst/FeatureAddedArgs.xml:
+	* doc/en/Gst/FeatureAddedHandler.xml:
+	* doc/en/Gst/FlagsInfo.xml:
+	* doc/en/Gst/FlagsValue.xml:
+	* doc/en/Gst/FlowReturn.xml:
+	* doc/en/Gst/Format.xml:
+	* doc/en/Gst/FormatDefinition.xml:
+	* doc/en/Gst/Fourcc.xml:
+	* doc/en/Gst/Fraction.xml:
+	* doc/en/Gst/FractionRange.xml:
+	* doc/en/Gst/GTypeNameAttribute.xml:
+	* doc/en/Gst/GhostPad.xml:
+	* doc/en/Gst/HaveDataArgs.xml:
+	* doc/en/Gst/HaveDataHandler.xml:
+	* doc/en/Gst/ImplementsInterface.xml:
+	* doc/en/Gst/ImplementsInterfaceAdapter.xml:
+	* doc/en/Gst/ImplementsInterfaceImplementor.xml:
+	* doc/en/Gst/Index.xml:
+	* doc/en/Gst/IndexAssociation.xml:
+	* doc/en/Gst/IndexCertainty.xml:
+	* doc/en/Gst/IndexEntry.xml:
+	* doc/en/Gst/IndexEntryType.xml:
+	* doc/en/Gst/IndexFactory.xml:
+	* doc/en/Gst/IndexFilter.xml:
+	* doc/en/Gst/IndexFlags.xml:
+	* doc/en/Gst/IndexLookupMethod.xml:
+	* doc/en/Gst/IndexResolver.xml:
+	* doc/en/Gst/IndexResolverMethod.xml:
+	* doc/en/Gst/IntRange.xml:
+	* doc/en/Gst/Iterator.xml:
+	* doc/en/Gst/LibraryError.xml:
+	* doc/en/Gst/LinkedArgs.xml:
+	* doc/en/Gst/LinkedHandler.xml:
+	* doc/en/Gst/List.xml:
+	* doc/en/Gst/Message.xml:
+	* doc/en/Gst/MessageArgs.xml:
+	* doc/en/Gst/MessageHandler.xml:
+	* doc/en/Gst/MessageType.xml:
+	* doc/en/Gst/MiniObject.xml:
+	* doc/en/Gst/MiniObjectFlags.xml:
+	* doc/en/Gst/NewUriArgs.xml:
+	* doc/en/Gst/NewUriHandler.xml:
+	* doc/en/Gst/Object.xml:
+	* doc/en/Gst/ObjectFlags.xml:
+	* doc/en/Gst/Pad.xml:
+	* doc/en/Gst/PadAcceptCapsFunction.xml:
+	* doc/en/Gst/PadActivateFunction.xml:
+	* doc/en/Gst/PadActivateModeFunction.xml:
+	* doc/en/Gst/PadAddedArgs.xml:
+	* doc/en/Gst/PadAddedHandler.xml:
+	* doc/en/Gst/PadBlockCallback.xml:
+	* doc/en/Gst/PadBufferAllocFunction.xml:
+	* doc/en/Gst/PadBufferProbeCallback.xml:
+	* doc/en/Gst/PadChainFunction.xml:
+	* doc/en/Gst/PadChainListFunction.xml:
+	* doc/en/Gst/PadCheckGetRangeFunction.xml:
+	* doc/en/Gst/PadCreatedArgs.xml:
+	* doc/en/Gst/PadCreatedHandler.xml:
+	* doc/en/Gst/PadDataProbeCallback.xml:
+	* doc/en/Gst/PadDirection.xml:
+	* doc/en/Gst/PadDispatcherFunction.xml:
+	* doc/en/Gst/PadEventFunction.xml:
+	* doc/en/Gst/PadEventProbeCallback.xml:
+	* doc/en/Gst/PadFixateCapsFunction.xml:
+	* doc/en/Gst/PadFlags.xml:
+	* doc/en/Gst/PadGetCapsFunction.xml:
+	* doc/en/Gst/PadGetRangeFunction.xml:
+	* doc/en/Gst/PadIterIntLinkFunction.xml:
+	* doc/en/Gst/PadLinkFunction.xml:
+	* doc/en/Gst/PadLinkReturn.xml:
+	* doc/en/Gst/PadPresence.xml:
+	* doc/en/Gst/PadQueryFunction.xml:
+	* doc/en/Gst/PadQueryTypeFunction.xml:
+	* doc/en/Gst/PadRemovedArgs.xml:
+	* doc/en/Gst/PadRemovedHandler.xml:
+	* doc/en/Gst/PadSetCapsFunction.xml:
+	* doc/en/Gst/PadTemplate.xml:
+	* doc/en/Gst/PadTemplateFlags.xml:
+	* doc/en/Gst/PadUnlinkFunction.xml:
+	* doc/en/Gst/ParentSetArgs.xml:
+	* doc/en/Gst/ParentSetHandler.xml:
+	* doc/en/Gst/ParentUnsetArgs.xml:
+	* doc/en/Gst/ParentUnsetHandler.xml:
+	* doc/en/Gst/Parse.xml:
+	* doc/en/Gst/ParseContext.xml:
+	* doc/en/Gst/ParseError.xml:
+	* doc/en/Gst/ParseFlags.xml:
+	* doc/en/Gst/Pipeline.xml:
+	* doc/en/Gst/PipelineFlags.xml:
+	* doc/en/Gst/Plugin.xml:
+	* doc/en/Gst/PluginAddedArgs.xml:
+	* doc/en/Gst/PluginAddedHandler.xml:
+	* doc/en/Gst/PluginDependencyFlags.xml:
+	* doc/en/Gst/PluginError.xml:
+	* doc/en/Gst/PluginFeature.xml:
+	* doc/en/Gst/PluginFeatureFilter.xml:
+	* doc/en/Gst/PluginFilter.xml:
+	* doc/en/Gst/PluginFlags.xml:
+	* doc/en/Gst/PluginInitFunc.xml:
+	* doc/en/Gst/Preset.xml:
+	* doc/en/Gst/PresetAdapter.xml:
+	* doc/en/Gst/PresetDefault.xml:
+	* doc/en/Gst/PresetImplementor.xml:
+	* doc/en/Gst/PropertyInfo.xml:
+	* doc/en/Gst/ProxyPad.xml:
+	* doc/en/Gst/Query.xml:
+	* doc/en/Gst/QueryType.xml:
+	* doc/en/Gst/Rank.xml:
+	* doc/en/Gst/Registry.xml:
+	* doc/en/Gst/ResourceError.xml:
+	* doc/en/Gst/SeekFlags.xml:
+	* doc/en/Gst/SeekType.xml:
+	* doc/en/Gst/Segment.xml:
+	* doc/en/Gst/SignalHandler.xml:
+	* doc/en/Gst/State.xml:
+	* doc/en/Gst/StateChange.xml:
+	* doc/en/Gst/StateChangeReturn.xml:
+	* doc/en/Gst/StaticPadTemplate.xml:
+	* doc/en/Gst/StreamError.xml:
+	* doc/en/Gst/StreamStatusType.xml:
+	* doc/en/Gst/Structure.xml:
+	* doc/en/Gst/StructureChangeType.xml:
+	* doc/en/Gst/SyncMessageArgs.xml:
+	* doc/en/Gst/SyncMessageHandler.xml:
+	* doc/en/Gst/SystemClock.xml:
+	* doc/en/Gst/Tag.xml:
+	* doc/en/Gst/TagFlags.xml:
+	* doc/en/Gst/TagList.xml:
+	* doc/en/Gst/TagMergeFunc.xml:
+	* doc/en/Gst/TagMergeMode.xml:
+	* doc/en/Gst/TagSetter.xml:
+	* doc/en/Gst/TagSetterAdapter.xml:
+	* doc/en/Gst/TagSetterImplementor.xml:
+	* doc/en/Gst/Task.xml:
+	* doc/en/Gst/TaskFunction.xml:
+	* doc/en/Gst/TaskPool.xml:
+	* doc/en/Gst/TaskPoolFunction.xml:
+	* doc/en/Gst/TaskState.xml:
+	* doc/en/Gst/TypeFind.xml:
+	* doc/en/Gst/TypeFindFactory.xml:
+	* doc/en/Gst/TypeFindFunction.xml:
+	* doc/en/Gst/TypeFindGetLengthFunction.xml:
+	* doc/en/Gst/TypeFindPeekFunction.xml:
+	* doc/en/Gst/TypeFindProbability.xml:
+	* doc/en/Gst/TypeFindSuggestFunction.xml:
+	* doc/en/Gst/URIHandler.xml:
+	* doc/en/Gst/URIHandlerAdapter.xml:
+	* doc/en/Gst/URIHandlerImplementor.xml:
+	* doc/en/Gst/URIType.xml:
+	* doc/en/Gst/UnlinkedArgs.xml:
+	* doc/en/Gst/UnlinkedHandler.xml:
+	* doc/en/Gst/Util.xml:
+	* doc/en/Gst/Version.xml:
+	* doc/en/index.xml:
+	  Update docs
+
+2009-10-02 15:49:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/BufferTest.cs:
+	  Fix unit test that uses the ByteReader
+
+2009-10-02 15:44:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/ByteReader.custom:
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/Makefile.am:
+	  Fix GstByteReader bindings
+
+2009-10-02 15:25:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Fix GstBitReader bindings
+
+2009-10-02 11:53:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* samples/GtkVideoPlayer.cs:
+	* samples/Makefile.am:
+	  Updating GtkVideoPlayer sample
+	  Handle bus messages, set the XWindowID from a sync handler, use playbin2, ...
+
+2009-10-01 16:10:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Bus.custom:
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Make sure Gst.Bus.SyncHandler handlers are not garbage collected too early
+
+2009-10-01 09:12:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gstreamer-sharp-0.10-uninstalled.pc.in:
+	* gstreamer-sharp-0.10.pc.in:
+	  Add support for using gstreamer-sharp uninstalled
+	  For this provide an uninstalled pkg-config file, missing bit are now
+	  some changes to gst-uninstalled. I'll commit those once core is released.
+	  Also clean up the normal pkg-config file, we don't require glib-sharp.
+
+2009-09-23 14:21:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* samples/Makefile.am:
+	* samples/TransformSample.cs:
+	  Add BaseTransform/Cairo/Navigation example
+	  This example implements a BaseTransform subclass, which overlays
+	  a video with a moving line and which reacts on navigation events
+	  and paints a circle at the position where a mouse button 1 was pressed.
+
+2009-09-23 09:03:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/BaseTransformTest.cs:
+	* tests/Makefile.am:
+	  Add unit tests for basetransform subclasses and buffer ownerships
+
+2009-09-23 08:23:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Use the owned-in-call-scope magic for BaseTransforms transform functions
+
+2009-09-23 08:20:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* generator/ManagedCallString.cs:
+	  Add hack to the codegenerator to handle "owned-in-call-scope" functionality to virtual methods
+	  This is needed for things like BaseTransform.OnTransformIp's buffer parameter.
+	  During the call we own the reference but not afterwards.
+
+2009-09-23 07:11:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Let BaseTransform.OnSetCaps return true by default
+
+2009-09-23 07:10:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* generator/ReturnValue.cs:
+	  Add support for specifying other default values for return values
+	  This allows us the override the base.SomeVMethod return values in case
+	  the native type doesn't implement the VM.
+
+2009-09-22 09:37:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/VideoUtil.custom:
+	* gstreamer-sharp/glue/Makefile.am:
+	* gstreamer-sharp/glue/videoutil.c:
+	  Add VideoUtil.FormatToTemplateCaps() to generate pad template caps
+
+2009-09-22 07:55:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/BufferTest.cs:
+	  Add simple test for Gst.Base.ByteReader to the buffer tests
+
+2009-09-22 07:51:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/gstreamer-api.raw:
+	* source/gstreamer-sharp-source.xml:
+	  Start of Gst.Base.{Byte,Bit}Reader bindings
+
+2009-09-22 07:40:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* doc/en/Gst/Buffer.xml:
+	* gstreamer-sharp/Buffer.custom:
+	* gstreamer-sharp/Gstreamer.metadata:
+	* gstreamer-sharp/glue/buffer.c:
+	* samples/AppSrc.cs:
+	* tests/BufferTest.cs:
+	  Update Gst.Buffer bindings
+
+2009-09-20 10:19:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* elementgen/elementgen.cs:
+	* elementgen/gst-xmlinspect.c:
+	* gstreamer-sharp/Adapter.custom:
+	* gstreamer-sharp/AppSink.custom:
+	* gstreamer-sharp/Application.cs:
+	* gstreamer-sharp/Bin.custom:
+	* gstreamer-sharp/Buffer.custom:
+	* gstreamer-sharp/Bus.custom:
+	* gstreamer-sharp/Caps.custom:
+	* gstreamer-sharp/Clock.custom:
+	* gstreamer-sharp/Debug.custom:
+	* gstreamer-sharp/DynamicSignal.cs:
+	* gstreamer-sharp/Element.custom:
+	* gstreamer-sharp/Event.custom:
+	* gstreamer-sharp/GError.cs:
+	* gstreamer-sharp/Iterator.custom:
+	* gstreamer-sharp/Marshaller.cs:
+	* gstreamer-sharp/Message.custom:
+	* gstreamer-sharp/MiniObject.cs:
+	* gstreamer-sharp/MixerMessage.cs:
+	* gstreamer-sharp/NavigationEvent.cs:
+	* gstreamer-sharp/NavigationMessage.cs:
+	* gstreamer-sharp/NavigationQuery.cs:
+	* gstreamer-sharp/Object.custom:
+	* gstreamer-sharp/Pad.custom:
+	* gstreamer-sharp/PadTemplate.custom:
+	* gstreamer-sharp/Plugin.custom:
+	* gstreamer-sharp/PresetDefault.cs:
+	* gstreamer-sharp/Query.custom:
+	* gstreamer-sharp/Structure.custom:
+	* gstreamer-sharp/TagList.custom:
+	* gstreamer-sharp/TunerNorm.custom:
+	* gstreamer-sharp/TypeFind.custom:
+	* gstreamer-sharp/TypeFindFactory.custom:
+	* gstreamer-sharp/Value.cs:
+	* gstreamer-sharp/Version.cs:
+	* gstreamer-sharp/baseplugins/playbin.custom:
+	* gstreamer-sharp/glue/adapter.c:
+	* gstreamer-sharp/glue/clock.c:
+	* gstreamer-sharp/glue/controller.c:
+	* gstreamer-sharp/glue/controlsource.c:
+	* gstreamer-sharp/glue/glib.c:
+	* gstreamer-sharp/glue/mixertrack.c:
+	* gstreamer-sharp/glue/task.c:
+	* gstreamer-sharp/glue/tunernorm.c:
+	* samples/AppSrc.cs:
+	* samples/DecodeBinTranscoder.cs:
+	* samples/HelloWorld.cs:
+	* samples/MP3LaunchParse.cs:
+	* samples/MetaData.cs:
+	* samples/PlayBinPlayer.cs:
+	* samples/QueueExample.cs:
+	* samples/TypeFind.cs:
+	* tests/ApplicationTest.cs:
+	* tests/BinTest.cs:
+	* tests/BufferTest.cs:
+	* tests/CapsTest.cs:
+	* tests/ElementTest.cs:
+	* tests/MessageTest.cs:
+	* tests/PadTest.cs:
+	* tests/PipelineTest.cs:
+	  Fix indention everywhere
+
+2009-09-20 10:09:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/glue/controlsource.c:
+	  Don't use declarations after statements in C code
+
+2009-09-20 10:06:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/glib-sharp/Thread.cs:
+	  Add .dll suffix to the glue dllimport to make it work on Windows
+
+2009-09-17 09:13:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/Makefile.am:
+	* gstreamer-sharp/glib-sharp/Value.cs:
+	  Windows on x86-64 uses 32 bit longs...
+
+2009-09-17 06:43:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gstreamer-sharp/glib-sharp/Value.cs:
+	  Support gulong and glong GValues
+	  Fixes bug #595377.
+
+2009-09-16 12:03:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* doc/en/Gst/Util.xml:
+	* gstreamer-sharp/Gstreamer.metadata:
+	  Bind gst_util_uint64_scale{,_int}
+	  This is useful in C# too because of the internal 128 bit integer
+	  arithmetic that is used to prevent overflows.
+
+2009-09-16 09:17:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* RELEASE:
+	  Update RELEASE
+
+2009-09-16 12:04:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Bump version to 0.9.1.1
+
 === release 0.9.1 ===
 
 2009-09-16  Sebastian Dröge <sebastian.droege@collabora.co.uk>
