@@ -299,6 +299,26 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static gint64
+granulepos_to_granule_theora (GstOggStream * pad, gint64 granulepos)
+{
+  gint64 keyindex, keyoffset;
+
+  if (pad->granuleshift != 0) {
+    keyindex = granulepos >> pad->granuleshift;
+    keyoffset = granulepos - (keyindex << pad->granuleshift);
+    if (keyoffset == 0) {
+      pad->theora_has_zero_keyoffset = TRUE;
+    }
+    if (pad->theora_has_zero_keyoffset) {
+      keyoffset++;
+    }
+    return keyindex + keyoffset;
+  } else {
+    return granulepos;
+  }
+}
+
 static gboolean
 is_keyframe_theora (GstOggStream * pad, gint64 granulepos)
 {
@@ -944,7 +964,7 @@ static const GstOggMap mappers[] = {
     "\200theora", 7, 42,
     "video/x-theora",
     setup_theora_mapper,
-    granulepos_to_granule_default,
+    granulepos_to_granule_theora,
     granule_to_granulepos_default,
     is_keyframe_theora,
     is_header_theora,

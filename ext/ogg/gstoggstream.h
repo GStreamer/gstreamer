@@ -63,6 +63,8 @@ struct _GstOggStream
   int vorbis_log2_num_modes;
   int vorbis_mode_sizes[256];
   int last_size;
+  /* theora stuff */
+  gboolean theora_has_zero_keyoffset;
 };
 
 
