@@ -559,6 +559,8 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       mp3parse->pending_ts = GST_CLOCK_TIME_NONE;
       mp3parse->tracked_offset = 0;
       mp3parse->sync_offset = 0;
+      /* also clear leftover data if clearing so much state */
+      gst_adapter_clear (mp3parse->adapter);
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
