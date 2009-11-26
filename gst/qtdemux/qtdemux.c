@@ -270,7 +270,7 @@ struct _QtDemuxStream
   guint32 current_chunk;
   guint32 last_chunk;
   guint32 samples_per_chunk;
-  guint32 stco_timestamp;
+  GstClockTime stco_timestamp;
   guint32 stco_sample_index;
   /* stsz */
   guint32 sample_size;          /* 0 means variable sizes are stored in stsz */
