@@ -576,24 +576,3 @@ gst_amrparse_convert (GstBaseParse * parse,
 
   return ret;
 }
-
-
-/**
- * plugin_init:
- * @plugin: GstPlugin
- *
- * Returns: TRUE on success.
- */
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "amrparse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_AMRPARSE);
-}
-
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "amrparse",
-    "Adaptive Multi-Rate Parser",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

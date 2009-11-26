@@ -94,7 +94,6 @@
   <chapter>
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aiff.xml" />
-    <xi:include href="xml/plugin-amrparse.xml" />
     <xi:include href="xml/plugin-audioparsersbad.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />

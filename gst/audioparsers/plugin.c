@@ -22,6 +22,7 @@
 #endif
 
 #include "gstaacparse.h"
+#include "gstamrparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -30,6 +31,8 @@ plugin_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "aacparse",
       GST_RANK_NONE, GST_TYPE_AACPARSE);
+  ret &= gst_element_register (plugin, "amrparse",
+      GST_RANK_PRIMARY + 1, GST_TYPE_AMRPARSE);
 
   return ret;
 }

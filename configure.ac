@@ -255,7 +255,6 @@ dnl *** plug-ins to include ***
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(aiff)
-AG_GST_CHECK_PLUGIN(amrparse)
 AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(autoconvert)
@@ -1634,7 +1633,6 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/adpcmdec/Makefile
 gst/aiff/Makefile
-gst/amrparse/Makefile
 gst/asfmux/Makefile
 gst/audioparsers/Makefile
 gst/autoconvert/Makefile
