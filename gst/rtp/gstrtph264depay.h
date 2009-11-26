@@ -50,6 +50,12 @@ struct _GstRtpH264Depay
   GstAdapter *adapter;
   gboolean    wait_start;
 
+  /* nal merging */
+  gboolean    merge;
+  GstAdapter *picture_adapter;
+  gboolean    picture_start;
+  gboolean    picture_complete;
+  GstClockTime last_ts;
 };
 
 struct _GstRtpH264DepayClass
