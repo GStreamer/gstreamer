@@ -342,6 +342,9 @@ gst_aacparse_check_adts_frame (GstAacParse * aacparse,
     const guint8 * data,
     const guint avail, guint * framesize, guint * needed_data)
 {
+  if (G_UNLIKELY (avail < 2))
+    return FALSE;
+
   if ((data[0] == 0xff) && ((data[1] & 0xf6) == 0xf0)) {
     *framesize = gst_aacparse_adts_get_frame_len (data);
 
