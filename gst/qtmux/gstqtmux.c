@@ -1326,7 +1326,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   gst_buffer_replace (&pad->last_buf, buf);
 
-  last_dts = gst_util_uint64_scale (pad->last_dts,
+  last_dts = gst_util_uint64_scale_round (pad->last_dts,
       atom_trak_get_timescale (pad->trak), GST_SECOND);
 
   /* raw audio has many samples per buffer (= chunk) */
@@ -1348,10 +1348,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       gint64 scaled_dts;
       pad->last_dts = GST_BUFFER_OFFSET_END (last_buf);
       if ((gint64) (pad->last_dts) < 0) {
-        scaled_dts = -gst_util_uint64_scale (-pad->last_dts,
+        scaled_dts = -gst_util_uint64_scale_round (-pad->last_dts,
             atom_trak_get_timescale (pad->trak), GST_SECOND);
       } else {
-        scaled_dts = gst_util_uint64_scale (pad->last_dts,
+        scaled_dts = gst_util_uint64_scale_round (pad->last_dts,
             atom_trak_get_timescale (pad->trak), GST_SECOND);
       }
       scaled_duration = scaled_dts - last_dts;
@@ -1361,7 +1361,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
        * trak timescale, then derive delta;
        * this ensures sums of (scale)delta add up to converted timestamp,
        * which only deviates at most 1/scale from timestamp itself */
-      scaled_duration = gst_util_uint64_scale (pad->last_dts + duration,
+      scaled_duration = gst_util_uint64_scale_round (pad->last_dts + duration,
           atom_trak_get_timescale (pad->trak), GST_SECOND) - last_dts;
       pad->last_dts += duration;
     }
@@ -1396,7 +1396,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   if ((pad->have_dts || qtmux->guess_pts) && pad->is_out_of_order) {
     guint64 pts;
 
-    pts = gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (last_buf),
+    pts = gst_util_uint64_scale_round (GST_BUFFER_TIMESTAMP (last_buf),
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset = (gint64) (pts - last_dts);
     do_pts = TRUE;
