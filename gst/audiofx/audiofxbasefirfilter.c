@@ -149,37 +149,50 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
   gint i, j, k, l; \
   gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
   gint res_start; \
+  gint from_input; \
+  gint off; \
+  gdouble *buffer = self->buffer; \
+  gdouble *kernel = self->kernel; \
+  guint buffer_length = self->buffer_length; \
   \
   /* convolution */ \
   for (i = 0; i < input_samples; i++) { \
     dst[i] = 0.0; \
     k = i % channels; \
     l = i / channels; \
-    for (j = 0; j < kernel_length; j++) \
-      if (l < j) \
-        dst[i] += \
-            self->buffer[(kernel_length + l - j) * channels + \
-            k] * self->kernel[j]; \
-      else \
-        dst[i] += src[(l - j) * channels + k] * self->kernel[j]; \
+    from_input = MIN (l, kernel_length-1); \
+    off = l * channels + k; \
+    for (j = 0; j <= from_input; j++) { \
+      dst[i] += src[off] * kernel[j]; \
+      off -= channels; \
+    } \
+    /* j == from_input && off == (l - j) * channels + k */ \
+    off += kernel_length * channels; \
+    for (; j < kernel_length; j++) { \
+      dst[i] += buffer[off] * kernel[j]; \
+      off -= channels; \
+    } \
   } \
   \
   /* copy the tail of the current input buffer to the residue, while \
    * keeping parts of the residue if the input buffer is smaller than \
    * the kernel length */ \
-  if (input_samples < kernel_length * channels) \
-    res_start = kernel_length * channels - input_samples; \
+  /* from now on take kernel length as length over all channels */ \
+  kernel_length *= channels; \
+  if (input_samples < kernel_length) \
+    res_start = kernel_length - input_samples; \
   else \
     res_start = 0; \
   \
   for (i = 0; i < res_start; i++) \
-    self->buffer[i] = self->buffer[i + input_samples]; \
-  for (i = res_start; i < kernel_length * channels; i++) \
-    self->buffer[i] = src[input_samples - kernel_length * channels + i]; \
+    buffer[i] = buffer[i + input_samples]; \
+  /* i == res_start */ \
+  for (; i < kernel_length; i++) \
+    buffer[i] = src[input_samples - kernel_length + i]; \
   \
-  self->buffer_fill += kernel_length * channels - res_start; \
-  if (self->buffer_fill > kernel_length * channels) \
-    self->buffer_fill = kernel_length * channels; \
+  self->buffer_fill += kernel_length - res_start; \
+  if (self->buffer_fill > kernel_length) \
+    self->buffer_fill = kernel_length; \
 }
 
 DEFINE_PROCESS_FUNC (32, float);
