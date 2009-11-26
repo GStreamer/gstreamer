@@ -690,24 +690,3 @@ gst_aacparse_is_seekable (GstBaseParse * parse)
   /* Not seekable if ADIF header is found */
   return (aacparse->header_type != DSPAAC_HEADER_ADIF);
 }
-
-
-/**
- * plugin_init:
- * @plugin: GstPlugin
- *
- * Returns: TRUE on success.
- */
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "aacparse",
-      GST_RANK_NONE, GST_TYPE_AACPARSE);
-}
-
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "aacparse",
-    "Advanced Audio Coding Parser",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
