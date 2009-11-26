@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstaacparse.la
 
 libgstaacparse_la_SOURCES = \
-	gstaacparse.c gstbaseparse.c
+	gstaacparse.c gstbaseparse.c plugin.c
 
 libgstaacparse_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstaacparse_la_LIBADD = $(GST_BASE_LIBS)
