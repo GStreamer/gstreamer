@@ -587,8 +587,13 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       gst_ogg_pad_parse_skeleton_fishead (pad, packet);
     }
     pad->have_type = gst_ogg_stream_setup_map (&pad->map, packet);
+    if (!pad->have_type) {
+      pad->map.caps = gst_caps_new_simple ("application/x-unknown", NULL);
+    }
     if (pad->map.caps) {
       gst_pad_set_caps (GST_PAD (pad), pad->map.caps);
+    } else {
+      GST_WARNING_OBJECT (ogg, "stream parser didn't create src pad caps");
     }
   }
 
@@ -1439,6 +1444,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     /* first add the pads */
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad;
+      GstStructure *structure;
 
       pad = g_array_index (chain->streams, GstOggPad *, i);
 
@@ -1452,15 +1458,12 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       pad->map.last_size = 0;
       pad->last_ret = GST_FLOW_OK;
 
+      structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
       pad->is_sparse =
-          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
-              0), "application/x-ogm-text") ||
-          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
-              0), "text/x-cmml") ||
-          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
-              0), "subtitle/x-kate") ||
-          gst_structure_has_name (gst_caps_get_structure (GST_PAD_CAPS (pad),
-              0), "application/x-kate");
+          gst_structure_has_name (structure, "application/x-ogm-text") ||
+          gst_structure_has_name (structure, "text/x-cmml") ||
+          gst_structure_has_name (structure, "subtitle/x-kate") ||
+          gst_structure_has_name (structure, "application/x-kate");
 
       /* activate first */
       gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
