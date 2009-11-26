@@ -63,11 +63,6 @@ struct _GstAmrParse {
   gboolean need_header;
   gint header;
   gboolean wide;
-  gboolean eos;
-  gboolean sync;
-  guint64 framecount;
-  guint64 bytecount;
-  GstClockTime ts;
 };
 
 /**
