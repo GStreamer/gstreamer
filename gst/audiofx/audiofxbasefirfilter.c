@@ -38,6 +38,11 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
+/* FIXME: Remove this once we depend on gst-plugins-base 0.10.26 */
+#ifndef GST_AUDIO_FILTER_CAST
+#define GST_AUDIO_FILTER_CAST(obj) ((GstAudioFilter *) (obj))
+#endif
+
 #include "audiofxbasefirfilter.h"
 
 #define GST_CAT_DEFAULT gst_audio_fx_base_fir_filter_debug
@@ -142,7 +147,7 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
 { \
   gint kernel_length = self->kernel_length; \
   gint i, j, k, l; \
-  gint channels = GST_AUDIO_FILTER (self)->format.channels; \
+  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
   gint res_start; \
   \
   /* convolution */ \
@@ -187,10 +192,11 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 {
   GstBuffer *outbuf;
   GstFlowReturn res;
-  gint rate = GST_AUDIO_FILTER (self)->format.rate;
-  gint channels = GST_AUDIO_FILTER (self)->format.channels;
+  gint rate = GST_AUDIO_FILTER_CAST (self)->format.rate;
+  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
   gint outsize, outsamples;
   gint diffsize, diffsamples;
+  gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
   guint8 *in, *out;
 
   if (channels == 0 || rate == 0) {
@@ -201,7 +207,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   /* Calculate the number of samples and their memory size that
    * should be pushed from the residue */
   outsamples = MIN (self->latency, self->buffer_fill / channels);
-  outsize = outsamples * channels * (GST_AUDIO_FILTER (self)->format.width / 8);
+  outsize = outsamples * channels * width;
   if (outsize == 0) {
     self->buffer_fill = 0;
     return;
@@ -211,9 +217,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
    * to start at the actual data instead of starting at the zeros before
    * when we only got one buffer smaller than latency */
   diffsamples = self->latency - self->buffer_fill / channels;
-  diffsize =
-      diffsamples * channels * (GST_AUDIO_FILTER (self)->format.width / 8);
-  if (diffsize > 0) {
+  if (diffsamples > 0) {
+    diffsize = diffsamples * channels * width;
     in = g_new0 (guint8, diffsize);
     out = g_new0 (guint8, diffsize);
     self->process (self, in, out, diffsamples * channels);
@@ -221,9 +226,9 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     g_free (out);
   }
 
-  res = gst_pad_alloc_buffer (GST_BASE_TRANSFORM (self)->srcpad,
+  res = gst_pad_alloc_buffer (GST_BASE_TRANSFORM_CAST (self)->srcpad,
       GST_BUFFER_OFFSET_NONE, outsize,
-      GST_PAD_CAPS (GST_BASE_TRANSFORM (self)->srcpad), &outbuf);
+      GST_PAD_CAPS (GST_BASE_TRANSFORM_CAST (self)->srcpad), &outbuf);
 
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (self, "failed allocating buffer of %d bytes", outsize);
@@ -262,7 +267,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       GST_BUFFER_OFFSET_END (outbuf), outsamples);
 
-  res = gst_pad_push (GST_BASE_TRANSFORM (self)->srcpad, outbuf);
+  res = gst_pad_push (GST_BASE_TRANSFORM_CAST (self)->srcpad, outbuf);
 
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (self, "failed to push residue");
@@ -309,10 +314,10 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
   GstClockTime timestamp, expected_timestamp;
-  gint channels = GST_AUDIO_FILTER (self)->format.channels;
-  gint rate = GST_AUDIO_FILTER (self)->format.rate;
-  gint input_samples =
-      GST_BUFFER_SIZE (outbuf) / (GST_AUDIO_FILTER (self)->format.width / 8);
+  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
+  gint rate = GST_AUDIO_FILTER_CAST (self)->format.rate;
+  gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
+  gint input_samples = (GST_BUFFER_SIZE (outbuf) / width) / channels;
   gint output_samples = input_samples;
   gint diff = 0;
 
@@ -358,12 +363,12 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
 
   /* Calculate the number of samples we can push out now without outputting
    * latency zeros in the beginning */
-  diff = self->latency * channels - self->buffer_fill;
+  diff = self->latency - self->buffer_fill / channels;
   if (diff > 0)
     output_samples -= diff;
 
   self->process (self, GST_BUFFER_DATA (inbuf), GST_BUFFER_DATA (outbuf),
-      input_samples);
+      input_samples * channels);
 
   if (output_samples <= 0) {
     return GST_BASE_TRANSFORM_FLOW_DROPPED;
@@ -371,31 +376,28 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
 
   GST_BUFFER_TIMESTAMP (outbuf) = expected_timestamp;
   GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale_round (output_samples / channels, GST_SECOND, rate);
+      gst_util_uint64_scale_round (output_samples, GST_SECOND, rate);
   if (self->start_off != GST_BUFFER_OFFSET_NONE) {
     GST_BUFFER_OFFSET (outbuf) = self->start_off + self->nsamples;
-    GST_BUFFER_OFFSET_END (outbuf) =
-        self->start_off + output_samples / channels;
+    GST_BUFFER_OFFSET_END (outbuf) = self->start_off + output_samples;
   } else {
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
   }
 
   if (output_samples < input_samples) {
-    GST_BUFFER_DATA (outbuf) +=
-        diff * (GST_AUDIO_FILTER (self)->format.width / 8);
-    GST_BUFFER_SIZE (outbuf) -=
-        diff * (GST_AUDIO_FILTER (self)->format.width / 8);
+    GST_BUFFER_DATA (outbuf) += diff * width;
+    GST_BUFFER_SIZE (outbuf) -= diff * width;
   }
 
-  self->nsamples += output_samples / channels;
+  self->nsamples += output_samples;
 
   GST_DEBUG_OBJECT (self, "Pushing buffer of size %d with timestamp: %"
       GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
       G_GUINT64_FORMAT ", offset_end: %" G_GUINT64_FORMAT ", nsamples: %d",
       GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
-      GST_BUFFER_OFFSET_END (outbuf), output_samples / channels);
+      GST_BUFFER_OFFSET_END (outbuf), output_samples);
 
   return GST_FLOW_OK;
 }
