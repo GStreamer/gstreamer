@@ -88,12 +88,6 @@ gboolean gst_amrparse_check_valid_frame (GstBaseParse * parse,
 GstFlowReturn gst_amrparse_parse_frame (GstBaseParse * parse,
     GstBuffer * buffer);
 
-gboolean gst_amrparse_convert (GstBaseParse * parse,
-    GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
-
-gboolean gst_amrparse_event (GstBaseParse * parse, GstEvent * event);
-
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrparse_debug, "amrparse", 0, \
                              "AMR-NB audio stream parser");
@@ -140,8 +134,6 @@ gst_amrparse_class_init (GstAmrParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_amrparse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_amrparse_stop);
-  parse_class->event = GST_DEBUG_FUNCPTR (gst_amrparse_event);
-  parse_class->convert = GST_DEBUG_FUNCPTR (gst_amrparse_convert);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amrparse_sink_setcaps);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_amrparse_parse_frame);
   parse_class->check_valid_frame =
@@ -160,7 +152,6 @@ gst_amrparse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
 {
   /* init rest */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (amrparse), 62);
-  amrparse->ts = 0;
   GST_DEBUG ("initialized");
 
 }
@@ -247,46 +238,10 @@ gst_amrparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
   }
 
   amrparse->need_header = FALSE;
+  gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 50);
   gst_amrparse_set_src_caps (amrparse);
   return TRUE;
 }
-
-
-/**
- * gst_amrparse_update_duration:
- * @amrparse: #GstAmrParse.
- *
- * Send duration information to base class.
- */
-static void
-gst_amrparse_update_duration (GstAmrParse * amrparse)
-{
-  GstPad *peer;
-  GstBaseParse *parse;
-
-  parse = GST_BASE_PARSE (amrparse);
-
-  /* Cannot estimate duration. No data has been passed to us yet */
-  if (!amrparse->framecount) {
-    return;
-  }
-
-  peer = gst_pad_get_peer (parse->sinkpad);
-  if (peer) {
-    GstFormat pformat = GST_FORMAT_BYTES;
-    guint64 bpf = amrparse->bytecount / amrparse->framecount;
-    gboolean qres = FALSE;
-    gint64 ptot;
-
-    qres = gst_pad_query_duration (peer, &pformat, &ptot);
-    gst_object_unref (GST_OBJECT (peer));
-    if (qres && bpf) {
-      gst_base_parse_set_duration (parse, GST_FORMAT_TIME,
-          AMR_FRAME_DURATION * ptot / bpf);
-    }
-  }
-}
-
 
 /**
  * gst_amrparse_parse_header:
@@ -348,15 +303,11 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
 
   GST_LOG ("buffer: %d bytes", dsize);
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    /* Discontinuous stream -> drop the sync */
-    amrparse->sync = FALSE;
-  }
-
   if (amrparse->need_header) {
     if (dsize >= AMR_MIME_HEADER_SIZE &&
         gst_amrparse_parse_header (amrparse, data, skipsize)) {
       amrparse->need_header = FALSE;
+      gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 50);
     } else {
       GST_WARNING ("media doesn't look like a AMR format");
     }
@@ -378,16 +329,14 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
      *       to contain a valid header as well (and there is enough data to
      *       perform this check)
      */
-    if (amrparse->sync || amrparse->eos ||
+    if (gst_base_parse_get_sync (parse) || gst_base_parse_get_drain (parse) ||
         (dsize >= fsize && (data[fsize] & 0x83) == 0)) {
-      amrparse->sync = TRUE;
       *framesize = fsize;
       return TRUE;
     }
   }
 
   GST_LOG ("sync lost");
-  amrparse->sync = FALSE;
   return FALSE;
 }
 
@@ -407,29 +356,6 @@ gst_amrparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
   GstAmrParse *amrparse;
 
   amrparse = GST_AMRPARSE (parse);
-
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gint64 btime;
-    gboolean r = gst_amrparse_convert (parse, GST_FORMAT_BYTES,
-        GST_BUFFER_OFFSET (buffer),
-        GST_FORMAT_TIME, &btime);
-    if (r) {
-      /* FIXME: What to do if the conversion fails? */
-      amrparse->ts = btime;
-    }
-  }
-
-  GST_BUFFER_DURATION (buffer) = AMR_FRAME_DURATION;
-  GST_BUFFER_TIMESTAMP (buffer) = amrparse->ts;
-
-  if (GST_CLOCK_TIME_IS_VALID (amrparse->ts)) {
-    amrparse->ts += AMR_FRAME_DURATION;
-  }
-
-  if (!(++amrparse->framecount % 50)) {
-    gst_amrparse_update_duration (amrparse);
-  }
-  amrparse->bytecount += GST_BUFFER_SIZE (buffer);
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
   return GST_FLOW_OK;
@@ -453,11 +379,6 @@ gst_amrparse_start (GstBaseParse * parse)
   GST_DEBUG ("start");
   amrparse->need_header = TRUE;
   amrparse->header = 0;
-  amrparse->sync = TRUE;
-  amrparse->eos = FALSE;
-  amrparse->framecount = 0;
-  amrparse->bytecount = 0;
-  amrparse->ts = 0;
   return TRUE;
 }
 
@@ -479,100 +400,5 @@ gst_amrparse_stop (GstBaseParse * parse)
   GST_DEBUG ("stop");
   amrparse->need_header = TRUE;
   amrparse->header = 0;
-  amrparse->ts = -1;
   return TRUE;
-}
-
-
-/**
- * gst_amrparse_event:
- * @parse: #GstBaseParse.
- * @event: #GstEvent.
- *
- * Implementation of "event" vmethod in #GstBaseParse class.
- *
- * Returns: TRUE if the event was handled and can be dropped.
- */
-gboolean
-gst_amrparse_event (GstBaseParse * parse, GstEvent * event)
-{
-  GstAmrParse *amrparse;
-
-  amrparse = GST_AMRPARSE (parse);
-  GST_DEBUG ("event");
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      amrparse->eos = TRUE;
-      GST_DEBUG ("EOS event");
-      break;
-    default:
-      break;
-  }
-
-  return parent_class->event (parse, event);
-}
-
-
-/**
- * gst_amrparse_convert:
- * @parse: #GstBaseParse.
- * @src_format: #GstFormat describing the source format.
- * @src_value: Source value to be converted.
- * @dest_format: #GstFormat defining the converted format.
- * @dest_value: Pointer where the conversion result will be put.
- *
- * Implementation of "convert" vmethod in #GstBaseParse class.
- *
- * Returns: TRUE if conversion was successful.
- */
-gboolean
-gst_amrparse_convert (GstBaseParse * parse,
-    GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
-{
-  gboolean ret = FALSE;
-  GstAmrParse *amrparse;
-  gfloat bpf;
-
-  amrparse = GST_AMRPARSE (parse);
-
-  /* We are not able to do any estimations until some data has been passed */
-  if (!amrparse->framecount)
-    return FALSE;
-
-  bpf = (gfloat) amrparse->bytecount / amrparse->framecount;
-
-  if (src_format == GST_FORMAT_BYTES) {
-    if (dest_format == GST_FORMAT_TIME) {
-      /* BYTES -> TIME conversion */
-      GST_DEBUG ("converting bytes -> time");
-
-      if (amrparse->framecount) {
-        *dest_value = AMR_FRAME_DURATION * (src_value - amrparse->header) / bpf;
-        GST_DEBUG ("conversion result: %" G_GINT64_FORMAT " ms",
-            *dest_value / GST_MSECOND);
-        ret = TRUE;
-      }
-    }
-  } else if (src_format == GST_FORMAT_TIME) {
-    GST_DEBUG ("converting time -> bytes");
-    if (dest_format == GST_FORMAT_BYTES) {
-      if (amrparse->framecount) {
-        *dest_value = bpf * src_value / AMR_FRAME_DURATION + amrparse->header;
-        GST_DEBUG ("time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
-            src_value / GST_MSECOND, *dest_value);
-        ret = TRUE;
-      }
-    }
-  } else if (src_format == GST_FORMAT_DEFAULT) {
-    /* DEFAULT == frame-based */
-    if (dest_format == GST_FORMAT_TIME) {
-      *dest_value = src_value * AMR_FRAME_DURATION;
-      ret = TRUE;
-    } else if (dest_format == GST_FORMAT_BYTES) {
-    }
-  }
-
-  return ret;
 }
