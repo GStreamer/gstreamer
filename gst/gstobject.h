@@ -252,9 +252,11 @@ struct _GstObjectClass {
   gchar		*path_string_separator;
   GObject	*signal_object;
 
+  /* FIXME-0.11: remove this, plus the above GST_CLASS_*_LOCK macros */
   GStaticRecMutex *lock;
 
   /* signals */
+  /* FIXME-0.11: remove, and pass NULL in g_signal_new(), we never used them */
   void          (*parent_set)       (GstObject * object, GstObject * parent);
   void          (*parent_unset)     (GstObject * object, GstObject * parent);
   void          (*object_saved)     (GstObject * object, GstXmlNodePtr parent);
