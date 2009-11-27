@@ -1,11 +1,11 @@
 plugin_LTLIBRARIES = libgstaudioparsersbad.la
 
 libgstaudioparsersbad_la_SOURCES = \
-	gstaacparse.c gstamrparse.c gstbaseparse.c plugin.c
+	gstaacparse.c gstamrparse.c gstac3parse.c gstbaseparse.c plugin.c
 
 libgstaudioparsersbad_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstaudioparsersbad_la_LIBADD = $(GST_BASE_LIBS)
 libgstaudioparsersbad_la_LDFLAGS = $(PACKAGE_LIBS) $(GST_PLUGIN_LDFLAGS)
 libgstaudioparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstaacparse.h gstamrparse.h gstbaseparse.h
+noinst_HEADERS = gstaacparse.h gstamrparse.h gstac3parse.c gstbaseparse.h
