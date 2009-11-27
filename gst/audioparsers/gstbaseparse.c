@@ -262,7 +262,7 @@ gst_base_parse_get_type (void)
     };
 
     base_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAacBaseParse", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+        "GstBaseParse", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
   }
   return base_parse_type;
 }
@@ -311,7 +311,7 @@ gst_base_parse_base_init (gpointer g_class)
   GstBaseParseClass *klass = GST_BASE_PARSE_CLASS (g_class);
   GstBaseParseClassPrivate *priv;
 
-  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "aacbaseparse", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
       "baseparse element");
 
   /* TODO: Remove this once GObject supports class private data */
