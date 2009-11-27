@@ -30,8 +30,8 @@
  * Additionally one can load saved pipelines into the gst-editor to inspect the
  * graph.
  *
- * #GstElement implementations need to override the #GstObject.save_thyself()
- * and #GstObject.restore_thyself() virtual functions of #GstObject.
+ * #GstElement implementations need to override the #GstObjectClass.save_thyself()
+ * and #GstObjectClass.restore_thyself() virtual functions of #GstObject.
  */
 
 #include "gst_private.h"
