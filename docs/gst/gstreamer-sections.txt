@@ -1262,6 +1262,7 @@ gst_param_spec_mini_object_get_type
 <FILE>gstobject</FILE>
 <TITLE>GstObject</TITLE>
 GstObject
+GstObjectClass
 GstObjectFlags
 GST_OBJECT_FLAGS
 GST_OBJECT_FLAG_IS_SET
@@ -1304,7 +1305,6 @@ gst_object_get_path_string
 gst_class_signal_connect
 gst_class_signal_emit_by_name
 <SUBSECTION Standard>
-GstObjectClass
 GST_OBJECT
 GST_IS_OBJECT
 GST_OBJECT_CLASS

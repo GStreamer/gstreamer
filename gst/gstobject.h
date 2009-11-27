@@ -239,12 +239,20 @@ struct _GstObject {
  */
 #define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_CLASS_GET_LOCK(obj)))
 
-/*
+/**
  * GstObjectClass:
- *
+ * @parent_class: parent
+ * @path_string_separator: separator used by gst_object_get_path_string()
  * @signal_object: is used to signal to the whole class
+ * @lock: class lock to be used with GST_CLASS_GET_LOCK(), GST_CLASS_LOCK(), GST_CLASS_UNLOCK() and others.
+ * @parent_set: default signal handler
+ * @parent_unset: default signal handler
+ * @object_saved: default signal handler
+ * @deep_notify: default signal handler
  * @save_thyself: xml serialisation
  * @restore_thyself: xml de-serialisation
+ *
+ * GStreamer base object class.
  */
 struct _GstObjectClass {
   GObjectClass	parent_class;
