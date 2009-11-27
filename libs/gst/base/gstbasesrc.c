@@ -43,12 +43,12 @@
  * <itemizedlist>
  *   <listitem><para>The format is set to #GST_FORMAT_BYTES (default).</para>
  *   </listitem>
- *   <listitem><para>#GstBaseSrc::is_seekable returns %TRUE.</para>
+ *   <listitem><para>#GstBaseSrcClass.is_seekable() returns %TRUE.</para>
  *   </listitem>
  * </itemizedlist>
  *
- * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any
- * time by overriding #GstBaseSrc::check_get_range so that it returns %TRUE.
+ * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any time
+ * by overriding #GstBaseSrcClass.check_get_range() so that it returns %TRUE.
  *
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must
@@ -56,23 +56,24 @@
  * #GST_FORMAT_BYTES:
  * <itemizedlist>
  *   <listitem><para>
- *     #GstBaseSrc::is_seekable returns %TRUE.
+ *     #GstBaseSrcClass.is_seekable() returns %TRUE.
  *   </para></listitem>
  *   <listitem><para>
- *     #GstBaseSrc::query can convert all supported seek formats to the
+ *     #GstBaseSrc:Class.query() can convert all supported seek formats to the
  *     internal format as set with gst_base_src_set_format().
  *   </para></listitem>
  *   <listitem><para>
- *     #GstBaseSrc::do_seek is implemented, performs the seek and returns %TRUE.
+ *     #GstBaseSrcClass.do_seek() is implemented, performs the seek and returns
+ *      %TRUE.
  *   </para></listitem>
  * </itemizedlist>
  *
- * When the element does not meet the requirements to operate in pull mode,
- * the offset and length in the #GstBaseSrc::create method should be ignored.
+ * When the element does not meet the requirements to operate in pull mode, the
+ * offset and length in the #GstBaseSrcClass.create() method should be ignored.
  * It is recommended to subclass #GstPushSrc instead, in this situation. If the
  * element can operate in pull mode but only with specific offsets and
  * lengths, it is allowed to generate an error when the wrong values are passed
- * to the #GstBaseSrc::create function.
+ * to the #GstBaseSrcClass.create() function.
  *
  * #GstBaseSrc has support for live sources. Live sources are sources that when
  * paused discard data, such as audio or video capture devices. A typical live
@@ -81,9 +82,10 @@
  * Use gst_base_src_set_live() to activate the live source mode.
  *
  * A live source does not produce data in the PAUSED state. This means that the
- * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
- * To signal the pipeline that the element will not produce data, the return
- * value from the READY to PAUSED state will be #GST_STATE_CHANGE_NO_PREROLL.
+ * #GstBaseSrcClass.create() method will not be called in PAUSED but only in
+ * PLAYING. To signal the pipeline that the element will not produce data, the
+ * return value from the READY to PAUSED state will be
+ * #GST_STATE_CHANGE_NO_PREROLL.
  *
  * A typical live source will timestamp the buffers it creates with the
  * current running time of the pipeline. This is one reason why a live source
@@ -91,17 +93,17 @@
  * distributed and running.
  *
  * Live sources that synchronize and block on the clock (an audio source, for
- * example) can since 0.10.12 use gst_base_src_wait_playing() when the ::create
- * function was interrupted by a state change to PAUSED.
+ * example) can since 0.10.12 use gst_base_src_wait_playing() when the
+ * #GstBaseSrcClass.create() function was interrupted by a state change to
+ * PAUSED.
  *
- * The #GstBaseSrc::get_times method can be used to implement pseudo-live
- * sources.
- * It only makes sense to implement the ::get_times function if the source is
- * a live source. The ::get_times function should return timestamps starting
- * from 0, as if it were a non-live source. The base class will make sure that
- * the timestamps are transformed into the current running_time.
- * The base source will then wait for the calculated running_time before pushing
- * out the buffer.
+ * The #GstBaseSrcClass.get_times() method can be used to implement pseudo-live
+ * sources. It only makes sense to implement the #GstBaseSrcClass.get_times()
+ * function if the source is a live source. The #GstBaseSrcClass.get_times()
+ * function should return timestamps starting from 0, as if it were a non-live
+ * source. The base class will make sure that the timestamps are transformed
+ * into the current running_time. The base source will then wait for the
+ * calculated running_time before pushing out the buffer.
  *
  * For live sources, the base class will by default report a latency of 0.
  * For pseudo live sources, the base class will by default measure the difference
@@ -113,7 +115,7 @@
  * There is only support in #GstBaseSrc for exactly one source pad, which
  * should be named "src". A source implementation (subclass of #GstBaseSrc)
  * should install a pad template in its class_init function, like so:
- * <programlisting>
+ * |[
  * static void
  * my_element_class_init (GstMyElementClass *klass)
  * {
@@ -125,7 +127,7 @@
  *   // see #GstElementDetails
  *   gst_element_class_set_details (gstelement_class, &amp;details);
  * }
- * </programlisting>
+ * ]|
  *
  * <refsect2>
  * <title>Controlled shutdown of live sources in applications</title>
@@ -453,9 +455,9 @@ gst_base_src_finalize (GObject * object)
  * gst_base_src_wait_playing:
  * @src: the src
  *
- * If the #GstBaseSrcClass::create method performs its own synchronisation against
- * the clock it must unblock when going from PLAYING to the PAUSED state and call
- * this method before continuing to produce the remaining data.
+ * If the #GstBaseSrcClass.create() method performs its own synchronisation
+ * against the clock it must unblock when going from PLAYING to the PAUSED state
+ * and call this method before continuing to produce the remaining data.
  *
  * This function will block until a state change to PLAYING happens (in which
  * case this function returns #GST_FLOW_OK) or the processing must be stopped due
@@ -544,7 +546,7 @@ gst_base_src_is_live (GstBaseSrc * src)
  * for sending NEW_SEGMENT events and for performing seeks.
  *
  * If a format of GST_FORMAT_BYTES is set, the element will be able to
- * operate in pull mode if the #GstBaseSrc::is_seekable returns TRUE.
+ * operate in pull mode if the #GstBaseSrc.is_seekable() returns TRUE.
  *
  * Since: 0.10.1
  */

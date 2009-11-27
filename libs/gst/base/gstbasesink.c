@@ -37,7 +37,7 @@
  * #GstBaseSink provides support for exactly one sink pad, which should be
  * named "sink". A sink implementation (subclass of #GstBaseSink) should
  * install a pad template in its base_init function, like so:
- * <programlisting>
+ * |[
  * static void
  * my_element_base_init (gpointer g_class)
  * {
@@ -50,34 +50,35 @@
  *   // see #GstElementDetails
  *   gst_element_class_set_details (gstelement_class, &amp;details);
  * }
- * </programlisting>
+ * ]|
  *
  * #GstBaseSink will handle the prerolling correctly. This means that it will
  * return #GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first
  * buffer arrives in this element. The base class will call the
- * #GstBaseSink::preroll vmethod with this preroll buffer and will then commit
- * the state change to the next asynchronously pending state.
+ * #GstBaseSinkClass.preroll() vmethod with this preroll buffer and will then
+ * commit the state change to the next asynchronously pending state.
  *
  * When the element is set to PLAYING, #GstBaseSink will synchronise on the
- * clock using the times returned from ::get_times. If this function returns
- * #GST_CLOCK_TIME_NONE for the start time, no synchronisation will be done.
- * Synchronisation can be disabled entirely by setting the object "sync"
- * property to %FALSE.
+ * clock using the times returned from #GstBaseSinkClass.get_times(). If this
+ * function returns #GST_CLOCK_TIME_NONE for the start time, no synchronisation
+ * will be done. Synchronisation can be disabled entirely by setting the object
+ * #GstBaseSink:sync property to %FALSE.
  *
- * After synchronisation the virtual method #GstBaseSink::render will be called.
- * Subclasses should minimally implement this method.
+ * After synchronisation the virtual method #GstBaseSinkClass.render() will be
+ * called. Subclasses should minimally implement this method.
  *
- * Since 0.10.3 subclasses that synchronise on the clock in the ::render method
- * are supported as well. These classes typically receive a buffer in the render
- * method and can then potentially block on the clock while rendering. A typical
- * example is an audiosink. Since 0.10.11 these subclasses can use
- * gst_base_sink_wait_preroll() to perform the blocking wait.
+ * Since 0.10.3 subclasses that synchronise on the clock in the
+ * #GstBaseSinkClass.render() method are supported as well. These classes
+ * typically receive a buffer in the render method and can then potentially
+ * block on the clock while rendering. A typical example is an audiosink.
+ * Since 0.10.11 these subclasses can use gst_base_sink_wait_preroll() to
+ * perform the blocking wait.
  *
  * Upon receiving the EOS event in the PLAYING state, #GstBaseSink will wait
  * for the clock to reach the time indicated by the stop time of the last
- * ::get_times call before posting an EOS message. When the element receives
- * EOS in PAUSED, preroll completes, the event is queued and an EOS message is
- * posted when going to PLAYING.
+ * #GstBaseSinkClass.get_times() call before posting an EOS message. When the
+ * element receives EOS in PAUSED, preroll completes, the event is queued and an
+ * EOS message is posted when going to PLAYING.
  *
  * #GstBaseSink will internally use the #GST_EVENT_NEWSEGMENT events to schedule
  * synchronisation and clipping of buffers. Buffers that fall completely outside
@@ -90,49 +91,53 @@
  * If no clock has been set on the element, the query will be forwarded
  * upstream.
  *
- * The ::set_caps function will be called when the subclass should configure
- * itself to process a specific media type.
+ * The #GstBaseSinkClass.set_caps() function will be called when the subclass
+ * should configure itself to process a specific media type.
  *
- * The ::start and ::stop virtual methods will be called when resources should
- * be allocated. Any ::preroll, ::render  and ::set_caps function will be
- * called between the ::start and ::stop calls.
+ * The #GstBaseSinkClass.start() and #GstBaseSinkClass.stop() virtual methods
+ * will be called when resources should be allocated. Any 
+ * #GstBaseSinkClass.preroll(), #GstBaseSinkClass.render() and
+ * #GstBaseSinkClass.set_caps() function will be called between the
+ * #GstBaseSinkClass.start() and #GstBaseSinkClass.stop() calls.
  *
- * The ::event virtual method will be called when an event is received by
- * #GstBaseSink. Normally this method should only be overriden by very specific
- * elements (such as file sinks) which need to handle the newsegment event
- * specially.
+ * The #GstBaseSinkClass.event() virtual method will be called when an event is
+ * received by #GstBaseSink. Normally this method should only be overriden by
+ * very specific elements (such as file sinks) which need to handle the
+ * newsegment event specially.
  *
- * #GstBaseSink provides an overridable ::buffer_alloc function that can be
- * used by sinks that want to do reverse negotiation or to provide
- * custom buffers (hardware buffers for example) to upstream elements.
+ * #GstBaseSink provides an overridable #GstBaseSinkClass.buffer_alloc()
+ * function that can be used by sinks that want to do reverse negotiation or to
+ * provide custom buffers (hardware buffers for example) to upstream elements.
  *
- * The ::unlock method is called when the elements should unblock any blocking
- * operations they perform in the ::render method. This is mostly useful when
- * the ::render method performs a blocking write on a file descriptor, for
- * example.
+ * The #GstBaseSinkClass.unlock() method is called when the elements should
+ * unblock any blocking operations they perform in the
+ * #GstBaseSinkClass.render() method. This is mostly useful when the
+ * #GstBaseSinkClass.render() method performs a blocking write on a file
+ * descriptor, for example.
  *
- * The max-lateness property affects how the sink deals with buffers that
- * arrive too late in the sink. A buffer arrives too late in the sink when
- * the presentation time (as a combination of the last segment, buffer
+ * The #GstBaseSink:max-lateness property affects how the sink deals with
+ * buffers that arrive too late in the sink. A buffer arrives too late in the
+ * sink when the presentation time (as a combination of the last segment, buffer
  * timestamp and element base_time) plus the duration is before the current
  * time of the clock.
  * If the frame is later than max-lateness, the sink will drop the buffer
  * without calling the render method.
- * This feature is disabled if sync is disabled, the ::get-times method does
- * not return a valid start time or max-lateness is set to -1 (the default).
+ * This feature is disabled if sync is disabled, the
+ * #GstBaseSinkClass.get_times() method does not return a valid start time or
+ * max-lateness is set to -1 (the default).
  * Subclasses can use gst_base_sink_set_max_lateness() to configure the
  * max-lateness value.
  *
- * The qos property will enable the quality-of-service features of the basesink
- * which gather statistics about the real-time performance of the clock
- * synchronisation. For each buffer received in the sink, statistics are
+ * The #GstBaseSink:qos property will enable the quality-of-service features of
+ * the basesink which gather statistics about the real-time performance of the
+ * clock synchronisation. For each buffer received in the sink, statistics are
  * gathered and a QOS event is sent upstream with these numbers. This
  * information can then be used by upstream elements to reduce their processing
  * rate, for example.
  *
- * Since 0.10.15 the async property can be used to instruct the sink to never
- * perform an ASYNC state change. This feature is mostly usable when dealing
- * with non-synchronized streams or sparse streams.
+ * Since 0.10.15 the #GstBaseSink:async property can be used to instruct the
+ * sink to never perform an ASYNC state change. This feature is mostly usable
+ * when dealing with non-synchronized streams or sparse streams.
  *
  * Last reviewed on 2007-08-29 (0.10.15)
  */
@@ -1931,8 +1936,9 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * is no clock, no synchronisation is done and #GST_CLOCK_BADTIME is returned.
  *
  * This function should only be called with the PREROLL_LOCK held, like when
- * receiving an EOS event in the ::event vmethod or when receiving a buffer in
- * the ::render vmethod.
+ * receiving an EOS event in the #GstBaseSinkClass.event() vmethod or when
+ * receiving a buffer in
+ * the #GstBaseSinkClass.render() vmethod.
  *
  * The @time argument should be the running_time of when this method should
  * return and is not adjusted with any latency or offset configured in the
@@ -2006,9 +2012,9 @@ no_clock:
  * gst_base_sink_wait_preroll:
  * @sink: the sink
  *
- * If the #GstBaseSinkClass::render method performs its own synchronisation against
- * the clock it must unblock when going from PLAYING to the PAUSED state and call
- * this method before continuing to render the remaining data.
+ * If the #GstBaseSinkClass.render() method performs its own synchronisation
+ * against the clock it must unblock when going from PLAYING to the PAUSED state
+ * and call this method before continuing to render the remaining data.
  *
  * This function will block until a state change to PLAYING happens (in which
  * case this function returns #GST_FLOW_OK) or the processing must be stopped due
