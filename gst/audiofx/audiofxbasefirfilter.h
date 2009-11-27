@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioFXBaseFIRFilter GstAudioFXBaseFIRFilter;
 typedef struct _GstAudioFXBaseFIRFilterClass GstAudioFXBaseFIRFilterClass;
 
-typedef void (*GstAudioFXBaseFIRFilterProcessFunc) (GstAudioFXBaseFIRFilter *, const guint8 *, guint8 *, guint);
+typedef guint (*GstAudioFXBaseFIRFilterProcessFunc) (GstAudioFXBaseFIRFilter *, const guint8 *, guint8 *, guint);
 
 /**
  * GstAudioFXBaseFIRFilter:
@@ -62,12 +62,14 @@ struct _GstAudioFXBaseFIRFilter {
 
   gdouble *buffer;              /* buffer for storing samples of previous buffers */
   guint buffer_fill;            /* fill level of buffer */
+  guint buffer_length;          /* length of the buffer */
 
   guint64 latency;
 
   GstClockTime start_ts;        /* start timestamp after a discont */
   guint64 start_off;            /* start offset after a discont */
-  guint64 nsamples;             /* number of samples since last discont */
+  guint64 nsamples_out;         /* number of output samples since last discont */
+  guint64 nsamples_in;          /* number of input samples since last discont */
 };
 
 struct _GstAudioFXBaseFIRFilterClass {
