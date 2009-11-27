@@ -1376,7 +1376,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     res = FALSE;
   }
 
-  /* if successfull seek, we update our real segment and push
+  /* if the seek was successful, we update our real segment and push
    * out the new segment. */
   if (res) {
     memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
@@ -1421,7 +1421,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 
   src->priv->discont = TRUE;
   src->data.ABI.running = TRUE;
-  /* and restart the task in case it got paused explicitely or by
+  /* and restart the task in case it got paused explicitly or by
    * the FLUSH_START event we pushed out. */
   tres = gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
       src->srcpad);
@@ -2863,6 +2863,11 @@ error_start:
 seek_failed:
   {
     GST_ERROR_OBJECT (basesrc, "Failed to perform initial seek");
+    /* flush all */
+    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
+    /* stop the task */
+    gst_pad_stop_task (pad);
+    /* Stop the basesrc */
     gst_base_src_stop (basesrc);
     if (event)
       gst_event_unref (event);
