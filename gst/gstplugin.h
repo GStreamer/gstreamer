@@ -121,6 +121,7 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 /**
  * GstPluginInitFullFunc:
  * @plugin: The plugin object
+ * @user_data: extra data
  *
  * A plugin should provide a pointer to a function of either #GstPluginInitFunc
  * or this type in the plugin_desc struct.
