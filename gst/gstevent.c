@@ -443,7 +443,7 @@ gst_event_new_flush_start (void)
  * gst_event_new_flush_stop:
  *
  * Allocate a new flush stop event. The flush stop event can be sent
- * upstream and downstream and travels out-of-bounds with the dataflow.
+ * upstream and downstream and travels serialized with the dataflow.
  * It is typically sent after sending a FLUSH_START event to make the
  * pads accept data again.
  *
