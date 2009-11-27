@@ -86,6 +86,7 @@
 
       <xi:include href="xml/gstcheck.xml" />
       <xi:include href="xml/gstcheckbufferstraw.xml" />
+      <xi:include href="xml/gstcheckconsistencychecker.xml" />
     </chapter>
   </part>
 
