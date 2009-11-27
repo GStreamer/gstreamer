@@ -153,7 +153,7 @@ gst_collect_pads_finalize (GObject * object)
 /**
  * gst_collect_pads_new:
  *
- * Create a new instance of #GstCollectsPads.
+ * Create a new instance of #GstCollectPads.
  *
  * Returns: a new #GstCollectPads, or NULL in case of an error.
  *

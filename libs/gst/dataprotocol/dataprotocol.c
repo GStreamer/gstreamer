@@ -367,7 +367,7 @@ gst_dp_header_payload_type (const guint8 * header)
 /**
  * gst_dp_header_from_buffer:
  * @buffer: a #GstBuffer to create a header for
- * @flags: the #GDPHeaderFlags to create the header with
+ * @flags: the #GstDPHeaderFlag to create the header with
  * @length: a guint pointer to store the header length in
  * @header: a guint8 * pointer to store a newly allocated header byte array in
  *
@@ -398,7 +398,7 @@ gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
 /**
  * gst_dp_packet_from_caps:
  * @caps: a #GstCaps to create a packet for
- * @flags: the #GDPHeaderFlags to create the header with
+ * @flags: the #GstDPHeaderFlag to create the header with
  * @length: a guint pointer to store the header length in
  * @header: a guint8 pointer to store a newly allocated header byte array in
  * @payload: a guint8 pointer to store a newly allocated payload byte array in
@@ -430,7 +430,7 @@ gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
 /**
  * gst_dp_packet_from_event:
  * @event: a #GstEvent to create a packet for
- * @flags: the #GDPHeaderFlags to create the header with
+ * @flags: the #GstDPHeaderFlag to create the header with
  * @length: a guint pointer to store the header length in
  * @header: a guint8 pointer to store a newly allocated header byte array in
  * @payload: a guint8 pointer to store a newly allocated payload byte array in

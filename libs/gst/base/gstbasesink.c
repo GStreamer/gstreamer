@@ -22,7 +22,7 @@
 /**
  * SECTION:gstbasesink
  * @short_description: Base class for sink elements
- * @see_also: #GstBaseTransform, #GstBaseSource
+ * @see_also: #GstBaseTransform, #GstBaseSrc
  *
  * #GstBaseSink is the base class for sink elements in GStreamer, such as
  * xvimagesink or filesink. It is a layer on top of #GstElement that provides a

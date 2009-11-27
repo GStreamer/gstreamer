@@ -331,7 +331,7 @@ gst_data_queue_is_empty (GstDataQueue * queue)
  * @queue: a #GstDataQueue.
  *
  * Queries if @queue is full. This check will be done using the
- * #GstDataQueueCheckFullCallback registered with @queue.
+ * #GstDataQueueCheckFullFunction registered with @queue.
  * MT safe.
  *
  * Returns: #TRUE if @queue is full.

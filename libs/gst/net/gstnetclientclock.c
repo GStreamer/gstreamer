@@ -522,7 +522,7 @@ gst_net_client_clock_stop (GstNetClientClock * self)
  * @base_time: initial time of the clock
  *
  * Create a new #GstNetClientClock that will report the time
- * provided by the #GstNetClockProvider on @remote_address and 
+ * provided by the #GstNetTimeProvider on @remote_address and 
  * @remote_port.
  *
  * Returns: a new #GstClock that receives a time from the remote
