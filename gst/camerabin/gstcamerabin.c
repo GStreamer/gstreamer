@@ -185,27 +185,6 @@ enum
   LAST_SIGNAL
 };
 
-enum
-{
-  ARG_0,
-  ARG_FILENAME,
-  ARG_MODE,
-  ARG_FLAGS,
-  ARG_MUTE,
-  ARG_ZOOM,
-  ARG_IMAGE_POST,
-  ARG_IMAGE_ENC,
-  ARG_VIDEO_POST,
-  ARG_VIDEO_ENC,
-  ARG_AUDIO_ENC,
-  ARG_VIDEO_MUX,
-  ARG_VF_SINK,
-  ARG_VIDEO_SRC,
-  ARG_AUDIO_SRC,
-  ARG_INPUT_CAPS,
-  ARG_FILTER_CAPS,
-  ARG_PREVIEW_CAPS
-};
 
 /*
  * defines and static global vars
@@ -338,6 +317,9 @@ static void gst_camerabin_set_property (GObject * object, guint prop_id,
 
 static void gst_camerabin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static void gst_camerabin_override_photo_properties (GObjectClass *
+    gobject_class);
 
 /*
  * GstElement function declarations
@@ -1030,28 +1012,18 @@ gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
 }
 
 static gboolean
-gst_camerabin_set_photo_iface_zoom (GstCameraBin * camera, gint zoom)
+gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gint zoom)
 {
-  GstPhotography *photo = NULL;
-  GstPhotoCaps pcaps = GST_PHOTOGRAPHY_CAPS_NONE;
   gboolean ret = FALSE;
-
-  if (GST_IS_ELEMENT (camera->src_vid_src) &&
-      gst_element_implements_interface (camera->src_vid_src,
-          GST_TYPE_PHOTOGRAPHY)) {
-    /* Try setting zoom using photography interface */
-    photo = GST_PHOTOGRAPHY (camera->src_vid_src);
-    if (photo) {
-      pcaps = gst_photography_get_capabilities (photo);
-    }
-    if (pcaps & GST_PHOTOGRAPHY_CAPS_ZOOM) {
-      GST_DEBUG_OBJECT (camera, "setting zoom %d using photography interface",
-          zoom);
-      ret = gst_photography_set_zoom (photo, (gfloat) zoom / 100.0);
-    }
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
+          "zoom")) {
+    g_object_set (G_OBJECT (camera->src_vid_src), "zoom",
+        (gfloat) zoom / 100, NULL);
+    ret = TRUE;
   }
   return ret;
 }
+
 
 static gboolean
 gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
@@ -1110,8 +1082,8 @@ gst_camerabin_setup_zoom (GstCameraBin * camera)
 
   GST_INFO_OBJECT (camera, "setting zoom %d", zoom);
 
-  if (gst_camerabin_set_photo_iface_zoom (camera, zoom)) {
-    GST_INFO_OBJECT (camera, "zoom set using photography interface");
+  if (gst_camerabin_set_videosrc_zoom (camera, zoom)) {
+    GST_INFO_OBJECT (camera, "zoom set using videosrc");
   } else if (gst_camerabin_set_element_zoom (camera, zoom)) {
     GST_INFO_OBJECT (camera, "zoom set using gst elements");
   } else {
@@ -2721,6 +2693,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       __gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1,
       G_TYPE_STRING);
 
+  gst_camerabin_override_photo_properties (gobject_class);
+
   klass->user_start = gst_camerabin_user_start;
   klass->user_stop = gst_camerabin_user_stop;
   klass->user_pause = gst_camerabin_user_pause;
@@ -2857,10 +2831,44 @@ gst_camerabin_finalize (GObject * object)
 }
 
 static void
+gst_camerabin_override_photo_properties (GObjectClass * gobject_class)
+{
+  g_object_class_override_property (gobject_class, ARG_WB_MODE,
+      GST_PHOTOGRAPHY_PROP_WB_MODE);
+
+  g_object_class_override_property (gobject_class, ARG_COLOUR_TONE,
+      GST_PHOTOGRAPHY_PROP_COLOUR_TONE);
+
+  g_object_class_override_property (gobject_class, ARG_SCENE_MODE,
+      GST_PHOTOGRAPHY_PROP_SCENE_MODE);
+
+  g_object_class_override_property (gobject_class, ARG_FLASH_MODE,
+      GST_PHOTOGRAPHY_PROP_FLASH_MODE);
+
+  g_object_class_override_property (gobject_class, ARG_CAPABILITIES,
+      GST_PHOTOGRAPHY_PROP_CAPABILITIES);
+
+  g_object_class_override_property (gobject_class, ARG_EV_COMP,
+      GST_PHOTOGRAPHY_PROP_EV_COMP);
+
+  g_object_class_override_property (gobject_class, ARG_ISO_SPEED,
+      GST_PHOTOGRAPHY_PROP_ISO_SPEED);
+
+  g_object_class_override_property (gobject_class, ARG_APERTURE,
+      GST_PHOTOGRAPHY_PROP_APERTURE);
+
+  g_object_class_override_property (gobject_class, ARG_EXPOSURE,
+      GST_PHOTOGRAPHY_PROP_EXPOSURE);
+}
+
+static void
 gst_camerabin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstCameraBin *camera = GST_CAMERABIN (object);
+
+  if (gst_camerabin_photography_set_property (camera, prop_id, value))
+    return;
 
   switch (prop_id) {
     case ARG_MUTE:
@@ -3014,6 +3022,9 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstCameraBin *camera = GST_CAMERABIN (object);
+
+  if (gst_camerabin_photography_get_property (camera, prop_id, value))
+    return;
 
   switch (prop_id) {
     case ARG_FILENAME:

@@ -51,6 +51,19 @@ G_BEGIN_DECLS
 /* Custom GstMessage name that will be sent to GstBus when shake risk changes */
 #define GST_PHOTOGRAPHY_SHAKE_RISK "shake-risk"
 
+/* Interface property names */
+#define GST_PHOTOGRAPHY_PROP_WB_MODE      "white-balance-mode"
+#define GST_PHOTOGRAPHY_PROP_COLOUR_TONE  "colour-tone-mode"
+#define GST_PHOTOGRAPHY_PROP_SCENE_MODE   "scene-mode"
+#define GST_PHOTOGRAPHY_PROP_FLASH_MODE   "flash-mode"
+#define GST_PHOTOGRAPHY_PROP_FOCUS_STATUS "focus-status"
+#define GST_PHOTOGRAPHY_PROP_CAPABILITIES "capabilities"
+#define GST_PHOTOGRAPHY_PROP_SHAKE_RISK   "shake-risk"
+#define GST_PHOTOGRAPHY_PROP_EV_COMP      "ev-compensation"
+#define GST_PHOTOGRAPHY_PROP_ISO_SPEED    "iso-speed"
+#define GST_PHOTOGRAPHY_PROP_APERTURE     "aperture"
+#define GST_PHOTOGRAPHY_PROP_EXPOSURE     "exposure"
+
 /**
  * GstPhotography:
  *

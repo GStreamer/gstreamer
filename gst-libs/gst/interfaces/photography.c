@@ -34,7 +34,8 @@
  * The interface allows access to some common digital imaging controls
  */
 
-static void gst_photography_iface_init (GstPhotographyInterface * iface);
+static void gst_photography_iface_base_init (GstPhotographyInterface * iface);
+static void gst_photography_iface_class_init (gpointer g_class);
 
 GType
 gst_photography_get_type (void)
@@ -44,14 +45,14 @@ gst_photography_get_type (void)
   if (!gst_photography_type) {
     static const GTypeInfo gst_photography_info = {
       sizeof (GstPhotographyInterface),
-      (GBaseInitFunc) gst_photography_iface_init,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
+      (GBaseInitFunc) gst_photography_iface_base_init,  /* base_init */
+      NULL,                     /* base_finalize */
+      (GClassInitFunc) gst_photography_iface_class_init,        /* class_init */
+      NULL,                     /* class_finalize */
+      NULL,                     /* class_data */
       0,
-      0,
-      NULL,
+      0,                        /* n_preallocs */
+      NULL,                     /* instance_init */
     };
 
     gst_photography_type = g_type_register_static (G_TYPE_INTERFACE,
@@ -64,7 +65,7 @@ gst_photography_get_type (void)
 }
 
 static void
-gst_photography_iface_init (GstPhotographyInterface * iface)
+gst_photography_iface_base_init (GstPhotographyInterface * iface)
 {
   /* default virtual functions */
   iface->get_ev_compensation = NULL;
@@ -382,7 +383,7 @@ gst_photography_set_autofocus (GstPhotography * photo, gboolean on)
  * Returns: TRUE if configuration was set successfully, otherwise FALSE.
  */
 gboolean
-gst_photography_set_config (GstPhotography * photo, GstPhotoSettings *config)
+gst_photography_set_config (GstPhotography * photo, GstPhotoSettings * config)
 {
   GstPhotographyInterface *iface;
   gboolean ret = FALSE;
@@ -420,4 +421,78 @@ gst_photography_get_config (GstPhotography * photo, GstPhotoSettings * config)
   }
 
   return ret;
+}
+
+/* Photography class initialization stuff */
+static void
+gst_photography_iface_class_init (gpointer g_class)
+{
+  /* create interface signals and properties here. */
+
+  /* White balance */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_WB_MODE,
+          "White balance mode property",
+          "White balance affects the color temperature of the photo",
+          GST_TYPE_WHITE_BALANCE_MODE,
+          GST_PHOTOGRAPHY_WB_MODE_AUTO, G_PARAM_READWRITE));
+
+  /* Colour tone */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_COLOUR_TONE,
+          "Colour tone mode property",
+          "Colour tone setting changes colour shading in the photo",
+          GST_TYPE_COLOUR_TONE_MODE,
+          GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL, G_PARAM_READWRITE));
+
+  /* Scene mode */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_SCENE_MODE,
+          "Scene mode property",
+          "Scene mode works as a preset for different photo shooting mode settings",
+          GST_TYPE_SCENE_MODE,
+          GST_PHOTOGRAPHY_SCENE_MODE_AUTO, G_PARAM_READWRITE));
+
+  /* Flash mode */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FLASH_MODE,
+          "Flash mode property",
+          "Flash mode defines how the flash light should be used",
+          GST_TYPE_FLASH_MODE,
+          GST_PHOTOGRAPHY_FLASH_MODE_AUTO, G_PARAM_READWRITE));
+
+  /* Capabilities */
+  g_object_interface_install_property (g_class,
+      g_param_spec_ulong (GST_PHOTOGRAPHY_PROP_CAPABILITIES,
+          "Photo capabilities bitmask",
+          "Tells the photo capabilities of the device",
+          0, G_MAXULONG, 0, G_PARAM_READABLE));
+
+  /* EV_compensation */
+  g_object_interface_install_property (g_class,
+      g_param_spec_float (GST_PHOTOGRAPHY_PROP_EV_COMP,
+          "EV compensation property",
+          "EV compensation affects the brightness of the image",
+          -2.5, 2.5, 0, G_PARAM_READWRITE));
+
+  /* ISO value */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_ISO_SPEED,
+          "ISO speed property",
+          "ISO speed defines the light sensitivity (0 = auto)",
+          0, 6400, 0, G_PARAM_READWRITE));
+
+  /* Aperture */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_APERTURE,
+          "Aperture property",
+          "Aperture defines the size of lens opening  (0 = auto)",
+          0, G_MAXUINT8, 0, G_PARAM_READWRITE));
+
+  /* Exposure */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_EXPOSURE,
+          "Exposure time in milliseconds",
+          "Exposure time defines how long the shutter will stay open (0 = auto)",
+          0, G_MAXUINT32, 0, G_PARAM_READWRITE));
 }

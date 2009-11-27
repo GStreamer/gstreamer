@@ -27,6 +27,7 @@
 #include <string.h>
 #include "gstcamerabinphotography.h"
 #include "gstcamerabin.h"
+#include "gstcamerabin-enum.h"
 
 GST_DEBUG_CATEGORY_STATIC (camerabinphoto_debug);
 #define GST_CAT_DEFAULT camerabinphoto_debug
@@ -235,37 +236,6 @@ gst_camerabin_get_flash_mode (GstPhotography * photo, GstFlashMode * flash_mode)
 }
 
 static gboolean
-gst_camerabin_set_zoom (GstPhotography * photo, gfloat zoom)
-{
-  GstCameraBin *camera;
-
-  g_return_val_if_fail (photo != NULL, FALSE);
-
-  camera = GST_CAMERABIN (photo);
-
-  /* camerabin can zoom by itself */
-  g_object_set (camera, "zoom", (gint) (CLAMP (zoom, 1.0, 10.0) * 100), NULL);
-
-  return TRUE;
-}
-
-static gboolean
-gst_camerabin_get_zoom (GstPhotography * photo, gfloat * zoom)
-{
-  GstCameraBin *camera;
-  gint cb_zoom = 0;
-
-  g_return_val_if_fail (photo != NULL, FALSE);
-
-  camera = GST_CAMERABIN (photo);
-
-  g_object_get (camera, "zoom", &cb_zoom, NULL);
-  *zoom = (gfloat) (cb_zoom / 100.0);
-
-  return TRUE;
-}
-
-static gboolean
 gst_camerabin_set_scene_mode (GstPhotography * photo, GstSceneMode scene_mode)
 {
   GstCameraBin *camera;
@@ -346,6 +316,70 @@ gst_camerabin_set_autofocus (GstPhotography * photo, gboolean on)
 }
 
 static gboolean
+gst_camerabin_get_aperture (GstPhotography * photo, guint * aperture)
+{
+  GstCameraBin *camera;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (photo != NULL, FALSE);
+
+  camera = GST_CAMERABIN (photo);
+
+  if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
+    ret = gst_photography_get_aperture (GST_PHOTOGRAPHY (camera->src_vid_src),
+        aperture);
+  }
+  return ret;
+}
+
+static void
+gst_camerabin_set_aperture (GstPhotography * photo, guint aperture)
+{
+  GstCameraBin *camera;
+
+  g_return_if_fail (photo != NULL);
+
+  camera = GST_CAMERABIN (photo);
+
+  if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
+    gst_photography_set_aperture (GST_PHOTOGRAPHY (camera->src_vid_src),
+        aperture);
+  }
+}
+
+static gboolean
+gst_camerabin_get_exposure (GstPhotography * photo, guint32 * exposure)
+{
+  GstCameraBin *camera;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (photo != NULL, FALSE);
+
+  camera = GST_CAMERABIN (photo);
+
+  if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
+    ret = gst_photography_get_exposure (GST_PHOTOGRAPHY (camera->src_vid_src),
+        exposure);
+  }
+  return ret;
+}
+
+static void
+gst_camerabin_set_exposure (GstPhotography * photo, guint32 exposure)
+{
+  GstCameraBin *camera;
+
+  g_return_if_fail (photo != NULL);
+
+  camera = GST_CAMERABIN (photo);
+
+  if (PHOTOGRAPHY_IS_OK (camera->src_vid_src)) {
+    gst_photography_set_exposure (GST_PHOTOGRAPHY (camera->src_vid_src),
+        exposure);
+  }
+}
+
+static gboolean
 gst_camerabin_set_config (GstPhotography * photo, GstPhotoSettings * config)
 {
   GstCameraBin *camera;
@@ -409,6 +443,181 @@ gst_camerabin_handle_scene_mode (GstCameraBin * camera, GstSceneMode scene_mode)
   }
 }
 
+gboolean
+gst_camerabin_photography_get_property (GstCameraBin * camera, guint prop_id,
+    GValue * value)
+{
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (camera, "Photointerface property: %d", prop_id);
+
+  switch (prop_id) {
+    case ARG_WB_MODE:
+    {
+      GstWhiteBalanceMode wb_mode;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_WB_MODE ====");
+      if (gst_camerabin_get_white_balance_mode ((GstPhotography *) camera,
+              &wb_mode)) {
+        g_value_set_enum (value, wb_mode);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_COLOUR_TONE:
+    {
+      GstColourToneMode tone;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_COLOUR_TONE ====");
+      if (gst_camerabin_get_colour_tone_mode ((GstPhotography *) camera, &tone)) {
+        g_value_set_enum (value, tone);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_SCENE_MODE:
+    {
+      GstSceneMode scene;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_SCENE_MODE ====");
+      if (gst_camerabin_get_scene_mode ((GstPhotography *) camera, &scene)) {
+        g_value_set_enum (value, scene);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_FLASH_MODE:
+    {
+      GstFlashMode flash;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_FLASH_MODE ====");
+      if (gst_camerabin_get_flash_mode ((GstPhotography *) camera, &flash)) {
+        g_value_set_enum (value, flash);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_CAPABILITIES:
+    {
+      gulong capabilities;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_CAPABILITIES ====");
+      capabilities =
+          (gulong) gst_camerabin_get_capabilities ((GstPhotography *) camera);
+      g_value_set_ulong (value, capabilities);
+      ret = TRUE;
+      break;
+    }
+    case ARG_EV_COMP:
+    {
+      gfloat ev_comp;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_EV_COMP ====");
+      if (gst_camerabin_get_ev_compensation ((GstPhotography *) camera,
+              &ev_comp)) {
+        g_value_set_float (value, ev_comp);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_ISO_SPEED:
+    {
+      guint iso_speed;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_ISO_SPEED ====");
+      if (gst_camerabin_get_iso_speed ((GstPhotography *) camera, &iso_speed)) {
+        g_value_set_uint (value, iso_speed);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_APERTURE:
+    {
+      guint aperture;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_APERTURE ====");
+      if (gst_camerabin_get_aperture ((GstPhotography *) camera, &aperture)) {
+        g_value_set_uint (value, aperture);
+      }
+      ret = TRUE;
+      break;
+    }
+    case ARG_EXPOSURE:
+    {
+      guint32 exposure;
+      GST_DEBUG_OBJECT (camera, "==== GETTING PROP_EXPOSURE ====");
+      if (gst_camerabin_get_exposure ((GstPhotography *) camera, &exposure)) {
+        g_value_set_uint (value, exposure);
+      }
+      ret = TRUE;
+      break;
+    }
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+
+/*
+ *
+ */
+gboolean
+gst_camerabin_photography_set_property (GstCameraBin * camera, guint prop_id,
+    const GValue * value)
+{
+  gboolean ret = FALSE;
+
+  switch (prop_id) {
+    case ARG_WB_MODE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_WB_MODE ====");
+      gst_camerabin_set_white_balance_mode ((GstPhotography *) camera,
+          g_value_get_enum (value));
+      ret = TRUE;
+      break;
+    case ARG_COLOUR_TONE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_COLOUR_TONE ====");
+      gst_camerabin_set_colour_tone_mode ((GstPhotography *) camera,
+          g_value_get_enum (value));
+      ret = TRUE;
+      break;
+    case ARG_SCENE_MODE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_SCENE_MODE ====");
+      gst_camerabin_set_scene_mode ((GstPhotography *) camera,
+          g_value_get_enum (value));
+      ret = TRUE;
+      break;
+    case ARG_FLASH_MODE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_FLASH_MODE ====");
+      gst_camerabin_set_flash_mode ((GstPhotography *) camera,
+          g_value_get_enum (value));
+      ret = TRUE;
+      break;
+    case ARG_EV_COMP:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_EV_COMP ====");
+      gst_camerabin_set_ev_compensation ((GstPhotography *) camera,
+          g_value_get_float (value));
+      ret = TRUE;
+      break;
+    case ARG_ISO_SPEED:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_ISO_SPEED ====");
+      gst_camerabin_set_iso_speed ((GstPhotography *) camera,
+          g_value_get_uint (value));
+      ret = TRUE;
+      break;
+    case ARG_APERTURE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_APERTURE ====");
+      gst_camerabin_set_aperture ((GstPhotography *) camera,
+          g_value_get_uint (value));
+      ret = TRUE;
+      break;
+    case ARG_EXPOSURE:
+      GST_DEBUG_OBJECT (camera, "==== SETTING PROP_EXPOSURE ====");
+      gst_camerabin_set_exposure ((GstPhotography *) camera,
+          g_value_get_uint (value));
+      ret = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+
 void
 gst_camerabin_photography_init (GstPhotographyInterface * iface)
 {
@@ -434,9 +643,6 @@ gst_camerabin_photography_init (GstPhotographyInterface * iface)
 
   iface->set_flash_mode = gst_camerabin_set_flash_mode;
   iface->get_flash_mode = gst_camerabin_get_flash_mode;
-
-  iface->set_zoom = gst_camerabin_set_zoom;
-  iface->get_zoom = gst_camerabin_get_zoom;
 
   iface->get_capabilities = gst_camerabin_get_capabilities;
 

@@ -25,6 +25,18 @@
 
 #include <gst/interfaces/photography.h>
 
+#include "gstcamerabin.h"
+
+gboolean
+gst_camerabin_photography_set_property (GstCameraBin * camerabin,
+                                        guint prop_id,
+                                        const GValue * value);
+
+gboolean
+gst_camerabin_photography_get_property (GstCameraBin * camerabin,
+                                        guint prop_id,
+                                        GValue * value);
+
 void gst_camerabin_photography_init (GstPhotographyInterface * iface);
 
 #endif /* #ifndef __GST_CAMERABIN_PHOTOGRAPHY_H__ */
