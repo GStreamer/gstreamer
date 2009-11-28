@@ -253,11 +253,11 @@ AG_GST_DEFAULT_ELEMENTS
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
-AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(aiff)
 AG_GST_CHECK_PLUGIN(amrparse)
 AG_GST_CHECK_PLUGIN(asfmux)
+AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(camerabin)
 AG_GST_CHECK_PLUGIN(legacyresample)
@@ -1632,11 +1632,11 @@ common/shave-libtool
 common/m4/Makefile
 gst-plugins-bad.spec
 gst/Makefile
-gst/aacparse/Makefile
 gst/adpcmdec/Makefile
 gst/aiff/Makefile
 gst/amrparse/Makefile
 gst/asfmux/Makefile
+gst/audioparsers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
