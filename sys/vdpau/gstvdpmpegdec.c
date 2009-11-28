@@ -1138,9 +1138,7 @@ gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
   /* SRC PAD */
   src_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (gclass), "src");
-  mpeg_dec->src =
-      GST_PAD (gst_vdp_video_src_pad_new (gst_pad_template_get_caps
-          (src_template)));
+  mpeg_dec->src = GST_PAD (gst_vdp_video_src_pad_new (src_template, "src"));
 
   gst_pad_set_event_function (mpeg_dec->src,
       GST_DEBUG_FUNCPTR (gst_vdp_mpeg_dec_src_event));
