@@ -214,8 +214,8 @@ g_signal_connect (bus, "message::eos", G_CALLBACK (cb_message_eos), NULL);
           error type and message, and optionally a debug string. Both
           can be extracted using <function>gst_message_parse_error
           ()</function>, <function>_parse_warning ()</function> and
-          <function>_parse_info ()</function>. Both error and debug string
-          should be free'ed after use.
+          <function>_parse_info ()</function>. Both error and debug strings
+          should be freed after use.
         </para>
       </listitem>
       <listitem>
