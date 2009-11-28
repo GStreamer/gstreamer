@@ -157,7 +157,6 @@ typedef enum {
 #define GST_EVENT_TRACE_NAME    "GstEvent"
 
 typedef struct _GstEvent GstEvent;
-typedef struct _GstEventClass GstEventClass;
 
 #define GST_TYPE_EVENT                  (gst_event_get_type())
 #define GST_IS_EVENT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EVENT))
@@ -359,13 +358,6 @@ struct _GstEvent {
   guint32       seqnum;
 
   GstStructure  *structure;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstEventClass {
-  GstMiniObjectClass mini_object_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

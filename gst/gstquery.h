@@ -90,7 +90,6 @@ typedef enum {
 
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 typedef struct _GstQuery GstQuery;
-typedef struct _GstQueryClass GstQueryClass;
 
 /**
  * GstQueryTypeDefinition:
@@ -109,13 +108,10 @@ struct _GstQueryTypeDefinition
   GQuark         quark;
 };
 
-#define GST_TYPE_QUERY                          (gst_query_get_type())
-#define GST_IS_QUERY(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QUERY))
-#define GST_IS_QUERY_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QUERY))
-#define GST_QUERY_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_QUERY, GstQueryClass))
-#define GST_QUERY(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QUERY, GstQuery))
-#define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj)) /* only since 0.10.23 */
-#define GST_QUERY_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QUERY, GstQueryClass))
+#define GST_TYPE_QUERY                         (gst_query_get_type())
+#define GST_IS_QUERY(obj)                      (GST_MINI_OBJECT_TYPE (obj) == GST_TYPE_QUERY)
+#define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj))
+#define GST_QUERY(obj)                         (GST_QUERY_CAST(obj))
 
 
 /**
@@ -156,13 +152,6 @@ struct _GstQuery
 
   /*< private >*/
   gpointer _gst_reserved;
-};
-
-struct _GstQueryClass {
-  GstMiniObjectClass mini_object_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 const gchar*    gst_query_type_get_name        (GstQueryType query);

@@ -131,7 +131,18 @@
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 
-static GType _gst_buffer_type = 0;
+GType
+gst_buffer_get_type (void)
+{
+  static GType gst_buffer_type = 0;
+
+  if (G_UNLIKELY (gst_buffer_type == 0)) {
+    gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
+        (GBoxedCopyFunc) gst_buffer_copy_conditional,
+        (GBoxedFreeFunc) gst_buffer_unref);
+  }
+  return gst_buffer_type;
+}
 
 /* buffer alignment in bytes
  * an alignment of 8 would be the same as malloc() guarantees
@@ -172,21 +183,6 @@ _gst_buffer_initialize (void)
 #endif
 }
 
-#define _do_init \
-{ \
-  _gst_buffer_type = g_define_type_id; \
-}
-
-G_DEFINE_TYPE_WITH_CODE (GstBuffer, gst_buffer, GST_TYPE_MINI_OBJECT, _do_init);
-
-static void
-gst_buffer_class_init (GstBufferClass * klass)
-{
-  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  klass->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_buffer_finalize;
-}
-
 static void
 gst_buffer_finalize (GstBuffer * buffer)
 {
@@ -202,9 +198,6 @@ gst_buffer_finalize (GstBuffer * buffer)
 
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
-
-/*   ((GstMiniObjectClass *) */
-/*       gst_buffer_parent_class)->finalize (GST_MINI_OBJECT_CAST (buffer)); */
 }
 
 /**
@@ -310,6 +303,9 @@ gst_buffer_init (GstBuffer * buffer)
 {
   GST_CAT_LOG (GST_CAT_BUFFER, "init %p", buffer);
 
+  buffer->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  buffer->mini_object.free = (GstMiniObjectFreeeFunction) gst_buffer_finalize;
+
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -331,7 +327,7 @@ gst_buffer_new (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = (GstBuffer *) gst_mini_object_new (_gst_buffer_type);
+  newbuf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 

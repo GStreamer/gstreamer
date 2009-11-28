@@ -117,21 +117,12 @@ typedef struct _GstStaticCaps GstStaticCaps;
 
 /**
  * GstCaps:
- * @type: GType of the caps
- * @refcount: the atomic refcount value
- * @flags: extra flags for the caps, read only.
+ * @mini_object: the parent type
  *
  * Object describing media types.
  */
 struct _GstCaps {
-  GType type;
-
-  /*< public >*/ /* with COW */
-  /* refcounting */
-  gint           refcount;
-
-  /*< public >*/ /* read only */
-  GstCapsFlags flags;
+  GstMiniObject mini_object;
 
   /*< private >*/
   GPtrArray *structs;

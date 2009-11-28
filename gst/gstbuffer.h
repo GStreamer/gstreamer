@@ -31,7 +31,6 @@
 G_BEGIN_DECLS
 
 typedef struct _GstBuffer GstBuffer;
-typedef struct _GstBufferClass GstBufferClass;
 
 /**
  * GST_BUFFER_TRACE_NAME:
@@ -41,12 +40,9 @@ typedef struct _GstBufferClass GstBufferClass;
 #define GST_BUFFER_TRACE_NAME           "GstBuffer"
 
 #define GST_TYPE_BUFFER                         (gst_buffer_get_type())
-#define GST_IS_BUFFER(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BUFFER))
-#define GST_IS_BUFFER_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BUFFER))
-#define GST_BUFFER_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BUFFER, GstBufferClass))
-#define GST_BUFFER(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_BUFFER, GstBuffer))
-#define GST_BUFFER_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BUFFER, GstBufferClass))
+#define GST_IS_BUFFER(obj)                      (GST_MINI_OBJECT_TYPE(obj) == GST_TYPE_BUFFER)
 #define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))
+#define GST_BUFFER(obj)                         (GST_BUFFER_CAST(obj))
 
 /**
  * GST_BUFFER_FLAGS:
@@ -233,7 +229,7 @@ typedef enum {
   GST_BUFFER_FLAG_MEDIA1     = (GST_MINI_OBJECT_FLAG_LAST << 5),
   GST_BUFFER_FLAG_MEDIA2     = (GST_MINI_OBJECT_FLAG_LAST << 6),
   GST_BUFFER_FLAG_MEDIA3     = (GST_MINI_OBJECT_FLAG_LAST << 7),
-  GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 8)
+  GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstBufferFlag;
 
 /**
@@ -289,10 +285,6 @@ struct _GstBuffer {
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstBufferClass {
-  GstMiniObjectClass    mini_object_class;
 };
 
 GType       gst_buffer_get_type (void);
@@ -484,7 +476,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
  *
  * Sets @b as the value of @v.  Caller retains reference to buffer.
  */
-#define         gst_value_set_buffer(v,b)       gst_value_set_mini_object(v, GST_MINI_OBJECT_CAST(b))
+#define         gst_value_set_buffer(v,b)       g_value_set_boxed((v),(b))
 /**
  * gst_value_take_buffer:
  * @v: a #GValue to receive the data
@@ -492,7 +484,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
  *
  * Sets @b as the value of @v.  Caller gives away reference to buffer.
  */
-#define         gst_value_take_buffer(v,b)      gst_value_take_mini_object(v, GST_MINI_OBJECT_CAST(b))
+#define         gst_value_take_buffer(v,b)      g_value_take_boxed(v,(b))
 /**
  * gst_value_get_buffer:
  * @v: a #GValue to query
@@ -503,7 +495,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset
  *
  * Returns: (transfer none): buffer
  */
-#define         gst_value_get_buffer(v)         GST_BUFFER_CAST (gst_value_get_mini_object(v))
+#define         gst_value_get_buffer(v)         GST_BUFFER_CAST (g_value_get_boxed(v))
 
 G_END_DECLS
 

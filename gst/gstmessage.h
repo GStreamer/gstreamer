@@ -25,7 +25,6 @@
 G_BEGIN_DECLS
 
 typedef struct _GstMessage GstMessage;
-typedef struct _GstMessageClass GstMessageClass;
 
 /**
  * GstMessageType:
@@ -142,12 +141,9 @@ typedef enum
 #define GST_MESSAGE_TRACE_NAME  "GstMessage"
 
 #define GST_TYPE_MESSAGE                         (gst_message_get_type())
-#define GST_IS_MESSAGE(obj)                      (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MESSAGE))
-#define GST_IS_MESSAGE_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MESSAGE))
-#define GST_MESSAGE_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MESSAGE, GstMessageClass))
-#define GST_MESSAGE(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MESSAGE, GstMessage))
-#define GST_MESSAGE_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MESSAGE, GstMessageClass))
+#define GST_IS_MESSAGE(obj)                      (GST_MINI_OBJECT_TYPE (obj) == GST_TYPE_MESSAGE)
 #define GST_MESSAGE_CAST(obj)                    ((GstMessage*)(obj))
+#define GST_MESSAGE(obj)                         (GST_MESSAGE_CAST(obj))
 
 /* the lock is used to handle the synchronous handling of messages,
  * the emiting thread is block until the handling thread processed
@@ -298,13 +294,6 @@ struct _GstMessage
   guint32 seqnum;
 
   GstStructure *structure;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstMessageClass {
-  GstMiniObjectClass mini_object_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

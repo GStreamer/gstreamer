@@ -29,17 +29,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MINI_OBJECT          (gst_mini_object_get_type())
-#define GST_IS_MINI_OBJECT(obj)       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MINI_OBJECT))
-#define GST_IS_MINI_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MINI_OBJECT))
-#define GST_MINI_OBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MINI_OBJECT, GstMiniObjectClass))
-#define GST_MINI_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MINI_OBJECT, GstMiniObject))
-#define GST_MINI_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MINI_OBJECT, GstMiniObjectClass))
 #define GST_MINI_OBJECT_CAST(obj)     ((GstMiniObject*)(obj))
 #define GST_MINI_OBJECT_CONST_CAST(obj) ((const GstMiniObject*)(obj))
 
 typedef struct _GstMiniObject GstMiniObject;
-typedef struct _GstMiniObjectClass GstMiniObjectClass;
 
 /**
  * GstMiniObjectCopyFunction:
@@ -51,17 +44,24 @@ typedef struct _GstMiniObjectClass GstMiniObjectClass;
  */
 typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *obj);
 /**
- * GstMiniObjectFinalizeFunction:
- * @obj: MiniObject to finalize
+ * GstMiniObjectFreeFunction:
+ * @obj: MiniObject to free
  *
  * Virtual function prototype for methods to free ressources used by
  * mini-objects. Subclasses of the mini object are allowed to revive the
  * passed object by doing a gst_mini_object_ref(). If the object is not
- * revived after the finalize function, the memory associated with the
+ * revived after the free function, the memory associated with the
  * object is freed.
  */
-typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
+typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 
+/**
+ * GST_MINI_OBJECT_FLAGS:
+ * @obj: MiniObject to return flags for.
+ *
+ * This macro returns the entire set of flags for the mini-object.
+ */
+#define GST_MINI_OBJECT_TYPE(obj)  (GST_MINI_OBJECT_CAST(obj)->type)
 /**
  * GST_MINI_OBJECT_FLAGS:
  * @obj: MiniObject to return flags for.
@@ -95,14 +95,6 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
 #define GST_MINI_OBJECT_FLAG_UNSET(obj,flag)         (GST_MINI_OBJECT_FLAGS (obj) &= ~(flag))
 
 /**
- * GST_VALUE_HOLDS_MINI_OBJECT:
- * @value: the #GValue to check
- *
- * Checks if the given #GValue contains a #GST_TYPE_MINI_OBJECT value.
- */
-#define GST_VALUE_HOLDS_MINI_OBJECT(value)  (G_VALUE_HOLDS(value, GST_TYPE_MINI_OBJECT))
-
-/**
  * GstMiniObjectFlags:
  * @GST_MINI_OBJECT_FLAG_READONLY: is the miniobject readonly or writable
  * @GST_MINI_OBJECT_FLAG_RESERVED1: a flag reserved for internal use e.g. as
@@ -111,7 +103,6 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
  *
  * Flags for the mini object
  */
-
 typedef enum
 {
   GST_MINI_OBJECT_FLAG_READONLY = (1<<0),
@@ -148,28 +139,18 @@ typedef enum
  * Get Value Func: gst_value_get_mini_object
  */
 struct _GstMiniObject {
-  GTypeInstance instance;
+  GType   type;
+
   /*< public >*/ /* with COW */
-  gint refcount;
-  guint flags;
-
-  /*< private >*/
-  gpointer _gst_reserved;
-};
-
-struct _GstMiniObjectClass {
-  GTypeClass type_class;
+  gint    refcount;
+  guint   flags;
 
   GstMiniObjectCopyFunction copy;
-  GstMiniObjectFinalizeFunction finalize;
-
-  /*< private >*/
-  gpointer _gst_reserved;
+  GstMiniObjectFreeFunction free;
 };
 
 GType 		gst_mini_object_get_type 	(void);
 
-GstMiniObject* 	gst_mini_object_new 		(GType type);
 GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object);
 gboolean 	gst_mini_object_is_writable 	(const GstMiniObject *mini_object);
 GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
@@ -177,44 +158,8 @@ GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
 /* refcounting */
 GstMiniObject* 	gst_mini_object_ref 		(GstMiniObject *mini_object);
 void 		gst_mini_object_unref 		(GstMiniObject *mini_object);
+
 void 		gst_mini_object_replace 	(GstMiniObject **olddata, GstMiniObject *newdata);
-
-/* GParamSpec */
-
-#define	GST_TYPE_PARAM_MINI_OBJECT	        (gst_param_spec_mini_object_get_type())
-#define GST_IS_PARAM_SPEC_MINI_OBJECT(pspec)    (G_TYPE_CHECK_INSTANCE_TYPE ((pspec), \
-                                                 GST_TYPE_PARAM_MINI_OBJECT))
-#define GST_PARAM_SPEC_MINI_OBJECT(pspec)       (G_TYPE_CHECK_INSTANCE_CAST ((pspec), \
-                                                 GST_TYPE_PARAM_MINI_OBJECT, \
-						 GstParamSpecMiniObject))
-
-typedef struct _GstParamSpecMiniObject GstParamSpecMiniObject;
-
-/**
- * GstParamSpecMiniObject:
- * @parent_instance: private %GParamSpec portion
- * 
- * A %GParamSpec derived structure that contains the meta data
- * for %GstMiniObject properties.
- */
-struct _GstParamSpecMiniObject
-{
-  GParamSpec parent_instance;
-};
-
-
-GType gst_param_spec_mini_object_get_type (void);
-
-GParamSpec* 	gst_param_spec_mini_object 	(const char *name, const char *nick,
-    						 const char *blurb, GType object_type, 
-						 GParamFlags flags);
-
-/* GValue stuff */
-
-void 		gst_value_set_mini_object 	(GValue *value, GstMiniObject *mini_object);
-void 		gst_value_take_mini_object 	(GValue *value, GstMiniObject *mini_object);
-GstMiniObject* 	gst_value_get_mini_object 	(const GValue *value);
-GstMiniObject*  gst_value_dup_mini_object       (const GValue *value);
 
 
 G_END_DECLS
