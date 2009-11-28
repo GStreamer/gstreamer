@@ -1646,9 +1646,15 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
       gint64 first, last;
 
       if (segment->rate > 0.0) {
+        if (segment->stop == *cstop)
+          *rstop = *rstart + current->amount;
+
         first = *rstart;
         last = *rstop;
       } else {
+        if (segment->start == *cstart)
+          *rstart = *rstop + current->amount;
+
         first = *rstop;
         last = *rstart;
       }
@@ -4684,6 +4690,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         bclass->unlock (basesink);
 
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+      GST_DEBUG_OBJECT (basesink, "got preroll lock");
       /* now that we have the PREROLL lock, clear our unlock request */
       if (bclass->unlock_stop)
         bclass->unlock_stop (basesink);
@@ -4694,6 +4701,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->need_preroll = TRUE;
 
       if (basesink->clock_id) {
+        GST_DEBUG_OBJECT (basesink, "unschedule clock");
         gst_clock_id_unschedule (basesink->clock_id);
       }
 
@@ -4704,6 +4712,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         basesink->playing_async = FALSE;
       } else {
         if (GST_STATE_TARGET (GST_ELEMENT (basesink)) <= GST_STATE_READY) {
+          GST_DEBUG_OBJECT (basesink, "element is <= READY");
           ret = GST_STATE_CHANGE_SUCCESS;
         } else {
           GST_DEBUG_OBJECT (basesink,
