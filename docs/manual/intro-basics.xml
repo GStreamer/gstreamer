@@ -28,7 +28,7 @@
     <title>Pads</title>
     <para>
       <emphasis>Pads</emphasis> are element's input and output, where
-      you can connect other elements. They used to negotiate links and
+      you can connect other elements. They are used to negotiate links and
       data flow
       between elements in &GStreamer;. A pad can be viewed as a
       <quote>plug</quote> or <quote>port</quote> on an element where
