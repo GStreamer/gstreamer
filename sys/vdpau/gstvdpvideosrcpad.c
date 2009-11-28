@@ -28,8 +28,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdp_video_src_pad_debug);
 enum
 {
   PROP_0,
-  PROP_DISPLAY,
-  PROP_TEMPL_CAPS
+  PROP_DISPLAY
 };
 
 #define DEBUG_INIT(bla) \
@@ -105,17 +104,17 @@ static void
 gst_vdp_video_src_pad_update_caps (GstVdpVideoSrcPad * vdp_pad)
 {
   GstCaps *yuv_caps, *video_caps;
+  const GstCaps *templ_caps;
 
   video_caps = gst_vdp_video_buffer_get_allowed_video_caps (vdp_pad->device);
   yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (vdp_pad->device);
   gst_caps_append (video_caps, yuv_caps);
 
-
   if (vdp_pad->caps)
     gst_caps_unref (vdp_pad->caps);
 
-  if (vdp_pad->templ_caps) {
-    vdp_pad->caps = gst_caps_intersect (video_caps, vdp_pad->templ_caps);
+  if ((templ_caps = gst_pad_get_pad_template_caps (GST_PAD (vdp_pad)))) {
+    vdp_pad->caps = gst_caps_intersect (video_caps, templ_caps);
     gst_caps_unref (video_caps);
   } else
     vdp_pad->caps = video_caps;
@@ -232,10 +231,13 @@ gst_vdp_video_src_pad_getcaps (GstPad * pad)
 {
   GstVdpVideoSrcPad *vdp_pad = (GstVdpVideoSrcPad *) pad;
 
+  const GstCaps *templ_caps;
+
   if (vdp_pad->caps)
-    return gst_caps_ref (vdp_pad->caps);
-  else if (vdp_pad->templ_caps)
-    return gst_caps_ref (vdp_pad->templ_caps);
+    return gst_caps_copy (vdp_pad->caps);
+
+  else if ((templ_caps = gst_pad_get_pad_template_caps (pad)))
+    return gst_caps_copy (templ_caps);
 
   return NULL;
 }
@@ -259,10 +261,13 @@ gst_vdp_video_src_pad_activate_push (GstPad * pad, gboolean active)
 }
 
 GstVdpVideoSrcPad *
-gst_vdp_video_src_pad_new (GstCaps * templ_caps)
+gst_vdp_video_src_pad_new (GstPadTemplate * templ, const gchar * name)
 {
-  return g_object_new (GST_TYPE_VDP_VIDEO_SRC_PAD, "direction", GST_PAD_SRC,
-      "template-caps", templ_caps, NULL);
+  g_return_val_if_fail (GST_IS_PAD_TEMPLATE (templ), NULL);
+  g_return_val_if_fail ((templ->direction == GST_PAD_SRC), NULL);
+
+  return g_object_new (GST_TYPE_VDP_VIDEO_SRC_PAD,
+      "name", name, "direction", templ->direction, "template", templ, NULL);
 }
 
 static void
@@ -274,9 +279,6 @@ gst_vdp_video_src_pad_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DISPLAY:
       g_value_set_string (value, vdp_pad->display);
-      break;
-    case PROP_TEMPL_CAPS:
-      gst_value_set_caps (value, vdp_pad->templ_caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -294,11 +296,6 @@ gst_vdp_video_src_pad_set_property (GObject * object, guint prop_id,
     case PROP_DISPLAY:
       vdp_pad->display = g_value_dup_string (value);
       break;
-    case PROP_TEMPL_CAPS:
-      if (vdp_pad->templ_caps)
-        gst_caps_unref (vdp_pad->templ_caps);
-      vdp_pad->templ_caps = gst_caps_copy (gst_value_get_caps (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -311,8 +308,6 @@ gst_vdp_video_src_pad_finalize (GObject * object)
   GstVdpVideoSrcPad *vdp_pad = (GstVdpVideoSrcPad *) object;
 
   g_free (vdp_pad->display);
-  if (vdp_pad->templ_caps)
-    gst_caps_unref (vdp_pad->templ_caps);
 
   G_OBJECT_CLASS (gst_vdp_video_src_pad_parent_class)->finalize (object);
 }
@@ -326,7 +321,6 @@ gst_vdp_video_src_pad_init (GstVdpVideoSrcPad * vdp_pad)
   vdp_pad->caps = NULL;
 
   vdp_pad->display = NULL;
-  vdp_pad->templ_caps = NULL;
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_video_src_pad_getcaps));
@@ -346,10 +340,4 @@ gst_vdp_video_src_pad_class_init (GstVdpVideoSrcPadClass * klass)
   g_object_class_install_property (object_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  g_object_class_install_property (object_class, PROP_TEMPL_CAPS,
-      g_param_spec_boxed ("template-caps", "Template caps",
-          "Template caps", GST_TYPE_CAPS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
 }
