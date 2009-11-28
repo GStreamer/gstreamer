@@ -42,6 +42,8 @@ struct _GstShout2send {
 
   GstShout2SendProtocol protocol;
 
+  GstPoll *timer;
+
   shout_t *conn;
 
   gchar *ip;
