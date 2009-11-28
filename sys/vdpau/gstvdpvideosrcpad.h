@@ -38,26 +38,6 @@ G_BEGIN_DECLS
 typedef struct _GstVdpVideoSrcPad GstVdpVideoSrcPad;
 typedef struct _GstVdpVideoSrcPadClass GstVdpVideoSrcPadClass;
 
-struct _GstVdpVideoSrcPad
-{
-  GstPad pad;
-
-  GstCaps *caps;
-  GstVdpDevice *device;
-
-  gboolean yuv_output;
-  gint width, height;
-  guint32 fourcc;
-
-  /* properties */
-  gchar *display;
-};
-
-struct _GstVdpVideoSrcPadClass
-{
-  GstPadClass pad_class;
-};
-
 GstFlowReturn gst_vdp_video_src_pad_push (GstVdpVideoSrcPad *vdp_pad, GstVdpVideoBuffer *video_buf);
 GstFlowReturn gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad *vdp_pad, GstVdpVideoBuffer **video_buf);
 

@@ -31,6 +31,26 @@ enum
   PROP_DISPLAY
 };
 
+struct _GstVdpVideoSrcPad
+{
+  GstPad pad;
+
+  GstCaps *caps;
+  GstVdpDevice *device;
+
+  gboolean yuv_output;
+  gint width, height;
+  guint32 fourcc;
+
+  /* properties */
+  gchar *display;
+};
+
+struct _GstVdpVideoSrcPadClass
+{
+  GstPadClass pad_class;
+};
+
 #define DEBUG_INIT(bla) \
 GST_DEBUG_CATEGORY_INIT (gst_vdp_video_src_pad_debug, "vdpvideosrcpad", 0, "GstVdpVideoSrcPad");
 
