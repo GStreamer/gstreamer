@@ -876,12 +876,14 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       if (G_UNLIKELY (!sink)) {
         GST_WARNING_OBJECT (self, "Can't get text sink from textoverlay");
         gst_object_unref (src);
+        continue;
       }
 
       if (G_UNLIKELY (gst_pad_link (src, sink) != GST_PAD_LINK_OK)) {
         GST_WARNING_OBJECT (self, "Can't link parser to textoverlay");
         gst_object_unref (sink);
         gst_object_unref (src);
+        continue;
       }
       gst_object_unref (sink);
       gst_object_unref (src);
@@ -1178,6 +1180,7 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
         gst_object_unref (sink);
         continue;
       }
+      gst_object_unref (sink);
 
       sink = _get_sub_pad (element);
       if (G_UNLIKELY (!sink)) {
