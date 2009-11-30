@@ -1432,6 +1432,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   gboolean created;
   gboolean prevsender, prevactive;
   RTPArrivalStats arrival;
+  guint32 csrcs[16];
+  guint8 i, count;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -1457,8 +1459,14 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   prevsender = RTP_SOURCE_IS_SENDER (source);
   prevactive = RTP_SOURCE_IS_ACTIVE (source);
 
-  /* we need to ref so that we can process the CSRCs later */
-  gst_buffer_ref (buffer);
+  /* copy available csrc for later */
+  count = gst_rtp_buffer_get_csrc_count (buffer);
+  /* make sure to not overflow our array. An RTP buffer can maximally contain
+   * 16 CSRCs */
+  count = MIN (count, 16);
+
+  for (i = 0; i < count; i++)
+    csrcs[i] = gst_rtp_buffer_get_csrc (buffer, i);
 
   /* let source process the packet */
   result = rtp_source_process_rtp (source, buffer, &arrival);
@@ -1480,17 +1488,14 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
     on_new_ssrc (sess, source);
 
   if (source->validated) {
-    guint8 i, count;
     gboolean created;
 
     /* for validated sources, we add the CSRCs as well */
-    count = gst_rtp_buffer_get_csrc_count (buffer);
-
     for (i = 0; i < count; i++) {
       guint32 csrc;
       RTPSource *csrc_src;
 
-      csrc = gst_rtp_buffer_get_csrc (buffer, i);
+      csrc = csrcs[i];
 
       /* get source */
       csrc_src = obtain_source (sess, csrc, &created, &arrival, TRUE);
@@ -1508,7 +1513,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
     }
   }
   g_object_unref (source);
-  gst_buffer_unref (buffer);
 
   RTP_SESSION_UNLOCK (sess);
 
