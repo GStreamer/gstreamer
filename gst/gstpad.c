@@ -327,6 +327,17 @@ gst_pad_class_init (GstPadClass * klass)
 #endif
   gstobject_class->path_string_separator = ".";
 
+  /* Register common function pointer descriptions */
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_activate_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_event_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_query_types_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
+#ifndef GST_REMOVE_DEPRECATED
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_internal_links_default);
+#endif
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
+
   klass->have_data = default_have_data;
 }
 
@@ -345,19 +356,16 @@ gst_pad_init (GstPad * pad)
   GST_PAD_CAPS (pad) = NULL;
   GST_PAD_GETCAPSFUNC (pad) = NULL;
 
-  GST_PAD_ACTIVATEFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_activate_default);
-  GST_PAD_EVENTFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_event_default);
-  GST_PAD_QUERYTYPEFUNC (pad) =
-      GST_DEBUG_FUNCPTR (gst_pad_get_query_types_default);
-  GST_PAD_QUERYFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_query_default);
+  GST_PAD_ACTIVATEFUNC (pad) = gst_pad_activate_default;
+  GST_PAD_EVENTFUNC (pad) = gst_pad_event_default;
+  GST_PAD_QUERYTYPEFUNC (pad) = gst_pad_get_query_types_default;
+  GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
 #ifndef GST_REMOVE_DEPRECATED
-  GST_PAD_INTLINKFUNC (pad) =
-      GST_DEBUG_FUNCPTR (gst_pad_get_internal_links_default);
+  GST_PAD_INTLINKFUNC (pad) = gst_pad_get_internal_links_default;
 #endif
-  GST_PAD_ITERINTLINKFUNC (pad) =
-      GST_DEBUG_FUNCPTR (gst_pad_iterate_internal_links_default);
+  GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
 
-  GST_PAD_ACCEPTCAPSFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_acceptcaps_default);
+  GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
 
   pad->do_buffer_signals = 0;
   pad->do_event_signals = 0;
