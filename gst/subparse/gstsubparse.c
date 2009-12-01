@@ -34,6 +34,7 @@
 #include "samiparse.h"
 #include "tmplayerparse.h"
 #include "mpl2parse.h"
+#include "qttextparse.h"
 
 GST_DEBUG_CATEGORY (sub_parse_debug);
 
@@ -67,14 +68,15 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami; "
         "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
-        "application/x-subtitle-dks")
+        "application/x-subtitle-dks; application/x-subtitle-qttext")
     );
 #else
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-dks; "
-        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2")
+        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
+        "application/x-subtitle-qttext")
     );
 #endif
 
@@ -143,6 +145,19 @@ gst_sub_parse_dispose (GObject * object)
 
   GST_DEBUG_OBJECT (subparse, "cleaning up subtitle parser");
 
+  switch (subparse->parser_type) {
+    case GST_SUB_PARSE_FORMAT_QTTEXT:
+      qttext_context_deinit (&subparse->state);
+      break;
+#ifndef GST_DISABLE_XML
+    case GST_SUB_PARSE_FORMAT_SAMI:
+      sami_context_deinit (&subparse->state);
+      break;
+#endif
+    default:
+      break;
+  }
+
   if (subparse->encoding) {
     g_free (subparse->encoding);
     subparse->encoding = NULL;
@@ -162,10 +177,6 @@ gst_sub_parse_dispose (GObject * object)
     g_string_free (subparse->textbuf, TRUE);
     subparse->textbuf = NULL;
   }
-#ifndef GST_DISABLE_XML
-  if (subparse->parser_type == GST_SUB_PARSE_FORMAT_SAMI)
-    sami_context_deinit (&subparse->state);
-#endif
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -422,6 +433,8 @@ gst_sub_parse_get_format_description (GstSubParseFormat format)
       return "SubViewer";
     case GST_SUB_PARSE_FORMAT_DKS:
       return "DKS";
+    case GST_SUB_PARSE_FORMAT_QTTEXT:
+      return "QTtext";
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       break;
@@ -1196,11 +1209,17 @@ parser_state_dispose (GstSubParse * self, ParserState * state)
     g_string_free (state->buf, TRUE);
     state->buf = NULL;
   }
+  if (state->user_data) {
+    switch (self->parser_type) {
 #ifndef GST_DISABLE_XML
-  if (state->user_data && self->parser_type == GST_SUB_PARSE_FORMAT_SAMI) {
-    sami_context_reset (state);
-  }
+      case GST_SUB_PARSE_FORMAT_SAMI:
+        sami_context_reset (state);
+        break;
 #endif
+      default:
+        break;
+    }
+  }
 }
 
 /* regex type enum */
@@ -1324,6 +1343,10 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("SubViewer (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBVIEWER;
   }
+  if (strstr (match_str, "{QTtext}") != NULL) {
+    GST_LOG ("QTtext (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_QTTEXT;
+  }
 
   GST_DEBUG ("no subtitle format detected");
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
@@ -1377,6 +1400,10 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_SUBVIEWER:
       self->parse_line = parse_subviewer;
       return gst_caps_new_simple ("text/plain", NULL);
+    case GST_SUB_PARSE_FORMAT_QTTEXT:
+      self->parse_line = parse_qttext;
+      qttext_context_init (&self->state);
+      return gst_caps_new_simple ("text/x-pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
@@ -1706,6 +1733,10 @@ static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 static GstStaticCaps dks_caps = GST_STATIC_CAPS ("application/x-subtitle-dks");
 #define DKS_CAPS (gst_static_caps_get (&dks_caps))
 
+static GstStaticCaps qttext_caps =
+GST_STATIC_CAPS ("application/x-subtitle-qttext");
+#define QTTEXT_CAPS (gst_static_caps_get (&qttext_caps))
+
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
@@ -1810,6 +1841,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     case GST_SUB_PARSE_FORMAT_DKS:
       GST_DEBUG ("DKS format detected");
       caps = DKS_CAPS;
+      break;
+    case GST_SUB_PARSE_FORMAT_QTTEXT:
+      GST_DEBUG ("QTtext format detected");
+      caps = QTTEXT_CAPS;
       break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
