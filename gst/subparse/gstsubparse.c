@@ -163,7 +163,8 @@ gst_sub_parse_dispose (GObject * object)
     subparse->textbuf = NULL;
   }
 #ifndef GST_DISABLE_XML
-  sami_context_deinit (&subparse->state);
+  if (subparse->parser_type == GST_SUB_PARSE_FORMAT_SAMI)
+    sami_context_deinit (&subparse->state);
 #endif
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
@@ -1189,14 +1190,14 @@ parser_state_init (ParserState * state)
 }
 
 static void
-parser_state_dispose (ParserState * state)
+parser_state_dispose (GstSubParse * self, ParserState * state)
 {
   if (state->buf) {
     g_string_free (state->buf, TRUE);
     state->buf = NULL;
   }
 #ifndef GST_DISABLE_XML
-  if (state->user_data) {
+  if (state->user_data && self->parser_type == GST_SUB_PARSE_FORMAT_SAMI) {
     sami_context_reset (state);
   }
 #endif
@@ -1670,7 +1671,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      parser_state_dispose (&self->state);
+      parser_state_dispose (self, &self->state);
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       break;
     default:
