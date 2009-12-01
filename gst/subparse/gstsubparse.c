@@ -1435,7 +1435,8 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
     g_string_truncate (self->textbuf, 0);
     gst_adapter_clear (self->adapter);
 #ifndef GST_DISABLE_XML
-    sami_context_reset (&self->state);
+    if (self->parser_type == GST_SUB_PARSE_FORMAT_SAMI)
+      sami_context_reset (&self->state);
 #endif
     /* we could set a flag to make sure that the next buffer we push out also
      * has the DISCONT flag set, but there's no point really given that it's
@@ -1600,7 +1601,8 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
        * if the file does not have an empty line at the end */
       if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP ||
           self->parser_type == GST_SUB_PARSE_FORMAT_TMPLAYER ||
-          self->parser_type == GST_SUB_PARSE_FORMAT_MPL2) {
+          self->parser_type == GST_SUB_PARSE_FORMAT_MPL2 ||
+          self->parser_type == GST_SUB_PARSE_FORMAT_QTTEXT) {
         GstBuffer *buf = gst_buffer_new_and_alloc (2 + 1);
 
         GST_DEBUG ("EOS. Pushing remaining text (if any)");

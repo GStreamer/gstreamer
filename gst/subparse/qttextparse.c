@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* References:
+ * http://www.apple.com/quicktime/tutorials/texttracks.html
+ * http://www.apple.com/quicktime/tutorials/textdescriptors.html
+ */
+
 #include "qttextparse.h"
 
 #include <string.h>
@@ -35,6 +40,16 @@ struct _GstQTTextContext
   gboolean absolute;
   guint64 start_time;
 
+  gboolean markup_open;
+  gboolean need_markup;
+
+  gchar *font;
+  gint font_size;
+  gchar *bg_color;
+  gchar *fg_color;
+
+  gboolean bold;
+  gboolean italic;
 };
 
 void
@@ -49,13 +64,115 @@ qttext_context_init (ParserState * state)
   /* we use 1000 as a default */
   context->timescale = 1000;
   context->absolute = TRUE;
+
+  context->markup_open = FALSE;
+  context->need_markup = FALSE;
+
+  context->font_size = 12;
 }
 
 void
 qttext_context_deinit (ParserState * state)
 {
-  g_free (state->user_data);
-  state->user_data = NULL;
+  if (state->user_data != NULL) {
+    GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
+    g_free (context->font);
+    g_free (context->bg_color);
+    g_free (context->fg_color);
+
+    g_free (state->user_data);
+    state->user_data = NULL;
+  }
+}
+
+/*
+ * Reads the string right after the ':'
+ */
+static gchar *
+read_str (const gchar * line, const gchar * end)
+{
+  gint index = 0;
+
+  while (line[index] != ':' && line[index] != '}') {
+    index++;
+  }
+  if (line[index] != ':')
+    return NULL;
+  index++;
+  while (line[index] == ' ')
+    index++;
+
+  return g_strndup (line + index, (end - (line + index)));
+}
+
+/* search for the ':' and parse the number right after it */
+static gint
+read_int (const gchar * line)
+{
+  gint index = 0;
+  while (line[index] != ':' && line[index] != '}') {
+    index++;
+  }
+  if (line[index] != ':')
+    return 0;
+  index++;
+  return atoi (line + index);
+}
+
+/* skip the ':' and then match the following string
+ * with 'match', but only if it before 'upto' */
+static gboolean
+string_match (const gchar * line, const gchar * match, const gchar * upto)
+{
+  gchar *result = strstr (line, match);
+  return (result < upto);
+}
+
+/*
+ * Reads the color values and stores them in r, g and b.
+ */
+static gboolean
+read_color (const gchar * line, gint * r, gint * g, gint * b)
+{
+  gint index = 0;
+  while (line[index] != ':' && line[index] != '}') {
+    index++;
+  }
+  if (line[index] != ':')
+    return FALSE;
+  index++;
+
+  *r = atoi (line + index);
+
+  while (line[index] != '}' && line[index] != ',') {
+    index++;
+  }
+  if (line[index] != ',')
+    return FALSE;
+  index++;
+
+  *g = atoi (line + index);
+
+  while (line[index] != '}' && line[index] != ',') {
+    index++;
+  }
+  if (line[index] != ',')
+    return FALSE;
+  index++;
+
+  *b = atoi (line + index);
+
+  return TRUE;
+}
+
+static gchar *
+make_color (gint r, gint g, gint b)
+{
+  /* qttext goes up to 65535, while pango goes to 255 */
+  r /= 256;
+  g /= 256;
+  b /= 256;
+  return g_strdup_printf ("#%02X%02X%02X", r, g, b);
 }
 
 static gboolean
@@ -63,6 +180,10 @@ qttext_parse_tag (ParserState * state, const gchar * line, gint * index)
 {
   gchar *next;
   gint next_index;
+  gint aux;
+  gchar *str;
+  gint r, g, b;
+  GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
 
   g_assert (line[*index] == '{');
 
@@ -77,8 +198,91 @@ qttext_parse_tag (ParserState * state, const gchar * line, gint * index)
   *index = *index + 1;          /* skip the { */
 
   /* now identify our tag */
+  /* FIXME: those should be case unsensitive */
+  /* TODO: there are other tags that could be added here */
   if (strncmp (line + *index, "QTtext", 6) == 0) {
     /* NOP */
+
+  } else if (strncmp (line + *index, "font", 4) == 0) {
+    str = read_str (line + *index + 4, line + next_index - 1);
+    if (str) {
+      g_free (context->font);
+      context->font = str;
+      context->need_markup = TRUE;
+      GST_DEBUG ("Setting qttext font to %s", str);
+    } else {
+      GST_WARNING ("Failed to parse qttext font at line: %s", line);
+    }
+
+  } else if (strncmp (line + *index, "size", 4) == 0) {
+    aux = read_int (line + *index + 4);
+    if (aux == 0) {
+      GST_WARNING ("Invalid size at line %s, using 12", line);
+      context->font_size = 12;
+    } else {
+      GST_DEBUG ("Setting qttext font-size to: %d", aux);
+      context->font_size = aux;
+    }
+    context->need_markup = TRUE;
+
+  } else if (strncmp (line + *index, "textColor", 9) == 0) {
+    if (read_color (line + *index + 9, &r, &g, &b)) {
+      context->fg_color = make_color (r, g, b);
+      GST_DEBUG ("Setting qttext fg color to %s", context->fg_color);
+    } else {
+      GST_WARNING ("Failed to read textColor at line %s", line);
+    }
+    context->need_markup = TRUE;
+
+  } else if (strncmp (line + *index, "backColor", 9) == 0) {
+    if (read_color (line + *index + 9, &r, &g, &b)) {
+      context->bg_color = make_color (r, g, b);
+      GST_DEBUG ("Setting qttext bg color to %s", context->bg_color);
+    } else {
+      GST_WARNING ("Failed to read backColor at line %s, disabling", line);
+      g_free (context->bg_color);
+      context->bg_color = NULL;
+    }
+    context->need_markup = TRUE;
+
+  } else if (strncmp (line + *index, "plain", 5) == 0) {
+    context->bold = FALSE;
+    context->italic = FALSE;
+    context->need_markup = TRUE;
+    GST_DEBUG ("Setting qttext style to plain");
+
+  } else if (strncmp (line + *index, "bold", 4) == 0) {
+    context->bold = TRUE;
+    context->italic = FALSE;
+    context->need_markup = TRUE;
+    GST_DEBUG ("Setting qttext style to bold");
+
+  } else if (strncmp (line + *index, "italic", 6) == 0) {
+    context->bold = FALSE;
+    context->italic = TRUE;
+    context->need_markup = TRUE;
+    GST_DEBUG ("Setting qttext style to italic");
+
+  } else if (strncmp (line + *index, "timescale", 9) == 0) {
+    aux = read_int (line + *index + 9);
+    if (aux == 0) {
+      GST_WARNING ("Couldn't interpret timescale at line %s, using 1000", line);
+      context->timescale = 1000;
+    } else {
+      GST_DEBUG ("Setting qttext timescale to: %d", aux);
+      context->timescale = aux;
+    }
+
+  } else if (strncmp (line + *index, "timestamps", 10) == 0) {
+    if (string_match (line + *index + 10, "relative", line + next_index)) {
+      GST_DEBUG ("Setting qttext timestamps to relative");
+      context->absolute = FALSE;
+    } else {
+      /* call it absolute otherwise */
+      GST_DEBUG ("Setting qttext timestamps to absolute");
+      context->absolute = TRUE;
+    }
+
   } else {
     GST_WARNING ("Unused qttext tag starting at: %s", line + *index);
   }
@@ -121,15 +325,50 @@ qttext_parse_timestamp (ParserState * state, const gchar * line, gint index)
 }
 
 static void
+qttext_open_markup (ParserState * state)
+{
+  GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
+
+  g_string_append (state->buf, "<span");
+
+  /* add your markup tags here */
+  if (context->font)
+    g_string_append_printf (state->buf, " font='%s %d'", context->font,
+        context->font_size);
+  else
+    g_string_append_printf (state->buf, " font='%d'", context->font_size);
+
+  if (context->bg_color)
+    g_string_append_printf (state->buf, " bgcolor='%s'", context->bg_color);
+  if (context->fg_color)
+    g_string_append_printf (state->buf, " color='%s'", context->fg_color);
+
+  if (context->bold)
+    g_string_append (state->buf, " weight='bold'");
+  if (context->italic)
+    g_string_append (state->buf, " style='italic'");
+
+  g_string_append (state->buf, ">");
+}
+
+static void
 qttext_prepare_text (ParserState * state)
 {
+  GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
   if (state->buf == NULL) {
     state->buf = g_string_sized_new (256);      /* this should be enough */
   } else {
     g_string_append (state->buf, "\n");
   }
 
-  /* TODO add the pango markup */
+  /* if needed, add pango markup */
+  if (context->need_markup) {
+    if (context->markup_open) {
+      g_string_append (state->buf, "</span>");
+    }
+    qttext_open_markup (state);
+    context->markup_open = TRUE;
+  }
 }
 
 static void
@@ -137,6 +376,23 @@ qttext_parse_text (ParserState * state, const gchar * line, gint index)
 {
   qttext_prepare_text (state);
   g_string_append (state->buf, line + index);
+}
+
+static gchar *
+qttext_get_text (ParserState * state)
+{
+  gchar *ret;
+  GstQTTextContext *context = GST_QTTEXT_CONTEXT (state);
+  if (state->buf == NULL)
+    return NULL;
+
+  if (context->markup_open) {
+    g_string_append (state->buf, "</span>");
+  }
+  ret = g_string_free (state->buf, FALSE);
+  state->buf = NULL;
+  context->markup_open = FALSE;
+  return ret;
 }
 
 gchar *
@@ -162,7 +418,7 @@ parse_qttext (ParserState * state, const gchar * line)
 
       /* check if we have pending text to send, in case we prepare it */
       if (state->buf) {
-        ret = g_string_free (state->buf, FALSE);
+        ret = qttext_get_text (state);
         if (context->absolute)
           state->duration = ts - context->start_time;
         else
