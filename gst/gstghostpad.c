@@ -86,25 +86,6 @@ static void on_src_target_notify (GstPad * target,
     GParamSpec * unused, gpointer user_data);
 
 
-static void
-gst_proxy_pad_class_init (GstProxyPadClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstProxyPadPrivate));
-
-  gobject_class->dispose = gst_proxy_pad_dispose;
-  gobject_class->finalize = gst_proxy_pad_finalize;
-
-#ifndef GST_DISABLE_LOADSAVE
-  {
-    GstObjectClass *gstobject_class = (GstObjectClass *) klass;
-
-    gstobject_class->save_thyself =
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_save_thyself);
-  }
-#endif
-}
 
 static const GstQueryType *
 gst_proxy_pad_do_query_type (GstPad * pad)
@@ -391,6 +372,41 @@ gst_proxy_pad_do_unlink (GstPad * pad)
 }
 
 static void
+gst_proxy_pad_class_init (GstProxyPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstProxyPadPrivate));
+
+  gobject_class->dispose = gst_proxy_pad_dispose;
+  gobject_class->finalize = gst_proxy_pad_finalize;
+
+#ifndef GST_DISABLE_LOADSAVE
+  {
+    GstObjectClass *gstobject_class = (GstObjectClass *) klass;
+
+    gstobject_class->save_thyself =
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_save_thyself);
+  }
+#endif
+  /* Register common function pointer descriptions */
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_query_type);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_event);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_query);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_iterate_internal_links);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_getcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_acceptcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_fixatecaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_setcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_unlink);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_bufferalloc);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_chain);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_chain_list);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_getrange);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_do_checkgetrange);
+}
+
+static void
 gst_proxy_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
@@ -428,23 +444,17 @@ gst_proxy_pad_init (GstProxyPad * ppad)
       GST_TYPE_PROXY_PAD, GstProxyPadPrivate);
   GST_PROXY_GET_LOCK (pad) = g_mutex_new ();
 
-  gst_pad_set_query_type_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query_type));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_proxy_pad_do_event));
-  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query));
+  gst_pad_set_query_type_function (pad, gst_proxy_pad_do_query_type);
+  gst_pad_set_event_function (pad, gst_proxy_pad_do_event);
+  gst_pad_set_query_function (pad, gst_proxy_pad_do_query);
   gst_pad_set_iterate_internal_links_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_iterate_internal_links));
+      gst_proxy_pad_do_iterate_internal_links);
 
-  gst_pad_set_getcaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getcaps));
-  gst_pad_set_acceptcaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_acceptcaps));
-  gst_pad_set_fixatecaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_fixatecaps));
-  gst_pad_set_setcaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_setcaps));
-  gst_pad_set_unlink_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_unlink));
+  gst_pad_set_getcaps_function (pad, gst_proxy_pad_do_getcaps);
+  gst_pad_set_acceptcaps_function (pad, gst_proxy_pad_do_acceptcaps);
+  gst_pad_set_fixatecaps_function (pad, gst_proxy_pad_do_fixatecaps);
+  gst_pad_set_setcaps_function (pad, gst_proxy_pad_do_setcaps);
+  gst_pad_set_unlink_function (pad, gst_proxy_pad_do_unlink);
 }
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -520,16 +530,6 @@ struct _GstGhostPadPrivate
 G_DEFINE_TYPE (GstGhostPad, gst_ghost_pad, GST_TYPE_PROXY_PAD);
 
 static void gst_ghost_pad_dispose (GObject * object);
-
-static void
-gst_ghost_pad_class_init (GstGhostPadClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
-
-  gobject_class->dispose = gst_ghost_pad_dispose;
-}
 
 /* see gstghostpad design docs */
 static gboolean
@@ -779,19 +779,33 @@ gst_ghost_pad_do_iterate_internal_links (GstPad * pad)
 }
 
 static void
+gst_ghost_pad_class_init (GstGhostPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
+
+  gobject_class->dispose = gst_ghost_pad_dispose;
+
+  GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_do_setcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_do_activate_pull);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_do_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_ghost_pad_do_link);
+}
+
+static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
   GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
       GST_TYPE_GHOST_PAD, GstGhostPadPrivate);
 
-  gst_pad_set_setcaps_function (GST_PAD_CAST (pad),
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_setcaps));
+  gst_pad_set_setcaps_function (GST_PAD_CAST (pad), gst_ghost_pad_do_setcaps);
   gst_pad_set_activatepull_function (GST_PAD_CAST (pad),
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_pull));
+      gst_ghost_pad_do_activate_pull);
   gst_pad_set_activatepush_function (GST_PAD_CAST (pad),
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_push));
+      gst_ghost_pad_do_activate_push);
   gst_pad_set_iterate_internal_links_function (GST_PAD_CAST (pad),
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_iterate_internal_links));
+      gst_ghost_pad_do_iterate_internal_links);
 }
 
 static void
@@ -872,23 +886,17 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* Set directional padfunctions for ghostpad */
   if (dir == GST_PAD_SINK) {
-    gst_pad_set_bufferalloc_function (pad,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
-    gst_pad_set_chain_function (pad,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
-    gst_pad_set_chain_list_function (pad,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain_list));
+    gst_pad_set_bufferalloc_function (pad, gst_proxy_pad_do_bufferalloc);
+    gst_pad_set_chain_function (pad, gst_proxy_pad_do_chain);
+    gst_pad_set_chain_list_function (pad, gst_proxy_pad_do_chain_list);
   } else {
-    gst_pad_set_getrange_function (pad,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
-    gst_pad_set_checkgetrange_function (pad,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_checkgetrange));
+    gst_pad_set_getrange_function (pad, gst_proxy_pad_do_getrange);
+    gst_pad_set_checkgetrange_function (pad, gst_proxy_pad_do_checkgetrange);
   }
 
   /* link/unlink functions */
-  gst_pad_set_link_function (pad, GST_DEBUG_FUNCPTR (gst_ghost_pad_do_link));
-  gst_pad_set_unlink_function (pad,
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_unlink));
+  gst_pad_set_link_function (pad, gst_ghost_pad_do_link);
+  gst_pad_set_unlink_function (pad, gst_ghost_pad_do_unlink);
 
   /* INTERNAL PAD, it always exists and is child of the ghostpad */
   otherdir = (dir == GST_PAD_SRC) ? GST_PAD_SINK : GST_PAD_SRC;
@@ -907,17 +915,13 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* Set directional padfunctions for internal pad */
   if (dir == GST_PAD_SRC) {
-    gst_pad_set_bufferalloc_function (internal,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
-    gst_pad_set_chain_function (internal,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
-    gst_pad_set_chain_list_function (internal,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain_list));
+    gst_pad_set_bufferalloc_function (internal, gst_proxy_pad_do_bufferalloc);
+    gst_pad_set_chain_function (internal, gst_proxy_pad_do_chain);
+    gst_pad_set_chain_list_function (internal, gst_proxy_pad_do_chain_list);
   } else {
-    gst_pad_set_getrange_function (internal,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
+    gst_pad_set_getrange_function (internal, gst_proxy_pad_do_getrange);
     gst_pad_set_checkgetrange_function (internal,
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_checkgetrange));
+        gst_proxy_pad_do_checkgetrange);
   }
 
   GST_PROXY_LOCK (pad);
@@ -949,9 +953,9 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* special activation functions for the internal pad */
   gst_pad_set_activatepull_function (internal,
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_internal_do_activate_pull));
+      gst_ghost_pad_internal_do_activate_pull);
   gst_pad_set_activatepush_function (internal,
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_internal_do_activate_push));
+      gst_ghost_pad_internal_do_activate_push);
 
   GST_PROXY_UNLOCK (pad);
 
