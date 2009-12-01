@@ -352,6 +352,19 @@ gst_queue_class_init (GstQueueClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_queue_finalize;
+
+  /* Registering debug symbols for function pointers */
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_sink_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_event);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_getcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_acceptcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_bufferalloc);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_event);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_query);
 }
 
 static void
@@ -359,36 +372,25 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
 {
   queue->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
 
-  gst_pad_set_chain_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_chain));
+  gst_pad_set_chain_function (queue->sinkpad, gst_queue_chain);
   gst_pad_set_activatepush_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_sink_activate_push));
-  gst_pad_set_event_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_handle_sink_event));
-  gst_pad_set_link_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_link_sink));
-  gst_pad_set_getcaps_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_getcaps));
-  gst_pad_set_acceptcaps_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
-  gst_pad_set_bufferalloc_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue_bufferalloc));
+      gst_queue_sink_activate_push);
+  gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
+  gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
+  gst_pad_set_getcaps_function (queue->sinkpad, gst_queue_getcaps);
+  gst_pad_set_acceptcaps_function (queue->sinkpad, gst_queue_acceptcaps);
+  gst_pad_set_bufferalloc_function (queue->sinkpad, gst_queue_bufferalloc);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
 
   gst_pad_set_activatepush_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_src_activate_push));
-  gst_pad_set_link_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_link_src));
-  gst_pad_set_acceptcaps_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
-  gst_pad_set_getcaps_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_getcaps));
-  gst_pad_set_event_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_handle_src_event));
-  gst_pad_set_query_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_handle_src_query));
+      gst_queue_src_activate_push);
+  gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
+  gst_pad_set_acceptcaps_function (queue->srcpad, gst_queue_acceptcaps);
+  gst_pad_set_getcaps_function (queue->srcpad, gst_queue_getcaps);
+  gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
+  gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
 
   GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
