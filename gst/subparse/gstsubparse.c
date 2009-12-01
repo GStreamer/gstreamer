@@ -73,7 +73,8 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-dks")
+    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-dks; "
+        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2")
     );
 #endif
 
