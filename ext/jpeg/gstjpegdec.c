@@ -1338,6 +1338,7 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (dec, "Aborting decompress");
       jpeg_abort_decompress (&dec->cinfo);
+      gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
       gst_jpeg_dec_reset_qos (dec);
       break;
     case GST_EVENT_NEWSEGMENT:{
