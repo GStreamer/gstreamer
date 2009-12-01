@@ -367,6 +367,12 @@ static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
+static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad);
+static gboolean gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps);
+static void gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_base_sink_pad_buffer_alloc (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
+
 
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
@@ -493,6 +499,18 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
   klass->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
+
+  /* Registering debug symbols for function pointers */
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_setcaps);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_fixate);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_buffer_alloc);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_pull);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_event);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain_list);
 }
 
 static GstCaps *
@@ -600,26 +618,19 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
-  gst_pad_set_getcaps_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_getcaps));
-  gst_pad_set_setcaps_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_setcaps));
-  gst_pad_set_fixatecaps_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_fixate));
+  gst_pad_set_getcaps_function (basesink->sinkpad, gst_base_sink_pad_getcaps);
+  gst_pad_set_setcaps_function (basesink->sinkpad, gst_base_sink_pad_setcaps);
+  gst_pad_set_fixatecaps_function (basesink->sinkpad, gst_base_sink_pad_fixate);
   gst_pad_set_bufferalloc_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_buffer_alloc));
-  gst_pad_set_activate_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate));
+      gst_base_sink_pad_buffer_alloc);
+  gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
   gst_pad_set_activatepush_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate_push));
+      gst_base_sink_pad_activate_push);
   gst_pad_set_activatepull_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate_pull));
-  gst_pad_set_event_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_event));
-  gst_pad_set_chain_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_chain));
-  gst_pad_set_chain_list_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_chain_list));
+      gst_base_sink_pad_activate_pull);
+  gst_pad_set_event_function (basesink->sinkpad, gst_base_sink_event);
+  gst_pad_set_chain_function (basesink->sinkpad, gst_base_sink_chain);
+  gst_pad_set_chain_list_function (basesink->sinkpad, gst_base_sink_chain_list);
   gst_element_add_pad (GST_ELEMENT_CAST (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_ACTIVATE_NONE;
