@@ -640,7 +640,7 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
   delay = shout_delay (sink->conn);
 
   GST_LOG_OBJECT (sink, "waiting %d msec", delay);
-  if (gst_poll_wait (sink->timer, 1000 * delay) == -1) {
+  if (gst_poll_wait (sink->timer, GST_MSECOND * delay) == -1) {
     GST_LOG_OBJECT (sink, "unlocked");
 
     fret = gst_base_sink_wait_preroll (basesink);
