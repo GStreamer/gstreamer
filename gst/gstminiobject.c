@@ -46,153 +46,66 @@ static GstAllocTrace *_gst_mini_object_trace;
 #define GST_MINI_OBJECT_GET_CLASS_UNCHECKED(obj) \
     ((GstMiniObjectClass *) (((GTypeInstance*)(obj))->g_class))
 
-#if 0
-static void gst_mini_object_base_init (gpointer g_class);
-static void gst_mini_object_base_finalize (gpointer g_class);
-#endif
-static void gst_mini_object_class_init (gpointer g_class, gpointer class_data);
-static void gst_mini_object_init (GTypeInstance * instance, gpointer klass);
-
-static void gst_value_mini_object_init (GValue * value);
-static void gst_value_mini_object_free (GValue * value);
-static void gst_value_mini_object_copy (const GValue * src_value,
-    GValue * dest_value);
-static gpointer gst_value_mini_object_peek_pointer (const GValue * value);
-static gchar *gst_value_mini_object_collect (GValue * value,
-    guint n_collect_values, GTypeCValue * collect_values, guint collect_flags);
-static gchar *gst_value_mini_object_lcopy (const GValue * value,
-    guint n_collect_values, GTypeCValue * collect_values, guint collect_flags);
-
-static GstMiniObject *gst_mini_object_copy_default (const GstMiniObject * obj);
-static void gst_mini_object_finalize (GstMiniObject * obj);
-
-GType
-gst_mini_object_get_type (void)
-{
-  static volatile GType _gst_mini_object_type = 0;
-
-  if (g_once_init_enter (&_gst_mini_object_type)) {
-    GType _type;
-    static const GTypeValueTable value_table = {
-      gst_value_mini_object_init,
-      gst_value_mini_object_free,
-      gst_value_mini_object_copy,
-      gst_value_mini_object_peek_pointer,
-      (char *) "p",
-      gst_value_mini_object_collect,
-      (char *) "p",
-      gst_value_mini_object_lcopy
-    };
-    static const GTypeInfo mini_object_info = {
-      sizeof (GstMiniObjectClass),
-#if 0
-      gst_mini_object_base_init,
-      gst_mini_object_base_finalize,
-#else
-      NULL, NULL,
-#endif
-      gst_mini_object_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMiniObject),
-      0,
-      (GInstanceInitFunc) gst_mini_object_init,
-      &value_table
-    };
-    static const GTypeFundamentalInfo mini_object_fundamental_info = {
-      (G_TYPE_FLAG_CLASSED | G_TYPE_FLAG_INSTANTIATABLE |
-          G_TYPE_FLAG_DERIVABLE | G_TYPE_FLAG_DEEP_DERIVABLE)
-    };
-
-    _type = g_type_fundamental_next ();
-    g_type_register_fundamental (_type, "GstMiniObject",
-        &mini_object_info, &mini_object_fundamental_info, G_TYPE_FLAG_ABSTRACT);
-
-#ifndef GST_DISABLE_TRACE
-    _gst_mini_object_trace = gst_alloc_trace_register (g_type_name (_type));
-#endif
-    g_once_init_leave (&_gst_mini_object_type, _type);
-  }
-
-  return _gst_mini_object_type;
-}
-
-#if 0
-static void
-gst_mini_object_base_init (gpointer g_class)
-{
-  /* do nothing */
-}
-
-static void
-gst_mini_object_base_finalize (gpointer g_class)
-{
-  /* do nothing */
-}
-#endif
-
-static void
-gst_mini_object_class_init (gpointer g_class, gpointer class_data)
-{
-  GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  mo_class->copy = gst_mini_object_copy_default;
-  mo_class->finalize = gst_mini_object_finalize;
-}
-
-static void
-gst_mini_object_init (GTypeInstance * instance, gpointer klass)
-{
-  GstMiniObject *mini_object = GST_MINI_OBJECT_CAST (instance);
-
-  mini_object->refcount = 1;
-}
-
+/* boxed copy and free functions. Don't real copy or free but simply
+ * change the refcount */
 static GstMiniObject *
-gst_mini_object_copy_default (const GstMiniObject * obj)
+_gst_mini_object_boxed_copy (GstMiniObject * mini_object)
 {
-  g_warning ("GstMiniObject classes must implement GstMiniObject::copy");
-  return NULL;
+  if (mini_object)
+    return gst_mini_object_ref (mini_object);
+  else
+    return NULL;
 }
 
 static void
-gst_mini_object_finalize (GstMiniObject * obj)
+_gst_mini_object_boxed_free (GstMiniObject * mini_object)
 {
-  /* do nothing */
-
-  /* WARNING: if anything is ever put in this method, make sure that the
-   * following sub-classes' finalize method chains up to this one:
-   * gstbuffer
-   * gstevent
-   * gstmessage
-   * gstquery
-   */
+  if (mini_object)
+    gst_mini_object_unref (mini_object);
 }
 
 /**
- * gst_mini_object_new:
- * @type: the #GType of the mini-object to create
+ * gst_mini_object_register:
+ * @name: name of the new boxed type
  *
- * Creates a new mini-object of the desired type.
+ * This function creates a new G_TYPE_BOXED derived type id for a new boxed type
+ * with name @name. The default miniobject refcounting copy and free function
+ * are used for the boxed type.
+ *
+ * Returns: a new G_TYPE_BOXED derived type id for @name.
+ */
+GType
+gst_mini_object_register (const gchar * name)
+{
+  GType type;
+
+  g_return_val_if_fail (name != NULL, 0);
+
+  type = g_boxed_type_register_static (name,
+      (GBoxedCopyFunc) _gst_mini_object_boxed_copy,
+      (GBoxedFreeFunc) _gst_mini_object_boxed_free);
+
+  return type;
+}
+
+/**
+ * gst_mini_object_init:
+ * @mini_object: a #GstMiniObject 
+ * @type: the #GType of the mini-object to create
+ * @size: the size of the data
+ *
+ * Initializes a mini-object with the desired type and size.
  *
  * MT safe
  *
  * Returns: (transfer full): the new mini-object.
  */
-GstMiniObject *
-gst_mini_object_new (GType type)
+void
+gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
 {
-  GstMiniObject *mini_object;
-
-  /* we don't support dynamic types because they really aren't useful,
-   * and could cause refcount problems */
-  mini_object = (GstMiniObject *) g_type_create_instance (type);
-
-#ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
-#endif
-
-  return mini_object;
+  mini_object->type = type;
+  mini_object->refcount = 1;
+  mini_object->size = size;
 }
 
 /* FIXME 0.11: Current way of doing the copy makes it impossible
@@ -222,13 +135,16 @@ gst_mini_object_new (GType type)
 GstMiniObject *
 gst_mini_object_copy (const GstMiniObject * mini_object)
 {
-  GstMiniObjectClass *mo_class;
+  GstMiniObject *copy;
 
   g_return_val_if_fail (mini_object != NULL, NULL);
 
-  mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
+  if (mini_object->copy)
+    copy = mo_class->copy (mini_object);
+  else
+    copy = NULL;
 
-  return mo_class->copy (mini_object);
+  return copy;
 }
 
 /**
@@ -320,33 +236,6 @@ gst_mini_object_ref (GstMiniObject * mini_object)
   return mini_object;
 }
 
-static void
-gst_mini_object_free (GstMiniObject * mini_object)
-{
-  GstMiniObjectClass *mo_class;
-
-  /* At this point, the refcount of the object is 0. We increase the refcount
-   * here because if a subclass recycles the object and gives out a new
-   * reference we don't want to free the instance anymore. */
-  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
-      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) + 1);
-
-  g_atomic_int_inc (&mini_object->refcount);
-
-  mo_class = GST_MINI_OBJECT_GET_CLASS_UNCHECKED (mini_object);
-  mo_class->finalize (mini_object);
-
-  /* decrement the refcount again, if the subclass recycled the object we don't
-   * want to free the instance anymore */
-  if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
-#ifndef GST_DISABLE_TRACE
-    gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
-#endif
-    g_type_free_instance ((GTypeInstance *) mini_object);
-  }
-}
-
 /**
  * gst_mini_object_unref:
  * @mini_object: the mini-object
@@ -366,7 +255,23 @@ gst_mini_object_unref (GstMiniObject * mini_object)
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
-    gst_mini_object_free (mini_object);
+    /* At this point, the refcount of the object is 0. We increase the refcount
+     * here because if a subclass recycles the object and gives out a new
+     * reference we don't want to free the instance anymore. */
+    gst_mini_object_ref (mini_object);
+
+    if (mini_object->dispose)
+      mini_object->dispose (mini_object);
+
+    /* decrement the refcount again, if the subclass recycled the object we don't
+     * want to free the instance anymore */
+    if (G_LIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
+#ifndef GST_DISABLE_TRACE
+      gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
+#endif
+      if (mini_object->free)
+        mini_object->free (mini_object);
+    }
   }
 }
 
@@ -406,248 +311,4 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 
   if (olddata_val)
     gst_mini_object_unref (olddata_val);
-}
-
-static void
-gst_value_mini_object_init (GValue * value)
-{
-  value->data[0].v_pointer = NULL;
-}
-
-static void
-gst_value_mini_object_free (GValue * value)
-{
-  if (value->data[0].v_pointer) {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (value->data[0].v_pointer));
-  }
-}
-
-static void
-gst_value_mini_object_copy (const GValue * src_value, GValue * dest_value)
-{
-  if (src_value->data[0].v_pointer) {
-    dest_value->data[0].v_pointer =
-        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->data[0].
-            v_pointer));
-  } else {
-    dest_value->data[0].v_pointer = NULL;
-  }
-}
-
-static gpointer
-gst_value_mini_object_peek_pointer (const GValue * value)
-{
-  return value->data[0].v_pointer;
-}
-
-static gchar *
-gst_value_mini_object_collect (GValue * value, guint n_collect_values,
-    GTypeCValue * collect_values, guint collect_flags)
-{
-  if (collect_values[0].v_pointer) {
-    value->data[0].v_pointer =
-        gst_mini_object_ref (collect_values[0].v_pointer);
-  } else {
-    value->data[0].v_pointer = NULL;
-  }
-
-  return NULL;
-}
-
-static gchar *
-gst_value_mini_object_lcopy (const GValue * value, guint n_collect_values,
-    GTypeCValue * collect_values, guint collect_flags)
-{
-  gpointer *mini_object_p = collect_values[0].v_pointer;
-
-  if (!mini_object_p) {
-    return g_strdup_printf ("value location for '%s' passed as NULL",
-        G_VALUE_TYPE_NAME (value));
-  }
-
-  if (!value->data[0].v_pointer)
-    *mini_object_p = NULL;
-  else if (collect_flags & G_VALUE_NOCOPY_CONTENTS)
-    *mini_object_p = value->data[0].v_pointer;
-  else
-    *mini_object_p = gst_mini_object_ref (value->data[0].v_pointer);
-
-  return NULL;
-}
-
-/**
- * gst_value_set_mini_object:
- * @value: a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- * @mini_object: (transfer none): mini object value to set
- *
- * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
- * @mini_object.
- * The caller retains ownership of the reference.
- */
-void
-gst_value_set_mini_object (GValue * value, GstMiniObject * mini_object)
-{
-  gpointer *pointer_p;
-
-  g_return_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value));
-  g_return_if_fail (mini_object == NULL || GST_IS_MINI_OBJECT (mini_object));
-
-  pointer_p = &value->data[0].v_pointer;
-  gst_mini_object_replace ((GstMiniObject **) pointer_p, mini_object);
-}
-
-/**
- * gst_value_take_mini_object:
- * @value: a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- * @mini_object: (transfer full): mini object value to take
- *
- * Set the contents of a %GST_TYPE_MINI_OBJECT derived #GValue to
- * @mini_object.
- * Takes over the ownership of the caller's reference to @mini_object;
- * the caller doesn't have to unref it any more.
- */
-void
-gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
-{
-  gpointer *pointer_p;
-
-  g_return_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value));
-  g_return_if_fail (mini_object == NULL || GST_IS_MINI_OBJECT (mini_object));
-
-  pointer_p = &value->data[0].v_pointer;
-  /* takes additional refcount */
-  gst_mini_object_replace ((GstMiniObject **) pointer_p, mini_object);
-  /* remove additional refcount */
-  if (mini_object)
-    gst_mini_object_unref (mini_object);
-}
-
-/**
- * gst_value_get_mini_object:
- * @value:   a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- *
- * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue.
- * Does not increase the refcount of the returned object.
- *
- * Returns: (transfer none): mini object contents of @value
- */
-GstMiniObject *
-gst_value_get_mini_object (const GValue * value)
-{
-  g_return_val_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value), NULL);
-
-  return value->data[0].v_pointer;
-}
-
-/**
- * gst_value_dup_mini_object:
- * @value:   a valid #GValue of %GST_TYPE_MINI_OBJECT derived type
- *
- * Get the contents of a %GST_TYPE_MINI_OBJECT derived #GValue,
- * increasing its reference count.
- *
- * Returns: (transfer full): mini object contents of @value
- *
- * Since: 0.10.20
- */
-GstMiniObject *
-gst_value_dup_mini_object (const GValue * value)
-{
-  g_return_val_if_fail (GST_VALUE_HOLDS_MINI_OBJECT (value), NULL);
-
-  return gst_mini_object_ref (value->data[0].v_pointer);
-}
-
-
-/* param spec */
-
-static void
-param_mini_object_init (GParamSpec * pspec)
-{
-  /* GParamSpecMiniObject *ospec = G_PARAM_SPEC_MINI_OBJECT (pspec); */
-}
-
-static void
-param_mini_object_set_default (GParamSpec * pspec, GValue * value)
-{
-  value->data[0].v_pointer = NULL;
-}
-
-static gboolean
-param_mini_object_validate (GParamSpec * pspec, GValue * value)
-{
-  GstMiniObject *mini_object = value->data[0].v_pointer;
-  gboolean changed = FALSE;
-
-  if (mini_object
-      && !g_value_type_compatible (G_OBJECT_TYPE (mini_object),
-          pspec->value_type)) {
-    gst_mini_object_unref (mini_object);
-    value->data[0].v_pointer = NULL;
-    changed = TRUE;
-  }
-
-  return changed;
-}
-
-static gint
-param_mini_object_values_cmp (GParamSpec * pspec,
-    const GValue * value1, const GValue * value2)
-{
-  guint8 *p1 = value1->data[0].v_pointer;
-  guint8 *p2 = value2->data[0].v_pointer;
-
-  /* not much to compare here, try to at least provide stable lesser/greater result */
-
-  return p1 < p2 ? -1 : p1 > p2;
-}
-
-GType
-gst_param_spec_mini_object_get_type (void)
-{
-  static GType type;
-
-  if (G_UNLIKELY (type) == 0) {
-    static const GParamSpecTypeInfo pspec_info = {
-      sizeof (GstParamSpecMiniObject),  /* instance_size */
-      16,                       /* n_preallocs */
-      param_mini_object_init,   /* instance_init */
-      G_TYPE_OBJECT,            /* value_type */
-      NULL,                     /* finalize */
-      param_mini_object_set_default,    /* value_set_default */
-      param_mini_object_validate,       /* value_validate */
-      param_mini_object_values_cmp,     /* values_cmp */
-    };
-    /* FIXME 0.11: Should really be GstParamSpecMiniObject */
-    type = g_param_type_register_static ("GParamSpecMiniObject", &pspec_info);
-  }
-
-  return type;
-}
-
-/**
- * gst_param_spec_mini_object:
- * @name: the canonical name of the property
- * @nick: the nickname of the property
- * @blurb: a short description of the property
- * @object_type: the #GstMiniObject #GType for the property
- * @flags: a combination of #GParamFlags
- *
- * Creates a new #GParamSpec instance that hold #GstMiniObject references.
- *
- * Returns: (transfer full): a newly allocated #GParamSpec instance
- */
-GParamSpec *
-gst_param_spec_mini_object (const char *name, const char *nick,
-    const char *blurb, GType object_type, GParamFlags flags)
-{
-  GstParamSpecMiniObject *ospec;
-
-  g_return_val_if_fail (g_type_is_a (object_type, GST_TYPE_MINI_OBJECT), NULL);
-
-  ospec = g_param_spec_internal (GST_TYPE_PARAM_MINI_OBJECT,
-      name, nick, blurb, flags);
-  G_PARAM_SPEC (ospec)->value_type = object_type;
-
-  return G_PARAM_SPEC (ospec);
 }

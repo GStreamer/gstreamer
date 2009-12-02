@@ -128,20 +128,15 @@
 #include "gstminiobject.h"
 #include "gstversion.h"
 
-static void gst_buffer_finalize (GstBuffer * buffer);
-static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
+static GType _gst_buffer_type = 0;
 
 GType
 gst_buffer_get_type (void)
 {
-  static GType gst_buffer_type = 0;
-
-  if (G_UNLIKELY (gst_buffer_type == 0)) {
-    gst_buffer_type = g_boxed_type_register_static ("GstBuffer",
-        (GBoxedCopyFunc) gst_buffer_copy_conditional,
-        (GBoxedFreeFunc) gst_buffer_unref);
+  if (G_UNLIKELY (_gst_buffer_type == 0)) {
+    _gst_buffer_type = gst_mini_object_register ("GstBuffer");
   }
-  return gst_buffer_type;
+  return _gst_buffer_type;
 }
 
 /* buffer alignment in bytes
@@ -181,23 +176,6 @@ _gst_buffer_initialize (void)
   _gst_buffer_data_alignment = getpagesize ();
 #endif
 #endif
-}
-
-static void
-gst_buffer_finalize (GstBuffer * buffer)
-{
-  g_return_if_fail (buffer != NULL);
-
-  GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
-
-  /* free our data */
-  if (G_LIKELY (buffer->malloc_data))
-    buffer->free_func (buffer->malloc_data);
-
-  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
-
-  if (buffer->parent)
-    gst_buffer_unref (buffer->parent);
 }
 
 /**
@@ -299,18 +277,20 @@ _gst_buffer_copy (GstBuffer * buffer)
 }
 
 static void
-gst_buffer_init (GstBuffer * buffer)
+_gst_buffer_free (GstBuffer * buffer)
 {
-  GST_CAT_LOG (GST_CAT_BUFFER, "init %p", buffer);
+  g_return_if_fail (buffer != NULL);
 
-  buffer->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  buffer->mini_object.free = (GstMiniObjectFreeeFunction) gst_buffer_finalize;
+  GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_FREE_FUNC (buffer) = g_free;
+  /* free our data */
+  if (G_LIKELY (buffer->malloc_data))
+    buffer->free_func (buffer->malloc_data);
+
+  gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+
+  if (buffer->parent)
+    gst_buffer_unref (buffer->parent);
 }
 
 /**
@@ -327,9 +307,20 @@ gst_buffer_new (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
-
+  newbuf = g_slice_new0 (GstBuffer);
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (newbuf),
+      _gst_buffer_type, sizeof (GstBuffer));
+
+  newbuf->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  newbuf->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_free;
+
+  GST_BUFFER_TIMESTAMP (newbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (newbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_FREE_FUNC (newbuf) = g_free;
 
   return newbuf;
 }

@@ -141,6 +141,32 @@ gst_caps_get_type (void)
 }
 
 /* creation/deletion */
+static void
+_gst_caps_free (GstCaps * caps)
+{
+  GstStructure *structure;
+  guint i, len;
+
+  /* The refcount must be 0, but since we're only called by gst_caps_unref,
+   * don't bother testing. */
+  len = caps->structs->len;
+  /* This can be used to get statistics about caps sizes */
+  /*GST_CAT_INFO (GST_CAT_CAPS, "caps size: %d", len); */
+  for (i = 0; i < len; i++) {
+    structure = (GstStructure *) gst_caps_get_structure_unchecked (caps, i);
+    gst_structure_set_parent_refcount (structure, NULL);
+    gst_structure_free (structure);
+  }
+  g_ptr_array_free (caps->structs, TRUE);
+#ifdef USE_POISONING
+  memset (caps, 0xff, sizeof (GstCaps));
+#endif
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
+#endif
+  g_slice_free (GstCaps, caps);
+}
 
 /**
  * gst_caps_new_empty:
@@ -156,9 +182,12 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps = g_slice_new (GstCaps);
 
-  caps->type = GST_TYPE_CAPS;
-  caps->refcount = 1;
-  caps->flags = 0;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps),
+      GST_TYPE_CAPS, sizeof (GstCaps));
+
+  caps->mini_object.copy = (GstMiniObjectCopyFunction) gst_caps_copy;
+  caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
+
   caps->structs = g_ptr_array_new ();
   /* the 32 has been determined by logging caps sizes in _gst_caps_free
    * but g_ptr_array uses 16 anyway if it expands once, so this does not help
@@ -186,7 +215,7 @@ gst_caps_new_any (void)
 {
   GstCaps *caps = gst_caps_new_empty ();
 
-  caps->flags = GST_CAPS_FLAGS_ANY;
+  GST_CAPS_FLAG_SET (caps, GST_CAPS_FLAGS_ANY);
 
   return caps;
 }
@@ -307,33 +336,6 @@ gst_caps_copy (const GstCaps * caps)
   }
 
   return newcaps;
-}
-
-static void
-_gst_caps_free (GstCaps * caps)
-{
-  GstStructure *structure;
-  guint i, len;
-
-  /* The refcount must be 0, but since we're only called by gst_caps_unref,
-   * don't bother testing. */
-  len = caps->structs->len;
-  /* This can be used to get statistics about caps sizes */
-  /*GST_CAT_INFO (GST_CAT_CAPS, "caps size: %d", len); */
-  for (i = 0; i < len; i++) {
-    structure = (GstStructure *) gst_caps_get_structure_unchecked (caps, i);
-    gst_structure_set_parent_refcount (structure, NULL);
-    gst_structure_free (structure);
-  }
-  g_ptr_array_free (caps->structs, TRUE);
-#ifdef USE_POISONING
-  memset (caps, 0xff, sizeof (GstCaps));
-#endif
-
-#ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
-#endif
-  g_slice_free (GstCaps, caps);
 }
 
 /**

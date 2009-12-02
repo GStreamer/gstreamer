@@ -106,34 +106,6 @@ struct _GstBusPrivate
 
 G_DEFINE_TYPE (GstBus, gst_bus, GST_TYPE_OBJECT);
 
-/* fixme: do something about this */
-static void
-marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
-    guint n_param_values, const GValue * param_values, gpointer invocation_hint,
-    gpointer marshal_data)
-{
-  typedef void (*marshalfunc_VOID__MINIOBJECT) (gpointer obj, gpointer arg1,
-      gpointer data2);
-  register marshalfunc_VOID__MINIOBJECT callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-
-  g_return_if_fail (n_param_values == 2);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data :
-      cc->callback);
-
-  callback (data1, gst_value_get_mini_object (param_values + 1), data2);
-}
-
 static void
 gst_bus_class_init (GstBusClass * klass)
 {
@@ -162,7 +134,7 @@ gst_bus_class_init (GstBusClass * klass)
       g_signal_new ("sync-message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstBusClass, sync_message), NULL, NULL,
-      marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 
   /**
    * GstBus::message:
@@ -177,7 +149,7 @@ gst_bus_class_init (GstBusClass * klass)
       g_signal_new ("message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstBusClass, message), NULL, NULL,
-      marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 
   g_type_class_add_private (klass, sizeof (GstBusPrivate));
 }

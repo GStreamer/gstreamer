@@ -38,20 +38,28 @@ typedef struct _GstMiniObject GstMiniObject;
  * GstMiniObjectCopyFunction:
  * @obj: MiniObject to copy
  *
- * Virtual function prototype for methods to create copies of instances.
+ * Function prototype for methods to create copies of instances.
  *
  * Returns: reference to cloned instance.
  */
 typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *obj);
 /**
+ * GstMiniObjectDisposeFunction:
+ * @obj: MiniObject to dispose
+ *
+ * Function prototype for when a miniobject has lost its last refcount.
+ * Implementation of the mini object are allowed to revive the
+ * passed object by doing a gst_mini_object_ref(). If the object is not
+ * revived after the dispose function, the memory associated with the
+ * object is freed.
+ */
+typedef void (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
+/**
  * GstMiniObjectFreeFunction:
  * @obj: MiniObject to free
  *
  * Virtual function prototype for methods to free ressources used by
- * mini-objects. Subclasses of the mini object are allowed to revive the
- * passed object by doing a gst_mini_object_ref(). If the object is not
- * revived after the free function, the memory associated with the
- * object is freed.
+ * mini-objects.
  */
 typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 
@@ -131,6 +139,9 @@ typedef enum
  * @instance: type instance
  * @refcount: atomic refcount
  * @flags: extra flags.
+ * @copy: a copy function
+ * @dispose: a dispose function
+ * @free: the free function
  * 
  * Base class for refcounted lightweight objects.
  * Ref Func: gst_mini_object_ref
@@ -144,12 +155,17 @@ struct _GstMiniObject {
   /*< public >*/ /* with COW */
   gint    refcount;
   guint   flags;
+  gsize   size;
 
   GstMiniObjectCopyFunction copy;
+  GstMiniObjectDisposeFunction dispose;
   GstMiniObjectFreeFunction free;
 };
 
-GType 		gst_mini_object_get_type 	(void);
+GType           gst_mini_object_register        (const gchar *name);
+
+void            gst_mini_object_init            (GstMiniObject *mini_object,
+                                                 GType type, gsize size);
 
 GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object);
 gboolean 	gst_mini_object_is_writable 	(const GstMiniObject *mini_object);

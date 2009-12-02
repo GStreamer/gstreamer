@@ -145,11 +145,6 @@ struct _GstBufferList
   GList *buffers;
 };
 
-struct _GstBufferListClass
-{
-  GstMiniObjectClass mini_object_class;
-};
-
 /**
  * GstBufferListIterator:
  *
@@ -166,8 +161,6 @@ struct _GstBufferListIterator
 
 static GType _gst_buffer_list_type = 0;
 
-G_DEFINE_TYPE (GstBufferList, gst_buffer_list, GST_TYPE_MINI_OBJECT);
-
 void
 _gst_buffer_list_initialize (void)
 {
@@ -175,37 +168,6 @@ _gst_buffer_list_initialize (void)
 
   g_type_class_ref (type);
   _gst_buffer_list_type = type;
-}
-
-static void
-gst_buffer_list_init (GstBufferList * list)
-{
-  list->buffers = NULL;
-
-  GST_LOG ("init %p", list);
-}
-
-static void
-gst_buffer_list_finalize (GstBufferList * list)
-{
-  GList *tmp;
-
-  g_return_if_fail (list != NULL);
-
-  GST_LOG ("finalize %p", list);
-
-  tmp = list->buffers;
-  while (tmp) {
-    if (tmp->data != GROUP_START && tmp->data != STOLEN) {
-      gst_buffer_unref (GST_BUFFER_CAST (tmp->data));
-    }
-    tmp = tmp->next;
-  }
-  g_list_free (list->buffers);
-
-/* Not chaining up because GstMiniObject::finalize() does nothing
-  GST_MINI_OBJECT_CLASS (gst_buffer_list_parent_class)->finalize
-      (GST_MINI_OBJECT_CAST (list));*/
 }
 
 static GstBufferList *
@@ -234,12 +196,24 @@ _gst_buffer_list_copy (GstBufferList * list)
 }
 
 static void
-gst_buffer_list_class_init (GstBufferListClass * list_class)
+_gst_buffer_list_free (GstBufferList * list)
 {
-  list_class->mini_object_class.copy =
-      (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
-  list_class->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_buffer_list_finalize;
+  GList *tmp;
+
+  g_return_if_fail (list != NULL);
+
+  GST_LOG ("free %p", list);
+
+  tmp = list->buffers;
+  while (tmp) {
+    if (tmp->data != GROUP_START && tmp->data != STOLEN) {
+      gst_buffer_unref (GST_BUFFER_CAST (tmp->data));
+    }
+    tmp = tmp->next;
+  }
+  g_list_free (list->buffers);
+
+  g_slice_free (GstBufferList, list);
 }
 
 /**
@@ -260,7 +234,13 @@ gst_buffer_list_new (void)
 {
   GstBufferList *list;
 
-  list = (GstBufferList *) gst_mini_object_new (_gst_buffer_list_type);
+  list = g_slice_new0 (GstBufferList);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type,
+      sizeof (GstBufferList));
+
+  list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
+  list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
 
   GST_LOG ("new %p", list);
 
@@ -420,6 +400,15 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
     tmp = g_list_next (tmp);
   }
   return NULL;
+}
+
+GType
+gst_buffer_list_get_type (void)
+{
+  if (G_UNLIKELY (_gst_buffer_list_type == 0)) {
+    _gst_buffer_list_type = gst_mini_object_register ("GstBufferList");
+  }
+  return _gst_buffer_list_type;
 }
 
 /**

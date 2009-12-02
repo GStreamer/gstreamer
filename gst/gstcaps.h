@@ -40,7 +40,7 @@ G_BEGIN_DECLS
  * Extra flags for a caps.
  */
 typedef enum {
-  GST_CAPS_FLAGS_ANY	= (1 << 0)
+  GST_CAPS_FLAGS_ANY	= (GST_MINI_OBJECT_FLAG_LAST << 0)
 } GstCapsFlags;
 
 /**
@@ -99,6 +99,14 @@ typedef enum {
 typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
+/**
+ * GST_CAPS_FLAGS:
+ * @caps: a #GstCaps.
+ *
+ * A flags word containing #GstCapsFlags flags set on this caps.
+ */
+#define GST_CAPS_FLAGS(caps)                    GST_MINI_OBJECT_FLAGS(caps)
+
 /* refcount */
 /**
  * GST_CAPS_REFCOUNT:
@@ -106,14 +114,39 @@ typedef struct _GstStaticCaps GstStaticCaps;
  *
  * Get access to the reference count field of the caps
  */
-#define GST_CAPS_REFCOUNT(caps)                 ((GST_CAPS(caps))->refcount)
+#define GST_CAPS_REFCOUNT(caps)                 GST_MINI_OBJECT_REFCOUNT(caps)
 /**
  * GST_CAPS_REFCOUNT_VALUE:
  * @caps: a #GstCaps
  *
  * Get the reference count value of the caps.
  */
-#define GST_CAPS_REFCOUNT_VALUE(caps)           (g_atomic_int_get (&(GST_CAPS(caps))->refcount))
+#define GST_CAPS_REFCOUNT_VALUE(caps)           GST_MINI_OBJECT_REFCOUNT_VALUE(caps)
+
+/**
+ * GST_CAPS_FLAG_IS_SET:
+ * @caps: a #GstBuffer.
+ * @flag: the #GstBufferFlag to check.
+ *
+ * Gives the status of a specific flag on a caps.
+ */
+#define GST_CAPS_FLAG_IS_SET(caps,flag)        GST_MINI_OBJECT_FLAG_IS_SET (caps, flag)
+/**
+ * GST_CAPS_FLAG_SET:
+ * @caps: a #GstBuffer.
+ * @flag: the #GstBufferFlag to set.
+ *
+ * Sets a caps flag on a caps.
+ */
+#define GST_CAPS_FLAG_SET(caps,flag)           GST_MINI_OBJECT_FLAG_SET (caps, flag)
+/**
+ * GST_CAPS_FLAG_UNSET:
+ * @caps: a #GstBuffer.
+ * @flag: the #GstBufferFlag to clear.
+ *
+ * Clears a caps flag.
+ */
+#define GST_CAPS_FLAG_UNSET(caps,flag)         GST_MINI_OBJECT_FLAG_UNSET (caps, flag)
 
 /**
  * GstCaps:
