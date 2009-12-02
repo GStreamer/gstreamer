@@ -275,10 +275,19 @@ static gboolean
 setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
+  guint w, h, par_d, par_n;
+
+  w = GST_READ_UINT24_BE (data + 14) & 0xFFFFF0;
+  h = GST_READ_UINT24_BE (data + 17) & 0xFFFFF0;
 
   pad->granulerate_n = GST_READ_UINT32_BE (data + 22);
   pad->granulerate_d = GST_READ_UINT32_BE (data + 26);
-  GST_LOG ("fps = %d/%d", pad->granulerate_n, pad->granulerate_d);
+
+  par_n = GST_READ_UINT24_BE (data + 30);
+  par_d = GST_READ_UINT24_BE (data + 33);
+
+  GST_LOG ("fps = %d/%d, PAR = %u/%u, width = %u, height = %u",
+      pad->granulerate_n, pad->granulerate_d, par_n, par_d, w, h);
 
   /* 2 bits + 3 bits = 5 bits KFGSHIFT */
   pad->granuleshift = ((GST_READ_UINT8 (data + 40) & 0x03) << 3) +
@@ -291,9 +300,21 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
       || pad->granulerate_d == 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_simple ("video/x-theora",
-      "framerate", GST_TYPE_FRACTION, pad->granulerate_n,
-      pad->granulerate_d, NULL);
+  pad->caps = gst_caps_new_simple ("video/x-theora", NULL);
+
+  if (w > 0 && h > 0) {
+    gst_caps_set_simple (pad->caps, "width", G_TYPE_INT, w, "height",
+        G_TYPE_INT, h, NULL);
+  }
+
+  /* only add framerate now so caps look prettier, with width/height first */
+  gst_caps_set_simple (pad->caps, "framerate", GST_TYPE_FRACTION,
+      pad->granulerate_n, pad->granulerate_d, NULL);
+
+  if (par_n > 0 && par_d > 0) {
+    gst_caps_set_simple (pad->caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_n, par_d, NULL);
+  }
 
   return TRUE;
 }
