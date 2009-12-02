@@ -26,7 +26,7 @@
 #endif
 
 /* FIXME: hack alert */
-#ifdef WIN32
+#ifdef HAVE_WIN32
 #define DISABLE_FAULT_HANDLER
 #endif
 
