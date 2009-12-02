@@ -258,6 +258,7 @@ typedef enum {
  *     When the buffer is freed, this data will freed with @free_func.
  * @free_func: a custom function that will be called with @malloc_data, defaults
  *     to g_free(). Since 0.10.22.
+ * @parent: the parent buffer if this is a subbuffer. Since 0.10.26.
  *
  * The structure of a #GstBuffer. Use the associated macros to access the public
  * variables.
@@ -283,10 +284,12 @@ struct _GstBuffer {
 
   guint8                *malloc_data;
 
+  /* ABI Added */
   GFreeFunc              free_func;
+  GstBuffer             *parent;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstBufferClass {

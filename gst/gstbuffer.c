@@ -122,9 +122,7 @@
 
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
-static GType gst_subbuffer_get_type (void);
 
-static GType _gst_subbuffer_type = 0;
 static GType _gst_buffer_type = 0;
 
 void
@@ -134,7 +132,6 @@ _gst_buffer_initialize (void)
    * done from multiple threads;
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
   g_type_class_ref (gst_buffer_get_type ());
-  g_type_class_ref (gst_subbuffer_get_type ());
 }
 
 #define _do_init \
@@ -164,6 +161,9 @@ gst_buffer_finalize (GstBuffer * buffer)
     buffer->free_func (buffer->malloc_data);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
+
+  if (buffer->parent)
+    gst_buffer_unref (buffer->parent);
 
 /*   ((GstMiniObjectClass *) */
 /*       gst_buffer_parent_class)->finalize (GST_MINI_OBJECT_CAST (buffer)); */
@@ -454,55 +454,7 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
   return ret;
 }
 
-typedef struct _GstSubBuffer GstSubBuffer;
-typedef struct _GstSubBufferClass GstSubBufferClass;
-
-#define GST_IS_SUBBUFFER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), _gst_subbuffer_type))
-#define GST_SUBBUFFER_CAST(obj) ((GstSubBuffer *)(obj))
-
-struct _GstSubBuffer
-{
-  GstBuffer buffer;
-
-  GstBuffer *parent;
-};
-
-struct _GstSubBufferClass
-{
-  GstBufferClass buffer_class;
-};
-
-static void gst_subbuffer_finalize (GstSubBuffer * buffer);
-
-#define _do_init_sub \
-{ \
-  _gst_subbuffer_type = g_define_type_id; \
-}
-
-G_DEFINE_TYPE_WITH_CODE (GstSubBuffer, gst_subbuffer, GST_TYPE_BUFFER,
-    _do_init_sub);
-
-static void
-gst_subbuffer_class_init (GstSubBufferClass * klass)
-{
-  klass->buffer_class.mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_subbuffer_finalize;
-}
-
-static void
-gst_subbuffer_finalize (GstSubBuffer * buffer)
-{
-  gst_buffer_unref (buffer->parent);
-
-  ((GstMiniObjectClass *) gst_subbuffer_parent_class)->finalize
-      (GST_MINI_OBJECT_CAST (buffer));
-}
-
-static void
-gst_subbuffer_init (GstSubBuffer * instance)
-{
-  GST_BUFFER_FLAG_SET (GST_BUFFER_CAST (instance), GST_BUFFER_FLAG_READONLY);
-}
+#define GST_IS_SUBBUFFER(obj)   (GST_BUFFER_CAST(obj)->parent != NULL)
 
 /**
  * gst_buffer_create_sub:
@@ -527,7 +479,7 @@ gst_subbuffer_init (GstSubBuffer * instance)
 GstBuffer *
 gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 {
-  GstSubBuffer *subbuffer;
+  GstBuffer *subbuffer;
   GstBuffer *parent;
   gboolean complete;
 
@@ -537,15 +489,16 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 
   /* find real parent */
   if (GST_IS_SUBBUFFER (buffer)) {
-    parent = GST_SUBBUFFER_CAST (buffer)->parent;
+    parent = buffer->parent;
   } else {
     parent = buffer;
   }
   gst_buffer_ref (parent);
 
   /* create the new buffer */
-  subbuffer = (GstSubBuffer *) gst_mini_object_new (_gst_subbuffer_type);
+  subbuffer = gst_buffer_new ();
   subbuffer->parent = parent;
+  GST_BUFFER_FLAG_SET (GST_BUFFER_CAST (subbuffer), GST_BUFFER_FLAG_READONLY);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", subbuffer,
       parent);
@@ -616,8 +569,7 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 
   /* it's only fast if we have subbuffers of the same parent */
   return (GST_IS_SUBBUFFER (buf1) &&
-      GST_IS_SUBBUFFER (buf2) &&
-      (GST_SUBBUFFER_CAST (buf1)->parent == GST_SUBBUFFER_CAST (buf2)->parent)
+      GST_IS_SUBBUFFER (buf2) && (buf1->parent == buf2->parent)
       && ((buf1->data + buf1->size) == buf2->data));
 }
 
@@ -657,7 +609,7 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast (buf1, buf2)) {
-    GstBuffer *parent = GST_SUBBUFFER_CAST (buf1)->parent;
+    GstBuffer *parent = buf1->parent;
 
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent,
