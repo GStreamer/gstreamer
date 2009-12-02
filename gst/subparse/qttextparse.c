@@ -24,6 +24,8 @@
 
 #include "qttextparse.h"
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #define MIN_TO_NSEC  (60 * GST_SECOND)
