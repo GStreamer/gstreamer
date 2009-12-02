@@ -67,6 +67,10 @@ The following fields can or must (*) be specified in the structure:
     reporting and corresponds to the GStream applied-rate field in the
     NEWSEGMENT event. (default = 1.0)
 
+   maxptime: (uint) [0, MAX]
+    The maxptime as defined in RFC 4566, this defines the maximum size of a
+    packet. It overrides the max-ptime property of payloaders.
+
    Optional parameters as key/value pairs, media type specific. The value type
    should be of type G_TYPE_STRING. The key is converted to lower-case. The
    value is left in its original case.
