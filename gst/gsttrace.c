@@ -74,7 +74,7 @@ static
     void
 read_tsc (gint64 * dst)
 {
-#ifdef HAVE_RDTSC
+#if defined(HAVE_RDTSC) && defined(__GNUC__)
   guint64 tsc;
   __asm__ __volatile__ ("rdtsc":"=A" (tsc));
 
