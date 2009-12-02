@@ -383,7 +383,7 @@ gst_event_unref (GstEvent * event)
  * Copy the event using the event specific copy function.
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_event_copy (GstEvent * event);
+G_INLINE_FUNC GstEvent * gst_event_copy (const GstEvent * event);
 #endif
 
 static inline GstEvent *
