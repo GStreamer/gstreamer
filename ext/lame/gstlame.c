@@ -1024,11 +1024,13 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (lame, "handling FLUSH stop event");
 
-      /* clear buffers */
-      mp3_buffer_size = 7200;
-      mp3_data = g_malloc (mp3_buffer_size);
-      lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
-      g_free (mp3_data);
+      if (lame->lgf) {
+        /* clear buffers if we already have lame set up */
+        mp3_buffer_size = 7200;
+        mp3_data = g_malloc (mp3_buffer_size);
+        lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
+        g_free (mp3_data);
+      }
 
       ret = gst_pad_push_event (lame->srcpad, event);
       break;
