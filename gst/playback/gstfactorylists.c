@@ -186,6 +186,7 @@ gst_factory_list_get_elements (GstFactoryListType type)
 void
 gst_factory_list_debug (GValueArray * array)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   gint i;
 
   for (i = 0; i < array->n_values; i++) {
@@ -197,6 +198,7 @@ gst_factory_list_debug (GValueArray * array)
 
     GST_DEBUG ("%s", gst_plugin_feature_get_name (feature));
   }
+#endif
 }
 
 /**

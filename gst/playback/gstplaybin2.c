@@ -1171,7 +1171,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   /* first filter out the interesting element factories */
   playbin->elements_lock = g_mutex_new ();
   gst_play_bin_update_elements_list (playbin);
-  gst_factory_list_debug (playbin->elements);
+  GST_FACTORY_LIST_DEBUG (playbin->elements);
 
   /* add sink */
   playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
@@ -2956,7 +2956,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   g_mutex_unlock (playbin->elements_lock);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", result);
-  gst_factory_list_debug (result);
+  GST_FACTORY_LIST_DEBUG (result);
 
   return result;
 }

@@ -39,6 +39,12 @@ void          gst_factory_list_debug        (GValueArray *array);
 
 GValueArray * gst_factory_list_filter       (GValueArray *array, const GstCaps *caps);
 
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_FACTORY_LIST_DEBUG(array) gst_factory_list_debug(array)
+#else
+#define GST_FACTORY_LIST_DEBUG(array)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_FACTORY_LISTS_H__ */
