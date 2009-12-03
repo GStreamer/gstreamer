@@ -4234,8 +4234,8 @@ done2:
             gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
         stream->stts_duration =
             gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
-        GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u ", i,
-            stream->stts_samples, stream->stts_duration);
+        GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %"
+            G_GUINT64_FORMAT, i, stream->stts_samples, stream->stts_duration);
 
         /* take first duration for fps */
         if (G_UNLIKELY (stream->min_duration == 0))
