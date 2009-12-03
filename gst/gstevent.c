@@ -85,10 +85,7 @@
 #include "gstutils.h"
 #include "gstquark.h"
 
-static void gst_event_finalize (GstEvent * event);
-static GstEvent *_gst_event_copy (GstEvent * event);
-
-static GstMiniObjectClass *parent_class = NULL;
+static GType _gst_event_type = 0;
 
 void
 _gst_event_initialize (void)
@@ -195,26 +192,19 @@ gst_event_type_get_flags (GstEventType type)
   } \
 }
 
-G_DEFINE_TYPE_WITH_CODE (GstEvent, gst_event, GST_TYPE_MINI_OBJECT, _do_init);
 
-static void
-gst_event_class_init (GstEventClass * klass)
+GType
+gst_event_get_type (void)
 {
-  parent_class = g_type_class_peek_parent (klass);
+  if (G_UNLIKELY (_gst_event_type == 0)) {
+    _gst_event_type = gst_mini_object_register ("GstEvent");
+  }
 
-  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
-  klass->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_event_finalize;
+  return _gst_event_type;
 }
 
 static void
-gst_event_init (GstEvent * event)
-{
-  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
-}
-
-static void
-gst_event_finalize (GstEvent * event)
+_gst_event_free (GstEvent * event)
 {
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_IS_EVENT (event));
@@ -231,7 +221,7 @@ gst_event_finalize (GstEvent * event)
     gst_structure_free (event->structure);
   }
 
-/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (event)); */
+  g_slice_free (GstEvent, event);
 }
 
 static GstEvent *
@@ -239,7 +229,12 @@ _gst_event_copy (GstEvent * event)
 {
   GstEvent *copy;
 
-  copy = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
+  copy = g_slice_new0 (GstEvent);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (copy),
+      _gst_event_type, sizeof (GstEvent));
+  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
+  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
 
   GST_EVENT_TYPE (copy) = GST_EVENT_TYPE (event);
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
@@ -261,14 +256,18 @@ gst_event_new (GstEventType type)
 {
   GstEvent *event;
 
-  event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
+  event = g_slice_new0 (GstEvent);
 
   GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
       gst_event_type_get_name (type), type);
 
-  event->type = type;
-  event->src = NULL;
-  event->structure = NULL;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (event),
+      _gst_event_type, sizeof (GstEvent));
+
+  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
+  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
+
+  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
   GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
 
   return event;
@@ -1295,6 +1294,6 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 
   if (msg)
     *msg =
-        GST_MESSAGE (gst_value_dup_mini_object (gst_structure_id_get_value
-            (event->structure, GST_QUARK (MESSAGE))));
+        GST_MESSAGE (g_value_dup_boxed (gst_structure_id_get_value
+            (structure, GST_QUARK (MESSAGE))));
 }

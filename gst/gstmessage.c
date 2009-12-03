@@ -63,8 +63,6 @@
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
 
-static GstMiniObjectClass *parent_class = NULL;
-
 void
 _gst_message_initialize (void)
 {

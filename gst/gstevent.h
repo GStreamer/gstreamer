@@ -159,11 +159,8 @@ typedef enum {
 typedef struct _GstEvent GstEvent;
 
 #define GST_TYPE_EVENT                  (gst_event_get_type())
-#define GST_IS_EVENT(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EVENT))
-#define GST_IS_EVENT_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_EVENT))
-#define GST_EVENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EVENT, GstEventClass))
-#define GST_EVENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
-#define GST_EVENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
+#define GST_IS_EVENT(obj)               ((obj) && GST_MINI_OBJECT_TYPE (obj) == GST_TYPE_EVENT)
+#define GST_EVENT(obj)                  ((GstEvent *)(obj))
 #define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
 
 /**

@@ -163,7 +163,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     GstCaps *caps = (GstCaps *) & (templ->static_caps);
 
     /* FIXME: this is not threadsafe */
-    if (caps->refcount == 1) {
+    if (GST_CAPS_REFCOUNT_VALUE (caps) == 1) {
       GstStructure *structure;
       guint i;
 
@@ -173,7 +173,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
         gst_structure_free (structure);
       }
       g_ptr_array_free (caps->structs, TRUE);
-      caps->refcount = 0;
+      GST_CAPS_REFCOUNT (caps) = 0;
     }
     g_slice_free (GstStaticPadTemplate, templ);
   }

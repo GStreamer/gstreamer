@@ -77,7 +77,7 @@
 
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \
-    GstCaps *_newcaps = gst_caps_copy (caps); \
+    GstCaps *_newcaps = _gst_caps_copy (caps); \
     gst_caps_unref(caps); \
     caps = _newcaps; \
   } \
@@ -90,11 +90,11 @@
   } \
 } G_STMT_END
 #define IS_WRITABLE(caps) \
-  (g_atomic_int_get (&(caps)->refcount) == 1)
+  (GST_CAPS_REFCOUNT_VALUE (caps) == 1)
 
 /* same as gst_caps_is_any () */
 #define CAPS_IS_ANY(caps)				\
-  ((caps)->flags & GST_CAPS_FLAGS_ANY)
+  (GST_CAPS_FLAGS(caps) & GST_CAPS_FLAGS_ANY)
 
 /* same as gst_caps_is_empty () */
 #define CAPS_IS_EMPTY(caps)				\
@@ -121,7 +121,6 @@ static void gst_caps_transform_to_string (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_caps_from_string_inplace (GstCaps * caps,
     const gchar * string);
-static GstCaps *gst_caps_copy_conditional (GstCaps * src);
 
 GType
 gst_caps_get_type (void)
@@ -129,15 +128,34 @@ gst_caps_get_type (void)
   static GType gst_caps_type = 0;
 
   if (G_UNLIKELY (gst_caps_type == 0)) {
-    gst_caps_type = g_boxed_type_register_static ("GstCaps",
-        (GBoxedCopyFunc) gst_caps_copy_conditional,
-        (GBoxedFreeFunc) gst_caps_unref);
+    gst_caps_type = gst_mini_object_register ("GstCaps");
 
     g_value_register_transform_func (gst_caps_type,
         G_TYPE_STRING, gst_caps_transform_to_string);
   }
 
   return gst_caps_type;
+}
+
+static GstCaps *
+_gst_caps_copy (const GstCaps * caps)
+{
+  GstCaps *newcaps;
+  GstStructure *structure;
+  guint i, n;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
+
+  newcaps = gst_caps_new_empty ();
+  GST_CAPS_FLAGS (newcaps) = GST_CAPS_FLAGS (caps);
+  n = caps->structs->len;
+
+  for (i = 0; i < n; i++) {
+    structure = gst_caps_get_structure_unchecked (caps, i);
+    gst_caps_append_structure (newcaps, gst_structure_copy (structure));
+  }
+
+  return newcaps;
 }
 
 /* creation/deletion */
@@ -180,12 +198,14 @@ _gst_caps_free (GstCaps * caps)
 GstCaps *
 gst_caps_new_empty (void)
 {
-  GstCaps *caps = g_slice_new (GstCaps);
+  GstCaps *caps;
+
+  caps = g_slice_new (GstCaps);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (caps),
       GST_TYPE_CAPS, sizeof (GstCaps));
 
-  caps->mini_object.copy = (GstMiniObjectCopyFunction) gst_caps_copy;
+  caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
   caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
 
   caps->structs = g_ptr_array_new ();
@@ -302,43 +322,6 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
 }
 
 /**
- * gst_caps_copy:
- * @caps: the #GstCaps to copy
- *
- * Creates a new #GstCaps as a copy of the old @caps. The new caps will have a
- * refcount of 1, owned by the caller. The structures are copied as well.
- *
- * Note that this function is the semantic equivalent of a gst_caps_ref()
- * followed by a gst_caps_make_writable(). If you only want to hold on to a
- * reference to the data, you should use gst_caps_ref().
- *
- * When you are finished with the caps, call gst_caps_unref() on it.
- *
- * Returns: (transfer full): the new #GstCaps
- */
-GstCaps *
-gst_caps_copy (const GstCaps * caps)
-{
-  GstCaps *newcaps;
-  GstStructure *structure;
-  guint i, n;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-
-  newcaps = gst_caps_new_empty ();
-  newcaps->flags = caps->flags;
-  n = caps->structs->len;
-
-  for (i = 0; i < n; i++) {
-    structure = gst_caps_get_structure_unchecked (caps, i);
-    gst_caps_append_structure_unchecked (newcaps,
-        gst_structure_copy (structure));
-  }
-
-  return newcaps;
-}
-
-/**
  * gst_caps_make_writable:
  * @caps: (transfer full): the #GstCaps to make writable
  *
@@ -369,65 +352,10 @@ gst_caps_make_writable (GstCaps * caps)
 
   /* else copy */
   GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy caps");
-  copy = gst_caps_copy (caps);
+  copy = _gst_caps_copy (caps);
   gst_caps_unref (caps);
 
   return copy;
-}
-
-/**
- * gst_caps_ref:
- * @caps: the #GstCaps to reference
- *
- * Add a reference to a #GstCaps object.
- *
- * From this point on, until the caller calls gst_caps_unref() or
- * gst_caps_make_writable(), it is guaranteed that the caps object will not
- * change. This means its structures won't change, etc. To use a #GstCaps
- * object, you must always have a refcount on it -- either the one made
- * implicitly by e.g. gst_caps_new_simple(), or via taking one explicitly with
- * this function.
- *
- * Returns: (transfer full): the same #GstCaps object.
- */
-GstCaps *
-gst_caps_ref (GstCaps * caps)
-{
-  g_return_val_if_fail (caps != NULL, NULL);
-
-#ifdef DEBUG_REFCOUNT
-  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p %d->%d", caps,
-      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
-#endif
-  g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0, NULL);
-
-  g_atomic_int_inc (&caps->refcount);
-
-  return caps;
-}
-
-/**
- * gst_caps_unref:
- * @caps: (transfer full): the #GstCaps to unref
- *
- * Unref a #GstCaps and and free all its structures and the
- * structures' values when the refcount reaches 0.
- */
-void
-gst_caps_unref (GstCaps * caps)
-{
-  g_return_if_fail (caps != NULL);
-
-#ifdef DEBUG_REFCOUNT
-  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p %d->%d", caps,
-      GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
-#endif
-
-  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
-
-  /* if we ended up with the refcount at zero, free the caps */
-  if (G_UNLIKELY (g_atomic_int_dec_and_test (&caps->refcount)))
-    _gst_caps_free (caps);
 }
 
 GType
@@ -462,13 +390,13 @@ gst_static_caps_get (GstStaticCaps * static_caps)
   caps = (GstCaps *) static_caps;
 
   /* refcount is 0 when we need to convert */
-  if (G_UNLIKELY (g_atomic_int_get (&caps->refcount) == 0)) {
+  if (G_UNLIKELY (GST_CAPS_REFCOUNT_VALUE (caps) == 0)) {
     const char *string;
     GstCaps temp;
 
     G_LOCK (static_caps_lock);
     /* check if other thread already updated */
-    if (G_UNLIKELY (g_atomic_int_get (&caps->refcount) > 0))
+    if (G_UNLIKELY (GST_CAPS_REFCOUNT_VALUE (caps) > 0))
       goto done;
 
     string = static_caps->string;
@@ -482,24 +410,21 @@ gst_static_caps_get (GstStaticCaps * static_caps)
      * real caps, refcount last. We do this because we must leave the refcount
      * of the result caps to 0 so that other threads don't run away with the
      * caps while we are constructing it. */
-    temp.type = GST_TYPE_CAPS;
-    temp.flags = 0;
-    temp.structs = g_ptr_array_new ();
+    gst_mini_object_init (GST_MINI_OBJECT_CAST (&temp),
+        GST_TYPE_CAPS, sizeof (GstCaps));
 
-    /* initialize the caps to a refcount of 1 so the caps can be writable for
-     * the next statement */
-    temp.refcount = 1;
+    temp.structs = g_ptr_array_new ();
 
     /* convert to string */
     if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
       g_critical ("Could not convert static caps \"%s\"", string);
 
     /* now copy stuff over to the real caps. */
-    caps->type = temp.type;
-    caps->flags = temp.flags;
+    GST_MINI_OBJECT_TYPE (caps) = GST_MINI_OBJECT_TYPE (&temp);
+    GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS (&temp);
     caps->structs = temp.structs;
     /* and bump the refcount so other threads can now read */
-    g_atomic_int_set (&caps->refcount, 1);
+    GST_CAPS_REFCOUNT (caps) = 1;
 
     GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
   done:
@@ -657,7 +582,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 #endif
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
     /* FIXME: this leaks */
-    caps1->flags |= GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAGS_ANY;
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
       gst_structure_free (structure);
@@ -703,7 +628,7 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
       gst_structure_free (structure);
     }
   } else if (G_UNLIKELY (CAPS_IS_ANY (caps2))) {
-    caps1->flags |= GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAGS_ANY;
     for (i = caps1->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps1, i);
       gst_structure_free (structure);
@@ -881,7 +806,7 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   newcaps = gst_caps_new_empty ();
-  newcaps->flags = caps->flags;
+  GST_CAPS_FLAGS (newcaps) = GST_CAPS_FLAGS (caps);
 
   if (G_LIKELY (caps->structs->len > nth)) {
     structure = gst_caps_get_structure_unchecked (caps, nth);
@@ -1433,7 +1358,7 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 
   /* caps are exactly the same pointers, just copy one caps */
   if (G_UNLIKELY (caps1 == caps2))
-    return gst_caps_copy (caps1);
+    return _gst_caps_copy (caps1);
 
   /* empty caps on either side, return empty */
   if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
@@ -1441,9 +1366,9 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 
   /* one of the caps is any, just copy the other caps */
   if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
-    return gst_caps_copy (caps2);
+    return _gst_caps_copy (caps2);
   if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
-    return gst_caps_copy (caps1);
+    return _gst_caps_copy (caps1);
 
   dest = gst_caps_new_empty ();
 
@@ -1578,7 +1503,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
     return gst_caps_new_empty ();
   }
   if (CAPS_IS_EMPTY_SIMPLE (subtrahend))
-    return gst_caps_copy (minuend);
+    return _gst_caps_copy (minuend);
 
   /* FIXME: Do we want this here or above?
      The reason we need this is that there is no definition about what
@@ -1589,7 +1514,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   sublen = subtrahend->structs->len;
   g_assert (sublen > 0);
 
-  src = gst_caps_copy (minuend);
+  src = _gst_caps_copy (minuend);
   for (i = 0; i < sublen; i++) {
     guint srclen;
 
@@ -1694,16 +1619,16 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   g_return_val_if_fail (caps2 != NULL, NULL);
 
   if (CAPS_IS_EMPTY (caps1))
-    return gst_caps_copy (caps2);
+    return _gst_caps_copy (caps2);
 
   if (CAPS_IS_EMPTY (caps2))
-    return gst_caps_copy (caps1);
+    return _gst_caps_copy (caps1);
 
   if (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))
     return gst_caps_new_any ();
 
-  dest1 = gst_caps_copy (caps1);
-  dest2 = gst_caps_copy (caps2);
+  dest1 = _gst_caps_copy (caps1);
+  dest2 = _gst_caps_copy (caps2);
   gst_caps_append (dest1, dest2);
 
   gst_caps_do_simplify (dest1);
@@ -1764,7 +1689,7 @@ gst_caps_normalize (const GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  newcaps = gst_caps_copy (caps);
+  newcaps = _gst_caps_copy (caps);
   nf.caps = newcaps;
 
   for (i = 0; i < gst_caps_get_size (newcaps); i++) {
@@ -1890,7 +1815,7 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
 {
   gst_structure_set_parent_refcount (old, NULL);
   gst_structure_free (old);
-  gst_structure_set_parent_refcount (new, &caps->refcount);
+  gst_structure_set_parent_refcount (new, &GST_CAPS_REFCOUNT (caps));
   g_ptr_array_index (caps->structs, i) = new;
 }
 
@@ -2064,7 +1989,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   gchar *s;
 
   if (strcmp ("ANY", string) == 0) {
-    caps->flags = GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS_ANY;
     return TRUE;
   }
   if (strcmp ("EMPTY", string) == 0) {
@@ -2130,14 +2055,4 @@ gst_caps_transform_to_string (const GValue * src_value, GValue * dest_value)
 
   dest_value->data[0].v_pointer =
       gst_caps_to_string (src_value->data[0].v_pointer);
-}
-
-static GstCaps *
-gst_caps_copy_conditional (GstCaps * src)
-{
-  if (src) {
-    return gst_caps_ref (src);
-  } else {
-    return NULL;
-  }
 }

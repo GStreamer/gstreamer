@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_CAPS             (gst_caps_get_type())
 #define GST_CAPS(object)          ((GstCaps*)object)
-#define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
+#define GST_IS_CAPS(object)       ((object) && (GST_MINI_OBJECT_TYPE(object) == GST_TYPE_CAPS))
 
 #define GST_TYPE_STATIC_CAPS      (gst_static_caps_get_type())
 
@@ -125,28 +125,98 @@ typedef struct _GstStaticCaps GstStaticCaps;
 
 /**
  * GST_CAPS_FLAG_IS_SET:
- * @caps: a #GstBuffer.
- * @flag: the #GstBufferFlag to check.
+ * @caps: a #GstCaps.
+ * @flag: the #GstCapsFlag to check.
  *
  * Gives the status of a specific flag on a caps.
  */
 #define GST_CAPS_FLAG_IS_SET(caps,flag)        GST_MINI_OBJECT_FLAG_IS_SET (caps, flag)
 /**
  * GST_CAPS_FLAG_SET:
- * @caps: a #GstBuffer.
- * @flag: the #GstBufferFlag to set.
+ * @caps: a #GstCaps.
+ * @flag: the #GstCapsFlag to set.
  *
  * Sets a caps flag on a caps.
  */
 #define GST_CAPS_FLAG_SET(caps,flag)           GST_MINI_OBJECT_FLAG_SET (caps, flag)
 /**
  * GST_CAPS_FLAG_UNSET:
- * @caps: a #GstBuffer.
- * @flag: the #GstBufferFlag to clear.
+ * @caps: a #GstCaps.
+ * @flag: the #GstCapsFlag to clear.
  *
  * Clears a caps flag.
  */
 #define GST_CAPS_FLAG_UNSET(caps,flag)         GST_MINI_OBJECT_FLAG_UNSET (caps, flag)
+
+/* refcounting */
+/**
+ * gst_caps_ref:
+ * @caps: the #GstCaps to reference
+ *
+ * Add a reference to a #GstCaps object.
+ *
+ * From this point on, until the caller calls gst_caps_unref() or
+ * gst_caps_make_writable(), it is guaranteed that the caps object will not
+ * change. This means its structures won't change, etc. To use a #GstCaps
+ * object, you must always have a refcount on it -- either the one made
+ * implicitly by e.g. gst_caps_new_simple(), or via taking one explicitly with
+ * this function.
+ *
+ * Returns: the same #GstCaps object.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstCaps * gst_caps_ref (GstCaps * caps);
+#endif
+
+static inline GstCaps *
+gst_caps_ref (GstCaps * caps)
+{
+  return (GstCaps *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (caps));
+}
+
+/**
+ * gst_caps_unref:
+ * @caps: a #GstCaps.
+ *
+ * Unref a #GstCaps and and free all its structures and the
+ * structures' values when the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_caps_unref (GstCaps * caps);
+#endif
+
+static inline void
+gst_caps_unref (GstCaps * caps)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (caps));
+}
+
+/* copy caps */
+/**
+ * gst_caps_copy:
+ * @caps: a #GstCaps.
+ *
+ * Creates a new #GstCaps as a copy of the old @caps. The new caps will have a
+ * refcount of 1, owned by the caller. The structures are copied as well.
+ *
+ * Note that this function is the semantic equivalent of a gst_caps_ref()
+ * followed by a gst_caps_make_writable(). If you only want to hold on to a
+ * reference to the data, you should use gst_caps_ref().
+ *
+ * When you are finished with the caps, call gst_caps_unref() on it.
+ *
+ * Returns: the new #GstCaps
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstCaps * gst_caps_copy (const GstCaps * caps);
+#endif
+
+static inline GstCaps *
+gst_caps_copy (const GstCaps * caps)
+{
+  return GST_CAPS (gst_mini_object_copy (GST_MINI_OBJECT_CAST (caps)));
+}
+
 
 /**
  * GstCaps:
@@ -193,10 +263,7 @@ GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
                                                     va_list        var_args);
 
 /* reference counting */
-GstCaps *         gst_caps_ref                     (GstCaps       *caps);
-GstCaps *         gst_caps_copy                    (const GstCaps *caps);
-GstCaps *         gst_caps_make_writable           (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
-void              gst_caps_unref                   (GstCaps       *caps);
+GstCaps *         gst_caps_make_writable           (GstCaps       *caps);
 
 GType             gst_static_caps_get_type         (void);
 GstCaps *         gst_static_caps_get              (GstStaticCaps *static_caps);
