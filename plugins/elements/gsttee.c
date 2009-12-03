@@ -299,13 +299,19 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   /* ERRORS */
 activate_failed:
   {
+    gboolean changed = FALSE;
+
     GST_OBJECT_LOCK (tee);
     GST_DEBUG_OBJECT (tee, "warning failed to activate request pad");
-    if (tee->allocpad == srcpad)
+    if (tee->allocpad == srcpad) {
       tee->allocpad = NULL;
-    gst_object_unref (srcpad);
+      changed = TRUE;
+    }
     GST_OBJECT_UNLOCK (tee);
-    g_object_notify (G_OBJECT (tee), "alloc-pad");
+    gst_object_unref (srcpad);
+    if (changed) {
+      g_object_notify (G_OBJECT (tee), "alloc-pad");
+    }
     return NULL;
   }
 }
@@ -315,16 +321,21 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
 {
   GstTee *tee;
   PushData *data;
+  gboolean changed = FALSE;
 
   tee = GST_TEE (element);
 
   GST_DEBUG_OBJECT (tee, "releasing pad");
 
   GST_OBJECT_LOCK (tee);
-  if (tee->allocpad == pad)
+  if (tee->allocpad == pad) {
     tee->allocpad = NULL;
+    changed = TRUE;
+  }
   GST_OBJECT_UNLOCK (tee);
-  g_object_notify (G_OBJECT (tee), "alloc-pad");
+  if (changed) {
+    g_object_notify (G_OBJECT (tee), "alloc-pad");
+  }
 
   /* wait for pending pad_alloc to finish */
   GST_TEE_DYN_LOCK (tee);
