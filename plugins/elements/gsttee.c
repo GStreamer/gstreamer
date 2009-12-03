@@ -643,9 +643,25 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
     gst_tee_do_message (tee, tee->sinkpad, data, is_list);
 
   GST_OBJECT_LOCK (tee);
+  pads = GST_ELEMENT_CAST (tee)->srcpads;
+
+  /* special case for just one pad that avoids reffing the buffer */
+  if (!pads->next) {
+    GstPad *pad = GST_PAD_CAST (pads->data);
+
+    GST_OBJECT_UNLOCK (tee);
+    if (pad == tee->pull_pad) {
+      ret = GST_FLOW_OK;
+    } else if (!is_list) {
+      ret = gst_pad_push (pad, GST_BUFFER_CAST (data));
+    } else {
+      ret = gst_pad_push_list (pad, GST_BUFFER_LIST_CAST (data));
+    }
+    return ret;
+  }
 
   /* mark all pads as 'not pushed on yet' */
-  g_list_foreach (GST_ELEMENT_CAST (tee)->srcpads, (GFunc) clear_pads, tee);
+  g_list_foreach (pads, (GFunc) clear_pads, tee);
 
 restart:
   cret = GST_FLOW_NOT_LINKED;
