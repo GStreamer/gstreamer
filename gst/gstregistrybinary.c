@@ -524,7 +524,11 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   if (contents == NULL) {
     /* Error mmap-ing the cache, try a plain memory read */
     if (mapped) {
+#if GLIB_CHECK_VERSION(2,22,0)
+      g_mapped_file_unref (mapped);
+#else
       g_mapped_file_free (mapped);
+#endif
       mapped = NULL;
     }
 
@@ -602,7 +606,11 @@ Error:
   g_timer_destroy (timer);
 #endif
   if (mapped) {
+#if GLIB_CHECK_VERSION(2,22,0)
+    g_mapped_file_unref (mapped);
+#else
     g_mapped_file_free (mapped);
+#endif
   } else {
     g_free (contents);
   }
