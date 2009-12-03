@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-07 00:46+0100\n"
+"POT-Creation-Date: 2009-12-01 14:34+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -753,6 +753,13 @@ msgstr "File \"%s\" isn't a regular file."
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Could not get/set settings from/on resource."
+
 msgid "caps"
 msgstr "caps"
 
@@ -827,7 +834,8 @@ msgid "Print list of blacklisted files"
 msgstr ""
 
 msgid ""
-"Print a machine-parsable list of features the specified plugin provides.\n"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""

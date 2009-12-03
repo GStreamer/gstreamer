@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-07 00:46+0100\n"
+"POT-Creation-Date: 2009-12-01 14:34+0000\n"
 "PO-Revision-Date: 2009-04-16 21:51-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -765,6 +765,13 @@ msgstr "O arquivo \"%s\" é um soquete."
 msgid "Failed after iterations as requested."
 msgstr "Falha após as interações requeridas."
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Não foi possível obter informações em \"%s\"."
+
 msgid "caps"
 msgstr "Caps"
 
@@ -834,8 +841,10 @@ msgstr "Exibir todos elementos"
 msgid "Print list of blacklisted files"
 msgstr ""
 
+#, fuzzy
 msgid ""
-"Print a machine-parsable list of features the specified plugin provides.\n"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""

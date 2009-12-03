@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-07 00:46+0100\n"
+"POT-Creation-Date: 2009-12-01 14:34+0000\n"
 "PO-Revision-Date: 2009-09-18 16:57+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -745,6 +745,13 @@ msgstr "Tập tin « %s » là ổ cắm."
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
+msgid "No Temp directory specified."
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Không thể lấy thông tin về « %s »."
+
 msgid "caps"
 msgstr "khả năng"
 
@@ -810,8 +817,10 @@ msgstr "In ra mọi yếu tố"
 msgid "Print list of blacklisted files"
 msgstr ""
 
+#, fuzzy
 msgid ""
-"Print a machine-parsable list of features the specified plugin provides.\n"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
