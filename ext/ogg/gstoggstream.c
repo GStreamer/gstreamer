@@ -1169,6 +1169,8 @@ gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet * packet)
         GST_DEBUG ("got stream type %" GST_PTR_FORMAT, pad->caps);
         pad->map = i;
         return TRUE;
+      } else {
+        GST_WARNING ("mapper '%s' did not accept setup header", mappers[i].id);
       }
     }
   }
