@@ -580,27 +580,29 @@ gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   return res;
 }
 
+static void
+gst_tee_do_message (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
+{
+  GST_OBJECT_LOCK (tee);
+  g_free (tee->last_message);
+  if (is_list) {
+    tee->last_message =
+        g_strdup_printf ("chain-list   ******* (%s:%s)t %p",
+        GST_DEBUG_PAD_NAME (pad), data);
+  } else {
+    tee->last_message =
+        g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
+        G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
+        GST_BUFFER_SIZE (data), GST_BUFFER_TIMESTAMP (data), data);
+  }
+  GST_OBJECT_UNLOCK (tee);
+  g_object_notify (G_OBJECT (tee), "last_message");
+}
+
 static GstFlowReturn
 gst_tee_do_push (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
 {
   GstFlowReturn res;
-
-  if (G_UNLIKELY (!tee->silent)) {
-    GST_OBJECT_LOCK (tee);
-    g_free (tee->last_message);
-    if (is_list) {
-      tee->last_message =
-          g_strdup_printf ("chain-list   ******* (%s:%s)t %p",
-          GST_DEBUG_PAD_NAME (pad), data);
-    } else {
-      tee->last_message =
-          g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
-          G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
-          GST_BUFFER_SIZE (data), GST_BUFFER_TIMESTAMP (data), data);
-    }
-    GST_OBJECT_UNLOCK (tee);
-    g_object_notify (G_OBJECT (tee), "last_message");
-  }
 
   /* Push */
   if (pad == tee->pull_pad) {
@@ -637,7 +639,11 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   guint32 cookie;
   GstFlowReturn ret, cret;
 
+  if (G_UNLIKELY (!tee->silent))
+    gst_tee_do_message (tee, tee->sinkpad, data, is_list);
+
   GST_OBJECT_LOCK (tee);
+
   /* mark all pads as 'not pushed on yet' */
   g_list_foreach (GST_ELEMENT_CAST (tee)->srcpads, (GFunc) clear_pads, tee);
 
