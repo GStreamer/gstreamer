@@ -278,8 +278,7 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
 
   pad->granulerate_n = GST_READ_UINT32_BE (data + 22);
   pad->granulerate_d = GST_READ_UINT32_BE (data + 26);
-  GST_LOG ("fps = %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-      pad->granulerate_n, pad->granulerate_d);
+  GST_LOG ("fps = %d/%d", pad->granulerate_n, pad->granulerate_d);
 
   /* 2 bits + 3 bits = 5 bits KFGSHIFT */
   pad->granuleshift = ((GST_READ_UINT8 (data + 40) & 0x03) << 3) +
@@ -448,7 +447,7 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
   pad->last_size = 0;
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = 3;
 
@@ -513,7 +512,7 @@ setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = GST_READ_UINT32_LE (packet->packet + 68) + 2;
   pad->frame_size = GST_READ_UINT32_LE (packet->packet + 64) *
@@ -683,7 +682,7 @@ setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT64_LE (data + 25);
   pad->granulerate_d = 1;
 
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
   if (pad->granulerate_n == 0)
     return FALSE;
 
@@ -709,7 +708,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = 10000000;
   pad->granulerate_d = GST_READ_UINT64_LE (data + 17);
 
-  GST_LOG ("fps = %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %.3f",
+  GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
       (double) pad->granulerate_n / pad->granulerate_d);
 
@@ -739,7 +738,7 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = 10000000;
   pad->granulerate_d = GST_READ_UINT64_LE (data + 17);
 
-  GST_LOG ("fps = %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %.3f",
+  GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
       (double) pad->granulerate_n / pad->granulerate_d);
 
@@ -782,7 +781,7 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
 
   pad->granulerate_n = GST_READ_UINT32_LE (data + 16);
   pad->granulerate_d = 1;
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   format = GST_READ_UINT32_LE (data + 12);
   channels = GST_READ_UINT8 (data + 21);
@@ -893,7 +892,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT64_LE (data + 12);
   pad->granulerate_d = GST_READ_UINT64_LE (data + 20);
   pad->granuleshift = data[28];
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = 3;
 
@@ -919,7 +918,7 @@ setup_celt_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data + 36);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->frame_size = GST_READ_UINT32_LE (packet->packet + 44);
   pad->n_header_packets = GST_READ_UINT32_LE (packet->packet + 56) + 2;
@@ -943,7 +942,7 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_LE (data + 24);
   pad->granulerate_d = GST_READ_UINT32_LE (data + 28);
   pad->granuleshift = GST_READ_UINT8 (data + 15);
-  GST_LOG ("sample rate: %" G_GUINT64_FORMAT, pad->granulerate_n);
+  GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = GST_READ_UINT8 (data + 11);
 
