@@ -234,8 +234,6 @@ process_fft_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, \
   guint generated = 0; \
   gdouble re, im; \
   \
-  input_samples /= channels; \
-  \
   if (!fft_buffer) \
     self->fft_buffer = fft_buffer = \
         g_new (GstFFTF64Complex, frequency_response_length); \
@@ -270,7 +268,7 @@ process_fft_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, \
     } \
     buffer_fill += pass; \
     src += channels * pass; \
-    input_samples -= channels * pass; \
+    input_samples -= pass; \
     \
     /* If we don't have a complete buffer go out */ \
     if (buffer_fill < buffer_length) \
@@ -399,7 +397,7 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
   if (self->buffer_fill > kernel_length) \
     self->buffer_fill = kernel_length; \
   \
-  return input_samples; \
+  return input_samples / channels; \
 }
 
 DEFINE_PROCESS_FUNC (32, float);
@@ -448,8 +446,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       diffsize = diffsamples * channels * width;
       in = g_new0 (guint8, diffsize);
       out = g_new0 (guint8, diffsize);
-      self->nsamples_out +=
-          self->process (self, in, out, diffsamples * channels);
+      self->nsamples_out += self->process (self, in, out, diffsamples);
       g_free (in);
       g_free (out);
     }
@@ -468,8 +465,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     /* Convolve the residue with zeros to get the actual remaining data */
     in = g_new0 (guint8, outsize);
     self->nsamples_out +=
-        self->process (self, in, GST_BUFFER_DATA (outbuf),
-        outsamples * channels);
+        self->process (self, in, GST_BUFFER_DATA (outbuf), outsamples);
     g_free (in);
   } else {
     guint gensamples = 0;
@@ -479,9 +475,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     data = GST_BUFFER_DATA (outbuf);
 
     while (gensamples < outsamples) {
-      guint step_insamples =
-          (self->block_length - self->buffer_fill) * channels;
-      guint8 *zeroes = g_new0 (guint8, step_insamples * width);
+      guint step_insamples = self->block_length - self->buffer_fill;
+      guint8 *zeroes = g_new0 (guint8, step_insamples * channels * width);
       guint8 *out = g_new (guint8, self->block_length * channels * width);
       guint step_gensamples;
 
@@ -659,7 +654,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
 
   generated_samples =
       self->process (self, GST_BUFFER_DATA (inbuf), GST_BUFFER_DATA (outbuf),
-      input_samples * channels);
+      input_samples);
 
   g_assert (generated_samples <= output_samples);
   self->nsamples_out += generated_samples;
