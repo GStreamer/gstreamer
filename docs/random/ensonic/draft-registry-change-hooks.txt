@@ -21,6 +21,9 @@ Some usecases need to cache gstreamer capabilities. They need to know when the
 cache needs to be rebuilt. We could either export the registry mtime as api or
 do the following.
 
+This gets more useful once we can have more plugin/element metadata in the
+registry (e.g. mime-types for demuxers and codecs, see
+http://www.rfc-editor.org/rfc/rfc4281.txt).
 
 Proposal
 --------
