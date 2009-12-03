@@ -2042,6 +2042,7 @@ gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
 static gboolean
 gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
 {
+  gboolean is_newsegment;
   gboolean ret = TRUE;
   gint i;
 
@@ -2050,6 +2051,9 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "Sending event of type %s to all source pads",
       GST_EVENT_TYPE_NAME (event));
 
+  is_newsegment = (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
+
+  /* FIXME: access to demux->src is not thread-safe here */
   g_assert (demux->src->len == demux->num_streams);
   for (i = 0; i < demux->src->len; i++) {
     GstMatroskaTrackContext *stream;
@@ -2058,7 +2062,8 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
 
-    if (G_UNLIKELY (stream->pending_tags)) {
+    /* FIXME: send global tags before stream tags */
+    if (G_UNLIKELY (is_newsegment && stream->pending_tags != NULL)) {
       GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s : %"
           GST_PTR_FORMAT, stream->pending_tags,
           GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
@@ -2068,7 +2073,7 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     }
   }
 
-  if (G_UNLIKELY (demux->global_tags)) {
+  if (G_UNLIKELY (is_newsegment && demux->global_tags != NULL)) {
     gst_tag_list_add (demux->global_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_CONTAINER_FORMAT, "Matroska", NULL);
     GST_DEBUG_OBJECT (demux, "Sending global_tags %p : %" GST_PTR_FORMAT,
