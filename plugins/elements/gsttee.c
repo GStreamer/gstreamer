@@ -637,10 +637,6 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   guint32 cookie;
   GstFlowReturn ret, cret;
 
-  if (!is_list) {
-    tee->offset += GST_BUFFER_SIZE (data);
-  }
-
   GST_OBJECT_LOCK (tee);
   /* mark all pads as 'not pushed on yet' */
   g_list_foreach (GST_ELEMENT_CAST (tee)->srcpads, (GFunc) clear_pads, tee);
