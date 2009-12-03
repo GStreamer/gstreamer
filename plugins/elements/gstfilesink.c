@@ -381,7 +381,7 @@ gst_file_sink_open_file (GstFileSink * sink)
 
   /* see if we are asked to perform a specific kind of buffering */
   if ((mode = sink->buffer_mode) != -1) {
-    gsize buffer_size;
+    guint buffer_size;
 
     /* free previous buffer if any */
     g_free (sink->buffer);
@@ -396,10 +396,10 @@ gst_file_sink_open_file (GstFileSink * sink)
       buffer_size = sink->buffer_size;
     }
 #ifdef HAVE_STDIO_EXT_H
-    GST_DEBUG_OBJECT (sink, "change buffer size %d to %d, mode %d",
-        __fbufsize (sink->file), buffer_size, mode);
+    GST_DEBUG_OBJECT (sink, "change buffer size %u to %u, mode %d",
+        (guint) __fbufsize (sink->file), buffer_size, mode);
 #else
-    GST_DEBUG_OBJECT (sink, "change  buffer size to %d, mode %d",
+    GST_DEBUG_OBJECT (sink, "change  buffer size to %u, mode %d",
         sink->buffer_size, mode);
 #endif
     if (setvbuf (sink->file, sink->buffer, mode, buffer_size) != 0) {

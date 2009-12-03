@@ -585,8 +585,8 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, gsize size,
 
   g_return_val_if_fail (offset >= 0, NULL);
 
-  GST_LOG_OBJECT (src, "mapping region %08llx+%08lx from file into memory",
-      offset, (gulong) size);
+  GST_LOG_OBJECT (src, "mapping region %08" G_GOFFSET_MODIFIER "x+%08lx "
+      "from file into memory", (goffset) offset, (gulong) size);
 
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
