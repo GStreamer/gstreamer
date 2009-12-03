@@ -2250,7 +2250,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
     chain->segment_stop = GST_CLOCK_TIME_NONE;
   }
 
-  GST_INFO ("segment stop %lld", chain->segment_stop);
+  GST_INFO ("segment stop %" G_GUINT64_FORMAT, chain->segment_stop);
 
   return GST_FLOW_OK;
 }
@@ -2330,7 +2330,7 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
       && chain->segment_start != G_MAXUINT64)
     chain->total_time = chain->segment_stop - chain->segment_start;
 
-  GST_DEBUG ("total time %lld", chain->total_time);
+  GST_DEBUG ("total time %" G_GUINT64_FORMAT, chain->total_time);
 
   GST_DEBUG_OBJECT (ogg, "return %d", res);
 

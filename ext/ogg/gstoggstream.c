@@ -416,7 +416,7 @@ granulepos_to_granule_dirac (GstOggStream * pad, gint64 gp)
   delay = (gp >> 9) & 0x1fff;
   dt = pt - delay;
 
-  GST_DEBUG ("pt %lld delay %d", pt, delay);
+  GST_DEBUG ("pt %" G_GINT64_FORMAT " delay %d", pt, delay);
 
   return dt + 4;
 }
