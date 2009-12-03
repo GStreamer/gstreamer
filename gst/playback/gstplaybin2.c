@@ -2970,13 +2970,12 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 {
   GstCaps *subcaps;
   gboolean ret = FALSE;
-  GstPlayBin *playbin = group->playbin;
 
   subcaps = gst_subtitle_overlay_create_factory_caps ();
   ret = !gst_caps_can_intersect (subcaps, caps);
   gst_caps_unref (subcaps);
 
-  GST_DEBUG_OBJECT (playbin,
+  GST_DEBUG_OBJECT (group->playbin,
       "continue autoplugging group %p for %s:%s, %" GST_PTR_FORMAT ": %d",
       group, GST_DEBUG_PAD_NAME (pad), caps, ret);
 
