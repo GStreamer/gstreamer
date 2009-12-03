@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
+#include <gst/fft/gstfftf64.h>
 
 G_BEGIN_DECLS
 
@@ -54,17 +55,26 @@ typedef guint (*GstAudioFXBaseFIRFilterProcessFunc) (GstAudioFXBaseFIRFilter *, 
 struct _GstAudioFXBaseFIRFilter {
   GstAudioFilter element;
 
-  /* < private > */
-  GstAudioFXBaseFIRFilterProcessFunc process;
-
+  /* properties */
   gdouble *kernel;              /* filter kernel -- time domain */
   guint kernel_length;          /* length of the filter kernel -- time domain */
 
+  guint64 latency;              /* pre-latency of the filter kernel */
+
+  /* < private > */
+  GstAudioFXBaseFIRFilterProcessFunc process;
+
   gdouble *buffer;              /* buffer for storing samples of previous buffers */
   guint buffer_fill;            /* fill level of buffer */
-  guint buffer_length;          /* length of the buffer */
+  guint buffer_length;          /* length of the buffer -- meaning depends on processing mode */
 
-  guint64 latency;
+  /* FFT convolution specific data */
+  GstFFTF64 *fft;
+  GstFFTF64 *ifft;
+  GstFFTF64Complex *frequency_response;  /* filter kernel -- frequency domain */
+  guint frequency_response_length;       /* length of filter kernel -- frequency domain */
+  GstFFTF64Complex *fft_buffer;          /* FFT buffer, has the length of the frequency response */
+  guint block_length;                    /* Length of the processing blocks -- time domain */
 
   GstClockTime start_ts;        /* start timestamp after a discont */
   guint64 start_off;            /* start offset after a discont */
