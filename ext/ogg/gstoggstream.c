@@ -441,8 +441,11 @@ static gboolean
 setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
+  guint chans;
 
-  data += 1 + 6 + 4 + 1;
+  data += 1 + 6 + 4;
+  chans = GST_READ_UINT8 (data);
+  data += 1;
   pad->granulerate_n = GST_READ_UINT32_LE (data);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
@@ -457,7 +460,8 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   parse_vorbis_header_packet (pad, packet);
 
   pad->caps = gst_caps_new_simple ("audio/x-vorbis",
-      "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+      "rate", G_TYPE_INT, pad->granulerate_n, "channels", G_TYPE_INT, chans,
+      NULL);
 
   return TRUE;
 }
@@ -507,12 +511,17 @@ static gboolean
 setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
+  guint chans;
 
   data += 8 + 20 + 4 + 4;
   pad->granulerate_n = GST_READ_UINT32_LE (data);
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
-  GST_LOG ("sample rate: %d", pad->granulerate_n);
+
+  data += 4 + 4 + 4;
+  chans = GST_READ_UINT32_LE (data);
+
+  GST_LOG ("sample rate: %d, channels: %u", pad->granulerate_n, chans);
 
   pad->n_header_packets = GST_READ_UINT32_LE (packet->packet + 68) + 2;
   pad->frame_size = GST_READ_UINT32_LE (packet->packet + 64) *
@@ -521,8 +530,8 @@ setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_n == 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_simple ("audio/x-speex",
-      "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  pad->caps = gst_caps_new_simple ("audio/x-speex", "rate", G_TYPE_INT,
+      pad->granulerate_n, "channels", G_TYPE_INT, chans, NULL);
 
   return TRUE;
 }
@@ -541,21 +550,24 @@ static gboolean
 setup_flac_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
+  guint chans;
 
   /* see http://flac.sourceforge.net/ogg_mapping.html */
 
   pad->granulerate_n = (GST_READ_UINT32_BE (data + 27) & 0xFFFFF000) >> 12;
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
-  GST_DEBUG ("sample rate: %d", pad->granulerate_n);
+  chans = ((GST_READ_UINT32_BE (data + 27) & 0x00000E00) >> 9) + 1;
+
+  GST_DEBUG ("sample rate: %d, channels: %u", pad->granulerate_n, chans);
 
   pad->n_header_packets = GST_READ_UINT16_BE (packet->packet + 7);
 
   if (pad->granulerate_n == 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_simple ("audio/x-flac",
-      "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  pad->caps = gst_caps_new_simple ("audio/x-flac", "rate", G_TYPE_INT,
+      pad->granulerate_n, "channels", G_TYPE_INT, chans, NULL);
 
   return TRUE;
 }
