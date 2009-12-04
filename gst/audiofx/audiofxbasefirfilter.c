@@ -56,6 +56,14 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 /* Switch from time-domain to FFT convolution for kernels >= this */
 #define FFT_THRESHOLD 32
 
+enum
+{
+  PROP_0 = 0,
+  PROP_LOW_LATENCY
+};
+
+#define DEFAULT_LOW_LATENCY FALSE
+
 GST_BOILERPLATE_FULL (GstAudioFXBaseFIRFilter, gst_audio_fx_base_fir_filter,
     GstAudioFilter, GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
@@ -76,82 +84,83 @@ static gboolean gst_audio_fx_base_fir_filter_query (GstPad * pad,
 static const GstQueryType *gst_audio_fx_base_fir_filter_query_type (GstPad *
     pad);
 
-/* Element class */
-
-static void
-gst_audio_fx_base_fir_filter_dispose (GObject * object)
-{
-  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
-
-  g_free (self->buffer);
-  self->buffer = NULL;
-  self->buffer_length = 0;
-
-  g_free (self->kernel);
-  self->kernel = NULL;
-
-  gst_fft_f64_free (self->fft);
-  self->fft = NULL;
-  gst_fft_f64_free (self->ifft);
-  self->ifft = NULL;
-
-  g_free (self->frequency_response);
-  self->frequency_response = NULL;
-
-  g_free (self->fft_buffer);
-  self->fft_buffer = NULL;
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+/* 
+ * The code below calculates the linear convolution:
+ *
+ * y[t] = \sum_{u=0}^{M-1} x[t - u] * h[u]
+ *
+ * where y is the output, x is the input, M is the length
+ * of the filter kernel and h is the filter kernel. For x
+ * holds: x[t] == 0 \forall t < 0.
+ *
+ * The runtime complexity of this is O (M) per sample.
+ *
+ */
+#define DEFINE_PROCESS_FUNC(width,ctype) \
+static guint \
+process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype * dst, guint input_samples) \
+{ \
+  gint kernel_length = self->kernel_length; \
+  gint i, j, k, l; \
+  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
+  gint res_start; \
+  gint from_input; \
+  gint off; \
+  gdouble *buffer = self->buffer; \
+  gdouble *kernel = self->kernel; \
+  guint buffer_length = self->buffer_length; \
+  \
+  if (!buffer) { \
+    self->buffer_length = buffer_length = kernel_length * channels; \
+    self->buffer = buffer = g_new0 (gdouble, self->buffer_length); \
+  } \
+  \
+  /* convolution */ \
+  for (i = 0; i < input_samples; i++) { \
+    dst[i] = 0.0; \
+    k = i % channels; \
+    l = i / channels; \
+    from_input = MIN (l, kernel_length-1); \
+    off = l * channels + k; \
+    for (j = 0; j <= from_input; j++) { \
+      dst[i] += src[off] * kernel[j]; \
+      off -= channels; \
+    } \
+    /* j == from_input && off == (l - j) * channels + k */ \
+    off += kernel_length * channels; \
+    for (; j < kernel_length; j++) { \
+      dst[i] += buffer[off] * kernel[j]; \
+      off -= channels; \
+    } \
+  } \
+  \
+  /* copy the tail of the current input buffer to the residue, while \
+   * keeping parts of the residue if the input buffer is smaller than \
+   * the kernel length */ \
+  /* from now on take kernel length as length over all channels */ \
+  kernel_length *= channels; \
+  if (input_samples < kernel_length) \
+    res_start = kernel_length - input_samples; \
+  else \
+    res_start = 0; \
+  \
+  for (i = 0; i < res_start; i++) \
+    buffer[i] = buffer[i + input_samples]; \
+  /* i == res_start */ \
+  for (; i < kernel_length; i++) \
+    buffer[i] = src[input_samples - kernel_length + i]; \
+  \
+  self->buffer_fill += kernel_length - res_start; \
+  if (self->buffer_fill > kernel_length) \
+    self->buffer_fill = kernel_length; \
+  \
+  return input_samples / channels; \
 }
 
-static void
-gst_audio_fx_base_fir_filter_base_init (gpointer g_class)
-{
-  GstCaps *caps;
+DEFINE_PROCESS_FUNC (32, float);
+DEFINE_PROCESS_FUNC (64, double);
 
-  caps = gst_caps_from_string (ALLOWED_CAPS);
-  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
-      caps);
-  gst_caps_unref (caps);
-}
-
-static void
-gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
-  GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
-
-  gobject_class->dispose = gst_audio_fx_base_fir_filter_dispose;
-
-  trans_class->transform =
-      GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform);
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_start);
-  trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_stop);
-  trans_class->event = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_event);
-  trans_class->transform_size =
-      GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform_size);
-  filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_setup);
-}
-
-static void
-gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
-    GstAudioFXBaseFIRFilterClass * g_class)
-{
-  self->kernel = NULL;
-  self->buffer = NULL;
-  self->buffer_length = 0;
-
-  self->start_ts = GST_CLOCK_TIME_NONE;
-  self->start_off = GST_BUFFER_OFFSET_NONE;
-  self->nsamples_out = 0;
-  self->nsamples_in = 0;
-
-  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
-      gst_audio_fx_base_fir_filter_query);
-  gst_pad_set_query_type_function (GST_BASE_TRANSFORM (self)->srcpad,
-      gst_audio_fx_base_fir_filter_query_type);
-}
+#undef DEFINE_PROCESS_FUNC
 
 /* This implements FFT convolution and uses the overlap-save algorithm.
  * See http://cnx.org/content/m12022/latest/ or your favorite
@@ -321,83 +330,209 @@ DEFINE_FFT_PROCESS_FUNC (64, double);
 
 #undef DEFINE_FFT_PROCESS_FUNC
 
-/* 
- * The code below calculates the linear convolution:
- *
- * y[t] = \sum_{u=0}^{M-1} x[t - u] * h[u]
- *
- * where y is the output, x is the input, M is the length
- * of the filter kernel and h is the filter kernel. For x
- * holds: x[t] == 0 \forall t < 0.
- *
- * The runtime complexity of this is O (M) per sample.
- *
- */
-#define DEFINE_PROCESS_FUNC(width,ctype) \
-static guint \
-process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype * dst, guint input_samples) \
-{ \
-  gint kernel_length = self->kernel_length; \
-  gint i, j, k, l; \
-  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
-  gint res_start; \
-  gint from_input; \
-  gint off; \
-  gdouble *buffer = self->buffer; \
-  gdouble *kernel = self->kernel; \
-  guint buffer_length = self->buffer_length; \
-  \
-  if (!buffer) { \
-    self->buffer_length = buffer_length = kernel_length * channels; \
-    self->buffer = buffer = g_new0 (gdouble, self->buffer_length); \
-  } \
-  \
-  /* convolution */ \
-  for (i = 0; i < input_samples; i++) { \
-    dst[i] = 0.0; \
-    k = i % channels; \
-    l = i / channels; \
-    from_input = MIN (l, kernel_length-1); \
-    off = l * channels + k; \
-    for (j = 0; j <= from_input; j++) { \
-      dst[i] += src[off] * kernel[j]; \
-      off -= channels; \
-    } \
-    /* j == from_input && off == (l - j) * channels + k */ \
-    off += kernel_length * channels; \
-    for (; j < kernel_length; j++) { \
-      dst[i] += buffer[off] * kernel[j]; \
-      off -= channels; \
-    } \
-  } \
-  \
-  /* copy the tail of the current input buffer to the residue, while \
-   * keeping parts of the residue if the input buffer is smaller than \
-   * the kernel length */ \
-  /* from now on take kernel length as length over all channels */ \
-  kernel_length *= channels; \
-  if (input_samples < kernel_length) \
-    res_start = kernel_length - input_samples; \
-  else \
-    res_start = 0; \
-  \
-  for (i = 0; i < res_start; i++) \
-    buffer[i] = buffer[i + input_samples]; \
-  /* i == res_start */ \
-  for (; i < kernel_length; i++) \
-    buffer[i] = src[input_samples - kernel_length + i]; \
-  \
-  self->buffer_fill += kernel_length - res_start; \
-  if (self->buffer_fill > kernel_length) \
-    self->buffer_fill = kernel_length; \
-  \
-  return input_samples / channels; \
+/* Element class */
+static void
+    gst_audio_fx_base_fir_filter_calculate_frequency_response
+    (GstAudioFXBaseFIRFilter * self)
+{
+  gst_fft_f64_free (self->fft);
+  self->fft = NULL;
+  gst_fft_f64_free (self->ifft);
+  self->ifft = NULL;
+  g_free (self->frequency_response);
+  self->frequency_response_length = 0;
+  g_free (self->fft_buffer);
+  self->fft_buffer = NULL;
+
+  if (self->kernel && self->kernel_length >= FFT_THRESHOLD
+      && !self->low_latency) {
+    guint block_length, i;
+    gdouble *kernel_tmp, *kernel = self->kernel;
+
+    /* We process 4 * kernel_length samples per pass in FFT mode */
+    block_length = 4 * self->kernel_length;
+    block_length = gst_fft_next_fast_length (block_length);
+    self->block_length = block_length;
+
+    kernel_tmp = g_new0 (gdouble, block_length);
+    memcpy (kernel_tmp, kernel, self->block_length * sizeof (gdouble));
+
+    self->fft = gst_fft_f64_new (block_length, FALSE);
+    self->ifft = gst_fft_f64_new (block_length, TRUE);
+    self->frequency_response_length = block_length / 2 + 1;
+    self->frequency_response =
+        g_new (GstFFTF64Complex, self->frequency_response_length);
+    gst_fft_f64_fft (self->fft, kernel_tmp, self->frequency_response);
+    g_free (kernel_tmp);
+
+    /* Normalize to make sure IFFT(FFT(x)) == x */
+    for (i = 0; i < self->frequency_response_length; i++) {
+      self->frequency_response[i].r /= block_length;
+      self->frequency_response[i].i /= block_length;
+    }
+  }
 }
 
-DEFINE_PROCESS_FUNC (32, float);
-DEFINE_PROCESS_FUNC (64, double);
+/* Must be called with base transform lock! */
+static void
+gst_audio_fx_base_fir_filter_select_process_function (GstAudioFXBaseFIRFilter *
+    self, gint width)
+{
+  if (width == 32 && self->fft && !self->low_latency)
+    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_32;
+  else if (width == 64 && self->fft && !self->low_latency)
+    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_64;
+  else if (width == 32)
+    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_32;
+  else if (width == 64)
+    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_64;
+  else
+    self->process = NULL;
+}
 
-#undef DEFINE_PROCESS_FUNC
+static void
+gst_audio_fx_base_fir_filter_dispose (GObject * object)
+{
+  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
+
+  g_free (self->buffer);
+  self->buffer = NULL;
+  self->buffer_length = 0;
+
+  g_free (self->kernel);
+  self->kernel = NULL;
+
+  gst_fft_f64_free (self->fft);
+  self->fft = NULL;
+  gst_fft_f64_free (self->ifft);
+  self->ifft = NULL;
+
+  g_free (self->frequency_response);
+  self->frequency_response = NULL;
+
+  g_free (self->fft_buffer);
+  self->fft_buffer = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_audio_fx_base_fir_filter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_LOW_LATENCY:{
+      gboolean low_latency;
+
+      if (GST_STATE (self) >= GST_STATE_PAUSED) {
+        g_warning ("Changing the \"low-latency\" property "
+            "is only allowed in states < PAUSED");
+        return;
+      }
+
+      GST_BASE_TRANSFORM_LOCK (self);
+      low_latency = g_value_get_boolean (value);
+
+      if (self->low_latency != low_latency) {
+        self->low_latency = low_latency;
+        gst_audio_fx_base_fir_filter_calculate_frequency_response (self);
+        gst_audio_fx_base_fir_filter_select_process_function (self,
+            GST_AUDIO_FILTER_CAST (self)->format.width);
+      }
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_audio_fx_base_fir_filter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_LOW_LATENCY:
+      g_value_set_boolean (value, self->low_latency);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_audio_fx_base_fir_filter_base_init (gpointer g_class)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
+      caps);
+  gst_caps_unref (caps);
+}
+
+static void
+gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstAudioFilterClass *filter_class = (GstAudioFilterClass *) klass;
+
+  gobject_class->dispose = gst_audio_fx_base_fir_filter_dispose;
+  gobject_class->set_property = gst_audio_fx_base_fir_filter_set_property;
+  gobject_class->get_property = gst_audio_fx_base_fir_filter_get_property;
+
+  /**
+   * GstAudioFXBaseFIRFilter::low-latency:
+   *
+   * Work in low-latency mode. This mode is much slower for large filter sizes
+   * but the latency is always only the pre-latency of the filter.
+   *
+   * Since: 0.10.18
+   */
+  g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
+      g_param_spec_boolean ("low-latency", "Low latency",
+          "Operate in low latency mode. This mode is slower but the "
+          "latency will only be the filter pre-latency. "
+          "Can only be changed in states < PAUSED!", DEFAULT_LOW_LATENCY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  trans_class->transform =
+      GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform);
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_start);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_stop);
+  trans_class->event = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_event);
+  trans_class->transform_size =
+      GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform_size);
+  filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_setup);
+}
+
+static void
+gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
+    GstAudioFXBaseFIRFilterClass * g_class)
+{
+  self->kernel = NULL;
+  self->buffer = NULL;
+  self->buffer_length = 0;
+
+  self->start_ts = GST_CLOCK_TIME_NONE;
+  self->start_off = GST_BUFFER_OFFSET_NONE;
+  self->nsamples_out = 0;
+  self->nsamples_in = 0;
+
+  self->low_latency = DEFAULT_LOW_LATENCY;
+
+  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
+      gst_audio_fx_base_fir_filter_query);
+  gst_pad_set_query_type_function (GST_BASE_TRANSFORM (self)->srcpad,
+      gst_audio_fx_base_fir_filter_query_type);
+}
 
 void
 gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
@@ -428,7 +563,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   }
   outsize = outsamples * channels * width;
 
-  if (!self->fft) {
+  if (!self->fft || self->low_latency) {
     gint64 diffsize, diffsamples;
 
     /* Process the difference between latency and residue length samples
@@ -529,7 +664,6 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     GstRingBufferSpec * format)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
-  gboolean ret = TRUE;
 
   if (self->buffer) {
     gst_audio_fx_base_fir_filter_push_residue (self);
@@ -543,17 +677,9 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     self->nsamples_in = 0;
   }
 
-  if (format->width == 32 && self->fft)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_32;
-  else if (format->width == 64 && self->fft)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_64;
-  else if (format->width == 32)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_32;
-  else if (format->width == 64)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_64;
-  ret = FALSE;
+  gst_audio_fx_base_fir_filter_select_process_function (self, format->width);
 
-  return TRUE;
+  return (self->process != NULL);
 }
 
 /* GstBaseTransform vmethod implementations */
@@ -568,7 +694,7 @@ gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform * base,
   GstStructure *s;
   gint width, channels;
 
-  if (!self->fft || direction == GST_PAD_SRC) {
+  if (!self->fft || self->low_latency || direction == GST_PAD_SRC) {
     *othersize = size;
     return TRUE;
   }
@@ -747,7 +873,7 @@ gst_audio_fx_base_fir_filter_query (GstPad * pad, GstQuery * query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          if (self->fft)
+          if (self->fft && !self->low_latency)
             latency = self->block_length - self->kernel_length + 1;
           else
             latency = self->latency;
@@ -815,10 +941,7 @@ void
 gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
     gdouble * kernel, guint kernel_length, guint64 latency)
 {
-  gdouble *kernel_tmp;
-  guint i;
   gboolean latency_changed;
-  gint width;
 
   g_return_if_fail (kernel != NULL);
   g_return_if_fail (self != NULL);
@@ -834,8 +957,9 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   }
 
   latency_changed = (self->latency != latency
-      || (self->kernel_length < FFT_THRESHOLD && kernel_length >= FFT_THRESHOLD)
-      || (self->kernel_length >= FFT_THRESHOLD
+      || (!self->low_latency && self->kernel_length < FFT_THRESHOLD
+          && kernel_length >= FFT_THRESHOLD)
+      || (!self->low_latency && self->kernel_length >= FFT_THRESHOLD
           && kernel_length < FFT_THRESHOLD));
 
   g_free (self->kernel);
@@ -844,51 +968,12 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   self->buffer_fill = 0;
   self->buffer_length = 0;
 
-  gst_fft_f64_free (self->fft);
-  self->fft = NULL;
-  gst_fft_f64_free (self->ifft);
-  self->ifft = NULL;
-  g_free (self->frequency_response);
-  self->frequency_response_length = 0;
-  g_free (self->fft_buffer);
-  self->fft_buffer = NULL;
-
   self->kernel = kernel;
   self->kernel_length = kernel_length;
 
-  if (kernel_length >= FFT_THRESHOLD) {
-    /* We process 4 * kernel_length samples per pass in FFT mode */
-    kernel_length = 4 * kernel_length;
-    kernel_length = gst_fft_next_fast_length (kernel_length);
-    self->block_length = kernel_length;
-
-    kernel_tmp = g_new0 (gdouble, kernel_length);
-    memcpy (kernel_tmp, kernel, self->kernel_length * sizeof (gdouble));
-
-    self->fft = gst_fft_f64_new (kernel_length, FALSE);
-    self->ifft = gst_fft_f64_new (kernel_length, TRUE);
-    self->frequency_response_length = kernel_length / 2 + 1;
-    self->frequency_response =
-        g_new (GstFFTF64Complex, self->frequency_response_length);
-    gst_fft_f64_fft (self->fft, kernel_tmp, self->frequency_response);
-    g_free (kernel_tmp);
-
-    /* Normalize to make sure IFFT(FFT(x)) == x */
-    for (i = 0; i < self->frequency_response_length; i++) {
-      self->frequency_response[i].r /= kernel_length;
-      self->frequency_response[i].i /= kernel_length;
-    }
-  }
-
-  width = GST_AUDIO_FILTER_CAST (self)->format.width;
-  if (width == 32 && self->fft)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_32;
-  else if (width == 64 && self->fft)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_64;
-  else if (width == 32)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_32;
-  else if (width == 64)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_64;
+  gst_audio_fx_base_fir_filter_calculate_frequency_response (self);
+  gst_audio_fx_base_fir_filter_select_process_function (self,
+      GST_AUDIO_FILTER_CAST (self)->format.width);
 
   if (latency_changed) {
     self->latency = latency;

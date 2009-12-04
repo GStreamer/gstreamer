@@ -60,6 +60,7 @@ struct _GstAudioFXBaseFIRFilter {
   guint kernel_length;          /* length of the filter kernel -- time domain */
 
   guint64 latency;              /* pre-latency of the filter kernel */
+  gboolean low_latency;         /* work in slower low latency mode */
 
   /* < private > */
   GstAudioFXBaseFIRFilterProcessFunc process;
