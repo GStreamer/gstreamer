@@ -462,13 +462,46 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   gint64 current_time;
   GstOggChain *chain;
   gint64 duration;
+  int offset;
+  int trim;
 
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08x", pad, pad->map.serialno);
 
+  if (pad->map.is_ogm) {
+    const guint8 *data;
+
+    data = packet->packet;
+
+    if (data[0] & 1) {
+      /* We don't push header packets for OGM */
+      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+      goto done;
+    }
+
+    offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
+
+    if (offset > packet->bytes) {
+      GST_ERROR ("buffer too small");
+      //goto buffer_too_small;
+    }
+    if (pad->map.is_ogm) {
+      trim = 0;
+      while (data[packet->bytes - 1 - trim] == 0) {
+        trim++;
+      }
+    } else {
+      trim = 0;
+    }
+  } else {
+    offset = 0;
+    trim = 0;
+  }
+
   ret =
       gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
-      GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (pad), &buf);
+      GST_BUFFER_OFFSET_NONE, packet->bytes - offset - trim,
+      GST_PAD_CAPS (pad), &buf);
 
   /* combine flows */
   cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
@@ -476,7 +509,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     goto no_buffer;
 
   /* copy packet in buffer */
-  memcpy (buf->data, packet->packet, packet->bytes);
+  memcpy (buf->data, packet->packet + offset, packet->bytes - offset - trim);
 
   duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
 
@@ -494,10 +527,17 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
           gst_ogg_stream_granulepos_to_key_granule (&pad->map,
           packet->granulepos);
     }
-    GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-        pad->current_granule - duration);
-    GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-        pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
+    if (pad->map.is_ogm) {
+      GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule);
+      GST_BUFFER_DURATION (buf) = gst_util_uint64_scale (duration,
+          GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+    } else {
+      GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule - duration);
+      GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
+    }
     GST_BUFFER_OFFSET_END (buf) =
         gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
         pad->keyframe_granule);

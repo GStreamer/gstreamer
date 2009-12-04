@@ -25,6 +25,8 @@
 #include "gstoggstream.h"
 #include "dirac_parse.h"
 
+#include <gst/riff/riff-media.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_ogg_demux_debug);
@@ -241,12 +243,14 @@ granule_to_granulepos_default (GstOggStream * pad, gint64 granule,
   }
 }
 
+#ifdef unused
 static gboolean
 is_header_unknown (GstOggStream * pad, ogg_packet * packet)
 {
   GST_WARNING ("don't know how to detect header");
   return FALSE;
 }
+#endif
 
 static gboolean
 is_header_true (GstOggStream * pad, ogg_packet * packet)
@@ -688,10 +692,6 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
   return TRUE;
 }
 
-#define STREAMHEADER_OGM_AUDIO_MIN_SIZE  53
-#define STREAMHEADER_OGM_VIDEO_MIN_SIZE  53
-#define STREAMHEADER_OGM_TEXT_MIN_SIZE    9
-
 /* Do we need these for something?
  * ogm->hdr.size = GST_READ_UINT32_LE (&data[13]);
  * ogm->hdr.time_unit = GST_READ_UINT64_LE (&data[17]);
@@ -702,27 +702,67 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
  */
 
 static gboolean
+is_header_ogm (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes >= 1 && (packet->packet[0] & 0x01)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gint64
+packet_duration_ogm (GstOggStream * pad, ogg_packet * packet)
+{
+  const guint8 *data;
+  int samples;
+  int offset;
+  int n;
+
+  data = packet->packet;
+  offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
+
+  if (offset > packet->bytes) {
+    GST_ERROR ("buffer too small");
+    return -1;
+  }
+
+  samples = 0;
+  for (n = offset - 1; n > 0; n--) {
+    samples = (samples << 8) | data[n];
+  }
+
+  return samples;
+}
+
+static gboolean
 setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
-  guint size = packet->bytes;
-
-  if (size < STREAMHEADER_OGM_AUDIO_MIN_SIZE ||
-      memcmp (data, "\001audio\000\000\000", 9) != 0) {
-    GST_WARNING ("not an ogm audio identification header");
-    return FALSE;
-  }
+  guint32 fourcc;
 
   pad->granulerate_n = GST_READ_UINT64_LE (data + 25);
   pad->granulerate_d = 1;
+
+  fourcc = GST_READ_UINT32_LE (data + 9);
+  GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+
+  pad->caps = gst_riff_create_audio_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
 
   GST_LOG ("sample rate: %d", pad->granulerate_n);
   if (pad->granulerate_n == 0)
     return FALSE;
 
-  /* FIXME */
-  pad->caps = gst_caps_new_simple ("audio/x-unknown",
-      "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  if (pad->caps) {
+    gst_caps_set_simple (pad->caps,
+        "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  } else {
+    pad->caps = gst_caps_new_simple ("audio/x-ogm-unknown",
+        "fourcc", GST_TYPE_FOURCC, fourcc,
+        "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  }
+
+  pad->n_header_packets = 1;
+  pad->is_ogm = TRUE;
 
   return TRUE;
 }
@@ -731,28 +771,47 @@ static gboolean
 setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
-  guint size = packet->bytes;
+  guint32 fourcc;
+  int width, height;
+  gint64 time_unit;
 
-  if (size < STREAMHEADER_OGM_VIDEO_MIN_SIZE ||
-      memcmp (data, "\001video\000\000\000", 9) != 0) {
-    GST_WARNING ("not an ogm video identification header");
-    return FALSE;
-  }
+  GST_DEBUG ("time unit %d", GST_READ_UINT32_LE (data + 16));
+  GST_DEBUG ("samples per unit %d", GST_READ_UINT32_LE (data + 24));
 
   pad->granulerate_n = 10000000;
-  pad->granulerate_d = GST_READ_UINT64_LE (data + 17);
+  time_unit = GST_READ_UINT64_LE (data + 17);
+  if (time_unit > G_MAXINT || time_unit < G_MININT) {
+    GST_WARNING ("timeunit is out of range");
+  }
+  pad->granulerate_d = (gint) CLAMP (time_unit, G_MININT, G_MAXINT);
 
   GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
       (double) pad->granulerate_n / pad->granulerate_d);
 
-  if (pad->granulerate_d <= 0)
-    return FALSE;
+  fourcc = GST_READ_UINT32_LE (data + 9);
+  width = GST_READ_UINT32_LE (data + 45);
+  height = GST_READ_UINT32_LE (data + 49);
+  GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
-  /* FIXME */
-  pad->caps = gst_caps_new_simple ("video/x-unknown",
-      "framerate", GST_TYPE_FRACTION, pad->granulerate_n,
-      pad->granulerate_d, NULL);
+  pad->caps = gst_riff_create_video_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
+
+  if (pad->caps == NULL) {
+    pad->caps = gst_caps_new_simple ("video/x-ogm-unknown",
+        "fourcc", GST_TYPE_FOURCC, fourcc,
+        "framerate", GST_TYPE_FRACTION, pad->granulerate_n,
+        pad->granulerate_d, NULL);
+  } else {
+    gst_caps_set_simple (pad->caps,
+        "framerate", GST_TYPE_FRACTION, pad->granulerate_n,
+        pad->granulerate_d,
+        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+  }
+  GST_DEBUG ("caps: %" GST_PTR_FORMAT, pad->caps);
+
+  pad->n_header_packets = 1;
+  pad->frame_size = 1;
+  pad->is_ogm = TRUE;
 
   return TRUE;
 }
@@ -761,16 +820,14 @@ static gboolean
 setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
-  guint size = packet->bytes;
-
-  if (size < STREAMHEADER_OGM_AUDIO_MIN_SIZE ||
-      memcmp (data, "\001text\000\000\000\000", 9) != 0) {
-    GST_WARNING ("not an ogm text identification header");
-    return FALSE;
-  }
+  gint64 time_unit;
 
   pad->granulerate_n = 10000000;
-  pad->granulerate_d = GST_READ_UINT64_LE (data + 17);
+  time_unit = GST_READ_UINT64_LE (data + 17);
+  if (time_unit > G_MAXINT || time_unit < G_MININT) {
+    GST_WARNING ("timeunit is out of range");
+  }
+  pad->granulerate_d = (gint) CLAMP (time_unit, G_MININT, G_MAXINT);
 
   GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
@@ -779,8 +836,11 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_d <= 0)
     return FALSE;
 
-  /* FIXME */
-  pad->caps = gst_caps_new_simple ("text/x-unknown", NULL);
+  pad->caps = gst_caps_new_simple ("text/plain", NULL);
+
+  pad->n_header_packets = 1;
+  pad->is_ogm = TRUE;
+  pad->is_ogm_text = TRUE;
 
   return TRUE;
 }
@@ -1123,34 +1183,34 @@ static const GstOggMap mappers[] = {
     packet_duration_constant
   },
   {
-    "OGM audio", 100, 0,
+    "\001audio\0\0\0", 9, 53,
     "application/x-ogm-audio",
     setup_ogmaudio_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     is_keyframe_true,
-    is_header_unknown,
-    NULL
+    is_header_ogm,
+    packet_duration_ogm
   },
   {
-    "OGM video", 100, 0,
+    "\001video\0\0\0", 9, 53,
     "application/x-ogm-video",
     setup_ogmvideo_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
-    is_header_unknown,
-    NULL
+    is_header_ogm,
+    packet_duration_ogm
   },
   {
-    "OGM text", 100, 0,
+    "\001text\0\0\0", 9, 9,
     "application/x-ogm-text",
     setup_ogmtext_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     is_keyframe_true,
-    is_header_unknown,
-    NULL
+    is_header_ogm,
+    packet_duration_ogm
   }
 };
 /* *INDENT-ON* */
@@ -1171,7 +1231,8 @@ gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet * packet)
         pad->map = i;
         return TRUE;
       } else {
-        GST_WARNING ("mapper '%s' did not accept setup header", mappers[i].id);
+        GST_WARNING ("mapper '%s' did not accept setup header",
+            mappers[i].media_type);
       }
     }
   }

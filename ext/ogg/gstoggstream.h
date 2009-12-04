@@ -65,6 +65,9 @@ struct _GstOggStream
   int last_size;
   /* theora stuff */
   gboolean theora_has_zero_keyoffset;
+  /* OGM stuff */
+  gboolean is_ogm;
+  gboolean is_ogm_text;
 };
 
 
