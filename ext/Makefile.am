@@ -159,7 +159,6 @@ DIST_SUBDIRS = \
 	gdk_pixbuf \
 	hal \
 	jpeg \
-	ladspa \
 	libcaca \
 	libpng \
 	pulse \

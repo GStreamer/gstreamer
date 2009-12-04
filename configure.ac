@@ -1102,7 +1102,6 @@ ext/flac/Makefile
 ext/gconf/Makefile
 ext/gdk_pixbuf/Makefile
 ext/hal/Makefile
-ext/ladspa/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
 ext/pulse/Makefile
