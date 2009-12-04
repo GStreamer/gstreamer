@@ -140,7 +140,7 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
   g_return_val_if_fail (mini_object != NULL, NULL);
 
   if (mini_object->copy)
-    copy = mo_class->copy (mini_object);
+    copy = mini_object->copy (mini_object);
   else
     copy = NULL;
 

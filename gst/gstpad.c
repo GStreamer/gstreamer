@@ -305,8 +305,7 @@ gst_pad_class_init (GstPadClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstPadClass, have_data),
       _gst_do_pass_data_accumulator,
-      NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
-      GST_TYPE_MINI_OBJECT);
+      NULL, gst_marshal_BOOLEAN__BOXED, G_TYPE_BOOLEAN, 1, G_TYPE_BOXED);
 
   pspec_caps = g_param_spec_boxed ("caps", "Caps",
       "The capabilities of the pad", GST_TYPE_CAPS,
@@ -3639,8 +3638,8 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   g_value_set_boolean (&ret, TRUE);
   g_value_init (&args[0], GST_TYPE_PAD);
   g_value_set_object (&args[0], pad);
-  g_value_init (&args[1], GST_TYPE_MINI_OBJECT);
-  gst_value_set_mini_object (&args[1], obj);
+  g_value_init (&args[1], G_TYPE_BOXED);
+  g_value_set_boxed (&args[1], obj);
 
   if (GST_IS_EVENT (obj))
     detail = event_quark;
@@ -3716,7 +3715,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   if (G_UNLIKELY (emit_signal)) {
     cache = NULL;
     if (G_LIKELY (is_buffer)) {
-      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (data)))
+      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
         goto dropping;
     } else {
       /* chain all groups in the buffer list one by one to avoid problems with
@@ -3953,7 +3952,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
     if (G_LIKELY (is_buffer)) {
       /* if the signal handler returned FALSE, it means we should just drop the
        * buffer */
-      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (data)))
+      if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (data)))
         goto dropped;
     } else {
       /* push all buffers in the list */
@@ -4443,7 +4442,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 
   /* can only fire the signal if we have a valid buffer */
   if (G_UNLIKELY (emit_signal) && (ret == GST_FLOW_OK)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (*buffer)))
       goto dropping;
   }
 
@@ -4612,7 +4611,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   /* can only fire the signal if we have a valid buffer */
   if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (*buffer)))
       goto dropping;
   }
 
@@ -4739,7 +4738,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
     GST_OBJECT_UNLOCK (pad);
 
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
       goto dropping;
 
     GST_OBJECT_LOCK (pad);

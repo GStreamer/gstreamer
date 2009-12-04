@@ -60,19 +60,7 @@
 #include "gstquark.h"
 
 
-static void gst_message_finalize (GstMessage * message);
-static GstMessage *_gst_message_copy (GstMessage * message);
-
-void
-_gst_message_initialize (void)
-{
-  GST_CAT_INFO (GST_CAT_GST_INIT, "init messages");
-
-  /* the GstMiniObject types need to be class_ref'd once before it can be
-   * done from multiple threads;
-   * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  g_type_class_ref (gst_message_get_type ());
-}
+static GType _gst_message_type = 0;
 
 typedef struct
 {
@@ -111,6 +99,24 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_PROGRESS, "progress", 0},
   {0, NULL, 0}
 };
+
+void
+_gst_message_initialize (void)
+{
+  gint i;
+
+  GST_CAT_INFO (GST_CAT_GST_INIT, "init messages");
+
+  /* the GstMiniObject types need to be class_ref'd once before it can be
+   * done from multiple threads;
+   * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
+  g_type_class_ref (gst_message_get_type ());
+
+  for (i = 0; message_quarks[i].name; i++) {
+    message_quarks[i].quark =
+        g_quark_from_static_string (message_quarks[i].name);
+  }
+}
 
 /**
  * gst_message_type_get_name:
@@ -152,38 +158,18 @@ gst_message_type_to_quark (GstMessageType type)
   return 0;
 }
 
-#define _do_init \
-{ \
-  gint i; \
-  \
-  for (i = 0; message_quarks[i].name; i++) { \
-    message_quarks[i].quark = \
-        g_quark_from_static_string (message_quarks[i].name); \
-  } \
-}
-
-G_DEFINE_TYPE_WITH_CODE (GstMessage, gst_message, GST_TYPE_MINI_OBJECT,
-    _do_init);
-
-static void
-gst_message_class_init (GstMessageClass * klass)
+GType
+gst_message_get_type (void)
 {
-  parent_class = g_type_class_peek_parent (klass);
-
-  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_message_copy;
-  klass->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_message_finalize;
+  if (G_UNLIKELY (_gst_message_type == 0)) {
+    _gst_message_type = gst_mini_object_register ("GstMessage");
+  }
+  return _gst_message_type;
 }
 
-static void
-gst_message_init (GstMessage * message)
-{
-  GST_CAT_LOG (GST_CAT_MESSAGE, "new message %p", message);
-  GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
-}
 
 static void
-gst_message_finalize (GstMessage * message)
+_gst_message_free (GstMessage * message)
 {
   g_return_if_fail (message != NULL);
 
@@ -205,7 +191,7 @@ gst_message_finalize (GstMessage * message)
     gst_structure_free (message->structure);
   }
 
-/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (message)); */
+  g_slice_free (GstMessage, message);
 }
 
 static GstMessage *
@@ -215,10 +201,13 @@ _gst_message_copy (GstMessage * message)
 
   GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p", message);
 
-  copy = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
+  copy = g_slice_new0 (GstMessage);
 
-  /* FIXME, need to copy relevant data from the miniobject. */
-  //memcpy (copy, message, sizeof (GstMessage));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (copy),
+      _gst_message_type, sizeof (GstMessage));
+
+  copy->mini_object.copy = (GstMiniObjectCopyFunction) _gst_message_copy;
+  copy->mini_object.free = (GstMiniObjectFreeFunction) _gst_message_free;
 
   GST_MESSAGE_GET_LOCK (copy) = GST_MESSAGE_GET_LOCK (message);
   GST_MESSAGE_COND (copy) = GST_MESSAGE_COND (message);
@@ -260,7 +249,13 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
 {
   GstMessage *message;
 
-  message = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
+  message = g_slice_new0 (GstMessage);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (message),
+      _gst_message_type, sizeof (GstMessage));
+
+  message->mini_object.copy = (GstMiniObjectCopyFunction) _gst_message_copy;
+  message->mini_object.free = (GstMiniObjectFreeFunction) _gst_message_free;
 
   GST_CAT_LOG (GST_CAT_MESSAGE, "source %s: creating new message %p %s",
       (src ? GST_OBJECT_NAME (src) : "NULL"), message,
@@ -278,6 +273,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
   }
   message->structure = structure;
 
+  GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
   GST_MESSAGE_SEQNUM (message) = gst_util_seqnum_next ();
 
   return message;

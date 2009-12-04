@@ -87,14 +87,6 @@
 
 static GType _gst_event_type = 0;
 
-void
-_gst_event_initialize (void)
-{
-  g_type_class_ref (gst_event_get_type ());
-  g_type_class_ref (gst_seek_flags_get_type ());
-  g_type_class_ref (gst_seek_type_get_type ());
-}
-
 typedef struct
 {
   const gint type;
@@ -124,6 +116,19 @@ static GstEventQuarks event_quarks[] = {
 
   {0, NULL, 0}
 };
+
+void
+_gst_event_initialize (void)
+{
+  gint i;
+  g_type_class_ref (gst_event_get_type ());
+  g_type_class_ref (gst_seek_flags_get_type ());
+  g_type_class_ref (gst_seek_type_get_type ());
+
+  for (i = 0; event_quarks[i].name; i++) {
+    event_quarks[i].quark = g_quark_from_static_string (event_quarks[i].name);
+  }
+}
 
 /**
  * gst_event_type_get_name:
@@ -182,16 +187,6 @@ gst_event_type_get_flags (GstEventType type)
 
   return ret;
 }
-
-#define _do_init \
-{ \
-  gint i; \
-  \
-  for (i = 0; event_quarks[i].name; i++) { \
-    event_quarks[i].quark = g_quark_from_static_string (event_quarks[i].name); \
-  } \
-}
-
 
 GType
 gst_event_get_type (void)

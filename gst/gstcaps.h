@@ -21,6 +21,7 @@
 #define __GST_CAPS_H__
 
 #include <gst/gstconfig.h>
+#include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
 #include <gst/glib-compat.h>
 
@@ -91,7 +92,8 @@ typedef enum {
  */
 #define GST_STATIC_CAPS(string) \
 { \
-  /* caps */ { 0, 0, (GstCapsFlags) 0, NULL, GST_PADDING_INIT }, \
+  /* miniobject */ { { 0, 0, 0, 0, NULL, NULL, NULL }, \
+  /* caps */ NULL,  GST_PADDING_INIT }, \
   /* string */ string, \
   GST_PADDING_INIT \
 }
