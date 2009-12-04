@@ -89,32 +89,11 @@ struct _GstOggPad
   gboolean have_type;
   GstOggPadMode mode;
 
-#if 0
-  GstPad *elem_pad;             /* sinkpad of internal element */
-  GstElement *element;          /* internal element */
-  GstPad *elem_out;             /* our sinkpad to receive buffers form the internal element */
-#endif
-
   GstOggChain *chain;           /* the chain we are part of */
   GstOggDemux *ogg;             /* the ogg demuxer we are part of */
 
-  //GList *headers;
   GstOggStream map;
-#if 0
-  gint map;
-  gboolean is_skeleton;
-  gboolean have_fisbone;
-  gint granulerate_n;
-  gint granulerate_d;
-  guint32 preroll;
-  guint granuleshift;
-  gint n_header_packets;
-  gint n_header_packets_seen;
-  gint64 accumulated_granule;
-  gint frame_size;
-#endif
 
-  //gint serialno;
   gint64 packetno;
   gint64 current_granule;
   gint64 keyframe_granule;

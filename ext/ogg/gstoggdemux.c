@@ -513,6 +513,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
   duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
 
+  GST_DEBUG_OBJECT (ogg, "duration %" G_GUINT64_FORMAT, duration);
+
   if (packet->b_o_s) {
     GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
@@ -527,16 +529,29 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
           gst_ogg_stream_granulepos_to_key_granule (&pad->map,
           packet->granulepos);
     }
+    GST_DEBUG_OBJECT (ogg, "current granule %" G_GUINT64_FORMAT,
+        pad->current_granule);
+
     if (pad->map.is_ogm) {
       GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
           pad->current_granule);
       GST_BUFFER_DURATION (buf) = gst_util_uint64_scale (duration,
           GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
     } else {
+      guint64 endtime;
+
       GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
           pad->current_granule - duration);
-      GST_BUFFER_DURATION (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule) - GST_BUFFER_TIMESTAMP (buf);
+      GST_DEBUG_OBJECT (ogg, "current granule time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      endtime =
+          gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
+      GST_DEBUG_OBJECT (ogg, "current granule end time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (endtime));
+
+      GST_BUFFER_DURATION (buf) = endtime - GST_BUFFER_TIMESTAMP (buf);
+      GST_DEBUG_OBJECT (ogg, "current duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
     }
     GST_BUFFER_OFFSET_END (buf) =
         gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
@@ -657,16 +672,24 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   if (!packet->b_o_s) {
     if (pad->start_time == GST_CLOCK_TIME_NONE) {
       gint64 duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
+      GST_DEBUG ("duration %" G_GINT64_FORMAT, duration);
       if (duration != -1) {
         pad->map.accumulated_granule += duration;
+        GST_DEBUG ("accumulated granule %" G_GINT64_FORMAT,
+            pad->map.accumulated_granule);
       }
 
       if (packet->granulepos != -1) {
         ogg_int64_t start_granule;
+        gint64 granule;
 
-        start_granule =
-            gst_ogg_stream_granulepos_to_granule (&pad->map,
-            packet->granulepos) - pad->map.accumulated_granule;
+        granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+            packet->granulepos);
+
+        if (granule > pad->map.accumulated_granule)
+          start_granule = granule - pad->map.accumulated_granule;
+        else
+          start_granule = 0;
 
         pad->start_time = gst_ogg_stream_granule_to_time (&pad->map,
             start_granule);
