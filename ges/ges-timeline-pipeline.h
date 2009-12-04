@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges.h>
+#include <gst/profile/gstprofile.h>
 
 G_BEGIN_DECLS
 
@@ -43,12 +44,33 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_PIPELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelineClass))
 
+/**
+ * GESPipelineFlags:
+ * @TIMELINE_MODE_PREVIEW_AUDIO: output audio to the soundcard
+ * @TIMELINE_MODE_PREVIEW_VIDEO: output video to the screen
+ * @TIMELINE_MODE_PREVIEW: output audio/video to soundcard/screen (default)
+ * @TIMELINE_MODE_RENDER: render timeline
+ *
+ * The various modes the #GESTimelinePipeline can be configured to.
+ */
+typedef enum {
+  TIMELINE_MODE_PREVIEW_AUDIO	= 1 << 0,
+  TIMELINE_MODE_PREVIEW_VIDEO	= 1 << 1,
+  TIMELINE_MODE_PREVIEW		= TIMELINE_MODE_PREVIEW_AUDIO | TIMELINE_MODE_PREVIEW_VIDEO,
+  TIMELINE_MODE_RENDER		= 1 << 2
+} GESPipelineFlags;
+
 struct _GESTimelinePipeline {
   GstPipeline parent;
 
   /* <private> */
   GESTimeline * timeline;
-  GstElement * sink;
+  GstElement * playsink;
+  GstElement * encodebin;
+  /* Note : urisink is only created when a URI has been provided */
+  GstElement * urisink;
+
+  GESPipelineFlags mode;
 
   GList *chains;
 };
@@ -63,6 +85,12 @@ GESTimelinePipeline* ges_timeline_pipeline_new (void);
 
 gboolean ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
 					     GESTimeline * timeline);
+
+gboolean ges_timeline_pipeline_set_render_settings (GESTimelinePipeline *pipeline,
+						    gchar * output_uri,
+						    GstEncodingProfile *profile);
+gboolean ges_timeline_pipeline_set_mode (GESTimelinePipeline *pipeline,
+					 GESPipelineFlags mode);
 
 G_END_DECLS
 

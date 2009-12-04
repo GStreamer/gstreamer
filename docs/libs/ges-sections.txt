@@ -167,11 +167,14 @@ ges_timeline_object_get_type
 <SECTION>
 <FILE>ges-timeline-pipeline</FILE>
 <TITLE>GESTimelinePipeline</TITLE>
+GESPipelineFlags
+ges_timeline_pipeline_new
+ges_timeline_pipeline_add_timeline
+ges_timeline_pipeline_set_mode
+ges_timeline_pipeline_set_render_settings
+<SUBSECTION Standard>
 GESTimelinePipeline
 GESTimelinePipelineClass
-ges_timeline_pipeline_add_timeline
-ges_timeline_pipeline_new
-<SUBSECTION Standard>
 ges_timeline_pipeline_get_type
 GES_TIMELINE_PIPELINE
 GES_TIMELINE_PIPELINE_CLASS
