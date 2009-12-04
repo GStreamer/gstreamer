@@ -2432,13 +2432,31 @@ restart:
             have_async = TRUE;
             break;
           }
-          case GST_STATE_CHANGE_FAILURE:
+          case GST_STATE_CHANGE_FAILURE:{
+            GstObject *parent;
+
             GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' failed to go to state %d(%s)",
                 GST_ELEMENT_NAME (child),
                 next, gst_element_state_get_name (next));
+
+            /* Only fail if the child is still inside
+             * this bin. It might've been removed already
+             * because of the error by the bin subclass
+             * to ignore the error.
+             */
+            parent = gst_object_get_parent (GST_OBJECT_CAST (child));
+            if (parent == GST_OBJECT_CAST (element)) {
+              gst_object_unref (child);
+              gst_object_unref (parent);
+              goto done;
+            }
+            if (parent)
+              gst_object_unref (parent);
             gst_object_unref (child);
-            goto done;
+
+            break;
+          }
           case GST_STATE_CHANGE_NO_PREROLL:
             GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' changed state to %d(%s) successfully without preroll",
