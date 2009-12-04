@@ -521,7 +521,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_OFFSET (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) = -1;
   } else {
-    pad->current_granule += duration;
+    if (pad->current_granule != -1)
+      pad->current_granule += duration;
     if (packet->granulepos != -1) {
       pad->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
           packet->granulepos);
