@@ -462,16 +462,23 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   gint64 current_time;
   GstOggChain *chain;
   gint64 duration;
-  int offset;
-  int trim;
+  gint offset;
+  gint trim;
+  GstClockTime out_timestamp, out_duration;
+  guint64 out_offset, out_offset_end;
 
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08x", pad, pad->map.serialno);
 
   if (pad->map.is_ogm) {
     const guint8 *data;
+    long bytes;
 
     data = packet->packet;
+    bytes = packet->bytes;
+
+    if (bytes < 1)
+      goto empty_packet;
 
     if (data[0] & 1) {
       /* We don't push header packets for OGM */
@@ -481,22 +488,68 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
     offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
 
-    if (offset > packet->bytes) {
-      GST_ERROR ("buffer too small");
-      //goto buffer_too_small;
-    }
-    if (pad->map.is_ogm) {
-      trim = 0;
-      while (data[packet->bytes - 1 - trim] == 0) {
-        trim++;
-      }
-    } else {
-      trim = 0;
+    trim = 0;
+    while (bytes && data[bytes - 1] == 0) {
+      trim++;
+      bytes--;
     }
   } else {
     offset = 0;
     trim = 0;
   }
+
+  /* get timing info for the packet */
+  duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
+  GST_DEBUG_OBJECT (ogg, "packet duration %" G_GUINT64_FORMAT, duration);
+
+  if (packet->b_o_s) {
+    out_timestamp = GST_CLOCK_TIME_NONE;
+    out_duration = GST_CLOCK_TIME_NONE;
+    out_offset = 0;
+    out_offset_end = -1;
+  } else {
+    if (packet->granulepos != -1) {
+      pad->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+          packet->granulepos);
+      pad->keyframe_granule =
+          gst_ogg_stream_granulepos_to_key_granule (&pad->map,
+          packet->granulepos);
+      GST_DEBUG_OBJECT (ogg, "new granule %" G_GUINT64_FORMAT,
+          pad->current_granule);
+    } else if (pad->current_granule != -1) {
+      pad->current_granule += duration;
+      GST_DEBUG_OBJECT (ogg, "interpollating granule %" G_GUINT64_FORMAT,
+          pad->current_granule);
+    }
+    /* we only push buffers after we have a valid granule. This is done so that
+     * we nicely skip packets without a timestamp after a seek. This is ok
+     * because we base or seek on the packet after the page with the smaller
+     * timestamp. */
+    if (pad->current_granule == -1)
+      goto no_timestamp;
+
+    if (pad->map.is_ogm) {
+      out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule);
+      out_duration = gst_util_uint64_scale (duration,
+          GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+    } else {
+      out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule - duration);
+      out_duration =
+          gst_ogg_stream_granule_to_time (&pad->map,
+          pad->current_granule) - out_timestamp;
+    }
+    out_offset_end =
+        gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
+        pad->keyframe_granule);
+    out_offset =
+        gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
+  }
+
+  /* check for invalid buffer sizes */
+  if (G_UNLIKELY (offset + trim >= packet->bytes))
+    goto empty_packet;
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
@@ -511,55 +564,10 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   /* copy packet in buffer */
   memcpy (buf->data, packet->packet + offset, packet->bytes - offset - trim);
 
-  duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
-
-  GST_DEBUG_OBJECT (ogg, "duration %" G_GUINT64_FORMAT, duration);
-
-  if (packet->b_o_s) {
-    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (buf) = 0;
-    GST_BUFFER_OFFSET_END (buf) = -1;
-  } else {
-    if (pad->current_granule != -1)
-      pad->current_granule += duration;
-    if (packet->granulepos != -1) {
-      pad->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
-          packet->granulepos);
-      pad->keyframe_granule =
-          gst_ogg_stream_granulepos_to_key_granule (&pad->map,
-          packet->granulepos);
-    }
-    GST_DEBUG_OBJECT (ogg, "current granule %" G_GUINT64_FORMAT,
-        pad->current_granule);
-
-    if (pad->map.is_ogm) {
-      GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule);
-      GST_BUFFER_DURATION (buf) = gst_util_uint64_scale (duration,
-          GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
-    } else {
-      guint64 endtime;
-
-      GST_BUFFER_TIMESTAMP (buf) = gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule - duration);
-      GST_DEBUG_OBJECT (ogg, "current granule time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-      endtime =
-          gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
-      GST_DEBUG_OBJECT (ogg, "current granule end time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (endtime));
-
-      GST_BUFFER_DURATION (buf) = endtime - GST_BUFFER_TIMESTAMP (buf);
-      GST_DEBUG_OBJECT (ogg, "current duration %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-    }
-    GST_BUFFER_OFFSET_END (buf) =
-        gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
-        pad->keyframe_granule);
-    GST_BUFFER_OFFSET (buf) =
-        gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
-  }
+  GST_BUFFER_TIMESTAMP (buf) = out_timestamp;
+  GST_BUFFER_DURATION (buf) = out_duration;
+  GST_BUFFER_OFFSET (buf) = out_offset;
+  GST_BUFFER_OFFSET_END (buf) = out_offset_end;
 
   /* Mark discont on the buffer */
   if (pad->discont) {
@@ -614,6 +622,18 @@ done:
   return cret;
 
   /* special cases */
+empty_packet:
+  {
+    GST_DEBUG_OBJECT (ogg, "Skipping empty packet");
+    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+    goto done;
+  }
+no_timestamp:
+  {
+    GST_DEBUG_OBJECT (ogg, "skipping packet: no valid granule found yet");
+    cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+    goto done;
+  }
 no_buffer:
   {
     GST_DEBUG_OBJECT (ogg,
