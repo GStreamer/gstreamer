@@ -2816,6 +2816,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   GstBuffer *buf = NULL, *sub = NULL;
   guint offset = 4;
   gint64 stop;
+  gint i;
 
   GST_DEBUG ("Reading and parsing avi headers: %d", avi->header_state);
 
@@ -3000,6 +3001,10 @@ skipping_done:
   gst_avi_demux_calculate_durations_from_index (avi);
 
   gst_avi_demux_expose_streams (avi, TRUE);
+
+  /* prepare all streams for index 0 */
+  for (i = 0; i < avi->num_streams; i++)
+    avi->stream[i].current_entry = 0;
 
   /* create initial NEWSEGMENT event */
   if ((stop = avi->segment.stop) == GST_CLOCK_TIME_NONE)
@@ -4345,7 +4350,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
             "Pushing buffer with time=%" GST_TIME_FORMAT ", duration %"
             GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
             " and size %d over pad %s", GST_TIME_ARGS (next_ts),
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
             size, GST_PAD_NAME (stream->pad));
 
         /* update current position in the segment */
@@ -4353,6 +4358,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
         /* mark discont when pending */
         if (G_UNLIKELY (stream->discont)) {
+          GST_DEBUG_OBJECT (avi, "Setting DISCONT");
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
           stream->discont = FALSE;
         }
