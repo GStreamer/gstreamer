@@ -579,7 +579,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     goto done;
 
   /* check if valid granulepos, then we can calculate the current
-   * position */
+   * position. We know the granule for each packet but we only want to update
+   * the last_stop when we have a valid granulepos on the packet because else
+   * our time jumps around for the different streams. */
   if (packet->granulepos < 0)
     goto done;
 
