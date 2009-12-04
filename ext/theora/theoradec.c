@@ -700,6 +700,12 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
+      GST_DEBUG_OBJECT (dec,
+          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
+          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (time));
+
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
@@ -1258,9 +1264,15 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
   if (dec->granulepos != -1) {
     gint64 cf = _theora_granule_frame (dec, dec->granulepos) + 1;
+    guint64 endtime;
 
-    GST_BUFFER_DURATION (out) = gst_util_uint64_scale_int (cf * GST_SECOND,
-        dec->info.fps_denominator, dec->info.fps_numerator) - outtime;
+    endtime = gst_util_uint64_scale_int (cf * GST_SECOND,
+        dec->info.fps_denominator, dec->info.fps_numerator);
+
+    if (endtime > outtime)
+      GST_BUFFER_DURATION (out) = endtime - outtime;
+    else
+      GST_BUFFER_DURATION (out) = GST_CLOCK_TIME_NONE;
   } else {
     GST_BUFFER_DURATION (out) =
         gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
