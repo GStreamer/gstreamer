@@ -521,16 +521,8 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     err = NULL;
   }
 
-  if (contents == NULL) {
+  if (mapped == NULL) {
     /* Error mmap-ing the cache, try a plain memory read */
-    if (mapped) {
-#if GLIB_CHECK_VERSION(2,22,0)
-      g_mapped_file_unref (mapped);
-#else
-      g_mapped_file_free (mapped);
-#endif
-      mapped = NULL;
-    }
 
     g_file_get_contents (location, &contents, &size, &err);
     if (err != NULL) {
@@ -542,10 +534,9 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
       return FALSE;
     }
   } else {
-    if (G_UNLIKELY ((contents = g_mapped_file_get_contents (mapped)) == NULL)) {
-      GST_ERROR ("Can't load file %s : %s", location, g_strerror (errno));
-      goto Error;
-    }
+    /* This can't fail if g_mapped_file_new() succeeded */
+    contents = g_mapped_file_get_contents (mapped);
+    size = g_mapped_file_get_length (mapped);
   }
 
   /* in is a cursor pointer, we initialize it with the begin of registry and is updated on each read */
