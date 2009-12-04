@@ -296,9 +296,10 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->n_header_packets = 3;
   pad->frame_size = 1;
 
-  if (pad->granuleshift == 0 || pad->granulerate_n == 0
-      || pad->granulerate_d == 0)
+  if (pad->granulerate_n == 0 || pad->granulerate_d == 0) {
+    GST_WARNING ("frame rate %d/%d", pad->granulerate_n, pad->granulerate_d);
     return FALSE;
+  }
 
   pad->caps = gst_caps_new_simple ("video/x-theora", NULL);
 
