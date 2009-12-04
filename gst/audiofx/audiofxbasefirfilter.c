@@ -20,12 +20,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  * 
- * 
- * TODO:  - Implement the convolution in place, probably only makes sense
- *          when using FFT convolution as currently the convolution itself
- *          is probably the bottleneck
- *        - Maybe allow cascading the filter to get a better stopband attenuation.
- *          Can be done by convolving a filter kernel with itself
  */
 
 #ifdef HAVE_CONFIG_H
