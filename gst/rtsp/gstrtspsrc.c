@@ -1699,6 +1699,7 @@ gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_LATENCY:
     default:
+      gst_event_unref (event);
       res = TRUE;
       break;
   }
