@@ -305,7 +305,7 @@ gst_pad_class_init (GstPadClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstPadClass, have_data),
       _gst_do_pass_data_accumulator,
-      NULL, gst_marshal_BOOLEAN__BOXED, G_TYPE_BOOLEAN, 1, G_TYPE_BOXED);
+      NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
 
   pspec_caps = g_param_spec_boxed ("caps", "Caps",
       "The capabilities of the pad", GST_TYPE_CAPS,

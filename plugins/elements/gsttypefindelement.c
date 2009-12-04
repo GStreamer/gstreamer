@@ -451,7 +451,7 @@ gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
-    gst_mini_object_unref (GST_MINI_OBJECT (event));
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
     return FALSE;
   }
   return gst_pad_push_event (typefind->sink, event);

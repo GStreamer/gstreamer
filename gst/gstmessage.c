@@ -110,7 +110,7 @@ _gst_message_initialize (void)
   /* the GstMiniObject types need to be class_ref'd once before it can be
    * done from multiple threads;
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  g_type_class_ref (gst_message_get_type ());
+  gst_message_get_type ();
 
   for (i = 0; message_quarks[i].name; i++) {
     message_quarks[i].quark =

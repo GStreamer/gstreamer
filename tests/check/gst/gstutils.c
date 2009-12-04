@@ -44,7 +44,7 @@ data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 {
   n_data_probes++;
   GST_DEBUG_OBJECT (pad, "data probe %d", n_data_probes);
-  g_assert (GST_IS_MINI_OBJECT (obj));
+  g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
   g_assert (data == SPECIAL_POINTER (0));
   return TRUE;
 }
@@ -133,7 +133,7 @@ static gboolean
 data_probe_once (GstPad * pad, GstMiniObject * obj, guint * data)
 {
   n_data_probes_once++;
-  g_assert (GST_IS_MINI_OBJECT (obj));
+  g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
 
   gst_pad_remove_data_probe (pad, *data);
 

@@ -259,7 +259,7 @@ create_read_only_buffer (void)
 {
   GstBuffer *buf;
 
-  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
+  buf = gst_buffer_new ();
 
   /* assign some read-only data to the new buffer */
   GST_BUFFER_DATA (buf) = (guint8 *) ro_memory;

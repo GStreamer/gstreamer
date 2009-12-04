@@ -251,7 +251,7 @@ marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
       (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data :
       cc->callback);
 
-  callback (data1, gst_value_get_mini_object (param_values + 1),
+  callback (data1, g_value_get_boxed (param_values + 1),
       g_value_get_object (param_values + 2), data2);
 }
 
@@ -850,7 +850,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
         G_GINT64_FORMAT ", flags: %d) %p", GST_BUFFER_SIZE (buf), ts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_MINI_OBJECT (buf)->flags, buf);
+        GST_MINI_OBJECT_CAST (buf)->flags, buf);
     GST_OBJECT_UNLOCK (src);
 
 #if !GLIB_CHECK_VERSION(2,26,0)

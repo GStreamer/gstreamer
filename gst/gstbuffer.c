@@ -291,6 +291,8 @@ _gst_buffer_free (GstBuffer * buffer)
 
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
+
+  g_slice_free (GstBuffer, buffer);
 }
 
 /**

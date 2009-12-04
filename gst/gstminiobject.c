@@ -38,6 +38,8 @@
 #include "gst/gstinfo.h"
 #include <gobject/gvaluecollector.h>
 
+#define GST_DISABLE_TRACE
+
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
 static GstAllocTrace *_gst_mini_object_trace;

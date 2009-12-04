@@ -505,7 +505,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_LAST_BUFFER,
-      gst_param_spec_mini_object ("last-buffer", "Last Buffer",
+      g_param_spec_boxed ("last-buffer", "Last Buffer",
           "The last buffer received in the sink", GST_TYPE_BUFFER,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**

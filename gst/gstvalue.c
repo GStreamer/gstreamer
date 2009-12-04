@@ -1720,8 +1720,8 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
 static gint
 gst_value_compare_buffer (const GValue * value1, const GValue * value2)
 {
-  GstBuffer *buf1 = GST_BUFFER (gst_value_get_mini_object (value1));
-  GstBuffer *buf2 = GST_BUFFER (gst_value_get_mini_object (value2));
+  GstBuffer *buf1 = GST_BUFFER_CAST (g_value_get_boxed (value1));
+  GstBuffer *buf2 = GST_BUFFER_CAST (g_value_get_boxed (value2));
 
   if (GST_BUFFER_SIZE (buf1) != GST_BUFFER_SIZE (buf2))
     return GST_VALUE_UNORDERED;

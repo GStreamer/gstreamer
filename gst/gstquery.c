@@ -72,16 +72,13 @@
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
 
-static void gst_query_finalize (GstQuery * query);
-static GstQuery *_gst_query_copy (GstQuery * query);
+static GType _gst_query_type = 0;
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
-
-static GstMiniObjectClass *parent_class = NULL;
 
 static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_POSITION, "position", "Current position", 0},
@@ -126,7 +123,7 @@ _gst_query_initialize (void)
   }
   g_static_mutex_unlock (&mutex);
 
-  g_type_class_ref (gst_query_get_type ());
+  gst_query_get_type ();
 }
 
 /**
@@ -165,55 +162,14 @@ gst_query_type_to_quark (GstQueryType query)
   return def->quark;
 }
 
-G_DEFINE_TYPE (GstQuery, gst_query, GST_TYPE_MINI_OBJECT);
-
-static void
-gst_query_class_init (GstQueryClass * klass)
+GType
+gst_query_get_type (void)
 {
-  parent_class = g_type_class_peek_parent (klass);
-
-  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
-  klass->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_query_finalize;
-
-}
-
-static void
-gst_query_init (GstQuery * query)
-{
-}
-
-static void
-gst_query_finalize (GstQuery * query)
-{
-  g_return_if_fail (query != NULL);
-
-  if (query->structure) {
-    gst_structure_set_parent_refcount (query->structure, NULL);
-    gst_structure_free (query->structure);
+  if (G_UNLIKELY (_gst_query_type == 0)) {
+    _gst_query_type = gst_mini_object_register ("GstQuery");
   }
-
-/*   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (query)); */
+  return _gst_query_type;
 }
-
-static GstQuery *
-_gst_query_copy (GstQuery * query)
-{
-  GstQuery *copy;
-
-  copy = (GstQuery *) gst_mini_object_new (GST_TYPE_QUERY);
-
-  copy->type = query->type;
-
-  if (query->structure) {
-    copy->structure = gst_structure_copy (query->structure);
-    gst_structure_set_parent_refcount (copy->structure,
-        &query->mini_object.refcount);
-  }
-
-  return copy;
-}
-
 
 
 /**
@@ -353,24 +309,52 @@ gst_query_type_iterate_definitions (void)
   return result;
 }
 
+static void
+_gst_query_free (GstQuery * query)
+{
+  g_return_if_fail (query != NULL);
+
+  if (query->structure) {
+    gst_structure_set_parent_refcount (query->structure, NULL);
+    gst_structure_free (query->structure);
+  }
+
+  g_slice_free (GstQuery, query);
+}
+
+static GstQuery *gst_query_new (GstQueryType type, GstStructure * structure);
+
+static GstQuery *
+_gst_query_copy (GstQuery * query)
+{
+  GstQuery *copy;
+
+  copy = gst_query_new (query->type, query->structure);
+
+  return copy;
+}
+
 static GstQuery *
 gst_query_new (GstQueryType type, GstStructure * structure)
 {
   GstQuery *query;
 
-  query = (GstQuery *) gst_mini_object_new (GST_TYPE_QUERY);
+  query = g_slice_new0 (GstQuery);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (query),
+      _gst_query_type, sizeof (GstQuery));
+
+  query->mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
+  query->mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
 
   GST_DEBUG ("creating new query %p %d", query, type);
 
   query->type = type;
+  query->structure = structure;
 
-  if (structure) {
-    query->structure = structure;
+  if (structure)
     gst_structure_set_parent_refcount (query->structure,
         &query->mini_object.refcount);
-  } else {
-    query->structure = NULL;
-  }
 
   return query;
 }

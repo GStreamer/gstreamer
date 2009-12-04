@@ -172,7 +172,7 @@ marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
       (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data :
       cc->callback);
 
-  callback (data1, gst_value_get_mini_object (param_values + 1), data2);
+  callback (data1, g_value_get_boxed (param_values + 1), data2);
 }
 
 static void

@@ -206,6 +206,7 @@ gst_caps_new_empty (void)
       GST_TYPE_CAPS, sizeof (GstCaps));
 
   caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
+  caps->mini_object.dispose = NULL;
   caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
 
   caps->structs = g_ptr_array_new ();

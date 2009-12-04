@@ -160,7 +160,7 @@ marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
       (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data :
       cc->callback);
 
-  callback (data1, gst_value_get_mini_object (param_values + 1),
+  callback (data1, g_value_get_boxed (param_values + 1),
       g_value_get_object (param_values + 2), data2);
 }
 

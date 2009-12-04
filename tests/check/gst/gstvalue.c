@@ -118,7 +118,7 @@ GST_START_TEST (test_deserialize_buffer)
   g_value_init (&value, GST_TYPE_BUFFER);
   fail_unless (gst_value_deserialize (&value, "1234567890abcdef"));
   /* does not increase the refcount */
-  buf = GST_BUFFER (gst_value_get_mini_object (&value));
+  buf = GST_BUFFER (g_value_get_boxed (&value));
   ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
 
   /* does not increase the refcount */

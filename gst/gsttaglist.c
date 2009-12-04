@@ -1849,7 +1849,7 @@ gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
 
   if (!gst_tag_list_copy_value (&v, list, tag))
     return FALSE;
-  *value = (GstBuffer *) gst_value_dup_mini_object (&v);
+  *value = g_value_dup_boxed (&v);
   g_value_unset (&v);
   return (*value != NULL);
 }
@@ -1885,6 +1885,6 @@ gst_tag_list_get_buffer_index (const GstTagList * list,
 
   if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
     return FALSE;
-  *value = (GstBuffer *) gst_value_dup_mini_object (v);
+  *value = g_value_dup_boxed (v);
   return (*value != NULL);
 }

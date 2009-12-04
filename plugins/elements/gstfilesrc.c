@@ -460,6 +460,7 @@ gst_file_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+#undef HAVE_MMAP
 /***
  * mmap code below
  */

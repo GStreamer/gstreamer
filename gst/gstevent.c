@@ -121,7 +121,8 @@ void
 _gst_event_initialize (void)
 {
   gint i;
-  g_type_class_ref (gst_event_get_type ());
+
+  gst_event_get_type ();
   g_type_class_ref (gst_seek_flags_get_type ());
   g_type_class_ref (gst_seek_type_get_type ());
 
