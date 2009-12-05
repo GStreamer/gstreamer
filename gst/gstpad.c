@@ -3638,7 +3638,7 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   g_value_set_boolean (&ret, TRUE);
   g_value_init (&args[0], GST_TYPE_PAD);
   g_value_set_object (&args[0], pad);
-  g_value_init (&args[1], G_TYPE_BOXED);
+  g_value_init (&args[1], GST_MINI_OBJECT_TYPE (obj));
   g_value_set_boxed (&args[1], obj);
 
   if (GST_IS_EVENT (obj))
