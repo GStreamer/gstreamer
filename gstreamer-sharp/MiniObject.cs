@@ -301,9 +301,6 @@ namespace Gst {
       return gtype;
     }
 
-    [DllImport ("glibsharpglue-2") ]
-    static extern IntPtr gtksharp_register_type (IntPtr name, IntPtr parent_type);
-
     protected GType LookupGType () {
       if (Handle != IntPtr.Zero) {
         GTypeInstance obj = (GTypeInstance) Marshal.PtrToStructure (Handle, typeof (GTypeInstance));
