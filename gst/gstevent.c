@@ -195,7 +195,6 @@ gst_event_get_type (void)
   if (G_UNLIKELY (_gst_event_type == 0)) {
     _gst_event_type = gst_mini_object_register ("GstEvent");
   }
-
   return _gst_event_type;
 }
 
@@ -220,6 +219,8 @@ _gst_event_free (GstEvent * event)
   g_slice_free (GstEvent, event);
 }
 
+static void gst_event_init (GstEvent * event, GstEventType type);
+
 static GstEvent *
 _gst_event_copy (GstEvent * event)
 {
@@ -227,12 +228,8 @@ _gst_event_copy (GstEvent * event)
 
   copy = g_slice_new0 (GstEvent);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (copy),
-      _gst_event_type, sizeof (GstEvent));
-  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
-  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
+  gst_event_init (copy, GST_EVENT_TYPE (event));
 
-  GST_EVENT_TYPE (copy) = GST_EVENT_TYPE (event);
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
 
@@ -247,6 +244,20 @@ _gst_event_copy (GstEvent * event)
   return copy;
 }
 
+static void
+gst_event_init (GstEvent * event, GstEventType type)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (event),
+      _gst_event_type, sizeof (GstEvent));
+
+  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
+  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
+
+  GST_EVENT_TYPE (event) = type;
+  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
+  GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
+}
+
 static GstEvent *
 gst_event_new (GstEventType type)
 {
@@ -257,14 +268,7 @@ gst_event_new (GstEventType type)
   GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
       gst_event_type_get_name (type), type);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (event),
-      _gst_event_type, sizeof (GstEvent));
-
-  event->mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
-  event->mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
-
-  GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
-  GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
+  gst_event_init (event, type);
 
   return event;
 }

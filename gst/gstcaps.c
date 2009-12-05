@@ -122,19 +122,19 @@ static void gst_caps_transform_to_string (const GValue * src_value,
 static gboolean gst_caps_from_string_inplace (GstCaps * caps,
     const gchar * string);
 
+static GType _gst_caps_type = 0;
+
 GType
 gst_caps_get_type (void)
 {
-  static GType gst_caps_type = 0;
+  if (G_UNLIKELY (_gst_caps_type == 0)) {
+    _gst_caps_type = gst_mini_object_register ("GstCaps");
 
-  if (G_UNLIKELY (gst_caps_type == 0)) {
-    gst_caps_type = gst_mini_object_register ("GstCaps");
-
-    g_value_register_transform_func (gst_caps_type,
+    g_value_register_transform_func (_gst_caps_type,
         G_TYPE_STRING, gst_caps_transform_to_string);
   }
 
-  return gst_caps_type;
+  return _gst_caps_type;
 }
 
 static GstCaps *
@@ -186,6 +186,25 @@ _gst_caps_free (GstCaps * caps)
   g_slice_free (GstCaps, caps);
 }
 
+static void
+gst_caps_init (GstCaps * caps)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps),
+      _gst_caps_type, sizeof (GstCaps));
+
+  caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
+  caps->mini_object.dispose = NULL;
+  caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
+
+  /* the 32 has been determined by logging caps sizes in _gst_caps_free
+   * but g_ptr_array uses 16 anyway if it expands once, so this does not help
+   * in practise
+   * caps->structs = g_ptr_array_sized_new (32);
+   */
+  caps->structs = g_ptr_array_new ();
+}
+
+
 /**
  * gst_caps_new_empty:
  *
@@ -202,19 +221,7 @@ gst_caps_new_empty (void)
 
   caps = g_slice_new (GstCaps);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps),
-      GST_TYPE_CAPS, sizeof (GstCaps));
-
-  caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
-  caps->mini_object.dispose = NULL;
-  caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
-
-  caps->structs = g_ptr_array_new ();
-  /* the 32 has been determined by logging caps sizes in _gst_caps_free
-   * but g_ptr_array uses 16 anyway if it expands once, so this does not help
-   * in practise
-   * caps->structs = g_ptr_array_sized_new (32);
-   */
+  gst_caps_init (caps);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_CAPS, "created caps %p", caps);
@@ -411,21 +418,16 @@ gst_static_caps_get (GstStaticCaps * static_caps)
      * real caps, refcount last. We do this because we must leave the refcount
      * of the result caps to 0 so that other threads don't run away with the
      * caps while we are constructing it. */
-    gst_mini_object_init (GST_MINI_OBJECT_CAST (&temp),
-        GST_TYPE_CAPS, sizeof (GstCaps));
-
-    temp.structs = g_ptr_array_new ();
+    gst_caps_init (&temp);
 
     /* convert to string */
     if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
       g_critical ("Could not convert static caps \"%s\"", string);
 
+    gst_caps_init (caps);
     /* now copy stuff over to the real caps. */
-    GST_MINI_OBJECT_TYPE (caps) = GST_MINI_OBJECT_TYPE (&temp);
     GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS (&temp);
     caps->structs = temp.structs;
-    /* and bump the refcount so other threads can now read */
-    GST_CAPS_REFCOUNT (caps) = 1;
 
     GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
   done:
