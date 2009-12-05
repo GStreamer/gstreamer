@@ -12,7 +12,7 @@ run-test: $(ASSEMBLY)
 
 EXTRA_DIST = $(ASSEMBLY_CSFILES)
 CLEANFILES = $(ASSEMBLY) *.mdb *.pdb TestResult.xml
-DISTCLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
 clean-local:
 	rm -rf %temp%

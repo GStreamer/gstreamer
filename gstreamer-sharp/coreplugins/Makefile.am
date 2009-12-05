@@ -14,6 +14,7 @@ XML_FILES = $(patsubst %,$(builddir)/%.xml,$(ELEMENTS))
 
 EXTRA_DIST = $(METADATA_FILES) $(CUSTOM_FILES) $(INSPECT_FILES) $(OTHER_CS_FILES)
 CLEANFILES = $(XML_FILES) $(CS_FILES)
+MAINTAINERCLEANFILES = Makefile.in
 
 plugins-update: $(patsubst $(srcdir)/inspect/%.raw, inspect-%, $(INSPECT_FILES))
 inspect-%:

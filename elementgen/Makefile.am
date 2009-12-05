@@ -1,7 +1,5 @@
-TARGETS = element-gen.exe gsts-xmlinspect
+TARGETS = $(noinst_SCRIPTS)
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
-
-all: $(TARGETS)
 
 element-gen.exe: $(srcdir)/elementgen.cs
 	$(CSC) -out:$@ -debug $(srcdir)/elementgen.cs

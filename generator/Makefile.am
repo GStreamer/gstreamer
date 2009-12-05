@@ -64,6 +64,7 @@ EXTRA_DIST =					\
 	$(dist_sources)
 
 CLEANFILES = gst-gapi_codegen.exe gst-gapi_codegen.exe.mdb
+MAINTAINERCLEANFILES = Makefile.in
 
 gst-gapi_codegen.exe: $(build_sources)
 	$(CSC) -debug -out:gst-gapi_codegen.exe $(WIN64DEFINES) $(OFF_T_FLAGS) $(references) $(build_sources)
