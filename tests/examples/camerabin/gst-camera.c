@@ -326,6 +326,21 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   return ret;
 }
 
+static void
+print_error_message (GstMessage * msg)
+{
+  GError *err = NULL;
+  gchar *dbg = NULL;
+
+  gst_message_parse_error (msg, &err, &dbg);
+
+  g_printerr ("Camerabin won't start up!\nError: %s\nDebug Info: %s\n",
+      err->message, (dbg) ? dbg : "None");
+
+  g_error_free (err);
+  g_free (dbg);
+}
+
 static gboolean
 my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
@@ -341,14 +356,7 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     }
     case GST_MESSAGE_ERROR:{
-      GError *err;
-      gchar *debug;
-
-      gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s\n", err->message);
-      g_error_free (err);
-      g_free (debug);
-
+      print_error_message (message);
       me_gst_cleanup_element ();
       gtk_main_quit ();
       break;
@@ -550,6 +558,7 @@ me_gst_setup_pipeline_create_vid_post_bin (const gchar * videopost)
 static gboolean
 me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
 {
+  GstMessage *msg;
   GstBus *bus;
   GstCaps *preview_caps;
 
@@ -615,19 +624,18 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
 
   init_view_finder_resolution_combobox ();
 
-  if (GST_STATE_CHANGE_FAILURE ==
-      gst_element_set_state (gst_camera_bin, GST_STATE_PAUSED)) {
+  gst_element_set_state (gst_camera_bin, GST_STATE_PLAYING);
+
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (gst_camera_bin),
+      3 * GST_SECOND, GST_MESSAGE_ERROR | GST_MESSAGE_ASYNC_DONE);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    print_error_message (msg);
+    gst_message_unref (msg);
     goto done;
-  } else {
-    gst_element_get_state (gst_camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
   }
 
-  if (GST_STATE_CHANGE_FAILURE ==
-      gst_element_set_state (gst_camera_bin, GST_STATE_PLAYING)) {
-    goto done;
-  } else {
-    gst_element_get_state (gst_camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
-  }
+  gst_message_unref (msg);
 
 #ifdef HAVE_GST_PHOTO_IFACE_H
   /* Initialize menus to default settings */
@@ -653,7 +661,6 @@ me_gst_cleanup_element ()
 {
   if (gst_camera_bin) {
     gst_element_set_state (gst_camera_bin, GST_STATE_NULL);
-    gst_element_get_state (gst_camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
     gst_object_unref (gst_camera_bin);
     gst_camera_bin = NULL;
 
