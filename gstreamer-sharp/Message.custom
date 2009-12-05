@@ -579,6 +579,22 @@ public static Message NewTag (Gst.Object src, Gst.Pad pad, TagList tags) {
   return msg;
 }
 
+[DllImport("libgstreamer-0.10.dll") ]
+static extern void gst_message_parse_tag (IntPtr msg, out IntPtr tags);
+
+public void ParseTag (out TagList tags) {
+  if (Type != MessageType.Tag)
+    throw new ArgumentException ();
+
+  IntPtr raw_ptr;
+
+  gst_message_parse_tag (Handle, out raw_ptr);
+  if (raw_ptr == IntPtr.Zero)
+    tags = null;
+  else
+    tags = (TagList) Gst.GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
+}
+
 [DllImport ("libgstreamer-0.10.dll") ]
 static extern void gst_message_parse_tag_full (IntPtr msg, out IntPtr pad, out IntPtr tags);
 

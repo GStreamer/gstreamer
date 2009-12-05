@@ -55,10 +55,9 @@ public class MetaData {
           return true;
 
         case MessageType.Tag:
-          Pad pad;
           TagList new_tags;
 
-          message.ParseTag (out pad, out new_tags);
+          message.ParseTag (out new_tags);
 
           if (tags != null) {
             tags = tags.Merge (new_tags, TagMergeMode.KeepAll);
