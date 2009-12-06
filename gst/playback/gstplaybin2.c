@@ -2370,7 +2370,8 @@ _playsink_src_event_probe_cb (GstPad * pad, GstEvent * event,
       return TRUE;
 
     /* If we have no group start accumulator yet, this is
-     * a QOS event for the previous group
+     * a QOS event for the previous group or this stream
+     * has a non-time segment.
      */
     if (!GST_CLOCK_TIME_IS_VALID (group_start_accum))
       return FALSE;
@@ -2414,25 +2415,26 @@ static gboolean
 _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
     PlaySinkEventProbeData * data)
 {
+  guint index;
+
+  if (data->type == GST_PLAY_SINK_TYPE_VIDEO
+      || data->type == GST_PLAY_SINK_TYPE_VIDEO_RAW)
+    index = 0;
+  else if (data->type == GST_PLAY_SINK_TYPE_AUDIO
+      || data->type == GST_PLAY_SINK_TYPE_AUDIO_RAW)
+    index = 1;
+  else if (data->type == GST_PLAY_SINK_TYPE_TEXT)
+    index = 2;
+  else
+    g_assert_not_reached ();
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
     GstPlayBin *playbin = data->playbin;
     GstSegment *segment;
-    guint index;
     gboolean update;
     GstFormat format;
     gdouble rate, applied_rate;
     gint64 start, stop, pos;
-
-    if (data->type == GST_PLAY_SINK_TYPE_VIDEO
-        || data->type == GST_PLAY_SINK_TYPE_VIDEO_RAW)
-      index = 0;
-    else if (data->type == GST_PLAY_SINK_TYPE_AUDIO
-        || data->type == GST_PLAY_SINK_TYPE_AUDIO_RAW)
-      index = 1;
-    else if (data->type == GST_PLAY_SINK_TYPE_TEXT)
-      index = 2;
-    else
-      g_assert_not_reached ();
 
     segment = &playbin->segments[index];
 
@@ -2443,9 +2445,13 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
     gst_segment_set_newsegment_full (segment, update, rate, applied_rate,
         format, start, stop, pos);
 
-    if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
+    if (format != GST_FORMAT_TIME)
+      data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
                 type].group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
   }
 
   return TRUE;
