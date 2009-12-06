@@ -100,9 +100,20 @@ static const GstQueryType *gst_audio_fx_base_fir_filter_query_type (GstPad *
 static guint \
 process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype * dst, guint input_samples) \
 { \
+  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
+  TIME_DOMAIN_CONVOLUTION_BODY (channels); \
+}
+
+#define DEFINE_PROCESS_FUNC_FIXED_CHANNELS(width,channels,ctype) \
+static guint \
+process_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype * dst, guint input_samples) \
+{ \
+  TIME_DOMAIN_CONVOLUTION_BODY (channels); \
+}
+
+#define TIME_DOMAIN_CONVOLUTION_BODY(channels) G_STMT_START { \
   gint kernel_length = self->kernel_length; \
   gint i, j, k, l; \
-  gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
   gint res_start; \
   gint from_input; \
   gint off; \
@@ -155,12 +166,20 @@ process_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, g##ctype 
     self->buffer_fill = kernel_length; \
   \
   return input_samples / channels; \
-}
+} G_STMT_END
 
 DEFINE_PROCESS_FUNC (32, float);
 DEFINE_PROCESS_FUNC (64, double);
 
+DEFINE_PROCESS_FUNC_FIXED_CHANNELS (32, 1, float);
+DEFINE_PROCESS_FUNC_FIXED_CHANNELS (64, 1, double);
+
+DEFINE_PROCESS_FUNC_FIXED_CHANNELS (32, 2, float);
+DEFINE_PROCESS_FUNC_FIXED_CHANNELS (64, 2, double);
+
+#undef TIME_DOMAIN_CONVOLUTION_BODY
 #undef DEFINE_PROCESS_FUNC
+#undef DEFINE_PROCESS_FUNC_FIXED_CHANNELS
 
 /* This implements FFT convolution and uses the overlap-save algorithm.
  * See http://cnx.org/content/m12022/latest/ or your favorite
@@ -221,6 +240,18 @@ process_fft_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, \
     g##ctype * dst, guint input_samples) \
 { \
   gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels; \
+  FFT_CONVOLUTION_BODY (channels); \
+}
+
+#define DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS(width,channels,ctype) \
+static guint \
+process_fft_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, \
+    g##ctype * dst, guint input_samples) \
+{ \
+  FFT_CONVOLUTION_BODY (channels); \
+}
+
+#define FFT_CONVOLUTION_BODY(channels) G_STMT_START { \
   gint i, j; \
   guint pass; \
   guint kernel_length = self->kernel_length; \
@@ -323,12 +354,20 @@ process_fft_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * src, \
   self->buffer_fill = buffer_fill; \
   \
   return generated; \
-}
+} G_STMT_END
 
 DEFINE_FFT_PROCESS_FUNC (32, float);
 DEFINE_FFT_PROCESS_FUNC (64, double);
 
+DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS (32, 1, float);
+DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS (64, 1, double);
+
+DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS (32, 2, float);
+DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS (64, 2, double);
+
+#undef FFT_CONVOLUTION_BODY
 #undef DEFINE_FFT_PROCESS_FUNC
+#undef DEFINE_FFT_PROCESS_FUNC_FIXED_CHANNELS
 
 /* Element class */
 static void
@@ -376,18 +415,39 @@ static void
 /* Must be called with base transform lock! */
 static void
 gst_audio_fx_base_fir_filter_select_process_function (GstAudioFXBaseFIRFilter *
-    self, gint width)
+    self, gint width, gint channels)
 {
-  if (width == 32 && self->fft && !self->low_latency)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_32;
-  else if (width == 64 && self->fft && !self->low_latency)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_64;
-  else if (width == 32)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_32;
-  else if (width == 64)
-    self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_64;
-  else
+  if (width == 32 && self->fft && !self->low_latency) {
+    if (channels == 1)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_1_32;
+    else if (channels == 2)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_2_32;
+    else
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_32;
+  } else if (width == 64 && self->fft && !self->low_latency) {
+    if (channels == 1)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_1_64;
+    else if (channels == 2)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_2_64;
+    else
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_fft_64;
+  } else if (width == 32) {
+    if (channels == 1)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_1_32;
+    else if (channels == 2)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_2_32;
+    else
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_32;
+  } else if (width == 64) {
+    if (channels == 1)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_1_64;
+    else if (channels == 2)
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_2_64;
+    else
+      self->process = (GstAudioFXBaseFIRFilterProcessFunc) process_64;
+  } else {
     self->process = NULL;
+  }
 }
 
 static void
@@ -439,7 +499,8 @@ gst_audio_fx_base_fir_filter_set_property (GObject * object, guint prop_id,
         self->low_latency = low_latency;
         gst_audio_fx_base_fir_filter_calculate_frequency_response (self);
         gst_audio_fx_base_fir_filter_select_process_function (self,
-            GST_AUDIO_FILTER_CAST (self)->format.width);
+            GST_AUDIO_FILTER_CAST (self)->format.width,
+            GST_AUDIO_FILTER_CAST (self)->format.channels);
       }
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
@@ -677,7 +738,8 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     self->nsamples_in = 0;
   }
 
-  gst_audio_fx_base_fir_filter_select_process_function (self, format->width);
+  gst_audio_fx_base_fir_filter_select_process_function (self, format->width,
+      format->channels);
 
   return (self->process != NULL);
 }
@@ -973,7 +1035,8 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
 
   gst_audio_fx_base_fir_filter_calculate_frequency_response (self);
   gst_audio_fx_base_fir_filter_select_process_function (self,
-      GST_AUDIO_FILTER_CAST (self)->format.width);
+      GST_AUDIO_FILTER_CAST (self)->format.width,
+      GST_AUDIO_FILTER_CAST (self)->format.channels);
 
   if (latency_changed) {
     self->latency = latency;
