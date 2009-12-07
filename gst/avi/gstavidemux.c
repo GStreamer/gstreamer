@@ -923,7 +923,7 @@ gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
     goto not_avi;
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_DEBUG_OBJECT (element, "parsing header %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (element, "header parsing took %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   return TRUE;
@@ -2379,7 +2379,7 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
   avi->have_index = gst_avi_demux_do_index_stats (avi);
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_DEBUG_OBJECT (avi, "parsing index %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (avi, "index parsing took %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   return TRUE;
@@ -3337,7 +3337,7 @@ skipping_done:
       avi->segment.start, stop, avi->segment.time);
 
   stamp = gst_util_get_timestamp () - stamp;
-  GST_DEBUG_OBJECT (avi, "pulling header %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (avi, "pulling header took %" GST_TIME_FORMAT,
       GST_TIME_ARGS (stamp));
 
   /* at this point we know all the streams and we can signal the no more
