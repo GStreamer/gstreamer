@@ -21,6 +21,7 @@
 #define __GST_ASS_RENDER_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include <ass/ass.h>
 #include <ass/ass_types.h>
@@ -42,6 +43,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstAssRender GstAssRender;
 typedef struct _GstAssRenderClass GstAssRenderClass;
+typedef void (*GstAssRenderBlitFunction) (GstAssRender *render, ASS_Image *ass_image, GstBuffer *buffer);
 
 struct _GstAssRender
 {
@@ -51,7 +53,9 @@ struct _GstAssRender
 
   GstSegment video_segment;
 
+  GstVideoFormat format;
   gint width, height;
+  GstAssRenderBlitFunction blit;
 
   GMutex *subtitle_mutex;
   GCond *subtitle_cond;

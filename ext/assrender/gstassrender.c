@@ -46,14 +46,18 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static GstStaticPadTemplate video_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("video_sink",
+    GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static GstStaticPadTemplate text_sink_factory =
@@ -359,57 +363,143 @@ gst_ass_render_getcaps (GstPad * pad)
   return caps;
 }
 
+#define CREATE_RGB_BLIT_FUNCTION(name,bpp,R,G,B) \
+static void \
+blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
+{ \
+  guint counter = 0; \
+  guint8 alpha, r, g, b, k; \
+  const guint8 *src; \
+  guint8 *dst; \
+  gint x, y, w, h; \
+  gint width = render->width; \
+  gint height = render->height; \
+  gint dst_stride = GST_ROUND_UP_4 (width * bpp); \
+  gint dst_skip; \
+  gint src_stride, src_skip; \
+  \
+  while (ass_image) { \
+    if (ass_image->dst_y > height || ass_image->dst_x > width) \
+      goto next; \
+    \
+    /* blend subtitles onto the video frame */ \
+    alpha = 255 - ((ass_image->color) & 0xff); \
+    r = ((ass_image->color) >> 24) & 0xff; \
+    g = ((ass_image->color) >> 16) & 0xff; \
+    b = ((ass_image->color) >> 8) & 0xff; \
+    src = ass_image->bitmap; \
+    dst = buffer->data + ass_image->dst_y * dst_stride + ass_image->dst_x * bpp; \
+    \
+    w = MIN (ass_image->w, width - ass_image->dst_x); \
+    h = MIN (ass_image->h, height - ass_image->dst_y); \
+    src_stride = ass_image->stride; \
+    src_skip = ass_image->stride - w; \
+    dst_skip = dst_stride - w * bpp; \
+    \
+    for (y = 0; y < h; y++) { \
+      for (x = 0; x < w; x++) { \
+        k = ((guint8) src[0]) * alpha / 255; \
+        dst[R] = (k * r + (255 - k) * dst[R]) / 255; \
+        dst[G] = (k * g + (255 - k) * dst[G]) / 255; \
+        dst[B] = (k * b + (255 - k) * dst[B]) / 255; \
+	src++; \
+	dst += bpp; \
+      } \
+      src += src_skip; \
+      dst += dst_skip; \
+    } \
+next: \
+    counter++; \
+    ass_image = ass_image->next; \
+  } \
+  GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter); \
+}
+
+CREATE_RGB_BLIT_FUNCTION (rgb, 3, 0, 1, 2);
+CREATE_RGB_BLIT_FUNCTION (bgr, 3, 2, 1, 0);
+CREATE_RGB_BLIT_FUNCTION (xrgb, 4, 1, 2, 3);
+CREATE_RGB_BLIT_FUNCTION (xbgr, 4, 3, 2, 1);
+CREATE_RGB_BLIT_FUNCTION (rgbx, 4, 0, 1, 2);
+CREATE_RGB_BLIT_FUNCTION (bgrx, 4, 2, 1, 0);
+
+#undef CREATE_RGB_BLIT_FUNCTION
+
 static gboolean
 gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
 {
   GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
-  GstStructure *structure;
   gboolean ret = FALSE;
   gint par_n = 1, par_d = 1;
+  gdouble dar;
 
   render->width = 0;
   render->height = 0;
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n, &par_d);
-
-  if (gst_structure_get_int (structure, "width", &render->width) &&
-      gst_structure_get_int (structure, "height", &render->height)) {
-    gdouble dar;
-
-    ret = gst_pad_set_caps (render->srcpad, caps);
-    ass_set_frame_size (render->ass_renderer, render->width, render->height);
-
-    dar = (((gdouble) par_n) * ((gdouble) render->width));
-    dar /= (((gdouble) par_d) * ((gdouble) render->height));
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
-    ass_set_aspect_ratio (render->ass_renderer, dar);
-#else
-    ass_set_aspect_ratio (render->ass_renderer,
-        dar, ((gdouble) render->width) / ((gdouble) render->height));
-#endif
-    ass_set_font_scale (render->ass_renderer, 1.0);
-    ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
-
-#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
-    ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
-    ass_set_fonts (render->ass_renderer, NULL, "Sans");
-#else
-    ass_set_fonts (render->ass_renderer, "Arial", "sans-serif", 1, NULL, 1);
-    ass_set_fonts (render->ass_renderer, NULL, "Sans", 1, NULL, 1);
-#endif
-    ass_set_margins (render->ass_renderer, 0, 0, 0, 0);
-    ass_set_use_margins (render->ass_renderer, 0);
-
-    render->renderer_init_ok = TRUE;
-
-    GST_DEBUG_OBJECT (render, "ass renderer setup complete");
-  } else {
-    GST_ERROR_OBJECT (render, "Invalid caps %" GST_PTR_FORMAT, caps);
+  if (!gst_video_format_parse_caps (caps, &render->format, &render->width,
+          &render->height)) {
+    GST_ERROR_OBJECT (render, "Can't parse caps: %" GST_PTR_FORMAT, caps);
     ret = FALSE;
+    goto out;
   }
 
+  gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
+
+  ret = gst_pad_set_caps (render->srcpad, caps);
+  if (!ret)
+    goto out;
+
+  switch (render->format) {
+    case GST_VIDEO_FORMAT_RGB:
+      render->blit = blit_rgb;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      render->blit = blit_bgr;
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      render->blit = blit_xrgb;
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      render->blit = blit_xbgr;
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+      render->blit = blit_rgbx;
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      render->blit = blit_bgrx;
+      break;
+    default:
+      ret = FALSE;
+      goto out;
+  }
+
+  ass_set_frame_size (render->ass_renderer, render->width, render->height);
+
+  dar = (((gdouble) par_n) * ((gdouble) render->width))
+      / (((gdouble) par_d) * ((gdouble) render->height));
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
+  ass_set_aspect_ratio (render->ass_renderer, dar);
+#else
+  ass_set_aspect_ratio (render->ass_renderer,
+      dar, ((gdouble) render->width) / ((gdouble) render->height));
+#endif
+  ass_set_font_scale (render->ass_renderer, 1.0);
+  ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
+
+#if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
+  ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
+  ass_set_fonts (render->ass_renderer, NULL, "Sans");
+#else
+  ass_set_fonts (render->ass_renderer, "Arial", "sans-serif", 1, NULL, 1);
+  ass_set_fonts (render->ass_renderer, NULL, "Sans", 1, NULL, 1);
+#endif
+  ass_set_margins (render->ass_renderer, 0, 0, 0, 0);
+  ass_set_use_margins (render->ass_renderer, 0);
+
+  render->renderer_init_ok = TRUE;
+
+  GST_DEBUG_OBJECT (render, "ass renderer setup complete");
+
+out:
   gst_object_unref (render);
 
   return ret;
@@ -569,7 +659,6 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
 
   /* now start rendering subtitles, if all conditions are met */
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
-    gint counter;
     GstClockTime running_time;
     gdouble timestamp;
 #ifndef GST_DISABLE_GST_DEBUG
@@ -595,7 +684,7 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
 
     /* not sure what the last parameter to this call is for (detect_change) */
     ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
-        timestamp, 0);
+        timestamp, NULL);
 
     if (ass_image == NULL) {
       GST_LOG_OBJECT (render, "nothing to render right now");
@@ -603,34 +692,7 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
       return ret;
     }
 
-    counter = 0;
-    while (ass_image) {
-      /* blend subtitles onto the video frame */
-      guint8 alpha = 255 - ((ass_image->color) & 0xff);
-      guint8 r = ((ass_image->color) >> 24) & 0xff;
-      guint8 g = ((ass_image->color) >> 16) & 0xff;
-      guint8 b = ((ass_image->color) >> 8) & 0xff;
-      guint8 *src = ass_image->bitmap;
-      guint8 *dst =
-          buffer->data + ass_image->dst_y *
-          GST_ROUND_UP_4 (render->width * 3) + ass_image->dst_x * 3;
-      guint x = 0;
-      guint y = 0;
-
-      for (y = 0; y < ass_image->h; y++) {
-        for (x = 0; x < ass_image->w; x++) {
-          guint8 k = ((guint8) src[x]) * alpha / 255;
-          dst[x * 3] = (k * r + (255 - k) * dst[x * 3]) / 255;
-          dst[x * 3 + 1] = (k * g + (255 - k) * dst[x * 3 + 1]) / 255;
-          dst[x * 3 + 2] = (k * b + (255 - k) * dst[x * 3 + 2]) / 255;
-        }
-        src += ass_image->stride;
-        dst += GST_ROUND_UP_4 (render->width * 3);
-      }
-      counter++;
-      ass_image = ass_image->next;
-    }
-    GST_LOG_OBJECT (render, "amount of rendered ass_image: %d", counter);
+    render->blit (render, ass_image, buffer);
   }
 
   ret = gst_pad_push (render->srcpad, buffer);
