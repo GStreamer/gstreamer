@@ -51,6 +51,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_uri_handler_debug);
 #define GST_CAT_DEFAULT gst_uri_handler_debug
 
+enum
+{
+  NEW_URI,
+  LAST_SIGNAL
+};
+
+static guint gst_uri_handler_signals[LAST_SIGNAL] = { 0 };
+
 static void gst_uri_handler_base_init (gpointer g_class);
 
 GType
@@ -98,7 +106,8 @@ gst_uri_handler_base_init (gpointer g_class)
      * The URI of the given @handler has changed.
      */
 
-    g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
+    gst_uri_handler_signals[NEW_URI] =
+        g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
         gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
     initialized = TRUE;
@@ -767,5 +776,5 @@ gst_uri_handler_new_uri (GstURIHandler * handler, const gchar * uri)
 {
   g_return_if_fail (GST_IS_URI_HANDLER (handler));
 
-  g_signal_emit_by_name (handler, "new-uri", uri);
+  g_signal_emit (handler, gst_uri_handler_signals[NEW_URI], 0, uri);
 }
