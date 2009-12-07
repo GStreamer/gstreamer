@@ -48,7 +48,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate video_sink_factory =
@@ -57,7 +58,8 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate text_sink_factory =
@@ -424,6 +426,176 @@ CREATE_RGB_BLIT_FUNCTION (bgrx, 4, 2, 1, 0);
 
 #undef CREATE_RGB_BLIT_FUNCTION
 
+#define COMP_Y(ret, r, g, b) \
+{ \
+   ret = (int) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16)); \
+   ret = CLAMP (ret, 0, 255); \
+}
+
+#define COMP_U(ret, r, g, b) \
+{ \
+   ret = (int) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) + 128); \
+   ret = CLAMP (ret, 0, 255); \
+}
+
+#define COMP_V(ret, r, g, b) \
+{ \
+   ret = (int) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) + 128); \
+   ret = CLAMP (ret, 0, 255); \
+}
+
+static void
+blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
+{
+  guint counter = 0;
+  guint8 alpha, r, g, b, k;
+  guint8 Y, U, V;
+  const guint8 *src;
+  guint8 *dst;
+  gint x, y, w, h;
+  gint w2, h2;
+  gint width = render->width;
+  gint height = render->height;
+  gint src_stride;
+  gint y_offset, y_height, y_width, y_stride;
+  gint u_offset, u_height, u_width, u_stride;
+  gint v_offset, v_height, v_width, v_stride;
+  gint div;
+
+  y_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0, width,
+      height);
+  u_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1, width,
+      height);
+  v_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2, width,
+      height);
+
+  y_height =
+      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 0, height);
+  u_height =
+      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 1, height);
+  v_height =
+      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 2, height);
+
+  y_width =
+      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 0, width);
+  u_width =
+      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 1, width);
+  v_width =
+      gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, 2, width);
+
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
+  u_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+  v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, width);
+
+  while (ass_image) {
+    if (ass_image->dst_y > height || ass_image->dst_x > width)
+      goto next;
+
+    /* blend subtitles onto the video frame */
+    alpha = 255 - ((ass_image->color) & 0xff);
+    r = ((ass_image->color) >> 24) & 0xff;
+    g = ((ass_image->color) >> 16) & 0xff;
+    b = ((ass_image->color) >> 8) & 0xff;
+
+    COMP_Y (Y, r, g, b);
+    COMP_U (U, r, g, b);
+    COMP_V (V, r, g, b);
+
+    w = MIN (ass_image->w, width - ass_image->dst_x);
+    h = MIN (ass_image->h, height - ass_image->dst_y);
+
+    src_stride = ass_image->stride;
+
+    /* Y */
+    src = ass_image->bitmap;
+    dst =
+        buffer->data + y_offset + ass_image->dst_y * y_stride +
+        ass_image->dst_x;
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        k = ((guint8) src[0]) * alpha / 255;
+        dst[0] = (k * Y + (255 - k) * dst[0]) / 255;
+        src++;
+        dst++;
+      }
+      src += src_stride - w;
+      dst += y_stride - w;
+    }
+
+    w2 = (w + 1) / 2;
+    h2 = (h + 1) / 2;
+
+    /* U */
+    src = ass_image->bitmap;
+    dst =
+        buffer->data + u_offset + ((ass_image->dst_y + 1) / 2) * u_stride +
+        (ass_image->dst_x + 1) / 2;
+    for (y = 0; y < h2; y++) {
+      for (x = 0; x < w2; x++) {
+        k = src[0] * alpha / 255;
+        div = 1;
+        if (x * 2 + 1 < w) {
+          k += src[1] * alpha / 255;
+          div++;
+        }
+        if (y * 2 + 1 < h) {
+          k += src[src_stride] * alpha / 255;
+          div++;
+        }
+        if (y * 2 + 1 < h && x * 2 + 1 < w) {
+          k += src[src_stride + 1] * alpha / 255;
+          div++;
+        }
+        k /= div;
+
+        dst[0] = (k * U + (255 - k) * dst[0]) / 255;
+        dst++;
+        src += 2;
+      }
+      dst += u_stride - w2;
+      src += src_stride - w2 * 2;
+    }
+    /* V */
+    src = ass_image->bitmap;
+    dst =
+        buffer->data + v_offset + ((ass_image->dst_y + 1) / 2) * v_stride +
+        (ass_image->dst_x + 1) / 2;
+    for (y = 0; y < h2; y++) {
+      for (x = 0; x < w2; x++) {
+        k = src[0] * alpha / 255;
+        div = 1;
+        if (x * 2 + 1 < w) {
+          k += src[1] * alpha / 255;
+          div++;
+        }
+        if (y * 2 + 1 < h) {
+          k += src[src_stride] * alpha / 255;
+          div++;
+        }
+        if (y * 2 + 1 < h && x * 2 + 1 < w) {
+          k += src[src_stride + 1] * alpha / 255;
+          div++;
+        }
+        k /= div;
+
+        dst[0] = (k * V + (255 - k) * dst[0]) / 255;
+        dst++;
+        src += 2;
+      }
+      dst += v_stride - w2;
+      src += src_stride - w2 * 2;
+    }
+
+  next:
+    counter++;
+    ass_image = ass_image->next;
+  }
+  GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
+}
+
 static gboolean
 gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
 {
@@ -466,6 +638,9 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
       break;
     case GST_VIDEO_FORMAT_BGRx:
       render->blit = blit_bgrx;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      render->blit = blit_i420;
       break;
     default:
       ret = FALSE;
