@@ -201,7 +201,7 @@ G_INLINE_FUNC GstQuery * gst_query_ref (GstQuery * q);
 static inline GstQuery *
 gst_query_ref (GstQuery * q)
 {
-  return GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT_CAST (q)));
+  return GST_QUERY_CAST (gst_mini_object_ref (GST_MINI_OBJECT_CAST (q)));
 }
 
 /**
@@ -237,7 +237,7 @@ G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);
 static inline GstQuery *
 gst_query_copy (const GstQuery * q)
 {
-  return GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT_CAST (q)));
+  return GST_QUERY_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (q)));
 }
 
 /**
@@ -246,7 +246,7 @@ gst_query_copy (const GstQuery * q)
  *
  * Makes a writable query from the given query.
  */
-#define         gst_query_make_writable(q)      GST_QUERY (gst_mini_object_make_writable (GST_MINI_OBJECT (q)))
+#define         gst_query_make_writable(q)      GST_QUERY_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (q)))
 
 /* position query */
 GstQuery*       gst_query_new_position          (GstFormat format);

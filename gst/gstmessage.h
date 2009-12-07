@@ -299,7 +299,7 @@ G_INLINE_FUNC GstMessage * gst_message_ref (GstMessage * msg);
 static inline GstMessage *
 gst_message_ref (GstMessage * msg)
 {
-  return (GstMessage *) gst_mini_object_ref (GST_MINI_OBJECT (msg));
+  return (GstMessage *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (msg));
 }
 
 /**
@@ -349,7 +349,7 @@ gst_message_copy (const GstMessage * msg)
  *
  * MT safe
  */
-#define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
+#define         gst_message_make_writable(msg)  GST_MESSAGE_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (msg)))
 
 /* identifiers for events and messages */
 guint32         gst_message_get_seqnum          (GstMessage *message);

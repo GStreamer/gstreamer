@@ -229,7 +229,7 @@ typedef struct _GstEventClass GstEventClass;
  * Since: 0.10.3
  */
 #define         gst_event_replace(old_event,new_event) \
-    gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT (new_event))
+    gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
 
 /**
  * GstSeekType:
@@ -356,7 +356,7 @@ G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * event);
 static inline GstEvent *
 gst_event_ref (GstEvent * event)
 {
-  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT (event));
+  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (event));
 }
 
 /**
@@ -372,7 +372,7 @@ G_INLINE_FUNC void gst_event_unref (GstEvent * event);
 static inline void
 gst_event_unref (GstEvent * event)
 {
-  gst_mini_object_unref (GST_MINI_OBJECT (event));
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (event));
 }
 
 /* copy event */
@@ -389,7 +389,7 @@ G_INLINE_FUNC GstEvent * gst_event_copy (const GstEvent * event);
 static inline GstEvent *
 gst_event_copy (const GstEvent * event)
 {
-  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT (event)));
+  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (event)));
 }
 
 

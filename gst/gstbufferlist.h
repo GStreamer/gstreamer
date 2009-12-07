@@ -167,7 +167,7 @@ G_INLINE_FUNC GstBufferList * gst_buffer_list_copy (const GstBufferList * list);
 static inline GstBufferList *
 gst_buffer_list_copy (const GstBufferList * list)
 {
-  return GST_BUFFER_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (list)));
+  return GST_BUFFER_LIST_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (list)));
 }
 
 /**
