@@ -24,7 +24,7 @@
 
 #include "gstassrender.h"
 
-#include <gst/video/video.h>
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_ass_render_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_ass_render_lib_debug);
@@ -963,6 +963,15 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
 static void
 gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 {
+  static const gchar *mimetypes[] = {
+    "application/x-font-ttf",
+    "application/x-font-otf",
+    "application/x-truetype-font"
+  };
+  static const gchar *extensions[] = {
+    ".otf",
+    ".ttf"
+  };
   guint tag_size;
   guint index;
 
@@ -975,6 +984,9 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
     GstBuffer *buf;
     GstCaps *caps;
     GstStructure *structure;
+    gboolean valid_mimetype, valid_extension;
+    guint j;
+    const gchar *filename;
 
     GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
@@ -986,11 +998,32 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 
       caps = GST_BUFFER_CAPS (buf);
       structure = gst_caps_get_structure (caps, 0);
-      if (gst_structure_has_name (structure, "application/x-truetype-font")
-          && gst_structure_has_field (structure, "filename")) {
-        const gchar *filename;
 
-        filename = gst_structure_get_string (structure, "filename");
+      valid_mimetype = FALSE;
+      valid_extension = FALSE;
+
+      for (j = 0; j < G_N_ELEMENTS (mimetypes); j++) {
+        if (gst_structure_has_name (structure, mimetypes[j])) {
+          valid_mimetype = TRUE;
+          break;
+        }
+      }
+      filename = gst_structure_get_string (structure, "filename");
+      if (!filename)
+        continue;
+
+      if (!valid_mimetype) {
+        guint len = strlen (filename);
+        const gchar *extension = filename + len - 4;
+        for (j = 0; j < G_N_ELEMENTS (extensions); j++) {
+          if (g_ascii_strcasecmp (extension, extensions[j]) == 0) {
+            valid_extension = TRUE;
+            break;
+          }
+        }
+      }
+
+      if (valid_mimetype || valid_extension) {
         ass_add_font (render->ass_library, (gchar *) filename,
             (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
         GST_DEBUG_OBJECT (render, "registered new font %s", filename);
