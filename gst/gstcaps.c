@@ -204,7 +204,6 @@ gst_caps_init (GstCaps * caps)
   caps->structs = g_ptr_array_new ();
 }
 
-
 /**
  * gst_caps_new_empty:
  *

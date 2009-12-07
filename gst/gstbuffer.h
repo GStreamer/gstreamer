@@ -40,7 +40,7 @@ typedef struct _GstBuffer GstBuffer;
 #define GST_BUFFER_TRACE_NAME           "GstBuffer"
 
 #define GST_TYPE_BUFFER                         (gst_buffer_get_type())
-#define GST_IS_BUFFER(obj)                      (GST_MINI_OBJECT_TYPE(obj) == GST_TYPE_BUFFER)
+#define GST_IS_BUFFER(obj)                      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER))
 #define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))
 #define GST_BUFFER(obj)                         (GST_BUFFER_CAST(obj))
 

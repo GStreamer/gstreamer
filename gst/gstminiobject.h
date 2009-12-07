@@ -29,8 +29,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_MINI_OBJECT_CAST(obj)     ((GstMiniObject*)(obj))
-#define GST_MINI_OBJECT_CONST_CAST(obj) ((const GstMiniObject*)(obj))
+#define GST_IS_MINI_OBJECT_TYPE(obj,type)  ((obj) && GST_MINI_OBJECT_TYPE(obj) == (type))
+#define GST_MINI_OBJECT_CAST(obj)          ((GstMiniObject*)(obj))
+#define GST_MINI_OBJECT_CONST_CAST(obj)    ((const GstMiniObject*)(obj))
+#define GST_MINI_OBJECT(obj)               (GST_MINI_OBJECT_CAST(obj))
 
 typedef struct _GstMiniObject GstMiniObject;
 

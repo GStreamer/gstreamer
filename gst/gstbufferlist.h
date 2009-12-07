@@ -27,10 +27,10 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BUFFER_LIST (gst_buffer_list_get_type ())
-#define GST_IS_BUFFER_LIST(obj) (GST_MINI_OBJECT_TYPE(obj) == GST_TYPE_BUFFER_LIST)
+#define GST_TYPE_BUFFER_LIST      (gst_buffer_list_get_type ())
+#define GST_IS_BUFFER_LIST(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER_LIST))
 #define GST_BUFFER_LIST_CAST(obj) ((GstBufferList *)obj)
-#define GST_BUFFER_LIST(obj) (GST_BUFFER_LIST_CAST(obj))
+#define GST_BUFFER_LIST(obj)      (GST_BUFFER_LIST_CAST(obj))
 
 typedef struct _GstBufferList GstBufferList;
 typedef struct _GstBufferListIterator GstBufferListIterator;

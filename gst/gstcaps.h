@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_CAPS             (gst_caps_get_type())
 #define GST_CAPS(object)          ((GstCaps*)object)
-#define GST_IS_CAPS(object)       ((object) && (GST_MINI_OBJECT_TYPE(object) == GST_TYPE_CAPS))
+#define GST_IS_CAPS(object)       (GST_IS_MINI_OBJECT_TYPE(object, GST_TYPE_CAPS))
 
 #define GST_TYPE_STATIC_CAPS      (gst_static_caps_get_type())
 

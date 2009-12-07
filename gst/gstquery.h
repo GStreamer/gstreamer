@@ -109,7 +109,7 @@ struct _GstQueryTypeDefinition
 };
 
 #define GST_TYPE_QUERY                         (gst_query_get_type())
-#define GST_IS_QUERY(obj)                      (GST_MINI_OBJECT_TYPE (obj) == GST_TYPE_QUERY)
+#define GST_IS_QUERY(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_QUERY))
 #define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj))
 #define GST_QUERY(obj)                         (GST_QUERY_CAST(obj))
 
