@@ -518,35 +518,43 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
           packet->granulepos);
       GST_DEBUG_OBJECT (ogg, "new granule %" G_GUINT64_FORMAT,
           pad->current_granule);
-    } else if (pad->current_granule != -1) {
+    } else if (ogg->segment.rate > 0.0 && pad->current_granule != -1) {
       pad->current_granule += duration;
       GST_DEBUG_OBJECT (ogg, "interpollating granule %" G_GUINT64_FORMAT,
           pad->current_granule);
     }
-    /* we only push buffers after we have a valid granule. This is done so that
-     * we nicely skip packets without a timestamp after a seek. This is ok
-     * because we base or seek on the packet after the page with the smaller
-     * timestamp. */
-    if (pad->current_granule == -1)
-      goto no_timestamp;
-
-    if (pad->map.is_ogm) {
-      out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule);
-      out_duration = gst_util_uint64_scale (duration,
-          GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+    if (ogg->segment.rate < 0.0 && packet->granulepos == -1) {
+      /* negative rates, only set timestamp on the packets with a granulepos */
+      out_timestamp = -1;
+      out_duration = -1;
+      out_offset = -1;
+      out_offset_end = -1;
     } else {
-      out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule - duration);
-      out_duration =
-          gst_ogg_stream_granule_to_time (&pad->map,
-          pad->current_granule) - out_timestamp;
+      /* we only push buffers after we have a valid granule. This is done so that
+       * we nicely skip packets without a timestamp after a seek. This is ok
+       * because we base or seek on the packet after the page with the smaller
+       * timestamp. */
+      if (pad->current_granule == -1)
+        goto no_timestamp;
+
+      if (pad->map.is_ogm) {
+        out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+            pad->current_granule);
+        out_duration = gst_util_uint64_scale (duration,
+            GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
+      } else {
+        out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
+            pad->current_granule - duration);
+        out_duration =
+            gst_ogg_stream_granule_to_time (&pad->map,
+            pad->current_granule) - out_timestamp;
+      }
+      out_offset_end =
+          gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
+          pad->keyframe_granule);
+      out_offset =
+          gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
     }
-    out_offset_end =
-        gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
-        pad->keyframe_granule);
-    out_offset =
-        gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
   }
 
   /* check for invalid buffer sizes */
@@ -1705,11 +1713,6 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
           begin = ogg->offset;  /* raw offset of next page */
           begintime = granuletime;
 
-          /*
-             if (target - begintime > GST_SECOND)
-             break;
-           */
-
           bisect = begin;       /* *not* begin + 1 */
         } else {
           if (bisect <= begin + 1) {
@@ -1757,7 +1760,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   GstOggChain *chain = NULL;
   gint64 begin, end;
   gint64 begintime, endtime;
-  gint64 target;
+  gint64 target, keytarget;
   gint64 best;
   gint64 total;
   gint64 result = 0;
@@ -1795,10 +1798,14 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   GST_DEBUG_OBJECT (ogg, "find keyframes");
   len = pending = chain->streams->len;
 
+  /* figure out where the keyframes are */
+  keytarget = target;
+
   while (TRUE) {
     ogg_page og;
     gint64 granulepos;
     GstOggPad *pad;
+    GstClockTime keyframe_time, granule_time;
 
     ret = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset, &result);
     GST_LOG_OBJECT (ogg, "looking for next page returned %" G_GINT64_FORMAT,
@@ -1816,21 +1823,45 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     if (pad->map.is_skeleton)
       goto next;
 
-    /* we've seen this pad */
-    if (pad->keyframe_granule != -1)
-      continue;
-
     granulepos = ogg_page_granulepos (&og);
     if (granulepos == -1) {
       GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
       continue;
     }
 
-    /* store granule of this pad */
+    /* in reverse we want to go past the page with the lower timestamp */
+    if (segment->rate < 0.0) {
+      /* get time for this pad */
+      granule_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
+          granulepos);
+
+      GST_LOG_OBJECT (ogg,
+          "looking at page with ts %" GST_TIME_FORMAT ", target %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (granule_time),
+          GST_TIME_ARGS (target));
+      if (granule_time < target)
+        continue;
+    }
+
+    /* we've seen this pad before */
+    if (pad->keyframe_granule != -1)
+      continue;
+
+    /* convert granule of this pad to the granule of the keyframe */
     pad->keyframe_granule = gst_ogg_stream_granulepos_to_key_granule (&pad->map,
         granulepos);
     GST_LOG_OBJECT (ogg, "marking stream granule %" G_GINT64_FORMAT,
         pad->keyframe_granule);
+
+    /* get time of the keyframe */
+    keyframe_time =
+        gst_ogg_stream_granule_to_time (&pad->map, pad->keyframe_granule);
+    GST_LOG_OBJECT (ogg, "stream %08x granule time %" GST_TIME_FORMAT,
+        pad->map.serialno, GST_TIME_ARGS (keyframe_time));
+
+    /* collect smallest value */
+    if (keyframe_time != -1 && keyframe_time < keytarget)
+      keytarget = keyframe_time;
 
   next:
     pending--;
@@ -1838,31 +1869,29 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       break;
   }
 
-  /* figure out where the keyframes are */
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-    GstClockTime granuletime;
+  /* for negative rates we will get to the keyframe backwards */
+  if (segment->rate < 0.0)
+    goto done;
 
-    granuletime =
-        gst_ogg_stream_granule_to_time (&pad->map, pad->keyframe_granule);
-    GST_LOG_OBJECT (ogg, "stream %08x granule time %" GST_TIME_FORMAT,
-        pad->map.serialno, GST_TIME_ARGS (granuletime));
+  if (keytarget != target) {
+    GST_LOG_OBJECT (ogg, "final seek to target %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (keytarget));
 
-    if (granuletime != -1 && granuletime < target)
-      target = granuletime;
+    /* last step, seek to the location of the keyframe */
+    if (!do_binary_search (ogg, chain, begin, end, begintime, endtime,
+            keytarget, &best))
+      goto seek_error;
+  } else {
+    /* seek back to previous position */
+    GST_LOG_OBJECT (ogg, "keyframe on target");
+    gst_ogg_demux_seek (ogg, best);
   }
 
-  GST_LOG_OBJECT (ogg, "final seek to target %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (target));
-
-  /* last step, seek to the location of the keyframe */
-  if (!do_binary_search (ogg, chain, begin, end, begintime, endtime, target,
-          &best))
-    goto seek_error;
-
+done:
   if (keyframe) {
-    segment->time = target;
-    segment->last_stop = target - begintime;
+    if (segment->rate > 0.0)
+      segment->time = keytarget;
+    segment->last_stop = keytarget - begintime;
   }
 
   *rchain = chain;
