@@ -74,6 +74,9 @@ struct _GstValueSubtractInfo
 #define FUNDAMENTAL_TYPE_ID(type) \
     ((type) >> G_TYPE_FUNDAMENTAL_SHIFT)
 
+#define VALUE_LIST_SIZE(v) (((GArray *) (v)->data[0].v_pointer)->len)
+#define VALUE_LIST_GET_VALUE(v, index) ((const GValue *) &g_array_index ((GArray *) (v)->data[0].v_pointer, GValue, (index)))
+
 static GArray *gst_value_table;
 static GHashTable *gst_value_hash;
 static GstValueTable *gst_value_tables_fundamental[FUNDAMENTAL_TYPE_ID_MAX + 1];
@@ -351,9 +354,9 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   g_return_if_fail (G_IS_VALUE (value2));
 
   value1_length =
-      (GST_VALUE_HOLDS_LIST (value1) ? gst_value_list_get_size (value1) : 1);
+      (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
   value2_length =
-      (GST_VALUE_HOLDS_LIST (value2) ? gst_value_list_get_size (value2) : 1);
+      (GST_VALUE_HOLDS_LIST (value2) ? VALUE_LIST_SIZE (value2) : 1);
   g_value_init (dest, GST_TYPE_LIST);
   array = (GArray *) dest->data[0].v_pointer;
   g_array_set_size (array, value1_length + value2_length);
@@ -361,7 +364,7 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   if (GST_VALUE_HOLDS_LIST (value1)) {
     for (i = 0; i < value1_length; i++) {
       gst_value_init_and_copy (&g_array_index (array, GValue, i),
-          gst_value_list_get_value (value1, i));
+          VALUE_LIST_GET_VALUE (value1, i));
     }
   } else {
     gst_value_init_and_copy (&g_array_index (array, GValue, 0), value1);
@@ -370,7 +373,7 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   if (GST_VALUE_HOLDS_LIST (value2)) {
     for (i = 0; i < value2_length; i++) {
       gst_value_init_and_copy (&g_array_index (array, GValue,
-              i + value1_length), gst_value_list_get_value (value2, i));
+              i + value1_length), VALUE_LIST_GET_VALUE (value2, i));
     }
   } else {
     gst_value_init_and_copy (&g_array_index (array, GValue, value1_length),
@@ -408,7 +411,7 @@ const GValue *
 gst_value_list_get_value (const GValue * value, guint index)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), NULL);
-  g_return_val_if_fail (index < gst_value_list_get_size (value), NULL);
+  g_return_val_if_fail (index < VALUE_LIST_SIZE (value), NULL);
 
   return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
       GValue, index);
@@ -2351,9 +2354,9 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   GValue intersection = { 0, };
   gboolean ret = FALSE;
 
-  size = gst_value_list_get_size (value1);
+  size = VALUE_LIST_SIZE (value1);
   for (i = 0; i < size; i++) {
-    const GValue *cur = gst_value_list_get_value (value1, i);
+    const GValue *cur = VALUE_LIST_GET_VALUE (value1, i);
 
     if (gst_value_intersect (&intersection, cur, value2)) {
       /* append value */
@@ -2679,9 +2682,9 @@ gst_value_subtract_from_list (GValue * dest, const GValue * minuend,
 
   ltype = gst_value_list_get_type ();
 
-  size = gst_value_list_get_size (minuend);
+  size = VALUE_LIST_SIZE (minuend);
   for (i = 0; i < size; i++) {
-    const GValue *cur = gst_value_list_get_value (minuend, i);
+    const GValue *cur = VALUE_LIST_GET_VALUE (minuend, i);
 
     if (gst_value_subtract (&subtraction, cur, subtrahend)) {
       if (!ret) {
@@ -2713,9 +2716,9 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
   GValue *subtraction = &data[0], *result = &data[1];
 
   gst_value_init_and_copy (result, minuend);
-  size = gst_value_list_get_size (subtrahend);
+  size = VALUE_LIST_SIZE (subtrahend);
   for (i = 0; i < size; i++) {
-    const GValue *cur = gst_value_list_get_value (subtrahend, i);
+    const GValue *cur = VALUE_LIST_GET_VALUE (subtrahend, i);
 
     if (gst_value_subtract (subtraction, result, cur)) {
       GValue *temp = result;
