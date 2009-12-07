@@ -948,7 +948,6 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   } else {
     gst_ass_render_process_text (render, buffer, sub_running_time,
         sub_running_time_end - sub_running_time);
-    gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
   }
 
