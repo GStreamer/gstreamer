@@ -721,6 +721,45 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   return ret;
 }
 
+static void
+gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
+{
+  guint tag_size;
+  guint index;
+
+  if (!taglist)
+    return;
+
+  tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
+  if (tag_size > 0 && render->embeddedfonts) {
+    const GValue *value;
+    GstBuffer *buf;
+    GstCaps *caps;
+    GstStructure *structure;
+
+    GST_DEBUG_OBJECT (render, "TAG event has attachments");
+
+    for (index = 0; index < tag_size; index++) {
+      value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT, index);
+      buf = gst_value_get_buffer (value);
+      if (!buf || !GST_BUFFER_CAPS (buf))
+        continue;
+
+      caps = GST_BUFFER_CAPS (buf);
+      structure = gst_caps_get_structure (caps, 0);
+      if (gst_structure_has_name (structure, "application/x-truetype-font")
+          && gst_structure_has_field (structure, "filename")) {
+        const gchar *filename;
+
+        filename = gst_structure_get_string (structure, "filename");
+        ass_add_font (render->ass_library, (gchar *) filename,
+            (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+        GST_DEBUG_OBJECT (render, "registered new font %s", filename);
+      }
+    }
+  }
+}
+
 static gboolean
 gst_ass_render_event_video (GstPad * pad, GstEvent * event)
 {
@@ -763,43 +802,13 @@ gst_ass_render_event_video (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_TAG:
     {
-      GstTagList *taglist = gst_tag_list_new ();
-      guint tag_size;
-      guint index;
+      GstTagList *taglist = NULL;
 
       /* tag events may contain attachments which might be fonts */
       GST_DEBUG_OBJECT (render, "got TAG event");
 
       gst_event_parse_tag (event, &taglist);
-      tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
-      if (tag_size > 0 && render->embeddedfonts) {
-        const GValue *value;
-        GstBuffer *buf;
-        GstCaps *caps;
-        GstStructure *structure;
-
-        GST_DEBUG_OBJECT (render, "TAG event has attachments");
-
-        for (index = 0; index < tag_size; index++) {
-          value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT,
-              index);
-          buf = gst_value_get_buffer (value);
-          if (!buf || !GST_BUFFER_CAPS (buf))
-            continue;
-
-          caps = GST_BUFFER_CAPS (buf);
-          structure = gst_caps_get_structure (caps, 0);
-          if (gst_structure_has_name (structure, "application/x-truetype-font")
-              && gst_structure_has_field (structure, "filename")) {
-            const gchar *filename;
-
-            filename = gst_structure_get_string (structure, "filename");
-            ass_add_font (render->ass_library, (gchar *) filename,
-                (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-            GST_DEBUG_OBJECT (render, "registered new font %s", filename);
-          }
-        }
-      }
+      gst_ass_render_handle_tags (render, taglist);
       ret = gst_pad_push_event (render->srcpad, event);
       break;
     }
@@ -895,41 +904,13 @@ gst_ass_render_event_text (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
     {
-      GstTagList *taglist = gst_tag_list_new ();
-      guint tag_size;
-      guint index;
+      GstTagList *taglist = NULL;
 
+      /* tag events may contain attachments which might be fonts */
       GST_DEBUG_OBJECT (render, "got TAG event");
 
       gst_event_parse_tag (event, &taglist);
-      tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
-      if (tag_size > 0 && render->embeddedfonts) {
-        const GValue *value;
-        GstBuffer *buf;
-        GstCaps *caps;
-        GstStructure *structure;
-
-        GST_DEBUG_OBJECT (render, "TAG event has attachments");
-
-        for (index = 0; index < tag_size; index++) {
-          value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT,
-              index);
-          buf = gst_value_get_buffer (value);
-          if (!buf || !GST_BUFFER_CAPS (buf))
-            continue;
-
-          caps = GST_BUFFER_CAPS (buf);
-          structure = gst_caps_get_structure (caps, 0);
-          if (gst_structure_has_name (structure, "application/x-truetype-font")
-              && gst_structure_has_field (structure, "filename")) {
-            const gchar *filename;
-            filename = gst_structure_get_string (structure, "filename");
-            ass_add_font (render->ass_library, (gchar *) filename,
-                (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-            GST_DEBUG_OBJECT (render, "registered new font %s", filename);
-          }
-        }
-      }
+      gst_ass_render_handle_tags (render, taglist);
       ret = gst_pad_push_event (render->srcpad, event);
       break;
     }
