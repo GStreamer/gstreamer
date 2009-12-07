@@ -143,13 +143,13 @@ struct _GstPlaySink
   GstElement *video_sink;
   GstElement *visualisation;
   GstElement *text_sink;
-  gfloat volume;
+  gdouble volume;
   gboolean mute;
   gchar *font_desc;             /* font description */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
   gint count;
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
-  gboolean mute_changed;        /* ... has been reated yet */
+  gboolean mute_changed;        /* ... has been created yet */
 };
 
 struct _GstPlaySinkClass
@@ -224,12 +224,6 @@ static void gst_play_sink_handle_message (GstBin * bin, GstMessage * message);
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
-static const GstElementDetails gst_play_sink_details =
-GST_ELEMENT_DETAILS ("Player Sink",
-    "Generic/Bin/Sink",
-    "Convenience sink for multiple streams",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 G_DEFINE_TYPE (GstPlaySink, gst_play_sink, GST_TYPE_BIN);
 
 static void
@@ -300,7 +294,10 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       gst_static_pad_template_get (&videotemplate));
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&texttemplate));
-  gst_element_class_set_details (gstelement_klass, &gst_play_sink_details);
+  gst_element_class_set_details_simple (gstelement_klass, "Player Sink",
+      "Generic/Bin/Sink",
+      "Convenience sink for multiple streams",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_sink_change_state);
