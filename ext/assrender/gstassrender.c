@@ -48,8 +48,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static GstStaticPadTemplate video_sink_factory =
@@ -58,8 +57,7 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static GstStaticPadTemplate text_sink_factory =
@@ -426,6 +424,7 @@ CREATE_RGB_BLIT_FUNCTION (bgrx, 4, 2, 1, 0);
 
 #undef CREATE_RGB_BLIT_FUNCTION
 
+#if 0
 #define COMP_Y(ret, r, g, b) \
 { \
    ret = (int) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16)); \
@@ -595,6 +594,7 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
   }
   GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
 }
+#endif
 
 static gboolean
 gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
@@ -639,9 +639,11 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
     case GST_VIDEO_FORMAT_BGRx:
       render->blit = blit_bgrx;
       break;
+#if 0
     case GST_VIDEO_FORMAT_I420:
       render->blit = blit_i420;
       break;
+#endif
     default:
       ret = FALSE;
       goto out;
