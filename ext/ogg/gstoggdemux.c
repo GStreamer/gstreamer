@@ -140,6 +140,7 @@ gst_ogg_pad_init (GstOggPad * pad)
   pad->mode = GST_OGG_PAD_MODE_INIT;
 
   pad->current_granule = -1;
+  pad->keyframe_granule = -1;
 
   pad->start_time = GST_CLOCK_TIME_NONE;
 
@@ -356,6 +357,7 @@ gst_ogg_pad_reset (GstOggPad * pad)
   pad->last_ret = GST_FLOW_OK;
   pad->last_stop = GST_CLOCK_TIME_NONE;
   pad->current_granule = -1;
+  pad->keyframe_granule = -1;
 }
 
 /* called when the skeleton fishead is found. Caller ensures the packet is
@@ -1601,63 +1603,17 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   return TRUE;
 }
 
-/* 
- * do seek to time @position, return FALSE or chain and TRUE
- */
 static gboolean
-gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
-    gboolean accurate, GstOggChain ** rchain)
+do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
+    gint64 end, gint64 begintime, gint64 endtime, gint64 target,
+    gint64 * offset)
 {
-  guint64 position;
-  GstOggChain *chain = NULL;
-  gint64 begin, end;
-  gint64 begintime, endtime;
-  gint64 target;
   gint64 best;
-  gint64 total;
-  gint64 result = 0;
   GstFlowReturn ret;
-  gint i;
+  gint64 result = 0;
 
-  position = segment->last_stop;
-
-  /* first find the chain to search in */
-  total = ogg->total_time;
-  if (ogg->chains->len == 0)
-    goto no_chains;
-
-  for (i = ogg->chains->len - 1; i >= 0; i--) {
-    chain = g_array_index (ogg->chains, GstOggChain *, i);
-    total -= chain->total_time;
-    if (position >= total)
-      break;
-  }
-
-  begin = chain->offset;
-  end = chain->end_offset;
-  begintime = chain->begin_time;
-  endtime = begintime + chain->total_time;
-  target = position - total + begintime;
-  if (accurate) {
-    if (segment->rate > 0.0) {
-      /* FIXME, seek 2 seconds early to catch keyframes, better implement
-       * keyframe detection. */
-      if (target - 2 * GST_SECOND > begintime)
-        target = target - (gint64) 2 *GST_SECOND;
-      else
-        target = begintime;
-    } else {
-      if (target + GST_SECOND < endtime)
-        target = target + (gint64) GST_SECOND;
-      else
-        target = endtime;
-    }
-  }
   best = begin;
 
-  GST_DEBUG_OBJECT (ogg,
-      "seeking to %" GST_TIME_FORMAT " in chain %p",
-      GST_TIME_ARGS (position), chain);
   GST_DEBUG_OBJECT (ogg,
       "chain offset %" G_GINT64_FORMAT ", end offset %" G_GINT64_FORMAT, begin,
       end);
@@ -1715,6 +1671,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
         GstClockTime granuletime;
         GstOggPad *pad;
 
+        /* get the granulepos */
         GST_LOG_OBJECT (ogg, "found next ogg page at %" G_GINT64_FORMAT,
             result);
         granulepos = ogg_page_granulepos (&og);
@@ -1723,14 +1680,17 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
           continue;
         }
 
+        /* get the stream */
         pad = gst_ogg_chain_get_stream (chain, ogg_page_serialno (&og));
         if (pad == NULL || pad->map.is_skeleton)
           continue;
 
+        /* convert granulepos to time */
         granuletime = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
             granulepos);
         if (granuletime < pad->start_time)
           continue;
+
         GST_LOG_OBJECT (ogg, "granulepos %" G_GINT64_FORMAT " maps to time %"
             GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (granuletime));
 
@@ -1745,8 +1705,10 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
           begin = ogg->offset;  /* raw offset of next page */
           begintime = granuletime;
 
-          if (target - begintime > GST_SECOND)
-            break;
+          /*
+             if (target - begintime > GST_SECOND)
+             break;
+           */
 
           bisect = begin;       /* *not* begin + 1 */
         } else {
@@ -1770,9 +1732,139 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
         goto seek_error;
     }
   }
-
   GST_DEBUG_OBJECT (ogg, "seeking to %" G_GINT64_FORMAT, best);
   gst_ogg_demux_seek (ogg, best);
+  *offset = best;
+
+  return TRUE;
+
+  /* ERRORS */
+seek_error:
+  {
+    GST_DEBUG_OBJECT (ogg, "got a seek error");
+    return FALSE;
+  }
+}
+
+/*
+ * do seek to time @position, return FALSE or chain and TRUE
+ */
+static gboolean
+gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
+    gboolean accurate, gboolean keyframe, GstOggChain ** rchain)
+{
+  guint64 position;
+  GstOggChain *chain = NULL;
+  gint64 begin, end;
+  gint64 begintime, endtime;
+  gint64 target;
+  gint64 best;
+  gint64 total;
+  gint64 result = 0;
+  GstFlowReturn ret;
+  gint i, pending, len;
+
+  position = segment->last_stop;
+
+  /* first find the chain to search in */
+  total = ogg->total_time;
+  if (ogg->chains->len == 0)
+    goto no_chains;
+
+  for (i = ogg->chains->len - 1; i >= 0; i--) {
+    chain = g_array_index (ogg->chains, GstOggChain *, i);
+    total -= chain->total_time;
+    if (position >= total)
+      break;
+  }
+
+  /* first step, locate page containing the required data */
+  begin = chain->offset;
+  end = chain->end_offset;
+  begintime = chain->begin_time;
+  endtime = begintime + chain->total_time;
+  target = position - total + begintime;
+
+  if (!do_binary_search (ogg, chain, begin, end, begintime, endtime, target,
+          &best))
+    goto seek_error;
+
+  /* second step: find pages for all streams, we use the keyframe_granule to keep
+   * track of which ones we saw. If we have seen a page for each stream we can
+   * calculate the positions of each keyframe. */
+  GST_DEBUG_OBJECT (ogg, "find keyframes");
+  len = pending = chain->streams->len;
+
+  while (TRUE) {
+    ogg_page og;
+    gint64 granulepos;
+    GstOggPad *pad;
+
+    ret = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset, &result);
+    GST_LOG_OBJECT (ogg, "looking for next page returned %" G_GINT64_FORMAT,
+        result);
+    if (ret == GST_FLOW_LIMIT) {
+      GST_LOG_OBJECT (ogg, "reached limit");
+      break;
+    }
+
+    /* get the stream */
+    pad = gst_ogg_chain_get_stream (chain, ogg_page_serialno (&og));
+    if (pad == NULL)
+      continue;
+
+    if (pad->map.is_skeleton)
+      goto next;
+
+    /* we've seen this pad */
+    if (pad->keyframe_granule != -1)
+      continue;
+
+    granulepos = ogg_page_granulepos (&og);
+    if (granulepos == -1) {
+      GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
+      continue;
+    }
+
+    /* store granule of this pad */
+    pad->keyframe_granule = gst_ogg_stream_granulepos_to_key_granule (&pad->map,
+        granulepos);
+    GST_LOG_OBJECT (ogg, "marking stream granule %" G_GINT64_FORMAT,
+        pad->keyframe_granule);
+
+  next:
+    pending--;
+    if (pending == 0)
+      break;
+  }
+
+  /* figure out where the keyframes are */
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+    GstClockTime granuletime;
+
+    granuletime =
+        gst_ogg_stream_granule_to_time (&pad->map, pad->keyframe_granule);
+    GST_LOG_OBJECT (ogg, "stream %08x granule time %" GST_TIME_FORMAT,
+        pad->map.serialno, GST_TIME_ARGS (granuletime));
+
+    if (granuletime != -1 && granuletime < target)
+      target = granuletime;
+  }
+
+  GST_LOG_OBJECT (ogg, "final seek to target %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (target));
+
+  /* last step, seek to the location of the keyframe */
+  if (!do_binary_search (ogg, chain, begin, end, begintime, endtime, target,
+          &best))
+    goto seek_error;
+
+  if (keyframe) {
+    segment->time = target;
+    segment->last_stop = target - begintime;
+  }
+
   *rchain = chain;
 
   return TRUE;
@@ -1795,7 +1887,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 {
   GstOggChain *chain = NULL;
   gboolean res;
-  gboolean flush, accurate;
+  gboolean flush, accurate, keyframe;
   GstFormat format;
   gdouble rate;
   GstSeekFlags flags;
@@ -1829,6 +1921,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
   accurate = flags & GST_SEEK_FLAG_ACCURATE;
+  keyframe = flags & GST_SEEK_FLAG_KEY_UNIT;
 
   /* first step is to unlock the streaming thread if it is
    * blocked in a chain call, we do this by starting the flush. because
@@ -1917,7 +2010,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   }
 
   /* for reverse we will already seek accurately */
-  res = gst_ogg_demux_do_seek (ogg, &ogg->segment, accurate, &chain);
+  res = gst_ogg_demux_do_seek (ogg, &ogg->segment, accurate, keyframe, &chain);
 
   /* seek failed, make sure we continue the current chain */
   if (!res) {
