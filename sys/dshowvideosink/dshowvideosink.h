@@ -45,7 +45,7 @@ typedef struct _GstDshowVideoSinkClass GstDshowVideoSinkClass;
 class RendererSupport
 {
 public:
-  virtual ~RenderSupport() {};
+  virtual ~RendererSupport() {};
   virtual const char *GetName() = 0;
   virtual IBaseFilter *GetFilter() = 0;
   virtual gboolean Configure() = 0;
