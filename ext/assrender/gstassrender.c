@@ -201,7 +201,7 @@ gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
   render->ass_library = ass_library_init ();
   ass_set_message_cb (render->ass_library, _libass_message_cb, render);
   ass_set_fonts_dir (render->ass_library, "./");
-  ass_set_extract_fonts (render->ass_library, 0);
+  ass_set_extract_fonts (render->ass_library, 1);
 
   render->ass_renderer = ass_renderer_init (render->ass_library);
   if (!render->ass_renderer) {
@@ -252,6 +252,7 @@ gst_assrender_set_property (GObject * object, guint prop_id,
       break;
     case ARG_EMBEDDEDFONTS:
       render->embeddedfonts = g_value_get_boolean (value);
+      ass_set_extract_fonts (render->ass_library, render->embeddedfonts);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
