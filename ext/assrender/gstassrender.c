@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_assrender_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_assrender_lib_debug);
 #define GST_CAT_DEFAULT gst_assrender_debug
 
 /* Filter signals and props */
@@ -131,6 +132,26 @@ gst_assrender_class_init (GstassrenderClass * klass)
 }
 
 static void
+_libass_message_cb (int level, const char *fmt, va_list args, void *data)
+{
+  Gstassrender *render = GST_ASSRENDER (data);
+  gchar *message = g_strdup_vprintf (fmt, args);
+
+  if (level < 2)
+    GST_CAT_ERROR_OBJECT (gst_assrender_lib_debug, render, message);
+  else if (level < 4)
+    GST_CAT_WARNING_OBJECT (gst_assrender_lib_debug, render, message);
+  else if (level < 5)
+    GST_CAT_INFO_OBJECT (gst_assrender_lib_debug, render, message);
+  else if (level < 6)
+    GST_CAT_DEBUG_OBJECT (gst_assrender_lib_debug, render, message);
+  else
+    GST_CAT_LOG_OBJECT (gst_assrender_lib_debug, render, message);
+
+  g_free (message);
+}
+
+static void
 gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
 {
   GST_DEBUG_OBJECT (render, "init");
@@ -178,6 +199,7 @@ gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
   gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
 
   render->ass_library = ass_library_init ();
+  ass_set_message_cb (render->ass_library, _libass_message_cb, render);
   ass_set_fonts_dir (render->ass_library, "./");
   ass_set_extract_fonts (render->ass_library, 0);
 
@@ -944,6 +966,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_assrender_debug, "assrender",
       0, "ASS/SSA subtitle renderer");
+  GST_DEBUG_CATEGORY_INIT (gst_assrender_lib_debug, "assrender_library",
+      0, "ASS/SSA subtitle renderer library");
 
   return gst_element_register (plugin, "assrender",
       GST_RANK_PRIMARY, GST_TYPE_ASSRENDER);
