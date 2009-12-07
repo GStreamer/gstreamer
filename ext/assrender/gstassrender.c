@@ -440,10 +440,9 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
     codec_private = (gchar *) GST_BUFFER_DATA (priv);
     codec_private_size = GST_BUFFER_SIZE (priv);
 
-    if (render->ass_track)
-      ass_free_track (render->ass_track);
+    if (!render->ass_track)
+      render->ass_track = ass_new_track (render->ass_library);
 
-    render->ass_track = ass_new_track (render->ass_library);
     ass_process_codec_private (render->ass_track,
         codec_private, codec_private_size);
 
