@@ -654,9 +654,6 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   GstClockTime sub_running_time, vid_running_time;
   GstClockTime sub_running_time_end;
 
-  gst_segment_set_last_stop (&render->subtitle_segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
-
   if (render->subtitle_flushing) {
     gst_buffer_unref (buffer);
     return GST_FLOW_WRONG_STATE;
@@ -672,6 +669,9 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+
+  gst_segment_set_last_stop (&render->subtitle_segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
 
   sub_running_time =
       gst_segment_to_running_time (&render->subtitle_segment, GST_FORMAT_TIME,
