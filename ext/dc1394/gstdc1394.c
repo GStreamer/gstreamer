@@ -156,8 +156,8 @@ gst_dc1394_class_init (GstDc1394Class * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_ISO_SPEED, g_param_spec_int ("iso-speed",
-          "The iso bandwidth in Mbps {100, 200, 400, 800, 1600, 3200}",
-          "The iso bandwidth in Mbps {100, 200, 400, 800, 1600, 3200}", 100,
+          "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)",
+          "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)", 100,
           3200, 400, G_PARAM_READWRITE));
 
   gstbasesrc_class->get_caps = gst_dc1394_getcaps;
@@ -239,7 +239,8 @@ gst_dc1394_set_property (GObject * object, guint prop_id,
           src->iso_speed = g_value_get_int (value);
           break;
         default:
-          g_warning ("Invalid iso speed %d, ignoring", g_value_get_int (value));
+          g_warning ("%s: Invalid iso speed %d, ignoring",
+              GST_ELEMENT_NAME (src), g_value_get_int (value));
           break;
       }
     default:
