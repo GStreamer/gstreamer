@@ -62,6 +62,7 @@ struct _GstDc1394 {
   gboolean segment;
   gint camnum; 
   gint bufsize; 
+  gint iso_speed;
 
   dc1394_t * dc1394;
   dc1394camera_t * camera; 

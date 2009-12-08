@@ -54,7 +54,8 @@ enum
   PROP_0,
   PROP_TIMESTAMP_OFFSET,
   PROP_CAMNUM,
-  PROP_BUFSIZE
+  PROP_BUFSIZE,
+  PROP_ISO_SPEED
       /* FILL ME */
 };
 
@@ -153,6 +154,11 @@ gst_dc1394_class_init (GstDc1394Class * klass)
           "The number of frames in the dma ringbuffer", 1,
           G_MAXINT, 10, G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_ISO_SPEED, g_param_spec_int ("iso-speed",
+          "The iso bandwidth in Mbps",
+          "The iso bandwidth in Mbps", 1, G_MAXINT, 400, G_PARAM_READWRITE));
+
   gstbasesrc_class->get_caps = gst_dc1394_getcaps;
   gstbasesrc_class->set_caps = gst_dc1394_setcaps;
 
@@ -172,6 +178,7 @@ gst_dc1394_init (GstDc1394 * src, GstDc1394Class * g_class)
   src->timestamp_offset = 0;
   src->caps = gst_dc1394_get_all_dc1394_caps ();
   src->bufsize = 10;
+  src->iso_speed = 400;
   src->camnum = 0;
   src->n_frames = 0;
 
@@ -217,6 +224,9 @@ gst_dc1394_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BUFSIZE:
       src->bufsize = g_value_get_int (value);
+      break;
+    case PROP_ISO_SPEED:
+      src->iso_speed = g_value_get_int (value);
     default:
       break;
   }
@@ -237,6 +247,9 @@ gst_dc1394_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BUFSIZE:
       g_value_set_int (value, src->bufsize);
+      break;
+    case PROP_ISO_SPEED:
+      g_value_set_int (value, src->iso_speed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1057,16 +1070,49 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
   GST_LOG_OBJECT (src, "The dma buffer queue size is %d  buffers",
       src->bufsize);
 
-  //FIXME HAVE THIS AUTOMATIC OR AS A PARAMETER ?
-  err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_400);
+  switch (src->iso_speed) {
+    case 100:
+      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_100);
+      break;
+    case 200:
+      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_200);
+      break;
+    case 400:
+      err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_400);
+      break;
+    case 800:
+      if (src->camera->bmode_capable > 0) {
+        dc1394_video_set_operation_mode (src->camera,
+            DC1394_OPERATION_MODE_1394B);
+        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_800);
+      }
+      break;
+    case 1600:
+      if (src->camera->bmode_capable > 0) {
+        dc1394_video_set_operation_mode (src->camera,
+            DC1394_OPERATION_MODE_1394B);
+        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_1600);
+      }
+      break;
+    case 3200:
+      if (src->camera->bmode_capable > 0) {
+        dc1394_video_set_operation_mode (src->camera,
+            DC1394_OPERATION_MODE_1394B);
+        err = dc1394_video_set_iso_speed (src->camera, DC1394_ISO_SPEED_3200);
+      }
+      break;
+    default:
+      GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Invalid ISO speed"),
+          ("Invalid ISO speed"));
+      goto error;
+      break;
+  }
 
   if (err != DC1394_SUCCESS) {
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Could not set ISO speed"),
         ("Could not set ISO speed"));
     goto error;
   }
-
-
 
   GST_LOG_OBJECT (src, "Setting mode :  %d", src->vmode);
   err = dc1394_video_set_mode (src->camera, src->vmode);
