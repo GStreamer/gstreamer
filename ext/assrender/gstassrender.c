@@ -133,6 +133,7 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
       GST_DEBUG_FUNCPTR (gst_ass_render_change_state);
 }
 
+#if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
 static void
 _libass_message_cb (gint level, const gchar * fmt, va_list args, gpointer data)
 {
@@ -152,6 +153,7 @@ _libass_message_cb (gint level, const gchar * fmt, va_list args, gpointer data)
 
   g_free (message);
 }
+#endif
 
 static void
 gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
@@ -201,7 +203,9 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
   gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
 
   render->ass_library = ass_library_init ();
+#if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
   ass_set_message_cb (render->ass_library, _libass_message_cb, render);
+#endif
   ass_set_fonts_dir (render->ass_library, "./");
   ass_set_extract_fonts (render->ass_library, 1);
 
