@@ -388,13 +388,18 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
     mp3parse->seek_table = NULL;
   }
 
-  g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+  g_mutex_lock (mp3parse->pending_seeks_lock);
   if (mp3parse->pending_accurate_seeks) {
     g_slist_foreach (mp3parse->pending_accurate_seeks, (GFunc) g_free, NULL);
     g_slist_free (mp3parse->pending_accurate_seeks);
     mp3parse->pending_accurate_seeks = NULL;
   }
-  g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+  if (mp3parse->pending_nonaccurate_seeks) {
+    g_slist_foreach (mp3parse->pending_nonaccurate_seeks, (GFunc) g_free, NULL);
+    g_slist_free (mp3parse->pending_nonaccurate_seeks);
+    mp3parse->pending_nonaccurate_seeks = NULL;
+  }
+  g_mutex_unlock (mp3parse->pending_seeks_lock);
 
   if (mp3parse->pending_segment) {
     GstEvent **eventp = &mp3parse->pending_segment;
@@ -424,7 +429,7 @@ gst_mp3parse_init (GstMPEGAudioParse * mp3parse, GstMPEGAudioParseClass * klass)
   gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->srcpad);
 
   mp3parse->adapter = gst_adapter_new ();
-  mp3parse->pending_accurate_seeks_lock = g_mutex_new ();
+  mp3parse->pending_seeks_lock = g_mutex_new ();
 
   gst_mp3parse_reset (mp3parse);
 }
@@ -440,8 +445,8 @@ gst_mp3parse_dispose (GObject * object)
     g_object_unref (mp3parse->adapter);
     mp3parse->adapter = NULL;
   }
-  g_mutex_free (mp3parse->pending_accurate_seeks_lock);
-  mp3parse->pending_accurate_seeks_lock = NULL;
+  g_mutex_free (mp3parse->pending_seeks_lock);
+  mp3parse->pending_seeks_lock = NULL;
 
   g_list_foreach (mp3parse->pending_events, (GFunc) gst_mini_object_unref,
       NULL);
@@ -467,14 +472,14 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, pos;
       gboolean update;
+      MPEGAudioPendingAccurateSeek *seek = NULL;
+      GSList *node;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
 
-      g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+      g_mutex_lock (mp3parse->pending_seeks_lock);
       if (format == GST_FORMAT_BYTES && mp3parse->pending_accurate_seeks) {
-        MPEGAudioPendingAccurateSeek *seek = NULL;
-        GSList *node;
 
         for (node = mp3parse->pending_accurate_seeks; node; node = node->next) {
           MPEGAudioPendingAccurateSeek *tmp = node->data;
@@ -513,7 +518,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
           mp3parse->pending_accurate_seeks =
               g_slist_delete_link (mp3parse->pending_accurate_seeks, node);
 
-          g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+          g_mutex_unlock (mp3parse->pending_seeks_lock);
           res = gst_pad_push_event (mp3parse->srcpad, event);
 
           return res;
@@ -522,7 +527,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
               "Accurate seek not possible, didn't get an appropiate upstream segment");
         }
       }
-      g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+      g_mutex_unlock (mp3parse->pending_seeks_lock);
 
       mp3parse->exact_position = FALSE;
 
@@ -535,6 +540,32 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
         if (mp3parse_bytepos_to_time (mp3parse, start, &seg_start, FALSE) &&
             mp3parse_bytepos_to_time (mp3parse, pos, &seg_pos, FALSE)) {
           gst_event_unref (event);
+
+          /* search the pending nonaccurate seeks */
+          g_mutex_lock (mp3parse->pending_seeks_lock);
+          seek = NULL;
+          for (node = mp3parse->pending_nonaccurate_seeks; node;
+              node = node->next) {
+            MPEGAudioPendingAccurateSeek *tmp = node->data;
+
+            if (tmp->upstream_start == pos) {
+              seek = tmp;
+              break;
+            }
+          }
+
+          if (seek) {
+            if (seek->segment.stop == -1) {
+              /* corrent the segment end, because non-accurate seeks might make
+               * our streaming end earlier (see bug #603695) */
+              seg_stop = -1;
+            }
+            g_free (seek);
+            mp3parse->pending_nonaccurate_seeks =
+                g_slist_delete_link (mp3parse->pending_nonaccurate_seeks, node);
+          }
+          g_mutex_unlock (mp3parse->pending_seeks_lock);
+
           event = gst_event_new_new_segment_full (update, rate, applied_rate,
               GST_FORMAT_TIME, seg_start, seg_stop, seg_pos);
           format = GST_FORMAT_TIME;
@@ -1869,6 +1900,8 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   gint64 byte_cur, byte_stop;
+  MPEGAudioPendingAccurateSeek *seek;
+  GstClockTime start;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -1888,6 +1921,13 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
       return TRUE;
   }
 
+  seek = g_new0 (MPEGAudioPendingAccurateSeek, 1);
+
+  seek->segment = mp3parse->segment;
+
+  gst_segment_set_seek (&seek->segment, rate, GST_FORMAT_TIME,
+      flags, cur_type, cur, stop_type, stop, NULL);
+
   /* Handle TIME based seeks by converting to a BYTE position */
 
   /* For accurate seeking get the frame 9 (MPEG1) or 29 (MPEG2) frames
@@ -1899,15 +1939,6 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
    */
 
   if (flags & GST_SEEK_FLAG_ACCURATE) {
-    MPEGAudioPendingAccurateSeek *seek =
-        g_new0 (MPEGAudioPendingAccurateSeek, 1);
-    GstClockTime start;
-
-    seek->segment = mp3parse->segment;
-
-    gst_segment_set_seek (&seek->segment, rate, GST_FORMAT_TIME,
-        flags, cur_type, cur, stop_type, stop, NULL);
-
     if (!mp3parse->seek_table) {
       byte_cur = 0;
       byte_stop = -1;
@@ -1957,21 +1988,21 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
     }
     event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
         byte_cur, stop_type, byte_stop);
-    g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+    g_mutex_lock (mp3parse->pending_seeks_lock);
     seek->upstream_start = byte_cur;
     seek->timestamp_start = start;
     mp3parse->pending_accurate_seeks =
         g_slist_prepend (mp3parse->pending_accurate_seeks, seek);
-    g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+    g_mutex_unlock (mp3parse->pending_seeks_lock);
     if (gst_pad_push_event (mp3parse->sinkpad, event)) {
       mp3parse->exact_position = TRUE;
       return TRUE;
     } else {
       mp3parse->exact_position = TRUE;
-      g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+      g_mutex_lock (mp3parse->pending_seeks_lock);
       mp3parse->pending_accurate_seeks =
           g_slist_remove (mp3parse->pending_accurate_seeks, seek);
-      g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+      g_mutex_unlock (mp3parse->pending_seeks_lock);
       g_free (seek);
       return FALSE;
     }
@@ -1993,7 +2024,24 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
   event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
       byte_cur, stop_type, byte_stop);
 
-  return gst_pad_push_event (mp3parse->sinkpad, event);
+  GST_LOG_OBJECT (mp3parse, "Storing pending seek");
+  g_mutex_lock (mp3parse->pending_seeks_lock);
+  seek->upstream_start = byte_cur;
+  seek->timestamp_start = cur;
+  mp3parse->pending_nonaccurate_seeks =
+      g_slist_prepend (mp3parse->pending_nonaccurate_seeks, seek);
+  g_mutex_unlock (mp3parse->pending_seeks_lock);
+  if (gst_pad_push_event (mp3parse->sinkpad, event)) {
+    return TRUE;
+  } else {
+    g_mutex_lock (mp3parse->pending_seeks_lock);
+    mp3parse->pending_nonaccurate_seeks =
+        g_slist_remove (mp3parse->pending_nonaccurate_seeks, seek);
+    g_mutex_unlock (mp3parse->pending_seeks_lock);
+    g_free (seek);
+    return FALSE;
+  }
+
 no_pos:
   GST_DEBUG_OBJECT (mp3parse,
       "Could not determine byte position for desired time");
