@@ -65,9 +65,6 @@ struct _GstTheoraDec
   th_comment comment;
 
   gboolean have_header;
-  gboolean is_old_bitstream;
-  guint64 granulepos;
-  guint64 granule_shift;
 
   GstClockTime last_timestamp;
   guint64 frame_nr; /* unused */

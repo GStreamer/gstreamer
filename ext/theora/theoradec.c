@@ -96,10 +96,6 @@ static gboolean theora_dec_src_query (GstPad * pad, GstQuery * query);
 static gboolean theora_dec_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
-static gboolean theora_dec_sink_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
-static gboolean theora_dec_sink_query (GstPad * pad, GstQuery * query);
 
 #if 0
 static const GstFormat *theora_get_formats (GstPad * pad);
@@ -146,7 +142,6 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
 {
   dec->sinkpad =
       gst_pad_new_from_static_template (&theora_dec_sink_factory, "sink");
-  gst_pad_set_query_function (dec->sinkpad, theora_dec_sink_query);
   gst_pad_set_event_function (dec->sinkpad, theora_dec_sink_event);
   gst_pad_set_setcaps_function (dec->sinkpad, theora_dec_setcaps);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
@@ -173,7 +168,6 @@ gst_theora_dec_reset (GstTheoraDec * dec)
 {
   dec->need_keyframe = TRUE;
   dec->last_timestamp = -1;
-  dec->granulepos = -1;
   dec->discont = TRUE;
   dec->frame_nr = -1;
   dec->seqnum = gst_util_seqnum_next ();
@@ -201,67 +195,6 @@ gst_theora_dec_reset (GstTheoraDec * dec)
     gst_tag_list_free (dec->tags);
     dec->tags = NULL;
   }
-}
-
-/* Return the frame number (starting from zero) corresponding to this 
- * granulepos */
-static gint64
-_theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
-{
-  guint ilog;
-  gint framenum;
-
-  if (granulepos == -1)
-    return -1;
-
-  ilog = dec->granule_shift;
-
-  /* granulepos is last ilog bits for counting pframes since last iframe and 
-   * bits in front of that for the framenumber of the last iframe. */
-  framenum = granulepos >> ilog;
-  framenum += granulepos - (framenum << ilog);
-
-  /* This is 0-based for old bitstreams, 1-based for new. Fix up. */
-  if (!dec->is_old_bitstream)
-    framenum -= 1;
-
-  GST_DEBUG_OBJECT (dec, "framecount=%d, ilog=%u", framenum, ilog);
-
-  return framenum;
-}
-
-/* Return the frame start time corresponding to this granulepos */
-static GstClockTime
-_theora_granule_start_time (GstTheoraDec * dec, gint64 granulepos)
-{
-  gint64 framecount;
-
-  /* invalid granule results in invalid time */
-  if (granulepos == -1)
-    return GST_CLOCK_TIME_NONE;
-
-  /* get framecount */
-  if ((framecount = _theora_granule_frame (dec, granulepos)) < 0)
-    return GST_CLOCK_TIME_NONE;
-
-  if (framecount < 0)
-    return GST_CLOCK_TIME_NONE;
-  return gst_util_uint64_scale_int (framecount * GST_SECOND,
-      dec->info.fps_denominator, dec->info.fps_numerator);
-}
-
-static gint64
-_inc_granulepos (GstTheoraDec * dec, gint64 granulepos)
-{
-  gint framecount;
-
-  if (granulepos == -1)
-    return -1;
-
-  framecount = _theora_granule_frame (dec, granulepos);
-
-  return (framecount + 1 +
-      (dec->is_old_bitstream ? 0 : 1)) << dec->granule_shift;
 }
 
 #if 0
@@ -388,6 +321,7 @@ no_header:
   }
 }
 
+#if 0
 static gboolean
 theora_dec_sink_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
@@ -454,6 +388,7 @@ no_header:
     goto done;
   }
 }
+#endif
 
 static gboolean
 theora_dec_src_query (GstPad * pad, GstQuery * query)
@@ -467,33 +402,20 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gint64 granulepos, value;
+      gint64 value;
       GstFormat my_format, format;
       gint64 time;
-
-      /* we can convert a granule position to everything */
-      granulepos = dec->granulepos;
-
-      GST_LOG_OBJECT (dec,
-          "query %p: we have current granule: %" G_GINT64_FORMAT, query,
-          granulepos);
 
       /* parse format */
       gst_query_parse_position (query, &format, NULL);
 
-      /* and convert to the final format in two steps with time as the 
-       * intermediate step */
-      my_format = GST_FORMAT_TIME;
-      if (!(res =
-              theora_dec_sink_convert (dec->sinkpad, GST_FORMAT_DEFAULT,
-                  granulepos, &my_format, &time)))
-        goto error;
-
+      time = dec->last_timestamp;
       time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
 
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
+      my_format = GST_FORMAT_TIME;
       if (!(res =
               theora_dec_src_convert (pad, my_format, time, &format, &value)))
         goto error;
@@ -503,19 +425,12 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       GST_LOG_OBJECT (dec,
           "query %p: we return %" G_GINT64_FORMAT " (format %u)", query, value,
           format);
-
       break;
     }
     case GST_QUERY_DURATION:
     {
-      GstPad *peer;
-
-      if (!(peer = gst_pad_get_peer (dec->sinkpad)))
-        goto error;
-
       /* forward to peer for total */
-      res = gst_pad_query (peer, query);
-      gst_object_unref (peer);
+      res = gst_pad_peer_query (pad, query);
       if (!res)
         goto error;
 
@@ -550,35 +465,6 @@ error:
     GST_DEBUG_OBJECT (dec, "query failed");
     goto done;
   }
-}
-
-static gboolean
-theora_dec_sink_query (GstPad * pad, GstQuery * query)
-{
-  gboolean res = FALSE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONVERT:
-    {
-      GstFormat src_fmt, dest_fmt;
-      gint64 src_val, dest_val;
-
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res =
-              theora_dec_sink_convert (pad, src_fmt, src_val, &dest_fmt,
-                  &dest_val)))
-        goto error;
-
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-error:
-  return res;
 }
 
 static gboolean
@@ -862,7 +748,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   GstCaps *caps;
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint32 bitstream_version;
   GList *walk;
   guint32 fourcc;
 
@@ -938,18 +823,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     dec->offset_x = 0;
     dec->offset_y = 0;
   }
-
-  dec->granule_shift = dec->info.keyframe_granule_shift;
-
-  /* With libtheora-1.0beta1 the granulepos scheme was changed:
-   * where earlier the granulepos refered to the index/beginning
-   * of a frame, it now refers to the end, which matches the use
-   * in vorbis/speex. We check the bitstream version from the header so
-   * we know which way to interpret the incoming granuepos
-   */
-  bitstream_version = (dec->info.version_major << 16) |
-      (dec->info.version_minor << 8) | dec->info.version_subminor;
-  dec->is_old_bitstream = (bitstream_version <= 0x00030200);
 
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       dec->width, dec->height, dec->offset_x, dec->offset_y);
@@ -1066,64 +939,22 @@ beach:
   return res;
 }
 
-/* FIXME, this needs to be moved to the demuxer */
 static GstFlowReturn
 theora_dec_push_forward (GstTheoraDec * dec, GstBuffer * buf)
 {
   GstFlowReturn result = GST_FLOW_OK;
-  GstClockTime outtime = GST_BUFFER_TIMESTAMP (buf);
 
-  if (outtime == GST_CLOCK_TIME_NONE) {
-    dec->queued = g_list_append (dec->queued, buf);
-    GST_DEBUG_OBJECT (dec, "queued buffer");
-  } else {
-    if (dec->queued) {
-      gint64 size;
-      GList *walk;
-
-      GST_DEBUG_OBJECT (dec, "first buffer with time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (outtime));
-
-      size = g_list_length (dec->queued);
-      for (walk = dec->queued; walk; walk = g_list_next (walk)) {
-        GstBuffer *buffer = GST_BUFFER (walk->data);
-        GstClockTime time;
-
-        time = outtime - gst_util_uint64_scale_int (size * GST_SECOND,
-            dec->info.fps_denominator, dec->info.fps_numerator);
-
-        GST_DEBUG_OBJECT (dec,
-            "patch buffer %" G_GINT64_FORMAT "%" GST_TIME_FORMAT, size,
-            GST_TIME_ARGS (time));
-        GST_BUFFER_TIMESTAMP (buffer) = time;
-        /* Next timestamp - this one is duration */
-        GST_BUFFER_DURATION (buffer) =
-            (outtime - gst_util_uint64_scale_int ((size - 1) * GST_SECOND,
-                dec->info.fps_denominator, dec->info.fps_numerator)) - time;
-
-        if (dec->discont) {
-          GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-          dec->discont = FALSE;
-        }
-        /* ignore the result.. */
-        if (clip_buffer (dec, buffer))
-          gst_pad_push (dec->srcpad, buffer);
-        else
-          gst_buffer_unref (buffer);
-        size--;
-      }
-      g_list_free (dec->queued);
-      dec->queued = NULL;
-    }
+  if (clip_buffer (dec, buf)) {
     if (dec->discont) {
+      GST_LOG_OBJECT (dec, "setting DISCONT");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       dec->discont = FALSE;
     }
-    if (clip_buffer (dec, buf))
-      result = gst_pad_push (dec->srcpad, buf);
-    else
-      gst_buffer_unref (buf);
+    result = gst_pad_push (dec->srcpad, buf);
+  } else {
+    gst_buffer_unref (buf);
   }
+
   return result;
 }
 
@@ -1197,7 +1028,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 
 static GstFlowReturn
 theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
-    GstClockTime outtime)
+    GstClockTime outtime, GstClockTime outdur)
 {
   /* normal data packet */
   th_ycbcr_buffer buf;
@@ -1208,6 +1039,17 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   if (G_UNLIKELY (!dec->have_header))
     goto not_initialized;
+
+  /* get timestamp and durations */
+  if (outtime == -1)
+    outtime = dec->last_timestamp;
+  if (outdur == -1)
+    outdur = gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
+        dec->info.fps_numerator);
+
+  /* calculate expected next timestamp */
+  if (outtime != -1 && outdur != -1)
+    dec->last_timestamp = outtime + outdur;
 
   /* the second most significant bit of the first data byte is cleared 
    * for keyframes. We can only check it if it's not a zero-length packet. */
@@ -1236,8 +1078,6 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     GST_OBJECT_LOCK (dec);
     /* check for QoS, don't perform the last steps of getting and
      * pushing the buffers that are known to be late. */
-    /* FIXME, we can also entirely skip decoding if the next valid buffer is 
-     * known to be after a keyframe (using the granule_shift) */
     need_skip = dec->earliest_time != -1 && qostime <= dec->earliest_time;
     GST_OBJECT_UNLOCK (dec);
 
@@ -1262,23 +1102,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   if (dec->frame_nr != -1)
     dec->frame_nr++;
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
-  if (dec->granulepos != -1) {
-    gint64 cf = _theora_granule_frame (dec, dec->granulepos) + 1;
-    guint64 endtime;
 
-    endtime = gst_util_uint64_scale_int (cf * GST_SECOND,
-        dec->info.fps_denominator, dec->info.fps_numerator);
-
-    if (endtime > outtime)
-      GST_BUFFER_DURATION (out) = endtime - outtime;
-    else
-      GST_BUFFER_DURATION (out) = GST_CLOCK_TIME_NONE;
-  } else {
-    GST_BUFFER_DURATION (out) =
-        gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
-        dec->info.fps_numerator);
-  }
   GST_BUFFER_TIMESTAMP (out) = outtime;
+  GST_BUFFER_DURATION (out) = outdur;
 
   if (dec->segment.rate >= 0.0)
     result = theora_dec_push_forward (dec, out);
@@ -1333,11 +1159,12 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 {
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
+  GstClockTime timestamp, duration;
 
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buf);
   packet.bytes = GST_BUFFER_SIZE (buf);
-  packet.granulepos = GST_BUFFER_OFFSET_END (buf);
+  packet.granulepos = -1;
   packet.packetno = 0;          /* we don't really care */
   packet.b_o_s = dec->have_header ? 0 : 1;
   /* EOS does not matter for the decoder */
@@ -1345,23 +1172,13 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 
   GST_LOG_OBJECT (dec, "decode buffer of size %ld", packet.bytes);
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
-  } else if (dec->have_header) {
-    if (packet.granulepos != -1) {
-      dec->granulepos = packet.granulepos;
-      dec->last_timestamp = _theora_granule_start_time (dec, packet.granulepos);
-    } else if (dec->last_timestamp != -1) {
-      dec->last_timestamp = _theora_granule_start_time (dec, dec->granulepos);
-    }
-  } else {
-    dec->last_timestamp = -1;
-  }
+  /* save last seem timestamp for interpolating the next timestamps using the
+   * framerate when we need to */
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  duration = GST_BUFFER_DURATION (buf);
 
-  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%" G_GINT64_FORMAT ", "
-      "granule pos=%" G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
-      packet.bytes ? packet.packet[0] : -1, (gint64) packet.packetno,
-      (gint64) packet.granulepos, GST_TIME_ARGS (dec->last_timestamp));
+  GST_DEBUG_OBJECT (dec, "header=%02x, outtime=%" GST_TIME_FORMAT,
+      packet.bytes ? packet.packet[0] : -1, GST_TIME_ARGS (timestamp));
 
   /* switch depending on packet type. A zero byte packet is always a data
    * packet; we don't dereference it in that case. */
@@ -1372,13 +1189,10 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
     }
     result = theora_handle_header_packet (dec, &packet);
   } else {
-    result = theora_handle_data_packet (dec, &packet, dec->last_timestamp);
+    result = theora_handle_data_packet (dec, &packet, timestamp, duration);
   }
 
 done:
-  /* interpolate granule pos */
-  dec->granulepos = _inc_granulepos (dec, dec->granulepos);
-
   return result;
 }
 
@@ -1563,7 +1377,6 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "received DISCONT buffer");
     dec->need_keyframe = TRUE;
     dec->last_timestamp = -1;
-    dec->granulepos = -1;
     dec->discont = TRUE;
   }
 
