@@ -3,28 +3,28 @@
   <description>Create and parse Audio Interchange File Format (AIFF) files</description>
   <filename>../../gst/aiff/.libs/libgstaiff.so</filename>
   <basename>libgstaiff.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>aiffparse</name>
-      <longname>AIFF audio demuxer</longname>
-      <class>Codec/Demuxer/Audio</class>
-      <description>Parse a .aiff file into raw audio</description>
-      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
+      <name>aiffmux</name>
+      <longname>AIFF audio muxer</longname>
+      <class>Muxer/Audio</class>
+      <description>Multiplex raw audio into AIFF</description>
+      <author>Robert Swain &lt;robert.swain@gmail.com&gt;</author>
       <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }</details>
-        </caps>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)8, depth=(int)[ 1, 8 ], signed=(boolean)true, endianness=(int)4321, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)16, depth=(int)[ 9, 16 ], signed=(boolean)true, endianness=(int)4321, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)24, depth=(int)[ 17, 24 ], signed=(boolean)true, endianness=(int)4321, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)32, depth=(int)[ 25, 32 ], signed=(boolean)true, endianness=(int)4321, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-aiff</details>
         </caps>

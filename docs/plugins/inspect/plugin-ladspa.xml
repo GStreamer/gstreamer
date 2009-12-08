@@ -3,12 +3,1080 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>ladspa-Ambisonics-11-cube-decoder</name>
+      <longname>AMB order 1,1 cube decoder</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 cube decoder</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-ULB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-URB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-URF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-ULF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-DLB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-DRB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-DRF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-DLF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-11-hexagon-decoder</name>
+      <longname>AMB order 1,1 hexagon decoder</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 hexagon decoder</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-L-LF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-LB-LB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-RB-B</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-R-RB</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-RF-RF</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-LF-F</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-11-mono-panner</name>
+      <longname>AMB order 1,1 mono panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 mono panner</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-11-rotator</name>
+      <longname>AMB order 1,1 rotator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 rotator</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-11-square-decoder</name>
+      <longname>AMB order 1,1 square decoder</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 square decoder</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-LB-L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-RB-B</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-RF-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-LF-F</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-11-stereo-panner</name>
+      <longname>AMB order 1,1 stereo panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 1,1 stereo panner</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-21-panner</name>
+      <longname>AMB order 2,1 panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 2,1 panner</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-21-rotator</name>
+      <longname>AMB order 2,1 rotator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 2,1 rotator</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-V</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-U</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Chorus1</name>
+      <longname>Chorus1 - Based on CSound orchestra by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Chorus1 - Based on CSound orchestra by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Chorus2</name>
+      <longname>Chorus2 - Based on CSound orchestra by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Chorus2 - Based on CSound orchestra by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-G2reverb</name>
+      <longname>Stereo reverb</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Stereo reverb</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Out_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Mvchpf-1</name>
+      <longname>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@skynet.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-1</name>
+      <longname>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Resonance</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-2</name>
+      <longname>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Resonance</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-3</name>
+      <longname>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Resonance</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-4</name>
+      <longname>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Resonance</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Parametric1</name>
+      <longname>4-band parametric filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>4-band parametric filter</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Phaser1</name>
+      <longname>Phaser1 - Similar to CSound's phaser1 by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Phaser1 - Similar to CSound's phaser1 by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Lin_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Phaser1+LFO</name>
+      <longname>Phaser1 with LFO</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Phaser1 with LFO</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Pulse-VCO</name>
+      <longname>Pulse-VCO  --  Anti-aliased oscillator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Pulse-VCO  --  Anti-aliased oscillator</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Lin_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Rec-VCO</name>
+      <longname>Rec-VCO  --  Anti-aliased oscillator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Rec-VCO  --  Anti-aliased oscillator</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Sync</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Mod</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Lin_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Saw-VCO</name>
+      <longname>Saw-VCO  --  Anti-aliased oscillator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Saw-VCO  --  Anti-aliased oscillator</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <pads>
+        <caps>
+          <name>Sync</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Lin_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Exp_FM</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-alias</name>
+      <longname>Aliasing</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Aliasing</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-allpass-c</name>
+      <longname>Allpass delay line, cubic spline interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Allpass delay line, cubic spline interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-allpass-l</name>
+      <longname>Allpass delay line, linear interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Allpass delay line, linear interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-allpass-n</name>
+      <longname>Allpass delay line, noninterpolating</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Allpass delay line, noninterpolating</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-amPitchshift</name>
+      <longname>AM pitchshifter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Pitch shifters</class>
+      <description>AM pitchshifter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-amp</name>
+      <longname>Simple amplifier</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Amplifiers</class>
+      <description>Simple amplifier</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>ladspa-amp-mono</name>
       <longname>Mono Amplifier</longname>
@@ -64,6 +1132,498 @@
       </pads>
     </element>
     <element>
+      <name>ladspa-analogueOsc</name>
+      <longname>Analogue Oscillator</longname>
+      <class>Source/Audio/LADSPA/Generators/Oscillators</class>
+      <description>Analogue Oscillator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-artificialLatency</name>
+      <longname>Artificial latency</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Artificial latency</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-autoPhaser</name>
+      <longname>Auto phaser</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Phasers</class>
+      <description>Auto phaser</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-bandpass-a-iir</name>
+      <longname>Glame Bandpass Analog Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Bandpass/Filters</class>
+      <description>Glame Bandpass Analog Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-bandpass-iir</name>
+      <longname>Glame Bandpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Bandpass/Filters</class>
+      <description>Glame Bandpass Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-bodeShifter</name>
+      <longname>Bode frequency shifter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Spectral</class>
+      <description>Bode frequency shifter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Up_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Down_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-bodeShifterCV</name>
+      <longname>Bode frequency shifter (CV)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Spectral</class>
+      <description>Bode frequency shifter (CV)</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Mix_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Up_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Down_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Shift_CV</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-butthigh-iir</name>
+      <longname>GLAME Butterworth Highpass</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Highpass/Filters</class>
+      <description>GLAME Butterworth Highpass</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-buttlow-iir</name>
+      <longname>GLAME Butterworth Lowpass</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Lowpass/Filters</class>
+      <description>GLAME Butterworth Lowpass</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-bwxover-iir</name>
+      <longname>Glame Butterworth X-over Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Bandpass/Filters</class>
+      <description>Glame Butterworth X-over Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>HP-Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>LP-Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-chebstortion</name>
+      <longname>Chebyshev distortion</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Chebyshev distortion</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-comb</name>
+      <longname>Comb Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Combs/Filters</class>
+      <description>Comb Filter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-comb-c</name>
+      <longname>Comb delay line, cubic spline interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Comb delay line, cubic spline interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-comb-l</name>
+      <longname>Comb delay line, linear interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Comb delay line, linear interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-comb-n</name>
+      <longname>Comb delay line, noninterpolating</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Comb delay line, noninterpolating</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-combSplitter</name>
+      <longname>Comb Splitter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Combs/Filters</class>
+      <description>Comb Splitter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_2</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_1</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-const</name>
+      <longname>Constant Signal Generator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Constant Signal Generator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-crossoverDist</name>
+      <longname>Crossover distortion</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Crossover distortion</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-dcRemove</name>
+      <longname>DC Offset Remover</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>DC Offset Remover</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-decay</name>
+      <longname>Exponential signal decay</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Exponential signal decay</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-decimator</name>
+      <longname>Decimator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Decimator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-declip</name>
+      <longname>Declipper</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Waveshapers</class>
+      <description>Declipper</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>ladspa-delay-5s</name>
       <longname>Simple Delay Line</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -85,11 +1645,821 @@
       </pads>
     </element>
     <element>
+      <name>ladspa-delay-c</name>
+      <longname>Simple delay line, cubic spline interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Simple delay line, cubic spline interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-delay-l</name>
+      <longname>Simple delay line, linear interpolation</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Simple delay line, linear interpolation</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-delay-n</name>
+      <longname>Simple delay line, noninterpolating</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Simple delay line, noninterpolating</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-delayorama</name>
+      <longname>Delayorama</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Delayorama</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-diode</name>
+      <longname>Diode Processor</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Diode Processor</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-divider</name>
+      <longname>Audio Divider (Suboctave Generator)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Generators</class>
+      <description>Audio Divider (Suboctave Generator)</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-dj-eq</name>
+      <longname>DJ EQ</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs</class>
+      <description>DJ EQ</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-dj-eq-mono</name>
+      <longname>DJ EQ (mono)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs</class>
+      <description>DJ EQ (mono)</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-djFlanger</name>
+      <longname>DJ flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Flangers</class>
+      <description>DJ flanger</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-dysonCompress</name>
+      <longname>Dyson compressor</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>Dyson compressor</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-fadDelay</name>
+      <longname>Fractionally Addressed Delay Line</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Fractionally Addressed Delay Line</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-fastLookaheadLimiter</name>
+      <longname>Fast Lookahead limiter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Limiters/Amplitude/Dynamics</class>
+      <description>Fast Lookahead limiter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_2</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_1</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_2</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_1</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-flanger</name>
+      <longname>Flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Flangers</class>
+      <description>Flanger</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-fmOsc</name>
+      <longname>FM Oscillator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Generators/Oscillators</class>
+      <description>FM Oscillator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-foldover</name>
+      <longname>Foldover distortion</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Foldover distortion</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-fourByFourPole</name>
+      <longname>4 x 4 pole allpass</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Filters/Allpass</class>
+      <description>4 x 4 pole allpass</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-foverdrive</name>
+      <longname>Fast overdrive</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Fast overdrive</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-freqTracker</name>
+      <longname>Frequency tracker</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Measurement</class>
+      <description>Frequency tracker</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Frequency_-Hz-</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-gate</name>
+      <longname>Gate</longname>
+      <class>Filter/Effect/Audio/LADSPA/Gates/Amplitude/Dynamics</class>
+      <description>Gate</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-giantFlange</name>
+      <longname>Giant flange</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Flangers</class>
+      <description>Giant flange</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-gong</name>
+      <longname>Gong model</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Gong model</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-gongBeater</name>
+      <longname>Gong beater</longname>
+      <class>Filter/Effect/Audio/LADSPA/Generators</class>
+      <description>Gong beater</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-gsm</name>
+      <longname>GSM simulator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>GSM simulator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-gverb</name>
+      <longname>GVerb</longname>
+      <class>Filter/Effect/Audio/LADSPA/Reverbs/Time/Simulators</class>
+      <description>GVerb</description>
+      <author>Juhana Sadeharju &lt;kouhia at nic.funet.fi&gt;, LADSPAification by Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-hardLimiter</name>
+      <longname>Hard Limiter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Hard Limiter</description>
+      <author>Marcus Andersson</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-harmonicGen</name>
+      <longname>Harmonic generator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Generators</class>
+      <description>Harmonic generator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-hermesFilter</name>
+      <longname>Hermes Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Filters</class>
+      <description>Hermes Filter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-highpass-iir</name>
+      <longname>Glame Highpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Highpass/Filters</class>
+      <description>Glame Highpass Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-hilbert</name>
+      <longname>Hilbert transformer</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Hilbert transformer</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>90deg_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>0deg_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>ladspa-hpf</name>
       <longname>Simple High Pass Filter</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Simple High Pass Filter</description>
       <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-imp</name>
+      <longname>Impulse convolver</longname>
+      <class>Filter/Effect/Audio/LADSPA/Spectral</class>
+      <description>Impulse convolver</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-impulse-fc</name>
+      <longname>Nonbandlimited single-sample impulses (Frequency: Control)</longname>
+      <class>Source/Audio/LADSPA/Utilities</class>
+      <description>Nonbandlimited single-sample impulses (Frequency: Control)</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-inv</name>
+      <longname>Inverter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Inverter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-karaoke</name>
+      <longname>Karaoke</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Karaoke</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Right_in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-lcrDelay</name>
+      <longname>L/C/R Delay</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>L/C/R Delay</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>R_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>L_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>R_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>L_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-lfoPhaser</name>
+      <longname>LFO Phaser</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Phasers</class>
+      <description>LFO Phaser</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-lowpass-iir</name>
+      <longname>Glame Lowpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Lowpass/Filters</class>
+      <description>Glame Lowpass Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
           <name>Output</name>
@@ -127,6 +2497,195 @@
       </pads>
     </element>
     <element>
+      <name>ladspa-lsFilter</name>
+      <longname>LS Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Filters</class>
+      <description>LS Filter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-matrixMSSt</name>
+      <longname>Matrix: MS to Stereo</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Matrix: MS to Stereo</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Side</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Mid</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-matrixSpatialiser</name>
+      <longname>Matrix Spatialiser</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Matrix Spatialiser</description>
+      <author>Joern Nettingsmeier &lt;nettings@folkwang-hochschule.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-matrixStMS</name>
+      <longname>Matrix: Stereo to MS</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Matrix: Stereo to MS</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Side</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Mid</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-mbeq</name>
+      <longname>Multiband EQ</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Multiband/EQs</class>
+      <description>Multiband EQ</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-modDelay</name>
+      <longname>Modulatable delay</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Modulatable delay</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Delay_-s-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-multivoiceChorus</name>
+      <longname>Multivoice Chorus</longname>
+      <class>Filter/Effect/Audio/LADSPA/Chorus/Time</class>
+      <description>Multivoice Chorus</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>ladspa-noise-white</name>
       <longname>White Noise Source</longname>
       <class>Source/Audio/LADSPA</class>
@@ -135,6 +2694,486 @@
       <pads>
         <caps>
           <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-notch-iir</name>
+      <longname>Mag's Notch Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Notch/Filters</class>
+      <description>Mag's Notch Filter</description>
+      <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-pitchScale</name>
+      <longname>Pitch Scaler</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Pitch shifters</class>
+      <description>Pitch Scaler</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-pitchScaleHQ</name>
+      <longname>Higher Quality Pitch Scaler</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Pitch shifters</class>
+      <description>Higher Quality Pitch Scaler</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-plate</name>
+      <longname>Plate reverb</longname>
+      <class>Filter/Effect/Audio/LADSPA/Reverbs/Time/Simulators</class>
+      <description>Plate reverb</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-pointerCastDistortion</name>
+      <longname>Pointer cast distortion</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Pointer cast distortion</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-rateShifter</name>
+      <longname>Rate shifter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Pitch shifters</class>
+      <description>Rate shifter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-retroFlange</name>
+      <longname>Retro Flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Flangers</class>
+      <description>Retro Flanger</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-revdelay</name>
+      <longname>Reverse Delay (5s max)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>Reverse Delay (5s max)</description>
+      <author>Jesse Chappell &lt;jesse at essej dot net&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-ringmod-1i1o1l</name>
+      <longname>Ringmod with LFO</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Modulators</class>
+      <description>Ringmod with LFO</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-ringmod-2i1o</name>
+      <longname>Ringmod with two inputs</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Modulators</class>
+      <description>Ringmod with two inputs</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Modulator</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-satanMaximiser</name>
+      <longname>Barry's Satan Maximiser</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Barry's Satan Maximiser</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sc1</name>
+      <longname>SC1</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SC1</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sc2</name>
+      <longname>SC2</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SC2</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Sidechain</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sc3</name>
+      <longname>SC3</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SC3</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Right_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Sidechain</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sc4</name>
+      <longname>SC4</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SC4</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Right_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sc4m</name>
+      <longname>SC4 mono</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SC4 mono</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-se4</name>
+      <longname>SE4</longname>
+      <class>Filter/Effect/Audio/LADSPA/Compressors/Amplitude/Dynamics</class>
+      <description>SE4</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Right_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Left_input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-shaper</name>
+      <longname>Wave shaper</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Waveshapers</class>
+      <description>Wave shaper</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sifter</name>
+      <longname>Signal sifter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Signal sifter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sinCos</name>
+      <longname>Sine + cosine oscillator</longname>
+      <class>Source/Audio/LADSPA/Generators/Oscillators</class>
+      <description>Sine + cosine oscillator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Cosine_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Sine_output</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
@@ -220,6 +3259,1002 @@
         <caps>
           <name>Output</name>
           <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-singlePara</name>
+      <longname>Single band parametric</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs/Parametric</class>
+      <description>Single band parametric</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sinusWavewrapper</name>
+      <longname>Sinus wavewrapper</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Waveshapers</class>
+      <description>Sinus wavewrapper</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-smoothDecimate</name>
+      <longname>Smooth Decimator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>Smooth Decimator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-split</name>
+      <longname>Mono to Stereo splitter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Mono to Stereo splitter</description>
+      <author>Frank Neumann &lt;franky@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_2</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_1</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-stepMuxer</name>
+      <longname>Step Demuxer</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Step Demuxer</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_8</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_7</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_6</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_5</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_4</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_3</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_2</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_1</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Clock</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-surroundEncoder</name>
+      <longname>Surround matrix encoder</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>Surround matrix encoder</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Rt</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Lt</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>S</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>C</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-svf</name>
+      <longname>State Variable Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Filters</class>
+      <description>State Variable Filter</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-autopan</name>
+      <longname>TAP AutoPanner</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Modulators</class>
+      <description>TAP AutoPanner</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-chorusflanger</name>
+      <longname>TAP Chorus/Flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Flangers</class>
+      <description>TAP Chorus/Flanger</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-deesser</name>
+      <longname>TAP DeEsser</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Dynamics</class>
+      <description>TAP DeEsser</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-doubler</name>
+      <longname>TAP Fractal Doubler</longname>
+      <class>Filter/Effect/Audio/LADSPA/Simulators</class>
+      <description>TAP Fractal Doubler</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-dynamics-m</name>
+      <longname>TAP Dynamics (M)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Dynamics</class>
+      <description>TAP Dynamics (M)</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-dynamics-st</name>
+      <longname>TAP Dynamics (St)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Dynamics</class>
+      <description>TAP Dynamics (St)</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_Right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-equalizer</name>
+      <longname>TAP Equalizer</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs</class>
+      <description>TAP Equalizer</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-equalizer-bw</name>
+      <longname>TAP Equalizer/BW</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs</class>
+      <description>TAP Equalizer/BW</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-limiter</name>
+      <longname>TAP Scaling Limiter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Limiters/Amplitude/Dynamics</class>
+      <description>TAP Scaling Limiter</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-pinknoise</name>
+      <longname>TAP Pink/Fractal Noise</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>TAP Pink/Fractal Noise</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-pitch</name>
+      <longname>TAP Pitch Shifter</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/Pitch shifters</class>
+      <description>TAP Pitch Shifter</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-reflector</name>
+      <longname>TAP Reflector</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time</class>
+      <description>TAP Reflector</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-reverb</name>
+      <longname>TAP Reverberator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Reverbs/Time/Simulators</class>
+      <description>TAP Reverberator</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_Right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-rotspeak</name>
+      <longname>TAP Rotary Speaker</longname>
+      <class>Filter/Effect/Audio/LADSPA/Simulators</class>
+      <description>TAP Rotary Speaker</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-sigmoid</name>
+      <longname>TAP Sigmoid Booster</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>TAP Sigmoid Booster</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-stereo-echo</name>
+      <longname>TAP Stereo Echo</longname>
+      <class>Filter/Effect/Audio/LADSPA/Time/Delays</class>
+      <description>TAP Stereo Echo</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_Right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_Left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-tremolo</name>
+      <longname>TAP Tremolo</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Modulators</class>
+      <description>TAP Tremolo</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output_0</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_0</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-tubewarmth</name>
+      <longname>TAP TubeWarmth</longname>
+      <class>Filter/Effect/Audio/LADSPA/Simulators</class>
+      <description>TAP TubeWarmth</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tap-vibrato</name>
+      <longname>TAP Vibrato</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Modulators</class>
+      <description>TAP Vibrato</description>
+      <author>Tom Szilagyi</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-tapeDelay</name>
+      <longname>Tape Delay Simulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Tape Delay Simulation</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-transient</name>
+      <longname>Transient mangler</longname>
+      <class>Filter/Effect/Audio/LADSPA/Amplitude/Dynamics</class>
+      <description>Transient mangler</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-triplePara</name>
+      <longname>Triple band parametric with shelves</longname>
+      <class>Filter/Effect/Audio/LADSPA/Frequency/EQs/Parametric</class>
+      <description>Triple band parametric with shelves</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-valve</name>
+      <longname>Valve saturation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Valve saturation</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-valveRect</name>
+      <longname>Valve rectifier</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Valve rectifier</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-vynil</name>
+      <longname>VyNil (Vinyl Effect)</longname>
+      <class>Filter/Effect/Audio/LADSPA/Distortions/Amplitude</class>
+      <description>VyNil (Vinyl Effect)</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-waveTerrain</name>
+      <longname>Wave Terrain Oscillator</longname>
+      <class>Filter/Effect/Audio/LADSPA/Generators/Oscillators</class>
+      <description>Wave Terrain Oscillator</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>x</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-xfade</name>
+      <longname>Crossfade</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Crossfade</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_B_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_B_left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_A_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_A_left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-xfade4</name>
+      <longname>Crossfade (4 outs)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Crossfade (4 outs)</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output_B_right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_B_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_A_right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Output_A_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_B_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_B_left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_A_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input_A_left</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-zm1</name>
+      <longname>z-1</longname>
+      <class>Filter/Effect/Audio/LADSPA/Utilities</class>
+      <description>z-1</description>
+      <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>

@@ -3,10 +3,10 @@
   <description>Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) demuxer and muxer</description>
   <filename>../../ext/metadata/.libs/libgstmetadata.so</filename>
   <basename>libgstmetadata.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -33,7 +33,7 @@
     <element>
       <name>metadatamux</name>
       <longname>Metadata muxer</longname>
-      <class>Muxer/Extracter/Metadata</class>
+      <class>Muxer/Formatter/Metadata</class>
       <description>Write metadata (EXIF, IPTC and XMP) into a image stream</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>

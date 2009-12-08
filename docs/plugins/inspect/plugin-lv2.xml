@@ -3,1206 +3,399 @@
   <description>All LV2 plugins</description>
   <filename>../../ext/lv2/.libs/libgstlv2.so</filename>
   <basename>libgstlv2.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>http---calf-sourceforge-net-plugins-Compressor</name>
-      <longname>Calf Compressor</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Compressor</description>
-      <author>Thor Harald Johansen</author>
+      <name>http---invadarecords-com-plugins-lv2-compressor-mono</name>
+      <longname>Invada Compressor (mono)</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Invada Compressor (mono)</description>
+      <author>Invada</author>
       <pads>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
         <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>
       </pads>
     </element>
     <element>
-      <name>http---calf-sourceforge-net-plugins-Filter</name>
-      <longname>Calf Filter</longname>
+      <name>http---invadarecords-com-plugins-lv2-compressor-stereo</name>
+      <longname>Invada Compressor (stereo)</longname>
       <class>Source/Audio/LV2</class>
-      <description>Calf Filter</description>
-      <author>Krzysztof Foltman</author>
+      <description>Invada Compressor (stereo)</description>
+      <author>Invada</author>
       <pads>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
         </caps>
         <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
         </caps>
       </pads>
     </element>
     <element>
-      <name>http---calf-sourceforge-net-plugins-Filterclavier</name>
-      <longname>Calf Filterclavier</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Filterclavier</description>
-      <author>Krzysztof Foltman / Hans Baier</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Flanger</name>
-      <longname>Calf Flanger</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Flanger</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Fluidsynth</name>
-      <longname>Calf Fluidsynth</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Fluidsynth</description>
-      <author>FluidSynth Team / Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Monosynth</name>
-      <longname>Calf Monosynth</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Monosynth</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-MultiChorus</name>
-      <longname>Calf MultiChorus</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf MultiChorus</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Organ</name>
-      <longname>Calf Organ</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Organ</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Phaser</name>
-      <longname>Calf Phaser</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Phaser</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Reverb</name>
-      <longname>Calf Reverb</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Reverb</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-RotarySpeaker</name>
-      <longname>Calf Rotary Speaker</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Rotary Speaker</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-VintageDelay</name>
-      <longname>Calf Vintage Delay</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Vintage Delay</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-plugins-Wavetable</name>
-      <longname>Calf Wavetable</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Calf Wavetable</description>
-      <author>Krzysztof Foltman</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT }, { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-allpass</name>
-      <longname>1-pole 1-zero Allpass Filter</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>1-pole 1-zero Allpass Filter</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>Out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>In</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-bandpass6</name>
-      <longname>6dB/oct RBJ Bandpass</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>6dB/oct RBJ Bandpass</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-between-c</name>
-      <longname>Between (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Between (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-bit-and-c</name>
-      <longname>Bitwise AND (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Bitwise AND (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-bit-or-c</name>
-      <longname>Bitwise OR (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Bitwise OR (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-bit-xor-c</name>
-      <longname>Bitwise XOR (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Bitwise XOR (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-ccfilter-m</name>
-      <longname>Control Change Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Control Change Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-channel-less-than-m</name>
-      <longname>Channel Less-Than Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Channel Less-Than Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-channelfilter-m</name>
-      <longname>Channel Range Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Channel Range Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-clip-c</name>
-      <longname>Clip (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Clip (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-copy-em</name>
-      <longname>Message pass-through (EM)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Message pass-through (EM)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-counter-c</name>
-      <longname>Counter (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Counter (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-crossfader2-a</name>
-      <longname>2-in crossfader (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>2-in crossfader (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>mix</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_b</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_a</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-crossfader2-c</name>
-      <longname>2-in crossfader (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>2-in crossfader (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-eventmerge-e</name>
-      <longname>Event Merge (E)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Event Merge (E)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-exp-inertia-c</name>
-      <longname>Exponential Inertia (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Exponential Inertia (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-flipflop-c</name>
-      <longname>T Flip-Flop (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>T Flip-Flop (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-highpass12</name>
-      <longname>12dB/oct RBJ Highpass</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>12dB/oct RBJ Highpass</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-highpass6</name>
-      <longname>6dB/oct Highpass Filter</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>6dB/oct Highpass Filter</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>Out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>In</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-ifthenelse-c</name>
-      <longname>If-Then-Else (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>If-Then-Else (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-key-less-than-m</name>
-      <longname>Key Less-Than Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Key Less-Than Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-keyfilter-m</name>
-      <longname>Key Range Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Key Range Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-less-c</name>
-      <longname>Less than (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Less than (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-level2edge-c</name>
-      <longname>Level to edge (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Level to edge (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-lin2exp</name>
-      <longname>Lin-Exp Mapper</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Lin-Exp Mapper</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-linear-inertia-c</name>
-      <longname>Linear Inertia (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Linear Inertia (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-logical-and-c</name>
-      <longname>Logical AND (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Logical AND (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-logical-not-c</name>
-      <longname>Logical NOT (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Logical NOT (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-logical-or-c</name>
-      <longname>Logical OR (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Logical OR (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-logical-xor-c</name>
-      <longname>Logical XOR (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Logical XOR (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-lowpass12</name>
-      <longname>12dB/oct RBJ Lowpass</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>12dB/oct RBJ Lowpass</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-lowpass6</name>
-      <longname>6dB/oct Lowpass Filter</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>6dB/oct Lowpass Filter</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>Out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>In</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-max</name>
-      <longname>Maximum (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Maximum (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_2</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_1</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-max-c</name>
-      <longname>Maximum (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Maximum (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-min</name>
-      <longname>Minimum (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Minimum (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_2</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_1</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-min-c</name>
-      <longname>Minimum (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Minimum (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-minus</name>
-      <longname>Subtract (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Subtract (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_2</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_1</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-minus-c</name>
-      <longname>Subtract (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Subtract (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-msgread-e</name>
-      <longname>Msg Read</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Msg Read</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-mul</name>
-      <longname>Multiply (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Multiply (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_2</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in_1</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-mul-c</name>
-      <longname>Multiply (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Multiply (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-mux16-c</name>
-      <longname>16-input Multiplexer (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>16-input Multiplexer (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-mux4-c</name>
-      <longname>4-input Multiplexer (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>4-input Multiplexer (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-mux8-c</name>
-      <longname>8-input Multiplexer (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>8-input Multiplexer (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-neg</name>
-      <longname>Negative (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Negative (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-neg-c</name>
-      <longname>Negative (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Negative (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-notch6</name>
-      <longname>6dB/oct RBJ Bandpass</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>6dB/oct RBJ Bandpass</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-notefilter-m</name>
-      <longname>Note Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Note Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-pcfilter-m</name>
-      <longname>Program Change Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Program Change Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-pitchbendfilter-m</name>
-      <longname>Pitch Bend Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Pitch Bend Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-pressurefilter-m</name>
-      <longname>Pressure Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Pressure Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-print-a</name>
-      <longname>Print To Console (A)</longname>
-      <class>Sink/Audio/LV2</class>
-      <description>Print To Console (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>in</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-print-c</name>
-      <longname>Print To Console (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Print To Console (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-print-e</name>
-      <longname>Print To Console (E)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Print To Console (E)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-print-em</name>
-      <longname>Print To Console (EM)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Print To Console (EM)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-prio-enc8-c</name>
-      <longname>8-input Priority Encoder (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>8-input Priority Encoder (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-prio-mux-c</name>
-      <longname>Priority Multiplexer (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Priority Multiplexer (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-pulse-lfo</name>
-      <longname>Pulse LFO</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Pulse LFO</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-quadpower-a</name>
-      <longname>Quad Power (A)</longname>
-      <class>Filter/Effect/Audio/LV2</class>
-      <description>Quad Power (A)</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>xaaaa</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>xaaa</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>xaa</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>xa</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-        <caps>
-          <name>x</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-quadpower-c</name>
-      <longname>Quad Power (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Quad Power (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-sample-hold-edge-c</name>
-      <longname>Sample&amp;Hold (Edge, C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Sample&amp;Hold (Edge, C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-sample-hold-level-c</name>
-      <longname>Sample&amp;Hold (Level, C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Sample&amp;Hold (Level, C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-saw-lfo</name>
-      <longname>Saw LFO</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Saw LFO</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-saw-osc</name>
-      <longname>Saw Oscillator</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Saw Oscillator</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-schmitt-c</name>
-      <longname>Schmitt Trigger (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Schmitt Trigger (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-setchannel-m</name>
-      <longname>Set Channel</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Set Channel</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-square-lfo</name>
-      <longname>Square LFO</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Square LFO</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-square-osc</name>
-      <longname>Square Oscillator</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Square Oscillator</description>
-      <author>no author available</author>
-      <pads>
-        <caps>
-          <name>out</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-systemfilter-m</name>
-      <longname>System Msg Filter</longname>
-      <class>Source/Audio/LV2</class>
-      <description>System Msg Filter</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-timer-c</name>
-      <longname>Timer (C)</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Timer (C)</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-transpose-m</name>
-      <longname>Transpose</longname>
-      <class>Source/Audio/LV2</class>
-      <description>Transpose</description>
-      <author>no author available</author>
-      <pads>
-    
-      </pads>
-    </element>
-    <element>
-      <name>http---calf-sourceforge-net-small-plugins-trigger-a2c</name>
-      <longname>Audio-to-control OR</longname>
+      <name>http---invadarecords-com-plugins-lv2-delay-mono</name>
+      <longname>Invada Delay Munge (mono in)</longname>
       <class>Sink/Analyzer/Audio/LV2</class>
-      <description>Audio-to-control OR</description>
-      <author>no author available</author>
+      <description>Invada Delay Munge (mono in)</description>
+      <author>Invada</author>
       <pads>
         <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, channel-positions=(GstAudioChannelPosition)&lt; { GST_AUDIO_CHANNEL_POSITION_FRONT_MONO } &gt;</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-delay-sum</name>
+      <longname>Invada Delay Munge (sum L+R in)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Delay Munge (sum L+R in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-erreverb-mono</name>
+      <longname>Invada Early Reflection Reverb (mono in)</longname>
+      <class>Sink/Analyzer/Audio/LV2</class>
+      <description>Invada Early Reflection Reverb (mono in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-erreverb-sum</name>
+      <longname>Invada Early Reflection Reverb (sum L+R in)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Early Reflection Reverb (sum L+R in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-filter-hpf-mono</name>
+      <longname>Invada High Pass Filter (mono)</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Invada High Pass Filter (mono)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-filter-hpf-stereo</name>
+      <longname>Invada High Pass Filter (stereo)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada High Pass Filter (stereo)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-filter-lpf-mono</name>
+      <longname>Invada Low Pass Filter (mono)</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Invada Low Pass Filter (mono)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-filter-lpf-stereo</name>
+      <longname>Invada Low Pass Filter (stereo)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Low Pass Filter (stereo)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-input</name>
+      <longname>Invada Input Module</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Input Module</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-meter</name>
+      <longname>Invada Meter</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Invada Meter</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>outR</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>outL</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>inR</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>inL</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-phaser-mono</name>
+      <longname>Invada Stereo Phaser (mono in)</longname>
+      <class>Sink/Analyzer/Audio/LV2</class>
+      <description>Invada Stereo Phaser (mono in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-phaser-stereo</name>
+      <longname>Invada Stereo Phaser (stereo in)</longname>
+      <class>Sink/Analyzer/Audio/LV2</class>
+      <description>Invada Stereo Phaser (stereo in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>inR</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>inL</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-phaser-sum</name>
+      <longname>Invada Stereo Phaser (sum L+R in)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Stereo Phaser (sum L+R in)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-testtone</name>
+      <longname>Invada Test Tones</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Test Tones</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-tube-mono</name>
+      <longname>Invada Tube Distortion (mono)</longname>
+      <class>Filter/Effect/Audio/LV2</class>
+      <description>Invada Tube Distortion (mono)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>http---invadarecords-com-plugins-lv2-tube-stereo</name>
+      <longname>Invada Tube Distortion (stereo)</longname>
+      <class>Source/Audio/LV2</class>
+      <description>Invada Tube Distortion (stereo)</description>
+      <author>Invada</author>
+      <pads>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>in</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
         </caps>
       </pads>
     </element>

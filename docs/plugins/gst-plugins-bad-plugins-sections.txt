@@ -70,6 +70,20 @@ gst_amrwbenc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-assrender</FILE>
+<TITLE>assrender</TITLE>
+GstAssRender
+<SUBSECTION Standard>
+GstAssRenderBlitFunction
+GstAssRenderClass
+GST_ASS_RENDER
+GST_ASS_RENDER_CLASS
+GST_IS_ASS_RENDER
+GST_IS_ASS_RENDER_CLASS
+gst_ass_render_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audioparse</FILE>
 <TITLE>audioparse</TITLE>
 GstAudioParse

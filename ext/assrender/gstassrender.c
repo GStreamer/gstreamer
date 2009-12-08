@@ -18,6 +18,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-assrender
+ *
+ * Renders timestamped SSA/ASS subtitles on top of a video stream.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/mkv ! matroskademux name=d ! queue ! mp3parse ! mad ! audioconvert ! autoaudiosink  d. ! queue ! ffdec_h264 ! ffmpegcolorspace ! r.   d. ! queue ! "application/x-ass" ! assrender name=r ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline demuxes a Matroska file with h.264 video, MP3 audio and embedded ASS subtitles and renders the subtitles on top of the video.
+ * </refsect2>
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -123,11 +137,11 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
   gobject_class->finalize = gst_ass_render_finalize;
 
   g_object_class_install_property (gobject_class, PROP_ENABLE,
-      g_param_spec_boolean ("enable", "Toggle rendering",
+      g_param_spec_boolean ("enable", "Enable",
           "Enable rendering of subtitles", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EMBEDDEDFONTS,
-      g_param_spec_boolean ("embeddedfonts", "Use embedded fonts",
+      g_param_spec_boolean ("embeddedfonts", "Embedded Fonts",
           "Extract and use fonts embedded in the stream", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

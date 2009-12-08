@@ -3,7 +3,7 @@
   <description>ASF Muxer Plugin</description>
   <filename>../../gst/asfmux/.libs/libgstasfmux.so</filename>
   <basename>libgstasfmux.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>gsoc2009 package</package>

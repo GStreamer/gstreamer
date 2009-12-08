@@ -51,6 +51,10 @@ struct _GstAssRender
 
   GstPad *video_sinkpad, *text_sinkpad, *srcpad;
 
+  /* properties */
+  gboolean enable, embeddedfonts;
+
+  /* <private> */
   GstSegment video_segment;
 
   GstVideoFormat format;
@@ -68,7 +72,7 @@ struct _GstAssRender
   ASS_Renderer *ass_renderer;
   ASS_Track *ass_track;
 
-  gboolean renderer_init_ok, track_init_ok, enable, embeddedfonts;
+  gboolean renderer_init_ok, track_init_ok;
 };
 
 struct _GstAssRenderClass

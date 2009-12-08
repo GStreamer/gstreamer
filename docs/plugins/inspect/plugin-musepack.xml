@@ -3,10 +3,10 @@
   <description>Musepack decoder</description>
   <filename>../../ext/musepack/.libs/libgstmusepack.so</filename>
   <basename>libgstmusepack.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-musepack, streamversion=(int)7</details>
+          <details>audio/x-musepack, streamversion=(int){ 7, 8 }</details>
         </caps>
         <caps>
           <name>src</name>
