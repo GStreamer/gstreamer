@@ -64,6 +64,7 @@ struct _GstIVorbisDec {
   guint64               granulepos;
 
   gboolean              initialized;
+  guint                 width;
 
   GList                 *queued;
 

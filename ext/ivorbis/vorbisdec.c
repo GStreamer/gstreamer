@@ -69,7 +69,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 6 ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, " "depth = (int) 16, " "signed = (boolean) true")
+        "width = (int) { 16, 32 }, "
+        "depth = (int) 16, " "signed = (boolean) true")
     );
 
 static GstStaticPadTemplate vorbis_dec_sink_factory =
@@ -237,7 +238,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = sizeof (gint32) * dec->vi.channels;
+          scale = dec->width * dec->vi.channels;
         case GST_FORMAT_DEFAULT:
           *dest_value =
               scale * gst_util_uint64_scale_int (src_value, dec->vi.rate,
@@ -250,7 +251,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * sizeof (gint32) * dec->vi.channels;
+          *dest_value = src_value * dec->width * dec->vi.channels;
           break;
         case GST_FORMAT_TIME:
           *dest_value =
@@ -263,11 +264,11 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / (sizeof (gint32) * dec->vi.channels);
+          *dest_value = src_value / (dec->width * dec->vi.channels);
           break;
         case GST_FORMAT_TIME:
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->vi.rate * sizeof (gint32) * dec->vi.channels);
+              dec->vi.rate * dec->width * dec->vi.channels);
           break;
         default:
           res = FALSE;
@@ -574,6 +575,7 @@ vorbis_handle_identification_packet (GstIVorbisDec * vd)
 {
   GstCaps *caps;
   const GstAudioChannelPosition *pos = NULL;
+  gint width = 16;
 
   switch (vd->vi.channels) {
     case 1:
@@ -626,10 +628,24 @@ vorbis_handle_identification_packet (GstIVorbisDec * vd)
       goto channel_count_error;
   }
 
+  /* negotiate with downstream */
+  caps = gst_pad_get_allowed_caps (vd->srcpad);
+  if (caps) {
+    if (!gst_caps_is_empty (caps)) {
+      GstStructure *s;
+
+      s = gst_caps_get_structure (caps, 0);
+      /* template ensures 16 or 32 */
+      gst_structure_get_int (s, "width", &width);
+    }
+    gst_caps_unref (caps);
+  }
+  vd->width = width >> 3;
+
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, vd->vi.rate,
       "channels", G_TYPE_INT, vd->vi.channels,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, width,
       "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (pos) {
@@ -830,6 +846,18 @@ copy_samples (gint32 * out, ogg_int32_t ** in, guint samples, gint channels)
   }
 }
 
+static void
+copy_samples_16 (gint16 * out, ogg_int32_t ** in, guint samples, gint channels)
+{
+  gint i, j;
+
+  for (j = 0; j < samples; j++) {
+    for (i = 0; i < channels; i++) {
+      *out++ = CLIP_TO_15 (in[i][j] >> 9);
+    }
+  }
+}
+
 /* clip output samples to the segment boundaries
  */
 static gboolean
@@ -853,7 +881,7 @@ vorbis_do_clip (GstIVorbisDec * dec, GstBuffer * buf)
     /* bring clipped time to samples */
     diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
     /* samples to bytes */
-    diff *= (sizeof (gint32) * dec->vi.channels);
+    diff *= (dec->width * dec->vi.channels);
     GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstart), diff);
     GST_BUFFER_DATA (buf) += diff;
@@ -865,7 +893,7 @@ vorbis_do_clip (GstIVorbisDec * dec, GstBuffer * buf)
 
     /* bring clipped time to samples and then to bytes */
     diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
-    diff *= (sizeof (gint32) * dec->vi.channels);
+    diff *= (dec->width * dec->vi.channels);
     GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
     GST_BUFFER_SIZE (buf) -= diff;
@@ -904,8 +932,7 @@ vorbis_dec_push (GstIVorbisDec * dec, GstBuffer * buf)
           walk = g_list_previous (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
-        outoffset -=
-            GST_BUFFER_SIZE (buffer) / (sizeof (gint32) * dec->vi.channels);
+        outoffset -= GST_BUFFER_SIZE (buffer) / (dec->width * dec->vi.channels);
 
         GST_BUFFER_OFFSET (buffer) = outoffset;
         GST_BUFFER_TIMESTAMP (buffer) =
@@ -986,7 +1013,7 @@ vorbis_handle_data_packet (GstIVorbisDec * vd, ogg_packet * packet)
   if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
     goto done;
 
-  size = sample_count * vd->vi.channels * sizeof (gint32);
+  size = sample_count * vd->vi.channels * vd->width;
 
   /* alloc buffer for it */
   result =
@@ -1000,8 +1027,15 @@ vorbis_handle_data_packet (GstIVorbisDec * vd, ogg_packet * packet)
     goto wrong_samples;
 
   /* copy samples in buffer */
-  copy_samples ((gint32 *) GST_BUFFER_DATA (out), pcm, sample_count,
-      vd->vi.channels);
+  if (vd->width == 4) {
+    copy_samples ((gint32 *) GST_BUFFER_DATA (out), pcm, sample_count,
+        vd->vi.channels);
+  } else if (vd->width == 2) {
+    copy_samples_16 ((gint16 *) GST_BUFFER_DATA (out), pcm, sample_count,
+        vd->vi.channels);
+  } else {
+    g_assert_not_reached ();
+  }
 
   GST_BUFFER_SIZE (out) = size;
   GST_BUFFER_OFFSET (out) = vd->granulepos;
@@ -1183,6 +1217,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
       vd->initialized = FALSE;
+      vd->width = 2;
       gst_ivorbis_dec_reset (vd);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
