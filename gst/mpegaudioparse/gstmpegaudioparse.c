@@ -1973,7 +1973,7 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
           g_slist_remove (mp3parse->pending_accurate_seeks, seek);
       g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
       g_free (seek);
-      return TRUE;
+      return FALSE;
     }
   }
 
