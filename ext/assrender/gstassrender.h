@@ -55,6 +55,7 @@ struct _GstAssRender
 
   GstVideoFormat format;
   gint width, height;
+  gint fps_n, fps_d;
   GstAssRenderBlitFunction blit;
 
   GMutex *subtitle_mutex;

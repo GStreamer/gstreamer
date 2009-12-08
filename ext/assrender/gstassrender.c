@@ -651,7 +651,8 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
   render->height = 0;
 
   if (!gst_video_format_parse_caps (caps, &render->format, &render->width,
-          &render->height)) {
+          &render->height) ||
+      !gst_video_parse_caps_framerate (caps, &render->fps_n, &render->fps_d)) {
     GST_ERROR_OBJECT (render, "Can't parse caps: %" GST_PTR_FORMAT, caps);
     ret = FALSE;
     goto out;
@@ -962,6 +963,10 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   vid_running_time =
       gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
       render->video_segment.last_stop);
+
+  if (render->fps_n && render->fps_d)
+    vid_running_time +=
+        gst_util_uint64_scale (GST_SECOND, render->fps_d, render->fps_n);
 
   if (sub_running_time > vid_running_time) {
     g_assert (render->subtitle_pending == NULL);
