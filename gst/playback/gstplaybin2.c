@@ -2130,21 +2130,25 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
     /* Drop all stream-changed messages except the last one */
     if (strcmp ("playbin2-stream-changed", gst_structure_get_name (s)) == 0) {
       guint32 seqnum = gst_message_get_seqnum (msg);
-      GList *l;
+      GList *l, *l_prev;
 
       group = playbin->curr_group;
       g_mutex_lock (group->stream_changed_pending_lock);
-      for (l = group->stream_changed_pending; l; l = l->next) {
+      for (l = group->stream_changed_pending; l;) {
         guint32 l_seqnum = GPOINTER_TO_UINT (l->data);
 
         if (l_seqnum == seqnum) {
+          l_prev = l;
+          l = l->next;
           group->stream_changed_pending =
-              g_list_delete_link (group->stream_changed_pending, l);
+              g_list_delete_link (group->stream_changed_pending, l_prev);
           if (group->stream_changed_pending) {
             gst_message_unref (msg);
             msg = NULL;
             break;
           }
+        } else {
+          l = l->next;
         }
       }
       g_mutex_unlock (group->stream_changed_pending_lock);
