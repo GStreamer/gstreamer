@@ -3140,6 +3140,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       GstFlowReturn ret;
+      gboolean update;
 
       GST_DEBUG_OBJECT (basesink, "newsegment %p", event);
 
@@ -3147,7 +3148,10 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (basesink->flushing))
         goto flushing;
 
-      if (G_UNLIKELY (basesink->priv->received_eos)) {
+      gst_event_parse_new_segment_full (event, &update, NULL, NULL, NULL, NULL,
+          NULL, NULL);
+
+      if (G_UNLIKELY (basesink->priv->received_eos && !update)) {
         /* we can't accept anything when we are EOS */
         result = FALSE;
         gst_event_unref (event);
