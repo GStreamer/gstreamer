@@ -2630,6 +2630,8 @@ gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 static gboolean
 intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
 {
+  gboolean empty = FALSE;
+
   /* skip the pad, the request came from */
   if (G_UNLIKELY (pad != orig)) {
     GstCaps *peercaps, *existing;
@@ -2637,13 +2639,17 @@ intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
     existing = g_value_get_pointer (ret);
     peercaps = gst_pad_peer_get_caps_reffed (pad);
     if (G_LIKELY (peercaps)) {
-      g_value_set_pointer (ret, gst_caps_intersect (existing, peercaps));
+      GstCaps *intersection = gst_caps_intersect (existing, peercaps);
+
+      empty = gst_caps_is_empty (intersection);
+
+      g_value_set_pointer (ret, intersection);
       gst_caps_unref (existing);
       gst_caps_unref (peercaps);
     }
   }
   gst_object_unref (pad);
-  return TRUE;
+  return !empty;
 }
 
 /**
