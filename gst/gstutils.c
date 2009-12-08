@@ -2628,7 +2628,7 @@ gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 #endif /* GST_REMOVE_DEPRECATED */
 
 static gboolean
-intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
+getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
 {
   gboolean empty = FALSE;
 
@@ -2691,7 +2691,7 @@ gst_pad_proxy_getcaps (GstPad * pad)
   iter = gst_element_iterate_pads (element);
   while (1) {
     res =
-        gst_iterator_fold (iter, (GstIteratorFoldFunction) intersect_caps_func,
+        gst_iterator_fold (iter, (GstIteratorFoldFunction) getcaps_fold_func,
         &ret, pad);
     switch (res) {
       case GST_ITERATOR_RESYNC:
@@ -2745,7 +2745,7 @@ typedef struct
 } LinkData;
 
 static gboolean
-link_fold_func (GstPad * pad, GValue * ret, LinkData * data)
+setcaps_fold_func (GstPad * pad, GValue * ret, LinkData * data)
 {
   gboolean success = TRUE;
 
@@ -2795,7 +2795,7 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   data.orig = pad;
   data.caps = caps;
 
-  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) link_fold_func,
+  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) setcaps_fold_func,
       &ret, &data);
   gst_iterator_free (iter);
 
