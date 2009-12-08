@@ -823,12 +823,12 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     self->buffer_fill = 0;
     g_free (self->buffer);
     self->buffer = NULL;
-    expected_timestamp = self->start_ts = timestamp;
+    self->start_ts = timestamp;
     self->start_off = GST_BUFFER_OFFSET (inbuf);
     self->nsamples_out = 0;
     self->nsamples_in = 0;
   } else if (!GST_CLOCK_TIME_IS_VALID (self->start_ts)) {
-    expected_timestamp = self->start_ts = timestamp;
+    self->start_ts = timestamp;
     self->start_off = GST_BUFFER_OFFSET (inbuf);
   }
 
