@@ -156,8 +156,9 @@ gst_dc1394_class_init (GstDc1394Class * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_ISO_SPEED, g_param_spec_int ("iso-speed",
-          "The iso bandwidth in Mbps",
-          "The iso bandwidth in Mbps", 1, G_MAXINT, 400, G_PARAM_READWRITE));
+          "The iso bandwidth in Mbps {100, 200, 400, 800, 1600, 3200}",
+          "The iso bandwidth in Mbps {100, 200, 400, 800, 1600, 3200}", 100,
+          3200, 400, G_PARAM_READWRITE));
 
   gstbasesrc_class->get_caps = gst_dc1394_getcaps;
   gstbasesrc_class->set_caps = gst_dc1394_setcaps;
@@ -226,7 +227,21 @@ gst_dc1394_set_property (GObject * object, guint prop_id,
       src->bufsize = g_value_get_int (value);
       break;
     case PROP_ISO_SPEED:
-      src->iso_speed = g_value_get_int (value);
+      switch (g_value_get_int (value)) {
+        case 100:
+        case 200:
+        case 300:
+        case 400:
+        case 800:
+        case 1600:
+        case 3200:
+          // fallthrough
+          src->iso_speed = g_value_get_int (value);
+          break;
+        default:
+          g_warning ("Invalid iso speed %d, ignoring", g_value_get_int (value));
+          break;
+      }
     default:
       break;
   }
@@ -1034,7 +1049,7 @@ static gboolean
 gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
 {
   dc1394camera_list_t *cameras = NULL;
-  gint err;
+  gint err = 0;
   int framerateconst;
 
   GST_LOG_OBJECT (src, "Opening the camera!!!");
