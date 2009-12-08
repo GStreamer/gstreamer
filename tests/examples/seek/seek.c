@@ -57,7 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define FILL_INTERVAL 100
 //#define UPDATE_INTERVAL 500
 //#define UPDATE_INTERVAL 100
-#define UPDATE_INTERVAL 10
+#define UPDATE_INTERVAL 40
 
 /* number of milliseconds to play for after a seek */
 #define SCRUB_TIME 100
