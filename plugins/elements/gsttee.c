@@ -114,6 +114,7 @@ static void gst_tee_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_tee_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_tee_dispose (GObject * object);
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
@@ -146,6 +147,23 @@ gst_tee_base_init (gpointer g_class)
 }
 
 static void
+gst_tee_dispose (GObject * object)
+{
+  GList *item;
+
+restart:
+  for (item = GST_ELEMENT_PADS (object); item; item = g_list_next (item)) {
+    GstPad *pad = GST_PAD (item->data);
+    if (GST_PAD_IS_SRC (pad)) {
+      gst_element_release_request_pad (GST_ELEMENT (object), pad);
+      goto restart;
+    }
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_tee_finalize (GObject * object)
 {
   GstTee *tee;
@@ -171,6 +189,7 @@ gst_tee_class_init (GstTeeClass * klass)
   gobject_class->finalize = gst_tee_finalize;
   gobject_class->set_property = gst_tee_set_property;
   gobject_class->get_property = gst_tee_get_property;
+  gobject_class->dispose = gst_tee_dispose;
 
   g_object_class_install_property (gobject_class, PROP_NUM_SRC_PADS,
       g_param_spec_int ("num-src-pads", "Num Src Pads",
