@@ -486,7 +486,7 @@ gst_object_finalize (GObject * object)
   parent_class->finalize (object);
 }
 
-/* Changing a GObject property of a GstObject will result in "deep_notify"
+/* Changing a GObject property of a GstObject will result in "deep-notify"
  * signals being emitted by the object itself, as well as in each parent
  * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
