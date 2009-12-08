@@ -2631,22 +2631,18 @@ static gboolean
 getcaps_fold_func (GstPad * pad, GValue * ret, GstPad * orig)
 {
   gboolean empty = FALSE;
+  GstCaps *peercaps, *existing;
 
-  /* skip the pad, the request came from */
-  if (G_UNLIKELY (pad != orig)) {
-    GstCaps *peercaps, *existing;
+  existing = g_value_get_pointer (ret);
+  peercaps = gst_pad_peer_get_caps_reffed (pad);
+  if (G_LIKELY (peercaps)) {
+    GstCaps *intersection = gst_caps_intersect (existing, peercaps);
 
-    existing = g_value_get_pointer (ret);
-    peercaps = gst_pad_peer_get_caps_reffed (pad);
-    if (G_LIKELY (peercaps)) {
-      GstCaps *intersection = gst_caps_intersect (existing, peercaps);
+    empty = gst_caps_is_empty (intersection);
 
-      empty = gst_caps_is_empty (intersection);
-
-      g_value_set_pointer (ret, intersection);
-      gst_caps_unref (existing);
-      gst_caps_unref (peercaps);
-    }
+    g_value_set_pointer (ret, intersection);
+    gst_caps_unref (existing);
+    gst_caps_unref (peercaps);
   }
   gst_object_unref (pad);
   return !empty;
@@ -2681,14 +2677,19 @@ gst_pad_proxy_getcaps (GstPad * pad)
 
   element = gst_pad_get_parent_element (pad);
   if (element == NULL)
-    return NULL;
+    goto no_parent;
 
   /* value to hold the return, by default it holds ANY, the ref is taken by
    * the GValue. */
   g_value_init (&ret, G_TYPE_POINTER);
   g_value_set_pointer (&ret, gst_caps_new_any ());
 
-  iter = gst_element_iterate_pads (element);
+  /* only iterate the pads in the oposite direction */
+  if (GST_PAD_IS_SRC (pad))
+    iter = gst_element_iterate_sink_pads (element);
+  else
+    iter = gst_element_iterate_src_pads (element);
+
   while (1) {
     res =
         gst_iterator_fold (iter, (GstIteratorFoldFunction) getcaps_fold_func,
@@ -2722,19 +2723,29 @@ done:
   caps = g_value_get_pointer (&ret);
   g_value_unset (&ret);
 
-  intersected = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_unref (caps);
+  if (caps) {
+    intersected =
+        gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (caps);
+  } else {
+    intersected = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
 
   return intersected;
 
   /* ERRORS */
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
 error:
   {
     g_warning ("Pad list returned error on element %s",
         GST_ELEMENT_NAME (element));
     gst_iterator_free (iter);
     gst_object_unref (element);
-    return NULL;
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 }
 
