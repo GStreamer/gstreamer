@@ -48,7 +48,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate video_sink_factory =
@@ -57,7 +58,8 @@ static GstStaticPadTemplate video_sink_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate text_sink_factory =
@@ -372,7 +374,7 @@ static void \
 blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
 { \
   guint counter = 0; \
-  guint8 alpha, r, g, b, k; \
+  gint alpha, r, g, b, k; \
   const guint8 *src; \
   guint8 *dst; \
   gint x, y, w, h; \
@@ -402,7 +404,7 @@ blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
     \
     for (y = 0; y < h; y++) { \
       for (x = 0; x < w; x++) { \
-        k = ((guint8) src[0]) * alpha / 255; \
+        k = src[0] * alpha / 255; \
         dst[R] = (k * r + (255 - k) * dst[R]) / 255; \
         dst[G] = (k * g + (255 - k) * dst[G]) / 255; \
         dst[B] = (k * b + (255 - k) * dst[B]) / 255; \
@@ -428,33 +430,48 @@ CREATE_RGB_BLIT_FUNCTION (bgrx, 4, 2, 1, 0);
 
 #undef CREATE_RGB_BLIT_FUNCTION
 
-#if 0
-#define COMP_Y(ret, r, g, b) \
-{ \
-   ret = (int) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16)); \
-   ret = CLAMP (ret, 0, 255); \
+static inline gint
+rgb_to_y (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret = (gint) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16));
+  ret = CLAMP (ret, 0, 255);
+  return ret;
 }
 
-#define COMP_U(ret, r, g, b) \
-{ \
-   ret = (int) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
+static inline gint
+rgb_to_u (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret =
+      (gint) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) +
+      128);
+  ret = CLAMP (ret, 0, 255);
+  return ret;
 }
 
-#define COMP_V(ret, r, g, b) \
-{ \
-   ret = (int) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
+static inline gint
+rgb_to_v (gint r, gint g, gint b)
+{
+  gint ret;
+
+  ret =
+      (gint) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) +
+      128);
+  ret = CLAMP (ret, 0, 255);
+  return ret;
 }
 
 static void
 blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
 {
   guint counter = 0;
-  guint8 alpha, r, g, b, k;
-  guint8 Y, U, V;
+  gint alpha, r, g, b, k, k2;
+  gint Y, U, V;
   const guint8 *src;
-  guint8 *dst;
+  guint8 *dst_y, *dst_u, *dst_v;
   gint x, y, w, h;
   gint w2, h2;
   gint width = render->width;
@@ -463,7 +480,6 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
   gint y_offset, y_height, y_width, y_stride;
   gint u_offset, u_height, u_width, u_stride;
   gint v_offset, v_height, v_width, v_stride;
-  gint div;
 
   y_offset =
       gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0, width,
@@ -503,102 +519,125 @@ blit_i420 (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer)
     g = ((ass_image->color) >> 16) & 0xff;
     b = ((ass_image->color) >> 8) & 0xff;
 
-    COMP_Y (Y, r, g, b);
-    COMP_U (U, r, g, b);
-    COMP_V (V, r, g, b);
+    Y = rgb_to_y (r, g, b);
+    U = rgb_to_u (r, g, b);
+    V = rgb_to_v (r, g, b);
 
     w = MIN (ass_image->w, width - ass_image->dst_x);
     h = MIN (ass_image->h, height - ass_image->dst_y);
 
-    src_stride = ass_image->stride;
-
-    /* Y */
-    src = ass_image->bitmap;
-    dst =
-        buffer->data + y_offset + ass_image->dst_y * y_stride +
-        ass_image->dst_x;
-    for (y = 0; y < h; y++) {
-      for (x = 0; x < w; x++) {
-        k = ((guint8) src[0]) * alpha / 255;
-        dst[0] = (k * Y + (255 - k) * dst[0]) / 255;
-        src++;
-        dst++;
-      }
-      src += src_stride - w;
-      dst += y_stride - w;
-    }
-
     w2 = (w + 1) / 2;
     h2 = (h + 1) / 2;
 
-    /* U */
+    src_stride = ass_image->stride;
+
     src = ass_image->bitmap;
-    dst =
+    dst_y =
+        buffer->data + y_offset + ass_image->dst_y * y_stride +
+        ass_image->dst_x;
+    dst_u =
         buffer->data + u_offset + ((ass_image->dst_y + 1) / 2) * u_stride +
         (ass_image->dst_x + 1) / 2;
-    for (y = 0; y < h2; y++) {
-      for (x = 0; x < w2; x++) {
-        k = src[0] * alpha / 255;
-        div = 1;
-        if (x * 2 + 1 < w) {
-          k += src[1] * alpha / 255;
-          div++;
-        }
-        if (y * 2 + 1 < h) {
-          k += src[src_stride] * alpha / 255;
-          div++;
-        }
-        if (y * 2 + 1 < h && x * 2 + 1 < w) {
-          k += src[src_stride + 1] * alpha / 255;
-          div++;
-        }
-        k /= div;
-
-        dst[0] = (k * U + (255 - k) * dst[0]) / 255;
-        dst++;
-        src += 2;
-      }
-      dst += u_stride - w2;
-      src += src_stride - w2 * 2;
-    }
-    /* V */
-    src = ass_image->bitmap;
-    dst =
+    dst_v =
         buffer->data + v_offset + ((ass_image->dst_y + 1) / 2) * v_stride +
         (ass_image->dst_x + 1) / 2;
-    for (y = 0; y < h2; y++) {
-      for (x = 0; x < w2; x++) {
-        k = src[0] * alpha / 255;
-        div = 1;
-        if (x * 2 + 1 < w) {
-          k += src[1] * alpha / 255;
-          div++;
-        }
-        if (y * 2 + 1 < h) {
-          k += src[src_stride] * alpha / 255;
-          div++;
-        }
-        if (y * 2 + 1 < h && x * 2 + 1 < w) {
-          k += src[src_stride + 1] * alpha / 255;
-          div++;
-        }
-        k /= div;
 
-        dst[0] = (k * V + (255 - k) * dst[0]) / 255;
-        dst++;
-        src += 2;
+    for (y = 0; y < h - 1; y += 2) {
+      for (x = 0; x < w - 1; x += 2) {
+        k = src[0] * alpha / 255;
+        k2 = k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        k = src[1] * alpha / 255;
+        k2 += k;
+        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+
+        src += src_stride;
+        dst_y += y_stride;
+
+        k = src[0] * alpha / 255;
+        k2 += k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        k = src[1] * alpha / 255;
+        k2 += k;
+        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+
+        k2 /= 4;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        dst_u++;
+        dst_v++;
+
+        src += -src_stride + 2;
+        dst_y += -y_stride + 2;
       }
-      dst += v_stride - w2;
-      src += src_stride - w2 * 2;
+
+      if (x < w) {
+        k = src[0] * alpha / 255;
+        k2 = k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        src += src_stride;
+        dst_y += y_stride;
+
+        k = src[0] * alpha / 255;
+        k2 += k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        k2 /= 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        dst_u++;
+        dst_v++;
+
+        src += -src_stride + 1;
+        dst_y += -y_stride + 1;
+      }
+
+      src += src_stride + (src_stride - w);
+      dst_y += y_stride + (y_stride - w);
+      dst_u += u_stride - w2;
+      dst_v += v_stride - w2;
+    }
+
+    if (y < h) {
+      for (x = 0; x < w - 1; x += 2) {
+        k = src[0] * alpha / 255;
+        k2 = k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        k = src[1] * alpha / 255;
+        k2 += k;
+        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+
+        k2 /= 2;
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        dst_u++;
+        dst_v++;
+
+        src += 2;
+        dst_y += 2;
+      }
+
+      if (x < w) {
+        k = src[0] * alpha / 255;
+        k2 = k;
+        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+
+        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
+        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+      }
     }
 
   next:
     counter++;
     ass_image = ass_image->next;
   }
+
   GST_LOG_OBJECT (render, "amount of rendered ass_image: %u", counter);
 }
-#endif
 
 static gboolean
 gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
@@ -643,11 +682,9 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
     case GST_VIDEO_FORMAT_BGRx:
       render->blit = blit_bgrx;
       break;
-#if 0
     case GST_VIDEO_FORMAT_I420:
       render->blit = blit_i420;
       break;
-#endif
     default:
       ret = FALSE;
       goto out;
