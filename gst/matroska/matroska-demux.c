@@ -2239,7 +2239,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
     demux->close_segment = gst_event_new_new_segment (TRUE,
         demux->segment.rate, GST_FORMAT_TIME, demux->segment.start,
-        demux->segment.last_stop, demux->segment.last_stop);
+        demux->segment.last_stop, demux->segment.stop);
     GST_OBJECT_UNLOCK (demux);
   }
 
@@ -3520,7 +3520,7 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
       /* advance stream time */
       gst_pad_push_event (context->pad,
           gst_event_new_new_segment (TRUE, demux->segment.rate,
-              GST_FORMAT_TIME, demux->segment.last_stop, -1,
+              GST_FORMAT_TIME, demux->segment.last_stop, demux->segment.stop,
               demux->segment.last_stop));
     }
   }
@@ -4357,8 +4357,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
               "stream %d. Sending updated NEWSEGMENT event", diff,
               stream->index);
           gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
-                  demux->segment.rate, GST_FORMAT_TIME, lace_time, -1,
-                  lace_time));
+                  demux->segment.rate, GST_FORMAT_TIME, lace_time,
+                  demux->segment.stop, lace_time));
         }
       }
 
