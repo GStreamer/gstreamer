@@ -2861,7 +2861,7 @@ gst_element_dispose (GObject * object)
     /* don't call _remove_pad with NULL */
     gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
   }
-  if (G_UNLIKELY (element->pads != 0)) {
+  if (G_UNLIKELY (element->pads != NULL)) {
     g_critical ("could not remove pads from element %s",
         GST_STR_NULL (GST_OBJECT_NAME (object)));
   }
