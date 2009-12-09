@@ -452,5 +452,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
    * If we are rendering, set playsink to sync=False,
    * If we are NOT rendering, set playsink to sync=TRUE */
 
+  pipeline->mode = mode;
+
   return TRUE;
 }
