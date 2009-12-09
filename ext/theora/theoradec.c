@@ -403,7 +403,7 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       gint64 value;
-      GstFormat my_format, format;
+      GstFormat format;
       gint64 time;
 
       /* parse format */
@@ -415,9 +415,9 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
 
-      my_format = GST_FORMAT_TIME;
       if (!(res =
-              theora_dec_src_convert (pad, my_format, time, &format, &value)))
+              theora_dec_src_convert (pad, GST_FORMAT_TIME, time, &format,
+                  &value)))
         goto error;
 
       gst_query_set_position (query, format, value);
