@@ -1149,7 +1149,9 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
           if (mixpad->fps_n == 0) {
             duration = GST_CLOCK_TIME_NONE;
           } else {
-            duration = GST_SECOND * mixpad->fps_d / mixpad->fps_n;
+            duration =
+                gst_util_uint64_scale_int (GST_SECOND, mixpad->fps_d,
+                mixpad->fps_n);
           }
         }
         if (GST_CLOCK_TIME_IS_VALID (duration))
@@ -1269,7 +1271,7 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
     if (mix->fps_n == 0) {
       interval = G_MAXINT64;
     } else {
-      interval = GST_SECOND * mix->fps_d / mix->fps_n;
+      interval = gst_util_uint64_scale_int (GST_SECOND, mix->fps_d, mix->fps_n);
     }
     GST_LOG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT " nanoseconds",
         interval);
