@@ -57,7 +57,6 @@ struct _GstVorbisDec {
   vorbis_info       vi;
   vorbis_comment    vc;
   vorbis_block      vb;
-  guint64           granulepos;
 
   gboolean          initialized;
 
@@ -73,8 +72,7 @@ struct _GstVorbisDec {
   gboolean          discont;
   guint32           seqnum;
 
-  GstClockTime      cur_timestamp; /* only used with non-ogg container formats */
-  GstClockTime      prev_timestamp; /* only used with non-ogg container formats */
+  GstClockTime      last_timestamp;
 
   GList            *pendingevents;
   GstTagList       *taglist;
