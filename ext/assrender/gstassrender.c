@@ -110,6 +110,8 @@ static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_ass_render_bufferalloc_video (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer);
 
+static gboolean gst_ass_render_query_src (GstPad * pad, GstQuery * query);
+
 static void
 gst_ass_render_base_init (gpointer gclass)
 {
@@ -210,6 +212,9 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
 
   gst_pad_set_bufferalloc_function (render->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_bufferalloc_video));
+
+  gst_pad_set_query_function (render->srcpad,
+      GST_DEBUG_FUNCPTR (gst_ass_render_query_src));
 
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
@@ -357,6 +362,18 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
   }
 
 
+  return ret;
+}
+
+static gboolean
+gst_ass_render_query_src (GstPad * pad, GstQuery * query)
+{
+  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  ret = gst_pad_peer_query (render->video_sinkpad, query);
+
+  gst_object_unref (render);
   return ret;
 }
 
