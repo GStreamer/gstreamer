@@ -1135,8 +1135,7 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
 
       GST_LOG_OBJECT (mix, "we need a new buffer");
 
-      buf = gst_collect_pads_pop (mix->collect, data);
-
+      buf = gst_collect_pads_peek (mix->collect, data);
       if (buf) {
         guint64 duration;
 
@@ -1289,6 +1288,8 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
       GST_LOG_OBJECT (pad, "queued now %" G_GINT64_FORMAT, pad->queued);
       if (pad->queued <= 0) {
         GST_LOG_OBJECT (pad, "unreffing buffer");
+        gst_buffer_unref (gst_collect_pads_pop (mix->collect,
+                &mixcol->collect));
         gst_buffer_unref (mixcol->buffer);
         mixcol->buffer = NULL;
       }
