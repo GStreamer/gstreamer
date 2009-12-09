@@ -1350,6 +1350,11 @@ gst_dshowvideosink_stop (GstBaseSink * bsink)
     sink->filter_graph = NULL;
   }
 
+  if (sink->filter_media_event) {
+    sink->filter_media_event->Release();
+    sink->filter_media_event = NULL;
+  }
+
   return TRUE;
 }
 
