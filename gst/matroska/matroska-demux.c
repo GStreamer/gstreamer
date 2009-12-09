@@ -4349,6 +4349,18 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
 
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
+        /* Check if this stream is after segment stop */
+        if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop) &&
+            lace_time >= demux->segment.stop) {
+          GST_DEBUG_OBJECT (demux,
+              "Stream %d after segment stop %" GST_TIME_FORMAT, stream->index,
+              GST_TIME_ARGS (demux->segment.stop));
+          ret = GST_FLOW_UNEXPECTED;
+          /* combine flows */
+          ret = gst_matroska_demux_combine_flows (demux, stream, ret);
+          goto done;
+        }
+
         if (!GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)
             || demux->segment.last_stop < lace_time)
           demux->segment.last_stop = lace_time;
