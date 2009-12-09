@@ -3359,6 +3359,8 @@ build_ima_adpcm_atom (gint channels, gint rate, gint blocksize)
 
   /* This atom's content is a WAVE header, including 2 bytes of extra data.
      Note that all of this is little-endian, unlike most stuff in qt. */
+  /* 4 bytes header per channel (including 1 sample). Then 2 samples per byte
+     for the rest. Simplifies to this. */
   samplesperblock = 2 * blocksize / channels - 7;
   bytespersec = rate * blocksize / samplesperblock;
   GST_WRITE_UINT16_LE (data, 0x11);
