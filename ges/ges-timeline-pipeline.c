@@ -37,8 +37,8 @@
 typedef struct
 {
   GESTimelinePipeline *pipeline;
-  GstElement *queue;
-  GstPad *srcpad;
+  GstElement *tee;
+  GstPad *srcpad;               /* Timeline source pad */
   GstPad *playsinkpad;
   GstPad *encodebinpad;
 } OutputChain;
@@ -170,7 +170,6 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 {
   OutputChain *chain;
   GESTrack *track;
-  const gchar *sinkpad_name;
   GstPad *sinkpad;
   gboolean reconfigured = FALSE;
 
@@ -184,50 +183,111 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     return;
   }
 
-  switch (track->type) {
-    case GES_TRACK_TYPE_VIDEO:
-      sinkpad_name = "video_sink";
-      break;
-    case GES_TRACK_TYPE_AUDIO:
-      sinkpad_name = "audio_sink";
-      break;
-    case GES_TRACK_TYPE_TEXT:
-      sinkpad_name = "text_sink";
-      break;
-    default:
-      GST_WARNING_OBJECT (self, "Can't handle tracks of type %d yet",
-          track->type);
-      return;
+  /* Don't connect track if it's not going to be used */
+  if (track->type == GES_TRACK_TYPE_VIDEO &&
+      !(self->mode & TIMELINE_MODE_PREVIEW_VIDEO) &&
+      !(self->mode & TIMELINE_MODE_RENDER)) {
+    GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
   }
-
-  /* Request a sinkpad from playsink */
-  if (G_UNLIKELY (!(sinkpad =
-              gst_element_get_request_pad (self->playsink, sinkpad_name)))) {
-    GST_WARNING_OBJECT (self, "Couldn't get a pad from the playsink !");
-    return;
+  if (track->type == GES_TRACK_TYPE_AUDIO &&
+      !(self->mode & TIMELINE_MODE_PREVIEW_AUDIO) &&
+      !(self->mode & TIMELINE_MODE_RENDER)) {
+    GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
   }
-
-  if (G_UNLIKELY (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)) {
-    GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
-    gst_object_unref (sinkpad);
-    return;
-  }
-
-  GST_DEBUG ("Reconfiguring playsink");
-
-  /* reconfigure playsink */
-  g_signal_emit_by_name (self->playsink, "reconfigure", &reconfigured);
-  GST_DEBUG ("'reconfigure' returned %d", reconfigured);
 
   /* Create a new chain */
   chain = g_new0 (OutputChain, 1);
   chain->pipeline = self;
   chain->srcpad = pad;
-  chain->playsinkpad = sinkpad;
+
+  /* Adding tee */
+  chain->tee = gst_element_factory_make ("tee", NULL);
+  gst_bin_add (GST_BIN_CAST (self), chain->tee);
+
+  /* Linking pad to tee */
+  sinkpad = gst_element_get_pad (chain->tee, "sink");
+  gst_pad_link (pad, sinkpad);
+
+  /* Connect playsink */
+  if (self->mode & TIMELINE_MODE_PREVIEW) {
+    const gchar *sinkpad_name;
+
+    GST_DEBUG_OBJECT (self, "Connecting to playsink");
+
+    switch (track->type) {
+      case GES_TRACK_TYPE_VIDEO:
+        sinkpad_name = "video_sink";
+        break;
+      case GES_TRACK_TYPE_AUDIO:
+        sinkpad_name = "audio_sink";
+        break;
+      case GES_TRACK_TYPE_TEXT:
+        sinkpad_name = "text_sink";
+        break;
+      default:
+        GST_WARNING_OBJECT (self, "Can't handle tracks of type %d yet",
+            track->type);
+        goto error;
+    }
+
+    /* Request a sinkpad from playsink */
+    if (G_UNLIKELY (!(sinkpad =
+                gst_element_get_request_pad (self->playsink, sinkpad_name)))) {
+      GST_WARNING_OBJECT (self, "Couldn't get a pad from the playsink !");
+      goto error;
+    }
+
+    if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
+                    "src%d"), sinkpad) != GST_PAD_LINK_OK)) {
+      GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
+      goto error;
+    }
+
+    GST_DEBUG ("Reconfiguring playsink");
+
+    /* reconfigure playsink */
+    g_signal_emit_by_name (self->playsink, "reconfigure", &reconfigured);
+    GST_DEBUG ("'reconfigure' returned %d", reconfigured);
+
+    chain->playsinkpad = sinkpad;
+  }
+
+  /* Connect to encodebin */
+  if (self->mode & TIMELINE_MODE_RENDER) {
+    GST_DEBUG_OBJECT (self, "Connecting to encodebin");
+
+    sinkpad = NULL;
+    g_signal_emit_by_name (self->encodebin, "request-pad",
+        gst_pad_get_caps (pad), &sinkpad);
+    if (G_UNLIKELY (sinkpad == NULL)) {
+      GST_WARNING_OBJECT (self, "Couldn't get a pad from encodebin !");
+      goto error;
+    }
+
+    if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
+                    "src%d"), sinkpad) != GST_PAD_LINK_OK)) {
+      GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
+      goto error;
+    }
+
+    chain->encodebinpad = sinkpad;
+  }
 
   self->chains = g_list_append (self->chains, chain);
 
   GST_DEBUG ("done");
+  return;
+
+error:
+  {
+    if (chain->tee) {
+      gst_bin_remove (GST_BIN_CAST (self), chain->tee);
+      gst_object_unref (chain->tee);
+    }
+    if (sinkpad)
+      gst_object_unref (sinkpad);
+    g_free (chain);
+  }
 }
 
 static void
@@ -236,6 +296,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GST_DEBUG_OBJECT (self, "pad removed %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* FIXME : IMPLEMENT ! */
+  GST_WARNING_OBJECT (self, "IMPLEMENTE ME !");
 
   GST_DEBUG ("done");
 }
@@ -261,7 +322,8 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
 
   GST_DEBUG ("pipeline:%p, timeline:%p", timeline, pipeline);
 
-  if (G_UNLIKELY (!gst_bin_add (GST_BIN (pipeline), GST_ELEMENT (timeline)))) {
+  if (G_UNLIKELY (!gst_bin_add (GST_BIN_CAST (pipeline),
+              GST_ELEMENT (timeline)))) {
     return FALSE;
   }
   pipeline->timeline = timeline;
