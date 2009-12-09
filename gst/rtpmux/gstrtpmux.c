@@ -97,7 +97,7 @@ static void gst_rtp_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
+static void gst_rtp_mux_dispose (GObject * object);
 
 GST_BOILERPLATE (GstRTPMux, gst_rtp_mux, GstElement, GST_TYPE_ELEMENT);
 
@@ -125,6 +125,7 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 
   gobject_class->get_property = gst_rtp_mux_get_property;
   gobject_class->set_property = gst_rtp_mux_set_property;
+  gobject_class->dispose = gst_rtp_mux_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
@@ -150,6 +151,23 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_mux_change_state);
 
   klass->chain_func = gst_rtp_mux_chain;
+}
+
+static void
+gst_rtp_mux_dispose (GObject * object)
+{
+  GList *item;
+
+restart:
+  for (item = GST_ELEMENT_PADS (object); item; item = g_list_next (item)) {
+    GstPad *pad = GST_PAD (item->data);
+    if (GST_PAD_IS_SINK (pad)) {
+      gst_element_release_request_pad (GST_ELEMENT (object), pad);
+      goto restart;
+    }
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
