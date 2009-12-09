@@ -4362,8 +4362,16 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         }
 
         if (!GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)
-            || demux->segment.last_stop < lace_time)
+            || demux->segment.last_stop < lace_time) {
           demux->segment.last_stop = lace_time;
+
+          if (demux->duration < lace_time) {
+            demux->duration = lace_time;
+            gst_element_post_message (GST_ELEMENT_CAST (demux),
+                gst_message_new_duration (GST_OBJECT_CAST (demux),
+                    GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+          }
+        }
 
         if (GST_CLOCK_TIME_IS_VALID (stream->pos)) {
           GstClockTimeDiff diff = GST_CLOCK_DIFF (stream->pos, lace_time);
