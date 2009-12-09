@@ -388,6 +388,7 @@ gst_matroska_demux_reset (GstElement * element)
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->duration = -1;
+  demux->last_stop_end = GST_CLOCK_TIME_NONE;
 
   if (demux->close_segment) {
     gst_event_unref (demux->close_segment);
@@ -4349,6 +4350,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
 
       if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
+        GstClockTime last_stop_end;
+
         /* Check if this stream is after segment stop */
         if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop) &&
             lace_time >= demux->segment.stop) {
@@ -4359,18 +4362,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           /* combine flows */
           ret = gst_matroska_demux_combine_flows (demux, stream, ret);
           goto done;
-        }
-
-        if (!GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)
-            || demux->segment.last_stop < lace_time) {
-          demux->segment.last_stop = lace_time;
-
-          if (demux->duration < lace_time) {
-            demux->duration = lace_time;
-            gst_element_post_message (GST_ELEMENT_CAST (demux),
-                gst_message_new_duration (GST_OBJECT_CAST (demux),
-                    GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
-          }
         }
 
         if (GST_CLOCK_TIME_IS_VALID (stream->pos)) {
@@ -4386,14 +4377,33 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
                     demux->segment.stop, lace_time));
           }
         }
+
+        if (!GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)
+            || demux->segment.last_stop < lace_time) {
+          demux->segment.last_stop = lace_time;
+        }
+
+        last_stop_end = lace_time;
+        if (duration) {
+          GST_BUFFER_DURATION (sub) = duration / laces;
+          last_stop_end += GST_BUFFER_DURATION (sub);
+        }
+
+        if (!GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) ||
+            demux->last_stop_end < last_stop_end)
+          demux->last_stop_end = last_stop_end;
+
+        if (demux->duration == -1 || demux->duration < lace_time) {
+          demux->duration = last_stop_end;
+          gst_element_post_message (GST_ELEMENT_CAST (demux),
+              gst_message_new_duration (GST_OBJECT_CAST (demux),
+                  GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+        }
       }
+
       stream->pos = lace_time;
 
       gst_matroska_demux_sync_streams (demux);
-
-      if (duration) {
-        GST_BUFFER_DURATION (sub) = duration / laces;
-      }
 
       if (is_simpleblock) {
         if (flags & 0x80)
@@ -5116,13 +5126,13 @@ pause:
 
         /* Close the segment, i.e. update segment stop with the duration
          * if no stop was set */
-        if (GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop) &&
+        if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
             !GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
           GstEvent *event =
               gst_event_new_new_segment_full (TRUE, demux->segment.rate,
               demux->segment.applied_rate, demux->segment.format,
               demux->segment.start,
-              demux->segment.last_stop, demux->segment.time);
+              demux->last_stop_end, demux->segment.time);
           gst_matroska_demux_send_event (demux, event);
         }
 
@@ -5132,7 +5142,7 @@ pause:
           /* for segment playback we need to post when (in stream time)
            * we stopped, this is either stop (when set) or the duration. */
           if ((stop = demux->segment.stop) == -1)
-            stop = demux->segment.last_stop;
+            stop = demux->last_stop_end;
 
           GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
           gst_element_post_message (GST_ELEMENT (demux),

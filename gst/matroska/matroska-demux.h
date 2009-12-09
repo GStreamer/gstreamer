@@ -91,6 +91,7 @@ typedef struct _GstMatroskaDemux {
   /* keeping track of playback position */
   GstSegment               segment;
   gboolean                 segment_running;
+  GstClockTime             last_stop_end;
   gint64                   duration;
 
   GstEvent                *close_segment;
