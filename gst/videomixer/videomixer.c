@@ -1263,7 +1263,7 @@ static void
 gst_videomixer_update_queues (GstVideoMixer * mix)
 {
   GSList *walk;
-  guint64 interval;
+  gint64 interval;
 
   interval = mix->master->queued;
   if (interval <= 0) {
@@ -1272,7 +1272,7 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
     } else {
       interval = gst_util_uint64_scale_int (GST_SECOND, mix->fps_d, mix->fps_n);
     }
-    GST_LOG_OBJECT (mix, "set interval to %" G_GUINT64_FORMAT " nanoseconds",
+    GST_LOG_OBJECT (mix, "set interval to %" G_GINT64_FORMAT " nanoseconds",
         interval);
   }
 
