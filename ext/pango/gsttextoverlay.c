@@ -895,7 +895,9 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
+    case GST_EVENT_SEEK:{
+      GstSeekFlags flags;
+
       /* We don't handle seek if we have not text pad */
       if (!overlay->text_linked) {
         GST_DEBUG_OBJECT (overlay, "seek received, pushing upstream");
@@ -905,8 +907,11 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (overlay, "seek received, driving from here");
 
-      /* Flush downstream, FIXME, only for flushing seek */
-      gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
+      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+
+      /* Flush downstream, only for flushing seek */
+      if (flags & GST_SEEK_FLAG_FLUSH)
+        gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
 
       /* Mark ourself as flushing, unblock chains */
       GST_OBJECT_LOCK (overlay);
@@ -924,6 +929,7 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
         gst_event_unref (event);
       }
       break;
+    }
     default:
       if (overlay->text_linked) {
         gst_event_ref (event);
