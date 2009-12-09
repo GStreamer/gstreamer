@@ -344,16 +344,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      GstPad *peer;
-
-      if (!(peer = gst_pad_get_peer (dec->sinkpad))) {
-        GST_WARNING_OBJECT (dec, "sink pad %" GST_PTR_FORMAT " is not linked",
-            dec->sinkpad);
-        goto error;
-      }
-
-      res = gst_pad_query (peer, query);
-      gst_object_unref (peer);
+      res = gst_pad_peer_query (pad, query);
       if (!res)
         goto error;
 
