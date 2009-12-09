@@ -4967,10 +4967,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         gst_element_no_more_pads (GST_ELEMENT (demux));
         /* send initial discont */
         gst_matroska_demux_send_event (demux,
-            gst_event_new_new_segment (FALSE, 1.0,
-                GST_FORMAT_TIME, 0,
-                (demux->segment.duration > 0) ? demux->segment.duration : -1,
-                0));
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
       } else {
         /* The idea is that we parse one cluster per loop and
          * then break out of the loop here. In the next call
@@ -5116,13 +5113,26 @@ pause:
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       if (ret == GST_FLOW_UNEXPECTED) {
         /* perform EOS logic */
+
+        /* Close the segment, i.e. update segment stop with the duration
+         * if no stop was set */
+        if (GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop) &&
+            !GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
+          GstEvent *event =
+              gst_event_new_new_segment_full (TRUE, demux->segment.rate,
+              demux->segment.applied_rate, demux->segment.format,
+              demux->segment.start,
+              demux->segment.last_stop, demux->segment.time);
+          gst_matroska_demux_send_event (demux, event);
+        }
+
         if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           gint64 stop;
 
           /* for segment playback we need to post when (in stream time)
            * we stopped, this is either stop (when set) or the duration. */
           if ((stop = demux->segment.stop) == -1)
-            stop = demux->segment.duration;
+            stop = demux->segment.last_stop;
 
           GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
           gst_element_post_message (GST_ELEMENT (demux),
