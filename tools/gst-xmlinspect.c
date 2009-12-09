@@ -640,6 +640,8 @@ main (int argc, char *argv[])
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
+  gst_tools_print_version ("gst-xmlinspect");
+
   ctx = g_option_context_new ("[ELEMENT-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -648,8 +650,6 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
-
-  gst_tools_print_version ("gst-xmlinspect");
 
   /* if no arguments, print out all elements */
   if (argc == 1) {
