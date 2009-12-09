@@ -1056,7 +1056,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context->index_writer_id = -1;
   context->type = 0;            /* no type yet */
   context->default_duration = 0;
-  context->pos = 0;
+  context->pos = GST_CLOCK_TIME_NONE;
   context->set_discont = TRUE;
   context->timecodescale = 1.0;
   context->flags =
@@ -2239,7 +2239,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
     demux->close_segment = gst_event_new_new_segment (TRUE,
         demux->segment.rate, GST_FORMAT_TIME, demux->segment.start,
-        demux->segment.last_stop, demux->segment.stop);
+        demux->segment.last_stop, demux->segment.time);
     GST_OBJECT_UNLOCK (demux);
   }
 
@@ -3507,8 +3507,9 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         "Checking for resync on stream %d (%" GST_TIME_FORMAT ")", stream_nr,
         GST_TIME_ARGS (context->pos));
 
-    /* does it lag? 0.5 seconds is a random treshold... */
-    if (context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
+    /* does it lag? 0.5 seconds is a random threshold... */
+    if (GST_CLOCK_TIME_IS_VALID (context->pos)
+        && context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
       GST_DEBUG_OBJECT (demux,
           "Synchronizing stream %d with others by advancing time " "from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
@@ -3520,8 +3521,8 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
       /* advance stream time */
       gst_pad_push_event (context->pad,
           gst_event_new_new_segment (TRUE, demux->segment.rate,
-              GST_FORMAT_TIME, demux->segment.last_stop, demux->segment.stop,
-              demux->segment.last_stop));
+              demux->segment.format, demux->segment.last_stop,
+              demux->segment.stop, demux->segment.last_stop));
     }
   }
 }
@@ -4332,7 +4333,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     /* else duration is diff between timecode of this and next block */
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
-      GstClockTimeDiff diff;
 
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
@@ -4348,28 +4348,31 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
 
-      if (lace_time != GST_CLOCK_TIME_NONE) {
-        demux->segment.last_stop = lace_time;
+      if (GST_CLOCK_TIME_IS_VALID (lace_time)) {
+        if (!GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)
+            || demux->segment.last_stop < lace_time)
+          demux->segment.last_stop = lace_time;
 
-        diff = GST_CLOCK_DIFF (stream->pos, lace_time);
-        if (diff < -GST_SECOND / 2 || diff > GST_SECOND / 2) {
-          GST_DEBUG_OBJECT (demux, "Gap of %" G_GINT64_FORMAT " ns detected in"
-              "stream %d. Sending updated NEWSEGMENT event", diff,
-              stream->index);
-          gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
-                  demux->segment.rate, GST_FORMAT_TIME, lace_time,
-                  demux->segment.stop, lace_time));
+        if (GST_CLOCK_TIME_IS_VALID (stream->pos)) {
+          GstClockTimeDiff diff = GST_CLOCK_DIFF (stream->pos, lace_time);
+
+          if (diff < -GST_SECOND / 2 || diff > GST_SECOND / 2) {
+            GST_DEBUG_OBJECT (demux,
+                "Gap of %" G_GINT64_FORMAT " ns detected in"
+                "stream %d. Sending updated NEWSEGMENT event", diff,
+                stream->index);
+            gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
+                    demux->segment.rate, demux->segment.format, lace_time,
+                    demux->segment.stop, lace_time));
+          }
         }
       }
-
-      stream->pos = demux->segment.last_stop;
+      stream->pos = lace_time;
 
       gst_matroska_demux_sync_streams (demux);
 
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
-        stream->pos += GST_BUFFER_DURATION (sub);
-        demux->segment.last_stop += GST_BUFFER_DURATION (sub);
       }
 
       if (is_simpleblock) {
