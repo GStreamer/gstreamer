@@ -1749,6 +1749,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       }
     }
   }
+  GST_DEBUG_OBJECT (playsink, "audio:%d, video:%d, vis:%d, text:%d", need_audio,
+      need_video, need_vis, need_text);
 
   /* set up video pipeline */
   if (need_video) {
@@ -1784,7 +1786,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       /* if we are not part of vis or subtitles, set the ghostpad target */
-      if (!need_vis && !need_text && playsink->text_pad == NULL) {
+      if (!need_vis && !need_text) {
         GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
         gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
             playsink->videochain->sinkpad);
