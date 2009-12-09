@@ -3337,3 +3337,74 @@ build_SMI_atom (const GstBuffer * seqh)
   gst_buffer_unref (buf);
   return res;
 }
+
+static AtomInfo *
+build_ima_adpcm_atom (gint channels, gint rate, gint blocksize)
+{
+  AtomData *atom_data;
+  GstBuffer *buf;
+  guint8 *data;
+  const gint ima_adpcm_atom_size = 20;
+  guint32 fourcc;
+  gint samplesperblock;
+  gint bytespersec;
+
+  /* The FOURCC for WAV codecs in QT is 'ms' followed by the 16 bit wave codec
+     identifier. Note that the identifier here is big-endian, but when used
+     within the WAVE header (below), it's little endian. */
+  fourcc = MS_WAVE_FOURCC (0x11);
+
+  buf = gst_buffer_new_and_alloc (ima_adpcm_atom_size);
+  data = GST_BUFFER_DATA (buf);
+
+  /* This atom's content is a WAVE header, including 2 bytes of extra data.
+     Note that all of this is little-endian, unlike most stuff in qt. */
+  samplesperblock = 2 * blocksize / channels - 7;
+  bytespersec = rate * blocksize / samplesperblock;
+  GST_WRITE_UINT16_LE (data, 0x11);
+  GST_WRITE_UINT16_LE (data + 2, channels);
+  GST_WRITE_UINT32_LE (data + 4, rate);
+  GST_WRITE_UINT32_LE (data + 8, bytespersec);
+  GST_WRITE_UINT16_LE (data + 12, blocksize);
+  GST_WRITE_UINT16_LE (data + 14, 4);
+  GST_WRITE_UINT16_LE (data + 16, 2);   /* Two extra bytes */
+  GST_WRITE_UINT16_LE (data + 18, samplesperblock);
+
+  atom_data = atom_data_new_from_gst_buffer (fourcc, buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_ima_adpcm_extension (gint channels, gint rate, gint blocksize)
+{
+  AtomWAVE *wave;
+  AtomFRMA *frma;
+  Atom *ext_atom;
+
+  /* Add WAVE atom */
+  wave = atom_wave_new ();
+
+  /* Prepend Terminator atom to the WAVE list first, so it ends up last */
+  ext_atom = (Atom *) atom_data_new (FOURCC_null);
+  wave->extension_atoms =
+      atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) ext_atom,
+      (AtomCopyDataFunc) atom_data_copy_data, (AtomFreeFunc) atom_data_free);
+
+  /* Add wave ima adpcm atom to WAVE */
+  wave->extension_atoms = g_list_prepend (wave->extension_atoms,
+      build_ima_adpcm_atom (channels, rate, blocksize));
+
+  /* Add FRMA to the WAVE */
+  frma = atom_frma_new ();
+  frma->media_type = MS_WAVE_FOURCC (0x11);
+
+  wave->extension_atoms =
+      atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) frma,
+      (AtomCopyDataFunc) atom_frma_copy_data, (AtomFreeFunc) atom_frma_free);
+
+  return build_atom_info_wrapper ((Atom *) wave, atom_wave_copy_data,
+      atom_wave_free);
+}

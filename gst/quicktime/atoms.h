@@ -675,6 +675,8 @@ AtomInfo *   build_amr_extension         ();
 AtomInfo *   build_h263_extension        ();
 AtomInfo *   build_gama_atom             (gdouble gamma);
 AtomInfo *   build_SMI_atom              (const GstBuffer *seqh);
+AtomInfo *   build_ima_adpcm_extension   (gint channels, gint rate,
+                                          gint blocksize);
 
 
 /*
