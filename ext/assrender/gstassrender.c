@@ -105,6 +105,7 @@ static GstFlowReturn gst_ass_render_chain_text (GstPad * pad, GstBuffer * buf);
 
 static gboolean gst_ass_render_event_video (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_text (GstPad * pad, GstEvent * event);
+static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
 
 static void
 gst_ass_render_base_init (gpointer gclass)
@@ -199,6 +200,8 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
       GST_DEBUG_FUNCPTR (gst_ass_render_event_video));
   gst_pad_set_event_function (render->text_sinkpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_event_text));
+  gst_pad_set_event_function (render->srcpad,
+      GST_DEBUG_FUNCPTR (gst_ass_render_event_src));
 
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
@@ -345,6 +348,55 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+
+  return ret;
+}
+
+static gboolean
+gst_ass_render_event_src (GstPad * pad, GstEvent * event)
+{
+  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      GstSeekFlags flags;
+
+      GST_DEBUG_OBJECT (render, "seek received, driving from here");
+
+      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+
+      /* Flush downstream, only for flushing seek */
+      if (flags & GST_SEEK_FLAG_FLUSH)
+        gst_pad_push_event (render->srcpad, gst_event_new_flush_start ());
+
+      /* Mark subtitle as flushing, unblocks chains */
+      g_mutex_lock (render->subtitle_mutex);
+      if (render->subtitle_pending)
+        gst_buffer_unref (render->subtitle_pending);
+      render->subtitle_pending = NULL;
+      render->subtitle_flushing = TRUE;
+      g_cond_signal (render->subtitle_cond);
+      g_mutex_unlock (render->subtitle_mutex);
+
+      /* Seek on each sink pad */
+      gst_event_ref (event);
+      ret = gst_pad_push_event (render->video_sinkpad, event);
+      if (ret) {
+        ret = gst_pad_push_event (render->text_sinkpad, event);
+      } else {
+        gst_event_unref (event);
+      }
+      break;
+    }
+    default:
+      gst_event_ref (event);
+      ret = gst_pad_push_event (render->video_sinkpad, event);
+      gst_pad_push_event (render->text_sinkpad, event);
+      break;
+  }
+
+  gst_object_unref (render);
 
   return ret;
 }
