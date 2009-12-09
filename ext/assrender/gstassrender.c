@@ -107,6 +107,9 @@ static gboolean gst_ass_render_event_video (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_text (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
 
+static GstFlowReturn gst_ass_render_bufferalloc_video (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer);
+
 static void
 gst_ass_render_base_init (gpointer gclass)
 {
@@ -190,6 +193,8 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
 
   gst_pad_set_getcaps_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_getcaps));
+  gst_pad_set_getcaps_function (render->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ass_render_getcaps));
 
   gst_pad_set_chain_function (render->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_chain_video));
@@ -202,6 +207,9 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
       GST_DEBUG_FUNCPTR (gst_ass_render_event_text));
   gst_pad_set_event_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_ass_render_event_src));
+
+  gst_pad_set_bufferalloc_function (render->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ass_render_bufferalloc_video));
 
   gst_element_add_pad (GST_ELEMENT (render), render->srcpad);
   gst_element_add_pad (GST_ELEMENT (render), render->video_sinkpad);
@@ -856,6 +864,28 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
       GST_TIME_ARGS (duration));
   ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
   gst_buffer_unref (buffer);
+}
+
+static GstFlowReturn
+gst_ass_render_bufferalloc_video (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buffer)
+{
+  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  GstFlowReturn ret = GST_FLOW_WRONG_STATE;
+  GstPad *allocpad;
+
+  GST_OBJECT_LOCK (render);
+  allocpad = render->srcpad ? gst_object_ref (render->srcpad) : NULL;
+  GST_OBJECT_UNLOCK (render);
+
+  if (allocpad) {
+    ret = gst_pad_alloc_buffer (allocpad, offset, size, caps, buffer);
+    gst_object_unref (allocpad);
+  }
+
+  gst_object_unref (render);
+
+  return ret;
 }
 
 static GstFlowReturn
