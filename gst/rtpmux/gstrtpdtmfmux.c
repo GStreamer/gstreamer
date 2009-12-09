@@ -89,7 +89,7 @@ static guint gst_rtpdtmfmux_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_rtp_dtmf_mux_dispose (GObject * object);
 
-static void gst_rtp_mux_release_pad (GstElement * element, GstPad * pad);
+static void gst_rtp_dtmf_mux_release_pad (GstElement * element, GstPad * pad);
 
 static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer);
@@ -131,7 +131,8 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_dispose);
-  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_mux_release_pad);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_release_pad);
   gstrtpmux_class->chain_func = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_chain);
   gstrtpmux_class->sink_event_func =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_sink_event);
@@ -301,7 +302,7 @@ gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_rtp_mux_release_pad (GstElement * element, GstPad * pad)
+gst_rtp_dtmf_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstRTPDTMFMux *mux = GST_RTP_DTMF_MUX (element);
 
