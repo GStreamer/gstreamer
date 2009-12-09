@@ -344,7 +344,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      res = gst_pad_peer_query (pad, query);
+      res = gst_pad_peer_query (dec->sinkpad, query);
       if (!res)
         goto error;
 
