@@ -129,6 +129,13 @@
   "rate = (int) 16000, " \
   "channels = [ 1, 2 ] "
 
+#define ADPCM_CAPS  \
+  "audio/x-adpcm, " \
+  "layout = (string)dvi, " \
+  "block_align = (int)[64, 8096], " \
+  COMMON_AUDIO_CAPS(2, MAX)
+
+
 /* FIXME 0.11 - take a look at bugs #580005 and #340375 */
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
@@ -156,6 +163,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
             MP3_CAPS " ; "
             AAC_CAPS " ; "
+            ADPCM_CAPS " ; "
             "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; " AMR_CAPS)
       }
   ,
