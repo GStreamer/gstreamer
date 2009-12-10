@@ -86,6 +86,7 @@ static GstFlowReturn gst_tcp_client_src_create (GstPushSrc * psrc,
 static gboolean gst_tcp_client_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_tcp_client_src_start (GstBaseSrc * bsrc);
 static gboolean gst_tcp_client_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_tcp_client_src_unlock_stop (GstBaseSrc * bsrc);
 
 static void gst_tcp_client_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -136,6 +137,7 @@ gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
   gstbasesrc_class->start = gst_tcp_client_src_start;
   gstbasesrc_class->stop = gst_tcp_client_src_stop;
   gstbasesrc_class->unlock = gst_tcp_client_src_unlock;
+  gstbasesrc_class->unlock_stop = gst_tcp_client_src_unlock_stop;
 
   gstpush_src_class->create = gst_tcp_client_src_create;
 
@@ -423,7 +425,20 @@ gst_tcp_client_src_unlock (GstBaseSrc * bsrc)
 {
   GstTCPClientSrc *src = GST_TCP_CLIENT_SRC (bsrc);
 
+  GST_DEBUG_OBJECT (src, "set to flushing");
   gst_poll_set_flushing (src->fdset, TRUE);
+
+  return TRUE;
+}
+
+/* will be called only between calls to start() and stop() */
+static gboolean
+gst_tcp_client_src_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstTCPClientSrc *src = GST_TCP_CLIENT_SRC (bsrc);
+
+  GST_DEBUG_OBJECT (src, "unset flushing");
+  gst_poll_set_flushing (src->fdset, FALSE);
 
   return TRUE;
 }
