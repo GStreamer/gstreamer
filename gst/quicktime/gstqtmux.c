@@ -642,6 +642,118 @@ gst_qt_mux_add_3gp_keywords (GstQTMux * qtmux, const GstTagList * list,
   g_free (ddata);
 }
 
+static gboolean
+gst_qt_mux_parse_classification_string (GstQTMux * qtmux, const gchar * input,
+    guint32 * p_fourcc, guint16 * p_table, gchar ** p_content)
+{
+  guint32 fourcc;
+  gint table;
+  gint size;
+  const gchar *data;
+
+  data = input;
+  size = strlen (input);
+
+  if (size < 4 + 3 + 1 + 1 + 1) {
+    /* at least the minimum xxxx://y/z */
+    GST_WARNING_OBJECT (qtmux, "Classification tag input (%s) too short, "
+        "ignoring", input);
+    return FALSE;
+  }
+
+  /* read the fourcc */
+  memcpy (&fourcc, data, 4);
+  size -= 4;
+  data += 4;
+
+  if (strncmp (data, "://", 3) != 0) {
+    goto mismatch;
+  }
+  data += 3;
+  size -= 3;
+
+  /* read the table number */
+  if (sscanf (data, "%d", &table) != 1) {
+    goto mismatch;
+  }
+  if (table < 0) {
+    GST_WARNING_OBJECT (qtmux, "Invalid table number in classification tag (%d)"
+        ", table numbers should be positive, ignoring tag", table);
+    return FALSE;
+  }
+
+  /* find the next / */
+  while (size > 0 && data[0] != '/') {
+    data += 1;
+    size -= 1;
+  }
+  if (size == 0) {
+    goto mismatch;
+  }
+  g_assert (data[0] == '/');
+
+  /* skip the '/' */
+  data += 1;
+  size -= 1;
+  if (size == 0) {
+    goto mismatch;
+  }
+
+  /* read up the rest of the string */
+  *p_content = g_strdup (data);
+  *p_table = (guint16) table;
+  *p_fourcc = fourcc;
+  return TRUE;
+
+mismatch:
+  {
+    GST_WARNING_OBJECT (qtmux, "Ignoring classification tag as "
+        "input (%s) didn't match the expected entitycode://table/content",
+        input);
+    return FALSE;
+  }
+}
+
+static void
+gst_qt_mux_add_3gp_classification (GstQTMux * qtmux, const GstTagList * list,
+    const char *tag, const char *tag2, guint32 fourcc)
+{
+  gchar *clsf_data = NULL;
+  gint size = 0;
+  guint32 entity = 0;
+  guint16 table = 0;
+  gchar *content = NULL;
+  guint8 *data;
+
+  g_return_if_fail (strcmp (tag, GST_TAG_3GP_CLASSIFICATION) == 0);
+
+  if (!gst_tag_list_get_string (list, tag, &clsf_data) || !clsf_data)
+    return;
+
+  GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
+      GST_FOURCC_ARGS (fourcc), clsf_data);
+
+  /* parse the string, format is:
+   * entityfourcc://table/content
+   */
+  gst_qt_mux_parse_classification_string (qtmux, clsf_data, &entity, &table,
+      &content);
+  g_free (clsf_data);
+  /* +1 for the \0 */
+  size = strlen (content) + 1;
+
+  /* now we have everything, build the atom
+   * atom description is at 3GPP TS 26.244 V8.2.0 (2009-09) */
+  data = g_malloc (4 + 2 + 2 + size);
+  GST_WRITE_UINT32_LE (data, entity);
+  GST_WRITE_UINT16_BE (data + 4, (guint16) table);
+  GST_WRITE_UINT16_BE (data + 6, 0);
+  memcpy (data + 8, content, size);
+  g_free (content);
+
+  atom_moov_add_3gp_tag (qtmux->moov, fourcc, data, 4 + 2 + 2 + size);
+  g_free (data);
+}
 
 typedef void (*GstQTMuxAddTagFunc) (GstQTMux * mux, const GstTagList * list,
     const char *tag, const char *tag2, guint32 fourcc);
@@ -690,6 +802,8 @@ static const GstTagToFourcc tag_matches_3gp[] = {
   {FOURCC_yrrc, GST_TAG_DATE, NULL, gst_qt_mux_add_3gp_date},
   {FOURCC_albm, GST_TAG_ALBUM, GST_TAG_TRACK_NUMBER, gst_qt_mux_add_3gp_str},
   {FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, gst_qt_mux_add_3gp_location},
+  {FOURCC_clsf, GST_TAG_3GP_CLASSIFICATION, NULL,
+      gst_qt_mux_add_3gp_classification},
   {0, NULL,}
 };
 
@@ -2311,6 +2425,18 @@ gst_qt_mux_register (GstPlugin * plugin)
   }
 
   GST_LOG ("Finished registering muxers");
+
+  /* FIXME: ideally classification tag should be added and
+     registered in gstreamer core gsttaglist
+   */
+
+  GST_LOG ("Registering tags");
+
+  gst_tag_register (GST_TAG_3GP_CLASSIFICATION, GST_TAG_FLAG_META,
+      G_TYPE_STRING, GST_TAG_3GP_CLASSIFICATION, "content classification",
+      gst_tag_merge_use_first);
+
+  GST_LOG ("Finished registering tags");
 
   return TRUE;
 }
