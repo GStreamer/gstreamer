@@ -623,7 +623,9 @@ gst_celt_enc_setup (GstCeltEnc * enc)
     celt_encoder_ctl (enc->state, CELT_SET_VBR_RATE (enc->bitrate), 0);
   }
 #endif
+#ifdef CELT_SET_COMPLEXITY
   celt_encoder_ctl (enc->state, CELT_SET_COMPLEXITY (enc->complexity), 0);
+#endif
 
   GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
 
