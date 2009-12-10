@@ -603,10 +603,6 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   if (packet->granulepos < 0)
     goto done;
 
-  /* store current granule pos */
-  ogg->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
-      packet->granulepos);
-
   /* convert to time */
   current_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
       packet->granulepos);
@@ -694,7 +690,6 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       packet->granulepos);
   if (granule != -1) {
     GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
-    ogg->current_granule = granule;
     pad->current_granule = granule;
   }
 
@@ -3174,7 +3169,6 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_sync_reset (&ogg->sync);
-      ogg->current_granule = -1;
       ogg->running = FALSE;
       ogg->segment_running = FALSE;
       gst_segment_init (&ogg->segment, GST_FORMAT_TIME);
