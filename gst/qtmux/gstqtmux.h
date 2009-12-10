@@ -159,6 +159,14 @@ typedef struct _GstQTMuxClassParams
 
 GType gst_qt_mux_get_type (void);
 
+/* FIXME: ideally classification tag should be added and
+ * registered in gstreamer core gsttaglist
+ *
+ * this tag is a string in the format: entityfourcc://table_num/content
+ * FIXME Shouldn't we add a field for 'language'?
+ */
+#define GST_TAG_3GP_CLASSIFICATION "classification"
+
 G_END_DECLS
 
 #endif /* __GST_QT_MUX_H__ */
