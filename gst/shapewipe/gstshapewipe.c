@@ -763,6 +763,7 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
+  gint width = self->width, height = self->height; \
   \
   if (low < 0.0f) { \
     high = 0.0f; \
@@ -774,8 +775,8 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     high = 1.0f; \
   } \
   \
-  for (i = 0; i < self->height; i++) { \
-    for (j = 0; j < self->width; j++) { \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
       gfloat in = *mask / scale; \
       \
       if (in < low) { \
@@ -824,6 +825,7 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
+  gint width = self->width, height = self->height; \
   \
   if (low < 0.0f) { \
     high = 0.0f; \
@@ -835,8 +837,8 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     high = 1.0f; \
   } \
   \
-  for (i = 0; i < self->height; i++) { \
-    for (j = 0; j < self->width; j++) { \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
       gfloat in = *mask / scale; \
       \
       if (in < low) { \
