@@ -51,7 +51,7 @@ static GstStaticPadTemplate adpcmdec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-adpcm, "
         " layout=(string){microsoft, dvi}, "
-        " block_align = (int) [64, 8096], "
+        " block_align = (int) [64, 8192], "
         " rate = (int)[ 1, MAX ], " "channels = (int)[1,2];")
     );
 
