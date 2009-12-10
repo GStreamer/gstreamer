@@ -87,7 +87,6 @@ gst_videomixer_blend_##name##_##name (guint8 * src, gint xpos, gint ypos, \
     return; \
   } \
   \
-  /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */   \
   for (i = 0; i < src_height; i++) { \
     for (j = 0; j < src_width; j++) { \
       BLEND_MODE (dest[r], dest[g], dest[b], src[r], src[g], src[b], \

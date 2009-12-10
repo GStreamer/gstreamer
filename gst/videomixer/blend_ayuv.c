@@ -210,7 +210,6 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
 
   dest = dest + 4 * xpos + (ypos * dest_stride);
 
-  /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
       alpha = (src[0] * b_alpha) >> 8;
