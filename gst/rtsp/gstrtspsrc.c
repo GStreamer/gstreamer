@@ -4310,6 +4310,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->setup_url);
 
+  next_protocol:
     /* first selectable protocol */
     while (protocol_masks[mask] && !(protocols & protocol_masks[mask]))
       mask++;
@@ -4322,8 +4323,14 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     /* create a string with first transport in line */
     res = gst_rtspsrc_create_transports_string (src,
         protocols & protocol_masks[mask], &transports);
-    if (res < 0)
+    if (res < 0 || transports == NULL)
       goto setup_transport_failed;
+
+    if (strlen (transports) == 0) {
+      GST_DEBUG_OBJECT (src, "no transports found");
+      mask++;
+      goto next_protocol;
+    }
 
     GST_DEBUG_OBJECT (src, "replace ports in %s", GST_STR_NULL (transports));
 
