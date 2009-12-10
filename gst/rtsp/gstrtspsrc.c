@@ -2205,6 +2205,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
       /* if we have a sinkpad for the other channel, create a pad and link to the
        * manager. */
       pad1 = gst_pad_new_from_template (template, "internalsrc1");
+      gst_pad_set_event_function (pad1, gst_rtspsrc_handle_internal_src_event);
       gst_pad_link (pad1, stream->channelpad[1]);
       gst_object_unref (stream->channelpad[1]);
       stream->channelpad[1] = pad1;
