@@ -1172,10 +1172,17 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
 static gboolean
 gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
-  GstH264Sps *sps;
+  GstH264Sps *sps = NULL;
   GstCaps *src_caps = NULL;
 
-  sps = h264parse->sps;
+  /* current PPS dictates which SPS to use */
+  if (h264parse->pps && h264parse->pps->sps_id < MAX_SPS_COUNT) {
+    sps = h264parse->sps_buffers[h264parse->pps->sps_id];
+  }
+  /* failing that, we'll take most recent SPS we can get */
+  if (!sps) {
+    sps = h264parse->sps;
+  }
 
   src_caps = h264parse->src_caps;
   if (G_UNLIKELY (src_caps == NULL))
@@ -1187,7 +1194,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
   /* if some upstream metadata missing, fill in from parsed stream */
   /* width / height */
-  if (sps && (!h264parse->width || !h264parse->height)) {
+  if (sps && (sps->width > 0 && sps->height > 0) &&
+      (h264parse->width != sps->width || h264parse->height != sps->height)) {
     gint width, height;
 
     width = h264parse->width = sps->width;
@@ -1201,15 +1209,16 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   }
 
   /* framerate */
-  if (sps && (!h264parse->fps_num && !h264parse->fps_den)) {
+  if (sps && (sps->time_scale > 0 && sps->num_units_in_tick > 0) &&
+      (h264parse->fps_num != sps->time_scale ||
+          h264parse->fps_den != sps->num_units_in_tick)) {
     gint fps_num, fps_den;
 
-    fps_num = sps->time_scale;
-    fps_den = sps->num_units_in_tick;
+    fps_num = h264parse->fps_num = sps->time_scale;
+    fps_den = h264parse->fps_den = sps->num_units_in_tick;
 
     /* FIXME verify / also handle other cases */
-    if (fps_num && fps_den &&
-        sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag) {
+    if (sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag) {
       src_caps = gst_caps_copy (caps);
       GST_DEBUG_OBJECT (h264parse, "updating caps fps %d/%d", fps_num, fps_den);
       gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
