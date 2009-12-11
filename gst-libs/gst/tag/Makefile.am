@@ -6,7 +6,7 @@ libgsttaginclude_HEADERS = \
 
 lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 
-libgsttag_@GST_MAJORMINOR@_la_SOURCES = gstvorbistag.c gstid3tag.c tags.c gsttagdemux.c
+libgsttag_@GST_MAJORMINOR@_la_SOURCES = gstvorbistag.c gstid3tag.c lang.c tags.c gsttagdemux.c
 libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) 
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
@@ -49,3 +49,17 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
+
+# little program that reads iso_639.xml and outputs tables for us as fallback
+# for when iso-codes are not available (and so we don't have to read the xml
+# just to map codes)
+if USE_ISO_CODES
+ISO_CODE_PROGS = mklangtables
+mklangtables_SOURCES = mklangtables.c
+mklangtables_CFLAGS = $(GST_CFLAGS)
+mklangtables_LDADD = $(GST_LIBS)
+else
+ISO_CODE_PROGS =
+endif
+
+noinst_PROGRAMS = $(ISO_CODE_PROGS)

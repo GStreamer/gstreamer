@@ -42,3 +42,5 @@ Makefile.in
 Makefile
 *.gir
 *.typelib
+
+gst-libs/gst/tag/mklangtables

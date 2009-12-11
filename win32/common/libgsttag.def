@@ -5,6 +5,11 @@ EXPORTS
 	gst_tag_from_id3_tag
 	gst_tag_from_id3_user_tag
 	gst_tag_from_vorbis_tag
+	gst_tag_get_language_code_iso_639_1
+	gst_tag_get_language_code_iso_639_2B
+	gst_tag_get_language_code_iso_639_2T
+	gst_tag_get_language_codes
+	gst_tag_get_language_name
 	gst_tag_id3_genre_count
 	gst_tag_id3_genre_get
 	gst_tag_image_data_to_image_buffer

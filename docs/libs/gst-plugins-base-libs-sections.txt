@@ -1564,6 +1564,18 @@ GstTagDemuxClass
 GstTagDemuxResult
 </SECTION>
 
+<SECTION>
+<FILE>gsttaglanguagecodes</FILE>
+<INCLUDE>gst/tag/tag.h</INCLUDE>
+<SUBSECTION>
+gst_tag_get_language_codes
+gst_tag_get_language_name
+gst_tag_get_language_code
+gst_tag_get_language_code_iso_639_1
+gst_tag_get_language_code_iso_639_2B
+gst_tag_get_language_code_iso_639_2T
+</SECTION>
+
 # base utils
 
 <SECTION>

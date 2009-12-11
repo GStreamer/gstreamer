@@ -348,6 +348,56 @@ if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(tcp)
 fi
 
+dnl iso-codes is optional, used by libgsttag
+AC_ARG_ENABLE(iso-codes,
+AC_HELP_STRING([--enable-iso-codes],[use iso-codes if installed]),
+[case "${enableval}" in
+  yes) enable_iso_codes=yes ;;
+  no)  enable_iso_codes=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-iso-codes) ;;
+esac
+],
+[enable_iso_codes=yes]) dnl Default value
+
+AC_MSG_CHECKING([whether to use iso-codes if they are available])
+if test "x$enable_iso_codes" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  have_iso_codes=no
+  AC_MSG_CHECKING([whether iso-codes are available on this system])
+  if $PKG_CONFIG iso-codes; then
+    AC_MSG_RESULT([yes])
+    AC_MSG_CHECKING([whether iso-codes has iso-639 domain])
+    if $PKG_CONFIG --variable=domains iso-codes | $GREP -q 639 ; then
+      AC_MSG_RESULT([yes])
+      AC_MSG_CHECKING([for iso-codes prefix])
+      ISO_CODES_PREFIX=`$PKG_CONFIG --variable=prefix iso-codes`
+      if test -d "$ISO_CODES_PREFIX"; then
+        AC_MSG_RESULT([yes])
+        AC_MSG_CHECKING([ISO_CODES_PREFIX])
+        AC_MSG_RESULT([$ISO_CODES_PREFIX])
+        ISO_639_DOMAIN="iso_639"
+        AC_MSG_CHECKING([ISO_639_DOMAIN])
+        AC_MSG_RESULT([$ISO_639_DOMAIN])
+        have_iso_codes=yes
+        AC_DEFINE([HAVE_ISO_CODES], [1], [make use of iso-codes for ISO-639])
+        AC_DEFINE_UNQUOTED([ISO_CODES_PREFIX], ["$ISO_CODES_PREFIX"], [prefix])
+        ISO_CODES_VERSION=`$PKG_CONFIG --modversion iso-codes`
+        AC_DEFINE_UNQUOTED([ISO_CODES_VERSION], ["$ISO_CODES_VERSION"], [ ])
+      else
+        AC_MSG_RESULT([no])
+      fi
+    else
+      AC_MSG_RESULT([no])
+    fi
+  else
+    AC_MSG_RESULT([no])
+  fi
+  AM_CONDITIONAL(USE_ISO_CODES, test "x$have_iso_codes" = "xyes")
+else
+  AC_MSG_RESULT([no (disabled via --disable-iso-codes)])
+  AM_CONDITIONAL(USE_ISO_CODES, false)
+fi
+
 dnl *** sys plug-ins ***
 
 echo
@@ -847,6 +897,7 @@ sed \
     -e 's/.* HAVE_CPU_I386$/#define HAVE_CPU_I386 1/' \
     -e 's/.* HAVE_FGETPOS$/#define HAVE_FGETPOS 1/' \
     -e 's/.* HAVE_FSETPOS$/#define HAVE_FSETPOS 1/' \
+    -e 's/.* HAVE_ISO_CODES$/#undef HAVE_ISO_CODES/' \
     -e 's/.* HAVE_LIBXML2$/#define HAVE_LIBXML2 1/' \
     -e 's/.* HAVE_PROCESS_H$/#define HAVE_PROCESS_H 1/' \
     -e 's/.* HAVE_STDLIB_H$/#define HAVE_STDLIB_H 1/' \
@@ -856,6 +907,8 @@ sed \
     -e 's/.* HAVE_WIN32$/#define HAVE_WIN32 1/' \
     -e 's/.* HAVE_WINSOCK2_H$/#define HAVE_WINSOCK2_H 1/' \
     -e 's/.* HOST_CPU$/#define HOST_CPU "i686"/' \
+    -e 's/.* ISO_CODES_PREFIX$/#undef ISO_CODES_PREFIX/' \
+    -e 's/.* ISO_CODES_VERSION$/#undef ISO_CODES_VERSION/' \
     -e 's/.* LIBDIR$/#ifdef _DEBUG\n#  define LIBDIR PREFIX "\\\\debug\\\\lib"\n#else\n#  define LIBDIR PREFIX "\\\\lib"\n#endif/' \
     -e 's/.* LOCALEDIR$/#define LOCALEDIR PREFIX "\\\\share\\\\locale"/' \
     -e "s/.* PACKAGE$/#define PACKAGE \"$PACKAGE\"/" \

@@ -238,6 +238,30 @@ GstBuffer             * gst_tag_image_data_to_image_buffer (const guint8   * ima
 /* FIXME 0.11: replace with a more general gst_tag_library_init() */
 void                    gst_tag_register_musicbrainz_tags (void);
 
+
+/* language tag related functions */
+
+gchar **       gst_tag_get_language_codes (void);
+
+const gchar *  gst_tag_get_language_name (const gchar * language_code);
+
+const gchar *  gst_tag_get_language_code_iso_639_1 (const gchar * lang_code);
+
+const gchar *  gst_tag_get_language_code_iso_639_2B (const gchar * lang_code);
+
+const gchar *  gst_tag_get_language_code_iso_639_2T (const gchar * lang_code);
+
+/**
+ * gst_tag_get_language_code:
+ * @lang_code: ISO-639 language code (e.g. "deu" or "ger" or "de")
+ *
+ * Convenience macro wrapping gst_tag_get_language_code_iso_639_1().
+ *
+ * Since: 0.10.26
+ */
+#define gst_tag_get_language_code(lang_code) \
+    gst_tag_get_language_code_iso_639_1(lang_code)
+
 G_END_DECLS
 
 #endif /* __GST_TAG_TAG_H__ */
