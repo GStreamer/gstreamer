@@ -170,6 +170,7 @@ G_BEGIN_DECLS
 #define FOURCC_jpeg     GST_MAKE_FOURCC('j','p','e','g')
 #define FOURCC_mjp2     GST_MAKE_FOURCC('m','j','p','2')
 #define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
+#define FOURCC_jp2c     GST_MAKE_FOURCC('j','p','2','c')
 #define FOURCC_gama     GST_MAKE_FOURCC('g','a','m','a')
 
 /* SVQ3 fourcc */
