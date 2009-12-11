@@ -203,6 +203,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   /* Adding tee */
   chain->tee = gst_element_factory_make ("tee", NULL);
   gst_bin_add (GST_BIN_CAST (self), chain->tee);
+  gst_element_sync_state_with_parent (chain->tee);
 
   /* Linking pad to tee */
   sinkpad = gst_element_get_pad (chain->tee, "sink");
