@@ -196,6 +196,12 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
     object->trackobjects =
         g_list_append (object->trackobjects, g_object_ref (res));
 
+    GST_DEBUG ("Setting properties on newly created TrackObject");
+
+    ges_track_object_set_start_internal (res, object->start);
+    ges_track_object_set_priority_internal (res, object->priority);
+    ges_track_object_set_duration_internal (res, object->duration);
+    ges_track_object_set_inpoint_internal (res, object->inpoint);
   }
 
   GST_DEBUG ("Returning res:%p", res);
@@ -258,16 +264,6 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
     }
 
     res = class->fill_track_object (object, trackobj, gnlobj);
-  }
-
-  if (G_LIKELY (res)) {
-    GST_DEBUG ("Setting properties");
-
-    ges_track_object_set_start_internal (trackobj, object->start);
-    ges_track_object_set_priority_internal (trackobj, object->priority);
-    ges_track_object_set_duration_internal (trackobj, object->duration);
-    ges_track_object_set_inpoint_internal (trackobj, object->inpoint);
-
   }
 
   GST_DEBUG ("Returning res:%d", res);
