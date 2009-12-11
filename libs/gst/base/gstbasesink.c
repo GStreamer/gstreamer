@@ -1972,6 +1972,7 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   GstClockID id;
   GstClockReturn ret;
   GstClock *clock;
+  GstClockTime base_time;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     goto invalid_time;
@@ -1983,8 +1984,13 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (sink)) == NULL))
     goto no_clock;
 
+  base_time = GST_ELEMENT_CAST (sink)->base_time;
+  GST_LOG_OBJECT (sink,
+      "time %" GST_TIME_FORMAT ", base_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time), GST_TIME_ARGS (base_time));
+
   /* add base_time to running_time to get the time against the clock */
-  time += GST_ELEMENT_CAST (sink)->base_time;
+  time += base_time;
 
   id = gst_clock_new_single_shot_id (clock, time);
   GST_OBJECT_UNLOCK (sink);
