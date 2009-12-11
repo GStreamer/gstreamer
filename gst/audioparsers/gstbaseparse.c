@@ -1656,8 +1656,8 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
         gst_util_uint64_scale (GST_SECOND, parse->priv->fps_den,
         parse->priv->fps_num);
   }
-  GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %d ms", fps_num, fps_den,
-      parse->priv->frame_duration / GST_MSECOND);
+  GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %" G_GINT64_FORMAT " ms",
+      fps_num, fps_den, parse->priv->frame_duration / GST_MSECOND);
   GST_LOG_OBJECT (parse, "set update interval: %d", interval);
   GST_BASE_PARSE_UNLOCK (parse);
 }
