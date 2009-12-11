@@ -87,7 +87,7 @@ G_BEGIN_DECLS
  * @inpoint: in-point (in nanoseconds) of the object in the track.
  * @duration: Duration of the object
  * @priority: Priority of the object in the track (0:top priority)
- * @gnlobject: The GNonLin object this object is controlling.
+ * @active: Whether the object is to be used or not.
  *
  * The GESTrackObject base class. Only sub-classes can access these fields.
  */

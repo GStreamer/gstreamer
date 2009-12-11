@@ -79,7 +79,7 @@ struct _GESCustomTimelineSourceClass {
 GType ges_cust_timeline_src_get_type (void);
 
 GESCustomTimelineSource*
-ges_custom_timeline_source_new (FillTrackObjectUserFunc,
+ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
 				gpointer user_data);
 
 G_END_DECLS

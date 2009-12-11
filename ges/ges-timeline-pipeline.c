@@ -383,6 +383,8 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
  * Note: The @pipeline will be set to #GST_STATE_NULL during this call due to
  * the internal changes that happen. The caller will therefore have to 
  * set the @pipeline to the requested state after calling this method.
+ *
+ * Returns: %TRUE if the mode was properly set, else %FALSE.
  **/
 gboolean
 ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
