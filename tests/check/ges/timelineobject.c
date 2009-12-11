@@ -35,7 +35,9 @@ my_fill_track_func (GESTimelineObject * object,
 }
 
 #define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
-  guint64 pstart, pdur, pmstart, pmdur, pprio, pact;			\
+  guint64 pstart, pdur, pmstart, pmdur;					\
+  guint32 pprio;							\
+  gboolean pact;							\
   g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
 		"media-start", &pmstart, "media-duration", &pmdur,	\
 		"priority", &pprio, "active", &pact,			\
