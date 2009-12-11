@@ -75,6 +75,7 @@ enum
   ARG_0,
   ARG_SYNC,
   ARG_TEXT_OVERLAY,
+  ARG_VIDEO_SINK,
   /* FILL ME */
 };
 
@@ -110,6 +111,11 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "text-overlay",
           "Wether to use text-overlay", TRUE,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_klass, ARG_VIDEO_SINK,
+      g_param_spec_object ("video-sink",
+          "video-sink",
+          "Video sink to use", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
@@ -164,23 +170,43 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 }
 
 static void
-fps_display_sink_init (GstFPSDisplaySink * self,
-    GstFPSDisplaySinkClass * g_class)
+update_sub_sink (GstElement * sink, gpointer data)
+{
+  g_object_set (sink, "sync", *((gboolean *) data), NULL);
+}
+
+static void
+update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 {
   GstPad *sink_pad;
+  GstIterator *iterator;
 
-  self->sync = FALSE;
-  self->use_text_overlay = TRUE;
+  if (self->video_sink) {
 
-  /* create child elements */
-  self->video_sink =
-      gst_element_factory_make ("xvimagesink", "fps-display-video_sink");
-  if (!self->video_sink) {
-    GST_ERROR_OBJECT (self, "element could not be created");
-    return;
+    /* remove pad probe */
+    sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
+    gst_pad_remove_data_probe (sink_pad, self->data_probe_id);
+    gst_object_unref (sink_pad);
+    self->data_probe_id = -1;
+
+    /* remove ghost pad */
+    gst_element_remove_pad (GST_ELEMENT (self), self->ghost_pad);
+
+    /* remove old sink */
+    gst_bin_remove (GST_BIN (self), self->video_sink);
+    gst_object_unref (self->video_sink);
   }
 
-  g_object_set (self->video_sink, "sync", self->sync, NULL);
+  /* create child elements */
+  self->video_sink = video_sink;
+
+  if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
+    iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
+    gst_iterator_foreach (iterator, (GFunc) update_sub_sink,
+        (void *) &self->sync);
+    gst_iterator_free (iterator);
+  } else
+    g_object_set (self->video_sink, "sync", self->sync, NULL);
 
   /* take a ref before bin takes the ownership */
   gst_object_ref (self->video_sink);
@@ -193,9 +219,29 @@ fps_display_sink_init (GstFPSDisplaySink * self,
 
   /* attach or pad probe */
   sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
-  gst_pad_add_data_probe (sink_pad, G_CALLBACK (on_video_sink_data_flow),
-      (gpointer) self);
+  self->data_probe_id = gst_pad_add_data_probe (sink_pad,
+      G_CALLBACK (on_video_sink_data_flow), (gpointer) self);
   gst_object_unref (sink_pad);
+
+}
+
+static void
+fps_display_sink_init (GstFPSDisplaySink * self,
+    GstFPSDisplaySinkClass * g_class)
+{
+  GstElement *video_sink;
+
+  self->sync = FALSE;
+  self->use_text_overlay = TRUE;
+
+  video_sink = gst_element_factory_make ("autovideosink",
+      "fps-display-video_sink");
+  if (!video_sink) {
+    GST_ERROR_OBJECT (self, "element could not be created");
+    return;
+  }
+
+  update_video_sink (self, video_sink);
 
   self->query = gst_query_new_position (GST_FORMAT_TIME);
 }
@@ -341,11 +387,18 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
+  GstIterator *iterator;
 
   switch (prop_id) {
     case ARG_SYNC:
       self->sync = g_value_get_boolean (value);
-      g_object_set (self->video_sink, "sync", self->sync, NULL);
+      if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
+        iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
+        gst_iterator_foreach (iterator, (GFunc) update_sub_sink,
+            (void *) &self->sync);
+        gst_iterator_free (iterator);
+      } else
+        g_object_set (self->video_sink, "sync", self->sync, NULL);
       break;
     case ARG_TEXT_OVERLAY:
       self->use_text_overlay = g_value_get_boolean (value);
@@ -359,6 +412,9 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
           g_object_set (self->text_overlay, "silent", FALSE, NULL);
         }
       }
+      break;
+    case ARG_VIDEO_SINK:
+      update_video_sink (self, (GstElement *) g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -378,6 +434,9 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_TEXT_OVERLAY:
       g_value_set_boolean (value, self->use_text_overlay);
+      break;
+    case ARG_VIDEO_SINK:
+      g_value_set_object (value, self->video_sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -58,6 +58,7 @@ struct _GstFPSDisplaySink
   GstClockTime next_ts;
 
   guint timeout_id;
+  guint data_probe_id;
 
   /* properties */
   gboolean sync;
