@@ -199,7 +199,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "MJ2",
         "GstMJ2Mux",
         GST_STATIC_CAPS ("video/mj2"),
-        GST_STATIC_CAPS ("image/x-j2c, " COMMON_VIDEO_CAPS),
+        GST_STATIC_CAPS ("image/x-j2c, " COMMON_VIDEO_CAPS "; "
+            "image/x-jpc, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS)
       }
   ,

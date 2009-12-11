@@ -251,6 +251,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->sync = FALSE;
   qtpad->last_dts = 0;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
+  qtpad->prepare_buf_func = NULL;
 
   if (qtpad->last_buf)
     gst_buffer_replace (&qtpad->last_buf, NULL);
@@ -353,6 +354,30 @@ gst_qt_mux_finalize (GObject * object)
   gst_object_unref (qtmux->collect);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstBuffer *
+gst_qt_mux_prepare_jpc_buffer (GstQTPad * qtpad, GstBuffer * buf,
+    GstQTMux * qtmux)
+{
+  GstBuffer *newbuf;
+
+  GST_LOG_OBJECT (qtmux, "Preparing jpc buffer");
+
+  if (buf == NULL)
+    return NULL;
+
+  newbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) + 8);
+  gst_buffer_copy_metadata (newbuf, buf, GST_BUFFER_COPY_ALL);
+
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (newbuf), GST_BUFFER_SIZE (newbuf));
+  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (newbuf) + 4, FOURCC_jp2c);
+
+  memcpy (GST_BUFFER_DATA (newbuf) + 8, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+  gst_buffer_unref (buf);
+
+  return newbuf;
 }
 
 static void
@@ -1398,6 +1423,11 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   if (!pad->fourcc)
     goto not_negotiated;
 
+  /* if this pad has a prepare function, call it */
+  if (pad->prepare_buf_func != NULL) {
+    buf = pad->prepare_buf_func (pad, buf, qtmux);
+  }
+
   last_buf = pad->last_buf;
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1668,6 +1698,8 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
   g_assert (qtpad);
 
+  qtpad->prepare_buf_func = NULL;
+
   /* does not go well to renegotiate stream mid-way */
   if (qtpad->fourcc)
     goto refuse_renegotiation;
@@ -1916,6 +1948,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
   g_assert (qtpad);
 
+  qtpad->prepare_buf_func = NULL;
+
   /* does not go well to renegotiate stream mid-way */
   if (qtpad->fourcc)
     goto refuse_renegotiation;
@@ -2095,20 +2129,43 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "image/jpeg") == 0) {
     entry.fourcc = FOURCC_jpeg;
     sync = FALSE;
-  } else if (strcmp (mimetype, "image/x-j2c") == 0) {
+  } else if (strcmp (mimetype, "image/x-j2c") == 0 ||
+      strcmp (mimetype, "image/x-jpc") == 0) {
     guint32 fourcc;
+    const GValue *cmap_array;
+    const GValue *cdef_array;
+    gint ncomp = 0;
+    gint fields = 1;
+
+    if (strcmp (mimetype, "image/x-jpc") == 0) {
+      qtpad->prepare_buf_func = gst_qt_mux_prepare_jpc_buffer;
+    }
+
+    gst_structure_get_int (structure, "num-components", &ncomp);
+    gst_structure_get_int (structure, "fields", &fields);
+    cmap_array = gst_structure_get_value (structure, "component-map");
+    cdef_array = gst_structure_get_value (structure, "channel-definitions");
 
     ext_atom = NULL;
     entry.fourcc = FOURCC_mjp2;
     sync = FALSE;
-    if (!gst_structure_get_fourcc (structure, "fourcc", &fourcc) ||
-        !(ext_atom =
-            build_jp2h_extension (qtpad->trak, width, height, fourcc))) {
+    if (gst_structure_get_fourcc (structure, "fourcc", &fourcc) &&
+        (ext_atom =
+            build_jp2h_extension (qtpad->trak, width, height, fourcc, ncomp,
+                cmap_array, cdef_array)) != NULL) {
+      ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+
+      ext_atom = build_fiel_extension (fields);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+
+      ext_atom = build_jp2x_extension (codec_data);
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    } else {
       GST_DEBUG_OBJECT (qtmux, "missing or invalid fourcc in jp2 caps");
       goto refuse_caps;
     }
-    if (ext_atom)
-      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 

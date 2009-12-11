@@ -62,8 +62,22 @@ G_BEGIN_DECLS
 
 typedef struct _GstQTMux GstQTMux;
 typedef struct _GstQTMuxClass GstQTMuxClass;
+typedef struct _GstQTPad GstQTPad;
 
-typedef struct _GstQTPad
+/*
+ * GstQTPadPrepareBufferFunc
+ *
+ * Receives a buffer (takes ref) and returns a new buffer that should
+ * replace the passed one.
+ *
+ * Useful for when the pad/datatype needs some manipulation before
+ * being muxed. (Originally added for image/x-jpc support, for which buffers
+ * need to be wrapped into a isom box)
+ */
+typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
+    GstBuffer * buf, GstQTMux * qtmux);
+
+struct _GstQTPad
 {
   GstCollectData collect;       /* we extend the CollectData */
 
@@ -89,7 +103,10 @@ typedef struct _GstQTPad
   /* all the atom and chunk book-keeping is delegated here
    * unowned/uncounted reference, parent MOOV owns */
   AtomTRAK *trak;
-} GstQTPad;
+
+  /* if nothing is set, it won't be called */
+  GstQTPadPrepareBufferFunc prepare_buf_func;
+};
 
 typedef enum _GstQTMuxState
 {

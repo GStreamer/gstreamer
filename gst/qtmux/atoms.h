@@ -670,7 +670,12 @@ AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * cod
 AtomInfo *   build_esds_extension        (AtomTRAK * trak, guint8 object_type,
                                           guint8 stream_type, const GstBuffer * codec_data);
 AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint height,
-                                          guint32 fourcc);
+                                          guint32 fourcc, gint ncomp,
+                                          const GValue * cmap_array,
+                                          const GValue * cdef_array);
+
+AtomInfo *   build_jp2x_extension        (const GstBuffer * prefix);
+AtomInfo *   build_fiel_extension        (gint fields);
 AtomInfo *   build_amr_extension         ();
 AtomInfo *   build_h263_extension        ();
 AtomInfo *   build_gama_atom             (gdouble gamma);

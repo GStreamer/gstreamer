@@ -45,8 +45,8 @@
 #include <string.h>
 #include <glib.h>
 
-/* only needed for gst_util_uint64_scale */
 #include <gst/gst.h>
+#include <gst/base/gstbytewriter.h>
 
 /**
  * Creates a new AtomsContext for the given flavor.
@@ -3182,52 +3182,173 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 }
 
 AtomInfo *
-build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc)
+build_fiel_extension (gint fields)
 {
   AtomData *atom_data;
   GstBuffer *buf;
-  guint8 *data;
+
+  if (fields == 1) {
+    return NULL;
+  }
+
+  buf = gst_buffer_new_and_alloc (1);
+  GST_BUFFER_DATA (buf)[0] = (guint8) fields;
+
+  atom_data =
+      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('f', 'i', 'e', 'l'), buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_jp2x_extension (const GstBuffer * prefix)
+{
+  AtomData *atom_data;
+
+  if (!prefix) {
+    return NULL;
+  }
+
+  atom_data =
+      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('j', 'p', '2', 'x'),
+      prefix);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc,
+    gint ncomp, const GValue * cmap_array, const GValue * cdef_array)
+{
+  AtomData *atom_data;
+  GstBuffer *buf;
   guint8 cenum;
+  gint i;
+  gint idhr_size = 22;
+  gint colr_size = 15;
+  gint cmap_size = 0, cdef_size = 0;
+  gint cmap_array_size = 0;
+  gint cdef_array_size = 0;
+  GstByteWriter writer;
+
+  g_return_val_if_fail (cmap_array == NULL ||
+      GST_VALUE_HOLDS_ARRAY (cmap_array), NULL);
+  g_return_val_if_fail (cdef_array == NULL ||
+      GST_VALUE_HOLDS_ARRAY (cdef_array), NULL);
 
   if (fourcc == GST_MAKE_FOURCC ('s', 'R', 'G', 'B')) {
     cenum = 0x10;
+    if (ncomp == 0)
+      ncomp = 3;
+  } else if (fourcc == GST_MAKE_FOURCC ('G', 'R', 'A', 'Y')) {
+    cenum = 0x11;
+    if (ncomp == 0)
+      ncomp = 1;
   } else if (fourcc == GST_MAKE_FOURCC ('s', 'Y', 'U', 'V')) {
     cenum = 0x12;
+    if (ncomp == 0)
+      ncomp = 3;
   } else
-    return FALSE;
+    return NULL;
 
-  buf = gst_buffer_new_and_alloc (22 + 15);
-  data = GST_BUFFER_DATA (buf);
+  if (cmap_array) {
+    cmap_array_size = gst_value_array_get_size (cmap_array);
+    cmap_size = 8 + cmap_array_size * 4;
+  }
+  if (cdef_array) {
+    cdef_array_size = gst_value_array_get_size (cdef_array);
+    cdef_size = 8 + 2 + cdef_array_size * 6;
+  }
+
+  buf = gst_buffer_new_and_alloc (idhr_size + colr_size + cmap_size +
+      cdef_size);
+  gst_byte_writer_init_with_buffer (&writer, buf, FALSE);
 
   /* ihdr = image header box */
-  GST_WRITE_UINT32_BE (data, 22);
-  GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('i', 'h', 'd', 'r'));
-  GST_WRITE_UINT32_BE (data + 8, height);
-  GST_WRITE_UINT32_BE (data + 12, width);
-  /* FIXME perhaps parse from stream,
-   * though exactly 3 in any respectable colourspace */
-  GST_WRITE_UINT16_BE (data + 16, 3);
+  gst_byte_writer_put_uint32_be (&writer, 22);
+  gst_byte_writer_put_uint32_le (&writer, GST_MAKE_FOURCC ('i', 'h', 'd', 'r'));
+  gst_byte_writer_put_uint32_be (&writer, height);
+  gst_byte_writer_put_uint32_be (&writer, width);
+  gst_byte_writer_put_uint16_be (&writer, ncomp);
   /* 8 bits per component, unsigned */
-  GST_WRITE_UINT8 (data + 18, 0x7);
+  gst_byte_writer_put_uint8 (&writer, 0x7);
   /* compression type; reserved */
-  GST_WRITE_UINT8 (data + 19, 0x7);
+  gst_byte_writer_put_uint8 (&writer, 0x7);
   /* colour space (un)known */
-  GST_WRITE_UINT8 (data + 20, 0x0);
+  gst_byte_writer_put_uint8 (&writer, 0x0);
   /* intellectual property right (box present) */
-  GST_WRITE_UINT8 (data + 21, 0x0);
+  gst_byte_writer_put_uint8 (&writer, 0x0);
 
   /* colour specification box */
-  data += 22;
-  GST_WRITE_UINT32_BE (data, 15);
-  GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('c', 'o', 'l', 'r'));
+  gst_byte_writer_put_uint32_be (&writer, 15);
+  gst_byte_writer_put_uint32_le (&writer, GST_MAKE_FOURCC ('c', 'o', 'l', 'r'));
+
   /* specification method: enumerated */
-  GST_WRITE_UINT8 (data + 8, 0x1);
+  gst_byte_writer_put_uint8 (&writer, 0x1);
   /* precedence; reserved */
-  GST_WRITE_UINT8 (data + 9, 0x0);
+  gst_byte_writer_put_uint8 (&writer, 0x0);
   /* approximation; reserved */
-  GST_WRITE_UINT8 (data + 10, 0x0);
+  gst_byte_writer_put_uint8 (&writer, 0x0);
   /* enumerated colourspace */
-  GST_WRITE_UINT32_BE (data + 11, cenum);
+  gst_byte_writer_put_uint32_be (&writer, cenum);
+
+  if (cmap_array) {
+    gst_byte_writer_put_uint32_be (&writer, cmap_size);
+    gst_byte_writer_put_uint32_le (&writer,
+        GST_MAKE_FOURCC ('c', 'm', 'a', 'p'));
+    for (i = 0; i < cmap_array_size; i++) {
+      const GValue *item;
+      gint value;
+      guint16 cmp;
+      guint8 mtyp;
+      guint8 pcol;
+      item = gst_value_array_get_value (cmap_array, i);
+      value = g_value_get_int (item);
+
+      /* value is '(mtyp << 24) | (pcol << 16) | cmp' */
+      cmp = value & 0xFFFF;
+      mtyp = value >> 24;
+      pcol = (value >> 16) & 0xFF;
+
+      if (mtyp == 1)
+        GST_WARNING ("MTYP of cmap atom signals Pallete Mapping, but we don't "
+            "handle Pallete mapping atoms yet");
+
+      gst_byte_writer_put_uint16_be (&writer, cmp);
+      gst_byte_writer_put_uint8 (&writer, mtyp);
+      gst_byte_writer_put_uint8 (&writer, pcol);
+    }
+  }
+
+  if (cdef_array) {
+    gst_byte_writer_put_uint32_be (&writer, cdef_size);
+    gst_byte_writer_put_uint32_le (&writer,
+        GST_MAKE_FOURCC ('c', 'd', 'e', 'f'));
+    gst_byte_writer_put_uint16_be (&writer, cdef_array_size);
+    for (i = 0; i < cdef_array_size; i++) {
+      const GValue *item;
+      gint value;
+      item = gst_value_array_get_value (cdef_array, i);
+      value = g_value_get_int (item);
+
+      gst_byte_writer_put_uint16_be (&writer, i);
+      if (value > 0) {
+        gst_byte_writer_put_uint16_be (&writer, 0);
+        gst_byte_writer_put_uint16_be (&writer, value);
+      } else if (value < 0) {
+        gst_byte_writer_put_uint16_be (&writer, -value);
+        gst_byte_writer_put_uint16_be (&writer, 0);     /* TODO what here? */
+      } else {
+        gst_byte_writer_put_uint16_be (&writer, 1);
+        gst_byte_writer_put_uint16_be (&writer, 0);
+      }
+    }
+  }
+
+  g_assert (gst_byte_writer_get_remaining (&writer) == 0);
 
   atom_data = atom_data_new_from_gst_buffer (FOURCC_jp2h, buf);
   gst_buffer_unref (buf);
