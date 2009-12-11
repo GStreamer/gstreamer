@@ -107,6 +107,14 @@ struct _GESTrackObject {
   guint32 priority;
   gboolean active;
 
+  /*< private >*/
+  /* These fields are only used before the gnlobject is available */
+  guint64 pending_start;
+  guint64 pending_inpoint;
+  guint64 pending_duration;
+  guint32 pending_priority;
+  gboolean pending_active;
+
   GstElement *gnlobject;
 };
 

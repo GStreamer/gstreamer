@@ -205,24 +205,26 @@ static void
 ges_track_object_init (GESTrackObject * self)
 {
   /* Sane default values */
-  self->start = 0;
-  self->inpoint = 0;
-  self->duration = GST_SECOND;
-  self->priority = 1;
+  self->pending_start = 0;
+  self->pending_inpoint = 0;
+  self->pending_duration = GST_SECOND;
+  self->pending_priority = 1;
+  self->pending_active = TRUE;
 }
 
 gboolean
 ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
 {
-  g_return_val_if_fail (object->gnlobject, FALSE);
-
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
 
-  if (G_UNLIKELY (start == object->start))
-    return FALSE;
+  if (object->gnlobject != NULL) {
+    if (G_UNLIKELY (start == object->start))
+      return FALSE;
 
-  g_object_set (object->gnlobject, "start", start, NULL);
+    g_object_set (object->gnlobject, "start", start, NULL);
+  } else
+    object->pending_start = start;
   return TRUE;
 };
 
@@ -233,12 +235,13 @@ ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
 
-  g_return_val_if_fail (object->gnlobject, FALSE);
+  if (object->gnlobject != NULL) {
+    if (G_UNLIKELY (inpoint == object->inpoint))
+      return FALSE;
 
-  if (G_UNLIKELY (inpoint == object->inpoint))
-    return FALSE;
-
-  g_object_set (object->gnlobject, "media-start", inpoint, NULL);
+    g_object_set (object->gnlobject, "media-start", inpoint, NULL);
+  } else
+    object->pending_inpoint = inpoint;
 
   return TRUE;
 }
@@ -250,13 +253,14 @@ ges_track_object_set_duration_internal (GESTrackObject * object,
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  g_return_val_if_fail (object->gnlobject, FALSE);
+  if (object->gnlobject != NULL) {
+    if (G_UNLIKELY (duration == object->duration))
+      return FALSE;
 
-  if (G_UNLIKELY (duration == object->duration))
-    return FALSE;
-
-  g_object_set (object->gnlobject, "duration", duration, "media-duration",
-      duration, NULL);
+    g_object_set (object->gnlobject, "duration", duration, "media-duration",
+        duration, NULL);
+  } else
+    object->pending_duration = duration;
   return TRUE;
 }
 
@@ -266,12 +270,13 @@ ges_track_object_set_priority_internal (GESTrackObject * object,
 {
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
-  g_return_val_if_fail (object->gnlobject, FALSE);
+  if (object->gnlobject != NULL) {
+    if (G_UNLIKELY (priority == object->priority))
+      return FALSE;
 
-  if (G_UNLIKELY (priority == object->priority))
-    return FALSE;
-
-  g_object_set (object->gnlobject, "priority", priority, NULL);
+    g_object_set (object->gnlobject, "priority", priority, NULL);
+  } else
+    object->pending_priority = priority;
   return TRUE;
 }
 
@@ -280,12 +285,13 @@ ges_track_object_set_active (GESTrackObject * object, gboolean active)
 {
   GST_DEBUG ("object:%p, active:%d", object, active);
 
-  g_return_val_if_fail (object->gnlobject, FALSE);
+  if (object->gnlobject != NULL) {
+    if (G_UNLIKELY (active == object->active))
+      return FALSE;
 
-  if (G_UNLIKELY (active == object->active))
-    return FALSE;
-
-  g_object_set (object->gnlobject, "active", active, NULL);
+    g_object_set (object->gnlobject, "active", active, NULL);
+  } else
+    object->pending_active = active;
   return TRUE;
 }
 
@@ -429,7 +435,15 @@ ensure_gnl_object (GESTrackObject * object)
         object->gnlobject);
     if (res) {
       /* Set some properties on the GnlObject */
-      g_object_set (object->gnlobject, "caps", object->track->caps, NULL);
+      g_object_set (object->gnlobject,
+          "caps", object->track->caps,
+          "duration", object->pending_duration,
+          "media-duration", object->pending_duration,
+          "start", object->pending_start,
+          "media-start", object->pending_inpoint,
+          "priority", object->pending_priority,
+          "active", object->pending_active, NULL);
+
     }
   }
 
