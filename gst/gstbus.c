@@ -49,8 +49,8 @@
  * from the bus to handle them.
  * Alternatively the application can register an asynchronous bus function
  * using gst_bus_add_watch_full() or gst_bus_add_watch(). This function will
- * install a #GSource in the default glib main loop and will deliver messages 
- * a short while after they have been posted. Note that the main loop should 
+ * install a #GSource in the default glib main loop and will deliver messages
+ * a short while after they have been posted. Note that the main loop should
  * be running for the asynchronous callbacks.
  *
  * It is also possible to get messages from the bus without any thread
@@ -403,7 +403,7 @@ is_flushing:
  * Check if there are pending messages on the bus that
  * should be handled.
  *
- * Returns: TRUE if there are messages on the bus to be handled, FALSE 
+ * Returns: TRUE if there are messages on the bus to be handled, FALSE
  * otherwise.
  *
  * MT safe.
@@ -1135,7 +1135,7 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
  * Instructs GStreamer to emit the "sync-message" signal after running the bus's
  * sync handler. This function is here so that code can ensure that they can
  * synchronously receive messages without having to affect what the bin's sync
- * handler is. 
+ * handler is.
  *
  * This function may be called multiple times. To clean up, the caller is
  * responsible for calling gst_bus_disable_sync_message_emission() as many times
