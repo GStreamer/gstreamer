@@ -190,6 +190,7 @@ gst_i420_do_blend (guint8 * src, guint8 * dest,
     gint dest_width, gdouble src_alpha)
 {
   int i, j;
+  gint b_alpha;
 
   /* If it's completely transparent... we just return */
   if (G_UNLIKELY (src_alpha == 0.0)) {
@@ -208,9 +209,11 @@ gst_i420_do_blend (guint8 * src, guint8 * dest,
     return;
   }
 
+  b_alpha = (gint) (src_alpha * 255);
+
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
-      *dest = src_alpha * (*src) + (1. - src_alpha) * (*dest);
+      *dest = (b_alpha * (*src) + (255 - b_alpha) * (*dest)) >> 16;
       dest++;
       src++;
     }
