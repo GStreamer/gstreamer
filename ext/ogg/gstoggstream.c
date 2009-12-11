@@ -568,7 +568,29 @@ setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
 static gboolean
 setup_fLaC_mapper (GstOggStream * pad, ogg_packet * packet)
 {
-  /* FIXME punt on this for now */
+  pad->granulerate_n = 0;
+  pad->granulerate_d = 1;
+  pad->granuleshift = 0;
+
+  pad->n_header_packets = 3;
+
+  pad->caps = gst_caps_new_simple ("audio/x-flac", NULL);
+
+  return TRUE;
+}
+
+static gboolean
+is_header_fLaC (GstOggStream * pad, ogg_packet * packet)
+{
+  if (pad->n_header_packets_seen == 1) {
+    pad->granulerate_n = (packet->packet[14] << 12) |
+        (packet->packet[15] << 4) | ((packet->packet[16] >> 4) & 0xf);
+  }
+
+  if (pad->n_header_packets_seen < pad->n_header_packets) {
+    return TRUE;
+  }
+
   return FALSE;
 }
 
@@ -1129,8 +1151,8 @@ static const GstOggMap mappers[] = {
     setup_fLaC_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    NULL,
-    is_header_count,
+    is_keyframe_true,
+    is_header_fLaC,
     NULL
   },
   {
@@ -1139,7 +1161,7 @@ static const GstOggMap mappers[] = {
     setup_flac_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    NULL,
+    is_keyframe_true,
     is_header_count,
     packet_duration_flac
   },
