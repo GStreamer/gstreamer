@@ -2073,7 +2073,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
 
   /* Try not to change the state of elements that are already in the state we're
    * going to */
-  if (!(child_pending != GST_STATE_VOID_PENDING ||
+  if (!(next == GST_STATE_PLAYING || child_pending != GST_STATE_VOID_PENDING ||
           (child_pending == GST_STATE_VOID_PENDING &&
               ((pending > child_current && next > child_current) ||
                   (pending < child_current && next < child_current)))))
