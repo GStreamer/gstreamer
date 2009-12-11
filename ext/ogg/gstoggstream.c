@@ -726,9 +726,9 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
 static gboolean
 is_header_ogm (GstOggStream * pad, ogg_packet * packet)
 {
-  if (packet->bytes >= 1 && (packet->packet[0] & 0x01)) {
+  if (packet->bytes >= 1 && (packet->packet[0] & 0x01))
     return TRUE;
-  }
+
   return FALSE;
 }
 
@@ -1222,7 +1222,7 @@ static const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     NULL,
     is_header_ogm,
-    packet_duration_ogm
+    packet_duration_constant
   },
   {
     "\001text\0\0\0", 9, 9,
