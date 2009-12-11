@@ -394,7 +394,7 @@ static void
     self->block_length = block_length;
 
     kernel_tmp = g_new0 (gdouble, block_length);
-    memcpy (kernel_tmp, kernel, self->block_length * sizeof (gdouble));
+    memcpy (kernel_tmp, kernel, self->kernel_length * sizeof (gdouble));
 
     self->fft = gst_fft_f64_new (block_length, FALSE);
     self->ifft = gst_fft_f64_new (block_length, TRUE);
