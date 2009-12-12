@@ -181,7 +181,7 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
           "Filter kernel length, will be rounded to the next odd number", 3,
-          50000, 101,
+          2560000, 101,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MODE,
