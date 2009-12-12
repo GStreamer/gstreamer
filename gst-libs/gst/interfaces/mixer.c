@@ -31,6 +31,23 @@
 /**
  * SECTION:gstmixer
  * @short_description: Interface for elements that provide mixer operations
+ * @see_also: alsamixer, oss4mixer, sunaudiomixer
+ *
+ * Basic interface for hardware mixer controls.
+ *
+ * Applications rarely need to use this interface, it is provided mainly
+ * for system-level mixer applets and the like. Volume control in playback
+ * applications should be done using a <classname>volume</classname>
+ * element or, if available, using the <quote>volume</quote> property of
+ * the audio sink element used (as provided by <classname>pulsesink</classname>
+ * for example), or even better: just use the <classname>playbin2</classname>
+ * element's <quote>volume</quote> property.
+ *
+ * Usage: In order to use the <classname>GstMixer</classname> interface, the
+ * element needs to be at least in READY state (so that the element has opened
+ * the mixer device). Once the element has been set to READY state or higher,
+ * it can be cast to a <classname>GstMixer</classname> using the GST_MIXER
+ * macro (in C) and the mixer API can be used.
  */
 
 #ifndef GST_DISABLE_DEPRECATED

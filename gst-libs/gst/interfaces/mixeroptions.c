@@ -19,6 +19,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstmixeroptions
+ * @short_description: Multi-option mixer control
+ * @see_also: GstMixer, GstMixerTrack
+ *
+ * Mixer control object that allows switching between multiple options.
+ * Note that <classname>GstMixerOptions</classname> is a subclass of
+ * <classname>GstMixerTrack</classname>.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

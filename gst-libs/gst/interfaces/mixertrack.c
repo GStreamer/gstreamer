@@ -19,6 +19,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstmixertrack
+ * @short_description: Basic mixer control object (volume slider, switch)
+ * @see_also: GstMixer, GstMixerOptions
+ *
+ * Basic mixer control object (note that it is a GObject and not a GstObject).
+ *
+ * A mixer track represents a single slider control of none, one or more
+ * channels. A mixer track with no channels is usually interpreted as a
+ * on/off switch control.
+ *
+ * Note the presence of both min_volume and max_volume fields. Applications
+ * must not assume that min_volume is 0 or max_volume is any particular
+ * value.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
