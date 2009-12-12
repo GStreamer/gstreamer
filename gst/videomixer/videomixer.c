@@ -1136,6 +1136,7 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
       GST_LOG_OBJECT (mix, "we need a new buffer");
 
       buf = gst_collect_pads_peek (mix->collect, data);
+
       if (buf) {
         guint64 duration;
 
@@ -1287,9 +1288,16 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
       pad->queued -= interval;
       GST_LOG_OBJECT (pad, "queued now %" G_GINT64_FORMAT, pad->queued);
       if (pad->queued <= 0) {
+        GstBuffer *buffer =
+            gst_collect_pads_pop (mix->collect, &mixcol->collect);
+
         GST_LOG_OBJECT (pad, "unreffing buffer");
-        gst_buffer_unref (gst_collect_pads_pop (mix->collect,
-                &mixcol->collect));
+        if (buffer)
+          gst_buffer_unref (buffer);
+        else
+          GST_WARNING_OBJECT (pad,
+              "Buffer was removed by GstCollectPads in the meantime");
+
         gst_buffer_unref (mixcol->buffer);
         mixcol->buffer = NULL;
       }
@@ -1503,6 +1511,7 @@ gst_videomixer_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
 {
+  GstVideoMixerPad *vpad = GST_VIDEO_MIXER_PAD (pad);
   GstVideoMixer *videomixer = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   gboolean ret;
 
@@ -1518,6 +1527,12 @@ gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
        * and downstream (using our source pad, the bastard!).
        */
       videomixer->sendseg = TRUE;
+
+      /* Reset pad state after FLUSH_STOP */
+      if (vpad->mixcol->buffer)
+        gst_buffer_unref (vpad->mixcol->buffer);
+      vpad->mixcol->buffer = NULL;
+      vpad->queued = 0;
       break;
     case GST_EVENT_NEWSEGMENT:
       videomixer->sendseg = TRUE;
