@@ -115,7 +115,7 @@ dump_languages (void)
 
   g_print ("};\n");
   g_print ("\n");
-  g_print ("const gchar iso_639_names[] =\n");
+  g_print ("static const gchar iso_639_names[] =\n");
   s = names->str;
   while (s != NULL && *s != '\0') {
     gchar line[74], *lastesc;

@@ -406,7 +406,7 @@ static const struct
   { "zu", "zul", ISO_639_FLAG_2T | ISO_639_FLAG_2B, 2026 },
 };
 
-const gchar iso_639_names[] =
+static const gchar iso_639_names[] =
   "Afar\000Abkhazian\000Avestan\000Afrikaans\000Akan\000Amharic\000Aragonese"
   "\000Arabic\000Assamese\000Avaric\000Aymara\000Azerbaijani\000Bashkir\000B"
   "elarusian\000Bulgarian\000Bihari languages\000Bislama\000Bambara\000Benga"
