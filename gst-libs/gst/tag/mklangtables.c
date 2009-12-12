@@ -30,6 +30,10 @@
 #include <glib.h>
 #include <string.h>
 
+#if !GLIB_CHECK_VERSION (2, 22, 0)
+#define g_mapped_file_unref g_mapped_file_free
+#endif
+
 #define ISO_639_XML_PATH ISO_CODES_PREFIX "/share/xml/iso-codes/iso_639.xml"
 
 typedef struct

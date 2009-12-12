@@ -49,6 +49,11 @@
 
 #include "lang-tables.c"
 
+/* FIXME: remove once we depend on GLib >= 2.22 */
+#if !GLIB_CHECK_VERSION (2, 22, 0)
+#define g_mapped_file_unref g_mapped_file_free
+#endif
+
 #ifndef GST_DISABLE_GST_DEBUG
 
 #define GST_CAT_DEFAULT ensure_debug_category()
