@@ -4,7 +4,10 @@ plugin_LTLIBRARIES = libgstqtmux.la
 
 # sources used to compile this plug-in
 libgstqtmux_la_SOURCES = gstqtmux.c \
+                        gstqtmoovrecover.c \
+                        gstqtmuxplugin.c \
 			atoms.c \
+                        atomsrecovery.c \
 			descriptors.c \
 			properties.c \
 			gstqtmuxmap.c
@@ -18,9 +21,12 @@ libgstqtmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = gstqtmux.h \
+                gstqtmoovrecover.h \
 		atoms.h \
+                atomsrecovery.h \
 		descriptors.h \
 		properties.h \
 		fourcc.h \
 		ftypcc.h \
 		gstqtmuxmap.h
+

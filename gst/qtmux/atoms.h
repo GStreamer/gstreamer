@@ -1,5 +1,5 @@
 /* Quicktime muxer plugin for GStreamer
- * Copyright (C) 2008 Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
+ * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -58,6 +58,38 @@ struct { \
   guint len; \
   struct_type *data; \
 }
+
+/* storage helpers */
+
+#define atom_array_init(array, reserve)                                       \
+G_STMT_START {                                                                \
+  (array)->len = 0;                                                           \
+  (array)->size = reserve;                                                    \
+  (array)->data = g_malloc (sizeof (*(array)->data) * reserve);               \
+} G_STMT_END
+
+#define atom_array_append(array, elmt, inc)                                   \
+G_STMT_START {                                                                \
+  g_assert ((array)->data);                                                   \
+  g_assert (inc > 0);                                                         \
+  if (G_UNLIKELY ((array)->len == (array)->size)) {                           \
+    (array)->size += inc;                                                     \
+    (array)->data =                                                           \
+        g_realloc ((array)->data, sizeof (*((array)->data)) * (array)->size); \
+  }                                                                           \
+  (array)->data[(array)->len] = elmt;                                         \
+  (array)->len++;                                                             \
+} G_STMT_END
+
+#define atom_array_get_len(array)                  ((array)->len)
+#define atom_array_index(array, index)             ((array)->data[index])
+
+#define atom_array_clear(array)                                               \
+G_STMT_START {                                                                \
+  (array)->size = (array)->len = 0;                                           \
+  g_free ((array)->data);                                                     \
+  (array)->data = NULL;                                                       \
+} G_STMT_END
 
 /* light-weight context that may influence header atom tree construction */
 typedef enum _AtomsTreeFlavor
@@ -612,6 +644,10 @@ void       atom_trak_add_samples       (AtomTRAK * trak, guint32 nsamples, guint
 void       atom_trak_add_elst_entry    (AtomTRAK * trak, guint32 duration,
                                         guint32 media_time, guint32 rate);
 guint32    atom_trak_get_timescale     (AtomTRAK *trak);
+void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,
+                                        guint32 delta, guint32 size,
+                                        guint64 chunk_offset, gboolean sync,
+                                        gboolean do_pts, gint64 pts_offset);
 
 AtomMOOV*  atom_moov_new               (AtomsContext *context);
 void       atom_moov_free              (AtomMOOV *moov);
@@ -621,6 +657,26 @@ void       atom_moov_update_duration   (AtomMOOV *moov);
 void       atom_moov_set_64bits        (AtomMOOV *moov, gboolean large_file);
 void       atom_moov_chunks_add_offset (AtomMOOV *moov, guint32 offset);
 void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);
+
+guint64    atom_mvhd_copy_data         (AtomMVHD * atom, guint8 ** buffer,
+                                        guint64 * size, guint64 * offset);
+void       atom_stco64_chunks_add_offset (AtomSTCO64 * stco64, guint32 offset);
+guint64    atom_trak_copy_data         (AtomTRAK * atom, guint8 ** buffer,
+                                        guint64 * size, guint64 * offset);
+void       atom_stbl_clear             (AtomSTBL * stbl);
+void       atom_stbl_init              (AtomSTBL * stbl);
+guint64    atom_stss_copy_data         (AtomSTSS *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+guint64    atom_stts_copy_data         (AtomSTTS *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+guint64    atom_stsc_copy_data         (AtomSTSC *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+guint64    atom_stsz_copy_data         (AtomSTSZ *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+guint64    atom_ctts_copy_data         (AtomCTTS *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
+guint64    atom_stco64_copy_data       (AtomSTCO64 *atom, guint8 **buffer,
+                                        guint64 *size, guint64* offset);
 
 /* media sample description related helpers */
 

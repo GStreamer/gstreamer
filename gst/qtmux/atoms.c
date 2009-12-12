@@ -1,5 +1,5 @@
 /* Quicktime muxer plugin for GStreamer
- * Copyright (C) 2008 Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
+ * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -48,38 +48,6 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
 
-
-/* storage helpers */
-
-#define atom_array_init(array, reserve)                                       \
-G_STMT_START {                                                                \
-  (array)->len = 0;                                                           \
-  (array)->size = reserve;                                                    \
-  (array)->data = g_malloc (sizeof (*(array)->data) * reserve);               \
-} G_STMT_END
-
-#define atom_array_append(array, elmt, inc)                                   \
-G_STMT_START {                                                                \
-  g_assert ((array)->data);                                                   \
-  g_assert (inc > 0);                                                         \
-  if (G_UNLIKELY ((array)->len == (array)->size)) {                           \
-    (array)->size += inc;                                                     \
-    (array)->data =                                                           \
-        g_realloc ((array)->data, sizeof (*((array)->data)) * (array)->size); \
-  }                                                                           \
-  (array)->data[(array)->len] = elmt;                                         \
-  (array)->len++;                                                             \
-} G_STMT_END
-
-#define atom_array_get_len(array)                  ((array)->len)
-#define atom_array_index(array, index)             ((array)->data[index])
-
-#define atom_array_clear(array)                                               \
-G_STMT_START {                                                                \
-  (array)->size = (array)->len = 0;                                           \
-  g_free ((array)->data);                                                     \
-  (array)->data = NULL;                                                       \
-} G_STMT_END
 
 /**
  * Creates a new AtomsContext for the given flavor.
@@ -641,7 +609,7 @@ atom_stss_clear (AtomSTSS * stss)
   atom_array_clear (&stss->entries);
 }
 
-static void
+void
 atom_stbl_init (AtomSTBL * stbl)
 {
   atom_header_set (&stbl->header, FOURCC_stbl, 0, 0);
@@ -656,7 +624,7 @@ atom_stbl_init (AtomSTBL * stbl)
   atom_co64_init (&stbl->stco64);
 }
 
-static void
+void
 atom_stbl_clear (AtomSTBL * stbl)
 {
   atom_clear (&stbl->header);
@@ -1370,7 +1338,7 @@ atom_ftyp_copy_data (AtomFTYP * ftyp, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_mvhd_copy_data (AtomMVHD * atom, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1545,7 +1513,7 @@ atom_url_copy_data (AtomURL * url, guint8 ** buffer, guint64 * size,
   return original_offset - *offset;
 }
 
-static guint64
+guint64
 atom_stts_copy_data (AtomSTTS * stts, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1729,7 +1697,7 @@ sample_entry_mp4v_copy_data (SampleTableEntryMP4V * mp4v, guint8 ** buffer,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1757,7 +1725,7 @@ atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1785,7 +1753,7 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_ctts_copy_data (AtomCTTS * ctts, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1811,7 +1779,7 @@ atom_ctts_copy_data (AtomCTTS * ctts, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_stco64_copy_data (AtomSTCO64 * stco64, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -1843,7 +1811,7 @@ atom_stco64_copy_data (AtomSTCO64 * stco64, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_stss_copy_data (AtomSTSS * stss, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -2152,7 +2120,7 @@ atom_edts_copy_data (AtomEDTS * edts, guint8 ** buffer, guint64 * size,
   return *offset - original_offset;
 }
 
-static guint64
+guint64
 atom_trak_copy_data (AtomTRAK * trak, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
@@ -2439,12 +2407,10 @@ atom_stbl_add_ctts_entry (AtomSTBL * stbl, guint32 nsamples, guint32 offset)
 }
 
 void
-atom_trak_add_samples (AtomTRAK * trak, guint32 nsamples, guint32 delta,
+atom_stbl_add_samples (AtomSTBL * stbl, guint32 nsamples, guint32 delta,
     guint32 size, guint64 chunk_offset, gboolean sync,
     gboolean do_pts, gint64 pts_offset)
 {
-  AtomSTBL *stbl = &trak->mdia.minf.stbl;
-
   atom_stts_add_entry (&stbl->stts, nsamples, delta);
   atom_stsz_add_entry (&stbl->stsz, nsamples, size);
   atom_stco64_add_entry (&stbl->stco64, chunk_offset);
@@ -2454,6 +2420,16 @@ atom_trak_add_samples (AtomTRAK * trak, guint32 nsamples, guint32 delta,
     atom_stbl_add_stss_entry (stbl);
   if (do_pts)
     atom_stbl_add_ctts_entry (stbl, nsamples, pts_offset);
+}
+
+void
+atom_trak_add_samples (AtomTRAK * trak, guint32 nsamples, guint32 delta,
+    guint32 size, guint64 chunk_offset, gboolean sync,
+    gboolean do_pts, gint64 pts_offset)
+{
+  AtomSTBL *stbl = &trak->mdia.minf.stbl;
+  atom_stbl_add_samples (stbl, nsamples, delta, size, chunk_offset, sync,
+      do_pts, pts_offset);
 }
 
 /* trak and moov molding */
@@ -2576,7 +2552,7 @@ atom_moov_set_64bits (AtomMOOV * moov, gboolean large_file)
   }
 }
 
-static void
+void
 atom_stco64_chunks_add_offset (AtomSTCO64 * stco64, guint32 offset)
 {
   guint i;
