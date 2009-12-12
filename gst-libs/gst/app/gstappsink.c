@@ -35,6 +35,8 @@
 
 /**
  * SECTION:gstappsink
+ * @short_description: Easy way for applications to extract buffers from a
+ *     pipeline
  * @see_also: #GstBaseSink, appsrc
  *
  * Appsink is a sink plugin that supports many different methods for making

@@ -34,6 +34,8 @@
 
 /**
  * SECTION:gstappsrc
+ * @short_description: Easy way for applications to inject buffers into a
+ *     pipeline
  * @see_also: #GstBaseSrc, appsink
  *
  * The appsrc element can be used by applications to insert data into a
