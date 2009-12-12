@@ -5633,8 +5633,7 @@ qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
   table = QT_UINT16 ((guint8 *) node->data + offset);
 
   /* Language code skipped */
-
-  offset += 4;
+  offset += 2;
 
   /* Tag format: "XXXX://Y[YYYY]/classification info string"
    * XXXX: classification entity, fixed length 4 chars.
