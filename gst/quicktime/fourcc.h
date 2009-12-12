@@ -77,6 +77,7 @@ G_BEGIN_DECLS
 #define FOURCC_vmhd     GST_MAKE_FOURCC('v','m','h','d')
 #define FOURCC_smhd     GST_MAKE_FOURCC('s','m','h','d')
 #define FOURCC_gmhd     GST_MAKE_FOURCC('g','m','h','d')
+#define FOURCC_hmhd     GST_MAKE_FOURCC('h','m','h','d')
 #define FOURCC_gmin     GST_MAKE_FOURCC('g','m','i','n')
 #define FOURCC_dinf     GST_MAKE_FOURCC('d','i','n','f')
 #define FOURCC_dref     GST_MAKE_FOURCC('d','r','e','f')

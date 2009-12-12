@@ -1,5 +1,5 @@
 /* Quicktime muxer plugin for GStreamer
- * Copyright (C) 2008 Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
+ * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -108,7 +108,8 @@ enum
   PROP_DO_CTTS,
   PROP_FLAVOR,
   PROP_FAST_START,
-  PROP_FAST_START_TEMP_FILE
+  PROP_FAST_START_TEMP_FILE,
+  PROP_MOOV_RECOV_FILE
 };
 
 /* some spare for header size as well */
@@ -120,6 +121,7 @@ enum
 #define DEFAULT_DO_CTTS                 FALSE
 #define DEFAULT_FAST_START              FALSE
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
+#define DEFAULT_MOOV_RECOV_FILE         NULL
 
 static void gst_qt_mux_finalize (GObject * object);
 
@@ -234,11 +236,19 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "when creating a faststart file. If null a filepath will be "
           "created automatically", DEFAULT_FAST_START_TEMP_FILE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (gobject_class, PROP_MOOV_RECOV_FILE,
+      g_param_spec_string ("moov-recovery-file", "File to store data for "
+          "posterior moov atom recovery", "File to be used to store "
+          "data for moov atom making movie file recovery possible in case "
+          "of a crash during muxing. Null for disabled. (Experimental)",
+          DEFAULT_MOOV_RECOV_FILE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_qt_mux_change_state);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_qt_mux_release_pad);
+
+  GST_DEBUG_CATEGORY_INIT (gst_qt_mux_debug, "qtmux", 0, "QT Muxer");
 }
 
 static void
@@ -287,6 +297,10 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   if (qtmux->fast_start_file) {
     fclose (qtmux->fast_start_file);
     qtmux->fast_start_file = NULL;
+  }
+  if (qtmux->moov_recov_file) {
+    fclose (qtmux->moov_recov_file);
+    qtmux->moov_recov_file = NULL;
   }
   gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
 
@@ -350,6 +364,7 @@ gst_qt_mux_finalize (GObject * object)
   gst_qt_mux_reset (qtmux, FALSE);
 
   g_free (qtmux->fast_start_file_path);
+  g_free (qtmux->moov_recov_file_path);
 
   atoms_context_free (qtmux->context);
   gst_object_unref (qtmux->collect);
@@ -1116,7 +1131,7 @@ gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
 serialize_error:
   {
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
-        ("Failed to serialize ftyp"));
+        ("Failed to serialize mdat"));
     return GST_FLOW_ERROR;
   }
 }
@@ -1188,26 +1203,48 @@ serialize_error:
   }
 }
 
+static void
+gst_qt_mux_prepare_ftyp (GstQTMux * qtmux, AtomFTYP ** p_ftyp,
+    GstBuffer ** p_prefix)
+{
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+  guint32 major, version;
+  GList *comp;
+  GstBuffer *prefix = NULL;
+  AtomFTYP *ftyp = NULL;
+
+  GST_DEBUG_OBJECT (qtmux, "Preparing ftyp and possible prefix atom");
+
+  /* init and send context and ftyp based on current property state */
+  gst_qt_mux_map_format_to_header (qtmux_klass->format, &prefix, &major,
+      &version, &comp, qtmux->moov, qtmux->longest_chunk,
+      qtmux->fast_start_file != NULL);
+  ftyp = atom_ftyp_new (qtmux->context, major, version, comp);
+  if (comp)
+    g_list_free (comp);
+  if (prefix) {
+    if (p_prefix)
+      *p_prefix = prefix;
+    else
+      gst_buffer_unref (prefix);
+  }
+  *p_ftyp = ftyp;
+}
+
 static GstFlowReturn
 gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
-  guint32 major, version;
-  GList *comp;
-  GstBuffer *prefix;
+  GstBuffer *prefix = NULL;
 
   GST_DEBUG_OBJECT (qtmux, "Preparing to send ftyp atom");
 
   /* init and send context and ftyp based on current property state */
-  if (qtmux->ftyp)
+  if (qtmux->ftyp) {
     atom_ftyp_free (qtmux->ftyp);
-  gst_qt_mux_map_format_to_header (qtmux_klass->format, &prefix, &major,
-      &version, &comp, qtmux->moov, qtmux->longest_chunk,
-      qtmux->fast_start_file != NULL);
-  qtmux->ftyp = atom_ftyp_new (qtmux->context, major, version, comp);
-  if (comp)
-    g_list_free (comp);
+    qtmux->ftyp = NULL;
+  }
+  gst_qt_mux_prepare_ftyp (qtmux, &qtmux->ftyp, &prefix);
   if (prefix) {
     ret = gst_qt_mux_send_buffer (qtmux, prefix, &qtmux->header_size, FALSE);
     if (ret != GST_FLOW_OK)
@@ -1226,6 +1263,57 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   /* let downstream know we think in BYTES and expect to do seeking later on */
   gst_pad_push_event (qtmux->srcpad,
       gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+
+  /* initialize our moov recovery file */
+  GST_OBJECT_LOCK (qtmux);
+  if (qtmux->moov_recov_file_path) {
+    GST_DEBUG_OBJECT (qtmux, "Openning moov recovery file: %s",
+        qtmux->moov_recov_file_path);
+    qtmux->moov_recov_file = g_fopen (qtmux->moov_recov_file_path, "wb+");
+    if (qtmux->moov_recov_file == NULL) {
+      GST_WARNING_OBJECT (qtmux, "Failed to open moov recovery file in %s",
+          qtmux->moov_recov_file_path);
+    } else {
+      GSList *walk;
+      gboolean fail = FALSE;
+      AtomFTYP *ftyp = NULL;
+      GstBuffer *prefix = NULL;
+
+      gst_qt_mux_prepare_ftyp (qtmux, &ftyp, &prefix);
+
+      if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
+              qtmux->moov, qtmux->timescale,
+              g_slist_length (qtmux->collect->data))) {
+        GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file "
+            "headers");
+        fail = TRUE;
+      }
+
+      atom_ftyp_free (ftyp);
+      if (prefix)
+        gst_buffer_unref (prefix);
+
+      for (walk = qtmux->collect->data; walk && !fail;
+          walk = g_slist_next (walk)) {
+        GstCollectData *cdata = (GstCollectData *) walk->data;
+        GstQTPad *qpad = (GstQTPad *) cdata;
+        /* write info for each stream */
+        fail = atoms_recov_write_trak_info (qtmux->moov_recov_file, qpad->trak);
+        if (fail) {
+          GST_WARNING_OBJECT (qtmux, "Failed to write trak info to recovery "
+              "file");
+        }
+      }
+      if (fail) {
+        /* cleanup */
+        fclose (qtmux->moov_recov_file);
+        qtmux->moov_recov_file = NULL;
+        GST_WARNING_OBJECT (qtmux, "An error was detected while writing to "
+            "recover file, moov recovery won't work");
+      }
+    }
+  }
+  GST_OBJECT_UNLOCK (qtmux);
 
   /* 
    * send mdat header if already needed, and mark position for later update.
@@ -1606,6 +1694,16 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* now we go and register this buffer/sample all over */
   /* note that a new chunk is started each time (not fancy but works) */
+  if (qtmux->moov_recov_file) {
+    if (!atoms_recov_write_trak_samples (qtmux->moov_recov_file, pad->trak,
+            nsamples, scaled_duration, sample_size, chunk_offset, sync, do_pts,
+            pts_offset)) {
+      GST_WARNING_OBJECT (qtmux, "Failed to write sample information to "
+          "recovery file, disabling recovery");
+      fclose (qtmux->moov_recov_file);
+      qtmux->moov_recov_file = NULL;
+    }
+  }
   atom_trak_add_samples (pad->trak, nsamples, scaled_duration, sample_size,
       chunk_offset, sync, do_pts, pts_offset);
 
@@ -2451,6 +2549,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_FAST_START_TEMP_FILE:
       g_value_set_string (value, qtmux->fast_start_file_path);
       break;
+    case PROP_MOOV_RECOV_FILE:
+      g_value_set_string (value, qtmux->moov_recov_file_path);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2499,6 +2600,10 @@ gst_qt_mux_set_property (GObject * object,
         gst_qt_mux_generate_fast_start_file_path (qtmux);
       }
       break;
+    case PROP_MOOV_RECOV_FILE:
+      g_free (qtmux->moov_recov_file_path);
+      qtmux->moov_recov_file_path = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2544,7 +2649,6 @@ gst_qt_mux_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
 
 gboolean
 gst_qt_mux_register (GstPlugin * plugin)
@@ -2613,18 +2717,3 @@ gst_qt_mux_register (GstPlugin * plugin)
 
   return TRUE;
 }
-
-gboolean
-gst_qt_mux_plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_qt_mux_debug, "qtmux", 0, "QT Muxer");
-
-  return gst_qt_mux_register (plugin);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "qtmux",
-    "Quicktime Muxer plugin",
-    gst_qt_mux_plugin_init, VERSION, "LGPL", "gsoc2008 package",
-    "embedded.ufcg.edu.br")

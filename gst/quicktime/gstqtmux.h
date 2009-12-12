@@ -1,5 +1,5 @@
 /* Quicktime muxer plugin for GStreamer
- * Copyright (C) 2008 Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>
+ * Copyright (C) 2008-2010 Thiago Santos <thiagoss@embedded.ufcg.edu.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,6 +48,7 @@
 
 #include "fourcc.h"
 #include "atoms.h"
+#include "atomsrecovery.h"
 #include "gstqtmuxmap.h"
 
 G_BEGIN_DECLS
@@ -144,6 +145,9 @@ struct _GstQTMux
   /* fast start */
   FILE *fast_start_file;
 
+  /* moov recovery */
+  FILE *moov_recov_file;
+
   /* properties */
   guint32 timescale;
   AtomsTreeFlavor flavor;
@@ -151,6 +155,7 @@ struct _GstQTMux
   gboolean large_file;
   gboolean guess_pts;
   gchar *fast_start_file_path;
+  gchar *moov_recov_file_path;
 
   /* for collect pads event handling function */
   GstPadEventFunction collect_event;
@@ -178,6 +183,7 @@ typedef struct _GstQTMuxClassParams
 #define GST_QT_MUX_PARAMS_QDATA g_quark_from_static_string("qt-mux-params")
 
 GType gst_qt_mux_get_type (void);
+gboolean gst_qt_mux_register (GstPlugin * plugin);
 
 /* FIXME: ideally classification tag should be added and
  * registered in gstreamer core gsttaglist
