@@ -50,6 +50,8 @@
 
 #include <liboil/liboil.h>
 
+#include <gst/tag/tag.h>
+
 #include "gstmpegdefs.h"
 #include "gstmpegtsdemux.h"
 #include "flutspatinfo.h"
@@ -949,17 +951,25 @@ gst_mpegts_demux_send_tags_for_stream (GstMpegTSDemux * demux,
         gst_mpeg_descriptor_find (stream->ES_info, DESC_ISO_639_LANGUAGE);
     if (iso639_languages) {
       if (DESC_ISO_639_LANGUAGE_codes_n (iso639_languages)) {
+        const gchar *lc;
         gchar lang_code[4];
-        gchar *language_n = (gchar *)
+        gchar *language_n;
+
+        language_n = (gchar *)
             DESC_ISO_639_LANGUAGE_language_code_nth (iso639_languages, 0);
+
         lang_code[0] = language_n[0];
         lang_code[1] = language_n[1];
         lang_code[2] = language_n[2];
         lang_code[3] = 0;
+
         if (!list)
           list = gst_tag_list_new ();
+
+        /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
+        lc = gst_tag_get_language_code (lang_code);
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+            GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
       }
     }
   }
