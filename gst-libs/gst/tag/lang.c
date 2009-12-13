@@ -317,11 +317,12 @@ gst_tag_get_language_codes (void)
  * Returns the name of the language given an ISO-639 language code, such
  * as often found in a GST_TAG_LANGUAGE tag. The name will be translated
  * according to the current locale (if the library was built against the
- * iso-codes package), otherwise the English name will be returned.
+ * iso-codes package, otherwise the English name will be returned).
  *
  * Language codes are case-sensitive and expected to be lower case.
  *
- * Returns: language name in UTF-8 format. The returned string must not be
+ * Returns: language name in UTF-8 format, or NULL if @language_code could
+ *     not be mapped to a language name. The returned string must not be
  *     modified and does not need to freed; it will stay valid until the
  *     application is terminated.
  *
