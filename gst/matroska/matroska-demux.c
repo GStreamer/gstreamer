@@ -1804,10 +1804,15 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   }
 
   if (context->language) {
+    const gchar *lang;
+
     if (!list)
       list = gst_tag_list_new ();
+
+    /* Matroska contains ISO 639-2B codes, we want ISO 639-1 */
+    lang = gst_tag_get_language_code (context->language);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_LANGUAGE_CODE, context->language, NULL);
+        GST_TAG_LANGUAGE_CODE, (lang) ? lang : context->language, NULL);
   }
 
   if (caps == NULL) {

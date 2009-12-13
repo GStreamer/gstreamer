@@ -49,6 +49,7 @@
 #include <string.h>
 
 #include <gst/riff/riff-media.h>
+#include <gst/tag/tag.h>
 
 #include "matroska-mux.h"
 #include "matroska-ids.h"
@@ -577,8 +578,11 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
 
+  /* FIXME: aren't we either leaking events here or doing a wrong unref? */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
+    case GST_EVENT_TAG:{
+      gchar *lang = NULL;
+
       GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
 
@@ -586,14 +590,25 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       g_assert (collect_pad);
       context = collect_pad->track;
       g_assert (context);
-      /* FIXME ?
-       * strictly speaking, the incoming language code may only be 639-1, so not
-       * 639-2 according to matroska specs, but it will have to do for now */
-      gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &context->language);
+
+      /* Matroska wants ISO 639-2B code, taglist most likely contains 639-1 */
+      if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
+        const gchar *lang_code;
+
+        lang_code = gst_tag_get_language_code_iso_639_2B (lang);
+        if (lang_code) {
+          GST_INFO_OBJECT (pad, "Setting language to '%s'", lang_code);
+          context->language = g_strdup (lang_code);
+        } else {
+          GST_WARNING_OBJECT (pad, "Did not get language code for '%s'", lang);
+        }
+        g_free (lang);
+      }
 
       gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
       break;
+    }
     case GST_EVENT_NEWSEGMENT:
       /* We don't support NEWSEGMENT events */
       ret = FALSE;
