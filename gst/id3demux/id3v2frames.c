@@ -276,7 +276,12 @@ parse_comment_frame (ID3TagsWorking * work)
         g_ascii_isalpha (language[0]) &&
         g_ascii_isalpha (language[1]) &&
         (g_ascii_isalpha (language[2]) || language[2] == '\0')) {
-      s = g_strdup_printf ("%s[%s]=%s", description, language, text);
+      const gchar *lang_code;
+
+      /* prefer two-letter ISO 639-1 code if we have a mapping */
+      lang_code = gst_tag_get_language_code (language);
+      s = g_strdup_printf ("%s[%s]=%s", description,
+          (lang_code) ? lang_code : language, text);
     } else {
       s = g_strdup_printf ("%s=%s", description, text);
     }
