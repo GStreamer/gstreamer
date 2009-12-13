@@ -113,7 +113,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
   g_object_class_install_property (gobject_klass, ARG_TEXT_OVERLAY,
       g_param_spec_boolean ("text-overlay",
           "text-overlay",
-          "Wether to use text-overlay", TRUE,
+          "Whether to use text-overlay", TRUE,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_VIDEO_SINK,
