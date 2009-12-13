@@ -686,18 +686,37 @@ GST_START_TEST (test_language_utils)
 {
   gchar **lang_codes, **c;
 
+#define ASSERT_STRINGS_EQUAL fail_unless_equals_string
+
   lang_codes = gst_tag_get_language_codes ();
   fail_unless (lang_codes != NULL);
   fail_unless (*lang_codes != NULL);
 
   for (c = lang_codes; c != NULL && *c != NULL; ++c) {
-    const gchar *lang_name;
+    const gchar *lang_name, *c1, *c2t, *c2b;
 
     lang_name = gst_tag_get_language_name (*c);
-    GST_DEBUG ("[%s] %s\n", *c, GST_STR_NULL (lang_name));
-
     fail_unless (lang_name != NULL);
     fail_unless (g_utf8_validate (lang_name, -1, NULL));
+
+    c1 = gst_tag_get_language_code_iso_639_1 (*c);
+    fail_unless (c1 != NULL);
+    fail_unless (g_utf8_validate (c1, -1, NULL));
+
+    c2t = gst_tag_get_language_code_iso_639_2T (*c);
+    fail_unless (c2t != NULL);
+    fail_unless (g_utf8_validate (c2t, -1, NULL));
+
+    c2b = gst_tag_get_language_code_iso_639_2B (*c);
+    fail_unless (c2b != NULL);
+    fail_unless (g_utf8_validate (c2b, -1, NULL));
+
+    ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_1 (*c), *c);
+    ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_1 (c2t), *c);
+    ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_1 (c2b), *c);
+
+    GST_DEBUG ("[%s] %s %s %s : %s\n", *c, c1, c2t, c2b, lang_name);
+
   }
   g_strfreev (lang_codes);
 
@@ -710,8 +729,6 @@ GST_START_TEST (test_language_utils)
       gst_tag_get_language_name ("ger"));
   fail_unless (gst_tag_get_language_name ("de") !=
       gst_tag_get_language_name ("fr"));
-
-#define ASSERT_STRINGS_EQUAL fail_unless_equals_string
 
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code ("deu"), "de");
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code ("de"), "de");
