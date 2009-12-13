@@ -5415,10 +5415,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   /* add some language tag, if useful */
   if (stream->lang_code && strcmp (stream->lang_id, "unk") &&
       strcmp (stream->lang_id, "und")) {
+    const gchar *lang_code;
+
     if (!list)
       list = gst_tag_list_new ();
+
+    /* convert ISO 639-2 code to ISO 639-1 */
+    lang_code = gst_tag_get_language_code (stream->lang_id);
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_LANGUAGE_CODE, stream->lang_id, NULL);
+        GST_TAG_LANGUAGE_CODE, (lang_code) ? lang_code : stream->lang_id, NULL);
   }
 
   /* now we are ready to add the stream */
