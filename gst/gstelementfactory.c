@@ -405,8 +405,14 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   if (factory->type == 0)
     goto no_type;
 
-  /* create an instance of the element, cast so we don't assert on NULL */
-  element = GST_ELEMENT_CAST (g_object_newv (factory->type, 0, NULL));
+  /* create an instance of the element, cast so we don't assert on NULL
+   * also set name as early as we can
+   */
+  if (name)
+    element =
+        GST_ELEMENT_CAST (g_object_new (factory->type, "name", name, NULL));
+  else
+    element = GST_ELEMENT_CAST (g_object_newv (factory->type, 0, NULL));
   if (G_UNLIKELY (element == NULL))
     goto no_element;
 
@@ -419,9 +425,6 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   if (!g_atomic_pointer_compare_and_exchange (
           (gpointer) & oclass->elementfactory, NULL, factory))
     gst_object_unref (factory);
-
-  if (name)
-    gst_object_set_name (GST_OBJECT_CAST (element), name);
 
   GST_DEBUG ("created element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
