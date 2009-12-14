@@ -57,10 +57,20 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_GCC_ASM
+#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
+#define BUILD_X86_ASM
+#endif
+#endif
+
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
+
+#include <liboil/liboil.h>
+#include <liboil/liboilcpu.h>
+#include <liboil/liboilfunction.h>
 
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -159,6 +169,14 @@ void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
 void gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height);
 void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV);
+
+#ifdef BUILD_X86_ASM
+void gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_height);
+void gst_videomixer_fill_ayuv_color_mmx (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV);
+#endif
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
@@ -920,12 +938,25 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
     goto done;
 
   switch (mixer->fmt) {
-    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_AYUV:{
+#ifdef BUILD_X86_ASM
+      guint cpu_flags = oil_cpu_get_flags ();
+
+      mixer->blend =
+          (cpu_flags & OIL_IMPL_FLAG_MMX) ? gst_videomixer_blend_ayuv_ayuv_mmx :
+          gst_videomixer_blend_ayuv_ayuv;
+      mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
+      mixer->fill_color =
+          (cpu_flags & OIL_IMPL_FLAG_MMX) ? gst_videomixer_fill_ayuv_color_mmx :
+          gst_videomixer_fill_ayuv_color;
+#else
       mixer->blend = gst_videomixer_blend_ayuv_ayuv;
       mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
       mixer->fill_color = gst_videomixer_fill_ayuv_color;
+#endif
       ret = TRUE;
       break;
+    }
     case GST_VIDEO_FORMAT_I420:
       mixer->blend = gst_videomixer_blend_i420_i420;
       mixer->fill_checker = gst_videomixer_fill_i420_checker;
@@ -1622,6 +1653,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_videomixer_debug, "videomixer", 0,
       "video mixer");
+
+  oil_init ();
 
   return gst_element_register (plugin, "videomixer", GST_RANK_PRIMARY,
       GST_TYPE_VIDEO_MIXER);

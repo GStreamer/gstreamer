@@ -1,5 +1,6 @@
 /* 
  * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,8 +18,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
+
+#ifdef HAVE_GCC_ASM
+#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
+#define BUILD_X86_ASM
+#endif
+#endif
 
 #define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
         Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;           \
@@ -230,6 +240,93 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
 
 #undef BLEND_MODE
 
+#ifdef BUILD_X86_ASM
+void
+gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
+    gint src_width, gint src_height, gdouble src_alpha,
+    guint8 * dest, gint dest_width, gint dest_height)
+{
+  gint b_alpha;
+  gint i;
+  gint src_stride, dest_stride;
+  gint src_add, dest_add;
+
+  src_stride = src_width * 4;
+  dest_stride = dest_width * 4;
+
+  b_alpha = (gint) (src_alpha * 255);
+
+  /* adjust src pointers for negative sizes */
+  if (xpos < 0) {
+    src += -xpos * 4;
+    src_width -= -xpos;
+    xpos = 0;
+  }
+  if (ypos < 0) {
+    src += -ypos * src_stride;
+    src_height -= -ypos;
+    ypos = 0;
+  }
+  /* adjust width/height if the src is bigger than dest */
+  if (xpos + src_width > dest_width) {
+    src_width = dest_width - xpos;
+  }
+  if (ypos + src_height > dest_height) {
+    src_height = dest_height - ypos;
+  }
+
+  src_add = src_stride - (4 * src_width);
+  dest_add = dest_stride - (4 * src_width);
+
+  dest = dest + 4 * xpos + (ypos * dest_stride);
+
+  for (i = 0; i < src_height; i++) {
+      /* *INDENT-OFF* */
+      __asm__ __volatile__ (
+          "pxor       %%mm7 ,   %%mm7   \n\t" /* mm7 = 0 */
+          "pcmpeqd    %%mm6 ,   %%mm6   \n\t"   /* mm6 = 0xffff... */
+          "punpcklbw  %%mm7 ,   %%mm6   \n\t"   /* mm6 = 0x00ff00ff00ff... */
+          "pcmpeqd    %%mm5 ,   %%mm5   \n\t"   /* mm5 = 0xffff... */
+          "psrlq        $56 ,   %%mm5   \n\t"   /* mm5 = 0x0...0ff */
+          "xor        %%ecx ,   %%ecx   \n\t"   /* ecx = 0 */
+          "1:                           \n\t"
+          "movzxb      (%0) ,   %%eax   \n\t"   /* eax == source alpha */
+          "imul          %2 ,   %%eax   \n\t"   /* eax = source alpha * alpha */
+          "sar           $8 ,   %%eax   \n\t"   /* eax = (source alpha * alpha) / 256 */
+          "movd       %%eax ,   %%mm0   \n\t"   /* mm0 = apply alpha */
+          "movd        (%0) ,   %%mm2   \n\t"   /* mm2 = src */
+          "movd        (%1) ,   %%mm1   \n\t"   /* mm1 = dest */
+          "punpcklwd  %%mm0 ,   %%mm0   \n\t"
+          "punpckldq  %%mm0 ,   %%mm0   \n\t"   /* mm0 == 0a 0a 0a 0a */
+          "punpcklbw  %%mm7 ,   %%mm1   \n\t"   /* mm1 == dv du dy da */
+          "punpcklbw  %%mm7 ,   %%mm2   \n\t"   /* mm2 == sv su sy sa */
+          "pmullw     %%mm0 ,   %%mm2   \n\t"   /* mm2 == a * s */
+          "pandn      %%mm6 ,   %%mm0   \n\t"   /* mm0 == 255 - a */
+          "pmullw     %%mm0 ,   %%mm1   \n\t"   /* mm1 == (255 - a) * d */
+          "paddusw    %%mm2 ,   %%mm1   \n\t"   /* mm1 == s + d */
+          "psrlw         $8 ,   %%mm1   \n\t"
+          "packuswb   %%mm7 ,   %%mm1   \n\t"
+          "por        %%mm5 ,   %%mm1   \n\t"   /* mm1 = 0x.....ff */
+          "movd       %%mm1 ,    (%1)   \n\t"   /* dest = mm1 */
+          "add           $4 ,     %1    \n\t"
+          "add           $4 ,     %0    \n\t"
+          "add           $1 ,   %%ecx   \n\t"
+          "cmp        %%ecx ,      %3   \n\t"
+          "jne                     1b"
+          : /* no output */
+          :"r" (src), "r" (dest), "r" (b_alpha), "r" (src_width)
+          :"%eax", "%ecx", "memory"
+#ifdef __MMX__
+          , "mm0", "mm1", "mm2", "mm5", "mm6", "mm7"
+#endif
+      );
+      /* *INDENT-ON* */
+    src += src_add;
+    dest += dest_add;
+  }
+  __asm__ __volatile__ ("emms");
+}
+#endif
 
 /* fill a buffer with a checkerboard pattern */
 void
@@ -263,3 +360,42 @@ gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
     }
   }
 }
+
+#ifdef BUILD_X86_ASM
+void
+gst_videomixer_fill_ayuv_color_mmx (guint8 * dest, gint width, gint height,
+    gint colY, gint colU, gint colV)
+{
+  guint64 val;
+  guint nvals = width * height;
+
+  val = (((guint64) 0xff)) | (((guint64) colY) << 8) |
+      (((guint64) colU) << 16) | (((guint64) colV) << 24);
+  val = (val << 32) | val;
+
+  /* *INDENT-OFF* */
+  __asm__ __volatile__ (
+    "cmp      $2 ,    %2  \n\t"
+    "jb       2f          \n\t"
+    "movq     %4 , %%mm0  \n\t"
+    "1:                   \n\t"
+    "movq  %%mm0 ,  (%1)  \n\t"
+    "sub      $2 ,    %0  \n\t"
+    "add      $8 ,    %1  \n\t"
+    "cmp      $2 ,    %2  \n\t"
+    "jae      1b          \n\t"
+    "emms                 \n\t"
+    "2:                   \n\t"
+    : "=r" (nvals), "=r" (dest)
+    : "0" (nvals), "1" (dest), "r" (val)
+    : "memory"
+#ifdef __MMX__
+      , "mm0"
+#endif
+  );
+
+  /* *INDENT-ON* */
+  if (nvals)
+    GST_WRITE_UINT32_LE (&dest[-4], (guint32) (val & 0xffffffff));
+}
+#endif
