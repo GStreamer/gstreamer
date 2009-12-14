@@ -31,13 +31,17 @@ typedef struct _GstElementClass GstElementClass;
 /* gstmessage.h needs State */
 /**
  * GstState:
- * @GST_STATE_VOID_PENDING     : no pending state.
- * @GST_STATE_NULL             : the NULL state or initial state of an element
- * @GST_STATE_READY            : the element is ready to go to PAUSED
- * @GST_STATE_PAUSED           : the element is PAUSED
- * @GST_STATE_PLAYING          : the element is PLAYING
+ * @GST_STATE_VOID_PENDING: no pending state.
+ * @GST_STATE_NULL        : the NULL state or initial state of an element.
+ * @GST_STATE_READY       : the element is ready to go to PAUSED.
+ * @GST_STATE_PAUSED      : the element is PAUSED, it is ready to accept and
+ *                          process data. Sink elements however only accept one
+ *                          buffer and then block.
+ * @GST_STATE_PLAYING     : the element is PLAYING, the #GstClock is running and
+ *                          the data is flowing.
  *
- * The posible states an element can be in.
+ * The posible states an element can be in. States can be chaged using
+ * gst_element_set_state() and checked using gst_element_get_state().
  */
 typedef enum {
   GST_STATE_VOID_PENDING        = 0,
@@ -78,8 +82,8 @@ G_BEGIN_DECLS
  * @GST_STATE_CHANGE_SUCCESS   : the state change succeeded
  * @GST_STATE_CHANGE_ASYNC     : the state change will happen asynchronously
  * @GST_STATE_CHANGE_NO_PREROLL: the state change succeeded but the element
- *                               cannot produce data in PAUSED. This typically
- *                               happens with live sources.
+ *                               cannot produce data in %GST_STATE_PAUSED.
+ *                               This typically happens with live sources.
  *
  * The possible return values from a state change function. Only
  * @GST_STATE_CHANGE_FAILURE is a real failure.
@@ -173,15 +177,129 @@ typedef enum {
 
 /**
  * GstStateChange:
- * @GST_STATE_CHANGE_NULL_TO_READY    : state change from NULL to READY
- * @GST_STATE_CHANGE_READY_TO_PAUSED  : state change from READY to PAUSED
- * @GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING
- * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED
- * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY
- * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL
+ * @GST_STATE_CHANGE_NULL_TO_READY    : state change from NULL to READY.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     The element must check if the resources it needs are available. Device
+ *     sinks and -sources typically try to probe the device to constrain their
+ *     caps.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The element opens the device (in case feature need to be probed).
+ *   </para></listitem>
+ * </itemizedlist>
+ * @GST_STATE_CHANGE_READY_TO_PAUSED  : state change from READY to PAUSED.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     The element pads are activated in order to receive data in PAUSED.
+ *     Streaming threads are started.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Some elements might need to return ASYNC and complete the state change
+ *     when they have enough information. It is a requirement for sinks to
+ *     return ASYNC and complete the state change when they receive the first
+ *     buffer or EOS event (preroll). Sinks also block the dataflow when in
+ *     PAUSED.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     A pipeline resets the running_time to 0.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Live sources return NO_PREROLL and don't generate data.
+ *   </para></listitem>
+ * </itemizedlist>
+ * @GST_STATE_CHANGE_PAUSED_TO_PLAYING: state change from PAUSED to PLAYING.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Most elements ignore this state change.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The pipeline selects a clock and distributes this to all the children
+ *     before setting them to PLAYING. This means that it is only alowed to
+ *     synchronize on the clock in the PLAYING state.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The pipeline uses the clock and the running_time to calculate the
+ *     base_time. The base_time is distributed to all children when performing
+ *     the state change.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Sink elements stop blocking on the preroll buffer or event and start
+ *     rendering the data.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Sinks can post the EOS message in the PLAYING state. It is not allowed to
+ *     post EOS when not in the PLAYING state.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     While streaming in PAUSED or PLAYING elements can create and remove
+ *     sometimes pads.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Live sources start generating data and return SUCCESS.
+ *   </para></listitem>
+ * </itemizedlist>
+ * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Most elements ignore this state change.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The pipeline calculates the running_time based on the last selected clock
+ *     and the base_time. It stores this information to continue playback when
+ *     going back to the PLAYING state.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Sinks unblock any clock wait calls.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     When a sink does not have a pending buffer to play, it returns ASYNC from
+ *     this state change and completes the state change when it receives a new
+ *     buffer or an EOS event.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Any queued EOS messages are removed since they will be reposted when going
+ *     back to the PLAYING state. The EOS messages are queued in GstBins.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Live sources stop generating data and return NO_PREROLL.
+ *   </para></listitem>
+ * </itemizedlist>
+ * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Sinks unblock any waits in the preroll.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Elements unblock any waits on devices
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Chain or get_range functions return WRONG_STATE.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The element pads are deactivated so that streaming becomes impossible and
+ *     all streaming threads are stopped.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     The sink forgets all negotiated formats
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Elements remove all sometimes pads
+ *   </para></listitem>
+ * </itemizedlist>
+ * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL.
+ * <itemizedlist>
+ *   <listitem><para>
+ *     Elements close devices
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Elements reset any internal state.
+ *   </para></listitem>
+ * </itemizedlist>
  *
- * The different (interesting) state changes that are passed to the
- * state change functions of elements.
+ * These are the different state changes an element goes through.
+ * %GST_STATE_NULL &rArr; %GST_STATE_PLAYING is called an upwards state change
+ * and %GST_STATE_PLAYING &rArr; %GST_STATE_NULL a downwards state change.
  */
 typedef enum /*< flags=0 >*/
 {

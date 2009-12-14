@@ -56,8 +56,8 @@
  *
  * Each element has a state (see #GstState).  You can get and set the state
  * of an element with gst_element_get_state() and gst_element_set_state().
- * To get a string representation of a #GstState, use
- * gst_element_state_get_name().
+ * Setting a state triggers a #GstStateChange. To get a string representation
+ * of a #GstState, use gst_element_state_get_name().
  *
  * You can get and set a #GstClock on an element using gst_element_get_clock()
  * and gst_element_set_clock().
@@ -2063,8 +2063,8 @@ interrupted:
  *
  * This function returns %GST_STATE_CHANGE_NO_PREROLL if the element
  * successfully changed its state but is not able to provide data yet.
- * This mostly happens for live sources that only produce data in the PLAYING
- * state. While the state change return is equivalent to
+ * This mostly happens for live sources that only produce data in 
+ * %GST_STATE_PLAYING. While the state change return is equivalent to
  * %GST_STATE_CHANGE_SUCCESS, it is returned to the application to signal that
  * some sink elements might not be able to complete their state change because
  * an element is not producing data to complete the preroll. When setting the
