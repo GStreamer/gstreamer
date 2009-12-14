@@ -30,61 +30,62 @@ the following state changes are possible:
 
  NULL -> READY
    - The element must check if the resources it needs are available.
-     Device sinks and -sources typically try to probe the device to constain
+     Device sinks and -sources typically try to probe the device to constrain
      their caps.
    - The element opens the device, this is needed if the previous step requires
      the device to be opened.
 
  READY -> PAUSED
-   - the element pads are activated in order to receive data in PAUSED.
+   - The element pads are activated in order to receive data in PAUSED.
      Streaming threads are started.
-   - some elements might need to return ASYNC and complete the state change
+   - Some elements might need to return ASYNC and complete the state change
      when they have enough information. It is a requirement for sinks to
      return ASYNC and complete the state change when they receive the first
-     buffer or EOS event (prerol). Sinks also block the dataflow when in PAUSED.
-   - a pipeline resets the running_time to 0.
-   - live sources return NO_PREROLL and don't generate data.
+     buffer or EOS event (preroll). Sinks also block the dataflow when in PAUSED.
+   - A pipeline resets the running_time to 0.
+   - Live sources return NO_PREROLL and don't generate data.
  
  PAUSED -> PLAYING
-   - most elements ignore this state change.
+   - Most elements ignore this state change.
    - The pipeline selects a clock and distributes this to all the children
      before setting them to PLAYING. This means that it is only alowed to
      synchronize on the clock in the PLAYING state.
    - The pipeline uses the clock and the running_time to calculate the base_time.
      The base_time is distributed to all children when performing the state
      change.
-   - sink elements stop blocking on the preroll buffer or event and start
-     rendering the data. 
-   - sinks can post the EOS message in the PLAYING state. It is not allowed to
+   - Sink elements stop blocking on the preroll buffer or event and start
+     rendering the data.
+   - Sinks can post the EOS message in the PLAYING state. It is not allowed to
      post EOS when not in the PLAYING state.
-   - while streaming in PAUSED or PLAYING elements can create and remove 
-     dynamic pads.
-   - live sources start generating data and return SUCCESS.
+   - While streaming in PAUSED or PLAYING elements can create and remove
+     sometimes pads.
+   - Live sources start generating data and return SUCCESS.
 
  PLAYING -> PAUSED
-   - most elements ignore this state change.
+   - Most elements ignore this state change.
    - The pipeline calculates the running_time based on the last selected clock
      and the base_time. It stores this information to continue playback when
      going back to the PLAYING state.
-   - sinks unblock any clock wait calls.
-   - when a sink did not have a pending buffer to play, it returns ASYNC from 
-     this state change and complete the state change when they receive a new buffer
-     or an EOS event.
-   - any queued EOS messages are removed since they will be reposted when going
+   - Sinks unblock any clock wait calls.
+   - When a sink does not have a pending buffer to play, it returns ASYNC from 
+     this state change and completes the state change when it receives a new
+     buffer or an EOS event.
+   - Any queued EOS messages are removed since they will be reposted when going
      back to the PLAYING state. The EOS messages are queued in GstBins.
-   - live sources stop generating data and return NO_PREROLL.
+   - Live sources stop generating data and return NO_PREROLL.
 
  PAUSED -> READY
-   - sinks unblock any waits in the preroll.
-   - elements unblock any waits on devices
-   - chain or get_range functions return WRONG_STATE.
-   - the element pads are deactivated so that streaming becomes impossible and
-     all streaming threads are stopped. 
-   - the sink forgets all negotiated formats
+   - Sinks unblock any waits in the preroll.
+   - Elements unblock any waits on devices
+   - Chain or get_range functions return WRONG_STATE.
+   - The element pads are deactivated so that streaming becomes impossible and
+     all streaming threads are stopped.
+   - The sink forgets all negotiated formats
+   - Elements remove all sometimes pads
  
  READY -> NULL
-   - elements close devices
-   - element removes any dynamically created pads
+   - Elements close devices
+   - Elements reset any internal state.
 
 
 State variables
