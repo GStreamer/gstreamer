@@ -675,6 +675,10 @@ gst_object_set_name (GstObject * object, const gchar * name)
     GST_OBJECT_UNLOCK (object);
     result = gst_object_set_name_default (object);
   }
+  /* FIXME-0.11: this misses a g_object_notify (object, "name"); unless called
+   * from gst_object_set_property.
+   * Ideally remove such custom setters (or make it static).
+   */
   return result;
 
   /* error */
