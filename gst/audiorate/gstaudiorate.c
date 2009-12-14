@@ -519,6 +519,9 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (audiorate, "resync to offset %" G_GINT64_FORMAT, pos);
 
+    /* resyncing is a discont */
+    audiorate->discont = TRUE;
+
     audiorate->next_offset = pos;
     audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
         GST_SECOND, audiorate->rate);
