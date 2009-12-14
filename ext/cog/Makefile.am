@@ -38,7 +38,7 @@ libgstcog_la_SOURCES = \
 noinst_PROGRAMS = generate_tables
 generate_tables_SOURCES = generate_tables.c gstcms.c
 generate_tables_CFLAGS = $(GST_CFLAGS)
-generate_tables_LDADD = $(GST_LIBS)
+generate_tables_LDADD = $(GST_LIBS) $(LIBM)
 
 nodist_libgstcog_la_SOURCES = cogorc.c cogorc.h
 BUILT_SOURCES = cogorc.c cogorc.h
