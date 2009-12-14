@@ -863,6 +863,9 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       ffmpegenc->adapter_ts = timestamp;
       ffmpegenc->adapter_consumed = 0;
     } else {
+      GstClockTime upstream_time;
+      guint64 bytes;
+
       /* use timestamp at head of the adapter */
       GST_LOG_OBJECT (ffmpegenc, "taking adapter timestamp %" GST_TIME_FORMAT,
           GST_TIME_ARGS (ffmpegenc->adapter_ts));
@@ -870,6 +873,29 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       timestamp +=
           gst_util_uint64_scale (ffmpegenc->adapter_consumed, GST_SECOND,
           ctx->sample_rate);
+      /* check with upstream timestamps, if too much deviation,
+       * forego some timestamp perfection in favour of upstream syncing
+       * (particularly in case these do not happen to come in multiple
+       * of frame size) */
+      upstream_time = gst_adapter_prev_timestamp (ffmpegenc->adapter, &bytes);
+      if (GST_CLOCK_TIME_IS_VALID (upstream_time)) {
+        GstClockTimeDiff diff;
+
+        upstream_time +=
+            gst_util_uint64_scale (bytes, GST_SECOND, ctx->sample_rate);
+        diff = upstream_time - timestamp;
+        /* relaxed difference, rather than half a sample or so ... */
+        if (diff > GST_SECOND / 10 || diff < -GST_SECOND / 10) {
+          GST_DEBUG_OBJECT (ffmpegenc, "adapter timestamp drifting, "
+              "taking upstream timestamp %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (upstream_time));
+          timestamp = upstream_time;
+          ffmpegenc->adapter_ts = upstream_time -
+              gst_util_uint64_scale (bytes, GST_SECOND, ctx->sample_rate);
+          ffmpegenc->adapter_consumed = bytes;
+          ffmpegenc->discont = TRUE;
+        }
+      }
     }
 
     GST_LOG_OBJECT (ffmpegenc, "pushing buffer in adapter");
