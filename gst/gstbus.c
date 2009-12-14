@@ -25,7 +25,8 @@
  * @see_also: #GstMessage, #GstElement
  *
  * The #GstBus is an object responsible for delivering #GstMessage packets in
- * a first-in first-out way from the streaming threads to the application.
+ * a first-in first-out way from the streaming threads (see #GstTask) to the
+ * application.
  *
  * Since the application typically only wants to deal with delivery of these
  * messages from one thread, the GstBus will marshall the messages between

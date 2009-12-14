@@ -56,6 +56,10 @@
  * After creating a #GstTask, use gst_object_unref() to free its resources. This can
  * only be done it the task is not running anymore.
  *
+ * Task functions can send a #GstMessage to send out-of-band data to the
+ * application. The application can receive messages from the #GstBus in its
+ * mainloop.
+ *
  * Last reviewed on 2006-02-13 (0.10.4)
  */
 
