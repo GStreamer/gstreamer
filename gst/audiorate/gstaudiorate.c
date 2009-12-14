@@ -294,6 +294,26 @@ gst_audio_rate_init (GstAudioRate * audiorate)
   audiorate->silent = DEFAULT_SILENT;
 }
 
+static void
+gst_audio_rate_fill_to_time (GstAudioRate * audiorate, GstClockTime time)
+{
+  GstBuffer *buf;
+
+  GST_DEBUG_OBJECT (audiorate, "next_ts: %" GST_TIME_FORMAT
+      ", filling to %" GST_TIME_FORMAT, GST_TIME_ARGS (audiorate->next_ts),
+      GST_TIME_ARGS (time));
+
+  if (!GST_CLOCK_TIME_IS_VALID (time) ||
+      !GST_CLOCK_TIME_IS_VALID (audiorate->next_ts))
+    return;
+
+  /* feed an empty buffer to chain with the given timestamp,
+   * it will take care of filling */
+  buf = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buf) = time;
+  gst_audio_rate_chain (audiorate->sinkpad, buf);
+}
+
 static gboolean
 gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -319,21 +339,16 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
           &start, &stop, &time);
 
       GST_DEBUG_OBJECT (audiorate, "handle NEWSEGMENT");
-      /* FIXME:
-       * - sparse stream support. For this, the update flag is TRUE and the
-       *   start/time positions are updated, meaning that time progressed by
-       *   time - old_time amount and we need to fill that gap with empty
-       *   samples.
-       * - fill the current segment if it has a valid stop position. This
-       *   happens when the update flag is FALSE. With the segment helper we can
-       *   calculate the accumulated time and compare this to the next_offset.
-       */
+      /* FIXME: bad things will likely happen if rate < 0 ... */
       if (!update) {
         /* a new segment starts. We need to figure out what will be the next
          * sample offset. We mark the offsets as invalid so that the _chain
          * function will perform this calculation. */
+        gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.stop);
         audiorate->next_offset = -1;
         audiorate->next_ts = -1;
+      } else {
+        gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.start);
       }
 
       /* we accept all formats */
@@ -632,6 +647,9 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
         g_object_notify (G_OBJECT (audiorate), "drop");
     }
   }
+
+  if (GST_BUFFER_SIZE (buf) == 0)
+    goto beach;
 
   /* Now calculate parameters for whichever buffer (either the original
    * or truncated one) we're pushing. */
