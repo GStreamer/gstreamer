@@ -205,13 +205,6 @@ mergebw t4, s3, t2
 mergewl d1, t3, t4
 
 
-.function orc_memcpy
-.dest 1 d1 void
-.source 1 s1 void
-
-copyb d1, s1
-
-
 .function orc_addc_convert_u8_s16
 .dest 1 d1
 .source 2 s1 int16_t
