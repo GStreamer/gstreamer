@@ -585,8 +585,9 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, gsize size,
 
   g_return_val_if_fail (offset >= 0, NULL);
 
-  GST_LOG_OBJECT (src, "mapping region %08" G_GOFFSET_MODIFIER "x+%08lx "
-      "from file into memory", (goffset) offset, (gulong) size);
+  /* FIXME ? use goffset and friends if we require glib >= 2.20 */
+  GST_LOG_OBJECT (src, "mapping region %08" G_GINT64_MODIFIER "x+%08lx "
+      "from file into memory", (gint64) offset, (gulong) size);
 
   mmapregion = mmap (NULL, size, PROT_READ, MAP_SHARED, src->fd, offset);
 
