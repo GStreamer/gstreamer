@@ -1,3 +1,5 @@
+noinst_HEADERS = gstaudiorate.h
+
 plugin_LTLIBRARIES = libgstaudiorate.la
 
 libgstaudiorate_la_SOURCES = gstaudiorate.c

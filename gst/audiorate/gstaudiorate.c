@@ -24,57 +24,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <gst/gst.h>
-#include <gst/audio/audio.h>
+#include "gstaudiorate.h"
 
 #define GST_CAT_DEFAULT audio_rate_debug
 GST_DEBUG_CATEGORY_STATIC (audio_rate_debug);
-
-#define GST_TYPE_AUDIO_RATE \
-  (gst_audio_rate_get_type())
-#define GST_AUDIO_RATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_RATE,GstAudioRate))
-#define GST_AUDIO_RATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_RATE,GstAudioRate))
-#define GST_IS_AUDIO_RATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_RATE))
-#define GST_IS_AUDIO_RATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_RATE))
-
-typedef struct _GstAudioRate GstAudioRate;
-typedef struct _GstAudioRateClass GstAudioRateClass;
-
-struct _GstAudioRate
-{
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
-
-  /* audio format */
-  gint bytes_per_sample;
-  gint rate;
-
-  /* stats */
-  guint64 in, out, add, drop;
-  gboolean silent;
-
-  /* audio state */
-  guint64 next_offset;
-  guint64 next_ts;
-
-  gboolean discont;
-
-  gboolean new_segment;
-  /* we accept all formats on the sink */
-  GstSegment sink_segment;
-  /* we output TIME format on the src */
-  GstSegment src_segment;
-};
-
-struct _GstAudioRateClass
-{
-  GstElementClass parent_class;
-};
 
 /* elementfactory information */
 static const GstElementDetails audio_rate_details =
