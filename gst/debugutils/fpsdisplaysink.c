@@ -33,8 +33,9 @@
  */
 /* FIXME:
  * - can we avoid plugging the textoverlay?
- * - we should use autovideosink as we are RANK_NONE and would not get plugged
+ * - We are using autovideosink now, but then sync doesn't work
  *   - but then we have to lookup the realsink to be able to set sync
+ *   - or we could make autovideosink proxy the property
  * - gst-seek 15 "videotestsrc ! fpsdisplaysink" dies when closing gst-seek
  * - if we make ourself RANK_PRIMARY+10 autovideosink asserts
  *
@@ -103,7 +104,8 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
 
   g_object_class_install_property (gobject_klass, ARG_SYNC,
       g_param_spec_boolean ("sync",
-          "Sync", "Sync on the clock", TRUE,
+          "Sync", "Sync on the clock (if the internally used sink doesn't "
+          "have this property it will be ignored", TRUE,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_TEXT_OVERLAY,
@@ -170,9 +172,15 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 }
 
 static void
-update_sub_sink (GstElement * sink, gpointer data)
+update_sink_sync (GstElement * sink, gpointer data)
 {
-  g_object_set (sink, "sync", *((gboolean *) data), NULL);
+  /* Some sinks (like autovideosink) don't have the sync property so
+   * we check it exists before setting it to avoid a warning at
+   * runtime. */
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (sink), "sync"))
+    g_object_set (sink, "sync", *((gboolean *) data), NULL);
+  else
+    GST_WARNING ("Internal sink doesn't have sync property");
 }
 
 static void
@@ -202,11 +210,11 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 
   if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
     iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
-    gst_iterator_foreach (iterator, (GFunc) update_sub_sink,
+    gst_iterator_foreach (iterator, (GFunc) update_sink_sync,
         (void *) &self->sync);
     gst_iterator_free (iterator);
   } else
-    g_object_set (self->video_sink, "sync", self->sync, NULL);
+    update_sink_sync (self->video_sink, (void *) &self->sync);
 
   /* take a ref before bin takes the ownership */
   gst_object_ref (self->video_sink);
@@ -394,11 +402,11 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
       self->sync = g_value_get_boolean (value);
       if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
         iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
-        gst_iterator_foreach (iterator, (GFunc) update_sub_sink,
+        gst_iterator_foreach (iterator, (GFunc) update_sink_sync,
             (void *) &self->sync);
         gst_iterator_free (iterator);
       } else
-        g_object_set (self->video_sink, "sync", self->sync, NULL);
+        update_sink_sync (self->video_sink, (void *) &self->sync);
       break;
     case ARG_TEXT_OVERLAY:
       self->use_text_overlay = g_value_get_boolean (value);
