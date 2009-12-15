@@ -107,6 +107,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/gdp/gstgdppay.h \
 	$(top_srcdir)/gst/playback/gstplay-enum.h \
 	$(top_srcdir)/gst/playback/gstsubtitleoverlay.h \
+	$(top_srcdir)/gst/audiorate/gstaudiorate.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpclientsrc.h \

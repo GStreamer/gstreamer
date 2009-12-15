@@ -154,6 +154,20 @@ audio_convert_prepare_context
 </SECTION>
 
 <SECTION>
+<FILE>element-audiorate</FILE>
+<TITLE>audiorate</TITLE>
+GstAudioRate
+<SUBSECTION Standard>
+GST_AUDIO_RATE
+GST_IS_AUDIO_RATE
+GST_TYPE_AUDIO_RATE
+gst_audio_rate_get_type
+GST_AUDIO_RATE_CLASS
+GST_IS_AUDIO_RATE_CLASS
+GstAudioRateClass
+</SECTION>
+
+<SECTION>
 <FILE>element-audioresample</FILE>
 <TITLE>audioresample</TITLE>
 GstAudioResample

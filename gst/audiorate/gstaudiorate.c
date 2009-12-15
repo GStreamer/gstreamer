@@ -17,6 +17,38 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-audiorate
+ * @see_also: #GstVideoRate
+ *
+ * This element takes an incoming stream of timestamped raw audio frames and
+ * produces a perfect stream by inserting or dropping samples as needed.
+ *
+ * This operation may be of use to link to elements that require or otherwise
+ * implicitly assume a perfect stream as they do not store timestamps,
+ * but derive this by some means (e.g. bitrate for some AVI cases).
+ *
+ * The properties #GstAudioRate:in, #GstAudioRate:out, #GstAudioRate:add
+ * and #GstAudioRate:drop can be read to obtain information about number of
+ * input samples, output samples, dropped samples (i.e. the number of unused input
+ * samples) and inserted samples (i.e. the number of samples added to stream).
+ *
+ * When the #GstAudioRate:silent property is set to FALSE, a GObject property
+ * notification will be emitted whenever one of the #GstAudioRate:add or
+ * #GstAudioRate:drop values changes.
+ * This can potentially cause performance degradation.
+ * Note that property notification will happen from the streaming thread, so
+ * applications should be prepared for this.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v alsasrc ! audiorate ! wavenc ! filesink location=alsa.wav
+ * ]| Capture audio from an ALSA device, and turn it into a perfect stream
+ * for saving in a raw audio file.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
