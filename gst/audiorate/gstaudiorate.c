@@ -475,7 +475,7 @@ static GstFlowReturn
 gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudioRate *audiorate;
-  GstClockTime in_time, run_time;
+  GstClockTime in_time;
   guint64 in_offset, in_offset_end, in_samples;
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -520,20 +520,16 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   in_size = GST_BUFFER_SIZE (buf);
   in_samples = in_size / audiorate->bytes_per_sample;
 
-  /* Figure out the total accumulated segment time. */
-  run_time = in_time + audiorate->src_segment.accum;
-
   /* calculate the buffer offset */
-  in_offset = gst_util_uint64_scale_int_round (run_time, audiorate->rate,
+  in_offset = gst_util_uint64_scale_int_round (in_time, audiorate->rate,
       GST_SECOND);
   in_offset_end = in_offset + in_samples;
 
   GST_LOG_OBJECT (audiorate,
-      "in_time:%" GST_TIME_FORMAT ", run_time:%" GST_TIME_FORMAT
-      ", in_duration:%" GST_TIME_FORMAT
+      "in_time:%" GST_TIME_FORMAT ", in_duration:%" GST_TIME_FORMAT
       ", in_size:%u, in_offset:%" G_GUINT64_FORMAT ", in_offset_end:%"
       G_GUINT64_FORMAT ", ->next_offset:%" G_GUINT64_FORMAT,
-      GST_TIME_ARGS (in_time), GST_TIME_ARGS (run_time),
+      GST_TIME_ARGS (in_time),
       GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (in_samples, audiorate->rate)),
       in_size, in_offset, in_offset_end, audiorate->next_offset);
 
