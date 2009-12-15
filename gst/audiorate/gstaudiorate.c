@@ -629,6 +629,11 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_set_caps (buf, GST_PAD_CAPS (audiorate->srcpad));
 
       audiorate->drop += truncsamples;
+      GST_DEBUG_OBJECT (audiorate, "truncating %" G_GUINT64_FORMAT " samples",
+          truncsamples);
+
+      if (!audiorate->silent)
+        g_object_notify (G_OBJECT (audiorate), "drop");
     }
   }
 
