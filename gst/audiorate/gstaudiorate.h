@@ -57,6 +57,7 @@ struct _GstAudioRate
   /* stats */
   guint64 in, out, add, drop;
   gboolean silent;
+  guint64 tolerance;
 
   /* audio state */
   guint64 next_offset;

@@ -30,8 +30,9 @@
  *
  * The properties #GstAudioRate:in, #GstAudioRate:out, #GstAudioRate:add
  * and #GstAudioRate:drop can be read to obtain information about number of
- * input samples, output samples, dropped samples (i.e. the number of unused input
- * samples) and inserted samples (i.e. the number of samples added to stream).
+ * input samples, output samples, dropped samples (i.e. the number of unused
+ * input samples) and inserted samples (i.e. the number of samples added to
+ * stream).
  *
  * When the #GstAudioRate:silent property is set to FALSE, a GObject property
  * notification will be emitted whenever one of the #GstAudioRate:add or
@@ -39,6 +40,13 @@
  * This can potentially cause performance degradation.
  * Note that property notification will happen from the streaming thread, so
  * applications should be prepared for this.
+ *
+ * If the #GstAudioRate:tolerance property is non-zero, and an incoming buffer's
+ * timestamp deviates less than the property indicates from what would make a
+ * 'perfect time', then no samples will be added or dropped.
+ * Note that the output is still guaranteed to be a perfect stream, which means
+ * that the incoming data is then simply shifted (by less than the indicated
+ * tolerance) to a perfect time.
  *
  * <refsect2>
  * <title>Example pipelines</title>
@@ -75,7 +83,8 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SILENT  TRUE
+#define DEFAULT_SILENT     TRUE
+#define DEFAULT_TOLERANCE  0
 
 enum
 {
@@ -85,6 +94,7 @@ enum
   ARG_ADD,
   ARG_DROP,
   ARG_SILENT,
+  ARG_TOLERANCE,
   /* FILL ME */
 };
 
@@ -189,6 +199,11 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, ARG_TOLERANCE,
+      g_param_spec_uint64 ("tolerance", "tolerance",
+          "Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns)",
+          0, G_MAXUINT64, DEFAULT_TOLERANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_audio_rate_change_state;
 }
@@ -277,6 +292,7 @@ gst_audio_rate_init (GstAudioRate * audiorate)
   audiorate->drop = 0;
   audiorate->add = 0;
   audiorate->silent = DEFAULT_SILENT;
+  audiorate->tolerance = DEFAULT_TOLERANCE;
 }
 
 static void
@@ -479,6 +495,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   guint64 in_offset, in_offset_end, in_samples;
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTimeDiff diff;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
@@ -535,6 +552,17 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_ARGS (in_time),
       GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (in_samples, audiorate->rate)),
       in_size, in_offset, in_offset_end, audiorate->next_offset);
+
+  diff = in_time - audiorate->next_ts;
+  if (diff <= (GstClockTimeDiff) audiorate->tolerance &&
+      diff >= (GstClockTimeDiff) - audiorate->tolerance) {
+    /* buffer time close enough to expected time,
+     * so produce a perfect stream by simply 'shifting'
+     * it to next ts and offset and sending */
+    GST_LOG_OBJECT (audiorate, "within tolerance %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (audiorate->tolerance));
+    goto send;
+  }
 
   /* do we need to insert samples */
   if (in_offset > audiorate->next_offset) {
@@ -639,6 +667,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   if (GST_BUFFER_SIZE (buf) == 0)
     goto beach;
 
+send:
   /* Now calculate parameters for whichever buffer (either the original
    * or truncated one) we're pushing. */
   GST_BUFFER_OFFSET (buf) = audiorate->next_offset;
@@ -696,6 +725,9 @@ gst_audio_rate_set_property (GObject * object,
     case ARG_SILENT:
       audiorate->silent = g_value_get_boolean (value);
       break;
+    case ARG_TOLERANCE:
+      audiorate->tolerance = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -723,6 +755,9 @@ gst_audio_rate_get_property (GObject * object,
       break;
     case ARG_SILENT:
       g_value_set_boolean (value, audiorate->silent);
+      break;
+    case ARG_TOLERANCE:
+      g_value_set_uint64 (value, audiorate->tolerance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
