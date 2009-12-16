@@ -155,10 +155,13 @@
  *      which can be provided to GstBaseParse to enable it to cater for
  *      buffer time metadata (which will be taken from upstream as much as possible).
  *      Internally keeping track of frames and respective
- *      sizes that have been pushed provides GstBaseParse which a bytes per frame
+ *      sizes that have been pushed provides GstBaseParse with a bytes per frame
  *      rate.  A default @convert (used if not overriden) will then use these
  *      rates to perform obvious conversions.  These rates are also used to update
  *      (estimated) duration at regular frame intervals.
+ *      If no (fixed) frames per second rate applies, default conversion will be
+ *      based on (estimated) bytes per second (but no default buffer metadata
+ *      can be provided in this case).
  *   </para></listitem>
  * </itemizedlist>
  *
@@ -207,6 +210,7 @@ struct _GstBaseParsePrivate
 
   gint64 duration;
   GstFormat duration_fmt;
+  gint64 estimated_duration;
 
   guint min_frame_size;
   gboolean passthrough;
@@ -224,6 +228,7 @@ struct _GstBaseParsePrivate
 
   guint64 framecount;
   guint64 bytecount;
+  guint64 acc_duration;
 
   GList *pending_events;
 
@@ -767,14 +772,32 @@ gst_base_parse_convert (GstBaseParse * parse,
     gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
   gboolean ret = FALSE;
+  guint64 bytes, duration;
 
-  if (src_format == dest_format) {
+  if (G_UNLIKELY (src_format == dest_format)) {
     *dest_value = src_value;
     return TRUE;
   }
 
-  /* need data and frame info (having num means den also ok) */
-  if (!parse->priv->framecount || !parse->priv->fps_num)
+  if (G_UNLIKELY (src_value == -1)) {
+    *dest_value = -1;
+    return TRUE;
+  }
+
+  /* need at least some frames */
+  if (!parse->priv->framecount)
+    return FALSE;
+
+  /* either frame info (having num means den also ok) or use average bitrate */
+  if (parse->priv->fps_num) {
+    duration = parse->priv->framecount * parse->priv->fps_den * 1000;
+    bytes = parse->priv->bytecount * parse->priv->fps_num;
+  } else {
+    duration = parse->priv->acc_duration / GST_MSECOND;
+    bytes = parse->priv->bytecount;
+  }
+
+  if (G_UNLIKELY (!duration || !bytes))
     return FALSE;
 
   if (src_format == GST_FORMAT_BYTES) {
@@ -782,9 +805,7 @@ gst_base_parse_convert (GstBaseParse * parse,
       /* BYTES -> TIME conversion */
       GST_DEBUG_OBJECT (parse, "converting bytes -> time");
 
-      *dest_value = gst_util_uint64_scale (src_value,
-          parse->priv->framecount * parse->priv->fps_den * 1000,
-          parse->priv->bytecount * parse->priv->fps_num);
+      *dest_value = gst_util_uint64_scale (src_value, duration, bytes);
       *dest_value *= GST_MSECOND;
       GST_DEBUG_OBJECT (parse, "conversion result: %" G_GINT64_FORMAT " ms",
           *dest_value / GST_MSECOND);
@@ -793,20 +814,21 @@ gst_base_parse_convert (GstBaseParse * parse,
   } else if (src_format == GST_FORMAT_TIME) {
     GST_DEBUG_OBJECT (parse, "converting time -> bytes");
     if (dest_format == GST_FORMAT_BYTES) {
-      *dest_value = gst_util_uint64_scale (src_value / GST_MSECOND,
-          parse->priv->fps_num * parse->priv->bytecount,
-          parse->priv->fps_den * 1000 * parse->priv->framecount);
+      *dest_value = gst_util_uint64_scale (src_value / GST_MSECOND, bytes,
+          duration);
       GST_DEBUG_OBJECT (parse,
           "time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
           src_value / GST_MSECOND, *dest_value);
       ret = TRUE;
     }
   } else if (src_format == GST_FORMAT_DEFAULT) {
+    /* DEFAULT == frame-based */
     if (dest_format == GST_FORMAT_TIME) {
-      /* DEFAULT == frame-based */
-      *dest_value = gst_util_uint64_scale (src_value,
-          GST_SECOND * parse->priv->fps_den, parse->priv->fps_num);
-      ret = TRUE;
+      if (parse->priv->fps_den) {
+        *dest_value = gst_util_uint64_scale (src_value,
+            GST_SECOND * parse->priv->fps_den, parse->priv->fps_num);
+        ret = TRUE;
+      }
     } else if (dest_format == GST_FORMAT_BYTES) {
     }
   }
@@ -824,32 +846,26 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
 {
   GstPad *peer;
   GstBaseParse *parse;
+  GstBaseParseClass *klass;
 
   parse = GST_BASE_PARSE (aacparse);
+  klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  /* need frame info */
-  if (!parse->priv->fps_den || !parse->priv->fps_num) {
+  /* must be able to convert */
+  if (!klass->convert)
     return;
-  }
-
-  /* Cannot estimate duration. No data has been passed to us yet */
-  if (!parse->priv->framecount || !parse->priv->bytecount) {
-    return;
-  }
 
   peer = gst_pad_get_peer (parse->sinkpad);
   if (peer) {
     GstFormat pformat = GST_FORMAT_BYTES;
     gboolean qres = FALSE;
-    gint64 ptot;
+    gint64 ptot, dest_value;
 
     qres = gst_pad_query_duration (peer, &pformat, &ptot);
     gst_object_unref (GST_OBJECT (peer));
     if (qres) {
-      gst_base_parse_set_duration (parse, GST_FORMAT_TIME,
-          gst_util_uint64_scale (ptot,
-              parse->priv->framecount * parse->priv->fps_den * GST_SECOND,
-              parse->priv->bytecount * parse->priv->fps_num));
+      if (klass->convert (parse, pformat, ptot, GST_FORMAT_TIME, &dest_value))
+        parse->priv->estimated_duration = dest_value;
     }
   }
 }
@@ -942,8 +958,12 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* update stats */
   parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
-  parse->priv->framecount +=
-      !GST_BUFFER_FLAG_IS_SET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME)) {
+    parse->priv->framecount++;
+    if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+      parse->priv->acc_duration += GST_BUFFER_DURATION (buffer);
+    }
+  }
   GST_BUFFER_FLAG_UNSET (buffer, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
   if (parse->priv->update_interval &&
       (parse->priv->framecount % parse->priv->update_interval) == 0)
@@ -1451,6 +1471,8 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
     parse->priv->framecount = 0;
     parse->priv->bytecount = 0;
+    parse->priv->acc_duration = 0;
+    parse->priv->estimated_duration = -1;
     parse->priv->next_ts = 0;
     parse->priv->passthrough = FALSE;
 
@@ -1812,6 +1834,9 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       } else if (parse->priv->duration != -1) {
         res = klass->convert (parse, parse->priv->duration_fmt,
             parse->priv->duration, format, &dest_value);
+      } else if (parse->priv->estimated_duration != -1) {
+        dest_value = parse->priv->estimated_duration;
+        res = TRUE;
       }
 
       g_mutex_unlock (parse->parse_lock);
