@@ -33,9 +33,6 @@
  */
 /* FIXME:
  * - can we avoid plugging the textoverlay?
- * - We are using autovideosink now, but then sync doesn't work
- *   - but then we have to lookup the realsink to be able to set sync
- *   - or we could make autovideosink proxy the property
  * - gst-seek 15 "videotestsrc ! fpsdisplaysink" dies when closing gst-seek
  * - if we make ourself RANK_PRIMARY+10 autovideosink asserts
  *
@@ -172,7 +169,7 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 }
 
 static void
-update_sink_sync (GstElement * sink, gpointer data)
+update_sub_sync (GstElement * sink, gpointer data)
 {
   /* Some sinks (like autovideosink) don't have the sync property so
    * we check it exists before setting it to avoid a warning at
@@ -184,10 +181,27 @@ update_sink_sync (GstElement * sink, gpointer data)
 }
 
 static void
+fps_display_sink_update_sink_sync (GstFPSDisplaySink * self)
+{
+  GstIterator *iterator;
+
+  if (self->video_sink == NULL)
+    return;
+
+  if (GST_IS_BIN (self->video_sink)) {
+    iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
+    gst_iterator_foreach (iterator, (GFunc) update_sub_sync,
+        (void *) &self->sync);
+    gst_iterator_free (iterator);
+  } else
+    update_sub_sync (self->video_sink, (void *) &self->sync);
+
+}
+
+static void
 update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 {
   GstPad *sink_pad;
-  GstIterator *iterator;
 
   if (self->video_sink) {
 
@@ -208,13 +222,7 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
   /* create child elements */
   self->video_sink = video_sink;
 
-  if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
-    iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
-    gst_iterator_foreach (iterator, (GFunc) update_sink_sync,
-        (void *) &self->sync);
-    gst_iterator_free (iterator);
-  } else
-    update_sink_sync (self->video_sink, (void *) &self->sync);
+  fps_display_sink_update_sink_sync (self);
 
   /* take a ref before bin takes the ownership */
   gst_object_ref (self->video_sink);
@@ -395,18 +403,11 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
-  GstIterator *iterator;
 
   switch (prop_id) {
     case ARG_SYNC:
       self->sync = g_value_get_boolean (value);
-      if (G_OBJECT_TYPE (self->video_sink) == GST_TYPE_BIN) {
-        iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
-        gst_iterator_foreach (iterator, (GFunc) update_sink_sync,
-            (void *) &self->sync);
-        gst_iterator_free (iterator);
-      } else
-        update_sink_sync (self->video_sink, (void *) &self->sync);
+      fps_display_sink_update_sink_sync (self);
       break;
     case ARG_TEXT_OVERLAY:
       self->use_text_overlay = g_value_get_boolean (value);
@@ -461,6 +462,12 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       fps_display_sink_start (self);
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* reinforce our sync to children, as they might have changed
+       * internally */
+      fps_display_sink_update_sink_sync (self);
       break;
     default:
       break;
