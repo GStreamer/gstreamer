@@ -2965,8 +2965,10 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
   for (tmp = endpads; tmp; tmp = tmp->next) {
     GstDecodePad *dpad = tmp->data;
 
-    if (dpad->exposed)
+    if (dpad->exposed) {
+      GST_DEBUG_OBJECT (dpad, "blocking exposed pad");
       gst_decode_pad_set_blocked (dpad, TRUE);
+    }
   }
 
   /* re-order pads : video, then audio, then others */
@@ -3155,6 +3157,9 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
   GstPad *opad;
 
   DYN_LOCK (dbin);
+
+  GST_DEBUG_OBJECT (dpad, "blocking pad: %d", blocked);
+
   opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
   if (!opad)
     goto out;
