@@ -39,6 +39,9 @@ G_BEGIN_DECLS
 #define GST_EBML_READ_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EBML_READ, GstEbmlReadClass))
 
+/* custom flow return code */
+#define  GST_FLOW_END  GST_FLOW_CUSTOM_SUCCESS
+
 typedef struct _GstEbmlLevel {
   guint64 start;
   guint64 length;
@@ -48,6 +51,7 @@ typedef struct _GstEbmlRead {
   GstElement parent;
 
   GstBuffer *cached_buffer;
+  gboolean push_cache;
 
   GstPad *sinkpad;
   guint64 offset;
@@ -62,6 +66,10 @@ typedef struct _GstEbmlReadClass {
 GType    gst_ebml_read_get_type          (void);
 
 void          gst_ebml_level_free        (GstEbmlLevel *level);
+
+void          gst_ebml_read_reset_cache (GstEbmlRead * ebml,
+                                          GstBuffer * buffer,
+                                          guint64 offset);
 
 GstFlowReturn gst_ebml_peek_id           (GstEbmlRead *ebml,
                                           guint       *level_up,

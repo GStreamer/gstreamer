@@ -23,6 +23,7 @@
 #define __GST_MATROSKA_DEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
@@ -97,6 +98,13 @@ typedef struct _GstMatroskaDemux {
   GstEvent                *close_segment;
   GstEvent                *new_segment;
   GstTagList              *global_tags;
+
+  /* push based mode usual suspects */
+  guint64                  offset;
+  GstAdapter              *adapter;
+  /* some state saving */
+  GstClockTime             cluster_time;
+  guint64                  cluster_offset;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

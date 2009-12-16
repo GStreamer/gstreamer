@@ -171,6 +171,29 @@ gst_ebml_read_change_state (GstElement * element, GstStateChange transition)
 }
 
 /*
+ * Used in push mode.
+ * Provided buffer is used as cache, based on offset 0, and no further reads
+ * will be issued.
+ */
+
+void
+gst_ebml_read_reset_cache (GstEbmlRead * ebml, GstBuffer * buffer,
+    guint64 offset)
+{
+  if (ebml->cached_buffer)
+    gst_buffer_unref (ebml->cached_buffer);
+
+  ebml->cached_buffer = buffer;
+  ebml->push_cache = TRUE;
+  buffer = gst_buffer_make_metadata_writable (buffer);
+  GST_BUFFER_OFFSET (buffer) = offset;
+  ebml->offset = offset;
+  g_list_foreach (ebml->level, (GFunc) gst_ebml_level_free, NULL);
+  g_list_free (ebml->level);
+  ebml->level = NULL;
+}
+
+/*
  * Return: the amount of levels in the hierarchy that the
  * current element lies higher than the previous one.
  * The opposite isn't done - that's auto-done using master
@@ -224,6 +247,13 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
       return GST_FLOW_OK;
     }
     /* not enough data in the cache, free cache and get a new one */
+    /* never drop pushed cache */
+    if (ebml->push_cache) {
+      if (ebml->offset == cache_offset + cache_size)
+        return GST_FLOW_END;
+      else
+        return GST_FLOW_UNEXPECTED;
+    }
     gst_buffer_unref (ebml->cached_buffer);
     ebml->cached_buffer = NULL;
   }
@@ -437,8 +467,17 @@ gst_ebml_peek_id (GstEbmlRead * ebml, guint * level_up, guint32 * id)
 next:
   off = ebml->offset;           /* save offset */
 
-  if ((ret = gst_ebml_read_element_id (ebml, id, &level_up_tmp)) != GST_FLOW_OK)
-    return ret;
+  if ((ret = gst_ebml_read_element_id (ebml, id, &level_up_tmp)) != GST_FLOW_OK) {
+    if (ret != GST_FLOW_END)
+      return ret;
+    else {
+      /* simulate dummy VOID element,
+       * and have the call stack bail out all the way */
+      *id = GST_EBML_ID_VOID;
+      *level_up = G_MAXUINT32 >> 2;
+      return GST_FLOW_OK;
+    }
+  }
 
   ebml->offset = off;           /* restore offset */
 
