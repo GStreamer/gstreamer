@@ -214,7 +214,7 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
     guint cache_size = GST_BUFFER_SIZE (ebml->cached_buffer);
 
     if (cache_offset <= ebml->offset &&
-        (ebml->offset + size) < (cache_offset + cache_size)) {
+        (ebml->offset + size) <= (cache_offset + cache_size)) {
       if (p_buf)
         *p_buf = gst_buffer_create_sub (ebml->cached_buffer,
             ebml->offset - cache_offset, size);
