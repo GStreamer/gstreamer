@@ -290,7 +290,7 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
           "psrlq        $56 ,   %%mm5   \n\t"   /* mm5 = 0x0...0ff */
           "xor        %%ecx ,   %%ecx   \n\t"   /* ecx = 0 */
           "1:                           \n\t"
-          "movzxb      (%2) ,   %%eax   \n\t"   /* eax == source alpha */
+          "movzbl      (%2) ,   %%eax   \n\t"   /* eax == source alpha */
           "imul          %4 ,   %%eax   \n\t"   /* eax = source alpha * alpha */
           "sar           $8 ,   %%eax   \n\t"   /* eax = (source alpha * alpha) / 256 */
           "movd       %%eax ,   %%mm0   \n\t"   /* mm0 = apply alpha */
