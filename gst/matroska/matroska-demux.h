@@ -72,6 +72,7 @@ typedef struct _GstMatroskaDemux {
   /* state */
   GstMatroskaDemuxState    state;
   guint                    level_up;
+  guint64                  seek_block;
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;

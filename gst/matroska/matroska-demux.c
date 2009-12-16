@@ -402,6 +402,7 @@ gst_matroska_demux_reset (GstElement * element)
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->duration = -1;
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
+  demux->seek_block = 0;
 
   demux->offset = 0;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
@@ -2302,6 +2303,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     context->last_flow = GST_FLOW_OK;
   }
   demux->segment.last_stop = entry->time;
+  demux->seek_block = entry->block;
 
   /* restart our task since it might have been stopped when we did the
    * flush. */
@@ -2562,6 +2564,12 @@ gst_matroska_demux_parse_index_cuetrack (GstMatroskaDemux * demux,
 
         GST_DEBUG_OBJECT (demux, "CueBlockNumber: %" G_GUINT64_FORMAT, num);
         idx.block = num;
+
+        /* mild sanity check, disregard strange cases ... */
+        if (idx.block > G_MAXUINT16) {
+          GST_DEBUG_OBJECT (demux, "... looks suspicious, ignoring");
+          idx.block = 1;
+        }
         break;
       }
 
@@ -4518,6 +4526,22 @@ done:
   return ret;
 }
 
+/* return FALSE if block(group) should be skipped (due to a seek) */
+static inline gboolean
+gst_matroska_demux_seek_block (GstMatroskaDemux * demux)
+{
+  if (G_UNLIKELY (demux->seek_block)) {
+    if (!(--demux->seek_block)) {
+      return TRUE;
+    } else {
+      GST_LOG_OBJECT (demux, "should skip block due to seek");
+      return FALSE;
+    }
+  } else {
+    return TRUE;
+  }
+}
+
 static GstFlowReturn
 gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
 {
@@ -4559,6 +4583,8 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
 
         /* a group of blocks inside a cluster */
       case GST_MATROSKA_ID_BLOCKGROUP:
+        if (!gst_matroska_demux_seek_block (demux))
+          goto skip;
         DEBUG_ELEMENT_START (demux, ebml, "BlockGroup");
         if ((ret = gst_ebml_read_master (ebml, &id)) == GST_FLOW_OK) {
           ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
@@ -4569,6 +4595,8 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
 
       case GST_MATROSKA_ID_SIMPLEBLOCK:
       {
+        if (!gst_matroska_demux_seek_block (demux))
+          goto skip;
         DEBUG_ELEMENT_START (demux, ebml, "SimpleBlock");
         ret = gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
             cluster_time, cluster_offset, TRUE);
@@ -4583,6 +4611,7 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_PREVSIZE:
       case GST_MATROSKA_ID_ENCRYPTEDBLOCK:
       case GST_MATROSKA_ID_SILENTTRACKS:
+      skip:
         GST_DEBUG ("Skipping Cluster subelement 0x%x - ignoring", id);
         ret = gst_ebml_read_skip (ebml);
         break;
@@ -4609,6 +4638,13 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
   }
 
   DEBUG_ELEMENT_STOP (demux, ebml, "Cluster", ret);
+
+  if (G_UNLIKELY (demux->seek_block)) {
+    GST_DEBUG_OBJECT (demux, "seek target block %" G_GUINT64_FORMAT
+        " not found in Cluster, trying next Cluster's first block instead",
+        demux->seek_block);
+    demux->seek_block = 0;
+  }
 
   return ret;
 }
