@@ -290,12 +290,12 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
           "psrlq        $56 ,   %%mm5   \n\t"   /* mm5 = 0x0...0ff */
           "xor        %%ecx ,   %%ecx   \n\t"   /* ecx = 0 */
           "1:                           \n\t"
-          "movzxb      (%0) ,   %%eax   \n\t"   /* eax == source alpha */
-          "imul          %2 ,   %%eax   \n\t"   /* eax = source alpha * alpha */
+          "movzxb      (%2) ,   %%eax   \n\t"   /* eax == source alpha */
+          "imul          %4 ,   %%eax   \n\t"   /* eax = source alpha * alpha */
           "sar           $8 ,   %%eax   \n\t"   /* eax = (source alpha * alpha) / 256 */
           "movd       %%eax ,   %%mm0   \n\t"   /* mm0 = apply alpha */
-          "movd        (%0) ,   %%mm2   \n\t"   /* mm2 = src */
-          "movd        (%1) ,   %%mm1   \n\t"   /* mm1 = dest */
+          "movd        (%2) ,   %%mm2   \n\t"   /* mm2 = src */
+          "movd        (%3) ,   %%mm1   \n\t"   /* mm1 = dest */
           "punpcklwd  %%mm0 ,   %%mm0   \n\t"
           "punpckldq  %%mm0 ,   %%mm0   \n\t"   /* mm0 == 0a 0a 0a 0a */
           "punpcklbw  %%mm7 ,   %%mm1   \n\t"   /* mm1 == dv du dy da */
@@ -307,14 +307,14 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
           "psrlw         $8 ,   %%mm1   \n\t"
           "packuswb   %%mm7 ,   %%mm1   \n\t"
           "por        %%mm5 ,   %%mm1   \n\t"   /* mm1 = 0x.....ff */
-          "movd       %%mm1 ,    (%1)   \n\t"   /* dest = mm1 */
+          "movd       %%mm1 ,    (%3)   \n\t"   /* dest = mm1 */
           "add           $4 ,     %1    \n\t"
           "add           $4 ,     %0    \n\t"
           "add           $1 ,   %%ecx   \n\t"
-          "cmp        %%ecx ,      %3   \n\t"
+          "cmp        %%ecx ,      %5   \n\t"
           "jne                     1b"
-          : /* no output */
-          :"r" (src), "r" (dest), "r" (b_alpha), "r" (src_width)
+          :"=r" (src), "=r" (dest)
+          :"0" (src), "1" (dest), "r" (b_alpha), "r" (src_width)
           :"%eax", "%ecx", "memory"
 #ifdef __MMX__
           , "mm0", "mm1", "mm2", "mm5", "mm6", "mm7"
