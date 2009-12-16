@@ -1274,10 +1274,8 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       while (walk) {
         GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
         walk = g_slist_next (walk);
-        if (sink_pad->display) {
-          g_object_unref (sink_pad->display);
-          sink_pad->display = NULL;
-        }
+        if (sink_pad->display)
+          gst_gl_display_activate_gl_context (sink_pad->display, FALSE);
       }
       if (mixer_class->reset)
         mixer_class->reset (mix);
@@ -1289,6 +1287,15 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       if (mix->display) {
         g_object_unref (mix->display);
         mix->display = NULL;
+      }
+      while (walk) {
+        GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
+        walk = g_slist_next (walk);
+        if (sink_pad->display) {
+          gst_gl_display_activate_gl_context (sink_pad->display, TRUE);
+          g_object_unref (sink_pad->display);
+          sink_pad->display = NULL;
+        }
       }
       break;
     }
