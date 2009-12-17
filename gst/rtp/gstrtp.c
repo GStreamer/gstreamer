@@ -35,6 +35,7 @@
 #include "gstrtppcmapay.h"
 #include "gstrtppcmadepay.h"
 #include "gstrtppcmudepay.h"
+#include "gstrtpg723pay.h"
 #include "gstrtpg726depay.h"
 #include "gstrtpg726pay.h"
 #include "gstrtpg729depay.h"
@@ -113,6 +114,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_ilbc_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_g723_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_g726_depay_plugin_init (plugin))
