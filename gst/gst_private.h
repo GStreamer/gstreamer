@@ -122,6 +122,24 @@ gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *
 extern gboolean _gst_disable_registry_cache;
 #endif
 
+/* provide inline gst_g_value_get_foo_unchecked(), used in gststructure.c */
+#define DEFINE_INLINE_G_VALUE_GET_UNCHECKED(ret_type,name_type,v_field) \
+static inline ret_type                                                  \
+gst_g_value_get_##name_type##_unchecked (const GValue *value)           \
+{                                                                       \
+  return value->data[0].v_field;                                        \
+}
+
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(gboolean,boolean,v_int)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(gint,int,v_int)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(guint,uint,v_uint)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(gint64,int64,v_int64)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(guint64,uint64,v_uint64)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(gfloat,float,v_float)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(gdouble,double,v_double)
+DEFINE_INLINE_G_VALUE_GET_UNCHECKED(const gchar *,string,v_pointer)
+
+
 /*** debugging categories *****************************************************/
 
 #ifndef GST_REMOVE_GST_DEBUG

@@ -1147,7 +1147,7 @@ gst_structure_get_boolean (const GstStructure * structure,
   if (!G_VALUE_HOLDS_BOOLEAN (&field->value))
     return FALSE;
 
-  *value = g_value_get_boolean (&field->value);
+  *value = gst_g_value_get_boolean_unchecked (&field->value);
 
   return TRUE;
 }
@@ -1183,7 +1183,7 @@ gst_structure_get_int (const GstStructure * structure,
   if (!G_VALUE_HOLDS_INT (&field->value))
     return FALSE;
 
-  *value = g_value_get_int (&field->value);
+  *value = gst_g_value_get_int_unchecked (&field->value);
 
   return TRUE;
 }
@@ -1221,7 +1221,7 @@ gst_structure_get_uint (const GstStructure * structure,
   if (!G_VALUE_HOLDS_UINT (&field->value))
     return FALSE;
 
-  *value = g_value_get_uint (&field->value);
+  *value = gst_g_value_get_uint_unchecked (&field->value);
 
   return TRUE;
 }
@@ -1335,7 +1335,7 @@ gst_structure_get_clock_time (const GstStructure * structure,
   if (!G_VALUE_HOLDS_UINT64 (&field->value))
     return FALSE;
 
-  *value = g_value_get_uint64 (&field->value);
+  *value = gst_g_value_get_uint64_unchecked (&field->value);
 
   return TRUE;
 }
@@ -1371,7 +1371,7 @@ gst_structure_get_double (const GstStructure * structure,
   if (!G_VALUE_HOLDS_DOUBLE (&field->value))
     return FALSE;
 
-  *value = g_value_get_double (&field->value);
+  *value = gst_g_value_get_double_unchecked (&field->value);
 
   return TRUE;
 }
@@ -1407,7 +1407,7 @@ gst_structure_get_string (const GstStructure * structure,
   if (!G_VALUE_HOLDS_STRING (&field->value))
     return NULL;
 
-  return g_value_get_string (&field->value);
+  return gst_g_value_get_string_unchecked (&field->value);
 }
 
 /**
@@ -1787,13 +1787,14 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   if (G_VALUE_TYPE (&value1) == G_TYPE_DOUBLE) {
     range_type = GST_TYPE_DOUBLE_RANGE;
     g_value_init (value, range_type);
-    gst_value_set_double_range (value, g_value_get_double (&value1),
-        g_value_get_double (&value2));
+    gst_value_set_double_range (value,
+        gst_g_value_get_double_unchecked (&value1),
+        gst_g_value_get_double_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT) {
     range_type = GST_TYPE_INT_RANGE;
     g_value_init (value, range_type);
-    gst_value_set_int_range (value, g_value_get_int (&value1),
-        g_value_get_int (&value2));
+    gst_value_set_int_range (value, gst_g_value_get_int_unchecked (&value1),
+        gst_g_value_get_int_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == GST_TYPE_FRACTION) {
     range_type = GST_TYPE_FRACTION_RANGE;
     g_value_init (value, range_type);
@@ -2196,7 +2197,7 @@ gst_structure_fixate_field_nearest_int (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == G_TYPE_INT) {
-        int x = g_value_get_int (list_value);
+        int x = gst_g_value_get_int_unchecked (list_value);
 
         if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
           best_index = i;
@@ -2260,7 +2261,7 @@ gst_structure_fixate_field_nearest_double (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == G_TYPE_DOUBLE) {
-        double x = g_value_get_double (list_value);
+        double x = gst_g_value_get_double_unchecked (list_value);
 
         if (best_index == -1 || (ABS (target - x) < ABS (target - best))) {
           best_index = i;
@@ -2314,7 +2315,7 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == G_TYPE_BOOLEAN) {
-        gboolean x = g_value_get_boolean (list_value);
+        gboolean x = gst_g_value_get_boolean_unchecked (list_value);
 
         if (best_index == -1 || x == target) {
           best_index = i;
