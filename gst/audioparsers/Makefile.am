@@ -8,4 +8,4 @@ libgstaudioparsersbad_la_LIBADD = $(GST_BASE_LIBS)
 libgstaudioparsersbad_la_LDFLAGS = $(PACKAGE_LIBS) $(GST_PLUGIN_LDFLAGS)
 libgstaudioparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstaacparse.h gstamrparse.h gstac3parse.c gstbaseparse.h
+noinst_HEADERS = gstaacparse.h gstamrparse.h gstac3parse.h gstbaseparse.h
