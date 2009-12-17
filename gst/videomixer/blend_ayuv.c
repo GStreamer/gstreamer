@@ -281,14 +281,17 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
   dest = dest + 4 * xpos + (ypos * dest_stride);
 
   for (i = 0; i < src_height; i++) {
+    gulong old_ebx;
+
       /* *INDENT-OFF* */
       __asm__ __volatile__ (
-          "pxor       %%mm7 ,   %%mm7   \n\t" /* mm7 = 0 */
+          "movl       %%ebx ,      %6   \n\t"
+          "pxor       %%mm7 ,   %%mm7   \n\t"   /* mm7 = 0 */
           "pcmpeqd    %%mm6 ,   %%mm6   \n\t"   /* mm6 = 0xffff... */
           "punpcklbw  %%mm7 ,   %%mm6   \n\t"   /* mm6 = 0x00ff00ff00ff... */
           "pcmpeqd    %%mm5 ,   %%mm5   \n\t"   /* mm5 = 0xffff... */
           "psrlq        $56 ,   %%mm5   \n\t"   /* mm5 = 0x0...0ff */
-          "xor        %%ecx ,   %%ecx   \n\t"   /* ecx = 0 */
+          "xor        %%ebx ,   %%ebx   \n\t"   /* ebx = 0 */
           "1:                           \n\t"
           "movzbl      (%2) ,   %%eax   \n\t"   /* eax == source alpha */
           "imul          %4 ,   %%eax   \n\t"   /* eax = source alpha * alpha */
@@ -310,12 +313,13 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
           "movd       %%mm1 ,    (%3)   \n\t"   /* dest = mm1 */
           "add           $4 ,     %1    \n\t"
           "add           $4 ,     %0    \n\t"
-          "add           $1 ,   %%ecx   \n\t"
-          "cmp        %%ecx ,      %5   \n\t"
-          "jne                     1b"
+          "add           $1 ,   %%ebx   \n\t"
+          "cmp        %%ebx ,      %5   \n\t"
+          "jne                     1b   \n\t"
+          "movl          %6 ,   %%ebx   \n\t"
           :"=r" (src), "=r" (dest)
-          :"0" (src), "1" (dest), "r" (b_alpha), "r" (src_width)
-          :"%eax", "%ecx", "memory"
+          :"0" (src), "1" (dest), "r" (b_alpha), "r" (src_width), "m" (old_ebx)
+          :"%eax", "memory"
 #ifdef __MMX__
           , "mm0", "mm1", "mm2", "mm5", "mm6", "mm7"
 #endif
@@ -387,7 +391,7 @@ gst_videomixer_fill_ayuv_color_mmx (guint8 * dest, gint width, gint height,
     "emms                 \n\t"
     "2:                   \n\t"
     : "=r" (nvals), "=r" (dest)
-    : "0" (nvals), "1" (dest), "r" (val)
+    : "0" (nvals), "1" (dest), "m" (val)
     : "memory"
 #ifdef __MMX__
       , "mm0"
