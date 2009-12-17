@@ -24,6 +24,7 @@
 #include "gstaacparse.h"
 #include "gstamrparse.h"
 #include "gstac3parse.h"
+#include "gstflacparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -36,6 +37,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY + 1, GST_TYPE_AMRPARSE);
   ret &= gst_element_register (plugin, "ac3parse",
       GST_RANK_MARGINAL, GST_TYPE_AC3_PARSE);
+  ret &= gst_element_register (plugin, "flacparse",
+      GST_RANK_NONE, GST_TYPE_FLAC_PARSE);
 
   return ret;
 }
