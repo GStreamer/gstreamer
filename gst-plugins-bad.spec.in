@@ -107,8 +107,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
-%{_libdir}/gstreamer-%{majorminor}/libgstaacparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstamrparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstqtmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstlegacyresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
@@ -129,6 +127,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideomeasure.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudioparsersbad.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
+
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideocodec.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideodecoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
@@ -146,7 +147,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstbasevideo*
 %{_libdir}/libgstsignalprocessor*
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
-# %{_datadir}/gstreamer-%{majorminor}/presets/GstFAAC.prs
+
+# hopefully very shortlived .pc file for bad
+%{_libdir}/pkgconfig/gstreamer-plugins-bad-0.10.pc
+
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
