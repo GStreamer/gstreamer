@@ -710,9 +710,11 @@ rg_analysis_analyze (RgAnalysisCtx * ctx, const gfloat * samples_l,
           (gint) G_N_ELEMENTS (ctx->track.histogram) - 1);
       /* Compute the per-window gain */
       const gdouble gain = PINK_REF - (gdouble) ival / STEPS_PER_DB;
-      const GstClockTime timestamp = (ctx->buffer_timestamp
-          + ctx->buffer_n_samples_done * GST_SECOND / ctx->sample_rate
-          - RMS_WINDOW_MSECS * GST_MSECOND);
+      const GstClockTime timestamp = ctx->buffer_timestamp
+          + gst_util_uint64_scale_int_ceil (GST_SECOND,
+          ctx->buffer_n_samples_done,
+          ctx->sample_rate)
+          - RMS_WINDOW_MSECS * GST_MSECOND;
 
       ctx->post_message (ctx->analysis, timestamp,
           RMS_WINDOW_MSECS * GST_MSECOND, -gain);
