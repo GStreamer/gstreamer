@@ -119,7 +119,8 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
   g_object_class_install_property (gobject_klass, ARG_VIDEO_SINK,
       g_param_spec_object ("video-sink",
           "video-sink",
-          "Video sink to use", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          "Video sink to use (Must only be called on NULL state)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
@@ -216,8 +217,8 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
     gst_object_unref (sink_pad);
     self->data_probe_id = -1;
 
-    /* remove ghost pad */
-    gst_element_remove_pad (GST_ELEMENT (self), self->ghost_pad);
+    /* remove ghost pad target */
+    gst_ghost_pad_set_target (GST_GHOST_PAD (self->ghost_pad), NULL);
 
     /* remove old sink */
     gst_bin_remove (GST_BIN (self), self->video_sink);
@@ -234,10 +235,6 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 
   gst_bin_add (GST_BIN (self), self->video_sink);
 
-  /* create ghost pad */
-  self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
-
   /* attach or pad probe */
   sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
   self->data_probe_id = gst_pad_add_data_probe (sink_pad,
@@ -250,19 +247,12 @@ static void
 fps_display_sink_init (GstFPSDisplaySink * self,
     GstFPSDisplaySinkClass * g_class)
 {
-  GstElement *video_sink;
-
   self->sync = FALSE;
   self->use_text_overlay = TRUE;
+  self->video_sink = NULL;
 
-  video_sink = gst_element_factory_make ("autovideosink",
-      "fps-display-video_sink");
-  if (!video_sink) {
-    GST_ERROR_OBJECT (self, "element could not be created");
-    return;
-  }
-
-  update_video_sink (self, video_sink);
+  self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
+  gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
 
   self->query = gst_query_new_position (GST_FORMAT_TIME);
 }
@@ -428,6 +418,14 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
       }
       break;
     case ARG_VIDEO_SINK:
+      /* FIXME should we add a state-lock or a lock around here?
+       * need to check if it is possible that a state change NULL->READY can
+       * happen while this code is executing on a different thread */
+      if (GST_STATE (self) != GST_STATE_NULL) {
+        g_warning ("Can't set video-sink property of fpsdisplaysink if not on "
+            "NULL state");
+        break;
+      }
       update_video_sink (self, (GstElement *) g_value_get_object (value));
       break;
     default:
@@ -466,7 +464,22 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      fps_display_sink_start (self);
+
+      if (self->video_sink == NULL) {
+        GstElement *video_sink;
+        GST_DEBUG_OBJECT (self, "No video sink set, creating autovideosink");
+        video_sink = gst_element_factory_make ("autovideosink",
+            "fps-display-video_sink");
+        update_video_sink (self, video_sink);
+      }
+
+      if (self->video_sink != NULL) {
+        fps_display_sink_start (self);
+      } else {
+        GST_ERROR_OBJECT (self, "Internal sink isn't set and autovideosink "
+            "could not be created");
+        ret = GST_STATE_CHANGE_FAILURE;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
