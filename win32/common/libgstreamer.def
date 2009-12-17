@@ -38,6 +38,7 @@ EXPORTS
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_type DATA
+	_gst_buffer_meta_init
 	_gst_debug_bin_to_dot_file
 	_gst_debug_bin_to_dot_file_with_ts
 	_gst_debug_category_new
@@ -94,8 +95,14 @@ EXPORTS
 	gst_buffer_create_sub
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
+<<<<<<< HEAD
+=======
+	gst_buffer_get_meta
+	gst_buffer_get_type
+>>>>>>> buffermeta: implement arbitrary buffer metadata
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
+	gst_buffer_iterate_meta
 	gst_buffer_join
 	gst_buffer_list_foreach
 	gst_buffer_list_get
@@ -117,8 +124,11 @@ EXPORTS
 	gst_buffer_list_new
 	gst_buffer_make_metadata_writable
 	gst_buffer_merge
+	gst_buffer_meta_get_info
+	gst_buffer_meta_register_info
 	gst_buffer_new
 	gst_buffer_new_and_alloc
+	gst_buffer_remove_meta
 	gst_buffer_set_caps
 	gst_buffer_span
 	gst_buffer_try_new_and_alloc

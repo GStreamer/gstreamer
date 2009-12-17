@@ -209,6 +209,24 @@ gst_buffer_span
 gst_buffer_join
 gst_buffer_merge
 
+GstBufferMeta
+
+gst_buffer_get_meta
+gst_buffer_remove_meta
+gst_buffer_iterate_meta
+
+GstBufferMetaInfo
+
+GstMetaInitFunction
+GstMetaFreeFunction
+GstMetaCopyFunction
+GstMetaSubFunction
+GstMetaSerializeFunction
+GstMetaDeserializeFunction
+
+gst_buffer_meta_get_info
+gst_buffer_meta_register_info
+
 <SUBSECTION Standard>
 GstBufferClass
 GST_BUFFER

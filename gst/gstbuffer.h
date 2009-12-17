@@ -284,11 +284,9 @@ struct _GstBuffer {
   /* ABI Added */
   GFreeFunc              free_func;
   GstBuffer             *parent;
+  gpointer               priv;
 
   gpointer               owner_priv;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocation */
@@ -470,6 +468,15 @@ GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, guint offset
 /* span, two buffers, intelligently */
 gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
+
+/* metadata */
+#include <gst/gstbuffermeta.h>
+
+GstBufferMeta * gst_buffer_get_meta             (GstBuffer *buffer, const GstBufferMetaInfo *info,
+                                                 gboolean create);
+gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, const GstBufferMetaInfo *info);
+
+GstBufferMeta * gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
 
 /**
  * gst_value_set_buffer:

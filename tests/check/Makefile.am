@@ -100,6 +100,7 @@ check_PROGRAMS =				\
 	$(ABI_CHECKS)			     	\
 	gst/gstbuffer				\
 	gst/gstbufferlist			\
+	gst/gstbuffermeta			\
 	gst/gstbus				\
 	gst/gstcaps     			\
 	$(CXX_CHECKS)			     	\

@@ -130,6 +130,16 @@
 
 GType _gst_buffer_type = 0;
 
+typedef struct _GstBufferMetaItem GstBufferMetaItem;
+
+struct _GstBufferMetaItem
+{
+  GstBufferMetaItem *next;
+  GstBufferMeta meta;
+};
+
+#define ITEM_SIZE(info) ((info)->size + sizeof (GstBufferMetaItem))
+
 /* buffer alignment in bytes
  * an alignment of 8 would be the same as malloc() guarantees
  */
@@ -189,6 +199,8 @@ void
 gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
     GstBufferCopyFlags flags)
 {
+  GstBufferMetaItem *walk;
+
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
 
@@ -223,6 +235,14 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
 
   if (flags & GST_BUFFER_COPY_CAPS) {
     gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
+  }
+
+  for (walk = src->priv; walk; walk = walk->next) {
+    GstBufferMeta *meta = &walk->meta;
+    const GstBufferMetaInfo *info = meta->info;
+
+    if (info->copy_func)
+      info->copy_func (dest, meta, src);
   }
 }
 
@@ -269,6 +289,8 @@ _gst_buffer_copy (GstBuffer * buffer)
 static void
 _gst_buffer_free (GstBuffer * buffer)
 {
+  GList *walk;
+
   g_return_if_fail (buffer != NULL);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
@@ -281,6 +303,18 @@ _gst_buffer_free (GstBuffer * buffer)
 
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
+
+  /* free metadata */
+  for (walk = buffer->priv; walk; walk = walk->next) {
+    GstBufferMeta *meta = &walk->meta;
+    const GstBufferMetaInfo *info = meta->info;
+
+    /* call free_func if any */
+    if (info->free_func)
+      info->free_func (meta, buffer);
+    /* and free the slice */
+    g_slice_free1 (ITEM_SIZE (info), meta);
+  }
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
 }
@@ -558,6 +592,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   GstBuffer *subbuffer;
   GstBuffer *parent;
   gboolean complete;
+  GstBufferMetaItem *walk;
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
@@ -619,6 +654,14 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
     GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_CAPS (subbuffer) = NULL;
+  }
+  /* call subbuffer functions for metadata */
+  for (walk = buffer->priv; walk; walk = walk->next) {
+    GstBufferMeta *meta = &walk->meta;
+    const GstBufferMetaInfo *info = meta->info;
+
+    if (info->sub_func)
+      info->sub_func (subbuffer, meta, buffer, offset, size);
   }
   return subbuffer;
 }
@@ -726,4 +769,129 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   }
 
   return newbuf;
+}
+
+
+/**
+ * gst_buffer_get_meta:
+ * @buffer: a #GstBuffer
+ * @info: a #GstBufferMetaInfo
+ *
+ * Retrieve the metadata for @info on @buffer.
+ *
+ * If there is no metadata for @info on @buffer, this function will return
+ * %NULL unless the @create flags is set to %TRUE, in which case a new
+ * metadata for @info will be created.
+ *
+ * Returns: the metadata for @info on @buffer or %NULL when there is no such
+ * metadata on @buffer and @create is %FALSE.
+ */
+GstBufferMeta *
+gst_buffer_get_meta (GstBuffer * buffer, const GstBufferMetaInfo * info,
+    gboolean create)
+{
+  GstBufferMetaItem *walk;
+  GstBufferMeta *result = NULL;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (info != NULL, NULL);
+
+  /* loop over the metadata items until we find the one with the
+   * requested info. FIXME, naive implementation using a list */
+  for (walk = buffer->priv; walk; walk = walk->next) {
+    GstBufferMeta *meta = &walk->meta;
+    if (meta->info == info) {
+      result = meta;
+      break;
+    }
+  }
+  /* not found, check if we need to create */
+  if (!result && create) {
+    /* create a new slice */
+    GST_DEBUG ("alloc metadata of size %" G_GSIZE_FORMAT, info->size);
+    walk = g_slice_alloc (ITEM_SIZE (info));
+    result = &walk->meta;
+    result->info = info;
+    /* call the init_func when needed */
+    if (info->init_func)
+      info->init_func (result, buffer);
+    /* and add to the list of metadata */
+    walk->next = buffer->priv;
+    buffer->priv = walk;
+  }
+  return result;
+}
+
+/**
+ * gst_buffer_remove_meta:
+ * @buffer: a #GstBuffer
+ * @info: a #GstBufferMetaInfo
+ *
+ * Remove the metadata for @info on @buffer.
+ *
+ * Returns: %TRUE if the metadata existed and was removed, %FALSE if no such
+ * metadata was on @buffer.
+ */
+gboolean
+gst_buffer_remove_meta (GstBuffer * buffer, const GstBufferMetaInfo * info)
+{
+  GstBufferMetaItem *walk, *prev;
+
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  /* find the metadata and delete */
+  prev = buffer->priv;
+  for (walk = prev; walk; walk = walk->next) {
+    GstBufferMeta *meta = &walk->meta;
+    if (meta->info == info) {
+      /* remove from list */
+      if (buffer->priv == walk)
+        buffer->priv = walk->next;
+      else
+        prev->next = walk->next;
+      /* call free_func if any */
+      if (info->free_func)
+        info->free_func (meta, buffer);
+      /* and free the slice */
+      g_slice_free1 (ITEM_SIZE (info), meta);
+      break;
+    }
+    prev = walk;
+  }
+  return walk != NULL;
+}
+
+/**
+ * gst_buffer_iterate_meta:
+ * @buffer: a #GstBuffer
+ * @state: an opaque state pointer
+ *
+ * Retrieve the next #GstBufferMeta after @current. If @state points
+ * to %NULL, the first metadata is returned.
+ *
+ * @state will be updated with an opage state pointer 
+ *
+ * Returns: The next #GstBufferMeta or %NULL when there are no more items.
+ */
+GstBufferMeta *
+gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
+{
+  GstBufferMetaItem **meta;
+
+  g_return_val_if_fail (buffer != NULL, NULL);
+  g_return_val_if_fail (state != NULL, NULL);
+
+  meta = (GstBufferMetaItem **) state;
+  if (*meta == NULL)
+    /* state NULL, move to first item */
+    *meta = buffer->priv;
+  else
+    /* state !NULL, move to next item in list */
+    *meta = (*meta)->next;
+
+  if (*meta)
+    return &(*meta)->meta;
+  else
+    return NULL;
 }
