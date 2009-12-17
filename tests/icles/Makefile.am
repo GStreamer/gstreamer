@@ -47,13 +47,12 @@ COG_TESTS =
 endif
 
 if USE_COG
-BUILT_SOURCES = cog-test.c
 CLEANFILES = cog-test.c
 
 cog-test.c: $(srcdir)/../../ext/cog/cog.orc
 	$(ORCC) --test -o cog-test.c $(srcdir)/../../ext/cog/cog.orc
 
-cog_test_SOURCES = cog-test.c
+nodist_cog_test_SOURCES = cog-test.c
 cog_test_CFLAGS = $(COG_CFLAGS)
 cog_test_LDADD = -lorc-test-0.4 $(COG_LIBS)
 endif
