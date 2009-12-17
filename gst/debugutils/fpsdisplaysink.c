@@ -34,7 +34,12 @@
 /* FIXME:
  * - can we avoid plugging the textoverlay?
  * - gst-seek 15 "videotestsrc ! fpsdisplaysink" dies when closing gst-seek
- * - if we make ourself RANK_PRIMARY+10 autovideosink asserts
+ *
+ * NOTE:
+ * - if we make ourself RANK_PRIMARY+10 or something that autovideosink would
+ *   select and fpsdisplaysink is set to use autovideosink as its internal sink
+ *   it doesn't work. Reason: autovideosink creates a fpsdisplaysink, that
+ *   creates an autovideosink, that...
  *
  * IDEAS:
  * - do we want to gather min/max fps and show in GST_STATE_CHANGE_READY_TO_NULL
@@ -230,7 +235,7 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
   gst_bin_add (GST_BIN (self), self->video_sink);
 
   /* create ghost pad */
-  self->ghost_pad = gst_ghost_pad_new_no_target ("sink_pad", GST_PAD_SINK);
+  self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
 
   /* attach or pad probe */
@@ -318,7 +323,7 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   self->frames_rendered = G_GUINT64_CONSTANT (0);
   self->frames_dropped = G_GUINT64_CONSTANT (0);
 
-  GST_WARNING ("use text-overlay? %d", self->use_text_overlay);
+  GST_DEBUG_OBJECT (self, "Use text-overlay? %d", self->use_text_overlay);
 
   if (self->use_text_overlay) {
     if (!self->text_overlay) {
