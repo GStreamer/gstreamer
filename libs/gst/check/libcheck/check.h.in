@@ -131,7 +131,11 @@ TCase * CK_EXPORT tcase_create (const char *name);
 
 /* Add a test function with signal handling to a test case (macro version) */
 #define tcase_add_test_raise_signal(tc,tf,signal) \
-   _tcase_add_test((tc),(tf),"" # tf "",(signal), 0, 1)
+   _tcase_add_test((tc),(tf),"" # tf "",(signal), 0, 0, 1)
+
+/* Add a test function with an expected exit value to a test case (macro version) */
+#define tcase_add_exit_test(tc, tf, expected_exit_value) \
+  _tcase_add_test((tc),(tf),"" # tf "",0,(expected_exit_value),0,1)
 
 /* Add a looping test function to a test case (macro version)
 
@@ -140,18 +144,22 @@ TCase * CK_EXPORT tcase_create (const char *name);
    available in the test.
  */
 #define tcase_add_loop_test(tc,tf,s,e) \
-   _tcase_add_test((tc),(tf),"" # tf "",0,(s),(e))
+  _tcase_add_test((tc),(tf),"" # tf "",0,0,(s),(e))
  
 /* Signal version of loop test.  
    FIXME: add a test case; this is untested as part of Check's tests.
  */
 #define tcase_add_loop_test_raise_signal(tc,tf,signal,s,e) \
-   _tcase_add_test((tc),(tf),"" # tf "",(signal),(s),(e))
+  _tcase_add_test((tc),(tf),"" # tf "",(signal),0,(s),(e))
+
+/* allowed exit value version of loop test. */
+#define tcase_add_loop_exit_test(tc,tf,expected_exit_value,s,e) \
+  _tcase_add_test((tc),(tf),"" # tf "",0,(expected_exit_value),(s),(e))
 
 /* Add a test function to a test case
   (function version -- use this when the macro won't work
 */
-void CK_EXPORT _tcase_add_test (TCase *tc, TFun tf, const char *fname, int _signal, int start, int end);
+void CK_EXPORT _tcase_add_test (TCase *tc, TFun tf, const char *fname, int _signal, int allowed_exit_value, int start, int end);
 
 /* Add unchecked fixture setup/teardown functions to a test case
 
@@ -197,7 +205,7 @@ void CK_EXPORT tcase_fn_start (const char *fname, const char *file, int line);
    One must use braces within a START_/END_ pair to declare new variables
 */ 
 #define START_TEST(__testname)\
-static void __testname (int CK_ATTRIBUTE_UNUSED _i)\
+static void __testname (int _i CK_ATTRIBUTE_UNUSED)\
 {\
   tcase_fn_start (""# __testname, __FILE__, __LINE__);
 
@@ -272,6 +280,9 @@ enum print_output {
   CK_NORMAL, /* All failed tests */
   CK_VERBOSE, /* All tests */
   CK_ENV, /* Look at environment var */
+#if @ENABLE_SUBUNIT@
+  CK_SUBUNIT, /* Run as a subunit child process */
+#endif
   CK_LAST
 };
 

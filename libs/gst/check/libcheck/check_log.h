@@ -26,6 +26,7 @@ void log_srunner_end (SRunner *sr);
 void log_suite_start (SRunner *sr, Suite *s);
 void log_suite_end (SRunner *sr, Suite *s);
 void log_test_end (SRunner *sr, TestResult *tr);
+void log_test_start (SRunner *sr, TCase *tc, TF *tfun);
 
 void stdout_lfun (SRunner *sr, FILE *file, enum print_output,
 		  void *obj, enum cl_event evt);
@@ -34,6 +35,9 @@ void lfile_lfun (SRunner *sr, FILE *file, enum print_output,
 		  void *obj, enum cl_event evt);
 
 void xml_lfun (SRunner *sr, FILE *file, enum print_output,
+		  void *obj, enum cl_event evt);
+
+void subunit_lfun (SRunner *sr, FILE *file, enum print_output,
 		  void *obj, enum cl_event evt);
 
 void srunner_register_lfun (SRunner *sr, FILE *lfile, int close,

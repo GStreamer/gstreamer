@@ -18,17 +18,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+#include "../lib/libcompat.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
 #endif
-
-#include "_stdint.h"
 
 #include "check.h"
 #include "check_error.h"
@@ -36,8 +34,7 @@
 #include "check_impl.h"
 #include "check_pack.h"
 
-#ifdef HAVE_PTHREAD_H
-#include <pthread.h>
+#ifdef HAVE_PTHREAD
 pthread_mutex_t lock_mutex = PTHREAD_MUTEX_INITIALIZER;
 #else
 #define pthread_mutex_lock(arg)
@@ -271,7 +268,7 @@ check_type (int type, const char *file, int line)
     eprintf ("Bad message type arg %d", file, line, type);
 }
 
-#ifdef HAVE_PTHREAD_H
+#ifdef HAVE_PTHREAD
 pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 

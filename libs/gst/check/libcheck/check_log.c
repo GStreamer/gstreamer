@@ -18,19 +18,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+#include "../lib/libcompat.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/time.h>
-#include <time.h>
 #include <check.h>
+#if HAVE_SUBUNIT_CHILD_H
+#include <subunit/child.h>
+#endif
 
 #include "check_error.h"
 #include "check_list.h"
 #include "check_impl.h"
 #include "check_log.h"
 #include "check_print.h"
+#include "check_str.h"
 
 
 static void srunner_send_evt (SRunner * sr, void *obj, enum cl_event evt);
@@ -119,6 +121,14 @@ log_suite_end (SRunner * sr, Suite * s)
 }
 
 void
+log_test_start (SRunner * sr, TCase * tc, TF * tfun)
+{
+  char buffer[100];
+  snprintf (buffer, 99, "%s:%s", tc->name, tfun->name);
+  srunner_send_evt (sr, buffer, CLSTART_T);
+}
+
+void
 log_test_end (SRunner * sr, TestResult * tr)
 {
   srunner_send_evt (sr, tr, CLEND_T);
@@ -142,7 +152,6 @@ void
 stdout_lfun (SRunner * sr, FILE * file, enum print_output printmode,
     void *obj, enum cl_event evt)
 {
-  TestResult *tr;
   Suite *s;
 
   if (printmode == CK_ENV) {
@@ -177,8 +186,9 @@ stdout_lfun (SRunner * sr, FILE * file, enum print_output printmode,
     case CLEND_S:
       s = obj;
       break;
+    case CLSTART_T:
+      break;
     case CLEND_T:
-      tr = obj;
       break;
     default:
       eprintf ("Bad event type received in stdout_lfun", __FILE__, __LINE__);
@@ -188,8 +198,9 @@ stdout_lfun (SRunner * sr, FILE * file, enum print_output printmode,
 }
 
 void
-lfile_lfun (SRunner * sr, FILE * file, enum print_output printmode,
-    void *obj, enum cl_event evt)
+lfile_lfun (SRunner * sr, FILE * file,
+    enum print_output printmode CK_ATTRIBUTE_UNUSED, void *obj,
+    enum cl_event evt)
 {
   TestResult *tr;
   Suite *s;
@@ -212,20 +223,23 @@ lfile_lfun (SRunner * sr, FILE * file, enum print_output printmode,
     case CLEND_S:
       s = obj;
       break;
+    case CLSTART_T:
+      break;
     case CLEND_T:
       tr = obj;
       tr_fprint (file, tr, CK_VERBOSE);
       break;
     default:
-      eprintf ("Bad event type received in stdout_lfun", __FILE__, __LINE__);
+      eprintf ("Bad event type received in lfile_lfun", __FILE__, __LINE__);
   }
 
 
 }
 
 void
-xml_lfun (SRunner * sr, FILE * file, enum print_output printmode,
-    void *obj, enum cl_event evt)
+xml_lfun (SRunner * sr CK_ATTRIBUTE_UNUSED, FILE * file,
+    enum print_output printmode CK_ATTRIBUTE_UNUSED, void *obj,
+    enum cl_event evt)
 {
   TestResult *tr;
   Suite *s;
@@ -266,6 +280,8 @@ xml_lfun (SRunner * sr, FILE * file, enum print_output printmode,
       fprintf (file, "  </suite>\n");
       s = obj;
       break;
+    case CLSTART_T:
+      break;
     case CLEND_T:
       tr = obj;
       tr_xmlprint (file, tr, CK_VERBOSE);
@@ -276,6 +292,67 @@ xml_lfun (SRunner * sr, FILE * file, enum print_output printmode,
 
 }
 
+#if ENABLE_SUBUNIT
+void
+subunit_lfun (SRunner * sr, FILE * file, enum print_output printmode,
+    void *obj, enum cl_event evt)
+{
+  TestResult *tr;
+  Suite *s;
+  char const *name;
+
+  /* assert(printmode == CK_SUBUNIT); */
+
+  switch (evt) {
+    case CLINITLOG_SR:
+      break;
+    case CLENDLOG_SR:
+      break;
+    case CLSTART_SR:
+      break;
+    case CLSTART_S:
+      s = obj;
+      break;
+    case CLEND_SR:
+      if (printmode > CK_SILENT) {
+        fprintf (file, "\n");
+        srunner_fprint (file, sr, printmode);
+      }
+      break;
+    case CLEND_S:
+      s = obj;
+      break;
+    case CLSTART_T:
+      name = obj;
+      subunit_test_start (name);
+      break;
+    case CLEND_T:
+      tr = obj;
+      {
+        char *name = ck_strdup_printf ("%s:%s", tr->tcname, tr->tname);
+        char *msg = tr_short_str (tr);
+        switch (tr->rtype) {
+          case CK_PASS:
+            subunit_test_pass (name);
+            break;
+          case CK_FAILURE:
+            subunit_test_fail (name, msg);
+            break;
+          case CK_ERROR:
+            subunit_test_error (name, msg);
+            break;
+          default:
+            eprintf ("Bad result type in subunit_lfun", __FILE__, __LINE__);
+            free (name);
+            free (msg);
+        }
+      }
+      break;
+    default:
+      eprintf ("Bad event type received in subunit_lfun", __FILE__, __LINE__);
+  }
+}
+#endif
 
 FILE *
 srunner_open_lfile (SRunner * sr)
@@ -308,7 +385,14 @@ srunner_init_logging (SRunner * sr, enum print_output print_mode)
 {
   FILE *f;
   sr->loglst = check_list_create ();
-  srunner_register_lfun (sr, stdout, 0, stdout_lfun, print_mode);
+#if ENABLE_SUBUNIT
+  if (print_mode != CK_SUBUNIT)
+#endif
+    srunner_register_lfun (sr, stdout, 0, stdout_lfun, print_mode);
+#if ENABLE_SUBUNIT
+  else
+    srunner_register_lfun (sr, stdout, 0, subunit_lfun, print_mode);
+#endif
   f = srunner_open_lfile (sr);
   if (f) {
     srunner_register_lfun (sr, f, 1, lfile_lfun, print_mode);

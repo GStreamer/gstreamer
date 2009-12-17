@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+#include "../lib/libcompat.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -43,6 +43,20 @@ tr_str (TestResult * tr)
   rstr = ck_strdup_printf ("%s:%d:%s:%s:%s:%d: %s%s",
       tr->file, tr->line,
       tr_type_str (tr), tr->tcname, tr->tname, tr->iter, exact_msg, tr->msg);
+
+  return rstr;
+}
+
+char *
+tr_short_str (TestResult * tr)
+{
+  const char *exact_msg;
+  char *rstr;
+
+  exact_msg = (tr->rtype == CK_ERROR) ? "(after this point) " : "";
+
+  rstr = ck_strdup_printf ("%s:%d: %s%s",
+      tr->file, tr->line, exact_msg, tr->msg);
 
   return rstr;
 }

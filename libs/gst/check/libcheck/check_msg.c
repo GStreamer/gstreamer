@@ -18,10 +18,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "config.h"
+#include "../lib/libcompat.h"
 
 #include <sys/types.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -73,7 +72,7 @@ get_pipe (void)
   if (send_file1 != 0) {
     return send_file1;
   }
-  printf ("send_file1=%p,send_file2=%p", send_file1, send_file2);
+
   eprintf ("No messaging setup", __FILE__, __LINE__);
 
   return NULL;
