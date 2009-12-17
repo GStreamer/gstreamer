@@ -3331,6 +3331,7 @@ qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, const guint8 * buf,
 
     child = g_node_new ((guint8 *) buf);
     g_node_append (node, child);
+    GST_LOG_OBJECT (qtdemux, "adding new node of len %d", len);
     qtdemux_parse_node (qtdemux, child, buf, len);
 
     buf += len;
@@ -5278,10 +5279,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         {
           gint len = QT_UINT32 (stsd_data);
 
-          if (len > 0x34) {
-            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
-
-            memcpy (GST_BUFFER_DATA (buf), stsd_data + 0x34, len - 0x34);
+          if (len >= 132) {
+            GstBuffer *buf = gst_buffer_new_and_alloc (36);
+            memcpy (GST_BUFFER_DATA (buf), stsd_data + 88, 36);
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
             gst_buffer_unref (buf);

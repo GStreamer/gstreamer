@@ -86,6 +86,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_colr, "colr", 0,},
   {FOURCC_fiel, "fiel", 0,},
   {FOURCC_jp2x, "jp2x", 0,},
+  {FOURCC_alac, "alac", 0,},
   {FOURCC_wave, "wave", QT_FLAG_CONTAINER},
   {FOURCC_appl, "appl", QT_FLAG_CONTAINER},
   {FOURCC_esds, "esds", 0},
