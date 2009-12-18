@@ -74,13 +74,18 @@ namespace Gst {
 
       foreach (Assembly asm in assemblies) {
         foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
-          string asm_dir = Path.GetDirectoryName (asm.Location);
           try {
             Assembly ref_asm;
-            if (File.Exists (Path.Combine (asm_dir, ref_name.Name + ".dll")))
-              ref_asm = Assembly.LoadFrom (Path.Combine (asm_dir, ref_name.Name + ".dll"));
+            if (asm.Location != String.Empty)
+            {
+                string asm_file = Path.Combine(Path.GetDirectoryName(asm.Location), ref_name.Name + ".dll");
+                if (File.Exists(asm_file))
+                    ref_asm = Assembly.LoadFrom(asm_file);
+                else
+                    ref_asm = Assembly.Load(ref_name);
+            }
             else
-              ref_asm = Assembly.Load (ref_name);
+                ref_asm = Assembly.Load(ref_name);
 
             Type[] ts = asm.GetTypes ();
             foreach (Type t in ts) {
