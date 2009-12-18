@@ -18,15 +18,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "../lib/libcompat.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
 #endif
+
+#include "_stdint.h"
 
 #include "check.h"
 #include "check_error.h"
@@ -35,6 +37,7 @@
 #include "check_pack.h"
 
 #ifdef HAVE_PTHREAD
+#include <pthread.h>
 pthread_mutex_t lock_mutex = PTHREAD_MUTEX_INITIALIZER;
 #else
 #define pthread_mutex_lock(arg)

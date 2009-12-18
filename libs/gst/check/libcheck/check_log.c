@@ -18,10 +18,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "../lib/libcompat.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#include <time.h>
 #include <check.h>
 #if HAVE_SUBUNIT_CHILD_H
 #include <subunit/child.h>
@@ -34,6 +38,20 @@
 #include "check_print.h"
 #include "check_str.h"
 
+/* localtime_r is apparently not available on Windows */
+#ifndef HAVE_LOCALTIME_R
+static struct tm *
+localtime_r (const time_t * clock, struct tm *result)
+{
+  struct tm *now = localtime (clock);
+  if (now == NULL) {
+    return NULL;
+  } else {
+    *result = *now;
+  }
+  return result;
+}
+#endif /* HAVE_DECL_LOCALTIME_R */
 
 static void srunner_send_evt (SRunner * sr, void *obj, enum cl_event evt);
 
