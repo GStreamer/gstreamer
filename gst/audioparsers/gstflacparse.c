@@ -633,6 +633,9 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
   const guint8 *data = GST_BUFFER_DATA (buffer);
 
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 4))
+    return FALSE;
+
   if (flacparse->state == GST_FLAC_PARSE_STATE_INIT) {
     if (memcmp (GST_BUFFER_DATA (buffer), "fLaC", 4) == 0) {
       GST_DEBUG_OBJECT (flacparse, "fLaC marker found");
@@ -682,8 +685,21 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
         return FALSE;
       }
     } else {
-      GST_DEBUG_OBJECT (flacparse, "Sync code not found");
-      return FALSE;
+      GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+      gint off;
+
+      off = gst_byte_reader_masked_scan_uint32 (&reader, 0xfffc0000, 0xfff80000,
+          0, GST_BUFFER_SIZE (buffer));
+
+      if (off > 0) {
+        GST_DEBUG_OBJECT (parse, "Possible sync at buffer offset %d", off);
+        *skipsize = off;
+        return FALSE;
+      } else {
+        GST_DEBUG_OBJECT (flacparse, "Sync code not found");
+        *skipsize = GST_BUFFER_SIZE (buffer) - 3;
+        return FALSE;
+      }
     }
   }
 
