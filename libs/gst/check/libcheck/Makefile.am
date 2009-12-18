@@ -27,5 +27,12 @@ HFILES =\
 noinst_HEADERS = $(HFILES)
 
 libcheckinternal_la_SOURCES	= $(CFILES) $(HFILES)
-libcheckinternal_la_LIBADD	= 
 
+# define HAVE_PTHREAD here as well so we keep changes to the code to a minimum
+if HAVE_PTHREAD_H
+libcheckinternal_la_CFLAGS	= -D_GNU_SOURCE -DHAVE_PTHREAD
+libcheckinternal_la_LIBADD	= -lpthread
+else
+libcheckinternal_la_CFLAGS	= -D_GNU_SOURCE
+libcheckinternal_la_LIBADD	=
+endif

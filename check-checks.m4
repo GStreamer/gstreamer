@@ -15,9 +15,26 @@ AC_SUBST(CHECK_MINOR_VERSION)
 AC_SUBST(CHECK_MICRO_VERSION)
 AC_SUBST(CHECK_VERSION)
 
-# Checks for header files.
+dnl Checks for header files and declarations
+AC_CHECK_HEADERS([unistd.h sys/wait.h sys/time.h])
 
-# Create _stdint.h in the top-level directory
+AC_CHECK_FUNCS([localtime_r])
+
+
+dnl Create _stdint.h in the top-level directory
 AX_CREATE_STDINT_H
+
+dnl Disable subunit support for the time being
+enable_subunit=false
+
+if test xfalse = x"$enable_subunit"; then
+ENABLE_SUBUNIT="0"
+else
+ENABLE_SUBUNIT="1"
+fi
+AC_SUBST(ENABLE_SUBUNIT)
+AC_DEFINE_UNQUOTED(ENABLE_SUBUNIT, $ENABLE_SUBUNIT, [Subunit protocol result output])
+
+AM_CONDITIONAL(SUBUNIT, test x"$enable_subunit" != "xfalse")
 
 ])

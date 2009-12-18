@@ -887,6 +887,7 @@ log_srunner_end
 log_srunner_start
 log_suite_end
 log_suite_start
+log_test_start
 log_test_end
 mark_point
 pack
@@ -907,6 +908,9 @@ srunner_open_lfile
 srunner_open_xmlfile
 srunner_register_lfun
 stdout_lfun
+subunit_lfun
+tcase_add_exit_test
+tcase_add_loop_exit_test
 tcase_add_loop_test
 tcase_add_loop_test_raise_signal
 tcase_add_test
@@ -915,6 +919,7 @@ teardown_messaging
 tr_create
 tr_fprint
 tr_reset
+tr_short_str
 tr_str
 tr_xmlprint
 upack

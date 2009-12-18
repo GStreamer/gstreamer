@@ -532,6 +532,7 @@ fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl building of unit test libraries
+dnl FIXME: disable gstcheck if we don't have pthread
 AC_ARG_ENABLE(check,
   AC_HELP_STRING([--disable-check], [disable building unit test libraries]),
   [
