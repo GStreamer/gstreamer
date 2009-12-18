@@ -420,7 +420,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
   drain = gst_base_parse_get_drain (parse);
 
   if (!sync && !drain) {
-    guint16 word;
+    guint16 word = 0;
 
     GST_DEBUG_OBJECT (ac3parse, "resyncing; checking next frame syncword");
 
