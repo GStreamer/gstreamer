@@ -499,7 +499,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
       "channels", G_TYPE_INT, faac->channels,
       "rate", G_TYPE_INT, faac->samplerate, NULL);
 
-  if (mpegversion == 4) {
+  if (!faac->outputformat) {
     GstBuffer *codec_data;
     guint8 *config = NULL;
     gulong config_len = 0;
