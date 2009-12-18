@@ -5362,7 +5362,7 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
   GstEbmlRead *ebml = GST_EBML_READ (demux);
   guint available;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint needed;
+  guint needed = 0;
   guint32 id;
   guint64 length;
   gchar *name;
