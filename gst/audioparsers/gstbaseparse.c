@@ -1226,6 +1226,8 @@ done:
   return ret;
 }
 
+/* pull @size bytes at current offset,
+ * i.e. at least try to and possibly return a shorter buffer if near the end */
 static GstFlowReturn
 gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     GstBuffer ** buffer)
@@ -1282,15 +1284,14 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
   }
 
   if (GST_BUFFER_SIZE (parse->priv->cache) < size) {
-    GST_WARNING_OBJECT (parse, "Dropping short buffer at offset %"
+    GST_DEBUG_OBJECT (parse, "Returning short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", parse->priv->offset,
         size, GST_BUFFER_SIZE (parse->priv->cache));
 
-    gst_buffer_unref (parse->priv->cache);
+    *buffer = parse->priv->cache;
     parse->priv->cache = NULL;
 
-    *buffer = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_OK;
   }
 
   *buffer = gst_buffer_create_sub (parse->priv->cache, 0, size);
@@ -1338,10 +1339,17 @@ gst_base_parse_loop (GstPad * pad)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     }
 
+    /* if we got a short read, inform subclass we are draining leftover
+     * and no more is to be expected */
+    if (GST_BUFFER_SIZE (buffer) < min_size)
+      parse->priv->drain = TRUE;
+
     skip = -1;
     if (klass->check_valid_frame (parse, buffer, &fsize, &skip)) {
+      parse->priv->drain = FALSE;
       break;
     }
+    parse->priv->drain = FALSE;
     if (skip > 0) {
       GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
       parse->priv->offset += skip;
@@ -1367,6 +1375,8 @@ gst_base_parse_loop (GstPad * pad)
       goto eos;
     else if (ret != GST_FLOW_OK)
       goto need_pause;
+    if (GST_BUFFER_SIZE (outbuf) < fsize)
+      goto eos;
   }
 
   parse->priv->offset += fsize;
