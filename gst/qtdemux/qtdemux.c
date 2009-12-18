@@ -776,8 +776,7 @@ gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
 
   result++;
   while (index < str->n_samples - 1) {
-    if (index + 1 > str->stbl_index
-        && !qtdemux_parse_samples (qtdemux, str, index + 1))
+    if (!qtdemux_parse_samples (qtdemux, str, index + 1))
       goto parse_failed;
 
     if (media_time < result->timestamp)
@@ -1026,6 +1025,7 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
+  /* FIXME, always play to the end */
   stop = -1;
 
   /* only forward streaming and seeking is possible */
@@ -1048,6 +1048,7 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (qtdemux, "Pushing BYTE seek rate %g, "
       "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, byte_cur,
       stop);
+
   /* BYTE seek event */
   event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, byte_cur,
       stop_type, stop);
@@ -1253,25 +1254,39 @@ no_format:
 }
 
 static gboolean
+qtdemux_ensure_index (GstQTDemux * qtdemux)
+{
+  guint i;
+
+  /* Build complete index */
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    if (!qtdemux_parse_samples (qtdemux, qtdemux->streams[i],
+            qtdemux->streams[i]->n_samples - 1))
+      goto parse_error;
+  }
+  return TRUE;
+
+  /* ERRORS */
+parse_error:
+  {
+    GST_LOG_OBJECT (qtdemux,
+        "Building complete index of stream %u for seeking failed!", i);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
-  guint i;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       /* Build complete index for seeking */
-      for (i = 0; i < qtdemux->n_streams; i++) {
-        if (!qtdemux_parse_samples (qtdemux, qtdemux->streams[i],
-                qtdemux->streams[i]->n_samples - 1)) {
-          GST_LOG_OBJECT (qtdemux,
-              "Building complete index of stream %u for seeking failed!", i);
-          res = FALSE;
-          gst_event_unref (event);
-          break;
-        }
-      }
+      if (!qtdemux_ensure_index (qtdemux))
+        goto index_failed;
+
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
       } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams) {
@@ -1296,6 +1311,14 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
   gst_object_unref (qtdemux);
 
   return res;
+
+  /* ERRORS */
+index_failed:
+  {
+    GST_ERROR_OBJECT (qtdemux, "Index failed");
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 /* stream/index return sample that is min/max w.r.t. byte position,
@@ -2820,8 +2843,7 @@ next_entry_size (GstQTDemux * demux)
       continue;
     }
 
-    if ((stream->sample_index > stream->stbl_index)
-        && !qtdemux_parse_samples (demux, stream, stream->sample_index)) {
+    if (!qtdemux_parse_samples (demux, stream, stream->sample_index)) {
       GST_LOG_OBJECT (demux, "Parsing of index %u from stbl atom failed!",
           stream->sample_index);
       return -1;
@@ -2872,7 +2894,7 @@ gst_qtdemux_post_progress (GstQTDemux * demux, gint num, gint denom)
 }
 
 static gboolean
-qtdemux_do_push_seek (GstQTDemux * demux, guint64 offset)
+qtdemux_seek_offset (GstQTDemux * demux, guint64 offset)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -2957,7 +2979,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             target = old + size;
 
             /* try to jump over the atom with a seek */
-            res = qtdemux_do_push_seek (demux, target);
+            res = qtdemux_seek_offset (demux, target);
 
             if (res) {
               GST_DEBUG_OBJECT (demux, "seek success");
@@ -3063,7 +3085,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             gboolean res;
 
             /* we need to seek back */
-            res = qtdemux_do_push_seek (demux, demux->first_mdat);
+            res = qtdemux_seek_offset (demux, demux->first_mdat);
             if (res) {
               demux->offset = demux->first_mdat;
             } else {
@@ -4117,6 +4139,9 @@ corrupt_file:
 
 /* collect samples from the next sample to be parsed up to sample @n for @stream
  * by reading the info from @stbl
+ *
+ * This code can be executed from both the streaming thread and the seeking
+ * thread so it takes the object lock to protect itself
  */
 static gboolean
 qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
@@ -4127,6 +4152,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
   if (n >= stream->n_samples)
     goto out_of_samples;
 
+  GST_OBJECT_LOCK (qtdemux);
   if (n <= stream->stbl_index)
     goto already_parsed;
 
@@ -4390,6 +4416,7 @@ ctts:
   }
 done:
   stream->stbl_index = n;
+  GST_OBJECT_UNLOCK (qtdemux);
 
   return TRUE;
 
@@ -4399,6 +4426,7 @@ already_parsed:
     GST_LOG_OBJECT (qtdemux,
         "Tried to parse up to sample %u but this sample has already been parsed",
         n);
+    GST_OBJECT_UNLOCK (qtdemux);
     return TRUE;
   }
   /* ERRORS */
@@ -4407,12 +4435,15 @@ out_of_samples:
     GST_LOG_OBJECT (qtdemux,
         "Tried to parse up to sample %u but there are only %u samples", n + 1,
         stream->n_samples);
-    goto corrupt_file;
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
   }
 corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
         (_("This file is corrupt and cannot be played.")), (NULL));
+    GST_OBJECT_UNLOCK (qtdemux);
     return FALSE;
   }
 }
