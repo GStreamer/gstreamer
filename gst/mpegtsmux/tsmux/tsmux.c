@@ -438,13 +438,13 @@ tsmux_find_stream (TsMux * mux, guint16 pid)
 }
 
 static gboolean
-tsmux_packet_out (TsMux * mux)
+tsmux_packet_out (TsMux * mux, gboolean delta)
 {
   if (G_UNLIKELY (mux->write_func == NULL))
     return TRUE;
 
   return mux->write_func (mux->packet_buf, TSMUX_PACKET_LENGTH,
-      mux->write_func_data, mux->new_pcr);
+      mux->write_func_data, mux->new_pcr, delta);
 }
 
 /*
@@ -704,7 +704,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
  * Returns: TRUE if the packet could be written.
  */
 gboolean
-tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
+tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream, gboolean delta)
 {
   guint payload_len, payload_offs;
   TsMuxPacketInfo *pi = &stream->pi;
@@ -788,7 +788,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
           payload_len))
     return FALSE;
 
-  res = tsmux_packet_out (mux);
+  res = tsmux_packet_out (mux, delta);
 
   /* Reset all dynamic flags */
   stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
@@ -859,7 +859,7 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
     cur_in += payload_len;
     payload_remain -= payload_len;
 
-    if (G_UNLIKELY (!tsmux_packet_out (mux))) {
+    if (G_UNLIKELY (!tsmux_packet_out (mux, TRUE))) {
       mux->new_pcr = -1;
       return FALSE;
     }
