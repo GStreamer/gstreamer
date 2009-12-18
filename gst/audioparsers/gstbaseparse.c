@@ -1216,7 +1216,7 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     guint cache_size = GST_BUFFER_SIZE (parse->priv->cache);
 
     if (cache_offset <= parse->priv->offset &&
-        (parse->priv->offset + size) < (cache_offset + cache_size)) {
+        (parse->priv->offset + size) <= (cache_offset + cache_size)) {
       *buffer = gst_buffer_create_sub (parse->priv->cache,
           parse->priv->offset - cache_offset, size);
       GST_BUFFER_OFFSET (*buffer) = parse->priv->offset;
