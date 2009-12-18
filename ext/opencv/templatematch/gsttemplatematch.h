@@ -47,8 +47,8 @@
 #define __GST_TEMPLATEMATCH_H__
 
 #include <gst/gst.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <cv.h>
+#include <highgui.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
