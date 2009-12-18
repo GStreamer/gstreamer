@@ -1103,6 +1103,11 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       if (G_UNLIKELY (parse->priv->drain)) {
         min_size = gst_adapter_available (parse->adapter);
+        GST_DEBUG_OBJECT (parse, "draining, data left: %d", min_size);
+        if (G_UNLIKELY (!min_size)) {
+          gst_buffer_unref (tmpbuf);
+          goto done;
+        }
       }
 
       /* Collect at least min_frame_size bytes */
