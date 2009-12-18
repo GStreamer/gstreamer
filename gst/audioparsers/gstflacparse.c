@@ -585,47 +585,25 @@ gst_flac_parse_get_frame_size (GstFlacParse * flacparse, GstBuffer * buffer,
 
 need_more_data:
   {
-    gint64 upstream_len = flacparse->upstream_length;
-    GstFormat fmt;
-    gboolean first_try = TRUE;
+    gint max;
 
-    GST_DEBUG_OBJECT (flacparse, "Need more data");
-
-  retry:
-
-    fmt = GST_FORMAT_BYTES;
-    if (upstream_len != -1 ||
-        (gst_pad_query_peer_duration (GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE
-                    (flacparse)), &fmt, &upstream_len)
-            && fmt == GST_FORMAT_BYTES && upstream_len != -1)) {
-      flacparse->upstream_length = upstream_len;
-      upstream_len -= GST_BUFFER_OFFSET (buffer);
-
-      if (flacparse->max_framesize
-          && flacparse->max_framesize > flacparse->requested_frame_size
-          && flacparse->max_framesize <= upstream_len) {
-        flacparse->requested_frame_size = flacparse->max_framesize;
-      } else if (flacparse->requested_frame_size + 4096 <= upstream_len) {
-        flacparse->requested_frame_size += 4096;
-      } else if (flacparse->requested_frame_size <= upstream_len) {
-        flacparse->requested_frame_size = upstream_len;
-      } else {
-        if (first_try) {
-          upstream_len = -1;
-          first_try = FALSE;
-          goto retry;
-        } else {
-          goto eos;
-        }
-      }
+    /* not enough, if that was all available, give up on frame */
+    if (G_UNLIKELY (gst_base_parse_get_drain (GST_BASE_PARSE_CAST (flacparse))))
+      goto eos;
+    /* otherwise, ask for some more */
+    max = flacparse->max_framesize;
+    if (!max)
+      max = 1 << 24;
+    flacparse->requested_frame_size
+        = MIN (GST_BUFFER_SIZE (buffer) + 4096, max);
+    if (flacparse->requested_frame_size > GST_BUFFER_SIZE (buffer)) {
       GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes",
           flacparse->requested_frame_size);
       return flacparse->requested_frame_size;
     } else {
-      flacparse->requested_frame_size++;
-      GST_DEBUG_OBJECT (flacparse, "Requesting %u bytes",
-          flacparse->requested_frame_size);
-      return flacparse->requested_frame_size;
+      GST_DEBUG_OBJECT (flacparse, "Giving up on invalid frame (%d bytes)",
+          GST_BUFFER_SIZE (buffer));
+      return -1;
     }
   }
 
