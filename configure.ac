@@ -532,7 +532,6 @@ fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl building of unit test libraries
-dnl FIXME: disable gstcheck if we don't have pthread
 AC_ARG_ENABLE(check,
   AC_HELP_STRING([--disable-check], [disable building unit test libraries]),
   [
@@ -660,10 +659,9 @@ AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
 
 SHAVE_INIT([common],[enable])
 
-dnl things for our internal libcheck
-if test "x$BUILD_CHECK" = "xyes"; then
-  AG_GST_CHECK_CHECKS()
-fi
+dnl things for our internal libcheck (must be called even if building
+dnl libcheck is disabled because it defines conditionals)
+AG_GST_CHECK_CHECKS()
 
 AC_CONFIG_FILES(
 Makefile
