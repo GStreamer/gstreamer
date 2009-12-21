@@ -671,6 +671,29 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buffer,
       GST_DEBUG_OBJECT (flacparse, "Found sync code");
       ret = gst_flac_parse_get_frame_size (flacparse, buffer, framesize);
       if (ret == 0) {
+        ret = *framesize;
+        /* if not in sync, also check for next frame header */
+        if (!gst_base_parse_get_sync (parse) &&
+            !gst_base_parse_get_drain (parse)) {
+          GST_DEBUG_OBJECT (flacparse, "Resyncing; checking next sync code");
+          if (GST_BUFFER_SIZE (buffer) >= ret + 2) {
+            if (data[ret] == 0xff && (data[ret + 1] >> 2) == 0x3e) {
+              GST_DEBUG_OBJECT (flacparse, "Found next sync code");
+              return TRUE;
+            } else {
+              GST_DEBUG_OBJECT (flacparse,
+                  "No next sync code, rejecting frame");
+              return FALSE;
+            }
+          } else {
+            /* request more data for next sync */
+            GST_DEBUG_OBJECT (flacparse, "... but not enough data");
+            ret += 2;
+            gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), ret);
+            flacparse->requested_frame_size = ret;
+            return FALSE;
+          }
+        }
         return TRUE;
       } else if (ret == -1) {
         return FALSE;
