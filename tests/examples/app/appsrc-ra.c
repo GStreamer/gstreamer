@@ -30,6 +30,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* FIXME: remove once we depend on GLib >= 2.22 */
+#if !GLIB_CHECK_VERSION (2, 22, 0)
+#define g_mapped_file_unref g_mapped_file_free
+#endif
+
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
@@ -215,7 +220,7 @@ main (int argc, char *argv[])
   gst_element_set_state (app->playbin, GST_STATE_NULL);
 
   /* free the file */
-  g_mapped_file_free (app->file);
+  g_mapped_file_unref (app->file);
 
   gst_object_unref (bus);
   g_main_loop_unref (app->loop);
