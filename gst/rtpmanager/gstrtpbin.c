@@ -215,6 +215,8 @@ struct _GstRtpBinPrivate
 
   /* if we are shutting down or not */
   gint shutdown;
+
+  gboolean autoremove;
 };
 
 /* signals and args */
@@ -243,6 +245,7 @@ enum
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_DO_LOST              FALSE
 #define DEFAULT_IGNORE_PT            FALSE
+#define DEFAULT_AUTOREMOVE           FALSE
 
 enum
 {
@@ -251,6 +254,7 @@ enum
   PROP_SDES,
   PROP_DO_LOST,
   PROP_IGNORE_PT,
+  PROP_AUTOREMOVE,
   PROP_LAST
 };
 
@@ -446,6 +450,9 @@ on_bye_timeout (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
 {
   g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_BYE_TIMEOUT], 0,
       sess->id, ssrc);
+
+  if (sess->bin->priv->autoremove)
+    g_signal_emit_by_name (sess->demux, "clear-ssrc", ssrc, NULL);
 }
 
 static void
@@ -453,6 +460,9 @@ on_timeout (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
 {
   g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_TIMEOUT], 0,
       sess->id, ssrc);
+
+  if (sess->bin->priv->autoremove)
+    g_signal_emit_by_name (sess->demux, "clear-ssrc", ssrc, NULL);
 }
 
 static void
@@ -1513,8 +1523,13 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
-      g_param_spec_boolean ("ignore_pt", "Ignore PT",
+      g_param_spec_boolean ("ignore-pt", "Ignore PT",
           "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
+          G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_AUTOREMOVE,
+      g_param_spec_boolean ("autoremove", "Auto Remove",
+          "Automatically removed timed out sources", DEFAULT_AUTOREMOVE,
           G_PARAM_READWRITE));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
@@ -1544,6 +1559,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->latency = DEFAULT_LATENCY_MS;
   rtpbin->do_lost = DEFAULT_DO_LOST;
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
+  rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
 
   /* some default SDES entries */
   str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
@@ -1653,6 +1669,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_IGNORE_PT:
       rtpbin->ignore_pt = g_value_get_boolean (value);
       break;
+    case PROP_AUTOREMOVE:
+      rtpbin->priv->autoremove = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1683,6 +1702,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IGNORE_PT:
       g_value_set_boolean (value, rtpbin->ignore_pt);
+      break;
+    case PROP_AUTOREMOVE:
+      g_value_set_boolean (value, rtpbin->priv->autoremove);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
