@@ -895,6 +895,12 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
     parse->priv->discont = FALSE;
   }
 
+  GST_LOG_OBJECT (parse,
+      "parsing frame at offset %" G_GUINT64_FORMAT
+      " (%#" G_GINT64_MODIFIER "x) of size %d",
+      GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
+      GST_BUFFER_SIZE (buffer));
+
   ret = klass->parse_frame (parse, buffer);
 
   /* re-use default handler to add missing metadata as-much-as-possible */
@@ -912,19 +918,10 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
 
   /* First buffers are dropped, this means that the subclass needs more
    * frames to decide on the format and queues them internally */
-  if (ret == GST_BASE_PARSE_FLOW_DROPPED && !GST_PAD_CAPS (parse->srcpad)) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
-  }
-
   /* convert internal flow to OK and mark discont for the next buffer. */
   if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
-    parse->priv->discont = TRUE;
-    ret = GST_FLOW_OK;
-
     gst_buffer_unref (buffer);
-
-    return ret;
+    return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {
     return ret;
   }
@@ -1403,18 +1400,16 @@ gst_base_parse_loop (GstPad * pad)
 
 need_pause:
   {
-    GST_LOG_OBJECT (parse, "pausing task");
+    GST_LOG_OBJECT (parse, "pausing task %d", ret);
     gst_pad_pause_task (pad);
     gst_object_unref (parse);
     return;
   }
 eos:
   {
-    GST_LOG_OBJECT (parse, "pausing task %d", ret);
+    GST_LOG_OBJECT (parse, "sending eos");
     gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
-    gst_pad_pause_task (pad);
-    gst_object_unref (parse);
-    return;
+    goto need_pause;
   }
 }
 
