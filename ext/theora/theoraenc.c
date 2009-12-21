@@ -104,6 +104,11 @@ _ilog (unsigned int v)
 #define THEORA_DEF_KEYFRAME_FREQ        64
 #define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
 #define THEORA_DEF_SPEEDLEVEL           1
+#define THEORA_DEF_VP3_COMPATIBLE       FALSE
+#define THEORA_DEF_DROP_FRAMES          TRUE
+#define THEORA_DEF_CAP_OVERFLOW         TRUE
+#define THEORA_DEF_CAP_UNDERFLOW        FALSE
+#define THEORA_DEF_RATE_BUFFER          0
 enum
 {
   ARG_0,
@@ -120,6 +125,11 @@ enum
   ARG_NOISE_SENSITIVITY,
   ARG_SHARPNESS,
   ARG_SPEEDLEVEL,
+  ARG_VP3_COMPATIBLE,
+  ARG_DROP_FRAMES,
+  ARG_CAP_OVERFLOW,
+  ARG_CAP_UNDERFLOW,
+  ARG_RATE_BUFFER,
   /* FILL ME */
 };
 
@@ -273,6 +283,38 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           "encoding.  This property requires libtheora version >= 1.0",
           0, 2, THEORA_DEF_SPEEDLEVEL,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_VP3_COMPATIBLE,
+      g_param_spec_boolean ("vp3-compatible", "VP3 Compatible",
+          "Disables non-VP3 compatible features."
+          "  This property requires libtheora version >= 1.1",
+          THEORA_DEF_VP3_COMPATIBLE,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_DROP_FRAMES,
+      g_param_spec_boolean ("drop-frames", "VP3 Compatible",
+          "Allow or disallow frame dropping."
+          "  This property requires libtheora version >= 1.1",
+          THEORA_DEF_DROP_FRAMES,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_CAP_OVERFLOW,
+      g_param_spec_boolean ("cap-overflow", "VP3 Compatible",
+          "Enable capping of bit reservoir overflows."
+          "  This property requires libtheora version >= 1.1",
+          THEORA_DEF_CAP_OVERFLOW,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_CAP_UNDERFLOW,
+      g_param_spec_boolean ("cap-underflow", "VP3 Compatible",
+          "Enable capping of bit reservoir underflows."
+          "  This property requires libtheora version >= 1.1",
+          THEORA_DEF_CAP_UNDERFLOW,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_RATE_BUFFER,
+      g_param_spec_int ("rate-buffer", "Rate Control Buffer",
+          "Sets the size of the rate control buffer, in units of frames.  "
+          "The default value of 0 instructs the encoder to automatically "
+          "select an appropriate value."
+          "  This property requires libtheora version >= 1.1",
+          0, 1000, THEORA_DEF_RATE_BUFFER,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_enc_change_state;
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
@@ -305,6 +347,11 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->expected_ts = GST_CLOCK_TIME_NONE;
 
   enc->speed_level = THEORA_DEF_SPEEDLEVEL;
+  enc->vp3_compatible = THEORA_DEF_VP3_COMPATIBLE;
+  enc->drop_frames = THEORA_DEF_DROP_FRAMES;
+  enc->cap_overflow = THEORA_DEF_CAP_OVERFLOW;
+  enc->cap_underflow = THEORA_DEF_CAP_UNDERFLOW;
+  enc->rate_buffer = THEORA_DEF_RATE_BUFFER;
 }
 
 static void
@@ -325,6 +372,7 @@ static void
 theora_enc_reset (GstTheoraEnc * enc)
 {
   ogg_uint32_t keyframe_force;
+  int rate_flags;
 
   if (enc->encoder)
     th_encode_free (enc->encoder);
@@ -334,6 +382,31 @@ theora_enc_reset (GstTheoraEnc * enc)
 #ifdef TH_ENCCTL_SET_SPLEVEL
   th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
       sizeof (enc->speed_level));
+#endif
+#ifdef TH_ENCCTL_SET_VP3_COMPATIBLE
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_VP3_COMPATIBLE,
+      &enc->vp3_compatible, sizeof (enc->vp3_compatible));
+#endif
+
+  rate_flags = 0;
+#ifdef TH_ENCCTL_SET_RATE_FLAGS
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_DROP_FRAMES;
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_CAP_OVERFLOW;
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_CAP_UNDERFLOW;
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_FLAGS,
+      &rate_flags, sizeof (rate_flags));
+#endif
+
+#ifdef TH_ENCCTL_SET_RATE_BUFFER
+  if (enc->rate_buffer) {
+    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_BUFFER,
+        &enc->rate_buffer, sizeof (enc->rate_buffer));
+  } else {
+    /* FIXME */
+  }
 #endif
 
   keyframe_force = enc->keyframe_auto ?
@@ -1084,6 +1157,31 @@ theora_enc_set_property (GObject * object, guint prop_id,
       enc->speed_level = g_value_get_int (value);
 #endif
       break;
+    case ARG_VP3_COMPATIBLE:
+#ifdef TH_ENCCTL_SET_VP3_COMPATIBLE
+      enc->vp3_compatible = g_value_get_boolean (value);
+#endif
+      break;
+    case ARG_DROP_FRAMES:
+#ifdef TH_ENCCTL_SET_RATE_FLAGS
+      enc->drop_frames = g_value_get_boolean (value);
+#endif
+      break;
+    case ARG_CAP_OVERFLOW:
+#ifdef TH_ENCCTL_SET_RATE_FLAGS
+      enc->cap_overflow = g_value_get_boolean (value);
+#endif
+      break;
+    case ARG_CAP_UNDERFLOW:
+#ifdef TH_ENCCTL_SET_RATE_FLAGS
+      enc->cap_underflow = g_value_get_boolean (value);
+#endif
+      break;
+    case ARG_RATE_BUFFER:
+#ifdef TH_ENCCTL_SET_RATE_BUFFER
+      enc->rate_buffer = g_value_get_int (value);
+#endif
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1135,6 +1233,21 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SPEEDLEVEL:
       g_value_set_int (value, enc->speed_level);
+      break;
+    case ARG_VP3_COMPATIBLE:
+      g_value_set_boolean (value, enc->vp3_compatible);
+      break;
+    case ARG_DROP_FRAMES:
+      g_value_set_boolean (value, enc->drop_frames);
+      break;
+    case ARG_CAP_OVERFLOW:
+      g_value_set_boolean (value, enc->cap_overflow);
+      break;
+    case ARG_CAP_UNDERFLOW:
+      g_value_set_boolean (value, enc->cap_underflow);
+      break;
+    case ARG_RATE_BUFFER:
+      g_value_set_int (value, enc->rate_buffer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
