@@ -410,19 +410,28 @@ gst_qt_mux_add_mp4_tag (GstQTMux * qtmux, const GstTagList * list,
       atom_moov_add_uint_tag (qtmux->moov, fourcc, 21, (gint) value);
       break;
     }
-      /* paired unsigned integers */
     case G_TYPE_UINT:
     {
       guint value;
-      guint count;
+      if (tag2) {
+        /* paired unsigned integers */
+        guint count;
 
-      if (!gst_tag_list_get_uint (list, tag, &value) ||
-          !gst_tag_list_get_uint (list, tag2, &count))
-        break;
-      GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u/%u",
-          GST_FOURCC_ARGS (fourcc), value, count);
-      atom_moov_add_uint_tag (qtmux->moov, fourcc, 0,
-          value << 16 | (count & 0xFFFF));
+        if (!gst_tag_list_get_uint (list, tag, &value) ||
+            !gst_tag_list_get_uint (list, tag2, &count))
+          break;
+        GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u/%u",
+            GST_FOURCC_ARGS (fourcc), value, count);
+        atom_moov_add_uint_tag (qtmux->moov, fourcc, 0,
+            value << 16 | (count & 0xFFFF));
+      } else {
+        /* unpaired unsigned integers */
+        if (!gst_tag_list_get_uint (list, tag, &value))
+          break;
+        GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u",
+            GST_FOURCC_ARGS (fourcc), value);
+        atom_moov_add_uint_tag (qtmux->moov, fourcc, 1, value);
+      }
       break;
     }
     default:
