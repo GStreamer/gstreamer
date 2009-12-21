@@ -51,8 +51,7 @@ struct _GstRtpH264Pay
   GstBaseRTPPayload payload;
 
   guint profile;
-  guint8 *sps, *pps;
-  guint sps_len, pps_len;
+  GList *sps, *pps;
 
   gboolean packetized;
   guint nal_length_size;
@@ -62,6 +61,10 @@ struct _GstRtpH264Pay
   gchar *sprop_parameter_sets;
   gboolean update_caps;
   GstH264ScanMode scan_mode;
+
+  guint spspps_interval;
+  gboolean send_spspps;
+  GstClockTime last_spspps;
 
   gboolean buffer_list;
 };
