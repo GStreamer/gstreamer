@@ -5880,6 +5880,33 @@ qtdemux_tag_add_tmpo (GstQTDemux * qtdemux, const char *tag1, const char *dummy,
 }
 
 static void
+qtdemux_tag_add_uint32 (GstQTDemux * qtdemux, const char *tag1,
+    const char *dummy, GNode * node)
+{
+  GNode *data;
+  int len;
+  int type;
+  guint32 num;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QT_UINT32 (data->data);
+    type = QT_UINT32 ((guint8 *) data->data + 8);
+    GST_DEBUG_OBJECT (qtdemux, "have %s tag, type=%d,len=%d", tag1, type, len);
+    /* some files wrongly have a type 0x0f=15, but it should be 0x15 */
+    if ((type == 0x00000015 || type == 0x0000000f) && len >= 20) {
+      num = QT_UINT32 ((guint8 *) data->data + 16);
+      if (num) {
+        /* do not add num=0 */
+        GST_DEBUG_OBJECT (qtdemux, "adding tag %d", num);
+        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+            tag1, num, NULL);
+      }
+    }
+  }
+}
+
+static void
 qtdemux_tag_add_covr (GstQTDemux * qtdemux, const char *tag1, const char *dummy,
     GNode * node)
 {
@@ -5980,6 +6007,13 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
 typedef void (*GstQTDemuxAddTagFunc) (GstQTDemux * demux,
     const char *tag, const char *tag_bis, GNode * node);
 
+/* unmapped tags
+FOURCC_pcst -> if media is a podcast -> bool
+FOURCC_cpil -> if media is part of a compilation -> bool
+FOURCC_pgap -> if media is part of a gapless context -> bool
+FOURCC_tven -> the tv episode id e.g. S01E23 -> str
+*/
+
 static const struct
 {
   guint32 fourcc;
@@ -5990,10 +6024,11 @@ static const struct
   {
   FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
   FOURCC_titl, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
-  FOURCC__grp, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC__grp, GST_TAG_GROUPING, NULL, qtdemux_tag_add_str}, {
   FOURCC__wrt, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC_aART, GST_TAG_ALBUM_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC_perf, GST_TAG_PERFORMER, NULL, qtdemux_tag_add_str}, {
   FOURCC_auth, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
   FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
@@ -6001,10 +6036,12 @@ static const struct
   FOURCC__cpy, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
   FOURCC__cmt, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+  FOURCC_desc, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
   FOURCC_dscp, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+  FOURCC__lyr, GST_TAG_LYRICS, NULL, qtdemux_tag_add_str}, {
   FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
   FOURCC_yrrc, GST_TAG_DATE, NULL, qtdemux_tag_add_year}, {
-  FOURCC__too, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+  FOURCC__too, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
   FOURCC__inf, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, qtdemux_tag_add_num}, {
   FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
@@ -6015,6 +6052,15 @@ static const struct
   FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
   FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
   FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
+  FOURCC_sonm, GST_TAG_TITLE_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_soal, GST_TAG_ALBUM_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_soar, GST_TAG_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_soaa, GST_TAG_ALBUM_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_soco, GST_TAG_COMPOSER_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_sosn, GST_TAG_SHOW_SORTNAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_tvsh, GST_TAG_SHOW_NAME, NULL, qtdemux_tag_add_str}, {
+  FOURCC_tvsn, GST_TAG_SHOW_SEASON_NUMBER, NULL, qtdemux_tag_add_uint32}, {
+  FOURCC_tves, GST_TAG_SHOW_EPISODE_NUMBER, NULL, qtdemux_tag_add_uint32}, {
   FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_keywords}, {
   FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
   FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
