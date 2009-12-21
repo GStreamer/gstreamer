@@ -285,6 +285,33 @@ _gst_tag_initialize (void)
       _
       ("geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"),
       NULL);
+  gst_tag_register (GST_TAG_SHOW_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("Name of the show"),
+      _("Name of the tv/podcast/series show the media is from"),
+      gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_SHOW_SORTNAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("Name of the show for sorting purposes"),
+      _("Name of the tv/podcast/series show the media is from, for sorting "
+          "purposes"), NULL);
+  gst_tag_register (GST_TAG_SHOW_EPISODE_NUMBER, GST_TAG_FLAG_META, G_TYPE_UINT,
+      _("Episode's number"),
+      _("The episode's number in the season the media is part of"),
+      gst_tag_merge_use_first);
+  gst_tag_register (GST_TAG_SHOW_SEASON_NUMBER, GST_TAG_FLAG_META, G_TYPE_UINT,
+      _("Season's number"),
+      _("The season's number of the show the media is part of"),
+      gst_tag_merge_use_first);
+  gst_tag_register (GST_TAG_LYRICS, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("Lyrics"), _("The lyrics of the media, commonly used for songs"),
+      gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_COMPOSER_SORTNAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("composer, for sorting purposes"),
+      _("person(s) who composed the recording, for sorting purposes"), NULL);
+  gst_tag_register (GST_TAG_GROUPING, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("Groups related media"),
+      _("Groups related media that spans multiple tracks, like the different "
+          "pieces of a concerto. It is a higher level than a track, "
+          "but lower than an album"), NULL);
 }
 
 /**
