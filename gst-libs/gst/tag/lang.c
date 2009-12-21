@@ -356,7 +356,7 @@ gst_tag_get_language_name (const gchar * language_code)
  *
  * Language codes are case-sensitive and expected to be lower case.
  *
- * Returns two-letter ISO-639-1 language code string that maps to @lang_code,
+ * Returns: two-letter ISO-639-1 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
  *
@@ -438,7 +438,7 @@ gst_tag_get_language_code_iso_639_2X (const gchar * lang_code, guint8 flags)
  *
  * Language codes are case-sensitive and expected to be lower case.
  *
- * Returns three-letter ISO-639-2 language code string that maps to @lang_code,
+ * Returns: three-letter ISO-639-2 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
  *
@@ -474,7 +474,7 @@ gst_tag_get_language_code_iso_639_2T (const gchar * lang_code)
  *
  * Language codes are case-sensitive and expected to be lower case.
  *
- * Returns three-letter ISO-639-2 language code string that maps to @lang_code,
+ * Returns: three-letter ISO-639-2 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
  *
