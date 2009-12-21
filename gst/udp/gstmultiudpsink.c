@@ -411,7 +411,7 @@ socket_last_error_message ()
   if (FAILED (result)) {
     return g_strdup ("failed to get error message from system");
   } else {
-    return g_convert (buf, "UTF-16", "UTF-8", NULL, NULL, NULL);
+    return g_convert (buf, -1, "UTF-16", "UTF-8", NULL, NULL, NULL);
   }
 #else
   return g_strdup (g_strerror (errno));
