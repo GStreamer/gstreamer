@@ -397,7 +397,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 2;
+    *skipsize = GST_BUFFER_SIZE (buf) - 3;
     return FALSE;
   }
 
