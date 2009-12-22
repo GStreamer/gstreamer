@@ -6028,7 +6028,7 @@ static const struct
   FOURCC__wrt, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC_aART, GST_TAG_ALBUM_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_perf, GST_TAG_PERFORMER, NULL, qtdemux_tag_add_str}, {
+  FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC_auth, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
   FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
   FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
