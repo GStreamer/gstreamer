@@ -664,6 +664,16 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   GST_OBJECT_LOCK (tee);
   pads = GST_ELEMENT_CAST (tee)->srcpads;
 
+  /* special case for zero pads */
+  if (!pads) {
+    GST_OBJECT_UNLOCK (tee);
+    if (is_list)
+      gst_buffer_list_unref (data);
+    else
+      gst_buffer_unref (data);
+    return GST_FLOW_NOT_LINKED;
+  }
+
   /* special case for just one pad that avoids reffing the buffer */
   if (!pads->next) {
     GstPad *pad = GST_PAD_CAST (pads->data);
