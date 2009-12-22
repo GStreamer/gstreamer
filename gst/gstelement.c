@@ -2043,9 +2043,9 @@ interrupted:
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
- * @state: a pointer to #GstState to hold the state. Can be %NULL.
- * @pending: a pointer to #GstState to hold the pending state.
- *           Can be %NULL.
+ * @state: (out): a pointer to #GstState to hold the state. Can be %NULL.
+ * @pending: (out): a pointer to #GstState to hold the pending state.
+ *                  Can be %NULL.
  * @timeout: a #GstClockTime to specify the timeout for an async
  *           state change or %GST_CLOCK_TIME_NONE for infinite timeout.
  *
