@@ -665,26 +665,21 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   pads = GST_ELEMENT_CAST (tee)->srcpads;
 
   /* special case for zero pads */
-  if (!pads) {
-    GST_OBJECT_UNLOCK (tee);
-    if (is_list)
-      gst_buffer_list_unref (data);
-    else
-      gst_buffer_unref (data);
-    return GST_FLOW_NOT_LINKED;
-  }
+  if (G_UNLIKELY (!pads))
+    goto no_pads;
 
   /* special case for just one pad that avoids reffing the buffer */
   if (!pads->next) {
     GstPad *pad = GST_PAD_CAST (pads->data);
 
     GST_OBJECT_UNLOCK (tee);
+
     if (pad == tee->pull_pad) {
       ret = GST_FLOW_OK;
-    } else if (!is_list) {
-      ret = gst_pad_push (pad, GST_BUFFER_CAST (data));
-    } else {
+    } else if (is_list) {
       ret = gst_pad_push_list (pad, GST_BUFFER_LIST_CAST (data));
+    } else {
+      ret = gst_pad_push (pad, GST_BUFFER_CAST (data));
     }
     return ret;
   }
@@ -708,7 +703,7 @@ restart:
     pdata = g_object_get_qdata ((GObject *) pad, push_data);
     g_assert (pdata != NULL);
 
-    if (!pdata->pushed) {
+    if (G_LIKELY (!pdata->pushed)) {
       /* not yet pushed, release lock and start pushing */
       gst_object_ref (pad);
       GST_OBJECT_UNLOCK (tee);
@@ -738,7 +733,7 @@ restart:
     /* before we go combining the return value, check if the pad list is still
      * the same. It could be possible that the pad we just pushed was removed
      * and the return value it not valid anymore */
-    if (GST_ELEMENT_CAST (tee)->pads_cookie != cookie) {
+    if (G_UNLIKELY (GST_ELEMENT_CAST (tee)->pads_cookie != cookie)) {
       GST_LOG_OBJECT (tee, "pad list changed");
       /* the list of pads changed, restart iteration. Pads that we already
        * pushed on and are still in the new list, will not be pushed on
@@ -747,11 +742,11 @@ restart:
     }
 
     /* stop pushing more buffers when we have a fatal error */
-    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
+    if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED))
       goto error;
 
     /* keep all other return values, overwriting the previous one. */
-    if (ret != GST_FLOW_NOT_LINKED) {
+    if (G_LIKELY (ret != GST_FLOW_NOT_LINKED)) {
       GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
       cret = ret;
     }
@@ -765,11 +760,17 @@ restart:
   return cret;
 
   /* ERRORS */
+no_pads:
+  {
+    GST_DEBUG_OBJECT (tee, "there are no pads, return not-linked");
+    ret = GST_FLOW_NOT_LINKED;
+    goto error;
+  }
 error:
   {
     GST_DEBUG_OBJECT (tee, "received error %s", gst_flow_get_name (ret));
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_OBJECT_UNLOCK (tee);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return ret;
   }
 }
