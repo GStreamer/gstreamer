@@ -127,7 +127,6 @@ gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay,
 
   rtph263depay->offset = 0;
   rtph263depay->leftover = 0;
-  rtph263depay->start = TRUE;
 }
 
 static void
@@ -274,7 +273,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   if (!EBIT) {
-    if(rtph263depay->start){
+    if (rtph263depay->start) {
       GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
 
       /* Copy the entire buffer */
@@ -282,7 +281,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gst_adapter_push (rtph263depay->adapter, tmp);
     }
   } else {
-    if(rtph263depay->start){
+    if (rtph263depay->start) {
       GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
 
       /* Copy the entire buffer except for the last byte */
@@ -299,7 +298,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   if (M) {
-    if(rtph263depay->start){
+    if (rtph263depay->start) {
       /* frame is completed */
       guint avail;
       guint32 timestamp;
@@ -325,7 +324,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
       rtph263depay->offset = 0;
       rtph263depay->leftover = 0;
-    }else{
+    } else {
       rtph263depay->start = TRUE;
     }
   }
@@ -347,6 +346,7 @@ gst_rtp_h263_depay_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtph263depay->adapter);
+      rtph263depay->start = TRUE;
       break;
     default:
       break;
