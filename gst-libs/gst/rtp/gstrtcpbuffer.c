@@ -1853,3 +1853,93 @@ gst_rtcp_unix_to_ntp (guint64 unixtime)
 
   return ntptime;
 }
+
+/**
+ * gst_rtcp_sdes_type_to_name:
+ * @type: a #GstRTCPSDESType
+ *
+ * Converts @type to the string equivalent. The string is typically used as a
+ * key in a #GstStructure containing SDES items.
+ *
+ * Returns: the string equivalent of @type
+ *
+ * Since: 0.10.26
+ */
+const gchar *
+gst_rtcp_sdes_type_to_name (GstRTCPSDESType type)
+{
+  const gchar *result;
+
+  switch (type) {
+    case GST_RTCP_SDES_CNAME:
+      result = "cname";
+      break;
+    case GST_RTCP_SDES_NAME:
+      result = "name";
+      break;
+    case GST_RTCP_SDES_EMAIL:
+      result = "email";
+      break;
+    case GST_RTCP_SDES_PHONE:
+      result = "phone";
+      break;
+    case GST_RTCP_SDES_LOC:
+      result = "location";
+      break;
+    case GST_RTCP_SDES_TOOL:
+      result = "tool";
+      break;
+    case GST_RTCP_SDES_NOTE:
+      result = "note";
+      break;
+    case GST_RTCP_SDES_PRIV:
+      result = "priv";
+      break;
+    default:
+      result = NULL;
+      break;
+  }
+  return result;
+}
+
+/**
+ * gst_rtcp_sdes_name_to_type:
+ * @name: a SDES name
+ *
+ * Convert @name into a @GstRTCPSDESType. @name is typically a key in a
+ * #GstStructure containing SDES items.
+ *
+ * Returns: the #GstRTCPSDESType for @name or #GST_RTCP_SDES_PRIV when @name
+ * is a private sdes item.
+ *
+ * Since: 0.10.26
+ */
+GstRTCPSDESType
+gst_rtcp_sdes_name_to_type (const gchar * name)
+{
+  if (name == NULL || strlen (name) == 0)
+    return GST_RTCP_SDES_INVALID;
+
+  if (strcmp ("cname", name) == 0)
+    return GST_RTCP_SDES_CNAME;
+
+  if (strcmp ("name", name) == 0)
+    return GST_RTCP_SDES_NAME;
+
+  if (strcmp ("email", name) == 0)
+    return GST_RTCP_SDES_EMAIL;
+
+  if (strcmp ("phone", name) == 0)
+    return GST_RTCP_SDES_PHONE;
+
+  if (strcmp ("location", name) == 0)
+    return GST_RTCP_SDES_LOC;
+
+  if (strcmp ("tool", name) == 0)
+    return GST_RTCP_SDES_TOOL;
+
+  if (strcmp ("note", name) == 0)
+    return GST_RTCP_SDES_NOTE;
+
+  return GST_RTCP_SDES_PRIV;
+}
