@@ -875,17 +875,21 @@ rtp_session_get_sdes_string (RTPSession * sess, GstRTCPSDESType type)
  *
  * Get the SDES data as a #GstStructure
  *
- * Returns: a GstStructure with SDES items for @sess.
+ * Returns: a GstStructure with SDES items for @sess. This function returns a
+ * copy of the SDES structure, use gst_structure_free() after usage.
  */
 GstStructure *
 rtp_session_get_sdes_struct (RTPSession * sess)
 {
-  GstStructure *result;
+  const GstStructure *sdes;
+  GstStructure *result = NULL;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
 
   RTP_SESSION_LOCK (sess);
-  result = rtp_source_get_sdes_struct (sess->source);
+  sdes = rtp_source_get_sdes_struct (sess->source);
+  if (sdes)
+    result = gst_structure_copy (sdes);
   RTP_SESSION_UNLOCK (sess);
 
   return result;
@@ -896,15 +900,16 @@ rtp_session_get_sdes_struct (RTPSession * sess)
  * @sess: an #RTSPSession
  * @sdes: a #GstStructure
  *
- * Set the SDES data as a #GstStructure.
+ * Set the SDES data as a #GstStructure. This function makes a copy of @sdes.
  */
 void
 rtp_session_set_sdes_struct (RTPSession * sess, const GstStructure * sdes)
 {
+  g_return_if_fail (sdes);
   g_return_if_fail (RTP_IS_SESSION (sess));
 
   RTP_SESSION_LOCK (sess);
-  rtp_source_set_sdes_struct (sess->source, sdes);
+  rtp_source_set_sdes_struct (sess->source, gst_structure_copy (sdes));
   RTP_SESSION_UNLOCK (sess);
 }
 
@@ -1717,9 +1722,8 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       j++;
     }
 
+    /* takes ownership of sdes */
     changed = rtp_source_set_sdes_struct (source, sdes);
-
-    gst_structure_free (sdes);
 
     source->validated = TRUE;
 
@@ -2318,7 +2322,7 @@ static void
 session_sdes (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
-  GstStructure *sdes;
+  const GstStructure *sdes;
   gint i, n_fields;
 
   /* add SDES packet */
@@ -2370,8 +2374,6 @@ session_sdes (RTPSession * sess, ReportData * data)
       gst_rtcp_packet_sdes_add_entry (packet, type, data_len, data);
     }
   }
-
-  gst_structure_free (sdes);
 
   data->has_sdes = TRUE;
 }

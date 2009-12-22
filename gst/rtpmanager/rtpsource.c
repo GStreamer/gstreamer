@@ -286,30 +286,34 @@ rtp_source_create_stats (RTPSource * src)
  * rtp_source_get_sdes_struct:
  * @src: an #RTPSource
  *
- * Get the SDES from @src.
+ * Get the SDES from @src. See the SDES property for more details.
  *
- * Returns: %GstStructure of type "application/x-rtp-source-sdes", see
- * the SDES property for more details.
+ * Returns: %GstStructure of type "application/x-rtp-source-sdes". The result is
+ * valid until the SDES items of @src are modified.
  */
-GstStructure *
+const GstStructure *
 rtp_source_get_sdes_struct (RTPSource * src)
 {
   g_return_val_if_fail (RTP_IS_SOURCE (src), NULL);
 
-  return gst_structure_copy (src->sdes);
+  return src->sdes;
 }
 
 static gboolean
 sdes_struct_compare_func (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
-  GstStructure *old = GST_STRUCTURE (user_data);
-  const gchar *field = g_quark_to_string (field_id);
+  GstStructure *old;
+  const gchar *field;
+
+  old = GST_STRUCTURE (user_data);
+  field = g_quark_to_string (field_id);
 
   if (!gst_structure_has_field (old, field))
     return FALSE;
 
   g_assert (G_VALUE_HOLDS_STRING (value));
+
   return strcmp (g_value_get_string (value), gst_structure_get_string (old,
           field)) == 0;
 }
@@ -322,15 +326,16 @@ sdes_struct_compare_func (GQuark field_id, const GValue * value,
  * Store the @sdes in @src. @sdes must be a structure of type
  * "application/x-rtp-source-sdes", see the SDES property for more details.
  *
+ * This function takes ownership of @sdes.
+ *
  * Returns: %FALSE if the SDES was unchanged.
  */
 gboolean
-rtp_source_set_sdes_struct (RTPSource * src, const GstStructure * sdes)
+rtp_source_set_sdes_struct (RTPSource * src, GstStructure * sdes)
 {
   gboolean changed;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
-
   g_return_val_if_fail (strcmp (gst_structure_get_name (sdes),
           "application/x-rtp-source-sdes") == 0, FALSE);
 
@@ -338,7 +343,9 @@ rtp_source_set_sdes_struct (RTPSource * src, const GstStructure * sdes)
 
   if (changed) {
     gst_structure_free (src->sdes);
-    src->sdes = gst_structure_copy (sdes);
+    src->sdes = sdes;
+  } else {
+    gst_structure_free (sdes);
   }
 
   return changed;
@@ -384,7 +391,7 @@ rtp_source_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, rtp_source_is_sender (src));
       break;
     case PROP_SDES:
-      g_value_take_boxed (value, rtp_source_get_sdes_struct (src));
+      g_value_set_boxed (value, rtp_source_get_sdes_struct (src));
       break;
     case PROP_STATS:
       g_value_take_boxed (value, rtp_source_create_stats (src));

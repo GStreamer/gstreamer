@@ -181,8 +181,9 @@ void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
 gboolean        rtp_source_set_sdes_string     (RTPSource *src, GstRTCPSDESType type,
                                                 const gchar *data);
 gchar*          rtp_source_get_sdes_string     (RTPSource *src, GstRTCPSDESType type);
-GstStructure *  rtp_source_get_sdes_struct     (RTPSource * src);
-gboolean        rtp_source_set_sdes_struct     (RTPSource * src, const GstStructure *sdes);
+const GstStructure *
+                rtp_source_get_sdes_struct     (RTPSource * src);
+gboolean        rtp_source_set_sdes_struct     (RTPSource * src, GstStructure *sdes);
 
 /* handling network address */
 void            rtp_source_set_rtp_from        (RTPSource *src, GstNetAddress *address);
