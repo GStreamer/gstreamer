@@ -262,7 +262,8 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   payload_len -= header_len;
 
   if (SBIT) {
-    /* take the leftover and merge it at the beginning */
+    /* take the leftover and merge it at the beginning, FIXME make the buffer
+     * data writable. */
     GST_LOG ("payload[0] : 0x%x", payload[0]);
     payload[0] &= 0xFF >> SBIT;
     GST_LOG ("payload[0] : 0x%x", payload[0]);
@@ -276,7 +277,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (rtph263depay->start) {
       GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
 
-      /* Copy the entire buffer */
+      /* Copy the entire buffer, FIXME, use subbuffers */
       memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
       gst_adapter_push (rtph263depay->adapter, tmp);
     }
@@ -284,7 +285,8 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (rtph263depay->start) {
       GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
 
-      /* Copy the entire buffer except for the last byte */
+      /* Copy the entire buffer except for the last byte. FIXME, use
+       * subbuffers. */
       memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
       gst_adapter_push (rtph263depay->adapter, tmp);
 
