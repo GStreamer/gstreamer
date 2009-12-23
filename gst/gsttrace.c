@@ -471,7 +471,13 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
     mem_live = trace->mem_live;
 
     while (mem_live) {
-      g_print ("%-22.22s : %p\n", "", mem_live->data);
+      gpointer data = mem_live->data;
+
+      if (G_IS_OBJECT (data)) {
+        g_print ("%-22.22s : %p\n", g_type_name (G_OBJECT_TYPE (data)), data);
+      } else {
+        g_print ("%-22.22s : %p\n", "", data);
+      }
       mem_live = mem_live->next;
     }
   }
