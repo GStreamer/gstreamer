@@ -802,6 +802,7 @@ block_async_full_destroy (gpointer user_data)
 
   fail_unless (*state < 2);
 
+  GST_DEBUG ("setting state to 2");
   *state = 2;
 }
 
@@ -811,6 +812,7 @@ block_async_full_cb (GstPad * pad, gboolean blocked, gpointer user_data)
   *(gint *) user_data = (gint) blocked;
 
   gst_pad_push_event (pad, gst_event_new_flush_start ());
+  GST_DEBUG ("setting state to 1");
 }
 
 GST_START_TEST (test_block_async_full_destroy)
@@ -833,14 +835,25 @@ GST_START_TEST (test_block_async_full_destroy)
   fail_unless (state == 1);
   gst_pad_push_event (pad, gst_event_new_flush_stop ());
 
-  /* call with the same user_data, should not call the destroy_notify function
-   */
+  /* pad was already blocked so nothing happens */
   gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 1);
 
+  /* unblock with the same data, callback is called */
+  gst_pad_set_blocked_async_full (pad, FALSE, block_async_full_cb,
+      &state, block_async_full_destroy);
+  fail_unless (state == 2);
+
+  /* block with the same data, callback is called */
+  state = 1;
+  gst_pad_set_blocked_async_full (pad, TRUE, block_async_full_cb,
+      &state, block_async_full_destroy);
+  fail_unless (state == 2);
+
   /* now change user_data (to NULL in this case) so destroy_notify should be
    * called */
+  state = 1;
   gst_pad_set_blocked_async_full (pad, FALSE, block_async_full_cb,
       NULL, block_async_full_destroy);
   fail_unless (state == 2);

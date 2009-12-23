@@ -1030,8 +1030,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
 
     GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
 
-    if (pad->block_destroy_data && pad->block_data &&
-        pad->block_data != user_data)
+    if (pad->block_destroy_data && pad->block_data)
       pad->block_destroy_data (pad->block_data);
 
     pad->block_callback = callback;
@@ -1048,8 +1047,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
 
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
 
-    if (pad->block_destroy_data && pad->block_data &&
-        pad->block_data != user_data)
+    if (pad->block_destroy_data && pad->block_data)
       pad->block_destroy_data (pad->block_data);
 
     pad->block_callback = callback;
