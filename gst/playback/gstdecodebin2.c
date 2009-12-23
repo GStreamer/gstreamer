@@ -1469,12 +1469,12 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         "is a demuxer, connecting the pad through multiqueue '%s'",
         GST_OBJECT_NAME (chain->parent->multiqueue));
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), NULL);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (chain->parent, pad)))
       goto beach;
     src = chain->parent->multiqueue;
     pad = mqpad;
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
   }
 
   /* 2. Try to create an element and link to it */
@@ -1488,7 +1488,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
      */
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
 
     /* take first factory */
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
@@ -1519,7 +1519,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     }
 
     /* 2.0. Unlink pad */
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), NULL);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
 
     /* 2.1. Try to create an element */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
@@ -1754,11 +1754,11 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   if (chain->parent && !chain->elements && src != chain->parent->multiqueue) {
     GST_LOG_OBJECT (src, "connecting the pad through multiqueue");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), NULL);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (chain->parent, pad)))
       goto beach;
     pad = mqpad;
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
   }
 
   gst_decode_pad_activate (dpad, chain);
@@ -2735,8 +2735,8 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   GstStructure *sa, *sb;
   const gchar *namea, *nameb;
 
-  capsa = gst_pad_get_caps_reffed (GST_PAD (da));
-  capsb = gst_pad_get_caps_reffed (GST_PAD (db));
+  capsa = gst_pad_get_caps_reffed (GST_PAD_CAST (da));
+  capsb = gst_pad_get_caps_reffed (GST_PAD_CAST (db));
 
   sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
   sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
@@ -2987,7 +2987,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
 
     /* 2. activate and add */
     if (!dpad->exposed
-        && !gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD (dpad))) {
+        && !gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD_CAST (dpad))) {
       /* not really fatal, we can try to add the other pads */
       g_warning ("error adding pad to decodebin2");
       continue;
@@ -3162,10 +3162,11 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
   gst_pad_set_blocked_async_full (opad, blocked,
       (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
       (GDestroyNotify) gst_object_unref);
+
   if (blocked) {
     if (dbin->shutdown) {
       /* deactivate to force flushing state to prevent NOT_LINKED errors */
-      gst_pad_set_active (GST_PAD (dpad), FALSE);
+      gst_pad_set_active (GST_PAD_CAST (dpad), FALSE);
     } else {
       gst_object_ref (dpad);
       dbin->blocked_pads = g_list_prepend (dbin->blocked_pads, dpad);
@@ -3186,7 +3187,7 @@ out:
 static void
 gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 {
-  gst_pad_add_event_probe (GST_PAD (dpad),
+  gst_pad_add_event_probe (GST_PAD_CAST (dpad),
       G_CALLBACK (source_pad_event_probe), dpad);
 }
 
@@ -3196,7 +3197,7 @@ gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeChain * chain)
   g_return_if_fail (chain != NULL);
 
   dpad->chain = chain;
-  gst_pad_set_active (GST_PAD (dpad), TRUE);
+  gst_pad_set_active (GST_PAD_CAST (dpad), TRUE);
   gst_decode_pad_set_blocked (dpad, TRUE);
   gst_decode_pad_add_drained_check (dpad);
 }
@@ -3216,11 +3217,12 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeChain * chain)
 {
   GstDecodePad *dpad;
 
+  GST_DEBUG_OBJECT (dbin, "making new decodepad");
   dpad =
       g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_DIRECTION (pad),
       NULL);
-  gst_ghost_pad_construct (GST_GHOST_PAD (dpad));
-  gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
+  gst_ghost_pad_construct (GST_GHOST_PAD_CAST (dpad));
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
   dpad->chain = chain;
   dpad->dbin = dbin;
 
@@ -3300,10 +3302,13 @@ unblock_pads (GstDecodeBin * dbin)
 {
   GList *tmp;
 
+  GST_LOG_OBJECT (dbin, "unblocking pads");
+
   for (tmp = dbin->blocked_pads; tmp; tmp = tmp->next) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
-    GstPad *opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
+    GstPad *opad;
 
+    opad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (dpad));
     if (!opad)
       continue;
 
@@ -3312,7 +3317,7 @@ unblock_pads (GstDecodeBin * dbin)
         (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
         (GDestroyNotify) gst_object_unref);
     /* make flushing, prevent NOT_LINKED */
-    GST_PAD_SET_FLUSHING (GST_PAD (dpad));
+    GST_PAD_SET_FLUSHING (GST_PAD_CAST (dpad));
     gst_object_unref (dpad);
     gst_object_unref (opad);
     GST_DEBUG_OBJECT (dpad, "unblocked");
