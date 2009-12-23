@@ -1076,7 +1076,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
             GstPad *sinkpad;
 
             /* insert a queue element right before the raw pad */
-            outelem = gst_element_factory_make ("queue2", "queue");
+            outelem = gst_element_factory_make ("queue2", NULL);
             gst_bin_add (GST_BIN_CAST (decoder), outelem);
 
             sinkpad = gst_element_get_static_pad (outelem, "sink");
