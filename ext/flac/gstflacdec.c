@@ -1773,6 +1773,16 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * downstream in PAUSED, for example */
   GST_PAD_STREAM_LOCK (flacdec->sinkpad);
 
+  /* start seek with clear state to avoid seeking thread pushing segments/data.
+   * Note current state may have some pending,
+   * e.g. multi-sink seek leads to immediate subsequent seek events */
+  if (flacdec->start_segment) {
+    gst_event_unref (flacdec->start_segment);
+    flacdec->start_segment = NULL;
+  }
+  gst_buffer_replace (&flacdec->pending, NULL);
+  flacdec->pending_samples = 0;
+
   /* save a segment copy until we know the seek worked. The idea is that
    * when the seek fails, we want to restore with what we were doing. */
   segment = flacdec->segment;
