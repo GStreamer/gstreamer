@@ -61,6 +61,7 @@ static const guint8 headheader[20] = {
   0x51, 0x44, 0x4d, 0x32, 0x0, 0x0, 0x0, 0x24,
   0x51, 0x44, 0x43, 0x41
 };
+
 static void gst_rtp_qdm2_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_qdm2_depay_change_state (GstElement *
@@ -95,8 +96,6 @@ gst_rtp_qdm2_depay_class_init (GstRtpQDM2DepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gstbasertpdepayload_class->process = gst_rtp_qdm2_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_qdm2_depay_setcaps;

@@ -58,44 +58,15 @@ GST_STATIC_PAD_TEMPLATE ("sinkrtcp",
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-static void gst_rtp_depay_class_init (GstRTPDepayClass * klass);
-static void gst_rtp_depay_init (GstRTPDepay * rtpdepay);
-
 static GstCaps *gst_rtp_depay_getcaps (GstPad * pad);
 static GstFlowReturn gst_rtp_depay_chain_rtp (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_rtp_depay_chain_rtcp (GstPad * pad,
     GstBuffer * buffer);
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_rtp_depay_signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_rtp_depay_get_type (void)
-{
-  static GType rtpdepay_type = 0;
-
-  if (!rtpdepay_type) {
-    static const GTypeInfo rtpdepay_info = {
-      sizeof (GstRTPDepayClass), NULL,
-      NULL,
-      (GClassInitFunc) gst_rtp_depay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRTPDepay),
-      0,
-      (GInstanceInitFunc) gst_rtp_depay_init,
-    };
-
-    rtpdepay_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPDepay", &rtpdepay_info,
-        0);
-  }
-  return rtpdepay_type;
-}
+GST_BOILERPLATE (GstRTPDepay, gst_rtp_depay, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_rtp_depay_class_init (GstRTPDepayClass * klass)
+gst_rtp_depay_base_init (gpointer klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
@@ -108,14 +79,16 @@ gst_rtp_depay_class_init (GstRTPDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_depay_sink_rtcp_template));
   gst_element_class_set_details (gstelement_class, &rtpdepay_details);
+}
 
-  parent_class = g_type_class_peek_parent (klass);
-
+static void
+gst_rtp_depay_class_init (GstRTPDepayClass * klass)
+{
   GST_DEBUG_CATEGORY_INIT (rtpdepay_debug, "rtpdepay", 0, "RTP decoder");
 }
 
 static void
-gst_rtp_depay_init (GstRTPDepay * rtpdepay)
+gst_rtp_depay_init (GstRTPDepay * rtpdepay, GstRTPDepayClass * klass)
 {
   /* the input rtp pad */
   rtpdepay->sink_rtp =

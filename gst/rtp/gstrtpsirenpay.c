@@ -81,8 +81,6 @@ gst_rtpsirenpay_class_init (GstRTPSirenPayClass * klass)
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
-
   gstbasertppayload_class->set_caps = gst_rtpsirenpay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpsirenpay_debug, "rtpsirenpay", 0,

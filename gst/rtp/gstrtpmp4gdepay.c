@@ -170,8 +170,6 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_rtp_mp4g_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_mp4g_depay_change_state;

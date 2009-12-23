@@ -82,8 +82,6 @@ gst_rtp_pcmu_pay_class_init (GstRtpPcmuPayClass * klass)
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertppayload_class->set_caps = gst_rtp_pcmu_pay_setcaps;
 }
 

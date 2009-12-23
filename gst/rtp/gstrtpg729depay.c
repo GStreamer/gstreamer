@@ -109,8 +109,6 @@ gst_rtp_g729_depay_class_init (GstRtpG729DepayClass * klass)
 
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertpdepayload_class->process = gst_rtp_g729_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_g729_depay_setcaps;
 }

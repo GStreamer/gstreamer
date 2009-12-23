@@ -71,9 +71,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
     );
 
-static void gst_asteriskh263_class_init (GstAsteriskh263Class * klass);
-static void gst_asteriskh263_base_init (GstAsteriskh263Class * klass);
-static void gst_asteriskh263_init (GstAsteriskh263 * asteriskh263);
 static void gst_asteriskh263_finalize (GObject * object);
 
 static GstFlowReturn gst_asteriskh263_chain (GstPad * pad, GstBuffer * buffer);
@@ -81,35 +78,11 @@ static GstFlowReturn gst_asteriskh263_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_asteriskh263_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
-static GType
-gst_asteriskh263_get_type (void)
-{
-  static GType asteriskh263_type = 0;
-
-  if (!asteriskh263_type) {
-    static const GTypeInfo asteriskh263_info = {
-      sizeof (GstAsteriskh263Class),
-      (GBaseInitFunc) gst_asteriskh263_base_init,
-      NULL,
-      (GClassInitFunc) gst_asteriskh263_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAsteriskh263),
-      0,
-      (GInstanceInitFunc) gst_asteriskh263_init,
-    };
-
-    asteriskh263_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAsteriskh263",
-        &asteriskh263_info, 0);
-  }
-  return asteriskh263_type;
-}
+GST_BOILERPLATE (GstAsteriskh263, gst_asteriskh263, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void
-gst_asteriskh263_base_init (GstAsteriskh263Class * klass)
+gst_asteriskh263_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -130,15 +103,14 @@ gst_asteriskh263_class_init (GstAsteriskh263Class * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_asteriskh263_finalize;
 
   gstelement_class->change_state = gst_asteriskh263_change_state;
 }
 
 static void
-gst_asteriskh263_init (GstAsteriskh263 * asteriskh263)
+gst_asteriskh263_init (GstAsteriskh263 * asteriskh263,
+    GstAsteriskh263Class * klass)
 {
   asteriskh263->srcpad =
       gst_pad_new_from_static_template (&gst_asteriskh263_src_template, "src");

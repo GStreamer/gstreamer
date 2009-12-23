@@ -72,9 +72,6 @@ enum
 };
 
 
-static void gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass);
-static void gst_rtp_mp4v_pay_base_init (GstRtpMP4VPayClass * klass);
-static void gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay);
 static void gst_rtp_mp4v_pay_finalize (GObject * object);
 
 static void gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
@@ -88,35 +85,10 @@ static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 static gboolean gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
+GST_BOILERPLATE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD)
 
-static GType
-gst_rtp_mp4v_pay_get_type (void)
-{
-  static GType rtpmp4vpay_type = 0;
-
-  if (!rtpmp4vpay_type) {
-    static const GTypeInfo rtpmp4vpay_info = {
-      sizeof (GstRtpMP4VPayClass),
-      (GBaseInitFunc) gst_rtp_mp4v_pay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_mp4v_pay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpMP4VPay),
-      0,
-      (GInstanceInitFunc) gst_rtp_mp4v_pay_init,
-    };
-
-    rtpmp4vpay_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpMP4VPay",
-        &rtpmp4vpay_info, 0);
-  }
-  return rtpmp4vpay_type;
-}
-
-static void
-gst_rtp_mp4v_pay_base_init (GstRtpMP4VPayClass * klass)
+     static void gst_rtp_mp4v_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -136,8 +108,6 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_rtp_mp4v_pay_set_property;
   gobject_class->get_property = gst_rtp_mp4v_pay_get_property;
@@ -159,11 +129,10 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4vpay_debug, "rtpmp4vpay", 0,
       "MP4 video RTP Payloader");
-
 }
 
 static void
-gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
+gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
 {
   GstPad *sinkpad;
 

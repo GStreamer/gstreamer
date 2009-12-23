@@ -97,8 +97,6 @@ gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstelement_class->change_state = gst_rtp_vorbis_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_vorbis_pay_setcaps;

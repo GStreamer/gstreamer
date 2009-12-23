@@ -78,9 +78,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static void gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass);
-static void gst_rtp_mp4g_pay_base_init (GstRtpMP4GPayClass * klass);
-static void gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay);
 static void gst_rtp_mp4g_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
@@ -88,35 +85,10 @@ static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
+GST_BOILERPLATE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD)
 
-static GType
-gst_rtp_mp4g_pay_get_type (void)
-{
-  static GType rtpmp4gpay_type = 0;
-
-  if (!rtpmp4gpay_type) {
-    static const GTypeInfo rtpmp4gpay_info = {
-      sizeof (GstRtpMP4GPayClass),
-      (GBaseInitFunc) gst_rtp_mp4g_pay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_mp4g_pay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpMP4GPay),
-      0,
-      (GInstanceInitFunc) gst_rtp_mp4g_pay_init,
-    };
-
-    rtpmp4gpay_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpMP4GPay",
-        &rtpmp4gpay_info, 0);
-  }
-  return rtpmp4gpay_type;
-}
-
-static void
-gst_rtp_mp4g_pay_base_init (GstRtpMP4GPayClass * klass)
+     static void gst_rtp_mp4g_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -137,8 +109,6 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_rtp_mp4g_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
@@ -149,7 +119,7 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 }
 
 static void
-gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay)
+gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay, GstRtpMP4GPayClass * klass)
 {
   rtpmp4gpay->adapter = gst_adapter_new ();
   rtpmp4gpay->rate = 90000;

@@ -85,9 +85,6 @@ static GstStaticPadTemplate gst_rtp_h263p_pay_src_template =
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-2000\"")
     );
 
-static void gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass);
-static void gst_rtp_h263p_pay_base_init (GstRtpH263PPayClass * klass);
-static void gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay);
 static void gst_rtp_h263p_pay_finalize (GObject * object);
 
 static void gst_rtp_h263p_pay_set_property (GObject * object, guint prop_id,
@@ -100,35 +97,11 @@ static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
 static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
-
-static GType
-gst_rtp_h263p_pay_get_type (void)
-{
-  static GType rtph263ppay_type = 0;
-
-  if (!rtph263ppay_type) {
-    static const GTypeInfo rtph263ppay_info = {
-      sizeof (GstRtpH263PPayClass),
-      (GBaseInitFunc) gst_rtp_h263p_pay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_h263p_pay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpH263PPay),
-      0,
-      (GInstanceInitFunc) gst_rtp_h263p_pay_init,
-    };
-
-    rtph263ppay_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpH263PPay",
-        &rtph263ppay_info, 0);
-  }
-  return rtph263ppay_type;
-}
+GST_BOILERPLATE (GstRtpH263PPay, gst_rtp_h263p_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtp_h263p_pay_base_init (GstRtpH263PPayClass * klass)
+gst_rtp_h263p_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -149,8 +122,6 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_rtp_h263p_pay_finalize;
   gobject_class->set_property = gst_rtp_h263p_pay_set_property;
   gobject_class->get_property = gst_rtp_h263p_pay_get_property;
@@ -169,7 +140,8 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
 }
 
 static void
-gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay)
+gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay,
+    GstRtpH263PPayClass * klass)
 {
   rtph263ppay->adapter = gst_adapter_new ();
 

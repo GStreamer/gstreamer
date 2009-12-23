@@ -111,44 +111,15 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
-static void gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass);
-static void gst_rtp_vraw_pay_base_init (GstRtpVRawPayClass * klass);
-static void gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay);
-
 static gboolean gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
+GST_BOILERPLATE (GstRtpVRawPay, gst_rtp_vraw_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD)
 
-static GType
-gst_rtp_vraw_pay_get_type (void)
-{
-  static GType rtpvrawpay_type = 0;
-
-  if (!rtpvrawpay_type) {
-    static const GTypeInfo rtpvrawpay_info = {
-      sizeof (GstRtpVRawPayClass),
-      (GBaseInitFunc) gst_rtp_vraw_pay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_vraw_pay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpVRawPay),
-      0,
-      (GInstanceInitFunc) gst_rtp_vraw_pay_init,
-    };
-
-    rtpvrawpay_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpVRawPay",
-        &rtpvrawpay_info, 0);
-  }
-  return rtpvrawpay_type;
-}
-
-static void
-gst_rtp_vraw_pay_base_init (GstRtpVRawPayClass * klass)
+     static void gst_rtp_vraw_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -167,8 +138,6 @@ gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertppayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
 
@@ -177,7 +146,7 @@ gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 }
 
 static void
-gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay)
+gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay, GstRtpVRawPayClass * klass)
 {
 }
 

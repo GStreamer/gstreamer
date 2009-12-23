@@ -85,8 +85,6 @@ gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
 
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertpdepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_mpa_depay_process;
 

@@ -120,8 +120,6 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertppayload_class->set_caps = gst_rtp_amr_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
 

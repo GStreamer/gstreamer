@@ -106,8 +106,6 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertpdepayload_class->process = gst_rtp_h263_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
 

@@ -375,9 +375,6 @@ static GstStaticPadTemplate gst_rtp_h263_pay_src_template =
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")
     );
 
-static void gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass);
-static void gst_rtp_h263_pay_base_init (GstRtpH263PayClass * klass);
-static void gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay);
 static void gst_rtp_h263_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload,
@@ -406,35 +403,10 @@ static void gst_rtp_h263_pay_context_destroy (GstRtpH263PayContext * context,
     guint ind);
 static void gst_rtp_h263_pay_package_destroy (GstRtpH263PayPackage * pack);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
+GST_BOILERPLATE (GstRtpH263Pay, gst_rtp_h263_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD)
 
-static GType
-gst_rtp_h263_pay_get_type (void)
-{
-  static GType rtph263pay_type = 0;
-
-  if (!rtph263pay_type) {
-    static const GTypeInfo rtph263pay_info = {
-      sizeof (GstRtpH263PayClass),
-      (GBaseInitFunc) gst_rtp_h263_pay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_h263_pay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpH263Pay),
-      0,
-      (GInstanceInitFunc) gst_rtp_h263_pay_init,
-    };
-
-    rtph263pay_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpH263Pay",
-        &rtph263pay_info, 0);
-  }
-  return rtph263pay_type;
-}
-
-static void
-gst_rtp_h263_pay_base_init (GstRtpH263PayClass * klass)
+     static void gst_rtp_h263_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -455,8 +427,6 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_rtp_h263_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_h263_pay_setcaps;
@@ -475,7 +445,7 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
 }
 
 static void
-gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay)
+gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay, GstRtpH263PayClass * klass)
 {
   rtph263pay->adapter = gst_adapter_new ();
 
@@ -924,9 +894,8 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     } else {
       if (n > rest_bits) {
         context->window =
-            (context->
-            window << rest_bits) | (*context->win_end & (((guint) pow (2.0,
-                        (double) rest_bits)) - 1));
+            (context->window << rest_bits) | (*context->
+            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
@@ -1687,8 +1656,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
-            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
+            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {

@@ -87,8 +87,6 @@ gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstelement_class->change_state = gst_rtp_vraw_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;

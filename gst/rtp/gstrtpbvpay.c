@@ -88,8 +88,6 @@ gst_rtpbvpay_class_init (GstRTPBVPayClass * klass)
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
-
   gstbasertppayload_class->set_caps = gst_rtpbvpay_sink_setcaps;
   gstbasertppayload_class->get_caps = gst_rtpbvpay_sink_getcaps;
 
