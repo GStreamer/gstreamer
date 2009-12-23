@@ -623,7 +623,7 @@ static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime timestamp)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GList *walk;
 
   for (walk = rtph264pay->sps; walk; walk = g_list_next (walk)) {
