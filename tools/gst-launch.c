@@ -740,7 +740,8 @@ main (int argc, char *argv[])
     if (!gst_alloc_trace_available ()) {
       g_warning ("Trace not available (recompile with trace enabled).");
     }
-    gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
+    gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE |
+        GST_ALLOC_TRACE_MEM_LIVE);
     gst_alloc_trace_print_live ();
   }
 
