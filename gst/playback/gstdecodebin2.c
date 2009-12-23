@@ -2190,7 +2190,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
     chain->endcaps = NULL;
   }
 
-  GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hided" : "Freed"),
+  GST_DEBUG_OBJECT (chain->dbin, "%s chain %p", (hide ? "Hidden" : "Freed"),
       chain);
   CHAIN_MUTEX_UNLOCK (chain);
   if (!hide) {
