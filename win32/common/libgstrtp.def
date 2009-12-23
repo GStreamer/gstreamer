@@ -64,6 +64,8 @@ EXPORTS
 	gst_rtcp_packet_set_rb
 	gst_rtcp_packet_sr_get_sender_info
 	gst_rtcp_packet_sr_set_sender_info
+	gst_rtcp_sdes_name_to_type
+	gst_rtcp_sdes_type_to_name
 	gst_rtcp_unix_to_ntp
 	gst_rtp_buffer_allocate_data
 	gst_rtp_buffer_calc_header_len
