@@ -136,6 +136,8 @@ static void gst_adder_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
     GstStateChange transition);
 
+static GstBuffer *gst_adder_do_clip (GstCollectPads * pads,
+    GstCollectData * data, GstBuffer * buffer, gpointer user_data);
 static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
 
@@ -780,7 +782,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. The collect_event function will push the
        * event past our element. We simply forward all flush-stop events, even
-       * when no flush-stop was pendingk, this is required because collectpads
+       * when no flush-stop was pending, this is required because collectpads
        * does not provide an API to handle-but-not-forward the flush-stop.
        * We unset the pending flush-stop flag so that we don't send anymore
        * flush-stop from the collect function later.
@@ -882,6 +884,8 @@ gst_adder_init (GstAdder * adder)
   adder->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_collected), adder);
+  gst_collect_pads_set_clip_function (adder->collect,
+      GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
 }
 
 static void
@@ -1021,6 +1025,18 @@ gst_adder_release_pad (GstElement * element, GstPad * pad)
 
   gst_collect_pads_remove_pad (adder->collect, pad);
   gst_element_remove_pad (element, pad);
+}
+
+static GstBuffer *
+gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
+    GstBuffer * buffer, gpointer user_data)
+{
+  GstAdder *adder = GST_ADDER (user_data);
+
+  buffer = gst_audio_buffer_clip (buffer, &data->segment, adder->rate,
+      adder->bps);
+
+  return buffer;
 }
 
 static GstFlowReturn
