@@ -26,15 +26,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_COLLECT_PADS  		 (gst_collect_pads_get_type())
-#define GST_COLLECT_PADS(obj)  		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS,GstCollectPads))
-#define GST_COLLECT_PADS_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
+#define GST_TYPE_COLLECT_PADS            (gst_collect_pads_get_type())
+#define GST_COLLECT_PADS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS,GstCollectPads))
+#define GST_COLLECT_PADS_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
 #define GST_COLLECT_PADS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
-#define GST_IS_COLLECT_PADS(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS))
+#define GST_IS_COLLECT_PADS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS))
 #define GST_IS_COLLECT_PADS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECT_PADS))
 
 typedef struct _GstCollectData GstCollectData;
 typedef struct _GstCollectPads GstCollectPads;
+typedef struct _GstCollectPadsPrivate GstCollectPadsPrivate;
 typedef struct _GstCollectPadsClass GstCollectPadsClass;
 
 /**
@@ -50,6 +51,29 @@ typedef struct _GstCollectPadsClass GstCollectPadsClass;
 typedef void (*GstCollectDataDestroyNotify) (GstCollectData *data);
 
 /**
+ * GstCollectPadsClipFunction:
+ * @pads: a #GstCollectPads 
+ * @data: a #GstCollectData 
+ * @buffer: a #GstBuffer 
+ * @user_data: user data 
+ *
+ * A function that will be called when @buffer is received on the pad managed
+ * by @data in the collecpad object @pads.
+ *
+ * The function should use the segment of @data and the negotiated media type on
+ * the pad to perform clipping of @buffer. 
+ *
+ * This function takes ownership of @buffer.
+ *
+ * Returns: a #GstBuffer that contains the clipped data of @buffer or NULL when
+ * the buffer has been clipped completely.
+ *
+ * Since: 0.10.26
+ */
+typedef GstBuffer * (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCollectData *data,
+                                                   GstBuffer *buffer, gpointer user_data);
+
+/**
  * GstCollectData:
  * @collect: owner #GstCollectPads
  * @pad: #GstPad managed by this data
@@ -62,10 +86,10 @@ typedef void (*GstCollectDataDestroyNotify) (GstCollectData *data);
 struct _GstCollectData
 {
   /* with LOCK of @collect */
-  GstCollectPads 	*collect;
-  GstPad		*pad;
-  GstBuffer		*buffer;
-  guint			 pos;
+  GstCollectPads        *collect;
+  GstPad                *pad;
+  GstBuffer             *buffer;
+  guint                  pos;
   GstSegment             segment;
 
   /*< private >*/
@@ -111,31 +135,32 @@ struct _GstCollectPads {
   GstObject      object;
 
   /*< public >*/ /* with LOCK */
-  GSList	*data;                  /* list of CollectData items */
+  GSList        *data;                  /* list of CollectData items */
 
   /*< private >*/
-  guint32	 cookie;		/* @data list cookie */
+  guint32        cookie;                /* @data list cookie */
 
   /* with LOCK */
-  GCond		*cond;			/* to signal removal of data */
+  GCond         *cond;                  /* to signal removal of data */
 
-  GstCollectPadsFunction func;		/* function and user_data for callback */
-  gpointer	 user_data;
+  GstCollectPadsFunction func;          /* function and user_data for callback */
+  gpointer       user_data;
 
-  guint		 numpads;		/* number of pads in @data */
-  guint		 queuedpads;		/* number of pads with a buffer */
-  guint		 eospads;		/* number of pads that are EOS */
+  guint          numpads;               /* number of pads in @data */
+  guint          queuedpads;            /* number of pads with a buffer */
+  guint          eospads;               /* number of pads that are EOS */
 
   /* with LOCK and PAD_LOCK*/
-  gboolean	 started;
+  gboolean       started;
 
   /*< private >*/
   union {
     struct {
       /* since 0.10.6 */ /* with PAD_LOCK */
-      GMutex    *pad_lock;		/* used to serialize add/remove */
+      GMutex    *pad_lock;              /* used to serialize add/remove */
       GSList    *pad_list;              /* updated pad list */
-      guint32	 pad_cookie;            /* updated cookie */
+      guint32    pad_cookie;            /* updated cookie */
+      GstCollectPadsPrivate  *priv;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -152,40 +177,44 @@ struct _GstCollectPadsClass {
 GType gst_collect_pads_get_type(void);
 
 /* creating the object */
-GstCollectPads*	gst_collect_pads_new	 	(void);
+GstCollectPads* gst_collect_pads_new            (void);
 
-/* set the callback */
-void		gst_collect_pads_set_function 	(GstCollectPads *pads, GstCollectPadsFunction func,
-						 gpointer user_data);
+/* set the callbacks */
+void            gst_collect_pads_set_function      (GstCollectPads *pads, GstCollectPadsFunction func,
+                                                    gpointer user_data);
+void            gst_collect_pads_set_clip_function (GstCollectPads *pads, GstCollectPadsClipFunction clipfunc,
+                                                    gpointer user_data);
 
 /* pad management */
-GstCollectData*	gst_collect_pads_add_pad	(GstCollectPads *pads, GstPad *pad, guint size);
+GstCollectData* gst_collect_pads_add_pad        (GstCollectPads *pads, GstPad *pad, guint size);
 GstCollectData* gst_collect_pads_add_pad_full   (GstCollectPads *pads, GstPad *pad, guint size, GstCollectDataDestroyNotify destroy_notify);
-gboolean	gst_collect_pads_remove_pad	(GstCollectPads *pads, GstPad *pad);
-gboolean	gst_collect_pads_is_active 	(GstCollectPads *pads, GstPad *pad);
+
+
+gboolean        gst_collect_pads_remove_pad     (GstCollectPads *pads, GstPad *pad);
+gboolean        gst_collect_pads_is_active      (GstCollectPads *pads, GstPad *pad);
 
 /* start/stop collection */
-GstFlowReturn	gst_collect_pads_collect 	(GstCollectPads *pads);
-GstFlowReturn	gst_collect_pads_collect_range 	(GstCollectPads *pads, guint64 offset, guint length);
+GstFlowReturn   gst_collect_pads_collect        (GstCollectPads *pads);
+GstFlowReturn   gst_collect_pads_collect_range  (GstCollectPads *pads, guint64 offset, guint length);
 
-void		gst_collect_pads_start 		(GstCollectPads *pads);
-void		gst_collect_pads_stop 		(GstCollectPads *pads);
-void		gst_collect_pads_set_flushing	(GstCollectPads *pads, gboolean flushing);
+void            gst_collect_pads_start          (GstCollectPads *pads);
+void            gst_collect_pads_stop           (GstCollectPads *pads);
+void            gst_collect_pads_set_flushing   (GstCollectPads *pads, gboolean flushing);
 
 /* get collected buffers */
-GstBuffer*	gst_collect_pads_peek 		(GstCollectPads *pads, GstCollectData *data);
-GstBuffer*	gst_collect_pads_pop		(GstCollectPads *pads, GstCollectData *data);
+GstBuffer*      gst_collect_pads_peek           (GstCollectPads *pads, GstCollectData *data);
+GstBuffer*      gst_collect_pads_pop            (GstCollectPads *pads, GstCollectData *data);
 
 /* get collected bytes */
-guint 		gst_collect_pads_available 	(GstCollectPads *pads);
-guint		gst_collect_pads_read		(GstCollectPads *pads, GstCollectData *data,
-						 guint8 **bytes, guint size);
+guint           gst_collect_pads_available      (GstCollectPads *pads);
+guint           gst_collect_pads_read           (GstCollectPads *pads, GstCollectData *data,
+                                                 guint8 **bytes, guint size);
 GstBuffer *     gst_collect_pads_read_buffer    (GstCollectPads * pads, GstCollectData * data,
-						 guint size);
+                                                 guint size);
 GstBuffer *     gst_collect_pads_take_buffer    (GstCollectPads * pads, GstCollectData * data,
-						 guint size);
-guint 		gst_collect_pads_flush 		(GstCollectPads *pads, GstCollectData *data,
-						 guint size);
+                                                 guint size);
+guint           gst_collect_pads_flush          (GstCollectPads *pads, GstCollectData *data,
+                                                 guint size);
 
 G_END_DECLS
 

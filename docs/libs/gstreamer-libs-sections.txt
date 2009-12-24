@@ -607,9 +607,11 @@ GST_BYTE_WRITER
 GstCollectData
 GstCollectPads
 GstCollectPadsFunction
+GstCollectPadsClipFunction
 GstCollectDataDestroyNotify
 gst_collect_pads_new
 gst_collect_pads_set_function
+gst_collect_pads_set_clip_function
 gst_collect_pads_add_pad
 gst_collect_pads_add_pad_full
 gst_collect_pads_remove_pad
@@ -628,6 +630,7 @@ gst_collect_pads_take_buffer
 gst_collect_pads_flush
 <SUBSECTION Standard>
 GstCollectPadsClass
+GstCollectPadsPrivate
 GST_COLLECT_PADS
 GST_IS_COLLECT_PADS
 GST_TYPE_COLLECT_PADS
