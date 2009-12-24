@@ -5115,6 +5115,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GstRTSPResult res;
   gchar *hval;
   gfloat fval;
+  gint hval_idx;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -5179,8 +5180,9 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
    * This is info for the RTP session manager that we pass to it in caps. */
-  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
-          &hval, 0) == GST_RTSP_OK)
+  hval_idx = 0;
+  while (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
+          &hval, hval_idx++) == GST_RTSP_OK)
     gst_rtspsrc_parse_rtpinfo (src, hval);
 
   gst_rtsp_message_unset (&response);
