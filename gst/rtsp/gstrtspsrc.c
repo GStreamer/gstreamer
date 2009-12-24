@@ -814,7 +814,11 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
 
   /* we must have a payload. No payload means we cannot create caps */
-  /* FIXME, handle multiple formats. */
+  /* FIXME, handle multiple formats. The problem here is that we just want to
+   * take the first available format that we can handle but in order to do that
+   * we need to scan for depayloader plugins. Scanning for payloader plugins is
+   * also suboptimal because the user maybe just wants to save the raw stream
+   * and then we don't care. */
   if ((payload = gst_sdp_media_get_format (media, 0))) {
     stream->pt = atoi (payload);
     /* convert caps */
@@ -1203,7 +1207,11 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
         if (valpos) {
           /* we have a '=' and thus a value, remove the '=' with \0 */
           *valpos = '\0';
-          /* value is everything between '=' and ';'. FIXME, strip? */
+          /* value is everything between '=' and ';'. We split the pairs at ;
+           * boundaries so we can take the remainder of the value. Some servers
+           * put spaces around the value which we strip off here. Alternatively
+           * we could strip those spaces in the depayloaders should these spaces
+           * actually carry any meaning in the future. */
           val = g_strstrip (valpos + 1);
         } else {
           /* simple <param>;.. is translated into <param>=1;... */
@@ -2091,13 +2099,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
           src);
       g_signal_connect (src->session, "on-timeout", (GCallback) on_timeout,
           src);
-      /* FIXME: remove this once the rtpjitterbuffer is in -good */
-      if (g_signal_lookup ("on-npt-stop", G_OBJECT_TYPE (src->session)) != 0) {
-        g_signal_connect (src->session, "on-npt-stop", (GCallback) on_npt_stop,
-            src);
-      } else {
-        GST_INFO_OBJECT (src, "skipping on-npt-stop handling, not implemented");
-      }
+      g_signal_connect (src->session, "on-npt-stop", (GCallback) on_npt_stop,
+          src);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
