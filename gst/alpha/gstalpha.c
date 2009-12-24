@@ -210,6 +210,7 @@ gst_alpha_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
       "alpha - Element for adding alpha channel to streams");
 }
+
 static void
 gst_alpha_class_init (GstAlphaClass * klass)
 {
@@ -347,6 +348,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
       break;
   }
 }
+
 static void
 gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -470,12 +472,12 @@ static void
 gst_alpha_set_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
 {
-  gint b_alpha = (gint) (alpha * 255);
+  gint s_alpha = CLAMP ((gint) (alpha * 256), 0, 256);
   gint y, x;
 
   for (y = 0; y < height; y++) {
     for (x = 0; x < width; x++) {
-      *dest++ = (*src++ * b_alpha) >> 8;
+      *dest++ = (*src++ * s_alpha) >> 8;
       *dest++ = *src++;
       *dest++ = *src++;
       *dest++ = *src++;
@@ -487,7 +489,7 @@ static void
 gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
     gdouble alpha)
 {
-  gint b_alpha = (gint) (alpha * 255);
+  gint b_alpha = CLAMP ((gint) (alpha * 255), 0, 255);
   guint8 *srcY;
   guint8 *srcU;
   guint8 *srcV;
