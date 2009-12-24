@@ -14,6 +14,7 @@ using System;
 using System.Reflection;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace Gst {
 
@@ -57,36 +58,47 @@ namespace Gst {
       gst_deinit();
     }
 
-    private static System.Type GstResolveType (Gst.GLib.GType gtype, string gtype_name) {
-      Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
+    private static Dictionary<string,bool> AssemblyReferencesGstreamerSharp = new Dictionary<string,bool> ();
 
-      foreach (Assembly asm in assemblies) {
-        Type[] ts = asm.GetTypes ();
-        foreach (Type t in ts) {
-          if (t.IsDefined (typeof (Gst.GTypeNameAttribute), false)) {
-            GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
-            if (gtype_name.Equals (gattr.TypeName)) {
-              return t;
-            }
-          }
+    private static bool CheckAssemblyReferences (Assembly asm)
+    {
+      bool result = false;
+      AssemblyName asm_name = asm.GetName ();
+
+      // If already visited, return immediately
+      if (AssemblyReferencesGstreamerSharp.ContainsKey (asm_name.FullName))
+        return AssemblyReferencesGstreamerSharp[asm_name.FullName];
+
+      AssemblyReferencesGstreamerSharp.Add (asm_name.FullName, false);
+
+      // Result is true for gstreamer-sharp or if a referenced assembly results in true
+      if (asm_name.Name == "gstreamer-sharp")
+        result = true;
+      foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
+        try {
+          result = result | CheckAssemblyReferences (Assembly.Load (ref_name));
+        } catch {
+          /* Failure to load a referenced assembly is not an error */
         }
       }
 
-      foreach (Assembly asm in assemblies) {
-        foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
-          try {
-            Assembly ref_asm;
-            if (asm.Location != String.Empty)
-            {
-                string asm_file = Path.Combine(Path.GetDirectoryName(asm.Location), ref_name.Name + ".dll");
-                if (File.Exists(asm_file))
-                    ref_asm = Assembly.LoadFrom(asm_file);
-                else
-                    ref_asm = Assembly.Load(ref_name);
-            }
-            else
-                ref_asm = Assembly.Load(ref_name);
+      if (result)
+        AssemblyReferencesGstreamerSharp[asm_name.FullName] = true;
+      return result;
+    }
 
+    private static System.Type GstResolveType (Gst.GLib.GType gtype, string gtype_name) {
+      Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
+
+      // Make sure all loaded assemblies are in the Dictionary
+      foreach (Assembly asm in assemblies) {
+        CheckAssemblyReferences (asm);
+      }
+
+      foreach (string key in AssemblyReferencesGstreamerSharp.Keys) {
+        if (AssemblyReferencesGstreamerSharp[key]) {
+          try {
+            Assembly asm = Assembly.Load (key);
             Type[] ts = asm.GetTypes ();
             foreach (Type t in ts) {
               if (t.IsDefined (typeof (Gst.GTypeNameAttribute), false)) {
