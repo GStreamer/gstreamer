@@ -515,7 +515,7 @@ gst_bin_init (GstBin * bin, GstBinClass * klass)
 static void
 gst_bin_dispose (GObject * object)
 {
-  GstBin *bin = GST_BIN (object);
+  GstBin *bin = GST_BIN_CAST (object);
   GstBus **child_bus_p = &bin->child_bus;
   GstClock **provided_clock_p = &bin->provided_clock;
   GstElement **clock_provider_p = &bin->clock_provider;
@@ -562,7 +562,7 @@ gst_bin_set_property (GObject * object, guint prop_id,
 {
   GstBin *gstbin;
 
-  gstbin = GST_BIN (object);
+  gstbin = GST_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_ASYNC_HANDLING:
@@ -582,7 +582,7 @@ gst_bin_get_property (GObject * object, guint prop_id,
 {
   GstBin *gstbin;
 
-  gstbin = GST_BIN (object);
+  gstbin = GST_BIN_CAST (object);
 
   switch (prop_id) {
     case PROP_ASYNC_HANDLING:
@@ -603,7 +603,7 @@ gst_bin_get_index_func (GstElement * element)
   GstBin *bin;
   GstIndex *result;
 
-  bin = GST_BIN (element);
+  bin = GST_BIN_CAST (element);
 
   GST_OBJECT_LOCK (bin);
   if ((result = bin->priv->index))
@@ -625,7 +625,7 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
   GstIterator *it;
   GstIndex *old;
 
-  bin = GST_BIN (element);
+  bin = GST_BIN_CAST (element);
 
   GST_OBJECT_LOCK (bin);
   old = bin->priv->index;
@@ -691,7 +691,7 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
   GstIterator *it;
   gboolean res = TRUE;
 
-  bin = GST_BIN (element);
+  bin = GST_BIN_CAST (element);
 
   it = gst_bin_iterate_elements (bin);
 
@@ -746,7 +746,7 @@ gst_bin_provide_clock_func (GstElement * element)
   GstClock **provided_clock_p;
   GstElement **clock_provider_p;
 
-  bin = GST_BIN (element);
+  bin = GST_BIN_CAST (element);
 
   GST_OBJECT_LOCK (bin);
   if (!bin->clock_dirty)
@@ -1036,7 +1036,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_bus (element, bin->child_bus);
 
   /* propagate the current base_time, start_time and clock */
-  gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
+  gst_element_set_base_time (element, GST_ELEMENT_CAST (bin)->base_time);
   gst_element_set_start_time (element, GST_ELEMENT_START_TIME (bin));
   /* it's possible that the element did not accept the clock but
    * that is not important right now. When the pipeline goes to PLAYING,
@@ -1508,7 +1508,7 @@ iterate_child_recurse (GstIterator * it, GstElement * child)
 {
   gst_object_ref (child);
   if (GST_IS_BIN (child)) {
-    GstIterator *other = gst_bin_iterate_recurse (GST_BIN (child));
+    GstIterator *other = gst_bin_iterate_recurse (GST_BIN_CAST (child));
 
     gst_iterator_push (it, other);
   }
@@ -2568,7 +2568,7 @@ activate_failure:
 static gboolean
 gst_bin_send_event (GstElement * element, GstEvent * event)
 {
-  GstBin *bin = GST_BIN (element);
+  GstBin *bin = GST_BIN_CAST (element);
   GstIterator *iter;
   gboolean res = TRUE;
   gboolean done = FALSE;
@@ -3431,7 +3431,7 @@ bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
 static gboolean
 gst_bin_query (GstElement * element, GstQuery * query)
 {
-  GstBin *bin = GST_BIN (element);
+  GstBin *bin = GST_BIN_CAST (element);
   GstIterator *iter;
   gboolean res = FALSE;
   GstIteratorFoldFunction fold_func;
@@ -3723,7 +3723,7 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)
 static xmlNodePtr
 gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
 {
-  GstBin *bin = GST_BIN (object);
+  GstBin *bin = GST_BIN_CAST (object);
   xmlNodePtr childlist, elementnode;
   GList *children;
   GstElement *child;
@@ -3738,7 +3738,7 @@ gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
 
   children = g_list_last (bin->children);
   while (children) {
-    child = GST_ELEMENT (children->data);
+    child = GST_ELEMENT_CAST (children->data);
     elementnode = xmlNewChild (childlist, NULL, (xmlChar *) "element", NULL);
     gst_object_save_thyself (GST_OBJECT (child), elementnode);
     children = g_list_previous (children);
@@ -3749,7 +3749,7 @@ gst_bin_save_thyself (GstObject * object, xmlNodePtr parent)
 static void
 gst_bin_restore_thyself (GstObject * object, xmlNodePtr self)
 {
-  GstBin *bin = GST_BIN (object);
+  GstBin *bin = GST_BIN_CAST (object);
   xmlNodePtr field = self->xmlChildrenNode;
   xmlNodePtr childlist;
 

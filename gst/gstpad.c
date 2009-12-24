@@ -384,7 +384,7 @@ gst_pad_init (GstPad * pad)
 static void
 gst_pad_dispose (GObject * object)
 {
-  GstPad *pad = GST_PAD (object);
+  GstPad *pad = GST_PAD_CAST (object);
   GstPad *peer;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pad, "dispose");
@@ -418,7 +418,7 @@ gst_pad_dispose (GObject * object)
 static void
 gst_pad_finalize (GObject * object)
 {
-  GstPad *pad = GST_PAD (object);
+  GstPad *pad = GST_PAD_CAST (object);
   GstTask *task;
 
   /* in case the task is still around, clean it up */
@@ -3424,7 +3424,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   while (!done) {
     switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
-        eventpad = GST_PAD (item);
+        eventpad = GST_PAD_CAST (item);
 
         /* if already pushed,  skip */
         if (g_list_find (pushed_pads, eventpad)) {
@@ -3808,7 +3808,7 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 
   g_return_val_if_fail (GST_IS_PAD (object), NULL);
 
-  pad = GST_PAD (object);
+  pad = GST_PAD_CAST (object);
 
   xmlNewChild (parent, NULL, (xmlChar *) "name",
       (xmlChar *) GST_PAD_NAME (pad));

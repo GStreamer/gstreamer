@@ -2845,7 +2845,7 @@ gst_element_get_factory (GstElement * element)
 static void
 gst_element_dispose (GObject * object)
 {
-  GstElement *element = GST_ELEMENT (object);
+  GstElement *element = GST_ELEMENT_CAST (object);
   GstClock **clock_p;
   GstBus **bus_p;
 
@@ -2902,7 +2902,7 @@ not_null:
 static void
 gst_element_finalize (GObject * object)
 {
-  GstElement *element = GST_ELEMENT (object);
+  GstElement *element = GST_ELEMENT_CAST (object);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize");
 
@@ -2943,7 +2943,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
 
   g_return_val_if_fail (GST_IS_ELEMENT (object), parent);
 
-  element = GST_ELEMENT (object);
+  element = GST_ELEMENT_CAST (object);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -3003,7 +3003,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
     GstPad *pad = GST_PAD_CAST (pads->data);
 
     /* figure out if it's a direct pad or a ghostpad */
-    if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
+    if (GST_ELEMENT_CAST (GST_OBJECT_PARENT (pad)) == element) {
       xmlNodePtr padtag = xmlNewChild (parent, NULL, (xmlChar *) "pad", NULL);
 
       gst_object_save_thyself (GST_OBJECT_CAST (pad), padtag);
@@ -3022,7 +3022,7 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
   gchar *name = NULL;
   gchar *value = NULL;
 
-  element = GST_ELEMENT (object);
+  element = GST_ELEMENT_CAST (object);
   g_return_if_fail (element != NULL);
 
   /* parameters */

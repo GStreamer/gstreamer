@@ -470,7 +470,7 @@ have_parent:
 static void
 gst_object_finalize (GObject * object)
 {
-  GstObject *gstobject = GST_OBJECT (object);
+  GstObject *gstobject = GST_OBJECT_CAST (object);
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "finalize");
 
@@ -945,7 +945,7 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
     GstObject *child;
     gboolean eq;
 
-    child = GST_OBJECT (list->data);
+    child = GST_OBJECT_CAST (list->data);
 
     GST_OBJECT_LOCK (child);
     eq = strcmp (GST_OBJECT_NAME (child), name) == 0;
@@ -1025,7 +1025,7 @@ gst_object_set_property (GObject * object, guint prop_id,
 {
   GstObject *gstobject;
 
-  gstobject = GST_OBJECT (object);
+  gstobject = GST_OBJECT_CAST (object);
 
   switch (prop_id) {
     case ARG_NAME:
@@ -1043,7 +1043,7 @@ gst_object_get_property (GObject * object, guint prop_id,
 {
   GstObject *gstobject;
 
-  gstobject = GST_OBJECT (object);
+  gstobject = GST_OBJECT_CAST (object);
 
   switch (prop_id) {
     case ARG_NAME:
