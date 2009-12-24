@@ -235,7 +235,6 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
-    guint8 *data;
     guint payload_len;
     gint header_len;
     guint next_gop = 0;
@@ -288,8 +287,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 
     payload = gst_rtp_buffer_get_payload (outbuf);
 
-    data = (guint8 *) gst_adapter_peek (rtph263ppay->adapter, towrite);
-    memcpy (&payload[header_len], data, towrite);
+    gst_adapter_copy (rtph263ppay->adapter, &payload[header_len], 0, towrite);
 
     /*  0                   1
      *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
