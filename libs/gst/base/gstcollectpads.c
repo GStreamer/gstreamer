@@ -929,13 +929,13 @@ gst_collect_pads_read (GstCollectPads * pads, GstCollectData * data,
  * @data: the data to use
  * @size: the number of bytes to read
  *
- * Get a subbuffer of @size bytes from the given pad @data.
+ * Get a buffer of @size bytes from the given pad @data.
  *
  * This function should be called with @pads LOCK held, such as in the callback.
  *
  * Since: 0.10.18
  *
- * Returns: A sub buffer. The size of the buffer can be less that requested.
+ * Returns: A #GstBuffer. The size of the buffer can be less that requested.
  * A return of NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
  *
@@ -945,7 +945,7 @@ GstBuffer *
 gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
     guint size)
 {
-  guint readsize;
+  guint readsize, bufsize;
   GstBuffer *buffer;
 
   g_return_val_if_fail (pads != NULL, NULL);
@@ -956,9 +956,14 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
   if ((buffer = data->buffer) == NULL)
     return NULL;
 
-  readsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
+  bufsize = GST_BUFFER_SIZE (buffer);
 
-  return gst_buffer_create_sub (buffer, data->pos, readsize);
+  readsize = MIN (size, bufsize - data->pos);
+
+  if (data->pos == 0 && readsize == bufsize)
+    return gst_buffer_ref (buffer);
+  else
+    return gst_buffer_create_sub (buffer, data->pos, readsize);
 }
 
 /**
@@ -967,14 +972,14 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
  * @data: the data to use
  * @size: the number of bytes to read
  *
- * Get a subbuffer of @size bytes from the given pad @data. Flushes the amount
+ * Get a buffer of @size bytes from the given pad @data. Flushes the amount
  * of read bytes.
  *
  * This function should be called with @pads LOCK held, such as in the callback.
  *
  * Since: 0.10.18
  *
- * Returns: A sub buffer. The size of the buffer can be less that requested.
+ * Returns: A #GstBuffer. The size of the buffer can be less that requested.
  * A return of NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
  *
