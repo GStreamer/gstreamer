@@ -168,8 +168,6 @@ gst_pipeline_class_init (GstPipelineClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBinClass *gstbin_class = GST_BIN_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   g_type_class_add_private (klass, sizeof (GstPipelinePrivate));
 
   gobject_class->set_property = gst_pipeline_set_property;
@@ -563,7 +561,7 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
 GstBus *
 gst_pipeline_get_bus (GstPipeline * pipeline)
 {
-  return gst_element_get_bus (GST_ELEMENT (pipeline));
+  return gst_element_get_bus (GST_ELEMENT_CAST (pipeline));
 }
 
 /**
@@ -682,7 +680,7 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 {
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), NULL);
 
-  return gst_pipeline_provide_clock_func (GST_ELEMENT (pipeline));
+  return gst_pipeline_provide_clock_func (GST_ELEMENT_CAST (pipeline));
 }
 
 
@@ -737,7 +735,8 @@ gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
   g_return_val_if_fail (pipeline != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), FALSE);
 
-  return GST_ELEMENT_CLASS (parent_class)->set_clock (GST_ELEMENT (pipeline),
+  return
+      GST_ELEMENT_CLASS (parent_class)->set_clock (GST_ELEMENT_CAST (pipeline),
       clock);
 }
 
