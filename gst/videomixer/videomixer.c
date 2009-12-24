@@ -1380,20 +1380,15 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
 
     /* Calculating out buffer size from input size */
     gst_pad_set_caps (mix->srcpad, newcaps);
-    outsize =
-        gst_video_format_get_size (mix->fmt, mix->out_width, mix->out_height);
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
-        outsize, newcaps, &outbuf);
     gst_caps_unref (newcaps);
-  } else {                      /* Otherwise we just allocate a buffer from current caps */
-    /* Calculating out buffer size from input size */
-    outsize =
-        gst_video_format_get_size (mix->fmt, mix->out_width, mix->out_height);
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
-        outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
   }
+
+  /* allocate an output buffer */
+  outsize =
+      gst_video_format_get_size (mix->fmt, mix->out_width, mix->out_height);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
+      outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
 
   /* This must be set at this point, otherwise we have no src caps */
   g_assert (mix->blend != NULL);
