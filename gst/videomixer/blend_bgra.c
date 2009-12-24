@@ -32,7 +32,7 @@ gst_videomixer_blend_##name##_##name (guint8 * src, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
     guint8 * dest, gint dest_width, gint dest_height) \
 { \
-  gint alpha, b_alpha; \
+  gint alpha, s_alpha; \
   gint i, j; \
   gint src_stride, dest_stride; \
   gint src_add, dest_add; \
@@ -41,7 +41,7 @@ gst_videomixer_blend_##name##_##name (guint8 * src, gint xpos, gint ypos, \
   src_stride = src_width * 4; \
   dest_stride = dest_width * 4; \
   \
-  b_alpha = (gint) (src_alpha * 255); \
+  s_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
   /* adjust src pointers for negative sizes */ \
   if (xpos < 0) { \
@@ -69,7 +69,7 @@ gst_videomixer_blend_##name##_##name (guint8 * src, gint xpos, gint ypos, \
   \
   for (i = 0; i < src_height; i++) { \
     for (j = 0; j < src_width; j++) { \
-      alpha = (src[a] * b_alpha) >> 8; \
+      alpha = (src[a] * s_alpha) >> 8; \
       BLEND_MODE (dest[b], dest[g], dest[r], src[b], src[g], src[r], \
           B, G, R, alpha); \
       dest[b] = B; \

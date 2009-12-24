@@ -45,7 +45,7 @@ gst_videomixer_blend_##name##_##name (guint8 * src, gint xpos, gint ypos, \
   src_stride = GST_ROUND_UP_4 (src_width * bpp); \
   dest_stride = GST_ROUND_UP_4 (dest_width * bpp); \
   \
-  b_alpha = (gint) (src_alpha * 255); \
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255); \
   \
   /* adjust src pointers for negative sizes */ \
   if (xpos < 0) { \

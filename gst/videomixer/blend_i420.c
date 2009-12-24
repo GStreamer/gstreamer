@@ -209,7 +209,7 @@ gst_i420_do_blend (guint8 * src, guint8 * dest,
     return;
   }
 
-  b_alpha = (gint) (src_alpha * 255);
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255);
 
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {

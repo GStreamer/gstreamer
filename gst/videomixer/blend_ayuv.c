@@ -185,7 +185,7 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
     gint src_width, gint src_height, gdouble src_alpha,
     guint8 * dest, gint dest_width, gint dest_height)
 {
-  gint alpha, b_alpha;
+  gint alpha, s_alpha;
   gint i, j;
   gint src_stride, dest_stride;
   gint src_add, dest_add;
@@ -194,7 +194,7 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
   src_stride = src_width * 4;
   dest_stride = dest_width * 4;
 
-  b_alpha = (gint) (src_alpha * 255);
+  s_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256);
 
   /* adjust src pointers for negative sizes */
   if (xpos < 0) {
@@ -222,7 +222,7 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
 
   for (i = 0; i < src_height; i++) {
     for (j = 0; j < src_width; j++) {
-      alpha = (src[0] * b_alpha) >> 8;
+      alpha = (src[0] * s_alpha) >> 8;
       BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
           alpha, Y, U, V);
       dest[0] = 0xff;
@@ -254,7 +254,7 @@ gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
   src_stride = src_width * 4;
   dest_stride = dest_width * 4;
 
-  b_alpha = (gint) (src_alpha * 255);
+  b_alpha = CLAMP ((gint) (src_alpha * 255), 0, 255);
 
   /* adjust src pointers for negative sizes */
   if (xpos < 0) {
