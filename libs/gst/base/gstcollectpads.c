@@ -1307,7 +1307,6 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   GstCollectPads *pads;
   GstCollectPadsPrivate *priv;
   GstFlowReturn ret;
-  GstBuffer **buffer_p;
 
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -1346,12 +1345,15 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* One more pad has data queued */
   pads->queuedpads++;
-  buffer_p = &data->buffer;
-  gst_buffer_replace (buffer_p, buffer);
+  /* take ownership of the buffer */
+  if (data->buffer)
+    gst_buffer_unref (data->buffer);
+  data->buffer = buffer;
+  buffer = NULL;
 
   /* update segment last position if in TIME */
   if (G_LIKELY (data->segment.format == GST_FORMAT_TIME)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (data->buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp))
       gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME, timestamp);
@@ -1405,7 +1407,8 @@ unlock_done:
   GST_DEBUG ("Pad %s:%s done", GST_DEBUG_PAD_NAME (pad));
   GST_OBJECT_UNLOCK (pads);
   unref_data (data);
-  gst_buffer_unref (buffer);
+  if (buffer)
+    gst_buffer_unref (buffer);
   return ret;
 
 pad_removed:
@@ -1448,9 +1451,8 @@ unexpected:
 clipped:
   {
     GST_DEBUG ("clipped buffer on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-    GST_OBJECT_UNLOCK (pads);
-    unref_data (data);
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto unlock_done;
   }
 error:
   {
