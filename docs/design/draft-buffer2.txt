@@ -378,5 +378,28 @@ We would like to think of the GstCaps containing the information needed to
 functionally negotiate the format between two elements. The Metadata should then
 only contain variables that can change between each buffer.
 
+For example, for video we would have width/height/framerate in the caps but then
+have the more technical details, such as stride, data pointers, pan/crop/zoom
+etc in the metadata.
+
+A scheme like this would still allow us to functionally specify the desired
+video resolution while the implementation details would be inside the metadata.
+
+
+Notes:
+------
+
+Some structures that we need to be able to add to buffers.
+
+  Clean Aperture
+  Abitrary Matrix Transform
+  Aspect ratio
+  Pan/crop/zoom
+  Video strides
+
+Some of these overlap, we need to find a minimal set of metadata structures that
+allows us to define all use cases.
+
+
 
 
