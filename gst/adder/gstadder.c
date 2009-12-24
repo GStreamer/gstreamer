@@ -798,7 +798,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
       GST_OBJECT_LOCK (adder->collect);
-      /* collectpads is a pile of horse manure. */
+      /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
       GST_OBJECT_UNLOCK (adder->collect);
       goto beach;
