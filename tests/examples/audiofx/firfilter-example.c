@@ -104,7 +104,7 @@ on_rate_changed (GstElement * element, gint rate, gpointer user_data)
   /* Latency is 1/2 of the kernel length for this method of
    * calculating a filter kernel from the frequency response
    */
-  g_object_set (G_OBJECT (element), "latency", 32 / 2, NULL);
+  g_object_set (G_OBJECT (element), "latency", (gint64) (32 / 2), NULL);
   g_value_array_free (va);
 }
 
