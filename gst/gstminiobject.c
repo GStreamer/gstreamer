@@ -273,12 +273,12 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
   g_return_val_if_fail (mini_object != NULL, NULL);
 
   if (gst_mini_object_is_writable (mini_object)) {
-    ret = (GstMiniObject *) mini_object;
+    ret = mini_object;
   } else {
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy %s miniobject",
         g_type_name (G_TYPE_FROM_INSTANCE (mini_object)));
     ret = gst_mini_object_copy (mini_object);
-    gst_mini_object_unref ((GstMiniObject *) mini_object);
+    gst_mini_object_unref (mini_object);
   }
 
   return ret;
