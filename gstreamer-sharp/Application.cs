@@ -121,6 +121,11 @@ namespace Gst {
       Gst.GLib.GType.Register (Structure.GType, typeof (Structure));
       Gst.GLib.GType.Register (TagList.GType, typeof (TagList));
       Gst.GLib.GType.Register (MiniObject.GType, typeof (MiniObject));
+      Gst.GLib.GType.Register (Bus.GType, typeof (Bus));
+      Gst.GLib.GType.Register (Pad.GType, typeof (Pad));
+      Gst.GLib.GType.Register (GhostPad.GType, typeof (GhostPad));
+      Gst.GLib.GType.Register (Message.GType, typeof (Message));
+      Gst.GLib.GType.Register (SystemClock.GType, typeof (SystemClock));
 
       GtkSharp.GstreamerSharp.ObjectManager.Initialize ();
     }
