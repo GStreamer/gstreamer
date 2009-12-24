@@ -58,62 +58,58 @@ namespace Gst {
       gst_deinit();
     }
 
-    private static Dictionary<string,bool> AssemblyReferencesGstreamerSharp = new Dictionary<string,bool> ();
+    private static Dictionary<int,bool> AssemblyTypesInCache = new Dictionary<int,bool> ();
+    private static Dictionary<string,Type> TypeCache = new Dictionary<string,Type> ();
 
-    private static bool CheckAssemblyReferences (Assembly asm)
+    // Recursively check for types with GTypeNameAttribute and put them in TypeCache,
+    // but only gstreamer-sharp is in the chain of referenced assemblies.
+    private static bool PutAssemblyTypesInCache (Assembly asm)
     {
-      bool result = false;
-      AssemblyName asm_name = asm.GetName ();
+      bool result;
 
       // If already visited, return immediately
-      if (AssemblyReferencesGstreamerSharp.ContainsKey (asm_name.FullName))
-        return AssemblyReferencesGstreamerSharp[asm_name.FullName];
+      if (AssemblyTypesInCache.TryGetValue(asm.GetHashCode (), out result))
+        return result;
 
-      AssemblyReferencesGstreamerSharp.Add (asm_name.FullName, false);
+      result = false;
+      AssemblyTypesInCache.Add (asm.GetHashCode (), false);
 
       // Result is true for gstreamer-sharp or if a referenced assembly results in true
-      if (asm_name.Name == "gstreamer-sharp")
+      if (asm.GetName().Name == "gstreamer-sharp")
         result = true;
       foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
         try {
-          result = result | CheckAssemblyReferences (Assembly.Load (ref_name));
+          result = result | PutAssemblyTypesInCache (Assembly.Load (ref_name));
         } catch {
           /* Failure to load a referenced assembly is not an error */
         }
       }
 
-      if (result)
-        AssemblyReferencesGstreamerSharp[asm_name.FullName] = true;
+      // Add types with GTypeNameAttribute in TypeCache
+      if (result) {
+        AssemblyTypesInCache[asm.GetHashCode ()] = true;
+        Type[] ts = asm.GetTypes ();
+        foreach (Type t in ts) {
+          if (t.IsDefined (typeof (GTypeNameAttribute), false)) {
+            GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
+            TypeCache[gattr.TypeName] = t;
+          }
+        }
+      }
+
       return result;
     }
 
     private static System.Type GstResolveType (Gst.GLib.GType gtype, string gtype_name) {
+      // Make sure all loaded assemblies are in the TypeCache
       Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
-
-      // Make sure all loaded assemblies are in the Dictionary
       foreach (Assembly asm in assemblies) {
-        CheckAssemblyReferences (asm);
+        PutAssemblyTypesInCache (asm);
       }
 
-      foreach (string key in AssemblyReferencesGstreamerSharp.Keys) {
-        if (AssemblyReferencesGstreamerSharp[key]) {
-          try {
-            Assembly asm = Assembly.Load (key);
-            Type[] ts = asm.GetTypes ();
-            foreach (Type t in ts) {
-              if (t.IsDefined (typeof (Gst.GTypeNameAttribute), false)) {
-                GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
-                if (gtype_name.Equals (gattr.TypeName)) {
-                  return t;
-                }
-              }
-            }
-
-          } catch (Exception) {
-            /* Failure to load a referenced assembly is not an error */
-          }
-        }
-      }
+      // Return the managed type
+      if (TypeCache.ContainsKey (gtype_name))
+        return TypeCache[gtype_name];
 
       return null;
     }
