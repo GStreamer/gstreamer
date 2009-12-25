@@ -47,6 +47,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
   gst_sdp_message_add_time (sdp, "0", "0", NULL);
   gst_sdp_message_add_attribute (sdp, "tool", "GStreamer");
   gst_sdp_message_add_attribute (sdp, "type", "broadcast");
+  gst_sdp_message_add_attribute (sdp, "control", "*");
   rangestr = gst_rtsp_range_to_string (&media->range);
   gst_sdp_message_add_attribute (sdp, "range", rangestr);
   g_free (rangestr);
