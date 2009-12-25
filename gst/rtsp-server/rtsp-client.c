@@ -1475,7 +1475,7 @@ static GstRTSPWatchFuncs watch_funcs = {
  * @client: a #GstRTSPClient
  * @channel: a #GIOChannel
  *
- * Accept a new connection for @client on the socket in @source. 
+ * Accept a new connection for @client on the socket in @channel. 
  *
  * This function should be called when the client properties and urls are fully
  * configured and the client is ready to start.

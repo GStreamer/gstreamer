@@ -464,8 +464,7 @@ default_accept_client (GstRTSPServer *server, GIOChannel *channel)
 
   /* set the session pool that this client should use */
   gst_rtsp_client_set_session_pool (client, server->session_pool);
-
-  /* set the session pool that this client should use */
+  /* set the media mapping that this client should use */
   gst_rtsp_client_set_media_mapping (client, server->media_mapping);
 
   /* accept connections for that client, this function returns after accepting
