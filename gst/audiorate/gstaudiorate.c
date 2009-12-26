@@ -672,10 +672,10 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+send:
   if (GST_BUFFER_SIZE (buf) == 0)
     goto beach;
 
-send:
   /* Now calculate parameters for whichever buffer (either the original
    * or truncated one) we're pushing. */
   GST_BUFFER_OFFSET (buf) = audiorate->next_offset;
