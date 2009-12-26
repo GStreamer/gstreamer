@@ -88,9 +88,14 @@ namespace Gst {
       // Add types with GTypeNameAttribute in TypeCache
       if (result) {
         AssemblyTypesInCache[asm.GetHashCode ()] = true;
-        Type[] ts = asm.GetTypes ();
+        Type[] ts;
+        try {
+          ts = asm.GetTypes ();
+        } catch (ReflectionTypeLoadException e) {
+          ts = e.Types;
+        }
         foreach (Type t in ts) {
-          if (t.IsDefined (typeof (GTypeNameAttribute), false)) {
+          if (t != null && t.IsDefined (typeof (GTypeNameAttribute), false)) {
             GTypeNameAttribute gattr = (GTypeNameAttribute) Attribute.GetCustomAttribute (t, typeof (GTypeNameAttribute), false);
             TypeCache[gattr.TypeName] = t;
           }
