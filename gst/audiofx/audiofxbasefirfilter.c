@@ -603,7 +603,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   gint rate = GST_AUDIO_FILTER_CAST (self)->format.rate;
   gint channels = GST_AUDIO_FILTER_CAST (self)->format.channels;
   gint width = GST_AUDIO_FILTER_CAST (self)->format.width / 8;
-  guint outsize, outsamples;
+  gint outsize, outsamples;
   guint8 *in, *out;
 
   if (channels == 0 || rate == 0 || self->nsamples_in == 0) {
@@ -616,7 +616,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   /* Calculate the number of samples and their memory size that
    * should be pushed from the residue */
   outsamples = self->nsamples_in - (self->nsamples_out - self->latency);
-  if (outsamples == 0) {
+  if (outsamples <= 0) {
     self->buffer_fill = 0;
     g_free (self->buffer);
     self->buffer = NULL;
