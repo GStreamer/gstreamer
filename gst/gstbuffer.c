@@ -498,14 +498,14 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   /* create the new buffer */
   subbuffer = gst_buffer_new ();
   subbuffer->parent = parent;
-  GST_BUFFER_FLAG_SET (GST_BUFFER_CAST (subbuffer), GST_BUFFER_FLAG_READONLY);
+  GST_BUFFER_FLAG_SET (subbuffer, GST_BUFFER_FLAG_READONLY);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", subbuffer,
       parent);
 
   /* set the right values in the child */
-  GST_BUFFER_DATA (GST_BUFFER_CAST (subbuffer)) = buffer->data + offset;
-  GST_BUFFER_SIZE (GST_BUFFER_CAST (subbuffer)) = size;
+  GST_BUFFER_DATA (subbuffer) = buffer->data + offset;
+  GST_BUFFER_SIZE (subbuffer) = size;
 
   if ((offset == 0) && (size == GST_BUFFER_SIZE (buffer))) {
     /* copy all the flags except IN_CAPS */
@@ -544,7 +544,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
     GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_CAPS (subbuffer) = NULL;
   }
-  return GST_BUFFER_CAST (subbuffer);
+  return subbuffer;
 }
 
 /**
