@@ -32,8 +32,6 @@
 
 #include <gst/check/gstcheck.h>
 
-static const GstBufferMetaInfo *test_meta_info = NULL;
-
 /* test metadata for PTS/DTS and duration */
 typedef struct
 {
@@ -118,9 +116,11 @@ test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
   test->clock_rate = meta->clock_rate;
 }
 
-static void
-register_metadata (void)
+static const GstBufferMetaInfo *
+gst_test_meta_get_info (void)
 {
+  static const GstBufferMetaInfo *test_meta_info = NULL;
+
   if (test_meta_info == NULL) {
     static const GstBufferMetaInfo info = {
       "GstTestMeta",
@@ -141,8 +141,6 @@ GST_START_TEST (test_metadata)
 {
   GstBuffer *buffer, *copy, *subbuf;
   GstTestMeta *meta;
-
-  register_metadata ();
 
   buffer = gst_buffer_new_and_alloc (4);
   memset (GST_BUFFER_DATA (buffer), 0, 4);
