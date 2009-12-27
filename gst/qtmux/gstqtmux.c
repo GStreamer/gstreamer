@@ -273,6 +273,8 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   qtmux->mdat_size = 0;
   qtmux->mdat_pos = 0;
   qtmux->longest_chunk = GST_CLOCK_TIME_NONE;
+  qtmux->video_pads = 0;
+  qtmux->audio_pads = 0;
 
   if (qtmux->ftyp) {
     atom_ftyp_free (qtmux->ftyp);
@@ -2274,13 +2276,14 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
 
 static GstPad *
 gst_qt_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name)
+    GstPadTemplate * templ, const gchar * req_name)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstQTMux *qtmux = GST_QT_MUX_CAST (element);
   GstQTPad *collect_pad;
   GstPad *newpad;
   gboolean audio;
+  gchar *name;
 
   if (templ->direction != GST_PAD_SINK)
     goto wrong_direction;
@@ -2288,17 +2291,20 @@ gst_qt_mux_request_new_pad (GstElement * element,
   if (qtmux->state != GST_QT_MUX_STATE_NONE)
     goto too_late;
 
-  GST_DEBUG_OBJECT (qtmux, "Requested pad: %s", GST_STR_NULL (name));
-
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     audio = TRUE;
+    name = g_strdup_printf ("audio_%02d", qtmux->audio_pads++);
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     audio = FALSE;
+    name = g_strdup_printf ("video_%02d", qtmux->video_pads++);
   } else
     goto wrong_template;
 
-  /* add pad to collections */
+  GST_DEBUG_OBJECT (qtmux, "Requested pad: %s", name);
+
+  /* create pad and add to collections */
   newpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
   collect_pad = (GstQTPad *)
       gst_collect_pads_add_pad_full (qtmux->collect, newpad, sizeof (GstQTPad),
       (GstCollectDataDestroyNotify) (gst_qt_mux_pad_reset));
