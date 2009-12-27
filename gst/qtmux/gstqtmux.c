@@ -2282,21 +2282,20 @@ gst_qt_mux_request_new_pad (GstElement * element,
   GstPad *newpad;
   gboolean audio;
 
-  GST_DEBUG_OBJECT (qtmux, "Requested pad: %s", GST_STR_NULL (name));
+  if (templ->direction != GST_PAD_SINK)
+    goto wrong_direction;
 
-  if (qtmux->state != GST_QT_MUX_STATE_NONE) {
-    GST_WARNING_OBJECT (qtmux, "Not providing request pad after stream start.");
-    return NULL;
-  }
+  if (qtmux->state != GST_QT_MUX_STATE_NONE)
+    goto too_late;
+
+  GST_DEBUG_OBJECT (qtmux, "Requested pad: %s", GST_STR_NULL (name));
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     audio = TRUE;
   } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
     audio = FALSE;
-  } else {
-    GST_WARNING_OBJECT (qtmux, "This is not our template!");
-    return NULL;
-  }
+  } else
+    goto wrong_template;
 
   /* add pad to collections */
   newpad = gst_pad_new_from_template (templ, name);
@@ -2328,6 +2327,23 @@ gst_qt_mux_request_new_pad (GstElement * element,
   gst_element_add_pad (element, newpad);
 
   return newpad;
+
+  /* ERRORS */
+wrong_direction:
+  {
+    GST_WARNING_OBJECT (qtmux, "Request pad that is not a SINK pad.");
+    return NULL;
+  }
+too_late:
+  {
+    GST_WARNING_OBJECT (qtmux, "Not providing request pad after stream start.");
+    return NULL;
+  }
+wrong_template:
+  {
+    GST_WARNING_OBJECT (qtmux, "This is not our template!");
+    return NULL;
+  }
 }
 
 static void
