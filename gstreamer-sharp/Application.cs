@@ -62,24 +62,24 @@ namespace Gst {
     private static Dictionary<string,Type> TypeCache = new Dictionary<string,Type> ();
 
     // Recursively check for types with GTypeNameAttribute and put them in TypeCache,
-    // but only gstreamer-sharp is in the chain of referenced assemblies.
-    private static bool PutAssemblyTypesInCache (Assembly asm)
+    // but only if gstreamer-sharp is in the chain of referenced assemblies.
+    private static void PutAssemblyTypesInCache (Assembly asm)
     {
-      bool result;
-
       // If already visited, return immediately
-      if (AssemblyTypesInCache.TryGetValue(asm.GetHashCode (), out result))
-        return result;
+      if (AssemblyTypesInCache.ContainsKey(asm.GetHashCode ()))
+        return;
 
-      result = false;
+      // Add with false to avoid chasing circular dependencies
       AssemblyTypesInCache.Add (asm.GetHashCode (), false);
 
       // Result is true for gstreamer-sharp or if a referenced assembly results in true
-      if (asm.GetName().Name == "gstreamer-sharp")
-        result = true;
+      bool result = asm.GetName().Name.Equals("gstreamer-sharp");
+
       foreach (AssemblyName ref_name in asm.GetReferencedAssemblies ()) {
         try {
-          result = result | PutAssemblyTypesInCache (Assembly.Load (ref_name));
+          Assembly ref_asm = Assembly.Load (ref_name);
+          PutAssemblyTypesInCache (ref_asm);
+          result = result | AssemblyTypesInCache[ref_asm.GetHashCode ()];
         } catch {
           /* Failure to load a referenced assembly is not an error */
         }
@@ -101,16 +101,11 @@ namespace Gst {
           }
         }
       }
-
-      return result;
     }
 
     private static System.Type GstResolveType (Gst.GLib.GType gtype, string gtype_name) {
-      // Make sure all loaded assemblies are in the TypeCache
-      Assembly[] assemblies = (Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone ();
-      foreach (Assembly asm in assemblies) {
-        PutAssemblyTypesInCache (asm);
-      }
+      // Make sure all currently loaded assemblies are in the TypeCache
+      System.Array.ForEach((Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone (), Application.PutAssemblyTypesInCache);
 
       // Return the managed type
       if (TypeCache.ContainsKey (gtype_name))
@@ -120,6 +115,8 @@ namespace Gst {
     }
 
     private static void RegisterManagedTypes() {
+      // Load types in TypeCache to speed up later invocations of GstResolveType
+      System.Array.ForEach((Assembly[]) AppDomain.CurrentDomain.GetAssemblies ().Clone (), Application.PutAssemblyTypesInCache);
       Gst.GLib.GType.ResolveType += GstResolveType;
 
       Gst.GLib.GType.Register (Fraction.GType, typeof (Fraction));
