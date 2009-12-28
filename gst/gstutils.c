@@ -139,7 +139,7 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
   if (!pspec)
     return;
 
-  value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
+  value_type = pspec->value_type;
 
   GST_DEBUG ("pspec->flags is %d, pspec->value_type is %s",
       pspec->flags, g_type_name (value_type));
@@ -803,7 +803,7 @@ gst_print_element_args (GString * buf, gint indent, GstElement * element)
     spec = *walk;
 
     if (spec->flags & G_PARAM_READABLE) {
-      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (spec));
+      g_value_init (&value, spec->value_type);
       g_object_get_property (G_OBJECT (element), spec->name, &value);
       str = g_strdup_value_contents (&value);
       g_value_unset (&value);

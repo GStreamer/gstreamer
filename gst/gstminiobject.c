@@ -579,13 +579,12 @@ param_mini_object_set_default (GParamSpec * pspec, GValue * value)
 static gboolean
 param_mini_object_validate (GParamSpec * pspec, GValue * value)
 {
-  GstParamSpecMiniObject *ospec = GST_PARAM_SPEC_MINI_OBJECT (pspec);
   GstMiniObject *mini_object = value->data[0].v_pointer;
   gboolean changed = FALSE;
 
   if (mini_object
       && !g_value_type_compatible (G_OBJECT_TYPE (mini_object),
-          G_PARAM_SPEC_VALUE_TYPE (ospec))) {
+          pspec->value_type)) {
     gst_mini_object_unref (mini_object);
     value->data[0].v_pointer = NULL;
     changed = TRUE;

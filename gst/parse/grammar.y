@@ -280,7 +280,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   if (gst_child_proxy_lookup (GST_OBJECT (set->parent), set->name, &target, &pspec)) { 
     gboolean got_value = FALSE;
 
-    value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
+    value_type = pspec->value_type;
 
     GST_CAT_LOG (GST_CAT_PIPELINE, "parsing delayed property %s as a %s from %s", pspec->name,
       g_type_name (value_type), set->value_str);
@@ -356,7 +356,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) { 
     gboolean got_value = FALSE;
 
-    value_type = G_PARAM_SPEC_VALUE_TYPE (pspec); 
+    value_type = pspec->value_type;
 
     GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s", pspec->name,
       g_type_name (value_type));

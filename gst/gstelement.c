@@ -2939,7 +2939,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
       xmlNodePtr param;
       char *contents;
 
-      g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (spec));
+      g_value_init (&value, spec->value_type);
 
       g_object_get_property (G_OBJECT (element), spec->name, &value);
       param = xmlNewChild (parent, NULL, (xmlChar *) "param", NULL);

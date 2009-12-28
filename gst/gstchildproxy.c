@@ -281,7 +281,7 @@ gst_child_proxy_get_valist (GstObject * object,
     if (!gst_child_proxy_lookup (object, name, &target, &pspec))
       goto not_found;
 
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (target), pspec->name, &value);
     gst_object_unref (target);
 

@@ -560,7 +560,7 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
         return;
       excluded_props++;
     }
-    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+    g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
 
     /* FIXME: handle flags */
