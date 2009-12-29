@@ -38,31 +38,8 @@
 
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
-static guint embed_xid = 0;
+static gulong embed_xid = 0;
 static GdkGC *trans_gc = NULL;
-
-static GstBusSyncReply
-bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
-{
-  if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
-      gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
-    GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
-
-    g_print ("got prepare-xwindow-id\n");
-    if (!embed_xid) {
-      embed_xid = GDK_WINDOW_XID (GDK_WINDOW (video_window->window));
-    }
-
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-            "force-aspect-ratio")) {
-      g_object_set (element, "force-aspect-ratio", TRUE, NULL);
-    }
-
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        embed_xid);
-  }
-  return GST_BUS_PASS;
-}
 
 static void
 redraw_overlay (GtkWidget * widget)
@@ -99,6 +76,18 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 {
   redraw_overlay (widget);
   return FALSE;
+}
+
+static void
+realize_cb (GtkWidget * widget, gpointer data)
+{
+  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+   * as well */
+  if (!gdk_window_ensure_native (widget->window))
+    g_error ("Couldn't create native window needed for GstXOverlay!");
+
+  embed_xid = GDK_WINDOW_XID (video_window->window);
+  g_print ("Window realize: got XID %lu\n", embed_xid);
 }
 
 static void
@@ -192,13 +181,16 @@ main (int argc, char **argv)
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
-  g_object_set (G_OBJECT (sink), "autopaint-colorkey", FALSE, "force-aspect-ratio", TRUE, "draw-borders", FALSE, "colorkey", 0x7F7F7F,  /* gray */
-      NULL);
+#define COLOR_GRAY 0x7F7F7F
+
+  g_object_set (G_OBJECT (sink), "autopaint-colorkey", FALSE,
+      "force-aspect-ratio", TRUE, "draw-borders", FALSE,
+      "colorkey", COLOR_GRAY, NULL);
 
   /* check xvimagesink capabilities */
   sret = gst_element_set_state (pipeline, GST_STATE_READY);
   if (sret == GST_STATE_CHANGE_FAILURE) {
-    g_printerr ("Can't set pipelien to READY\n");
+    g_printerr ("Can't set pipeline to READY\n");
     gst_object_unref (pipeline);
     return -1;
   }
@@ -223,8 +215,6 @@ main (int argc, char **argv)
     g_value_array_free (arr);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
-      pipeline);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
   g_signal_connect (bus, "message::state-changed",
       G_CALLBACK (msg_state_changed), pipeline);
@@ -242,12 +232,28 @@ main (int argc, char **argv)
       G_CALLBACK (handle_resize_cb), NULL);
   g_signal_connect (G_OBJECT (video_window), "expose-event",
       G_CALLBACK (handle_expose_cb), NULL);
+  g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
   gtk_widget_set_double_buffered (video_window, FALSE);
   gtk_container_add (GTK_CONTAINER (window), video_window);
 
   /* show the gui and play */
 
   gtk_widget_show_all (window);
+
+  /* realize window now so that the video window gets created and we can
+   * obtain its XID before the pipeline is started up and the videosink
+   * asks for the XID of the window to render onto */
+  gtk_widget_realize (window);
+
+  /* we should have the XID now */
+  g_assert (embed_xid != 0);
+
+  /* we know what the video sink is in this case (xvimagesink), so we can
+   * just set it directly here now (instead of waiting for a prepare-xwindow-id
+   * element message in a sync bus handler and setting it there) */
+  g_print ("setting XID %lu\n", embed_xid);
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), embed_xid);
+
   g_idle_add (start_pipeline, pipeline);
   gtk_main ();
 
