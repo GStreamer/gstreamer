@@ -2391,8 +2391,13 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
 
 #ifdef HAVE_X
 
-static guint embed_xid = 0;
+static gulong embed_xid = 0;
 
+/* We set the xid here in response to the prepare-xwindow-id message via a
+ * bus sync handler because we don't know the actual videosink used from the
+ * start (as we don't know the pipeline, or bin elements such as autovideosink
+ * or gconfvideosink may be used which create the actual videosink only once
+ * the pipeline is started) */
 static GstBusSyncReply
 bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
@@ -2400,18 +2405,21 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
       gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
-    g_print ("got prepare-xwindow-id\n");
-    if (!embed_xid) {
-      embed_xid = GDK_WINDOW_XID (GDK_WINDOW (video_window->window));
-    }
+    g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);
 
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
             "force-aspect-ratio")) {
       g_object_set (element, "force-aspect-ratio", TRUE, NULL);
     }
 
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        embed_xid);
+    /* Should have been initialised from main thread before (can't use
+     * GDK_WINDOW_XID here with Gtk+ >= 2.18, because the sync handler will
+     * be called from a streaming thread and GDK_WINDOW_XID maps to more than
+     * a simple structure lookup with Gtk+ >= 2.18, where 'more' is stuff that
+     * shouldn't be done from a non-GUI thread without explicit locking).  */
+    g_assert (embed_xid != 0);
+
+    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (element), embed_xid);
   }
   return GST_BUS_PASS;
 }
@@ -2427,6 +2435,19 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
   return FALSE;
 }
 
+static void
+realize_cb (GtkWidget * widget, gpointer data)
+{
+  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+   * as well */
+  if (!gdk_window_ensure_native (widget->window))
+    g_error ("Couldn't create native window needed for GstXOverlay!");
+
+#ifdef HAVE_X
+  embed_xid = GDK_WINDOW_XID (video_window->window);
+  g_print ("Window realize: video window XID = %lu\n", embed_xid);
+#endif
+}
 
 static void
 msg_eos (GstBus * bus, GstMessage * message, GstPipeline * data)
@@ -2623,9 +2644,11 @@ main (int argc, char **argv)
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   video_window = gtk_drawing_area_new ();
-  g_signal_connect (G_OBJECT (video_window), "expose-event",
+  g_signal_connect (video_window, "expose-event",
       G_CALLBACK (handle_expose_cb), NULL);
+  g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
   gtk_widget_set_double_buffered (video_window, FALSE);
+
   statusbar = gtk_statusbar_new ();
   status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
   gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
@@ -2890,6 +2913,14 @@ main (int argc, char **argv)
 
   /* show the gui. */
   gtk_widget_show_all (window);
+
+  /* realize window now so that the video window gets created and we can
+   * obtain its XID before the pipeline is started up and the videosink
+   * asks for the XID of the window to render onto */
+  gtk_widget_realize (window);
+
+  /* we should have the XID now */
+  g_assert (embed_xid != 0);
 
   if (verbose) {
     g_signal_connect (pipeline, "deep_notify",
