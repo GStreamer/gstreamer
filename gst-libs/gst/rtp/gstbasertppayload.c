@@ -530,6 +530,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
   }
 
   payload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
+  payload->abidata.ABI.ptime = 0;
 
   /* the peer caps can override some of the defaults */
   peercaps = gst_pad_peer_get_caps (payload->srcpad);
@@ -547,7 +548,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     GstStructure *s, *d;
     const GValue *value;
     gint pt;
-    guint max_ptime;
+    gint max_ptime, ptime;
 
     /* peer provides caps we can use to fixate, intersect. This always returns a
      * writable caps. */
@@ -561,8 +562,11 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     /* get first structure */
     s = gst_caps_get_structure (temp, 0);
 
-    if (gst_structure_get_uint (s, "maxptime", &max_ptime))
+    if (gst_structure_get_int (s, "maxptime", &max_ptime) && max_ptime > 0)
       payload->priv->caps_max_ptime = max_ptime * GST_MSECOND;
+
+    if (gst_structure_get_int (s, "ptime", &ptime) && ptime > 0)
+      payload->abidata.ABI.ptime = ptime;
 
     if (gst_structure_get_int (s, "payload", &pt)) {
       /* use peer pt */
