@@ -1184,13 +1184,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     sps = h264parse->sps;
   }
 
-  src_caps = h264parse->src_caps;
-  if (G_UNLIKELY (src_caps == NULL))
-    src_caps = caps;
+  if (G_UNLIKELY (h264parse->src_caps == NULL))
+    src_caps = gst_caps_copy (caps);
+  else
+    src_caps = gst_caps_ref (h264parse->src_caps);
+  src_caps = gst_caps_make_writable (src_caps);
 
   g_return_val_if_fail (src_caps != NULL, FALSE);
-  gst_caps_ref (src_caps);
-  caps = src_caps;
 
   /* if some upstream metadata missing, fill in from parsed stream */
   /* width / height */
@@ -1202,8 +1202,6 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     height = h264parse->height = sps->height;
 
     GST_DEBUG_OBJECT (h264parse, "updating caps w/h %dx%d", width, height);
-    gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
-    gst_caps_unref (src_caps);
     gst_caps_set_simple (src_caps, "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height, NULL);
   }
@@ -1219,10 +1217,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 
     /* FIXME verify / also handle other cases */
     if (sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag) {
-      src_caps = gst_caps_copy (caps);
       GST_DEBUG_OBJECT (h264parse, "updating caps fps %d/%d", fps_num, fps_den);
-      gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
-      gst_caps_unref (src_caps);
       gst_caps_set_simple (src_caps,
           "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
     }
@@ -1235,7 +1230,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     const GValue *value = NULL;
     const GstBuffer *codec_data = NULL;
 
-    structure = gst_caps_get_structure (caps, 0);
+    structure = gst_caps_get_structure (src_caps, 0);
     value = gst_structure_get_value (structure, "codec_data");
     if (value != NULL)
       codec_data = gst_value_get_buffer (value);
@@ -1245,8 +1240,6 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           || memcmp (GST_BUFFER_DATA (buf), GST_BUFFER_DATA (codec_data),
               GST_BUFFER_SIZE (buf))) {
         GST_DEBUG_OBJECT (h264parse, "setting new codec_data");
-        gst_caps_replace (&src_caps, gst_caps_copy (src_caps));
-        gst_caps_unref (src_caps);
         gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER, buf,
             NULL);
         gst_buffer_unref (buf);
