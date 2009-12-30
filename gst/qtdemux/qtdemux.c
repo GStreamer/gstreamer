@@ -6469,15 +6469,28 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         GST_DEBUG_OBJECT (qtdemux, "priority %04x", QT_UINT8 (ptr + 2));
         ptr += 3;
         break;
-      case 0x04:
+      case 0x04:{
+        guint max_bitrate, avg_bitrate;
+
         object_type_id = QT_UINT8 (ptr);
+        max_bitrate = QT_UINT32 (ptr + 5);
+        avg_bitrate = QT_UINT32 (ptr + 9);
         GST_DEBUG_OBJECT (qtdemux, "object_type_id %02x", object_type_id);
         GST_DEBUG_OBJECT (qtdemux, "stream_type %02x", QT_UINT8 (ptr + 1));
         GST_DEBUG_OBJECT (qtdemux, "buffer_size_db %02x", QT_UINT24 (ptr + 2));
-        GST_DEBUG_OBJECT (qtdemux, "max bitrate %d", QT_UINT32 (ptr + 5));
-        GST_DEBUG_OBJECT (qtdemux, "avg bitrate %d", QT_UINT32 (ptr + 9));
+        GST_DEBUG_OBJECT (qtdemux, "max bitrate %u", max_bitrate);
+        GST_DEBUG_OBJECT (qtdemux, "avg bitrate %u", avg_bitrate);
+        if (max_bitrate > 0 && max_bitrate < G_MAXUINT32) {
+          gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+              GST_TAG_MAXIMUM_BITRATE, max_bitrate, NULL);
+        }
+        if (avg_bitrate > 0 && avg_bitrate < G_MAXUINT32) {
+          gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+              avg_bitrate, NULL);
+        }
         ptr += 13;
         break;
+      }
       case 0x05:
         GST_MEMDUMP_OBJECT (qtdemux, "data", ptr, len);
         data_ptr = ptr;
