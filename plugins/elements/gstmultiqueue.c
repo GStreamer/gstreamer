@@ -1670,7 +1670,7 @@ gst_single_queue_new (GstMultiQueue * mqueue)
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_query));
-  gst_pad_set_iterate_internal_links_function (sq->sinkpad,
+  gst_pad_set_iterate_internal_links_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
