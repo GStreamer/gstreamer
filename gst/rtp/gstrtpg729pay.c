@@ -190,9 +190,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   /* min number of bytes based on a given ptime, has to be a multiple
      of frame duration */
   {
-    guint64 min_ptime;
-
-    g_object_get (G_OBJECT (payload), "min-ptime", &min_ptime, NULL);
+    guint64 min_ptime = payload->min_ptime;
 
     min_ptime = min_ptime / 1000000;
     minptime_octets = G729_FRAME_SIZE *
@@ -203,6 +201,18 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
 
   if (min_payload_len > max_payload_len) {
     min_payload_len = max_payload_len;
+  }
+
+  /* If the ptime is specified in the caps, tried to adhere to it exactly */
+  if (payload->abidata.ABI.ptime) {
+    guint ptime_in_bytes = G729_FRAME_SIZE *
+        (guint) (payload->abidata.ABI.ptime / G729_FRAME_DURATION_MS);
+
+    /* clip to computed min and max lengths */
+    ptime_in_bytes = MAX (min_payload_len, ptime_in_bytes);
+    ptime_in_bytes = MIN (max_payload_len, ptime_in_bytes);
+
+    min_payload_len = max_payload_len = ptime_in_bytes;
   }
 
   GST_LOG_OBJECT (basertpaudiopayload,
