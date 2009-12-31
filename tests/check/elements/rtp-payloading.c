@@ -750,6 +750,24 @@ GST_START_TEST (rtp_jpeg_list)
 }
 
 GST_END_TEST;
+static char rtp_g729_frame_data[] =
+    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static int rtp_g729_frame_data_size = 22;
+
+static int rtp_g729_frame_count = 1;
+
+GST_START_TEST (rtp_g729)
+{
+  rtp_pipeline_test (rtp_g729_frame_data, rtp_g729_frame_data_size,
+      rtp_g729_frame_count, "audio/G729", "rtpg729pay",
+      "rtpg729depay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
 /*
  * Creates the test suite.
  *
@@ -786,6 +804,7 @@ rtp_payloading_suite ()
   tcase_add_test (tc_chain, rtp_vorbis);
   tcase_add_test (tc_chain, rtp_jpeg);
   tcase_add_test (tc_chain, rtp_jpeg_list);
+  tcase_add_test (tc_chain, rtp_g729);
   return s;
 }
 
