@@ -156,7 +156,6 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   guint minptime_octets = 0;
   guint min_payload_len;
   guint max_payload_len;
-  gboolean use_adapter = FALSE;
 
   available = GST_BUFFER_SIZE (buf);
 
@@ -221,31 +220,25 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
 
   adapter = gst_base_rtp_audio_payload_get_adapter (basertpaudiopayload);
 
-  if (adapter && gst_adapter_available (adapter)) {
-    /* If there is always data in the adapter, we have to use it */
-    gst_adapter_push (adapter, buf);
-    available = gst_adapter_available (adapter);
-    use_adapter = TRUE;
-  } else {
-    /* let's set the base timestamp */
+
+  /* let's reset the base timestamp when the adapter is empty */
+  if (gst_adapter_available (adapter) == 0)
     basertpaudiopayload->base_ts = GST_BUFFER_TIMESTAMP (buf);
 
-    /* If buffer fits on an RTP packet, let's just push it through */
-    /* this will check against max_ptime and max_mtu */
-    if (GST_BUFFER_SIZE (buf) >= min_payload_len &&
-        GST_BUFFER_SIZE (buf) <= max_payload_len) {
-      ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
-          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-          GST_BUFFER_TIMESTAMP (buf));
-      gst_buffer_unref (buf);
-      g_object_unref (adapter);
-      return ret;
-    }
-
-    available = GST_BUFFER_SIZE (buf);
-    data = (guint8 *) GST_BUFFER_DATA (buf);
+  if (gst_adapter_available (adapter) == 0 &&
+      GST_BUFFER_SIZE (buf) >= min_payload_len &&
+      GST_BUFFER_SIZE (buf) <= max_payload_len) {
+    ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
+        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
+        GST_BUFFER_TIMESTAMP (buf));
+    gst_buffer_unref (buf);
+    g_object_unref (adapter);
+    return ret;
   }
 
+  gst_adapter_push (adapter, buf);
+
+  available = gst_adapter_available (adapter);
   /* as long as we have full frames */
   /* this loop will push all available buffers till the last frame */
   while (available >= min_payload_len ||
@@ -260,38 +253,18 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
           (available / G729_FRAME_SIZE) * G729_FRAME_SIZE);
     }
 
-    if (use_adapter) {
-      data = gst_adapter_peek (adapter, payload_len);
-    }
+    data = gst_adapter_peek (adapter, payload_len);
 
-    ret = gst_base_rtp_audio_payload_push (basertpaudiopayload, data,
-        payload_len, basertpaudiopayload->base_ts);
+    ret = gst_base_rtp_audio_payload_flush (basertpaudiopayload, payload_len,
+        basertpaudiopayload->base_ts);
 
     num = payload_len / G729_FRAME_SIZE;
     basertpaudiopayload->base_ts += G729_FRAME_DURATION * num;
 
-    if (use_adapter) {
-      gst_adapter_flush (adapter, payload_len);
-      available = gst_adapter_available (adapter);
-    } else {
-      available -= payload_len;
-      data += payload_len;
-    }
+    available = gst_adapter_available (adapter);
   }
 
-  if (!use_adapter) {
-    if (available != 0 && adapter) {
-      GstBuffer *buf2;
-      buf2 = gst_buffer_create_sub (buf,
-          GST_BUFFER_SIZE (buf) - available, available);
-      gst_adapter_push (adapter, buf2);
-    }
-    gst_buffer_unref (buf);
-  }
-
-  if (adapter) {
-    g_object_unref (adapter);
-  }
+  g_object_unref (adapter);
 
   return ret;
 
