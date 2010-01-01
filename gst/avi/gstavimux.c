@@ -1010,7 +1010,7 @@ too_late:
   }
 wrong_template:
   {
-    g_warning ("avimuxx: this is not our template!\n");
+    g_warning ("avimux: this is not our template!\n");
     return NULL;
   }
 }
