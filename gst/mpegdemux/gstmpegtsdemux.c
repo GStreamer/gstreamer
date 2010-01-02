@@ -660,6 +660,10 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
         template = klass->audio_template;
         name = g_strdup_printf ("audio_%04x", stream->PID);
         caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      } else if (gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_ENHANCED_AC3)) {
+        template = klass->private_template;
+        name = g_strdup_printf ("audio_%04x", stream->PID);
+        caps = gst_caps_new_simple ("audio/x-eac3", NULL);
       } else if (gst_mpeg_descriptor_find (stream->ES_info, DESC_DVB_TELETEXT)) {
         template = klass->private_template;
         name = g_strdup_printf ("private_%04x", stream->PID);
