@@ -88,12 +88,27 @@ typedef struct _QtDemuxSample QtDemuxSample;
 struct _QtDemuxSample
 {
   guint32 size;
+  gint32 pts_offset;            /* Add this value to timestamp to get the pts */
   guint64 offset;
-  guint64 pts_offset;           /* Add this value to timestamp to get the pts */
-  guint64 timestamp;            /* In mov time */
-  guint64 duration;             /* In mov time */
+  guint64 timestamp;            /* DTS In mov time */
+  guint32 duration;             /* In mov time */
   gboolean keyframe;            /* TRUE when this packet is a keyframe */
 };
+
+/* timestamp is the DTS */
+#define QTSAMPLE_DTS(stream,sample) gst_util_uint64_scale ((sample)->timestamp,\
+    GST_SECOND, (stream)->timescale)
+/* timestamp + offset is the PTS */
+#define QTSAMPLE_PTS(stream,sample) gst_util_uint64_scale ((sample)->timestamp + \
+    (sample)->pts_offset, GST_SECOND, (stream)->timescale)
+/* timestamp + duration - dts is the duration */
+#define QTSAMPLE_DUR_DTS(stream,sample,dts) (gst_util_uint64_scale ((sample)->timestamp + \
+    (sample)->duration, GST_SECOND, (stream)->timescale) - (dts));
+/* timestamp + offset + duration - pts is the duration */
+#define QTSAMPLE_DUR_PTS(stream,sample,pts) (gst_util_uint64_scale ((sample)->timestamp + \
+    (sample)->pts_offset + (sample)->duration, GST_SECOND, (stream)->timescale) - (pts));
+
+#define QTSAMPLE_KEYFRAME(stream,sample) ((stream)->all_keyframe || (sample)->keyframe)
 
 /*
  * Quicktime has tracks and segments. A track is a continuous piece of
@@ -2098,21 +2113,21 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (kf_index > stream->sample_index) {
       GST_DEBUG_OBJECT (qtdemux,
           "moving forwards to keyframe at %u (pts %" GST_TIME_FORMAT, kf_index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                  timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (stream->
+                  samples[kf_index].timestamp, GST_SECOND, stream->timescale)));
       gst_qtdemux_move_stream (qtdemux, stream, kf_index);
     } else {
       GST_DEBUG_OBJECT (qtdemux,
           "moving forwards, keyframe at %u (pts %" GST_TIME_FORMAT
           " already sent", kf_index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                  timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (stream->
+                  samples[kf_index].timestamp, GST_SECOND, stream->timescale)));
     }
   } else {
     GST_DEBUG_OBJECT (qtdemux,
         "moving backwards to keyframe at %u (pts %" GST_TIME_FORMAT, kf_index,
-        GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                timestamp, GST_SECOND, stream->timescale)));
+        GST_TIME_ARGS (gst_util_uint64_scale (stream->
+                samples[kf_index].timestamp, GST_SECOND, stream->timescale)));
     gst_qtdemux_move_stream (qtdemux, stream, kf_index);
   }
 
@@ -2170,14 +2185,11 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     return FALSE;
   }
 
-  *timestamp =
-      gst_util_uint64_scale (sample->timestamp + sample->pts_offset,
-      GST_SECOND, stream->timescale);
+  *timestamp = QTSAMPLE_PTS (stream, sample);
   *offset = sample->offset;
   *size = sample->size;
-  *duration =
-      gst_util_uint64_scale (sample->duration, GST_SECOND, stream->timescale);
-  *keyframe = stream->all_keyframe || sample->keyframe;
+  *duration = QTSAMPLE_DUR_PTS (stream, sample, *timestamp);
+  *keyframe = QTSAMPLE_KEYFRAME (stream, sample);
 
   /* update dummy segment duration */
   if (stream->sample_index == stream->n_samples - 1 && stream->n_segments == 1) {
@@ -3160,6 +3172,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
       case QTDEMUX_STATE_MOVIE:{
         GstBuffer *outbuf;
         QtDemuxStream *stream = NULL;
+        QtDemuxSample *sample;
         int i = -1;
         guint64 timestamp, duration, position;
         gboolean keyframe;
@@ -3210,21 +3223,15 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             GST_FOURCC_ARGS (stream->fourcc));
 
         g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
-        position =
-            gst_util_uint64_scale (stream->samples[stream->
-                sample_index].timestamp, GST_SECOND, stream->timescale);
-        timestamp =
-            gst_util_uint64_scale (stream->samples[stream->
-                sample_index].timestamp +
-            stream->samples[stream->sample_index].pts_offset, GST_SECOND,
-            stream->timescale);
-        duration =
-            gst_util_uint64_scale (stream->samples[stream->
-                sample_index].duration, GST_SECOND, stream->timescale);
-        keyframe = stream->all_keyframe
-            || stream->samples[stream->sample_index].keyframe;
-        ret =
-            gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
+
+        sample = &stream->samples[stream->sample_index];
+
+        position = QTSAMPLE_DTS (stream, sample);
+        timestamp = QTSAMPLE_PTS (stream, sample);
+        duration = QTSAMPLE_DUR_DTS (stream, sample, position);
+        keyframe = QTSAMPLE_KEYFRAME (stream, sample);
+
+        ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
             timestamp, duration, keyframe, position, demux->offset);
 
         /* combine flows */
@@ -4130,8 +4137,8 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u  (%u MB)",
-      stream->n_samples,
+  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %d = (%u MB)",
+      stream->n_samples, sizeof (QtDemuxSample),
       (guint) (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
 
   if (stream->n_samples >=
