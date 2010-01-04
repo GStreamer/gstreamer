@@ -4320,11 +4320,12 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
             "sample %d: timestamp %" GST_TIME_FORMAT ", size %u",
             j, GST_TIME_ARGS (gst_util_uint64_scale (stream->stco_sample_index,
                     GST_SECOND, stream->timescale)), stream->samples[j].size);
+
         stream->samples[j].timestamp = stream->stco_sample_index;
-        stream->stco_sample_index += stream->samples_per_chunk;
-        stream->samples[j].duration =
-            stream->stco_sample_index - stream->samples[j].timestamp;
+        stream->samples[j].duration = stream->samples_per_chunk;
         stream->samples[j].keyframe = TRUE;
+
+        stream->stco_sample_index += stream->samples_per_chunk;
         stream->stsc_chunk_index++;
       }
     }
@@ -4358,11 +4359,12 @@ done2:
             "sample %d: index %d, timestamp %" GST_TIME_FORMAT,
             index, j, GST_TIME_ARGS (gst_util_uint64_scale (stream->stts_time,
                     GST_SECOND, stream->timescale)));
+
         stream->samples[index].timestamp = stream->stts_time;
+        stream->samples[index].duration = stream->stts_duration;
+
         /* add non-scaled values to avoid rounding errors */
         stream->stts_time += stream->stts_duration;
-        stream->samples[index].duration =
-            stream->stts_time - stream->samples[index].timestamp;
         stream->stts_sample_index++;
         index++;
         if (G_UNLIKELY (index > n))
