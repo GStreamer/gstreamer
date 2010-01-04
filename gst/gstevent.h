@@ -381,6 +381,8 @@ gst_event_unref (GstEvent * event)
  * @event: The event to copy
  *
  * Copy the event using the event specific copy function.
+ *
+ * Returns: the new event
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstEvent * gst_event_copy (const GstEvent * event);
