@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "videomixerpad.h"
+#include "blend.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_videomixer_debug);
 #define GST_CAT_DEFAULT gst_videomixer_debug
@@ -105,11 +106,9 @@ struct _GstVideoMixer
   guint64	segment_position;
   gdouble	segment_rate;
 
-  void (*blend) (guint8 * src, gint xpos, gint ypos, gint src_width, gint src_height, gdouble src_alpha,
-                 guint8 * dest, gint dest_width, gint dest_height);
-  void (*fill_checker) (guint8 * dest, gint width, gint height);
-
-  void (*fill_color) (guint8 * dest, gint width, gint height, gint colY, gint colU, gint colV);
+  BlendFunction blend;
+  FillCheckerFunction fill_checker;
+  FillColorFunction fill_color;
 };
 
 struct _GstVideoMixerClass

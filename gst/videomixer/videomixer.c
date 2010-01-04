@@ -68,10 +68,6 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
-
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -104,79 +100,6 @@ static gboolean gst_videomixer_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_videomixer_sink_event (GstPad * pad, GstEvent * event);
 
 static void gst_videomixer_sort_pads (GstVideoMixer * mix);
-
-/*AYUV function definitions see file: blend_ayuv*/
-void gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_ayuv_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_ayuv_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-/*BGRA/ARGB function definitions see file: blend_bgra*/
-void gst_videomixer_blend_bgra_bgra (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_bgra_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_bgra_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_argb_argb (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_argb_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_argb_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-/* RGB function definitions see file: blend_rgb.c */
-void gst_videomixer_blend_rgb_rgb (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_rgb_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_rgb_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_bgr_bgr (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_bgr_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_bgr_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_xrgb_xrgb (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_xrgb_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_xrgb_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_xbgr_xbgr (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_xbgr_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_xbgr_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_rgbx_rgbx (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_rgbx_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_rgbx_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-void gst_videomixer_blend_bgrx_bgrx (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_bgrx_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_bgrx_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-/*I420 function definitions see file: blend_i420.c*/
-void gst_videomixer_blend_i420_i420 (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_heighty);
-void gst_videomixer_fill_i420_checker (guint8 * dest, gint width, gint height);
-void gst_videomixer_fill_i420_color (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-
-#ifdef BUILD_X86_ASM
-void gst_videomixer_blend_ayuv_ayuv_mmx (guint8 * src, gint xpos, gint ypos,
-    gint src_width, gint src_height, gdouble src_alpha,
-    guint8 * dest, gint dest_width, gint dest_height);
-void gst_videomixer_fill_ayuv_color_mmx (guint8 * dest, gint width, gint height,
-    gint colY, gint colU, gint colV);
-#endif
 
 #define DEFAULT_PAD_ZORDER 0
 #define DEFAULT_PAD_XPOS   0
@@ -938,77 +861,64 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
     goto done;
 
   switch (mixer->fmt) {
-    case GST_VIDEO_FORMAT_AYUV:{
-#ifdef BUILD_X86_ASM
-      guint cpu_flags = oil_cpu_get_flags ();
-
-      mixer->blend =
-          (cpu_flags & OIL_IMPL_FLAG_MMX) ? gst_videomixer_blend_ayuv_ayuv_mmx :
-          gst_videomixer_blend_ayuv_ayuv;
-      mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
-      mixer->fill_color =
-          (cpu_flags & OIL_IMPL_FLAG_MMX) ? gst_videomixer_fill_ayuv_color_mmx :
-          gst_videomixer_fill_ayuv_color;
-#else
-      mixer->blend = gst_videomixer_blend_ayuv_ayuv;
-      mixer->fill_checker = gst_videomixer_fill_ayuv_checker;
-      mixer->fill_color = gst_videomixer_fill_ayuv_color;
-#endif
-      ret = TRUE;
-      break;
-    }
-    case GST_VIDEO_FORMAT_I420:
-      mixer->blend = gst_videomixer_blend_i420_i420;
-      mixer->fill_checker = gst_videomixer_fill_i420_checker;
-      mixer->fill_color = gst_videomixer_fill_i420_color;
-      ret = TRUE;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-      mixer->blend = gst_videomixer_blend_bgra_bgra;
-      mixer->fill_checker = gst_videomixer_fill_bgra_checker;
-      mixer->fill_color = gst_videomixer_fill_bgra_color;
+    case GST_VIDEO_FORMAT_AYUV:
+      mixer->blend = gst_video_mixer_blend_ayuv;
+      mixer->fill_checker = gst_video_mixer_fill_checker_ayuv;
+      mixer->fill_color = gst_video_mixer_fill_color_ayuv;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ARGB:
-      mixer->blend = gst_videomixer_blend_argb_argb;
-      mixer->fill_checker = gst_videomixer_fill_argb_checker;
-      mixer->fill_color = gst_videomixer_fill_argb_color;
+      mixer->blend = gst_video_mixer_blend_argb;
+      mixer->fill_checker = gst_video_mixer_fill_checker_argb;
+      mixer->fill_color = gst_video_mixer_fill_color_argb;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      mixer->blend = gst_video_mixer_blend_bgra;
+      mixer->fill_checker = gst_video_mixer_fill_checker_bgra;
+      mixer->fill_color = gst_video_mixer_fill_color_bgra;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      mixer->blend = gst_video_mixer_blend_i420;
+      mixer->fill_checker = gst_video_mixer_fill_checker_i420;
+      mixer->fill_color = gst_video_mixer_fill_color_i420;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGB:
-      mixer->blend = gst_videomixer_blend_rgb_rgb;
-      mixer->fill_checker = gst_videomixer_fill_rgb_checker;
-      mixer->fill_color = gst_videomixer_fill_rgb_color;
+      mixer->blend = gst_video_mixer_blend_rgb;
+      mixer->fill_checker = gst_video_mixer_fill_checker_rgb;
+      mixer->fill_color = gst_video_mixer_fill_color_rgb;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGR:
-      mixer->blend = gst_videomixer_blend_bgr_bgr;
-      mixer->fill_checker = gst_videomixer_fill_bgr_checker;
-      mixer->fill_color = gst_videomixer_fill_bgr_color;
+      mixer->blend = gst_video_mixer_blend_bgr;
+      mixer->fill_checker = gst_video_mixer_fill_checker_bgr;
+      mixer->fill_color = gst_video_mixer_fill_color_bgr;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xRGB:
-      mixer->blend = gst_videomixer_blend_xrgb_xrgb;
-      mixer->fill_checker = gst_videomixer_fill_xrgb_checker;
-      mixer->fill_color = gst_videomixer_fill_xrgb_color;
+      mixer->blend = gst_video_mixer_blend_xrgb;
+      mixer->fill_checker = gst_video_mixer_fill_checker_xrgb;
+      mixer->fill_color = gst_video_mixer_fill_color_xrgb;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_xBGR:
-      mixer->blend = gst_videomixer_blend_xbgr_xbgr;
-      mixer->fill_checker = gst_videomixer_fill_xbgr_checker;
-      mixer->fill_color = gst_videomixer_fill_xbgr_color;
+      mixer->blend = gst_video_mixer_blend_xbgr;
+      mixer->fill_checker = gst_video_mixer_fill_checker_xbgr;
+      mixer->fill_color = gst_video_mixer_fill_color_xbgr;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGBx:
-      mixer->blend = gst_videomixer_blend_rgbx_rgbx;
-      mixer->fill_checker = gst_videomixer_fill_rgbx_checker;
-      mixer->fill_color = gst_videomixer_fill_rgbx_color;
+      mixer->blend = gst_video_mixer_blend_rgbx;
+      mixer->fill_checker = gst_video_mixer_fill_checker_rgbx;
+      mixer->fill_color = gst_video_mixer_fill_color_rgbx;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_BGRx:
-      mixer->blend = gst_videomixer_blend_bgrx_bgrx;
-      mixer->fill_checker = gst_videomixer_fill_bgrx_checker;
-      mixer->fill_color = gst_videomixer_fill_bgrx_color;
+      mixer->blend = gst_video_mixer_blend_bgrx;
+      mixer->fill_checker = gst_video_mixer_fill_checker_bgrx;
+      mixer->fill_color = gst_video_mixer_fill_color_bgrx;
       ret = TRUE;
       break;
     default:
@@ -1649,7 +1559,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_videomixer_debug, "videomixer", 0,
       "video mixer");
 
-  oil_init ();
+  gst_video_mixer_init_blend ();
 
   return gst_element_register (plugin, "videomixer", GST_RANK_PRIMARY,
       GST_TYPE_VIDEO_MIXER);
