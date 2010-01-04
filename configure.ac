@@ -1,4 +1,4 @@
-AC_INIT(gstreamer-sharp, 0.9.2,
+AC_INIT(gstreamer-sharp, 0.9.2.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gst-sharp,
     gstreamer-sharp)
 AC_CANONICAL_SYSTEM
@@ -14,7 +14,7 @@ AC_HEADER_STDC
 PACKAGE_VERSION=gstreamer-sharp-0.10
 AC_SUBST(PACKAGE_VERSION)
 
-API_VERSION=0.9.2.0
+API_VERSION=0.9.3.0
 AC_SUBST(API_VERSION)
 
 MONO_REQUIRED_VERSION=2.4
