@@ -88,14 +88,13 @@ static GstStaticPadTemplate modplug_src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        "audio/x-raw-int,"
+    GST_STATIC_CAPS ("audio/x-raw-int,"
         " endianness = (int) BYTE_ORDER,"
         " signed = (boolean) true,"
         " width = (int) 32,"
         " depth = (int) 32,"
         " rate = (int) { 8000, 11025, 22050, 44100 },"
-        " channels = (int) [ 1, 2 ]; "	
+        " channels = (int) [ 1, 2 ]; "
         "audio/x-raw-int,"
         " endianness = (int) BYTE_ORDER,"
         " signed = (boolean) true,"
@@ -479,14 +478,15 @@ gst_modplug_load_song (GstModPlug * modplug)
   gst_structure_get_int (structure, "rate", &modplug->frequency);
 
   modplug->read_samples = 1152;
-  modplug->read_bytes = modplug->read_samples * modplug->channel * modplug->bits / 8;
+  modplug->read_bytes =
+      modplug->read_samples * modplug->channel * modplug->bits / 8;
 
   GST_DEBUG_OBJECT (modplug, "Loading song");
 
   modplug->mSoundFile = new CSoundFile;
 
   modplug->mSoundFile->SetWaveConfig (modplug->frequency, modplug->bits,
-        modplug->channel);
+      modplug->channel);
 
   modplug->mSoundFile->SetWaveConfigEx (modplug->surround, !modplug->oversamp,
       modplug->reverb, true, modplug->megabass, modplug->noise_reduction, true);
