@@ -68,6 +68,7 @@ enum
 #define DEFAULT_PORT         8000
 #define DEFAULT_PASSWORD     "hackme"
 #define DEFAULT_USERNAME     "source"
+#define DEFAULT_PUBLIC     FALSE
 #define DEFAULT_STREAMNAME   ""
 #define DEFAULT_DESCRIPTION  ""
 #define DEFAULT_GENRE        ""
@@ -204,6 +205,11 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
           G_PARAM_READWRITE));
 
   /* metadata */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PUBLIC,
+      g_param_spec_boolean ("public", "public",
+          "If the stream should be listed on the server's stream directory",
+          DEFAULT_PUBLIC, G_PARAM_READWRITE));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME,
       g_param_spec_string ("streamname", "streamname", "name of the stream",
           DEFAULT_STREAMNAME, G_PARAM_READWRITE));
@@ -266,6 +272,7 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->mount = g_strdup (DEFAULT_MOUNT);
   shout2send->url = g_strdup (DEFAULT_URL);
   shout2send->protocol = DEFAULT_PROTOCOL;
+  shout2send->ispublic = DEFAULT_PUBLIC;
 
   shout2send->tags = gst_tag_list_new ();
   shout2send->conn = NULL;
@@ -477,6 +484,12 @@ gst_shout2send_start (GstBaseSink * basesink)
   cur_prop = "password";
   GST_DEBUG_OBJECT (sink, "setting password: %s", sink->password);
   if (shout_set_password (sink->conn, sink->password) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "public";
+  GST_DEBUG_OBJECT (sink, "setting %s: %u", cur_prop, sink->ispublic);
+  if (shout_set_public (sink->conn,
+          (sink->ispublic ? 1 : 0)) != SHOUTERR_SUCCESS)
     goto set_failed;
 
   cur_prop = "streamname";
@@ -693,6 +706,9 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
         g_free (shout2send->username);
       shout2send->username = g_strdup (g_value_get_string (value));
       break;
+    case ARG_PUBLIC:
+      shout2send->ispublic = g_value_get_boolean (value);
+      break;
     case ARG_STREAMNAME:       /* Name of the stream */
       if (shout2send->streamname)
         g_free (shout2send->streamname);
@@ -747,6 +763,9 @@ gst_shout2send_get_property (GObject * object, guint prop_id,
       break;
     case ARG_USERNAME:
       g_value_set_string (value, shout2send->username);
+      break;
+    case ARG_PUBLIC:
+      g_value_set_boolean (value, shout2send->ispublic);
       break;
     case ARG_STREAMNAME:       /* Name of the stream */
       g_value_set_string (value, shout2send->streamname);
