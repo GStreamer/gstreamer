@@ -58,6 +58,9 @@
 #include "qtdemux.h"
 #include "qtpalette.h"
 
+#include "gst/riff/riff-media.h"
+#include "gst/riff/riff-read.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5482,7 +5485,58 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         esds = qtdemux_tree_get_child_by_type (mp4a, FOURCC_esds);
     }
 
-    if (esds) {
+
+    /* If the fourcc's bottom 16 bits gives 'sm', then the top
+       16 bits is a byte-swapped wave-style codec identifier,
+       and we can find a WAVE header internally to a 'wave' atom here.
+       This can more clearly be thought of as 'ms' as the top 16 bits, and a
+       codec id as the bottom 16 bits - but byte-swapped to store in QT (which
+       is big-endian).
+     */
+    if ((fourcc & 0xffff) == (('s' << 8) | 'm')) {
+      if (len < offset + 20) {
+        GST_WARNING_OBJECT (qtdemux, "No wave atom in MS-style audio");
+      } else {
+        guint32 datalen = QT_UINT32 (stsd_data + offset + 16);
+        const guint8 *data = stsd_data + offset + 16;
+        GNode *wavenode;
+        GNode *waveheadernode;
+
+        wavenode = g_node_new ((guint8 *) data);
+        if (qtdemux_parse_node (qtdemux, wavenode, data, datalen)) {
+          const guint8 *waveheader;
+          guint32 headerlen;
+
+          waveheadernode = qtdemux_tree_get_child_by_type (wavenode, fourcc);
+          waveheader = (const guint8 *) waveheadernode->data;
+          headerlen = QT_UINT32 (waveheader);
+
+          if (headerlen > 8) {
+            gst_riff_strf_auds *header = NULL;
+            GstBuffer *headerbuf;
+            GstBuffer *extra;
+
+            waveheader += 8;
+            headerlen -= 8;
+
+            headerbuf = gst_buffer_new ();
+            GST_BUFFER_DATA (headerbuf) = (guint8 *) waveheader;
+            GST_BUFFER_SIZE (headerbuf) = headerlen;
+
+            if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
+                    headerbuf, &header, &extra)) {
+              gst_caps_unref (stream->caps);
+              stream->caps = gst_riff_create_audio_caps (header->format, NULL,
+                  header, extra, NULL, NULL);
+
+              if (extra)
+                gst_buffer_unref (extra);
+            }
+          }
+        }
+        g_node_destroy (wavenode);
+      }
+    } else if (esds) {
       gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
     } else {
       switch (fourcc) {
