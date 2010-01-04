@@ -914,6 +914,7 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
   gint offset;
 
   guint64 avail;
+  gint64 upstream_total_bytes = 0;
   guint32 read_id;
   const guint8 *data;
 
@@ -964,6 +965,9 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     return;
   /* The header starts at the provided offset */
   data += offset;
+
+  /* obtain real upstream total bytes */
+  mp3parse_total_bytes (mp3parse, &upstream_total_bytes);
 
   read_id = GST_READ_UINT32_BE (data);
   if (read_id == xing_id || read_id == info_id) {
@@ -1097,6 +1101,15 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
         GST_TIME_FORMAT ", %u bytes, vbr scale %u", mp3parse->xing_frames,
         GST_TIME_ARGS (mp3parse->xing_total_time), mp3parse->xing_bytes,
         mp3parse->xing_vbr_scale);
+
+    /* check for truncated file */
+    if (upstream_total_bytes && mp3parse->xing_bytes &&
+        mp3parse->xing_bytes * 0.8 > upstream_total_bytes) {
+      GST_WARNING_OBJECT (mp3parse, "File appears to have been truncated; "
+          "invalidating Xing header duration and size");
+      mp3parse->xing_flags &= ~XING_BYTES_FLAG;
+      mp3parse->xing_flags &= ~XING_FRAMES_FLAG;
+    }
   } else if (read_id == vbri_id) {
     gint64 total_bytes, total_frames;
     GstClockTime total_time;
@@ -1216,6 +1229,16 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     GST_DEBUG_OBJECT (mp3parse, "VBRI header reported %u frames, time %"
         GST_TIME_FORMAT ", bytes %u", mp3parse->vbri_frames,
         GST_TIME_ARGS (mp3parse->vbri_total_time), mp3parse->vbri_bytes);
+
+    /* check for truncated file */
+    if (upstream_total_bytes && mp3parse->vbri_bytes &&
+        mp3parse->vbri_bytes * 0.8 > upstream_total_bytes) {
+      GST_WARNING_OBJECT (mp3parse, "File appears to have been truncated; "
+          "invalidating VBRI header duration and size");
+      mp3parse->vbri_valid = FALSE;
+    } else {
+      mp3parse->vbri_valid = TRUE;
+    }
   } else {
     GST_DEBUG_OBJECT (mp3parse,
         "Xing, LAME or VBRI header not found in first frame");
@@ -1683,7 +1706,7 @@ mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total)
     return TRUE;
   }
 
-  if (mp3parse->vbri_bytes != 0) {
+  if (mp3parse->vbri_bytes != 0 && mp3parse->vbri_valid) {
     *total = mp3parse->vbri_bytes;
     return TRUE;
   }
@@ -1703,7 +1726,7 @@ mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total)
     return TRUE;
   }
 
-  if (mp3parse->vbri_total_time != 0) {
+  if (mp3parse->vbri_total_time != 0 && mp3parse->vbri_valid) {
     *total = mp3parse->vbri_total_time;
     return TRUE;
   }
