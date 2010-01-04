@@ -1025,10 +1025,10 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       mp3parse->xing_bytes = 0;
     }
 
-    /* If we know the upstream size and duration, compute the 
+    /* If we know the upstream size and duration, compute the
      * total bitrate, rounded up to the nearest kbit/sec */
-    if (mp3parse_total_time (mp3parse, &total_time) &&
-        mp3parse_total_bytes (mp3parse, &total_bytes)) {
+    if ((total_time = mp3parse->xing_total_time) &&
+        (total_bytes = mp3parse->xing_bytes)) {
       mp3parse->xing_bitrate = gst_util_uint64_scale (total_bytes,
           8 * GST_SECOND, total_time);
       mp3parse->xing_bitrate += 500;
@@ -1141,8 +1141,8 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
 
     /* If we know the upstream size and duration, compute the 
      * total bitrate, rounded up to the nearest kbit/sec */
-    if (mp3parse_total_time (mp3parse, &total_time) &&
-        mp3parse_total_bytes (mp3parse, &total_bytes)) {
+    if ((total_time = mp3parse->vbri_total_time) &&
+        (total_bytes = mp3parse->vbri_bytes)) {
       mp3parse->vbri_bitrate = gst_util_uint64_scale (total_bytes,
           8 * GST_SECOND, total_time);
       mp3parse->vbri_bitrate += 500;
@@ -1737,17 +1737,14 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
 
   /* If XING seek table exists use this for time->byte conversion */
   if ((mp3parse->xing_flags & XING_TOC_FLAG) &&
-      mp3parse_total_bytes (mp3parse, &total_bytes) &&
-      mp3parse_total_time (mp3parse, &total_time)) {
+      (total_bytes = mp3parse->xing_bytes) &&
+      (total_time = mp3parse->xing_total_time)) {
     gdouble fa, fb, fx;
     gdouble percent =
         CLAMP ((100.0 * gst_util_guint64_to_gdouble (ts)) /
         gst_util_guint64_to_gdouble (total_time), 0.0, 100.0);
     gint index = CLAMP (percent, 0, 99);
 
-    /* xing indicated size is preferred over e.g. truncated file size */
-    if (mp3parse->xing_bytes)
-      total_bytes = mp3parse->xing_bytes;
     fa = mp3parse->xing_seek_table[index];
     if (index < 99)
       fb = mp3parse->xing_seek_table[index + 1];
@@ -1761,15 +1758,11 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     return TRUE;
   }
 
-  if (mp3parse->vbri_seek_table &&
-      mp3parse_total_bytes (mp3parse, &total_bytes) &&
-      mp3parse_total_time (mp3parse, &total_time)) {
+  if (mp3parse->vbri_seek_table && (total_bytes = mp3parse->vbri_bytes) &&
+      (total_time = mp3parse->vbri_total_time)) {
     gint i, j;
     gdouble a, b, fa, fb;
 
-    /* header indicated size is preferred over e.g. truncated file size */
-    if (mp3parse->vbri_bytes)
-      total_bytes = mp3parse->vbri_bytes;
     i = gst_util_uint64_scale (ts, mp3parse->vbri_seek_points - 1, total_time);
     i = CLAMP (i, 0, mp3parse->vbri_seek_points - 1);
 
@@ -1823,15 +1816,12 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
 
   /* If XING seek table exists use this for byte->time conversion */
   if (!from_total_time && (mp3parse->xing_flags & XING_TOC_FLAG) &&
-      mp3parse_total_bytes (mp3parse, &total_bytes) &&
-      mp3parse_total_time (mp3parse, &total_time)) {
+      (total_bytes = mp3parse->xing_bytes) &&
+      (total_time = mp3parse->xing_total_time)) {
     gdouble fa, fb, fx;
     gdouble pos;
     gint index;
 
-    /* xing indicated size is preferred over e.g. truncated file size */
-    if (mp3parse->xing_bytes)
-      total_bytes = mp3parse->xing_bytes;
     pos = CLAMP ((bytepos * 256.0) / total_bytes, 0.0, 256.0);
     index = CLAMP (pos, 0, 255);
     fa = mp3parse->xing_seek_table_inverse[index];
@@ -1848,15 +1838,12 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
   }
 
   if (!from_total_time && mp3parse->vbri_seek_table &&
-      mp3parse_total_bytes (mp3parse, &total_bytes) &&
-      mp3parse_total_time (mp3parse, &total_time)) {
+      (total_bytes = mp3parse->vbri_bytes) &&
+      (total_time = mp3parse->vbri_total_time)) {
     gint i = 0;
     guint64 sum = 0;
     gdouble a, b, fa, fb;
 
-    /* header indicated size is preferred over e.g. truncated file size */
-    if (mp3parse->vbri_bytes)
-      total_bytes = mp3parse->vbri_bytes;
     do {
       sum += mp3parse->vbri_seek_table[i];
       i++;
