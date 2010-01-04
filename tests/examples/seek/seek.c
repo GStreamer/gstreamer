@@ -2438,10 +2438,12 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
+#if GTK_CHECK_VERSION(2,18,0)
   /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
    * as well */
   if (!gdk_window_ensure_native (widget->window))
     g_error ("Couldn't create native window needed for GstXOverlay!");
+#endif
 
 #ifdef HAVE_X
   embed_xid = GDK_WINDOW_XID (video_window->window);
