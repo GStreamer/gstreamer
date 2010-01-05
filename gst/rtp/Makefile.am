@@ -22,6 +22,7 @@ libgstrtp_la_SOURCES = \
 	gstrtppcmudepay.c \
 	gstrtppcmupay.c \
 	gstrtppcmapay.c \
+	gstrtpg723depay.c \
 	gstrtpg723pay.c \
 	gstrtpg726pay.c \
 	gstrtpg726depay.c \
@@ -102,6 +103,7 @@ noinst_HEADERS =			\
 		 gstrtppcmudepay.h	\
 		 gstrtppcmupay.h 	\
 		 gstrtppcmapay.h 	\
+	         gstrtpg723depay.h      \
 	         gstrtpg723pay.h        \
 	         gstrtpg726depay.h      \
 	         gstrtpg726pay.h        \
