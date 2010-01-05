@@ -1711,7 +1711,7 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
  * gst_base_transform_get_sync:
  * @parse: the #GstBaseParse to query
  *
- * Returns TRUE if parser is considered 'in sync'.  That is, frames have been
+ * Returns: TRUE if parser is considered 'in sync'.  That is, frames have been
  * continuously successfully parsed and pushed.
  */
 gboolean
@@ -1734,7 +1734,7 @@ gst_base_parse_get_sync (GstBaseParse * parse)
  * gst_base_transform_get_drain:
  * @parse: the #GstBaseParse to query
  *
- * Returns TRUE if parser is currently 'draining'.  That is, leftover data
+ * Returns: TRUE if parser is currently 'draining'.  That is, leftover data
  * (e.g. in FLUSH or EOS situation) is being parsed.
  */
 gboolean
