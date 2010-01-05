@@ -274,6 +274,9 @@ void            gst_rtcp_packet_fb_set_type           (GstRTCPPacket *packet, Gs
 guint64         gst_rtcp_ntp_to_unix                  (guint64 ntptime);
 guint64         gst_rtcp_unix_to_ntp                  (guint64 unixtime);
 
+const gchar *   gst_rtcp_sdes_type_to_name            (GstRTCPSDESType type);
+GstRTCPSDESType gst_rtcp_sdes_name_to_type            (const gchar *name);
+
 G_END_DECLS
 
 #endif /* __GST_RTCPBUFFER_H__ */

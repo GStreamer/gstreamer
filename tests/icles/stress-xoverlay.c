@@ -146,7 +146,7 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   GstXOverlay *ov = NULL;
 
   s = gst_message_get_structure (message);
-  if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
+  if (s == NULL || !gst_structure_has_name (s, "prepare-xwindow-id")) {
     return GST_BUS_PASS;
   }
 
@@ -161,6 +161,7 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   g_timeout_add (100, (GSourceFunc) cycle_window, ov);
   g_timeout_add (2000, (GSourceFunc) toggle_events, ov);
 
+  gst_message_unref (message);
   return GST_BUS_DROP;
 }
 

@@ -86,6 +86,7 @@ struct _GstURIDecodeBin
   gboolean use_buffering;
 
   GstElement *source;
+  GstElement *queue;
   GstElement *typefind;
   guint have_type_id;           /* have-type signal id from typefind */
   GSList *decodebins;
@@ -1076,13 +1077,16 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
             GstPad *sinkpad;
 
             /* insert a queue element right before the raw pad */
-            outelem = gst_element_factory_make ("queue2", "queue");
+            outelem = gst_element_factory_make ("queue2", NULL);
             gst_bin_add (GST_BIN_CAST (decoder), outelem);
 
             sinkpad = gst_element_get_static_pad (outelem, "sink");
             gst_pad_link (pad, sinkpad);
             gst_object_unref (sinkpad);
             gst_object_unref (pad);
+
+            /* save queue pointer so we can remove it later */
+            decoder->queue = outelem;
 
             /* get the new raw srcpad */
             pad = gst_element_get_static_pad (outelem, "src");
@@ -1482,10 +1486,12 @@ could_not_link:
   {
     GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
         (NULL), ("Can't link source to typefind element"));
+    gst_bin_remove (GST_BIN_CAST (decoder), typefind);
     return FALSE;
   }
 }
 
+/* remove source and all related elements */
 static void
 remove_source (GstURIDecodeBin * bin)
 {
@@ -1505,6 +1511,18 @@ remove_source (GstURIDecodeBin * bin)
       bin->src_nmp_sig_id = 0;
     }
     bin->source = NULL;
+  }
+  if (bin->queue) {
+    GST_DEBUG_OBJECT (bin, "removing old queue element");
+    gst_element_set_state (bin->queue, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (bin), bin->queue);
+    bin->queue = NULL;
+  }
+  if (bin->typefind) {
+    GST_DEBUG_OBJECT (bin, "removing old typefind element");
+    gst_element_set_state (bin->typefind, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (bin), bin->typefind);
+    bin->typefind = NULL;
   }
 }
 

@@ -3182,7 +3182,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   else
     g_object_set (uridecodebin, "download", FALSE, NULL);
 
-
   /* configure subtitle encoding */
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
@@ -3368,6 +3367,17 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     }
 
     if (select->selector) {
+      gint n;
+
+      /* release and unref requests pad from the selector */
+      for (n = 0; n < select->channels->len; n++) {
+        GstPad *sinkpad = g_ptr_array_index (select->channels, n);
+
+        gst_element_release_request_pad (select->selector, sinkpad);
+        gst_object_unref (sinkpad);
+      }
+      g_ptr_array_set_size (select->channels, 0);
+
       gst_element_set_state (select->selector, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
       select->selector = NULL;

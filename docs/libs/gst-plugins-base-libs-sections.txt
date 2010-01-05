@@ -1119,6 +1119,9 @@ gst_rtcp_packet_fb_set_media_ssrc
 gst_rtcp_ntp_to_unix
 gst_rtcp_unix_to_ntp
 
+gst_rtcp_sdes_name_to_type
+gst_rtcp_sdes_type_to_name
+
 <SUBSECTION Standard>
 </SECTION>
 

@@ -136,6 +136,8 @@ static void gst_adder_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
     GstStateChange transition);
 
+static GstBuffer *gst_adder_do_clip (GstCollectPads * pads,
+    GstCollectData * data, GstBuffer * buffer, gpointer user_data);
 static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
 
@@ -780,7 +782,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. The collect_event function will push the
        * event past our element. We simply forward all flush-stop events, even
-       * when no flush-stop was pendingk, this is required because collectpads
+       * when no flush-stop was pending, this is required because collectpads
        * does not provide an API to handle-but-not-forward the flush-stop.
        * We unset the pending flush-stop flag so that we don't send anymore
        * flush-stop from the collect function later.
@@ -798,7 +800,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
       GST_OBJECT_LOCK (adder->collect);
-      /* collectpads is a pile of horse manure. */
+      /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
       GST_OBJECT_UNLOCK (adder->collect);
       goto beach;
@@ -882,6 +884,8 @@ gst_adder_init (GstAdder * adder)
   adder->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_collected), adder);
+  gst_collect_pads_set_clip_function (adder->collect,
+      GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
 }
 
 static void
@@ -1023,6 +1027,18 @@ gst_adder_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, pad);
 }
 
+static GstBuffer *
+gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
+    GstBuffer * buffer, gpointer user_data)
+{
+  GstAdder *adder = GST_ADDER (user_data);
+
+  buffer = gst_audio_buffer_clip (buffer, &data->segment, adder->rate,
+      adder->bps);
+
+  return buffer;
+}
+
 static GstFlowReturn
 gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 {
@@ -1043,12 +1059,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
    *     mix into a temp (float) buffer and scale afterwards as well
    */
   GstAdder *adder;
-  GSList *collected;
+  GSList *collected, *next = NULL;
   GstFlowReturn ret;
-  GstBuffer *outbuf = NULL;
+  GstBuffer *outbuf = NULL, *gapbuf = NULL;
   gpointer outdata = NULL;
   guint outsize;
-  gboolean empty = TRUE;
 
   adder = GST_ADDER (user_data);
 
@@ -1064,20 +1079,26 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   /* get available bytes for reading, this can be 0 which could mean empty
    * buffers or EOS, which we will catch when we loop over the pads. */
   outsize = gst_collect_pads_available (pads);
+  /* can only happen when no pads to collect or all EOS */
+  if (outsize == 0)
+    goto eos;
 
   GST_LOG_OBJECT (adder,
       "starting to cycle through channels, %d bytes available (bps = %d)",
       outsize, adder->bps);
 
-  for (collected = pads->data; collected; collected = g_slist_next (collected)) {
+  for (collected = pads->data; collected; collected = next) {
     GstCollectData *collect_data;
     GstBuffer *inbuf;
-    guint8 *indata;
-    guint insize;
+    gboolean is_gap;
+
+    /* take next to see if this is the last collectdata */
+    next = g_slist_next (collected);
 
     collect_data = (GstCollectData *) collected->data;
 
-    /* get a subbuffer of size bytes */
+    /* get a buffer of size bytes, if we get a buffer, it is at least outsize
+     * bytes big. */
     inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
     /* NULL means EOS or an empty buffer so we still need to flush in
      * case of an empty buffer. */
@@ -1086,55 +1107,69 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       continue;
     }
 
-    indata = GST_BUFFER_DATA (inbuf);
-    insize = GST_BUFFER_SIZE (inbuf);
+    is_gap = GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP);
 
+    /* Try to make an output buffer */
     if (outbuf == NULL) {
-      GST_LOG_OBJECT (adder, "channel %p: making output buffer of %d bytes",
-          collect_data, outsize);
+      /* if this is a gap buffer but we have some more pads to check, skip it.
+       * If we are at the last buffer, take it, regardless if it is a GAP
+       * buffer or not. */
+      if (is_gap && next) {
+        GST_DEBUG_OBJECT (adder, "skipping, non-last GAP buffer");
+        /* we keep the GAP buffer, if we don't have anymore buffers (all pads
+         * EOS, we can use this one as the output buffer. */
+        if (gapbuf == NULL)
+          gapbuf = inbuf;
+        else
+          gst_buffer_unref (inbuf);
+        continue;
+      }
 
-      /* first buffer, alloc outsize.
-       * FIXME: we can easily subbuffer and _make_writable.
-       * FIXME: only create empty buffer for first non-gap buffer, so that we
-       * only use adder function when really adding
-       */
-      outbuf = gst_buffer_new_and_alloc (outsize);
+      GST_LOG_OBJECT (adder, "channel %p: preparing output buffer of %d bytes",
+          collect_data, outsize);
+      /* make data and metadata writable, can simply return the inbuf when we
+       * are the only one referencing this buffer. If this is the last (and
+       * only) GAP buffer, it will automatically copy the GAP flag. */
+      outbuf = gst_buffer_make_writable (inbuf);
       outdata = GST_BUFFER_DATA (outbuf);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (adder->srcpad));
-
-      if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-        GST_LOG_OBJECT (adder, "channel %p: copying %d bytes from data %p",
-            collect_data, insize, indata);
-        /* clear if we are only going to fill a partial buffer */
-        if (G_UNLIKELY (outsize > insize))
-          memset ((guint8 *) outdata + insize, 0, outsize - insize);
-        /* and copy the data into it */
-        memcpy (outdata, indata, insize);
-        empty = FALSE;
-      } else {
-        /* clear whole buffer */
-        GST_LOG_OBJECT (adder, "channel %p: zeroing %d bytes from data %p",
-            collect_data, insize, indata);
-        memset (outdata, 0, outsize);
-      }
     } else {
-      if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
+      if (!is_gap) {
+        /* we had a previous output buffer, mix this non-GAP buffer */
+        guint8 *indata;
+        guint insize;
+
+        indata = GST_BUFFER_DATA (inbuf);
+        insize = GST_BUFFER_SIZE (inbuf);
+
+        /* all buffers should have outsize, there are no short buffers because we
+         * asked for the max size above */
+        g_assert (insize == outsize);
+
         GST_LOG_OBJECT (adder, "channel %p: mixing %d bytes from data %p",
             collect_data, insize, indata);
+
         /* further buffers, need to add them */
         adder->func ((gpointer) outdata, (gpointer) indata, insize);
-        empty = FALSE;
       } else {
-        GST_LOG_OBJECT (adder, "channel %p: skipping %d bytes from data %p",
-            collect_data, insize, indata);
+        /* skip gap buffer */
+        GST_LOG_OBJECT (adder, "channel %p: skipping GAP buffer", collect_data);
       }
+      gst_buffer_unref (inbuf);
     }
-    gst_buffer_unref (inbuf);
   }
 
-  /* can only happen when no pads to collect or all EOS */
-  if (outbuf == NULL)
-    goto eos;
+  if (outbuf == NULL) {
+    /* no output buffer, reuse one of the GAP buffers then if we have one */
+    if (gapbuf) {
+      GST_LOG_OBJECT (adder, "reusing GAP buffer %p", gapbuf);
+      outbuf = gapbuf;
+    } else
+      /* assume EOS otherwise, this should not happen, really */
+      goto eos;
+  } else if (gapbuf)
+    /* we had an output buffer, unref the gapbuffer we kept */
+    gst_buffer_unref (gapbuf);
 
   /* our timestamping is very simple, just an ever incrementing
    * counter, the new segment time will take care of their respective
@@ -1199,13 +1234,9 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   GST_BUFFER_DURATION (outbuf) = adder->timestamp -
       GST_BUFFER_TIMESTAMP (outbuf);
 
-  /* if we only processed silence, mark output again as silence */
-  if (empty)
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-
   /* send it out */
-  GST_LOG_OBJECT (adder, "pushing outbuf, timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+  GST_LOG_OBJECT (adder, "pushing outbuf %p, timestamp %" GST_TIME_FORMAT,
+      outbuf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
   ret = gst_pad_push (adder->srcpad, outbuf);
 
   GST_LOG_OBJECT (adder, "pushed outbuf, result = %s", gst_flow_get_name (ret));

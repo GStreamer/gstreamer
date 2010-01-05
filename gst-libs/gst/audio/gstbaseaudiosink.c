@@ -88,9 +88,9 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
-/* when timestamps or clock slaving drift for more than 10ms we resync. This is
+/* when timestamps or clock slaving drift for more than 20ms we resync. This is
  * a reasonable default */
-#define DEFAULT_DRIFT_TOLERANCE   ((20 * GST_MSECOND) / GST_USECOND)
+#define DEFAULT_DRIFT_TOLERANCE   ((40 * GST_MSECOND) / GST_USECOND)
 
 enum
 {

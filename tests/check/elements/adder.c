@@ -732,6 +732,116 @@ GST_START_TEST (test_remove_pad)
 GST_END_TEST;
 
 
+static GstBuffer *handoff_buffer = NULL;
+static void
+handoff_buffer_cb (GstElement * fakesink, GstBuffer * buffer, GstPad * pad,
+    gpointer user_data)
+{
+  GST_DEBUG ("got buffer %p", buffer);
+  gst_buffer_replace (&handoff_buffer, buffer);
+}
+
+/* check if clipping works as expected */
+GST_START_TEST (test_clip)
+{
+  GstElement *bin, *adder, *sink;
+  GstBus *bus;
+  GstPad *sinkpad;
+  gboolean res;
+  GstFlowReturn ret;
+  GstEvent *event;
+  GstBuffer *buffer;
+  GstCaps *caps;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  /* just an adder and a fakesink */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) handoff_buffer_cb, NULL);
+  gst_bin_add_many (GST_BIN (bin), adder, sink, NULL);
+
+  res = gst_element_link (adder, sink);
+  fail_unless (res == TRUE, NULL);
+
+  /* set to playing */
+  res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* create an unconnected sinkpad in adder, should also automatically activate
+   * the pad */
+  sinkpad = gst_element_get_request_pad (adder, "sink%d");
+  fail_if (sinkpad == NULL, NULL);
+
+  /* send segment to adder */
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+      GST_SECOND, 2 * GST_SECOND, 0);
+  gst_pad_send_event (sinkpad, event);
+
+  caps = gst_caps_new_simple ("audio/x-raw-int",
+      "rate", G_TYPE_INT, 44100,
+      "channels", G_TYPE_INT, 2,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+      "width", G_TYPE_INT, 16,
+      "depth", G_TYPE_INT, 16, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  /* should be clipped and ok */
+  buffer = gst_buffer_new_and_alloc (44100);
+  GST_BUFFER_TIMESTAMP (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_set_caps (buffer, caps);
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (sinkpad, buffer);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (handoff_buffer == NULL);
+
+  /* should be partially clipped */
+  buffer = gst_buffer_new_and_alloc (44100);
+  GST_BUFFER_TIMESTAMP (buffer) = 900 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_set_caps (buffer, caps);
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (sinkpad, buffer);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (handoff_buffer != NULL);
+  gst_buffer_replace (&handoff_buffer, NULL);
+
+  /* should not be clipped */
+  buffer = gst_buffer_new_and_alloc (44100);
+  GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_set_caps (buffer, caps);
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (sinkpad, buffer);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (handoff_buffer != NULL);
+  gst_buffer_replace (&handoff_buffer, NULL);
+
+  /* should be clipped and ok */
+  buffer = gst_buffer_new_and_alloc (44100);
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
+  gst_buffer_set_caps (buffer, caps);
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (sinkpad, buffer);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (handoff_buffer == NULL);
+
+
+}
+
+GST_END_TEST;
+
 static Suite *
 adder_suite (void)
 {
@@ -745,6 +855,7 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_live_seeking);
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
+  tcase_add_test (tc_chain, test_clip);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND

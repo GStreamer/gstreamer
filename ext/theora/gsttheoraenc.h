@@ -98,6 +98,11 @@ struct _GstTheoraEnc
   guint64 timestamp_offset;
 
   gint speed_level;
+  gboolean vp3_compatible;
+  gboolean drop_frames;
+  gboolean cap_overflow;
+  gboolean cap_underflow;
+  int rate_buffer;
 };
 
 struct _GstTheoraEncClass

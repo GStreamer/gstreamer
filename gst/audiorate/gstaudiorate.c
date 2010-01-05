@@ -199,6 +199,14 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstAudioRate:tolerance
+   *
+   * The difference between incoming timestamp and next timestamp must exceed
+   * the given value for audiorate to add or drop samples.
+   *
+   * Since: 0.10.26
+   **/
   g_object_class_install_property (object_class, ARG_TOLERANCE,
       g_param_spec_uint64 ("tolerance", "tolerance",
           "Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns)",
@@ -664,10 +672,10 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+send:
   if (GST_BUFFER_SIZE (buf) == 0)
     goto beach;
 
-send:
   /* Now calculate parameters for whichever buffer (either the original
    * or truncated one) we're pushing. */
   GST_BUFFER_OFFSET (buf) = audiorate->next_offset;
