@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:gstamrparse
+ * SECTION:element-amrparse
  * @short_description: AMR parser
  * @see_also: #GstAmrnbDec, #GstAmrnbEnc
  *

@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:gstaacparse
+ * SECTION:element-aacparse
  * @short_description: AAC parser
  * @see_also: #GstAmrParse
  *
