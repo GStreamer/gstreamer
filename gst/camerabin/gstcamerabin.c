@@ -1748,16 +1748,6 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
   GST_LOG_OBJECT (camera, "got image buffer %p with size %d",
       buffer, GST_BUFFER_SIZE (buffer));
 
-  /* We can't send real EOS event, since it would switch the image queue
-     into "draining mode". Therefore we send our own custom eos and
-     catch & drop it later in queue's srcpad data probe */
-  GST_DEBUG_OBJECT (camera, "sending img-eos to image queue");
-  gst_camerabin_send_img_queue_custom_event (camera,
-      gst_structure_new ("img-eos", NULL));
-
-  /* our work is done, disconnect */
-  gst_pad_remove_buffer_probe (pad, camera->image_captured_id);
-
   g_mutex_lock (camera->capture_mutex);
   camera->capturing = FALSE;
   g_cond_signal (camera->cond);
@@ -1772,6 +1762,16 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
     GST_WARNING_OBJECT (camera,
         "This element has no bus, therefore no message sent!");
   }
+
+  /* We can't send real EOS event, since it would switch the image queue
+     into "draining mode". Therefore we send our own custom eos and
+     catch & drop it later in queue's srcpad data probe */
+  GST_DEBUG_OBJECT (camera, "sending img-eos to image queue");
+  gst_camerabin_send_img_queue_custom_event (camera,
+      gst_structure_new ("img-eos", NULL));
+
+  /* our work is done, disconnect */
+  gst_pad_remove_buffer_probe (pad, camera->image_captured_id);
 
   return TRUE;
 }
