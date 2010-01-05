@@ -37,14 +37,14 @@ GST_DEBUG_CATEGORY_STATIC (flacparse_debug);
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-flac, "
+    GST_STATIC_CAPS ("audio/x-flac, framed = (boolean) true, "
         "channels = (int) [ 1, 8 ], " "rate = (int) [ 1, 655350 ]")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-flac")
+    GST_STATIC_CAPS ("audio/x-flac, framed = (boolean) false")
     );
 
 static void gst_flac_parse_finalize (GObject * object);
