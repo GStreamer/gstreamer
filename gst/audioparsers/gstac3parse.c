@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstac3parse
+ * SECTION:element-ac3parse
  * @short_description: AC3 parser
  * @see_also: #GstAmrParse, #GstAACParse
  *
