@@ -2099,8 +2099,13 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
           src);
       g_signal_connect (src->session, "on-timeout", (GCallback) on_timeout,
           src);
-      g_signal_connect (src->session, "on-npt-stop", (GCallback) on_npt_stop,
-          src);
+      /* FIXME: remove this once the rdtmanager is released */
+      if (g_signal_lookup ("on-npt-stop", G_OBJECT_TYPE (src->session)) != 0) {
+        g_signal_connect (src->session, "on-npt-stop", (GCallback) on_npt_stop,
+            src);
+      } else {
+        GST_INFO_OBJECT (src, "skipping on-npt-stop handling, not implemented");
+      }
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
