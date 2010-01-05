@@ -91,6 +91,10 @@ G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 
 gboolean _gst_gl_window_debug = FALSE;
 
+void gst_gl_window_init_platform ()
+{
+}
+
 /* Must be called in the gl thread */
 static void
 gst_gl_window_finalize (GObject * object)
