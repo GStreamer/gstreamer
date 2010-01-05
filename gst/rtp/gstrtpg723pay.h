@@ -42,12 +42,17 @@ typedef struct _GstRTPG723PayClass GstRTPG723PayClass;
 
 struct _GstRTPG723Pay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstBaseRTPPayload payload;
+
+  GstAdapter  *adapter;
+  GstClockTime duration;
+  GstClockTime timestamp;
+  gboolean discont;
 };
 
 struct _GstRTPG723PayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtp_g723_pay_plugin_init (GstPlugin * plugin);

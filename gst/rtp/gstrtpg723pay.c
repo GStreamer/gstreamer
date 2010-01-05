@@ -19,12 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * This payloader assumes that the data will ALWAYS come as zero or more
- * 10 bytes frame of audio followed by 0 or 1 2 byte frame of silence.
- * Any other buffer format won't work
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -38,23 +32,18 @@
 #define GST_RTP_PAYLOAD_G723 4
 #define GST_RTP_PAYLOAD_G723_STRING "4"
 
-/* According to RFC 3551, works only with G723 encoded with 6.3 kb/s high-rate */
-#define G723_FRAME_SIZE 24
-#define G723B_SID_FRAME_SIZE 4
 #define G723_FRAME_DURATION (30 * GST_MSECOND)
-#define G723_FRAME_DURATION_MS (30)
 
-static gboolean
-gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps);
-static GstFlowReturn
-gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf);
-
+static gboolean gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload,
+    GstCaps * caps);
+static GstFlowReturn gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload *
+    payload, GstBuffer * buf);
 
 static const GstElementDetails gst_rtp_g723_pay_details =
 GST_ELEMENT_DETAILS ("RTP G.723 payloader",
     "Codec/Payloader/Network",
-    "Packetize 6.3kb/s G.723 audio into RTP packets",
-    "Tiago Katcipis <tiago.katcipis@digitro.com.br>");
+    "Packetize G.723 audio into RTP packets",
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_g723_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -79,11 +68,15 @@ static GstStaticPadTemplate gst_rtp_g723_pay_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"G723\"")
     );
 
-static void
-gst_rtp_g723_pay_init (GstRTPG723Pay * pay, GstRTPG723PayClass * klass);
+static void gst_rtp_g723_pay_init (GstRTPG723Pay * pay,
+    GstRTPG723PayClass * klass);
+static void gst_rtp_g723_pay_finalize (GObject * object);
 
-GST_BOILERPLATE (GstRTPG723Pay, gst_rtp_g723_pay, GstBaseRTPAudioPayload,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+static GstStateChangeReturn gst_rtp_g723_pay_change_state (GstElement * element,
+    GstStateChange transition);
+
+GST_BOILERPLATE (GstRTPG723Pay, gst_rtp_g723_pay, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
 gst_rtp_g723_pay_base_init (gpointer klass)
@@ -100,7 +93,17 @@ gst_rtp_g723_pay_base_init (gpointer klass)
 static void
 gst_rtp_g723_pay_class_init (GstRTPG723PayClass * klass)
 {
-  GstBaseRTPPayloadClass *payload_class = GST_BASE_RTP_PAYLOAD_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseRTPPayloadClass *payload_class;
+
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+  payload_class = (GstBaseRTPPayloadClass *) klass;
+
+  gobject_class->finalize = gst_rtp_g723_pay_finalize;
+
+  gstelement_class->change_state = gst_rtp_g723_pay_change_state;
 
   payload_class->set_caps = gst_rtp_g723_pay_set_caps;
   payload_class->handle_buffer = gst_rtp_g723_pay_handle_buffer;
@@ -110,16 +113,26 @@ static void
 gst_rtp_g723_pay_init (GstRTPG723Pay * pay, GstRTPG723PayClass * klass)
 {
   GstBaseRTPPayload *payload = GST_BASE_RTP_PAYLOAD (pay);
-  GstBaseRTPAudioPayload *audiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (pay);
+
+  pay->adapter = gst_adapter_new ();
 
   payload->pt = GST_RTP_PAYLOAD_G723;
   gst_basertppayload_set_options (payload, "audio", FALSE, "G723", 8000);
-
-  gst_base_rtp_audio_payload_set_frame_based (audiopayload);
-  gst_base_rtp_audio_payload_set_frame_options (audiopayload,
-      G723_FRAME_DURATION_MS, G723_FRAME_SIZE);
-
 }
+
+static void
+gst_rtp_g723_pay_finalize (GObject * object)
+{
+  GstRTPG723Pay *pay;
+
+  pay = GST_RTP_G723_PAY (object);
+
+  g_object_unref (pay->adapter);
+  pay->adapter = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 static gboolean
 gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
@@ -141,159 +154,162 @@ gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
+gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
+{
+  GstBuffer *outbuf;
+  GstFlowReturn ret;
+  guint8 *payload;
+  guint avail;
+
+  avail = gst_adapter_available (pay->adapter);
+
+  outbuf = gst_rtp_buffer_new_allocate (avail, 0, 0);
+  payload = gst_rtp_buffer_get_payload (outbuf);
+
+  GST_BUFFER_TIMESTAMP (outbuf) = pay->timestamp;
+  GST_BUFFER_DURATION (outbuf) = pay->duration;
+
+  /* copy G723 data as payload */
+  gst_adapter_copy (pay->adapter, payload, 0, avail);
+
+  /* flush bytes from adapter */
+  gst_adapter_flush (pay->adapter, avail);
+  pay->timestamp = GST_CLOCK_TIME_NONE;
+  pay->duration = 0;
+
+  /* set discont and marker */
+  if (pay->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    gst_rtp_buffer_set_marker (outbuf, TRUE);
+    pay->discont = FALSE;
+  }
+
+  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (pay), outbuf);
+
+  return ret;
+}
+
+/* 00    high-rate speech (6.3 kb/s)            24
+ * 01    low-rate speech  (5.3 kb/s)            20
+ * 10    SID frame                               4
+ * 11    reserved                                0  */
+static const guint size_tab[4] = {
+  24, 20, 4, 0
+};
+
+static GstFlowReturn
 gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseRTPAudioPayload *basertpaudiopayload =
-      GST_BASE_RTP_AUDIO_PAYLOAD (payload);
-  GstAdapter *adapter = NULL;
-  guint payload_len;
-  const guint8 *data = NULL;
-  guint available;
-  guint maxptime_octets = G_MAXUINT;
-  guint minptime_octets = 0;
-  guint min_payload_len;
-  guint max_payload_len;
-  gboolean use_adapter = FALSE;
+  guint8 *data;
+  guint size;
+  guint8 HDR;
+  GstRTPG723Pay *pay;
+  GstClockTime packet_dur, timestamp;
+  guint payload_len, packet_len;
 
-  available = GST_BUFFER_SIZE (buf);
+  pay = GST_RTP_G723_PAY (payload);
 
-  if (available % G723_FRAME_SIZE != 0 &&
-      available % G723_FRAME_SIZE != G723B_SID_FRAME_SIZE)
+  size = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (buf);
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* flush everything on discont */
+    gst_adapter_clear (pay->adapter);
+    pay->timestamp = GST_CLOCK_TIME_NONE;
+    pay->duration = 0;
+    pay->discont = TRUE;
+  }
+
+  /* should be one of these sizes */
+  if (size != 4 && size != 20 && size != 24)
     goto invalid_size;
 
-  /* max number of bytes based on given ptime, has to be multiple of
-   * frame_duration */
-  if (payload->max_ptime != -1) {
-    guint ptime_ms = payload->max_ptime / 1000000;
+  /* check size by looking at the header bits */
+  HDR = data[0] & 0x3;
+  if (size_tab[HDR] != size)
+    goto wrong_size;
 
-    maxptime_octets = G723_FRAME_SIZE *
-        (int) (ptime_ms / G723_FRAME_DURATION_MS);
+  /* calculate packet size and duration */
+  payload_len = gst_adapter_available (pay->adapter) + size;
+  packet_dur = pay->duration + G723_FRAME_DURATION;
+  packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
-    if (maxptime_octets < G723_FRAME_SIZE) {
-      GST_WARNING_OBJECT (basertpaudiopayload, "Given ptime %" G_GINT64_FORMAT
-          " is smaller than minimum %d ns, overwriting to minimum",
-          payload->max_ptime, G723_FRAME_DURATION_MS);
-      maxptime_octets = G723_FRAME_SIZE;
-    }
+  if (gst_basertppayload_is_filled (payload, packet_len, packet_dur)) {
+    /* size or duration would overflow the packet, flush the queued data */
+    ret = gst_rtp_g723_pay_flush (pay);
   }
 
-  max_payload_len = MIN (
-      /* MTU max */
-      (int) (gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU
-              (basertpaudiopayload), 0, 0) / G723_FRAME_SIZE) * G723_FRAME_SIZE,
-      /* ptime max */
-      maxptime_octets);
-
-  /* min number of bytes based on a given ptime, has to be a multiple
-     of frame duration */
-  {
-    guint64 min_ptime;
-
-    g_object_get (G_OBJECT (payload), "min-ptime", &min_ptime, NULL);
-
-    min_ptime = min_ptime / 1000000;
-    minptime_octets = G723_FRAME_SIZE *
-        (int) (min_ptime / G723_FRAME_DURATION_MS);
+  /* update timestamp, we keep the timestamp for the first packet in the adapter
+   * but are able to calculate it from next packets. */
+  if (timestamp != GST_CLOCK_TIME_NONE && pay->timestamp == GST_CLOCK_TIME_NONE) {
+    if (timestamp > pay->duration)
+      pay->timestamp = timestamp - pay->duration;
+    else
+      pay->timestamp = 0;
   }
 
-  min_payload_len = MAX (minptime_octets, G723_FRAME_SIZE);
+  /* add packet to the queue */
+  gst_adapter_push (pay->adapter, buf);
+  pay->duration = packet_dur;
 
-  if (min_payload_len > max_payload_len) {
-    min_payload_len = max_payload_len;
-  }
-
-  GST_DEBUG_OBJECT (basertpaudiopayload,
-      "Calculated min_payload_len %u and max_payload_len %u",
-      min_payload_len, max_payload_len);
-
-  adapter = gst_base_rtp_audio_payload_get_adapter (basertpaudiopayload);
-
-  if (adapter && gst_adapter_available (adapter)) {
-    /* If there is always data in the adapter, we have to use it */
-    gst_adapter_push (adapter, buf);
-    available = gst_adapter_available (adapter);
-    use_adapter = TRUE;
-  } else {
-    /* let's set the base timestamp */
-    basertpaudiopayload->base_ts = GST_BUFFER_TIMESTAMP (buf);
-
-    /* If buffer fits on an RTP packet, let's just push it through */
-    /* this will check against max_ptime and max_mtu */
-    if (GST_BUFFER_SIZE (buf) >= min_payload_len &&
-        GST_BUFFER_SIZE (buf) <= max_payload_len) {
-      ret = gst_base_rtp_audio_payload_push (basertpaudiopayload,
-          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-          GST_BUFFER_TIMESTAMP (buf));
-      gst_buffer_unref (buf);
-      return ret;
-    }
-
-    available = GST_BUFFER_SIZE (buf);
-    data = (guint8 *) GST_BUFFER_DATA (buf);
-  }
-
-  /* as long as we have full frames */
-  /* this loop will push all available buffers till the last frame */
-  while (available >= min_payload_len ||
-      available % G723_FRAME_SIZE == G723B_SID_FRAME_SIZE) {
-    guint num;
-
-    /* We send as much as we can */
-    if (available <= max_payload_len) {
-      payload_len = available;
-    } else {
-      payload_len = MIN (max_payload_len,
-          (available / G723_FRAME_SIZE) * G723_FRAME_SIZE);
-    }
-
-    if (use_adapter) {
-      data = gst_adapter_peek (adapter, payload_len);
-    }
-
-    ret = gst_base_rtp_audio_payload_push (basertpaudiopayload, data,
-        payload_len, basertpaudiopayload->base_ts);
-
-    num = payload_len / G723_FRAME_SIZE;
-    basertpaudiopayload->base_ts += G723_FRAME_DURATION * num;
-
-    if (use_adapter) {
-      gst_adapter_flush (adapter, payload_len);
-      available = gst_adapter_available (adapter);
-    } else {
-      available -= payload_len;
-      data += payload_len;
-    }
-  }
-
-  if (!use_adapter) {
-    if (available != 0 && adapter) {
-      GstBuffer *buf2;
-      buf2 = gst_buffer_create_sub (buf,
-          GST_BUFFER_SIZE (buf) - available, available);
-      gst_adapter_push (adapter, buf2);
-    } else {
-      gst_buffer_unref (buf);
-    }
-  }
-
-  if (adapter) {
-    g_object_unref (adapter);
+  /* check if we can flush now */
+  if (pay->duration >= payload->min_ptime) {
+    ret = gst_rtp_g723_pay_flush (pay);
   }
 
   return ret;
 
-  /* ERRORS */
+  /* WARNINGS */
 invalid_size:
   {
-    GST_ELEMENT_ERROR (payload, STREAM, WRONG_TYPE,
+    GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
         ("Invalid input buffer size"),
-        ("Invalid buffer size, should be a multiple of"
-            " G723_FRAME_SIZE(24) with an optional G723B_SID_FRAME_SIZE(4)"
-            " added to it, but it is %u", available));
+        ("Input size should be 4, 20 or 24, got %u", size));
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
+wrong_size:
+  {
+    GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
+        ("Wrong input buffer size"),
+        ("Expected input buffer size %u but got %u", size_tab[HDR], size));
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+}
+
+static GstStateChangeReturn
+gst_rtp_g723_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstRTPG723Pay *pay;
+
+  pay = GST_RTP_G723_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_adapter_clear (pay->adapter);
+      pay->timestamp = GST_CLOCK_TIME_NONE;
+      pay->duration = 0;
+      pay->discont = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_adapter_clear (pay->adapter);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 /*Plugin init functions*/
