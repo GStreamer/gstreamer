@@ -31,6 +31,10 @@
 #include "check_impl.h"
 #include "check_msg.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             /* for _POSIX_VERSION */
+#endif
+
 #ifndef DEFAULT_TIMEOUT
 #define DEFAULT_TIMEOUT 4
 #endif
