@@ -6,6 +6,7 @@ gstlibsgstgl_C_FILES = \
   gstgldisplay.c \
   gstglbuffer.c \
   gstglfilter.c \
+  gstglmixer.c \
   gstglshader.c
 
 gstlibsgstgl_OBJC_FILES = gstglwindow_cocoa.m
@@ -13,10 +14,11 @@ gstlibsgstgl_OBJC_FILES = gstglwindow_cocoa.m
 ifeq ($(GNUSTEP_TARGET_OS), mingw32)
 gstlibsgstgl_INCLUDE_DIRS = \
   -I../../../win32/common \
-  -ID:/workspace/glib/include/glib-2.0 \
-  -ID:/workspace/gstreamer/include \
-  -ID:/workspace/glib/lib/glib-2.0/include \
-  -ID:/workspace/glew/include
+  -IC:/gstreamer/include/libxml2 \
+  -IC:/gstreamer/include/glib-2.0 \
+  -IC:/gstreamer/lib/glib-2.0/include \
+  -IC:/gstreamer/include \
+  -IC:/gstreamer/include/gstreamer-0.10
 endif
 
 gstlibsgstgl_CFLAGS = -Wall -DHAVE_CONFIG_H

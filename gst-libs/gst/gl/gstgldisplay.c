@@ -112,6 +112,8 @@ static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
+
+  gst_gl_window_init_platform ();
 }
 
 

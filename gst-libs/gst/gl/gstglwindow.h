@@ -96,6 +96,9 @@ void gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpoin
 
 void gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
+/* helper */
+void gst_gl_window_init_platform ();
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_H__ */
