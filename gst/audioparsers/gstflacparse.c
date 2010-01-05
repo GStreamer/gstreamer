@@ -1,6 +1,9 @@
 /* GStreamer
  *
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>.
+ * Copyright (C) 2009 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+ * Copyright (C) 2009 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,6 +19,34 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:element-flacparse
+ * @see_also: flacdec, oggdemux, vorbisparse
+ *
+ * The flacparse element will parse the header packets of the FLAC
+ * stream and put them as the streamheader in the caps. This is used in the
+ * multifdsink case where you want to stream live FLAC streams to multiple
+ * clients, each client has to receive the streamheaders first before they can
+ * consume the FLAC packets.
+ *
+ * This element also makes sure that the buffers that it pushes out are properly
+ * timestamped and that their offset and offset_end are set. The buffers that
+ * flacparse outputs have all of the metadata that oggmux expects to receive,
+ * which allows you to (for example) remux an ogg/flac or convert a native FLAC
+ * format file to an ogg bitstream.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v filesrc location=sine.flac ! flacparse ! identity \
+ *            ! oggmux ! filesink location=sine-remuxed.ogg
+ * ]| This pipeline converts a native FLAC format file to an ogg bitstream.
+ * It also illustrates that the streamheader is set in the caps, and that each
+ * buffer has the timestamp, duration, offset, and offset_end set.
+ * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H

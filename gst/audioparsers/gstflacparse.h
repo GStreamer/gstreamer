@@ -1,6 +1,9 @@
 /* GStreamer
  *
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>.
+ * Copyright (C) 2009 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+ * Copyright (C) 2009 Nokia Corporation. All rights reserved.
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
