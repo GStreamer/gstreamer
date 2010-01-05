@@ -408,6 +408,20 @@ FESTIVAL_DEFAULT_TEXT_MODE
 </SECTION>
 
 <SECTION>
+<FILE>element-flacparse</FILE>
+<TITLE>flacparse</TITLE>
+GstFlacParse
+<SUBSECTION Standard>
+GstFlacParseClass
+GST_FLAC_PARSE
+GST_FLAC_PARSE_CLASS
+GST_IS_FLAC_PARSE
+GST_IS_FLAC_PARSE_CLASS
+GST_TYPE_FLAC_PARSE
+gst_flac_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-fpsdisplaysink</FILE>
 <TITLE>fpsdisplaysink</TITLE>
 GstFPSDisplaySink
