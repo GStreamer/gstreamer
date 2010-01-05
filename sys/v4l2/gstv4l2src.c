@@ -982,8 +982,16 @@ gst_v4l2src_uri_get_uri (GstURIHandler * handler)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (handler);
 
-  if (v4l2src->v4l2object->videodev)
-    return g_strdup_printf ("v4l2://%s", v4l2src->v4l2object->videodev);
+  if (v4l2src->v4l2object->videodev != NULL) {
+    gchar uri[256];
+
+    /* need to return a const string, but also don't want to leak the generated
+     * string, so just intern it - there's a limited number of video devices
+     * after all */
+    g_snprintf (uri, sizeof (uri), "v4l2://%s", v4l2src->v4l2object->videodev);
+    return g_intern_string (uri);
+  }
+
   return "v4l2://";
 }
 
