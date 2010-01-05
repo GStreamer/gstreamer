@@ -4327,6 +4327,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
             /* save state */
             stream->stsc_sample_index = k + 1;
             stream->chunk_offset = chunk_offset;
+            stream->stsc_chunk_index = j;
             goto done2;
           }
         }
