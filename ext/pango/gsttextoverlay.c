@@ -2035,7 +2035,8 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
     gint fps_num, fps_denom;
 
     s = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
-    if (gst_structure_get_fraction (s, "framerate", &fps_num, &fps_denom)) {
+    if (gst_structure_get_fraction (s, "framerate", &fps_num, &fps_denom) &&
+        fps_num && fps_denom) {
       GST_DEBUG_OBJECT (overlay, "estimating duration based on framerate");
       stop = start + gst_util_uint64_scale_int (GST_SECOND, fps_denom, fps_num);
     } else {
