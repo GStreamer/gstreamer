@@ -101,33 +101,47 @@ setup_deinterlace ()
  * and validating inputs/outputs
  */
 static void
-setup_test_pipeline (GstCaps * filtercaps, gint numbuffers)
+setup_test_pipeline (gint mode, GstCaps * infiltercaps, GstCaps * outfiltercaps,
+    gint numbuffers)
 {
   GstElement *src;
-  GstElement *filter;
+  GstElement *infilter;
+  GstElement *outfilter;
   GstElement *sink;
 
   setup_deinterlace ();
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("videotestsrc", NULL);
-  filter = gst_element_factory_make ("capsfilter", NULL);
+  infilter = gst_element_factory_make ("capsfilter", "infilter");
+  outfilter = gst_element_factory_make ("capsfilter", "outfilter");
   sink = gst_element_factory_make ("fakesink", NULL);
   fail_if (src == NULL);
-  fail_if (filter == NULL);
+  fail_if (infilter == NULL);
+  fail_if (outfilter == NULL);
   fail_if (sink == NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, filter, deinterlace, sink, NULL);
+  fail_unless (gst_bin_add (GST_BIN (pipeline), src));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), infilter));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), deinterlace));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), outfilter));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), sink));
 
   /* set the properties */
+  g_object_set (deinterlace, "mode", mode, NULL);
   if (numbuffers > 0)
     g_object_set (src, "num-buffers", numbuffers, NULL);
-  if (filtercaps)
-    g_object_set (filter, "caps", filtercaps, NULL);
+  if (infiltercaps)
+    g_object_set (infilter, "caps", infiltercaps, NULL);
+  if (outfiltercaps)
+    g_object_set (outfilter, "caps", outfiltercaps, NULL);
 
-  fail_unless (gst_element_link_many (src, filter, deinterlace, sink, NULL));
-  if (filtercaps)
-    gst_caps_unref (filtercaps);
+  fail_unless (gst_element_link_many (src, infilter, deinterlace, outfilter,
+          sink, NULL));
+  if (infiltercaps)
+    gst_caps_unref (infiltercaps);
+  if (outfiltercaps)
+    gst_caps_unref (outfiltercaps);
 }
 
 /*
@@ -191,17 +205,19 @@ srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
 /*
  * Utility function that sets up a pipeline with deinterlace for
  * validanting that it operates in passthrough mode when receiving
- * data with 'filtercaps' as the input caps and operating in 'mode'
- * mode
+ * data with 'infiltercaps' as the input caps and operating in 'mode' mode
  */
 static void
-deinterlace_check_passthrough (gint mode, const gchar * filtercaps)
+deinterlace_check_passthrough (gint mode, const gchar * infiltercaps)
 {
   GstMessage *msg;
   GQueue *queue;
+  GstCaps *incaps = NULL;
 
-  setup_test_pipeline (gst_caps_from_string (filtercaps), 20);
-  g_object_set (deinterlace, "mode", mode, NULL);
+  if (infiltercaps)
+    incaps = gst_caps_from_string (infiltercaps);
+
+  setup_test_pipeline (mode, incaps, NULL, 20);
 
   queue = g_queue_new ();
 
@@ -335,18 +351,22 @@ GST_START_TEST (test_mode_disabled_accept_caps)
 
 GST_END_TEST;
 
-GST_START_TEST (test_mode_disabled_yuv_passthrough)
+GST_START_TEST (test_mode_disabled_passthrough)
 {
-  /* 2 is auto mode */
-  deinterlace_check_passthrough (2, "video/x-raw-yuv");
+  /* 2 is disabled mode */
+  deinterlace_check_passthrough (2, CAPS_YUY2_INTERLACED);
+  deinterlace_check_passthrough (2, CAPS_YVYU_INTERLACED);
+  deinterlace_check_passthrough (2, CAPS_YUY2);
+  deinterlace_check_passthrough (2, CAPS_YVYU);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_mode_auto_yuv_passthrough)
+GST_START_TEST (test_mode_auto_deinterlaced_passthrough)
 {
   /* 0 is auto mode */
-  deinterlace_check_passthrough (0, "video/x-raw-yuv");
+  deinterlace_check_passthrough (0, CAPS_YUY2);
+  deinterlace_check_passthrough (0, CAPS_YVYU);
 }
 
 GST_END_TEST;
@@ -363,8 +383,8 @@ deinterlace_suite (void)
   tcase_add_test (tc_chain, test_mode_auto_accept_caps);
   tcase_add_test (tc_chain, test_mode_forced_accept_caps);
   tcase_add_test (tc_chain, test_mode_disabled_accept_caps);
-  tcase_add_test (tc_chain, test_mode_disabled_yuv_passthrough);
-  tcase_add_test (tc_chain, test_mode_auto_yuv_passthrough);
+  tcase_add_test (tc_chain, test_mode_disabled_passthrough);
+  tcase_add_test (tc_chain, test_mode_auto_deinterlaced_passthrough);
 
   return s;
 }
