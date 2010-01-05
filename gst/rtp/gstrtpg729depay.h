@@ -45,8 +45,6 @@ typedef struct _GstRtpG729DepayClass GstRtpG729DepayClass;
 struct _GstRtpG729Depay
 {
   GstBaseRTPDepayload depayload;
-
-  gint     channels;
 };
 
 struct _GstRtpG729DepayClass

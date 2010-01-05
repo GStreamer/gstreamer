@@ -165,8 +165,7 @@ gst_rtp_g729_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   /* ERRORS */
 wrong_channels:
   {
-    GST_DEBUG_OBJECT (rtpg729depay, "expected 1 channel, got %d",
-        rtpg729depay->channels);
+    GST_DEBUG_OBJECT (rtpg729depay, "expected 1 channel, got %d", channels);
     return FALSE;
   }
 wrong_clock_rate:
