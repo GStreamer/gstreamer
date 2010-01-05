@@ -77,6 +77,7 @@ static GstPad *sinkpad;
 
 static GstElement *pipeline;
 
+/* sets up deinterlace and shortcut pointers to its pads */
 static void
 setup_deinterlace ()
 {
@@ -89,6 +90,16 @@ setup_deinterlace ()
   fail_unless (srcpad != NULL);
 }
 
+/* sets up a basic test pipeline containing:
+ *
+ * videotestsrc ! capsfilter ! deinterlace ! fakesink
+ *
+ * The parameters set the capsfilter caps and the num-buffers
+ * property of videotestsrc
+ *
+ * It is useful for adding buffer probes to deinterlace pads
+ * and validating inputs/outputs
+ */
 static void
 setup_test_pipeline (GstCaps * filtercaps, gint numbuffers)
 {
@@ -119,6 +130,11 @@ setup_test_pipeline (GstCaps * filtercaps, gint numbuffers)
     gst_caps_unref (filtercaps);
 }
 
+/*
+ * Checks if 2 buffers are equal
+ *
+ * Equals means same caps and same data
+ */
 static gboolean
 test_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
@@ -152,6 +168,10 @@ sinkpad_enqueue_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
   return TRUE;
 }
 
+/*
+ * pad buffer probe that compares the buffer with the top one
+ * in the GQueue passed as the user data
+ */
 static gboolean
 srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
 {
@@ -168,6 +188,12 @@ srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
   return TRUE;
 }
 
+/*
+ * Utility function that sets up a pipeline with deinterlace for
+ * validanting that it operates in passthrough mode when receiving
+ * data with 'filtercaps' as the input caps and operating in 'mode'
+ * mode
+ */
 static void
 deinterlace_check_passthrough (gint mode, const gchar * filtercaps)
 {
@@ -199,6 +225,10 @@ deinterlace_check_passthrough (gint mode, const gchar * filtercaps)
   g_queue_free (queue);
 }
 
+/*
+ * Sets the caps on deinterlace sinkpad and validates the
+ * caps that is set on the srcpad
+ */
 static void
 deinterlace_set_caps_and_check (GstCaps * input, gboolean must_deinterlace)
 {
