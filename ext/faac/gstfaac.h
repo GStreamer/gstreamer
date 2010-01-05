@@ -38,7 +38,10 @@ G_BEGIN_DECLS
 #define GST_IS_FAAC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FAAC))
 
-typedef struct _GstFaac {
+typedef struct _GstFaac GstFaac;
+typedef struct _GstFaacClass GstFaacClass;
+
+struct _GstFaac {
   GstElement element;
 
   /* pads */
@@ -65,11 +68,11 @@ typedef struct _GstFaac {
   GstAdapter *adapter;
   /* offset of data to be encoded next */
   guint offset;
-} GstFaac;
+};
 
-typedef struct _GstFaacClass {
+struct _GstFaacClass {
   GstElementClass parent_class;
-} GstFaacClass;
+};
 
 GType gst_faac_get_type (void);
 

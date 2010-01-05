@@ -20,7 +20,7 @@
 
 /**
  * SECTION:element-faac
- * @seealso: faad
+ * @see_also: faad
  *
  * faac encodes raw audio to AAC (MPEG-4 part 10) streams.
  *
