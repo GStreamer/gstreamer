@@ -389,8 +389,11 @@ GObject
       GstMP4Mux
       GstGPPMux
       GstMJ2Mux
-      GstAacBaseParse
+      GstBaseParse
         GstAacParse
+        GstAc3Parse
+        GstAmrParse
+        GstFlacParse
       GstSSim
       GstCDXAParse
       GstVcdParse
@@ -415,8 +418,6 @@ GObject
       GstMXFMux
       GstRealVideoDec
       GstRealAudioDec
-      GstAmrBaseParse
-        GstAmrParse
       GstId3BaseMux
         GstId3Mux
       GstSirenDec
