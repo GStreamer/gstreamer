@@ -125,6 +125,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/aiff/aiffparse.h \
 	$(top_srcdir)/gst/aiff/aiffmux.h \
 	$(top_srcdir)/gst/audioparsers/gstaacparse.h \
+	$(top_srcdir)/gst/audioparsers/gstac3parse.h \
 	$(top_srcdir)/gst/audioparsers/gstamrparse.h \
 	$(top_srcdir)/gst/audioparsers/gstflacparse.h \
 	$(top_srcdir)/gst/autoconvert/gstautoconvert.h \

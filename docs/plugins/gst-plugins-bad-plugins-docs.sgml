@@ -18,6 +18,7 @@
   <chapter>
     <title>gst-plugins-bad Elements</title>
     <xi:include href="xml/element-aacparse.xml" />
+    <xi:include href="xml/element-ac3parse.xml" />
     <xi:include href="xml/element-aiffparse.xml" />
     <xi:include href="xml/element-aiffmux.xml" />
     <xi:include href="xml/element-amrparse.xml" />

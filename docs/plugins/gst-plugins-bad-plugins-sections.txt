@@ -13,6 +13,20 @@ gst_aacparse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-ac3parse</FILE>
+<TITLE>ac3parse</TITLE>
+GstAc3Parse
+<SUBSECTION Standard>
+GstAc3ParseClass
+GST_AC3_PARSE
+GST_AC3_PARSE_CLASS
+GST_IS_AC3_PARSE
+GST_IS_AC3_PARSE_CLASS
+GST_TYPE_AC3_PARSE
+gst_ac3_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-aiffmux</FILE>
 <TITLE>aiffmux</TITLE>
 GstAiffMux
