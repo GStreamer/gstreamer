@@ -75,6 +75,8 @@ static GstElement *deinterlace;
 static GstPad *srcpad;
 static GstPad *sinkpad;
 
+static GstElement *pipeline;
+
 static void
 setup_deinterlace ()
 {
@@ -85,6 +87,116 @@ setup_deinterlace ()
   fail_unless (sinkpad != NULL);
   srcpad = gst_element_get_static_pad (deinterlace, "src");
   fail_unless (srcpad != NULL);
+}
+
+static void
+setup_test_pipeline (GstCaps * filtercaps, gint numbuffers)
+{
+  GstElement *src;
+  GstElement *filter;
+  GstElement *sink;
+
+  setup_deinterlace ();
+
+  pipeline = gst_pipeline_new ("pipeline");
+  src = gst_element_factory_make ("videotestsrc", NULL);
+  filter = gst_element_factory_make ("capsfilter", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (src == NULL);
+  fail_if (filter == NULL);
+  fail_if (sink == NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, filter, deinterlace, sink, NULL);
+
+  /* set the properties */
+  if (numbuffers > 0)
+    g_object_set (src, "num-buffers", numbuffers, NULL);
+  if (filtercaps)
+    g_object_set (filter, "caps", filtercaps, NULL);
+
+  fail_unless (gst_element_link_many (src, filter, deinterlace, sink, NULL));
+  if (filtercaps)
+    gst_caps_unref (filtercaps);
+}
+
+static gboolean
+test_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
+{
+  GstCaps *caps_a;
+  GstCaps *caps_b;
+
+  if (GST_BUFFER_SIZE (buf_a) != GST_BUFFER_SIZE (buf_b))
+    return FALSE;
+
+  caps_a = gst_buffer_get_caps (buf_a);
+  caps_b = gst_buffer_get_caps (buf_b);
+
+  if (!gst_caps_is_equal (caps_a, caps_b))
+    return FALSE;
+
+  gst_caps_unref (caps_a);
+  gst_caps_unref (caps_b);
+
+  return memcmp (GST_BUFFER_DATA (buf_a), GST_BUFFER_DATA (buf_b),
+      GST_BUFFER_SIZE (buf_a)) == 0;
+}
+
+static gboolean
+sinkpad_enqueue_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
+{
+  GQueue *queue = (GQueue *) data;
+
+  /* enqueue a copy for being compared later */
+  g_queue_push_tail (queue, gst_buffer_copy (buf));
+
+  return TRUE;
+}
+
+static gboolean
+srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
+{
+  GQueue *queue = (GQueue *) data;
+  GstBuffer *queue_buf;
+
+  queue_buf = (GstBuffer *) g_queue_pop_head (queue);
+  fail_if (queue_buf == NULL);
+
+  fail_unless (test_buffer_equals (buf, queue_buf));
+
+  gst_buffer_unref (queue_buf);
+
+  return TRUE;
+}
+
+static void
+deinterlace_check_passthrough (gint mode, const gchar * filtercaps)
+{
+  GstMessage *msg;
+  GQueue *queue;
+
+  setup_test_pipeline (gst_caps_from_string (filtercaps), 20);
+  g_object_set (deinterlace, "mode", mode, NULL);
+
+  queue = g_queue_new ();
+
+  /* set up probes for testing */
+  gst_pad_add_buffer_probe (sinkpad, (GCallback) sinkpad_enqueue_buffer, queue);
+  gst_pad_add_buffer_probe (srcpad,
+      (GCallback) srcpad_dequeue_and_compare_buffer, queue);
+
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
+      GST_STATE_CHANGE_FAILURE);
+
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline), GST_MESSAGE_EOS, -1);
+  gst_message_unref (msg);
+
+  /* queue should be empty */
+  fail_unless (g_queue_is_empty (queue));
+
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_NULL) ==
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline);
+  g_queue_free (queue);
 }
 
 static void
@@ -193,6 +305,22 @@ GST_START_TEST (test_mode_disabled_accept_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mode_disabled_yuv_passthrough)
+{
+  /* 2 is auto mode */
+  deinterlace_check_passthrough (2, "video/x-raw-yuv");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mode_auto_yuv_passthrough)
+{
+  /* 0 is auto mode */
+  deinterlace_check_passthrough (0, "video/x-raw-yuv");
+}
+
+GST_END_TEST;
+
 static Suite *
 deinterlace_suite (void)
 {
@@ -205,6 +333,8 @@ deinterlace_suite (void)
   tcase_add_test (tc_chain, test_mode_auto_accept_caps);
   tcase_add_test (tc_chain, test_mode_forced_accept_caps);
   tcase_add_test (tc_chain, test_mode_disabled_accept_caps);
+  tcase_add_test (tc_chain, test_mode_disabled_yuv_passthrough);
+  tcase_add_test (tc_chain, test_mode_auto_yuv_passthrough);
 
   return s;
 }
