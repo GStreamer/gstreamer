@@ -208,7 +208,7 @@ gst_flac_parse_get_frame_size (GstFlacParse * flacparse, GstBuffer * buffer,
       goto error;
     else
       flacparse->channels = tmp + 1;
-  } else if (tmp <= 10 && flacparse->channels != 2) {
+  } else if (tmp <= 10) {
     if (flacparse->channels && 2 != flacparse->channels)
       goto error;
     else
