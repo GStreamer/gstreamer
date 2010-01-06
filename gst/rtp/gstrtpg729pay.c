@@ -150,7 +150,6 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
       GST_BASE_RTP_AUDIO_PAYLOAD (payload);
   GstAdapter *adapter = NULL;
   guint payload_len;
-  const guint8 *data = NULL;
   guint available;
   guint maxptime_octets = G_MAXUINT;
   guint minptime_octets = 0;
@@ -252,8 +251,6 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
       payload_len = MIN (max_payload_len,
           (available / G729_FRAME_SIZE) * G729_FRAME_SIZE);
     }
-
-    data = gst_adapter_peek (adapter, payload_len);
 
     ret = gst_base_rtp_audio_payload_flush (basertpaudiopayload, payload_len,
         basertpaudiopayload->base_ts);
