@@ -693,6 +693,13 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     pad->current_granule = granule;
   }
 
+  /* restart header packet count when seeing a b_o_s page;
+   * particularly useful following a seek or even following chain finding */
+  if (packet->b_o_s) {
+    GST_DEBUG_OBJECT (ogg, "b_o_s packet, resetting header packet count");
+    pad->map.n_header_packets_seen = 0;
+  }
+
   /* Overload the value of b_o_s in ogg_packet with a flag whether or
    * not this is a header packet.  Maybe some day this could be cleaned
    * up.  */
@@ -729,6 +736,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     }
   } else {
     pad->map.n_header_packets_seen++;
+    GST_DEBUG ("header packet %d", pad->map.n_header_packets_seen);
   }
 
   /* we know the start_time of the pad data, see if we
