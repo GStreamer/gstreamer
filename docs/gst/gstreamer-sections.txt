@@ -1964,8 +1964,6 @@ gst_registry_add_path
 gst_registry_scan_path
 gst_registry_binary_read_cache
 gst_registry_binary_write_cache
-gst_registry_xml_read_cache
-gst_registry_xml_write_cache
 gst_registry_lookup
 gst_registry_remove_feature
 gst_registry_add_feature
@@ -1994,6 +1992,8 @@ GST_MAGIC_BINARY_VERSION_STR
 GST_MAGIC_BINARY_VERSION_LEN
 gst_registry_get_type
 GstRegistryPrivate
+gst_registry_xml_read_cache
+gst_registry_xml_write_cache
 </SECTION>
 
 
