@@ -657,11 +657,11 @@ AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/gstreamer-$GST_MAJORMINO
 AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 
-SHAVE_INIT([common],[enable])
-
 dnl things for our internal libcheck (must be called even if building
 dnl libcheck is disabled because it defines conditionals)
 AG_GST_CHECK_CHECKS()
+
+SHAVE_INIT([common],[enable])
 
 AC_CONFIG_FILES(
 Makefile
