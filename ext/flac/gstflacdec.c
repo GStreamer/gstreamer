@@ -39,6 +39,7 @@
  */
 
 /* TODO: add seeking when operating chain-based with unframed input */
+/* FIXME: demote/remove granulepos handling and make more time-centric */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -1301,8 +1302,19 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
         GST_BUFFER_SIZE (buf), &unused);
 
     /* oggdemux will set granulepos in OFFSET_END instead of timestamp */
-    if (got_audio_frame && !GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-      dec->cur_granulepos = GST_BUFFER_OFFSET_END (buf);
+    if (G_LIKELY (got_audio_frame)) {
+      /* old oggdemux for now */
+      if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+        dec->cur_granulepos = GST_BUFFER_OFFSET_END (buf);
+      } else {
+        GstFormat dformat = GST_FORMAT_DEFAULT;
+
+        /* upstream (e.g. demuxer) presents us time,
+         * convert to default samples */
+        gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME,
+            GST_BUFFER_TIMESTAMP (buf), &dformat, &dec->segment.last_stop);
+        dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
+      }
     }
   } else {
     dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
