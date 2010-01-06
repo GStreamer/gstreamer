@@ -620,6 +620,12 @@ setup_flac_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static gboolean
+is_header_flac (GstOggStream * pad, ogg_packet * packet)
+{
+  return (packet->bytes > 0 && (packet->packet[0] != 0xff));
+}
+
 static gint64
 packet_duration_flac (GstOggStream * pad, ogg_packet * packet)
 {
@@ -1187,7 +1193,7 @@ static const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     is_keyframe_true,
-    is_header_count,
+    is_header_flac,
     packet_duration_flac
   },
   {
