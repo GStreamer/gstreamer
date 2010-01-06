@@ -428,6 +428,10 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
       case CODEC_ID_DTS:
         maxchannels = 6;
         break;
+      case CODEC_ID_WMAPRO:
+      case CODEC_ID_TRUEHD:
+        maxchannels = 8;
+        break;
       default:
         break;
     }
@@ -636,9 +640,19 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-eac3", NULL);
       break;
 
-    case CODEC_ID_ATRAC3:
+    case CODEC_ID_TRUEHD:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-true-hd", NULL);
+      break;
+
+    case CODEC_ID_ATRAC1:
       caps =
           gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac3",
+          NULL);
+      break;
+
+    case CODEC_ID_ATRAC3:
+      caps =
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac1",
           NULL);
       break;
 
@@ -825,6 +839,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
     }
       break;
+    case CODEC_ID_WMAPRO:
+    {
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-wma",
+          "wmaversion", G_TYPE_INT, 3, NULL);
+      break;
+    }
 
     case CODEC_ID_MACE3:
     case CODEC_ID_MACE6:
@@ -1441,6 +1461,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         gst_caps_set_simple (caps,
             "samplesize", G_TYPE_INT, context->bits_per_coded_sample, NULL);
       }
+      break;
+    case CODEC_ID_TWINVQ:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-twin-vq", NULL);
       break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
@@ -2425,7 +2448,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else if (!strcmp (format_name, "mpc")) {
     caps = gst_caps_from_string ("audio/x-musepack, streamversion = (int) 7");
   } else if (!strcmp (format_name, "vqf")) {
-    caps = gst_caps_from_string ("audio/x-twinvq");
+    caps = gst_caps_from_string ("audio/x-vqf");
   } else {
     gchar *name;
 
@@ -2808,6 +2831,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
         case 2:
           id = CODEC_ID_WMAV2;
+          break;
+        case 3:
+          id = CODEC_ID_WMAPRO;
           break;
       }
     }
