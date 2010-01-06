@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-12-01 14:34+0000\n"
+"POT-Creation-Date: 2010-01-06 20:08+0000\n"
 "PO-Revision-Date: 2009-05-04 13:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -628,6 +628,57 @@ msgid ""
 msgstr ""
 "hoogte van de geografische locatie van waar het medium is opgenomen of "
 "geproduceerd in meters volgens WGS84 (nul op gemiddeld zeeniveau)"
+
+msgid "show name"
+msgstr ""
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+
+#, fuzzy
+msgid "show sortname"
+msgstr "naam artiest voor sorteren"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+
+#, fuzzy
+msgid "episode number"
+msgstr "schijfnummer"
+
+msgid "The episode number in the season the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "season number"
+msgstr "schijfnummer"
+
+msgid "The season number of the show the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "lyrics"
+msgstr "licentie"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr ""
+
+#, fuzzy
+msgid "composer sortname"
+msgstr "titel voor het sorteren"
+
+#, fuzzy
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "perso(o)n(en) die de opname gemaakt hebben gebruikt voor sorteren"
+
+msgid "grouping"
+msgstr ""
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
 
 msgid ", "
 msgstr ", "
