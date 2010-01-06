@@ -637,6 +637,31 @@ packet_duration_flac (GstOggStream * pad, ogg_packet * packet)
   if (block_size_index >= 8) {
     return 256 << (block_size_index - 8);
   }
+  if (block_size_index == 6 || block_size_index == 7) {
+    guint len, bytes = (block_size_index - 6) + 1;
+    guint8 tmp;
+
+    if (packet->bytes < 4 + 1 + bytes)
+      return -1;
+    tmp = packet->packet[4];
+    /* utf-8 prefix */
+    len = 0;
+    while (tmp & 0x80) {
+      len++;
+      tmp <<= 1;
+    }
+    if (len == 2)
+      return -1;
+    if (len == 0)
+      len++;
+    if (packet->bytes < 4 + len + bytes)
+      return -1;
+    if (bytes == 1) {
+      return packet->packet[4 + len] + 1;
+    } else {
+      return GST_READ_UINT16_BE (packet->packet + 4 + len) + 1;
+    }
+  }
   return -1;
 }
 
@@ -1156,7 +1181,7 @@ static const GstOggMap mappers[] = {
     NULL
   },
   {
-    "\177FLAC", 4, 36,
+    "\177FLAC", 5, 36,
     "audio/x-flac",
     setup_flac_mapper,
     granulepos_to_granule_default,

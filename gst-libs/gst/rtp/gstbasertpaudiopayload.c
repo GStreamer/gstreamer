@@ -98,6 +98,7 @@ struct _GstBaseRTPAudioPayloadPrivate
   guint cached_mtu;
   guint cached_min_ptime;
   guint cached_max_ptime;
+  guint cached_ptime;
   guint cached_min_length;
   guint cached_max_length;
 };
@@ -516,6 +517,7 @@ gst_base_rtp_audio_payload_get_lengths (GstBaseRTPPayload *
 
   /* check cached values */
   if (G_LIKELY (priv->cached_mtu == mtu
+          && priv->cached_ptime == basepayload->abidata.ABI.ptime
           && priv->cached_max_ptime == basepayload->max_ptime
           && priv->cached_min_ptime == basepayload->min_ptime)) {
     /* if nothing changed, return cached values */
@@ -546,8 +548,21 @@ gst_base_rtp_audio_payload_get_lengths (GstBaseRTPPayload *
   if (*min_payload_len > *max_payload_len)
     *min_payload_len = *max_payload_len;
 
+  /* If the ptime is specified in the caps, tried to adhere to it exactly */
+  if (basepayload->abidata.ABI.ptime) {
+    guint ptime_in_bytes = priv->time_to_bytes (payload,
+        basepayload->abidata.ABI.ptime);
+
+    /* clip to computed min and max lengths */
+    ptime_in_bytes = MAX (*min_payload_len, ptime_in_bytes);
+    ptime_in_bytes = MIN (*max_payload_len, ptime_in_bytes);
+
+    *min_payload_len = *max_payload_len = ptime_in_bytes;
+  }
+
   /* cache values */
   priv->cached_mtu = mtu;
+  priv->cached_ptime = basepayload->abidata.ABI.ptime;
   priv->cached_min_ptime = basepayload->min_ptime;
   priv->cached_max_ptime = basepayload->max_ptime;
   priv->cached_min_length = *min_payload_len;

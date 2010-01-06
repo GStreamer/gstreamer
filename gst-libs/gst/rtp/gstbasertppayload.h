@@ -111,7 +111,12 @@ struct _GstBaseRTPPayload
   /*< private >*/
   GstBaseRTPPayloadPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer)) - 1];
+  union  {
+    struct {
+      guint ptime; /* in ms */
+    } ABI;
+    gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer)) - 1];
+  } abidata;
 };
 
 struct _GstBaseRTPPayloadClass
