@@ -358,6 +358,9 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   gboolean equal;
   bitstream_t bs = { data, 0, 0, size };
 
+  if (size < 5)
+    goto failed;
+
   /* Parse the config from the VOS frame */
   bs.offset = 5;
 
