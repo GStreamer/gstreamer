@@ -57,6 +57,7 @@ struct _GstFlacEnc {
   gint           quality;
   gboolean       stopped;
   guint           padding;
+  gint            seekpoints;
 
 #if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
   FLAC__SeekableStreamEncoder *encoder;

@@ -142,7 +142,8 @@ enum
   PROP_MIN_RESIDUAL_PARTITION_ORDER,
   PROP_MAX_RESIDUAL_PARTITION_ORDER,
   PROP_RICE_PARAMETER_SEARCH_DIST,
-  PROP_PADDING
+  PROP_PADDING,
+  PROP_SEEKPOINTS
 };
 
 GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
@@ -228,6 +229,7 @@ static const GstFlacEncParams flacenc_params[] = {
 
 #define DEFAULT_QUALITY 5
 #define DEFAULT_PADDING 0
+#define DEFAULT_SEEKPOINTS 0
 
 #define GST_TYPE_FLAC_ENC_QUALITY (gst_flac_enc_quality_get_type ())
 GType
@@ -381,6 +383,21 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "Write a PADDING block with this length in bytes", 0, G_MAXUINT,
           DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstFlacEnc:padding
+   *
+   * Write a PADDING block with this length in bytes
+   *
+   * Since: 0.10.18
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_SEEKPOINTS,
+      g_param_spec_int ("seekpoints",
+          "Seekpoints",
+          "Add SEEKTABLE metadata (if > 0, number of entries, if < 0, interval in sec)",
+          -G_MAXINT, G_MAXINT,
+          DEFAULT_SEEKPOINTS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_flac_enc_change_state;
 }
 
@@ -447,10 +464,11 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 }
 
 static void
-gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
+gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
 {
   const GstTagList *user_tags;
   GstTagList *copy;
+  gint entries = 1;
 
   g_return_if_fail (flacenc != NULL);
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (flacenc));
@@ -459,21 +477,51 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
   }
   copy = gst_tag_list_merge (user_tags, flacenc->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (flacenc)));
-  flacenc->meta = g_new0 (FLAC__StreamMetadata *, 2);
+  flacenc->meta = g_new0 (FLAC__StreamMetadata *, 3);
 
   flacenc->meta[0] =
       FLAC__metadata_object_new (FLAC__METADATA_TYPE_VORBIS_COMMENT);
   gst_tag_list_foreach (copy, add_one_tag, flacenc);
 
+  if (flacenc->seekpoints && total_samples != GST_CLOCK_TIME_NONE) {
+    gboolean res;
+    guint samples;
+
+    flacenc->meta[1] =
+        FLAC__metadata_object_new (FLAC__METADATA_TYPE_SEEKTABLE);
+    if (flacenc->seekpoints > 0) {
+      res =
+          FLAC__metadata_object_seektable_template_append_spaced_points
+          (flacenc->meta[1], flacenc->seekpoints, total_samples);
+    } else {
+      samples = -flacenc->seekpoints * flacenc->sample_rate;
+      res =
+          FLAC__metadata_object_seektable_template_append_spaced_points_by_samples
+          (flacenc->meta[1], samples, total_samples);
+    }
+    if (!res) {
+      GST_DEBUG_OBJECT (flacenc, "adding seekpoint template %d failed",
+          flacenc->seekpoints);
+      FLAC__metadata_object_delete (flacenc->meta[1]);
+      flacenc->meta[1] = NULL;
+    } else {
+      entries++;
+    }
+  } else if (flacenc->seekpoints && total_samples == GST_CLOCK_TIME_NONE) {
+    GST_WARNING_OBJECT (flacenc, "total time unknown; can not add seekpoints");
+  }
+
   if (flacenc->padding > 0) {
-    flacenc->meta[1] = FLAC__metadata_object_new (FLAC__METADATA_TYPE_PADDING);
-    flacenc->meta[1]->length = flacenc->padding;
+    flacenc->meta[entries] =
+        FLAC__metadata_object_new (FLAC__METADATA_TYPE_PADDING);
+    flacenc->meta[entries]->length = flacenc->padding;
+    entries++;
   }
 
   if (FLAC__stream_encoder_set_metadata (flacenc->encoder,
-          flacenc->meta, (flacenc->padding > 0) ? 2 : 1) != true)
-
+          flacenc->meta, entries) != true)
     g_warning ("Dude, i'm already initialized!");
+
   gst_tag_list_free (copy);
 }
 
@@ -656,7 +704,7 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     FLAC__stream_encoder_set_total_samples_estimate (flacenc->encoder,
         MIN (total_samples, G_GUINT64_CONSTANT (0x0FFFFFFFFF)));
 
-  gst_flac_enc_set_metadata (flacenc);
+  gst_flac_enc_set_metadata (flacenc, total_samples);
 
   init_status = FLAC__stream_encoder_init_stream (flacenc->encoder,
       gst_flac_enc_write_callback, gst_flac_enc_seek_callback,
@@ -1230,6 +1278,9 @@ gst_flac_enc_set_property (GObject * object, guint prop_id,
     case PROP_PADDING:
       this->padding = g_value_get_uint (value);
       break;
+    case PROP_SEEKPOINTS:
+      this->seekpoints = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1303,6 +1354,9 @@ gst_flac_enc_get_property (GObject * object, guint prop_id,
     case PROP_PADDING:
       g_value_set_uint (value, this->padding);
       break;
+    case PROP_SEEKPOINTS:
+      g_value_set_int (value, this->seekpoints);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1351,6 +1405,9 @@ gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
 
         if (flacenc->meta[1])
           FLAC__metadata_object_delete (flacenc->meta[1]);
+
+        if (flacenc->meta[2])
+          FLAC__metadata_object_delete (flacenc->meta[2]);
 
         g_free (flacenc->meta);
         flacenc->meta = NULL;
