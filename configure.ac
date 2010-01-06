@@ -307,7 +307,10 @@ else
   embffmpeg_configure_args="--prefix=$prefix"
 
   # Enable shared and static so that we get .a files, but with PIC code.
-  embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network --disable-vhook"
+  embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffserver --disable-ffplay\
+        --enable-postproc --enable-gpl --enable-static --enable-shared \
+	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
+	 --disable-network --disable-hwaccels"
 
   # if we are cross-compiling, tell ffmpeg so
   if test "x$cross_compiling" = xyes; then
