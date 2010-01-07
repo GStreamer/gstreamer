@@ -472,11 +472,6 @@ gst_sps_decode_vui (GstH264Parse * h, GstNalBs * bs)
       GST_DEBUG_OBJECT (h, "timing info: dur=%d/%d fixed=%d",
           num_units_in_tick, time_scale, sps->fixed_frame_rate_flag);
     }
-
-    GST_DEBUG_OBJECT (h,
-        "num_units_in_tick = %d, time_scale = %d, "
-        "fixed_frame_rate_flag = %d\n",
-        sps->num_units_in_tick, sps->time_scale, sps->fixed_frame_rate_flag);
   }
 
   sps->nal_hrd_parameters_present_flag = gst_nal_bs_read (bs, 1);
@@ -1216,7 +1211,9 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     fps_den = h264parse->fps_den = sps->num_units_in_tick;
 
     /* FIXME verify / also handle other cases */
-    if (sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag) {
+    if (sps->fixed_frame_rate_flag && sps->frame_mbs_only_flag &&
+        !sps->pic_struct_present_flag) {
+      fps_den *= 2;             /* picture is a frame = 2 fields */
       GST_DEBUG_OBJECT (h264parse, "updating caps fps %d/%d", fps_num, fps_den);
       gst_caps_set_simple (src_caps,
           "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
