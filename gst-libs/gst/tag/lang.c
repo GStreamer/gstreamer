@@ -47,7 +47,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "lang-tables.c"
+#include "lang-tables.dat"
 
 /* FIXME: remove once we depend on GLib >= 2.22 */
 #if !GLIB_CHECK_VERSION (2, 22, 0)
