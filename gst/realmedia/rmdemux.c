@@ -1492,7 +1492,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     /* save for later, we must send the tags after the newsegment event */
     if (codec_name != NULL && codec_tag != NULL) {
-      stream->pending_tags = gst_tag_list_new ();
+      if (stream->pending_tags == NULL)
+        stream->pending_tags = gst_tag_list_new ();
       gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_KEEP,
           codec_tag, codec_name, NULL);
     }
@@ -1556,6 +1557,8 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   guint str_len = 0;
   int stream_type;
   int offset;
+  guint32 max_bitrate;
+  guint32 avg_bitrate;
 
   stream = g_new0 (GstRMDemuxStream, 1);
 
@@ -1568,6 +1571,24 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   stream->discont = TRUE;
   stream->adapter = gst_adapter_new ();
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
+
+  /* parse the bitrates */
+  max_bitrate = RMDEMUX_GUINT32_GET (data + 2);
+  avg_bitrate = RMDEMUX_GUINT32_GET (data + 6);
+  GST_LOG_OBJECT (rmdemux, "Stream max bitrate=%u", max_bitrate);
+  GST_LOG_OBJECT (rmdemux, "Stream avg bitrate=%u", avg_bitrate);
+  if (max_bitrate != 0) {
+    if (stream->pending_tags == NULL)
+      stream->pending_tags = gst_tag_list_new ();
+    gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MAXIMUM_BITRATE, max_bitrate, NULL);
+  }
+  if (avg_bitrate != 0) {
+    if (stream->pending_tags == NULL)
+      stream->pending_tags = gst_tag_list_new ();
+    gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_BITRATE, avg_bitrate, NULL);
+  }
 
   offset = 30;
   stream1_type_string = gst_rm_utils_read_string8 (data + offset,
