@@ -1169,6 +1169,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
   GstH264Sps *sps = NULL;
   GstCaps *src_caps = NULL;
+  gboolean modified = FALSE;
 
   /* current PPS dictates which SPS to use */
   if (h264parse->pps && h264parse->pps->sps_id < MAX_SPS_COUNT) {
@@ -1179,10 +1180,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     sps = h264parse->sps;
   }
 
-  if (G_UNLIKELY (h264parse->src_caps == NULL))
+  if (G_UNLIKELY (h264parse->src_caps == NULL)) {
     src_caps = gst_caps_copy (caps);
-  else
+    modified = TRUE;
+  } else {
     src_caps = gst_caps_ref (h264parse->src_caps);
+  }
   src_caps = gst_caps_make_writable (src_caps);
 
   g_return_val_if_fail (src_caps != NULL, FALSE);
@@ -1199,6 +1202,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     GST_DEBUG_OBJECT (h264parse, "updating caps w/h %dx%d", width, height);
     gst_caps_set_simple (src_caps, "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height, NULL);
+    modified = TRUE;
   }
 
   /* framerate */
@@ -1217,6 +1221,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       GST_DEBUG_OBJECT (h264parse, "updating caps fps %d/%d", fps_num, fps_den);
       gst_caps_set_simple (src_caps,
           "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
+      modified = TRUE;
     }
   }
 
@@ -1240,6 +1245,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER, buf,
             NULL);
         gst_buffer_unref (buf);
+        modified = TRUE;
       }
     } else {
       GST_DEBUG_OBJECT (h264parse, "no codec_data yet");
@@ -1247,8 +1253,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   }
 
   /* save as new caps, caps will be set when pushing data */
-  gst_caps_replace (&h264parse->src_caps, src_caps);
-  gst_caps_unref (src_caps);
+  /* avoid replacing caps by a mere identical copy, thereby triggering
+   * negotiating (which e.g. some container might not appreciate) */
+  if (modified) {
+    gst_caps_replace (&h264parse->src_caps, src_caps);
+    gst_caps_unref (src_caps);
+  }
 
   return TRUE;
 }
