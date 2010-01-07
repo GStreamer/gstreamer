@@ -148,9 +148,6 @@ gst_audio_fir_filter_update_kernel (GstAudioFIRFilter * self, GValueArray * va)
   gdouble *kernel;
   guint i;
 
-  gst_audio_fx_base_fir_filter_push_residue (GST_AUDIO_FX_BASE_FIR_FILTER
-      (self));
-
   if (va) {
     if (self->kernel)
       g_value_array_free (self->kernel);
@@ -231,9 +228,7 @@ gst_audio_fir_filter_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_KERNEL:
       g_mutex_lock (self->lock);
-      gst_audio_fx_base_fir_filter_push_residue (GST_AUDIO_FX_BASE_FIR_FILTER
-          (self));
-
+      /* update kernel already pushes residues */
       gst_audio_fir_filter_update_kernel (self, g_value_dup_boxed (value));
       g_mutex_unlock (self->lock);
       break;

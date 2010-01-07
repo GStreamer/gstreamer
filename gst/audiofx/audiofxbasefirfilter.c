@@ -59,10 +59,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0 = 0,
-  PROP_LOW_LATENCY
+  PROP_LOW_LATENCY,
+  PROP_DRAIN_ON_CHANGES
 };
 
 #define DEFAULT_LOW_LATENCY FALSE
+#define DEFAULT_DRAIN_ON_CHANGES TRUE
 
 GST_BOILERPLATE_FULL (GstAudioFXBaseFIRFilter, gst_audio_fx_base_fir_filter,
     GstAudioFilter, GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
@@ -290,6 +292,8 @@ process_fft_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype
     self->buffer_fill = buffer_fill = kernel_length - 1; \
   } \
   \
+  g_assert (self->buffer_length == block_length); \
+  \
   while (input_samples) { \
     pass = MIN (buffer_length - buffer_fill, input_samples); \
     \
@@ -505,6 +509,12 @@ gst_audio_fx_base_fir_filter_set_property (GObject * object, guint prop_id,
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     }
+    case PROP_DRAIN_ON_CHANGES:{
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->drain_on_changes = g_value_get_boolean (value);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -520,6 +530,9 @@ gst_audio_fx_base_fir_filter_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOW_LATENCY:
       g_value_set_boolean (value, self->low_latency);
+      break;
+    case PROP_DRAIN_ON_CHANGES:
+      g_value_set_boolean (value, self->drain_on_changes);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -564,6 +577,22 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
           "Can only be changed in states < PAUSED!", DEFAULT_LOW_LATENCY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAudioFXBaseFIRFilter::drain-on-changes:
+   *
+   * Whether the filter should be drained when its coeficients change
+   *
+   * Note: Currently this only works if the kernel size is not changed!
+   * Support for drainless kernel size changes will be added in the future.
+   *
+   * Since: 0.10.18
+   */
+  g_object_class_install_property (gobject_class, PROP_DRAIN_ON_CHANGES,
+      g_param_spec_boolean ("drain-on-changes", "Drain on changes",
+          "Drains the filter when its coeficients change",
+          DEFAULT_DRAIN_ON_CHANGES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_start);
@@ -588,6 +617,7 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self,
   self->nsamples_in = 0;
 
   self->low_latency = DEFAULT_LOW_LATENCY;
+  self->drain_on_changes = DEFAULT_DRAIN_ON_CHANGES;
 
   gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
       gst_audio_fx_base_fir_filter_query);
@@ -1009,7 +1039,16 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   g_return_if_fail (self != NULL);
 
   GST_BASE_TRANSFORM_LOCK (self);
-  if (self->buffer) {
+
+  latency_changed = (self->latency != latency
+      || (!self->low_latency && self->kernel_length < FFT_THRESHOLD
+          && kernel_length >= FFT_THRESHOLD)
+      || (!self->low_latency && self->kernel_length >= FFT_THRESHOLD
+          && kernel_length < FFT_THRESHOLD));
+
+  /* FIXME: If the latency changes, the buffer size changes too and we
+   * have to drain in any case until this is fixed in the future */
+  if (self->buffer && (!self->drain_on_changes || latency_changed)) {
     gst_audio_fx_base_fir_filter_push_residue (self);
     self->start_ts = GST_CLOCK_TIME_NONE;
     self->start_off = GST_BUFFER_OFFSET_NONE;
@@ -1018,17 +1057,13 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
     self->buffer_fill = 0;
   }
 
-  latency_changed = (self->latency != latency
-      || (!self->low_latency && self->kernel_length < FFT_THRESHOLD
-          && kernel_length >= FFT_THRESHOLD)
-      || (!self->low_latency && self->kernel_length >= FFT_THRESHOLD
-          && kernel_length < FFT_THRESHOLD));
-
   g_free (self->kernel);
-  g_free (self->buffer);
-  self->buffer = NULL;
-  self->buffer_fill = 0;
-  self->buffer_length = 0;
+  if (!self->drain_on_changes || latency_changed) {
+    g_free (self->buffer);
+    self->buffer = NULL;
+    self->buffer_fill = 0;
+    self->buffer_length = 0;
+  }
 
   self->kernel = kernel;
   self->kernel_length = kernel_length;
