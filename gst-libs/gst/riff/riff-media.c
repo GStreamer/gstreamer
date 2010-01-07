@@ -77,20 +77,31 @@ gst_riff_create_video_caps (guint32 codec_fcc,
               "endianness", G_TYPE_INT, G_BIG_ENDIAN,
               "red_mask", G_TYPE_INT, 0xff, "green_mask", G_TYPE_INT, 0xff00,
               "blue_mask", G_TYPE_INT, 0xff0000, NULL);
+        } else if (bpp == 32) {
+          caps = gst_caps_new_simple ("video/x-raw-rgb",
+              "bpp", G_TYPE_INT, 32, "depth", G_TYPE_INT, 24,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              "red_mask", G_TYPE_INT, 0xff00, "green_mask", G_TYPE_INT,
+              0xff0000, "blue_mask", G_TYPE_INT, 0xff000000, NULL);
         } else {
           GST_WARNING ("Unhandled DIB RGB depth: %d", bpp);
           return NULL;
         }
       } else {
         /* for template */
-        caps = gst_caps_from_string ("video/x-raw-rgb, bpp = (int) { 8, 24 }, "
+        caps =
+            gst_caps_from_string ("video/x-raw-rgb, bpp = (int) { 8, 24, 32 }, "
             "depth = (int) { 8, 24}");
       }
 
       palette = strf_data;
       strf_data = NULL;
-      if (codec_name)
-        *codec_name = g_strdup_printf ("Palettized %d-bit RGB", bpp);
+      if (codec_name) {
+        if (bpp == 8)
+          *codec_name = g_strdup_printf ("Palettized %d-bit RGB", bpp);
+        else
+          *codec_name = g_strdup_printf ("%d-bit RGB", bpp);
+      }
       break;
     }
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
