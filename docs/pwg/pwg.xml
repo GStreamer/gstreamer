@@ -29,7 +29,6 @@
 <!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
 <!ENTITY ADVANCED_CLOCK       SYSTEM "advanced-clock.xml">
 <!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced-dparams.xml">
-<!ENTITY ADVANCED_MIDI        SYSTEM "advanced-midi.xml">
 <!ENTITY ADVANCED_INTERFACES  SYSTEM "advanced-interfaces.xml">
 <!ENTITY ADVANCED_TAGGING     SYSTEM "advanced-tagging.xml">
 <!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
@@ -144,7 +143,6 @@
     &ADVANCED_REQUEST;
     &ADVANCED_CLOCK;
     &ADVANCED_DPARAMS;
-    &ADVANCED_MIDI;
     &ADVANCED_INTERFACES;
     &ADVANCED_TAGGING;
     &ADVANCED_EVENTS;
