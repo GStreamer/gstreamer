@@ -459,45 +459,6 @@ next_start_code (guint8 * data, guint size)
   return size;
 }
 
-/* we don't use memcpy but this faster version (around 20%) because we need to
- * perform it on all data. */
-static gboolean
-is_nal_equal (const guint8 * nal1, const guint8 * nal2, guint len)
-{
-  /* if we have a 64-bit processor, we may use guint64 to make 
-   * this go faster. Otherwise with 32 bits, we are already
-   * going faster than byte to byte compare.
-   */
-  guint remainder = len & 0x3;
-  guint num_int = len >> 2;
-  guint32 *pu1 = (guint32 *) nal1, *pu2 = (guint32 *) nal2;
-  guint i;
-
-  /* compare by groups of sizeof(guint32) bytes */
-  for (i = 0; i < num_int; i++) {
-    /* XOR is faster than CMP?... */
-    if (pu1[i] ^ pu2[i])
-      return FALSE;
-  }
-
-  /* check that the remaining bytes are still equal */
-  if (!remainder) {
-    return TRUE;
-  } else if (1 == remainder) {
-    --len;
-    return (nal1[len] == nal2[len]);
-  } else {                      /* 2 or 3 */
-    if (remainder & 1) {        /* -1 if 3 bytes left */
-      --len;
-      if (nal1[len] != nal2[len])
-        return FALSE;
-    }
-    /* last 2 bytes */
-    return ((nal1[len - 1] == nal2[len - 1])    /* -1 */
-        &&(nal1[len - 2] == nal2[len - 2]));    /* -2 */
-  }
-}
-
 static gboolean
 gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
     guint8 * data, guint size, GstClockTime timestamp)
@@ -556,7 +517,7 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
       sps_buf = GST_BUFFER_CAST (payloader->sps->data);
 
       if ((GST_BUFFER_SIZE (sps_buf) != sps_len)
-          || !is_nal_equal (GST_BUFFER_DATA (sps_buf), sps, sps_len)) {
+          || memcmp (GST_BUFFER_DATA (sps_buf), sps, sps_len)) {
         /* something changed, update */
         payloader->profile = (sps[1] << 16) + (sps[2] << 8) + sps[3];
         GST_DEBUG ("Profile level IDC = %06x", payloader->profile);
@@ -589,7 +550,7 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
       pps_buf = GST_BUFFER_CAST (payloader->pps->data);
 
       if ((GST_BUFFER_SIZE (pps_buf) != pps_len)
-          || !is_nal_equal (GST_BUFFER_DATA (pps_buf), pps, pps_len)) {
+          || memcmp (GST_BUFFER_DATA (pps_buf), pps, pps_len)) {
         /* something changed, update */
         updated = TRUE;
       }
