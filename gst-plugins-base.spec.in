@@ -55,7 +55,7 @@ plug-ins.
 export DOCS_ARE_INCOMPLETE_PLEASE_FIXME=0
 %build
 %configure \
-  --enable-gtk-doc
+  --enable-gtk-doc --enable-introspection=no
 
 make %{?_smp_mflags}
                                                                                 
@@ -117,7 +117,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
-%{_libdir}/gstreamer-%{majorminor}/libgstqueue2.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapp.so
 
 # Here are packages not in the base plugins package but not dependant
