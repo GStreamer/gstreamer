@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-12-01 14:34+0000\n"
+"POT-Creation-Date: 2010-01-06 20:08+0000\n"
 "PO-Revision-Date: 2009-04-16 21:51-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -640,6 +640,57 @@ msgid ""
 msgstr ""
 "elevação geográfica de onde a mídia foi gravada ou produzida em metros de "
 "acordo com WGS84 (zero é a média do nível do mar)"
+
+msgid "show name"
+msgstr ""
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+
+#, fuzzy
+msgid "show sortname"
+msgstr "artista para ordenação"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+
+#, fuzzy
+msgid "episode number"
+msgstr "número do disco"
+
+msgid "The episode number in the season the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "season number"
+msgstr "número do disco"
+
+msgid "The season number of the show the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "lyrics"
+msgstr "licença"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr ""
+
+#, fuzzy
+msgid "composer sortname"
+msgstr "título para ordenação"
+
+#, fuzzy
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "pessoa(s) responsável(is) pela gravação, para ordenação"
+
+msgid "grouping"
+msgstr ""
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
 
 msgid ", "
 msgstr ", "

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-12-01 14:34+0000\n"
+"POT-Creation-Date: 2010-01-06 20:08+0000\n"
 "PO-Revision-Date: 2009-05-01 11:53中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -606,6 +606,57 @@ msgid ""
 msgstr ""
 "根据 WGS84（平均海平面为 0 米）标准确定的地理海拔高度（有关此媒体在哪里录制或"
 "产生的）"
+
+msgid "show name"
+msgstr ""
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+
+#, fuzzy
+msgid "show sortname"
+msgstr "排序后的艺术家"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+
+#, fuzzy
+msgid "episode number"
+msgstr "碟片编号"
+
+msgid "The episode number in the season the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "season number"
+msgstr "碟片编号"
+
+msgid "The season number of the show the media is part of"
+msgstr ""
+
+#, fuzzy
+msgid "lyrics"
+msgstr "许可证"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr ""
+
+#, fuzzy
+msgid "composer sortname"
+msgstr "排序后的标题名"
+
+#, fuzzy
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "用于排序的负责录制的个人"
+
+msgid "grouping"
+msgstr ""
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
 
 msgid ", "
 msgstr ", "

@@ -791,33 +791,33 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-elevation"
 /**
- * GST_TAG_TV_SHOW
+ * GST_TAG_SHOW_NAME
  *
- * Name of the show of the media, used for displaying
+ * Name of the show, used for displaying (string)
  *
  * Since: 0.10.26
  */
 #define GST_TAG_SHOW_NAME                         "show-name"
 /**
- * GST_TAG_TV_SHOW_SORTNAME
+ * GST_TAG_SHOW_SORTNAME
  *
- * Name of the show of the media, used for sorting
+ * Name of the show, used for sorting (string)
  *
  * Since: 0.10.26
  */
 #define GST_TAG_SHOW_SORTNAME                     "show-sortname"
 /**
- * GST_TAG_EPISODE_NUMBER
+ * GST_TAG_SHOW_EPISODE_NUMBER
  *
- * Number of the episode within a season/show
+ * Number of the episode within a season/show (unsigned integer)
  *
  * Since: 0.10.26
  */
 #define GST_TAG_SHOW_EPISODE_NUMBER               "show-episode-number"
 /**
- * GST_TAG_SEASON_NUMBER
+ * GST_TAG_SHOW_SEASON_NUMBER
  *
- * Number of the season of a show/series
+ * Number of the season of a show/series (unsigned integer)
  *
  * Since: 0.10.26
  */
@@ -825,7 +825,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_LYRICS
  *
- * The lyrics of the media
+ * The lyrics of the media (string)
  *
  * Since: 0.10.26
  */
@@ -833,7 +833,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_COMPOSER_SORTNAME
  *
- * The composer's name, used for sorting
+ * The composer's name, used for sorting (string)
  *
  * Since: 0.10.26
  */
@@ -842,11 +842,12 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * GST_TAG_GROUPING
  *
  * Groups together media that are related and spans multiple tracks. An
- * example are multiple pieces of a concerto.
+ * example are multiple pieces of a concerto. (string)
  *
  * Since: 0.10.26
  */
 #define GST_TAG_GROUPING                          "grouping"
+
 G_END_DECLS
 
 #endif /* __GST_TAGLIST_H__ */

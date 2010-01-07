@@ -156,6 +156,8 @@ gst_task_pool_finalize (GObject * object)
  * GThreadPool for threads.
  *
  * Returns: a new #GstTaskPool. gst_object_unref() after usage.
+ *
+ * Since: 0.10.24
  */
 GstTaskPool *
 gst_task_pool_new (void)
@@ -175,6 +177,8 @@ gst_task_pool_new (void)
  * Prepare the taskpool for accepting gst_task_pool_push() operations.
  *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 void
 gst_task_pool_prepare (GstTaskPool * pool, GError ** error)
@@ -197,6 +201,8 @@ gst_task_pool_prepare (GstTaskPool * pool, GError ** error)
  * to ensure proper cleanup of internal data structures in test suites.
  *
  * MT safe.
+ *
+ * Since: 0.10.24
  */
 void
 gst_task_pool_cleanup (GstTaskPool * pool)
@@ -223,6 +229,8 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  * Returns: a pointer that should be used for the gst_task_pool_join
  * function. This pointer can be NULL, you must check @error to detect
  * errors.
+ *
+ * Since: 0.10.24
  */
 gpointer
 gst_task_pool_push (GstTaskPool * pool, GstTaskPoolFunction func,
@@ -254,6 +262,8 @@ not_supported:
  *
  * Join a task and/or return it to the pool. @id is the id obtained from 
  * gst_task_pool_push().
+ *
+ * Since: 0.10.24
  */
 void
 gst_task_pool_join (GstTaskPool * pool, gpointer id)
