@@ -144,9 +144,6 @@ struct _GstASFDemux {
   gint64             packet;       /* current packet                           */
   guint              speed_packets; /* Known number of packets to get in one go*/
 
-  /* bitrates are unused at the moment */
-  guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
-
   gchar              **languages;
   guint                num_languages;
 

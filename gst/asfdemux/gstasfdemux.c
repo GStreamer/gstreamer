@@ -3006,6 +3006,7 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * demux, guint8 * data,
     guint64 size)
 {
   guint16 num_streams, i;
+  AsfStream *stream;
 
   if (size < 2)
     goto not_enough_data;
@@ -3026,8 +3027,16 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * demux, guint8 * data,
     bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
     if (stream_id < GST_ASF_DEMUX_NUM_STREAM_IDS) {
-      demux->bitrate[stream_id] = bitrate;
-      GST_DEBUG ("bitrate[%u] = %u", stream_id, bitrate);
+      GST_DEBUG_OBJECT (demux, "bitrate of stream %u = %u", stream_id, bitrate);
+      stream = gst_asf_demux_get_stream (demux, stream_id);
+      if (stream) {
+        if (stream->pending_tags == NULL)
+          stream->pending_tags = gst_tag_list_new ();
+        gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_BITRATE, bitrate, NULL);
+      } else {
+        GST_WARNING_OBJECT (demux, "Stream id %u wasn't found", stream_id);
+      }
     } else {
       GST_WARNING ("stream id %u is too large", stream_id);
     }
