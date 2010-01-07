@@ -1453,7 +1453,7 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
   guint8 *data;
   GstBuffer *outbuf = NULL;
   guint outsize, size, nal_length = h264parse->nal_length_size;
-  gboolean start = h264parse->picture_start;
+  gboolean start;
   gboolean complete;
 
   data = GST_BUFFER_DATA (nal);
@@ -1466,6 +1466,8 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
   nal_type = data[nal_length] & 0x1f;
   GST_LOG_OBJECT (h264parse, "nal type: %d", nal_type);
   h264parse->picture_start |= (nal_type == 1 || nal_type == 2 || nal_type == 5);
+  /* first_mb_in_slice == 0 considered start of frame */
+  start = h264parse->picture_start && (data[nal_length + 1] & 0x80);
   if (G_UNLIKELY (!next_nal)) {
     complete = TRUE;
   } else {
@@ -1545,13 +1547,16 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
       outbuf = gst_adapter_take_buffer (h264parse->picture_adapter, outsize);
       outbuf = gst_buffer_make_metadata_writable (outbuf);
       GST_BUFFER_TIMESTAMP (outbuf) = ts;
+
+      /* AU always starts a frame */
+      start = TRUE;
     }
   } else {
     outbuf = gst_h264parse_write_nal_prefix (h264parse, nal);
   }
 
   if (_start)
-    *_start = (h264parse->picture_start != start);
+    *_start = start;
 
   return outbuf;
 }
@@ -1740,9 +1745,6 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       if (!outbuf) {
         /* no complete unit yet, go for next round */
         continue;
-      } else {
-        if (h264parse->merge)
-          start = TRUE;
       }
 
       /* Ignore upstream dts that stalls or goes backward. Upstream elements
