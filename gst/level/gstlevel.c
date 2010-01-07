@@ -202,7 +202,7 @@ gst_level_class_init (GstLevelClass * klass)
   gobject_class->finalize = gst_level_finalize;
 
   g_object_class_install_property (gobject_class, PROP_SIGNAL_LEVEL,
-      g_param_spec_boolean ("message", "mesage",
+      g_param_spec_boolean ("message", "message",
           "Post a level message for each passed interval",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
