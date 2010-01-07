@@ -2552,13 +2552,12 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
     name_utf8 =
         g_convert (name, name_len, "UTF-8", "UTF-16LE", &in, &out, NULL);
 
-    GST_DEBUG ("Found tag/metadata %s", name_utf8);
-
-    gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name_utf8);
-
-    GST_DEBUG ("gst_tag_name %s", gst_tag_name);
-
     if (name_utf8 != NULL) {
+      GST_DEBUG ("Found tag/metadata %s", name_utf8);
+
+      gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name_utf8);
+      GST_DEBUG ("gst_tag_name %s", GST_STR_NULL (gst_tag_name));
+
       switch (datatype) {
         case ASF_DEMUX_DATA_TYPE_UTF16LE_STRING:{
           gchar *value_utf8;
@@ -2566,10 +2565,10 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
           value_utf8 = g_convert (value, value_len, "UTF-8", "UTF-16LE",
               &in, &out, NULL);
 
-          GST_DEBUG ("string value %s", value_utf8);
-
           /* get rid of tags with empty value */
           if (value_utf8 != NULL && *value_utf8 != '\0') {
+            GST_DEBUG ("string value %s", value_utf8);
+
             value_utf8[out] = '\0';
 
             if (gst_tag_name != NULL) {
@@ -2622,7 +2621,8 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
           } else if (value_utf8 == NULL) {
             GST_WARNING ("Failed to convert string value to UTF8, skipping");
           } else {
-            GST_DEBUG ("Skipping empty string value for %s", gst_tag_name);
+            GST_DEBUG ("Skipping empty string value for %s",
+                GST_STR_NULL (gst_tag_name));
           }
           g_free (value_utf8);
           break;
@@ -2630,7 +2630,8 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
         case ASF_DEMUX_DATA_TYPE_BYTE_ARRAY:{
           if (gst_tag_name) {
             if (!g_str_equal (gst_tag_name, GST_TAG_IMAGE)) {
-              GST_FIXME ("Unhandled byte array tag %s", gst_tag_name);
+              GST_FIXME ("Unhandled byte array tag %s",
+                  GST_STR_NULL (gst_tag_name));
               break;
             } else {
               asf_demux_parse_picture_tag (taglist, (guint8 *) value,
