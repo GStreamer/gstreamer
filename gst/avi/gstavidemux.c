@@ -45,7 +45,6 @@
 #endif
 
 #include <string.h>
-#include <ctype.h>
 
 #include "gst/riff/riff-media.h"
 #include "gstavidemux.h"
@@ -3101,79 +3100,46 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d)
   g_date_free (date);
 }
 
-#define SKIP_TOKEN(data,size,label) \
-  while (size > 0 && !isspace (data[0])) { \
-    data++; \
-    size--; \
-  } \
-  while (size > 0 && isspace (data[0])) { \
-    data++; \
-    size--; \
-  } \
-  if (size == 0) \
-    goto label;
-
-#define SKIP_DIGIT(data,size,label) \
-  while (size > 0 && isdigit (data[0])) { \
-    data++; \
-    size--; \
-  } \
-  while (size > 0 && !isdigit (data[0])) { \
-    data++; \
-    size--; \
-  } \
-  if (size == 0) \
-    goto label;
-
 static void
 gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data, guint size)
 {
   gint y, m, d;
+  gint ret;
 
-  /* parse the year */
-  y = atoi (data);
-  SKIP_DIGIT (data, size, parse_fail);
-
-  /* parse the month */
-  m = atoi (data);
-  SKIP_DIGIT (data, size, parse_fail);
-
-  /* parse the day */
-  d = atoi (data);
-
+  ret = sscanf (data, "%d:%d:%d", &y, &m, &d);
+  if (ret != 3) {
+    GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+    return;
+  }
   gst_avi_demux_add_date_tag (avi, y, m, d);
-  return;
-
-parse_fail:
-  GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
 }
 
 static gint
 get_month_num (gchar * data, guint size)
 {
-  if (strncasecmp (data, "jan", 3) == 0) {
+  if (g_ascii_strncasecmp (data, "jan", 3) == 0) {
     return 1;
-  } else if (strncasecmp (data, "feb", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "feb", 3) == 0) {
     return 2;
-  } else if (strncasecmp (data, "mar", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "mar", 3) == 0) {
     return 3;
-  } else if (strncasecmp (data, "apr", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "apr", 3) == 0) {
     return 4;
-  } else if (strncasecmp (data, "may", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "may", 3) == 0) {
     return 5;
-  } else if (strncasecmp (data, "jun", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "jun", 3) == 0) {
     return 6;
-  } else if (strncasecmp (data, "jul", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "jul", 3) == 0) {
     return 7;
-  } else if (strncasecmp (data, "aug", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "aug", 3) == 0) {
     return 8;
-  } else if (strncasecmp (data, "sep", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "sep", 3) == 0) {
     return 9;
-  } else if (strncasecmp (data, "oct", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "oct", 3) == 0) {
     return 10;
-  } else if (strncasecmp (data, "nov", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "nov", 3) == 0) {
     return 11;
-  } else if (strncasecmp (data, "dec", 3) == 0) {
+  } else if (g_ascii_strncasecmp (data, "dec", 3) == 0) {
     return 12;
   }
 
@@ -3183,28 +3149,20 @@ get_month_num (gchar * data, guint size)
 static void
 gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data, guint size)
 {
-  gint y, m, d;
+  gint year, month, day;
+  gint hour, min, sec;
+  gint ret;
+  gchar weekday[16];
+  gchar monthstr[16];
 
-  /* skip the week day */
-  SKIP_TOKEN (data, size, parse_fail);
-
-  /* get the month */
-  m = get_month_num (data, size);
-  SKIP_TOKEN (data, size, parse_fail);
-
-  d = atoi (data);
-  SKIP_TOKEN (data, size, parse_fail);
-
-  /* skip the hour */
-  SKIP_TOKEN (data, size, parse_fail);
-
-  y = atoi (data);
-
-  gst_avi_demux_add_date_tag (avi, y, m, d);
-  return;
-
-parse_fail:
-  GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+  ret = sscanf (data, "%s %s %d %d:%d:%d %d", weekday, monthstr, &day, &hour,
+      &min, &sec, &year);
+  if (ret != 7) {
+    GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+    return;
+  }
+  month = get_month_num (monthstr, strlen (monthstr));
+  gst_avi_demux_add_date_tag (avi, year, month, day);
 }
 
 static void
@@ -3212,6 +3170,7 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
 {
   gchar *data = (gchar *) GST_BUFFER_DATA (buf);
   guint size = GST_BUFFER_SIZE (buf);
+  gchar *safedata = NULL;
 
   /*
    * According to:
@@ -3226,7 +3185,7 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
    */
 
   /* skip eventual initial whitespace */
-  while (size > 0 && isspace (data[0])) {
+  while (size > 0 && g_ascii_isspace (data[0])) {
     data++;
     size--;
   }
@@ -3235,14 +3194,23 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
     goto non_parsable;
   }
 
+  /* make a safe copy to add a \0 to the end of the string */
+  safedata = g_malloc (sizeof (gchar) * size + 1);
+  memcpy (safedata, data, size);
+  safedata[size] = '\0';
+
   /* test if the first char is a alpha or a number */
-  if (isdigit (data[0])) {
-    gst_avi_demux_parse_idit_nums_only (avi, data, size);
+  if (g_ascii_isdigit (data[0])) {
+    gst_avi_demux_parse_idit_nums_only (avi, safedata, size);
+    g_free (safedata);
     return;
-  } else if (isalpha (data[0])) {
-    gst_avi_demux_parse_idit_text (avi, data, size);
+  } else if (g_ascii_isalpha (data[0])) {
+    gst_avi_demux_parse_idit_text (avi, safedata, size);
+    g_free (safedata);
     return;
   }
+
+  g_free (safedata);
 
 non_parsable:
   GST_WARNING_OBJECT (avi, "IDIT tag has no parsable info");
