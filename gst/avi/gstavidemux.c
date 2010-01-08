@@ -3101,7 +3101,7 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d)
 }
 
 static void
-gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data, guint size)
+gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data)
 {
   gint y, m, d;
   gint ret;
@@ -3147,15 +3147,15 @@ get_month_num (gchar * data, guint size)
 }
 
 static void
-gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data, guint size)
+gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data)
 {
   gint year, month, day;
   gint hour, min, sec;
   gint ret;
-  gchar weekday[16];
-  gchar monthstr[16];
+  gchar weekday[4];
+  gchar monthstr[4];
 
-  ret = sscanf (data, "%s %s %d %d:%d:%d %d", weekday, monthstr, &day, &hour,
+  ret = sscanf (data, "%3s %3s %d %d:%d:%d %d", weekday, monthstr, &day, &hour,
       &min, &sec, &year);
   if (ret != 7) {
     GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
@@ -3195,17 +3195,15 @@ gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
   }
 
   /* make a safe copy to add a \0 to the end of the string */
-  safedata = g_malloc (sizeof (gchar) * size + 1);
-  memcpy (safedata, data, size);
-  safedata[size] = '\0';
+  safedata = g_strndup (data, size);
 
   /* test if the first char is a alpha or a number */
   if (g_ascii_isdigit (data[0])) {
-    gst_avi_demux_parse_idit_nums_only (avi, safedata, size);
+    gst_avi_demux_parse_idit_nums_only (avi, safedata);
     g_free (safedata);
     return;
   } else if (g_ascii_isalpha (data[0])) {
-    gst_avi_demux_parse_idit_text (avi, safedata, size);
+    gst_avi_demux_parse_idit_text (avi, safedata);
     g_free (safedata);
     return;
   }
