@@ -3153,7 +3153,7 @@ get_month_num (gchar * data, guint size)
 {
   if (strncasecmp (data, "jan", 3) == 0) {
     return 1;
-  } else if (strncasecmp (data, "fev", 3) == 0) {
+  } else if (strncasecmp (data, "feb", 3) == 0) {
     return 2;
   } else if (strncasecmp (data, "mar", 3) == 0) {
     return 3;
