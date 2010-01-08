@@ -1578,6 +1578,25 @@ gst_qtdemux_get_index (GstElement * element)
   return result;
 }
 
+static void
+gst_qtdemux_stbl_free (QtDemuxStream * stream)
+{
+  if (stream->stco.data)
+    g_free ((gpointer) stream->stco.data);
+  if (stream->stsz.data)
+    g_free ((gpointer) stream->stsz.data);
+  if (stream->stsc.data)
+    g_free ((gpointer) stream->stsc.data);
+  if (stream->stts.data)
+    g_free ((gpointer) stream->stts.data);
+  if (stream->stss.data)
+    g_free ((gpointer) stream->stss.data);
+  if (stream->stps.data)
+    g_free ((gpointer) stream->stps.data);
+  if (stream->ctts.data)
+    g_free ((gpointer) stream->ctts.data);
+}
+
 static GstStateChangeReturn
 gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1635,20 +1654,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
           g_free (stream->segments);
         if (stream->pending_tags)
           gst_tag_list_free (stream->pending_tags);
-        if (stream->stco.data)
-          g_free ((gpointer) stream->stco.data);
-        if (stream->stsz.data)
-          g_free ((gpointer) stream->stsz.data);
-        if (stream->stsc.data)
-          g_free ((gpointer) stream->stsc.data);
-        if (stream->stts.data)
-          g_free ((gpointer) stream->stts.data);
-        if (stream->stss.data)
-          g_free ((gpointer) stream->stss.data);
-        if (stream->stps.data)
-          g_free ((gpointer) stream->stps.data);
-        if (stream->ctts.data)
-          g_free ((gpointer) stream->ctts.data);
+        /* free stbl sub-atoms */
+        gst_qtdemux_stbl_free (stream);
         g_free (stream);
       }
       qtdemux->major_brand = 0;
@@ -4567,6 +4574,9 @@ ctts:
   }
 done:
   stream->stbl_index = n;
+  /* if index has been completely parsed, free data that is no-longer needed */
+  if (n == stream->n_samples)
+    gst_qtdemux_stbl_free (stream);
   GST_OBJECT_UNLOCK (qtdemux);
 
   return TRUE;
@@ -5745,42 +5755,11 @@ error_encrypted:
     return FALSE;
   }
 samples_failed:
-  {
-    /* we posted an error already */
-    if (stream->stco.data)
-      g_free ((gpointer) stream->stco.data);
-    if (stream->stsz.data)
-      g_free ((gpointer) stream->stsz.data);
-    if (stream->stsc.data)
-      g_free ((gpointer) stream->stsc.data);
-    if (stream->stts.data)
-      g_free ((gpointer) stream->stts.data);
-    if (stream->stss.data)
-      g_free ((gpointer) stream->stss.data);
-    if (stream->stps.data)
-      g_free ((gpointer) stream->stps.data);
-    if (stream->ctts.data)
-      g_free ((gpointer) stream->ctts.data);
-    g_free (stream);
-    return FALSE;
-  }
 segments_failed:
   {
     /* we posted an error already */
-    if (stream->stco.data)
-      g_free ((gpointer) stream->stco.data);
-    if (stream->stsz.data)
-      g_free ((gpointer) stream->stsz.data);
-    if (stream->stsc.data)
-      g_free ((gpointer) stream->stsc.data);
-    if (stream->stts.data)
-      g_free ((gpointer) stream->stts.data);
-    if (stream->stss.data)
-      g_free ((gpointer) stream->stss.data);
-    if (stream->stps.data)
-      g_free ((gpointer) stream->stps.data);
-    if (stream->ctts.data)
-      g_free ((gpointer) stream->ctts.data);
+    /* free stbl sub-atoms */
+    gst_qtdemux_stbl_free (stream);
     g_free (stream);
     return FALSE;
   }
