@@ -45,6 +45,7 @@
 #endif
 
 #include <string.h>
+#include <ctype.h>
 
 #include "gst/riff/riff-media.h"
 #include "gstavidemux.h"
@@ -103,6 +104,8 @@ static void gst_avi_demux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_avi_demux_get_index (GstElement * element);
 static GstStateChangeReturn gst_avi_demux_change_state (GstElement * element,
     GstStateChange transition);
+
+static void gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
 
@@ -2817,6 +2820,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   guint offset = 4;
   gint64 stop;
   gint i;
+  GstTagList *tags = NULL;
 
   GST_DEBUG ("Reading and parsing avi headers: %d", avi->header_state);
 
@@ -2889,6 +2893,9 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                   goto next;
               }
               break;
+            case GST_RIFF_IDIT:
+              gst_avi_demux_parse_idit (avi, sub);
+              goto next;
             default:
               GST_WARNING_OBJECT (avi,
                   "Unknown off %d tag %" GST_FOURCC_FORMAT " in AVI header",
@@ -2949,8 +2956,16 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                   /* mind padding */
                   if (size & 1)
                     gst_adapter_flush (avi->adapter, 1);
-                  gst_riff_parse_info (GST_ELEMENT (avi), buf,
-                      &avi->globaltags);
+                  gst_riff_parse_info (GST_ELEMENT (avi), buf, &tags);
+                  if (tags) {
+                    if (avi->globaltags) {
+                      gst_tag_list_insert (avi->globaltags, tags,
+                          GST_TAG_MERGE_REPLACE);
+                    } else {
+                      avi->globaltags = tags;
+                    }
+                  }
+                  tags = NULL;
                   gst_buffer_unref (buf);
 
                   avi->offset += GST_ROUND_UP_2 (size) - 4;
@@ -3066,6 +3081,173 @@ header_wrong_avih:
   }
 }
 
+static void
+gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d)
+{
+  GDate *date;
+  date = g_date_new_dmy (d, m, y);
+  if (!g_date_valid (date)) {
+    /* bogus date */
+    GST_WARNING_OBJECT (avi, "Refusing to add invalid date %d-%d-%d", y, m, d);
+    g_date_free (date);
+    return;
+  }
+
+  if (avi->globaltags == NULL)
+    avi->globaltags = gst_tag_list_new ();
+
+  gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date,
+      NULL);
+  g_date_free (date);
+}
+
+#define SKIP_TOKEN(data,size,label) \
+  while (size > 0 && !isspace (data[0])) { \
+    data++; \
+    size--; \
+  } \
+  while (size > 0 && isspace (data[0])) { \
+    data++; \
+    size--; \
+  } \
+  if (size == 0) \
+    goto label;
+
+#define SKIP_DIGIT(data,size,label) \
+  while (size > 0 && isdigit (data[0])) { \
+    data++; \
+    size--; \
+  } \
+  while (size > 0 && !isdigit (data[0])) { \
+    data++; \
+    size--; \
+  } \
+  if (size == 0) \
+    goto label;
+
+static void
+gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data, guint size)
+{
+  gint y, m, d;
+
+  /* parse the year */
+  y = atoi (data);
+  SKIP_DIGIT (data, size, parse_fail);
+
+  /* parse the month */
+  m = atoi (data);
+  SKIP_DIGIT (data, size, parse_fail);
+
+  /* parse the day */
+  d = atoi (data);
+
+  gst_avi_demux_add_date_tag (avi, y, m, d);
+  return;
+
+parse_fail:
+  GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+}
+
+static gint
+get_month_num (gchar * data, guint size)
+{
+  if (strncasecmp (data, "jan", 3) == 0) {
+    return 1;
+  } else if (strncasecmp (data, "fev", 3) == 0) {
+    return 2;
+  } else if (strncasecmp (data, "mar", 3) == 0) {
+    return 3;
+  } else if (strncasecmp (data, "apr", 3) == 0) {
+    return 4;
+  } else if (strncasecmp (data, "may", 3) == 0) {
+    return 5;
+  } else if (strncasecmp (data, "jun", 3) == 0) {
+    return 6;
+  } else if (strncasecmp (data, "jul", 3) == 0) {
+    return 7;
+  } else if (strncasecmp (data, "aug", 3) == 0) {
+    return 8;
+  } else if (strncasecmp (data, "sep", 3) == 0) {
+    return 9;
+  } else if (strncasecmp (data, "oct", 3) == 0) {
+    return 10;
+  } else if (strncasecmp (data, "nov", 3) == 0) {
+    return 11;
+  } else if (strncasecmp (data, "dec", 3) == 0) {
+    return 12;
+  }
+
+  return 0;
+}
+
+static void
+gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data, guint size)
+{
+  gint y, m, d;
+
+  /* skip the week day */
+  SKIP_TOKEN (data, size, parse_fail);
+
+  /* get the month */
+  m = get_month_num (data, size);
+  SKIP_TOKEN (data, size, parse_fail);
+
+  d = atoi (data);
+  SKIP_TOKEN (data, size, parse_fail);
+
+  /* skip the hour */
+  SKIP_TOKEN (data, size, parse_fail);
+
+  y = atoi (data);
+
+  gst_avi_demux_add_date_tag (avi, y, m, d);
+  return;
+
+parse_fail:
+  GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+}
+
+static void
+gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf)
+{
+  gchar *data = (gchar *) GST_BUFFER_DATA (buf);
+  guint size = GST_BUFFER_SIZE (buf);
+
+  /*
+   * According to:
+   * http://www.eden-foundation.org/products/code/film_date_stamp/index.html
+   *
+   * This tag could be in one of the below formats
+   * 2005:08:17 11:42:43
+   * THU OCT 26 16:46:04 2006
+   * Mon Mar  3 09:44:56 2008
+   *
+   * FIXME: Our date tag doesn't include hours
+   */
+
+  /* skip eventual initial whitespace */
+  while (size > 0 && isspace (data[0])) {
+    data++;
+    size--;
+  }
+
+  if (size == 0) {
+    goto non_parsable;
+  }
+
+  /* test if the first char is a alpha or a number */
+  if (isdigit (data[0])) {
+    gst_avi_demux_parse_idit_nums_only (avi, data, size);
+    return;
+  } else if (isalpha (data[0])) {
+    gst_avi_demux_parse_idit_text (avi, data, size);
+    return;
+  }
+
+non_parsable:
+  GST_WARNING_OBJECT (avi, "IDIT tag has no parsable info");
+}
+
 /*
  * Read full AVI headers.
  */
@@ -3079,6 +3261,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   gint64 stop;
   GstElement *element = GST_ELEMENT_CAST (avi);
   GstClockTime stamp;
+  GstTagList *tags = NULL;
 
   stamp = gst_util_get_timestamp ();
 
@@ -3157,7 +3340,16 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
           case GST_RIFF_LIST_INFO:
             GST_BUFFER_DATA (sub) = data + 4;
             GST_BUFFER_SIZE (sub) -= 4;
-            gst_riff_parse_info (element, sub, &avi->globaltags);
+            gst_riff_parse_info (element, sub, &tags);
+            if (tags) {
+              if (avi->globaltags) {
+                gst_tag_list_insert (avi->globaltags, tags,
+                    GST_TAG_MERGE_REPLACE);
+              } else {
+                avi->globaltags = tags;
+              }
+            }
+            tags = NULL;
             break;
           default:
             GST_WARNING_OBJECT (avi,
@@ -3171,6 +3363,9 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         }
         break;
       }
+      case GST_RIFF_IDIT:
+        gst_avi_demux_parse_idit (avi, sub);
+        goto next;
       default:
         GST_WARNING_OBJECT (avi,
             "Unknown tag %" GST_FOURCC_FORMAT " in AVI header at off %d",
@@ -3253,7 +3448,16 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             }
 
             sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
-            gst_riff_parse_info (element, sub, &avi->globaltags);
+            gst_riff_parse_info (element, sub, &tags);
+            if (tags) {
+              if (avi->globaltags) {
+                gst_tag_list_insert (avi->globaltags, tags,
+                    GST_TAG_MERGE_REPLACE);
+              } else {
+                avi->globaltags = tags;
+              }
+            }
+            tags = NULL;
             if (sub) {
               gst_buffer_unref (sub);
               sub = NULL;
