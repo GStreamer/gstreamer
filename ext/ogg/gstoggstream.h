@@ -36,6 +36,8 @@ struct _GstOggStream
 
   guint32 serialno;
   GList *headers;
+  gboolean have_headers;
+  GList *queued;
 
   /* for oggparse */
   gboolean in_headers;

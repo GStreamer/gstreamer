@@ -149,6 +149,7 @@ gst_ogg_pad_init (GstOggPad * pad)
   pad->have_type = FALSE;
   pad->continued = NULL;
   pad->map.headers = NULL;
+  pad->map.queued = NULL;
 }
 
 static void
@@ -162,6 +163,9 @@ gst_ogg_pad_dispose (GObject * object)
   g_list_foreach (pad->map.headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (pad->map.headers);
   pad->map.headers = NULL;
+  g_list_foreach (pad->map.queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (pad->map.queued);
+  pad->map.queued = NULL;
 
   /* clear continued pages */
   g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
@@ -429,9 +433,21 @@ gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
   }
 }
 
+static GstBuffer *
+gst_ogg_demux_buffer_from_packet (ogg_packet * packet)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new_and_alloc (packet->bytes);
+  memcpy (buf->data, packet->packet, packet->bytes);
+  GST_BUFFER_OFFSET (buf) = -1;
+  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+
+  return buf;
+}
+
 /* queue data, basically takes the packet, puts it in a buffer and store the
- * buffer in the headers list.
- */
+ * buffer in the queued list.  */
 static GstFlowReturn
 gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
 {
@@ -444,17 +460,13 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
   GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08x", pad,
       pad->map.serialno);
 
-  buf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (buf->data, packet->packet, packet->bytes);
-  GST_BUFFER_OFFSET (buf) = -1;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-  pad->map.headers = g_list_append (pad->map.headers, buf);
+  buf = gst_ogg_demux_buffer_from_packet (packet);
+  pad->map.queued = g_list_append (pad->map.queued, buf);
 
   /* we are ok now */
   return GST_FLOW_OK;
 }
 
-/* send packet to internal element */
 static GstFlowReturn
 gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 {
@@ -698,6 +710,12 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   if (packet->b_o_s) {
     GST_DEBUG_OBJECT (ogg, "b_o_s packet, resetting header packet count");
     pad->map.n_header_packets_seen = 0;
+    if (!pad->map.have_headers) {
+      GST_DEBUG_OBJECT (ogg, "clearing header packets");
+      g_list_foreach (pad->map.headers, (GFunc) gst_mini_object_unref, NULL);
+      g_list_free (pad->map.headers);
+      pad->map.headers = NULL;
+    }
   }
 
   /* Overload the value of b_o_s in ogg_packet with a flag whether or
@@ -705,6 +723,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
    * up.  */
   packet->b_o_s = gst_ogg_stream_packet_is_header (&pad->map, packet);
   if (!packet->b_o_s) {
+    pad->map.have_headers = TRUE;
     if (pad->start_time == GST_CLOCK_TIME_NONE) {
       gint64 duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);
       GST_DEBUG ("duration %" G_GINT64_FORMAT, duration);
@@ -735,8 +754,14 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       }
     }
   } else {
+    GstBuffer *buf;
+
     pad->map.n_header_packets_seen++;
-    GST_DEBUG ("header packet %d", pad->map.n_header_packets_seen);
+    if (!pad->map.have_headers) {
+      buf = gst_ogg_demux_buffer_from_packet (packet);
+      pad->map.headers = g_list_append (pad->map.headers, buf);
+      GST_DEBUG ("keeping header packet %d", pad->map.n_header_packets_seen);
+    }
   }
 
   /* we know the start_time of the pad data, see if we
@@ -776,7 +801,9 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   /* if we are building a chain, store buffer for when we activate
    * it. This path is taken if we operate in streaming mode. */
   if (ogg->building_chain) {
-    ret = gst_ogg_demux_queue_data (pad, packet);
+    /* bos packets where stored in the header list */
+    if (!packet->b_o_s)
+      ret = gst_ogg_demux_queue_data (pad, packet);
   }
   /* else we are completely streaming to the peer */
   else {
@@ -1589,27 +1616,37 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   GST_DEBUG_OBJECT (ogg, "starting chain");
 
-  /* then send out any queued buffers */
+  /* then send out any headers and queued buffers */
   for (i = 0; i < chain->streams->len; i++) {
-    GList *headers;
+    GList *walk;
     GstOggPad *pad;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
 
-    for (headers = pad->map.headers; headers; headers = g_list_next (headers)) {
-      GstBuffer *buffer = GST_BUFFER (headers->data);
+    GST_DEBUG_OBJECT (ogg, "pushing headers");
+    /* ref and push headers */
+    for (walk = pad->map.headers; walk; walk = g_list_next (walk)) {
+      GstBuffer *buffer = GST_BUFFER (walk->data);
 
       if (pad->discont) {
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
         pad->discont = FALSE;
       }
+      /* we don't care about the return value here */
+      gst_pad_push (GST_PAD_CAST (pad), gst_buffer_ref (buffer));
+    }
+
+    GST_DEBUG_OBJECT (ogg, "pushing queued buffers");
+    /* push queued buffers */
+    for (walk = pad->map.queued; walk; walk = g_list_next (walk)) {
+      GstBuffer *buffer = GST_BUFFER (walk->data);
 
       /* we don't care about the return value here */
       gst_pad_push (GST_PAD_CAST (pad), buffer);
     }
-    /* and free the headers */
-    g_list_free (pad->map.headers);
-    pad->map.headers = NULL;
+    /* and free the queued buffers */
+    g_list_free (pad->map.queued);
+    pad->map.queued = NULL;
   }
   return TRUE;
 }
@@ -1706,6 +1743,7 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
             GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (granuletime));
 
         granuletime -= pad->start_time;
+        granuletime += begintime;
 
         GST_DEBUG_OBJECT (ogg,
             "found page with granule %" G_GINT64_FORMAT " and time %"
