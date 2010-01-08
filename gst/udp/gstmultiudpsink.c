@@ -407,11 +407,11 @@ socket_last_error_message ()
   wchar_t buf[1024];
   DWORD result =
       FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, errorcode, 0, buf, sizeof (buf) / sizeof (wchar_t), NULL);
+      NULL, errorcode, 0, (LPSTR) buf, sizeof (buf) / sizeof (wchar_t), NULL);
   if (FAILED (result)) {
     return g_strdup ("failed to get error message from system");
   } else {
-    return g_convert (buf, -1, "UTF-16", "UTF-8", NULL, NULL, NULL);
+    return g_convert ((gchar *) buf, -1, "UTF-16", "UTF-8", NULL, NULL, NULL);
   }
 #else
   return g_strdup (g_strerror (errno));
