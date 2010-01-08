@@ -2109,6 +2109,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* find keyframe of the target index */
   kf_index = gst_qtdemux_find_keyframe (qtdemux, stream, index);
 
+/* *INDENT-OFF* */
+/* indent does stupid stuff with stream->samples[].timestamp */
+
   /* if we move forwards, we don't have to go back to the previous
    * keyframe since we already sent that. We can also just jump to
    * the keyframe right before the target index if there is one. */
@@ -2117,23 +2120,28 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (kf_index > stream->sample_index) {
       GST_DEBUG_OBJECT (qtdemux,
           "moving forwards to keyframe at %u (pts %" GST_TIME_FORMAT, kf_index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                  timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (
+                  stream->samples[kf_index].timestamp,
+                  GST_SECOND, stream->timescale)));
       gst_qtdemux_move_stream (qtdemux, stream, kf_index);
     } else {
       GST_DEBUG_OBJECT (qtdemux,
           "moving forwards, keyframe at %u (pts %" GST_TIME_FORMAT
           " already sent", kf_index,
-          GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                  timestamp, GST_SECOND, stream->timescale)));
+          GST_TIME_ARGS (gst_util_uint64_scale (
+                  stream->samples[kf_index].timestamp,
+                  GST_SECOND, stream->timescale)));
     }
   } else {
     GST_DEBUG_OBJECT (qtdemux,
         "moving backwards to keyframe at %u (pts %" GST_TIME_FORMAT, kf_index,
-        GST_TIME_ARGS (gst_util_uint64_scale (stream->samples[kf_index].
-                timestamp, GST_SECOND, stream->timescale)));
+        GST_TIME_ARGS (gst_util_uint64_scale (
+                stream->samples[kf_index].timestamp,
+                GST_SECOND, stream->timescale)));
     gst_qtdemux_move_stream (qtdemux, stream, kf_index);
   }
+
+/* *INDENT-ON* */
 
   return TRUE;
 }
