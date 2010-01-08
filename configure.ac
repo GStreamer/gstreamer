@@ -151,6 +151,14 @@ GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
+dnl check for gstreamer-convenience
+PKG_CHECK_MODULES(GST_CONVENIENCE, gstreamer-convenience-libs-$GST_MAJORMINOR, HAVE_GST_CONVENIENCE="yes", HAVE_GST_CONVENIENCE="no")
+if test "x$HAVE_GST_CONVENIENCE" != "xyes"; then
+  AC_ERROR([gst-convenience is required for rendering support])
+fi
+AC_SUBST(GST_CONVENIENCE_LIBS)
+AC_SUBST(GST_CONVENIENCE_CFLAGS)
+
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
