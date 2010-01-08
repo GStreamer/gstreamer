@@ -32,7 +32,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#else
+#define fsync(fd) _commit(fd)
+#include <io.h>
 #endif
+
 #include <errno.h>
 
 #include <gst/gstconfig.h>
@@ -428,7 +432,7 @@ gboolean
 _gst_plugin_loader_client_run ()
 {
   GstPluginLoader *l;
-  int dup_fd;
+  int dup_fd = 0;
 
   l = plugin_loader_new (NULL);
   if (l == NULL)
