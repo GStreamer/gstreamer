@@ -622,7 +622,7 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     TsMuxProgram *prog = best->prog;
     GstBuffer *buf = best->queued_buf;
     gint64 pts = -1;
-    gboolean delta;
+    gboolean delta = TRUE;
 
     if (prog == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, ("Stream is not associated with "
@@ -643,9 +643,9 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     }
 
     g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-    delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    if (best->stream->is_video_stream)
+      delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     GST_DEBUG_OBJECT (mux, "delta: %d", delta);
-
 
     GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
         "Chose stream for output (PID: 0x%04x)", best->pid);
