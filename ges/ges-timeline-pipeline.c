@@ -409,6 +409,9 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
  *
  * Specify where the pipeline shall be rendered and with what settings.
  *
+ * This method must be called before setting the pipeline mode to
+ * #TIMELINE_MODE_RENDER
+ *
  * Returns: %TRUE if the settings were aknowledged properly, else %FALSE
  */
 gboolean
