@@ -384,9 +384,10 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GstFlacEnc:padding
+   * GstFlacEnc:seekpoints
    *
-   * Write a PADDING block with this length in bytes
+   * Write a SEEKTABLE block with a specific number of seekpoints
+   * or with a specific interval spacing.
    *
    * Since: 0.10.18
    **/
