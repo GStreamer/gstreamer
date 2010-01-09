@@ -517,7 +517,9 @@ gst_x264_enc_reset (GstX264Enc * encoder)
 
   GST_OBJECT_LOCK (encoder);
   encoder->i_type = X264_TYPE_AUTO;
-  encoder->send_forcekeyunit = FALSE;
+  if (encoder->forcekeyunit_event)
+    gst_event_unref (encoder->forcekeyunit_event);
+  encoder->forcekeyunit_event = NULL;
   GST_OBJECT_UNLOCK (encoder);
 }
 
@@ -925,7 +927,9 @@ gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
         /* Set I frame request */
         GST_OBJECT_LOCK (encoder);
         encoder->i_type = X264_TYPE_I;
-        encoder->send_forcekeyunit = TRUE;
+        encoder->forcekeyunit_event = gst_event_copy (event);
+        GST_EVENT_TYPE (encoder->forcekeyunit_event) =
+            GST_EVENT_CUSTOM_DOWNSTREAM;
         GST_OBJECT_UNLOCK (encoder);
         forward = FALSE;
         gst_event_unref (event);
@@ -1057,7 +1061,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GstClockTime timestamp;
   GstClockTime duration;
   guint8 *data;
-  gboolean send_forcekeyunit;
+  GstEvent *forcekeyunit_event = NULL;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
@@ -1137,15 +1141,14 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   }
 
   GST_OBJECT_LOCK (encoder);
-  send_forcekeyunit = encoder->send_forcekeyunit;
-  encoder->send_forcekeyunit = FALSE;
+  forcekeyunit_event = encoder->forcekeyunit_event;
+  encoder->forcekeyunit_event = NULL;
   GST_OBJECT_UNLOCK (encoder);
-  if (send_forcekeyunit)
-    gst_pad_push_event (encoder->srcpad,
-        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-            gst_structure_new ("GstForceKeyUnit",
-                "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (out_buf),
-                NULL)));
+  if (forcekeyunit_event) {
+    gst_structure_set (forcekeyunit_event->structure,
+        "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (out_buf), NULL);
+    gst_pad_push_event (encoder->srcpad, forcekeyunit_event);
+  }
 
   return gst_pad_push (encoder->srcpad, out_buf);
 }
