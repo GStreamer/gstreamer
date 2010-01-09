@@ -112,6 +112,9 @@ static gboolean gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
+static gboolean gst_rtp_h264_pay_handle_event (GstPad * pad, GstEvent * event);
+static GstStateChangeReturn gst_basertppayload_change_state (GstElement *
+    element, GstStateChange transition);
 
 GST_BOILERPLATE (GstRtpH264Pay, gst_rtp_h264_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
@@ -136,9 +139,11 @@ static void
 gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_h264_pay_set_property;
@@ -183,8 +188,12 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
 
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_basertppayload_change_state);
+
   gstbasertppayload_class->set_caps = gst_rtp_h264_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_h264_pay_handle_buffer;
+  gstbasertppayload_class->handle_event = gst_rtp_h264_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtph264pay_debug, "rtph264pay", 0,
       "H264 RTP Payloader");
@@ -668,9 +677,10 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
     }
   }
 
-  if (send_spspps) {
+  if (send_spspps || rtph264pay->send_spspps) {
     /* we need to send SPS/PPS now first. FIXME, don't use the timestamp for
      * checking when we need to send SPS/PPS but convert to running_time first. */
+    rtph264pay->send_spspps = FALSE;
     ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, timestamp);
     if (ret != GST_FLOW_OK)
       return ret;
@@ -1010,6 +1020,51 @@ caps_rejected:
   g_array_set_size (nal_queue, 0);
   gst_buffer_unref (buffer);
   return GST_FLOW_NOT_NEGOTIATED;
+}
+
+static gboolean
+gst_rtp_h264_pay_handle_event (GstPad * pad, GstEvent * event)
+{
+  const GstStructure *s;
+  GstRtpH264Pay *rtph264pay =
+      GST_RTP_H264_PAY (gst_pad_get_parent_element (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        gboolean resend_codec_data;
+
+        if (gst_structure_get_boolean (s, "all-headers",
+                &resend_codec_data) && resend_codec_data)
+          rtph264pay->send_spspps = TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
+static GstStateChangeReturn
+gst_basertppayload_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstRtpH264Pay *rtph264pay = GST_RTP_H264_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      rtph264pay->send_spspps = FALSE;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return ret;
 }
 
 static void
