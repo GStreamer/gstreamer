@@ -18,7 +18,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 /**
  * SECTION:gstxoverlay
  * @short_description: Interface for setting/getting a Window on elements
@@ -96,6 +95,143 @@
  * ...
  * }
  * </programlisting>
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Two basic usage scenarios</title>
+ * <para>
+ * There are two basic usage scenarios: in the simplest case, the application
+ * knows exactly what particular element is used for video output, which is
+ * usually the case when the application creates the videosink to use
+ * (e.g. #xvimagesink, #ximagesink, etc.) itself; in this case, the application
+ * can just create the videosink element, create and realize the window to
+ * render the video on and then call gst_x_overlay_set_xwindow_id() directly
+ * with the XID or native window handle, before starting up the pipeline.
+ * </para>
+ * <para>
+ * In the other and more common case, the application does not know in advance
+ * what GStreamer video sink element will be used for video output. This is
+ * usually the case when an element such as #autovideosink or #gconfvideosink
+ * is used. In this case, the video sink element itself is created
+ * asynchronously from a GStreamer streaming thread some time after the
+ * pipeline has been started up. When that happens, however, the video sink
+ * will need to know right then whether to render onto an already existing
+ * application window or whether to create its own window. This is when it
+ * posts a prepare-xwindow-id message, and that is also why this message needs
+ * to be handled in a sync bus handler which will be called from the streaming
+ * thread directly (because the video sink will need an answer right then).
+ * </para>
+ * <para>
+ * As response to the prepare-xwindow-id element message in the bus sync
+ * handler, the application may use gst_x_overlay_set_xwindow_id() to tell
+ * the video sink to render onto an existing window surface. At this point the
+ * application should already have obtained the window handle / XID, so it
+ * just needs to set it. It is generally not advisable to call any GUI toolkit
+ * functions or window system functions from the streaming thread in which the
+ * prepare-xwindow-id message is handled, because most GUI toolkits and
+ * windowing systems are not thread-safe at all and a lot of care would be
+ * required to co-ordinate the toolkit and window system calls of the
+ * different threads (Gtk+ users please note: prior to Gtk+ 2.18
+ * GDK_WINDOW_XID() was just a simple structure access, so generally fine to do
+ * within the bus sync handler; this macro was changed to a function call in
+ * Gtk+ 2.18 and later, which is likely to cause problems when called from a
+ * sync handler; see below for a better approach without GDK_WINDOW_XID()
+ * used in the callback).
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>GstXOverlay and Gtk+</title>
+ * <para>
+ * <programlisting>
+ * #include &lt;gtk/gtk.h&gt;
+ * #ifdef GDK_WINDOWING_X11
+ * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
+ * #endif
+ * ...
+ * static gulong video_window_xid = 0;
+ * ...
+ * static GstBusSyncReply
+ * bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
+ * {
+ *  // ignore anything but 'prepare-xwindow-id' element messages
+ *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+ *    return GST_BUS_PASS;
+ *  if (!gst_structure_has_name (message-&gt;structure, "prepare-xwindow-id"))
+ *    return GST_BUS_PASS;
+ *  
+ *  if (video_window_xid != 0) {
+ *    GstXOverlay *xoverlay;
+ *    
+ *    // GST_MESSAGE_SRC (message) will be the video sink element
+ *    xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+ *    gst_x_overlay_set_xwindow_id (xoverlay, video_window_xid);
+ *  } else {
+ *    g_warning ("Should have obtained video_window_xid by now!");
+ *  }
+ *  
+ *  gst_message_unref (message);
+ *  return GST_BUS_DROP;
+ * }
+ * ...
+ * static void
+ * video_widget_realize_cb (GtkWidget * widget, gpointer data)
+ * {
+ * #if GTK_CHECK_VERSION(2,18,0)
+ *   // This is here just for pedagogical purposes, GDK_WINDOW_XID will call
+ *   // it as well in newer Gtk versions
+ *   if (!gdk_window_ensure_native (widget->window))
+ *     g_error ("Couldn't create native window needed for GstXOverlay!");
+ * #endif
+ * 
+ * #ifdef GDK_WINDOWING_X11
+ *   video_window_xid = GDK_WINDOW_XID (video_window->window);
+ * #endif
+ * }
+ * ...
+ * int
+ * main (int argc, char **argv)
+ * {
+ *   GtkWidget *video_window;
+ *   GtkWidget *app_window;
+ *   ...
+ *   app_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+ *   ...
+ *   video_window = gtk_drawing_area_new ();
+ *   g_signal_connect (video_window, "realize",
+ *       G_CALLBACK (video_widget_realize_cb), NULL);
+ *   gtk_widget_set_double_buffered (video_window, FALSE);
+ *   ...
+ *   // usually the video_window will not be directly embedded into the
+ *   // application window like this, but there will be many other widgets
+ *   // and the video window will be embedded in one of them instead
+ *   gtk_container_add (GTK_CONTAINER (ap_window), video_window);
+ *   ...
+ *   // show the GUI
+ *   gtk_widget_show_all (app_window);
+ * 
+ *   // realize window now so that the video window gets created and we can
+ *   // obtain its XID before the pipeline is started up and the videosink
+ *   // asks for the XID of the window to render onto
+ *   gtk_widget_realize (window);
+ * 
+ *   // we should have the XID now
+ *   g_assert (video_window_xid != 0);
+ *   ...
+ *   // set up sync handler for setting the xid once the pipeline is started
+ *   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+ *   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL);
+ *   gst_object_unref (bus);
+ *   ...
+ *   gst_element_set_state (pipeline, GST_STATE_PLAYING);
+ *   ...
+ * }
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>GstXOverlay and Qt</title>
+ * <para>
+ * FIXME: write me
  * </para>
  * </refsect2>
  */
