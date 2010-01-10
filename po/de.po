@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-19 11:59+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -217,24 +217,6 @@ msgstr "Das Element »autoaudiosink« funktioniert nicht."
 
 msgid "Can't play a text file without video."
 msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-"Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
-
-msgid "No Temp directory specified."
-msgstr "Kein temporärer Ordner angegeben."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Temporäre Datei »%s« konnte nicht erstellt werden."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Die Datei »%s« konnte zum Lesen nicht geöffnet werden."
-
-msgid "Internal data flow error."
-msgstr "Interner Fehler im Datenstrom."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -503,6 +485,22 @@ msgstr "Das Gerät »%s« wird bereits verwendet."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr ""
+#~ "Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Kein temporärer Ordner angegeben."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Temporäre Datei »%s« konnte nicht erstellt werden."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Die Datei »%s« konnte zum Lesen nicht geöffnet werden."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Interner Fehler im Datenstrom."
 
 #~ msgid "No file name specified."
 #~ msgstr "Kein Dateiname angegeben."

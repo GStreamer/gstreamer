@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-17 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -215,23 +215,6 @@ msgstr "Elementet autoaudiosink virker ikke."
 
 msgid "Can't play a text file without video."
 msgstr "Kan ikke afspille en tekstfil uden video."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Kan ikke vise både undertekster og underbilleder."
-
-msgid "No Temp directory specified."
-msgstr "Ingen midlertidig mappe angivet."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kunne ikke oprette midlertidig fil \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åbne fil \"%s\" til læsning."
-
-msgid "Internal data flow error."
-msgstr "Intern datastrømsfejl."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -507,6 +490,21 @@ msgstr "Enheden \"%s\" er allerede i brug."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke tilgå enheden \"%s\"."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Kan ikke vise både undertekster og underbilleder."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Ingen midlertidig mappe angivet."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Kunne ikke oprette midlertidig fil \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kunne ikke åbne fil \"%s\" til læsning."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Intern datastrømsfejl."
 
 #~ msgid "No file name specified."
 #~ msgstr "Intet filnavn angivet."

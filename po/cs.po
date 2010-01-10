@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-21 01:21+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -216,23 +216,6 @@ msgstr "Nefunguje prvek autoaudiosink."
 
 msgid "Can't play a text file without video."
 msgstr "Textový soubor nelze přehrát bez videa."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Textové titulky ani podřazené obrázky nelze zobrazit."
-
-msgid "No Temp directory specified."
-msgstr "Nezadán žádný adresář Temp."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nezdařilo se vytvoření dočasného souboru \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
-
-msgid "Internal data flow error."
-msgstr "Vnitřní chyba datového toku."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -501,3 +484,18 @@ msgstr "Zařízení \"%s\" je již používáno."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Zařízení \"%s\" se nezdařilo otevřít ke čtení a k zápisu."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Textové titulky ani podřazené obrázky nelze zobrazit."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Nezadán žádný adresář Temp."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Nezdařilo se vytvoření dočasného souboru \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnitřní chyba datového toku."

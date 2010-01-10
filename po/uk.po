@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -217,25 +217,6 @@ msgstr "Відсутні елементи autoaudiosink та alsasink."
 
 msgid "Can't play a text file without video."
 msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Пристрій не вказано."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не вдається відкрити файл \"%s\" для читання."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Помилка внутрішнього потоку даних."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -506,6 +487,21 @@ msgstr "Пристрій \"%s\" вже використовується іншо
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Пристрій не вказано."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не вдається відкрити файл \"%s\" для читання."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Помилка внутрішнього потоку даних."
 
 #~ msgid "No file name specified."
 #~ msgstr "Не вказано назву файлу."

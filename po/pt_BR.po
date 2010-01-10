@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-04-16 21:03-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -222,26 +222,6 @@ msgstr "Os elementos autoaudiosink e alsasink não estão funcionando."
 
 msgid "Can't play a text file without video."
 msgstr "Não é possível reproduzir um arquivo de texto sem vídeo."
-
-#, fuzzy
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Não é possível reproduzir legendas de texto e subimagens."
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Nenhum dispositivo especificado."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Não foi possível fechar o arquivo VFS \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Erro interno no fluxo de dados."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -510,6 +490,25 @@ msgstr "O dispositivo \"%s\" já está sendo usado."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e escrita."
+
+#, fuzzy
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Não é possível reproduzir legendas de texto e subimagens."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Nenhum dispositivo especificado."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Não foi possível fechar o arquivo VFS \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Erro interno no fluxo de dados."
 
 #~ msgid "No file name specified."
 #~ msgstr "Não foi especificado um nome de arquivo."

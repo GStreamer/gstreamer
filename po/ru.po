@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-02-12 14:45+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -218,26 +218,6 @@ msgstr "Отсутствуют элементы autoaudiosink и alsasink."
 
 msgid "Can't play a text file without video."
 msgstr "Воспроизведение текстового файла без видео невозможно."
-
-#, fuzzy
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Воспроизведение текстового файла без видео невозможно."
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Не указано устройство."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не удалось закрыть vfs-файл «%s»."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не удалось открыть файл «%s» для чтения."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Внутренняя ошибка потока данных."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -506,6 +486,25 @@ msgstr "Устройство «%s» уже используется."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не удалось открыть устройство «%s» для чтения и записи."
+
+#, fuzzy
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Воспроизведение текстового файла без видео невозможно."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Не указано устройство."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Не удалось закрыть vfs-файл «%s»."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не удалось открыть файл «%s» для чтения."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Внутренняя ошибка потока данных."
 
 #~ msgid "No file name specified."
 #~ msgstr "Не указано имя файла."

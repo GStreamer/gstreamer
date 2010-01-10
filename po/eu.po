@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-08-29 12:55+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -217,24 +217,6 @@ msgstr "Autoaudiosink elementua ez da lanean ari."
 
 msgid "Can't play a text file without video."
 msgstr "Ezin da bideorik gabeko testu-fitxategi bat erreproduzitu."
-
-#, fuzzy
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Ezin dira testuaren azpititulu eta azpiirudiak bistaratu."
-
-msgid "No Temp directory specified."
-msgstr "Ez da aldi baterako direktoriorik zehaztu."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Ezin izan da aldi baterako \"%s\" fitxategia sortu."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
-
-msgid "Internal data flow error."
-msgstr "Datu-korrontearen barne-errorea."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -505,6 +487,22 @@ msgstr "\"%s\" gailua erabiltzen ari dira."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Ezin izan da \"%s\" gailua ireki irakurtzeko eta idazteko."
+
+#, fuzzy
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Ezin dira testuaren azpititulu eta azpiirudiak bistaratu."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Ez da aldi baterako direktoriorik zehaztu."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Ezin izan da aldi baterako \"%s\" fitxategia sortu."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Ezin izan da \"%s\" fitxategia ireki irakurtzeko."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Datu-korrontearen barne-errorea."
 
 #, fuzzy
 #~ msgid "No file name specified."

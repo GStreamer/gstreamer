@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-17 18:51+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -220,23 +220,6 @@ msgstr "Element autoaudiosink nie działa."
 
 msgid "Can't play a text file without video."
 msgstr "Nie można odtwarzać pliku tekstowego bez obrazu."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Nie można wyświetlać jednocześnie podpisów tekstowych i podobrazów."
-
-msgid "No Temp directory specified."
-msgstr "Nie określono katalogu tymczasowego."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
-
-msgid "Internal data flow error."
-msgstr "Błąd wewnętrzny przepływu danych."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -505,3 +488,18 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Nie można wyświetlać jednocześnie podpisów tekstowych i podobrazów."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Nie określono katalogu tymczasowego."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Błąd wewnętrzny przepływu danych."

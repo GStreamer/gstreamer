@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-01-11 20:45+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -221,25 +221,6 @@ msgstr "autovideosink と alsasink エレメントの両方が見つかりませ
 
 msgid "Can't play a text file without video."
 msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "デバイスが指定されていません"
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "vfs ファイル \"%s\" をクローズできませんでした"
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "内部データストリームエラー"
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -508,6 +489,21 @@ msgstr "デバイス \"%s\" は既に使われています"
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした"
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "デバイスが指定されていません"
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "vfs ファイル \"%s\" をクローズできませんでした"
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "内部データストリームエラー"
 
 #~ msgid "No file name specified."
 #~ msgstr "ファイル名が指定されていません"

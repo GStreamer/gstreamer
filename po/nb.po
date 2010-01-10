@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2007-11-03 14:50+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -212,24 +212,6 @@ msgid "The autoaudiosink element is not working."
 msgstr ""
 
 msgid "Can't play a text file without video."
-msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Ingen enhet oppgitt."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-msgid "Internal data flow error."
 msgstr ""
 
 #, c-format
@@ -499,6 +481,17 @@ msgstr "Enhet «%s» eksisterer ikke."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Ingen enhet oppgitt."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
 
 #, fuzzy
 #~ msgid "No file name specified."

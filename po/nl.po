@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-05-04 12:58+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -220,26 +220,6 @@ msgstr "Beide elementen 'autoaudiosink' en 'alsasink' werken niet."
 
 msgid "Can't play a text file without video."
 msgstr "Kan geen tekstbestand afspelen zonder video."
-
-#, fuzzy
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Kan geen tekst-ondertitels en onder-afbeeldingen en afspelen."
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Geen apparaat opgegeven."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Kan het VFS-bestand \"%s\" niet sluiten."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kan bestand \"%s\" niet open voor lezen."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "Interne fout in gegevensstroom."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -508,6 +488,25 @@ msgstr "Apparaat \"%s\" is al in gebruik."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kan apparaat \"%s\" niet openen voor lezen en schrijven."
+
+#, fuzzy
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Kan geen tekst-ondertitels en onder-afbeeldingen en afspelen."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Geen apparaat opgegeven."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Kan het VFS-bestand \"%s\" niet sluiten."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kan bestand \"%s\" niet open voor lezen."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Interne fout in gegevensstroom."
 
 #~ msgid "No file name specified."
 #~ msgstr "Geen bestandsnaam opgegeven."

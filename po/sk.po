@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-21 09:53+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -217,23 +217,6 @@ msgstr "Nefunguje prvok autoaudiosink."
 
 msgid "Can't play a text file without video."
 msgstr "Nemôžem prehrať textový súbor bez videa."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Nemôžem zobrazovať naraz textové titulky aj podobrázky."
-
-msgid "No Temp directory specified."
-msgstr "Nebol zadaný dočasný adresár (Temp)."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Nepodarilo sa vytvoriť dočasný súbor \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
-
-msgid "Internal data flow error."
-msgstr "Vnútorná chyba prúdu údajov."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -502,6 +485,21 @@ msgstr "Zariadenie \"%s\" sa už používa."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Nemôžem zobrazovať naraz textové titulky aj podobrázky."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Nebol zadaný dočasný adresár (Temp)."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Nepodarilo sa vytvoriť dočasný súbor \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Vnútorná chyba prúdu údajov."
 
 #~ msgid "No file name specified."
 #~ msgstr "Nebolo zadané meno súboru."

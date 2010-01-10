@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-17 11:02+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -218,23 +218,6 @@ msgstr "Autoaudiosink-elementti ei toimi."
 
 msgid "Can't play a text file without video."
 msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."
-
-msgid "No Temp directory specified."
-msgstr "Tilapäishakemistoa ei ole määritelty."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Tilapäistiedostoa ”%s” ei voitu luoda."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
-
-msgid "Internal data flow error."
-msgstr "Sisäisen tietovirran virhe."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -503,6 +486,21 @@ msgstr "Laite \"%s\" on jo käytössä."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Tilapäishakemistoa ei ole määritelty."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Tilapäistiedostoa ”%s” ei voitu luoda."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Sisäisen tietovirran virhe."
 
 #~ msgid "No file name specified."
 #~ msgstr "Tiedostonimeä ei annettu."

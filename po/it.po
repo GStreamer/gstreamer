@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-17 23:19+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -220,28 +220,6 @@ msgstr "L'elemento «autoaudiosink» non è operativo."
 
 msgid "Can't play a text file without video."
 msgstr "Impossibile riprodurre un file di testo senza video."
-
-# NOTA NOTA NOTA
-# questo messaggio è stanissimo
-# Subpictures sono cose tipiche dei dvd (vedi google)
-# e sembra che non ci sia una traduzione in italiano
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Impossibile mostrare sottotitoli di testo e subpicture."
-
-# sarebbe da controllare perché Temp è maiuscolo...
-msgid "No Temp directory specified."
-msgstr "Nessuna directory temporanea specificata."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Impossibile creare il file temporaneo «%s»."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Impossibile aprire il file «%s» in lettura."
-
-msgid "Internal data flow error."
-msgstr "Errore interno nel flusso di dati."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -528,3 +506,23 @@ msgstr "Il device «%s» è già in uso."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+
+# NOTA NOTA NOTA
+# questo messaggio è stanissimo
+# Subpictures sono cose tipiche dei dvd (vedi google)
+# e sembra che non ci sia una traduzione in italiano
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Impossibile mostrare sottotitoli di testo e subpicture."
+
+# sarebbe da controllare perché Temp è maiuscolo...
+#~ msgid "No Temp directory specified."
+#~ msgstr "Nessuna directory temporanea specificata."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Impossibile creare il file temporaneo «%s»."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Impossibile aprire il file «%s» in lettura."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Errore interno nel flusso di dati."

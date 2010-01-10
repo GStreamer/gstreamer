@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-18 17:15+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -210,23 +210,6 @@ msgstr "Phần tử autoaudiosink không hoạt động."
 
 msgid "Can't play a text file without video."
 msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
-
-msgid "No Temp directory specified."
-msgstr "Chưa ghi rõ thư mục Tạm thời."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Không thể tạo tập tin tạm thời « %s »."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Không thể mở tập tin « %s » để đọc."
-
-msgid "Internal data flow error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -500,3 +483,18 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Chưa ghi rõ thư mục Tạm thời."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Không thể tạo tập tin tạm thời « %s »."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Không thể mở tập tin « %s » để đọc."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Lỗi luồng dữ liệu nội bộ."

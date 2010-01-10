@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -210,25 +210,6 @@ msgstr "autovideosink 和 alsasink 组件都缺少。"
 
 msgid "Can't play a text file without video."
 msgstr "无法播放不带视频的文本文件。"
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "未指定设备。"
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "无法关闭 vfs 文件“%s”。"
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "无法打开文件“%s”读取。"
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "内部数据流错误。"
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -497,6 +478,21 @@ msgstr "设备“%s”目前已被使用了。"
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "无法打开设备“%s”读取。"
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "未指定设备。"
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "无法关闭 vfs 文件“%s”。"
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "无法打开文件“%s”读取。"
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "内部数据流错误。"
 
 #~ msgid "No file name specified."
 #~ msgstr "未给定文件名。"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-19 12:14+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -216,24 +216,6 @@ msgstr "Елементът „autoaudiosink“ не работи."
 
 msgid "Can't play a text file without video."
 msgstr "Не може да се изпълни текстов файл без видео."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-"Не може да се показват едновременно текстови субтитри и подизображения."
-
-msgid "No Temp directory specified."
-msgstr "Не е указана временна директория."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Временният файл „%s“ не може да бъде създаден."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Файлът „%s“ не може да се отвори за четене."
-
-msgid "Internal data flow error."
-msgstr "Вътрешна грешка на потока от данни."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -502,3 +484,19 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr ""
+#~ "Не може да се показват едновременно текстови субтитри и подизображения."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Не е указана временна директория."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Временният файл „%s“ не може да бъде създаден."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Файлът „%s“ не може да се отвори за четене."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "Вътрешна грешка на потока от данни."

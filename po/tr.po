@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2009-09-18 18:06+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -209,23 +209,6 @@ msgstr "Autoaudiosink öğesi çalışmıyor."
 
 msgid "Can't play a text file without video."
 msgstr "Vidyo olmadan metin dosyasını oynatamaz."
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr "Metin altyazılarını altgörüntülerini oynatamıyor."
-
-msgid "No Temp directory specified."
-msgstr "Geçici Temp dizini belirtilmedi."
-
-#, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Geçici dosya oluşturulamıyor \"%s\"."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Dosyayı \"%s\" okumak için açamıyor."
-
-msgid "Internal data flow error."
-msgstr "İç veri akışı hatası."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -494,6 +477,21 @@ msgstr "Aygıt \"%s\" zaten kullanımda."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
+
+#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgstr "Metin altyazılarını altgörüntülerini oynatamıyor."
+
+#~ msgid "No Temp directory specified."
+#~ msgstr "Geçici Temp dizini belirtilmedi."
+
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Geçici dosya oluşturulamıyor \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Dosyayı \"%s\" okumak için açamıyor."
+
+#~ msgid "Internal data flow error."
+#~ msgstr "İç veri akışı hatası."
 
 #~ msgid "No file name specified."
 #~ msgstr "Dosya adı belirtilmedi."

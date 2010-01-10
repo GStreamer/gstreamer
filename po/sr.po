@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -216,24 +216,6 @@ msgid "The autoaudiosink element is not working."
 msgstr ""
 
 msgid "Can't play a text file without video."
-msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Уређај није наведен."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "Не могу да пишем у датотеку „%s“."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-msgid "Internal data flow error."
 msgstr ""
 
 #, c-format
@@ -504,6 +486,17 @@ msgstr "OSS уређај „%s“ већ користи неки програм.
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Уређај није наведен."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Не могу да пишем у датотеку „%s“."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
 #~ msgid "Device is not open."
 #~ msgstr "Уређај није отворен."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2005-12-04 22:00+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -219,24 +219,6 @@ msgstr "Manca tant l'element autoaudiosink com el alsasink."
 
 msgid "Can't play a text file without video."
 msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-msgid "No Temp directory specified."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-#, fuzzy, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
-
-#, fuzzy
-msgid "Internal data flow error."
-msgstr "S'ha produït un error intern de flux de dades."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -508,6 +490,18 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
+
+#, fuzzy
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "S'ha produït un error intern de flux de dades."
 
 #~ msgid "discid"
 #~ msgstr "id del disc"

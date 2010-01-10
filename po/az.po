@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-10-05 13:46+0100\n"
+"POT-Creation-Date: 2010-01-10 20:40+0000\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -216,24 +216,6 @@ msgid "The autoaudiosink element is not working."
 msgstr ""
 
 msgid "Can't play a text file without video."
-msgstr ""
-
-msgid "Can't display both text subtitles and subpictures."
-msgstr ""
-
-#, fuzzy
-msgid "No Temp directory specified."
-msgstr "Avadanlıq bildirilməyib."
-
-#, fuzzy, c-format
-msgid "Could not create temp file \"%s\"."
-msgstr "\"%s\" faylına yazıla bilmədi."
-
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
-
-msgid "Internal data flow error."
 msgstr ""
 
 #, c-format
@@ -504,6 +486,17 @@ msgstr "\"%s\" OSS avadanlığı başqa bir proqram tərəfindən istifadədədi
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Avadanlıq bildirilməyib."
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "\"%s\" faylına yazıla bilmədi."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
 
 #~ msgid "Device is not open."
 #~ msgstr "Avadanlıq açıq deyil."
