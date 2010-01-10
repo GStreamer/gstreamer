@@ -1497,8 +1497,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   /* skip start code */
   data += 4;
 
-  scr1 = GUINT32_FROM_BE (*(guint32 *) data);
-  scr2 = GUINT32_FROM_BE (*(guint32 *) (data + 4));
+  scr1 = GST_READ_UINT32_BE (data);
+  scr2 = GST_READ_UINT32_BE (data + 4);
 
   /* fixed length to begin with, start code and two scr values */
   length = 8 + 4;
@@ -1544,7 +1544,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
        to DTS/PTS, that also implies 1 tick rounding error */
     data += 6;
     /* PMR:22 ! :2==11 ! reserved:5 ! stuffing_len:3 */
-    next32 = (GUINT32_FROM_BE ((*(guint32 *) data)));
+    next32 = GST_READ_UINT32_BE (data);
     if (G_UNLIKELY ((next32 & 0x00000300) != 0x00000300))
       goto lost_sync;
 
@@ -2227,8 +2227,8 @@ gst_flups_demux_scan_ts (GstFluPSDemux * demux, const guint8 * data,
   /* skip start code */
   data += 4;
 
-  scr1 = GUINT32_FROM_BE (*(guint32 *) data);
-  scr2 = GUINT32_FROM_BE (*(guint32 *) (data + 4));
+  scr1 = GST_READ_UINT32_BE (data);
+  scr2 = GST_READ_UINT32_BE (data + 4);
 
   /* start parsing the stream */
   if ((*data & 0xc0) == 0x40) {
@@ -2260,7 +2260,7 @@ gst_flups_demux_scan_ts (GstFluPSDemux * demux, const guint8 * data,
        to DTS/PTS, that also implies 1 tick rounding error */
     data += 6;
     /* PMR:22 ! :2==11 ! reserved:5 ! stuffing_len:3 */
-    next32 = (GUINT32_FROM_BE ((*(guint32 *) data)));
+    next32 = GST_READ_UINT32_BE (data);
     if ((next32 & 0x00000300) != 0x00000300)
       goto beach;
 
