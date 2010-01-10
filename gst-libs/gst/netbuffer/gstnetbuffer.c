@@ -306,14 +306,15 @@ gst_netaddress_get_address_bytes (const GstNetAddress * naddr,
 /**
  * gst_netaddress_set_address_bytes:
  * @naddr: a network address
+ * @type: the address type (IPv4 or IPV6)
  * @address: a location to store the result.
  * @port: a location to store the port.
  *
  * Set just the address bytes stored in @naddr into @address.
  *
- * Note that @port must be expressed in network byte order, use g_htons() to convert
- * it to network byte order order. IP4 address bytes must also be stored in
- * network byte order.
+ * Note that @port must be expressed in network byte order, use g_htons() to
+ * convert it to network byte order order. IP4 address bytes must also be
+ * stored in network byte order.
  *
  * Returns: number of bytes actually copied
  *
