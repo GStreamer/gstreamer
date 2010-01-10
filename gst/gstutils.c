@@ -1900,7 +1900,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 gboolean
 gst_element_link (GstElement * src, GstElement * dest)
 {
-  return gst_element_link_pads_filtered (src, NULL, dest, NULL, NULL);
+  return gst_element_link_pads (src, NULL, dest, NULL);
 }
 
 /**
