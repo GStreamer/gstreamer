@@ -1579,9 +1579,6 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   g_return_val_if_fail (GST_IS_ELEMENT (src), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (dest), FALSE);
 
-  srcclass = GST_ELEMENT_GET_CLASS (src);
-  destclass = GST_ELEMENT_GET_CLASS (dest);
-
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS,
       "trying to link element %s:%s to element %s:%s", GST_ELEMENT_NAME (src),
       srcpadname ? srcpadname : "(any)", GST_ELEMENT_NAME (dest),
@@ -1763,6 +1760,9 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       gst_object_unref (destpad);
     destpad = NULL;
   }
+
+  srcclass = GST_ELEMENT_GET_CLASS (src);
+  destclass = GST_ELEMENT_GET_CLASS (dest);
 
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
       "we might have request pads on both sides, checking...");
