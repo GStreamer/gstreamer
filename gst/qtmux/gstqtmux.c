@@ -1717,6 +1717,7 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   AudioSampleEntry entry = { 0, };
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
+  const gchar *stream_format;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -1787,8 +1788,20 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
         }
         break;
       case 4:
-        /* AAC */
-        entry.fourcc = FOURCC_mp4a;
+
+        /* check stream-format */
+        stream_format = gst_structure_get_string (structure, "stream-format");
+        if (stream_format) {
+          if (strcmp (stream_format, "none") != 0) {
+            GST_WARNING_OBJECT (qtmux, "Unsupported AAC stream-format %s, "
+                "please use 'none'", stream_format);
+            goto refuse_caps;
+          }
+        } else {
+          GST_WARNING_OBJECT (qtmux, "No stream-format present in caps, "
+              "assuming 'none'");
+        }
+
         if (!codec_data || GST_BUFFER_SIZE (codec_data) < 2)
           GST_WARNING_OBJECT (qtmux, "no (valid) codec_data for AAC audio");
         else {
@@ -1800,6 +1813,10 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
             GST_WARNING_OBJECT (qtmux,
                 "non-LC AAC may not run well on (Apple) QuickTime/iTunes");
         }
+
+        /* AAC */
+        entry.fourcc = FOURCC_mp4a;
+
         if (format == GST_QT_MUX_FORMAT_QT)
           ext_atom = build_mov_aac_extension (qtpad->trak, codec_data);
         else
