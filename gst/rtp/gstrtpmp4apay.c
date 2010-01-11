@@ -43,7 +43,8 @@ static GstStaticPadTemplate gst_rtp_mp4a_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, mpegversion=(int)4")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=(int)4, "
+        "stream-format=(string)raw")
     );
 
 static GstStaticPadTemplate gst_rtp_mp4a_pay_src_template =
@@ -246,10 +247,26 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstStructure *structure;
   const GValue *codec_data;
   gboolean res, framed = TRUE;
+  const gchar *stream_format;
 
   rtpmp4apay = GST_RTP_MP4A_PAY (payload);
 
   structure = gst_caps_get_structure (caps, 0);
+
+  /* this is already handled by the template caps, but it is better
+   * to leave here to have meaningful warning messages when linking
+   * fails */
+  stream_format = gst_structure_get_string (structure, "stream-format");
+  if (stream_format) {
+    if (strcmp (stream_format, "raw") != 0) {
+      GST_WARNING_OBJECT (rtpmp4apay, "AAC's stream-format must be 'raw', "
+          "%s is not supported", stream_format);
+      return FALSE;
+    }
+  } else {
+    GST_WARNING_OBJECT (rtpmp4apay, "AAC's stream-format not specified, "
+        "assuming 'raw'");
+  }
 
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data) {
