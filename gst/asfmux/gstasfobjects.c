@@ -284,7 +284,7 @@ gst_asf_match_guid (const guint8 * data, const Guid * guid)
 void
 gst_asf_put_i32 (guint8 * buf, gint32 data)
 {
-  *(gint32 *) buf = data;
+  GST_WRITE_UINT32_LE (buf, (guint32) data);
 }
 
 /**
