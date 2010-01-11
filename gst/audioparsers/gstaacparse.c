@@ -210,6 +210,7 @@ gst_aacparse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   GstStructure *s;
   GstCaps *src_caps = NULL;
   gboolean res = FALSE;
+  const gchar *stream_format;
 
   GST_DEBUG_OBJECT (aacparse, "sink caps: %" GST_PTR_FORMAT, sink_caps);
   if (sink_caps)
@@ -220,11 +221,27 @@ gst_aacparse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   gst_caps_set_simple (src_caps, "framed", G_TYPE_BOOLEAN, TRUE,
       "mpegversion", G_TYPE_INT, aacparse->mpegversion, NULL);
 
+  switch (aacparse->header_type) {
+    case DSPAAC_HEADER_NONE:
+      stream_format = "none";
+      break;
+    case DSPAAC_HEADER_ADTS:
+      stream_format = "adts";
+      break;
+    case DSPAAC_HEADER_ADIF:
+      stream_format = "adif";
+      break;
+    default:
+      stream_format = NULL;
+  }
+
   s = gst_caps_get_structure (src_caps, 0);
   if (!gst_structure_has_field (s, "rate") && aacparse->sample_rate > 0)
     gst_structure_set (s, "rate", G_TYPE_INT, aacparse->sample_rate, NULL);
   if (!gst_structure_has_field (s, "channels") && aacparse->channels > 0)
     gst_structure_set (s, "channels", G_TYPE_INT, aacparse->channels, NULL);
+  if (!gst_structure_has_field (s, "stream-format") && stream_format)
+    gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
