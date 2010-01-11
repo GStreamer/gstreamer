@@ -43,9 +43,9 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define GST_VMNC_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VMNC_DEC,GstVMncDec))
 
-#define RFB_GET_UINT32(ptr) GUINT32_FROM_BE (*(guint32 *)(ptr))
-#define RFB_GET_UINT16(ptr) GUINT16_FROM_BE (*(guint16 *)(ptr))
-#define RFB_GET_UINT8(ptr) (*(guint8 *)(ptr))
+#define RFB_GET_UINT32(ptr) GST_READ_UINT32_BE(ptr)
+#define RFB_GET_UINT16(ptr) GST_READ_UINT16_BE(ptr)
+#define RFB_GET_UINT8(ptr) GST_READ_UINT8(ptr)
 
 enum
 {
@@ -729,6 +729,7 @@ vmnc_handle_copy_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   return 4;
 }
 
+/* FIXME: data+off might not be properly aligned */
 #define READ_PIXEL(pixel, data, off, len)         \
   if (dec->format.bytes_per_pixel == 1) {         \
      if (off >= len)                              \
