@@ -346,26 +346,27 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (tee, "releasing pad");
 
+  /* wait for pending pad_alloc to finish */
+  GST_TEE_DYN_LOCK (tee);
+  data = g_object_get_qdata (G_OBJECT (pad), push_data);
+
   GST_OBJECT_LOCK (tee);
+  /* mark the pad as removed so that future pad_alloc fails with NOT_LINKED. */
+  data->removed = TRUE;
   if (tee->allocpad == pad) {
     tee->allocpad = NULL;
     changed = TRUE;
   }
   GST_OBJECT_UNLOCK (tee);
-  if (changed) {
-    g_object_notify (G_OBJECT (tee), "alloc-pad");
-  }
-
-  /* wait for pending pad_alloc to finish */
-  GST_TEE_DYN_LOCK (tee);
-  /* mark the pad as removed so that future pad_alloc fails with NOT_LINKED. */
-  data = g_object_get_qdata (G_OBJECT (pad), push_data);
-  data->removed = TRUE;
 
   gst_pad_set_active (pad, FALSE);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (tee), pad);
   GST_TEE_DYN_UNLOCK (tee);
+
+  if (changed) {
+    g_object_notify (G_OBJECT (tee), "alloc-pad");
+  }
 }
 
 static void
@@ -495,7 +496,7 @@ retry:
       *buf = NULL;
       goto retry;
     }
-    if (res == GST_FLOW_OK) {
+    if (!data->removed && res == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (tee, "we have a buffer on pad %s:%s",
           GST_DEBUG_PAD_NAME (pad));
       /* we have a buffer, keep the pad for later and exit the loop. */
