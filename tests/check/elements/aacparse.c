@@ -473,7 +473,7 @@ GST_START_TEST (test_parse_handle_codec_data)
   fail_unless (gst_structure_has_field (s, "codec_data"));
   fail_unless (gst_structure_has_field (s, "stream-format"));
   stream_format = gst_structure_get_string (s, "stream-format");
-  fail_unless (strcmp (stream_format, "none") == 0);
+  fail_unless (strcmp (stream_format, "raw") == 0);
 
   gst_caps_unref (sinkcaps);
 
