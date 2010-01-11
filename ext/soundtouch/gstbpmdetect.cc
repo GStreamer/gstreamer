@@ -17,8 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define FLOAT_SAMPLES 1
-#include <soundtouch/BPMDetect.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* FIXME: workaround for SoundTouch.h of version 1.3.1 defining those
  * variables while it shouldn't. */
 #undef VERSION
@@ -29,10 +31,8 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-/* FIXME: keep it here to avoid PACKAGE* redefinition warnings */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#define FLOAT_SAMPLES 1
+#include <soundtouch/BPMDetect.h>
 
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
