@@ -239,7 +239,7 @@ has_xing_header (guint32 header, guchar * data, gsize size)
 static GstBuffer *
 generate_xing_header (GstXingMux * xing)
 {
-  guint32 *xing_flags;
+  guint8 *xing_flags;
   guint32 xing_flags_tmp = 0;
   GstBuffer *xing_header;
   guchar *data;
@@ -288,7 +288,7 @@ generate_xing_header (GstXingMux * xing)
   memcpy (data, "Xing", 4);
   data += 4;
 
-  xing_flags = (guint32 *) data;
+  xing_flags = data;
   data += 4;
 
   if (xing->duration != GST_CLOCK_TIME_NONE) {
@@ -379,7 +379,7 @@ generate_xing_header (GstXingMux * xing)
     }
   }
 
-  GST_DEBUG ("Setting Xing flags to 0x%x\n", *xing_flags);
+  GST_DEBUG ("Setting Xing flags to 0x%x\n", xing_flags_tmp);
   xing_flags_tmp = GUINT32_TO_BE (xing_flags_tmp);
   memcpy (xing_flags, &xing_flags_tmp, 4);
   return xing_header;
