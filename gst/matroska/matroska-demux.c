@@ -2062,12 +2062,14 @@ gst_matroska_demux_found_global_tag (GstMatroskaDemux * demux,
   }
 }
 
-/* takes ownership of the passed event! */
+/* returns FALSE if there are no pads to deliver event to,
+ * otherwise TRUE (whatever the outcome of event sending),
+ * takes ownership of the passed event! */
 static gboolean
 gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
 {
   gboolean is_newsegment;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
   gint i;
 
   g_return_val_if_fail (event != NULL, FALSE);
@@ -2085,6 +2087,7 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     stream = g_ptr_array_index (demux->src, i);
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
+    ret = TRUE;
 
     /* FIXME: send global tags before stream tags */
     if (G_UNLIKELY (is_newsegment && stream->pending_tags != NULL)) {
@@ -5163,6 +5166,8 @@ pause:
     gst_pad_pause_task (demux->sinkpad);
 
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      gboolean push_eos = TRUE;
+
       if (ret == GST_FLOW_UNEXPECTED) {
         /* perform EOS logic */
 
@@ -5190,15 +5195,21 @@ pause:
           gst_element_post_message (GST_ELEMENT (demux),
               gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
                   stop));
-        } else {
-          /* normal playback, send EOS to all linked pads */
-          GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          gst_matroska_demux_send_event (demux, gst_event_new_eos ());
+          push_eos = FALSE;
         }
       } else {
+        /* for fatal errors we post an error message */
         GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
             ("stream stopped, reason %s", reason));
-        gst_matroska_demux_send_event (demux, gst_event_new_eos ());
+      }
+      if (push_eos) {
+        /* send EOS, and prevent hanging if no streams yet */
+        GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
+        if (!gst_matroska_demux_send_event (demux, gst_event_new_eos ()) &&
+            (ret == GST_FLOW_UNEXPECTED)) {
+          GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+              (NULL), ("got eos but no streams (yet)"));
+        }
       }
     }
     return;
