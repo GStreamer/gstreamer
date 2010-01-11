@@ -202,26 +202,6 @@ set_filename (GString * name)
   }
 }
 
-static GstBusSyncReply
-set_xwindow (GstMessage ** message, gpointer data)
-{
-  GstBusSyncReply ret = GST_BUS_PASS;
-  const GstStructure *s = gst_message_get_structure (*message);
-
-  if (!s || !gst_structure_has_name (s, "prepare-xwindow-id")) {
-    goto done;
-  }
-
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (*message)),
-      GDK_WINDOW_XWINDOW (ui_drawing->window));
-
-  gst_message_unref (*message);
-  *message = NULL;
-  ret = GST_BUS_DROP;
-done:
-  return ret;
-}
-
 /* Write raw image buffer to file if found from message */
 static void
 handle_element_message (GstMessage * msg)
@@ -278,17 +258,18 @@ handle_element_message (GstMessage * msg)
 static GstBusSyncReply
 my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
-  GstBusSyncReply ret = GST_BUS_PASS;
+  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+    return GST_BUS_PASS;
 
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ELEMENT:
-      ret = set_xwindow (&message, data);
-      break;
-    default:
-      /* unhandled message */
-      break;
-  }
-  return ret;
+  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+    return GST_BUS_PASS;
+
+  /* FIXME: make sure to get XID in main thread */
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (message->src),
+      GDK_WINDOW_XWINDOW (ui_drawing->window));
+
+  gst_message_unref (message);
+  return GST_BUS_DROP;
 }
 
 static void
