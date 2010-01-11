@@ -1315,8 +1315,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
         goto index_failed;
       ts = gst_util_get_timestamp () - ts;
       GST_DEBUG_OBJECT (qtdemux,
-          "Time taken to parse index %" GST_TIME_FORMAT "\n",
-          GST_TIME_ARGS (ts));
+          "Time taken to parse index %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
     }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
