@@ -3603,25 +3603,33 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         guint32 version;
         guint32 offset;
 
+        /* There are two things we might encounter here: a true mp4a atom, and
+           an mp4a entry in an stsd atom. The latter is what we're interested
+           in, and it looks like an atom, but isn't really one. The true mp4a
+           atom is short, so we detect it based on length here. */
         if (length < 20) {
-          /* small boxes are also inside wave inside the mp4a box */
           GST_LOG_OBJECT (qtdemux, "skipping small mp4a box");
           break;
         }
-        version = QT_UINT32 (buffer + 16);
+
+        /* 'version' here is the sound sample description version. Types 0 and
+           1 are documented in the QTFF reference, but type 2 is not: it's
+           described in Apple header files instead (struct SoundDescriptionV2
+           in Movies.h) */
+        version = QT_UINT16 (buffer + 16);
 
         GST_DEBUG_OBJECT (qtdemux, "mp4a version 0x%08x", version);
 
         /* parse any esds descriptors */
         switch (version) {
-          case 0x00000000:
+          case 0:
             offset = 0x24;
             break;
-          case 0x00010000:
+          case 1:
             offset = 0x34;
             break;
-          case 0x00020000:
-            offset = 0x58;
+          case 2:
+            offset = 0x48;
             break;
           default:
             GST_WARNING_OBJECT (qtdemux, "unhandled mp4a version 0x%08x",
