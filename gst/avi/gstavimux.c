@@ -174,6 +174,7 @@ static GstStaticPadTemplate audio_sink_factory =
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 4, "
+        "stream-format = (string) none, "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
 /*#if 0 VC6 doesn't support #if here ...
         "audio/x-vorbis, "
@@ -847,7 +848,20 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
         case 4:
         {
           GstBuffer *codec_data_buf = avipad->auds_codec_data;
+          const gchar *stream_format;
           guint codec;
+
+          stream_format = gst_structure_get_string (structure, "stream-format");
+          if (stream_format) {
+            if (strcmp (stream_format, "none") != 0) {
+              GST_WARNING_OBJECT (avimux, "AAC's stream format '%s' is not "
+                  "supported, please use 'none'", stream_format);
+              break;
+            }
+          } else {
+            GST_WARNING_OBJECT (avimux, "AAC's stream-format not specified, "
+                "assuming 'none'");
+          }
 
           /* vbr case needs some special handling */
           if (!codec_data_buf || GST_BUFFER_SIZE (codec_data_buf) < 2) {
