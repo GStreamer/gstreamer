@@ -15,13 +15,13 @@
 
 #include "vncauth.h"
 
-#define RFB_GET_UINT32(ptr) GUINT32_FROM_BE (*(guint32 *)(ptr))
-#define RFB_GET_UINT16(ptr) GUINT16_FROM_BE (*(guint16 *)(ptr))
-#define RFB_GET_UINT8(ptr) (*(guint8 *)(ptr))
+#define RFB_GET_UINT32(ptr) GST_READ_UINT32_BE(ptr)
+#define RFB_GET_UINT16(ptr) GST_READ_UINT16_BE(ptr)
+#define RFB_GET_UINT8(ptr) GST_READ_UINT8(ptr)
 
-#define RFB_SET_UINT32(ptr, val) (*(guint32 *)(ptr) = GUINT32_TO_BE (val))
-#define RFB_SET_UINT16(ptr, val) (*(guint16 *)(ptr) = GUINT16_TO_BE (val))
-#define RFB_SET_UINT8(ptr, val) (*(guint8 *)(ptr) = val)
+#define RFB_SET_UINT32(ptr, val) GST_WRITE_UINT32_BE((ptr),(val))
+#define RFB_SET_UINT16(ptr, val) GST_WRITE_UINT16_BE((ptr),(val))
+#define RFB_SET_UINT8(ptr, val) GST_WRITE_UINT8((ptr),(val))
 
 GST_DEBUG_CATEGORY_EXTERN (rfbdecoder_debug);
 #define GST_CAT_DEFAULT rfbdecoder_debug
