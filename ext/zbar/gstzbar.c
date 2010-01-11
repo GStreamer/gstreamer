@@ -270,7 +270,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   size = GST_BUFFER_SIZE (outbuf);
 
   image = zbar_image_create ();
-  zbar_image_set_format (image, *(gint *) "Y800");
+  zbar_image_set_format (image, GST_MAKE_FOURCC ('Y', '8', '0', '0'));
   zbar_image_set_size (image, zbar->width, zbar->height);
   zbar_image_set_data (image, (gpointer) data, zbar->width * zbar->height,
       NULL);
