@@ -104,7 +104,13 @@ struct _GstVideoMixer
   /* sink event handling */
   GstPadEventFunction collect_event;
   guint64	segment_position;
-  gdouble	segment_rate;
+
+  /* Current downstream segment */
+  GstSegment    segment;
+
+  /* QoS stuff */
+  gdouble proportion;
+  GstClockTime earliest_time;
 
   BlendFunction blend;
   FillCheckerFunction fill_checker;
