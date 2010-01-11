@@ -342,10 +342,6 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(XDG_LIBS)
 fi
 
-if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(librfb)
-fi
-
 if test "x$HAVE_PTHREAD_H" = "xyes"; then
   DCCP_LIBS="$DCCP_LIBS -lpthread"
   AC_SUBST(DCCP_LIBS)

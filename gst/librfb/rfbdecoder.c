@@ -8,9 +8,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef G_OS_WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else
+#include <winsock2.h>
+#endif
 #include <errno.h>
 
 #include "vncauth.h"
@@ -112,7 +116,11 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
 
   sa.sin_family = AF_INET;
   sa.sin_port = htons (port);
+#ifndef G_OS_WIN32
   inet_pton (AF_INET, addr, &sa.sin_addr);
+#else
+  sa.sin_addr.s_addr = inet_addr (addr);
+#endif
   if (connect (decoder->fd, (struct sockaddr *) &sa,
           sizeof (struct sockaddr)) == -1) {
     close (decoder->fd);
@@ -164,7 +172,11 @@ rfb_decoder_read (RfbDecoder * decoder, guint32 len)
   }
 
   while (total < len) {
+#ifndef G_OS_WIN32
     now = recv (decoder->fd, decoder->data + total, len - total, 0);
+#else
+    now = recv (decoder->fd, (char *) decoder->data + total, len - total, 0);
+#endif
     if (now <= 0) {
       GST_WARNING ("rfb read error on socket");
       return NULL;

@@ -22,6 +22,7 @@
  */
 
 #include "config.h"
+#include <glib.h>
 #include "_stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -130,10 +131,17 @@ vncRandomBytes (unsigned char *bytes)
 {
   int32_t i;
   uint32_t seed = (uint32_t) time (0);
-
+#ifndef G_OS_WIN32
   srandom (seed);
+#else
+  srand (seed);
+#endif
   for (i = 0; i < CHALLENGESIZE; i++) {
+#ifndef G_OS_WIN32
     bytes[i] = (unsigned char) (random () & 255);
+#else
+    bytes[i] = (unsigned char) (rand () & 255);
+#endif
   }
 }
 
