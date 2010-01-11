@@ -77,7 +77,8 @@
     "audio/mpeg, "                     \
     "mpegversion = (int) { 4, 2 }, "   \
     "channels = (int) [ 1, 6 ], "      \
-    "rate = (int) [ 8000, 96000 ]"
+    "rate = (int) [ 8000, 96000 ], "   \
+    "stream-format = (string) { adts, none } "
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -497,7 +498,9 @@ gst_faac_configure_source_pad (GstFaac * faac)
   srccaps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, mpegversion,
       "channels", G_TYPE_INT, faac->channels,
-      "rate", G_TYPE_INT, faac->samplerate, NULL);
+      "rate", G_TYPE_INT, faac->samplerate,
+      "stream-format", G_TYPE_STRING, (faac->outputformat ? "adts" : "none"),
+      NULL);
 
   if (!faac->outputformat) {
     GstBuffer *codec_data;
