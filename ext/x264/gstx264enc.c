@@ -220,7 +220,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
         "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
+        "stream-format = (string) { byte-stream, avc-sample }")
     );
 
 static void gst_x264_enc_finalize (GObject * object);
@@ -788,6 +789,7 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
 {
   GstBuffer *buf;
   GstCaps *outcaps;
+  GstStructure *structure;
   gboolean res;
 
   outcaps = gst_caps_new_simple ("video/x-h264",
@@ -795,12 +797,19 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
       "height", G_TYPE_INT, encoder->height,
       "framerate", GST_TYPE_FRACTION, encoder->fps_num, encoder->fps_den, NULL);
 
+  structure = gst_caps_get_structure (outcaps, 0);
+
   if (!encoder->byte_stream) {
     buf = gst_x264_enc_header_buf (encoder);
     if (buf != NULL) {
       gst_caps_set_simple (outcaps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
       gst_buffer_unref (buf);
     }
+    gst_structure_set (structure, "stream-format", G_TYPE_STRING, "avc-sample",
+        NULL);
+  } else {
+    gst_structure_set (structure, "stream-format", G_TYPE_STRING, "byte-stream",
+        NULL);
   }
 
   res = gst_pad_set_caps (pad, outcaps);
