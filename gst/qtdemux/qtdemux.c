@@ -1581,13 +1581,13 @@ gst_qtdemux_get_index (GstElement * element)
 static void
 gst_qtdemux_stbl_free (QtDemuxStream * stream)
 {
-  g_free (stream->stco.data);
-  g_free (stream->stsz.data);
-  g_free (stream->stsc.data);
-  g_free (stream->stts.data);
-  g_free (stream->stss.data);
-  g_free (stream->stps.data);
-  g_free (stream->ctts.data);
+  g_free ((gpointer) stream->stco.data);
+  g_free ((gpointer) stream->stsz.data);
+  g_free ((gpointer) stream->stsc.data);
+  g_free ((gpointer) stream->stts.data);
+  g_free ((gpointer) stream->stss.data);
+  g_free ((gpointer) stream->stps.data);
+  g_free ((gpointer) stream->ctts.data);
 }
 
 static GstStateChangeReturn
