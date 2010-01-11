@@ -34,6 +34,8 @@
 
 #include <string.h>
 
+#define BLEND(D,S,alpha) (((D) * (256 - (alpha)) + (S) * (alpha)) >> 8)
+
 #ifdef HAVE_GCC_ASM
 #if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
 #define BUILD_X86_ASM
@@ -45,8 +47,6 @@
 #endif
 
 /* Below are the implementations of everything */
-
-#define BLEND(D,S,alpha) (((D) * (255 - (alpha)) + (S) * (alpha)) >> 8)
 
 inline static void
 _blend_u8_c (guint8 * dest, const guint8 * src,
@@ -459,11 +459,9 @@ fill_color_##name (guint8 * dest, gint width, gint height, \
   gint i; \
   gint dest_stride = GST_ROUND_UP_4 (width * bpp); \
   \
-  red = CLAMP (1.164 * (colY - 16) + 1.596 * (colV - 128), 0, 255); \
-  green = \
-      CLAMP (1.164 * (colY - 16) - 0.813 * (colV - 128) - 0.391 * (colU - 128), \
-      0, 255); \
-  blue = CLAMP (1.164 * (colY - 16) + 2.018 * (colU - 128), 0, 255); \
+  red = YUV_TO_R (colY, colU, colV); \
+  green = YUV_TO_G (colY, colU, colV); \
+  blue = YUV_TO_B (colY, colU, colV); \
   \
   for (i = 0; i < height; i++) { \
     MEMSET_RGB (dest, red, green, blue, width); \
@@ -508,6 +506,15 @@ RGB_FILL_COLOR (bgrx_c, 4, _memset_bgrx_c);
 
 /* MMX Implementations */
 #ifdef BUILD_X86_ASM
+
+#define MEMSET_xRGB_MMX(name, r, g, b) \
+static inline void \
+_memset_##name##_mmx (guint8* dest, gint red, gint green, gint blue, gint width) { \
+  guint32 val = (red << r) | (green << g) | (blue << b); \
+  \
+  _memset_u32_mmx ((guint32 *) dest, val, width); \
+}
+
 #define A32
 #define NAME_BLEND _blend_loop_argb_mmx
 #define NAME_FILL_COLOR _fill_color_loop_argb_mmx
@@ -544,6 +551,25 @@ BLEND_A32 (bgra_mmx, _blend_loop_bgra_mmx);
 A32_COLOR (argb_mmx, TRUE, _fill_color_loop_argb_mmx);
 A32_COLOR (bgra_mmx, TRUE, _fill_color_loop_bgra_mmx);
 A32_COLOR (ayuv_mmx, FALSE, _fill_color_loop_argb_mmx);
+
+I420_BLEND (mmx, _memcpy_u8_mmx, _blend_u8_mmx);
+I420_FILL_CHECKER (mmx, _memset_u8_mmx);
+I420_FILL_COLOR (mmx, _memset_u8_mmx);
+
+RGB_BLEND (rgb_mmx, 3, _memcpy_u8_mmx, _blend_u8_mmx);
+
+RGB_BLEND (xrgb_mmx, 4, _memcpy_u8_mmx, _blend_u8_mmx);
+MEMSET_xRGB_MMX (xrgb, 16, 8, 0);
+RGB_FILL_COLOR (xrgb_mmx, 4, _memset_xrgb_mmx);
+
+MEMSET_xRGB_MMX (xbgr, 0, 8, 16);
+RGB_FILL_COLOR (xbgr_mmx, 4, _memset_xbgr_mmx);
+
+MEMSET_xRGB_MMX (rgbx, 24, 16, 8);
+RGB_FILL_COLOR (rgbx_mmx, 4, _memset_rgbx_mmx);
+
+MEMSET_xRGB_MMX (bgrx, 8, 16, 24);
+RGB_FILL_COLOR (bgrx_mmx, 4, _memset_bgrx_mmx);
 #endif
 
 /* Init function */
@@ -612,10 +638,20 @@ gst_video_mixer_init_blend (void)
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
     gst_video_mixer_blend_argb = blend_argb_mmx;
     gst_video_mixer_blend_bgra = blend_bgra_mmx;
+    gst_video_mixer_blend_i420 = blend_i420_mmx;
+    gst_video_mixer_blend_rgb = blend_rgb_mmx;
+    gst_video_mixer_blend_xrgb = blend_xrgb_mmx;
+
+    gst_video_mixer_fill_checker_i420 = fill_checker_i420_mmx;
 
     gst_video_mixer_fill_color_argb = fill_color_argb_mmx;
     gst_video_mixer_fill_color_bgra = fill_color_bgra_mmx;
     gst_video_mixer_fill_color_ayuv = fill_color_ayuv_mmx;
+    gst_video_mixer_fill_color_i420 = fill_color_i420_mmx;
+    gst_video_mixer_fill_color_xrgb = fill_color_xrgb_mmx;
+    gst_video_mixer_fill_color_xbgr = fill_color_xbgr_mmx;
+    gst_video_mixer_fill_color_rgbx = fill_color_rgbx_mmx;
+    gst_video_mixer_fill_color_bgrx = fill_color_bgrx_mmx;
   }
 #endif
 }
