@@ -672,8 +672,11 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   /* get general properties */
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  /* spec says it is mandatory */
+  if (!gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "height", &height))
+    goto refuse_caps;
+
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
   if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)
@@ -721,12 +724,8 @@ skip_details:
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
     gst_structure_get_fourcc (structure, "format", &videocontext->fourcc);
-
-    return TRUE;
   } else if (!strcmp (mimetype, "image/jpeg")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MJPEG);
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-xvid") /* MS/VfW compatibility cases */
       ||!strcmp (mimetype, "video/x-huffyuv")
       || !strcmp (mimetype, "video/x-divx")
@@ -793,7 +792,7 @@ skip_details:
     }
 
     if (!fourcc)
-      return FALSE;
+      goto refuse_caps;
 
     bih = g_new0 (BITMAPINFOHEADER, 1);
     GST_WRITE_UINT32_LE (&bih->bi_size, size);
@@ -817,8 +816,6 @@ skip_details:
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
     context->codec_priv = (gpointer) bih;
     context->codec_priv_size = size;
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
 
@@ -835,8 +832,6 @@ skip_details:
       memcpy (context->codec_priv, GST_BUFFER_DATA (codec_buf),
           context->codec_priv_size);
     }
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-theora")) {
     const GValue *streamheader;
 
@@ -852,13 +847,10 @@ skip_details:
     if (!theora_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("theora stream headers missing or malformed"));
-      return FALSE;
+      goto refuse_caps;
     }
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-dirac")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 
@@ -874,7 +866,7 @@ skip_details:
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
         break;
       default:
-        return FALSE;
+        goto refuse_caps;
     }
 
     /* global headers may be in codec data */
@@ -884,14 +876,10 @@ skip_details:
       memcpy (context->codec_priv, GST_BUFFER_DATA (codec_buf),
           context->codec_priv_size);
     }
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-msmpeg")) {
   msmpeg43:
     /* can only make it here if preceding case verified it was version 3 */
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
-
-    return TRUE;
   } else if (!strcmp (mimetype, "video/x-pn-realvideo")) {
     gint rmversion;
     const GValue *mdpr_data;
@@ -911,7 +899,7 @@ skip_details:
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4);
         break;
       default:
-        return FALSE;
+        goto refuse_caps;
     }
 
     mdpr_data = gst_structure_get_value (structure, "mdpr_data");
@@ -929,11 +917,17 @@ skip_details:
       context->codec_priv = priv_data;
       context->codec_priv_size = priv_data_size;
     }
-
-    return TRUE;
   }
 
-  return FALSE;
+  return TRUE;
+
+  /* ERRORS */
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (mux, "pad %s refused caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
+    return FALSE;
+  }
 }
 
 /* N > 0 to expect a particular number of headers, negative if the
@@ -1501,7 +1495,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
             break;
           default:
-            return FALSE;
+            goto refuse_caps;
         }
         break;
       }
@@ -1532,14 +1526,12 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             g_assert_not_reached ();
         } else {
           GST_DEBUG_OBJECT (mux, "no AAC codec_data; not packetized");
-          return FALSE;
+          goto refuse_caps;
         }
         break;
       default:
-        return FALSE;
+        goto refuse_caps;
     }
-
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-int")) {
     gint width, depth;
     gint endianness = G_LITTLE_ENDIAN;
@@ -1549,24 +1541,24 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         !gst_structure_get_int (structure, "depth", &depth) ||
         !gst_structure_get_boolean (structure, "signed", &signedness)) {
       GST_DEBUG_OBJECT (mux, "broken caps, width/depth/signed field missing");
-      return FALSE;
+      goto refuse_caps;
     }
 
     if (depth > 8 &&
         !gst_structure_get_int (structure, "endianness", &endianness)) {
       GST_DEBUG_OBJECT (mux, "broken caps, no endianness specified");
-      return FALSE;
+      goto refuse_caps;
     }
 
     if (width != depth) {
       GST_DEBUG_OBJECT (mux, "width must be same as depth!");
-      return FALSE;
+      goto refuse_caps;
     }
 
     /* FIXME: where is this spec'ed out? (tpm) */
     if ((width == 8 && signedness) || (width >= 16 && !signedness)) {
       GST_DEBUG_OBJECT (mux, "8-bit PCM must be unsigned, 16-bit PCM signed");
-      return FALSE;
+      goto refuse_caps;
     }
 
     audiocontext->bitdepth = depth;
@@ -1575,19 +1567,17 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     else
       context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE);
 
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-float")) {
     gint width;
 
     if (!gst_structure_get_int (structure, "width", &width)) {
       GST_DEBUG_OBJECT (mux, "broken caps, width field missing");
-      return FALSE;
+      goto refuse_caps;
     }
 
     audiocontext->bitdepth = width;
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT);
 
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-vorbis")) {
     const GValue *streamheader;
 
@@ -1603,9 +1593,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!vorbis_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("vorbis stream headers missing or malformed"));
-      return FALSE;
+      goto refuse_caps;
     }
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-flac")) {
     const GValue *streamheader;
 
@@ -1620,9 +1609,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!flac_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("flac stream headers missing or malformed"));
-      return FALSE;
+      goto refuse_caps;
     }
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-speex")) {
     const GValue *streamheader;
 
@@ -1637,13 +1625,10 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!speex_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("speex stream headers missing or malformed"));
-      return FALSE;
+      goto refuse_caps;
     }
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AC3);
-
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-tta")) {
     gint width;
 
@@ -1654,7 +1639,6 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     audiocontext->bitdepth = width;
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_TTA);
 
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
     gint raversion;
     const GValue *mdpr_data;
@@ -1671,7 +1655,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK);
         break;
       default:
-        return FALSE;
+        goto refuse_caps;
     }
 
     mdpr_data = gst_structure_get_value (structure, "mdpr_data");
@@ -1690,7 +1674,6 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       context->codec_priv_size = priv_data_size;
     }
 
-    return TRUE;
   } else if (!strcmp (mimetype, "audio/x-wma")) {
     guint8 *codec_priv;
     guint codec_priv_size;
@@ -1706,7 +1689,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         || samplerate == 0 || channels == 0) {
       GST_WARNING_OBJECT (mux, "Missing wmaversion/block_align/bitrate/"
           "channels/rate on WMA caps");
-      return FALSE;
+      goto refuse_caps;
     }
 
     switch (wmaversion) {
@@ -1721,7 +1704,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         break;
       default:
         GST_WARNING_OBJECT (mux, "Unexpected WMA version: %d", wmaversion);
-        return FALSE;
+        goto refuse_caps;
     }
 
     if (gst_structure_get_int (structure, "depth", &depth))
@@ -1753,10 +1736,17 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_ACM);
     context->codec_priv = (gpointer) codec_priv;
     context->codec_priv_size = codec_priv_size;
-    return TRUE;
   }
 
-  return FALSE;
+  return TRUE;
+
+  /* ERRORS */
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (mux, "pad %s refused caps %" GST_PTR_FORMAT,
+        GST_PAD_NAME (pad), caps);
+    return FALSE;
+  }
 }
 
 
