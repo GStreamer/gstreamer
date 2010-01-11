@@ -43,7 +43,8 @@ static GstStaticPadTemplate gst_rtp_mp4g_depay_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg,"
         "mpegversion=(int) 4,"
-        "systemstream=(boolean)false;" "audio/mpeg," "mpegversion=(int) 4")
+        "systemstream=(boolean)false;"
+        "audio/mpeg," "mpegversion=(int) 4, " "stream-format=(string)raw")
     );
 
 static GstStaticPadTemplate gst_rtp_mp4g_depay_sink_template =
@@ -242,7 +243,8 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if ((str = gst_structure_get_string (structure, "media"))) {
     if (strcmp (str, "audio") == 0) {
       srccaps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 4, NULL);
+          "mpegversion", G_TYPE_INT, 4, "stream-format", G_TYPE_STRING, "raw",
+          NULL);
     } else if (strcmp (str, "video") == 0) {
       srccaps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4,
