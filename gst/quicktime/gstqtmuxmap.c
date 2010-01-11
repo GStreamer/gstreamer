@@ -119,7 +119,7 @@
 #define AAC_CAPS \
   "audio/mpeg, " \
   "mpegversion = (int) 4, " \
-  "stream-format = (string) none, " \
+  "stream-format = (string) raw, " \
   COMMON_AUDIO_CAPS (8, MAX)
 
 #define AMR_CAPS \
