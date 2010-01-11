@@ -1022,99 +1022,7 @@ wrong_type:
   }
 wrong_count:
   {
-    GST_WARNING ("got %u streamheaders, not 3 as expected", bufarr->len);
-    return FALSE;
-  }
-wrong_content_type:
-  {
-    GST_WARNING ("streamheaders array does not contain GstBuffers");
-    return FALSE;
-  }
-}
-
-/* FIXME: after release make all code use xiph3_streamheader_to_codecdata() */
-static gboolean
-xiph3_streamheader_to_codecdata (const GValue * streamheader,
-    GstMatroskaTrackContext * context, GstBuffer ** p_buf0)
-{
-  GstBuffer *buf[3];
-  GArray *bufarr;
-  guint8 *priv_data;
-  guint i, offset, priv_data_size;
-
-  if (streamheader == NULL)
-    goto no_stream_headers;
-
-  if (G_VALUE_TYPE (streamheader) != GST_TYPE_ARRAY)
-    goto wrong_type;
-
-  bufarr = g_value_peek_pointer (streamheader);
-  if (bufarr->len != 3)
-    goto wrong_count;
-
-  context->xiph_headers_to_skip = bufarr->len;
-
-  for (i = 0; i < 3; i++) {
-    GValue *bufval = &g_array_index (bufarr, GValue, i);
-
-    if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER)
-      goto wrong_content_type;
-
-    buf[i] = g_value_peek_pointer (bufval);
-  }
-
-  priv_data_size = 1;
-  priv_data_size += GST_BUFFER_SIZE (buf[0]) / 0xff + 1;
-  priv_data_size += GST_BUFFER_SIZE (buf[1]) / 0xff + 1;
-
-  for (i = 0; i < 3; ++i) {
-    priv_data_size += GST_BUFFER_SIZE (buf[i]);
-  }
-
-  priv_data = g_malloc0 (priv_data_size);
-
-  priv_data[0] = 2;
-  offset = 1;
-
-  for (i = 0; i < GST_BUFFER_SIZE (buf[0]) / 0xff; ++i) {
-    priv_data[offset++] = 0xff;
-  }
-  priv_data[offset++] = GST_BUFFER_SIZE (buf[0]) % 0xff;
-
-  for (i = 0; i < GST_BUFFER_SIZE (buf[1]) / 0xff; ++i) {
-    priv_data[offset++] = 0xff;
-  }
-  priv_data[offset++] = GST_BUFFER_SIZE (buf[1]) % 0xff;
-
-  for (i = 0; i < 3; ++i) {
-    memcpy (priv_data + offset, GST_BUFFER_DATA (buf[i]),
-        GST_BUFFER_SIZE (buf[i]));
-    offset += GST_BUFFER_SIZE (buf[i]);
-  }
-
-  context->codec_priv = priv_data;
-  context->codec_priv_size = priv_data_size;
-
-  if (p_buf0)
-    *p_buf0 = gst_buffer_ref (buf[0]);
-
-  return TRUE;
-
-/* ERRORS */
-no_stream_headers:
-  {
-    GST_WARNING ("required streamheaders missing in sink caps!");
-    return FALSE;
-  }
-wrong_type:
-  {
-    GST_WARNING ("streamheaders are not a GST_TYPE_ARRAY, but a %s",
-        G_VALUE_TYPE_NAME (streamheader));
-    return FALSE;
-  }
-wrong_count:
-  {
-    GST_WARNING ("got %u streamheaders, not 3 as expected", bufarr->len);
+    GST_WARNING ("got %u streamheaders, not %d as expected", bufarr->len, N);
     return FALSE;
   }
 wrong_content_type:
@@ -1130,8 +1038,7 @@ vorbis_streamheader_to_codecdata (const GValue * streamheader,
 {
   GstBuffer *buf0 = NULL;
 
-  /* FIXME: change to use xiphN_streamheader_to_codecdata() after release */
-  if (!xiph3_streamheader_to_codecdata (streamheader, context, &buf0))
+  if (!xiphN_streamheader_to_codecdata (streamheader, context, &buf0, 3))
     return FALSE;
 
   if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 4) {
@@ -1160,8 +1067,7 @@ theora_streamheader_to_codecdata (const GValue * streamheader,
 {
   GstBuffer *buf0 = NULL;
 
-  /* FIXME: change to use xiphN_streamheader_to_codecdata() after release */
-  if (!xiph3_streamheader_to_codecdata (streamheader, context, &buf0))
+  if (!xiphN_streamheader_to_codecdata (streamheader, context, &buf0, 3))
     return FALSE;
 
   if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 26) {
