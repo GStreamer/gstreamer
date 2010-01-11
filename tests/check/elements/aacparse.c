@@ -229,8 +229,9 @@ GST_START_TEST (test_parse_adif_normal)
 
   /* Check that the negotiated caps are as expected */
   /* For ADIF parser assumes that data is always version 4 */
-  scaps = gst_caps_from_string (SINK_CAPS_MPEG4);
+  scaps = gst_caps_from_string (SINK_CAPS_MPEG4 ", stream-format=(string)adif");
   sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
+
   GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?", sinkcaps, scaps);
   fail_unless (gst_caps_is_equal (sinkcaps, scaps));
   gst_caps_unref (sinkcaps);
@@ -408,7 +409,8 @@ GST_START_TEST (test_parse_adts_detect_mpeg_version)
   aacparse = setup_aacparse (NULL);
 
   /* buffer_verify_adts will check if the caps are equal */
-  vdata.caps = gst_caps_from_string (SINK_CAPS_MPEG2);
+  vdata.caps = gst_caps_from_string (SINK_CAPS_MPEG2
+      ", stream-format=(string)adts");
 
   for (i = 0; i < 10; i++) {
     /* Push MPEG version 2 frames. */
@@ -447,6 +449,7 @@ GST_START_TEST (test_parse_handle_codec_data)
   GstStructure *s;
   guint datasum = 0;
   guint i;
+  const gchar *stream_format;
 
   aacparse = setup_aacparse (SRC_CAPS_CDATA);
 
@@ -468,6 +471,9 @@ GST_START_TEST (test_parse_handle_codec_data)
   fail_unless_structure_field_int_equals (s, "channels", 2);
   fail_unless_structure_field_int_equals (s, "rate", 48000);
   fail_unless (gst_structure_has_field (s, "codec_data"));
+  fail_unless (gst_structure_has_field (s, "stream-format"));
+  stream_format = gst_structure_get_string (s, "stream-format");
+  fail_unless (strcmp (stream_format, "none") == 0);
 
   gst_caps_unref (sinkcaps);
 
