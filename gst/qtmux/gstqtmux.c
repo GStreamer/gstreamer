@@ -1792,14 +1792,14 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
         /* check stream-format */
         stream_format = gst_structure_get_string (structure, "stream-format");
         if (stream_format) {
-          if (strcmp (stream_format, "none") != 0) {
+          if (strcmp (stream_format, "raw") != 0) {
             GST_WARNING_OBJECT (qtmux, "Unsupported AAC stream-format %s, "
-                "please use 'none'", stream_format);
+                "please use 'raw'", stream_format);
             goto refuse_caps;
           }
         } else {
           GST_WARNING_OBJECT (qtmux, "No stream-format present in caps, "
-              "assuming 'none'");
+              "assuming 'raw'");
         }
 
         if (!codec_data || GST_BUFFER_SIZE (codec_data) < 2)

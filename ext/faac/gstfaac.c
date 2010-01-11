@@ -78,7 +78,7 @@
     "mpegversion = (int) { 4, 2 }, "   \
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) [ 8000, 96000 ], "   \
-    "stream-format = (string) { adts, none } "
+    "stream-format = (string) { adts, raw } "
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -499,7 +499,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
       "mpegversion", G_TYPE_INT, mpegversion,
       "channels", G_TYPE_INT, faac->channels,
       "rate", G_TYPE_INT, faac->samplerate,
-      "stream-format", G_TYPE_STRING, (faac->outputformat ? "adts" : "none"),
+      "stream-format", G_TYPE_STRING, (faac->outputformat ? "adts" : "raw"),
       NULL);
 
   if (!faac->outputformat) {

@@ -223,7 +223,7 @@ gst_aacparse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
 
   switch (aacparse->header_type) {
     case DSPAAC_HEADER_NONE:
-      stream_format = "none";
+      stream_format = "raw";
       break;
     case DSPAAC_HEADER_ADTS:
       stream_format = "adts";
