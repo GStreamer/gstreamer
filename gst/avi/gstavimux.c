@@ -174,7 +174,7 @@ static GstStaticPadTemplate audio_sink_factory =
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 4, "
-        "stream-format = (string) none, "
+        "stream-format = (string) raw, "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
 /*#if 0 VC6 doesn't support #if here ...
         "audio/x-vorbis, "
@@ -853,14 +853,14 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
           stream_format = gst_structure_get_string (structure, "stream-format");
           if (stream_format) {
-            if (strcmp (stream_format, "none") != 0) {
+            if (strcmp (stream_format, "raw") != 0) {
               GST_WARNING_OBJECT (avimux, "AAC's stream format '%s' is not "
-                  "supported, please use 'none'", stream_format);
+                  "supported, please use 'raw'", stream_format);
               break;
             }
           } else {
             GST_WARNING_OBJECT (avimux, "AAC's stream-format not specified, "
-                "assuming 'none'");
+                "assuming 'raw'");
           }
 
           /* vbr case needs some special handling */

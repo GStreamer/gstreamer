@@ -136,7 +136,7 @@ static GstStaticPadTemplate audiosink_templ =
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
-        "stream-format = (string) { none }, "
+        "stream-format = (string) { raw }, "
         COMMON_AUDIO_CAPS "; "
         "audio/mpeg, "
         "mpegversion = (int) { 2, 4 }, "
@@ -1510,13 +1510,13 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         stream_format = gst_structure_get_string (structure, "stream-format");
         /* check this is raw aac */
         if (stream_format) {
-          if (strcmp (stream_format, "none") != 0) {
-            GST_WARNING_OBJECT (mux, "AAC stream-format must be 'none', not %s",
+          if (strcmp (stream_format, "raw") != 0) {
+            GST_WARNING_OBJECT (mux, "AAC stream-format must be 'raw', not %s",
                 stream_format);
           }
         } else {
           GST_WARNING_OBJECT (mux, "AAC stream-format not specified, "
-              "assuming 'none'");
+              "assuming 'raw'");
         }
 
         if (buf) {
