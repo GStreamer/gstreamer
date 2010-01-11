@@ -2140,9 +2140,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   gboolean flush, keyunit;
   gdouble rate;
   gint64 cur, stop;
-  gint64 segment_start, segment_stop;
   gint i;
   GstMatroskaTrackContext *track = NULL;
+  GstSegment seeksegment = { 0, };
+  gboolean update;
 
   if (pad)
     track = gst_pad_get_element_private (pad);
@@ -2162,19 +2163,29 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     return FALSE;
   }
 
-  /* check sanity before we start flushing and all that */
-  if (cur_type == GST_SEEK_TYPE_SET) {
-    GST_OBJECT_LOCK (demux);
-    if ((entry =
-            gst_matroskademux_do_index_seek (demux, track, cur, -1,
-                FALSE)) == NULL) {
-      GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
-      GST_OBJECT_UNLOCK (demux);
-      return FALSE;
-    }
-    GST_DEBUG_OBJECT (demux, "Seek position looks sane");
-    GST_OBJECT_UNLOCK (demux);
+  /* copy segment, we need this because we still need the old
+   * segment when we close the current segment. */
+  memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
+
+  if (event) {
+    GST_DEBUG_OBJECT (demux, "configuring seek");
+    gst_segment_set_seek (&seeksegment, rate, format, flags,
+        cur_type, cur, stop_type, stop, &update);
   }
+
+  GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
+
+  /* check sanity before we start flushing and all that */
+  GST_OBJECT_LOCK (demux);
+  if ((entry =
+          gst_matroskademux_do_index_seek (demux, track,
+              seeksegment.last_stop, -1, FALSE)) == NULL) {
+    GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
+    GST_OBJECT_UNLOCK (demux);
+    return FALSE;
+  }
+  GST_DEBUG_OBJECT (demux, "Seek position looks sane");
+  GST_OBJECT_UNLOCK (demux);
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
@@ -2184,52 +2195,17 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
     gst_matroska_demux_send_event (demux, gst_event_new_flush_start ());
   } else {
+    GST_DEBUG_OBJECT (demux, "Non-flushing seek, pausing task");
     gst_pad_pause_task (demux->sinkpad);
   }
 
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
    * forever. */
+  GST_DEBUG_OBJECT (demux, "Waiting for streaming to stop");
   GST_PAD_STREAM_LOCK (demux->sinkpad);
 
   GST_OBJECT_LOCK (demux);
-
-  /* if nothing configured, play complete file */
-  if (!GST_CLOCK_TIME_IS_VALID (cur))
-    cur = 0;
-  /* prevent some calculations and comparisons involving INVALID */
-  segment_start = demux->segment.start;
-  segment_stop = demux->segment.stop;
-  if (!GST_CLOCK_TIME_IS_VALID (segment_start))
-    segment_start = 0;
-
-  if (cur_type == GST_SEEK_TYPE_SET)
-    segment_start = cur;
-  else if (cur_type == GST_SEEK_TYPE_CUR)
-    segment_start += cur;
-
-  if (stop_type == GST_SEEK_TYPE_SET) {
-    segment_stop = stop;
-  } else if (stop_type == GST_SEEK_TYPE_CUR) {
-    if (GST_CLOCK_TIME_IS_VALID (segment_stop)
-        && GST_CLOCK_TIME_IS_VALID (stop))
-      segment_stop += stop;
-    else
-      segment_stop = -1;
-  }
-
-  GST_DEBUG_OBJECT (demux,
-      "New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
-
-  if (entry == NULL)
-    entry = gst_matroskademux_do_index_seek (demux, track, segment_start,
-        segment_stop, keyunit);
-
-  if (!entry) {
-    GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
-    goto seek_error;
-  }
 
   /* seek (relative to matroska segment) */
   if (gst_ebml_read_seek (GST_EBML_READ (demux),
@@ -2245,7 +2221,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   if (keyunit) {
     GST_DEBUG_OBJECT (demux, "seek to key unit, adjusting segment start to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (entry->time));
-    segment_start = entry->time;
+    seeksegment.start = entry->time;
+    seeksegment.last_stop = entry->time;
+    seeksegment.time = entry->time;
   }
 
   GST_OBJECT_UNLOCK (demux);
@@ -2268,14 +2246,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   GST_OBJECT_LOCK (demux);
+  /* now update the real segment info */
   GST_DEBUG_OBJECT (demux, "Committing new seek segment");
-
-  demux->segment.rate = rate;
-  demux->segment.flags = flags;
-
-  demux->segment.start = segment_start;
-  demux->segment.stop = segment_stop;
-
+  memcpy (&demux->segment, &seeksegment, sizeof (GstSegment));
   GST_OBJECT_UNLOCK (demux);
 
   /* notify start of new segment */
@@ -2290,8 +2263,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_OBJECT_LOCK (demux);
   if (demux->new_segment)
     gst_event_unref (demux->new_segment);
-  demux->new_segment = gst_event_new_new_segment (FALSE, rate,
-      GST_FORMAT_TIME, segment_start, segment_stop, segment_start);
+  demux->new_segment = gst_event_new_new_segment_full (FALSE,
+      demux->segment.rate, demux->segment.applied_rate, demux->segment.format,
+      demux->segment.last_stop, demux->segment.stop, demux->segment.time);
   GST_OBJECT_UNLOCK (demux);
 
   /* update the time */
@@ -2318,11 +2292,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
 seek_error:
   {
-    /* FIXME: shouldn't we either make it a real error or start the task
-     * function again so that things can continue from where they left off? */
-    GST_DEBUG_OBJECT (demux, "Got a seek error");
     GST_OBJECT_UNLOCK (demux);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL, ("Got a seek error"));
     return FALSE;
   }
 }
