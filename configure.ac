@@ -1444,7 +1444,9 @@ AG_GST_CHECK_FEATURE(ACM, [Windows ACM library], acm, [
       [HAVE_ACM="yes"
        AC_SUBST(ACMENC_CFLAGS)
        AC_SUBST(ACMMP3DEC_CFLAGS)
-      ], [HAVE_ACM="no"])
+      ], [HAVE_ACM="no"],
+      [AC_INCLUDES_DEFAULT
+#include <windows.h>])
 ])
 
 dnl *** vdpau ***
