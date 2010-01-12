@@ -215,11 +215,12 @@ helper_find_get_length (gpointer data)
 }
 
 /**
- * gst_type_find_helper_get_range:
+ * gst_type_find_helper_get_range_ext:
  * @obj: A #GstObject that will be passed as first argument to @func
  * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
  *        to access data at random offsets when doing the typefinding
  * @size: The length in bytes
+ * @extension: extenstion of the media
  * @prob: location to store the probability of the found caps, or #NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
@@ -231,20 +232,26 @@ helper_find_get_length (gpointer data)
  * callback can then call the upstream peer pad with offsets adjusted for the
  * tag size, for example).
  *
+ * When @extension is not NULL, this function will first try the typefind
+ * functions for the given extension, which might speed up the typefinding
+ * in many cases.
+ *
  * Returns: The #GstCaps corresponding to the data stream.
  * Returns #NULL if no #GstCaps matches the data stream.
+ *
+ * Since: 0.10.26
  */
-
 GstCaps *
-gst_type_find_helper_get_range (GstObject * obj,
+gst_type_find_helper_get_range_ext (GstObject * obj,
     GstTypeFindHelperGetRangeFunction func, guint64 size,
-    GstTypeFindProbability * prob)
+    const gchar * extension, GstTypeFindProbability * prob)
 {
   GstTypeFindHelper helper;
   GstTypeFind find;
   GSList *walk;
   GList *l, *type_list;
   GstCaps *result = NULL;
+  gint pos = 0;
 
   g_return_val_if_fail (GST_IS_OBJECT (obj), NULL);
   g_return_val_if_fail (func != NULL, NULL);
@@ -269,6 +276,48 @@ gst_type_find_helper_get_range (GstObject * obj,
 
   type_list = gst_type_find_factory_get_list ();
 
+  /* move the typefinders for the extension first in the list. The idea is that
+   * when one of them returns MAX we don't need to search further as there is a
+   * very high chance we got the right type. */
+  if (extension) {
+    GList *next;
+
+    GST_LOG_OBJECT (obj, "sorting typefind for extension %s to head",
+        extension);
+
+    for (l = type_list; l; l = next) {
+      GstTypeFindFactory *factory;
+      gint i;
+      gchar **ext;
+
+      next = l->next;
+
+      factory = GST_TYPE_FIND_FACTORY (l->data);
+
+      ext = gst_type_find_factory_get_extensions (factory);
+      if (ext == NULL)
+        continue;
+
+      GST_LOG_OBJECT (obj, "testing factory %s for extension %s",
+          GST_PLUGIN_FEATURE_NAME (factory), extension);
+
+      for (i = 0; ext[i]; i++) {
+        if (strcmp (ext[i], extension) == 0) {
+          /* found extension, move in front */
+          GST_LOG_OBJECT (obj, "moving typefind for extension %s to head",
+              extension);
+          /* remove entry from list */
+          type_list = g_list_delete_link (type_list, l);
+          /* insert at the position */
+          type_list = g_list_insert (type_list, factory, pos);
+          /* next element will be inserted after this one */
+          pos++;
+          break;
+        }
+      }
+    }
+  }
+
   for (l = type_list; l; l = l->next) {
     helper.factory = GST_TYPE_FIND_FACTORY (l->data);
     gst_type_find_factory_call_function (helper.factory, &find);
@@ -291,6 +340,34 @@ gst_type_find_helper_get_range (GstObject * obj,
       result, (guint) helper.best_probability);
 
   return result;
+}
+
+/**
+ * gst_type_find_helper_get_range:
+ * @obj: A #GstObject that will be passed as first argument to @func
+ * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
+ *        to access data at random offsets when doing the typefinding
+ * @size: The length in bytes
+ * @prob: location to store the probability of the found caps, or #NULL
+ *
+ * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
+ * however, this function will use the specified function @func to obtain the
+ * data needed by the typefind functions, rather than operating on a given
+ * source pad. This is useful mostly for elements like tag demuxers which
+ * strip off data at the beginning and/or end of a file and want to typefind
+ * the stripped data stream before adding their own source pad (the specified
+ * callback can then call the upstream peer pad with offsets adjusted for the
+ * tag size, for example).
+ *
+ * Returns: The #GstCaps corresponding to the data stream.
+ * Returns #NULL if no #GstCaps matches the data stream.
+ */
+GstCaps *
+gst_type_find_helper_get_range (GstObject * obj,
+    GstTypeFindHelperGetRangeFunction func, guint64 size,
+    GstTypeFindProbability * prob)
+{
+  return gst_type_find_helper_get_range_ext (obj, func, size, NULL, prob);
 }
 
 /**
@@ -496,13 +573,13 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
 
     factory = GST_TYPE_FIND_FACTORY (l->data);
 
+    /* we only want to check those factories without a function */
+    if (factory->function != NULL)
+      continue;
+
     /* get the extension that this typefind factory can handle */
     ext = gst_type_find_factory_get_extensions (factory);
     if (ext == NULL)
-      continue;
-
-    /* we only want to check those factories without a function */
-    if (factory->function != NULL)
       continue;
 
     /* there are extension, see if one of them matches the requested

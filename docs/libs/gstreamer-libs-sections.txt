@@ -675,6 +675,7 @@ gst_type_find_helper_for_buffer
 gst_type_find_helper_for_extension
 GstTypeFindHelperGetRangeFunction
 gst_type_find_helper_get_range
+gst_type_find_helper_get_range_ext
 <SUBSECTION Private>
 </SECTION>
 
