@@ -191,6 +191,12 @@ mpegtsmux_prepare_h264 (GstBuffer * buf, MpegTsPadData * data, MpegTsMux * mux)
     out_offset += nal_size;
   }
 
+  if (out_offset > GST_BUFFER_SIZE (out_buf)) {
+    GST_WARNING_OBJECT (mux, "Calculated buffer size %u is greater than max "
+        "expected size %u, using max expected size (Input might not be in "
+        "avc format", out_buf, GST_BUFFER_SIZE (out_buf));
+    out_offset = GST_BUFFER_SIZE (out_buf);
+  }
   GST_BUFFER_SIZE (out_buf) = out_offset;
 
   return out_buf;
