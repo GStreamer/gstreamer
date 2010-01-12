@@ -114,7 +114,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/tcp/gsttcpclientsink.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversrc.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
-	$(top_srcdir)/gst/tcp/gsttcp-enumtypes.h \
+	$(top_builddir)/gst/tcp/gsttcp-enumtypes.h \
 	$(top_srcdir)/gst/tcp/gsttcp.h \
 	$(top_srcdir)/gst/videorate/gstvideorate.h \
 	$(top_srcdir)/gst/videoscale/gstvideoscale.h \
