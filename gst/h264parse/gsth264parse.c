@@ -1384,6 +1384,7 @@ static GstBuffer *
 gst_h264parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
 {
   guint nal_length = h264parse->nal_length_size;
+  gint i;
 
   g_assert (nal_length <= 4);
 
@@ -1412,15 +1413,40 @@ gst_h264parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
         break;
     }
   } else if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    gint offset = 0;
+    guint nalu_size = 0;
+
     if (nal_length == 4) {
       nal = gst_buffer_make_writable (nal);
-      GST_WRITE_UINT32_BE (GST_BUFFER_DATA (nal), 0x01);
+      while (offset + 4 <= GST_BUFFER_SIZE (nal)) {
+        nalu_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (nal) + offset);
+        GST_WRITE_UINT32_BE (GST_BUFFER_DATA (nal) + offset, 0x01);
+        offset += nalu_size + 4;
+      }
     } else {
-      gst_buffer_replace (&nal,
-          gst_h264_parse_make_nal (h264parse,
-              GST_BUFFER_DATA (nal) + nal_length,
-              GST_BUFFER_SIZE (nal) - nal_length));
+      GstAdapter *adapter = gst_adapter_new ();
+      GstBuffer *sub;
+      while (offset + nal_length <= GST_BUFFER_SIZE (nal)) {
+        nalu_size = 0;
+        for (i = 0; i < nal_length; i++)
+          nalu_size = (nalu_size << 8) | GST_BUFFER_DATA (nal)[i];
+        if (nalu_size > GST_BUFFER_SIZE (nal) - nal_length - offset) {
+          GST_WARNING_OBJECT (h264parse, "NAL size %u is larger than buffer, "
+              "reducing it to the buffer size: %u", nalu_size,
+              GST_BUFFER_SIZE (nal) - nal_length - offset);
+          nalu_size = GST_BUFFER_SIZE (nal) - nal_length - offset;
+        }
+
+        sub = gst_h264_parse_make_nal (h264parse,
+            GST_BUFFER_DATA (nal) + nal_length + offset, nalu_size);
+        gst_adapter_push (adapter, sub);
+        offset += nalu_size + nal_length;
+      }
+      sub = gst_adapter_take_buffer (adapter, gst_adapter_available (adapter));
+      gst_buffer_copy_metadata (sub, nal, GST_BUFFER_COPY_ALL);
       gst_buffer_unref (nal);
+      nal = sub;
+      g_object_unref (adapter);
     }
   }
 
