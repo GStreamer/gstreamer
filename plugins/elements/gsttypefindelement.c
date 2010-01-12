@@ -613,15 +613,13 @@ gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
-static GstCaps *
-gst_type_find_guess_by_extension (GstTypeFindElement * typefind, GstPad * pad,
-    GstTypeFindProbability * probability)
+static gchar *
+gst_type_find_get_extension (GstTypeFindElement * typefind, GstPad * pad)
 {
   GstQuery *query;
-  gchar *uri;
+  gchar *uri, *result;
   size_t len;
   gint find;
-  GstCaps *caps;
 
   query = gst_query_new_uri ();
 
@@ -647,17 +645,12 @@ gst_type_find_guess_by_extension (GstTypeFindElement * typefind, GstPad * pad,
   if (find < 0)
     goto no_extension;
 
-  GST_DEBUG_OBJECT (typefind, "found extension %s", &uri[find + 1]);
+  result = g_strdup (&uri[find + 1]);
 
-  caps =
-      gst_type_find_helper_for_extension (GST_OBJECT_CAST (typefind),
-      &uri[find + 1]);
-  if (caps)
-    *probability = GST_TYPE_FIND_MAXIMUM;
-
+  GST_DEBUG_OBJECT (typefind, "found extension %s", result);
   gst_query_unref (query);
 
-  return caps;
+  return result;
 
   /* ERRORS */
 peer_query_failed:
@@ -678,6 +671,26 @@ no_extension:
     gst_query_unref (query);
     return NULL;
   }
+}
+
+static GstCaps *
+gst_type_find_guess_by_extension (GstTypeFindElement * typefind, GstPad * pad,
+    GstTypeFindProbability * probability)
+{
+  gchar *ext;
+  GstCaps *caps;
+
+  ext = gst_type_find_get_extension (typefind, pad);
+  if (!ext)
+    return NULL;
+
+  caps = gst_type_find_helper_for_extension (GST_OBJECT_CAST (typefind), ext);
+  if (caps)
+    *probability = GST_TYPE_FIND_MAXIMUM;
+
+  g_free (ext);
+
+  return caps;
 }
 
 static GstFlowReturn
@@ -848,6 +861,7 @@ gst_type_find_element_activate (GstPad * pad)
     if (peer) {
       gint64 size;
       GstFormat format = GST_FORMAT_BYTES;
+      gchar *ext;
 
       if (!gst_pad_query_duration (peer, &format, &size)) {
         GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
@@ -863,10 +877,12 @@ gst_type_find_element_activate (GstPad * pad)
         gst_object_unref (peer);
         return FALSE;
       }
+      ext = gst_type_find_get_extension (typefind, pad);
 
-      found_caps = gst_type_find_helper_get_range (GST_OBJECT_CAST (peer),
+      found_caps = gst_type_find_helper_get_range_ext (GST_OBJECT_CAST (peer),
           (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
-          (guint64) size, &probability);
+          (guint64) size, ext, &probability);
+      g_free (ext);
 
       gst_object_unref (peer);
     }
