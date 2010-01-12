@@ -84,6 +84,14 @@ _strnlen (const gchar * str, gint maxlen)
   inptr += _len + 1; \
 }G_STMT_END
 
+#define unpack_string_nocopy(inptr, outptr, endptr, error_label)  G_STMT_START{\
+  gint _len = _strnlen (inptr, (endptr-inptr)); \
+  if (_len == -1) \
+    goto error_label; \
+  outptr = (const gchar *)inptr; \
+  inptr += _len + 1; \
+}G_STMT_END
+
 #define ALIGNMENT            (sizeof (void *))
 #define alignment(_address)  (gsize)_address%ALIGNMENT
 #define align(_ptr)          _ptr += (( alignment(_ptr) == 0) ? 0 : ALIGNMENT-alignment(_ptr))
@@ -496,6 +504,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
 {
   GstRegistryChunkPluginFeature *pf = NULL;
   GstPluginFeature *feature = NULL;
+  const gchar *const_str;
   gchar *type_name = NULL, *str;
   gchar *feature_name;
   GType type;
@@ -584,9 +593,8 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     if (G_UNLIKELY ((n = ef->ninterfaces))) {
       GST_DEBUG ("Reading %d Interfaces at address %p", n, *in);
       for (i = 0; i < n; i++) {
-        unpack_string (*in, str, end, fail);
-        __gst_element_factory_add_interface (factory, str);
-        g_free (str);
+        unpack_string_nocopy (*in, const_str, end, fail);
+        __gst_element_factory_add_interface (factory, const_str);
       }
     }
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
@@ -600,10 +608,13 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     unpack_element (*in, tff, GstRegistryChunkTypeFindFactory, end, fail);
     pf = (GstRegistryChunkPluginFeature *) tff;
 
-    /* load caps */
-    unpack_string (*in, str, end, fail);
-    factory->caps = (str && *str) ? gst_caps_from_string (str) : NULL;
-    g_free (str);
+    /* load typefinder caps */
+    unpack_string_nocopy (*in, const_str, end, fail);
+    if (const_str != NULL && *const_str != '\0')
+      factory->caps = gst_caps_from_string (const_str);
+    else
+      factory->caps = NULL;
+
     /* load extensions */
     if (tff->nextensions) {
       GST_DEBUG ("Reading %d Typefind extensions at address %p",
@@ -729,8 +740,8 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   gchar *start = *in;
 #endif
   GstRegistryChunkPluginElement *pe;
+  const gchar *cache_str = NULL;
   GstPlugin *plugin = NULL;
-  gchar *cache_str = NULL;
   guint i, n;
 
   align (*in);
@@ -764,11 +775,9 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   GST_LOG ("  desc.origin='%s'", plugin->desc.origin);
 
   /* unpack cache data */
-  unpack_string (*in, cache_str, end, fail);
-  if (*cache_str) {
+  unpack_string_nocopy (*in, cache_str, end, fail);
+  if (cache_str != NULL && *cache_str != '\0')
     plugin->priv->cache_data = gst_structure_from_string (cache_str, NULL);
-  }
-  g_free (cache_str);
 
   /* If the license string is 'BLACKLIST', mark this as a blacklisted
    * plugin */
