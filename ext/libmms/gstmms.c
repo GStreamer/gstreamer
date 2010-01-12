@@ -452,6 +452,14 @@ gst_mms_start (GstBaseSrc * bsrc)
         gst_message_new_element (GST_OBJECT_CAST (mms),
             gst_structure_new ("redirect", "new-location", G_TYPE_STRING, url,
                 NULL)));
+
+    /* post an error message as well, so that applications that don't handle
+     * redirect messages get to see a proper error message */
+    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
+        ("Could not connect to streaming server."),
+        ("A redirect message was posted on the bus and should have been "
+            "handled by the application."));
+
     return FALSE;
   }
 
