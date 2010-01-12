@@ -13,7 +13,7 @@ TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(top_builddir)/../gst-ffmpeg/ext/ffmpeg:$(top_builddir)/../gst-plugins-good/gst:$(top_builddir)/../gst-plugins-good/sys:$(top_builddir)/../gst-plugins-good/ext:$(top_builddir)/../gst-plugins-ugly/gst:$(top_builddir)/../gst-plugins-ugly/sys:$(top_builddir)/../gst-plugins-ugly/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
-        STATE_IGNORE_ELEMENTS="alsaspdifsink apexsink camerabin cdaudio dc1394src dccpclientsrc dccpclientsink dccpserversrc dccpserversink dvbsrc dvbbasebin dfbvideosink festival nassink rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv vdpaumpegdec"
+        STATE_IGNORE_ELEMENTS="alsaspdifsink apexsink camerabin cdaudio dc1394src dccpclientsrc dccpclientsink dccpserversrc dccpserversink dvbsrc dvbbasebin dfbvideosink festival nassink rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv vdpaumpegdec neonhttpsrc"
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
