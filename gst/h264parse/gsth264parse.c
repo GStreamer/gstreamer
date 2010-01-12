@@ -1169,6 +1169,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
   GstH264Sps *sps = NULL;
   GstCaps *src_caps = NULL;
+  GstStructure *structure;
   gboolean modified = FALSE;
 
   /* current PPS dictates which SPS to use */
@@ -1225,14 +1226,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     }
   }
 
+  structure = gst_caps_get_structure (src_caps, 0);
   /* transforming to non-bytestream needs to make codec-data */
   if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
     GstBuffer *buf;
-    GstStructure *structure;
     const GValue *value = NULL;
     const GstBuffer *codec_data = NULL;
 
-    structure = gst_caps_get_structure (src_caps, 0);
     value = gst_structure_get_value (structure, "codec_data");
     if (value != NULL)
       codec_data = gst_value_get_buffer (value);
@@ -1249,6 +1249,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       }
     } else {
       GST_DEBUG_OBJECT (h264parse, "no codec_data yet");
+    }
+  } else if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+    /* need to remove the codec_data */
+    if (gst_structure_has_field (structure, "codec_data")) {
+      gst_structure_remove_field (structure, "codec_data");
+      modified = TRUE;
     }
   }
 
