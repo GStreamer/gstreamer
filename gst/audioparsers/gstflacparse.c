@@ -863,8 +863,8 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
   const guint8 *data = GST_BUFFER_DATA (buffer);
-  guint32 img_len, img_type;
-  guint32 img_mimetype_len, img_description_len;
+  guint32 img_len = 0, img_type = 0;
+  guint32 img_mimetype_len = 0, img_description_len = 0;
 
   if (!gst_byte_reader_get_uint32_be (&reader, &img_type))
     goto error;
