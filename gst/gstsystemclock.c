@@ -198,8 +198,6 @@ gst_system_clock_dispose (GObject * object)
     GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
     entry->status = GST_CLOCK_UNSCHEDULED;
   }
-  g_list_free (clock->entries);
-  clock->entries = NULL;
   GST_CLOCK_BROADCAST (clock);
   gst_system_clock_add_wakeup (sysclock);
   GST_OBJECT_UNLOCK (clock);
@@ -208,6 +206,10 @@ gst_system_clock_dispose (GObject * object)
     g_thread_join (sysclock->thread);
   sysclock->thread = NULL;
   GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
+
+  g_list_foreach (clock->entries, (GFunc) gst_clock_id_unref, NULL);
+  g_list_free (clock->entries);
+  clock->entries = NULL;
 
   gst_poll_free (sysclock->priv->timer);
 
