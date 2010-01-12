@@ -670,7 +670,7 @@ static GstFlowReturn
 gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 {
   gint64 granule;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GstOggDemux *ogg = pad->ogg;
 
