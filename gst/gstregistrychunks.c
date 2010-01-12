@@ -504,14 +504,13 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
 {
   GstRegistryChunkPluginFeature *pf = NULL;
   GstPluginFeature *feature = NULL;
-  const gchar *const_str;
-  gchar *type_name = NULL, *str;
-  gchar *feature_name;
+  const gchar *const_str, *type_name;
+  gchar *str, *feature_name;
   GType type;
   guint i;
 
   /* unpack plugin feature strings */
-  unpack_string (*in, type_name, end, fail);
+  unpack_string_nocopy (*in, type_name, end, fail);
 
   if (G_UNLIKELY (!type_name)) {
     GST_ERROR ("No feature type name");
@@ -527,13 +526,11 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
   if (G_UNLIKELY (!(type = g_type_from_name (type_name)))) {
     GST_ERROR ("Unknown type from typename '%s' for plugin '%s'", type_name,
         plugin_name);
-    g_free (type_name);
     g_free (feature_name);
     return FALSE;
   }
   if (G_UNLIKELY ((feature = g_object_newv (type, 0, NULL)) == NULL)) {
     GST_ERROR ("Can't create feature from type");
-    g_free (type_name);
     g_free (feature_name);
     return FALSE;
   }
@@ -648,13 +645,11 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
   gst_registry_add_feature (registry, feature);
   GST_DEBUG ("Added feature %s", feature->name);
 
-  g_free (type_name);
   return TRUE;
 
   /* Errors */
 fail:
   GST_INFO ("Reading plugin feature failed");
-  g_free (type_name);
   if (feature) {
     if (GST_IS_OBJECT (feature))
       gst_object_unref (feature);
