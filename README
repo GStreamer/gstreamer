@@ -1,0 +1,26 @@
+
+  gst-vaapi
+  VA API support to GStreamer
+
+  Copyright (C) 2010 Splitted-Desktop Systems
+
+
+License
+-------
+
+gst-vaapi is available under the terms of the GNU General Public
+License.
+
+
+Overview
+--------
+
+gst-vaapi consists in a VA API based videosink for GStreamer and
+helper libraries.
+
+
+Requirements
+------------
+
+gstreamer-0.10 >= 0.10.0
+gstreamer-plugins-base-0.10 >= 0.10.0
