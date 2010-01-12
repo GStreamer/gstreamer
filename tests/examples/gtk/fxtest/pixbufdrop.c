@@ -128,7 +128,7 @@ on_drag_data_received (GtkWidget * widget,
 {
   SourceData *userdata = g_new0 (SourceData, 1);
 #ifdef G_OS_WIN32
-  gchar *filename = g_filename_from_uri (seldata->data, NULL, NULL);
+  gchar *filename = g_filename_from_uri ((const gchar *) seldata->data, NULL, NULL);
 #else
   GdkPixbufFormat *format;
   gchar **uris = gtk_selection_data_get_uris (seldata);
