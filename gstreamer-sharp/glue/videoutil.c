@@ -11,7 +11,7 @@ gstsharp_gst_videoutil_get_template_caps (GstVideoFormat fmt) {
       return NULL;
 
     caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("AYUV"));
-    gst_caps_set_simple (caps, fourcc, GST_TYPE_FOURCC, fourcc, NULL);
+    gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC, fourcc, NULL);
     return caps;
   } else {
     switch (fmt) {
