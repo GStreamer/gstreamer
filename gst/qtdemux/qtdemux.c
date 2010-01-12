@@ -4156,7 +4156,8 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %d = (%u MB)",
+  GST_DEBUG_OBJECT (qtdemux,
+      "allocating n_samples %u * %" G_GSIZE_FORMAT " = (%u MB)",
       stream->n_samples, sizeof (QtDemuxSample),
       (guint) (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
 
