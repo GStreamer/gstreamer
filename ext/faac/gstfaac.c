@@ -491,8 +491,18 @@ gst_faac_configure_source_pad (GstFaac * faac)
     conf->bitRate = maxbitrate;
   }
 
+  /* default 0 to start with, libfaac chooses based on bitrate */
+  conf->bandWidth = 0;
+
   if (!faacEncSetConfiguration (faac->handle, conf))
     goto set_failed;
+
+  /* let's see what really happened,
+   * note that this may not really match desired rate */
+  GST_DEBUG_OBJECT (faac, "average bitrate: %d kbps",
+      (conf->bitRate + 500) / 1000 * faac->channels);
+  GST_DEBUG_OBJECT (faac, "quantization quality: %ld", conf->quantqual);
+  GST_DEBUG_OBJECT (faac, "bandwidth: %d Hz", conf->bandWidth);
 
   /* now create a caps for it all */
   srccaps = gst_caps_new_simple ("audio/mpeg",
