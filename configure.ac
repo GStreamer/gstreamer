@@ -24,7 +24,7 @@ PKG_CHECK_MODULES(MONO_DEPENDENCY, mono >= $MONO_REQUIRED_VERSION, has_mono=true
 AM_PROG_LIBTOOL
 
 if test "x$has_mono" = "xtrue"; then
-	GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
+	GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(prefix)/lib /root $(DESTDIR)/$(prefix)/lib'
 	GENERATED_SOURCES=generated/*.cs
 	AC_PATH_PROG(MONO, mono, no)
 	AC_PATH_PROG(CSC, gmcs, no)
