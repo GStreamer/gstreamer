@@ -2305,7 +2305,7 @@ gst_qt_mux_request_new_pad (GstElement * element,
   if (templ->direction != GST_PAD_SINK)
     goto wrong_direction;
 
-  if (qtmux->state != GST_QT_MUX_STATE_NONE)
+  if (qtmux->state > GST_QT_MUX_STATE_STARTED)
     goto too_late;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
