@@ -308,7 +308,7 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_AMPLIFICATION,
       g_param_spec_float ("amplification", "Amplification",
-          "Factor of amplification", 0.0, G_MAXFLOAT,
+          "Factor of amplification", -G_MAXFLOAT, G_MAXFLOAT,
           1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
