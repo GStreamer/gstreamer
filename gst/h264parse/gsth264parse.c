@@ -1164,6 +1164,18 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   return buf;
 }
 
+static guint
+gst_h264_parse_parse_stream_format (GstH264Parse * h264parse,
+    const gchar * stream_format)
+{
+  if (strcmp (stream_format, "avc-sample") == 0) {
+    return GST_H264_PARSE_FORMAT_SAMPLE;
+  } else if (strcmp (stream_format, "byte-stream") == 0) {
+    return GST_H264_PARSE_FORMAT_BYTE;
+  }
+  return GST_H264_PARSE_FORMAT_INPUT;   /* this means we don't know */
+}
+
 static gboolean
 gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
@@ -1171,6 +1183,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   GstCaps *src_caps = NULL;
   GstStructure *structure;
   gboolean modified = FALSE;
+  const gchar *stream_format;
 
   /* current PPS dictates which SPS to use */
   if (h264parse->pps && h264parse->pps->sps_id < MAX_SPS_COUNT) {
@@ -1227,6 +1240,50 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   }
 
   structure = gst_caps_get_structure (src_caps, 0);
+
+  /* we replace the stream-format on caps if needed */
+  stream_format = gst_structure_get_string (structure, "stream-format");
+  if (stream_format) {
+    guint input_format;
+    guint output_format;
+
+    input_format = gst_h264_parse_parse_stream_format (h264parse,
+        stream_format);
+    output_format = h264parse->format;
+
+    if (output_format == GST_H264_PARSE_FORMAT_INPUT) {
+      if (h264parse->packetized) {
+        output_format = GST_H264_PARSE_FORMAT_SAMPLE;
+      } else {
+        output_format = GST_H264_PARSE_FORMAT_BYTE;
+      }
+    }
+
+    if (input_format != output_format) {
+      /* we need to replace it */
+      stream_format = NULL;
+    }
+  }
+
+  /* we need to add a new stream-format */
+  if (stream_format == NULL) {
+    gst_structure_remove_field (structure, "stream-format");
+    if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
+      stream_format = "avc-sample";
+    } else if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
+      stream_format = "byte-stream";
+    } else {
+      if (h264parse->packetized) {
+        stream_format = "avc-sample";
+      } else {
+        stream_format = "byte-stream";
+      }
+    }
+    gst_structure_set (structure, "stream-format", G_TYPE_STRING, stream_format,
+        NULL);
+    modified = TRUE;
+  }
+
   /* transforming to non-bytestream needs to make codec-data */
   if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
     GstBuffer *buf;
