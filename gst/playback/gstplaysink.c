@@ -1732,12 +1732,13 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
      * video in this case. */
     need_video = TRUE;
     need_text = TRUE;
-  } else if (flags & GST_PLAY_FLAG_VIDEO && playsink->video_pad) {
+  } else if (((flags & GST_PLAY_FLAG_VIDEO)
+          || (flags & GST_PLAY_FLAG_NATIVE_VIDEO)) && playsink->video_pad) {
     /* we have video and we are requested to show it */
     need_video = TRUE;
   }
   if (playsink->audio_pad) {
-    if (flags & GST_PLAY_FLAG_AUDIO) {
+    if ((flags & GST_PLAY_FLAG_AUDIO) || (flags & GST_PLAY_FLAG_NATIVE_AUDIO)) {
       need_audio = TRUE;
     }
     if (playsink->audio_pad_raw) {
