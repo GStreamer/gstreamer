@@ -46,7 +46,7 @@ or integrate with autoconf using the pkg.m4 macro (providing PKG_CONFIG_CHECK).
 It is possible to develop and compile against an uninstalled copy of
 gstreamer and gst-plugins-* (for example, against gits checkouts).
 The easiest way to do this is to use a bash script like  this:
-<ulink url="http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/faq/gst-uninstalled">lastest version of gst-uninstalled</ulink>.
+<ulink url="http://cgit.freedesktop.org/gstreamer/gstreamer/tree/scripts/gst-uninstalled">latest version of gst-uninstalled</ulink>.
 
 If you put this script in your path, and symlink it to gst-git (if you want
 to develop against git master) or to gst-released (if you want to develop

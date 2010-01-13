@@ -3,6 +3,23 @@
   <qandaset defaultlabel="qanda">
 
     <qandaentry>
+      <question id="git-uninstalled">
+        <para>
+Is there a way to test or develop against GStreamer from git without
+interfering with my system GStreamer installed from packages?
+        </para>
+      </question>
+
+      <answer>
+        <para>
+Yes! You have two options: you can either run GStreamer in an uninstalled setup
+(see <link linkend="developing-uninstalled-gstreamer">How do I develop against
+an uninstalled GStreamer copy ?</link>), or you can use GNOME's jhbuild.
+        </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="git-anon">
         <para>
 How do I check out GStreamer from git ?
