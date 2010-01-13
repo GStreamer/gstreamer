@@ -56,8 +56,6 @@
 
 #include <errno.h>
 
-extern int h_errno;
-
 #include "gstrtspdefs.h"
 
 #ifdef G_OS_WIN32
