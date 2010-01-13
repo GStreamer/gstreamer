@@ -1736,7 +1736,7 @@ mpeg_find_next_header (GstTypeFind * tf, DataScanCtx * c,
 /*** video/mpeg MPEG-4 elementary video stream ***/
 
 static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
-    "systemstream = (boolean) false, mpegversion = 4");
+    "systemstream=(boolean)false, mpegversion=4, parsed=(boolean)false");
 #define MPEG4_VIDEO_CAPS gst_static_caps_get(&mpeg4_video_caps)
 
 /*
