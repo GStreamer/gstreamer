@@ -115,8 +115,8 @@ gst_iir_equalizer_10bands_class_init (GstIirEqualizer10BandsClass * klass)
           -24.0, 12.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_BAND3,
-      g_param_spec_double ("band3", "227 Hz",
-          "gain for the frequency band 227 Hz, ranging from -24 dB to +12 dB",
+      g_param_spec_double ("band3", "237 Hz",
+          "gain for the frequency band 237 Hz, ranging from -24 dB to +12 dB",
           -24.0, 12.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_BAND4,
