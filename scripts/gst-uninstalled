@@ -1,6 +1,6 @@
 #!/bin/bash -i
 #
-# this script is in git as gstreamer/docs/faq/gst-uninstalled
+# this script is in git as gstreamer/scripts/gst-uninstalled
 #
 # It will set up the environment to use and develop gstreamer and projects
 # that use gstreamer with an uninstalled git checkout of gstreamer and the

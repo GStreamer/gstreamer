@@ -220,7 +220,7 @@ After the autogen.sh stage, you can follow the directions listed in
 "COMPILING FROM SOURCE"
 
 You can also run your whole cvs stack uninstalled.  The script in
-the gstreamer module /docs/faq/gst-uninstalled) is helpful in setting
+the gstreamer module /scripts/gst-uninstalled) is helpful in setting
 up your environment for this.
 
 PLUG-IN DEPENDENCIES AND LICENSES
