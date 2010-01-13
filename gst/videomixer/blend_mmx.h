@@ -233,8 +233,8 @@ _memset_u8_mmx (guint8 * dest, guint val, guint count)
     "jne        4b            \n\t"
     "5:                       \n\t"
     "emms                     \n\t"
-    : "=r" (count), "=r" (dest)
-    : "0" (count), "1" (dest), "r" (val8), "m" (val64)
+    : "=r" (count), "=q" (dest)
+    : "0" (count), "1" (dest), "q" (val8), "m" (val64)
     : "memory"
 #ifdef __MMX__
       , "mm0"
