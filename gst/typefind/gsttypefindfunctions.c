@@ -686,7 +686,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
             G_GINT64_MODIFIER "x, framelen %u", mpegversion, c.offset, len);
         gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
-            "mpegversion", G_TYPE_INT, mpegversion, NULL);
+            "mpegversion", G_TYPE_INT, mpegversion,
+            "stream-type", G_TYPE_STRING, "adts", NULL);
         break;
       }
 
@@ -694,7 +695,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
     } else if (!memcmp (c.data, "ADIF", 4)) {
       /* ADIF header */
       gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
-          "framed", G_TYPE_BOOLEAN, FALSE, "mpegversion", G_TYPE_INT, 4, NULL);
+          "framed", G_TYPE_BOOLEAN, FALSE, "mpegversion", G_TYPE_INT, 4,
+          "stream-format", G_TYPE_STRING, "adif", NULL);
       break;
     }
 
