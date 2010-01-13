@@ -45,6 +45,7 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
 
 #include "gst/riff/riff-media.h"
 #include "gstavidemux.h"
