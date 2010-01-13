@@ -32,6 +32,7 @@
       </para>
     </abstract>
 
+<!--
     <revhistory>
       <revision>
         <revnumber>0.2.1</revnumber>
@@ -57,6 +58,8 @@
         <revremark>Initial conversion from FAQ database.</revremark>
       </revision>
     </revhistory>
+-->
+
   </articleinfo>
 
   &START;
