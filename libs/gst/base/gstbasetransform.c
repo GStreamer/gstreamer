@@ -1253,7 +1253,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
   /* check if we got different caps on this new output buffer */
   newcaps = GST_BUFFER_CAPS (*out_buf);
   newsize = GST_BUFFER_SIZE (*out_buf);
-  if (!gst_caps_is_equal (newcaps, oldcaps)) {
+  if (newcaps && !gst_caps_is_equal (newcaps, oldcaps)) {
     GstCaps *othercaps;
     gboolean can_convert;
 
@@ -1394,7 +1394,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
    * check. This is needed when we receive different pointers on the sinkpad
    * that mean the same caps. What we then want to do is prefer those caps over
    * the ones on the srcpad and set the srcpad caps to the buffer caps */
-  setcaps = (newcaps != outcaps) && (!gst_caps_is_equal (newcaps, outcaps));
+  setcaps = !newcaps || ((newcaps != outcaps)
+      && (!gst_caps_is_equal (newcaps, outcaps)));
   /* we need to modify the metadata when the element is not gap aware,
    * passthrough is not used and the gap flag is set */
   copymeta |= !trans->priv->gap_aware && !trans->passthrough
