@@ -1438,7 +1438,7 @@ wrong_version:
  * takes ownership of nal and returns buffer
  */
 static GstBuffer *
-gst_h264parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
+gst_h264_parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
 {
   guint nal_length = h264parse->nal_length_size;
   gint i;
@@ -1617,7 +1617,7 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
 
   if (h264parse->merge) {
     /* proper prefix */
-    nal = gst_h264parse_write_nal_prefix (h264parse, nal);
+    nal = gst_h264_parse_write_nal_prefix (h264parse, nal);
 
     /* start of a picture is a good time to insert codec SPS and PPS */
     if (G_UNLIKELY (h264parse->codec_nals && h264parse->picture_start)) {
@@ -1648,7 +1648,7 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
       start = TRUE;
     }
   } else {
-    outbuf = gst_h264parse_write_nal_prefix (h264parse, nal);
+    outbuf = gst_h264_parse_write_nal_prefix (h264parse, nal);
   }
 
   if (_start)
