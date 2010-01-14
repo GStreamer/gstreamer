@@ -1703,6 +1703,26 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
 }
 
 static gboolean
+check_field (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *structure = (GstStructure *) user_data;
+  const GValue *other = gst_structure_id_get_value (structure, field_id);
+  if (other == NULL)
+    return FALSE;
+  return gst_value_compare (value, other) == GST_VALUE_EQUAL;
+}
+
+static gboolean
+gst_qtmux_caps_is_subset_full (GstQTMux * qtmux, GstCaps * subset,
+    GstCaps * superset)
+{
+  GstStructure *sub_s = gst_caps_get_structure (subset, 0);
+  GstStructure *sup_s = gst_caps_get_structure (superset, 0);
+
+  return gst_structure_foreach (sub_s, check_field, sup_s);
+}
+
+static gboolean
 gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstQTMux *qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
@@ -1718,6 +1738,7 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
   const gchar *stream_format;
+  GstCaps *current_caps = NULL;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -1725,9 +1746,21 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   qtpad->prepare_buf_func = NULL;
 
-  /* does not go well to renegotiate stream mid-way */
-  if (qtpad->fourcc)
-    goto refuse_renegotiation;
+  /* does not go well to renegotiate stream mid-way, unless
+   * the old caps are a subset of the new one (this means upstream
+   * added more info to the caps, as both should be 'fixed' caps) */
+  if (qtpad->fourcc) {
+    g_object_get (pad, "caps", &current_caps, NULL);
+    g_assert (caps != NULL);
+
+    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+      goto refuse_renegotiation;
+    }
+    GST_DEBUG_OBJECT (qtmux,
+        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, GST_PAD_CAPS (pad));
+    return TRUE;
+  }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -1984,6 +2017,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   GList *ext_atom_list = NULL;
   gboolean sync = FALSE;
   int par_num, par_den;
+  GstCaps *current_caps = NULL;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -1991,9 +2025,21 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   qtpad->prepare_buf_func = NULL;
 
-  /* does not go well to renegotiate stream mid-way */
-  if (qtpad->fourcc)
-    goto refuse_renegotiation;
+  /* does not go well to renegotiate stream mid-way, unless
+   * the old caps are a subset of the new one (this means upstream
+   * added more info to the caps, as both should be 'fixed' caps) */
+  if (qtpad->fourcc) {
+    g_object_get (pad, "caps", &current_caps, NULL);
+    g_assert (caps != NULL);
+
+    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+      goto refuse_renegotiation;
+    }
+    GST_DEBUG_OBJECT (qtmux,
+        "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, GST_PAD_CAPS (pad));
+    return TRUE;
+  }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
