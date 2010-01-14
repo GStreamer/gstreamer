@@ -1558,6 +1558,8 @@ gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
       if (!gst_pad_send_event (sinkpad, event))
         GST_DEBUG_OBJECT (suburidecodebin, "Seeking to the beginning failed!");
     }
+
+    gst_object_unref (sinkpad);
   }
 
   if (it)
