@@ -192,6 +192,9 @@ struct _QtDemuxStream
   GstCaps *caps;
   guint32 fourcc;
 
+  /* if the stream has a redirect URI in its headers, we store it here */
+  gchar *redirect_uri;
+
   /* duration/scale */
   guint64 duration;             /* in timescale */
   guint32 timescale;
@@ -1679,6 +1682,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
           g_free (stream->segments);
         if (stream->pending_tags)
           gst_tag_list_free (stream->pending_tags);
+        g_free (stream->redirect_uri);
         /* free stbl sub-atoms */
         gst_qtdemux_stbl_free (stream);
         g_free (stream);
@@ -4854,6 +4858,98 @@ end:
   }
 }
 
+static gchar *
+qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
+{
+  GNode *hndl;
+  GNode *dinf;
+  GstByteReader dref;
+  gchar *uri = NULL;
+
+  /*
+   * Get 'dinf', to get its child 'dref', that might contain a 'hndl'
+   * atom that might contain a 'data' atom with the rtsp uri.
+   * This case was reported in bug #597497, some info about
+   * the hndl atom can be found in TN1195
+   */
+  dinf = qtdemux_tree_get_child_by_type (minf, FOURCC_dinf);
+  GST_DEBUG_OBJECT (qtdemux, "Trying to obtain rtsp URI for stream trak");
+
+  if (dinf) {
+    guint32 dref_num_entries;
+    if (qtdemux_tree_get_child_by_type_full (dinf, FOURCC_dref, &dref) &&
+        gst_byte_reader_skip (&dref, 4) &&
+        gst_byte_reader_get_uint32_be (&dref, &dref_num_entries)) {
+      gint i;
+      hndl = NULL;
+
+      /* search dref entries for hndl atom */
+      for (i = 0; i < dref_num_entries; i++) {
+        guint32 size, type;
+        guint8 string_len;
+        if (gst_byte_reader_get_uint32_be (&dref, &size) &&
+            qt_atom_parser_get_fourcc (&dref, &type)) {
+          if (type == FOURCC_hndl) {
+            GST_DEBUG_OBJECT (qtdemux, "Found hndl atom");
+
+            /* skip data reference handle bytes and the
+             * following pascal string and some extra 4 
+             * bytes I have no idea what are */
+            if (!gst_byte_reader_skip (&dref, 4) ||
+                !gst_byte_reader_get_uint8 (&dref, &string_len) ||
+                !gst_byte_reader_skip (&dref, string_len + 4)) {
+              GST_WARNING_OBJECT (qtdemux, "Failed to parse hndl atom");
+              break;
+            }
+
+            /* iterate over the atoms to find the data atom */
+            while (gst_byte_reader_get_remaining (&dref) >= 8) {
+              guint32 atom_size;
+              guint32 atom_type;
+
+              if (gst_byte_reader_get_uint32_be (&dref, &atom_size) &&
+                  qt_atom_parser_get_fourcc (&dref, &atom_type)) {
+                if (atom_type == FOURCC_data) {
+                  const guint8 *uri_aux = NULL;
+
+                  /* found the data atom that might contain the rtsp uri */
+                  GST_DEBUG_OBJECT (qtdemux, "Found data atom inside "
+                      "hndl atom, interpreting it as an URI");
+                  if (gst_byte_reader_peek_data (&dref, atom_size - 8,
+                          &uri_aux)) {
+                    if (g_strstr_len ((gchar *) uri_aux, 7, "rtsp://") != NULL)
+                      uri = g_strndup ((gchar *) uri_aux, atom_size - 8);
+                    else
+                      GST_WARNING_OBJECT (qtdemux, "Data atom in hndl atom "
+                          "didn't contain a rtsp address");
+                  } else {
+                    GST_WARNING_OBJECT (qtdemux, "Failed to get the data "
+                        "atom contents");
+                  }
+                  break;
+                }
+                /* skipping to the next entry */
+                gst_byte_reader_skip (&dref, atom_size - 8);
+              } else {
+                GST_WARNING_OBJECT (qtdemux, "Failed to parse hndl child "
+                    "atom header");
+                break;
+              }
+            }
+            break;
+          }
+          /* skip to the next entry */
+          gst_byte_reader_skip (&dref, size - 8);
+        } else {
+          GST_WARNING_OBJECT (qtdemux, "Error parsing dref atom");
+        }
+      }
+      GST_DEBUG_OBJECT (qtdemux, "Finished parsing dref atom");
+    }
+  }
+  return uri;
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -5659,7 +5755,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_FOURCC_ARGS (fourcc), stream->caps);
 
   } else if (stream->subtype == FOURCC_strm) {
-    if (fourcc != FOURCC_rtsp) {
+    if (fourcc == FOURCC_rtsp) {
+      stream->redirect_uri = qtdemux_get_rtsp_uri_from_hndl (qtdemux, minf);
+    } else {
       GST_INFO_OBJECT (qtdemux, "unhandled stream type %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (fourcc));
       goto unknown_stream;
@@ -6729,6 +6827,20 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   gst_element_post_message (GST_ELEMENT (qtdemux),
       gst_message_new_tag (GST_OBJECT (qtdemux),
           gst_tag_list_copy (qtdemux->tag_list)));
+
+  /* check if we should post a redirect in case there is a single trak
+   * and it is a redirecting trak */
+  if (qtdemux->n_streams == 1 && qtdemux->streams[0]->redirect_uri != NULL) {
+    GstMessage *m;
+    GST_INFO_OBJECT (qtdemux, "Issuing a redirect due to a single track with "
+        "a external content");
+    m = gst_message_new_element (GST_OBJECT_CAST (qtdemux),
+        gst_structure_new ("redirect",
+            "new-location", G_TYPE_STRING, qtdemux->streams[0]->redirect_uri,
+            NULL));
+    gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
+    qtdemux->posted_redirect = TRUE;
+  }
 
   return TRUE;
 }
