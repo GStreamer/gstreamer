@@ -46,6 +46,8 @@
 #include <gst/tag/tag.h>
 #include <gst/audio/multichannel.h>
 
+#include "gstvorbiscommon.h"
+
 GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
 
@@ -564,77 +566,14 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 2:
       /* nothing */
       break;
-    case 3:{
-      static const GstAudioChannelPosition pos3[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-      };
-      pos = pos3;
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+      pos = gst_vorbis_channel_positions[vd->vi.channels - 1];
       break;
-    }
-    case 4:{
-      static const GstAudioChannelPosition pos4[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
-      };
-      pos = pos4;
-      break;
-    }
-    case 5:{
-      static const GstAudioChannelPosition pos5[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
-      };
-      pos = pos5;
-      break;
-    }
-    case 6:{
-      static const GstAudioChannelPosition pos6[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE
-      };
-      pos = pos6;
-      break;
-    }
-      /* 6.1 and 7.1 are in the Vorbis spec since 2010-01-13 */
-    case 7:{
-      static const GstAudioChannelPosition pos7[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE
-      };
-      pos = pos7;
-      /* fallthrough */
-    }
-    case 8:{
-      static const GstAudioChannelPosition pos8[] = {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE
-      };
-
-      pos = pos8;
-      /* fallthrough */
-    }
     default:{
       gint i;
       GstAudioChannelPosition *posn =

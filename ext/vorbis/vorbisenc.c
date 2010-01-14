@@ -54,6 +54,8 @@
 #include <gst/audio/audio.h>
 #include "gstvorbisenc.h"
 
+#include "gstvorbiscommon.h"
+
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug
 
@@ -228,56 +230,6 @@ gst_vorbis_enc_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static const GstAudioChannelPosition vorbischannelpositions[][8] = {
-  {                             /* Mono */
-      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
-  {                             /* Stereo */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-  {                             /* Stereo + Centre */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-  {                             /* Quadraphonic */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      },
-  {                             /* Stereo + Centre + rear stereo */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      },
-  {                             /* Full 5.1 Surround */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
-      },
-  {                             /* 6.1 Surround, in Vorbis spec since 2010-01-13 */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
-  {                             /* 7.1 Surround, in Vorbis spec since 2010-01-13 */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
-};
-
 static GstCaps *
 gst_vorbis_enc_generate_sink_caps (void)
 {
@@ -305,7 +257,7 @@ gst_vorbis_enc_generate_sink_caps (void)
     g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
 
     for (c = 0; c < i; c++) {
-      g_value_set_enum (&pos, vorbischannelpositions[i - 1][c]);
+      g_value_set_enum (&pos, gst_vorbis_channel_positions[i - 1][c]);
       gst_value_array_append_value (&chanpos, &pos);
     }
     g_value_unset (&pos);
