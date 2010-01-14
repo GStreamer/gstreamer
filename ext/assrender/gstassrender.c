@@ -1018,14 +1018,14 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
     ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
         timestamp, NULL);
 
-    if (ass_image == NULL) {
+    if (ass_image != NULL) {
+      buffer = gst_buffer_make_writable (buffer);
+      render->blit (render, ass_image, buffer);
+    } else {
       GST_LOG_OBJECT (render, "nothing to render right now");
-      ret = gst_pad_push (render->srcpad, buffer);
-      return ret;
     }
-
-    buffer = gst_buffer_make_writable (buffer);
-    render->blit (render, ass_image, buffer);
+  } else {
+    GST_LOG_OBJECT (render, "rendering disabled, doing buffer passthrough");
   }
 
   ret = gst_pad_push (render->srcpad, buffer);
