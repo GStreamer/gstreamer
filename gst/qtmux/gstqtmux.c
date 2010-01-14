@@ -1759,7 +1759,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (qtmux,
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, GST_PAD_CAPS (pad));
-    return TRUE;
   }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,
@@ -2038,7 +2037,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (qtmux,
         "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, GST_PAD_CAPS (pad));
-    return TRUE;
   }
 
   GST_DEBUG_OBJECT (qtmux, "%s:%s, caps=%" GST_PTR_FORMAT,

@@ -460,14 +460,14 @@ atom_stsd_init (AtomSTSD * stsd)
 
   atom_full_init (&stsd->header, FOURCC_stsd, 0, 0, 0, flags);
   stsd->entries = NULL;
+  stsd->n_entries = 0;
 }
 
 static void
-atom_stsd_clear (AtomSTSD * stsd)
+atom_stsd_remove_entries (AtomSTSD * stsd)
 {
   GList *walker;
 
-  atom_full_clear (&stsd->header);
   walker = stsd->entries;
   while (walker) {
     GList *aux = walker;
@@ -489,6 +489,14 @@ atom_stsd_clear (AtomSTSD * stsd)
     }
     g_list_free (aux);
   }
+  stsd->n_entries = 0;
+}
+
+static void
+atom_stsd_clear (AtomSTSD * stsd)
+{
+  atom_stsd_remove_entries (stsd);
+  atom_full_clear (&stsd->header);
 }
 
 static void
@@ -3015,6 +3023,7 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
   SampleTableEntryMP4A *ste;
 
   atom_trak_set_audio_commons (trak, context, scale);
+  atom_stsd_remove_entries (&trak->mdia.minf.stbl.stsd);
   ste = atom_trak_add_audio_entry (trak, context, entry->fourcc);
 
   trak->is_video = FALSE;
@@ -3088,6 +3097,7 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
   }
 
   atom_trak_set_video_commons (trak, context, scale, dwidth, dheight);
+  atom_stsd_remove_entries (&trak->mdia.minf.stbl.stsd);
   ste = atom_trak_add_video_entry (trak, context, entry->fourcc);
 
   trak->is_video = TRUE;
