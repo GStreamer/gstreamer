@@ -1028,13 +1028,19 @@ atom_trak_new (AtomsContext * context)
 }
 
 static void
-atom_trak_free (AtomTRAK * trak)
+atom_trak_clear (AtomTRAK * trak)
 {
   atom_clear (&trak->header);
   atom_tkhd_clear (&trak->tkhd);
   if (trak->edts)
     atom_edts_free (trak->edts);
   atom_mdia_clear (&trak->mdia);
+}
+
+static void
+atom_trak_free (AtomTRAK * trak)
+{
+  atom_trak_clear (trak);
   g_free (trak);
 }
 
