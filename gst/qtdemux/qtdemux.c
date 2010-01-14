@@ -2563,18 +2563,20 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
-    GstMessage *m;
     gchar *url;
 
     url = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
-    /* we have RTSP redirect now */
-    m = gst_message_new_element (GST_OBJECT_CAST (qtdemux),
-        gst_structure_new ("redirect",
-            "new-location", G_TYPE_STRING, url, NULL));
+    if (url != NULL && strlen (url) != 0) {
+      /* we have RTSP redirect now */
+      gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
+          gst_message_new_element (GST_OBJECT_CAST (qtdemux),
+              gst_structure_new ("redirect",
+                  "new-location", G_TYPE_STRING, url, NULL)));
+    } else {
+      GST_WARNING_OBJECT (qtdemux, "Redirect URI of stream is empty, not "
+          "posting");
+    }
     g_free (url);
-
-    gst_element_post_message (GST_ELEMENT_CAST (qtdemux), m);
   }
 
   /* position reporting */
