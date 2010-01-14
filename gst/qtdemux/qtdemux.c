@@ -2873,9 +2873,7 @@ pause:
       if (ret == GST_FLOW_UNEXPECTED) {
         if (qtdemux->n_streams == 0) {
           /* we have no streams, post an error */
-          GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
-              (_("This file contains no playable streams.")),
-              ("no known streams found"));
+          gst_qtdemux_post_no_playable_stream_error (qtdemux);
         }
         if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           gint64 stop;
