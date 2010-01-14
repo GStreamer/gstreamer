@@ -479,6 +479,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
 
   qtdemux->state = QTDEMUX_STATE_INITIAL;
   qtdemux->pullbased = FALSE;
+  qtdemux->posted_redirect = FALSE;
   qtdemux->neededbytes = 16;
   qtdemux->todrop = 0;
   qtdemux->adapter = gst_adapter_new ();
@@ -500,6 +501,20 @@ gst_qtdemux_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_qtdemux_post_no_playable_stream_error (GstQTDemux * qtdemux)
+{
+  if (qtdemux->posted_redirect) {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file contains no playable streams.")),
+        ("no known streams found, a redirect message has been posted"));
+  } else {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file contains no playable streams.")),
+        ("no known streams found"));
+  }
 }
 
 static GstFlowReturn
@@ -714,6 +729,8 @@ static void
 gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
 {
   guint n;
+  gboolean pushed_sucessfully = FALSE;
+  GstEventType etype = GST_EVENT_TYPE (event);
 
   GST_DEBUG_OBJECT (qtdemux, "pushing %s event on all source pads",
       GST_EVENT_TYPE_NAME (event));
@@ -721,10 +738,17 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
   for (n = 0; n < qtdemux->n_streams; n++) {
     GstPad *pad;
 
-    if ((pad = qtdemux->streams[n]->pad))
-      gst_pad_push_event (pad, gst_event_ref (event));
+    if ((pad = qtdemux->streams[n]->pad)) {
+      if (gst_pad_push_event (pad, gst_event_ref (event)))
+        pushed_sucessfully = TRUE;
+    }
   }
   gst_event_unref (event);
+
+  /* if it is EOS and nothing is pushed, post an error */
+  if (!pushed_sucessfully && etype == GST_EVENT_EOS) {
+    gst_qtdemux_post_no_playable_stream_error (qtdemux);
+  }
 }
 
 /* push a pending newsegment event, if any from the streaming thread */
@@ -1526,10 +1550,17 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
     case GST_EVENT_EOS:
       /* If we are in push mode, and get an EOS before we've seen any streams,
        * then error out - we have nowhere to send the EOS */
-      if (!demux->pullbased && demux->n_streams == 0) {
-        GST_ELEMENT_ERROR (demux, STREAM, DECODE,
-            (_("This file contains no playable streams.")),
-            ("no known streams found"));
+      if (!demux->pullbased) {
+        gint i;
+        gboolean has_valid_stream = FALSE;
+        for (i = 0; i < demux->n_streams; i++) {
+          if (demux->streams[i]->pad != NULL) {
+            has_valid_stream = TRUE;
+            break;
+          }
+        }
+        if (!has_valid_stream)
+          gst_qtdemux_post_no_playable_stream_error (demux);
       }
       break;
     default:
@@ -1613,6 +1644,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->neededbytes = 16;
       qtdemux->todrop = 0;
       qtdemux->pullbased = FALSE;
+      qtdemux->posted_redirect = FALSE;
       qtdemux->offset = 0;
       qtdemux->first_mdat = -1;
       qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
@@ -2572,6 +2604,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
           gst_message_new_element (GST_OBJECT_CAST (qtdemux),
               gst_structure_new ("redirect",
                   "new-location", G_TYPE_STRING, url, NULL)));
+      qtdemux->posted_redirect = TRUE;
     } else {
       GST_WARNING_OBJECT (qtdemux, "Redirect URI of stream is empty, not "
           "posting");
@@ -6529,6 +6562,7 @@ qtdemux_process_redirects (GstQTDemux * qtdemux, GList * references)
   GST_INFO_OBJECT (qtdemux, "posting redirect message: %" GST_PTR_FORMAT, s);
   msg = gst_message_new_element (GST_OBJECT_CAST (qtdemux), s);
   gst_element_post_message (GST_ELEMENT_CAST (qtdemux), msg);
+  qtdemux->posted_redirect = TRUE;
 }
 
 /* look for redirect nodes, collect all redirect information and

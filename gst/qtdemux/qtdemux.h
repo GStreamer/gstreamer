@@ -75,6 +75,7 @@ struct _GstQTDemux {
   gint state;
 
   gboolean pullbased;
+  gboolean posted_redirect;
 
   /* push based variables */
   guint neededbytes;
