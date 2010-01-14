@@ -606,19 +606,16 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       pos = pos6;
       break;
     }
-      /* FIXME: for >6 channels the layout is not defined by the Vorbis
-       * spec. These are the gstreamer "defaults" for 7/8 channels and
-       * NONE layouts for more channels
-       */
+      /* 6.1 and 7.1 are in the Vorbis spec since 2010-01-13 */
     case 7:{
       static const GstAudioChannelPosition pos7[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE
       };
       pos = pos7;
       /* fallthrough */
@@ -626,13 +623,13 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 8:{
       static const GstAudioChannelPosition pos8[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE
       };
 
       pos = pos8;
