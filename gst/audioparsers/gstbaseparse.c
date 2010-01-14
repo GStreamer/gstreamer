@@ -267,7 +267,7 @@ gst_base_parse_get_type (void)
     };
 
     base_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstBaseParse", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
+        "GstAudioBaseParseBad", &base_parse_info, G_TYPE_FLAG_ABSTRACT);
   }
   return base_parse_type;
 }
