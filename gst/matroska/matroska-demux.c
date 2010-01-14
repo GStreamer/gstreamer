@@ -2281,6 +2281,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
   demux->segment.last_stop = entry->time;
   demux->seek_block = entry->block;
+  demux->last_stop_end = GST_CLOCK_TIME_NONE;
 
   /* restart our task since it might have been stopped when we did the
    * flush. */
@@ -5179,7 +5180,8 @@ pause:
               gst_event_new_new_segment_full (TRUE, demux->segment.rate,
               demux->segment.applied_rate, demux->segment.format,
               demux->segment.start,
-              demux->last_stop_end, demux->segment.time);
+              MAX (demux->last_stop_end, demux->segment.start),
+              demux->segment.time);
           gst_matroska_demux_send_event (demux, event);
         }
 
