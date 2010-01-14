@@ -63,7 +63,7 @@ enum
 
 #define DEFAULT_APEX_HOST		""
 #define DEFAULT_APEX_PORT		5000
-#define DEFAULT_APEX_VOLUME		75
+#define DEFAULT_APEX_VOLUME		1.0
 #define DEFAULT_APEX_JACK_TYPE		GST_APEX_JACK_TYPE_UNDEFINED
 #define DEFAULT_APEX_JACK_STATUS	GST_APEX_JACK_STATUS_UNDEFINED
 
@@ -263,9 +263,12 @@ gst_apexsink_class_init (GstApExSinkClass * klass)
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_PORT,
       g_param_spec_uint ("port", "Port", "AirPort Express target port", 0,
           32000, DEFAULT_APEX_PORT, G_PARAM_READWRITE));
+  /* we need to expose the volume as a double for playbin2. Internally we keep
+   * it as an int between 0 and 100, where 75 corresponds to 1.0.
+   * FIXME we should store the volume as a double. */
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_VOLUME,
-      g_param_spec_uint ("volume", "Volume", "AirPort Express target volume", 0,
-          100, DEFAULT_APEX_VOLUME, G_PARAM_READWRITE));
+      g_param_spec_double ("volume", "Volume", "AirPort Express target volume",
+          0.0, 10.0, DEFAULT_APEX_VOLUME, G_PARAM_READWRITE));
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_JACK_TYPE,
       g_param_spec_enum ("jack_type", "Jack Type",
           "AirPort Express connected jack type", GST_APEX_SINK_JACKTYPE_TYPE,
@@ -292,7 +295,7 @@ gst_apexsink_init (GstApExSink * apexsink, GstApExSinkClass * g_class)
 
   apexsink->host = g_strdup (DEFAULT_APEX_HOST);
   apexsink->port = DEFAULT_APEX_PORT;
-  apexsink->volume = DEFAULT_APEX_VOLUME;
+  apexsink->volume = CLAMP (DEFAULT_APEX_VOLUME * 75, 0, 100);
   apexsink->gst_apexraop = NULL;
   apexsink->tracks = g_list_append (apexsink->tracks, track);
 
@@ -310,40 +313,41 @@ gst_apexsink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case APEX_PROP_HOST:
-    {
       if (sink->gst_apexraop == NULL) {
         g_free (sink->host);
         sink->host = g_value_dup_string (value);
 
         GST_INFO_OBJECT (sink, "ApEx sink target set to \"%s\"", sink->host);
-      } else
+      } else {
         G_OBJECT_WARN_INVALID_PSPEC (object, "host", prop_id, pspec);
-    }
+      }
       break;
     case APEX_PROP_PORT:
-    {
       if (sink->gst_apexraop == NULL) {
         sink->port = g_value_get_uint (value);
 
         GST_INFO_OBJECT (sink, "ApEx port set to \"%d\"", sink->port);
-      } else
+      } else {
         G_OBJECT_WARN_INVALID_PSPEC (object, "port", prop_id, pspec);
-    }
+      }
       break;
     case APEX_PROP_VOLUME:
     {
-      sink->volume = g_value_get_uint (value);
+      gdouble volume;
+
+      volume = g_value_get_double (value);
+      volume *= 75.0;
+
+      sink->volume = CLAMP (volume, 0, 100);
 
       if (sink->gst_apexraop != NULL)
         gst_apexraop_set_volume (sink->gst_apexraop, sink->volume);
 
       GST_INFO_OBJECT (sink, "ApEx volume set to \"%d%%\"", sink->volume);
-    }
       break;
-    default:
-    {
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -357,35 +361,23 @@ gst_apexsink_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case APEX_PROP_HOST:
-    {
       g_value_set_string (value, sink->host);
-    }
       break;
     case APEX_PROP_PORT:
-    {
       g_value_set_uint (value, sink->port);
-    }
       break;
     case APEX_PROP_VOLUME:
-    {
-      g_value_set_uint (value, sink->volume);
-    }
+      g_value_set_double (value, ((gdouble) sink->volume) / 75.0);
       break;
     case APEX_PROP_JACK_TYPE:
-    {
       g_value_set_enum (value, gst_apexraop_get_jacktype (sink->gst_apexraop));
-    }
       break;
     case APEX_PROP_JACK_STATUS:
-    {
       g_value_set_enum (value,
           gst_apexraop_get_jackstatus (sink->gst_apexraop));
-    }
       break;
     default:
-    {
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-    }
       break;
   }
 }
@@ -429,37 +421,25 @@ gst_apexsink_open (GstAudioSink * asink)
 
   switch (gst_apexraop_get_jackstatus (apexsink->gst_apexraop)) {
     case GST_APEX_JACK_STATUS_CONNECTED:
-    {
       GST_INFO_OBJECT (apexsink, "OPEN : ApEx jack is connected");
-    }
       break;
     case GST_APEX_JACK_STATUS_DISCONNECTED:
-    {
       GST_WARNING_OBJECT (apexsink, "OPEN : ApEx jack is disconnected !");
-    }
       break;
     default:
-    {
       GST_WARNING_OBJECT (apexsink, "OPEN : ApEx jack status is undefined !");
-    }
       break;
   }
 
   switch (gst_apexraop_get_jacktype (apexsink->gst_apexraop)) {
     case GST_APEX_JACK_TYPE_ANALOG:
-    {
       GST_INFO_OBJECT (apexsink, "OPEN : ApEx jack type is analog");
-    }
       break;
     case GST_APEX_JACK_TYPE_DIGITAL:
-    {
       GST_INFO_OBJECT (apexsink, "OPEN : ApEx jack type is digital");
-    }
       break;
     default:
-    {
       GST_WARNING_OBJECT (apexsink, "OPEN : ApEx jack type is undefined !");
-    }
       break;
   }
 
@@ -510,8 +490,9 @@ gst_apexsink_write (GstAudioSink * asink, gpointer data, guint length)
     GST_INFO_OBJECT (apexsink,
         "WRITE : %d bytes not fully sended, skipping frame samples...", length);
   } else {
-    GST_INFO_OBJECT (apexsink, "WRITE : %d bytes sended", length);
+    GST_INFO_OBJECT (apexsink, "WRITE : %d bytes sent", length);
 
+    /* FIXME, sleeping is ugly and not interruptible */
     usleep ((gulong) ((length * 1000000.) / (GST_APEX_RAOP_BITRATE *
                 GST_APEX_RAOP_BYTES_PER_SAMPLE) - apexsink->latency_time));
   }
