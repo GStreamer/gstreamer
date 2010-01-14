@@ -3164,14 +3164,20 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
   if (!opad)
     goto out;
 
-  gst_pad_set_blocked_async_full (opad, blocked,
-      (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
-      (GDestroyNotify) gst_object_unref);
+  /* do not block if shutting down.
+   * we do not consider/expect it blocked further below, but use other trick */
+  if (!blocked || !dbin->shutdown)
+    gst_pad_set_blocked_async_full (opad, blocked,
+        (GstPadBlockCallback) source_pad_blocked_cb, gst_object_ref (dpad),
+        (GDestroyNotify) gst_object_unref);
 
   if (blocked) {
     if (dbin->shutdown) {
       /* deactivate to force flushing state to prevent NOT_LINKED errors */
       gst_pad_set_active (GST_PAD_CAST (dpad), FALSE);
+      /* note that deactivating the target pad would have no effect here,
+       * since elements are typically connected first (and pads exposed),
+       * and only then brought to PAUSED state (so pads activated) */
     } else {
       gst_object_ref (dpad);
       dbin->blocked_pads = g_list_prepend (dbin->blocked_pads, dpad);
