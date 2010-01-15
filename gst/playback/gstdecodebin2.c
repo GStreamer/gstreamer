@@ -1897,17 +1897,19 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
 
   GST_LOG_OBJECT (element, "got no more pads");
 
+  CHAIN_MUTEX_LOCK (chain);
   if (!chain->elements || (GstElement *) chain->elements->data != element) {
     GST_LOG_OBJECT (chain->dbin, "no-more-pads from old chain element '%s'",
         GST_OBJECT_NAME (element));
+    CHAIN_MUTEX_UNLOCK (chain);
     return;
   } else if (!chain->demuxer) {
     GST_LOG_OBJECT (chain->dbin, "no-more-pads from a non-demuxer element '%s'",
         GST_OBJECT_NAME (element));
+    CHAIN_MUTEX_UNLOCK (chain);
     return;
   }
 
-  CHAIN_MUTEX_LOCK (chain);
   /* when we received no_more_pads, we can complete the pads of the chain */
   if (!chain->next_groups && chain->active_group) {
     group = chain->active_group;
@@ -2548,6 +2550,7 @@ gst_decode_chain_is_complete (GstDecodeChain * chain)
 {
   gboolean complete = FALSE;
 
+  CHAIN_MUTEX_LOCK (chain);
   if (chain->deadend) {
     complete = TRUE;
     goto out;
@@ -2567,6 +2570,7 @@ gst_decode_chain_is_complete (GstDecodeChain * chain)
   }
 
 out:
+  CHAIN_MUTEX_UNLOCK (chain);
   GST_DEBUG_OBJECT (chain->dbin, "Chain %p is complete: %d", chain, complete);
   return complete;
 }
