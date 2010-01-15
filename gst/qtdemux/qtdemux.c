@@ -1674,12 +1674,10 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
         }
         if (stream->pad)
           gst_element_remove_pad (element, stream->pad);
-        if (stream->samples)
-          g_free (stream->samples);
+        g_free (stream->samples);
         if (stream->caps)
           gst_caps_unref (stream->caps);
-        if (stream->segments)
-          g_free (stream->segments);
+        g_free (stream->segments);
         if (stream->pending_tags)
           gst_tag_list_free (stream->pending_tags);
         g_free (stream->redirect_uri);
