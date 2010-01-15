@@ -510,11 +510,11 @@ static void
 gst_qtdemux_post_no_playable_stream_error (GstQTDemux * qtdemux)
 {
   if (qtdemux->posted_redirect) {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file contains no playable streams.")),
         ("no known streams found, a redirect message has been posted"));
   } else {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file contains no playable streams.")),
         ("no known streams found"));
   }
@@ -528,7 +528,7 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
 
   /* Sanity check: catch bogus sizes (fuzzed/broken files) */
   if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is invalid and cannot be played.")),
         ("atom has bogus size %" G_GUINT64_FORMAT, size));
     return GST_FLOW_ERROR;
@@ -1761,7 +1761,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   gst_buffer_unref (buf);
 
   if (G_UNLIKELY (length == 0)) {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is invalid and cannot be played.")),
         ("Header atom '%" GST_FOURCC_FORMAT "' has empty length",
             GST_FOURCC_ARGS (fourcc)));
@@ -1818,7 +1818,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       }
 
       if (length != GST_BUFFER_SIZE (moov)) {
-        GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
             (_("This file is incomplete and cannot be played.")),
             ("We got less than expected (received %u, wanted %u, offset %"
                 G_GUINT64_FORMAT ")",
@@ -3055,7 +3055,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GST_DEBUG_OBJECT (demux, "Peeking found [%" GST_FOURCC_FORMAT "] "
             "size: %" G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc), size);
         if (size == 0) {
-          GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+          GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
               (_("This file is invalid and cannot be played.")),
               ("initial atom '%" GST_FOURCC_FORMAT "' has empty length",
                   GST_FOURCC_ARGS (fourcc)));
@@ -3112,7 +3112,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             }
           }
         } else if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
-          GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+          GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
               (_("This file is invalid and cannot be played.")),
               ("atom %" GST_FOURCC_FORMAT " has bogus size %" G_GUINT64_FORMAT,
                   GST_FOURCC_ARGS (fourcc), size));
@@ -3952,7 +3952,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
             palette_data = ff_qt_default_palette_256;
           break;
         default:
-          GST_ELEMENT_WARNING (qtdemux, STREAM, DECODE,
+          GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
               (_("The video in this file might not play correctly.")),
               ("unsupported palette depth %d", depth));
           break;
@@ -4043,7 +4043,7 @@ done:
 
 too_many_streams:
   {
-    GST_ELEMENT_WARNING (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
         (_("This file contains too many streams. Only playing first %d"),
             GST_QTDEMUX_MAX_STREAMS), (NULL));
     return TRUE;
@@ -4239,7 +4239,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
 corrupt_file:
   {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     return FALSE;
   }
@@ -4635,13 +4635,13 @@ out_of_samples:
     GST_LOG_OBJECT (qtdemux,
         "Tried to parse up to sample %u but there are only %u samples", n + 1,
         stream->n_samples);
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     return FALSE;
   }
 corrupt_file:
   {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     GST_OBJECT_UNLOCK (qtdemux);
     return FALSE;
@@ -5876,7 +5876,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 /* ERRORS */
 corrupt_file:
   {
-    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     g_free (stream);
     return FALSE;
