@@ -1101,7 +1101,6 @@ wrong_header:
 }
 
 /* AVI header handling */
-
 /*
  * gst_avi_demux_parse_avih:
  * @avi: caller element (used for errors/debug).
