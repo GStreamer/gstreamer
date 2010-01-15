@@ -1,0 +1,10 @@
+%%
+ignore
+	gst_tag_get_language_code
+	gst_tag_get_language_name
+	gst_tag_get_language_code_iso_639_1
+	gst_tag_get_language_code_iso_638_2B
+	gst_tag_get_language_code_iso_638_2T
+	gst_video_event_new_still_frame
+	gst_video_event_parse_still_frame
+%%

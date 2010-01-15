@@ -1,0 +1,20 @@
+%%
+ignore
+	gst_caps_set_value
+	gst_pad_get_caps_reffed
+	gst_pad_peer_get_caps_reffed
+	gst_util_greatest_common_divisor
+	gst_util_fraction_to_double
+	gst_util_double_to_fraction
+	gst_util_fraction_multiply
+	gst_util_fraction_add
+	gst_event_new_sink_message
+	gst_event_parse_sink_message
+	gst_plugin_feature_list_copy
+	gst_registry_get_feature_list_cookie
+	gst_structure_id_has_field
+	gst_structure_id_has_field_type
+	gst_base_src_new_seamless_segment
+	gst_collect_pads_set_clip_function
+	gst_type_find_helper_get_range_ext
+%%
