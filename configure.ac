@@ -44,8 +44,8 @@ AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 AC_SUBST(GLIB_REQ,  2.8.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.10.12)
-AC_SUBST(GSTPB_REQ, 0.10.12)
+AC_SUBST(GST_REQ,   0.10.18)
+AC_SUBST(GSTPB_REQ, 0.10.18)
 
 AC_DISABLE_STATIC
 
@@ -104,41 +104,6 @@ dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
 
 if test "x$GST_CVS_VERSION" = "x"
 then
-  if test $GST_MINOR_VERSION -lt "13"
-  then
-    IGNORE_GST_0_10_13="gst-0.10.13.ignore"
-  else
-    IGNORE_GST_0_10_13=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "14"
-  then
-    IGNORE_GST_0_10_14="gst-0.10.14.ignore"
-  else
-    IGNORE_GST_0_10_14=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "15"
-  then
-    IGNORE_GST_0_10_15="gst-0.10.15.ignore"
-  else
-    IGNORE_GST_0_10_15=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "16"
-  then
-    IGNORE_GST_0_10_16="gst-0.10.16.ignore"
-  else
-    IGNORE_GST_0_10_16=""
-  fi
-
-  if test $GST_MINOR_VERSION -lt "18"
-  then
-    IGNORE_GST_0_10_18="gst-0.10.18.ignore"
-  else
-    IGNORE_GST_0_10_18=""
-  fi
-
   if test $GST_MINOR_VERSION -lt "20"
   then
     IGNORE_GST_0_10_20="gst-0.10.20.ignore"
@@ -189,28 +154,6 @@ then
   fi
 
   dnl plugins base
-  if test $GST_PB_MINOR_VERSION -lt "14"
-  then
-    IGNORE_GST_PB_0_10_14="gst-pb-0.10.14.ignore"
-  else
-    IGNORE_GST_PB_0_10_14=""
-  fi
-
-  if test $GST_PB_MINOR_VERSION -lt "16"
-  then
-    IGNORE_GST_PB_0_10_16="gst-pb-0.10.16.ignore"
-  else
-    IGNORE_GST_PB_0_10_16=""
-    AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
-  fi
-
-  if test $GST_PB_MINOR_VERSION -lt "18"
-  then
-    IGNORE_GST_PB_0_10_18="gst-pb-0.10.18.ignore"
-  else
-    IGNORE_GST_PB_0_10_18=""
-  fi
-
   if test $GST_PB_MINOR_VERSION -ge "22"
   then
     AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
@@ -240,10 +183,6 @@ then
     IGNORE_GST_PB_0_10_26=""
   fi
 else
-  IGNORE_GST_0_10_13=""
-  IGNORE_GST_0_10_14=""
-  IGNORE_GST_0_10_15=""
-  IGNORE_GST_0_10_16=""
   IGNORE_GST_0_10_18=""
   IGNORE_GST_0_10_20=""
   IGNORE_GST_0_10_21=""
@@ -252,24 +191,14 @@ else
   IGNORE_GST_0_10_24=""
   IGNORE_GST_0_10_25=""
   IGNORE_GST_0_10_26=""
-  IGNORE_GST_PB_0_10_14=""
-  IGNORE_GST_PB_0_10_16=""
-  IGNORE_GST_PB_0_10_18=""
   IGNORE_GST_PB_0_10_23=""
   IGNORE_GST_PB_0_10_25=""
   IGNORE_GST_PB_0_10_26=""
-  AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
   AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
   AC_DEFINE_UNQUOTED(HAVE_GST_VIDEO, 1, [We can use the gst-video library])
   AC_DEFINE_UNQUOTED(HAVE_GST_TAG, 1, [We can use the gst-tag library])
 fi
-AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 AC_DEFINE_UNQUOTED(HAVE_STREAM_VOLUME_INTERFACE, 1, [We can use the streamvolume interface])
-AC_SUBST(IGNORE_GST_0_10_13)
-AC_SUBST(IGNORE_GST_0_10_14)
-AC_SUBST(IGNORE_GST_0_10_15)
-AC_SUBST(IGNORE_GST_0_10_16)
-AC_SUBST(IGNORE_GST_0_10_18)
 AC_SUBST(IGNORE_GST_0_10_20)
 AC_SUBST(IGNORE_GST_0_10_21)
 AC_SUBST(IGNORE_GST_0_10_22)
@@ -277,14 +206,9 @@ AC_SUBST(IGNORE_GST_0_10_23)
 AC_SUBST(IGNORE_GST_0_10_24)
 AC_SUBST(IGNORE_GST_0_10_25)
 AC_SUBST(IGNORE_GST_0_10_26)
-AC_SUBST(IGNORE_GST_PB_0_10_14)
-AC_SUBST(IGNORE_GST_PB_0_10_16)
-AC_SUBST(IGNORE_GST_PB_0_10_18)
 AC_SUBST(IGNORE_GST_PB_0_10_23)
 AC_SUBST(IGNORE_GST_PB_0_10_25)
 AC_SUBST(IGNORE_GST_PB_0_10_26)
-AC_SUBST(HAVE_VIDEO_ORIENTATION)
-AC_SUBST(HAVE_PLUGINS_INSTALL)
 AM_CONDITIONAL(HAVE_GST_AUDIO, $HAVE_GST_AUDIO)
 AM_CONDITIONAL(HAVE_GST_VIDEO, $HAVE_GST_VIDEO)
 AM_CONDITIONAL(HAVE_GST_TAG, $HAVE_GST_TAG)

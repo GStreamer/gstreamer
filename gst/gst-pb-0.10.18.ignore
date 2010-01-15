@@ -1,8 +1,0 @@
-%%
-ignore
-  gst_collect_pads_read_buffer
-  gst_collect_pads_take_buffer
-  gst_mixer_message_parse_options_list_changed
-%%
-ignore-type
-%%

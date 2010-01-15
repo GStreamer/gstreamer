@@ -1,7 +1,0 @@
-%%
-ignore
-  gst_index_set_resolver_full
-%%
-ignore-type
-  GstPoll
-%%
