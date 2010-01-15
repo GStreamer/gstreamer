@@ -174,6 +174,7 @@ typedef struct _GstAviDemux {
 
   /* some stream info for length */
   gst_riff_avih *avih;
+  GstClockTime   duration;
 
   /* segment in TIME */
   GstSegment     segment;

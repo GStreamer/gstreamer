@@ -524,18 +524,24 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_DURATION:
     {
       GstFormat fmt;
+      GstClockTime duration;
 
+      /* only act on audio or video streams */
       if (stream->strh->type != GST_RIFF_FCC_auds &&
           stream->strh->type != GST_RIFF_FCC_vids) {
         res = FALSE;
         break;
       }
 
+      /* take stream duration, fall back to avih duration */
+      if ((duration = stream->duration) == -1)
+        duration = avi->duration;
+
       gst_query_parse_duration (query, &fmt, NULL);
 
       switch (fmt) {
         case GST_FORMAT_TIME:
-          gst_query_set_duration (query, fmt, stream->duration);
+          gst_query_set_duration (query, fmt, duration);
           break;
         case GST_FORMAT_DEFAULT:
         {
@@ -546,7 +552,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           if (stream->idx_n >= 0)
             gst_query_set_duration (query, fmt, stream->idx_n);
           else if (gst_pad_query_convert (pad, GST_FORMAT_TIME,
-                  stream->duration, &fmt, &dur))
+                  duration, &fmt, &dur))
             gst_query_set_duration (query, fmt, dur);
           break;
         }
@@ -1011,6 +1017,7 @@ gst_avi_demux_parse_avih (GstElement * element,
     GstBuffer * buf, gst_riff_avih ** _avih)
 {
   gst_riff_avih *avih;
+  GstAviDemux *avi = GST_AVI_DEMUX (element);
 
   if (buf == NULL)
     goto no_buffer;
@@ -1056,6 +1063,15 @@ gst_avi_demux_parse_avih (GstElement * element,
 
   *_avih = avih;
   gst_buffer_unref (buf);
+
+  if (avih->us_frame != 0 && avih->tot_frames != 0)
+    avi->duration =
+        (guint64) avih->us_frame * (guint64) avih->tot_frames * 1000;
+  else
+    avi->duration = GST_CLOCK_TIME_NONE;
+
+  GST_INFO_OBJECT (element, " header duration  %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (avi->duration));
 
   return TRUE;
 
