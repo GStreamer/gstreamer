@@ -89,7 +89,9 @@ RELEASE PROCEDURE:
   - 'git commit -a' in the tree
   - tag tree
     for example for 0.6.3 :
-           git tag -a RELEASE-0.6.3
+           git tag -a -m 'Release 0.6.3' RELEASE-0.6.3
+    Make sure to use the -a option to create an *annotated* tag: 'git describe'
+    should show 'RELEASE-0.6.3'
   - bump nano number in configure.ac, commit
   - sync source and packages to website
     + run /bin/data-put in www
