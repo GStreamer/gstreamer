@@ -34,7 +34,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * only receive this message in the PLAYING state and every time it sets a
  * pipeline to PLAYING that is in the EOS state. The application can perform a
  * flushing seek in the pipeline, which will undo the EOS state again.
- * @GST_MESSAGE_ERROR: an error occured. Whe the application receives an error
+ * @GST_MESSAGE_ERROR: an error occured. When the application receives an error
  * message it should stop playback of the pipeline and not assume that more
  * data will be played.
  * @GST_MESSAGE_WARNING: a warning occured.
@@ -49,14 +49,15 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
  * @GST_MESSAGE_STATE_DIRTY: an element changed state in a streaming thread.
  * This message is deprecated.
- * @GST_MESSAGE_STEP_DONE: a framestep finished. This message is not yet
- * implemented.
+ * @GST_MESSAGE_STEP_DONE: a stepping operation finished.
  * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies its capability of providing
  *                             a clock. This message is used internally and
  *                             never forwarded to the application.
  * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
  *                          unusable. The pipeline will select a new clock on
- *                          the next PLAYING state change.
+ *                          the next PLAYING state change. The application
+ *                          should set the pipeline to PAUSED and back to
+ *                          PLAYING when this message is received.
  * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline.
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed. This
  * message is used internally and never forwarded to the application.
@@ -80,7 +81,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * change. The application will only receive this message from the toplevel
  * pipeline. Since: 0.10.13
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
- * pipeline will calculate and distribute a new latency. Since: 0.10.12
+ * application should recalculate and distribute a new latency. Since: 0.10.12
  * @GST_MESSAGE_REQUEST_STATE: Posted by elements when they want the pipeline to
  * change state. This message is a suggestion to the application which can
  * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
