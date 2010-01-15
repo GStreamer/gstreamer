@@ -206,7 +206,7 @@ gst_avi_demux_init (GstAviDemux * avi)
       GST_DEBUG_FUNCPTR (gst_avi_demux_chain));
   gst_pad_set_event_function (avi->sinkpad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_handle_sink_event));
-  gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
+  gst_element_add_pad (GST_ELEMENT_CAST (avi), avi->sinkpad);
 
   avi->adapter = gst_adapter_new ();
 
@@ -240,7 +240,7 @@ gst_avi_demux_reset_stream (GstAviDemux * avi, GstAviStream * stream)
   if (stream->pad) {
     if (stream->exposed) {
       gst_pad_set_active (stream->pad, FALSE);
-      gst_element_remove_pad (GST_ELEMENT (avi), stream->pad);
+      gst_element_remove_pad (GST_ELEMENT_CAST (avi), stream->pad);
     } else
       gst_object_unref (stream->pad);
   }
@@ -959,7 +959,7 @@ gst_avi_demux_stream_init_push (GstAviDemux * avi)
     tmp = gst_adapter_take_buffer (avi->adapter, 12);
 
     GST_DEBUG ("Parsing avi header");
-    if (!gst_avi_demux_parse_file_header (GST_ELEMENT (avi), tmp)) {
+    if (!gst_avi_demux_parse_file_header (GST_ELEMENT_CAST (avi), tmp)) {
       return GST_FLOW_ERROR;
     }
     GST_DEBUG ("header ok");
@@ -2045,7 +2045,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 #endif
 
   if (avi->element_index)
-    gst_index_get_writer_id (avi->element_index, GST_OBJECT (stream->pad),
+    gst_index_get_writer_id (avi->element_index, GST_OBJECT_CAST (stream->pad),
         &stream->index_id);
 
   stream->num = avi->num_streams;
@@ -2862,19 +2862,20 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         GST_DEBUG ("'hdrl' LIST tag found. Parsing next chunk");
 
         /* the hdrl starts with a 'avih' header */
-        if (!gst_riff_parse_chunk (GST_ELEMENT (avi), buf, &offset, &tag, &sub))
+        if (!gst_riff_parse_chunk (GST_ELEMENT_CAST (avi), buf, &offset, &tag,
+                &sub))
           goto header_no_avih;
 
         if (tag != GST_RIFF_TAG_avih)
           goto header_no_avih;
 
-        if (!gst_avi_demux_parse_avih (GST_ELEMENT (avi), sub, &avi->avih))
+        if (!gst_avi_demux_parse_avih (GST_ELEMENT_CAST (avi), sub, &avi->avih))
           goto header_wrong_avih;
 
         GST_DEBUG_OBJECT (avi, "AVI header ok, reading elemnts from header");
 
         /* now, read the elements from the header until the end */
-        while (gst_riff_parse_chunk (GST_ELEMENT (avi), buf, &offset, &tag,
+        while (gst_riff_parse_chunk (GST_ELEMENT_CAST (avi), buf, &offset, &tag,
                 &sub)) {
           /* sub can be NULL on empty tags */
           if (!sub)
@@ -2972,7 +2973,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                   /* mind padding */
                   if (size & 1)
                     gst_adapter_flush (avi->adapter, 1);
-                  gst_riff_parse_info (GST_ELEMENT (avi), buf, &tags);
+                  gst_riff_parse_info (GST_ELEMENT_CAST (avi), buf, &tags);
                   if (tags) {
                     if (avi->globaltags) {
                       gst_tag_list_insert (avi->globaltags, tags,
@@ -3054,7 +3055,7 @@ skipping_done:
   /* at this point we know all the streams and we can signal the no more
    * pads signal */
   GST_DEBUG_OBJECT (avi, "signaling no more pads");
-  gst_element_no_more_pads (GST_ELEMENT (avi));
+  gst_element_no_more_pads (GST_ELEMENT_CAST (avi));
 
   return GST_FLOW_OK;
 
@@ -3824,8 +3825,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   /* post the SEGMENT_START message when we do segmented playback */
   if (avi->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT (avi),
-        gst_message_new_segment_start (GST_OBJECT (avi),
+    gst_element_post_message (GST_ELEMENT_CAST (avi),
+        gst_message_new_segment_start (GST_OBJECT_CAST (avi),
             avi->segment.format, avi->segment.last_stop));
   }
 
@@ -4682,9 +4683,9 @@ pause:
         GST_INFO_OBJECT (avi, "sending segment_done");
 
         gst_element_post_message
-            (GST_ELEMENT (avi),
-            gst_message_new_segment_done (GST_OBJECT (avi), GST_FORMAT_TIME,
-                stop));
+            (GST_ELEMENT_CAST (avi),
+            gst_message_new_segment_done (GST_OBJECT_CAST (avi),
+                GST_FORMAT_TIME, stop));
         push_eos = FALSE;
       }
     } else {
@@ -4801,7 +4802,7 @@ gst_avi_demux_activate_push (GstPad * pad, gboolean active)
     }
     GST_OBJECT_UNLOCK (avi);
     /* object lock might be taken again */
-    gst_index_get_writer_id (avi->element_index, GST_OBJECT (avi),
+    gst_index_get_writer_id (avi->element_index, GST_OBJECT_CAST (avi),
         &avi->index_id);
 #endif
   } else {
@@ -4827,7 +4828,7 @@ gst_avi_demux_set_index (GstElement * element, GstIndex * index)
   GST_OBJECT_UNLOCK (avi);
   /* object lock might be taken again */
   if (index)
-    gst_index_get_writer_id (index, GST_OBJECT (element), &avi->index_id);
+    gst_index_get_writer_id (index, GST_OBJECT_CAST (element), &avi->index_id);
   GST_DEBUG_OBJECT (avi, "Set index %" GST_PTR_FORMAT, avi->element_index);
 }
 
