@@ -673,8 +673,8 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       out_data[i] = GST_BUFFER_DATA (outbuf) + scale->out_offset[i];
   }
 
-  sws_scale (scale->ctx, in_data, scale->in_stride, 0, scale->in_height,
-      out_data, scale->out_stride);
+  sws_scale (scale->ctx, (const guint8 **) in_data, scale->in_stride, 0,
+      scale->in_height, out_data, scale->out_stride);
 
   return GST_FLOW_OK;
 }
