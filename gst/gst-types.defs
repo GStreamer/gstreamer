@@ -606,11 +606,12 @@
     '("tag" "GST_EVENT_TAG")
     '("filler" "GST_EVENT_FILLER")
     '("buffersize" "GST_EVENT_BUFFERSIZE")
+    '("sink-message" "GST_EVENT_SINK_MESSAGE")
     '("qos" "GST_EVENT_QOS")
     '("seek" "GST_EVENT_SEEK")
     '("navigation" "GST_EVENT_NAVIGATION")
     '("latency" "GST_EVENT_LATENCY")
-    '("gst-event-step" "GST_EVENT_STEP")
+    '("step" "GST_EVENT_STEP")
     '("custom-upstream" "GST_EVENT_CUSTOM_UPSTREAM")
     '("custom-downstream" "GST_EVENT_CUSTOM_DOWNSTREAM")
     '("custom-downstream-oob" "GST_EVENT_CUSTOM_DOWNSTREAM_OOB")
@@ -1013,7 +1014,8 @@
   (c-name "GstPluginFlags")
   (gtype-id "GST_TYPE_PLUGIN_FLAGS")
   (values
-    '("d" "GST_PLUGIN_FLAG_CACHED")
+    '("cached" "GST_PLUGIN_FLAG_CACHED")
+    '("blacklisted" "GST_PLUGIN_FLAG_BLACKLISTED")
   )
 )
 

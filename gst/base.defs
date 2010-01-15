@@ -455,6 +455,17 @@
   (return-type "gboolean")
 )
 
+(define-method new_seamless_segment
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_new_seamless_segment")
+  (return-type "gboolean")
+  (parameters
+    '("gint64" "start")
+    '("gint64" "stop")
+    '("gint64" "position")
+  )
+)
+
 (define-virtual get_caps
   (of-object "GstBaseSrc")
   (return-type "GstCaps*")
@@ -803,6 +814,16 @@
   )
 )
 
+(define-method set_clip_function
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_set_clip_function")
+  (return-type "none")
+  (parameters
+    '("GstCollectPadsClipFunction" "clipfunc")
+    '("gpointer" "user_data")
+  )
+)
+
 (define-method add_pad
   (of-object "GstCollectPads")
   (c-name "gst_collect_pads_add_pad")
@@ -992,6 +1013,18 @@
     '("GstObject*" "obj")
     '("GstTypeFindHelperGetRangeFunction" "func")
     '("guint64" "size")
+    '("GstTypeFindProbability*" "prob")
+  )
+)
+
+(define-function type_find_helper_get_range_ext
+  (c-name "gst_type_find_helper_get_range_ext")
+  (return-type "GstCaps*")
+  (parameters
+    '("GstObject*" "obj")
+    '("GstTypeFindHelperGetRangeFunction" "func")
+    '("guint64" "size")
+    '("const-gchar*" "extension")
     '("GstTypeFindProbability*" "prob")
   )
 )

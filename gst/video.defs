@@ -40,6 +40,11 @@
     '("y41b" "GST_VIDEO_FORMAT_Y41B")
     '("y42b" "GST_VIDEO_FORMAT_Y42B")
     '("yvyu" "GST_VIDEO_FORMAT_YVYU")
+    '("y444" "GST_VIDEO_FORMAT_Y444")
+    '("v210" "GST_VIDEO_FORMAT_v210")
+    '("v216" "GST_VIDEO_FORMAT_v216")
+    '("nv12" "GST_VIDEO_FORMAT_NV12")
+    '("nv21" "GST_VIDEO_FORMAT_NV21")
   )
 )
 
@@ -279,4 +284,19 @@
   )
 )
 
+(define-function event_new_still_frame
+  (c-name "gst_video_event_new_still_frame")
+  (return-type "GstEvent*")
+  (parameters
+    '("gboolean" "in_still")
+  )
+)
 
+(define-function event_parse_still_frame
+  (c-name "gst_video_event_parse_still_frame")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("gboolean*" "in_still")
+  )
+)

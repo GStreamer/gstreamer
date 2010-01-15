@@ -216,4 +216,40 @@
   (return-type "none")
 )
 
+(define-function get_language_codes
+  (c-name "gst_tag_get_language_codes")
+  (return-type "gchar**")
+)
+
+(define-function get_language_name
+  (c-name "gst_tag_get_language_name")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "language_code")
+  )
+)
+
+(define-function get_language_code_iso_639_1
+  (c-name "gst_tag_get_language_code_iso_639_1")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "lang_code")
+  )
+)
+
+(define-function get_language_code_iso_639_2B
+  (c-name "gst_tag_get_language_code_iso_639_2B")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "lang_code")
+  )
+)
+
+(define-function get_language_code_iso_639_2T
+  (c-name "gst_tag_get_language_code_iso_639_2T")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "lang_code")
+  )
+)
 

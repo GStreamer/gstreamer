@@ -776,6 +776,16 @@
   (return-type "none")
 )
 
+(define-method set_value
+  (of-object "GstCaps")
+  (c-name "gst_caps_set_value")
+  (return-type "none")
+  (parameters
+    '("const-char*" "field")
+    '("const-GValue*" "value")
+  )
+)
+
 (define-method set_simple
   (of-object "GstCaps")
   (c-name "gst_caps_set_simple")
@@ -4385,6 +4395,12 @@
   (return-type "const-GstCaps*")
 )
 
+(define-method get_caps_reffed
+  (of-object "GstPad")
+  (c-name "gst_pad_get_caps_reffed")
+  (return-type "GstCaps*")
+)
+
 (define-method get_caps
   (of-object "GstPad")
   (c-name "gst_pad_get_caps")
@@ -4417,6 +4433,12 @@
   (parameters
     '("GstCaps*" "caps")
   )
+)
+
+(define-method peer_get_caps_reffed
+  (of-object "GstPad")
+  (c-name "gst_pad_peer_get_caps_reffed")
+  (return-type "GstCaps*")
 )
 
 (define-method peer_get_caps
@@ -4773,6 +4795,77 @@
     '("GstSearchMode" "mode")
     '("gconstpointer" "search_data")
     '("gpointer" "user_data")
+  )
+)
+(define-function util_greatest_common_divisor
+  (c-name "gst_util_greatest_common_divisor")
+  (return-type "gint")
+  (parameters
+    '("gint" "a")
+    '("gint" "b")
+  )
+)
+
+(define-function util_fraction_to_double
+  (c-name "gst_util_fraction_to_double")
+  (return-type "none")
+  (parameters
+    '("gint" "src_n")
+    '("gint" "src_d")
+    '("gdouble*" "dest")
+  )
+)
+
+(define-function util_double_to_fraction
+  (c-name "gst_util_double_to_fraction")
+  (return-type "none")
+  (parameters
+    '("gdouble" "src")
+    '("gint*" "dest_n")
+    '("gint*" "dest_d")
+  )
+)
+
+(define-function util_fraction_multiply
+  (c-name "gst_util_fraction_multiply")
+  (return-type "gboolean")
+  (parameters
+    '("gint" "a_n")
+    '("gint" "a_d")
+    '("gint" "b_n")
+    '("gint" "b_d")
+    '("gint*" "res_n")
+    '("gint*" "res_d")
+  )
+)
+
+(define-function util_fraction_add
+  (c-name "gst_util_fraction_add")
+  (return-type "gboolean")
+  (parameters
+    '("gint" "a_n")
+    '("gint" "a_d")
+    '("gint" "b_n")
+    '("gint" "b_d")
+    '("gint*" "res_n")
+    '("gint*" "res_d")
+  )
+)
+
+(define-function event_new_sink_message
+  (c-name "gst_event_new_sink_message")
+  (return-type "GstEvent*")
+  (parameters
+    '("struct-GstMessage*" "msg")
+  )
+)
+
+(define-method parse_sink_message
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_sink_message")
+  (return-type "none")
+  (parameters
+    '("struct-GstMessage**" "msg")
   )
 )
 
@@ -5195,6 +5288,14 @@
 (define-function plugin_feature_list_free
   (c-name "gst_plugin_feature_list_free")
   (return-type "none")
+  (parameters
+    '("GList*" "list")
+  )
+)
+
+(define-function plugin_feature_list_copy
+  (c-name "gst_plugin_feature_list_copy")
+  (return-type "GList*")
   (parameters
     '("GList*" "list")
   )
@@ -5963,6 +6064,13 @@
     '("const-gchar*" "name")
   )
 )
+
+(define-method get_feature_list_cookie
+  (of-object "GstRegistry")
+  (c-name "gst_registry_get_feature_list_cookie")
+  (return-type "guint32")
+)
+
 (define-method add_feature
   (of-object "GstRegistry")
   (c-name "gst_registry_add_feature")
@@ -6497,6 +6605,24 @@
   )
 )
 
+(define-method id_has_field
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_has_field")
+  (return-type "gboolean")
+  (parameters
+    '("GQuark" "field")
+  )
+)
+
+(define-method id_has_field_typed
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_has_field_typed")
+  (return-type "gboolean")
+  (parameters
+    '("GQuark" "field")
+    '("GType" "type")
+  )
+)
 
 (define-method has_field
   (of-object "GstStructure")
