@@ -298,7 +298,8 @@ gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
 
     fixed_time_increment = bits;
   } else {
-    fixed_time_increment = 1;
+    /* When fixed_vop_rate is not set we can't guess any framerate */
+    fixed_time_increment = 0;
   }
   GST_DEBUG_OBJECT (parse, "fixed time increment %d", fixed_time_increment);
 
