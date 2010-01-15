@@ -1001,7 +1001,7 @@ wrong_header:
 
 /*
  * gst_avi_demux_parse_avih:
- * @element: caller element (used for errors/debug).
+ * @avi: caller element (used for errors/debug).
  * @buf: input data to be used for parsing.
  * @avih: pointer to structure (filled in by function) containing
  *        stream information (such as flags, number of streams, etc.).
@@ -1013,11 +1013,10 @@ wrong_header:
  *          (fatal).
  */
 static gboolean
-gst_avi_demux_parse_avih (GstElement * element,
+gst_avi_demux_parse_avih (GstAviDemux * avi,
     GstBuffer * buf, gst_riff_avih ** _avih)
 {
   gst_riff_avih *avih;
-  GstAviDemux *avi = GST_AVI_DEMUX (element);
 
   if (buf == NULL)
     goto no_buffer;
@@ -1045,21 +1044,21 @@ gst_avi_demux_parse_avih (GstElement * element,
 #endif
 
   /* debug stuff */
-  GST_INFO_OBJECT (element, "avih tag found:");
-  GST_INFO_OBJECT (element, " us_frame    %u", avih->us_frame);
-  GST_INFO_OBJECT (element, " max_bps     %u", avih->max_bps);
-  GST_INFO_OBJECT (element, " pad_gran    %u", avih->pad_gran);
-  GST_INFO_OBJECT (element, " flags       0x%08x", avih->flags);
-  GST_INFO_OBJECT (element, " tot_frames  %u", avih->tot_frames);
-  GST_INFO_OBJECT (element, " init_frames %u", avih->init_frames);
-  GST_INFO_OBJECT (element, " streams     %u", avih->streams);
-  GST_INFO_OBJECT (element, " bufsize     %u", avih->bufsize);
-  GST_INFO_OBJECT (element, " width       %u", avih->width);
-  GST_INFO_OBJECT (element, " height      %u", avih->height);
-  GST_INFO_OBJECT (element, " scale       %u", avih->scale);
-  GST_INFO_OBJECT (element, " rate        %u", avih->rate);
-  GST_INFO_OBJECT (element, " start       %u", avih->start);
-  GST_INFO_OBJECT (element, " length      %u", avih->length);
+  GST_INFO_OBJECT (avi, "avih tag found:");
+  GST_INFO_OBJECT (avi, " us_frame    %u", avih->us_frame);
+  GST_INFO_OBJECT (avi, " max_bps     %u", avih->max_bps);
+  GST_INFO_OBJECT (avi, " pad_gran    %u", avih->pad_gran);
+  GST_INFO_OBJECT (avi, " flags       0x%08x", avih->flags);
+  GST_INFO_OBJECT (avi, " tot_frames  %u", avih->tot_frames);
+  GST_INFO_OBJECT (avi, " init_frames %u", avih->init_frames);
+  GST_INFO_OBJECT (avi, " streams     %u", avih->streams);
+  GST_INFO_OBJECT (avi, " bufsize     %u", avih->bufsize);
+  GST_INFO_OBJECT (avi, " width       %u", avih->width);
+  GST_INFO_OBJECT (avi, " height      %u", avih->height);
+  GST_INFO_OBJECT (avi, " scale       %u", avih->scale);
+  GST_INFO_OBJECT (avi, " rate        %u", avih->rate);
+  GST_INFO_OBJECT (avi, " start       %u", avih->start);
+  GST_INFO_OBJECT (avi, " length      %u", avih->length);
 
   *_avih = avih;
   gst_buffer_unref (buf);
@@ -1070,7 +1069,7 @@ gst_avi_demux_parse_avih (GstElement * element,
   else
     avi->duration = GST_CLOCK_TIME_NONE;
 
-  GST_INFO_OBJECT (element, " header duration  %" GST_TIME_FORMAT,
+  GST_INFO_OBJECT (avi, " header duration  %" GST_TIME_FORMAT,
       GST_TIME_ARGS (avi->duration));
 
   return TRUE;
@@ -1078,12 +1077,12 @@ gst_avi_demux_parse_avih (GstElement * element,
   /* ERRORS */
 no_buffer:
   {
-    GST_ELEMENT_ERROR (element, STREAM, DEMUX, (NULL), ("No buffer"));
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("No buffer"));
     return FALSE;
   }
 avih_too_small:
   {
-    GST_ELEMENT_ERROR (element, STREAM, DEMUX, (NULL),
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
         ("Too small avih (%d available, %d needed)",
             GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_avih)));
     gst_buffer_unref (buf);
@@ -2869,7 +2868,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         if (tag != GST_RIFF_TAG_avih)
           goto header_no_avih;
 
-        if (!gst_avi_demux_parse_avih (GST_ELEMENT_CAST (avi), sub, &avi->avih))
+        if (!gst_avi_demux_parse_avih (avi, sub, &avi->avih))
           goto header_wrong_avih;
 
         GST_DEBUG_OBJECT (avi, "AVI header ok, reading elemnts from header");
@@ -3285,7 +3284,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     goto no_avih;
   else if (tag != GST_RIFF_TAG_avih)
     goto no_avih;
-  else if (!gst_avi_demux_parse_avih (element, sub, &avi->avih))
+  else if (!gst_avi_demux_parse_avih (avi, sub, &avi->avih))
     goto invalid_avih;
 
   GST_DEBUG_OBJECT (avi, "AVI header ok, reading elements from header");
