@@ -12,7 +12,7 @@ references = $(GLIBSHARP_LIBS)
 KEYFILE = gstreamer-sharp.snk
 
 ASSEMBLY = $(ASSEMBLY_NAME).dll
-gapidir = $(datadir)/gapi
+gapidir = $(datadir)/gapi-2.0
 gapi_DATA = $(APIS)
 
 glue_includes="gst/gst.h gst/interfaces/colorbalance.h gst/interfaces/colorbalancechannel.h gst/interfaces/tuner.h gst/interfaces/tunerchannel.h gst/interfaces/tunernorm.h gst/cdda/gstcddabasesrc.h"
