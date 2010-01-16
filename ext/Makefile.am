@@ -118,6 +118,12 @@ else
  FAAD_DIR=
 endif
 
+if USE_FLITE
+FLITE_DIR=flite
+else
+FLITE_DIR=
+endif
+
 #if USE_G729
 #G729_DIR=g729
 #else

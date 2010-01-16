@@ -847,6 +847,16 @@ AG_GST_CHECK_FEATURE(FBDEV, [linux framebuffer], fbdevsink, [
   fi
 ])
 
+dnl *** flite ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_FLITE, true)
+AG_GST_CHECK_FEATURE(FLITE, [Flite plugin], flite, [
+  AG_GST_CHECK_LIBHEADER(FLITE, flite, flite_init, -lm, flite/flite.h,
+    FLITE_LIBS="-lflite -lflite_cmu_us_kal -lflite_usenglish -lflite_cmulex -lm")
+
+  AC_SUBST(FLITE_CFLAGS)
+  AC_SUBST(FLITE_LIBS)
+])
+
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
 AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
@@ -1725,6 +1735,7 @@ ext/divx/Makefile
 ext/dts/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/flite/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
