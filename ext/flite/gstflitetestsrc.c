@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
+#include <gst/base/gstadapter.h>
 #include <gst/audio/multichannel.h>
 
 #include <flite/flite.h>
@@ -46,9 +47,13 @@ struct _GstFliteTestSrc
 {
   GstBaseSrc parent;
 
+  GstAdapter *adapter;
+
   int samplerate;
   int n_channels;
   GstAudioChannelPosition *layout;
+
+  int samples_per_buffer;
 
   int channel;
 
@@ -73,9 +78,12 @@ GST_ELEMENT_DETAILS ("Flite speech test source",
     "Creates audio test signals identifying channels",
     "David Schleef <ds@schleef.org>");
 
+#define DEFAULT_SAMPLES_PER_BUFFER 1024
+
 enum
 {
   PROP_0,
+  PROP_SAMPLES_PER_BUFFER,
   PROP_LAST
 };
 
@@ -137,6 +145,13 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_flite_test_src_stop);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_flite_test_src_create);
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_flite_test_src_set_caps);
+
+  g_object_class_install_property (gobject_class, PROP_SAMPLES_PER_BUFFER,
+      g_param_spec_int ("samplesperbuffer", "Samples per buffer",
+          "Number of samples in each outgoing buffer",
+          1, G_MAXINT, DEFAULT_SAMPLES_PER_BUFFER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -147,6 +162,7 @@ gst_flite_test_src_init (GstFliteTestSrc * src, GstFliteTestSrcClass * g_class)
 #endif
 
   src->samplerate = 48000;
+  src->samples_per_buffer = DEFAULT_SAMPLES_PER_BUFFER;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
@@ -294,6 +310,8 @@ gst_flite_test_src_start (GstBaseSrc * basesrc)
 {
   GstFliteTestSrc *src = GST_FLITE_TEST_SRC (basesrc);
 
+  src->adapter = gst_adapter_new ();
+
   src->voice = register_cmu_us_kal ();
   src->n_channels = 2;
 
@@ -303,6 +321,10 @@ gst_flite_test_src_start (GstBaseSrc * basesrc)
 static gboolean
 gst_flite_test_src_stop (GstBaseSrc * basesrc)
 {
+  GstFliteTestSrc *src = GST_FLITE_TEST_SRC (basesrc);
+
+  g_object_unref (src->adapter);
+
   return TRUE;
 }
 
@@ -336,37 +358,46 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstFliteTestSrc *src;
-  GstBuffer *buf;
-  cst_wave *wave;
-  char *text;
-  int i;
-  gint16 *data;
+  int n_bytes;
 
   src = GST_FLITE_TEST_SRC (basesrc);
 
-  text = get_channel_name (src, src->channel);
+  n_bytes = src->n_channels * sizeof (gint16) * src->samples_per_buffer;
 
-  wave = flite_text_to_wave (text, src->voice);
-  g_free (text);
-  cst_wave_resample (wave, 48000);
+  while (gst_adapter_available (src->adapter) < n_bytes) {
+    GstBuffer *buf;
+    char *text;
+    int i;
+    gint16 *data;
+    cst_wave *wave;
 
-  GST_DEBUG ("type %s, sample_rate %d, num_samples %d, num_channels %d",
-      wave->type, wave->sample_rate, wave->num_samples, wave->num_channels);
+    text = get_channel_name (src, src->channel);
 
-  buf = gst_buffer_new_and_alloc (src->n_channels * sizeof (gint16) *
-      wave->num_samples);
+    wave = flite_text_to_wave (text, src->voice);
+    g_free (text);
+    cst_wave_resample (wave, 48000);
 
-  data = (void *) GST_BUFFER_DATA (buf);
-  memset (data, 0, src->n_channels * sizeof (gint16) * wave->num_samples);
-  for (i = 0; i < wave->num_samples; i++) {
-    data[i * src->n_channels + src->channel] = wave->samples[i];
+    GST_DEBUG ("type %s, sample_rate %d, num_samples %d, num_channels %d",
+        wave->type, wave->sample_rate, wave->num_samples, wave->num_channels);
+
+    buf = gst_buffer_new_and_alloc (src->n_channels * sizeof (gint16) *
+        wave->num_samples);
+
+    data = (void *) GST_BUFFER_DATA (buf);
+    memset (data, 0, src->n_channels * sizeof (gint16) * wave->num_samples);
+    for (i = 0; i < wave->num_samples; i++) {
+      data[i * src->n_channels + src->channel] = wave->samples[i];
+    }
+
+    src->channel++;
+    if (src->channel == src->n_channels) {
+      src->channel = 0;
+    }
+
+    gst_adapter_push (src->adapter, buf);
   }
 
-  src->channel++;
-  if (src->channel == src->n_channels)
-    src->channel = 0;
-
-  *buffer = buf;
+  *buffer = gst_adapter_take_buffer (src->adapter, n_bytes);
 
   return GST_FLOW_OK;
 }
@@ -375,11 +406,12 @@ static void
 gst_flite_test_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-#if 0
   GstFliteTestSrc *src = GST_FLITE_TEST_SRC (object);
-#endif
 
   switch (prop_id) {
+    case PROP_SAMPLES_PER_BUFFER:
+      src->samples_per_buffer = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -390,11 +422,12 @@ static void
 gst_flite_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-#if 0
   GstFliteTestSrc *src = GST_FLITE_TEST_SRC (object);
-#endif
 
   switch (prop_id) {
+    case PROP_SAMPLES_PER_BUFFER:
+      g_value_set_int (value, src->samples_per_buffer);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
