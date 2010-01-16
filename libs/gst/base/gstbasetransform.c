@@ -1550,7 +1550,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
     /* if we have a suggestion, pretend we got these as input */
     GST_OBJECT_LOCK (pad);
-    if ((priv->sink_suggest && !gst_caps_is_equal (caps, priv->sink_suggest))) {
+    if ((priv->size_suggest && priv->sink_suggest
+            && !gst_caps_is_equal (caps, priv->sink_suggest))) {
       sink_suggest = gst_caps_ref (priv->sink_suggest);
       size_suggest = priv->size_suggest;
       GST_DEBUG_OBJECT (trans, "have suggestion %p %" GST_PTR_FORMAT " size %u",
