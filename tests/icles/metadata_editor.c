@@ -742,7 +742,7 @@ ui_refresh ()
 static int
 ui_create ()
 {
-  Gerror *error = NULL;
+  GError *error = NULL;
   int ret = 0;
 
   builder = gtk_builder_new ();
