@@ -48,6 +48,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/audio/multichannel.h>
+
 #include "gstfaac.h"
 
 #define SINK_CAPS \
@@ -120,6 +122,7 @@ static void gst_faac_get_property (GObject * object,
 static gboolean gst_faac_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_faac_configure_source_pad (GstFaac * faac);
 static gboolean gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_faac_sink_getcaps (GstPad * pad);
 static GstFlowReturn gst_faac_push_buffers (GstFaac * faac, gboolean force);
 static GstFlowReturn gst_faac_chain (GstPad * pad, GstBuffer * data);
 static GstStateChangeReturn gst_faac_change_state (GstElement * element,
@@ -296,6 +299,8 @@ gst_faac_init (GstFaac * faac)
       GST_DEBUG_FUNCPTR (gst_faac_chain));
   gst_pad_set_setcaps_function (faac->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faac_sink_setcaps));
+  gst_pad_set_getcaps_function (faac->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faac_sink_getcaps));
   gst_pad_set_event_function (faac->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faac_sink_event));
   gst_element_add_pad (GST_ELEMENT (faac), faac->sinkpad);
@@ -345,6 +350,76 @@ gst_faac_close_encoder (GstFaac * faac)
   faac->handle = NULL;
   gst_adapter_clear (faac->adapter);
   faac->offset = 0;
+}
+
+static const GstAudioChannelPosition aac_channel_positions[][8] = {
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}
+};
+
+static GstCaps *
+gst_faac_sink_getcaps (GstPad * pad)
+{
+  static volatile gsize sinkcaps = 0;
+
+  if (g_once_init_enter (&sinkcaps)) {
+    GstCaps *tmp = gst_caps_new_empty ();
+    GstStructure *s, *t;
+    gint i, c;
+
+    s = gst_structure_new ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "width", G_TYPE_INT, 16,
+        "depth", G_TYPE_INT, 16, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
+
+    for (i = 1; i <= 6; i++) {
+      GValue chanpos = { 0 };
+      GValue pos = { 0 };
+
+      t = gst_structure_copy (s);
+
+      gst_structure_set (t, "channels", G_TYPE_INT, i, NULL);
+
+      g_value_init (&chanpos, GST_TYPE_ARRAY);
+      g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+      for (c = 0; c < i; c++) {
+        g_value_set_enum (&pos, aac_channel_positions[i - 1][c]);
+        gst_value_array_append_value (&chanpos, &pos);
+      }
+      g_value_unset (&pos);
+
+      gst_structure_set_value (t, "channel-positions", &chanpos);
+      g_value_unset (&chanpos);
+      gst_caps_append_structure (tmp, t);
+    }
+    gst_structure_free (s);
+
+    GST_DEBUG_OBJECT (pad, "Generated sinkcaps: %" GST_PTR_FORMAT, tmp);
+
+    g_once_init_leave (&sinkcaps, (gsize) tmp);
+  }
+
+  return gst_caps_ref ((GstCaps *) sinkcaps);
 }
 
 static gboolean
