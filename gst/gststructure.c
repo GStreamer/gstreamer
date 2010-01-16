@@ -702,7 +702,6 @@ gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
   guint i, len;
 
   len = structure->fields->len;
-  g_return_val_if_fail (structure != NULL, NULL);
 
   for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
