@@ -73,6 +73,14 @@ gst_frei0r_klass_install_properties (GObjectClass * gobject_class,
 
     prop_name = g_ascii_strdown (param_info->name, -1);
     g_strcanon (prop_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
+    /* satisfy glib2 (argname[0] must be [A-Za-z]) */
+    if (!((prop_name[0] >= 'a' && prop_name[0] <= 'z') ||
+            (prop_name[0] >= 'A' && prop_name[0] <= 'Z'))) {
+      gchar *tempstr = prop_name;
+
+      prop_name = g_strconcat ("param-", prop_name, NULL);
+      g_free (tempstr);
+    }
 
     properties[i].prop_id = count;
     properties[i].prop_idx = i;
