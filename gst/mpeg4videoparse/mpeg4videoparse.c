@@ -120,6 +120,8 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
   return res;
 }
 
+#define VIDEO_OBJECT_STARTCODE_MIN      0x00
+#define VIDEO_OBJECT_STARTCODE_MAX      0x1F
 #define VOS_STARTCODE                   0xB0
 #define VOS_ENDCODE                     0xB1
 #define USER_DATA_STARTCODE             0xB2
@@ -215,6 +217,7 @@ static gint aspect_ratio_table[6][2] = { {-1, -1}, {1, 1}, {12, 11},
 {10, 11}, {16, 11}, {40, 33}
 };
 
+/* Handle parsing a video object */
 static gboolean
 gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
     gsize size)
@@ -291,7 +294,7 @@ gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
     /* fixed time increment */
     int n;
 
-    /* Lenght of the time increment is the minimal number of bits needed to
+    /* Length of the time increment is the minimal number of bits needed to
      * represent time_increment_resolution */
     for (n = 0; (time_increment_resolution >> n) != 0; n++);
     GET_BITS (&bs, n, &bits);
@@ -347,7 +350,8 @@ failed:
   return FALSE;
 }
 
-/* Returns whether we successfully set the caps downstream if needed */
+/* Handle parsing a visual object sequence.
+   Returns whether we successfully set the caps downstream if needed */
 static gboolean
 gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
     gsize size)
@@ -368,11 +372,13 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   profile = data[4];
 
   /* invalid profile, yikes */
-  if (profile == 0)
+  if (profile == 0) {
+    GST_WARNING_OBJECT (parse, "Invalid profile in VOS");
     return FALSE;
+  }
 
   equal = FALSE;
-  if (G_LIKELY (parse->config &&
+  if (G_LIKELY (parse->config && size == GST_BUFFER_SIZE (parse->config) &&
           memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0))
     equal = TRUE;
 
@@ -661,16 +667,52 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
       && G_VALUE_HOLDS (value, GST_TYPE_BUFFER)) {
     GstBuffer *buf = gst_value_get_buffer (value);
 
-    res = gst_mpeg4vparse_handle_vos (parse, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
+    /* Set the config from this codec_data immediately so that in the worst
+       case, we don't just discard it.
+       Note that in most cases, this will be freed and overwritten when we
+       manage to parse the codec_data. */
+    if (!parse->config) {
+      parse->config = gst_buffer_copy (buf);
+    }
+
+    if (GST_BUFFER_SIZE (buf) < 4) {
+      GST_WARNING_OBJECT (parse, "codec_data too short, ignoring");
+      goto failed_parse;
+    } else {
+      const guint8 *data = GST_BUFFER_DATA (buf);
+
+      if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
+        if (data[3] == VOS_STARTCODE) {
+          /* Usually the codec data will be a visual object sequence, containing
+             a visual object, with a video object/video object layer. */
+          res = gst_mpeg4vparse_handle_vos (parse, data, GST_BUFFER_SIZE (buf));
+        } else if (data[3] >= VIDEO_OBJECT_STARTCODE_MIN &&
+            data[3] <= VIDEO_OBJECT_STARTCODE_MAX) {
+          /* Sometimes, instead, it'll just have the video object/video object
+             layer data. We can parse that too, though it'll give us slightly
+             less information. */
+          res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf));
+        }
+      } else {
+        GST_WARNING_OBJECT (parse,
+            "codec_data does not begin with start code, invalid");
+        goto failed_parse;
+      }
+    }
   } else {
-    /* No codec data, set minimal new caps.. VOS parsing later will fill in
-     * the other fields */
-    res = gst_mpeg4vparse_set_new_caps (parse, 0, 0, 0, 0, 0, 0);
+    /* No codec data; treat the same a failed codec data */
+    goto failed_parse;
   }
 
+done:
   gst_object_unref (parse);
   return res;
+
+failed_parse:
+  /* No codec data, or obviously-invalid, so set minimal new caps.
+     VOS parsing later will (hopefully) fill in the other fields */
+  res = gst_mpeg4vparse_set_new_caps (parse, 0, 0, 0, 0, 0, 0);
+  goto done;
 }
 
 static gboolean
