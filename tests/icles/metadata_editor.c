@@ -47,7 +47,6 @@
 #include <unistd.h>
 
 #include <gst/gst.h>
-#include <glade/glade-xml.h>
 #include <gtk/gtk.h>
 
 /*
@@ -119,7 +118,7 @@ AppOptions app_options = APP_OPT_ALL;
 
 GstTagList *tag_list = NULL;
 
-GladeXML *ui_glade_xml = NULL;
+GtkBuilder *builder = NULL;
 GtkWidget *ui_main_window = NULL;
 GtkWidget *ui_drawing = NULL;
 GtkWidget *ui_tree = NULL;
@@ -311,7 +310,7 @@ ui_drawing_size_allocate_cb (GtkWidget * drawing_area,
 }
 
 /*
- * UI handling functions (mapped by glade)
+ * UI handling functions (mapped by GtkBuilder)
  */
 
 gboolean
@@ -741,90 +740,39 @@ ui_refresh ()
 }
 
 static int
-ui_connect_signals()
-{
-
-  glade_xml_signal_connect(ui_glade_xml, "on_checkbuttonCaptureV4l2_toggled",
-      (GCallback)on_checkbuttonCaptureV4l2_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_checkbuttonCaptureTest_toggled",
-      (GCallback)on_checkbuttonCaptureTest_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsDemuxExif_toggled",
-      (GCallback) on_checkbuttonOptionsDemuxExif_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsDemuxIptc_toggled",
-      (GCallback) on_checkbuttonOptionsDemuxIptc_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsDemuxXmp_toggled",
-      (GCallback) on_checkbuttonOptionsDemuxXmp_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsMuxExif_toggled",
-      (GCallback) on_checkbuttonOptionsMuxExif_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsMuxIptc_toggled",
-      (GCallback) on_checkbuttonOptionsMuxIptc_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml,
-      "on_checkbuttonOptionsMuxXmp_toggled",
-      (GCallback) on_checkbuttonOptionsMuxXmp_toggled);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_buttonSaveFile_clicked",
-      (GCallback)on_buttonSaveFile_clicked);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_windowMain_delete_event",
-      (GCallback)on_windowMain_delete_event);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_drawingMain_expose_event",
-      (GCallback)on_drawingMain_expose_event);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_buttonInsert_clicked",
-      (GCallback)on_buttonInsert_clicked);
-
-  glade_xml_signal_connect(ui_glade_xml, "on_buttonOpenFile_clicked",
-      (GCallback)on_buttonOpenFile_clicked);
-
-  return 0;
-
-}
-
-static int
 ui_create ()
 {
+  Gerror *error = NULL;
   int ret = 0;
 
-  ui_glade_xml = glade_xml_new ("metadata_editor.glade", NULL, NULL);
-
-  if (!ui_glade_xml) {
-    fprintf (stderr, "glade_xml_new failed\n");
+  builder = gtk_builder_new ();
+  if (!gtk_builder_add_from_file (builder, "metadata_editor.ui", &error))
+  {
+    g_warning ("Couldn't load builder file: %s", error->message);
+    g_error_free (error);
     ret = -101;
     goto done;
   }
 
-  ui_main_window = glade_xml_get_widget (ui_glade_xml, "windowMain");
+  ui_main_window = GTK_WIDGET (gtk_builder_get_object (builder, "windowMain"));
 
-  ui_drawing = glade_xml_get_widget (ui_glade_xml, "drawingMain");
+  ui_drawing = GTK_WIDGET (gtk_builder_get_object (builder, "drawingMain"));
 
-  ui_tree = glade_xml_get_widget (ui_glade_xml, "treeMain");
+  ui_tree = GTK_WIDGET (gtk_builder_get_object (builder, "treeMain"));
 
   ui_entry_insert_tag =
-      GTK_ENTRY (glade_xml_get_widget (ui_glade_xml, "entryTag"));
+          GTK_ENTRY (gtk_builder_get_object (builder, "entryTag"));
 
   ui_entry_insert_value =
-      GTK_ENTRY (glade_xml_get_widget (ui_glade_xml, "entryValue"));
+          GTK_ENTRY (gtk_builder_get_object (builder, "entryValue"));
 
   ui_chk_bnt_capture_v4l2 =
-      GTK_TOGGLE_BUTTON (glade_xml_get_widget (ui_glade_xml,
-          "checkbuttonCaptureV4l2"));
+          GTK_TOGGLE_BUTTON (gtk_builder_get_object (builder,
+                                                     "checkbuttonCaptureV4l2"));
 
   ui_chk_bnt_capture_test =
-      GTK_TOGGLE_BUTTON (glade_xml_get_widget (ui_glade_xml,
-          "checkbuttonCaptureTest"));
+          GTK_TOGGLE_BUTTON (gtk_builder_get_object (builder,
+                                                     "checkbuttonCaptureTest"));
 
   if (!(ui_main_window && ui_drawing && ui_tree
           && ui_entry_insert_tag && ui_entry_insert_value
@@ -837,7 +785,7 @@ ui_create ()
   g_signal_connect_after (ui_drawing, "size-allocate",
       G_CALLBACK (ui_drawing_size_allocate_cb), NULL);
 
-  ui_connect_signals();
+  gtk_builder_connect_signals (builder, NULL);
 
   ui_setup_tree_view (GTK_TREE_VIEW (ui_tree));
 

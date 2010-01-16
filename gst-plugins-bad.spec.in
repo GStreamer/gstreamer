@@ -135,7 +135,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoencoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoparse.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstbasevideoutils.h
-%{_datadir}/gstreamer-%{majorminor}/camera-apps/gst-camera.glade
+%{_datadir}/gstreamer-%{majorminor}/camera-apps/gst-camera.ui
 %{_includedir}/gstreamer-%{majorminor}/gst/signalprocessor/gstsignalprocessor.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h

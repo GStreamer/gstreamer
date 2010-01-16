@@ -1,346 +1,359 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--*- mode: xml -*-->
-<glade-interface>
-  <widget class="GtkWindow" id="windowMain">
+<?xml version="1.0"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="windowMain">
     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="title" translatable="yes">gst-camera</property>
     <signal name="delete_event" handler="on_windowMain_delete_event"/>
     <child>
-      <widget class="GtkVBox" id="vboxMain">
+      <object class="GtkVBox" id="vboxMain">
         <property name="visible">True</property>
         <child>
-          <widget class="GtkHBox" id="hbox2">
+          <object class="GtkHBox" id="hbox2">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkMenuBar" id="menubar1">
+              <object class="GtkMenuBar" id="menubar1">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkMenuItem" id="menuitemPhotography">
+                  <object class="GtkMenuItem" id="menuitemPhotography">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Photography</property>
                     <property name="use_underline">True</property>
-                    <child>
-                      <widget class="GtkMenu" id="menu1">
+                    <child type="submenu">
+                      <object class="GtkMenu" id="menu1">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
                 <child>
-                  <widget class="GtkMenuItem" id="menuitemCapture">
+                  <object class="GtkMenuItem" id="menuitemCapture">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Capture</property>
                     <property name="use_underline">True</property>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkComboBox" id="comboboxResolution">
+              <object class="GtkComboBox" id="comboboxResolution">
                 <property name="visible">True</property>
-                <property name="items" translatable="yes"></property>
+                <property name="model">liststore1</property>
                 <signal name="changed" handler="on_comboboxResolution_changed"/>
-              </widget>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hboxMode">
+          <object class="GtkHBox" id="hboxMode">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkRadioButton" id="radiobuttonImageCapture">
+              <object class="GtkRadioButton" id="radiobuttonImageCapture">
+                <property name="label" translatable="yes">Image capture</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Image capture</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="on_radiobuttonImageCapture_toggled"/>
-              </widget>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkRadioButton" id="radiobuttonVideoCapture">
+              <object class="GtkRadioButton" id="radiobuttonVideoCapture">
+                <property name="label" translatable="yes">Video rec</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Video rec</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="active">True</property>
                 <property name="draw_indicator">True</property>
                 <property name="group">radiobuttonImageCapture</property>
                 <signal name="toggled" handler="on_radiobuttonVideoCapture_toggled"/>
-              </widget>
+              </object>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="buttonShot">
+              <object class="GtkButton" id="buttonShot">
+                <property name="label" translatable="yes">Shot</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Shot</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_buttonShot_clicked"/>
-              </widget>
+              </object>
               <packing>
                 <property name="position">2</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkButton" id="buttonPause">
+              <object class="GtkButton" id="buttonPause">
+                <property name="label" translatable="yes">Pause</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Pause</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <signal name="clicked" handler="on_buttonPause_clicked"/>
-              </widget>
+              </object>
               <packing>
                 <property name="position">3</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkCheckButton" id="chkbntMute">
+              <object class="GtkCheckButton" id="chkbntMute">
+                <property name="label" translatable="yes">mute</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">mute</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="on_chkbntMute_toggled"/>
-              </widget>
+              </object>
               <packing>
                 <property name="position">4</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkCheckButton" id="chkbntContinous">
+              <object class="GtkCheckButton" id="chkbntContinous">
+                <property name="label" translatable="yes">continous</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="label" translatable="yes">continous</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="draw_indicator">True</property>
-              </widget>
+              </object>
               <packing>
                 <property name="position">5</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkCheckButton" id="chkbtnRawMsg">
+              <object class="GtkCheckButton" id="chkbtnRawMsg">
+                <property name="label" translatable="yes">raw msg</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="tooltip" translatable="yes">Send raw image after still image capture as gstreamer message</property>
-                <property name="label" translatable="yes">raw msg</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Send raw image after still image capture as gstreamer message</property>
                 <property name="use_underline">True</property>
-                <property name="response_id">0</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="on_chkbtnRawMsg_toggled"/>
-              </widget>
+              </object>
               <packing>
                 <property name="position">6</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkTable" id="tableOptions">
+          <object class="GtkTable" id="tableOptions">
             <property name="visible">True</property>
-            <property name="n_rows">1</property>
             <property name="n_columns">3</property>
             <child>
-              <widget class="GtkVBox" id="vboxVidEffect">
+              <object class="GtkVBox" id="vboxVidEffect">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkLabel" id="labelVidEff">
+                  <object class="GtkLabel" id="labelVidEff">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">video effects:</property>
-                  </widget>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffNone">
+                  <object class="GtkRadioButton" id="rbBntVidEffNone">
+                    <property name="label" translatable="yes">none</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">none</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <signal name="toggled" handler="on_rbBntVidEffNone_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffEdge">
+                  <object class="GtkRadioButton" id="rbBntVidEffEdge">
+                    <property name="label" translatable="yes">edged</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">edged</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffEdge_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffAging">
+                  <object class="GtkRadioButton" id="rbBntVidEffAging">
+                    <property name="label" translatable="yes">aging</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">aging</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffAging_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffDice">
+                  <object class="GtkRadioButton" id="rbBntVidEffDice">
+                    <property name="label" translatable="yes">dice</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">dice</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffDice_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">4</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffWarp">
+                  <object class="GtkRadioButton" id="rbBntVidEffWarp">
+                    <property name="label" translatable="yes">warp</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">warp</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffWarp_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">5</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffShaga">
+                  <object class="GtkRadioButton" id="rbBntVidEffShaga">
+                    <property name="label" translatable="yes">shagadelic</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">shagadelic</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffShagadelic_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">6</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffVertigo">
+                  <object class="GtkRadioButton" id="rbBntVidEffVertigo">
+                    <property name="label" translatable="yes">vertigo</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">vertigo</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffVertigo_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">7</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffRev">
+                  <object class="GtkRadioButton" id="rbBntVidEffRev">
+                    <property name="label" translatable="yes">rev</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">rev</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffRev_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">8</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkRadioButton" id="rbBntVidEffQuark">
+                  <object class="GtkRadioButton" id="rbBntVidEffQuark">
+                    <property name="label" translatable="yes">quark</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">quark</property>
+                    <property name="receives_default">False</property>
                     <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                     <property name="group">rbBntVidEffNone</property>
                     <signal name="toggled" handler="on_rbBntVidEffQuark_toggled"/>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">9</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="x_options"></property>
               </packing>
             </child>
             <child>
-              <widget class="GtkScrolledWindow" id="scrlWndColorControls">
+              <object class="GtkScrolledWindow" id="scrlWndColorControls">
                 <property name="width_request">200</property>
                 <property name="height_request">200</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
                 <child>
-                  <widget class="GtkViewport" id="viewportColorControls">
+                  <object class="GtkViewport" id="viewportColorControls">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
-                      <widget class="GtkVBox" id="vboxColorControls">
+                      <object class="GtkVBox" id="vboxColorControls">
                         <property name="visible">True</property>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="left_attach">2</property>
                 <property name="right_attach">3</property>
@@ -348,50 +361,63 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkAspectFrame" id="drawingareaFrame">
+              <object class="GtkAspectFrame" id="drawingareaFrame">
                 <property name="visible">True</property>
                 <property name="label_xalign">0</property>
-                <property name="shadow_type">GTK_SHADOW_NONE</property>
-                <property name="ratio">1</property>
+                <property name="shadow_type">none</property>
                 <property name="obey_child">False</property>
                 <child>
-                  <widget class="GtkAlignment" id="alignment1">
+                  <object class="GtkAlignment" id="alignment1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkDrawingArea" id="drawingareaView">
+                      <object class="GtkDrawingArea" id="drawingareaView">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <signal name="configure_event" handler="on_drawingareaView_configure_event"/>
-                      </widget>
+                      </object>
                     </child>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHScale" id="hscaleZoom">
+          <object class="GtkHScale" id="hscaleZoom">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="adjustment">100 100 1100 10 100 100</property>
+            <property name="adjustment">adjustment1</property>
             <property name="digits">0</property>
-            <property name="value_pos">GTK_POS_LEFT</property>
+            <property name="value_pos">left</property>
             <signal name="value_changed" handler="on_hscaleZoom_value_changed"/>
-          </widget>
+          </object>
           <packing>
             <property name="expand">False</property>
             <property name="position">3</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+  </object>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="lower">100</property>
+    <property name="upper">1100</property>
+    <property name="value">100</property>
+    <property name="step_increment">10</property>
+    <property name="page_increment">100</property>
+    <property name="page_size">100</property>
+  </object>
+  <object class="GtkListStore" id="liststore1">
+    <columns>
+      <!-- column-name item text -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+</interface>

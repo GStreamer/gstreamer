@@ -1,123 +1,130 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.0 on Thu Feb  7 14:44:35 2008 -->
-<glade-interface>
-  <widget class="GtkWindow" id="windowMain">
+<?xml version="1.0"?>
+<interface>
+  <!-- interface-requires gtk+ 2.8 -->
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="windowMain">
     <property name="width_request">800</property>
     <property name="height_request">600</property>
     <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
     <property name="title" translatable="yes">Metadata Editor</property>
     <signal name="delete_event" handler="on_windowMain_delete_event"/>
     <child>
-      <widget class="GtkVPaned" id="vpanedMain">
+      <object class="GtkVPaned" id="vpanedMain">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
         <child>
-          <widget class="GtkDrawingArea" id="drawingMain">
+          <object class="GtkDrawingArea" id="drawingMain">
             <property name="width_request">200</property>
             <property name="height_request">100</property>
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <signal name="expose_event" handler="on_drawingMain_expose_event"/>
-          </widget>
+          </object>
           <packing>
             <property name="resize">False</property>
             <property name="shrink">False</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkVBox" id="vboxMain">
+          <object class="GtkVBox" id="vboxMain">
             <property name="visible">True</property>
             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
             <child>
-              <widget class="GtkScrolledWindow" id="scrolledwindow">
+              <object class="GtkScrolledWindow" id="scrolledwindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
                 <child>
-                  <widget class="GtkTreeView" id="treeMain">
+                  <object class="GtkTreeView" id="treeMain">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                    <property name="headers_clickable">True</property>
                     <property name="rules_hint">True</property>
                     <property name="enable_search">False</property>
                     <property name="hover_expand">True</property>
-                  </widget>
+                  </object>
                 </child>
-              </widget>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
             </child>
             <child>
-              <widget class="GtkVBox" id="vboxEditBnt">
+              <object class="GtkVBox" id="vboxEditBnt">
                 <property name="visible">True</property>
                 <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                 <child>
-                  <widget class="GtkHBox" id="hboxEdit">
+                  <object class="GtkHBox" id="hboxEdit">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
-                      <widget class="GtkEntry" id="entryTag">
+                      <object class="GtkEntry" id="entryTag">
                         <property name="width_request">300</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkEntry" id="entryValue">
+                      <object class="GtkEntry" id="entryValue">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">1</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
+                  <packing>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
-                  <widget class="GtkHButtonBox" id="hbuttonboxBnt">
+                  <object class="GtkHButtonBox" id="hbuttonboxBnt">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <property name="homogeneous">True</property>
-                    <property name="layout_style">GTK_BUTTONBOX_SPREAD</property>
+                    <property name="layout_style">spread</property>
                     <child>
-                      <widget class="GtkButton" id="buttonInsert">
+                      <object class="GtkButton" id="buttonInsert">
+                        <property name="label" translatable="yes">Insert</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="label" translatable="yes">Insert</property>
-                        <property name="response_id">0</property>
                         <signal name="clicked" handler="on_buttonInsert_clicked"/>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkButton" id="buttonSaveFile">
+                      <object class="GtkButton" id="buttonSaveFile">
+                        <property name="label" translatable="yes">Save File</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="label" translatable="yes">Save File</property>
-                        <property name="response_id">0</property>
                         <signal name="clicked" handler="on_buttonSaveFile_clicked"/>
-                      </widget>
+                      </object>
                       <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
@@ -125,207 +132,216 @@
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkHBox" id="hboxOptions">
+                  <object class="GtkHBox" id="hboxOptions">
                     <property name="visible">True</property>
                     <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                     <child>
-                      <widget class="GtkVBox" id="vboxCaptureOptions">
+                      <object class="GtkVBox" id="vboxCaptureOptions">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonCaptureV4l2">
+                          <object class="GtkCheckButton" id="checkbuttonCaptureV4l2">
+                            <property name="label" translatable="yes">Capture image from camera</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">Capture image from camera</property>
-                            <property name="response_id">0</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonCaptureV4l2_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonCaptureTest">
+                          <object class="GtkCheckButton" id="checkbuttonCaptureTest">
+                            <property name="label" translatable="yes">Capture image from videotestsrc</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">Capture image from videotestsrc</property>
-                            <property name="response_id">0</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonCaptureTest_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="buttonOpenFile">
+                          <object class="GtkButton" id="buttonOpenFile">
+                            <property name="label" translatable="yes">Open File...</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">Open File...</property>
-                            <property name="response_id">0</property>
                             <signal name="clicked" handler="on_buttonOpenFile_clicked"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="position">2</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
                     <child>
-                      <widget class="GtkVBox" id="vboxOptionsDemux">
+                      <object class="GtkVBox" id="vboxOptionsDemux">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <child>
-                          <widget class="GtkLabel" id="labelDemux">
+                          <object class="GtkLabel" id="labelDemux">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <property name="xalign">0</property>
                             <property name="label" translatable="yes">Demux options:</property>
-                          </widget>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsDemuxExif">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsDemuxExif">
+                            <property name="label" translatable="yes">exif</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">exif</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsDemuxExif_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsDemuxIptc">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsDemuxIptc">
+                            <property name="label" translatable="yes">iptc</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">iptc</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsDemuxIptc_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">2</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsDemuxXmp">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsDemuxXmp">
+                            <property name="label" translatable="yes">xmp</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">xmp</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsDemuxXmp_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">3</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkVBox" id="vboxOptionsMux">
+                      <object class="GtkVBox" id="vboxOptionsMux">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <child>
-                          <widget class="GtkLabel" id="labelMux">
+                          <object class="GtkLabel" id="labelMux">
                             <property name="visible">True</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                             <property name="xalign">0</property>
                             <property name="label" translatable="yes">Mux options:</property>
-                          </widget>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsMuxExif">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsMuxExif">
+                            <property name="label" translatable="yes">exif</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">exif</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsMuxExif_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsMuxIptc">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsMuxIptc">
+                            <property name="label" translatable="yes">iptc</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">iptc</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsMuxIptc_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">2</property>
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkCheckButton" id="checkbuttonOptionsMuxXmp">
+                          <object class="GtkCheckButton" id="checkbuttonOptionsMuxXmp">
+                            <property name="label" translatable="yes">xmp</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
                             <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">xmp</property>
-                            <property name="response_id">0</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                             <signal name="toggled" handler="on_checkbuttonOptionsMuxXmp_toggled"/>
-                          </widget>
+                          </object>
                           <packing>
                             <property name="fill">False</property>
                             <property name="position">3</property>
                           </packing>
                         </child>
-                      </widget>
+                      </object>
                       <packing>
                         <property name="position">2</property>
                       </packing>
                     </child>
-                  </widget>
+                  </object>
                   <packing>
                     <property name="position">2</property>
                   </packing>
                 </child>
-              </widget>
+              </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
+          </object>
           <packing>
             <property name="resize">True</property>
             <property name="shrink">False</property>
           </packing>
         </child>
-      </widget>
+      </object>
     </child>
-  </widget>
-</glade-interface>
+  </object>
+</interface>

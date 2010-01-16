@@ -33,7 +33,6 @@
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/photography.h>
-#include <glade/glade-xml.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
@@ -56,8 +55,8 @@
 
 #define PREVIEW_TIME_MS (2 * 1000)
 #define N_BURST_IMAGES 10
-#define DEFAULT_GLADE_FILE "gst-camera.glade"
-#define SHARED_GLADE_FILE CAMERA_APPS_GLADEDIR"/"DEFAULT_GLADE_FILE
+#define DEFAULT_UI_FILE "gst-camera.ui"
+#define SHARED_UI_FILE CAMERA_APPS_UIDIR"/"DEFAULT_UI_FILE
 
 /* Names of default elements */
 #define CAMERA_APP_VIDEOSRC "v4l2src"
@@ -95,7 +94,7 @@ typedef enum _tag_CaptureState
  * Global Vars
  */
 
-static GladeXML *ui_glade_xml = NULL;
+static GtkBuilder *builder = NULL;
 static GtkWidget *ui_main_window = NULL;
 static GtkWidget *ui_drawing = NULL;
 static GtkWidget *ui_drawing_frame = NULL;
@@ -1087,62 +1086,7 @@ on_key_pressed (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
 static void
 ui_connect_signals (void)
 {
-  glade_xml_signal_connect (ui_glade_xml, "on_windowMain_delete_event",
-      (GCallback) on_windowMain_delete_event);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_buttonShot_clicked",
-      (GCallback) on_buttonShot_clicked);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_buttonPause_clicked",
-      (GCallback) on_buttonPause_clicked);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_drawingareaView_configure_event",
-      (GCallback) on_drawingareaView_configure_event);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_comboboxResolution_changed",
-      (GCallback) on_comboboxResolution_changed);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_radiobuttonImageCapture_toggled",
-      (GCallback) on_radiobuttonImageCapture_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_radiobuttonVideoCapture_toggled",
-      (GCallback) on_radiobuttonVideoCapture_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffNone_toggled",
-      (GCallback) on_rbBntVidEffNone_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffEdge_toggled",
-      (GCallback) on_rbBntVidEffEdge_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffAging_toggled",
-      (GCallback) on_rbBntVidEffAging_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffDice_toggled",
-      (GCallback) on_rbBntVidEffDice_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffWarp_toggled",
-      (GCallback) on_rbBntVidEffWarp_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffShagadelic_toggled",
-      (GCallback) on_rbBntVidEffShagadelic_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffVertigo_toggled",
-      (GCallback) on_rbBntVidEffVertigo_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffRev_toggled",
-      (GCallback) on_rbBntVidEffRev_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_rbBntVidEffQuark_toggled",
-      (GCallback) on_rbBntVidEffQuark_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_chkbntMute_toggled",
-      (GCallback) on_chkbntMute_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_chkbtnRawMsg_toggled",
-      (GCallback) on_chkbtnRawMsg_toggled);
-
-  glade_xml_signal_connect (ui_glade_xml, "on_hscaleZoom_value_changed",
-      (GCallback) on_hscaleZoom_value_changed);
+  gtk_builder_connect_signals (builder, NULL);
 
   g_signal_connect (ui_main_window, "key-press-event",
       (GCallback) on_key_pressed, NULL);
@@ -1674,40 +1618,43 @@ fill_capture_menu (GtkMenuItem * parent_item)
 static gboolean
 ui_create (void)
 {
-  gchar *gladefile = DEFAULT_GLADE_FILE;
+  GError *error = NULL;
+  gchar *uifile = DEFAULT_UI_FILE;
 
-  if (!g_file_test (gladefile, G_FILE_TEST_EXISTS)) {
-    gladefile = SHARED_GLADE_FILE;
+  if (!g_file_test (uifile, G_FILE_TEST_EXISTS)) {
+    uifile = SHARED_UI_FILE;
   }
 
-  ui_glade_xml = glade_xml_new (gladefile, NULL, NULL);
-  if (!ui_glade_xml) {
-    fprintf (stderr, "glade_xml_new failed for %s\n", gladefile);
-    fflush (stderr);
+  builder = gtk_builder_new ();
+  if (!gtk_builder_add_from_file (builder, uifile, &error)) {
+    g_warning ("Couldn't load builder file: %s", error->message);
+    g_error_free (error);
     goto done;
   }
 
-  ui_main_window = glade_xml_get_widget (ui_glade_xml, "windowMain");
-  ui_drawing = glade_xml_get_widget (ui_glade_xml, "drawingareaView");
-  ui_drawing_frame = glade_xml_get_widget (ui_glade_xml, "drawingareaFrame");
-  ui_chk_continous = glade_xml_get_widget (ui_glade_xml, "chkbntContinous");
-  ui_chk_rawmsg = glade_xml_get_widget (ui_glade_xml, "chkbtnRawMsg");
-  ui_bnt_shot = GTK_BUTTON (glade_xml_get_widget (ui_glade_xml, "buttonShot"));
-  ui_bnt_pause =
-      GTK_BUTTON (glade_xml_get_widget (ui_glade_xml, "buttonPause"));
+  ui_main_window = GTK_WIDGET (gtk_builder_get_object (builder, "windowMain"));
+  ui_drawing = GTK_WIDGET (gtk_builder_get_object (builder, "drawingareaView"));
+  ui_drawing_frame =
+      GTK_WIDGET (gtk_builder_get_object (builder, "drawingareaFrame"));
+  ui_chk_continous =
+      GTK_WIDGET (gtk_builder_get_object (builder, "chkbntContinous"));
+  ui_chk_rawmsg = GTK_WIDGET (gtk_builder_get_object (builder, "chkbtnRawMsg"));
+  ui_bnt_shot = GTK_BUTTON (gtk_builder_get_object (builder, "buttonShot"));
+  ui_bnt_pause = GTK_BUTTON (gtk_builder_get_object (builder, "buttonPause"));
   ui_cbbox_resolution =
-      GTK_COMBO_BOX (glade_xml_get_widget (ui_glade_xml, "comboboxResolution"));
-  ui_chk_mute = glade_xml_get_widget (ui_glade_xml, "chkbntMute");
-  ui_vbox_color_controls = glade_xml_get_widget (ui_glade_xml,
-      "vboxColorControls");
-  ui_rdbntImageCapture = glade_xml_get_widget (ui_glade_xml,
-      "radiobuttonImageCapture");
-  ui_rdbntVideoCapture = glade_xml_get_widget (ui_glade_xml,
-      "radiobuttonVideoCapture");
+      GTK_COMBO_BOX (gtk_builder_get_object (builder, "comboboxResolution"));
+  ui_chk_mute = GTK_WIDGET (gtk_builder_get_object (builder, "chkbntMute"));
+  ui_vbox_color_controls =
+      GTK_WIDGET (gtk_builder_get_object (builder, "vboxColorControls"));
+  ui_rdbntImageCapture =
+      GTK_WIDGET (gtk_builder_get_object (builder, "radiobuttonImageCapture"));
+  ui_rdbntVideoCapture =
+      GTK_WIDGET (gtk_builder_get_object (builder, "radiobuttonVideoCapture"));
+  ui_menuitem_photography =
+      GTK_WIDGET (gtk_builder_get_object (builder, "menuitemPhotography"));
+  ui_menuitem_capture =
+      GTK_WIDGET (gtk_builder_get_object (builder, "menuitemCapture"));
 
-  ui_menuitem_photography = glade_xml_get_widget (ui_glade_xml,
-      "menuitemPhotography");
-  ui_menuitem_capture = glade_xml_get_widget (ui_glade_xml, "menuitemCapture");
 #ifdef HAVE_GST_PHOTO_IFACE_H
   if (ui_menuitem_photography) {
     fill_photography_menu (GTK_MENU_ITEM (ui_menuitem_photography));

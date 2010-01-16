@@ -3,5 +3,4 @@ ext/audiofile/gstafsrc.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3spusink.c
 sys/dxr3/dxr3videosink.c
-tests/icles/metadata_editor.glade
-
+tests/icles/metadata_editor.ui

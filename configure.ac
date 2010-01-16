@@ -207,14 +207,6 @@ HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK, gtk+-x11-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
-dnl libglade is optional and only used in examples
-HAVE_GLADE=NO
-PKG_CHECK_MODULES(GLADE, libglade-2.0 >= 2.6.0, HAVE_GLADE=yes, HAVE_GLADE=no)
-AC_SUBST(GLADE_LIBS)
-AC_SUBST(GLADE_CFLAGS)
-AC_SUBST(HAVE_GLADE)
-AM_CONDITIONAL(HAVE_GLADE, test "x$HAVE_GLADE" = "xyes")
-
 dnl x11 is optional for librfb
 HAVE_X11=NO
 PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
