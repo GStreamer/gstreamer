@@ -749,7 +749,7 @@ gst_shape_wipe_do_qos (GstShapeWipe * self, GstClockTime timestamp)
   return TRUE;
 }
 
-#define CREATE_AYUV_FUNCTIONS(depth, scale) \
+#define CREATE_AYUV_FUNCTIONS(depth, shift) \
 static GstFlowReturn \
 gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     GstBuffer * maskbuf, GstBuffer * outbuf) \
@@ -763,6 +763,7 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
+  guint32 low_i, high_i, position_i, round_i; \
   gint width = self->width, height = self->height; \
   \
   if (low < 0.0f) { \
@@ -775,24 +776,31 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     high = 1.0f; \
   } \
   \
+  position_i = position * 65536; \
+  low_i = low * 65536; \
+  high_i = high * 65536; \
+  round_i = (high_i - low_i) >> 1; \
+  \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
-      gfloat in = *mask / scale; \
+      guint32 in = *mask << shift; \
       \
-      if (in < low) { \
+      if (in < low_i) { \
         output[0] = 0x00;       /* A */ \
         output[1] = 0x00;       /* Y */ \
         output[2] = 0x80;       /* U */ \
         output[3] = 0x80;       /* V */ \
-      } else if (in >= high) { \
+      } else if (in >= high_i) { \
         output[0] = 0xff;       /* A */ \
         output[1] = input[1];   /* Y */ \
         output[2] = input[2];   /* U */ \
         output[3] = input[3];   /* V */ \
       } else { \
-        gfloat val = 255.0f * ((in - low) / (high - low)); \
+        guint32 val; \
+        /* Note: This will never overflow or be larger than 255! */ \
+        val = ((((in - low_i) << 16) + round_i) / (high_i - low_i)) >> 8; \
         \
-        output[0] = CLAMP (val, 0, 255);        /* A */ \
+        output[0] = val;        /* A */ \
         output[1] = input[1];   /* Y */ \
         output[2] = input[2];   /* U */ \
         output[3] = input[3];   /* V */ \
@@ -808,10 +816,10 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   return GST_FLOW_OK; \
 }
 
-CREATE_AYUV_FUNCTIONS (16, 65536.0f);
-CREATE_AYUV_FUNCTIONS (8, 256.0f);
+CREATE_AYUV_FUNCTIONS (16, 0);
+CREATE_AYUV_FUNCTIONS (8, 8);
 
-#define CREATE_ARGB_FUNCTIONS(depth, name, scale, a, r, g, b) \
+#define CREATE_ARGB_FUNCTIONS(depth, name, shift, a, r, g, b) \
 static GstFlowReturn \
 gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     GstBuffer * maskbuf, GstBuffer * outbuf) \
@@ -825,6 +833,7 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
+  guint32 low_i, high_i, position_i, round_i; \
   gint width = self->width, height = self->height; \
   \
   if (low < 0.0f) { \
@@ -837,9 +846,14 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     high = 1.0f; \
   } \
   \
+  position_i = position * 65536; \
+  low_i = low * 65536; \
+  high_i = high * 65536; \
+  round_i = (high_i - low_i) >> 1; \
+  \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
-      gfloat in = *mask / scale; \
+      guint32 in = *mask << shift; \
       \
       if (in < low) { \
         output[a] = 0x00;       /* A */ \
@@ -852,9 +866,11 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
         output[g] = input[g];   /* G */ \
         output[b] = input[b];   /* B */ \
       } else { \
-        gfloat val = 255.0f * ((in - low) / (high - low)); \
+        guint32 val; \
+        /* Note: This will never overflow or be larger than 255! */ \
+        val = ((((in - low_i) << 16) + round_i) / (high_i - low_i)) >> 8; \
         \
-        output[a] = CLAMP (val, 0, 255);        /* A */ \
+        output[a] = val;        /* A */ \
         output[r] = input[r];   /* R */ \
         output[g] = input[g];   /* G */ \
         output[b] = input[b];   /* B */ \
@@ -870,11 +886,11 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
   return GST_FLOW_OK; \
 }
 
-CREATE_ARGB_FUNCTIONS (16, argb, 65536.0f, 0, 1, 2, 3);
-CREATE_ARGB_FUNCTIONS (8, argb, 256.0f, 0, 1, 2, 3);
+CREATE_ARGB_FUNCTIONS (16, argb, 0, 0, 1, 2, 3);
+CREATE_ARGB_FUNCTIONS (8, argb, 8, 0, 1, 2, 3);
 
-CREATE_ARGB_FUNCTIONS (16, bgra, 65536.0f, 3, 2, 1, 0);
-CREATE_ARGB_FUNCTIONS (8, bgra, 256.0f, 3, 2, 1, 0);
+CREATE_ARGB_FUNCTIONS (16, bgra, 0, 3, 2, 1, 0);
+CREATE_ARGB_FUNCTIONS (8, bgra, 8, 3, 2, 1, 0);
 
 static GstFlowReturn
 gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
