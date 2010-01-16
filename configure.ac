@@ -207,6 +207,9 @@ HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK, gtk+-x11-2.0 >= 2.12.0, HAVE_GTK=yes, HAVE_GTK=no)
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
+dnl Needed for GtkBuilder to autoconnect signals
+PKG_CHECK_MODULES(GMODULE_EXPORT, gmodule-export-2.0, HAVE_GMODULE_EXPORT=yes, HAVE_GMODULE_EXPORT=no)
+
 dnl x11 is optional for librfb
 HAVE_X11=NO
 PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
