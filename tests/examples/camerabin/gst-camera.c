@@ -160,40 +160,6 @@ static gboolean capture_mode_set_state (CaptureState state);
 static void capture_mode_config_gui (void);
 static gboolean capture_mode_stop (void);
 
-static void on_windowMain_delete_event (GtkWidget * widget, GdkEvent * event,
-    gpointer user_data);
-static void on_buttonShot_clicked (GtkButton * button, gpointer user_data);
-static void on_buttonPause_clicked (GtkButton * button, gpointer user_data);
-static void on_comboboxResolution_changed (GtkComboBox * widget,
-    gpointer user_data);
-static void on_radiobuttonImageCapture_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_radiobuttonVideoCapture_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffNone_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffEdge_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffAging_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffDice_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffWarp_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffShagadelic_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffVertigo_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffRev_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_rbBntVidEffQuark_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_chkbntMute_toggled (GtkToggleButton * togglebutton,
-    gpointer user_data);
-static void on_chkbtnRawMsg_toggled (GtkToggleButton * togglebutton,
-    gpointer data);
-static void on_hscaleZoom_value_changed (GtkRange * range, gpointer user_data);
-
 static void ui_connect_signals (void);
 static gboolean ui_create (void);
 static void destroy_color_controls (void);
@@ -774,7 +740,7 @@ done:
   return FALSE;
 }
 
-static void
+void
 on_windowMain_delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
 {
   capture_mode_set_state (CAP_STATE_IMAGE);
@@ -811,7 +777,7 @@ set_metadata (void)
   g_free (desc_str);
 }
 
-static void
+void
 on_buttonShot_clicked (GtkButton * button, gpointer user_data)
 {
   switch (capture_state) {
@@ -844,7 +810,7 @@ on_buttonShot_clicked (GtkButton * button, gpointer user_data)
   }
 }
 
-static void
+void
 on_buttonPause_clicked (GtkButton * button, gpointer user_data)
 {
   switch (capture_state) {
@@ -874,7 +840,7 @@ on_buttonPause_clicked (GtkButton * button, gpointer user_data)
   }
 }
 
-static gboolean
+gboolean
 on_drawingareaView_configure_event (GtkWidget * widget,
     GdkEventConfigure * event, gpointer data)
 {
@@ -888,7 +854,7 @@ on_drawingareaView_configure_event (GtkWidget * widget,
   return TRUE;
 }
 
-static void
+void
 on_comboboxResolution_changed (GtkComboBox * widget, gpointer user_data)
 {
   GstStructure *st;
@@ -915,7 +881,7 @@ on_comboboxResolution_changed (GtkComboBox * widget, gpointer user_data)
   }
 }
 
-static void
+void
 on_radiobuttonImageCapture_toggled (GtkToggleButton * togglebutton,
     gpointer user_data)
 {
@@ -927,7 +893,7 @@ on_radiobuttonImageCapture_toggled (GtkToggleButton * togglebutton,
   }
 }
 
-static void
+void
 on_radiobuttonVideoCapture_toggled (GtkToggleButton * togglebutton,
     gpointer user_data)
 {
@@ -939,7 +905,7 @@ on_radiobuttonVideoCapture_toggled (GtkToggleButton * togglebutton,
   }
 }
 
-static void
+void
 on_rbBntVidEff_toggled (GtkToggleButton * togglebutton, gchar * effect)
 {
   if (gtk_toggle_button_get_active (togglebutton)) {
@@ -955,68 +921,68 @@ on_rbBntVidEff_toggled (GtkToggleButton * togglebutton, gchar * effect)
   }
 }
 
-static void
+void
 on_rbBntVidEffNone_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, NULL);
 }
 
-static void
+void
 on_rbBntVidEffEdge_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "edgetv");
 }
 
-static void
+void
 on_rbBntVidEffAging_toggled (GtkToggleButton * togglebutton, gpointer user_data)
 {
   on_rbBntVidEff_toggled (togglebutton, "agingtv");
 }
 
-static void
+void
 on_rbBntVidEffDice_toggled (GtkToggleButton * togglebutton, gpointer user_data)
 {
   on_rbBntVidEff_toggled (togglebutton, "dicetv");
 }
 
-static void
+void
 on_rbBntVidEffWarp_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "warptv");
 }
 
-static void
+void
 on_rbBntVidEffShagadelic_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "shagadelictv");
 }
 
-static void
+void
 on_rbBntVidEffVertigo_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "vertigotv");
 }
 
-static void
+void
 on_rbBntVidEffRev_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "revtv");
 }
 
-static void
+void
 on_rbBntVidEffQuark_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   on_rbBntVidEff_toggled (togglebutton, "quarktv");
 }
 
-static void
+void
 on_chkbntMute_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   g_object_set (gst_camera_bin, "mute",
       gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (togglebutton)), NULL);
 }
 
-static void
+void
 on_chkbtnRawMsg_toggled (GtkToggleButton * togglebutton, gpointer data)
 {
   const gchar *env_var = "CAMSRC_PUBLISH_RAW";
@@ -1027,14 +993,14 @@ on_chkbtnRawMsg_toggled (GtkToggleButton * togglebutton, gpointer data)
   }
 }
 
-static void
+void
 on_hscaleZoom_value_changed (GtkRange * range, gpointer user_data)
 {
   gint zoom = gtk_range_get_value (range);
   g_object_set (gst_camera_bin, "zoom", zoom, NULL);
 }
 
-static void
+void
 on_color_control_value_changed (GtkRange * range, gpointer user_data)
 {
   GstColorBalance *balance = GST_COLOR_BALANCE (gst_camera_bin);

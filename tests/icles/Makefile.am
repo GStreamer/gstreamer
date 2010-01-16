@@ -25,9 +25,9 @@ GST_METADATA_TESTS = metadata_editor
 
 metadata_editor_SOURCES = metadata_editor.c
 metadata_editor_CFLAGS  = \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS) $(GMODULE_EXPORT_CFLAGS)
 metadata_editor_LDADD   = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS) $(GTK_LIBS)
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS) $(GTK_LIBS) $(GMODULE_EXPORT_LIBS)
 else
 GST_METADATA_TESTS =
 endif
