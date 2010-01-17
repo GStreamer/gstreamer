@@ -14,7 +14,9 @@ endif
 monodocdir=$(SOURCESDIR)
 monodoc_DATA=$(TARGETS)
 
-gstreamer-sharp-docs.zip gstreamer-sharp-docs.tree: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
+gstreamer-sharp-docs.tree: gstreamer-sharp-docs.zip
+
+gstreamer-sharp-docs.zip: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
 	$(MDASSEMBLER) --ecma $(srcdir)/en -o gstreamer-sharp-docs
 
 html: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
