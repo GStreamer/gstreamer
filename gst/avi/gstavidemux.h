@@ -193,7 +193,7 @@ typedef struct _GstAviDemux {
 
   guint64        first_movi_offset;
   guint64        idx1_offset; /* offset in file of list/chunk after movi */
-  GstEvent      *event_seek;
+  GstEvent      *seek_event;
 
   gboolean       building_index;
   guint          odml_stream;

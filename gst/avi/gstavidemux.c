@@ -895,7 +895,6 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* handle seeking only in pull mode */
       if (!avi->streaming) {
         res = gst_avi_demux_handle_seek (avi, pad, event);
       } else {
@@ -4239,9 +4238,9 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
     avi->state = GST_AVI_DEMUX_SEEK;
 
     /* copy the event */
-    if (avi->event_seek)
-      gst_event_unref (avi->event_seek);
-    avi->event_seek = gst_event_ref (event);
+    if (avi->seek_event)
+      gst_event_unref (avi->seek_event);
+    avi->seek_event = gst_event_ref (event);
 
     if (!avi->building_index) {
       avi->building_index = 1;
@@ -5097,11 +5096,11 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       }
 
       /* calculate and perform seek */
-      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, avi->event_seek)) {
+      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, avi->seek_event)) {
         GST_WARNING ("Push mode seek failed");
         res = GST_FLOW_ERROR;
       }
-      gst_event_unref (avi->event_seek);
+      gst_event_unref (avi->seek_event);
       avi->state = GST_AVI_DEMUX_MOVI;
       break;
     default:
