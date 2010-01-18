@@ -304,6 +304,9 @@ gst_cdxa_parse_loop (GstPad * sinkpad)
     }
 
     sync_offset = gst_cdxa_parse_sync (buf);
+    gst_buffer_unref (buf);
+    buf = NULL;
+
     if (sync_offset >= 0)
       break;
 
@@ -358,6 +361,9 @@ gst_cdxa_parse_loop (GstPad * sinkpad)
 eos:
   {
     GST_DEBUG_OBJECT (cdxa, "Sending EOS");
+    if (buf)
+      gst_buffer_unref (buf);
+    buf = NULL;
     gst_pad_push_event (cdxa->srcpad, gst_event_new_eos ());
     /* fallthrough */
   }
