@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Relicensed for GStreamer from GPL to LGPL with permit from Billy Biggs.
+ * See: http://bugzilla.gnome.org/show_bug.cgi?id=163578
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif

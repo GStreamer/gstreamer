@@ -1,19 +1,27 @@
-/////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2001 Tom Barry.  All rights reserved.
-/////////////////////////////////////////////////////////////////////////////
-//
-//	This file is subject to the terms of the GNU General Public License as
-//	published by the Free Software Foundation.  A copy of this license is
-//	included with this software distribution in the file COPYING.  If you
-//	do not have a copy, you may obtain a copy by writing to the Free
-//	Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-//
-//	This software is distributed in the hope that it will be useful,
-//	but WITHOUT ANY WARRANTY; without even the implied warranty of
-//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//	GNU General Public License for more details
-//
-/////////////////////////////////////////////////////////////////////////////
+/*
+ * GStreamer
+ * Copyright (c) 2001 Tom Barry  All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/*
+ * Relicensed for GStreamer from GPL to LGPL with permit from Tom Barry.
+ * See: http://bugzilla.gnome.org/show_bug.cgi?id=163578
+ */
 
 // Define a few macros for CPU dependent instructions. 
 // I suspect I don't really understand how the C macro preprocessor works but
