@@ -57,7 +57,6 @@ struct _GstRtpH264Pay
   guint nal_length_size;
   GArray *queue;
 
-  gchar *profile_level_id;
   gchar *sprop_parameter_sets;
   gboolean update_caps;
   GstH264ScanMode scan_mode;

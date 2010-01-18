@@ -151,8 +151,7 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PROFILE_LEVEL_ID, g_param_spec_string ("profile-level-id",
           "profile-level-id",
-          "The base64 profile-level-id to set in out caps (set to NULL to "
-          "extract from stream)",
+          "The base64 profile-level-id to set in the sink caps (deprecated)",
           DEFAULT_PROFILE_LEVEL_ID,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -230,7 +229,6 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
 
-  g_free (rtph264pay->profile_level_id);
   g_free (rtph264pay->sprop_parameter_sets);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -275,8 +273,7 @@ gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
   /* profile is 24 bit. Force it to respect the limit */
   profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
   /* combine into output caps */
-  res = gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
-      G_TYPE_STRING, profile,
+  res = gst_basertppayload_set_outcaps (basepayload,
       "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
   g_string_free (sprops, TRUE);
   g_free (profile);
@@ -945,21 +942,18 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       GST_DEBUG_OBJECT (basepayload, "found next start at %u of size %u", next,
           nal_len);
 
-      if (rtph264pay->profile_level_id != NULL &&
-          rtph264pay->sprop_parameter_sets != NULL) {
+      if (rtph264pay->sprop_parameter_sets != NULL) {
         /* explicitly set profile and sprop, use those */
         if (rtph264pay->update_caps) {
-          if (!gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
-                  G_TYPE_STRING, rtph264pay->profile_level_id,
+          if (!gst_basertppayload_set_outcaps (basepayload,
                   "sprop-parameter-sets", G_TYPE_STRING,
                   rtph264pay->sprop_parameter_sets, NULL))
             goto caps_rejected;
 
           rtph264pay->update_caps = FALSE;
 
-          GST_DEBUG
-              ("outcaps udpate: profile-level-id=%s, sprop-parameter-sets=%s",
-              rtph264pay->profile_level_id, rtph264pay->sprop_parameter_sets);
+          GST_DEBUG ("outcaps udpate: sprop-parameter-sets=%s",
+              rtph264pay->sprop_parameter_sets);
         }
       } else {
         /* We know our stream is a valid H264 NAL packet,
@@ -1025,9 +1019,6 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE_LEVEL_ID:
-      g_free (rtph264pay->profile_level_id);
-      rtph264pay->profile_level_id = g_value_dup_string (value);
-      rtph264pay->update_caps = TRUE;
       break;
     case PROP_SPROP_PARAMETER_SETS:
       g_free (rtph264pay->sprop_parameter_sets);
@@ -1059,7 +1050,6 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE_LEVEL_ID:
-      g_value_set_string (value, rtph264pay->profile_level_id);
       break;
     case PROP_SPROP_PARAMETER_SETS:
       g_value_set_string (value, rtph264pay->sprop_parameter_sets);
