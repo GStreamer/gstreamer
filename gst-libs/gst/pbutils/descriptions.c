@@ -62,6 +62,7 @@ typedef struct
 static const FormatInfo formats[] = {
   /* container/tag formats with static descriptions */
   {"application/ogg", "Ogg", FLAG_CONTAINER},
+  {"application/mxf", "MXF", FLAG_CONTAINER},
   {"application/vnd.rn-realmedia", "Realmedia", FLAG_CONTAINER},
   {"application/x-id3", N_("ID3 tag"), FLAG_CONTAINER},
   {"application/x-ape", N_("APE tag"), FLAG_CONTAINER},
