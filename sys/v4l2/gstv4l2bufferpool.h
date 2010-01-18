@@ -4,7 +4,7 @@
  *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *               2009 Texas Instruments, Inc - http://www.ti.com/
  *
- * gstv4l2src.h: BT8x8/V4L2 source element
+ * gstv4l2bufferpool.h V4L2 buffer pool class
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
