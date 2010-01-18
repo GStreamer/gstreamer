@@ -890,10 +890,10 @@ gst_asf_demux_aggregate_flow_return (GstASFDemux * demux, AsfStream * stream,
 
   for (i = 0; i < demux->num_streams; i++) {
     if (demux->stream[i].active) {
-      GstFlowReturn flowret = demux->stream[i].last_flow;
+      flow = demux->stream[i].last_flow;
       GST_DEBUG_OBJECT (demux, "Aggregating: flow %i return %s", i,
-          gst_flow_get_name (flowret));
-      if (flowret != GST_FLOW_NOT_LINKED)
+          gst_flow_get_name (flow));
+      if (flow != GST_FLOW_NOT_LINKED)
         goto done;
     }
   }
