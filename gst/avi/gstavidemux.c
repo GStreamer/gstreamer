@@ -275,6 +275,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
 
   avi->state = GST_AVI_DEMUX_START;
   avi->offset = 0;
+  avi->building_index = FALSE;
 
   avi->index_offset = 0;
   g_free (avi->avih);
@@ -287,6 +288,10 @@ gst_avi_demux_reset (GstAviDemux * avi)
   if (avi->seg_event) {
     gst_event_unref (avi->seg_event);
     avi->seg_event = NULL;
+  }
+  if (avi->seek_event) {
+    gst_event_unref (avi->seek_event);
+    avi->seek_event = NULL;
   }
 
   if (avi->globaltags)
@@ -1564,7 +1569,7 @@ out_of_mem:
  * Create and push a flushing seek event upstream
  */
 static gboolean
-avi_demux_do_push_seek (GstAviDemux * demux, guint64 offset)
+perform_seek_to_offset (GstAviDemux * demux, guint64 offset)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -1591,6 +1596,7 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi)
 {
   guint32 tag = 0, size;
   GstBuffer *buf = NULL;
+  guint odml_stream;
 
   GST_DEBUG_OBJECT (avi, "read subindexes for %d streams", avi->num_streams);
 
@@ -1600,10 +1606,13 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi)
   if (!gst_avi_demux_peek_chunk (avi, &tag, &size))
     return TRUE;
 
-  if ((tag != GST_MAKE_FOURCC ('i', 'x', '0' + avi->odml_stream / 10,
-              '0' + avi->odml_stream % 10)) &&
-      (tag != GST_MAKE_FOURCC ('0' + avi->odml_stream / 10,
-              '0' + avi->odml_stream % 10, 'i', 'x'))) {
+  /* this is the ODML chunk we expect */
+  odml_stream = avi->odml_stream;
+
+  if ((tag != GST_MAKE_FOURCC ('i', 'x', '0' + odml_stream / 10,
+              '0' + odml_stream % 10)) &&
+      (tag != GST_MAKE_FOURCC ('0' + odml_stream / 10,
+              '0' + odml_stream % 10, 'i', 'x'))) {
     GST_WARNING_OBJECT (avi, "Not an ix## chunk (%" GST_FOURCC_FORMAT ")",
         GST_FOURCC_ARGS (tag));
     return FALSE;
@@ -1614,22 +1623,31 @@ gst_avi_demux_read_subindexes_push (GstAviDemux * avi)
   gst_adapter_flush (avi->adapter, 8);
   buf = gst_adapter_take_buffer (avi->adapter, size);
 
-  if (!gst_avi_demux_parse_subindex (avi, &avi->stream[avi->odml_stream], buf))
+  if (!gst_avi_demux_parse_subindex (avi, &avi->stream[odml_stream], buf))
     return FALSE;
 
-  if (avi->odml_subidxs[++avi->odml_subidx] == GST_BUFFER_OFFSET_NONE) {
+  /* we parsed the index, go to next subindex */
+  avi->odml_subidx++;
+
+  if (avi->odml_subidxs[avi->odml_subidx] == GST_BUFFER_OFFSET_NONE) {
+    /* we reached the end of the indexes for this stream, move to the next
+     * stream to handle the first index */
+    avi->odml_stream++;
     avi->odml_subidx = 0;
-    if (++avi->odml_stream < avi->num_streams) {
+
+    if (avi->odml_stream < avi->num_streams) {
+      /* there are more indexes */
       avi->odml_subidxs = avi->stream[avi->odml_stream].indexes;
     } else {
-      /* get stream stats now */
+      /* we're done, get stream stats now */
       avi->have_index = gst_avi_demux_do_index_stats (avi);
 
       return TRUE;
     }
   }
 
-  return avi_demux_do_push_seek (avi, avi->odml_subidxs[avi->odml_subidx]);
+  /* seek to next index */
+  return perform_seek_to_offset (avi, avi->odml_subidxs[avi->odml_subidx]);
 }
 
 /*
@@ -2684,7 +2702,7 @@ gst_avi_demux_stream_index_push (GstAviDemux * avi)
         (8 + GST_ROUND_UP_2 (size)));
     avi->idx1_offset = offset + 8 + GST_ROUND_UP_2 (size);
     /* issue seek to allow chain function to handle it and return! */
-    avi_demux_do_push_seek (avi, avi->idx1_offset);
+    perform_seek_to_offset (avi, avi->idx1_offset);
     return;
   }
 
@@ -2888,7 +2906,6 @@ gst_avi_demux_stream_scan (GstAviDemux * avi)
 
   /* collect stats */
   avi->have_index = gst_avi_demux_do_index_stats (avi);
-
 
   return TRUE;
 
@@ -3937,7 +3954,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 }
 
 /*
- * Handle seek event.
+ * Handle seek event in pull mode.
  */
 static gboolean
 gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
@@ -4092,7 +4109,7 @@ no_format:
 }
 
 /*
- * Handle seek event.
+ * Handle seek event in push mode.
  */
 static gboolean
 avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
@@ -4213,7 +4230,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (avi, "Seeking to offset %" G_GUINT64_FORMAT,
       stream->index[index].offset);
 
-  if (!avi_demux_do_push_seek (avi,
+  if (!perform_seek_to_offset (avi,
           stream->index[index].offset - (avi->stream[0].indexes ? 8 : 0))) {
     GST_DEBUG_OBJECT (avi, "seek event failed!");
     return FALSE;
@@ -4233,7 +4250,9 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
   /* check for having parsed index already */
   if (!avi->have_index) {
     guint64 offset;
+    gboolean building_index;
 
+    GST_OBJECT_LOCK (avi);
     /* handle the seek event in the chain function */
     avi->state = GST_AVI_DEMUX_SEEK;
 
@@ -4242,8 +4261,11 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
       gst_event_unref (avi->seek_event);
     avi->seek_event = gst_event_ref (event);
 
-    if (!avi->building_index) {
-      avi->building_index = 1;
+    /* set the building_index flag so that only one thread can setup the
+     * structures for index seeking. */
+    building_index = avi->building_index;
+    if (!building_index) {
+      avi->building_index = TRUE;
       if (avi->stream[0].indexes) {
         avi->odml_stream = 0;
         avi->odml_subidxs = avi->stream[avi->odml_stream].indexes;
@@ -4251,12 +4273,15 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
       } else {
         offset = avi->idx1_offset;
       }
+    }
+    GST_OBJECT_UNLOCK (avi);
 
+    if (!building_index) {
       /* seek to the first subindex or legacy index */
       GST_INFO_OBJECT (avi,
           "Seeking to legacy index/first subindex at %" G_GUINT64_FORMAT,
           offset);
-      return avi_demux_do_push_seek (avi, offset);
+      return perform_seek_to_offset (avi, offset);
     }
 
     /* FIXME: we have to always return true so that we don't block the seek
@@ -5075,14 +5100,16 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       res = gst_avi_demux_stream_data (avi);
       break;
     case GST_AVI_DEMUX_SEEK:
+    {
+      GstEvent *event;
+
       res = GST_FLOW_OK;
 
       /* obtain and parse indexes */
-      if (avi->stream[0].indexes && !gst_avi_demux_read_subindexes_push (avi)) {
+      if (avi->stream[0].indexes && !gst_avi_demux_read_subindexes_push (avi))
         /* seek in subindex read function failed */
-        res = GST_FLOW_ERROR;
-        break;
-      }
+        goto index_failed;
+
       if (!avi->stream[0].indexes && !avi->have_index
           && avi->avih->flags & GST_RIFF_AVIH_HASINDEX)
         gst_avi_demux_stream_index_push (avi);
@@ -5095,14 +5122,19 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
         break;
       }
 
+      GST_OBJECT_LOCK (avi);
+      event = avi->seek_event;
+      avi->seek_event = NULL;
+      GST_OBJECT_UNLOCK (avi);
+
       /* calculate and perform seek */
-      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, avi->seek_event)) {
-        GST_WARNING ("Push mode seek failed");
-        res = GST_FLOW_ERROR;
-      }
-      gst_event_unref (avi->seek_event);
+      if (!avi_demux_handle_seek_push (avi, avi->sinkpad, event))
+        goto seek_failed;
+
+      gst_event_unref (event);
       avi->state = GST_AVI_DEMUX_MOVI;
       break;
+    }
     default:
       GST_ELEMENT_ERROR (avi, STREAM, FAILED, (NULL),
           ("Illegal internal state"));
@@ -5113,13 +5145,28 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
   GST_DEBUG_OBJECT (avi, "state: %d res:%s", avi->state,
       gst_flow_get_name (res));
 
-  if (G_UNLIKELY (avi->abort_buffering)) {
-    avi->abort_buffering = FALSE;
-    res = GST_FLOW_ERROR;
-    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("unhandled buffer size"));
-  }
+  if (G_UNLIKELY (avi->abort_buffering))
+    goto abort_buffering;
 
   return res;
+
+  /* ERRORS */
+index_failed:
+  {
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("failed to read indexes"));
+    return GST_FLOW_ERROR;
+  }
+seek_failed:
+  {
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("push mode seek failed"));
+    return GST_FLOW_ERROR;
+  }
+abort_buffering:
+  {
+    avi->abort_buffering = FALSE;
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL), ("unhandled buffer size"));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
