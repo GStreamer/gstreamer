@@ -555,6 +555,12 @@ static void gst_play_bin_suburidecodebin_block (GstElement * suburidecodebin,
 static void gst_play_bin_suburidecodebin_seek_to_start (GstElement *
     suburidecodebin);
 
+/* This is non-NULL if the current thread is inside an about-to-finish signal handler,
+ * which is the only place where the currently set URI or subtitle URI is allowed
+ * to be changed in states >= PAUSED.
+ */
+static GStaticPrivate _in_about_to_finish_handler = G_STATIC_PRIVATE_INIT;
+
 static GstElementClass *parent_class;
 
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
@@ -1225,11 +1231,18 @@ static void
 gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
 {
   GstSourceGroup *group;
+  gboolean in_about_to_finish_handler;
+
+  in_about_to_finish_handler
+      = g_static_private_get (&_in_about_to_finish_handler) != NULL;
 
   if (uri == NULL) {
     g_warning ("cannot set NULL uri");
     return;
   }
+
+  g_return_if_fail (GST_STATE (playbin) < GST_STATE_PAUSED ||
+      in_about_to_finish_handler);
 
   GST_PLAY_BIN_LOCK (playbin);
   group = playbin->next_group;
@@ -1249,6 +1262,13 @@ static void
 gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
 {
   GstSourceGroup *group;
+  gboolean in_about_to_finish_handler;
+
+  in_about_to_finish_handler
+      = g_static_private_get (&_in_about_to_finish_handler) != NULL;
+
+  g_return_if_fail (GST_STATE (playbin) < GST_STATE_PAUSED ||
+      in_about_to_finish_handler);
 
   GST_PLAY_BIN_LOCK (playbin);
   group = playbin->next_group;
@@ -2936,9 +2956,11 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "about to finish in group %p", group);
 
+  g_static_private_set (&_in_about_to_finish_handler, (gpointer) 1, NULL);
   /* after this call, we should have a next group to activate or we EOS */
   g_signal_emit (G_OBJECT (playbin),
       gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
+  g_static_private_set (&_in_about_to_finish_handler, NULL, NULL);
 
   /* now activate the next group. If the app did not set a uri, this will
    * fail and we can do EOS */
@@ -3640,6 +3662,8 @@ gst_play_bin2_plugin_init (GstPlugin * plugin)
 
   g_type_class_ref (gst_input_selector_get_type ());
   g_type_class_ref (gst_selector_pad_get_type ());
+
+  g_static_private_set (&_in_about_to_finish_handler, NULL, NULL);
 
   return gst_element_register (plugin, "playbin2", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
