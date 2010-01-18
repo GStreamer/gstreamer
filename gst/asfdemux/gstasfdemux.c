@@ -874,10 +874,19 @@ parse_failed:
 }
 
 static GstFlowReturn
-gst_asf_demux_aggregate_flow_return (GstASFDemux * demux)
+gst_asf_demux_aggregate_flow_return (GstASFDemux * demux, AsfStream * stream,
+    GstFlowReturn flow)
 {
   int i;
+
   GST_DEBUG_OBJECT (demux, "Aggregating");
+
+  /* Store the value */
+  stream->last_flow = flow;
+
+  /* any other error that is not not-linked can be returned right away */
+  if (flow != GST_FLOW_NOT_LINKED)
+    goto done;
 
   for (i = 0; i < demux->num_streams; i++) {
     if (demux->stream[i].active) {
@@ -885,12 +894,13 @@ gst_asf_demux_aggregate_flow_return (GstASFDemux * demux)
       GST_DEBUG_OBJECT (demux, "Aggregating: flow %i return %s", i,
           gst_flow_get_name (flowret));
       if (flowret != GST_FLOW_NOT_LINKED)
-        return flowret;
+        goto done;
     }
   }
 
   /* If we got here, then all our active streams are not linked */
-  return GST_FLOW_NOT_LINKED;
+done:
+  return flow;
 }
 
 static gboolean
@@ -1275,6 +1285,7 @@ static GstFlowReturn
 gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 {
   AsfStream *stream;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (!demux->activated_streams)) {
     if (!gst_asf_demux_check_activate_streams (demux, force))
@@ -1406,12 +1417,17 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
         GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
         GST_BUFFER_SIZE (payload->buf));
 
-    stream->last_flow = gst_pad_push (stream->pad, payload->buf);
+    ret = gst_pad_push (stream->pad, payload->buf);
+    ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
     payload->buf = NULL;
     g_array_remove_index (stream->payloads, 0);
+
+    /* Break out as soon as we have an issue */
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      break;
   }
 
-  return gst_asf_demux_aggregate_flow_return (demux);
+  return ret;
 }
 
 static gboolean
