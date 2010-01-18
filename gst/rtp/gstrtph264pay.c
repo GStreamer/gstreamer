@@ -238,7 +238,7 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
 /* take the currently configured SPS and PPS lists and set them on the caps as
  * sprop-parameter-sets */
-static void
+static gboolean
 gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
 {
   GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
@@ -247,6 +247,7 @@ gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
   GList *walk;
   GString *sprops;
   guint count;
+  gboolean res;
 
   sprops = g_string_new ("");
   count = 0;
@@ -274,11 +275,13 @@ gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
   /* profile is 24 bit. Force it to respect the limit */
   profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
   /* combine into output caps */
-  gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
+  res = gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
       G_TYPE_STRING, profile,
       "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
   g_string_free (sprops, TRUE);
   g_free (profile);
+
+  return res;
 }
 
 static gboolean
@@ -393,7 +396,8 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
       size -= nal_size;
     }
     /* and update the caps with the collected data */
-    gst_rtp_h264_pay_set_sps_pps (basepayload);
+    if (!gst_rtp_h264_pay_set_sps_pps (basepayload))
+      return FALSE;
   } else {
     GST_DEBUG_OBJECT (rtph264pay, "have bytestream h264");
     rtph264pay->packetized = FALSE;
@@ -945,10 +949,12 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
           rtph264pay->sprop_parameter_sets != NULL) {
         /* explicitly set profile and sprop, use those */
         if (rtph264pay->update_caps) {
-          gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
-              G_TYPE_STRING, rtph264pay->profile_level_id,
-              "sprop-parameter-sets", G_TYPE_STRING,
-              rtph264pay->sprop_parameter_sets, NULL);
+          if (!gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
+                  G_TYPE_STRING, rtph264pay->profile_level_id,
+                  "sprop-parameter-sets", G_TYPE_STRING,
+                  rtph264pay->sprop_parameter_sets, NULL))
+            goto caps_rejected;
+
           rtph264pay->update_caps = FALSE;
 
           GST_DEBUG
@@ -972,7 +978,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     /* if has new SPS & PPS, update the output caps */
     if (G_UNLIKELY (update))
-      gst_rtp_h264_pay_set_sps_pps (basepayload);
+      if (!gst_rtp_h264_pay_set_sps_pps (basepayload))
+        goto caps_rejected;
 
     /* second pass to payload and push */
     data = nal_data;
@@ -999,6 +1006,13 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gst_buffer_unref (buffer);
 
   return ret;
+
+caps_rejected:
+
+  GST_WARNING_OBJECT (basepayload, "Could not set outcaps");
+  g_array_set_size (nal_queue, 0);
+  gst_buffer_unref (buffer);
+  return GST_FLOW_NOT_NEGOTIATED;
 }
 
 static void
