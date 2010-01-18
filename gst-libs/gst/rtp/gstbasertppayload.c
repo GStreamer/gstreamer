@@ -556,6 +556,11 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     gst_caps_unref (srccaps);
     gst_caps_unref (peercaps);
 
+    if (gst_caps_is_empty (temp)) {
+      gst_caps_unref (temp);
+      return FALSE;
+    }
+
     /* now fixate, start by taking the first caps */
     gst_caps_truncate (temp);
 
