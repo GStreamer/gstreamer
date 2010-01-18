@@ -1901,8 +1901,11 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
         pad->map.serialno, GST_TIME_ARGS (keyframe_time));
 
     /* collect smallest value */
-    if (keyframe_time != -1 && keyframe_time < keytarget)
-      keytarget = keyframe_time;
+    if (keyframe_time != -1) {
+      keyframe_time += begintime;
+      if (keyframe_time < keytarget)
+        keytarget = keyframe_time;
+    }
 
   next:
     pending--;
