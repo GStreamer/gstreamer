@@ -221,7 +221,7 @@ class Discoverer(gst.Pipeline):
                                             self.videoheight,
                                             self.videorate.num, self.videorate.denom)
             if self.tags.has_key("video-codec"):
-                print "\tCodec :", self.tags.pop("video-codec")
+                print "\tCodec :", self.tags["video-codec"]
         if self.is_audio:
             print "Audio :"
             if self.audiofloat:
@@ -233,7 +233,7 @@ class Discoverer(gst.Pipeline):
                                                                   self.audiorate,
                                                                   self.audiodepth)
             if self.tags.has_key("audio-codec"):
-                print "\tCodec :", self.tags.pop("audio-codec")
+                print "\tCodec :", self.tags["audio-codec"]
         for stream in self.otherstreams:
             if not stream == self.mimetype:
                 print "Other unsuported Multimedia stream :", stream
