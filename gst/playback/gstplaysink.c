@@ -787,26 +787,66 @@ gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
   return result;
 }
 
-static gint
-find_property_sink (GstElement * element, const gchar * name)
+static gboolean
+element_is_sink (GstElement * element)
 {
-  gint res;
   gboolean is_sink;
 
   GST_OBJECT_LOCK (element);
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
   GST_OBJECT_UNLOCK (element);
 
-  if (is_sink &&
-      g_object_class_find_property (G_OBJECT_GET_CLASS (element), name)) {
-    res = 0;
-    GST_DEBUG_OBJECT (element, "found %s property on sink", name);
-  } else {
-    GST_DEBUG_OBJECT (element, "did not find %s property", name);
-    res = 1;
-    gst_object_unref (element);
+  GST_DEBUG_OBJECT (element, "is a sink: %s", (is_sink) ? "yes" : "no");
+  return is_sink;
+}
+
+static gboolean
+element_has_property (GstElement * element, const gchar * pname, GType type)
+{
+  GParamSpec *pspec;
+
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), pname);
+
+  if (pspec == NULL) {
+    GST_DEBUG_OBJECT (element, "no %s property", pname);
+    return FALSE;
   }
-  return res;
+
+  if (type == G_TYPE_INVALID || type == pspec->value_type ||
+      g_type_is_a (pspec->value_type, type)) {
+    GST_DEBUG_OBJECT (element, "has %s property of type %s", pname,
+        (type == G_TYPE_INVALID) ? "any type" : g_type_name (type));
+    return TRUE;
+  }
+
+  GST_WARNING_OBJECT (element, "has %s property, but property is of type %s "
+      "and we expected it to be of type %s", pname,
+      g_type_name (pspec->value_type), g_type_name (type));
+
+  return FALSE;
+}
+
+typedef struct
+{
+  const gchar *prop_name;
+  GType prop_type;
+} FindPropertyHelper;
+
+static gint
+find_property_sink (GstElement * element, FindPropertyHelper * helper)
+{
+  if (!element_is_sink (element)) {
+    gst_object_unref (element);
+    return 1;
+  }
+
+  if (!element_has_property (element, helper->prop_name, helper->prop_type)) {
+    gst_object_unref (element);
+    return 1;
+  }
+
+  GST_INFO_OBJECT (element, "found sink with %s property", helper->prop_name);
+  return 0;                     /* keep it */
 }
 
 /* find a sink in the hierarchy with a property named @name. This function does
@@ -814,17 +854,19 @@ find_property_sink (GstElement * element, const gchar * name)
  * long as the bin is valid. */
 static GstElement *
 gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
-    const gchar * name)
+    const gchar * name, GType expected_type)
 {
   GstElement *result = NULL;
   GstIterator *it;
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (obj), name)) {
+  if (element_has_property (obj, name, expected_type)) {
     result = obj;
   } else if (GST_IS_BIN (obj)) {
+    FindPropertyHelper helper = { name, expected_type };
+
     it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
     result = gst_iterator_find_custom (it,
-        (GCompareFunc) find_property_sink, (gpointer) name);
+        (GCompareFunc) find_property_sink, &helper);
     gst_iterator_free (it);
     /* we don't need the extra ref */
     if (result)
@@ -942,7 +984,9 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
    * queue for the audio chain. */
-  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "async",
+      G_TYPE_BOOLEAN);
   if (elem) {
     GST_DEBUG_OBJECT (playsink, "setting async property to %d on element %s",
         async, GST_ELEMENT_NAME (elem));
@@ -1087,7 +1131,9 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
    * queue for the audio chain. */
-  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "async",
+      G_TYPE_BOOLEAN);
   if (elem) {
     GST_DEBUG_OBJECT (playsink, "setting async property to %d on element %s",
         async, GST_ELEMENT_NAME (elem));
@@ -1137,7 +1183,9 @@ gen_text_chain (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "trying configured textsink");
     chain->sink = try_element (playsink, playsink->text_sink, FALSE);
     if (chain->sink) {
-      elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
+      elem =
+          gst_play_sink_find_property_sinks (playsink, chain->sink, "async",
+          G_TYPE_BOOLEAN);
       if (elem) {
         /* make sure the sparse subtitles don't participate in the preroll */
         g_object_set (elem, "async", FALSE, NULL);
@@ -1156,7 +1204,7 @@ gen_text_chain (GstPlaySink * playsink)
         /* try to set sync to true but it's no biggie when we can't */
         if ((elem =
                 gst_play_sink_find_property_sinks (playsink, chain->sink,
-                    "sync")))
+                    "sync", G_TYPE_BOOLEAN)))
           g_object_set (elem, "sync", TRUE, NULL);
       } else {
         GST_WARNING_OBJECT (playsink,
@@ -1331,7 +1379,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
-  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "volume");
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "volume",
+      G_TYPE_DOUBLE);
   if (elem) {
     chain->volume = elem;
 
@@ -1345,7 +1395,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
     chain->mute =
-        gst_play_sink_find_property_sinks (playsink, chain->sink, "mute");
+        gst_play_sink_find_property_sinks (playsink, chain->sink, "mute",
+        G_TYPE_BOOLEAN);
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
       g_signal_connect (chain->mute, "notify::mute",
@@ -1527,7 +1578,9 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
-  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "volume");
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "volume",
+      G_TYPE_DOUBLE);
   if (elem) {
     chain->volume = elem;
 
@@ -1545,7 +1598,8 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
     chain->mute =
-        gst_play_sink_find_property_sinks (playsink, chain->sink, "mute");
+        gst_play_sink_find_property_sinks (playsink, chain->sink, "mute",
+        G_TYPE_BOOLEAN);
     if (chain->mute) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
       g_signal_connect (chain->mute, "notify::mute",
