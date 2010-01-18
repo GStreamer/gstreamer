@@ -78,8 +78,6 @@ struct _GstV4l2Buffer {
   GstV4l2BufferPool *pool;
 };
 
-G_END_DECLS
-
 void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type);
 
@@ -93,5 +91,7 @@ gint gst_v4l2_buffer_pool_available_buffers (GstV4l2BufferPool *pool);
 
 #define GST_V4L2_BUFFER_POOL_LOCK(pool)     g_mutex_lock ((pool)->lock)
 #define GST_V4L2_BUFFER_POOL_UNLOCK(pool)   g_mutex_unlock ((pool)->lock)
+
+G_END_DECLS
 
 #endif /* __GSTV4L2BUFFER_H__ */
