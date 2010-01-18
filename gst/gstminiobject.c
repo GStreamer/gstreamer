@@ -430,8 +430,8 @@ gst_value_mini_object_copy (const GValue * src_value, GValue * dest_value)
 {
   if (src_value->data[0].v_pointer) {
     dest_value->data[0].v_pointer =
-        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->
-            data[0].v_pointer));
+        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->data[0].
+            v_pointer));
   } else {
     dest_value->data[0].v_pointer = NULL;
   }
@@ -447,7 +447,12 @@ static gchar *
 gst_value_mini_object_collect (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  gst_value_set_mini_object (value, collect_values[0].v_pointer);
+  if (collect_values[0].v_pointer) {
+    value->data[0].v_pointer =
+        gst_mini_object_ref (collect_values[0].v_pointer);
+  } else {
+    value->data[0].v_pointer = NULL;
+  }
 
   return NULL;
 }
