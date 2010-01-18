@@ -749,44 +749,6 @@ activate_chain (GstPlayChain * chain, gboolean activate)
   return TRUE;
 }
 
-static gint
-find_property (GstElement * element, const gchar * name)
-{
-  gint res;
-
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (element), name)) {
-    res = 0;
-    GST_DEBUG_OBJECT (element, "found %s property", name);
-  } else {
-    GST_DEBUG_OBJECT (element, "did not find %s property", name);
-    res = 1;
-    gst_object_unref (element);
-  }
-  return res;
-}
-
-/* find an object in the hierarchy with a property named @name */
-static GstElement *
-gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
-    const gchar * name)
-{
-  GstElement *result = NULL;
-  GstIterator *it;
-
-  if (GST_IS_BIN (obj)) {
-    it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
-    result = gst_iterator_find_custom (it,
-        (GCompareFunc) find_property, (gpointer) name);
-    gst_iterator_free (it);
-  } else {
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (obj), name)) {
-      result = obj;
-      gst_object_ref (obj);
-    }
-  }
-  return result;
-}
-
 static gboolean
 element_is_sink (GstElement * element)
 {
@@ -830,12 +792,13 @@ typedef struct
 {
   const gchar *prop_name;
   GType prop_type;
+  gboolean need_sink;
 } FindPropertyHelper;
 
 static gint
-find_property_sink (GstElement * element, FindPropertyHelper * helper)
+find_property (GstElement * element, FindPropertyHelper * helper)
 {
-  if (!element_is_sink (element)) {
+  if (helper->need_sink && !element_is_sink (element)) {
     gst_object_unref (element);
     return 1;
   }
@@ -845,10 +808,12 @@ find_property_sink (GstElement * element, FindPropertyHelper * helper)
     return 1;
   }
 
-  GST_INFO_OBJECT (element, "found sink with %s property", helper->prop_name);
+  GST_INFO_OBJECT (element, "found %s with %s property", helper->prop_name,
+      (helper->need_sink) ? "sink" : "element");
   return 0;                     /* keep it */
 }
 
+/* FIXME: why not move these functions into core? */
 /* find a sink in the hierarchy with a property named @name. This function does
  * not increase the refcount of the returned object and thus remains valid as
  * long as the bin is valid. */
@@ -862,15 +827,39 @@ gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
   if (element_has_property (obj, name, expected_type)) {
     result = obj;
   } else if (GST_IS_BIN (obj)) {
-    FindPropertyHelper helper = { name, expected_type };
+    FindPropertyHelper helper = { name, expected_type, TRUE };
 
     it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
     result = gst_iterator_find_custom (it,
-        (GCompareFunc) find_property_sink, &helper);
+        (GCompareFunc) find_property, &helper);
     gst_iterator_free (it);
     /* we don't need the extra ref */
     if (result)
       gst_object_unref (result);
+  }
+  return result;
+}
+
+/* find an object in the hierarchy with a property named @name */
+static GstElement *
+gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
+    const gchar * name, GType expected_type)
+{
+  GstElement *result = NULL;
+  GstIterator *it;
+
+  if (GST_IS_BIN (obj)) {
+    FindPropertyHelper helper = { name, expected_type, FALSE };
+
+    it = gst_bin_iterate_recurse (GST_BIN_CAST (obj));
+    result = gst_iterator_find_custom (it,
+        (GCompareFunc) find_property, &helper);
+    gst_iterator_free (it);
+  } else {
+    if (element_has_property (obj, name, expected_type)) {
+      result = obj;
+      gst_object_ref (obj);
+    }
   }
   return result;
 }
@@ -2155,7 +2144,7 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
       /* find and get the last-buffer property now */
       if ((elem =
               gst_play_sink_find_property (playsink, chain->sink,
-                  "last-buffer"))) {
+                  "last-buffer", GST_TYPE_BUFFER))) {
         GST_DEBUG_OBJECT (playsink, "getting last-buffer property");
         g_object_get (elem, "last-buffer", &result, NULL);
         gst_object_unref (elem);
