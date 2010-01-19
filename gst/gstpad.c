@@ -4344,7 +4344,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
     GST_DEBUG_OBJECT (pad,
         "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
         GST_PAD_CAPS (pad), caps, caps);
-    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
+    if (G_UNLIKELY (!gst_pad_set_caps (pad, caps)))
       goto not_negotiated;
   }
 
