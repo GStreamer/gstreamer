@@ -4438,10 +4438,23 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
       }
       return GST_FLOW_OK;
+    } else if (tag == GST_RIFF_TAG_RIFF) {
+      /* RIFF tags can appear in ODML files, just jump over them */
+      if (gst_adapter_available (avi->adapter) >= 12) {
+        GST_DEBUG ("Found RIFF tag, skipping RIFF header");
+        gst_adapter_flush (avi->adapter, 12);
+        continue;
+      }
+      return GST_FLOW_OK;
     } else if (tag == GST_RIFF_TAG_idx1) {
-      GST_DEBUG ("Found index tag, stream done");
-      avi->have_eos = TRUE;
-      return GST_FLOW_UNEXPECTED;
+      GST_DEBUG ("Found index tag");
+      if (gst_avi_demux_peek_chunk (avi, &tag, &size) || size == 0) {
+        /* accept 0 size buffer here */
+        avi->abort_buffering = FALSE;
+        GST_DEBUG ("  skipping %d bytes for now", size);
+        gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
+      }
+      return GST_FLOW_OK;
     } else if (tag == GST_RIFF_TAG_LIST) {
       /* movi chunks might be grouped in rec list */
       if (gst_adapter_available (avi->adapter) >= 12) {
