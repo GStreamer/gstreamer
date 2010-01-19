@@ -5082,9 +5082,6 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       avi->stream[i].discont = TRUE;
   }
 
-  if (GST_BUFFER_IS_DISCONT (buf))
-    gst_adapter_clear (avi->adapter);
-
   GST_DEBUG ("Store %d bytes in adapter", GST_BUFFER_SIZE (buf));
   gst_adapter_push (avi->adapter, buf);
 
