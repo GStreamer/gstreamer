@@ -2,9 +2,9 @@ Seeking
 -------
 
 Seeking in GStreamer means configuring the pipeline for playback of the
-media between a certain start and stop time, called a segment. By default a
-pipeline will play from position 0 to the total duration of the media at a rate
-of 1.0.
+media between a certain start and stop time, called the playback segment.
+By default a pipeline will play from position 0 to the total duration of the
+media at a rate of 1.0.
 
 A seek is performed by sending a seek event to the sink elements of a
 pipeline. Sending the seek event to a bin will by default forward
@@ -13,7 +13,9 @@ the event to all sinks in the bin.
 When performing a seek, the start and stop values of the segment can be
 specified as absoulte positions or relative to the currently configured
 playback segment. Note that it is not possible to seek relative to the current
-playback position.
+playback position. To seek relative to the current playback position, one must
+query the position first and then perform an absolute seek to the desired
+position.
 
 Feedback of the seek operation can be immediatly using the GST_SEEK_FLAG_FLUSH
 flag. With this flag, all pending data in the pipeline is discarded and playback
@@ -53,6 +55,14 @@ When performing a seek with a playback rate different from 1.0, the
 GST_SEEK_FLAG_SKIP flag can be used to instruct decoders and demuxers that they
 are allowed to skip decoding. This can be useful when resource consumption is
 more important than accurately producing all frames.
+
+
+Seeking in push based elements
+------------------------------
+
+
+
+
 
 
 Generating seeking events

@@ -54,11 +54,14 @@ QoS message
 -----------
 
 Whenever QoS discards a piece of data or affects the quality of the stream, a
-message must be posted by the element that performed the QoS. 
+message must be posted by the element that performed the QoS.  We assume that
+the time gained by dropping the data outweighs the time spend in creating and
+posting the QoS message so that posting the message should not cause more
+performance problems.
 
 This message can be posted by a sink/src that performs synchronisation against the
 clock or it could be dropped by an upstream element that performs QoS because of
-QOS events received from downstream.
+QOS events received from a downstream element.
 
  - live: G_TYPE_BOOLEAN:
       If the QoS message was dropped by a live element such as a sink or a live
@@ -72,7 +75,7 @@ QOS events received from downstream.
       The lateness of the buffer. 
 
  - proportion, G_TYPE_DOUBLE:
-      Long term prediction of the ideal rate.
+      Long term prediction of the ideal rate. 
 
 Optional stats:
 
