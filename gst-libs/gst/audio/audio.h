@@ -58,7 +58,7 @@ G_BEGIN_DECLS
  * Calculate clocktime from sample @frames and @rate.
  */
 #define GST_FRAMES_TO_CLOCK_TIME(frames, rate) \
-  ((GstClockTime) gst_util_uint64_scale (frames, GST_SECOND, rate))
+  ((GstClockTime) gst_util_uint64_scale_round (frames, GST_SECOND, rate))
 
 /**
  * GST_CLOCK_TIME_TO_FRAMES:
@@ -68,7 +68,7 @@ G_BEGIN_DECLS
  * Calculate frames from @clocktime and sample @rate.
  */
 #define GST_CLOCK_TIME_TO_FRAMES(clocktime, rate) \
-  gst_util_uint64_scale (clocktime, rate, GST_SECOND)
+  gst_util_uint64_scale_round (clocktime, rate, GST_SECOND)
 
 /**
  * GST_AUDIO_DEF_RATE:
