@@ -165,7 +165,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   /* max number of bytes based on given ptime, has to be multiple of
    * frame_duration */
   if (payload->max_ptime != -1) {
-    guint ptime_ms = payload->max_ptime / 1000000;
+    guint ptime_ms = payload->max_ptime / GST_MSECOND;
 
     maxptime_octets = G729_FRAME_SIZE *
         (int) (ptime_ms / G729_FRAME_DURATION_MS);
@@ -190,7 +190,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   {
     guint64 min_ptime = payload->min_ptime;
 
-    min_ptime = min_ptime / 1000000;
+    min_ptime = min_ptime / GST_MSECOND;
     minptime_octets = G729_FRAME_SIZE *
         (int) (min_ptime / G729_FRAME_DURATION_MS);
   }
@@ -203,8 +203,9 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
 
   /* If the ptime is specified in the caps, tried to adhere to it exactly */
   if (payload->abidata.ABI.ptime) {
+    guint64 ptime = payload->abidata.ABI.ptime / GST_MSECOND;
     guint ptime_in_bytes = G729_FRAME_SIZE *
-        (guint) (payload->abidata.ABI.ptime / G729_FRAME_DURATION_MS);
+        (guint) (ptime / G729_FRAME_DURATION_MS);
 
     /* clip to computed min and max lengths */
     ptime_in_bytes = MAX (min_payload_len, ptime_in_bytes);
