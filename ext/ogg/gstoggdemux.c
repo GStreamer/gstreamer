@@ -2138,7 +2138,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       stop = MIN (stop, chain->segment_stop);
     }
 
-    last_stop = ogg->segment.last_stop - begin_time;
+    last_stop = ogg->segment.last_stop;
     if (chain->segment_start != GST_CLOCK_TIME_NONE)
       last_stop += chain->segment_start;
 
