@@ -113,7 +113,7 @@ struct _GstBaseRTPPayload
 
   union  {
     struct {
-      guint ptime; /* in ms */
+      guint64 ptime; /* in ns */
     } ABI;
     gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer)) - 1];
   } abidata;

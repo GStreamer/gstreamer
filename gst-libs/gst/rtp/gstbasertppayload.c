@@ -571,7 +571,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
       payload->priv->caps_max_ptime = max_ptime * GST_MSECOND;
 
     if (gst_structure_get_int (s, "ptime", &ptime) && ptime > 0)
-      payload->abidata.ABI.ptime = ptime;
+      payload->abidata.ABI.ptime = ptime * GST_MSECOND;
 
     if (gst_structure_get_int (s, "payload", &pt)) {
       /* use peer pt */
