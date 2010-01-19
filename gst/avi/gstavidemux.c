@@ -777,25 +777,30 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
 
       if (avi->have_index) {
         GstAviIndexEntry *entry;
-        guint index;
-        /* FIXME, this code assumes the main stream with keyframes is stream 0,
-         * which is mostly correct... */
-        GstAviStream *stream = &avi->stream[avi->main_stream];
+        guint i = 0, index;
+        GstAviStream *stream;
 
-        /* find the index for start bytes offset, calculate the corresponding
-         * time and (reget?) start offset in bytes */
-        entry = gst_util_array_binary_search (stream->index,
-            stream->idx_n, sizeof (GstAviIndexEntry),
-            (GCompareDataFunc) gst_avi_demux_index_entry_offset_search,
-            GST_SEARCH_MODE_BEFORE, &start, NULL);
+        /* find which stream we're on */
+        do {
+          stream = &avi->stream[i];
 
-        if (entry == NULL) {
-          index = 0;
-        } else {
-          index = entry - stream->index;
-        }
+          /* find the index for start bytes offset */
+          entry = gst_util_array_binary_search (stream->index,
+              stream->idx_n, sizeof (GstAviIndexEntry),
+              (GCompareDataFunc) gst_avi_demux_index_entry_offset_search,
+              GST_SEARCH_MODE_BEFORE, &start, NULL);
 
-        start = stream->index[index].offset;
+          if (entry == NULL) {
+            index = 0;
+          } else {
+            index = entry - stream->index;
+          }
+
+          if (stream->index[index].offset == start)
+            break;
+        } while (++i < avi->num_streams);
+
+        /* get the ts corresponding to start offset bytes for the stream */
         gst_avi_demux_get_buffer_info (avi, stream, index,
             (GstClockTime *) & time, NULL, NULL, NULL);
       } else if (avi->element_index) {
@@ -4151,87 +4156,94 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
     format = fmt;
   }
-  GST_DEBUG_OBJECT (avi,
-      "seek requested: rate %g cur %" GST_TIME_FORMAT " stop %"
-      GST_TIME_FORMAT, rate, GST_TIME_ARGS (cur), GST_TIME_ARGS (stop));
-  /* FIXME: can we do anything with rate!=1.0 */
 
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
-  GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
-      " keyframe seeking:%d", GST_TIME_ARGS (cur), keyframe);
+  GST_DEBUG_OBJECT (avi,
+      "Seek requested: ts %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
+      ", kf %u, rate %lf", GST_TIME_ARGS (cur), GST_TIME_ARGS (stop), keyframe,
+      rate);
+  /* FIXME: can we do anything with rate!=1.0 */
 
   /* FIXME, this code assumes the main stream with keyframes is stream 0,
    * which is mostly correct... */
   str_num = avi->main_stream;
-  stream = &avi->stream[avi->main_stream];
+  stream = &avi->stream[str_num];
 
   /* get the entry index for the requested position */
   index = gst_avi_demux_index_for_time (avi, stream, cur);
-  GST_DEBUG_OBJECT (avi, "Got entry %u", index);
+  GST_DEBUG_OBJECT (avi, "str %u: Found entry %u for %" GST_TIME_FORMAT,
+      str_num, index, GST_TIME_ARGS (cur));
 
   /* check if we are already on a keyframe */
   if (!ENTRY_IS_KEYFRAME (&stream->index[index])) {
-    GST_DEBUG_OBJECT (avi, "not keyframe, searching back");
+    GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
     /* now go to the previous keyframe, this is where we should start
      * decoding from. */
     index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
-    GST_DEBUG_OBJECT (avi, "previous keyframe at %u", index);
+    GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", index);
   }
 
   gst_avi_demux_get_buffer_info (avi, stream, index,
       &stream->current_timestamp, &stream->current_ts_end,
       &stream->current_offset, &stream->current_offset_end);
 
-  min_offset = stream->current_offset;
+  /* re-use cur to be the timestamp of the seek as it _will_ be */
+  cur = stream->current_timestamp;
+
+  min_offset = stream->index[index].offset;
+
+  GST_DEBUG_OBJECT (avi,
+      "Seek to: ts %" GST_TIME_FORMAT " (on str %u, idx %u, offset %"
+      G_GUINT64_FORMAT ")", GST_TIME_ARGS (stream->current_timestamp), str_num,
+      index, min_offset);
+
   for (n = 0; n < avi->num_streams; n++) {
     GstAviStream *str = &avi->stream[n];
     guint idx;
-    guint64 off;
 
     if (n == avi->main_stream)
       continue;
 
     /* get the entry index for the requested position */
-    idx = gst_avi_demux_index_for_time (avi, str, stream->current_timestamp);
-    GST_DEBUG_OBJECT (avi, "Got entry %u", idx);
+    idx = gst_avi_demux_index_for_time (avi, str, cur);
+    GST_DEBUG_OBJECT (avi, "str %u: Found entry %u for %" GST_TIME_FORMAT, n,
+        idx, GST_TIME_ARGS (cur));
 
     /* check if we are already on a keyframe */
     if (!ENTRY_IS_KEYFRAME (&str->index[idx])) {
-      GST_DEBUG_OBJECT (avi, "not keyframe, searching back");
+      GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
       /* now go to the previous keyframe, this is where we should start
        * decoding from. */
       idx = gst_avi_demux_index_prev (avi, str, idx, TRUE);
-      GST_DEBUG_OBJECT (avi, "previous keyframe at %u", idx);
+      GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", idx);
     }
 
-    gst_avi_demux_get_buffer_info (avi, str, idx, NULL, NULL, &off, NULL);
-    if (off < min_offset) {
+    gst_avi_demux_get_buffer_info (avi, str, idx,
+        &str->current_timestamp, &str->current_ts_end,
+        &str->current_offset, &str->current_offset_end);
+
+    if (str->index[idx].offset < min_offset) {
+      min_offset = str->index[idx].offset;
       GST_DEBUG_OBJECT (avi,
-          "Found an earlier offset at %" G_GUINT64_FORMAT ", str %u", off, n);
-      min_offset = off;
+          "Found an earlier offset at %" G_GUINT64_FORMAT ", str %u",
+          min_offset, n);
       str_num = n;
       stream = str;
       index = idx;
     }
   }
 
-  gst_avi_demux_get_buffer_info (avi, stream, index,
-      &stream->current_timestamp, &stream->current_ts_end,
-      &stream->current_offset, &stream->current_offset_end);
-
-  GST_DEBUG_OBJECT (avi, "Moved to str %u, idx %u, ts %" GST_TIME_FORMAT
-      ", ts_end %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
-      ", off_end %" G_GUINT64_FORMAT, str_num, index,
+  GST_DEBUG_OBJECT (avi,
+      "Seek performed: str %u, offset %" G_GUINT64_FORMAT ", idx %u, ts %"
+      GST_TIME_FORMAT ", ts_end %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
+      ", off_end %" G_GUINT64_FORMAT, str_num, min_offset, index,
       GST_TIME_ARGS (stream->current_timestamp),
       GST_TIME_ARGS (stream->current_ts_end), stream->current_offset,
       stream->current_offset_end);
 
-  GST_DEBUG_OBJECT (avi, "Seeking to offset %" G_GUINT64_FORMAT,
-      stream->index[index].offset);
-
   if (!perform_seek_to_offset (avi,
-          stream->index[index].offset - (avi->stream[0].indexes ? 8 : 0))) {
+          min_offset - (avi->stream[0].indexes ? 8 : 0))) {
     GST_DEBUG_OBJECT (avi, "seek event failed!");
     return FALSE;
   }
