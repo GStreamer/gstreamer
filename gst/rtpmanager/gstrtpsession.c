@@ -713,24 +713,29 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
 }
 
 static void
-get_current_times (GstRtpSession * rtpsession,
-    GstClockTime * running_time, guint64 * ntpnstime)
+get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
+    guint64 * ntpnstime)
 {
   guint64 ntpns;
   GstClock *clock;
-  GstClockTime base_time, ntpnsbase, rt;
+  GstClockTime base_time, rt;
+  GTimeVal current;
 
   GST_OBJECT_LOCK (rtpsession);
   if ((clock = GST_ELEMENT_CLOCK (rtpsession))) {
     base_time = GST_ELEMENT_CAST (rtpsession)->base_time;
-    ntpnsbase = rtpsession->priv->ntpnsbase;
     gst_object_ref (clock);
     GST_OBJECT_UNLOCK (rtpsession);
 
+    /* get current NTP time */
+    g_get_current_time (&current);
+    ntpns = GST_TIMEVAL_TO_TIME (current);
+
+    /* add constant to convert from 1970 based time to 1900 based time */
+    ntpns += (2208988800LL * GST_SECOND);
+
     /* get current clock time and convert to running time */
     rt = gst_clock_get_time (clock) - base_time;
-    /* add NTP base offset to get NTP ns time */
-    ntpns = rt + ntpnsbase;
 
     gst_object_unref (clock);
   } else {
@@ -751,6 +756,7 @@ rtcp_thread (GstRtpSession * rtpsession)
   GstClockTime current_time;
   GstClockTime next_timeout;
   guint64 ntpnstime;
+  GstClockTime running_time;
 
   GST_DEBUG_OBJECT (rtpsession, "entering RTCP thread");
 
@@ -789,7 +795,7 @@ rtcp_thread (GstRtpSession * rtpsession)
     current_time = gst_clock_get_time (rtpsession->priv->sysclock);
 
     /* get current NTP time */
-    get_current_times (rtpsession, NULL, &ntpnstime);
+    get_current_times (rtpsession, &running_time, &ntpnstime);
 
     /* we get unlocked because we need to perform reconsideration, don't perform
      * the timeout but get a new reporting estimate. */
@@ -798,7 +804,8 @@ rtcp_thread (GstRtpSession * rtpsession)
 
     /* perform actions, we ignore result. Release lock because it might push. */
     GST_RTP_SESSION_UNLOCK (rtpsession);
-    rtp_session_on_timeout (rtpsession->priv->session, current_time, ntpnstime);
+    rtp_session_on_timeout (rtpsession->priv->session, current_time, ntpnstime,
+        running_time);
     GST_RTP_SESSION_LOCK (rtpsession);
   }
   /* mark the thread as stopped now */
@@ -1602,9 +1609,8 @@ gst_rtp_session_chain_send_rtp_common (GstPad * pad, gpointer data,
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GstFlowReturn ret;
-  GstClockTime timestamp;
+  GstClockTime timestamp, running_time;
   GstClockTime current_time;
-  guint64 ntpnstime;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
@@ -1625,23 +1631,20 @@ gst_rtp_session_chain_send_rtp_common (GstPad * pad, gpointer data,
   } else {
     timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (data));
   }
+
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* convert to running time using the segment start value. */
-    ntpnstime =
+    running_time =
         gst_segment_to_running_time (&rtpsession->send_rtp_seg, GST_FORMAT_TIME,
         timestamp);
-    /* convert to NTP time by adding the NTP base */
-    ntpnstime += priv->ntpnsbase;
   } else {
-    /* no timestamp, we could take the current running_time and convert it to
-     * NTP time. */
-    ntpnstime = -1;
+    /* no timestamp. */
+    running_time = -1;
   }
 
   current_time = gst_clock_get_time (priv->sysclock);
-  ret =
-      rtp_session_send_rtp (priv->session, data, is_list, current_time,
-      ntpnstime);
+  ret = rtp_session_send_rtp (priv->session, data, is_list, current_time,
+      running_time);
   if (ret != GST_FLOW_OK)
     goto push_error;
 

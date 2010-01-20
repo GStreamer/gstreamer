@@ -136,12 +136,12 @@ struct _RTPSource {
   GstClockTime  last_activity;
   GstClockTime  last_rtp_activity;
 
+  GstClockTime  last_rtime;
   GstClockTime  last_rtptime;
-  GstClockTime  last_ntpnstime;
 
   /* for bitrate estimation */
   guint64       bitrate;
-  GstClockTime  prev_ntpnstime;
+  GstClockTime  prev_rtime;
   guint64       bytes_sent;
 
   GQueue       *packets;
@@ -192,8 +192,8 @@ void            rtp_source_set_rtcp_from       (RTPSource *src, GstNetAddress *a
 /* handling RTP */
 GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
 
-GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list, guint64 ntpnstime);
-
+GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list,
+                                                GstClockTime running_time);
 /* RTCP messages */
 void            rtp_source_process_bye         (RTPSource *src, const gchar *reason);
 void            rtp_source_process_sr          (RTPSource *src, GstClockTime time, guint64 ntptime,
@@ -202,8 +202,8 @@ void            rtp_source_process_rb          (RTPSource *src, GstClockTime tim
                                                 gint32 packetslost, guint32 exthighestseq, guint32 jitter,
                                                 guint32 lsr, guint32 dlsr);
 
-gboolean        rtp_source_get_new_sr          (RTPSource *src, guint64 ntpnstime, guint64 *ntptime,
-		                                guint32 *rtptime, guint32 *packet_count,
+gboolean        rtp_source_get_new_sr          (RTPSource *src, guint64 ntpnstime, GstClockTime running_time,
+                                                guint64 *ntptime, guint32 *rtptime, guint32 *packet_count,
 						guint32 *octet_count);
 gboolean        rtp_source_get_new_rb          (RTPSource *src, GstClockTime time, guint8 *fractionlost,
                                                 gint32 *packetslost, guint32 *exthighestseq, guint32 *jitter,

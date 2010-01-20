@@ -1047,8 +1047,7 @@ set_ssrc (GstBuffer ** buffer, guint group, guint idx, RTPSource * src)
  * @src: an #RTPSource
  * @data: an RTP buffer or a list of RTP buffers
  * @is_list: if @data is a buffer or list
- * @ntpnstime: the NTP time when this buffer was captured in nanoseconds. This
- * is the buffer timestamp converted to NTP time.
+ * @running_time: the running time of @data
  *
  * Send @data (an RTP buffer or list of buffers) originating from @src.
  * This will make @src a sender. This function takes ownership of @data and
@@ -1058,13 +1057,13 @@ set_ssrc (GstBuffer ** buffer, guint group, guint idx, RTPSource * src)
  */
 GstFlowReturn
 rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
-    guint64 ntpnstime)
+    GstClockTime running_time)
 {
   GstFlowReturn result;
   guint len;
   guint32 rtptime;
   guint64 ext_rtptime;
-  guint64 ntp_diff, rtp_diff;
+  guint64 rt_diff, rtp_diff;
   guint64 elapsed;
   GstBufferList *list = NULL;
   GstBuffer *buffer = NULL;
@@ -1104,8 +1103,8 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   src->stats.octets_sent += len;
   src->bytes_sent += len;
 
-  if (src->prev_ntpnstime) {
-    elapsed = ntpnstime - src->prev_ntpnstime;
+  if (src->prev_rtime) {
+    elapsed = running_time - src->prev_rtime;
 
     if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
       guint64 rate;
@@ -1122,12 +1121,12 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
       else
         src->bitrate = ((src->bitrate * 3) + rate) / 4;
 
-      src->prev_ntpnstime = ntpnstime;
+      src->prev_rtime = running_time;
       src->bytes_sent = 0;
     }
   } else {
     GST_LOG ("Reset bitrate measurement");
-    src->prev_ntpnstime = ntpnstime;
+    src->prev_rtime = running_time;
     src->bitrate = 0;
   }
 
@@ -1139,24 +1138,24 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   ext_rtptime = src->last_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
-  GST_LOG ("SSRC %08x, RTP %" G_GUINT64_FORMAT ", NTP %" GST_TIME_FORMAT,
-      src->ssrc, ext_rtptime, GST_TIME_ARGS (ntpnstime));
+  GST_LOG ("SSRC %08x, RTP %" G_GUINT64_FORMAT ", running_time %"
+      GST_TIME_FORMAT, src->ssrc, ext_rtptime, GST_TIME_ARGS (running_time));
 
   if (ext_rtptime > src->last_rtptime) {
     rtp_diff = ext_rtptime - src->last_rtptime;
-    ntp_diff = ntpnstime - src->last_ntpnstime;
+    rt_diff = running_time - src->last_rtime;
 
     /* calc the diff so we can detect drift at the sender. This can also be used
      * to guestimate the clock rate if the NTP time is locked to the RTP
      * timestamps (as is the case when the capture device is providing the clock). */
-    GST_LOG ("SSRC %08x, diff RTP %" G_GUINT64_FORMAT ", diff NTP %"
-        GST_TIME_FORMAT, src->ssrc, rtp_diff, GST_TIME_ARGS (ntp_diff));
+    GST_LOG ("SSRC %08x, diff RTP %" G_GUINT64_FORMAT ", diff running_time %"
+        GST_TIME_FORMAT, src->ssrc, rtp_diff, GST_TIME_ARGS (rt_diff));
   }
 
   /* we keep track of the last received RTP timestamp and the corresponding
-   * NTP timestamp so that we can use this info when constructing SR reports */
+   * buffer running_time so that we can use this info when constructing SR reports */
+  src->last_rtime = running_time;
   src->last_rtptime = ext_rtptime;
-  src->last_ntpnstime = ntpnstime;
 
   /* push packet */
   if (!src->callbacks.push_rtp)
@@ -1312,6 +1311,7 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
  * rtp_source_get_new_sr:
  * @src: an #RTPSource
  * @ntpnstime: the current time in nanoseconds since 1970
+ * @running_time: the current running_time of the pipeline.
  * @ntptime: the NTP time in 32.32 fixed point
  * @rtptime: the RTP time corresponding to @ntptime
  * @packet_count: the packet count
@@ -1319,12 +1319,19 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
  *
  * Get new values to put into a new SR report from this source.
  *
+ * @running_time and @ntpnstime are captured at the same time and represent the
+ * running time of the pipeline clock and the absolute current system time in
+ * nanoseconds respectively. Together with the last running_time and rtp timestamp
+ * we have observed in the source, we can generate @ntptime and @rtptime for an SR
+ * packet. @ntptime is basically the fixed point representation of @ntpnstime
+ * and @rtptime the associated RTP timestamp.
+ *
  * Returns: %TRUE on success.
  */
 gboolean
 rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
-    guint64 * ntptime, guint32 * rtptime, guint32 * packet_count,
-    guint32 * octet_count)
+    GstClockTime running_time, guint64 * ntptime, guint32 * rtptime,
+    guint32 * packet_count, guint32 * octet_count)
 {
   guint64 t_rtp;
   guint64 t_current_ntp;
@@ -1332,30 +1339,36 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
 
-  /* use the sync params to interpolate the date->time member to rtptime. We
-   * use the last sent timestamp and rtptime as reference points. We assume
-   * that the slope of the rtptime vs timestamp curve is 1, which is certainly
+  /* We last saw a buffer with last_rtptime at last_rtime. Given a running_time
+   * and an NTP time, we can scale the RTP timestamps so that they match the
+   * given NTP time.  for scaling, we assume that the slope of the rtptime vs
+   * running_time vs ntptime curve is close to 1, which is certainly
    * sufficient for the frequency at which we report SR and the rate we send
    * out RTP packets. */
   t_rtp = src->last_rtptime;
 
-  GST_DEBUG ("last_ntpnstime %" GST_TIME_FORMAT ", last_rtptime %"
-      G_GUINT64_FORMAT, GST_TIME_ARGS (src->last_ntpnstime), t_rtp);
+  GST_DEBUG ("last_rtime %" GST_TIME_FORMAT ", last_rtptime %"
+      G_GUINT64_FORMAT, GST_TIME_ARGS (src->last_rtime), t_rtp);
 
   if (src->clock_rate != -1) {
-    /* get the diff with the SR time */
-    diff = GST_CLOCK_DIFF (src->last_ntpnstime, ntpnstime);
+    /* get the diff between the clock running_time and the buffer running_time.
+     * This is the elapsed time, as measured against the pipeline clock, between
+     * when the rtp timestamp was observed and the current running_time.
+     *
+     * We need to apply this diff to the RTP timestamp to get the RTP timestamp
+     * for the given ntpnstime. */
+    diff = GST_CLOCK_DIFF (src->last_rtime, running_time);
 
     /* now translate the diff to RTP time, handle positive and negative cases.
      * If there is no diff, we already set rtptime correctly above. */
     if (diff > 0) {
-      GST_DEBUG ("ntpnstime %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (ntpnstime), GST_TIME_ARGS (diff));
+      GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
       t_rtp += gst_util_uint64_scale_int (diff, src->clock_rate, GST_SECOND);
     } else {
       diff = -diff;
-      GST_DEBUG ("ntpnstime %" GST_TIME_FORMAT ", diff -%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (ntpnstime), GST_TIME_ARGS (diff));
+      GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff -%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
       t_rtp -= gst_util_uint64_scale_int (diff, src->clock_rate, GST_SECOND);
     }
   } else {

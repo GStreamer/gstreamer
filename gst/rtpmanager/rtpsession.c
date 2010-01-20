@@ -1956,9 +1956,9 @@ ignore:
  * rtp_session_send_rtp:
  * @sess: an #RTPSession
  * @data: pointer to either an RTP buffer or a list of RTP buffers
+ * @is_list: TRUE when @data is a buffer list
  * @current_time: the current system time
- * @ntpnstime: the NTP time in nanoseconds of when this buffer was captured.
- * This is the buffer timestamp converted to NTP time.
+ * @running_time: the running time of @data
  *
  * Send the RTP buffer in the session manager. This function takes ownership of
  * @buffer.
@@ -1967,7 +1967,7 @@ ignore:
  */
 GstFlowReturn
 rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
-    GstClockTime current_time, guint64 ntpnstime)
+    GstClockTime current_time, GstClockTime running_time)
 {
   GstFlowReturn result;
   RTPSource *source;
@@ -1997,7 +1997,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* we use our own source to send */
-  result = rtp_source_send_rtp (source, data, is_list, ntpnstime);
+  result = rtp_source_send_rtp (source, data, is_list, running_time);
 
   if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
     sess->stats.sender_sources++;
@@ -2175,6 +2175,7 @@ typedef struct
   GstBuffer *rtcp;
   GstClockTime current_time;
   guint64 ntpnstime;
+  GstClockTime running_time;
   GstClockTime interval;
   GstRTCPPacket packet;
   gboolean is_bye;
@@ -2199,8 +2200,8 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
     gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SR, packet);
 
     /* get latest stats */
-    rtp_source_get_new_sr (own, data->ntpnstime, &ntptime, &rtptime,
-        &packet_count, &octet_count);
+    rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
+        &ntptime, &rtptime, &packet_count, &octet_count);
     /* store stats */
     rtp_source_process_sr (own, data->current_time, ntptime, rtptime,
         packet_count, octet_count);
@@ -2448,6 +2449,7 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
  * @sess: an #RTPSession
  * @current_time: the current system time
  * @ntpnstime: the current NTP time in nanoseconds
+ * @running_time: the current running_time of the pipeline
  *
  * Perform maintenance actions after the timeout obtained with
  * rtp_session_next_timeout() expired.
@@ -2462,7 +2464,7 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
  */
 GstFlowReturn
 rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
-    guint64 ntpnstime)
+    guint64 ntpnstime, GstClockTime running_time)
 {
   GstFlowReturn result = GST_FLOW_OK;
   GList *item;
@@ -2481,6 +2483,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.ntpnstime = ntpnstime;
   data.is_bye = FALSE;
   data.has_sdes = FALSE;
+  data.running_time = running_time;
 
   own = sess->source;
 
