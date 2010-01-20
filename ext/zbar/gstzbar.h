@@ -47,6 +47,7 @@ typedef struct _GstZBarClass GstZBarClass;
  */
 struct _GstZBar
 {
+  /*< private >*/
   GstVideoFilter videofilter;
 
   /* format */

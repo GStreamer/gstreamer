@@ -83,21 +83,21 @@ typedef struct _AsfPayload
   guint16 packet_count;
 } AsfPayload;
 
-Guid gst_asf_generate_file_id ();
+Guid gst_asf_generate_file_id (void);
 
 gboolean gst_byte_reader_get_asf_var_size_field (GstByteReader * reader,
     guint8 field_type, guint32 * var);
 guint32 gst_asf_read_var_size_field (guint8 * data, guint8 field_type);
 guint gst_asf_get_var_size_field_len (guint8 field_type);
 
-GstAsfFileInfo *gst_asf_file_info_new ();
+GstAsfFileInfo *gst_asf_file_info_new (void);
 void gst_asf_file_info_reset (GstAsfFileInfo * info);
 void gst_asf_file_info_free (GstAsfFileInfo * info);
 
 guint32 gst_asf_payload_get_size (AsfPayload * payload);
 void gst_asf_payload_free (AsfPayload * payload);
 
-guint64 gst_asf_get_current_time ();
+guint64 gst_asf_get_current_time (void);
 
 gboolean gst_asf_match_guid (const guint8 * data, const Guid * g);
 

@@ -64,7 +64,7 @@ const Guid guids[] = {
  * Returns: The generated GUID
  */
 Guid
-gst_asf_generate_file_id ()
+gst_asf_generate_file_id (void)
 {
   guint32 aux;
   Guid guid;
@@ -168,11 +168,13 @@ gst_asf_get_var_size_field_len (guint8 field_type)
 
 /**
  * gst_asf_file_info_new:
+ *
  * Creates a new #GstAsfFileInfo
+ * 
  * Returns: the created struct
  */
 GstAsfFileInfo *
-gst_asf_file_info_new ()
+gst_asf_file_info_new (void)
 {
   return g_new0 (GstAsfFileInfo, 1);
 }
@@ -180,6 +182,7 @@ gst_asf_file_info_new ()
 /**
  * gst_asf_file_info_reset:
  * @info: the #GstAsfFileInfo to be reset
+ * 
  * resets the data of a #GstFileInfo
  */
 void
@@ -237,7 +240,7 @@ gst_asf_payload_free (AsfPayload * payload)
  * Returns:
  */
 guint64
-gst_asf_get_current_time ()
+gst_asf_get_current_time (void)
 {
   GTimeVal timeval;
   guint64 secs;

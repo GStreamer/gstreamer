@@ -90,7 +90,7 @@ static GstPlugin *gst_lv2_plugin;
 GST_DEBUG_CATEGORY_STATIC (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
 
-/** Convert an LV2 port role to a Gst channel positon
+/* Convert an LV2 port role to a Gst channel positon
  * WARNING: If the group has only a single port,
  * GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER will be returned for pg:centerRole
  * (which is used by LV2 for mono groups), but this is not correct.  In this
@@ -139,7 +139,7 @@ gst_lv2_role_to_position (SLV2Value role)
   return GST_AUDIO_CHANNEL_POSITION_INVALID;
 }
 
-/** Find and return the group @a uri in @a groups, or NULL if not found */
+/* Find and return the group @a uri in @a groups, or NULL if not found */
 static GstLV2Group *
 gst_lv2_class_find_group (GArray * groups, SLV2Value uri)
 {

@@ -138,12 +138,12 @@ typedef struct _ESDescriptor
 
 /* --- FUNCTIONS --- */
 void    desc_es_init                               (ESDescriptor *es);
-ESDescriptor *desc_es_descriptor_new               ();
+ESDescriptor *desc_es_descriptor_new               (void);
 guint64 desc_es_descriptor_copy_data               (ESDescriptor *es, guint8 **buffer,
                                                     guint64 *size, guint64 *offset);
 void    desc_es_descriptor_clear                   (ESDescriptor *es);
 
-DecoderSpecificInfoDescriptor *desc_dec_specific_info_new();
+DecoderSpecificInfoDescriptor *desc_dec_specific_info_new(void);
 void    desc_dec_specific_info_free                (DecoderSpecificInfoDescriptor *dsid);
 void    desc_dec_specific_info_alloc_data          (DecoderSpecificInfoDescriptor *dsid,
                                                     guint32 size);

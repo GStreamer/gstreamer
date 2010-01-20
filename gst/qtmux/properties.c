@@ -142,13 +142,14 @@ prop_copy_fourcc (guint32 prop, guint8 ** buffer, guint64 * size,
 INT_ARRAY_COPY_FUNC (fourcc, guint32);
 
 /**
- * Copies a string of bytes without placing its size at the beginning.
- *
+ * prop_copy_fixed_size_string:
  * @string: the string to be copied
  * @str_size: size of the string
  * @buffer: the array to copy the string to
  * @offset: the position in the buffer array.
  * This value is updated to the point right after the copied string.
+ *
+ * Copies a string of bytes without placing its size at the beginning.
  *
  * Returns: the number of bytes copied
  */
@@ -160,15 +161,17 @@ prop_copy_fixed_size_string (guint8 * string, guint str_size, guint8 ** buffer,
 }
 
 /**
- * Copies a string and its size to an array. Example:
- * string = 'abc\0'
- * result in the array: [3][a][b][c]  (each [x] represents a position)
+ * prop_copy_size_string:
  *
  * @string: the string to be copied
  * @str_size: size of the string
  * @buffer: the array to copy the string to
  * @offset: the position in the buffer array.
  * This value is updated to the point right after the copied string.
+ *
+ * Copies a string and its size to an array. Example:
+ * string = 'abc\0'
+ * result in the array: [3][a][b][c]  (each [x] represents a position)
  *
  * Returns: the number of bytes copied
  */
@@ -184,12 +187,13 @@ prop_copy_size_string (guint8 * string, guint str_size, guint8 ** buffer,
 }
 
 /**
- * Copies a string including its null terminating char to an array.
- *
+ * prop_copy_null_terminated_string:
  * @string: the string to be copied
  * @buffer: the array to copy the string to
  * @offset: the position in the buffer array.
  * This value is updated to the point right after the copied string.
+ *
+ * Copies a string including its null terminating char to an array.
  *
  * Returns: the number of bytes copied
  */

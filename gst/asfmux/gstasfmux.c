@@ -689,9 +689,9 @@ gst_asf_mux_write_file_properties (GstAsfMux * asfmux, guint8 ** buf)
 
 /**
  * gst_asf_mux_write_stream_properties:
- * @param asfmux:
- * @param buf: pointer to the data pointer
- * @param asfpad: Pad that handles the stream
+ * @asfmux:
+ * @buf: pointer to the data pointer
+ * @asfpad: Pad that handles the stream
  *
  * Writes the stream properties object in the buffer
  * for the stream handled by the #GstAsfPad passed.

@@ -42,7 +42,7 @@
 
 #include "descriptors.h"
 
-/**
+/*
  * Some mp4 structures (descriptors) use a coding scheme for
  * representing its size.
  * It is grouped in bytes. The 1st bit set to 1 means we need another byte,
@@ -51,7 +51,7 @@
  * The next set of functions handle those values
  */
 
-/**
+/*
  * Gets an unsigned integer and packs it into a 'expandable size' format
  * (as used by mp4 descriptors)
  * @size: the integer to be parsed
@@ -70,7 +70,7 @@ expandable_size_parse (guint64 size, guint8 * ptr, guint32 array_size)
   }
 }
 
-/**
+/*
  * Gets how many positions in an array holding an 'expandable size'
  * are really used
  *
@@ -112,7 +112,7 @@ desc_dec_specific_info_init (DecoderSpecificInfoDescriptor * dsid)
 }
 
 DecoderSpecificInfoDescriptor *
-desc_dec_specific_info_new ()
+desc_dec_specific_info_new (void)
 {
   DecoderSpecificInfoDescriptor *desc =
       g_new0 (DecoderSpecificInfoDescriptor, 1);
@@ -151,7 +151,7 @@ desc_es_init (ESDescriptor * es)
 }
 
 ESDescriptor *
-desc_es_descriptor_new ()
+desc_es_descriptor_new (void)
 {
   ESDescriptor *es = g_new0 (ESDescriptor, 1);
 

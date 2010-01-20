@@ -52,9 +52,9 @@ typedef struct _GstTheoraExpDecClass GstTheoraExpDecClass;
  */
 struct _GstTheoraExpDec
 {
+  /* <private> */
   GstElement element;
 
-  /* <private> */
   /* Pads */
   GstPad *sinkpad;
   GstPad *srcpad;
