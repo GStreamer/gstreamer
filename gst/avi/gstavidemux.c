@@ -771,6 +771,18 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+    {
+      gint i;
+
+      gst_adapter_clear (avi->adapter);
+      avi->have_eos = FALSE;
+      for (i = 0; i < avi->num_streams; i++) {
+        avi->stream[i].last_flow = GST_FLOW_OK;
+        avi->stream[i].discont = TRUE;
+      }
+      /* fall through to default case so that the event gets passed downstream */
+    }
     default:
       res = gst_pad_event_default (pad, event);
       break;
