@@ -994,7 +994,7 @@ find_add_conflicting_addresses (RTPSession * sess, RTPArrivalStats * arrival)
     RTPConflictingAddress *known_conflict = item->data;
 
     if (gst_netaddress_equal (&arrival->address, &known_conflict->address)) {
-      known_conflict->time = arrival->time;
+      known_conflict->time = arrival->current_time;
       return TRUE;
     }
   }
@@ -1002,7 +1002,7 @@ find_add_conflicting_addresses (RTPSession * sess, RTPArrivalStats * arrival)
   new_conflict = g_new0 (RTPConflictingAddress, 1);
 
   memcpy (&new_conflict->address, &arrival->address, sizeof (GstNetAddress));
-  new_conflict->time = arrival->time;
+  new_conflict->time = arrival->current_time;
 
   sess->conflicting_addresses = g_list_prepend (sess->conflicting_addresses,
       new_conflict);
@@ -1065,7 +1065,8 @@ check_collision (RTPSession * sess, RTPSource * source,
       GST_DEBUG ("Collision for SSRC %x", rtp_source_get_ssrc (source));
       on_ssrc_collision (sess, source);
 
-      rtp_session_schedule_bye_locked (sess, "SSRC Collision", arrival->time);
+      rtp_session_schedule_bye_locked (sess, "SSRC Collision",
+          arrival->current_time);
 
       sess->change_ssrc = TRUE;
     }
@@ -1122,9 +1123,9 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     }
   }
   /* update last activity */
-  source->last_activity = arrival->time;
+  source->last_activity = arrival->current_time;
   if (rtp)
-    source->last_rtp_activity = arrival->time;
+    source->last_rtp_activity = arrival->current_time;
   g_object_ref (source);
 
   return source;
@@ -1390,12 +1391,11 @@ rtp_session_create_source (RTPSession * sess)
 static void
 update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
-    GstClockTime running_time, guint64 ntpnstime)
+    GstClockTime running_time)
 {
   /* get time of arrival */
-  arrival->time = current_time;
+  arrival->current_time = current_time;
   arrival->running_time = running_time;
-  arrival->ntpnstime = ntpnstime;
 
   /* get packet size including header overhead */
   arrival->bytes = GST_BUFFER_SIZE (buffer) + sess->header_len;
@@ -1420,7 +1420,6 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
  * @sess: and #RTPSession
  * @buffer: an RTP buffer
  * @current_time: the current system time
- * @ntpnstime: the NTP arrival time in nanoseconds
  *
  * Process an RTP buffer in the session manager. This function takes ownership
  * of @buffer.
@@ -1429,7 +1428,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
  */
 GstFlowReturn
 rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
-    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
+    GstClockTime current_time, GstClockTime running_time)
 {
   GstFlowReturn result;
   guint32 ssrc;
@@ -1449,7 +1448,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
   update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
-      running_time, ntpnstime);
+      running_time);
 
   /* ignore more RTP packets when we left the session */
   if (sess->source->received_bye)
@@ -1567,8 +1566,8 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
       /* only deal with report blocks for our session, we update the stats of
        * the sender of the RTCP message. We could also compare our stats against
        * the other sender to see if we are better or worse. */
-      rtp_source_process_rb (source, arrival->time, fractionlost, packetslost,
-          exthighestseq, jitter, lsr, dlsr);
+      rtp_source_process_rb (source, arrival->current_time, fractionlost,
+          packetslost, exthighestseq, jitter, lsr, dlsr);
 
       on_ssrc_active (sess, source);
     }
@@ -1597,7 +1596,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
       &packet_count, &octet_count);
 
   GST_DEBUG ("got SR packet: SSRC %08x, time %" GST_TIME_FORMAT,
-      senderssrc, GST_TIME_ARGS (arrival->time));
+      senderssrc, GST_TIME_ARGS (arrival->current_time));
 
   source = obtain_source (sess, senderssrc, &created, arrival, FALSE);
   if (!source)
@@ -1612,8 +1611,8 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* first update the source */
-  rtp_source_process_sr (source, arrival->time, ntptime, rtptime, packet_count,
-      octet_count);
+  rtp_source_process_sr (source, arrival->current_time, ntptime, rtptime,
+      packet_count, octet_count);
 
   if (prevsender != RTP_SOURCE_IS_SENDER (source)) {
     sess->stats.sender_sources++;
@@ -1768,7 +1767,7 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
       return;
 
     /* store time for when we need to time out this source */
-    source->bye_time = arrival->time;
+    source->bye_time = arrival->current_time;
 
     prevactive = RTP_SOURCE_IS_ACTIVE (source);
     prevsender = RTP_SOURCE_IS_SENDER (source);
@@ -1794,17 +1793,17 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
       /* some members went away since the previous timeout estimate.
        * Perform reverse reconsideration but only when we are not scheduling a
        * BYE ourselves. */
-      if (arrival->time < sess->next_rtcp_check_time) {
+      if (arrival->current_time < sess->next_rtcp_check_time) {
         GstClockTime time_remaining;
 
-        time_remaining = sess->next_rtcp_check_time - arrival->time;
+        time_remaining = sess->next_rtcp_check_time - arrival->current_time;
         sess->next_rtcp_check_time =
             gst_util_uint64_scale (time_remaining, members, pmembers);
 
         GST_DEBUG ("reverse reconsideration %" GST_TIME_FORMAT,
             GST_TIME_ARGS (sess->next_rtcp_check_time));
 
-        sess->next_rtcp_check_time += arrival->time;
+        sess->next_rtcp_check_time += arrival->current_time;
 
         /* mark pending reconsider. We only want to signal the reconsideration
          * once after we handled all the source in the bye packet */
@@ -1866,7 +1865,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
-  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1, -1);
+  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1);
 
   if (sess->sent_bye)
     goto ignore;

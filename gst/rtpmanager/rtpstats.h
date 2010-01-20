@@ -56,9 +56,8 @@ typedef struct {
 
 /**
  * RTPArrivalStats:
- * @time: arrival time of a packet according to the system clock
+ * @current_time: arrival time of a packet according to the system clock
  * @running_time: arrival time of a packet as buffer running_time
- * @ntpnstime: arrival time of a packet as NTP time in nanoseconds
  * @have_address: if the @address field contains a valid address
  * @address: address of the sender of the packet
  * @bytes: bytes of the packet including lowlevel overhead
@@ -67,9 +66,8 @@ typedef struct {
  * Structure holding information about the arrival stats of a packet.
  */
 typedef struct {
-  GstClockTime  time;
+  GstClockTime  current_time;
   GstClockTime  running_time;
-  guint64       ntpnstime;
   gboolean      have_address;
   GstNetAddress address;
   guint         bytes;

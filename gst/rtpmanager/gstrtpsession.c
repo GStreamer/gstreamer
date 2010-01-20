@@ -1341,7 +1341,6 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
   GstRtpSessionPrivate *priv;
   GstFlowReturn ret;
   GstClockTime current_time, running_time;
-  guint64 ntpnstime;
   GstClockTime timestamp;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
@@ -1356,15 +1355,13 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
     running_time =
         gst_segment_to_running_time (&rtpsession->recv_rtp_seg, GST_FORMAT_TIME,
         timestamp);
-    /* add constant to convert running time to NTP time */
-    ntpnstime = running_time + priv->ntpnsbase;
   } else {
-    get_current_times (rtpsession, &running_time, &ntpnstime);
+    get_current_times (rtpsession, &running_time, NULL);
   }
   current_time = gst_clock_get_time (priv->sysclock);
 
   ret = rtp_session_process_rtp (priv->session, buffer, current_time,
-      running_time, ntpnstime);
+      running_time);
   if (ret != GST_FLOW_OK)
     goto push_error;
 
