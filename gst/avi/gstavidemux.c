@@ -279,9 +279,9 @@ gst_avi_demux_reset (GstAviDemux * avi)
     gst_object_unref (avi->element_index);
   avi->element_index = NULL;
 
-  if (avi->seek_event) {
-    gst_event_unref (avi->seek_event);
-    avi->seek_event = NULL;
+  if (avi->seg_event) {
+    gst_event_unref (avi->seg_event);
+    avi->seg_event = NULL;
   }
 
   if (avi->globaltags)
@@ -3043,9 +3043,9 @@ skipping_done:
 
   GST_DEBUG_OBJECT (avi, "segment stop %" G_GINT64_FORMAT, stop);
 
-  if (avi->seek_event)
-    gst_event_unref (avi->seek_event);
-  avi->seek_event = gst_event_new_new_segment_full
+  if (avi->seg_event)
+    gst_event_unref (avi->seg_event);
+  avi->seg_event = gst_event_new_new_segment_full
       (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
       avi->segment.start, stop, avi->segment.time);
 
@@ -3517,9 +3517,9 @@ skipping_done:
   gst_avi_demux_do_seek (avi, &avi->segment);
 
   /* prepare initial segment */
-  if (avi->seek_event)
-    gst_event_unref (avi->seek_event);
-  avi->seek_event = gst_event_new_new_segment_full
+  if (avi->seg_event)
+    gst_event_unref (avi->seg_event);
+  avi->seg_event = gst_event_new_new_segment_full
       (FALSE, avi->segment.rate, avi->segment.applied_rate, GST_FORMAT_TIME,
       avi->segment.start, stop, avi->segment.time);
 
@@ -3834,16 +3834,16 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     stop = avi->segment.duration;
 
   /* queue the segment event for the streaming thread. */
-  if (avi->seek_event)
-    gst_event_unref (avi->seek_event);
+  if (avi->seg_event)
+    gst_event_unref (avi->seg_event);
   if (avi->segment.rate > 0.0) {
     /* forwards goes from last_stop to stop */
-    avi->seek_event = gst_event_new_new_segment_full (FALSE,
+    avi->seg_event = gst_event_new_new_segment_full (FALSE,
         avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.last_stop, stop, avi->segment.time);
   } else {
     /* reverse goes from start to last_stop */
-    avi->seek_event = gst_event_new_new_segment_full (FALSE,
+    avi->seg_event = gst_event_new_new_segment_full (FALSE,
         avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.start, avi->segment.last_stop, avi->segment.time);
   }
@@ -4638,9 +4638,9 @@ gst_avi_demux_loop (GstPad * pad)
       avi->state = GST_AVI_DEMUX_MOVI;
       break;
     case GST_AVI_DEMUX_MOVI:
-      if (G_UNLIKELY (avi->seek_event)) {
-        gst_avi_demux_push_event (avi, avi->seek_event);
-        avi->seek_event = NULL;
+      if (G_UNLIKELY (avi->seg_event)) {
+        gst_avi_demux_push_event (avi, avi->seg_event);
+        avi->seg_event = NULL;
       }
       if (G_UNLIKELY (avi->got_tags)) {
         push_tag_lists (avi);
@@ -4728,9 +4728,9 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       }
       break;
     case GST_AVI_DEMUX_MOVI:
-      if (G_UNLIKELY (avi->seek_event)) {
-        gst_avi_demux_push_event (avi, avi->seek_event);
-        avi->seek_event = NULL;
+      if (G_UNLIKELY (avi->seg_event)) {
+        gst_avi_demux_push_event (avi, avi->seg_event);
+        avi->seg_event = NULL;
       }
       if (G_UNLIKELY (avi->got_tags)) {
         push_tag_lists (avi);
