@@ -530,7 +530,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_NTP_NS_BASE,
       g_param_spec_uint64 ("ntp-ns-base", "NTP base time",
-          "The NTP base time corresponding to running_time 0", 0,
+          "The NTP base time corresponding to running_time 0 (deprecated)", 0,
           G_MAXUINT64, DEFAULT_NTP_NS_BASE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,

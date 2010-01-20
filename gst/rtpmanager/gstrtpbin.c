@@ -210,9 +210,6 @@ struct _GstRtpBinPrivate
   /* lock protecting dynamic adding/removing */
   GMutex *dyn_lock;
 
-  /* the time when we went to playing */
-  GstClockTime ntp_ns_base;
-
   /* if we are shutting down or not */
   gint shutdown;
 
@@ -536,8 +533,6 @@ create_session (GstRtpBin * rtpbin, gint id)
       (GDestroyNotify) gst_caps_unref);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
-  /* set NTP base or new session */
-  g_object_set (session, "ntp-ns-base", rtpbin->priv->ntp_ns_base, NULL);
   /* configure SDES items */
   GST_OBJECT_LOCK (rtpbin);
   g_object_set (session, "sdes", rtpbin->sdes, NULL);
@@ -1928,30 +1923,6 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
   }
 }
 
-static void
-calc_ntp_ns_base (GstRtpBin * bin)
-{
-  GstClockTime now;
-  GTimeVal current;
-  GSList *walk;
-
-  /* get the current time and convert it to NTP time in nanoseconds */
-  g_get_current_time (&current);
-  now = GST_TIMEVAL_TO_TIME (current);
-  now += (2208988800LL * GST_SECOND);
-
-  GST_RTP_BIN_LOCK (bin);
-  bin->priv->ntp_ns_base = now;
-  for (walk = bin->sessions; walk; walk = g_slist_next (walk)) {
-    GstRtpBinSession *session = (GstRtpBinSession *) walk->data;
-
-    g_object_set (session->session, "ntp-ns-base", now, NULL);
-  }
-  GST_RTP_BIN_UNLOCK (bin);
-
-  return;
-}
-
 static GstStateChangeReturn
 gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1968,9 +1939,6 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (rtpbin, "clearing shutdown flag");
       g_atomic_int_set (&priv->shutdown, 0);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      calc_ntp_ns_base (rtpbin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_LOG_OBJECT (rtpbin, "setting shutdown flag");
