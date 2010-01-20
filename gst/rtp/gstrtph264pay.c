@@ -93,7 +93,7 @@ gst_h264_scan_mode_get_type (void)
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
 #define DEFAULT_SCAN_MODE               GST_H264_SCAN_MODE_MULTI_NAL
 #define DEFAULT_BUFFER_LIST             FALSE
-#define DEFAULT_SPSPPS_INTERVAL		      0
+#define DEFAULT_CONFIG_INTERVAL		      0
 
 enum
 {
@@ -102,7 +102,7 @@ enum
   PROP_SPROP_PARAMETER_SETS,
   PROP_SCAN_MODE,
   PROP_BUFFER_LIST,
-  PROP_SPSPPS_INTERVAL,
+  PROP_CONFIG_INTERVAL,
   PROP_LAST
 };
 
@@ -176,12 +176,12 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
           DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_SPSPPS_INTERVAL,
-      g_param_spec_uint ("spspps-interval",
+      PROP_CONFIG_INTERVAL,
+      g_param_spec_uint ("config-interval",
           "SPS PPS Send Interval",
           "Send SPS and PPS Insertion Interval in seconds (sprop parameter sets "
-          "will be multiplexed in the data stream when detected.)",
-          0, 3600, DEFAULT_SPSPPS_INTERVAL,
+          "will be multiplexed in the data stream when detected.) (0 = disabled)",
+          0, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
@@ -204,7 +204,7 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
   rtph264pay->last_spspps = -1;
   rtph264pay->scan_mode = GST_H264_SCAN_MODE_MULTI_NAL;
   rtph264pay->buffer_list = DEFAULT_BUFFER_LIST;
-  rtph264pay->spspps_interval = DEFAULT_SPSPPS_INTERVAL;
+  rtph264pay->spspps_interval = DEFAULT_CONFIG_INTERVAL;
 }
 
 static void
@@ -1031,7 +1031,7 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
     case PROP_BUFFER_LIST:
       rtph264pay->buffer_list = g_value_get_boolean (value);
       break;
-    case PROP_SPSPPS_INTERVAL:
+    case PROP_CONFIG_INTERVAL:
       rtph264pay->spspps_interval = g_value_get_uint (value);
       break;
     default:
@@ -1060,7 +1060,7 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
     case PROP_BUFFER_LIST:
       g_value_set_boolean (value, rtph264pay->buffer_list);
       break;
-    case PROP_SPSPPS_INTERVAL:
+    case PROP_CONFIG_INTERVAL:
       g_value_set_uint (value, rtph264pay->spspps_interval);
       break;
     default:
