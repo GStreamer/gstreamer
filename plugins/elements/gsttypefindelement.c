@@ -60,8 +60,9 @@
 #  include "config.h"
 #endif
 
-#include "gsttypefindelement.h"
 #include "gst/gst_private.h"
+
+#include "gsttypefindelement.h"
 #include "gst/gst-i18n-lib.h"
 #include "gst/base/gsttypefindhelper.h"
 

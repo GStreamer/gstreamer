@@ -33,6 +33,10 @@
  * functions */
 extern const char             g_log_domain_gstreamer[];
 
+#ifdef __G_LIB_H__
+#warning "gst_private.h must be included before glib.h"
+#endif
+
 #include <glib.h>
 
 #include <stdlib.h>

@@ -1,10 +1,10 @@
 %{
+#include "../gst_private.h"
+
 #include <math.h>
 #include <string.h>
 
 #include <glib/gprintf.h>
-
-#include "../gst_private.h"
 
 #include "types.h"
 #include "../gstinfo.h"

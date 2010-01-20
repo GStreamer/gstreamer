@@ -26,10 +26,10 @@
 #  include "config.h"
 #endif
 
-#include <string.h>
-
-#include <gst/gst.h>
 #include <gst/gst_private.h>
+#include <gst/gst.h>
+
+#include <string.h>
 
 int
 main (int argc, char *argv[])

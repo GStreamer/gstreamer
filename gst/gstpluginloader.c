@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include <gst/gst_private.h>
+
 #ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -33,7 +35,6 @@
 #endif
 #include <errno.h>
 
-#include <gst/gst_private.h>
 #include <gst/gstconfig.h>
 
 #include <gst/gstpoll.h>

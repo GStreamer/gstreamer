@@ -49,6 +49,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gst_private.h"
+
 #include <glib/gstdio.h>
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
@@ -60,7 +63,6 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "gst_private.h"
 #include "glib-compat-private.h"
 
 #include <gst/gst.h>

@@ -146,9 +146,10 @@
 #  include "config.h"
 #endif
 
+#include <gst/gst_private.h>
+
 #include "gstbasesink.h"
 #include <gst/gstmarshal.h>
-#include <gst/gst_private.h>
 #include <gst/gst-i18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
