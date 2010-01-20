@@ -96,7 +96,7 @@ main (int argc, gchar ** argv)
    * */
 
   src1 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (0));
-  g_object_set (src1, "start", 0, "duration", GST_SECOND, NULL);
+  g_object_set (src1, "start", (guint64) 0, "duration", GST_SECOND, NULL);
   src2 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (1));
   g_object_set (src2, "start", GST_SECOND, "duration", GST_SECOND, NULL);
   src3 = ges_custom_timeline_source_new (fill_customsrc, GUINT_TO_POINTER (0));
