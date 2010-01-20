@@ -27,8 +27,8 @@
  * @short_description: Asynchronous data queue.
  *
  * Data is queued until one of the limits specified by the
- * #GstQueue22:max-size-buffers, #GstQueue22:max-size-bytes and/or
- * #GstQueue22:max-size-time properties has been reached. Any attempt to push
+ * #GstQueue2:max-size-buffers, #GstQueue2:max-size-bytes and/or
+ * #GstQueue2:max-size-time properties has been reached. Any attempt to push
  * more buffers into the queue will block the pushing thread until more space
  * becomes available.
  *
@@ -36,7 +36,7 @@
  * processing on sink and source pad.
  *
  * You can query how many buffers are queued by reading the
- * #GstQueue22:current-level-buffers property.
+ * #GstQueue2:current-level-buffers property.
  *
  * The default queue size limits are 100 buffers, 2MB of data, or
  * two seconds worth of data, whichever is reached first.
