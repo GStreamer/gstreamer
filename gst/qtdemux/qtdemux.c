@@ -2054,6 +2054,14 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return FALSE;
   }
 
+  /* segment lies beyond total indicated duration */
+  if (G_UNLIKELY (segment->duration != -1 && segment->time > segment->duration)) {
+    GST_WARNING_OBJECT (qtdemux, "segment->duration %" G_GUINT64_FORMAT
+        " < segment->time %" G_GUINT64_FORMAT, segment->duration,
+        segment->time);
+    return FALSE;
+  }
+
   /* get time in this segment */
   seg_time = offset - segment->time;
 
@@ -2072,12 +2080,14 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * In order to compare the two, we need to bring segment.stop
    * into the track-time-realm */
 
-  if (qtdemux->segment.stop == -1)
+  stop = qtdemux->segment.stop;
+  if (stop == -1)
+    stop = qtdemux->segment.duration;
+  if (stop == -1)
     stop = segment->media_stop;
   else
     stop =
-        MIN (segment->media_stop,
-        qtdemux->segment.stop - segment->time + segment->media_start);
+        MIN (segment->media_stop, stop - segment->time + segment->media_start);
 
   if (qtdemux->segment.rate >= 0) {
     start = MIN (segment->media_start + seg_time, stop);
