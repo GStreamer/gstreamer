@@ -494,7 +494,8 @@ gst_oss4_mixer_watch_thread (gpointer thread_data)
      * add in ever iteration, which would be less exact, but who cares */
     g_get_current_time (&tv);
     g_time_val_add (&tv, GST_OSS4_MIXER_WATCH_INTERVAL * 1000);
-    g_cond_timed_wait (mixer->watch_cond, GST_OBJECT_GET_LOCK (mixer), &tv);
+    (void) g_cond_timed_wait (mixer->watch_cond, GST_OBJECT_GET_LOCK (mixer),
+        &tv);
   }
   GST_OBJECT_UNLOCK (mixer);
 
