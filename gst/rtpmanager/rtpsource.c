@@ -807,14 +807,14 @@ static void
 calculate_jitter (RTPSource * src, GstBuffer * buffer,
     RTPArrivalStats * arrival)
 {
-  guint64 ntpnstime;
+  GstClockTime running_time;
   guint32 rtparrival, transit, rtptime;
   gint32 diff;
   gint clock_rate;
   guint8 pt;
 
   /* get arrival time */
-  if ((ntpnstime = arrival->ntpnstime) == GST_CLOCK_TIME_NONE)
+  if ((running_time = arrival->running_time) == GST_CLOCK_TIME_NONE)
     goto no_time;
 
   pt = gst_rtp_buffer_get_payload_type (buffer);
@@ -829,7 +829,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't
    * care about the absolute value, just the difference. */
-  rtparrival = gst_util_uint64_scale_int (ntpnstime, clock_rate, GST_SECOND);
+  rtparrival = gst_util_uint64_scale_int (running_time, clock_rate, GST_SECOND);
 
   /* transit time is difference with RTP timestamp */
   transit = rtparrival - rtptime;
@@ -859,7 +859,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   /* ERRORS */
 no_time:
   {
-    GST_WARNING ("cannot get current time");
+    GST_WARNING ("cannot get current running_time");
     return;
   }
 no_clock_rate:
