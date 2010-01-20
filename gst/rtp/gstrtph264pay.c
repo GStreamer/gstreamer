@@ -655,7 +655,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
       GST_DEBUG_OBJECT (rtph264pay, "interval since last SPS/PPS %ums", diff);
 
       /* bigger than interval, queue SPS/PPS */
-      if (diff >= rtph264pay->spspps_interval) {
+      if (diff >= (rtph264pay->spspps_interval * GST_MSECOND)) {
         GST_DEBUG_OBJECT (rtph264pay, "time to send SPS/PPS");
         send_spspps = TRUE;
       }
@@ -667,7 +667,8 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
   }
 
   if (send_spspps) {
-    /* we need to send SPS/PPS now first */
+    /* we need to send SPS/PPS now first. FIXME, don't use the timestamp for
+     * checking when we need to send SPS/PPS but convert to running_time first. */
     ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, timestamp);
     if (ret != GST_FLOW_OK)
       return ret;
