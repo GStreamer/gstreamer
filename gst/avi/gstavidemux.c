@@ -3815,6 +3815,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
     /* reset the last flow and mark discont, FLUSH is always DISCONT */
     for (i = 0; i < avi->num_streams; i++) {
+      GST_DEBUG_OBJECT (avi, "marking DISCONT");
       avi->stream[i].last_flow = GST_FLOW_OK;
       avi->stream[i].discont = TRUE;
     }
@@ -4308,6 +4309,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
 
     /* mark discont when pending */
     if (stream->discont) {
+      GST_DEBUG_OBJECT (avi, "setting DISCONT flag");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
     }
@@ -4722,6 +4724,15 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
+  gint i;
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_DEBUG_OBJECT (avi, "got DISCONT");
+    gst_adapter_clear (avi->adapter);
+    /* mark all streams DISCONT */
+    for (i = 0; i < avi->num_streams; i++)
+      avi->stream[i].discont = TRUE;
+  }
 
   GST_DEBUG ("Store %d bytes in adapter", GST_BUFFER_SIZE (buf));
   gst_adapter_push (avi->adapter, buf);
