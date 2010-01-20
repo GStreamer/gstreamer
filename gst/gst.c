@@ -364,7 +364,11 @@ gst_init_get_option_group (void)
    * called gst_init() yet or initialised the threading system otherwise, we
    * better issue a warning here (since chances are high that the application
    * has already called other GLib functions such as g_option_context_new() */
+#if GLIB_CHECK_VERSION (2,20,0)
+  if (!g_thread_get_initialized ()) {
+#else
   if (!g_thread_supported ()) {
+#endif
     g_warning ("The GStreamer function gst_init_get_option_group() was\n"
         "\tcalled, but the GLib threading system has not been initialised\n"
         "\tyet, something that must happen before any other GLib function\n"
@@ -417,7 +421,11 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 #endif
   gboolean res;
 
+#if GLIB_CHECK_VERSION (2,20,0)
+  if (!g_thread_get_initialized ())
+#else
   if (!g_thread_supported ())
+#endif
     g_thread_init (NULL);
 
   if (gst_initialized) {
@@ -514,8 +522,8 @@ prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 
 #ifndef GST_DISABLE_OPTION_PARSING
 static void
-split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
-    gpointer user_data)
+split_and_iterate (const gchar * stringlist, gchar * separator,
+    GFunc iterator, gpointer user_data)
 {
   gchar **strings;
   gint j = 0;
@@ -562,7 +570,11 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_init ();
 
   /* we need threading to be enabled right here */
+#if GLIB_CHECK_VERSION (2,20,0)
+  g_assert (g_thread_get_initialized ());
+#else
   g_assert (g_thread_supported ());
+#endif
   _gst_debug_init ();
 
 #ifdef ENABLE_NLS
