@@ -153,8 +153,7 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
+  g_thread_init (NULL);
 
   gst_tools_print_version ("gst-typefind");
 
