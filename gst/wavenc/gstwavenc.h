@@ -54,6 +54,7 @@ struct _GstWavEnc {
   guint32    length;
 
   gboolean   sent_header;
+  gboolean   finished_properly;
 };
 
 struct _GstWavEncClass {

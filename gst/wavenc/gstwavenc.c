@@ -637,6 +637,9 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
       /* write header with correct length values */
       gst_wavenc_push_header (wavenc, wavenc->length);
 
+      /* we're done with this file */
+      wavenc->finished_properly = TRUE;
+
       /* and forward the EOS event */
       res = gst_pad_event_default (pad, event);
       break;
@@ -667,6 +670,9 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
     /* use bogus size initially, we'll write the real
      * header when we get EOS and know the exact length */
     flow = gst_wavenc_push_header (wavenc, 0x7FFF0000);
+
+    /* starting a file, means we have to finish it properly */
+    wavenc->finished_properly = FALSE;
 
     if (flow != GST_FLOW_OK)
       return flow;
@@ -705,6 +711,8 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       wavenc->rate = 0;
       wavenc->length = 0;
       wavenc->sent_header = FALSE;
+      /* its true because we haven't writen anything */
+      wavenc->finished_properly = TRUE;
       break;
     default:
       break;
@@ -713,6 +721,19 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
   ret = parent_class->change_state (element, transition);
   if (ret != GST_STATE_CHANGE_SUCCESS)
     return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (!wavenc->finished_properly) {
+        GST_ELEMENT_WARNING (wavenc, STREAM, MUX,
+            ("Wav stream not finished properly"),
+            ("Wav stream not finished properly, no EOS received "
+                "before shutdown"));
+      }
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }
