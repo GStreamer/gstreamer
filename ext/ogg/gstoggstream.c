@@ -1282,7 +1282,14 @@ gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet * packet)
     if (packet->bytes >= mappers[i].min_packet_size &&
         packet->bytes >= mappers[i].id_length &&
         memcmp (packet->packet, mappers[i].id, mappers[i].id_length) == 0) {
-      ret = mappers[i].setup_func (pad, packet);
+
+      GST_DEBUG ("found mapper for '%s'", mappers[i].id);
+
+      if (mappers[i].setup_func)
+        ret = mappers[i].setup_func (pad, packet);
+      else
+        continue;
+
       if (ret) {
         GST_DEBUG ("got stream type %" GST_PTR_FORMAT, pad->caps);
         pad->map = i;
