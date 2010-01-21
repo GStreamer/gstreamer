@@ -1532,6 +1532,9 @@ gst_avi_demux_read_subindexes_pull (GstAviDemux * avi)
   for (n = 0; n < avi->num_streams; n++) {
     GstAviStream *stream = &avi->stream[n];
 
+    if (stream->indexes == NULL)
+      continue;
+
     for (i = 0; stream->indexes[i] != GST_BUFFER_OFFSET_NONE; i++) {
       if (gst_riff_read_chunk (GST_ELEMENT_CAST (avi), avi->sinkpad,
               &stream->indexes[i], &tag, &buf) != GST_FLOW_OK)
