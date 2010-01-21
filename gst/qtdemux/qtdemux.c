@@ -4295,7 +4295,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       /* different sizes for each sample */
       for (cur = first; cur <= last; cur++) {
         cur->size = gst_byte_reader_get_uint32_be_unchecked (&stream->stsz);
-        GST_LOG_OBJECT (qtdemux, "sample %d has size %u", cur - samples,
+        GST_LOG_OBJECT (qtdemux, "sample %lu has size %u", cur - samples,
             cur->size);
       }
     } else {
@@ -4380,7 +4380,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         chunk_offset = stream->chunk_offset;
 
         for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
-          GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %"
+          GST_LOG_OBJECT (qtdemux, "Creating entry %lu with offset %"
               G_GUINT64_FORMAT, cur - samples, stream->chunk_offset);
 
           cur->offset = chunk_offset;
@@ -4478,7 +4478,7 @@ done2:
 
       for (j = stream->stts_sample_index; j < stts_samples; j++) {
         GST_DEBUG_OBJECT (qtdemux,
-            "sample %d: index %d, timestamp %" GST_TIME_FORMAT,
+            "sample %lu: index %d, timestamp %" GST_TIME_FORMAT,
             cur - samples, j, GST_TIME_ARGS (gst_util_uint64_scale (stts_time,
                     GST_SECOND, stream->timescale)));
 
@@ -4505,7 +4505,7 @@ done2:
      * need something in here. */
     for (; cur < last; cur++) {
       GST_DEBUG_OBJECT (qtdemux,
-          "fill sample %d: timestamp %" GST_TIME_FORMAT, cur - samples,
+          "fill sample %lu: timestamp %" GST_TIME_FORMAT, cur - samples,
           GST_TIME_ARGS (gst_util_uint64_scale (stream->stts_time, GST_SECOND,
                   stream->timescale)));
       cur->timestamp = stream->stts_time;
