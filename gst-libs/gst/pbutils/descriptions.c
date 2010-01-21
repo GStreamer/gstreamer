@@ -69,6 +69,7 @@ static const FormatInfo formats[] = {
   {"application/x-apetag", N_("APE tag"), FLAG_CONTAINER},
   {"application/x-icy", N_("ICY internet radio"), FLAG_CONTAINER},
   {"application/x-3gp", "3GP", FLAG_CONTAINER},
+  {"application/x-yuv4mpeg", "Y4M", FLAG_CONTAINER},
   {"multipart/x-mixed-replace", "Multipart", FLAG_CONTAINER},
   {"video/x-fli", "FLI/FLC/FLX Animation", FLAG_CONTAINER},
   {"video/x-flv", "Flash", FLAG_CONTAINER},
