@@ -393,6 +393,7 @@ SUBDIRS=\
 	$(DVDNAV_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
+	$(FLITE_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
 	$(HERMES_DIR) \
@@ -448,6 +449,7 @@ DIST_SUBDIRS = \
 	directfb \
 	faac \
 	faad \
+	flite \
 	gsm \
 	ivorbis \
 	ladspa \
