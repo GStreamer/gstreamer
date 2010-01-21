@@ -41,7 +41,7 @@
 
 GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
-GST_DEBUG_CATEGORY (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY (ffmpegcolorspace_performance);
 
 /* elementfactory information */
 static const GstElementDetails ffmpegcsp_details =
@@ -554,7 +554,7 @@ gst_ffmpegcolorspace_register (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
       "FFMPEG-based colorspace converter");
-  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+  GST_DEBUG_CATEGORY_GET (ffmpegcolorspace_performance, "GST_PERFORMANCE");
 
   /* template caps */
   caps = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);

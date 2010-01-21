@@ -35,7 +35,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_EXTERN (ffmpegcolorspace_performance);
 
 #define xglue(x, y) x ## y
 #define glue(x, y) xglue(x, y)
@@ -3120,8 +3120,9 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
     return 0;
   }
 no_chroma_filter:
-  GST_CAT_INFO (GST_CAT_PERFORMANCE, "no direct path to convert colorspace "
-      "from %s -> %s", src_pix->name, dst_pix->name);
+  GST_CAT_INFO (ffmpegcolorspace_performance,
+      "no direct path to convert colorspace from %s -> %s", src_pix->name,
+      dst_pix->name);
 
   /* try to use an intermediate format */
   if (src_pix_fmt == PIX_FMT_YUV422 || dst_pix_fmt == PIX_FMT_YUV422) {
