@@ -695,7 +695,11 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   data += 8;
 
   /* FIXME: we don't use basetime anywhere in the demuxer! */
-  basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
+  if (basetime_d != 0)
+    basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
+  else
+    basetime = -1;
+
   GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT ")",
       GST_TIME_ARGS (basetime));
 
