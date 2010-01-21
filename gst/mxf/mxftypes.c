@@ -1537,10 +1537,11 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
     GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
         mxf_ul_to_string (ul, str), tag_size);
 
-    local_tag = g_slice_new (MXFLocalTag);
+    local_tag = g_slice_new0 (MXFLocalTag);
     memcpy (&local_tag->ul, ul, sizeof (MXFUL));
     local_tag->size = tag_size;
     local_tag->data = g_memdup (tag_data, tag_size);
+    local_tag->g_slice = FALSE;
 
     g_hash_table_insert (*hash_table, &local_tag->ul, local_tag);
   } else {
