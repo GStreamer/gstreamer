@@ -30,12 +30,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_INDEX			(gst_index_get_type ())
-#define GST_INDEX(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX, GstIndex))
-#define GST_IS_INDEX(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX))
-#define GST_INDEX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX, GstIndexClass))
-#define GST_IS_INDEX_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
-#define GST_INDEX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX, GstIndexClass))
+#define GST_TYPE_INDEX                  (gst_index_get_type ())
+#define GST_INDEX(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX, GstIndex))
+#define GST_IS_INDEX(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX))
+#define GST_INDEX_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX, GstIndexClass))
+#define GST_IS_INDEX_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
+#define GST_INDEX_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX, GstIndexClass))
 
 #define GST_TYPE_INDEX_ENTRY            (gst_index_entry_get_type())
 
@@ -94,7 +94,7 @@ typedef enum {
  *
  * Get the number of associations in the entry.
  */
-#define GST_INDEX_NASSOCS(entry)		((entry)->data.assoc.nassocs)
+#define GST_INDEX_NASSOCS(entry)                ((entry)->data.assoc.nassocs)
 
 /**
  * GST_INDEX_ASSOC_FLAGS:
@@ -102,7 +102,7 @@ typedef enum {
  *
  *  Get the flags for this entry.
  */
-#define GST_INDEX_ASSOC_FLAGS(entry)		((entry)->data.assoc.flags)
+#define GST_INDEX_ASSOC_FLAGS(entry)            ((entry)->data.assoc.flags)
 
 /**
  * GST_INDEX_ASSOC_FORMAT:
@@ -111,7 +111,7 @@ typedef enum {
  *
  * Get the i-th format of the entry.
  */
-#define GST_INDEX_ASSOC_FORMAT(entry,i)		((entry)->data.assoc.assocs[(i)].format)
+#define GST_INDEX_ASSOC_FORMAT(entry,i)         ((entry)->data.assoc.assocs[(i)].format)
 
 /**
  * GST_INDEX_ASSOC_VALUE:
@@ -120,7 +120,7 @@ typedef enum {
  *
  * Get the i-th value of the entry.
  */
-#define GST_INDEX_ASSOC_VALUE(entry,i)		((entry)->data.assoc.assocs[(i)].value)
+#define GST_INDEX_ASSOC_VALUE(entry,i)          ((entry)->data.assoc.assocs[(i)].value)
 
 typedef struct _GstIndexAssociation GstIndexAssociation;
 
@@ -132,8 +132,8 @@ typedef struct _GstIndexAssociation GstIndexAssociation;
  * An association in an entry.
  */
 struct _GstIndexAssociation {
-  GstFormat 	format;
-  gint64 	value;
+  GstFormat     format;
+  gint64        value;
 };
 
 /**
@@ -148,12 +148,12 @@ struct _GstIndexAssociation {
  * Flags for an association entry.
  */
 typedef enum {
-  GST_ASSOCIATION_FLAG_NONE 	  = 0,
+  GST_ASSOCIATION_FLAG_NONE       = 0,
   GST_ASSOCIATION_FLAG_KEY_UNIT   = (1 << 0),
   GST_ASSOCIATION_FLAG_DELTA_UNIT = (1 << 1),
 
   /* new flags should start here */
-  GST_ASSOCIATION_FLAG_LAST	= (1 << 8)
+  GST_ASSOCIATION_FLAG_LAST     = (1 << 8)
 } GstAssocFlags;
 
 /**
@@ -162,7 +162,7 @@ typedef enum {
  *
  * Get the format of the format entry
  */
-#define GST_INDEX_FORMAT_FORMAT(entry)		((entry)->data.format.format)
+#define GST_INDEX_FORMAT_FORMAT(entry)          ((entry)->data.format.format)
 
 /**
  * GST_INDEX_FORMAT_KEY:
@@ -170,14 +170,14 @@ typedef enum {
  *
  * Get the key of the format entry
  */
-#define GST_INDEX_FORMAT_KEY(entry)		((entry)->data.format.key)
+#define GST_INDEX_FORMAT_KEY(entry)             ((entry)->data.format.key)
 
 /**
  * GST_INDEX_ID_INVALID:
  *
  * Constant for an invalid index id
  */
-#define GST_INDEX_ID_INVALID			(-1)
+#define GST_INDEX_ID_INVALID                    (-1)
 
 /**
  * GST_INDEX_ID_DESCRIPTION:
@@ -185,7 +185,7 @@ typedef enum {
  *
  * Get the description of the id entry
  */
-#define GST_INDEX_ID_DESCRIPTION(entry)		((entry)->data.id.description)
+#define GST_INDEX_ID_DESCRIPTION(entry)         ((entry)->data.id.description)
 
 /**
  * GstIndexEntry:
@@ -194,27 +194,27 @@ typedef enum {
  */
 struct _GstIndexEntry {
   /*< private >*/
-  GstIndexEntryType	 type;
-  gint			 id;
+  GstIndexEntryType      type;
+  gint                   id;
 
   union {
     struct {
-      gchar		*description;
+      gchar             *description;
     } id;
     struct {
-      gint		 nassocs;
+      gint               nassocs;
       GstIndexAssociation
-	      		*assocs;
-      GstAssocFlags	 flags;
+                        *assocs;
+      GstAssocFlags      flags;
     } assoc;
     struct {
-      gchar		*key;
-      GType		 type;
-      gpointer		 object;
+      gchar             *key;
+      GType              type;
+      gpointer           object;
     } object;
     struct {
-      GstFormat		 format;
-      const gchar	*key;
+      GstFormat          format;
+      const gchar       *key;
     } format;
   } data;
 };
@@ -252,8 +252,8 @@ struct _GstIndexGroup {
  * to the index, %FALSE otherwise.
  *
  */
-typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index,
-							 GstIndexEntry *entry,
+typedef gboolean        (*GstIndexFilter)               (GstIndex *index,
+                                                         GstIndexEntry *entry,
                                                          gpointer user_data);
 /**
  * GstIndexResolverMethod:
@@ -280,10 +280,10 @@ typedef enum {
  *
  * Returns: %TRUE if an id could be assigned to the writer.
  */
-typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index,
-						   	 GstObject *writer,
-						   	 gchar **writer_string,
-						   	 gpointer user_data);
+typedef gboolean        (*GstIndexResolver)             (GstIndex *index,
+                                                         GstObject *writer,
+                                                         gchar **writer_string,
+                                                         gpointer user_data);
 
 /**
  * GstIndexFlags:
@@ -322,26 +322,26 @@ typedef enum {
  * Opaque #GstIndex structure.
  */
 struct _GstIndex {
-  GstObject		 object;
+  GstObject              object;
 
   /*< private >*/
-  GList			*groups;
-  GstIndexGroup		*curgroup;
-  gint			 maxgroup;
+  GList                 *groups;
+  GstIndexGroup         *curgroup;
+  gint                   maxgroup;
 
   GstIndexResolverMethod method;
-  GstIndexResolver 	 resolver;
-  gpointer		 resolver_user_data;
+  GstIndexResolver       resolver;
+  gpointer               resolver_user_data;
 
-  GstIndexFilter	 filter;
-  gpointer		 filter_user_data;
-  GDestroyNotify	 filter_user_data_destroy;
+  GstIndexFilter         filter;
+  gpointer               filter_user_data;
+  GDestroyNotify         filter_user_data_destroy;
 
-  GHashTable		*writers;
-  gint			 last_id;
+  GHashTable            *writers;
+  gint                   last_id;
 
   /* ABI added since 0.10.18 */
-  GDestroyNotify	 resolver_user_data_destroy;
+  GDestroyNotify         resolver_user_data_destroy;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING - 1];
@@ -351,75 +351,75 @@ struct _GstIndexClass {
   GstObjectClass parent_class;
 
   /*< protected >*/
-  gboolean	(*get_writer_id)	(GstIndex *index, gint *writer_id, gchar *writer_string);
+  gboolean      (*get_writer_id)        (GstIndex *index, gint *writer_id, gchar *writer_string);
 
-  void		(*commit)		(GstIndex *index, gint id);
+  void          (*commit)               (GstIndex *index, gint id);
 
   /* abstract methods */
-  void		(*add_entry)		(GstIndex *index, GstIndexEntry *entry);
+  void          (*add_entry)            (GstIndex *index, GstIndexEntry *entry);
 
-  GstIndexEntry* (*get_assoc_entry)	(GstIndex *index, gint id,
-		                         GstIndexLookupMethod method, GstAssocFlags flags,
-		                         GstFormat format, gint64 value,
-					 GCompareDataFunc func,
-					 gpointer user_data);
+  GstIndexEntry* (*get_assoc_entry)     (GstIndex *index, gint id,
+                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                         GstFormat format, gint64 value,
+                                         GCompareDataFunc func,
+                                         gpointer user_data);
   /* signals */
-  void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
+  void          (*entry_added)          (GstIndex *index, GstIndexEntry *entry);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType			gst_index_get_type		(void);
-GstIndex*		gst_index_new			(void);
-void			gst_index_commit		(GstIndex *index, gint id);
+GType                   gst_index_get_type              (void);
+GstIndex*               gst_index_new                   (void);
+void                    gst_index_commit                (GstIndex *index, gint id);
 
-gint			gst_index_get_group		(GstIndex *index);
-gint			gst_index_new_group		(GstIndex *index);
-gboolean		gst_index_set_group		(GstIndex *index, gint groupnum);
+gint                    gst_index_get_group             (GstIndex *index);
+gint                    gst_index_new_group             (GstIndex *index);
+gboolean                gst_index_set_group             (GstIndex *index, gint groupnum);
 
-void			gst_index_set_certainty		(GstIndex *index,
-							 GstIndexCertainty certainty);
-GstIndexCertainty	gst_index_get_certainty		(GstIndex *index);
+void                    gst_index_set_certainty         (GstIndex *index,
+                                                         GstIndexCertainty certainty);
+GstIndexCertainty       gst_index_get_certainty         (GstIndex *index);
 
-void			gst_index_set_filter		(GstIndex *index,
-		                                         GstIndexFilter filter, gpointer user_data);
-void			gst_index_set_filter_full	(GstIndex *index,
-		                                         GstIndexFilter filter, gpointer user_data,
+void                    gst_index_set_filter            (GstIndex *index,
+                                                         GstIndexFilter filter, gpointer user_data);
+void                    gst_index_set_filter_full       (GstIndex *index,
+                                                         GstIndexFilter filter, gpointer user_data,
                                                          GDestroyNotify user_data_destroy);
-void			gst_index_set_resolver		(GstIndex *index,
-		                                         GstIndexResolver resolver, gpointer user_data);
-void			gst_index_set_resolver_full	(GstIndex *index, GstIndexResolver resolver,
+void                    gst_index_set_resolver          (GstIndex *index,
+                                                         GstIndexResolver resolver, gpointer user_data);
+void                    gst_index_set_resolver_full     (GstIndex *index, GstIndexResolver resolver,
                                                          gpointer user_data,
                                                          GDestroyNotify user_data_destroy);
 
-gboolean 		gst_index_get_writer_id 	(GstIndex *index, GstObject *writer, gint *id);
+gboolean                gst_index_get_writer_id         (GstIndex *index, GstObject *writer, gint *id);
 
-GstIndexEntry*		gst_index_add_format		(GstIndex *index, gint id, GstFormat format);
-GstIndexEntry*		gst_index_add_associationv	(GstIndex * index, gint id, GstAssocFlags flags,
+GstIndexEntry*          gst_index_add_format            (GstIndex *index, gint id, GstFormat format);
+GstIndexEntry*          gst_index_add_associationv      (GstIndex * index, gint id, GstAssocFlags flags,
                                                          gint n, const GstIndexAssociation * list);
-GstIndexEntry*		gst_index_add_association	(GstIndex *index, gint id, GstAssocFlags flags,
-							 GstFormat format, gint64 value, ...);
-GstIndexEntry*		gst_index_add_object		(GstIndex *index, gint id, gchar *key,
-							 GType type, gpointer object);
-GstIndexEntry*		gst_index_add_id		(GstIndex *index, gint id,
-							 gchar *description);
+GstIndexEntry*          gst_index_add_association       (GstIndex *index, gint id, GstAssocFlags flags,
+                                                         GstFormat format, gint64 value, ...);
+GstIndexEntry*          gst_index_add_object            (GstIndex *index, gint id, gchar *key,
+                                                         GType type, gpointer object);
+GstIndexEntry*          gst_index_add_id                (GstIndex *index, gint id,
+                                                         gchar *description);
 
-GstIndexEntry*		gst_index_get_assoc_entry	(GstIndex *index, gint id,
-		 					 GstIndexLookupMethod method, GstAssocFlags flags,
-		                                         GstFormat format, gint64 value);
-GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id,
-							 GstIndexLookupMethod method, GstAssocFlags flags,
-		                                         GstFormat format, gint64 value,
-							 GCompareDataFunc func,
-							 gpointer user_data);
+GstIndexEntry*          gst_index_get_assoc_entry       (GstIndex *index, gint id,
+                                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                                         GstFormat format, gint64 value);
+GstIndexEntry*          gst_index_get_assoc_entry_full  (GstIndex *index, gint id,
+                                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                                         GstFormat format, gint64 value,
+                                                         GCompareDataFunc func,
+                                                         gpointer user_data);
 
 /* working with index entries */
 GType gst_index_entry_get_type (void);
 GstIndexEntry *         gst_index_entry_copy            (GstIndexEntry *entry);
-void			gst_index_entry_free		(GstIndexEntry *entry);
-gboolean		gst_index_entry_assoc_map	(GstIndexEntry *entry,
-		                                         GstFormat format, gint64 *value);
+void                    gst_index_entry_free            (GstIndexEntry *entry);
+gboolean                gst_index_entry_assoc_map       (GstIndexEntry *entry,
+                                                         GstFormat format, gint64 *value);
 
 G_END_DECLS
 
