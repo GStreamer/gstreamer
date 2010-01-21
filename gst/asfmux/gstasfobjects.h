@@ -147,7 +147,6 @@ gboolean gst_asf_tag_present_in_content_description (const gchar * tag);
 #define ASF_AUDIO_SPECIFIC_DATA_SIZE 18
 #define ASF_VIDEO_SPECIFIC_DATA_SIZE 51
 #define ASF_DATA_OBJECT_SIZE 50
-#define ASF_PAYLOAD_PARSING_INFO_SIZE 16
 #define ASF_SINGLE_PAYLOAD_HEADER_SIZE 15
 #define ASF_MULTIPLE_PAYLOAD_HEADER_SIZE 17
 #define ASF_EXTENDED_STREAM_PROPERTIES_OBJECT_SIZE 88
@@ -163,6 +162,7 @@ gboolean gst_asf_tag_present_in_content_description (const gchar * tag);
 #define ASF_FIELD_TYPE_BYTE 1
 #define ASF_FIELD_TYPE_WORD 2
 #define ASF_FIELD_TYPE_DWORD 3
+#define ASF_FIELD_TYPE_MASK 3
 
 /* tag types */
 #define ASF_TAG_TYPE_UNICODE_STR 0

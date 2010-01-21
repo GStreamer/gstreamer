@@ -120,6 +120,7 @@ struct _GstAsfMux
 
   /* payloads still to be sent in a packet */
   guint32 payload_data_size;
+  guint32 payload_parsing_info_size;
   GSList *payloads;
 
   Guid file_id;
