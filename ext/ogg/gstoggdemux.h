@@ -112,8 +112,7 @@ struct _GstOggPad
   gboolean discont;
   GstFlowReturn last_ret;       /* last return of _pad_push() */
 
-  gboolean dynamic;             /* True if the internal element had dynamic pads */
-  guint padaddedid;             /* The signal id for element::pad-added */
+  gboolean added;
 };
 
 struct _GstOggPadClass

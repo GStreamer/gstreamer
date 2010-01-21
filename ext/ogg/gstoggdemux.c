@@ -1527,7 +1527,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
     GstEvent *event;
 
-    if (pad->map.is_skeleton)
+    if (!pad->added)
       continue;
 
     event = gst_event_new_eos ();
@@ -1540,6 +1540,8 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
     gst_pad_set_active (GST_PAD_CAST (pad), FALSE);
 
     gst_element_remove_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
+
+    pad->added = FALSE;
   }
   /* if we cannot seek back to the chain, we can destroy the chain 
    * completely */
@@ -1574,7 +1576,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
       pad = g_array_index (chain->streams, GstOggPad *, i);
 
-      if (pad->map.is_skeleton)
+      if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
         continue;
 
       GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
@@ -1583,6 +1585,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       pad->discont = TRUE;
       pad->map.last_size = 0;
       pad->last_ret = GST_FLOW_OK;
+      pad->added = TRUE;
 
       structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
       pad->is_sparse =
