@@ -4191,7 +4191,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   /* re-use cur to be the timestamp of the seek as it _will_ be */
   cur = stream->current_timestamp;
 
-  min_offset = stream->index[index].offset;
+  min_offset = avi->seek_kf_offset = stream->index[index].offset;
 
   GST_DEBUG_OBJECT (avi,
       "Seek to: ts %" GST_TIME_FORMAT " (on str %u, idx %u, offset %"
@@ -4838,15 +4838,28 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     } else {
       GstAviStream *stream;
       GstClockTime next_ts = 0;
-      GstBuffer *buf;
+      GstBuffer *buf = NULL;
       guint64 offset;
+      gboolean saw_desired_kf = stream_nr != avi->main_stream
+          || avi->offset >= avi->seek_kf_offset;
 
-      gst_adapter_flush (avi->adapter, 8);
+      if (stream_nr == avi->main_stream && avi->offset == avi->seek_kf_offset) {
+        GST_DEBUG_OBJECT (avi, "Desired keyframe reached");
+        avi->seek_kf_offset = 0;
+      }
 
-      /* get buffer */
-      buf = gst_adapter_take_buffer (avi->adapter, GST_ROUND_UP_2 (size));
-      /* patch the size */
-      GST_BUFFER_SIZE (buf) = size;
+      if (saw_desired_kf) {
+        gst_adapter_flush (avi->adapter, 8);
+        /* get buffer */
+        buf = gst_adapter_take_buffer (avi->adapter, GST_ROUND_UP_2 (size));
+        /* patch the size */
+        GST_BUFFER_SIZE (buf) = size;
+      } else {
+        GST_DEBUG_OBJECT (avi,
+            "Desired keyframe not yet reached, flushing chunk");
+        gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
+      }
+
       offset = avi->offset;
       avi->offset += 8 + GST_ROUND_UP_2 (size);
 
@@ -4862,10 +4875,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       if (G_UNLIKELY (!stream->pad)) {
         GST_WARNING_OBJECT (avi, "no pad for stream ID %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag));
-        gst_buffer_unref (buf);
+        if (buf)
+          gst_buffer_unref (buf);
       } else {
-        GstClockTime dur_ts = 0;
-
         /* get time of this buffer */
         gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
         if (G_UNLIKELY (format != GST_FORMAT_TIME))
@@ -4877,47 +4889,51 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         stream->current_entry++;
         stream->current_total += size;
 
-        /* invert the picture if needed */
-        buf = gst_avi_demux_invert (stream, buf);
-
-        gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
-        if (G_UNLIKELY (format != GST_FORMAT_TIME))
-          goto wrong_format;
-
-        GST_BUFFER_TIMESTAMP (buf) = next_ts;
-        GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
-        if (stream->strh->type == GST_RIFF_FCC_vids) {
-          GST_BUFFER_OFFSET (buf) = stream->current_entry - 1;
-          GST_BUFFER_OFFSET_END (buf) = stream->current_entry;
-        } else {
-          GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
-          GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
-        }
-
-        gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
-        GST_DEBUG_OBJECT (avi,
-            "Pushing buffer with time=%" GST_TIME_FORMAT ", duration %"
-            GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
-            " and size %d over pad %s", GST_TIME_ARGS (next_ts),
-            GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-            size, GST_PAD_NAME (stream->pad));
-
         /* update current position in the segment */
         gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
 
-        /* mark discont when pending */
-        if (G_UNLIKELY (stream->discont)) {
-          GST_DEBUG_OBJECT (avi, "Setting DISCONT");
-          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-          stream->discont = FALSE;
-        }
-        res = gst_pad_push (stream->pad, buf);
+        if (saw_desired_kf && buf) {
+          GstClockTime dur_ts = 0;
 
-        /* combine flows */
-        res = gst_avi_demux_combine_flows (avi, stream, res);
-        if (G_UNLIKELY (res != GST_FLOW_OK)) {
-          GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
-          return res;
+          /* invert the picture if needed */
+          buf = gst_avi_demux_invert (stream, buf);
+
+          gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
+          if (G_UNLIKELY (format != GST_FORMAT_TIME))
+            goto wrong_format;
+
+          GST_BUFFER_TIMESTAMP (buf) = next_ts;
+          GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
+          if (stream->strh->type == GST_RIFF_FCC_vids) {
+            GST_BUFFER_OFFSET (buf) = stream->current_entry - 1;
+            GST_BUFFER_OFFSET_END (buf) = stream->current_entry;
+          } else {
+            GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+            GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+          }
+
+          gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
+          GST_DEBUG_OBJECT (avi,
+              "Pushing buffer with time=%" GST_TIME_FORMAT ", duration %"
+              GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
+              " and size %d over pad %s", GST_TIME_ARGS (next_ts),
+              GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+              GST_BUFFER_OFFSET (buf), size, GST_PAD_NAME (stream->pad));
+
+          /* mark discont when pending */
+          if (G_UNLIKELY (stream->discont)) {
+            GST_DEBUG_OBJECT (avi, "Setting DISCONT");
+            GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+            stream->discont = FALSE;
+          }
+          res = gst_pad_push (stream->pad, buf);
+
+          /* combine flows */
+          res = gst_avi_demux_combine_flows (avi, stream, res);
+          if (G_UNLIKELY (res != GST_FLOW_OK)) {
+            GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
+            return res;
+          }
         }
       }
     }

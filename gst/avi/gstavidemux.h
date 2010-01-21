@@ -199,6 +199,8 @@ typedef struct _GstAviDemux {
   guint          odml_stream;
   guint          odml_subidx;
   guint64       *odml_subidxs;
+
+  guint64        seek_kf_offset; /* offset of the keyframe to which we want to seek */
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {
