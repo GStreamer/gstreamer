@@ -332,6 +332,13 @@ gst_queue2_class_init (GstQueue2Class * klass)
           "property, use temp-template to configure the name template)",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstQueue2:temp-remove
+   *
+   * When temp-template is set, remove the temporary file when going to READY.
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_TEMP_REMOVE,
       g_param_spec_boolean ("temp-remove", "Remove the Temporary File",
           "Remove the temp-location after use",
