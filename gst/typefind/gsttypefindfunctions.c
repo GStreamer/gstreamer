@@ -39,6 +39,7 @@
 #include <gst/gstinfo.h>
 #include <gst/gstutils.h>
 
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
