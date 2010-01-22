@@ -1240,7 +1240,8 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 no_caps:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("could not find caps for codec (), unknown type"));
+        ("could not find caps for codec (%s), unknown type",
+            oclass->in_plugin->name));
     return FALSE;
   }
 caps_failed:
