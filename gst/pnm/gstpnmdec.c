@@ -42,10 +42,6 @@
 
 #include <string.h>
 
-static GstElementDetails pnmdec_details = GST_ELEMENT_DETAILS ("PNM converter",
-    "Codec/Decoder/Image", "Decodes PNM format",
-    "Lutz Mueller <lutz@users.sourceforge.net>");
-
 static GstElementClass *parent_class;
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
@@ -319,7 +315,10 @@ gst_pnmdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_pnmdec_sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pnmdec_src_pad_template));
-  gst_element_class_set_details (element_class, &pnmdec_details);
+  gst_element_class_set_details_simple (element_class, "PNM image decoder",
+      "Codec/Decoder/Image",
+      "Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format",
+      "Lutz Mueller <lutz@users.sourceforge.net>");
 }
 
 static void

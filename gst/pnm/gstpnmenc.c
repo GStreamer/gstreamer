@@ -51,11 +51,6 @@ enum
       /* Add here. */
 };
 
-static GstElementDetails pnmenc_details =
-GST_ELEMENT_DETAILS ("PNM converter", "Codec/Encoder/Image",
-    "Encodes in PNM format",
-    "Lutz Mueller <lutz@users.sourceforge.net>");
-
 static GstStaticPadTemplate sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
@@ -242,7 +237,10 @@ gst_pnmenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_pad_template));
-  gst_element_class_set_details (element_class, &pnmenc_details);
+  gst_element_class_set_details_simple (element_class, "PNM image encoder",
+      "Codec/Encoder/Image",
+      "Encodes images into portable pixmap or graymap (PNM) format",
+      "Lutz Mueller <lutz@users.sourceforge.net>");
 }
 
 static void
