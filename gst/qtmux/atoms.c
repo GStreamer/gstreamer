@@ -1463,7 +1463,8 @@ atom_hdlr_copy_data (AtomHDLR * hdlr, guint8 ** buffer, guint64 * size,
   prop_copy_uint32 (hdlr->flags, buffer, size, offset);
   prop_copy_uint32 (hdlr->flags_mask, buffer, size, offset);
 
-  prop_copy_null_terminated_string (hdlr->name, buffer, size, offset);
+  prop_copy_size_string ((guint8 *) hdlr->name, strlen (hdlr->name), buffer,
+      size, offset);
 
   atom_write_size (buffer, size, offset, original_offset);
   return *offset - original_offset;
@@ -2823,15 +2824,27 @@ atom_hdlr_set_type (AtomHDLR * hdlr, AtomsContext * context, guint32 comp_type,
 }
 
 static void
+atom_hdlr_set_name (AtomHDLR * hdlr, char *name)
+{
+  hdlr->name = g_strdup (name);
+}
+
+static void
 atom_mdia_set_hdlr_type_audio (AtomMDIA * mdia, AtomsContext * context)
 {
   atom_hdlr_set_type (&mdia->hdlr, context, FOURCC_mhlr, FOURCC_soun);
+  /* Some players (low-end hardware) check for this name, which is what
+   * QuickTime itself sets */
+  atom_hdlr_set_name (&mdia->hdlr, "SoundHandler");
 }
 
 static void
 atom_mdia_set_hdlr_type_video (AtomMDIA * mdia, AtomsContext * context)
 {
   atom_hdlr_set_type (&mdia->hdlr, context, FOURCC_mhlr, FOURCC_vide);
+  /* Some players (low-end hardware) check for this name, which is what
+   * QuickTime itself sets */
+  atom_hdlr_set_name (&mdia->hdlr, "VideoHandler");
 }
 
 static void
