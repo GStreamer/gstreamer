@@ -533,12 +533,17 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
   /* adjust available size for parsing if there's less actual packet data for
    * parsing than there is data in bytes (for sample see bug 431318) */
-  if (G_UNLIKELY (packet.length != 0 && packet.length < demux->packet_size)) {
-    GST_LOG_OBJECT (demux, "shortened packet, adjusting available data size");
-    if (size < demux->packet_size - packet.length)
+  if (G_UNLIKELY (packet.length != 0 && packet.padding == 0
+          && packet.length < demux->packet_size)) {
+    GST_LOG_OBJECT (demux, "shortened packet with implicit padding, "
+        "adjusting available data size");
+    if (size < demux->packet_size - packet.length) {
+      /* the buffer is smaller than the implicit padding */
       goto short_packet;
-    else
+    } else {
+      /* subtract the implicit padding */
       size -= (demux->packet_size - packet.length);
+    }
   }
 
   if (has_multiple_payloads) {
