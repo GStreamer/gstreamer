@@ -38,7 +38,9 @@ main (int argc, char **argv)
 {
   GstElement *pipeline;
   GstBus *bus;
+#ifndef G_DISABLE_ASSERT
   GstState state, pending;
+#endif
   GError *error = NULL;
 
   gst_init (&argc, &argv);
