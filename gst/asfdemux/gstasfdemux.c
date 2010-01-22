@@ -1880,10 +1880,10 @@ gst_asf_demux_get_var_length (guint8 type, guint8 ** p_data, guint64 * p_size)
       return gst_asf_demux_get_uint32 (p_data, p_size);
 
     default:
+      g_assert_not_reached ();
       break;
   }
-
-  g_assert_not_reached ();
+  return 0;
 }
 
 static gboolean

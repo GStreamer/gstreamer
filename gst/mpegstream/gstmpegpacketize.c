@@ -356,4 +356,5 @@ gst_mpeg_packetize_read (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
   }
 
   g_assert_not_reached ();
+  return GST_FLOW_ERROR;
 }
