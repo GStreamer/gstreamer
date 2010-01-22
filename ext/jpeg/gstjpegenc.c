@@ -218,14 +218,49 @@ gst_jpegenc_init_destination (j_compress_ptr cinfo)
 static boolean
 gst_jpegenc_flush_destination (j_compress_ptr cinfo)
 {
-  GST_DEBUG ("gst_jpegenc_chain: flush_destination: buffer too small !!!");
+  GstBuffer *overflow_buffer;
+  guint32 old_buffer_size;
+  GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
+  GST_DEBUG_OBJECT (jpegenc,
+      "gst_jpegenc_chain: flush_destination: buffer too small");
+
+  /* Our output buffer wasn't big enough.
+   * Make a new buffer that's twice the size, */
+  old_buffer_size = GST_BUFFER_SIZE (jpegenc->output_buffer);
+  gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
+      GST_BUFFER_OFFSET_NONE, old_buffer_size * 2,
+      GST_PAD_CAPS (jpegenc->srcpad), &overflow_buffer);
+  memcpy (GST_BUFFER_DATA (overflow_buffer),
+      GST_BUFFER_DATA (jpegenc->output_buffer), old_buffer_size);
+
+  /* drop it into place, */
+  gst_buffer_unref (jpegenc->output_buffer);
+  jpegenc->output_buffer = overflow_buffer;
+
+  /* and last, update libjpeg on where to work. */
+  jpegenc->jdest.next_output_byte =
+      GST_BUFFER_DATA (jpegenc->output_buffer) + old_buffer_size;
+  jpegenc->jdest.free_in_buffer =
+      GST_BUFFER_SIZE (jpegenc->output_buffer) - old_buffer_size;
+
   return TRUE;
 }
 
 static void
 gst_jpegenc_term_destination (j_compress_ptr cinfo)
 {
-  GST_DEBUG ("gst_jpegenc_chain: term_source");
+  GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
+  GST_DEBUG_OBJECT (jpegenc, "gst_jpegenc_chain: term_source");
+
+  /* Trim the buffer size and push it. */
+  GST_BUFFER_SIZE (jpegenc->output_buffer) =
+      GST_ROUND_UP_4 (GST_BUFFER_SIZE (jpegenc->output_buffer) -
+      jpegenc->jdest.free_in_buffer);
+
+  g_signal_emit (G_OBJECT (jpegenc), gst_jpegenc_signals[FRAME_ENCODED], 0);
+
+  jpegenc->last_ret = gst_pad_push (jpegenc->srcpad, jpegenc->output_buffer);
+  jpegenc->output_buffer = NULL;
 }
 
 static void
@@ -264,6 +299,8 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->jdest.empty_output_buffer = gst_jpegenc_flush_destination;
   jpegenc->jdest.term_destination = gst_jpegenc_term_destination;
   jpegenc->cinfo.dest = &jpegenc->jdest;
+  jpegenc->cinfo.client_data = jpegenc;
+
 
   /* init properties */
   jpegenc->quality = JPEG_DEFAULT_QUALITY;
@@ -422,6 +459,10 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   }
 #endif
 
+  /* guard against a potential error in gst_jpegenc_term_destination
+     which occurs iff bufsize % 4 < free_space_remaining */
+  jpegenc->bufsize = GST_ROUND_UP_4 (jpegenc->bufsize);
+
   jpeg_suppress_tables (&jpegenc->cinfo, TRUE);
 
   GST_DEBUG_OBJECT (jpegenc, "resync done");
@@ -434,7 +475,6 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   GstJpegEnc *jpegenc;
   guchar *data;
   gulong size;
-  GstBuffer *outbuf;
   guint height, width;
   guchar *base[3], *end[3];
   gint i, j, k;
@@ -452,12 +492,13 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   ret =
       gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
       GST_BUFFER_OFFSET_NONE, jpegenc->bufsize, GST_PAD_CAPS (jpegenc->srcpad),
-      &outbuf);
+      &jpegenc->output_buffer);
 
   if (ret != GST_FLOW_OK)
     goto done;
 
-  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (jpegenc->output_buffer, buf,
+      GST_BUFFER_COPY_TIMESTAMPS);
 
   width = jpegenc->width;
   height = jpegenc->height;
@@ -470,8 +511,8 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   end[1] = base[1] + (height / 2) * I420_U_ROWSTRIDE (width);
   end[2] = base[2] + (height / 2) * I420_V_ROWSTRIDE (width);
 
-  jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (outbuf);
-  jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (outbuf);
+  jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (jpegenc->output_buffer);
+  jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (jpegenc->output_buffer);
 
   /* prepare for raw input */
 #if JPEG_LIB_VERSION >= 70
@@ -503,15 +544,10 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
     jpeg_write_raw_data (&jpegenc->cinfo, jpegenc->line, 2 * DCTSIZE);
   }
 
+  /* This will ensure that gst_jpegenc_term_destination is called; we push
+     the final output buffer from there */
   jpeg_finish_compress (&jpegenc->cinfo);
   GST_LOG_OBJECT (jpegenc, "compressing done");
-
-  GST_BUFFER_SIZE (outbuf) =
-      GST_ROUND_UP_4 (jpegenc->bufsize - jpegenc->jdest.free_in_buffer);
-
-  g_signal_emit (G_OBJECT (jpegenc), gst_jpegenc_signals[FRAME_ENCODED], 0);
-
-  ret = gst_pad_push (jpegenc->srcpad, outbuf);
 
 done:
   gst_buffer_unref (buf);

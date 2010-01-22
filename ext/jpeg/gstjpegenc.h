@@ -31,7 +31,6 @@
 #include <jpeglib.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_JPEGENC \
   (gst_jpegenc_get_type())
 #define GST_JPEGENC(obj) \
@@ -42,15 +41,15 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEGENC))
 #define GST_IS_JPEGENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGENC))
-
 typedef struct _GstJpegEnc GstJpegEnc;
 typedef struct _GstJpegEncClass GstJpegEncClass;
 
-struct _GstJpegEnc {
+struct _GstJpegEnc
+{
   GstElement element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
   /* video state */
   gint format;
@@ -70,17 +69,22 @@ struct _GstJpegEnc {
   gint quality;
   gint smoothing;
   gint idct_method;
+
+  /* cached return state for any problems that may occur in callbacks */
+  GstFlowReturn last_ret;
+
+  GstBuffer *output_buffer;
 };
 
-struct _GstJpegEncClass {
+struct _GstJpegEncClass
+{
   GstElementClass parent_class;
 
   /* signals */
-  void (*frame_encoded) (GstElement *element);
+  void (*frame_encoded) (GstElement * element);
 };
 
-GType gst_jpegenc_get_type(void);
+GType gst_jpegenc_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_JPEGENC_H__ */
