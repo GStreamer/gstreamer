@@ -433,12 +433,12 @@ dnl *** OS X videosrc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
 HAVE_OSX_VIDEO="no"
 AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosrc, [
-  AC_CHECK_HEADER(Quicktime/Quicktime.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+  AC_CHECK_TYPE([SeqGrabComponent], HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no",
+      [#include <Quicktime/Quicktime.h>])
 ])
 dnl in case header Quicktime/Quicktime.h is found on other platforms
 case "$host" in
   *-*darwin*)
-    dnl do nothing
     ;;
   *)
     HAVE_OSX_VIDEO="no"
@@ -448,7 +448,8 @@ esac
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
-  AC_CHECK_HEADER(QuickTime/Movies.h, HAVE_QUICKTIME="yes", HAVE_QUICKTIME="no")
+  AC_CHECK_TYPE([SampleReferenceRecord], HAVE_QUICKTIME="yes", HAVE_QUICKTIME="no",
+      [#include <Quicktime/Quicktime.h>])
 ])
 
 dnl check for Video CD
