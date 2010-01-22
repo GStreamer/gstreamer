@@ -21,65 +21,14 @@
 
 #include "gstpnmdec.h"
 #include "gstpnmenc.h"
-#include "gstpnmutils.h"
 
-#include <gst/gstplugin.h>
-#include <gst/gstversion.h>
-#include <gst/gsttypefind.h>
+#include <gst/gst.h>
 
 #include <string.h>
-
-static GstStaticCaps bitmap_caps = GST_STATIC_CAPS (MIME_BM);
-static GstStaticCaps graymap_caps = GST_STATIC_CAPS (MIME_GM);
-static GstStaticCaps pixmap_caps = GST_STATIC_CAPS (MIME_PM);
-
-#define BITMAP_CAPS (gst_static_caps_get (&bitmap_caps))
-#define GRAYMAP_CAPS (gst_static_caps_get (&graymap_caps))
-#define PIXMAP_CAPS (gst_static_caps_get (&pixmap_caps))
-
-static void
-gst_my_typefind_function (GstTypeFind * tf, gpointer d)
-{
-  GstPnmInfoMngrResult r = GST_PNM_INFO_MNGR_RESULT_READING;
-  GstPnmInfoMngr mngr = { 0, };
-  guint i;
-  guint8 *data = NULL;
-
-  for (i = 0; r == GST_PNM_INFO_MNGR_RESULT_READING; i++) {
-    data = gst_type_find_peek (tf, i, 1);
-    if (!data)
-      break;
-    r = gst_pnm_info_mngr_scan (&mngr, data, 1);
-  }
-  switch (r) {
-    case GST_PNM_INFO_MNGR_RESULT_READING:
-    case GST_PNM_INFO_MNGR_RESULT_FAILED:
-      return;
-    case GST_PNM_INFO_MNGR_RESULT_FINISHED:
-      switch (mngr.info.type) {
-        case GST_PNM_TYPE_BITMAP:
-          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, BITMAP_CAPS);
-          return;
-        case GST_PNM_TYPE_GRAYMAP:
-          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, GRAYMAP_CAPS);
-          return;
-        case GST_PNM_TYPE_PIXMAP:
-          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, PIXMAP_CAPS);
-          return;
-      }
-  }
-}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  static gchar *exts[] = { "pnm", NULL };
-
-  if (!gst_type_find_register (plugin, "", GST_RANK_PRIMARY,
-          gst_my_typefind_function, exts, gst_caps_from_string (MIME_ALL),
-          NULL, NULL))
-    return FALSE;
-
   if (!gst_element_register (plugin, "pnmdec", GST_RANK_PRIMARY,
           GST_TYPE_PNMDEC))
     return FALSE;
