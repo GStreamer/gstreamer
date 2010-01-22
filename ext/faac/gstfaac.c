@@ -580,7 +580,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
 
   /* let's see what really happened,
    * note that this may not really match desired rate */
-  GST_DEBUG_OBJECT (faac, "average bitrate: %d kbps",
+  GST_DEBUG_OBJECT (faac, "average bitrate: %lu kbps",
       (conf->bitRate + 500) / 1000 * faac->channels);
   GST_DEBUG_OBJECT (faac, "quantization quality: %ld", conf->quantqual);
   GST_DEBUG_OBJECT (faac, "bandwidth: %d Hz", conf->bandWidth);
