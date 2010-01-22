@@ -219,6 +219,23 @@ GST_START_TEST (test_put_data_strings)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fill)
+{
+  GstByteWriter writer;
+  guint8 data[] = { 0x0, 0x0, 0x0, 0x0, 0x5, 0x5 };
+  guint8 *data2;
+
+  gst_byte_writer_init (&writer);
+  fail_unless (gst_byte_writer_fill (&writer, 0, 4));
+  fail_unless (gst_byte_writer_fill (&writer, 5, 2));
+
+  data2 = gst_byte_writer_reset_and_get_data (&writer);
+  fail_unless (data2 != NULL);
+  fail_unless (memcmp (data2, data, 6) == 0);
+  g_free (data2);
+}
+
+GST_END_TEST;
 static Suite *
 gst_byte_writer_suite (void)
 {
@@ -232,6 +249,7 @@ gst_byte_writer_suite (void)
   tcase_add_test (tc_chain, test_write_non_fixed);
   tcase_add_test (tc_chain, test_from_data);
   tcase_add_test (tc_chain, test_put_data_strings);
+  tcase_add_test (tc_chain, test_fill);
 
   return s;
 }
