@@ -338,13 +338,13 @@ else
   dnl checks for extra enable/disable flags
   FFMPEG_OPTS="`$srcdir/gst-libs/ext/ffmpeg/configure --help`"
   # Let's check if we can disable the building of the ffmpeg binary
-  can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg' | wc -l`
-  if test "$can_disable" != "0"; then
+  can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg'`
+  if test "$can_disable" != ""; then
     embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffmpeg"
   fi
   dnl check if libswscale needs enabling explicitly
-  can_enable=`echo "$FFMPEG_OPTS" | grep 'enable-swscale' | wc -l`
-  if test "$can_enable" != "0"; then
+  can_enable=`echo "$FFMPEG_OPTS" | grep 'enable-swscale'`
+  if test "$can_enable" != ""; then
     embffmpeg_configure_args="$embffmpeg_configure_args --enable-swscale"
   fi
 
