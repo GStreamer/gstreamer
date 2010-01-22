@@ -650,6 +650,7 @@ gst_type_find_get_extension (GstTypeFindElement * typefind, GstPad * pad)
 
   GST_DEBUG_OBJECT (typefind, "found extension %s", result);
   gst_query_unref (query);
+  g_free (uri);
 
   return result;
 
@@ -670,6 +671,7 @@ no_extension:
   {
     GST_WARNING_OBJECT (typefind, "could not find uri extension in %s", uri);
     gst_query_unref (query);
+    g_free (uri);
     return NULL;
   }
 }
