@@ -1240,8 +1240,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 no_caps:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("could not find caps for codec (%s), unknown type",
-            oclass->in_plugin->name));
+        ("could not find caps for codec (), unknown type"));
     return FALSE;
   }
 caps_failed:
@@ -1713,7 +1712,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   GST_DEBUG_OBJECT (ffmpegdec, "ts-handler: pts %" G_GUINT64_FORMAT, out_pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT,
-      ffmpegdec->picture->pts);
+      (guint64) ffmpegdec->picture->pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d",
       ffmpegdec->picture->coded_picture_number);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: ref %d",

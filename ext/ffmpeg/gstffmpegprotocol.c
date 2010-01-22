@@ -184,7 +184,8 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
   GstProtocolInfo *info;
   guint64 newpos = 0;
 
-  GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d", pos, whence);
+  GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d",
+      (gint64) pos, whence);
 
   info = (GstProtocolInfo *) h->priv_data;
 

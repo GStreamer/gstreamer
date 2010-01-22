@@ -1240,13 +1240,13 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 open_failed:
   {
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
-        (gst_ffmpegdemux_averror (res)));
+        ("%s", gst_ffmpegdemux_averror (res)));
     return FALSE;
   }
 no_info:
   {
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
-        (gst_ffmpegdemux_averror (res)));
+        ("%s", gst_ffmpegdemux_averror (res)));
     return FALSE;
   }
 }
@@ -1363,7 +1363,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
       "pkt pts:%" GST_TIME_FORMAT
       " / size:%d / stream_index:%d / flags:%d / duration:%" GST_TIME_FORMAT
       " / pos:%" G_GINT64_FORMAT, GST_TIME_ARGS (timestamp), pkt.size,
-      pkt.stream_index, pkt.flags, GST_TIME_ARGS (duration), pkt.pos);
+      pkt.stream_index, pkt.flags, GST_TIME_ARGS (duration), (gint64) pkt.pos);
 
   /* check start_time */
   if (demux->start_time != -1 && demux->start_time > timestamp)
