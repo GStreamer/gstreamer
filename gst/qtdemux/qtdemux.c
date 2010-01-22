@@ -1932,7 +1932,10 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     k_index = gst_qtdemux_find_keyframe (qtdemux, ref_str,
         ref_str->from_sample - 1);
   } else {
-    k_index = ref_str->from_sample - 10;
+    if (ref_str->from_sample >= 10)
+      k_index = ref_str->from_sample - 10;
+    else
+      k_index = 0;
   }
 
   /* get current segment for that stream */
