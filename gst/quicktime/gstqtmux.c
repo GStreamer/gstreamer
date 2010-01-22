@@ -1885,8 +1885,7 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
 
     if (depth <= 8) {
       endianness = G_BYTE_ORDER;
-    } else if (!gst_structure_get_boolean (structure,
-            "endianness", &endianness)) {
+    } else if (!gst_structure_get_int (structure, "endianness", &endianness)) {
       GST_DEBUG_OBJECT (qtmux, "broken caps, endianness field missing");
       goto refuse_caps;
     }
