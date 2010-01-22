@@ -142,6 +142,7 @@ EXPORTS
 	gst_byte_reader_skip_string_utf32
 	gst_byte_reader_skip_string_utf8
 	gst_byte_writer_ensure_free_space
+	gst_byte_writer_fill
 	gst_byte_writer_free
 	gst_byte_writer_free_and_get_buffer
 	gst_byte_writer_free_and_get_data

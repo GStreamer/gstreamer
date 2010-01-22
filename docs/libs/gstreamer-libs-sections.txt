@@ -595,6 +595,7 @@ gst_byte_writer_put_string_utf32
 gst_byte_writer_put_string_utf8
 
 gst_byte_writer_put_data
+gst_byte_writer_fill
 
 <SUBSECTION Private>
 GST_BYTE_WRITER

@@ -144,6 +144,7 @@ gboolean gst_byte_writer_put_double_be (GstByteWriter *writer, gdouble val);
 gboolean gst_byte_writer_put_double_le (GstByteWriter *writer, gdouble val);
 
 gboolean gst_byte_writer_put_data (GstByteWriter *writer, const guint8 *data, guint size);
+gboolean gst_byte_writer_fill (GstByteWriter *writer, const guint8 value, guint size);
 gboolean gst_byte_writer_put_string_utf8 (GstByteWriter *writer, const gchar *data);
 gboolean gst_byte_writer_put_string_utf16 (GstByteWriter *writer, const guint16 *data);
 gboolean gst_byte_writer_put_string_utf32 (GstByteWriter *writer, const guint32 *data);

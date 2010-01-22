@@ -492,6 +492,21 @@ gst_byte_writer_put_data (GstByteWriter * writer, const guint8 * data,
   return TRUE;
 }
 
+gboolean
+gst_byte_writer_fill (GstByteWriter * writer, const guint8 value, guint size)
+{
+  g_return_val_if_fail (writer != NULL, FALSE);
+
+  if (G_UNLIKELY (!gst_byte_writer_ensure_free_space (writer, size)))
+    return FALSE;
+
+  memset ((guint8 *) & writer->parent.data[writer->parent.byte], value, size);
+  writer->parent.byte += size;
+  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
+
+  return TRUE;
+}
+
 #define CREATE_WRITE_STRING_FUNC(bits,type) \
 gboolean \
 gst_byte_writer_put_string_utf##bits (GstByteWriter *writer, const type * data) \
@@ -801,6 +816,18 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * @size: Size of @data in bytes
  *
  * Writes @size bytes of @data to @writer.
+ *
+ * Returns: %TRUE if the value could be written
+ *
+ * Since: 0.10.26
+ */
+/**
+ * gst_byte_writer_fill:
+ * @writer: #GstByteWriter instance
+ * @value: Value to be writen
+ * @size: Number of bytes to be writen
+ *
+ * Writes @size bytes containing @value to @writer.
  *
  * Returns: %TRUE if the value could be written
  *
