@@ -781,6 +781,34 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
 
+
+static gboolean
+source_pad_event_probe (GstPad * pad, GstEvent * event,
+    GstURIDecodeBin * decoder)
+{
+  GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    GST_DEBUG_OBJECT (pad, "we received EOS");
+
+    g_signal_emit (G_OBJECT (decoder),
+        gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
+  }
+  /* never drop events */
+  return TRUE;
+}
+
+/* called when we found a raw pad on the source element. We need to set up a
+ * padprobe to detect EOS before exposing the pad. */
+static void
+expose_decoded_pad (GstElement * element, GstPad * pad,
+    GstURIDecodeBin * decoder)
+{
+  gst_pad_add_event_probe (pad, G_CALLBACK (source_pad_event_probe), decoder);
+
+  new_decoded_pad_cb (element, pad, FALSE, decoder);
+}
+
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin * decoder)
 {
@@ -1093,7 +1121,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
           } else {
             outelem = decoder->source;
           }
-          new_decoded_pad_cb (outelem, pad, FALSE, decoder);
+          expose_decoded_pad (outelem, pad, decoder);
         }
         gst_object_unref (pad);
         break;
@@ -1547,7 +1575,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
     /* it's all raw, create output pads. */
     GST_URI_DECODE_BIN_UNLOCK (bin);
     gst_caps_unref (rawcaps);
-    new_decoded_pad_cb (element, pad, FALSE, bin);
+    expose_decoded_pad (element, pad, bin);
     return;
   }
   gst_caps_unref (rawcaps);
