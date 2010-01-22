@@ -2580,6 +2580,104 @@ tiff_type_find (GstTypeFind * tf, gpointer ununsed)
   }
 }
 
+/*** PNM ***/
+
+static GstStaticCaps pnm_caps = GST_STATIC_CAPS ("image/x-portable-bitmap; "
+    "image/x-portable-graymap; image/x-portable-pixmap; "
+    "image/x-portable-anymap");
+
+#define PNM_CAPS (gst_static_caps_get(&pnm_caps))
+
+#define IS_PNM_WHITESPACE(c) \
+    ((c) == ' ' || (c) == '\r' || (c) == '\n' || (c) == 't')
+
+static void
+pnm_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  const gchar *media_type = NULL;
+  DataScanCtx c = { 0, NULL, 0 };
+  guint h = 0, w = 0;
+
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 16)))
+    return;
+
+  /* see http://en.wikipedia.org/wiki/Netpbm_format */
+  if (c.data[0] != 'P' || c.data[1] < '1' || c.data[1] > '7' ||
+      !IS_PNM_WHITESPACE (c.data[2]) ||
+      (c.data[3] != '#' && c.data[3] < '0' && c.data[3] > '9'))
+    return;
+
+  switch (c.data[1]) {
+    case '1':
+      media_type = "image/x-portable-bitmap";   /* ASCII */
+      break;
+    case '2':
+      media_type = "image/x-portable-graymap";  /* ASCII */
+      break;
+    case '3':
+      media_type = "image/x-portable-pixmap";   /* ASCII */
+      break;
+    case '4':
+      media_type = "image/x-portable-bitmap";   /* Raw */
+      break;
+    case '5':
+      media_type = "image/x-portable-graymap";  /* Raw */
+      break;
+    case '6':
+      media_type = "image/x-portable-pixmap";   /* Raw */
+      break;
+    case '7':
+      media_type = "image/x-portable-anymap";
+      break;
+    default:
+      g_return_if_reached ();
+  }
+
+  /* try to extract width and height as well */
+  if (c.data[1] != '7') {
+    gchar s[64] = { 0, }
+    , sep1, sep2;
+
+    /* need to skip any comment lines first */
+    data_scan_ctx_advance (tf, &c, 3);
+    while (c.data[0] == '#') {  /* we know there's still data left */
+      data_scan_ctx_advance (tf, &c, 1);
+      while (c.data[0] != '\n' && c.data[0] != '\r') {
+        if (!data_scan_ctx_ensure_data (tf, &c, 4))
+          return;
+        data_scan_ctx_advance (tf, &c, 1);
+      }
+      data_scan_ctx_advance (tf, &c, 1);
+      GST_LOG ("skipped comment line in PNM header");
+    }
+
+    if (!data_scan_ctx_ensure_data (tf, &c, 32) &&
+        !data_scan_ctx_ensure_data (tf, &c, 4)) {
+      return;
+    }
+
+    /* need to NUL-terminate data for sscanf */
+    memcpy (s, c.data, MIN (sizeof (s) - 1, c.size));
+    if (sscanf (s, "%u%c%u%c", &w, &sep1, &h, &sep2) == 4 &&
+        IS_PNM_WHITESPACE (sep1) && IS_PNM_WHITESPACE (sep2) &&
+        w > 0 && w < G_MAXINT && h > 0 && h < G_MAXINT) {
+      GST_LOG ("extracted PNM width and height: %dx%d", w, h);
+    } else {
+      w = 0;
+      h = 0;
+    }
+  } else {
+    /* FIXME: extract width + height for anymaps too */
+  }
+
+  if (w > 0 && h > 0) {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM, media_type,
+        "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
+  } else {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, media_type, NULL);
+  }
+}
+
 static GstStaticCaps sds_caps = GST_STATIC_CAPS ("audio/x-sds");
 
 #define SDS_CAPS (gst_static_caps_get(&sds_caps))
@@ -3486,6 +3584,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mng_exts[] = { "mng", NULL };
   static gchar *jng_exts[] = { "jng", NULL };
   static gchar *xpm_exts[] = { "xpm", NULL };
+  static gchar *pnm_exts[] = { "pnm", "ppm", "pgm", "pbm", NULL };
   static gchar *ras_exts[] = { "ras", NULL };
   static gchar *bz2_exts[] = { "bz2", NULL };
   static gchar *gz_exts[] = { "gz", NULL };
@@ -3659,6 +3758,8 @@ plugin_init (GstPlugin * plugin)
       bmp_exts, BMP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/tiff", GST_RANK_PRIMARY, tiff_type_find,
       tiff_exts, TIFF_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-portable-pixmap", GST_RANK_SECONDARY,
+      pnm_type_find, pnm_exts, PNM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
       matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/mxf", GST_RANK_PRIMARY,
