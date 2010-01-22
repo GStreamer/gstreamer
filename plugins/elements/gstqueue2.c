@@ -101,6 +101,7 @@ enum
 #define DEFAULT_USE_RATE_ESTIMATE  TRUE
 #define DEFAULT_LOW_PERCENT        10
 #define DEFAULT_HIGH_PERCENT       99
+#define DEFAULT_TEMP_REMOVE        TRUE
 
 /* other defines */
 #define DEFAULT_BUFFER_SIZE 4096
@@ -120,7 +121,9 @@ enum
   PROP_LOW_PERCENT,
   PROP_HIGH_PERCENT,
   PROP_TEMP_TEMPLATE,
-  PROP_TEMP_LOCATION
+  PROP_TEMP_LOCATION,
+  PROP_TEMP_REMOVE,
+  PROP_LAST
 };
 
 #define GST_QUEUE2_CLEAR_LEVEL(l) G_STMT_START {         \
@@ -326,8 +329,13 @@ gst_queue2_class_init (GstQueue2Class * klass)
   g_object_class_install_property (gobject_class, PROP_TEMP_LOCATION,
       g_param_spec_string ("temp-location", "Temporary File Location",
           "Location to store temporary files in (Deprecated: Only read this "
-          "property, use temp-tmpl to configure the name template)",
+          "property, use temp-template to configure the name template)",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TEMP_REMOVE,
+      g_param_spec_boolean ("temp-remove", "Remove the Temporary File",
+          "Remove the temp-location after use",
+          DEFAULT_TEMP_REMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* set several parent class virtual functions */
   gobject_class->finalize = gst_queue2_finalize;
@@ -404,6 +412,7 @@ gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class)
   queue->temp_template = NULL;
   queue->temp_location = NULL;
   queue->temp_location_set = FALSE;
+  queue->temp_remove = DEFAULT_TEMP_REMOVE;
 
   GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
@@ -1009,11 +1018,12 @@ gst_queue2_close_temp_location_file (GstQueue2 * queue)
 
   GST_DEBUG_OBJECT (queue, "closing temp file");
 
-  /* we don't remove the file so that the application can use it as a cache
-   * later on */
   fflush (queue->temp_file);
   fclose (queue->temp_file);
-  remove (queue->temp_location);
+
+  if (queue->temp_remove)
+    remove (queue->temp_location);
+
   queue->temp_file = NULL;
 }
 
@@ -2035,6 +2045,9 @@ gst_queue2_set_property (GObject * object,
        * property. */
       queue->temp_location_set = queue->temp_location != NULL;
       break;
+    case PROP_TEMP_REMOVE:
+      queue->temp_remove = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2087,6 +2100,9 @@ gst_queue2_get_property (GObject * object,
       break;
     case PROP_TEMP_LOCATION:
       g_value_set_string (value, queue->temp_location);
+      break;
+    case PROP_TEMP_REMOVE:
+      g_value_set_boolean (value, queue->temp_remove);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

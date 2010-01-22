@@ -110,6 +110,7 @@ struct _GstQueue2
   gchar *temp_template;
   gboolean temp_location_set;
   gchar *temp_location;
+  gboolean temp_remove;
   FILE *temp_file;
   guint64 writing_pos;
   guint64 reading_pos;
