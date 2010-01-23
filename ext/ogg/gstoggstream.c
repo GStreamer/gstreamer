@@ -1089,6 +1089,10 @@ static gboolean
 setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   guint8 *data = packet->packet;
+  const char *category;
+
+  if (packet->bytes < 64)
+    return FALSE;
 
   pad->granulerate_n = GST_READ_UINT32_LE (data + 24);
   pad->granulerate_d = GST_READ_UINT32_LE (data + 28);
@@ -1100,8 +1104,14 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_n == 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_simple ("audio/x-kate",
-      "rate", G_TYPE_INT, pad->granulerate_n, NULL);
+  category = (const char *) data + 48;
+  if (strcmp (category, "subtitles") == 0 || strcmp (category, "SUB") == 0 ||
+      strcmp (category, "spu-subtitles") == 0 ||
+      strcmp (category, "K-SPU") == 0) {
+    pad->caps = gst_caps_new_simple ("subtitle/x-kate", NULL);
+  } else {
+    pad->caps = gst_caps_new_simple ("application/x-kate", NULL);
+  }
 
   return TRUE;
 }
