@@ -183,6 +183,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Pegasus Lossless JPEG");
       break;
 
+    case GST_MAKE_FOURCC ('L', 'O', 'C', 'O'):
+      caps = gst_caps_new_simple ("video/x-loco", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("LOCO Lossless");
+      break;
+
     case GST_MAKE_FOURCC ('S', 'P', '5', '3'):
     case GST_MAKE_FOURCC ('S', 'P', '5', '4'):
     case GST_MAKE_FOURCC ('S', 'P', '5', '5'):
@@ -1748,6 +1754,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('F', 'P', 'S', '1'),
     GST_MAKE_FOURCC ('A', 'A', 'S', 'C'),
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
+    GST_MAKE_FOURCC ('L', 'O', 'C', 'O'),
     /* FILL ME */
   };
   guint i;
