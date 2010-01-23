@@ -759,6 +759,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     pad->map.n_header_packets_seen++;
     if (!pad->map.have_headers) {
       buf = gst_ogg_demux_buffer_from_packet (packet);
+      gst_buffer_set_caps (buf, pad->map.caps);
       pad->map.headers = g_list_append (pad->map.headers, buf);
       GST_DEBUG ("keeping header packet %d", pad->map.n_header_packets_seen);
     }
