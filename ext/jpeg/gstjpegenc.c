@@ -233,6 +233,9 @@ gst_jpegenc_flush_destination (j_compress_ptr cinfo)
   memcpy (GST_BUFFER_DATA (overflow_buffer),
       GST_BUFFER_DATA (jpegenc->output_buffer), old_buffer_size);
 
+  gst_buffer_copy_metadata (overflow_buffer, jpegenc->output_buffer,
+      GST_BUFFER_COPY_TIMESTAMPS);
+
   /* drop it into place, */
   gst_buffer_unref (jpegenc->output_buffer);
   jpegenc->output_buffer = overflow_buffer;
