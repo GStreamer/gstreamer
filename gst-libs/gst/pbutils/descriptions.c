@@ -164,6 +164,7 @@ static const FormatInfo formats[] = {
   {"video/x-intel-h263", "Intel H.263", 0},
   {"video/x-jpeg", "Motion JPEG", 0},
   /* { "video/x-jpeg-b", "", 0 }, does this actually exist? */
+  {"video/x-loco", "LOCO Lossless", 0},
   {"video/x-mjpeg", "Motion-JPEG", 0},
   {"video/x-mjpeg-b", "Motion-JPEG format B", 0},
   {"video/mpegts", "MPEG-2 Transport Stream", FLAG_CONTAINER},
