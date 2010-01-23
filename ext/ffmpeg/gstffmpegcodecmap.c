@@ -1108,6 +1108,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-aasc", NULL);
       break;
 
+    case CODEC_ID_LOCO:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-loco", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
@@ -1124,7 +1128,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_PGMYUV:
     case CODEC_ID_PAM:
     case CODEC_ID_FFVHUFF:
-    case CODEC_ID_LOCO:
     case CODEC_ID_WNV1:
     case CODEC_ID_MP3ADU:
     case CODEC_ID_MP3ON4:
