@@ -568,6 +568,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft RLE");
       break;
 
+    case GST_MAKE_FOURCC ('A', 'A', 'S', 'C'):
+      caps = gst_caps_new_simple ("video/x-aasc", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Autodesk Animator");
+      break;
+
     case GST_MAKE_FOURCC ('X', 'x', 'a', 'n'):
       caps = gst_caps_new_simple ("video/x-xan",
           "wcversion", G_TYPE_INT, 4, NULL);
@@ -1733,6 +1739,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('R', 'P', 'Z', 'A'),
     GST_MAKE_FOURCC ('T', 'H', 'E', 'O'),
     GST_MAKE_FOURCC ('F', 'P', 'S', '1'),
+    GST_MAKE_FOURCC ('A', 'A', 'S', 'C'),
     /* FILL ME */
   };
   guint i;
