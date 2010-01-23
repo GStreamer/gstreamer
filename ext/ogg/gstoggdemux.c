@@ -483,6 +483,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   gint offset;
   GstClockTime out_timestamp, out_duration;
   guint64 out_offset, out_offset_end;
+  gboolean delta_unit = FALSE;
 
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08x", pad, pad->map.serialno);
@@ -530,6 +531,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     }
 
     offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
+    delta_unit = (((data[0] & 0x08) >> 3) == 0);
   } else {
     offset = 0;
   }
@@ -603,6 +605,10 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
+
+  /* set delta flag for OGM content */
+  if (delta_unit)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* copy packet in buffer */
   memcpy (buf->data, packet->packet + offset, packet->bytes - offset);
