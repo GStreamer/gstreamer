@@ -41,6 +41,7 @@
 #endif
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/tag/tag.h>
 
 #include "gstoggdemux.h"
 
@@ -499,6 +500,32 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
     if (data[0] & 1) {
       /* We don't push header packets for OGM */
+      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+      goto done;
+    } else if (data[0] & 3 && pad->map.is_ogm_text) {
+      GstTagList *tags;
+
+      /* We don't push comment packets either for text streams,
+       * other streams will handle the comment packets in the
+       * decoder */
+      buf = gst_buffer_new ();
+
+      GST_BUFFER_DATA (buf) = (guint8 *) data;
+      GST_BUFFER_SIZE (buf) = bytes;
+
+      tags = gst_tag_list_from_vorbiscomment_buffer (buf,
+          (guint8 *) "\003vorbis", 7, NULL);
+      gst_buffer_unref (buf);
+      buf = NULL;
+
+      if (tags) {
+        GST_DEBUG_OBJECT (ogg, "tags = %" GST_PTR_FORMAT, tags);
+        gst_element_found_tags_for_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad),
+            tags);
+      } else {
+        GST_DEBUG_OBJECT (ogg, "failed to extract tags from vorbis comment");
+      }
+
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
