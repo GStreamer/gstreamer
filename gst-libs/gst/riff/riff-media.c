@@ -112,8 +112,10 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+    case GST_MAKE_FOURCC ('Y', 'U', 'N', 'V'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
+          NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YUV 4:2:2");
       break;
