@@ -461,6 +461,7 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
       pad->map.serialno);
 
   buf = gst_ogg_demux_buffer_from_packet (packet);
+  gst_buffer_set_caps (buf, pad->map.caps);
   pad->map.queued = g_list_append (pad->map.queued, buf);
 
   /* we are ok now */
