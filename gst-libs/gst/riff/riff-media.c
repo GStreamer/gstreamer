@@ -792,6 +792,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('v', 'p', '6', '0'):
     case GST_MAKE_FOURCC ('V', 'P', '6', '0'):
+    case GST_MAKE_FOURCC ('v', 'p', '6', '1'):
+    case GST_MAKE_FOURCC ('V', 'P', '6', '1'):
       caps = gst_caps_new_simple ("video/x-vp6", NULL);
       if (codec_name)
         *codec_name = g_strdup ("On2 VP6");
