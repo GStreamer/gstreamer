@@ -63,6 +63,25 @@ GST_DEBUG_CATEGORY (gst_ogg_demux_debug);
 GST_DEBUG_CATEGORY (gst_ogg_demux_setup_debug);
 #define GST_CAT_DEFAULT gst_ogg_demux_debug
 
+
+static ogg_packet *
+_ogg_packet_copy (const ogg_packet * packet)
+{
+  ogg_packet *ret = g_new0 (ogg_packet, 1);
+
+  *ret = *packet;
+  ret->packet = g_memdup (packet->packet, packet->bytes);
+
+  return ret;
+}
+
+static void
+_ogg_packet_free (ogg_packet * packet)
+{
+  g_free (packet->packet);
+  g_free (packet);
+}
+
 static ogg_page *
 gst_ogg_page_copy (ogg_page * page)
 {
@@ -160,10 +179,10 @@ gst_ogg_pad_dispose (GObject * object)
   pad->chain = NULL;
   pad->ogg = NULL;
 
-  g_list_foreach (pad->map.headers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (pad->map.headers, (GFunc) _ogg_packet_free, NULL);
   g_list_free (pad->map.headers);
   pad->map.headers = NULL;
-  g_list_foreach (pad->map.queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_foreach (pad->map.queued, (GFunc) _ogg_packet_free, NULL);
   g_list_free (pad->map.queued);
   pad->map.queued = NULL;
 
@@ -433,26 +452,11 @@ gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
   }
 }
 
-static GstBuffer *
-gst_ogg_demux_buffer_from_packet (ogg_packet * packet)
-{
-  GstBuffer *buf;
-
-  buf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (buf->data, packet->packet, packet->bytes);
-  GST_BUFFER_OFFSET (buf) = -1;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-
-  return buf;
-}
-
 /* queue data, basically takes the packet, puts it in a buffer and store the
  * buffer in the queued list.  */
 static GstFlowReturn
 gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
 {
-  GstBuffer *buf;
-
 #ifndef GST_DISABLE_GST_DEBUG
   GstOggDemux *ogg = pad->ogg;
 #endif
@@ -460,9 +464,7 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
   GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08x", pad,
       pad->map.serialno);
 
-  buf = gst_ogg_demux_buffer_from_packet (packet);
-  gst_buffer_set_caps (buf, pad->map.caps);
-  pad->map.queued = g_list_append (pad->map.queued, buf);
+  pad->map.queued = g_list_append (pad->map.queued, _ogg_packet_copy (packet));
 
   /* we are ok now */
   return GST_FLOW_OK;
@@ -755,13 +757,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       }
     }
   } else {
-    GstBuffer *buf;
-
     pad->map.n_header_packets_seen++;
     if (!pad->map.have_headers) {
-      buf = gst_ogg_demux_buffer_from_packet (packet);
-      gst_buffer_set_caps (buf, pad->map.caps);
-      pad->map.headers = g_list_append (pad->map.headers, buf);
+      pad->map.headers =
+          g_list_append (pad->map.headers, _ogg_packet_copy (packet));
       GST_DEBUG ("keeping header packet %d", pad->map.n_header_packets_seen);
     }
   }
@@ -1631,23 +1630,18 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GST_DEBUG_OBJECT (ogg, "pushing headers");
     /* ref and push headers */
     for (walk = pad->map.headers; walk; walk = g_list_next (walk)) {
-      GstBuffer *buffer = GST_BUFFER (walk->data);
+      ogg_packet *p = walk->data;
 
-      if (pad->discont) {
-        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-        pad->discont = FALSE;
-      }
-      /* we don't care about the return value here */
-      gst_pad_push (GST_PAD_CAST (pad), gst_buffer_ref (buffer));
+      gst_ogg_demux_chain_peer (pad, p);
     }
 
     GST_DEBUG_OBJECT (ogg, "pushing queued buffers");
     /* push queued buffers */
     for (walk = pad->map.queued; walk; walk = g_list_next (walk)) {
-      GstBuffer *buffer = GST_BUFFER (walk->data);
+      ogg_packet *p = walk->data;
 
-      /* we don't care about the return value here */
-      gst_pad_push (GST_PAD_CAST (pad), buffer);
+      gst_ogg_demux_chain_peer (pad, p);
+      _ogg_packet_free (p);
     }
     /* and free the queued buffers */
     g_list_free (pad->map.queued);
