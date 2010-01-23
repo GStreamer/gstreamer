@@ -7292,6 +7292,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-rle",
           "layout", G_TYPE_STRING, "quicktime", NULL);
       break;
+    case GST_MAKE_FOURCC ('I', 'V', '3', '2'):
     case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
       _codec ("Indeo Video 3");
       caps = gst_caps_new_simple ("video/x-indeo",
