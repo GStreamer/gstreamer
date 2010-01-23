@@ -783,6 +783,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Karl Morton's video codec");
       break;
 
+    case GST_MAKE_FOURCC ('v', 'p', '5', '0'):
+    case GST_MAKE_FOURCC ('V', 'P', '5', '0'):
+      caps = gst_caps_new_simple ("video/x-vp5", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("On2 VP5");
+      break;
+
     case GST_MAKE_FOURCC ('v', 'p', '6', '0'):
     case GST_MAKE_FOURCC ('V', 'P', '6', '0'):
       caps = gst_caps_new_simple ("video/x-vp6", NULL);
@@ -1753,6 +1760,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('d', 'r', 'a', 'c'),
     GST_MAKE_FOURCC ('F', 'F', 'V', '1'),
     GST_MAKE_FOURCC ('K', 'M', 'V', 'C'),
+    GST_MAKE_FOURCC ('V', 'P', '5', '0'),
     GST_MAKE_FOURCC ('V', 'P', '6', '0'),
     GST_MAKE_FOURCC ('L', 'M', '2', '0'),
     GST_MAKE_FOURCC ('R', 'P', 'Z', 'A'),
