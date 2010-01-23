@@ -202,6 +202,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Sp5x-like JPEG");
       break;
 
+    case GST_MAKE_FOURCC ('Z', 'M', 'B', 'V'):
+      caps = gst_caps_new_simple ("video/x-zmbv", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Zip Motion Block video");
+      break;
+
     case GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'):
       caps = gst_caps_new_simple ("video/x-huffyuv", NULL);
       if (strf) {
@@ -1773,6 +1779,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('A', 'A', 'S', 'C'),
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
     GST_MAKE_FOURCC ('L', 'O', 'C', 'O'),
+    GST_MAKE_FOURCC ('Z', 'M', 'B', 'V'),
     /* FILL ME */
   };
   guint i;
