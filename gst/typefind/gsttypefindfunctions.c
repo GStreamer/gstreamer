@@ -1090,7 +1090,7 @@ musepack_type_find (GstTypeFind * tf, gpointer unused)
 }
 
 /*** audio/x-ac3 ***/
-/* This should be audio/ac3, but isn't for backwards compatibility */
+/* FIXME 0.11: should be audio/ac3, but isn't for backwards compatibility */
 static GstStaticCaps ac3_caps = GST_STATIC_CAPS ("audio/x-ac3");
 
 #define AC3_CAPS (gst_static_caps_get(&ac3_caps))
@@ -1142,47 +1142,51 @@ static const struct ac3_frmsize ac3_frmsizecod_tbl[] = {
   {640, {1280, 1394, 1920}}
 };
 
-
 static void
 ac3_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 5);
-  gint offset = 0;
+  DataScanCtx c = { 0, NULL, 0 };
 
   /* Search for an ac3 frame; not neccesarily right at the start, but give it
    * a lower probability if not found right at the start. Check that the
    * frame is followed by a second frame at the expected offset.
    * We could also check the two ac3 CRCs, but we don't do that right now */
-  while (data && offset < 1024) {
-    if (data[0] == 0x0b && data[1] == 0x77) {
-      guint fscod = (data[4] >> 6) & 0x03;
-      guint frmsizecod = data[4] & 0x3f;
+  while (c.offset < 1024) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 5)))
+      break;
+
+    if (c.data[0] == 0x0b && c.data[1] == 0x77) {
+      guint fscod = (c.data[4] >> 6) & 0x03;
+      guint frmsizecod = c.data[4] & 0x3f;
 
       if (fscod < 3 && frmsizecod < 38) {
-        guint frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
+        DataScanCtx c_next = c;
+        guint frame_size;
 
-        data = gst_type_find_peek (tf, offset + frame_size * 2, 5);
+        frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
+        if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
+          data_scan_ctx_advance (tf, &c, frame_size * 2);
 
-        if (data) {
-          if (data[0] == 0x0b && data[1] == 0x77) {
-            guint fscod2 = (data[4] >> 6) & 0x03;
-            guint frmsizecod2 = data[4] & 0x3f;
+          if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
+            guint fscod2 = (c_next.data[4] >> 6) & 0x03;
+            guint frmsizecod2 = c_next.data[4] & 0x3f;
 
             if (fscod == fscod2 && frmsizecod == frmsizecod2) {
-              int prob;
+              GstTypeFindProbability prob;
 
-              if (offset == 0)
+              if (c.offset == 0)
                 prob = GST_TYPE_FIND_MAXIMUM;
               else
                 prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+
               gst_type_find_suggest (tf, prob, AC3_CAPS);
+              return;
             }
           }
         }
       }
     }
-    offset++;
-    data = gst_type_find_peek (tf, offset, 5);
+    data_scan_ctx_advance (tf, &c, 1);
   }
 }
 
