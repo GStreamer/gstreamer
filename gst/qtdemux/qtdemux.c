@@ -7089,6 +7089,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
     case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
+    case GST_MAKE_FOURCC ('d', 'm', 'b', '1'):
       _codec ("Motion-JPEG");
       caps = gst_caps_new_simple ("image/jpeg", NULL);
       break;
