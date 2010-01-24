@@ -1233,8 +1233,8 @@ static const GstOggMap mappers[] = {
     "\200kate\0\0\0", 8, 0,
     "text/x-kate",
     setup_kate_mapper,
-    NULL,
-    NULL,
+    granulepos_to_granule_default,
+    granule_to_granulepos_default,
     NULL,
     is_header_count,
     NULL
