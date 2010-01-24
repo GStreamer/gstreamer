@@ -2230,6 +2230,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint tip = 0;
   guint64 offset = 0;
   guint64 size;
+  const gchar *variant = NULL;
 
   while ((data = gst_type_find_peek (tf, offset, 12)) != NULL) {
     guint64 new_offset;
@@ -2238,6 +2239,13 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     }
+
+    if (STRNCMP (&data[4], "ftypisom", 8) == 0) {
+      tip = GST_TYPE_FIND_MAXIMUM;
+      variant = "iso";
+      break;
+    }
+
     /* box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
@@ -2280,8 +2288,17 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     offset = new_offset;
   }
+
   if (tip > 0) {
-    gst_type_find_suggest (tf, tip, QT_CAPS);
+    if (variant) {
+      GstCaps *caps = gst_caps_copy (QT_CAPS);
+
+      gst_caps_set_simple (caps, "variant", G_TYPE_STRING, variant, NULL);
+      gst_type_find_suggest (tf, tip, caps);
+      gst_caps_unref (caps);
+    } else {
+      gst_type_find_suggest (tf, tip, QT_CAPS);
+    }
   }
 };
 
