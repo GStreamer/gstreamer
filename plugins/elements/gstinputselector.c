@@ -357,10 +357,10 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
    * is enabled */
   if (pad != active_sinkpad && !sel->select_all)
     forward = FALSE;
-  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
     g_object_notify (G_OBJECT (sel), "active-pad");
+  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -422,7 +422,9 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, newtags);
       GST_OBJECT_UNLOCK (selpad);
 
+      GST_INPUT_SELECTOR_LOCK (sel);
       g_object_notify (G_OBJECT (selpad), "tags");
+      GST_INPUT_SELECTOR_UNLOCK (sel);
       break;
     }
     case GST_EVENT_EOS:
@@ -502,10 +504,10 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   if (pad != active_sinkpad)
     goto not_active;
 
-  GST_INPUT_SELECTOR_UNLOCK (sel);
-
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
     g_object_notify (G_OBJECT (sel), "active-pad");
+
+  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
 
@@ -624,10 +626,10 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
     selpad->segment_pending = FALSE;
   }
-  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
     g_object_notify (G_OBJECT (sel), "active-pad");
+  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (close_event)
     gst_pad_push_event (sel->srcpad, close_event);
@@ -1411,10 +1413,10 @@ gst_input_selector_switch (GstInputSelector * self, GstPad * pad,
 
   self->blocked = FALSE;
   GST_INPUT_SELECTOR_BROADCAST (self);
-  GST_INPUT_SELECTOR_UNLOCK (self);
 
   if (changed)
     g_object_notify (G_OBJECT (self), "active-pad");
+  GST_INPUT_SELECTOR_UNLOCK (self);
 }
 
 static gboolean
