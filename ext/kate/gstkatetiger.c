@@ -289,7 +289,7 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
   tiger->mutex = g_mutex_new ();
 
   tiger->katesinkpad =
-      gst_pad_new_from_static_template (&kate_sink_factory, "kate_sink");
+      gst_pad_new_from_static_template (&kate_sink_factory, "subtitle_sink");
   gst_pad_set_chain_function (tiger->katesinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_chain));
   gst_pad_set_query_function (tiger->katesinkpad,
