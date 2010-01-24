@@ -752,7 +752,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     pad->map.n_header_packets_seen = 0;
     if (!pad->map.have_headers) {
       GST_DEBUG_OBJECT (ogg, "clearing header packets");
-      g_list_foreach (pad->map.headers, (GFunc) gst_mini_object_unref, NULL);
+      g_list_foreach (pad->map.headers, (GFunc) _ogg_packet_free, NULL);
       g_list_free (pad->map.headers);
       pad->map.headers = NULL;
     }
