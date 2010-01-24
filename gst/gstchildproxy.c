@@ -198,7 +198,7 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
     gst_object_unref (object);
     object = next;
     current++;
-  };
+  }
   if (current[1] == NULL) {
     GParamSpec *spec =
         g_object_class_find_property (G_OBJECT_GET_CLASS (object), current[0]);
