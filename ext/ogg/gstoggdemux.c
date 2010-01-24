@@ -481,6 +481,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstOggChain *chain;
   gint64 duration;
   gint offset;
+  gint trim;
   GstClockTime out_timestamp, out_duration;
   guint64 out_offset, out_offset_end;
   gboolean delta_unit = FALSE;
@@ -532,8 +533,19 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
     offset = 1 + (((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1));
     delta_unit = (((data[0] & 0x08) >> 3) == 0);
+
+    trim = 0;
+
+    /* Strip trailing \0 for subtitles */
+    if (pad->map.is_ogm_text) {
+      while (bytes && data[bytes - 1] == 0) {
+        trim++;
+        bytes--;
+      }
+    }
   } else {
     offset = 0;
+    trim = 0;
   }
 
   /* get timing info for the packet */
@@ -594,12 +606,13 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   }
 
   /* check for invalid buffer sizes */
-  if (G_UNLIKELY (offset >= packet->bytes))
+  if (G_UNLIKELY (offset + trim >= packet->bytes))
     goto empty_packet;
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
-      GST_BUFFER_OFFSET_NONE, packet->bytes - offset, GST_PAD_CAPS (pad), &buf);
+      GST_BUFFER_OFFSET_NONE, packet->bytes - offset - trim,
+      GST_PAD_CAPS (pad), &buf);
 
   /* combine flows */
   cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
@@ -611,7 +624,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* copy packet in buffer */
-  memcpy (buf->data, packet->packet + offset, packet->bytes - offset);
+  memcpy (buf->data, packet->packet + offset, packet->bytes - offset - trim);
 
   GST_BUFFER_TIMESTAMP (buf) = out_timestamp;
   GST_BUFFER_DURATION (buf) = out_duration;
