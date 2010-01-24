@@ -336,7 +336,7 @@ gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
   return res;
 }
 
-guint
+static guint
 gst_bin_child_proxy_get_children_count (GstChildProxy * child_proxy)
 {
   guint num;
