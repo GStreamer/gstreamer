@@ -128,6 +128,9 @@ static GstFlowReturn gst_kate_dec_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_kate_dec_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_kate_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event);
+static GstCaps *gst_kate_dec_src_get_caps (GstPad * pad);
 
 static void
 gst_kate_dec_base_init (gpointer gclass)
@@ -184,16 +187,21 @@ gst_kate_dec_init (GstKateDec * dec, GstKateDecClass * gclass)
       GST_DEBUG_FUNCPTR (gst_kate_dec_chain));
   gst_pad_set_query_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_kate_dec_sink_query));
+  gst_pad_set_event_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_kate_dec_sink_event));
   gst_pad_use_fixed_caps (dec->sinkpad);
   gst_pad_set_caps (dec->sinkpad,
       gst_static_pad_template_get_caps (&sink_factory));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  gst_pad_set_getcaps_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_kate_dec_src_get_caps));
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
-  gst_kate_util_decode_base_init (&dec->decoder);
+  gst_kate_util_decode_base_init (&dec->decoder, TRUE);
 
+  dec->src_caps = NULL;
   dec->remove_markup = FALSE;
 }
 
@@ -240,9 +248,16 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
   const kate_event *ev = NULL;
   GstFlowReturn rflow = GST_FLOW_OK;
 
+  if (!gst_kate_util_decoder_base_update_segment (&kd->decoder,
+          GST_ELEMENT_CAST (kd), buf)) {
+    GST_WARNING_OBJECT (kd, "Out of segment!");
+    goto not_in_seg;
+  }
+
   rflow =
       gst_kate_util_decoder_base_chain_kate_packet (&kd->decoder,
-      GST_ELEMENT_CAST (kd), pad, buf, kd->srcpad, &ev);
+      GST_ELEMENT_CAST (kd), pad, buf, kd->srcpad, kd->srcpad, &kd->src_caps,
+      &ev);
   if (G_UNLIKELY (rflow != GST_FLOW_OK)) {
     gst_object_unref (kd);
     gst_buffer_unref (buf);
@@ -336,6 +351,7 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+not_in_seg:
   gst_object_unref (kd);
   gst_buffer_unref (buf);
   return rflow;
@@ -345,6 +361,7 @@ static GstStateChangeReturn
 gst_kate_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstKateDec *kd = GST_KATE_DEC (element);
+
   return gst_kate_decoder_base_change_state (&kd->decoder, element,
       parent_class, transition);
 }
@@ -358,4 +375,88 @@ gst_kate_dec_sink_query (GstPad * pad, GstQuery * query)
       pad, query);
   gst_object_unref (kd);
   return res;
+}
+
+static gboolean
+gst_kate_dec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (kd != NULL, FALSE);
+
+  GST_LOG_OBJECT (kd, "Event on sink pad: %s", GST_EVENT_TYPE_NAME (event));
+
+  // Delay events till we've set caps
+  if (gst_kate_util_decoder_base_queue_event (&kd->decoder, event,
+          &gst_kate_dec_sink_handle_event, pad)) {
+    gst_object_unref (kd);
+    return TRUE;
+  }
+
+  res = gst_kate_dec_sink_handle_event (pad, event);
+
+  gst_object_unref (kd);
+
+  return res;
+}
+
+static gboolean
+gst_kate_dec_sink_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (kd != NULL, FALSE);
+
+  GST_LOG_OBJECT (kd, "Handling event on sink pad: %s",
+      GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      gst_kate_util_decoder_base_new_segment_event (&kd->decoder, event);
+      res = gst_pad_event_default (pad, event);
+      break;
+
+    case GST_EVENT_FLUSH_START:
+      gst_kate_util_decoder_base_set_flushing (&kd->decoder, TRUE);
+      res = gst_pad_event_default (pad, event);
+      break;
+
+    case GST_EVENT_FLUSH_STOP:
+      gst_kate_util_decoder_base_set_flushing (&kd->decoder, FALSE);
+      res = gst_pad_event_default (pad, event);
+      break;
+
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (kd);
+
+  return res;
+}
+
+static GstCaps *
+gst_kate_dec_src_get_caps (GstPad * pad)
+{
+  GstKateDec *kd = (GstKateDec *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstCaps *caps;
+
+  g_return_val_if_fail (kd != NULL, FALSE);
+
+  if (kd->src_caps) {
+    GST_DEBUG_OBJECT (kd, "We have src caps (%s)",
+        gst_caps_to_string (kd->src_caps));
+    caps = kd->src_caps;
+  } else {
+    GST_DEBUG_OBJECT (kd, "We have no src caps, using template caps");
+    caps = gst_static_pad_template_get_caps (&src_factory);
+  }
+
+  caps = gst_caps_copy (caps);
+
+  gst_object_unref (kd);
+  return caps;
 }

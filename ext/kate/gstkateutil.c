@@ -23,9 +23,16 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
 #include <gst/tag/tag.h>
 #include "gstkate.h"
 #include "gstkateutil.h"
+
+GST_DEBUG_CATEGORY_EXTERN (gst_kateutil_debug);
+#define GST_CAT_DEFAULT gst_kateutil_debug
+
+static void gst_kate_util_decoder_base_free_event_queue (GstKateDecoderBase *
+    decoder);
 
 GstCaps *
 gst_kate_util_set_header_on_caps (GstElement * element, GstCaps * caps,
@@ -95,7 +102,8 @@ gst_kate_util_install_decoder_base_properties (GObjectClass * gobject_class)
 }
 
 void
-gst_kate_util_decode_base_init (GstKateDecoderBase * decoder)
+gst_kate_util_decode_base_init (GstKateDecoderBase * decoder,
+    gboolean delay_events)
 {
   if (G_UNLIKELY (!decoder))
     return;
@@ -106,6 +114,8 @@ gst_kate_util_decode_base_init (GstKateDecoderBase * decoder)
   decoder->original_canvas_height = 0;
   decoder->tags = NULL;
   decoder->initialized = FALSE;
+  decoder->delay_events = delay_events;
+  decoder->event_queue = NULL;
 }
 
 static void
@@ -121,7 +131,74 @@ gst_kate_util_decode_base_reset (GstKateDecoderBase * decoder)
   }
   decoder->original_canvas_width = 0;
   decoder->original_canvas_height = 0;
+  if (decoder->event_queue) {
+    gst_kate_util_decoder_base_free_event_queue (decoder);
+  }
   decoder->initialized = FALSE;
+}
+
+gboolean
+gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder,
+    GstEvent * event, gboolean (*handler) (GstPad *, GstEvent *), GstPad * pad)
+{
+  gboolean can_be_queued;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_EOS:
+      can_be_queued = FALSE;
+      break;
+    default:
+      can_be_queued = TRUE;
+      break;
+  }
+
+  if (decoder->delay_events && can_be_queued) {
+    GstKateDecoderBaseQueuedEvent *item;
+    GST_DEBUG_OBJECT (decoder, "We have to delay the event");
+    item = g_slice_new (GstKateDecoderBaseQueuedEvent);
+    if (item) {
+      item->event = event;
+      item->pad = pad;
+      item->handler = handler;
+      g_queue_push_tail (decoder->event_queue, item);
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  } else {
+    return FALSE;
+  }
+}
+
+static void
+gst_kate_util_decoder_base_free_event_queue (GstKateDecoderBase * decoder)
+{
+  while (decoder->event_queue->length) {
+    GstKateDecoderBaseQueuedEvent *item = (GstKateDecoderBaseQueuedEvent *)
+        g_queue_pop_head (decoder->event_queue);
+    g_slice_free (GstKateDecoderBaseQueuedEvent, item);
+  }
+  g_queue_free (decoder->event_queue);
+  decoder->event_queue = NULL;
+}
+
+static void
+gst_kate_util_decoder_base_drain_event_queue (GstKateDecoderBase * decoder)
+{
+  decoder->delay_events = FALSE;
+
+  if (decoder->event_queue->length == 0)
+    return;
+
+  GST_DEBUG_OBJECT (decoder, "We can now drain all events!");
+  while (decoder->event_queue->length) {
+    GstKateDecoderBaseQueuedEvent *item = (GstKateDecoderBaseQueuedEvent *)
+        g_queue_pop_head (decoder->event_queue);
+    (*item->handler) (item->pad, item->event);
+    g_slice_free (GstKateDecoderBaseQueuedEvent, item);
+  }
 }
 
 gboolean
@@ -152,38 +229,67 @@ gst_kate_util_decoder_base_get_property (GstKateDecoderBase * decoder,
 GstFlowReturn
 gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
     GstElement * element, GstPad * pad, GstBuffer * buf, GstPad * srcpad,
-    const kate_event ** ev)
+    GstPad * tagpad, GstCaps ** src_caps, const kate_event ** ev)
 {
   kate_packet kp;
   int ret;
   GstFlowReturn rflow = GST_FLOW_OK;
+  gboolean is_header;
 
   GST_DEBUG_OBJECT (element, "got kate packet, %u bytes, type %02x",
       GST_BUFFER_SIZE (buf),
       GST_BUFFER_SIZE (buf) == 0 ? -1 : GST_BUFFER_DATA (buf)[0]);
+
+  is_header = GST_BUFFER_SIZE (buf) > 0 && (GST_BUFFER_DATA (buf)[0] & 0x80);
+
+  if (!is_header && decoder->tags) {
+    /* after we've processed headers, send any tags before processing the data packet */
+    GST_DEBUG_OBJECT (element, "Not a header, sending tags for pad %s:%s",
+        GST_DEBUG_PAD_NAME (tagpad));
+    gst_element_found_tags_for_pad (element, tagpad, decoder->tags);
+    decoder->tags = NULL;
+  }
+
   kate_packet_wrap (&kp, GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (buf));
   ret = kate_high_decode_packetin (&decoder->k, &kp, ev);
   if (G_UNLIKELY (ret < 0)) {
     GST_ELEMENT_ERROR (element, STREAM, DECODE, (NULL),
         ("Failed to decode Kate packet: %d", ret));
     return GST_FLOW_ERROR;
-  } else if (G_UNLIKELY (ret > 0)) {
+  }
+
+  if (G_UNLIKELY (ret > 0)) {
     GST_DEBUG_OBJECT (element,
         "kate_high_decode_packetin has received EOS packet");
-    return GST_FLOW_OK;
   }
 
   /* headers may be interesting to retrieve information from */
-  if (G_LIKELY (GST_BUFFER_SIZE (buf) > 0))
+  if (G_UNLIKELY (is_header)) {
     switch (GST_BUFFER_DATA (buf)[0]) {
-        GstCaps *caps;
-
       case 0x80:               /* ID header */
         GST_INFO_OBJECT (element, "Parsed ID header: language %s, category %s",
             decoder->k.ki->language, decoder->k.ki->category);
-        caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
-        gst_pad_set_caps (srcpad, caps);
-        gst_caps_unref (caps);
+        if (src_caps) {
+          if (*src_caps) {
+            gst_caps_unref (*src_caps);
+            *src_caps = NULL;
+          }
+          if (strcmp (decoder->k.ki->category, "K-SPU") == 0 ||
+              strcmp (decoder->k.ki->category, "spu-subtitles") == 0) {
+            *src_caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+          } else if (decoder->k.ki->text_markup_type == kate_markup_none) {
+            *src_caps = gst_caps_new_simple ("text/plain", NULL);
+          } else {
+            *src_caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
+          }
+          GST_INFO_OBJECT (element, "Setting src caps to %s",
+              gst_caps_to_string (*src_caps));
+          if (!gst_pad_set_caps (srcpad, *src_caps)) {
+            GST_ERROR_OBJECT (element,
+                "Failed to renegotiate caps for pad %s:%s",
+                GST_DEBUG_PAD_NAME (srcpad));
+          }
+        }
         if (decoder->k.ki->language && *decoder->k.ki->language) {
           GstTagList *old = decoder->tags, *tags = gst_tag_list_new ();
           if (tags) {
@@ -213,6 +319,9 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         decoder->category = g_strdup (decoder->k.ki->category);
         decoder->original_canvas_width = decoder->k.ki->original_canvas_width;
         decoder->original_canvas_height = decoder->k.ki->original_canvas_height;
+
+        /* we can now send away any event we've delayed, as the src pad now has caps */
+        gst_kate_util_decoder_base_drain_event_queue (decoder);
 
         break;
 
@@ -247,8 +356,9 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           if (old)
             gst_tag_list_free (old);
 
+#if 0
           if (decoder->initialized) {
-            gst_element_found_tags_for_pad (element, srcpad, decoder->tags);
+            gst_element_found_tags_for_pad (element, tagpad, decoder->tags);
             decoder->tags = NULL;
           } else {
             /* Only push them as messages for the time being. *
@@ -257,12 +367,14 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
                 gst_message_new_tag (GST_OBJECT (element),
                     gst_tag_list_copy (decoder->tags)));
           }
+#endif
         }
         break;
 
       default:
         break;
     }
+  }
 
   return rflow;
 }
@@ -285,7 +397,10 @@ gst_kate_decoder_base_change_state (GstKateDecoderBase * decoder,
         GST_WARNING_OBJECT (element, "failed to initialize kate state: %d",
             ret);
       }
+      gst_segment_init (&decoder->kate_segment, GST_FORMAT_UNDEFINED);
+      decoder->kate_flushing = FALSE;
       decoder->initialized = TRUE;
+      decoder->event_queue = g_queue_new ();
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -304,6 +419,8 @@ gst_kate_decoder_base_change_state (GstKateDecoderBase * decoder,
         kate_high_decode_clear (&decoder->k);
         decoder->initialized = FALSE;
       }
+      gst_segment_init (&decoder->kate_segment, GST_FORMAT_UNDEFINED);
+      decoder->kate_flushing = TRUE;
       gst_kate_util_decode_base_reset (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -314,6 +431,73 @@ gst_kate_decoder_base_change_state (GstKateDecoderBase * decoder,
   }
 
   return res;
+}
+
+void
+gst_kate_util_decoder_base_set_flushing (GstKateDecoderBase * decoder,
+    gboolean flushing)
+{
+  decoder->kate_flushing = flushing;
+  gst_segment_init (&decoder->kate_segment, GST_FORMAT_UNDEFINED);
+}
+
+void
+gst_kate_util_decoder_base_new_segment_event (GstKateDecoderBase * decoder,
+    GstEvent * event)
+{
+  gboolean update;
+  gdouble rate;
+  GstFormat format;
+  gint64 start, stop, time;
+  gdouble arate;
+
+  gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+      &start, &stop, &time);
+  GST_DEBUG_OBJECT (decoder, "kate pad segment:"
+      " Update %d, rate %g arate %g format %d start %" GST_TIME_FORMAT
+      " %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
+      update, rate, arate, format, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
+  gst_segment_set_newsegment_full (&decoder->kate_segment, update, rate,
+      arate, format, start, stop, time);
+}
+
+gboolean
+gst_kate_util_decoder_base_update_segment (GstKateDecoderBase * decoder,
+    GstElement * element, GstBuffer * buf)
+{
+  gint64 clip_start = 0, clip_stop = 0;
+  gboolean in_seg;
+
+  if (decoder->kate_flushing) {
+    GST_LOG_OBJECT (element, "Kate pad flushing, buffer ignored");
+    return FALSE;
+  }
+
+  if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+    GstClockTime stop;
+
+    if (G_LIKELY (GST_BUFFER_DURATION_IS_VALID (buf)))
+      stop = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+    else
+      stop = GST_CLOCK_TIME_NONE;
+
+    in_seg = gst_segment_clip (&decoder->kate_segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buf), stop, &clip_start, &clip_stop);
+  } else {
+    in_seg = TRUE;
+  }
+
+  if (in_seg) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      gst_segment_set_last_stop (&decoder->kate_segment, GST_FORMAT_TIME,
+          clip_start);
+    }
+  } else {
+    GST_INFO_OBJECT (element, "Kate buffer not in segment, ignored");
+  }
+
+  return in_seg;
 }
 
 static GstClockTime
