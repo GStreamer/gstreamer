@@ -57,13 +57,13 @@ GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv"));
+    GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate video_sinktemplate =
-    GST_STATIC_PAD_TEMPLATE ("video_sink",
+GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv"));
+    GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate subtitle_sinktemplate =
 GST_STATIC_PAD_TEMPLATE ("subtitle_sink",
