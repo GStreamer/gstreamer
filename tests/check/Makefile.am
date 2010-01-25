@@ -82,6 +82,7 @@ endif
 
 check_PROGRAMS = \
 	generic/states \
+	generic/capsrenegotiation \
 	$(check_annodex) \
 	elements/alphacolor \
 	elements/aspectratiocrop \

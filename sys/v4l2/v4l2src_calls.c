@@ -105,6 +105,8 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   v4l2object = v4l2src->v4l2object;
   pool = v4l2src->pool;
+  if (!pool)
+    goto no_buffer_pool;
 
   GST_DEBUG_OBJECT (v4l2src, "grab frame");
 
@@ -174,6 +176,11 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   return GST_FLOW_OK;
 
   /* ERRORS */
+no_buffer_pool:
+  {
+    GST_DEBUG ("no buffer pool");
+    return GST_FLOW_WRONG_STATE;
+  }
 select_error:
   {
     GST_ELEMENT_ERROR (pool->v4l2elem, RESOURCE, READ, (NULL),

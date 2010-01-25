@@ -517,6 +517,12 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (jpegenc->output_buffer);
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (jpegenc->output_buffer);
 
+  /* FIXME: shouldn't we also set
+   * - jpegenc->cinfo.max_{v,h}_samp_factor
+   * - jpegenc->cinfo.comp_info[0,1,2].{v,h}_samp_factor
+   * accordingly?
+   */
+
   /* prepare for raw input */
 #if JPEG_LIB_VERSION >= 70
   jpegenc->cinfo.do_fancy_downsampling = FALSE;
