@@ -142,7 +142,8 @@ gst_asf_parse_parse_packet (GstAsfParse * asfparse, GstBuffer * buffer)
 {
   GstAsfPacketInfo *packetinfo = asfparse->packetinfo;
 
-  if (!gst_asf_parse_packet (buffer, packetinfo, FALSE))
+  if (!gst_asf_parse_packet (buffer, packetinfo, FALSE,
+          asfparse->asfinfo->packet_size))
     goto error;
 
   GST_DEBUG_OBJECT (asfparse, "Received packet of length %" G_GUINT32_FORMAT

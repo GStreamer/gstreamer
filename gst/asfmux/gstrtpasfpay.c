@@ -141,7 +141,8 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
   rtppay = GST_BASE_RTP_PAYLOAD (rtpasfpay);
   packetinfo = &rtpasfpay->packetinfo;
 
-  if (!gst_asf_parse_packet (buffer, packetinfo, TRUE)) {
+  if (!gst_asf_parse_packet (buffer, packetinfo, TRUE,
+          rtpasfpay->asfinfo.packet_size)) {
     GST_ERROR_OBJECT (rtpasfpay, "Error while parsing asf packet");
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
@@ -176,10 +177,13 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
       default:
         break;
     }
-    gst_asf_parse_packet (buffer, &info, FALSE);
+    gst_asf_parse_packet (buffer, &info, FALSE, 0);
   }
 
-  packet_util_size = packetinfo->packet_size - packetinfo->padding;
+  if (packetinfo->padding != 0)
+    packet_util_size = rtpasfpay->asfinfo.packet_size - packetinfo->padding;
+  else
+    packet_util_size = packetinfo->packet_size;
   packet_offset = 0;
   while (packet_util_size > 0) {
     /* Even if we don't fill completely an output buffer we

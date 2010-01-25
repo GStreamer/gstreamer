@@ -519,7 +519,7 @@ gst_asf_parse_single_payload (GstByteReader * reader, gboolean * has_keyframe)
 
 gboolean
 gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
-    gboolean trust_delta_flag)
+    gboolean trust_delta_flag, guint packet_size)
 {
   GstByteReader *reader;
   gboolean ret = TRUE;
@@ -538,6 +538,11 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   guint32 send_time = 0;
   guint16 duration = 0;
   gboolean has_keyframe;
+
+  if (packet_size != 0 && GST_BUFFER_SIZE (buffer) != packet_size) {
+    GST_WARNING ("ASF packets should be aligned with buffers");
+    return FALSE;
+  }
 
   reader = gst_byte_reader_new_from_buffer (buffer);
 
@@ -599,11 +604,30 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
           padding_len_type, &padd_len))
     goto error;
 
-  if (packet_len_type != ASF_FIELD_TYPE_NONE &&
-      packet_len != GST_BUFFER_SIZE (buffer)) {
-    GST_WARNING ("ASF packets should be aligned with buffers");
-    ret = FALSE;
-    goto end;
+  /* some packet size validation */
+  if (packet_size != 0 && packet_len_type != ASF_FIELD_TYPE_NONE) {
+    if (padding_len_type != ASF_FIELD_TYPE_NONE &&
+        packet_len + padd_len != packet_size) {
+      GST_WARNING ("Packet size (payload=%u + padding=%u) doesn't "
+          "match expected size %u", packet_len, padd_len, packet_size);
+      ret = FALSE;
+    }
+
+    /* Be forgiving if packet_len has the full packet size
+     * as the spec isn't really clear on its meaning.
+     *
+     * I had been taking it as the full packet size (fixed)
+     * until bug #607555, that convinced me that it is more likely
+     * the actual payloaded data size.
+     */
+    if (packet_len == packet_size) {
+      GST_DEBUG ("This packet's length field represents the full "
+          "packet and not the payloaded data length");
+      ret = TRUE;
+    }
+
+    if (!ret)
+      goto end;
   }
 
   GST_LOG ("Getting send time and duration");
