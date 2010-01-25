@@ -3,17 +3,17 @@
   <description>Cog plugin</description>
   <filename>../../ext/cog/.libs/libgstcog.so</filename>
   <basename>libgstcog.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>cogcolorspace</name>
-      <longname>YCbCr format conversion</longname>
+      <longname>YCbCr/RGB format conversion</longname>
       <class>Filter/Effect/Video</class>
-      <description>YCbCr format conversion</description>
+      <description>YCbCr/RGB format conversion</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>

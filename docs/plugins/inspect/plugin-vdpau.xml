@@ -3,7 +3,7 @@
   <description>Various elements utilizing VDPAU</description>
   <filename>../../sys/vdpau/.libs/libgstvdpau.so</filename>
   <basename>libgstvdpau.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.17.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
@@ -20,7 +20,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+          <details>video/x-vdpau-video, chroma-type=(int)0, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)NV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
         </caps>
         <caps>
           <name>sink</name>
@@ -31,44 +31,38 @@
       </pads>
     </element>
     <element>
-      <name>vdpauvideoyuv</name>
-      <longname>VdpauVideoYUV</longname>
-      <class>Covideo_yuv/Decoder/Video</class>
-      <description>VDPAU video surface to YUV</description>
+      <name>vdpausink</name>
+      <longname>VDPAU Sink</longname>
+      <class>Sink/Video</class>
+      <description>VDPAU Sink</description>
       <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
       <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
-        </caps>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+          <details>video/x-vdpau-output, rgba-format=(int)[ 0, 4 ], width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]</details>
         </caps>
       </pads>
     </element>
     <element>
-      <name>vdpauyuvvideo</name>
-      <longname>VdpauYUVVideo</longname>
-      <class>Coyuv_video/Decoder/Video</class>
-      <description>VDPAU video surface to YUV</description>
+      <name>vdpauvideopostprocess</name>
+      <longname>VdpauVideoPostProcess</longname>
+      <class>Filter/Converter/Decoder/Video</class>
+      <description>Post process GstVdpVideoBuffers and output GstVdpOutputBuffers</description>
       <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
       <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-vdpau-video, chroma-type=(int)[ 0, 2 ], width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
-        </caps>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+          <details>video/x-vdpau-video, chroma-type=(int)0, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-vdpau-video, chroma-type=(int)1, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-vdpau-video, chroma-type=(int)2, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)NV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)AVUY, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YUY2, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-output, rgba-format=(int)4, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-vdpau-output, rgba-format=(int)3, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-vdpau-output, rgba-format=(int)0, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-vdpau-output, rgba-format=(int)2, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-vdpau-output, rgba-format=(int)1, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-raw-rgb, bpp=(int)8, depth=(int)8, endianness=(int)4321, red_mask=(int)0, green_mask=(int)0, blue_mask=(int)0, alpha_mask=(int)255, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)30, endianness=(int)4321, red_mask=(int)1020, green_mask=(int)4190208, blue_mask=(int)-4194304, alpha_mask=(int)3, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)30, endianness=(int)4321, red_mask=(int)-4194304, green_mask=(int)4190208, blue_mask=(int)1020, alpha_mask=(int)3, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 8192 ], height=(int)[ 1, 8192 ]</details>
         </caps>
       </pads>
     </element>

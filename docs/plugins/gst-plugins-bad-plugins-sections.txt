@@ -183,6 +183,21 @@ gst_celt_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-dataurisrc</FILE>
+<TITLE>dataurisrc</TITLE>
+GstDataURISrc
+<SUBSECTION Standard>
+GstDataURISrcClass
+GST_DATA_URI_SRC
+GST_DATA_URI_SRC_CLASS
+GST_IS_DATA_URI_SRC
+GST_IS_DATA_URI_SRC_CLASS
+GST_TYPE_DATA_URI_SRC
+gst_data_uri_src_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>element-dc1394</FILE>
 <TITLE>dc1394</TITLE>
 GstDc1394

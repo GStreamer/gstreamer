@@ -20,7 +20,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/mpeg, framed=(boolean)true, mpegversion=(int){ 2, 4 }</details>
+          <details>audio/mpeg, framed=(boolean)true, mpegversion=(int){ 2, 4 }, stream-format=(string){ raw, adts, adif }</details>
         </caps>
         <caps>
           <name>sink</name>

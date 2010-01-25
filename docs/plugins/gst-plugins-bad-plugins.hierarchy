@@ -81,6 +81,10 @@ GObject
         ladspa-Pulse-VCO
         ladspa-Saw-VCO
         ladspa-Rec-VCO
+        ladspa-Ambisonics-31-panner
+        ladspa-Ambisonics-31-rotator
+        ladspa-Ambisonics-33-panner
+        ladspa-Ambisonics-33-rotator
         ladspa-smoothDecimate
         ladspa-giantFlange
         ladspa-lfoPhaser
@@ -114,6 +118,8 @@ GObject
         ladspa-singlePara
         ladspa-gongBeater
         ladspa-tapeDelay
+        ladspa-Tricardioid-to-AMB
+        ladspa-Virtualmic
         ladspa-sifter
         ladspa-tap-dynamics-st
         ladspa-hardLimiter
@@ -184,6 +190,8 @@ GObject
         ladspa-decimator
         ladspa-Ambisonics-21-panner
         ladspa-Ambisonics-21-rotator
+        ladspa-Ambisonics-22-panner
+        ladspa-Ambisonics-22-rotator
         ladspa-dj-eq-mono
         ladspa-dj-eq
         ladspa-Mvclpf-1
@@ -209,6 +217,7 @@ GObject
         GstVideoSink
           GstDfbVideoSink
           GstSDLVideoSink
+          VdpSink
         GstBaseAudioSink
           GstAudioSink
             GstNasSink
@@ -239,6 +248,7 @@ GObject
           frei0r-src-nois0r
           frei0r-src-lissajous0r
           frei0r-src-partik0l
+          frei0r-src-plasma
           frei0r-src-onecol0r
           frei0r-src-ising0r
           GstRfbSrc
@@ -247,11 +257,17 @@ GObject
         GstSFSrc
         GstDTMFSrc
         GstRTPDTMFSrc
+        GstDataURISrc
       GstBaseTransform
         GstAudioFilter
           GstOFA
           GstBPMDetect
           GstStereo
+        GstCogdownsample
+        GstCogcolorspace
+        GstCogScale
+        GstColorconvert
+        GstLogoinsert
         GstDtmfDetect
         GstBayer2RGB
         GstCapsSetter
@@ -263,9 +279,11 @@ GObject
           frei0r-filter-delay0r
           frei0r-filter-r
           frei0r-filter-squareblur
+          frei0r-filter-curves
           frei0r-filter-b
           frei0r-filter-vectorscope
           frei0r-filter-mask0mate
+          frei0r-filter-vertigo
           frei0r-filter-color-distance
           frei0r-filter-distort0r
           frei0r-filter-threshold0r
@@ -273,11 +291,18 @@ GObject
           frei0r-filter-nosync0r
           frei0r-filter-luminance
           frei0r-filter-rgb-parade
+          frei0r-filter-3-point-color-balance
           frei0r-filter-bw0r
+          frei0r-filter-threelay0r
+          frei0r-filter-bluescreen0r
           frei0r-filter-sobel
           frei0r-filter-glow
+          frei0r-filter-tint0r
+          frei0r-filter-levels
           frei0r-filter-hueshift0r
           frei0r-filter-pixeliz0r
+          frei0r-filter-primaries
+          frei0r-filter-nervous
           frei0r-filter-saturat0r
           frei0r-filter-white-balance
           frei0r-filter-cartoon
@@ -287,6 +312,7 @@ GObject
           frei0r-filter-perspective
           frei0r-filter-k-means-clustering
           frei0r-filter-edgeglow
+          frei0r-filter-baltan
           frei0r-filter-g
           frei0r-filter-tehroxx0r
           frei0r-filter-equaliz0r
@@ -295,6 +321,7 @@ GObject
           frei0r-filter-flippo
           frei0r-filter-3dflippo
           frei0r-filter-contrast0r
+          frei0r-filter-dealygrab
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
@@ -322,12 +349,15 @@ GObject
       GstGSMDec
       GstModPlug
       GstWildmidi
+      GstMSE
       GstAssRender
       GstPitch
       GstCeltEnc
       GstCeltDec
       GstTRM
       GstOss4Mixer
+      GstVdpMpegDec
+      GstVdpVideoPostProcess
       GstMveDemux
       GstMveMux
       GstBaseRTPDepayload
@@ -385,15 +415,15 @@ GObject
       GstSpeed
       GstInputSelector
       GstOutputSelector
+      GstBaseParse
+        GstAacParse
+        GstAmrParse
+        GstAc3Parse
+        GstFlacParse
       GstQTMux
       GstMP4Mux
       GstGPPMux
       GstMJ2Mux
-      GstBaseParse
-        GstAacParse
-        GstAc3Parse
-        GstAmrParse
-        GstFlacParse
       GstSSim
       GstCDXAParse
       GstVcdParse
@@ -402,6 +432,7 @@ GObject
       GstPnmenc
       GstTtaParse
       GstTtaDec
+      ADPCMEnc
       GstRTPMux
         GstRTPDTMFMux
       GstFreeze

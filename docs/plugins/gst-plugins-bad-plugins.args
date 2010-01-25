@@ -22655,12 +22655,12 @@
 
 <ARG>
 <NAME>GstApExSink::volume</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 100</RANGE>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
 <BLURB>AirPort Express target volume.</BLURB>
-<DEFAULT>75</DEFAULT>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23429,7 +23429,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sync</NICK>
-<BLURB>Sync on the clock.</BLURB>
+<BLURB>Sync on the clock (if the internally used sink doesn't have this property it will be ignored.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -23439,8 +23439,18 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>text-overlay</NICK>
-<BLURB>Wether to use text-overlay.</BLURB>
+<BLURB>Whether to use text-overlay.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFPSDisplaySink::video-sink</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>video-sink</NICK>
+<BLURB>Video sink to use (Must only be called on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -26270,7 +26280,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>7.29112e-304</DEFAULT>
+<DEFAULT>1.01856e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26310,7 +26320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>7.29112e-304</DEFAULT>
+<DEFAULT>1.03978e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26320,7 +26330,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>7.29112e-304</DEFAULT>
+<DEFAULT>1.061e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26350,7 +26360,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.57351e-316</DEFAULT>
+<DEFAULT>1.05617e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26360,7 +26370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>1.38588e-316</DEFAULT>
+<DEFAULT>8.87875e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26370,7 +26380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.31882e-310</DEFAULT>
+<DEFAULT>3.50926e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26400,7 +26410,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>6.27068e-38</DEFAULT>
+<DEFAULT>9.36751e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26410,7 +26420,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>2.36943e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26420,7 +26430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>3.50514e-38</DEFAULT>
+<DEFAULT>2.36943e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26520,7 +26530,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Temperature</NICK>
 <BLURB>Noise Temperature.</BLURB>
-<DEFAULT>3.93156e-311</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26750,7 +26760,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6.96745e+252</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26760,7 +26770,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>5.62947e+188</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26770,7 +26780,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6.09249e+247</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26940,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>2.37152e-322</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27130,7 +27140,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.38372e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -32980,6 +32990,846 @@
 <FLAGS>rwx</FLAGS>
 <NICK>threshold</NICK>
 <BLURB>threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ADPCMEnc::blockalign</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[64,8192]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block Align</NICK>
+<BLURB>Block size for output stream.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ADPCMEnc::layout</NAME>
+<TYPE>GstADPCMEncLayout</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Layout</NICK>
+<BLURB>Layout for output stream.</BLURB>
+<DEFAULT>DVI/IMA APDCM</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDataURISrc::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI that should be used.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-primaries::factor</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Factor</NICK>
+<BLURB>influence of mean px value. > 32 = 0.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::black-output</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black output</NICK>
+<BLURB>Black output.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel to adjust levels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::gamma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gamma</NICK>
+<BLURB>Gamma.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::histogram-position</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Histogram position</NICK>
+<BLURB>Histogram position.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::input-black-level</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input black level</NICK>
+<BLURB>Input black level.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::input-white-level</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Input white level</NICK>
+<BLURB>Input white level.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::show-histogram</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show histogram</NICK>
+<BLURB>Show histogram.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-levels::white-output</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White output</NICK>
+<BLURB>White output.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-black-to-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map black to</NICK>
+<BLURB>The color to map source color with null luminance.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-black-to-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map black to</NICK>
+<BLURB>The color to map source color with null luminance.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-black-to-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map black to-R</NICK>
+<BLURB>The color to map source color with null luminance.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-white-to-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map white to</NICK>
+<BLURB>The color to map source color with full luminance.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-white-to-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map white to</NICK>
+<BLURB>The color to map source color with full luminance.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::map-white-to-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Map white to-R</NICK>
+<BLURB>The color to map source color with full luminance.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-tint0r::tint-amount</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tint amount</NICK>
+<BLURB>Amount of color.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-bluescreen0r::color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>The color to make transparent (B G R).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-bluescreen0r::color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>The color to make transparent (B G R).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-bluescreen0r::color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color-R</NICK>
+<BLURB>The color to make transparent (B G R).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-bluescreen0r::distance</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Distance</NICK>
+<BLURB>Distance to Color (127 is good).</BLURB>
+<DEFAULT>127</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::black-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black color</NICK>
+<BLURB>Black color.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::black-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black color</NICK>
+<BLURB>Black color.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::black-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black color-R</NICK>
+<BLURB>Black color.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::gray-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gray color</NICK>
+<BLURB>Gray color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::gray-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gray color</NICK>
+<BLURB>Gray color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::gray-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gray color-R</NICK>
+<BLURB>Gray color.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::source-image-on-left-side</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source image on left side</NICK>
+<BLURB>Source image on left side.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::split-preview</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Split preview</NICK>
+<BLURB>Split privew.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::white-color-b</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White color</NICK>
+<BLURB>White color.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::white-color-g</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White color</NICK>
+<BLURB>White color.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-3-point-color-balance::white-color-r</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White color-R</NICK>
+<BLURB>White color.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-1-move</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1_move</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-1-speed</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>1_speed</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-2-move</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2_move</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-2-speed</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2_speed</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-3-speed</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>3_speed</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-src-plasma::param-4-speed</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>4_speed</NICK>
+<BLURB> .</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vertigo::mode</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>The effect mode.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vertigo::phaseincrement</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PhaseIncrement</NICK>
+<BLURB>Phase increment.</BLURB>
+<DEFAULT>0.02</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-vertigo::zoomrate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Zoomrate</NICK>
+<BLURB>Zoomrate.</BLURB>
+<DEFAULT>1.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::channel</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel to adjust levels (1 = RED; 2 = GREEN; 3 = BLUE; 4 = LUMA).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::curve-point-number</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Curve point number</NICK>
+<BLURB>Number of point to use to build curve.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::graph-position</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Graph position</NICK>
+<BLURB>Output image corner where curve graph will be drawn (1 = TOP,LEFT; 2 = TOP,RIGHT; 3 = BOTTOM,LEFT; 4 = BOTTOM, RIGHT).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-1-input-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 1 input value</NICK>
+<BLURB>Point 1 input value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-1-output-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 1 output value</NICK>
+<BLURB>Point 1 output value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-2-input-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 2 input value</NICK>
+<BLURB>Point 2 input value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-2-output-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 2 output value</NICK>
+<BLURB>Point 2 output value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-3-input-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 3 input value</NICK>
+<BLURB>Point 3 input value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-3-output-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 3 output value</NICK>
+<BLURB>Point 3 output value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-4-input-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 4 input value</NICK>
+<BLURB>Point 4 input value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-4-output-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 4 output value</NICK>
+<BLURB>Point 4 output value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-5-input-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 5 input value</NICK>
+<BLURB>Point 5 input value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::point-5-output-value</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Point 5 output value</NICK>
+<BLURB>Point 5 output value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>frei0r-filter-curves::show-curves</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Show curves</NICK>
+<BLURB>Draw curve graph on output image.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>VdpSink::display</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>VdpSink::handle-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle XEvents</NICK>
+<BLURB>When enabled, XEvents will be selected and handled.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>VdpSink::handle-expose</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle expose</NICK>
+<BLURB>When enabled, the current frame will always be drawn in response to X Expose events.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>VdpSink::pixel-aspect-ratio</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>VdpSink::synchronous</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synchronous</NICK>
+<BLURB>When enabled, runs the X display in synchronous mode. (used only for debugging).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::display</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, the plugin will only scale up the input surface to themaximum size where the aspect ratio can be preserved.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::inverse-telecine</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inverse telecine</NICK>
+<BLURB>Whether inverse telecine should be used.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::method</NAME>
+<TYPE>GstVdpDeinterlaceMethods</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Deinterlace method</NICK>
+<BLURB>Specifies which deinterlace method to use.</BLURB>
+<DEFAULT>Vertically scale a single field to the size of a single frame.</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::mode</NAME>
+<TYPE>GstVdpDeinterlaceModes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Deinterlace mode</NICK>
+<BLURB>Specifies if the element should deinterlace or not.</BLURB>
+<DEFAULT>Auto detection</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::noise-reduction</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise reduction</NICK>
+<BLURB>The amount of noise reduction that should be done.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVdpVideoPostProcess::sharpening</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sharpening</NICK>
+<BLURB>The amount of sharpening or blurring to be applied.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCogcolorspace::color-matrix</NAME>
+<TYPE>CogColorMatrix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color Matrix</NICK>
+<BLURB>Color matrix for YCbCr <-> RGB conversion.</BLURB>
+<DEFAULT>unknown</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCogcolorspace::quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-22-rotator::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-22-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-22-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Virtualmic::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>90</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Virtualmic::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Virtualmic::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Virtualmic::Polar</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Polar</NICK>
+<BLURB>Polar.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-33-rotator::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-33-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-33-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-31-rotator::Angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Angle.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-31-panner::Azimuth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Azimuth</NICK>
+<BLURB>Azimuth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ladspa-Ambisonics-31-panner::Elevation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-90,90]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Elevation</NICK>
+<BLURB>Elevation.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

@@ -490,6 +490,672 @@
       </pads>
     </element>
     <element>
+      <name>ladspa-Ambisonics-22-panner</name>
+      <longname>AMB order 2,2 panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 2,2 panner</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-T</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-S</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-22-rotator</name>
+      <longname>AMB order 2,2 rotator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 2,2 rotator</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-T</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-S</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-V</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-U</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-T</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-S</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-31-panner</name>
+      <longname>AMB order 3,1 panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 3,1 panner</description>
+      <author>Joern Nettingsmeier &lt;nettings@stackingdwarves.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>OUT-Q</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>OUT-P</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-31-rotator</name>
+      <longname>AMB order 3,1 rotator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 3,1 rotator</description>
+      <author>Joern Nettingsmeier &lt;nettings@stackingdwarves.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Q</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-P</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Q</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-P</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-V</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-U</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-33-panner</name>
+      <longname>AMB order 3,3 panner</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 3,3 panner</description>
+      <author>Joern Nettingsmeier &lt;nettings@stackingdwarves.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Q</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-P</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-O</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-N</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-M</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-K</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-T</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-S</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Ambisonics-33-rotator</name>
+      <longname>AMB order 3,3 rotator</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>AMB order 3,3 rotator</description>
+      <author>Joern Nettingsmeier &lt;nettings@stackingdwarves.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Q</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-P</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-O</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-N</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-M</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-K</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-V</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-U</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-T</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-S</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Q</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-P</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-O</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-N</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-M</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-K</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-V</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-U</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-T</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-S</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>ladspa-Chorus1</name>
       <longname>Chorus1 - Based on CSound orchestra by Sean Costello</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -758,7 +1424,7 @@
       <longname>4-band parametric filter</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>4-band parametric filter</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Output</name>
@@ -946,6 +1612,102 @@
         <caps>
           <name>Output</name>
           <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Tricardioid-to-AMB</name>
+      <longname>Three cardioids to AMB matrix</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Three cardioids to AMB matrix</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-Z</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-Y</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-X</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-W</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-B</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-R</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-L</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-Virtualmic</name>
+      <longname>Virtual stereo microphone</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Virtual stereo microphone</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Out-R</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>Out-L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Z</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-Y</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-X</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>In-W</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
         </caps>

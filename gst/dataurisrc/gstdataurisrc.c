@@ -19,6 +19,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-dataurisrc
+ *
+ * dataurisrc handles data: URIs, see <ulink role="online-location" url="http://tools.ietf.org/html/rfc2397">RFC 2397</ulink> for more information.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-0.10 -v dataurisrc uri="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfElEQVQ4je2MwQnAIAxFgziA4EnczIsO4MEROo/gzZWc4xdTbe1R6LGRR74heYS7iKElzfcMiRnt4hf8gk8EayB6luefue/HzlJfCA50XsNjYRxprZmenXNIKSGEsC+QUqK1hhgj521BzhnWWiilUGvdF5RS4L2HMQZCCJy8sHMm2TYdJAAAAABJRU5ErkJggg==" ! pngdec ! ffmpegcolorspace ! freeze ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline displays a small 16x16 PNG image from the data URI.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

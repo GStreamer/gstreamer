@@ -1,0 +1,34 @@
+<plugin>
+  <name>adpcmenc</name>
+  <description>ADPCM encoder</description>
+  <filename>../../gst/adpcmenc/.libs/libgstadpcmenc.so</filename>
+  <basename>libgstadpcmenc.so</basename>
+  <version>0.10.17.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>adpcmenc</name>
+      <longname>ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Encode ADPCM audio</description>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-adpcm, layout=(string){ dvi }, block_align=(int)[ 64, 8192 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, depth=(int)16, width=(int)16, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

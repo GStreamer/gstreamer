@@ -130,6 +130,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audioparsers/gstflacparse.h \
 	$(top_srcdir)/gst/autoconvert/gstautoconvert.h \
 	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
+	$(top_srcdir)/gst/dataurisrc/gstdataurisrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversink.h \

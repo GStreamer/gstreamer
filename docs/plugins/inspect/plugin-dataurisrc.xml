@@ -1,0 +1,28 @@
+<plugin>
+  <name>dataurisrc</name>
+  <description>data: URI source</description>
+  <filename>../../gst/dataurisrc/.libs/libgstdataurisrc.so</filename>
+  <basename>libgstdataurisrc.so</basename>
+  <version>0.10.17.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dataurisrc</name>
+      <longname>data: URI source element</longname>
+      <class>Source</class>
+      <description>Handles data: uris</description>
+      <author>Philippe Normand &lt;pnormand@igalia.com&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

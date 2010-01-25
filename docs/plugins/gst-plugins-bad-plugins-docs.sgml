@@ -29,6 +29,7 @@
     <xi:include href="xml/element-capssetter.xml" />
     <xi:include href="xml/element-celtdec.xml" />
     <xi:include href="xml/element-celtenc.xml" />
+    <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
     <xi:include href="xml/element-dccpclientsink.xml" />
     <xi:include href="xml/element-dccpclientsrc.xml" />
@@ -108,6 +109,7 @@
     <xi:include href="xml/plugin-cdaudio.xml" />
     <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-celt.xml" />
+    <xi:include href="xml/plugin-dataurisrc.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
     <xi:include href="xml/plugin-debugutilsbad.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />

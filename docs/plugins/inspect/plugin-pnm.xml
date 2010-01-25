@@ -11,9 +11,9 @@
   <elements>
     <element>
       <name>pnmdec</name>
-      <longname>PNM converter</longname>
+      <longname>PNM image decoder</longname>
       <class>Codec/Decoder/Image</class>
-      <description>Decodes PNM format</description>
+      <description>Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format</description>
       <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
@@ -26,22 +26,22 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>image/x-image-bitmap; image/x-image-graymap; image/x-image-pixmap; image/x-image-anymap</details>
+          <details>image/x-portable-bitmap; image/x-portable-graymap; image/x-portable-pixmap; image/x-portable-anymap</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>pnmenc</name>
-      <longname>PNM converter</longname>
+      <longname>PNM image encoder</longname>
       <class>Codec/Encoder/Image</class>
-      <description>Encodes in PNM format</description>
+      <description>Encodes images into portable pixmap or graymap (PNM) format</description>
       <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/x-image-bitmap; image/x-image-graymap; image/x-image-pixmap; image/x-image-anymap</details>
+          <details>image/x-portable-bitmap; image/x-portable-graymap; image/x-portable-pixmap; image/x-portable-anymap</details>
         </caps>
         <caps>
           <name>sink</name>
