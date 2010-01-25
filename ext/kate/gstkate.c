@@ -100,7 +100,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
 #ifdef HAVE_TIGER
-  if (!gst_element_register (plugin, "tiger", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "tiger", GST_RANK_PRIMARY,
           GST_TYPE_KATE_TIGER))
     return FALSE;
 #endif
