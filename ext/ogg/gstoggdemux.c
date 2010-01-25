@@ -472,7 +472,8 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
 }
 
 static GstFlowReturn
-gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
+gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
+    gboolean push_headers)
 {
   GstBuffer *buf;
   GstFlowReturn ret, cret;
@@ -639,10 +640,13 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
   pad->last_stop = ogg->segment.last_stop;
 
-  ret = gst_pad_push (GST_PAD_CAST (pad), buf);
+  /* don't push the header packets when we are asked to skip them */
+  if (!packet->b_o_s || push_headers) {
+    ret = gst_pad_push (GST_PAD_CAST (pad), buf);
 
-  /* combine flows */
-  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
+    /* combine flows */
+    cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
+  }
 
   /* we're done with skeleton stuff */
   if (pad->map.is_skeleton)
@@ -839,13 +843,14 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   /* if we are building a chain, store buffer for when we activate
    * it. This path is taken if we operate in streaming mode. */
   if (ogg->building_chain) {
-    /* bos packets where stored in the header list */
+    /* bos packets where stored in the header list so we can discard
+     * them here*/
     if (!packet->b_o_s)
       ret = gst_ogg_demux_queue_data (pad, packet);
   }
   /* else we are completely streaming to the peer */
   else {
-    ret = gst_ogg_demux_chain_peer (pad, packet);
+    ret = gst_ogg_demux_chain_peer (pad, packet, !ogg->pullmode);
   }
   return ret;
 }
@@ -1657,7 +1662,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   GST_DEBUG_OBJECT (ogg, "starting chain");
 
-  /* then send out any headers and queued buffers */
+  /* then send out any headers and queued packets */
   for (i = 0; i < chain->streams->len; i++) {
     GList *walk;
     GstOggPad *pad;
@@ -1665,19 +1670,19 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     pad = g_array_index (chain->streams, GstOggPad *, i);
 
     GST_DEBUG_OBJECT (ogg, "pushing headers");
-    /* ref and push headers */
+    /* push headers */
     for (walk = pad->map.headers; walk; walk = g_list_next (walk)) {
       ogg_packet *p = walk->data;
 
-      gst_ogg_demux_chain_peer (pad, p);
+      gst_ogg_demux_chain_peer (pad, p, TRUE);
     }
 
     GST_DEBUG_OBJECT (ogg, "pushing queued buffers");
-    /* push queued buffers */
+    /* push queued packets */
     for (walk = pad->map.queued; walk; walk = g_list_next (walk)) {
       ogg_packet *p = walk->data;
 
-      gst_ogg_demux_chain_peer (pad, p);
+      gst_ogg_demux_chain_peer (pad, p, TRUE);
       _ogg_packet_free (p);
     }
     /* and free the queued buffers */
