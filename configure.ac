@@ -3,7 +3,7 @@ AC_PREREQ(2.52)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Python Bindings, 0.10.17.1,
+AC_INIT(GStreamer Python Bindings, 0.10.17.2,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-python)
 
