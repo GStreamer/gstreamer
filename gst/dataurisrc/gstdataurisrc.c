@@ -22,7 +22,7 @@
 /**
  * SECTION:element-dataurisrc
  *
- * dataurisrc handles data: URIs, see <ulink role="online-location" url="http://tools.ietf.org/html/rfc2397">RFC 2397</ulink> for more information.
+ * dataurisrc handles data: URIs, see <ulink url="http://tools.ietf.org/html/rfc2397">RFC 2397</ulink> for more information.
  *
  * <refsect2>
  * <title>Example launch line</title>
