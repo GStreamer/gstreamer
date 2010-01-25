@@ -191,15 +191,13 @@ set_filename (GString * name)
   }
 
   if (datadir == NULL) {
-    // FIXME: maemo
-    //#define DEFAULT_IMAGEDIR "$HOME/MyDocs/.images/"
-    //#define DEFAULT_VIDEODIR "$HOME/MyDocs/.videos/"
     gchar *curdir = g_get_current_dir ();
     g_string_prepend (name, curdir);
     g_free (curdir);
   } else {
     g_string_prepend (name, datadir);
   }
+  GST_INFO ("capture to %s", name->str);
 }
 
 /* Write raw image buffer to file if found from message */
