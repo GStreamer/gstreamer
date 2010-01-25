@@ -2551,7 +2551,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
 /* find a pad with a given serial number
  */
 static GstOggPad *
-gst_ogg_demux_find_pad (GstOggDemux * ogg, int serialno)
+gst_ogg_demux_find_pad (GstOggDemux * ogg, glong serialno)
 {
   GstOggPad *pad;
   gint i;
@@ -2583,7 +2583,7 @@ gst_ogg_demux_find_pad (GstOggDemux * ogg, int serialno)
 /* find a chain with a given serial number
  */
 static GstOggChain *
-gst_ogg_demux_find_chain (GstOggDemux * ogg, int serialno)
+gst_ogg_demux_find_chain (GstOggDemux * ogg, glong serialno)
 {
   GstOggPad *pad;
 
@@ -2750,7 +2750,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
 {
   GstOggPad *pad;
   gint64 granule;
-  guint serialno;
+  glong serialno;
   GstFlowReturn result = GST_FLOW_OK;
 
   serialno = ogg_page_serialno (page);
