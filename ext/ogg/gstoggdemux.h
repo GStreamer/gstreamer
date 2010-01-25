@@ -135,7 +135,7 @@ struct _GstOggDemux
   gint64 read_offset;
   gint64 offset;
 
-  gboolean seekable;
+  gboolean pullmode;
   gboolean running;
 
   gboolean need_chains;

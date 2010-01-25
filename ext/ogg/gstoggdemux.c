@@ -244,11 +244,11 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       if (format != GST_FORMAT_TIME)
         goto wrong_format;
 
-      if (ogg->seekable) {
-        /* we must return the total seekable length */
+      if (ogg->pullmode) {
+        /* we must return the total length */
         total_time = ogg->total_time;
       } else {
-        /* in non-seek mode we can answer the query and we must return -1 */
+        /* in push mode we can answer the query and we must return -1 */
         total_time = -1;
       }
 
@@ -261,7 +261,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_TIME) {
-        gst_query_set_seeking (query, GST_FORMAT_TIME, ogg->seekable,
+        gst_query_set_seeking (query, GST_FORMAT_TIME, ogg->pullmode,
             0, ogg->total_time);
       } else {
         res = FALSE;
@@ -297,11 +297,11 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* can't seek if we are not seekable, FIXME could pass the
+      /* can't seek if we are not pullmode, FIXME could pass the
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
-      if (!ogg->seekable) {
-        GST_DEBUG_OBJECT (ogg, "seek on non seekable stream");
+      if (!ogg->pullmode) {
+        GST_DEBUG_OBJECT (ogg, "seek on pull mode stream not implemented yet");
         goto error;
       }
 
@@ -335,11 +335,11 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* can't seek if we are not seekable, FIXME could pass the
+      /* can't seek if we are not pullmode, FIXME could pass the
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
-      if (!ogg->seekable) {
-        GST_DEBUG_OBJECT (ogg, "seek on non seekable stream");
+      if (!ogg->pullmode) {
+        GST_DEBUG_OBJECT (ogg, "seek on pull mode stream not implemented yet");
         goto error;
       }
 
@@ -1583,7 +1583,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   }
   /* if we cannot seek back to the chain, we can destroy the chain 
    * completely */
-  if (!ogg->seekable) {
+  if (!ogg->pullmode) {
     gst_ogg_chain_free (chain);
   }
   ogg->current_chain = NULL;
@@ -2789,8 +2789,8 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       GstOggChain *current_chain;
       gint64 current_time;
 
-      /* this can only happen in non-seekabe mode */
-      if (ogg->seekable)
+      /* this can only happen in push mode */
+      if (ogg->pullmode)
         goto unknown_chain;
 
       current_chain = ogg->current_chain;
@@ -3212,7 +3212,7 @@ gst_ogg_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
 
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
-  ogg->seekable = FALSE;
+  ogg->pullmode = FALSE;
 
   return TRUE;
 }
@@ -3229,7 +3229,7 @@ gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (active) {
     ogg->need_chains = TRUE;
-    ogg->seekable = TRUE;
+    ogg->pullmode = TRUE;
 
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
         sinkpad);
