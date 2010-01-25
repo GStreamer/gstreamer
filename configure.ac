@@ -93,6 +93,7 @@ AC_SUBST(plugindir)
 
 dnl Check for VA-API
 PKG_CHECK_MODULES(LIBVA, [libva])
+PKG_CHECK_MODULES(X11, [x11])
 PKG_CHECK_MODULES(LIBVA_X11, [libva-x11])
 
 dnl Check for SDS extensions to VA-API
