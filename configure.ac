@@ -91,12 +91,12 @@ AC_MSG_RESULT([$GST_PLUGINS_DIR])
 plugindir="$GST_PLUGINS_DIR"
 AC_SUBST(plugindir)
 
-dnl Check for VA API
-PKG_CHECK_MODULES(LIBVA_DEPS, [libva])
-PKG_CHECK_MODULES(LIBVA_X11_DEPS, [libva-x11])
+dnl Check for VA-API
+PKG_CHECK_MODULES(LIBVA, [libva])
+PKG_CHECK_MODULES(LIBVA_X11, [libva-x11])
 
-dnl Check for SDS extensions to VA API
-AC_CACHE_CHECK([for VA API],
+dnl Check for SDS extensions to VA-API
+AC_CACHE_CHECK([for VA-API],
   ac_cv_libva_sds_extensions, [
   saved_CFLAGS="$CFLAGS"
   CFLAGS="$CFLAGS $LIBVA_DEPS_CFLAGS"
@@ -104,14 +104,14 @@ AC_CACHE_CHECK([for VA API],
     #include <va/va_version.h>
     #if VA_MAJOR_VERSION == 0 && VA_MINOR_VERSION == 29
     # if !defined(VA_SDS_VERSION) || (VA_SDS_VERSION < $LIBVA_SDS_VERSION_0_29)
-    #  error "VA API version >= 0.29.0-sds$LIBVA_SDS_VERSION_0_29 is required"
+    #  error "VA-API version >= 0.29.0-sds$LIBVA_SDS_VERSION_0_29 is required"
     # endif
     #elif VA_MAJOR_VERSION == 0 && VA_MINOR_VERSION == 30
     # if !defined(VA_SDS_VERSION) || (VA_SDS_VERSION < $LIBVA_SDS_VERSION_0_30)
-    #  error "VA API version >= 0.30.0-sds$LIBVA_SDS_VERSION_0_30 is required"
+    #  error "VA-API version >= 0.30.0-sds$LIBVA_SDS_VERSION_0_30 is required"
     # endif
     #elif !VA_CHECK_VERSION(0,31,0)
-    # error "VA API version >= 0.31 is required"
+    # error "VA-API version >= 0.31 is required"
     #endif
   ], [],
   [ac_cv_libva_sds_extensions="yes"],
@@ -125,7 +125,7 @@ VA_DRIVER_INIT_FUNC="__vaDriverInit_${VA_MAJOR_VERSION}_${VA_MINOR_VERSION}_sds"
 if test "$ac_cv_libva_sds_extensions" = "yes"; then
     AC_DEFINE_UNQUOTED([VA_DRIVER_INIT_FUNC], [$VA_DRIVER_INIT_FUNC], [Define driver entry-point])
 else
-    AC_MSG_ERROR([Your VA API SDK does not include SDS extensions])
+    AC_MSG_ERROR([Your VA-API SDK does not include SDS extensions])
 fi
 
 AC_OUTPUT([
