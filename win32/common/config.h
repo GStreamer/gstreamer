@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "NULL"
+#define GETTEXT_PACKAGE "gst-plugins-bad-0.10"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -27,7 +27,7 @@
 #define GST_PACKAGE_NAME "GStreamer Bad Plug-ins git"
 
 /* package origin */
-#define GST_PACKAGE_ORIGIN "http://gstreamer.freedesktop.org"
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA

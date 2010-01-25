@@ -524,7 +524,6 @@ mxf_up_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   }
 
   g_assert_not_reached ();
-  return NULL;
 }
 
 static void
