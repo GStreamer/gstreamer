@@ -1891,7 +1891,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
     /* these don't do what one would expect or
      * are only partially functional/useful */
-    if (!strcmp (in_plugin->name, "aac") || !strcmp (in_plugin->name, "wv"))
+    if (!strcmp (in_plugin->name, "aac") ||
+        !strcmp (in_plugin->name, "wv") || !strcmp (in_plugin->name, "ass"))
       goto next;
 
     /* Don't use the typefind functions of formats for which we already have

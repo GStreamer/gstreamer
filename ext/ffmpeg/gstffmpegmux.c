@@ -830,7 +830,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         (!strncmp (in_plugin->name, "image", 5)) ||
         (!strncmp (in_plugin->name, "mulaw", 5)) ||
         (!strncmp (in_plugin->name, "alaw", 4)) ||
-        (!strncmp (in_plugin->name, "h26", 3))
+        (!strncmp (in_plugin->name, "h26", 3)) ||
+        (!strncmp (in_plugin->name, "ass", 3))
         ) {
       GST_LOG ("Ignoring muxer %s", in_plugin->name);
       goto next;
