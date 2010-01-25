@@ -379,6 +379,7 @@ gst_lv2_class_get_param_name (GstLV2Class * klass, gint portnum)
 {
   SLV2Plugin lv2plugin = klass->plugin;
   SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, portnum);
+
   return g_strdup (slv2_value_as_string (slv2_port_get_symbol (lv2plugin,
               port)));
 }
@@ -390,11 +391,21 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
   SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, portnum);
   SLV2Value lv2def, lv2min, lv2max;
   GParamSpec *ret;
-  gchar *name;
+  gchar *name, *nick;
   gint perms;
   gfloat lower = 0.0f, upper = 1.0f, def = 0.0f;
 
-  name = gst_lv2_class_get_param_name (klass, portnum);
+  nick = gst_lv2_class_get_param_name (klass, portnum);
+  name = g_strdup (nick);
+  g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+  if (!((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A'
+              && name[0] <= 'Z'))) {
+    gchar *tempstr = name;
+
+    name = g_strconcat ("param-", name, NULL);
+    g_free (tempstr);
+  }
+
   perms = G_PARAM_READABLE;
   if (slv2_port_is_a (lv2plugin, port, input_class))
     perms |= G_PARAM_WRITABLE | G_PARAM_CONSTRUCT;
@@ -402,9 +413,8 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
     perms |= GST_PARAM_CONTROLLABLE;
 
   if (slv2_port_has_property (lv2plugin, port, toggled_prop)) {
-    ret = g_param_spec_boolean (name, name, name, FALSE, perms);
-    g_free (name);
-    return ret;
+    ret = g_param_spec_boolean (name, nick, nick, FALSE, perms);
+    goto done;
   }
 
   slv2_port_get_range (lv2plugin, port, &lv2def, &lv2min, &lv2max);
@@ -433,11 +443,13 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
   }
 
   if (slv2_port_has_property (lv2plugin, port, integer_prop))
-    ret = g_param_spec_int (name, name, name, lower, upper, def, perms);
+    ret = g_param_spec_int (name, nick, nick, lower, upper, def, perms);
   else
-    ret = g_param_spec_float (name, name, name, lower, upper, def, perms);
+    ret = g_param_spec_float (name, nick, nick, lower, upper, def, perms);
 
+done:
   g_free (name);
+  g_free (nick);
 
   return ret;
 }
