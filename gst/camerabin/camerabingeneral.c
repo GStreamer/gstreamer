@@ -40,14 +40,17 @@ GST_DEBUG_CATEGORY (gst_camerabin_debug);
  *
  * Adds given element to given @bin. Looks for an unconnected src pad
  * from the @bin and links the element to it.  Raises an error if adding
- * or linking failed.
+ * or linking failed. Unrefs the element in the case of an error.
  *
  * Returns: %TRUE if adding and linking succeeded, %FALSE otherwise.
  */
 gboolean
 gst_camerabin_add_element (GstBin * bin, GstElement * new_elem)
 {
-  gboolean ret = FALSE;
+  gboolean ret;
+
+  g_return_val_if_fail (bin, FALSE);
+  g_return_val_if_fail (new_elem, FALSE);
 
   ret = gst_camerabin_try_add_element (bin, new_elem);
 
@@ -56,6 +59,7 @@ gst_camerabin_add_element (GstBin * bin, GstElement * new_elem)
     GST_ELEMENT_ERROR (bin, CORE, NEGOTIATION, (NULL),
         ("linking %s failed", elem_name));
     g_free (elem_name);
+    gst_object_unref (new_elem);
   }
 
   return ret;
@@ -78,9 +82,8 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
   GstElement *bin_elem;
   gboolean ret = TRUE;
 
-  if (!bin || !new_elem) {
-    return FALSE;
-  }
+  g_return_val_if_fail (bin, FALSE);
+  g_return_val_if_fail (new_elem, FALSE);
 
   /* Get pads for linking */
   bin_pad = gst_bin_find_unlinked_pad (bin, GST_PAD_SRC);
@@ -93,6 +96,7 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
     bin_elem = gst_pad_get_parent_element (bin_pad);
     gst_object_unref (bin_pad);
     if (!gst_element_link (bin_elem, new_elem)) {
+      gst_object_ref (new_elem);
       gst_bin_remove (bin, new_elem);
       ret = FALSE;
     }
@@ -119,6 +123,9 @@ GstElement *
 gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name)
 {
   GstElement *new_elem;
+
+  g_return_val_if_fail (bin, FALSE);
+  g_return_val_if_fail (elem_name, FALSE);
 
   new_elem = gst_element_factory_make (elem_name, NULL);
   if (!new_elem) {
