@@ -349,8 +349,7 @@ gst_qt_mux_finalize (GObject * object)
 
   gst_qt_mux_reset (qtmux, FALSE);
 
-  if (qtmux->fast_start_file_path)
-    g_free (qtmux->fast_start_file_path);
+  g_free (qtmux->fast_start_file_path);
 
   atoms_context_free (qtmux->context);
   gst_object_unref (qtmux->collect);
@@ -2448,10 +2447,8 @@ gst_qt_mux_generate_fast_start_file_path (GstQTMux * qtmux)
 {
   gchar *tmp;
 
-  if (qtmux->fast_start_file_path) {
-    g_free (qtmux->fast_start_file_path);
-    qtmux->fast_start_file_path = NULL;
-  }
+  g_free (qtmux->fast_start_file_path);
+  qtmux->fast_start_file_path = NULL;
 
   tmp = g_strdup_printf ("%s%d", "qtmux", g_random_int ());
   qtmux->fast_start_file_path = g_build_filename (g_get_tmp_dir (), tmp, NULL);
@@ -2479,9 +2476,7 @@ gst_qt_mux_set_property (GObject * object,
       qtmux->fast_start = g_value_get_boolean (value);
       break;
     case PROP_FAST_START_TEMP_FILE:
-      if (qtmux->fast_start_file_path) {
-        g_free (qtmux->fast_start_file_path);
-      }
+      g_free (qtmux->fast_start_file_path);
       qtmux->fast_start_file_path = g_value_dup_string (value);
       /* NULL means to generate a random one */
       if (!qtmux->fast_start_file_path) {
