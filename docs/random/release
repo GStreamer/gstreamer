@@ -7,7 +7,6 @@ Development period is marked by having a fourth (nano) version number of 1.
 During development anything goes short of wiping the tree.
 Just try doing a few basic things :
 - make sure it builds for you !
-- check what you're about to commit with cvs -Q diff -r
 - preferably, keep an anonymous checkout around as well so you can
   immediately update and check if your changes work in a clean tree as well
 
@@ -26,9 +25,11 @@ Also, this should only be allowed after passing a few sanity checks :
 - FIXME: should debs be built here ? If so, how ?
 
 At this time, we need to do a few prereleases for general checking by all
-interested developers.  To minimize the impact on the rest of the core hacking,
-we create a new CVS branch which will go through the pre-releases and finally
-contain the definitive tarball for that version.
+interested developers. The git modules that are in the process of being
+released are usually frozen for commits during that time, until the final
+release is made. We intentionally don't do releases in separate branches to
+make sure everyone is focused on testing the code that is about to be released.
+
 
 RELEASE PROCEDURE:
 -----------------
@@ -42,10 +43,11 @@ RELEASE PROCEDURE:
   - run 'make download-po' to make sure translations in CVS are up-to-date,
     and then 'make update-po' in po/ (which will update the .pot template too
     and merge the changes into the .po files)
+  - run 'make win32-update' where applicable
   - Make one or more prereleases
     - Make sure you've got the latest clean CVS of the module
     - Run bin/data-get in www/ to sync data from website
-    - Bump the nano number to > 2 (eg, first pre-release for 
+    - Bump the nano number to >= 2 (eg, first pre-release for 
       0.10.12 is 0.10.11.2)
     - When releasing -base/-good/-ugly/-bad/gnonlin, make sure GST_REQ and
       GST_PBREQ are up-to-date. In particular, keep GST_REQ of the
