@@ -2865,7 +2865,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   }
 
   /* Get caps between all elements in this chain */
-  l = (chain->elements && chain->elements->next) ? chain->elements->next : NULL;
+  l = (chain->elements && chain->elements->next) ? chain->elements : NULL;
   for (; l && l->next; l = l->next) {
     GstCaps *caps = _gst_element_get_linked_caps (l->next->data, l->data);
 
