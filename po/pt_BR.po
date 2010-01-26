@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.22.2\n"
+"Project-Id-Version: gstreamer-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-06 20:08+0000\n"
-"PO-Revision-Date: 2009-04-16 21:51-0300\n"
+"POT-Creation-Date: 2010-01-26 17:05+0000\n"
+"PO-Revision-Date: 2009-11-05 01:18-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "MIME-Version: 1.0\n"
@@ -129,6 +129,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Erro no GStreamer: falha ao alterar estado e algum elemento falhou ao enviar "
+"uma mensagem de erro apropriada com a razão da falha."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Erro interno no GStreamer: problema no Pad."
@@ -210,8 +212,7 @@ msgid "Could not synchronize on resource."
 msgstr "Não foi possível sincronizar no recurso."
 
 msgid "Could not get/set settings from/on resource."
-msgstr ""
-"Não foi possível obter, ou definir, configurações para, ou do, recurso."
+msgstr "Não foi possível obter/definir configurações para/do recurso."
 
 msgid "No space left on the resource."
 msgstr "Não foi deixado espaço no recurso."
@@ -221,7 +222,7 @@ msgstr "O GStreamer encontrou um erro geral no fluxo."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
-"O elemento não implementa a manipulação desse fluxo. Por favor, reporte o "
+"O elemento não implementa a manipulação desse fluxo. Por favor, relate o "
 "erro."
 
 msgid "Could not determine type of stream."
@@ -246,10 +247,10 @@ msgid "Could not multiplex stream."
 msgstr "Não foi possível multiplexar o fluxo."
 
 msgid "The stream is in the wrong format."
-msgstr "Esse fluxo está com o formato errado."
+msgstr "Esse fluxo está com um formato errado."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "O fluxo está criptografado e descriptografação não é suportada."
+msgstr "O fluxo está criptografado e não há suporte a descriptografação."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
@@ -264,7 +265,7 @@ msgstr "Nenhuma mensagem de erro para o domínio %s."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Nenhuma mensagem de erro padrão para o domínio %s e código %d."
+msgstr "Nenhuma mensagem de erro predefinida para o domínio %s e código %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
@@ -306,31 +307,29 @@ msgstr "álbum para ordenação"
 msgid "album containing this data for sorting purposes"
 msgstr "álbum contendo esses dados, para ordenação"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artista"
+msgstr "artista do álbum"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "O artista de todo álbum, como ele deveria ser exibido"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "artista para ordenação"
+msgstr "artista do álbum para ordenação"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "O artista de todo álbum, como ele deveria ser ordenado"
 
 msgid "date"
 msgstr "data"
 
 msgid "date the data was created (as a GDate structure)"
-msgstr "data que os dados foram criados (como uma estrutura GDate)"
+msgstr "data que os dados foram criados (estrutura GDate)"
 
 msgid "genre"
 msgstr "gênero"
 
 msgid "genre this data belongs to"
-msgstr "gênero ao qual este dado pertence"
+msgstr "gênero que este dado pertence"
 
 msgid "comment"
 msgstr "comentário"
@@ -356,7 +355,7 @@ msgid "track count"
 msgstr "número de faixas"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "número de faixas dentro da coleção a qual esta faixa pertence"
+msgstr "número de faixas dentro da coleção que esta faixa pertence"
 
 msgid "disc number"
 msgstr "número do disco"
@@ -368,7 +367,7 @@ msgid "disc count"
 msgstr "número de discos"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "número de discos dentro da coleção o qual este disco pertence"
+msgstr "número de discos dentro da coleção que este disco pertence"
 
 msgid "location"
 msgstr "local"
@@ -443,7 +442,7 @@ msgid "performer"
 msgstr "participação"
 
 msgid "person(s) performing"
-msgstr "pessoa(s) participantes"
+msgstr "pessoa(s) participante(s)"
 
 msgid "composer"
 msgstr "compositor"
@@ -481,13 +480,11 @@ msgstr "CODEC de legenda"
 msgid "codec the subtitle data is stored in"
 msgstr "CODEC de legenda usado nos dados"
 
-#, fuzzy
 msgid "container format"
-msgstr "informação de contato"
+msgstr "formato do contêiner"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "CODEC usado nos dados"
+msgstr "formato do contêiner usado para os dados"
 
 msgid "bitrate"
 msgstr "taxa de bits"
@@ -600,12 +597,11 @@ msgstr "palavras-chave separadas por vírgula descrevendo o conteúdo"
 msgid "geo location name"
 msgstr "nome da localização geográfica"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
-"localização ou onde a mídia foi gravada ou produzida descritiva e legível"
+"descrição legível da localização de onde a mídia foi gravada ou produzida"
 
 msgid "geo location latitude"
 msgstr "latitude da localização geográfica"
@@ -701,7 +697,7 @@ msgstr "o arquivo \"%s\" está vazio, operação não permitida"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "nenhum Bin \"%s\", cancelando"
+msgstr "nenhum arquivo \"%s\", cancelando"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -723,7 +719,7 @@ msgstr "nenhum elemento \"%s\""
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "não foi possível validar o Caps \"%s\""
+msgstr "não foi possível analisar o Caps \"%s\""
 
 msgid "link without source element"
 msgstr "vínculo sem o elemento fonte"
@@ -757,7 +753,7 @@ msgid "Internal data flow error."
 msgstr "Erro interno no fluxo de dados."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Uma grande quantidade de buffers está sendo descartada."
 
 msgid "Internal data flow problem."
 msgstr "Problema interno no fluxo de dados."
@@ -943,21 +939,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVISO: o elemento com o nome \"%s\" não foi encontrado.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+msgstr "Obtida a mensagem #%u do elemento \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+msgstr "Obtida a mensagem #%u do Pad \"%s:%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Obtida mensagem do elemento \"%s\" (%s): "
+msgstr "Obtida a mensagem #%u do objeto \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Obtida mensagem #%"
+msgstr "Obtida a mensagem #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -967,16 +963,16 @@ msgstr "Obtido o final do fluxo do elemento \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+msgstr "ETIQ. ENCONTR. : encontrada pelo Pad \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+msgstr "ETIQ. ENCONTR. : encontrada pelo objeto \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ETIQUETA ENCONTRADA\n"
 
 #, c-format
 msgid ""
