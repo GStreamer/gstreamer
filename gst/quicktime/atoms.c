@@ -48,6 +48,39 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
 
+
+/* storage helpers */
+
+#define atom_array_init(array, reserve)                                       \
+G_STMT_START {                                                                \
+  (array)->len = 0;                                                           \
+  (array)->size = reserve;                                                    \
+  (array)->data = g_malloc (sizeof (*(array)->data) * reserve);               \
+} G_STMT_END
+
+#define atom_array_append(array, elmt, inc)                                   \
+G_STMT_START {                                                                \
+  g_assert ((array)->data);                                                   \
+  g_assert (inc > 0);                                                         \
+  if (G_UNLIKELY ((array)->len == (array)->size)) {                           \
+    (array)->size += inc;                                                     \
+    (array)->data =                                                           \
+        g_realloc ((array)->data, sizeof (*((array)->data)) * (array)->size); \
+  }                                                                           \
+  (array)->data[(array)->len] = elmt;                                         \
+  (array)->len++;                                                             \
+} G_STMT_END
+
+#define atom_array_get_len(array)                  ((array)->len)
+#define atom_array_index(array, index)             ((array)->data[index])
+
+#define atom_array_clear(array)                                               \
+G_STMT_START {                                                                \
+  (array)->size = (array)->len = 0;                                           \
+  g_free ((array)->data);                                                     \
+  (array)->data = NULL;                                                       \
+} G_STMT_END
+
 /**
  * Creates a new AtomsContext for the given flavor.
  */
@@ -505,7 +538,7 @@ atom_ctts_init (AtomCTTS * ctts)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&ctts->header, FOURCC_ctts, 0, 0, 0, flags);
-  ctts->entries = NULL;
+  atom_array_init (&ctts->entries, 128);
 }
 
 static AtomCTTS *
@@ -520,18 +553,8 @@ atom_ctts_new ()
 static void
 atom_ctts_free (AtomCTTS * ctts)
 {
-  GList *walker;
-
   atom_full_clear (&ctts->header);
-  walker = ctts->entries;
-  while (walker) {
-    GList *aux = walker;
-
-    walker = g_list_next (walker);
-    ctts->entries = g_list_remove_link (ctts->entries, aux);
-    g_free ((CTTSEntry *) aux->data);
-    g_list_free (aux);
-  }
+  atom_array_clear (&ctts->entries);
   g_free (ctts);
 }
 
@@ -541,25 +564,14 @@ atom_stts_init (AtomSTTS * stts)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&stts->header, FOURCC_stts, 0, 0, 0, flags);
-  stts->entries = NULL;
+  atom_array_init (&stts->entries, 512);
 }
 
 static void
 atom_stts_clear (AtomSTTS * stts)
 {
-  GList *walker;
-
   atom_full_clear (&stts->header);
-  walker = stts->entries;
-  while (walker) {
-    GList *aux = walker;
-
-    walker = g_list_next (walker);
-    stts->entries = g_list_remove_link (stts->entries, aux);
-    g_free ((STTSEntry *) aux->data);
-    g_list_free (aux);
-  }
-  stts->n_entries = 0;
+  atom_array_clear (&stts->entries);
 }
 
 static void
@@ -568,17 +580,16 @@ atom_stsz_init (AtomSTSZ * stsz)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&stsz->header, FOURCC_stsz, 0, 0, 0, flags);
+  atom_array_init (&stsz->entries, 1024);
   stsz->sample_size = 0;
   stsz->table_size = 0;
-  stsz->entries = NULL;
 }
 
 static void
 atom_stsz_clear (AtomSTSZ * stsz)
 {
   atom_full_clear (&stsz->header);
-  g_list_free (stsz->entries);
-  stsz->entries = NULL;
+  atom_array_clear (&stsz->entries);
   stsz->table_size = 0;
 }
 
@@ -588,26 +599,14 @@ atom_stsc_init (AtomSTSC * stsc)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&stsc->header, FOURCC_stsc, 0, 0, 0, flags);
-  stsc->entries = NULL;
-  stsc->n_entries = 0;
+  atom_array_init (&stsc->entries, 128);
 }
 
 static void
 atom_stsc_clear (AtomSTSC * stsc)
 {
-  GList *walker;
-
   atom_full_clear (&stsc->header);
-  walker = stsc->entries;
-  while (walker) {
-    GList *aux = walker;
-
-    walker = g_list_next (walker);
-    stsc->entries = g_list_remove_link (stsc->entries, aux);
-    g_free ((STSCEntry *) aux->data);
-    g_list_free (aux);
-  }
-  stsc->n_entries = 0;
+  atom_array_clear (&stsc->entries);
 }
 
 static void
@@ -616,26 +615,14 @@ atom_co64_init (AtomSTCO64 * co64)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&co64->header, FOURCC_co64, 0, 0, 0, flags);
-  co64->entries = NULL;
-  co64->n_entries = 0;
+  atom_array_init (&co64->entries, 256);
 }
 
 static void
 atom_stco64_clear (AtomSTCO64 * stco64)
 {
-  GList *walker;
-
   atom_full_clear (&stco64->header);
-  walker = stco64->entries;
-  while (walker) {
-    GList *aux = walker;
-
-    walker = g_list_next (walker);
-    stco64->entries = g_list_remove_link (stco64->entries, aux);
-    g_free ((guint64 *) aux->data);
-    g_list_free (aux);
-  }
-  stco64->n_entries = 0;
+  atom_array_clear (&stco64->entries);
 }
 
 static void
@@ -644,17 +631,14 @@ atom_stss_init (AtomSTSS * stss)
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&stss->header, FOURCC_stss, 0, 0, 0, flags);
-  stss->entries = NULL;
-  stss->n_entries = 0;
+  atom_array_init (&stss->entries, 128);
 }
 
 static void
 atom_stss_clear (AtomSTSS * stss)
 {
   atom_full_clear (&stss->header);
-  g_list_free (stss->entries);
-  stss->entries = NULL;
-  stss->n_entries = 0;
+  atom_array_clear (&stss->entries);
 }
 
 static void
@@ -1565,18 +1549,18 @@ atom_stts_copy_data (AtomSTTS * stts, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
 
   if (!atom_full_copy_data (&stts->header, buffer, size, offset)) {
     return 0;
   }
 
-  prop_copy_uint32 (stts->n_entries, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&stts->entries), buffer, size, offset);
   /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 8 * stts->n_entries);
-  for (walker = g_list_last (stts->entries); walker != NULL;
-      walker = g_list_previous (walker)) {
-    STTSEntry *entry = (STTSEntry *) walker->data;
+  prop_copy_ensure_buffer (buffer, size, offset,
+      8 * atom_array_get_len (&stts->entries));
+  for (i = 0; i < atom_array_get_len (&stts->entries); i++) {
+    STTSEntry *entry = &atom_array_index (&stts->entries, i);
 
     prop_copy_uint32 (entry->sample_count, buffer, size, offset);
     prop_copy_int32 (entry->sample_delta, buffer, size, offset);
@@ -1749,7 +1733,7 @@ atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
 
   if (!atom_full_copy_data (&stsz->header, buffer, size, offset)) {
     return 0;
@@ -1760,9 +1744,10 @@ atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
   /* minimize realloc */
   prop_copy_ensure_buffer (buffer, size, offset, 4 * stsz->table_size);
   if (stsz->sample_size == 0) {
-    for (walker = g_list_last (stsz->entries); walker != NULL;
-        walker = g_list_previous (walker)) {
-      prop_copy_uint32 ((guint32) GPOINTER_TO_UINT (walker->data), buffer, size,
+    /* entry count must match sample count */
+    g_assert (atom_array_get_len (&stsz->entries) == stsz->table_size);
+    for (i = 0; i < atom_array_get_len (&stsz->entries); i++) {
+      prop_copy_uint32 (atom_array_index (&stsz->entries, i), buffer, size,
           offset);
     }
   }
@@ -1776,19 +1761,19 @@ atom_stsc_copy_data (AtomSTSC * stsc, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
 
   if (!atom_full_copy_data (&stsc->header, buffer, size, offset)) {
     return 0;
   }
 
-  prop_copy_uint32 (stsc->n_entries, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&stsc->entries), buffer, size, offset);
   /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 12 * stsc->n_entries);
+  prop_copy_ensure_buffer (buffer, size, offset,
+      12 * atom_array_get_len (&stsc->entries));
 
-  for (walker = g_list_last (stsc->entries); walker != NULL;
-      walker = g_list_previous (walker)) {
-    STSCEntry *entry = (STSCEntry *) walker->data;
+  for (i = 0; i < atom_array_get_len (&stsc->entries); i++) {
+    STSCEntry *entry = &atom_array_index (&stsc->entries, i);
 
     prop_copy_uint32 (entry->first_chunk, buffer, size, offset);
     prop_copy_uint32 (entry->samples_per_chunk, buffer, size, offset);
@@ -1804,18 +1789,18 @@ atom_ctts_copy_data (AtomCTTS * ctts, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
 
   if (!atom_full_copy_data (&ctts->header, buffer, size, offset)) {
     return 0;
   }
 
-  prop_copy_uint32 (ctts->n_entries, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&ctts->entries), buffer, size, offset);
   /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 8 * ctts->n_entries);
-  for (walker = g_list_last (ctts->entries); walker != NULL;
-      walker = g_list_previous (walker)) {
-    CTTSEntry *entry = (CTTSEntry *) walker->data;
+  prop_copy_ensure_buffer (buffer, size, offset,
+      8 * atom_array_get_len (&ctts->entries));
+  for (i = 0; i < atom_array_get_len (&ctts->entries); i++) {
+    CTTSEntry *entry = &atom_array_index (&ctts->entries, i);
 
     prop_copy_uint32 (entry->samplecount, buffer, size, offset);
     prop_copy_uint32 (entry->sampleoffset, buffer, size, offset);
@@ -1830,20 +1815,21 @@ atom_stco64_copy_data (AtomSTCO64 * stco64, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
   gboolean trunc_to_32 = stco64->header.header.type == FOURCC_stco;
 
   if (!atom_full_copy_data (&stco64->header, buffer, size, offset)) {
     return 0;
   }
 
-  prop_copy_uint32 (stco64->n_entries, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&stco64->entries), buffer, size,
+      offset);
 
   /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 8 * stco64->n_entries);
-  for (walker = g_list_last (stco64->entries); walker != NULL;
-      walker = g_list_previous (walker)) {
-    guint64 *value = (guint64 *) walker->data;
+  prop_copy_ensure_buffer (buffer, size, offset,
+      8 * atom_array_get_len (&stco64->entries));
+  for (i = 0; i < atom_array_get_len (&stco64->entries); i++) {
+    guint64 *value = &atom_array_index (&stco64->entries, i);
 
     if (trunc_to_32) {
       prop_copy_uint32 ((guint32) * value, buffer, size, offset);
@@ -1861,9 +1847,9 @@ atom_stss_copy_data (AtomSTSS * stss, guint8 ** buffer, guint64 * size,
     guint64 * offset)
 {
   guint64 original_offset = *offset;
-  GList *walker;
+  guint i;
 
-  if (stss->entries == NULL) {
+  if (atom_array_get_len (&stss->entries) == 0) {
     /* FIXME not needing this atom might be confused with error while copying */
     return 0;
   }
@@ -1872,12 +1858,12 @@ atom_stss_copy_data (AtomSTSS * stss, guint8 ** buffer, guint64 * size,
     return 0;
   }
 
-  prop_copy_uint32 (stss->n_entries, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&stss->entries), buffer, size, offset);
   /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 4 * stss->n_entries);
-  for (walker = g_list_last (stss->entries); walker != NULL;
-      walker = g_list_previous (walker)) {
-    prop_copy_uint32 ((guint32) GPOINTER_TO_UINT (walker->data), buffer, size,
+  prop_copy_ensure_buffer (buffer, size, offset,
+      4 * atom_array_get_len (&stss->entries));
+  for (i = 0; i < atom_array_get_len (&stss->entries); i++) {
+    prop_copy_uint32 (atom_array_index (&stss->entries, i), buffer, size,
         offset);
   }
 
@@ -1964,7 +1950,7 @@ atom_stbl_copy_data (AtomSTBL * stbl, guint8 ** buffer, guint64 * size,
   }
   /* this atom is optional, so let's check if we need it
    * (to avoid false error) */
-  if (stbl->stss.entries) {
+  if (atom_array_get_len (&stbl->stss.entries)) {
     if (!atom_stss_copy_data (&stbl->stss, buffer, size, offset)) {
       return 0;
     }
@@ -2344,59 +2330,40 @@ atom_wave_copy_data (AtomWAVE * wave, guint8 ** buffer,
 
 /* add samples to tables */
 
-static STSCEntry *
-stsc_entry_new (guint32 first_chunk, guint32 samples, guint32 desc_index)
-{
-  STSCEntry *entry = g_new0 (STSCEntry, 1);
-
-  entry->first_chunk = first_chunk;
-  entry->samples_per_chunk = samples;
-  entry->sample_description_index = desc_index;
-  return entry;
-}
-
 static void
 atom_stsc_add_new_entry (AtomSTSC * stsc, guint32 first_chunk, guint32 nsamples)
 {
-  if (stsc->entries &&
-      ((STSCEntry *) stsc->entries->data)->samples_per_chunk == nsamples)
+  STSCEntry nentry;
+  gint len;
+
+  if ((len = atom_array_get_len (&stsc->entries)) &&
+      ((atom_array_index (&stsc->entries, len - 1)).samples_per_chunk ==
+          nsamples))
     return;
 
-  stsc->entries =
-      g_list_prepend (stsc->entries, stsc_entry_new (first_chunk, nsamples, 1));
-  stsc->n_entries++;
-}
-
-static STTSEntry *
-stts_entry_new (guint32 sample_count, gint32 sample_delta)
-{
-  STTSEntry *entry = g_new0 (STTSEntry, 1);
-
-  entry->sample_count = sample_count;
-  entry->sample_delta = sample_delta;
-  return entry;
+  nentry.first_chunk = first_chunk;
+  nentry.samples_per_chunk = nsamples;
+  nentry.sample_description_index = 1;
+  atom_array_append (&stsc->entries, nentry, 128);
 }
 
 static void
 atom_stts_add_entry (AtomSTTS * stts, guint32 sample_count, gint32 sample_delta)
 {
-  STTSEntry *entry;
+  STTSEntry *entry = NULL;
 
-  if (stts->entries == NULL) {
-    stts->entries =
-        g_list_prepend (stts->entries, stts_entry_new (sample_count,
-            sample_delta));
-    stts->n_entries++;
-    return;
-  }
-  entry = (STTSEntry *) g_list_first (stts->entries)->data;
-  if (entry->sample_delta == sample_delta) {
+  if (G_LIKELY (atom_array_get_len (&stts->entries) != 0))
+    entry = &atom_array_index (&stts->entries,
+        atom_array_get_len (&stts->entries) - 1);
+
+  if (entry && entry->sample_delta == sample_delta) {
     entry->sample_count += sample_count;
   } else {
-    stts->entries =
-        g_list_prepend (stts->entries, stts_entry_new (sample_count,
-            sample_delta));
-    stts->n_entries++;
+    STTSEntry nentry;
+
+    nentry.sample_count = sample_count;
+    nentry.sample_delta = sample_delta;
+    atom_array_append (&stts->entries, nentry, 256);
   }
 }
 
@@ -2411,31 +2378,26 @@ atom_stsz_add_entry (AtomSTSZ * stsz, guint32 nsamples, guint32 size)
     return;
   }
   for (i = 0; i < nsamples; i++) {
-    stsz->entries = g_list_prepend (stsz->entries, GUINT_TO_POINTER (size));
+    atom_array_append (&stsz->entries, size, 1024);
   }
 }
 
 static guint32
 atom_stco64_get_entry_count (AtomSTCO64 * stco64)
 {
-  return stco64->n_entries;
+  return atom_array_get_len (&stco64->entries);
 }
 
 static void
 atom_stco64_add_entry (AtomSTCO64 * stco64, guint64 entry)
 {
-  guint64 *pont = g_new (guint64, 1);
-
-  *pont = entry;
-  stco64->entries = g_list_prepend (stco64->entries, pont);
-  stco64->n_entries++;
+  atom_array_append (&stco64->entries, entry, 256);
 }
 
 static void
 atom_stss_add_entry (AtomSTSS * stss, guint32 sample)
 {
-  stss->entries = g_list_prepend (stss->entries, GUINT_TO_POINTER (sample));
-  stss->n_entries++;
+  atom_array_append (&stss->entries, sample, 512);
 }
 
 static void
@@ -2449,19 +2411,18 @@ atom_stbl_add_stss_entry (AtomSTBL * stbl)
 static void
 atom_ctts_add_entry (AtomCTTS * ctts, guint32 nsamples, guint32 offset)
 {
-  GList *walker;
-  CTTSEntry *entry;
+  CTTSEntry *entry = NULL;
 
-  walker = g_list_first (ctts->entries);
-  entry = (walker == NULL) ? NULL : (CTTSEntry *) walker->data;
+  if (G_LIKELY (atom_array_get_len (&ctts->entries) != 0))
+    entry = &atom_array_index (&ctts->entries,
+        atom_array_get_len (&ctts->entries) - 1);
 
   if (entry == NULL || entry->sampleoffset != offset) {
-    CTTSEntry *entry = g_new0 (CTTSEntry, 1);
+    CTTSEntry nentry;
 
-    entry->samplecount = nsamples;
-    entry->sampleoffset = offset;
-    ctts->entries = g_list_prepend (ctts->entries, entry);
-    ctts->n_entries++;
+    nentry.samplecount = nsamples;
+    nentry.sampleoffset = offset;
+    atom_array_append (&ctts->entries, nentry, 256);
   } else {
     entry->samplecount += nsamples;
   }
@@ -2524,14 +2485,13 @@ atom_trak_get_duration (AtomTRAK * trak)
 static guint64
 atom_stts_get_total_duration (AtomSTTS * stts)
 {
-  GList *walker = stts->entries;
+  guint i;
   guint64 sum = 0;
 
-  while (walker) {
-    STTSEntry *entry = (STTSEntry *) walker->data;
+  for (i = 0; i < atom_array_get_len (&stts->entries); i++) {
+    STTSEntry *entry = &atom_array_index (&stts->entries, i);
 
     sum += (guint64) (entry->sample_count) * entry->sample_delta;
-    walker = g_list_next (walker);
   }
   return sum;
 }
@@ -2618,13 +2578,12 @@ atom_moov_set_64bits (AtomMOOV * moov, gboolean large_file)
 static void
 atom_stco64_chunks_add_offset (AtomSTCO64 * stco64, guint32 offset)
 {
-  GList *entries = stco64->entries;
+  guint i;
 
-  while (entries) {
-    guint64 *value = (guint64 *) entries->data;
+  for (i = 0; i < atom_array_get_len (&stco64->entries); i++) {
+    guint64 *value = &atom_array_index (&stco64->entries, i);
 
     *value += offset;
-    entries = g_list_next (entries);
   }
 }
 

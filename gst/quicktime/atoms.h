@@ -51,6 +51,14 @@
 #include "fourcc.h"
 #include "ftypcc.h"
 
+/* helper storage struct */
+#define ATOM_ARRAY(struct_type) \
+struct { \
+  guint size; \
+  guint len; \
+  struct_type *data; \
+}
+
 /* light-weight context that may influence header atom tree construction */
 typedef enum _AtomsTreeFlavor
 {
@@ -257,18 +265,14 @@ typedef struct _AtomSTTS
 {
   AtomFull header;
 
-  guint n_entries;
-  /* list of STTSEntry */
-  GList *entries;
+  ATOM_ARRAY (STTSEntry) entries;
 } AtomSTTS;
 
 typedef struct _AtomSTSS
 {
   AtomFull header;
 
-  guint n_entries;
-  /* list of sample indexes (guint32) */
-  GList *entries;
+  ATOM_ARRAY (guint32) entries;
 } AtomSTSS;
 
 typedef struct _AtomESDS
@@ -388,8 +392,7 @@ typedef struct _AtomSTSZ
   /* need the size here because when sample_size is constant,
    * the list is empty */
   guint32 table_size;
-  /* list of guint32 */
-  GList *entries;
+  ATOM_ARRAY (guint32) entries;
 } AtomSTSZ;
 
 typedef struct _STSCEntry
@@ -403,9 +406,7 @@ typedef struct _AtomSTSC
 {
   AtomFull header;
 
-  guint n_entries;
-  /* list of STSCEntry */
-  GList *entries;
+  ATOM_ARRAY (STSCEntry) entries;
 } AtomSTSC;
 
 
@@ -417,9 +418,7 @@ typedef struct _AtomSTCO64
 {
   AtomFull header;
 
-  guint n_entries;
-  /* list of guint64 */
-  GList *entries;
+  ATOM_ARRAY (guint64) entries;
 } AtomSTCO64;
 
 typedef struct _CTTSEntry
@@ -433,8 +432,7 @@ typedef struct _AtomCTTS
   AtomFull header;
 
   /* also entry count here */
-  guint n_entries;
-  GList *entries;
+  ATOM_ARRAY (CTTSEntry) entries;
 } AtomCTTS;
 
 typedef struct _AtomSTBL
