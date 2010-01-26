@@ -166,6 +166,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   ShmPipe *self = spalloc_new (ShmPipe);
   int flags;
   struct sockaddr_un sun;
+  int i = 0;
 
   memset (self, 0, sizeof (ShmPipe));
 
@@ -188,12 +189,19 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   sun.sun_family = AF_UNIX;
   strncpy (sun.sun_path, path, sizeof (sun.sun_path));
 
-  if (bind (self->main_socket, (struct sockaddr *) &sun,
+  while (bind (self->main_socket, (struct sockaddr *) &sun,
           sizeof (struct sockaddr_un)) < 0) {
-    RETURN_ERROR ("bind() failed (%d): %s\n", errno, strerror (errno));
+    if (errno != EADDRINUSE)
+      RETURN_ERROR ("bind() failed (%d): %s\n", errno, strerror (errno));
+
+    if (i > 256)
+      RETURN_ERROR ("Could not find a free socket name for %s", path);
+
+    snprintf (sun.sun_path, sizeof (sun.sun_path), "%s.%d", path, i);
+    i++;
   }
 
-  self->socket_path = strdup (path);
+  self->socket_path = strdup (sun.sun_path);
 
   if (listen (self->main_socket, 10) < 0) {
     RETURN_ERROR ("listen() failed (%d): %s\n", errno, strerror (errno));
@@ -808,4 +816,10 @@ int
 sp_writer_pending_writes (ShmPipe * self)
 {
   return (self->buffers != NULL);
+}
+
+const char *
+sp_writer_get_path (ShmPipe *pipe)
+{
+  return pipe->socket_path;
 }

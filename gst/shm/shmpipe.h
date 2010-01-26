@@ -47,6 +47,7 @@ typedef struct _ShmPipe ShmPipe;
 typedef struct _ShmBlock ShmBlock;
 
 ShmPipe *sp_writer_create (const char *path, size_t size, mode_t perms);
+const char *sp_writer_get_path (ShmPipe *pipe);
 void sp_close (ShmPipe * self);
 
 void sp_writer_setperms_shm (ShmPipe * self, mode_t perms);
