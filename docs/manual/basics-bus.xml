@@ -38,7 +38,7 @@
             be called whenever the pipeline emits a message to the bus. In this
             handler, check the signal type (see next section) and do something
             accordingly. The return value of the handler should be TRUE to
-            remove the message from the bus.
+            keep the handler attached to the bus, return FALSE to remove it.
           </para>
         </listitem>
         <listitem>
