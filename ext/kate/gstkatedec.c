@@ -265,7 +265,7 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
     } else if (ev->text_markup_type == kate_markup_none) {
       /* no pango markup yet, escape text */
       /* TODO: actually do the pango thing */
-      escaped = g_markup_printf_escaped ("%s", ev->text);
+      escaped = g_strdup (ev->text);
       plain = TRUE;
     } else {
       escaped = g_strdup (ev->text);
