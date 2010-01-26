@@ -6,9 +6,15 @@
 /* Define if building universal (internal helper macro) */
 #undef AC_APPLE_UNIVERSAL_BUILD
 
+/* poll doesn't work on devices */
+#undef BROKEN_POLL
+
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
+
+/* Subunit protocol result output */
+#undef ENABLE_SUBUNIT
 
 /* gettext package name */
 #define GETTEXT_PACKAGE "gstreamer-0.10"
@@ -44,10 +50,13 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer git/prerelease"
+#define GST_PACKAGE_NAME "GStreamer prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
+
+/* location of the installed gst-plugin-scanner */
+#undef GST_PLUGIN_SCANNER_INSTALLED
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
@@ -115,9 +124,6 @@
 /* Define to 1 if you have the `fgetpos' function. */
 #define HAVE_FGETPOS 1
 
-/* Define to 1 if you have the `fork' function. */
-#undef HAVE_FORK
-
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
 
@@ -139,6 +145,12 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
 
+/* Have GMP library */
+#undef HAVE_GMP
+
+/* Have GSL library */
+#undef HAVE_GSL
+
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
 
@@ -157,6 +169,9 @@
 /* Define if libxml2 is available */
 #define HAVE_LIBXML2 1
 
+/* Define to 1 if you have the `localtime_r' function. */
+#undef HAVE_LOCALTIME_R
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -165,6 +180,9 @@
 
 /* Have a monotonic clock */
 #undef HAVE_MONOTONIC_CLOCK
+
+/* Defined if compiling for OSX */
+#undef HAVE_OSX
 
 /* Define to 1 if you have the `poll' function. */
 #undef HAVE_POLL
@@ -217,6 +235,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
+/* Define to 1 if you have the <sys/param.h> header file. */
+#undef HAVE_SYS_PARAM_H
+
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
 
@@ -226,14 +247,23 @@
 /* Define to 1 if you have the <sys/times.h> header file. */
 #undef HAVE_SYS_TIMES_H
 
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
 
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
+
 /* Define to 1 if you have the <ucontext.h> header file. */
 #undef HAVE_UCONTEXT_H
+
+/* Have __uint128_t type */
+#undef HAVE_UINT128_T
 
 /* defined if unaligned memory access works correctly */
 #undef HAVE_UNALIGNED_ACCESS
@@ -286,13 +316,16 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.23.3"
+#define PACKAGE_STRING "GStreamer 0.10.25.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.23.3"
+#define PACKAGE_VERSION "0.10.25.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -301,6 +334,21 @@
 #  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
 #endif
 
+/* The size of `char', as computed by sizeof. */
+#undef SIZEOF_CHAR
+
+/* The size of `int', as computed by sizeof. */
+#undef SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of `short', as computed by sizeof. */
+#undef SIZEOF_SHORT
+
+/* The size of `void*', as computed by sizeof. */
+#undef SIZEOF_VOIDP
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -308,7 +356,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.23.3"
+#define VERSION "0.10.25.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

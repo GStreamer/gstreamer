@@ -535,6 +535,7 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_NEWSEGMENT), "GST_EVENT_NEWSEGMENT", "newsegment"},
     {C_ENUM (GST_EVENT_TAG), "GST_EVENT_TAG", "tag"},
     {C_ENUM (GST_EVENT_BUFFERSIZE), "GST_EVENT_BUFFERSIZE", "buffersize"},
+    {C_ENUM (GST_EVENT_SINK_MESSAGE), "GST_EVENT_SINK_MESSAGE", "sink-message"},
     {C_ENUM (GST_EVENT_QOS), "GST_EVENT_QOS", "qos"},
     {C_ENUM (GST_EVENT_SEEK), "GST_EVENT_SEEK", "seek"},
     {C_ENUM (GST_EVENT_NAVIGATION), "GST_EVENT_NAVIGATION", "navigation"},
@@ -1170,6 +1171,8 @@ gst_plugin_flags_get_type (void)
   static gsize id = 0;
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_PLUGIN_FLAG_CACHED), "GST_PLUGIN_FLAG_CACHED", "cached"},
+    {C_FLAGS (GST_PLUGIN_FLAG_BLACKLISTED), "GST_PLUGIN_FLAG_BLACKLISTED",
+        "blacklisted"},
     {0, NULL, NULL}
   };
 
