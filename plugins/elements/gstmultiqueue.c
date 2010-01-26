@@ -917,6 +917,13 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
       gst_pad_set_caps (sq->srcpad, caps);
 
     result = gst_pad_push (sq->srcpad, buffer);
+
+    if (result == GST_FLOW_UNEXPECTED) {
+      GST_LOG_OBJECT (mq, "got UNEXPECTED from downstream");
+      /* FIXME, dequeue items until we see EOS or NEWSEGMENT. If the queue is
+       * empty, set a flag so that we pass unexpected upstream. */
+      result = GST_FLOW_OK;
+    }
   } else if (GST_IS_EVENT (object)) {
     GstEvent *event;
 
