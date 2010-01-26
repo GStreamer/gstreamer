@@ -641,6 +641,7 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->fmt = GST_VIDEO_FORMAT_UNKNOWN;
 
   mix->last_ts = 0;
+  mix->last_duration = -1;
 
   /* clean up collect data */
   walk = mix->collect->data;
@@ -1165,10 +1166,13 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
       if (buf) {
         guint64 duration;
 
-        GST_LOG_OBJECT (mix, "we have a buffer !");
-
         mixcol->buffer = buf;
         duration = GST_BUFFER_DURATION (mixcol->buffer);
+
+        GST_LOG_OBJECT (mix, "we have a buffer with duration %" GST_TIME_FORMAT
+            ", queued %" GST_TIME_FORMAT, GST_TIME_ARGS (duration),
+            GST_TIME_ARGS (mixpad->queued));
+
         /* no duration on the buffer, use the framerate */
         if (!GST_CLOCK_TIME_IS_VALID (duration)) {
           if (mixpad->fps_n == 0) {
@@ -1183,6 +1187,9 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
           mixpad->queued += duration;
         else if (!mixpad->queued)
           mixpad->queued = GST_CLOCK_TIME_NONE;
+
+        GST_LOG_OBJECT (mix, "now queued: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (mixpad->queued));
       } else {
         GST_LOG_OBJECT (mix, "pop returned a NULL buffer");
       }
@@ -1377,12 +1384,17 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     in_ts = GST_BUFFER_TIMESTAMP (mixcol->buffer);
 
     timestamp = gst_segment_to_running_time (seg, GST_FORMAT_TIME, in_ts);
+    duration = GST_BUFFER_DURATION (mixcol->buffer);
 
     mix->last_ts = timestamp;
-    duration = GST_BUFFER_DURATION (mixcol->buffer);
-    if (GST_CLOCK_TIME_IS_VALID (duration))
-      mix->last_ts += duration;
+    mix->last_duration = duration;
+  } else {
+    timestamp = mix->last_ts;
+    duration = mix->last_duration;
   }
+
+  if (GST_CLOCK_TIME_IS_VALID (duration))
+    mix->last_ts += duration;
 
   if (!gst_videomixer_do_qos (mix, timestamp)) {
     gst_videomixer_update_queues (mix);
