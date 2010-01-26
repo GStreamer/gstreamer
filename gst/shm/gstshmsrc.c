@@ -39,7 +39,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_SOCKET_PATH
+  PROP_SOCKET_PATH,
+  PROP_IS_LIVE
 };
 
 struct GstShmBuffer
@@ -117,6 +118,11 @@ gst_shm_src_class_init (GstShmSrcClass * klass)
           "The path to the control socket used to control the shared memory"
           " transport", NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is this a live source",
+          "True if the element cannot produce data in PAUSED", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (shmsrc_debug, "shmsrc", 0, "Shared Memory Source");
 }
 
@@ -144,6 +150,10 @@ gst_shm_src_set_property (GObject * object, guint prop_id,
       }
       GST_OBJECT_UNLOCK (object);
       break;
+    case PROP_IS_LIVE:
+      gst_base_src_set_live (GST_BASE_SRC (object),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -161,6 +171,9 @@ gst_shm_src_get_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (object);
       g_value_set_string (value, self->socket_path);
       GST_OBJECT_UNLOCK (object);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
