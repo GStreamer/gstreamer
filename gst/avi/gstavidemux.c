@@ -4205,6 +4205,11 @@ gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
     GstAviStream *stream;
 
     stream = &avi->stream[i];
+
+    /* ignore streams that finished */
+    if (stream->last_flow == GST_FLOW_UNEXPECTED)
+      continue;
+
     position = stream->current_timestamp;
 
     /* position of -1 is EOS */
@@ -4369,7 +4374,8 @@ eos_stop:
         " setting EOS (%" GST_TIME_FORMAT " > %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (timestamp), GST_TIME_ARGS (avi->segment.stop));
     ret = GST_FLOW_UNEXPECTED;
-    goto beach;
+    /* move to next stream */
+    goto next;
   }
 pull_failed:
   {
