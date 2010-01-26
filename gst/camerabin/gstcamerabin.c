@@ -3020,6 +3020,12 @@ gst_camerabin_override_photo_properties (GObjectClass * gobject_class)
   g_object_class_override_property (gobject_class,
       ARG_IMAGE_CAPTURE_SUPPORTED_CAPS,
       GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
+
+  g_object_class_override_property (gobject_class, ARG_FLICKER_MODE,
+      GST_PHOTOGRAPHY_PROP_FLICKER_MODE);
+
+  g_object_class_override_property (gobject_class, ARG_FOCUS_MODE,
+      GST_PHOTOGRAPHY_PROP_FOCUS_MODE);
 }
 
 static void

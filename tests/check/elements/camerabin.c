@@ -324,6 +324,8 @@ test_photography_settings (GstElement * cam)
   GstWhiteBalanceMode wb, orig_wb;
   GstColourToneMode ct, orig_ct;
   GstSceneMode sm, orig_sm;
+  GstFlickerReductionMode flm, orig_flm;
+  GstFocusMode fm, orig_fm;
   gfloat zoom, orig_zoom;
 
   if (!GST_IS_PHOTOGRAPHY (cam)) {
@@ -398,6 +400,28 @@ test_photography_settings (GstElement * cam)
   }
   g_type_class_unref (tclass);
 
+  tclass = g_type_class_ref (GST_TYPE_FOCUS_MODE);
+  for (fm = 0; fm < G_ENUM_CLASS (tclass)->n_values; fm++) {
+    orig_fm = fm;
+    gst_photography_set_focus_mode (GST_PHOTOGRAPHY (cam), fm);
+    gst_photography_get_focus_mode (GST_PHOTOGRAPHY (cam), &fm);
+    fail_if (orig_fm != fm, "setting photography focus mode failed");
+    fm = orig_fm;
+    g_usleep (PHOTO_SETTING_DELAY_US);
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_FLICKER_REDUCTION_MODE);
+  for (flm = 0; flm < G_ENUM_CLASS (tclass)->n_values; flm++) {
+    orig_flm = flm;
+    gst_photography_set_flicker_mode (GST_PHOTOGRAPHY (cam), flm);
+    gst_photography_get_flicker_mode (GST_PHOTOGRAPHY (cam), &flm);
+    fail_if (orig_flm != flm, "setting photography flicker mode failed");
+    flm = orig_flm;
+    g_usleep (PHOTO_SETTING_DELAY_US);
+  }
+  g_type_class_unref (tclass);
+
   for (zoom = 1.0; zoom <= 10.0; zoom += 1.0) {
     orig_zoom = zoom;
     gst_photography_set_zoom (GST_PHOTOGRAPHY (cam), zoom);
@@ -421,6 +445,8 @@ test_photography_properties (GstElement * cam)
   GstWhiteBalanceMode wb, orig_wb;
   GstColourToneMode ct, orig_ct;
   GstSceneMode sm, orig_sm;
+  GstFocusMode fm, orig_fm;
+  GstFlickerReductionMode flm, orig_flm;
   GstCaps *caps = NULL;
 
   if (!GST_IS_PHOTOGRAPHY (cam)) {
@@ -515,6 +541,30 @@ test_photography_properties (GstElement * cam)
     fail_if (sm < 0 || sm > G_ENUM_CLASS (tclass)->n_values,
         "setting photography scene mode failed");
     sm = orig_sm;
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_FOCUS_MODE);
+  for (fm = 0; fm < G_ENUM_CLASS (tclass)->n_values; fm++) {
+    orig_fm = fm;
+    g_object_set (G_OBJECT (cam), "focus-mode", fm, NULL);
+    g_object_get (G_OBJECT (cam), "focus-mode", &fm, NULL);
+    fail_if (fm < 0 || fm > G_ENUM_CLASS (tclass)->n_values,
+        "setting photography focus mode failed");
+    fm = orig_fm;
+    g_usleep (PHOTO_SETTING_DELAY_US);
+  }
+  g_type_class_unref (tclass);
+
+  tclass = g_type_class_ref (GST_TYPE_FLICKER_REDUCTION_MODE);
+  for (flm = 0; flm < G_ENUM_CLASS (tclass)->n_values; flm++) {
+    orig_flm = flm;
+    g_object_set (G_OBJECT (cam), "flicker-mode", flm, NULL);
+    g_object_get (G_OBJECT (cam), "flicker-mode", &flm, NULL);
+    fail_if (flm < 0 || flm > G_ENUM_CLASS (tclass)->n_values,
+        "setting photography flicker reduction mode failed");
+    flm = orig_flm;
+    g_usleep (PHOTO_SETTING_DELAY_US);
   }
   g_type_class_unref (tclass);
 }

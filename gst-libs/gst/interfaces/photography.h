@@ -65,6 +65,8 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_EXPOSURE     "exposure"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS \
     "image-capture-supported-caps"
+#define GST_PHOTOGRAPHY_PROP_FLICKER_MODE "flicker-mode"
+#define GST_PHOTOGRAPHY_PROP_FOCUS_MODE   "focus-mode"
 
 /**
  * GstPhotography:
@@ -147,6 +149,25 @@ typedef enum
   GST_PHOTOGRAPHY_SHAKE_RISK_HIGH,
 } GstPhotoShakeRisk;
 
+typedef enum
+{
+  GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF = 0,
+  GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ,
+  GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ,
+  GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO,
+} GstFlickerReductionMode;
+
+typedef enum {
+    GST_PHOTOGRAPHY_FOCUS_MODE_AUTO = 0,
+    GST_PHOTOGRAPHY_FOCUS_MODE_MACRO,
+    GST_PHOTOGRAPHY_FOCUS_MODE_PORTRAIT,
+    GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY,
+    GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL,
+    GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED,
+    GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL,
+    GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED,
+} GstFocusMode;
+
 typedef struct
 {
   GstWhiteBalanceMode wb_mode;
@@ -158,6 +179,8 @@ typedef struct
   gfloat ev_compensation;
   guint iso_speed;
   gfloat zoom;
+  GstFlickerReductionMode flicker_mode;
+  GstFocusMode focus_mode;
 } GstPhotoSettings;
 
 /**
@@ -220,6 +243,10 @@ typedef struct _GstPhotographyInterface
     gboolean (*get_flash_mode) (GstPhotography * photo,
       GstFlashMode * flash_mode);
     gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
+    gboolean (*get_flicker_mode) (GstPhotography * photo,
+      GstFlickerReductionMode * flicker_mode);
+    gboolean (*get_focus_mode) (GstPhotography * photo,
+      GstFocusMode * focus_mode);
 
     gboolean (*set_ev_compensation) (GstPhotography * photo, gfloat ev_comp);
     gboolean (*set_iso_speed) (GstPhotography * photo, guint iso_speed);
@@ -234,6 +261,10 @@ typedef struct _GstPhotographyInterface
     gboolean (*set_flash_mode) (GstPhotography * photo,
       GstFlashMode flash_mode);
     gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
+    gboolean (*set_flicker_mode) (GstPhotography * photo,
+      GstFlickerReductionMode flicker_mode);
+    gboolean (*set_focus_mode) (GstPhotography * photo,
+      GstFocusMode focus_mode);
 
     GstPhotoCaps (*get_capabilities) (GstPhotography * photo);
     gboolean (*prepare_for_capture) (GstPhotography * photo,
@@ -266,6 +297,10 @@ gboolean gst_photography_get_scene_mode (GstPhotography * photo,
 gboolean gst_photography_get_flash_mode (GstPhotography * photo,
     GstFlashMode * flash_mode);
 gboolean gst_photography_get_zoom (GstPhotography * photo, gfloat * zoom);
+gboolean gst_photography_get_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode *mode);
+gboolean gst_photography_get_focus_mode (GstPhotography * photo,
+    GstFocusMode *mode);
 
 gboolean gst_photography_set_ev_compensation (GstPhotography * photo,
     gfloat ev_comp);
@@ -282,6 +317,10 @@ gboolean gst_photography_set_scene_mode (GstPhotography * photo,
 gboolean gst_photography_set_flash_mode (GstPhotography * photo,
     GstFlashMode flash_mode);
 gboolean gst_photography_set_zoom (GstPhotography * photo, gfloat zoom);
+gboolean gst_photography_set_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode mode);
+gboolean gst_photography_set_focus_mode (GstPhotography * photo,
+    GstFocusMode mode);
 
 GstPhotoCaps gst_photography_get_capabilities (GstPhotography * photo);
 

@@ -82,6 +82,8 @@ gst_photography_iface_base_init (GstPhotographyInterface * iface)
   iface->get_scene_mode = NULL;
   iface->get_flash_mode = NULL;
   iface->get_zoom = NULL;
+  iface->get_flicker_mode = NULL;
+  iface->get_focus_mode = NULL;
 
   iface->set_ev_compensation = NULL;
   iface->set_iso_speed = NULL;
@@ -92,6 +94,8 @@ gst_photography_iface_base_init (GstPhotographyInterface * iface)
   iface->set_scene_mode = NULL;
   iface->set_flash_mode = NULL;
   iface->set_zoom = NULL;
+  iface->set_flicker_mode = NULL;
+  iface->set_focus_mode = NULL;
 
   iface->get_capabilities = NULL;
   iface->prepare_for_capture = NULL;
@@ -307,6 +311,46 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstFlashMode);
 GST_PHOTOGRAPHY_FUNC_TEMPLATE (zoom, gfloat);
 
 /**
+ * gst_photography_set_flicker_mode:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @flicker_mode: flicker mode value to set
+ *
+ * Set the flicker mode value for the #GstElement.
+ *
+ * Returns: %TRUE if setting the value succeeded, %FALSE otherwise
+ */
+/**
+ * gst_photography_get_flicker_mode:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @flicker_mode: flicker mode value to get
+ *
+ * Get the flicker mode value for the #GstElement
+ *
+ * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
+ */
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (flicker_mode, GstFlickerReductionMode);
+
+/**
+ * gst_photography_set_focus_mode:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @focus_mode: focus mode value to set
+ *
+ * Set the focus mode value for the #GstElement.
+ *
+ * Returns: %TRUE if setting the value succeeded, %FALSE otherwise
+ */
+/**
+ * gst_photography_get_focus_mode:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @focus_mode: focus_mode value to get
+ *
+ * Get the focus mode value for the #GstElement
+ *
+ * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
+ */
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (focus_mode, GstFocusMode);
+
+/**
  * gst_photography_get_capabilities:
  * @photo: #GstPhotography interface of a #GstElement
  *
@@ -465,6 +509,22 @@ gst_photography_iface_class_init (gpointer g_class)
           "Flash mode defines how the flash light should be used",
           GST_TYPE_FLASH_MODE,
           GST_PHOTOGRAPHY_FLASH_MODE_AUTO, G_PARAM_READWRITE));
+
+  /* Flicker reduction mode */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FLICKER_MODE,
+          "Flicker reduction mode property",
+          "Flicker reduction mode defines a line frequency for flickering prevention",
+          GST_TYPE_FLICKER_REDUCTION_MODE,
+          GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF, G_PARAM_READWRITE));
+
+  /* Focus mode */
+  g_object_interface_install_property (g_class,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FOCUS_MODE,
+          "Focus mode property",
+          "Focus mode defines the range of focal lengths to use in autofocus search",
+          GST_TYPE_FOCUS_MODE,
+          GST_PHOTOGRAPHY_FOCUS_MODE_AUTO, G_PARAM_READWRITE));
 
   /* Capabilities */
   g_object_interface_install_property (g_class,
