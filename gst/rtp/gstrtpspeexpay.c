@@ -284,11 +284,11 @@ gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* copy data in payload */
   memcpy (&payload[0], data, size);
 
-  gst_buffer_unref (buffer);
-
   ret = gst_basertppayload_push (basepayload, outbuf);
 
 done:
+  gst_buffer_unref (buffer);
+
   rtpspeexpay->packet++;
 
   return ret;
@@ -298,6 +298,7 @@ parse_error:
   {
     GST_ELEMENT_ERROR (rtpspeexpay, STREAM, DECODE, (NULL),
         ("Error parsing first identification packet."));
+    gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 }
