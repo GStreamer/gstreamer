@@ -34,6 +34,8 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_Y444, "GST_VIDEO_FORMAT_Y444", "y444"},
       {GST_VIDEO_FORMAT_v210, "GST_VIDEO_FORMAT_v210", "v210"},
       {GST_VIDEO_FORMAT_v216, "GST_VIDEO_FORMAT_v216", "v216"},
+      {GST_VIDEO_FORMAT_NV12, "GST_VIDEO_FORMAT_NV12", "nv12"},
+      {GST_VIDEO_FORMAT_NV21, "GST_VIDEO_FORMAT_NV21", "nv21"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);

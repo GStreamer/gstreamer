@@ -99,6 +99,7 @@ gst_rtsp_version_get_type (void)
     static const GEnumValue values[] = {
       {GST_RTSP_VERSION_INVALID, "GST_RTSP_VERSION_INVALID", "invalid"},
       {GST_RTSP_VERSION_1_0, "GST_RTSP_VERSION_1_0", "1-0"},
+      {GST_RTSP_VERSION_1_1, "GST_RTSP_VERSION_1_1", "1-1"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstRTSPVersion", values);
@@ -125,6 +126,8 @@ gst_rtsp_method_get_type (void)
       {GST_RTSP_SETUP, "GST_RTSP_SETUP", "setup"},
       {GST_RTSP_SET_PARAMETER, "GST_RTSP_SET_PARAMETER", "set-parameter"},
       {GST_RTSP_TEARDOWN, "GST_RTSP_TEARDOWN", "teardown"},
+      {GST_RTSP_GET, "GST_RTSP_GET", "get"},
+      {GST_RTSP_POST, "GST_RTSP_POST", "post"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_flags_register_static ("GstRTSPMethod", values);
@@ -268,6 +271,15 @@ gst_rtsp_header_field_get_type (void)
       {GST_RTSP_HDR_X_STARTUPPROFILE, "GST_RTSP_HDR_X_STARTUPPROFILE",
           "x-startupprofile"},
       {GST_RTSP_HDR_TIMESTAMP, "GST_RTSP_HDR_TIMESTAMP", "timestamp"},
+      {GST_RTSP_HDR_AUTHENTICATION_INFO, "GST_RTSP_HDR_AUTHENTICATION_INFO",
+          "authentication-info"},
+      {GST_RTSP_HDR_HOST, "GST_RTSP_HDR_HOST", "host"},
+      {GST_RTSP_HDR_PRAGMA, "GST_RTSP_HDR_PRAGMA", "pragma"},
+      {GST_RTSP_HDR_X_SERVER_IP_ADDRESS, "GST_RTSP_HDR_X_SERVER_IP_ADDRESS",
+          "x-server-ip-address"},
+      {GST_RTSP_HDR_X_SESSIONCOOKIE, "GST_RTSP_HDR_X_SESSIONCOOKIE",
+          "x-sessioncookie"},
+      {GST_RTSP_HDR_LAST, "GST_RTSP_HDR_LAST", "last"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =

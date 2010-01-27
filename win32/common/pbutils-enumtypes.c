@@ -12,8 +12,8 @@
 GType
 gst_install_plugins_return_get_type (void)
 {
-  static GType etype = 0;
-  if (etype == 0) {
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_INSTALL_PLUGINS_SUCCESS, "GST_INSTALL_PLUGINS_SUCCESS", "success"},
       {GST_INSTALL_PLUGINS_NOT_FOUND, "GST_INSTALL_PLUGINS_NOT_FOUND",
@@ -35,9 +35,11 @@ gst_install_plugins_return_get_type (void)
           "GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS", "install-in-progress"},
       {0, NULL, NULL}
     };
-    etype = g_enum_register_static ("GstInstallPluginsReturn", values);
+    GType g_define_type_id =
+        g_enum_register_static ("GstInstallPluginsReturn", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
-  return etype;
+  return g_define_type_id__volatile;
 }
 
 /* Generated data ends here */

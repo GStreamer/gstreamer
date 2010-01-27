@@ -10,6 +10,7 @@
 #include "mixertrack.h"
 #include "navigation.h"
 #include "propertyprobe.h"
+#include "streamvolume.h"
 #include "tuner.h"
 #include "tunernorm.h"
 #include "tunerchannel.h"
@@ -115,6 +116,8 @@ gst_mixer_track_flags_get_type (void)
       {GST_MIXER_TRACK_NO_RECORD, "GST_MIXER_TRACK_NO_RECORD", "no-record"},
       {GST_MIXER_TRACK_NO_MUTE, "GST_MIXER_TRACK_NO_MUTE", "no-mute"},
       {GST_MIXER_TRACK_WHITELIST, "GST_MIXER_TRACK_WHITELIST", "whitelist"},
+      {GST_MIXER_TRACK_READONLY, "GST_MIXER_TRACK_READONLY", "readonly"},
+      {GST_MIXER_TRACK_WRITEONLY, "GST_MIXER_TRACK_WRITEONLY", "writeonly"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -224,6 +227,27 @@ gst_navigation_event_type_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstNavigationEventType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "streamvolume.h" */
+GType
+gst_stream_volume_format_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_STREAM_VOLUME_FORMAT_LINEAR, "GST_STREAM_VOLUME_FORMAT_LINEAR",
+          "linear"},
+      {GST_STREAM_VOLUME_FORMAT_CUBIC, "GST_STREAM_VOLUME_FORMAT_CUBIC",
+          "cubic"},
+      {GST_STREAM_VOLUME_FORMAT_DB, "GST_STREAM_VOLUME_FORMAT_DB", "db"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstStreamVolumeFormat", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

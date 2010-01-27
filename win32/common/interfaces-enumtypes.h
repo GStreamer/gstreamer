@@ -34,6 +34,10 @@ GType gst_navigation_message_type_get_type (void);
 GType gst_navigation_event_type_get_type (void);
 #define GST_TYPE_NAVIGATION_EVENT_TYPE (gst_navigation_event_type_get_type())
 
+/* enumerations from "streamvolume.h" */
+GType gst_stream_volume_format_get_type (void);
+#define GST_TYPE_STREAM_VOLUME_FORMAT (gst_stream_volume_format_get_type())
+
 /* enumerations from "tunerchannel.h" */
 GType gst_tuner_channel_flags_get_type (void);
 #define GST_TYPE_TUNER_CHANNEL_FLAGS (gst_tuner_channel_flags_get_type())
