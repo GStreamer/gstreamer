@@ -847,7 +847,8 @@ gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      gst_speex_enc_encode (enc, TRUE);
+      if (enc->setup)
+        gst_speex_enc_encode (enc, TRUE);
       res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_TAG:
