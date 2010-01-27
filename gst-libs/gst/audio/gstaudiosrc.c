@@ -209,6 +209,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   if (readfunc == NULL)
     goto no_function;
 
+  /* FIXME: maybe we should at least use a custom pointer type here? */
   g_value_init (&val, G_TYPE_POINTER);
   g_value_set_pointer (&val, src->thread);
   message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
