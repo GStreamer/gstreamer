@@ -1496,15 +1496,23 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   last_dts = gst_util_uint64_scale_round (pad->last_dts,
       atom_trak_get_timescale (pad->trak), GST_SECOND);
 
-  /* raw audio has many samples per buffer (= chunk) */
   if (pad->sample_size) {
+    /* Constant size packets: usually raw audio (with many samples per
+       buffer (= chunk)), but can also be fixed-packet-size codecs like ADPCM
+     */
     sample_size = pad->sample_size;
     if (GST_BUFFER_SIZE (last_buf) % sample_size != 0)
       goto fragmented_sample;
     /* note: qt raw audio storage warps it implicitly into a timewise
      * perfect stream, discarding buffer times */
-    nsamples = GST_BUFFER_SIZE (last_buf) / sample_size;
+    if (GST_BUFFER_DURATION (last_buf) != GST_CLOCK_TIME_NONE) {
+      nsamples = gst_util_uint64_scale_round (GST_BUFFER_DURATION (last_buf),
+          atom_trak_get_timescale (pad->trak), GST_SECOND);
+    } else {
+      nsamples = GST_BUFFER_SIZE (last_buf) / sample_size;
+    }
     duration = GST_BUFFER_DURATION (last_buf) / nsamples;
+
     /* timescale = samplerate */
     scaled_duration = 1;
     pad->last_dts += duration * nsamples;
@@ -1948,6 +1956,15 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
        channel) */
     entry.samples_per_packet = 2 * blocksize / channels - 7;
     entry.bytes_per_sample = 2;
+
+    entry.bytes_per_frame = blocksize;
+    entry.bytes_per_packet = blocksize / channels;
+    /* ADPCM has constant size packets */
+    constant_size = 1;
+    /* TODO: I don't really understand why this helps, but it does! Constant
+     * size and compression_id of -2 seem to be incompatible, and other files
+     * in the wild use this too. */
+    entry.compression_id = -1;
 
     ext_atom = build_ima_adpcm_extension (channels, rate, blocksize);
   }
