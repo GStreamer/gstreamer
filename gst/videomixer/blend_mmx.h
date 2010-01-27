@@ -191,7 +191,7 @@ _memcpy_u8_mmx (guint8 * dest, const guint8 * src, guint count)
     "jne        4b            \n\t"
     "5:                       \n\t"
     "emms                     \n\t"
-    : "=r" (count), "=r" (dest), "=r" (src)
+    : "=r" (count), "=R" (dest), "=R" (src)
     : "0" (count), "1" (dest), "2" (src)
     : "memory", "ah"
 #ifdef __MMX__
