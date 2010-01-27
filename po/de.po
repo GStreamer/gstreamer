@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-13 23:01+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -46,11 +46,11 @@ msgstr "Verbindung zum Server konnte nicht hergestellt werden"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Kein oder ungültiger Eingabeton, der AVI-Strom wird fehlerhaft sein."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Diese Datei ist ungültig und kann nicht wiedergegeben werden."
-
 msgid "This file contains no playable streams."
 msgstr "Diese Datei enthält keine abspielbaren Ströme."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Diese Datei ist ungültig und kann nicht wiedergegeben werden."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Diese Datei ist unvollständig und kann nicht wiedergegeben werden."

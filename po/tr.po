@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-12 00:27+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -35,11 +35,11 @@ msgstr "Sunucuya bağlanamıyor"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Bu dosya geçersiz ve oynatılamaz."
-
 msgid "This file contains no playable streams."
 msgstr "Dosya çalınabilir akışlar içermiyor."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Bu dosya geçersiz ve oynatılamaz."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Dosya eksik ve oynatılamaz."

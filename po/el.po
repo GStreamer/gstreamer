@@ -1,0 +1,402 @@
+# Greek translation for gst-plugins-good package of GStreamer project.
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
+# This file is distributed under the same license as the gst-plugins-good package.
+# Simos Xenitellis <simos.lists@googlemail.com>, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
+"PO-Revision-Date: 2009-12-04 14:37+0200\n"
+"Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
+"Language-Team: Greek <team@lists.gnome.gr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 0.3\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Could not establish connection to sound server"
+msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"
+
+msgid "Failed to query sound server capabilities"
+msgstr "Αποτυχία αναζήτησης των δυνατοτήτων του διακομιστή ήχου"
+
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+msgid "Failed to decode JPEG image"
+msgstr "Αποτυχία αποκωδικοποίησης της εικόνας JPEG"
+
+msgid "Could not connect to server"
+msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
+
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "Καμία ή άκυρη εισαγωγή ήχου, η AVI ροή θα καταρρεύσει."
+
+msgid "This file contains no playable streams."
+msgstr "Αυτό το αρχείο δεν περιέχει αναπαραγώγιμες ροές."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Το αρχείο αυτό δεν είναι έγκυρο και δεν μπορεί να αναπαραχθεί."
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Το αρχείο αυτό είναι ανολοκλήρωτο και δεν μπορεί να αναπαραχθεί."
+
+msgid "This file is corrupt and cannot be played."
+msgstr "Το αρχείο αυτό είναι κατεστραμμένο και δεν μπορεί να αναπαραχθεί. "
+
+msgid "The video in this file might not play correctly."
+msgstr "Το βίντεο σε αυτό το αρχείο μπορεί να μην αναπαραχθεί σωστά."
+
+#, c-format
+msgid "This file contains too many streams. Only playing first %d"
+msgstr "Αυτό το αρχείο περιέχει πολλές ροές. Αναπαράγεται μόνο η πρώτη %d"
+
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Δεν βρέθηκε καμία υποστηριζόμενη ροή. Είναι πιθανόν να πρέπει να κάνετε "
+"εγκατάσταση ένα πρόσθετο GStreamer RTSP για τις ροές Real μέσων. "
+
+#, fuzzy
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Δεν βρέθηκε καμία υποστηριζόμενη ροή. Είναι πιθανόν να σας λείπει το "
+"πρόσθετο του GStreamer RTSP."
+
+msgid "Internal data flow error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+msgid "Volume"
+msgstr "Ένταση"
+
+msgid "Bass"
+msgstr "Μπάσα"
+
+msgid "Treble"
+msgstr ""
+
+msgid "Synth"
+msgstr "Synth"
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Speaker"
+msgstr "Μεγάφωνο"
+
+msgid "Line-in"
+msgstr "Γραμμή-εισόδου"
+
+msgid "Microphone"
+msgstr "Μικρόφωνο"
+
+msgid "CD"
+msgstr "CD"
+
+msgid "Mixer"
+msgstr "Μείκτης"
+
+msgid "PCM-2"
+msgstr "PCM-2"
+
+msgid "Record"
+msgstr "Εγγραφή"
+
+msgid "In-gain"
+msgstr ""
+
+msgid "Out-gain"
+msgstr ""
+
+msgid "Line-1"
+msgstr "Γραμμή-1"
+
+msgid "Line-2"
+msgstr "Γραμμή-2"
+
+msgid "Line-3"
+msgstr "Γραμμή-3"
+
+msgid "Digital-1"
+msgstr "Ψηφιακό-1"
+
+msgid "Digital-2"
+msgstr "Ψηφιακό-2"
+
+msgid "Digital-3"
+msgstr "Ψηφιακό-3"
+
+msgid "Phone-in"
+msgstr "Είσοδος τηλεφώνου"
+
+msgid "Phone-out"
+msgstr "Έξοδος τηλεφώνου"
+
+msgid "Video"
+msgstr "Βίντεο"
+
+msgid "Radio"
+msgstr "Ράδιο"
+
+msgid "Monitor"
+msgstr "Οθόνη"
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για αναπαραγωγή. Η συσκευή "
+"χρησιμοποιείται από μια άλλη εφαρμογή."
+
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για αναπαραγωγή. Δεν έχετε τα "
+"δικαιώματα να ανοίξετε την συσκευή."
+
+msgid "Could not open audio device for playback."
+msgstr "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για αναπαραγωγή. "
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. Δεν έχετε τα "
+"δικαιώματα να ανοίξετε την συσκευή."
+
+msgid "Could not open audio device for recording."
+msgstr "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. "
+
+msgid "Gain"
+msgstr ""
+
+msgid "Built-in Speaker"
+msgstr "Ενσωματωμένο μεγάφωνο"
+
+msgid "Headphone"
+msgstr "Ακουστικό"
+
+msgid "Line Out"
+msgstr "Γραμμή εξόδου"
+
+msgid "SPDIF Out"
+msgstr "SPDIF Out"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 Out"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 Out"
+
+#, c-format
+msgid "Error reading %d bytes from device '%s'."
+msgstr "Σφάλμα κατά την ανάγνωση %d bytes απο την συσκευή '%s'."
+
+#, c-format
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr "Απροσδόκητο μέγεθος πλαισίου από %u αντί του %u"
+
+#, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Σφάλμα κατά την ανάγνωση %d bytes στην συσκευή '%s'."
+
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr "Αποτυχία ανάγνωσης των ρυθμίσεων δέκτη %d στην συσκευή '%s'."
+
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr ""
+
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr ""
+"Αποτυχία κατά την ανάγνωση των χαρακτηριστικών ελέγχου στην συσκευή '%s'."
+
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Δεν ήταν δυνατή η ταυτοποίηση της συσκευής '%s'."
+
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "Αυτή δεν είναι μια συκευή '%s'."
+
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής '%s' για ανάγνωση και γράψιμο. "
+
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
+
+#, fuzzy, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
+
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "Αποτυχία ρύθμισης κανόνα για την συσκευή '%s'."
+
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr ""
+"Αποτυχία ανάγνωσης της τρέχουσας συχνότητας δέκτη για την συσκευή '%s'."
+
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr ""
+"Αποτυχία ρύθμισης τρέχουσας συχνότητας δέκτη για την συσκευή '%s' στα %lu Hz"
+
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "Αποτυχία ανάγνωσης ισχύς σήματος για την συσκευή '%s'."
+
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr "Αποτυχία ανάγνωσης τιμής για τον έλεγχο %d στην συσκευή '%s'."
+
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr "Αποτυχία ρύθμισης τιμής %d για τον έλεγχο %d στην συσκευή '%s'."
+
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr ""
+"Αποτυχία ανάγνωσης της τρέχουσας εισαγωγής στην συσκευή '%s'. Πιθανόν να "
+"είναι μια συσκευή ράδιο"
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Αποτυχία ρύθμισης εισαγωγής %d στην συσκευή %s."
+
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr ""
+
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "Αποτυχία έπειτα από %d προσπάθειες. συσκευή %s. σφάλμα συστήματος: %s"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Δεν ήταν δυνατή η ανάγνωση των παραμέτρων στην συσκευή '%s'"
+
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr ""
+
+#, c-format
+msgid "The driver of device '%s' does not support any known capture method."
+msgstr "Ο οδηγός της συσκευής '%s' δεν υποστηρίζει κάποια γνωστή μέθοδο λήψης."
+
+msgid "Changing resolution at runtime is not yet supported."
+msgstr ""
+"Η αλλαγή της ανάλυσης κατά τη διάρκεια λειτουργίας δεν υποστηρίζεται ακόμα."
+
+msgid "Cannot operate without a clock"
+msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολόι "
+
+#~ msgid "Describes the selected input element."
+#~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εισαγωγής."
+
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr ""
+#~ "Περιγράφει το επιλεγμένο στοιχείο εξόδου για το Audio/Video Conferencing."
+
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εξόδου για μουσική και ταινίες."
+
+#~ msgid "Describes the selected output element."
+#~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εξαγωγής."
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Ο GStreamer μπορεί να αναπαράγει ήχο κάνωντας χρήση οποιουδήποτε αριθμού "
+#~ "στοιχείων εξαγωγής. Μερικές πιθανές επιλογές είναι τα osssink, esdsink "
+#~ "και alsasink.Το audiosink  μπορεί να γίνει εν μέρει μέσο πληροφορίας αντί "
+#~ "ενός από τα στοιχεία."
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Ο GStreamer μπορεί να αναπαράγει βίντεο κάνωντας χρήση οποιουδήποτε "
+#~ "αριθμού στοιχείων εξαγωγής. Μερικές πιθανές επιλογές είναι τα "
+#~ "xvimagesink, ximagesink, sdlvideosink και aasink. Το videosink  μπορεί να "
+#~ "γίνει εν μέρει μέσο πληροφορίας αντί ενός από τα στοιχεία."
+
+#~ msgid "default GStreamer audio source"
+#~ msgstr "προεπιλεγμένη πηγή ήχου του GStreamer"
+
+#~ msgid "default GStreamer video source"
+#~ msgstr "προεπιλεγμένη πηγή βίντεο του GStreamer"
+
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "προεπιλεγμένο πρόσθετο οπτικοποίησης του GStreamer"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "Περιγραφή του GStreamer audiosink για μουσική και ταινίες"
+
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "περιγραφή για το προεπιλεγμένο GStreamer audiosink"
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "περιγραφή για το προεπιλεγμένο GStreamer audiosrc"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Αποτυχία απαρίθμησης των πιθανών μορφών βίντεο με τα οποία μπορεί να "
+#~ "λειτουργήσει η συσκευή '%s'"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'. Μη αρκετή μνήμη."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Η συσκευή '%s' δεν υποστηρίζει την λήψη βίντεο "
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Η συσκευή '%s' δεν μπορεί να κάνει λήψη στο %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Η συκευή '%s' δεν μπορεί να κάνει λήψη στην επιλεγμένη μορφή "
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Σφάλμα κατά την εκκίνηση ροής λήψης από την συκσευή '%s'."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Σφάλμα κατά την διακοπή ροής λήψης από την συκσευή '%s'."

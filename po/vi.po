@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-09-18 23:10+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -41,11 +41,11 @@ msgstr ""
 "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
 "thế luồng AVI hư."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Tập tin này không hợp lệ nên không thể phát được."
-
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng có thể phát."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Tập tin này không hợp lệ nên không thể phát được."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."

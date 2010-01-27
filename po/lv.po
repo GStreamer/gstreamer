@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-08-20 11:35+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -38,11 +38,11 @@ msgstr "Nevar savienoties ar serveri"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nav neviena vai nederīgs ievades audio, AVI straume tiks bojāta."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Šis fails ir nederīgs un nevar tikt atskaņots."
-
 msgid "This file contains no playable streams."
 msgstr "Šis fails nesatur nevienu atskaņojamu straumi."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Šis fails ir nederīgs un nevar tikt atskaņots."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Šis pails ir nepabeigts un nevar tikt atskaņots."

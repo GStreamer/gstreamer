@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-13 10:28+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -39,11 +39,11 @@ msgstr "Nepodarilo sa pripojiť k serveru"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Tento súbor je chybný a nedá sa prehrať."
-
 msgid "This file contains no playable streams."
 msgstr "Tento súbor neobsahuje žiadne prehrateľné prúdy údajov."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Tento súbor je chybný a nedá sa prehrať."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento súbor je neúplný a nedá sa prehrať."

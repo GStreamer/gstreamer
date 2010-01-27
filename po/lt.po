@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.7.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2008-07-09 13:37+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -38,12 +38,12 @@ msgstr "Nepavyko prisijungti prie serverio"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nėra arba netaisyklingas audio, AVI srautas bus sugadintas."
 
+msgid "This file contains no playable streams."
+msgstr "Šiame faile nėra srautų, kuriuos būtų galima groti."
+
 #, fuzzy
 msgid "This file is invalid and cannot be played."
 msgstr "Failas neužbaigtas ir negali būti pagrotas."
-
-msgid "This file contains no playable streams."
-msgstr "Šiame faile nėra srautų, kuriuos būtų galima groti."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Failas neužbaigtas ir negali būti pagrotas."

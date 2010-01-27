@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-11 22:11+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -45,11 +45,11 @@ msgstr ""
 "Ääntä ei ole tai äänilähde on viallinen, AVI-virta tulee olemaan "
 "vaurioitunut."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Tiedosto on virheellinen eikä sitä voida esittää."
-
 msgid "This file contains no playable streams."
 msgstr "Tiedosto ei sisällä soitettavia virtoja."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Tiedosto on virheellinen eikä sitä voida esittää."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tiedosto on vajaa eikä sitä voida esittää."

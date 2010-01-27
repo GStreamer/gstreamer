@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-09-19 13:02+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -38,11 +38,11 @@ msgstr "Не може да се осъществи връзка към сърв�
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Аудио входът липсва или е грешен. Потокът с AVI ще бъде повреден."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Този файл е повреден и не може да бъде изпълнен."
-
 msgid "This file contains no playable streams."
 msgstr "Този файл не съдържа изпълними потоци."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Този файл е повреден и не може да бъде изпълнен."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Този файл е непълен и не може да бъде изпълнен."

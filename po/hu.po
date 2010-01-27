@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-08-12 23:38+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -42,11 +42,11 @@ msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
 
-msgid "This file is invalid and cannot be played."
-msgstr "A fájl nem érvényes és nem játszható le."
-
 msgid "This file contains no playable streams."
 msgstr "A fájl nem tartalmaz lejátszható adatfolyamokat."
+
+msgid "This file is invalid and cannot be played."
+msgstr "A fájl nem érvényes és nem játszható le."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "A fájl nem teljes és nem játszható le."

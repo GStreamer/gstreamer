@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-11 20:50+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -38,11 +38,11 @@ msgstr "Kunde inte ansluta till servern"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Den här filen är ogiltig och kan inte spelas upp."
-
 msgid "This file contains no playable streams."
 msgstr "Den här filen innehåller inga uppspelningsbara strömmar."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Den här filen är ogiltig och kan inte spelas upp."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Den här filen är inte fullständig och kan inte spelas upp."

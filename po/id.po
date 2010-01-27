@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-11-14 05:38+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -37,11 +37,11 @@ msgstr "Tak dapat menghubungi server"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
 
-msgid "This file is invalid and cannot be played."
-msgstr "Berkas ini tidak sah dan tak dapat diputar."
-
 msgid "This file contains no playable streams."
 msgstr "Berkas ini tidak berisi arus yang dapat diputar."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Berkas ini tidak sah dan tak dapat diputar."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Berkas ini tidak lengkap dan tak dapat diputar."

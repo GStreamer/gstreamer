@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -39,10 +39,10 @@ msgstr "Не могу да затворим управљачки уређај �
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
-msgid "This file is invalid and cannot be played."
+msgid "This file contains no playable streams."
 msgstr ""
 
-msgid "This file contains no playable streams."
+msgid "This file is invalid and cannot be played."
 msgstr ""
 
 msgid "This file is incomplete and cannot be played."

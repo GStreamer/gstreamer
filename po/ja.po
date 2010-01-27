@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-17 00:15+0000\n"
+"POT-Creation-Date: 2010-01-27 01:52+0000\n"
 "PO-Revision-Date: 2009-06-01 19:29+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -40,11 +40,11 @@ msgstr "サーバーへ接続できません"
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
 
-msgid "This file is invalid and cannot be played."
-msgstr "このファイルは不正なため再生することができません"
-
 msgid "This file contains no playable streams."
 msgstr "このファイルには再生不可能なストリームが含まれています"
+
+msgid "This file is invalid and cannot be played."
+msgstr "このファイルは不正なため再生することができません"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "このファイルは正常ではないため、再生することができません"
