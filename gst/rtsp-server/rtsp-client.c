@@ -1369,6 +1369,21 @@ error (GstRTSPWatch * watch, GstRTSPResult result, gpointer user_data)
   return GST_RTSP_OK;
 }
 
+static GstRTSPResult
+error_full (GstRTSPWatch *watch, GstRTSPResult result,
+    GstRTSPMessage *message, guint id, gpointer user_data)
+{
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  gchar *str;
+
+  str = gst_rtsp_strresult (result);
+  GST_INFO ("client %p: received an error %s when handling message %p with id %d",
+      client, str, message, id);
+  g_free (str);
+
+  return GST_RTSP_OK;
+}
+
 static GstRTSPStatusCode
 tunnel_start (GstRTSPWatch * watch, gpointer user_data)
 {
@@ -1467,7 +1482,8 @@ static GstRTSPWatchFuncs watch_funcs = {
   closed,
   error,
   tunnel_start,
-  tunnel_complete
+  tunnel_complete,
+  error_full
 };
 
 /**
