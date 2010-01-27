@@ -544,7 +544,7 @@ gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
     GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
     entry->position = mux->byte_count;
     entry->time =
-        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_MSECOND;
+        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_SECOND;
     mux->index = g_list_prepend (mux->index, entry);
   }
 
