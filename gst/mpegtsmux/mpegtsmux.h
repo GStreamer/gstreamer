@@ -122,6 +122,7 @@ struct MpegTsMux {
   gboolean first_pcr;
   
   GstClockTime last_ts;
+  gboolean is_delta;
 };
 
 struct MpegTsMuxClass  {

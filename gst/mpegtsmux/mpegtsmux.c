@@ -135,7 +135,7 @@ static void gst_mpegtsmux_get_property (GObject * object, guint prop_id,
 
 static void mpegtsmux_dispose (GObject * object);
 static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
-    gint64 new_pcr, gboolean delta);
+    gint64 new_pcr);
 static void release_buffer_cb (guint8 * data, void *user_data);
 
 static gboolean mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
@@ -217,6 +217,7 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->m2ts_mode = FALSE;
   mux->first_pcr = TRUE;
   mux->last_ts = 0;
+  mux->is_delta = TRUE;
 
   mux->prog_map = NULL;
 }
@@ -661,12 +662,12 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
         GST_BUFFER_SIZE (buf), buf, pts, -1);
     best->queued_buf = NULL;
 
+    mux->is_delta = delta;
     while (tsmux_stream_bytes_in_buffer (best->stream) > 0) {
-      if (!tsmux_write_stream_packet (mux->tsmux, best->stream, delta)) {
+      if (!tsmux_write_stream_packet (mux->tsmux, best->stream)) {
         GST_DEBUG_OBJECT (mux, "Failed to write data packet");
         goto write_fail;
       }
-      delta = TRUE;
     }
     if (prog->pcr_stream == best->stream) {
       mux->last_ts = best->last_ts;
@@ -771,8 +772,7 @@ mpegtsmux_release_pad (GstElement * element, GstPad * pad)
 }
 
 static gboolean
-new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr,
-    gboolean delta)
+new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
 {
   /* Called when the TsMux has prepared a packet for output. Return FALSE
    * on error */
@@ -787,11 +787,12 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr,
   if (mux->m2ts_mode == TRUE) {
     /* Enters when the m2ts-mode is set true */
     buf = gst_buffer_new_and_alloc (M2TS_PACKET_LENGTH);
-    if (delta) {
+    if (mux->is_delta) {
       GST_LOG_OBJECT (mux, "marking as delta unit");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     } else {
       GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
+      mux->is_delta = TRUE;
     }
     if (G_UNLIKELY (buf == NULL)) {
       mux->last_flow_ret = GST_FLOW_ERROR;
@@ -865,11 +866,12 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr,
     /* In case of Normal Ts packets */
     GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
     buf = gst_buffer_new_and_alloc (len);
-    if (delta) {
+    if (mux->is_delta) {
       GST_LOG_OBJECT (mux, "marking as delta unit");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     } else {
       GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
+      mux->is_delta = TRUE;
     }
     if (G_UNLIKELY (buf == NULL)) {
       mux->last_flow_ret = GST_FLOW_ERROR;

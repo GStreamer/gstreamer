@@ -95,7 +95,7 @@ G_BEGIN_DECLS
 typedef struct TsMuxSection TsMuxSection;
 typedef struct TsMux TsMux;
 
-typedef gboolean (*TsMuxWriteFunc) (guint8 *data, guint len, void *user_data, gint64 new_pcr, gboolean delta);
+typedef gboolean (*TsMuxWriteFunc) (guint8 *data, guint len, void *user_data, gint64 new_pcr);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
@@ -176,7 +176,7 @@ void 		tsmux_program_add_stream 	(TsMuxProgram *program, TsMuxStream *stream);
 void 		tsmux_program_set_pcr_stream 	(TsMuxProgram *program, TsMuxStream *stream);
 
 /* writing stuff */
-gboolean 	tsmux_write_stream_packet 	(TsMux *mux, TsMuxStream *stream, gboolean delta);
+gboolean 	tsmux_write_stream_packet 	(TsMux *mux, TsMuxStream *stream);
 
 G_END_DECLS
 
