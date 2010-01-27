@@ -268,6 +268,7 @@ static GstStateChangeReturn gst_dvbsrc_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_dvbsrc_unlock (GstBaseSrc * bsrc);
+static gboolean gst_dvbsrc_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size);
 
@@ -330,6 +331,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dvbsrc_unlock);
+  gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_dvbsrc_unlock_stop);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_dvbsrc_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_dvbsrc_get_size);
 
@@ -887,7 +889,7 @@ read_device (int fd, int adapter_number, int frontend_number, int size,
   pfd[0].fd = fd;
   pfd[0].events = POLLIN;
 
-  while (count < size) {
+  while (count < size && !object->need_unlock) {
     ret_val = poll (pfd, 1, TIMEOUT);
     if (ret_val > 0) {
       if (pfd[0].revents & POLLIN) {
@@ -931,6 +933,11 @@ read_device (int fd, int adapter_number, int frontend_number, int size,
       };
     }
 
+  }
+
+  if (!count) {
+    gst_buffer_unref (buf);
+    return NULL;
   }
 
   GST_BUFFER_SIZE (buf) = count;
@@ -1036,6 +1043,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
     close (src->fd_frontend);
     return FALSE;
   }
+  src->need_unlock = FALSE;
 
   return TRUE;
 }
@@ -1052,6 +1060,18 @@ gst_dvbsrc_stop (GstBaseSrc * bsrc)
 static gboolean
 gst_dvbsrc_unlock (GstBaseSrc * bsrc)
 {
+  GstDvbSrc *src = GST_DVBSRC (bsrc);
+
+  src->need_unlock = TRUE;
+  return TRUE;
+}
+
+static gboolean
+gst_dvbsrc_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstDvbSrc *src = GST_DVBSRC (bsrc);
+
+  src->need_unlock = FALSE;
   return TRUE;
 }
 

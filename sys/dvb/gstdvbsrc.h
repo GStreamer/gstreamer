@@ -78,6 +78,7 @@ G_BEGIN_DECLS
     GstDvbSrcPol pol;
     guint stats_interval;
     guint stats_counter;
+    gboolean need_unlock;
   };
 
   struct _GstDvbSrcClass
