@@ -18,6 +18,7 @@ avimux
 avisubtitle
 cmmldec
 cmmlenc
+deinterlace
 deinterleave
 equalizer
 gdkpixbufsink
