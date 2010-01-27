@@ -235,13 +235,13 @@ gst_lv2_base_init (gpointer g_class)
             assert (group);
             assert (slv2_value_equals (group->uri, group_uri));
           } else {
-            GST_WARNING ("plugin %s has duplicate group symbol '%s'\n",
+            GST_WARNING ("plugin %s has duplicate group symbol '%s'",
                 slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)),
                 slv2_value_as_string (g.symbol));
             in_group = FALSE;
           }
         } else {
-          GST_WARNING ("plugin %s has illegal group with no symbol\n",
+          GST_WARNING ("plugin %s has illegal group with no symbol",
               slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)));
           in_group = FALSE;
         }
@@ -413,6 +413,9 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
     g_free (tempstr);
   }
 
+  GST_DEBUG ("%s trying port %s : %s",
+      slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), name, nick);
+
   perms = G_PARAM_READABLE;
   if (slv2_port_is_a (lv2plugin, port, input_class))
     perms |= G_PARAM_WRITABLE | G_PARAM_CONSTRUCT;
@@ -438,13 +441,13 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
   slv2_value_free (lv2max);
 
   if (def < lower) {
-    GST_WARNING ("%s has lower bound %f > default %f\n",
+    GST_WARNING ("%s has lower bound %f > default %f",
         slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), lower, def);
     lower = def;
   }
 
   if (def > upper) {
-    GST_WARNING ("%s has upper bound %f < default %f\n",
+    GST_WARNING ("%s has upper bound %f < default %f",
         slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)), upper, def);
     upper = def;
   }
