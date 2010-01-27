@@ -410,32 +410,32 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
   gst_caps_unref (caps);
 
   ret = TRUE;
-  GST_OBJECT_UNLOCK (src);
+
 out:
+
+  GST_OBJECT_UNLOCK (src);
+
   g_free (mimetype);
   g_free (charset);
-
 
   return ret;
 
 invalid_uri:
   {
-    GST_OBJECT_UNLOCK (src);
-    GST_ELEMENT_ERROR (src, STREAM, FORMAT, (NULL), (NULL));
+    GST_WARNING_OBJECT (src, "invalid URI '%s'", uri);
+    goto out;
   }
-  goto out;
 wrong_state:
   {
-    GST_OBJECT_UNLOCK (src);
-    GST_ELEMENT_ERROR (src, CORE, FAILED, (NULL), (NULL));
+    GST_WARNING_OBJECT (src, "Can't set URI in %s state",
+        gst_element_state_get_name (GST_STATE (src)));
+    goto out;
   }
-  goto out;
 invalid_uri_encoded_data:
   {
-    GST_OBJECT_UNLOCK (src);
-    GST_ELEMENT_ERROR (src, STREAM, FORMAT, (NULL), (NULL));
+    GST_WARNING_OBJECT (src, "Failed to parse data encoded in URI '%s'", uri);
+    goto out;
   }
-  goto out;
 }
 
 static gboolean
