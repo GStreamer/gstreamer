@@ -94,6 +94,7 @@ enum
 #define DEFAULT_TS_OFFSET       0
 #define DEFAULT_DO_LOST         FALSE
 #define DEFAULT_MODE            RTP_JITTER_BUFFER_MODE_SLAVE
+#define DEFAULT_PERCENT         0
 
 enum
 {
@@ -103,6 +104,7 @@ enum
   PROP_TS_OFFSET,
   PROP_DO_LOST,
   PROP_MODE,
+  PROP_PERCENT,
   PROP_LAST
 };
 
@@ -355,6 +357,15 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_param_spec_enum ("mode", "Mode",
           "Control the buffering algorithm in use", RTP_TYPE_JITTER_BUFFER_MODE,
           DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtpJitterBuffer::percent:
+   *
+   * The percent of the jitterbuffer that is filled.
+   */
+  g_object_class_install_property (gobject_class, PROP_PERCENT,
+      g_param_spec_int ("percent", "percent",
+          "The buffer filled percent", 0, 100,
+          0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -672,6 +683,9 @@ gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jbuf, gboolean active,
         GST_TIME_ARGS (priv->out_offset));
     priv->active = active;
     JBUF_SIGNAL (priv);
+  }
+  if (!active) {
+    rtp_jitter_buffer_set_buffering (priv->jbuf, TRUE);
   }
   if ((head = rtp_jitter_buffer_peek (priv->jbuf))) {
     /* head buffer timestamp and offset gives our output time */
@@ -2131,6 +2145,20 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       g_value_set_enum (value, rtp_jitter_buffer_get_mode (priv->jbuf));
       JBUF_UNLOCK (priv);
       break;
+    case PROP_PERCENT:
+    {
+      gint percent;
+
+      JBUF_LOCK (priv);
+      if (priv->srcresult != GST_FLOW_OK)
+        percent = 100;
+      else
+        percent = rtp_jitter_buffer_get_percent (priv->jbuf);
+
+      g_value_set_int (value, percent);
+      JBUF_UNLOCK (priv);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

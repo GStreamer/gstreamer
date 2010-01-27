@@ -162,7 +162,7 @@ rtp_jitter_buffer_set_delay (RTPJitterBuffer * jbuf, GstClockTime delay)
   jbuf->high_level = (delay * 90) / 100;
 
   GST_DEBUG ("delay %" GST_TIME_FORMAT ", min %" GST_TIME_FORMAT ", max %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (jbuf->level),
+      GST_TIME_FORMAT, GST_TIME_ARGS (jbuf->delay),
       GST_TIME_ARGS (jbuf->low_level), GST_TIME_ARGS (jbuf->high_level));
 }
 
@@ -209,17 +209,17 @@ rtp_jitter_buffer_resync (RTPJitterBuffer * jbuf, GstClockTime time,
   }
 }
 
-static void
-update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
+static guint64
+get_buffer_level (RTPJitterBuffer * jbuf)
 {
   GstBuffer *high_buf, *low_buf;
-  gboolean post = FALSE;
+  guint64 level;
 
   high_buf = g_queue_peek_head (jbuf->packets);
   low_buf = g_queue_peek_tail (jbuf->packets);
 
   if (!high_buf || !low_buf || high_buf == low_buf) {
-    jbuf->level = 0;
+    level = 0;
   } else {
     guint64 high_ts, low_ts;
 
@@ -227,20 +227,30 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
     low_ts = GST_BUFFER_TIMESTAMP (low_buf);
 
     if (high_ts > low_ts)
-      jbuf->level = high_ts - low_ts;
+      level = high_ts - low_ts;
     else
-      jbuf->level = 0;
+      level = 0;
   }
-  GST_DEBUG ("buffer level %" GST_TIME_FORMAT, GST_TIME_ARGS (jbuf->level));
+  return level;
+}
+
+static void
+update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
+{
+  gboolean post = FALSE;
+  guint64 level;
+
+  level = get_buffer_level (jbuf);
+  GST_DEBUG ("buffer level %" GST_TIME_FORMAT, GST_TIME_ARGS (level));
 
   if (jbuf->buffering) {
     post = TRUE;
-    if (jbuf->level > jbuf->high_level) {
+    if (level > jbuf->high_level) {
       GST_DEBUG ("buffering finished");
       jbuf->buffering = FALSE;
     }
   } else {
-    if (jbuf->level < jbuf->low_level) {
+    if (level < jbuf->low_level) {
       GST_DEBUG ("buffering started");
       jbuf->buffering = TRUE;
       post = TRUE;
@@ -250,7 +260,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
     gint perc;
 
     if (jbuf->buffering) {
-      perc = (jbuf->level * 100 / jbuf->high_level);
+      perc = (level * 100 / jbuf->high_level);
       perc = MIN (perc, 100);
     } else {
       perc = 100;
@@ -323,7 +333,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
  */
 static GstClockTime
 calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
-    guint32 clock_rate, GstClockTime max_delay)
+    guint32 clock_rate)
 {
   guint64 ext_rtptime;
   guint64 send_diff, recv_diff;
@@ -721,6 +731,40 @@ gboolean
 rtp_jitter_buffer_is_buffering (RTPJitterBuffer * jbuf)
 {
   return jbuf->buffering;
+}
+
+/**
+ * rtp_jitter_buffer_set_buffering:
+ * @jbuf: an #RTPJitterBuffer
+ * @buffering: the new buffering state
+ *
+ * Forces @jbuf to go into the buffering state.
+ */
+void
+rtp_jitter_buffer_set_buffering (RTPJitterBuffer * jbuf, gboolean buffering)
+{
+  jbuf->buffering = buffering;
+}
+
+/**
+ * rtp_jitter_buffer_get_percent:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Get the buffering percent of the jitterbuffer.
+ *
+ * Returns: the buffering percent
+ */
+gint
+rtp_jitter_buffer_get_percent (RTPJitterBuffer * jbuf)
+{
+  gint percent;
+  guint64 level;
+
+  level = get_buffer_level (jbuf);
+  percent = (level * 100 / jbuf->high_level);
+  percent = MIN (percent, 100);
+
+  return percent;
 }
 
 /**

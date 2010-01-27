@@ -1771,7 +1771,6 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
           gst_structure_set ((GstStructure *) s, "session", G_TYPE_UINT,
               sess->id, NULL);
         }
-        GST_RTP_BIN_UNLOCK (rtpbin);
       }
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
@@ -1780,7 +1779,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
     {
       gint percent;
       gint min_percent = 100;
-      GSList *sessions, *streams, *elements = NULL;
+      GSList *sessions, *streams;
       GstRtpBinStream *stream;
       gboolean change = FALSE, active = FALSE;
       GstClockTime min_out_time;
@@ -1808,7 +1807,6 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
           for (streams = session->streams; streams;
               streams = g_slist_next (streams)) {
             GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
-            GstElement *element = stream->buffer;
 
             GST_DEBUG_OBJECT (bin, "stream %p percent %d", stream,
                 stream->percent);
@@ -1816,8 +1814,6 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             /* find min percent */
             if (min_percent > stream->percent)
               min_percent = stream->percent;
-
-            elements = g_slist_prepend (elements, gst_object_ref (element));
           }
           GST_RTP_SESSION_UNLOCK (session);
         }
@@ -1863,6 +1859,8 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
               "running time now %" GST_TIME_FORMAT,
               GST_TIME_ARGS (running_time));
 
+          GST_RTP_BIN_LOCK (rtpbin);
+
           /* when we reactivate, calculate the offsets so that all streams have
            * an output time that is at least as big as the running_time */
           offset = 0;
@@ -1876,28 +1874,38 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
             }
           }
 
+          /* pause all streams */
           min_out_time = -1;
-          while (G_LIKELY (elements)) {
-            GstElement *element = elements->data;
-            GstClockTime last_out;
+          for (sessions = rtpbin->sessions; sessions;
+              sessions = g_slist_next (sessions)) {
+            GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
 
-            g_signal_emit_by_name (element, "set-active", active, offset,
-                &last_out);
+            GST_RTP_SESSION_LOCK (session);
+            for (streams = session->streams; streams;
+                streams = g_slist_next (streams)) {
+              GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+              GstElement *element = stream->buffer;
+              guint64 last_out;
 
-            if (!active) {
-              if (last_out == -1)
-                last_out = 0;
-              if (last_out < min_out_time)
-                min_out_time = last_out;
+              g_signal_emit_by_name (element, "set-active", active, offset,
+                  &last_out);
+
+              if (!active) {
+                g_object_get (element, "percent", &stream->percent, NULL);
+
+                if (last_out == -1)
+                  last_out = 0;
+                if (last_out < min_out_time)
+                  min_out_time = last_out;
+              }
+
+              GST_DEBUG_OBJECT (bin,
+                  "setting %p to %d, offset %" GST_TIME_FORMAT ", last %"
+                  GST_TIME_FORMAT ", percent %d", element, active,
+                  GST_TIME_ARGS (offset), GST_TIME_ARGS (last_out),
+                  stream->percent);
             }
-
-            GST_DEBUG_OBJECT (bin,
-                "setting %p to %d, offset %" GST_TIME_FORMAT ", last %"
-                GST_TIME_FORMAT, element, active, GST_TIME_ARGS (offset),
-                GST_TIME_ARGS (last_out));
-
-            gst_object_unref (element);
-            elements = g_slist_delete_link (elements, elements);
+            GST_RTP_SESSION_UNLOCK (session);
           }
           GST_DEBUG_OBJECT (bin,
               "min out time %" GST_TIME_FORMAT, GST_TIME_ARGS (min_out_time));
@@ -1905,6 +1913,8 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
           /* the buffer_start is the min out time of all paused jitterbuffers */
           if (!active)
             rtpbin->buffer_start = min_out_time;
+
+          GST_RTP_BIN_UNLOCK (rtpbin);
         }
       }
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
