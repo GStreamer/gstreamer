@@ -375,13 +375,20 @@ gst_lv2_base_init (gpointer g_class)
 }
 
 static gchar *
-gst_lv2_class_get_param_name (GstLV2Class * klass, gint portnum)
+gst_lv2_class_get_param_name (GstLV2Class * klass, SLV2Port port)
 {
   SLV2Plugin lv2plugin = klass->plugin;
-  SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, portnum);
 
   return g_strdup (slv2_value_as_string (slv2_port_get_symbol (lv2plugin,
               port)));
+}
+
+static gchar *
+gst_lv2_class_get_param_nick (GstLV2Class * klass, SLV2Port port)
+{
+  SLV2Plugin lv2plugin = klass->plugin;
+
+  return g_strdup (slv2_value_as_string (slv2_port_get_name (lv2plugin, port)));
 }
 
 static GParamSpec *
@@ -395,8 +402,8 @@ gst_lv2_class_get_param_spec (GstLV2Class * klass, gint portnum)
   gint perms;
   gfloat lower = 0.0f, upper = 1.0f, def = 0.0f;
 
-  nick = gst_lv2_class_get_param_name (klass, portnum);
-  name = g_strdup (nick);
+  nick = gst_lv2_class_get_param_nick (klass, port);
+  name = gst_lv2_class_get_param_name (klass, port);
   g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
   if (!((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A'
               && name[0] <= 'Z'))) {
