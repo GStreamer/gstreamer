@@ -306,6 +306,11 @@ gst_pulsering_context_state_cb (pa_context * c, void *userdata)
   state = pa_context_get_state (c);
   GST_LOG_OBJECT (psink, "got new context state %d", state);
 
+  /* psink can be null when we are shutting down and the ringbuffer is already
+   * unparented */
+  if (psink == NULL)
+    return;
+
   switch (state) {
     case PA_CONTEXT_READY:
     case PA_CONTEXT_TERMINATED:
