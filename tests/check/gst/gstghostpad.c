@@ -376,7 +376,7 @@ GST_START_TEST (test_ghost_pads)
    * all pads */
 
   /* wait for thread to settle down */
-  while (GST_OBJECT_REFCOUNT_VALUE (fsrc) > 2)
+  while (GST_OBJECT_REFCOUNT_VALUE (fsrc) > 1)
     THREAD_SWITCH ();
 
   ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 1);
