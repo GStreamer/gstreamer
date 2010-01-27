@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-10 20:40+0000\n"
+"POT-Creation-Date: 2010-01-27 00:55+0000\n"
 "PO-Revision-Date: 2009-07-30 12:26+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -489,24 +489,11 @@ msgstr "Ierīce \"%s\" jau tiek izmantota."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
 
-#, fuzzy
-#~ msgid "Can't display both text subtitles and subpictures."
+#~ msgid "Can't play a text subtitles and subpictures."
 #~ msgstr "Nevar atskaņot teksta subtitrus un subattēlus."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Nav norādīta ierīce."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Nevarēja aizvērt vfs failu \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Iekšējās datu plūsmas kļūda."
 
 #~ msgid "No file name specified."
 #~ msgstr "Nav norādīts faila nosaukums."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."

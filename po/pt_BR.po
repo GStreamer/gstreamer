@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-10 20:40+0000\n"
-"PO-Revision-Date: 2009-04-16 21:03-0300\n"
+"POT-Creation-Date: 2010-01-27 00:55+0000\n"
+"PO-Revision-Date: 2009-11-05 01:06-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "MIME-Version: 1.0\n"
@@ -126,9 +126,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Este parece ser um arquivo de texto"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Não foi possível criar o elemento \"typefind\"."
+msgstr "Não foi possível determinar o tipo de fluxo"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -182,21 +181,19 @@ msgstr ""
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Os elementos autoaudiosink e alsasink estão faltando."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Os elementos autovideosink e xvimagesink estão faltando."
+msgstr "Os elementos autovideosink e %s estão faltando."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Os elementos autovideosink e xvimagesink estão faltando."
+msgstr "O elemento autovideosink está faltando."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Os elementos autovideosink e xvimagesink não estão funcionando."
+msgstr "Os elementos autovideosink e %s não estão funcionando."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Os elementos autovideosink e xvimagesink não estão funcionando."
+msgstr "O elemento autovideosink não está funcionando."
 
 msgid "Custom text sink element is not usable."
 msgstr "O elemento consumidor personalizado de texto não é utilizável."
@@ -204,21 +201,19 @@ msgstr "O elemento consumidor personalizado de texto não é utilizável."
 msgid "No volume control found"
 msgstr "Nenhum controle de volume encontrado"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Os elementos autoaudiosink e alsasink estão faltando."
+msgstr "Os elementos autoaudiosink e %s estão faltando."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Os elementos autoaudiosink e alsasink estão faltando."
+msgstr "O elemento autoaudiosink não está faltando."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Os elementos autoaudiosink e alsasink não estão funcionando."
+msgstr "Os elementos autoaudiosink e %s não estão funcionando."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Os elementos autoaudiosink e alsasink não estão funcionando."
+msgstr "O elemento autoaudiosink não está funcionando."
 
 msgid "Can't play a text file without video."
 msgstr "Não é possível reproduzir um arquivo de texto sem vídeo."
@@ -491,22 +486,18 @@ msgstr "O dispositivo \"%s\" já está sendo usado."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e escrita."
 
-#, fuzzy
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Não é possível reproduzir legendas de texto e subimagens."
 
-#, fuzzy
 #~ msgid "No Temp directory specified."
-#~ msgstr "Nenhum dispositivo especificado."
+#~ msgstr "Nenhum diretório temporário especificado."
 
-#, fuzzy
 #~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Não foi possível fechar o arquivo VFS \"%s\"."
+#~ msgstr "Não foi possível criar o arquivo temporário \"%s\"."
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
-#, fuzzy
 #~ msgid "Internal data flow error."
 #~ msgstr "Erro interno no fluxo de dados."
 
