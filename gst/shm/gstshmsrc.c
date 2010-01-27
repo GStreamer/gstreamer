@@ -218,8 +218,10 @@ gst_shm_src_stop (GstBaseSrc * bsrc)
 
   GST_DEBUG_OBJECT (self, "Stopping %p", self);
 
+  GST_OBJECT_LOCK (self);
   sp_close (self->pipe);
   self->pipe = NULL;
+  GST_OBJECT_UNLOCK (self);
 
   gst_poll_free (self->poll);
   self->poll = NULL;
@@ -236,7 +238,9 @@ free_buffer (gpointer data)
 
   GST_LOG ("Freeing buffer %p", gsb->buf);
 
+  GST_OBJECT_LOCK (gsb->src);
   sp_client_recv_finish (gsb->src->pipe, gsb->buf);
+  GST_OBJECT_UNLOCK (gsb->src);
 
   gst_object_unref (gsb->src);
   g_slice_free (struct GstShmBuffer, gsb);
@@ -277,7 +281,9 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     if (gst_poll_fd_can_read (self->poll, &self->pollfd)) {
       buf = NULL;
       GST_LOG_OBJECT (self, "Reading from pipe");
+      GST_OBJECT_LOCK (self);
       rv = sp_client_recv (self->pipe, &buf);
+      GST_OBJECT_UNLOCK (self);
       if (rv < 0) {
         GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
             ("Error reading control data: %d", rv));
