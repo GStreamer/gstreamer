@@ -234,19 +234,31 @@ gst_data_uri_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   GstFlowReturn ret;
 
   GST_OBJECT_LOCK (src);
-  if (!src->buffer) {
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), (NULL));
-  } else if (offset + size > GST_BUFFER_SIZE (src->buffer)) {
+
+  if (!src->buffer)
+    goto no_buffer;
+
+  /* This is only correct because GstBaseSrc already clips size for us to be no
+   * larger than the max. available size if a segment at the end is requested */
+  if (offset + size > GST_BUFFER_SIZE (src->buffer)) {
     ret = GST_FLOW_UNEXPECTED;
   } else {
     ret = GST_FLOW_OK;
     *buf = gst_buffer_create_sub (src->buffer, offset, size);
     gst_buffer_set_caps (*buf, GST_BUFFER_CAPS (src->buffer));
   }
+
   GST_OBJECT_UNLOCK (src);
 
   return ret;
+
+/* ERRORS */
+no_buffer:
+  {
+    GST_OBJECT_UNLOCK (src);
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), (NULL));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static gboolean
