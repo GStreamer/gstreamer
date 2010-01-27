@@ -3,8 +3,8 @@ AC_PREREQ(2.52)
 dnl please read gstreamer/docs/random/autotools before changing this file
 
 dnl initialize autoconf
-dnl releases only do -Wall, cvs and prerelease does -Werror too
-dnl use a three digit version number for releases, and four for cvs/pre
+dnl releases only do -Wall, git and prerelease does -Werror too
+dnl use a three digit version number for releases, and four for git/pre
 AC_INIT(GStreamer Good Plug-ins, 0.10.17.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-good)
@@ -18,7 +18,7 @@ dnl define PACKAGE_VERSION_* variables
 AS_VERSION
 
 dnl check if this is a release version
-AS_NANO(GST_CVS="no", GST_CVS="yes")
+AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
@@ -267,13 +267,13 @@ dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_GIT)
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CXXFLAGS($GST_GIT)
 
 dnl define correct level for debugging messages
-AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
@@ -1006,7 +1006,7 @@ fi
 AC_SUBST(PROFILE_CFLAGS)
 
 if test "x$PACKAGE_VERSION_NANO" = "x1"; then
-  dnl Define _only_ during CVS (not pre-releases or releases)
+  dnl Define _only_ for git (not pre-releases or releases)
   DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
 else
   DEPRECATED_CFLAGS=""
