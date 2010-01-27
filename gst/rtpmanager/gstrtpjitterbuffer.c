@@ -1433,9 +1433,11 @@ again:
       }
     }
     /* now we wait */
+    GST_DEBUG_OBJECT (jitterbuffer, "waiting");
     priv->waiting = TRUE;
     JBUF_WAIT (priv);
     priv->waiting = FALSE;
+    GST_DEBUG_OBJECT (jitterbuffer, "waiting done");
 
     if (id) {
       /* unschedule any pending async notifications we might have */
