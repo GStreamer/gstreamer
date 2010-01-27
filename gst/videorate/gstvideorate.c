@@ -209,6 +209,8 @@ gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
   GstCaps *intersect;
   const GstCaps *in_templ;
   gint i;
+  GSList *extra_structures = NULL;
+  GSList *iter;
 
   in_templ = gst_pad_get_pad_template_caps (in_pad);
   intersect = gst_caps_intersect (in_caps, in_templ);
@@ -219,9 +221,22 @@ gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
 
     structure = gst_caps_get_structure (intersect, i);
 
-    gst_structure_set (structure,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    if (gst_structure_has_field (structure, "framerate")) {
+      GstStructure *copy_structure;
+
+      copy_structure = gst_structure_copy (structure);
+      gst_structure_set (copy_structure,
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      extra_structures = g_slist_append (extra_structures, copy_structure);
+    }
   }
+
+  /* append the extra structures */
+  for (iter = extra_structures; iter != NULL; iter = g_slist_next (iter)) {
+    gst_caps_append_structure (intersect, (GstStructure *) iter->data);
+  }
+  g_slist_free (extra_structures);
+
   *out_caps = intersect;
 
   return TRUE;
