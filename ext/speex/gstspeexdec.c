@@ -148,7 +148,9 @@ gst_speex_dec_reset (GstSpeexDec * dec)
   dec->frame_size = 0;
   dec->frame_duration = 0;
   dec->mode = NULL;
-  dec->header = NULL;           /* FIXME: free ?! */
+  free (dec->header);
+  dec->header = NULL;
+  speex_bits_destroy (&dec->bits);
   if (dec->state) {
     speex_decoder_destroy (dec->state);
     dec->state = NULL;
