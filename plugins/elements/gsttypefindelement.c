@@ -951,6 +951,18 @@ gst_type_find_element_activate (GstPad * pad)
     }
   }
 
+  /* the type find helpers might have triggered setcaps here (due to upstream)
+   * setting caps on buffers, which emits typefound signal and an element
+   * could have been linked and have its pads activated
+   *
+   * If we deactivate the pads in the following steps we might mess up
+   * downstream element. We should prevent that.
+   */
+  if (typefind->mode == MODE_NORMAL) {
+    /* this means we already emitted typefound */
+    goto really_done;
+  }
+
   /* 3 */
   gst_pad_activate_pull (pad, FALSE);
 
@@ -973,8 +985,9 @@ done:
   /* 7 */
   g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
       0, probability, found_caps);
-  gst_caps_unref (found_caps);
   typefind->mode = MODE_NORMAL;
+really_done:
+  gst_caps_unref (found_caps);
 
   /* 8 */
   if (gst_pad_is_active (pad))
