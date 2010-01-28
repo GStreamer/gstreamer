@@ -6,16 +6,28 @@
 # run this from a directory that contains the checkouts for each of the
 # modules
 
-FAILURE=
+PIDS=
 
+CORE="\
+    gstreamer gst-plugins-base"
 MODULES="\
-    gstreamer gst-plugins-base \
     gst-plugins-good gst-plugins-ugly gst-plugins-bad \
     gst-ffmpeg \
     gst-python \
     gnonlin"
 
-for m in $MODULES; do
+tmp=${TMPDIR-/tmp}
+tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$
+
+(umask 077 && mkdir "$tmp") || {
+  echo "Could not create temporary directory! Exiting." 1>&2
+  exit 1
+}
+
+ERROR_LOG="$tmp/failures.log"
+touch $ERROR_LOG
+
+for m in $CORE $MODULES; do
   if test -d $m; then
     echo "+ updating $m"
     cd $m
@@ -23,56 +35,22 @@ for m in $MODULES; do
     git pull origin master
     if test $? -ne 0
     then
+      echo "$m: update (trying stash, pull, stash apply)" >> $ERROR_LOG
       git stash
       git pull origin master
       if test $? -ne 0
       then 
-        git stash apply
-        FAILURE="$FAILURE$m: update\n"
-      else
-        git stash apply
-      fi
-      cd ..
-      continue
-    fi
-    git submodule update
-    if test $? -ne 0
-    then
-      FAILURE="$FAILURE$m: update\n"
-      cd ..
-      continue
-    fi
-    cd ..
-  fi
-done
-
-# then build
-for m in $MODULES; do
-  if test -d $m; then
-    cd $m
-    if test ! -e Makefile
-    then
-      ./autoregen.sh
-      if test $? -ne 0
-      then
-        FAILURE="$FAILURE$m: autoregen.sh\n"
+        echo "$m: update" >> $ERROR_LOG
         cd ..
         continue
       fi
+      git stash apply
     fi
 
-    make $@
+    git submodule update
     if test $? -ne 0
     then
-      FAILURE="$FAILURE$m: make\n"
-      cd ..
-      continue
-    fi
-
-    make $@ check
-    if test $? -ne 0
-    then
-      FAILURE="$FAILURE$m: check\n"
+      echo "$m: update (submodule)" >> $ERROR_LOG
       cd ..
       continue
     fi
@@ -80,8 +58,74 @@ for m in $MODULES; do
   fi
 done
 
-if test "x$FAILURE" != "x";  then
+build()
+{
+  if test -d $1; then
+    cd $1
+    if test ! -e Makefile
+    then
+      echo "+ $1: autoregen.sh"
+      ./autoregen.sh > "$tmp/$1-regen.log" 2>&1
+      if test $? -ne 0
+      then
+        echo "$1: autoregen.sh [$tmp/$1-regen.log]" >> $ERROR_LOG
+        cd ..
+        return -1
+      fi
+      echo "+ $1: autoregen.sh done"
+    fi
+
+    echo "+ $1: make"
+    make > "$tmp/$1-make.log" 2>&1
+    if test $? -ne 0
+    then
+      echo "$1: make [$tmp/$1-make.log]" >> $ERROR_LOG
+      cd ..
+      return -1
+    fi
+    echo "+ $1: make done"
+
+    if test "x$CHECK" != "x"; then
+      echo "+ $1: make check"
+      make check > "$tmp/$1-check.log" 2>&1
+      if test $? -ne 0
+      then
+        echo "$1: check [$tmp/$1-check.log]" >> $ERROR_LOG
+        cd ..
+        return
+      fi
+      echo "+ $1: make check done"
+    fi
+    cd ..
+  fi
+}
+
+beach()
+{
+if test -e $ERROR_LOG;  then
   echo "Failures:"
   echo
-  echo -e $FAILURE
+  cat $ERROR_LOG
+else
+  rm -rf "$tmp"
 fi
+}
+
+# build core and base plugins sequentially
+# exit if build fails (excluding checks)
+for m in $CORE; do
+  build $m
+  if [ $? == -1 ]; then
+  beach
+  fi
+done
+
+# build other modules in parallel
+for m in $MODULES; do
+  build $m &
+  PIDS="$PIDS $!"
+done
+wait $PIDS
+
+beach
+
