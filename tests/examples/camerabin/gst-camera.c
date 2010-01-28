@@ -130,6 +130,8 @@ static gchar *image_post;
 
 static GList *video_caps_list = NULL;
 
+static guint bus_handler_id = 0;
+
 #ifdef HAVE_GST_PHOTO_IFACE_H
 static gchar *iso_speed_labels[] = { "auto", "100", "200", "400" };
 
@@ -314,11 +316,17 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
       gst_message_parse_state_changed (message, &old, &new, &pending);
 
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "state-change %s -> %s",
+          gst_element_state_get_name (old), gst_element_state_get_name (new));
+
       /* Create/destroy color controls according videosrc state */
       if (GST_MESSAGE_SRC (message) == GST_OBJECT (gst_videosrc)) {
-        if (old == GST_STATE_PAUSED && new == GST_STATE_READY) {
+        GST_INFO_OBJECT (GST_MESSAGE_SRC (message), "state-change %s -> %s",
+            gst_element_state_get_name (old), gst_element_state_get_name (new));
+
+        if (old == GST_STATE_READY && new == GST_STATE_NULL) {
           destroy_color_controls ();
-        } else if (old == GST_STATE_READY && new == GST_STATE_PAUSED) {
+        } else if (old == GST_STATE_NULL && new == GST_STATE_READY) {
           create_color_controls ();
         }
       }
@@ -334,8 +342,8 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS, dump_name);
         g_free (dump_name);
       }
-    }
       break;
+    }
     case GST_MESSAGE_ELEMENT:
     {
       handle_element_message (message);
@@ -502,7 +510,6 @@ me_gst_setup_pipeline_create_vid_post_bin (const gchar * videopost)
 static gboolean
 me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
 {
-  GstMessage *msg;
   GstBus *bus;
   GstCaps *preview_caps;
 
@@ -521,7 +528,7 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
   preview_caps = gst_caps_from_string (PREVIEW_CAPS);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (gst_camera_bin));
-  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  bus_handler_id = gst_bus_add_watch (bus, my_bus_callback, NULL);
   gst_bus_set_sync_handler (bus, my_bus_sync_callback, NULL);
   gst_object_unref (bus);
 
@@ -570,17 +577,6 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
 
   gst_element_set_state (gst_camera_bin, GST_STATE_PLAYING);
 
-  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (gst_camera_bin),
-      3 * GST_SECOND, GST_MESSAGE_ERROR | GST_MESSAGE_ASYNC_DONE);
-
-  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    print_error_message (msg);
-    gst_message_unref (msg);
-    goto done;
-  }
-
-  gst_message_unref (msg);
-
 #ifdef HAVE_GST_PHOTO_IFACE_H
   /* Initialize menus to default settings */
   GtkWidget *sub_menu =
@@ -600,11 +596,28 @@ done:
   return FALSE;
 }
 
+static gboolean
+me_gst_setup_default_pipeline (gpointer data)
+{
+  if (!me_gst_setup_pipeline (NULL, NULL)) {
+    gtk_main_quit ();
+  }
+  return FALSE;
+}
+
 static void
 me_gst_cleanup_element ()
 {
   if (gst_camera_bin) {
+    GstBus *bus;
+
     gst_element_set_state (gst_camera_bin, GST_STATE_NULL);
+    gst_element_get_state (gst_camera_bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (gst_camera_bin));
+    gst_bus_set_sync_handler (bus, NULL, NULL);
+    g_source_remove (bus_handler_id);
+
     gst_object_unref (gst_camera_bin);
     gst_camera_bin = NULL;
 
@@ -842,8 +855,21 @@ on_comboboxResolution_changed (GtkComboBox * widget, gpointer user_data)
       g_list_nth_data (video_caps_list, gtk_combo_box_get_active (widget));
 
   if (video_caps) {
+    GstState old;
 
-    gst_element_set_state (gst_camera_bin, GST_STATE_READY);
+    gst_element_get_state (gst_camera_bin, &old, NULL, GST_CLOCK_TIME_NONE);
+    GST_DEBUG ("change resolution in %s", gst_element_state_get_name (old));
+
+    if (old != GST_STATE_NULL) {
+      gst_element_set_state (gst_camera_bin, GST_STATE_READY);
+      /* source need to be NULL, otherwise changing the mode fails with device
+       * busy:
+       * - if src goes from NULL->PLAYING it sets new mode anyway
+       * - if src goes form READY->PLAYIN new mode is activated via reverse caps
+       *   negotiation, but then the device is already streaming
+       */
+      gst_element_set_state (gst_videosrc, GST_STATE_NULL);
+    }
 
     st = gst_caps_get_structure (video_caps, 0);
 
@@ -856,7 +882,9 @@ on_comboboxResolution_changed (GtkComboBox * widget, gpointer user_data)
 
     g_object_set (G_OBJECT (gst_camera_bin), "filter-caps", video_caps, NULL);
 
-    gst_element_set_state (gst_camera_bin, GST_STATE_PLAYING);
+    if (old != GST_STATE_NULL) {
+      gst_element_set_state (gst_camera_bin, old);
+    }
   }
 }
 
@@ -1198,15 +1226,16 @@ destroy_color_controls ()
 {
   GList *widgets, *item;
   GtkWidget *widget = NULL;
+  gpointer user_data = NULL;
 
   widgets = gtk_container_get_children (GTK_CONTAINER (ui_vbox_color_controls));
   for (item = widgets; item; item = g_list_next (item)) {
     widget = GTK_WIDGET (item->data);
+    user_data = g_object_get_data (G_OBJECT (widget), "channel");
     g_signal_handlers_disconnect_by_func (widget, (GFunc) format_value_callback,
-        g_object_get_data (G_OBJECT (widget), "channel"));
+        user_data);
     g_signal_handlers_disconnect_by_func (widget,
-        (GFunc) on_color_control_value_changed,
-        g_object_get_data (G_OBJECT (widget), "channel"));
+        (GFunc) on_color_control_value_changed, user_data);
     gtk_container_remove (GTK_CONTAINER (ui_vbox_color_controls), widget);
   }
   g_list_free (widgets);
@@ -1648,9 +1677,8 @@ main (int argc, char *argv[])
     goto done;
   }
   /* create pipeline and run */
-  if (me_gst_setup_pipeline (NULL, NULL)) {
-    gtk_main ();
-  }
+  g_idle_add (me_gst_setup_default_pipeline, NULL);
+  gtk_main ();
 
 done:
   me_gst_cleanup_element ();
