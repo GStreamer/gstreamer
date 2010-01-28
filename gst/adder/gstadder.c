@@ -232,11 +232,16 @@ static GstCaps *
 gst_adder_sink_getcaps (GstPad * pad)
 {
   GstAdder *adder;
-  GstCaps *result, *peercaps, *sinkcaps;
+  GstCaps *result, *peercaps, *sinkcaps, *filter_caps;
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
   GST_OBJECT_LOCK (adder);
+  /* take filter */
+  if ((filter_caps = adder->filter_caps))
+    gst_caps_ref (filter_caps);
+  GST_OBJECT_UNLOCK (adder);
+
   /* get the downstream possible caps */
   peercaps = gst_pad_peer_get_caps (adder->srcpad);
 
@@ -245,9 +250,9 @@ gst_adder_sink_getcaps (GstPad * pad)
   sinkcaps = gst_pad_get_fixed_caps_func (pad);
   if (peercaps) {
     /* restrict with filter-caps if any */
-    if (adder->filter_caps) {
+    if (filter_caps) {
       GST_DEBUG_OBJECT (adder, "filtering peer caps");
-      result = gst_caps_intersect (peercaps, adder->filter_caps);
+      result = gst_caps_intersect (peercaps, filter_caps);
       gst_caps_unref (peercaps);
       peercaps = result;
     }
@@ -260,16 +265,18 @@ gst_adder_sink_getcaps (GstPad * pad)
     /* the peer has no caps (or there is no peer), just use the allowed caps
      * of this sinkpad. */
     /* restrict with filter-caps if any */
-    if (adder->filter_caps) {
+    if (filter_caps) {
       GST_DEBUG_OBJECT (adder, "no peer caps, using filtered sinkcaps");
-      result = gst_caps_intersect (sinkcaps, adder->filter_caps);
+      result = gst_caps_intersect (sinkcaps, filter_caps);
       gst_caps_unref (sinkcaps);
     } else {
       GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
       result = sinkcaps;
     }
   }
-  GST_OBJECT_UNLOCK (adder);
+
+  if (filter_caps)
+    gst_caps_unref (filter_caps);
 
   GST_LOG_OBJECT (adder, "getting caps on pad %p,%s to %" GST_PTR_FORMAT, pad,
       GST_PAD_NAME (pad), result);
