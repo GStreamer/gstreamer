@@ -4382,17 +4382,42 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           goto done;
         }
 
-        if (GST_CLOCK_TIME_IS_VALID (stream->pos)) {
-          GstClockTimeDiff diff = GST_CLOCK_DIFF (stream->pos, lace_time);
+        /* handle gaps, e.g. non-zero start-time, or an cue index entry
+         * that landed us with timestamps not quite intended */
+        if (GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop)) {
+          GstClockTimeDiff diff;
 
-          if (diff < -GST_SECOND / 2 || diff > GST_SECOND / 2) {
+          /* only send newsegments with increasing start times,
+           * otherwise if these go back and forth downstream (sinks) increase
+           * accumulated time and running_time */
+          diff = GST_CLOCK_DIFF (demux->segment.last_stop, lace_time);
+          if (diff > 2 * GST_SECOND && lace_time > demux->segment.start &&
+              (!GST_CLOCK_TIME_IS_VALID (demux->segment.stop) ||
+                  lace_time < demux->segment.stop)) {
             GST_DEBUG_OBJECT (demux,
                 "Gap of %" G_GINT64_FORMAT " ns detected in"
-                "stream %d. Sending updated NEWSEGMENT event", diff,
-                stream->index);
-            gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
-                    demux->segment.rate, demux->segment.format, lace_time,
-                    demux->segment.stop, lace_time));
+                "stream %d (" GST_TIME_FORMAT " -> " GST_TIME_FORMAT "). "
+                "Sending updated NEWSEGMENT events", diff,
+                stream->index, GST_TIME_ARGS (stream->pos),
+                GST_TIME_ARGS (lace_time));
+            /* send newsegment events such that the gap is not accounted in
+             * accum time, hence running_time */
+            /* close ahead of gap */
+            gst_matroska_demux_send_event (demux,
+                gst_event_new_new_segment (TRUE, demux->segment.rate,
+                    demux->segment.format, demux->segment.last_stop,
+                    demux->segment.last_stop, demux->segment.last_stop));
+            /* skip gap */
+            gst_matroska_demux_send_event (demux,
+                gst_event_new_new_segment (FALSE, demux->segment.rate,
+                    demux->segment.format, lace_time, demux->segment.stop,
+                    lace_time));
+            /* align segment view with downstream,
+             * prevents double-counting accum when closing segment */
+            gst_segment_set_newsegment (&demux->segment, FALSE,
+                demux->segment.rate, demux->segment.format, lace_time,
+                demux->segment.stop, lace_time);
+            demux->segment.last_stop = lace_time;
           }
         }
 
