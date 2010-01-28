@@ -1742,9 +1742,9 @@ atom_stsz_copy_data (AtomSTSZ * stsz, guint8 ** buffer, guint64 * size,
 
   prop_copy_uint32 (stsz->sample_size, buffer, size, offset);
   prop_copy_uint32 (stsz->table_size, buffer, size, offset);
-  /* minimize realloc */
-  prop_copy_ensure_buffer (buffer, size, offset, 4 * stsz->table_size);
   if (stsz->sample_size == 0) {
+    /* minimize realloc */
+    prop_copy_ensure_buffer (buffer, size, offset, 4 * stsz->table_size);
     /* entry count must match sample count */
     g_assert (atom_array_get_len (&stsz->entries) == stsz->table_size);
     for (i = 0; i < atom_array_get_len (&stsz->entries); i++) {
