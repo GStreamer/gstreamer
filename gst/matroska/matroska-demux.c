@@ -3526,9 +3526,12 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         "Checking for resync on stream %d (%" GST_TIME_FORMAT ")", stream_nr,
         GST_TIME_ARGS (context->pos));
 
-    /* does it lag? 0.5 seconds is a random threshold... */
-    if (GST_CLOCK_TIME_IS_VALID (context->pos)
-        && context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
+    /* does it lag? 0.5 seconds is a random threshold...
+     * lag need only be considered if we have advanced into requested segment */
+    if (GST_CLOCK_TIME_IS_VALID (context->pos) &&
+        GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop) &&
+        demux->segment.last_stop > demux->segment.start &&
+        context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
       GST_DEBUG_OBJECT (demux,
           "Synchronizing stream %d with others by advancing time " "from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
