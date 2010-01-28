@@ -15,8 +15,8 @@
 
 #else
 
-#define spalloc_new0(type) malloc (sizeof (type))
-#define spalloc_alloc0(size) malloc (size)
+#define spalloc_new(type) malloc (sizeof (type))
+#define spalloc_alloc(size) malloc (size)
 
 #define spalloc_free(type, buf) free (buf)
 #define spalloc_free1(size, buf) free (buf)
@@ -38,5 +38,10 @@ void shm_alloc_space_block_inc (ShmAllocBlock * block);
 void shm_alloc_space_block_dec (ShmAllocBlock * block);
 ShmAllocBlock * shm_alloc_space_block_get (ShmAllocSpace * space,
     unsigned long offset);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __SHMALLOC_H__ */

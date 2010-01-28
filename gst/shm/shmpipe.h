@@ -37,6 +37,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _ShmClient ShmClient;
 typedef struct _ShmPipe ShmPipe;
 typedef struct _ShmBlock ShmBlock;
@@ -64,5 +69,9 @@ int sp_writer_pending_writes (ShmPipe * self);
 ShmPipe *sp_client_open (const char *path);
 unsigned long sp_client_recv (ShmPipe * self, char **buf);
 int sp_client_recv_finish (ShmPipe * self, char *buf);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __SHMPIPE_H__ */

@@ -466,7 +466,7 @@ sp_writer_free_block (ShmBlock * block)
 /* Returns the number of client this has successfully been sent to */
 
 int
-sp_writer_send_buf (ShmPipe * self, gchar * buf, size_t size)
+sp_writer_send_buf (ShmPipe * self, char * buf, size_t size)
 {
   ShmArea *area = NULL;
   unsigned long offset = 0;
@@ -562,7 +562,6 @@ sp_client_recv (ShmPipe * self, char **buf)
           cb.payload.new_shm_area.path_size, 0);
       if (retval != cb.payload.new_shm_area.path_size) {
         free (area_name);
-        g_debug ("retval: %d, errno: %d", retval, errno);
         return -3;
       }
 
