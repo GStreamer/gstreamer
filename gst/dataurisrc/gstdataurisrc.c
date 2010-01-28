@@ -67,6 +67,7 @@ static gboolean gst_data_uri_src_is_seekable (GstBaseSrc * src);
 static GstFlowReturn gst_data_uri_src_create (GstBaseSrc * src, guint64 offset,
     guint size, GstBuffer ** buf);
 static gboolean gst_data_uri_src_check_get_range (GstBaseSrc * src);
+static gboolean gst_data_uri_src_start (GstBaseSrc * src);
 
 static void gst_data_uri_src_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -128,6 +129,7 @@ gst_data_uri_src_class_init (GstDataURISrcClass * klass)
   basesrc_class->create = GST_DEBUG_FUNCPTR (gst_data_uri_src_create);
   basesrc_class->check_get_range =
       GST_DEBUG_FUNCPTR (gst_data_uri_src_check_get_range);
+  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_data_uri_src_start);
 }
 
 static void
@@ -267,6 +269,31 @@ gst_data_uri_src_check_get_range (GstBaseSrc * basesrc)
   return TRUE;
 }
 
+static gboolean
+gst_data_uri_src_start (GstBaseSrc * basesrc)
+{
+  GstDataURISrc *src = GST_DATA_URI_SRC (basesrc);
+
+  GST_OBJECT_LOCK (src);
+
+  if (src->uri == NULL || *src->uri == '\0' || src->buffer == NULL)
+    goto no_uri;
+
+  GST_OBJECT_UNLOCK (src);
+
+  return TRUE;
+
+/* ERRORS */
+no_uri:
+  {
+    GST_OBJECT_UNLOCK (src);
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        ("No valid data URI specified, or the data URI could not be parsed."),
+        ("%s", src->uri));
+    return FALSE;
+  }
+}
+
 static void
 gst_data_uri_src_handler_init (gpointer g_iface, gpointer iface_data)
 {
@@ -308,6 +335,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
   gchar *mimetype = NULL;
   const gchar *parameters_start;
   const gchar *data_start;
+  const gchar *orig_uri = uri;
   GstCaps *caps;
   gboolean base64 = FALSE;
   gchar *charset = NULL;
@@ -408,6 +436,9 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
     caps = gst_caps_new_simple (mimetype, NULL);
   gst_buffer_set_caps (src->buffer, caps);
   gst_caps_unref (caps);
+
+  g_free (src->uri);
+  src->uri = g_strdup (orig_uri);
 
   ret = TRUE;
 
