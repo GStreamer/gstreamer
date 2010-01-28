@@ -46,7 +46,7 @@ enum
 struct GstShmBuffer
 {
   char *buf;
-  GstShmSrc *src;
+  GstShmPipe *pipe;
 };
 
 
@@ -76,6 +76,9 @@ static GstFlowReturn gst_shm_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_shm_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_shm_src_unlock_stop (GstBaseSrc * bsrc);
+
+static void gst_shm_pipe_inc (GstShmPipe *pipe);
+static void gst_shm_pipe_dec (GstShmPipe *pipe);
 
 // static guint gst_shm_src_signals[LAST_SIGNAL] = { 0 };
 
@@ -185,6 +188,10 @@ static gboolean
 gst_shm_src_start (GstBaseSrc * bsrc)
 {
   GstShmSrc *self = GST_SHM_SRC (bsrc);
+  GstShmPipe *gstpipe = g_slice_new0 (GstShmPipe);
+
+  gstpipe->use_count = 1;
+  gstpipe->src = gst_object_ref (self);
 
   if (!self->socket_path) {
     GST_ELEMENT_ERROR (bsrc, RESOURCE, NOT_FOUND,
@@ -193,18 +200,21 @@ gst_shm_src_start (GstBaseSrc * bsrc)
   }
 
   GST_OBJECT_LOCK (self);
-  self->pipe = sp_client_open (self->socket_path);
+  gstpipe->pipe = sp_client_open (self->socket_path);
   GST_OBJECT_UNLOCK (self);
 
-  if (!self->pipe) {
+  if (!gstpipe->pipe) {
     GST_ELEMENT_ERROR (bsrc, RESOURCE, OPEN_READ_WRITE,
         ("Could not open socket: %d %s", errno, strerror (errno)), (NULL));
+    gst_shm_pipe_dec (gstpipe);
     return FALSE;
   }
 
+  self->pipe = gstpipe;
+
   self->poll = gst_poll_new (TRUE);
   gst_poll_fd_init (&self->pollfd);
-  self->pollfd.fd = sp_get_fd (self->pipe);
+  self->pollfd.fd = sp_get_fd (self->pipe->pipe);
   gst_poll_add_fd (self->poll, &self->pollfd);
   gst_poll_fd_ctl_read (self->poll, &self->pollfd, TRUE);
 
@@ -218,10 +228,10 @@ gst_shm_src_stop (GstBaseSrc * bsrc)
 
   GST_DEBUG_OBJECT (self, "Stopping %p", self);
 
-  GST_OBJECT_LOCK (self);
-  sp_close (self->pipe);
-  self->pipe = NULL;
-  GST_OBJECT_UNLOCK (self);
+  if (self->pipe) {
+    gst_shm_pipe_dec (self->pipe);
+    self->pipe = NULL;
+  }
 
   gst_poll_free (self->poll);
   self->poll = NULL;
@@ -234,15 +244,17 @@ static void
 free_buffer (gpointer data)
 {
   struct GstShmBuffer *gsb = data;
-  g_return_if_fail (gsb->src->pipe != NULL);
+  g_return_if_fail (gsb->pipe != NULL);
+  g_return_if_fail (gsb->pipe->src != NULL);
 
   GST_LOG ("Freeing buffer %p", gsb->buf);
 
-  GST_OBJECT_LOCK (gsb->src);
-  sp_client_recv_finish (gsb->src->pipe, gsb->buf);
-  GST_OBJECT_UNLOCK (gsb->src);
+  GST_OBJECT_LOCK (gsb->pipe->src);
+  sp_client_recv_finish (gsb->pipe->pipe, gsb->buf);
+  GST_OBJECT_UNLOCK (gsb->pipe->src);
 
-  gst_object_unref (gsb->src);
+  gst_shm_pipe_dec (gsb->pipe);
+
   g_slice_free (struct GstShmBuffer, gsb);
 }
 
@@ -282,7 +294,7 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       buf = NULL;
       GST_LOG_OBJECT (self, "Reading from pipe");
       GST_OBJECT_LOCK (self);
-      rv = sp_client_recv (self->pipe, &buf);
+      rv = sp_client_recv (self->pipe->pipe, &buf);
       GST_OBJECT_UNLOCK (self);
       if (rv < 0) {
         GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
@@ -296,7 +308,8 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   gsb = g_slice_new0 (struct GstShmBuffer);
   gsb->buf = buf;
-  gsb->src = gst_object_ref (self);
+  gsb->pipe = self->pipe;
+  gst_shm_pipe_inc (self->pipe);
 
   *outbuf = gst_buffer_new ();
   GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_READONLY);
@@ -334,4 +347,39 @@ gst_shm_src_unlock_stop (GstBaseSrc * bsrc)
     gst_poll_set_flushing (self->poll, FALSE);
 
   return TRUE;
+}
+
+static void
+gst_shm_pipe_inc (GstShmPipe *pipe)
+{
+  g_return_if_fail (pipe);
+  g_return_if_fail (pipe->src);
+  g_return_if_fail (pipe->use_count > 0);
+
+  GST_OBJECT_LOCK (pipe->src);
+  pipe->use_count++;
+  GST_OBJECT_UNLOCK (pipe->src);
+}
+
+static void
+gst_shm_pipe_dec (GstShmPipe *pipe)
+{
+  g_return_if_fail (pipe);
+  g_return_if_fail (pipe->src);
+  g_return_if_fail (pipe->use_count > 0);
+
+  GST_OBJECT_LOCK (pipe->src);
+  pipe->use_count--;
+
+  if (pipe->use_count > 0) {
+    GST_OBJECT_UNLOCK (pipe->src);
+    return;
+  }
+
+  if (pipe->pipe)
+    sp_close (pipe->pipe);
+  GST_OBJECT_UNLOCK (pipe->src);
+
+  gst_object_unref (pipe->src);
+  g_slice_free (GstShmPipe, pipe);
 }

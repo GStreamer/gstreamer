@@ -41,6 +41,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHM_SRC))
 typedef struct _GstShmSrc GstShmSrc;
 typedef struct _GstShmSrcClass GstShmSrcClass;
+typedef struct _GstShmPipe GstShmPipe;
 
 struct _GstShmSrc
 {
@@ -48,7 +49,7 @@ struct _GstShmSrc
 
   gchar *socket_path;
 
-  ShmPipe *pipe;
+  GstShmPipe *pipe;
   GstPoll *poll;
   GstPollFD pollfd;
 
@@ -63,6 +64,13 @@ struct _GstShmSrcClass
 };
 
 GType gst_shm_src_get_type (void);
+
+struct _GstShmPipe {
+  int use_count;
+
+  GstShmSrc *src;
+  ShmPipe *pipe;
+};
 
 G_END_DECLS
 #endif /* __GST_SHM_SRC_H__ */
