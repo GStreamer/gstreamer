@@ -224,7 +224,6 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
   ShmArea *area = spalloc_new (ShmArea);
   char tmppath[PATH_MAX];
   int flags;
-  int has_path = (path != NULL) ? 1 : 0;
   int prot;
 
   memset (area, 0, sizeof (ShmArea));
@@ -240,25 +239,24 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
     flags = O_RDONLY;
 
   area->shm_fd = -1;
-  if (!path)
-    path = tmppath;
 
-  do {
-    if (path == tmppath) {
-      path = tmppath;
+  if (path) {
+    area->shm_fd = shm_open (path, flags, perms);
+  } else {
+    do {
       snprintf (tmppath, PATH_MAX, "/%X%X%X%X%X.shmpipe",
           rand (), rand (), rand (), rand (), rand ());
-    }
-    area->shm_fd = shm_open (path, flags, perms);
-  } while (path == tmppath && area->shm_fd < 0 && errno == EEXIST);
-
-  if (area->shm_fd < 0) {
-    RETURN_ERROR ("shm_open failed on %s (%d): %s\n", path, errno,
-        strerror (errno));
+      area->shm_fd = shm_open (tmppath, flags, perms);
+    } while (area->shm_fd < 0 && errno == EEXIST);
   }
 
-  if (!has_path)
-    area->shm_area_name = strdup (path);
+  if (area->shm_fd < 0) {
+    RETURN_ERROR ("shm_open failed on %s (%d): %s\n",
+        path ? path : tmppath, errno, strerror (errno));
+  }
+
+  if (!path)
+    area->shm_area_name = strdup (tmppath);
 
   if (writer) {
     if (ftruncate (area->shm_fd, size)) {
