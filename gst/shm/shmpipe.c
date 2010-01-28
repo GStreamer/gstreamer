@@ -597,6 +597,7 @@ sp_client_recv (ShmPipe * self, char **buf)
       for (area = self->shm_area; area; area = area->next) {
         if (area->id == cb.area_id) {
           *buf = area->shm_area + cb.payload.buffer.offset;
+          sp_shm_area_inc (area);
           return cb.payload.buffer.size;
         }
       }
@@ -657,6 +658,8 @@ sp_client_recv_finish (ShmPipe * self, char *buf)
   assert (shm_area);
 
   offset = buf - shm_area->shm_area;
+
+  sp_shm_area_dec (self, shm_area);
 
   cb.payload.ack_buffer.offset = offset;
   return send_command (self->main_socket, &cb, COMMAND_ACK_BUFFER,
