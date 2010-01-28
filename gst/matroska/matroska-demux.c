@@ -1075,7 +1075,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context->index_writer_id = -1;
   context->type = 0;            /* no type yet */
   context->default_duration = 0;
-  context->pos = GST_CLOCK_TIME_NONE;
+  context->pos = 0;
   context->set_discont = TRUE;
   context->timecodescale = 1.0;
   context->flags =
