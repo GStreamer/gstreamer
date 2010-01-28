@@ -1162,8 +1162,8 @@ done:
   if (camera->allowed_caps) {
     caps = gst_caps_copy (camera->allowed_caps);
   }
+  GST_DEBUG_OBJECT (camera, "allowed caps:%" GST_PTR_FORMAT, caps);
 failed:
-  GST_INFO_OBJECT (camera, "allowed caps:%" GST_PTR_FORMAT, caps);
   return caps;
 }
 
@@ -1412,6 +1412,7 @@ gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps)
   if (camera->src_zoom_filter)
     g_object_set (G_OBJECT (camera->src_zoom_filter), "caps", new_caps, NULL);
   gst_camerabin_update_aspect_filter (camera, new_caps);
+  GST_INFO_OBJECT (camera, "udpated");
 }
 
 /*
