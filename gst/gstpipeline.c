@@ -322,12 +322,49 @@ gst_pipeline_new (const gchar * name)
   return gst_element_factory_make ("pipeline", name);
 }
 
+/* takes a snapshot of the running_time of the pipeline and store this as the
+ * element start_time. This is the time we will set as the running_time of the
+ * pipeline when we go to PLAYING next. */
+static void
+pipeline_update_start_time (GstElement * element)
+{
+  GstPipeline *pipeline = GST_PIPELINE_CAST (element);
+  GstClock *clock;
+
+  GST_OBJECT_LOCK (element);
+  if ((clock = element->clock)) {
+    GstClockTime now;
+
+    gst_object_ref (clock);
+    GST_OBJECT_UNLOCK (element);
+
+    /* calculate the time when we stopped */
+    now = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+
+    GST_OBJECT_LOCK (element);
+    /* store the current running time */
+    if (GST_ELEMENT_START_TIME (pipeline) != GST_CLOCK_TIME_NONE) {
+      GST_ELEMENT_START_TIME (pipeline) = now - element->base_time;
+      /* we went to PAUSED, when going to PLAYING select clock and new
+       * base_time */
+      pipeline->priv->update_clock = TRUE;
+    }
+    GST_DEBUG_OBJECT (element,
+        "start_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+        ", base_time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_ELEMENT_START_TIME (pipeline)),
+        GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
+  }
+  GST_OBJECT_UNLOCK (element);
+}
+
 /* MT safe */
 static GstStateChangeReturn
 gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
-  GstPipeline *pipeline = GST_PIPELINE (element);
+  GstPipeline *pipeline = GST_PIPELINE_CAST (element);
   GstClock *clock;
 
   switch (transition) {
@@ -426,34 +463,12 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_OBJECT_LOCK (element);
-      if ((clock = element->clock)) {
-        GstClockTime now;
-
-        gst_object_ref (clock);
-        GST_OBJECT_UNLOCK (element);
-
-        /* calculate the time when we stopped */
-        now = gst_clock_get_time (clock);
-        gst_object_unref (clock);
-
-        GST_OBJECT_LOCK (element);
-        /* store the current running time */
-        if (GST_ELEMENT_START_TIME (pipeline) != GST_CLOCK_TIME_NONE) {
-          GST_ELEMENT_START_TIME (pipeline) = now - element->base_time;
-          /* we went to PAUSED, when going to PLAYING select clock and new
-           * base_time */
-          pipeline->priv->update_clock = TRUE;
-        }
-        GST_DEBUG_OBJECT (element,
-            "start_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
-            ", base_time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (GST_ELEMENT_START_TIME (pipeline)),
-            GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
-      }
-      GST_OBJECT_UNLOCK (element);
+    {
+      /* we take a start_time snapshot before calling the children state changes
+       * so that they know about when the pipeline PAUSED. */
+      pipeline_update_start_time (element);
       break;
-      break;
+    }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -472,7 +487,13 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    {
+      /* Take a new snapshot of the start_time after calling the state change on
+       * all children. This will be the running_time of the pipeline when we go
+       * back to PLAYING */
+      pipeline_update_start_time (element);
       break;
+    }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
