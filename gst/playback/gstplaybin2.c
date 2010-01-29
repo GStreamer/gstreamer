@@ -2473,8 +2473,8 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
 
     if (format != GST_FORMAT_TIME)
       data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
-                type].group_start_accum))
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
+            group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
@@ -3484,6 +3484,8 @@ setup_next_source (GstPlayBin * playbin, GstState target)
 no_next_group:
   {
     GST_DEBUG_OBJECT (playbin, "no next group");
+    if (target == GST_STATE_READY && new_group && new_group->uri == NULL)
+      GST_ELEMENT_ERROR (playbin, RESOURCE, NOT_FOUND, ("No URI set"), (NULL));
     GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
   }
