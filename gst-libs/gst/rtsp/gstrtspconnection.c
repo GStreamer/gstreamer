@@ -1834,22 +1834,31 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
   while (TRUE) {
     switch (builder->state) {
       case STATE_START:
+      {
+        guint8 c;
+
         builder->offset = 0;
         res =
             read_bytes (conn, (guint8 *) builder->buffer, &builder->offset, 1);
         if (res != GST_RTSP_OK)
           goto done;
 
+        c = builder->buffer[0];
+
         /* we have 1 bytes now and we can see if this is a data message or
          * not */
-        if (builder->buffer[0] == '$') {
+        if (c == '$') {
           /* data message, prepare for the header */
           builder->state = STATE_DATA_HEADER;
+        } else if (c == '\n' || c == '\r') {
+          /* skip \n and \r */
+          builder->offset = 0;
         } else {
           builder->line = 0;
           builder->state = STATE_READ_LINES;
         }
         break;
+      }
       case STATE_DATA_HEADER:
       {
         res =
