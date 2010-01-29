@@ -234,7 +234,7 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
 
 
   if (writer)
-    flags = O_RDWR | O_CREAT | O_TRUNC;
+    flags = O_RDWR | O_CREAT | O_TRUNC | O_EXCL;
   else
     flags = O_RDONLY;
 
