@@ -94,6 +94,7 @@ enum
   ARG_B_PYRAMID,
   ARG_WEIGHTB,
   ARG_SPS_ID,
+  ARG_AU_NALU,
   ARG_TRELLIS,
   ARG_KEYINT_MAX,
   ARG_CABAC,
@@ -124,6 +125,7 @@ enum
 #define ARG_B_PYRAMID_DEFAULT          FALSE
 #define ARG_WEIGHTB_DEFAULT            FALSE
 #define ARG_SPS_ID_DEFAULT             0
+#define ARG_AU_NALU_DEFAULT            TRUE
 #define ARG_TRELLIS_DEFAULT            TRUE
 #define ARG_KEYINT_MAX_DEFAULT         0
 #define ARG_CABAC_DEFAULT              TRUE
@@ -363,6 +365,10 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_uint ("sps-id", "SPS ID",
           "SPS and PPS ID number",
           0, 31, ARG_SPS_ID_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_AU_NALU,
+      g_param_spec_boolean ("aud", "AUD",
+          "Use AU (Access Unit) delimiter", ARG_AU_NALU_DEFAULT,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TRELLIS,
       g_param_spec_boolean ("trellis", "Trellis quantization",
           "Enable trellis searched quantization", ARG_TRELLIS_DEFAULT,
@@ -475,6 +481,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->b_pyramid = ARG_B_PYRAMID_DEFAULT;
   encoder->weightb = ARG_WEIGHTB_DEFAULT;
   encoder->sps_id = ARG_SPS_ID_DEFAULT;
+  encoder->au_nalu = ARG_AU_NALU_DEFAULT;
   encoder->trellis = ARG_TRELLIS_DEFAULT;
   encoder->keyint_max = ARG_KEYINT_MAX_DEFAULT;
   encoder->cabac = ARG_CABAC_DEFAULT;
@@ -558,11 +565,12 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.vui.i_sar_width = encoder->par_num;
     encoder->x264param.vui.i_sar_height = encoder->par_den;
   }
+  /* FIXME 0.11 : 2s default keyframe interval seems excessive
+   * (10s is x264 default) */
   encoder->x264param.i_keyint_max = encoder->keyint_max ? encoder->keyint_max :
       (2 * encoder->fps_num / encoder->fps_den);
   encoder->x264param.b_cabac = encoder->cabac;
-  // TODO
-  encoder->x264param.b_aud = 1;
+  encoder->x264param.b_aud = encoder->au_nalu;
   encoder->x264param.i_sps_id = encoder->sps_id;
   if ((((encoder->height == 576) && ((encoder->width == 720)
                   || (encoder->width == 704) || (encoder->width == 352)))
@@ -1237,6 +1245,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_SPS_ID:
       encoder->sps_id = g_value_get_uint (value);
       break;
+    case ARG_AU_NALU:
+      encoder->au_nalu = g_value_get_boolean (value);
+      break;
     case ARG_TRELLIS:
       encoder->trellis = g_value_get_boolean (value);
       break;
@@ -1343,6 +1354,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SPS_ID:
       g_value_set_uint (value, encoder->sps_id);
+      break;
+    case ARG_AU_NALU:
+      g_value_set_boolean (value, encoder->au_nalu);
       break;
     case ARG_TRELLIS:
       g_value_set_boolean (value, encoder->trellis);
