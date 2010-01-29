@@ -2064,6 +2064,7 @@ gst_ffmpeg_caps_with_codectype (enum CodecType type,
   }
 }
 
+#if 0
 static void
 nal_escape (guint8 * dst, guint8 * src, guint size, guint * destsize)
 {
@@ -2150,6 +2151,7 @@ full_copy:
     return;
   }
 }
+#endif
 
 /*
  * caps_with_codecid () transforms a GstCaps for a known codec
@@ -2186,20 +2188,27 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     if (context->extradata)
       av_free (context->extradata);
 
+#if 0
     if (codec_id == CODEC_ID_H264) {
       guint extrasize;
 
       GST_DEBUG ("copy, escaping codec_data %d", size);
       /* ffmpeg h264 expects the codec_data to be escaped, there is no real
        * reason for this but let's just escape it for now. Start by allocating
-       * enough space, x2 is more than enough. */
+       * enough space, x2 is more than enough.
+       *
+       * FIXME, we disabled escaping because some file already contain escaped
+       * codec_data and then we escape twice and fail. It's better to leave it
+       * as is, as that is what most players do. */
       context->extradata =
           av_mallocz (GST_ROUND_UP_16 (size * 2 +
               FF_INPUT_BUFFER_PADDING_SIZE));
       copy_config (context->extradata, data, size, &extrasize);
       GST_DEBUG ("escaped size: %d", extrasize);
       context->extradata_size = extrasize;
-    } else {
+    } else
+#endif
+    {
       /* allocate with enough padding */
       GST_DEBUG ("copy codec_data");
       context->extradata =
