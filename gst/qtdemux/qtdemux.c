@@ -8706,7 +8706,9 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;                    /* Nothing special needed here */
     case 0x21:                 /* H.264 */
       codec_name = "H.264 / AVC";
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "avc",
+          "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case 0x40:                 /* AAC (any) */
     case 0x66:                 /* AAC Main */
@@ -9060,7 +9062,9 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
       _codec ("H.264 / AVC");
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "avc",
+          "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
       _codec ("Run-length encoding");
