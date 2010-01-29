@@ -225,6 +225,7 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
   char tmppath[PATH_MAX];
   int flags;
   int prot;
+  int i = 0;
 
   memset (area, 0, sizeof (ShmArea));
 
@@ -244,8 +245,7 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
     area->shm_fd = shm_open (path, flags, perms);
   } else {
     do {
-      snprintf (tmppath, PATH_MAX, "/%X%X%X%X%X.shmpipe",
-          rand (), rand (), rand (), rand (), rand ());
+      snprintf (tmppath, PATH_MAX, "/shmpipe.5%d.%5d", getpid (), i++);
       area->shm_fd = shm_open (tmppath, flags, perms);
     } while (area->shm_fd < 0 && errno == EEXIST);
   }
