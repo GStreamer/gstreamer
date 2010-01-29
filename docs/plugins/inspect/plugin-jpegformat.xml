@@ -1,0 +1,34 @@
+<plugin>
+  <name>jpegformat</name>
+  <description>JPEG interchange format plugin</description>
+  <filename>../../gst/jpegformat/.libs/libgstjpegformat.so</filename>
+  <basename>libgstjpegformat.so</basename>
+  <version>0.10.17.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>jpegparse</name>
+      <longname>JPEG stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parse JPEG images into single-frame buffers</description>
+      <author>Arnout Vandecappelle (Essensium/Mind) &lt;arnout@mind.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/jpeg, parsed=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/jpeg, format=(fourcc){ I420, Y41B, UYVY, YV12 }, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], interlaced=(boolean){ true, false }, framerate=(fraction)[ 0/1, 2147483647/1 ], parsed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
