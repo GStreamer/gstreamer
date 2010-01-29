@@ -788,20 +788,3 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-
-  if (!gst_element_register (plugin, "jpegparse", GST_RANK_PRIMARY + 1,
-          GST_TYPE_JPEG_PARSE))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "jpegformat",
-    "JPEG interchange format plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
