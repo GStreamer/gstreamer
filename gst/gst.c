@@ -359,24 +359,30 @@ gst_init_get_option_group (void)
     {NULL}
   };
 
-  /* The GLib threading system must be initialised before calling any other
-   * GLib function according to the documentation; if the application hasn't
-   * called gst_init() yet or initialised the threading system otherwise, we
-   * better issue a warning here (since chances are high that the application
-   * has already called other GLib functions such as g_option_context_new() */
+  /* Since GLib 2.23.2 calling g_thread_init() 'late' is allowed and is
+   * automatically done as part of g_type_init() */
+  if (!glib_check_version (2, 23, 3)) {
+    /* The GLib threading system must be initialised before calling any other
+     * GLib function according to the documentation; if the application hasn't
+     * called gst_init() yet or initialised the threading system otherwise, we
+     * better issue a warning here (since chances are high that the application
+     * has already called other GLib functions such as g_option_context_new() */
 #if GLIB_CHECK_VERSION (2,20,0)
-  if (!g_thread_get_initialized ()) {
+    if (!g_thread_get_initialized ()) {
 #else
-  if (!g_thread_supported ()) {
+    if (!g_thread_supported ()) {
 #endif
-    g_warning ("The GStreamer function gst_init_get_option_group() was\n"
-        "\tcalled, but the GLib threading system has not been initialised\n"
-        "\tyet, something that must happen before any other GLib function\n"
-        "\tis called. The application needs to be fixed so that it calls\n"
-        "\t   if (!g_thread_supported ()) g_thread_init(NULL);\n"
-        "\tas very first thing in its main() function. Please file a bug\n"
-        "\tagainst this application.");
-    g_thread_init (NULL);
+      g_warning ("The GStreamer function gst_init_get_option_group() was\n"
+          "\tcalled, but the GLib threading system has not been initialised\n"
+          "\tyet, something that must happen before any other GLib function\n"
+          "\tis called. The application needs to be fixed so that it calls\n"
+          "\t   if (!g_thread_get_initialized ()) g_thread_init(NULL);\n"
+          "\tas very first thing in its main() function. Please file a bug\n"
+          "\tagainst this application.");
+      g_thread_init (NULL);
+    }
+  } else {
+    /* GLib >= 2.23.2 */
   }
 
   group = g_option_group_new ("gst", _("GStreamer Options"),
@@ -784,6 +790,11 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
     gst_trace_set_default (gst_trace);
   }
 #endif /* GST_DISABLE_TRACE */
+
+  GST_INFO ("GLib runtime version: %d.%d.%d\n", glib_major_version,
+      glib_minor_version, glib_micro_version);
+  GST_INFO ("GLib headers version: %d.%d.%d\n", GLIB_MAJOR_VERSION,
+      GLIB_MINOR_VERSION, GLIB_MICRO_VERSION);
 
   return TRUE;
 }
