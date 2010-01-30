@@ -373,7 +373,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
   /* ERROR */
 wrong_state:
   {
-    g_warning ("Changing the `location' property on filesink when a file is "
+    g_warning ("Changing the `location' property on filesrc when a file is "
         "open is not supported.");
     GST_OBJECT_UNLOCK (src);
     return FALSE;
