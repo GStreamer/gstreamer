@@ -669,6 +669,7 @@ reset:
 
 static void gst_rtsp_real_extension_init (gpointer g_iface,
     gpointer iface_data);
+static void gst_rtsp_real_finalize (GObject * obj);
 
 static void
 _do_init (GType rtspreal_type)
@@ -697,6 +698,10 @@ gst_rtsp_real_base_init (gpointer klass)
 static void
 gst_rtsp_real_class_init (GstRTSPRealClass * g_class)
 {
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
+
+  gobject_class->finalize = gst_rtsp_real_finalize;
+
   GST_DEBUG_CATEGORY_INIT (rtspreal_debug, "rtspreal", 0,
       "RealMedia RTSP extension");
 }
@@ -705,6 +710,29 @@ static void
 gst_rtsp_real_init (GstRTSPReal * rtspreal, GstRTSPRealClass * klass)
 {
   rtspreal->isreal = FALSE;
+}
+
+static void
+gst_rtsp_stream_free (GstRTSPRealStream * stream)
+{
+  g_free (stream->stream_name);
+  g_free (stream->mime_type);
+  gst_asm_rule_book_free (stream->rulebook);
+  g_free (stream->type_specific_data);
+
+  g_free (stream);
+}
+
+static void
+gst_rtsp_real_finalize (GObject * obj)
+{
+  GstRTSPReal *r = (GstRTSPReal *) obj;
+
+  g_list_foreach (r->streams, (GFunc) gst_rtsp_stream_free, NULL);
+  g_list_free (r->streams);
+  g_free (r->rules);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
