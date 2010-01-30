@@ -455,6 +455,8 @@ gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
     more = gst_rdt_packet_move_to_next (&packet);
   }
 
+  gst_buffer_unref (buf);
+
   return ret;
 }
 
