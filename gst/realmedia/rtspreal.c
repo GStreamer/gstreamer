@@ -593,7 +593,9 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   GST_BUFFER_SIZE (buf) = offset;
 
   /* Set on caps */
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
   gst_structure_set (props, "config", GST_TYPE_BUFFER, buf, NULL);
+  gst_buffer_unref (buf);
 
   /* Overwrite encoding and media fields */
   gst_structure_set (props, "encoding-name", G_TYPE_STRING, "X-REAL-RDT", NULL);
