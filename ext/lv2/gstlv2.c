@@ -476,7 +476,8 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
 {
   GObjectClass *gobject_class;
   GstSignalProcessorClass *gsp_class;
-  gint i;
+  GParamSpec *p;
+  gint i, ix;
 
   GST_DEBUG ("class_init %p", klass);
 
@@ -493,27 +494,23 @@ gst_lv2_class_init (GstLV2Class * klass, SLV2Plugin lv2plugin)
 
   klass->plugin = lv2plugin;
 
+  /* properties have an offset of 1 */
+  ix = 1;
+
   /* register properties */
 
-  for (i = 0; i < gsp_class->num_control_in; i++) {
-    GParamSpec *p;
-
+  for (i = 0; i < gsp_class->num_control_in; i++, ix++) {
     p = gst_lv2_class_get_param_spec (klass,
         g_array_index (klass->control_in_ports, GstLV2Port, i).index);
 
-    /* properties have an offset of 1 */
-    g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, p);
+    g_object_class_install_property (gobject_class, ix, p);
   }
 
-  for (i = 0; i < gsp_class->num_control_out; i++) {
-    GParamSpec *p;
-
+  for (i = 0; i < gsp_class->num_control_out; i++, ix++) {
     p = gst_lv2_class_get_param_spec (klass,
         g_array_index (klass->control_out_ports, GstLV2Port, i).index);
 
-    /* properties have an offset of 1, and we already added num_control_in */
-    g_object_class_install_property (G_OBJECT_CLASS (klass),
-        gsp_class->num_control_in + i + 1, p);
+    g_object_class_install_property (gobject_class, ix, p);
   }
 }
 
