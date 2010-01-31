@@ -135,6 +135,8 @@ static const gpointer STOLEN = "";
  * @mini_object: the parent structure
  *
  * Opaque list of grouped buffers.
+ *
+ * Since: 0.10.24
  */
 struct _GstBufferList
 {
@@ -152,6 +154,8 @@ struct _GstBufferListClass
  * GstBufferListIterator:
  *
  * Opaque iterator for a #GstBufferList.
+ *
+ * Since: 0.10.24
  */
 struct _GstBufferListIterator
 {
@@ -246,6 +250,8 @@ gst_buffer_list_class_init (gpointer g_class, gpointer class_data)
  * the returned #GstBufferList.
  *
  * Returns: the new #GstBufferList. gst_buffer_list_unref() after usage.
+ *
+ * Since: 0.10.24
  */
 GstBufferList *
 gst_buffer_list_new (void)
@@ -266,6 +272,8 @@ gst_buffer_list_new (void)
  * Returns the number of groups in @list.
  *
  * Returns: the number of groups in the buffer list
+ *
+ * Since: 0.10.24
  */
 guint
 gst_buffer_list_n_groups (GstBufferList * list)
@@ -298,6 +306,8 @@ gst_buffer_list_n_groups (GstBufferList * list)
  * @func can modify the passed buffer pointer or its contents. The return value
  * of @func define if this function returns or if the remaining buffers in a
  * group should be skipped.
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
@@ -370,6 +380,8 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  *
  * Returns: the buffer at @idx in @group or NULL when there is no buffer. The
  * buffer remains valid as long as @list is valid.
+ *
+ * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
@@ -441,6 +453,8 @@ gst_buffer_list_get_type (void)
  *
  * Returns: a new #GstBufferListIterator of the buffers in @list.
  * gst_buffer_list_iterator_free() after usage
+ *
+ * Since: 0.10.24
  */
 GstBufferListIterator *
 gst_buffer_list_iterate (GstBufferList * list)
@@ -462,6 +476,8 @@ gst_buffer_list_iterate (GstBufferList * list)
  * @it: the #GstBufferListIterator to free
  *
  * Free the iterator.
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_iterator_free (GstBufferListIterator * it)
@@ -483,6 +499,8 @@ gst_buffer_list_iterator_free (GstBufferListIterator * it)
  * the state of the iterator @it.
  *
  * Returns: the number of buffers left to iterate in the current group
+ *
+ * Since: 0.10.24
  */
 guint
 gst_buffer_list_iterator_n_buffers (const GstBufferListIterator * it)
@@ -516,6 +534,8 @@ gst_buffer_list_iterator_n_buffers (const GstBufferListIterator * it)
  * will return the buffer after the inserted buffer, if any.
  *
  * This function takes ownership of @buffer.
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_iterator_add (GstBufferListIterator * it, GstBuffer * buffer)
@@ -540,6 +560,8 @@ gst_buffer_list_iterator_add (GstBufferListIterator * it, GstBuffer * buffer)
  * gst_buffer_list_iterator_next_group(). A subsequent call to
  * gst_buffer_list_iterator_next_group() will advance the iterator to the group
  * after the inserted group, if any.
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_iterator_add_group (GstBufferListIterator * it)
@@ -568,6 +590,8 @@ gst_buffer_list_iterator_add_group (GstBufferListIterator * it)
  * unref it.
  *
  * Returns: the next buffer in the current group of the buffer list, or NULL
+ *
+ * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_iterator_next (GstBufferListIterator * it)
@@ -609,6 +633,8 @@ no_buffer:
  *
  * Returns: TRUE if the iterator could be advanced to the next group, FALSE if
  * the iterator was already at the last group
+ *
+ * Since: 0.10.24
  */
 gboolean
 gst_buffer_list_iterator_next_group (GstBufferListIterator * it)
@@ -640,6 +666,8 @@ gst_buffer_list_iterator_next_group (GstBufferListIterator * it)
  * only be called once per call to gst_buffer_list_iterator_next().
  *
  * The removed buffer is unreffed.
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_iterator_remove (GstBufferListIterator * it)
@@ -669,6 +697,8 @@ gst_buffer_list_iterator_remove (GstBufferListIterator * it)
  * This function unrefs the replaced buffer if it has not been stolen with
  * gst_buffer_list_iterator_steal() and takes ownership of @buffer (i.e. the
  * refcount of @buffer is not increased).
+ *
+ * Since: 0.10.24
  */
 void
 gst_buffer_list_iterator_take (GstBufferListIterator * it, GstBuffer * buffer)
@@ -692,6 +722,8 @@ gst_buffer_list_iterator_take (GstBufferListIterator * it, GstBuffer * buffer)
  * modifying the refcount of the buffer.
  *
  * Returns: the last buffer returned by gst_buffer_list_iterator_next()
+ *
+ * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_iterator_steal (GstBufferListIterator * it)
@@ -724,6 +756,8 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
  * See #GstBufferListDoFunction for more details.
  *
  * Returns: the return value from @do_func
+ *
+ * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_iterator_do (GstBufferListIterator * it,
@@ -764,6 +798,8 @@ gst_buffer_list_iterator_do (GstBufferListIterator * it,
  * the state of the iterator @it or the list.
  *
  * Returns: a new #GstBuffer, gst_buffer_unref() after usage, or NULL
+ *
+ * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_iterator_merge_group (const GstBufferListIterator * it)
