@@ -324,6 +324,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     ctx->duration = MAX (ctx->duration, intval);
   }
 
+  /* FIXME: use GstByteWriter to write the header */
   /* PROP */
   offset = 0;
   size = 50;
@@ -352,7 +353,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   READ_BUFFER (sdp, "Comment", comment, comment_len);
   READ_BUFFER (sdp, "Copyright", copyright, copyright_len);
 
-  size = 22 + title_len + author_len + comment_len + copyright_len;
+  size = 18 + title_len + author_len + comment_len + copyright_len;
   ENSURE_SIZE (offset + size);
   datap = data + offset;
 
