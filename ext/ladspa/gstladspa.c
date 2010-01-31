@@ -882,6 +882,9 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD, "LADSPA");
 
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
+
   gst_plugin_add_dependency_simple (plugin,
       "LADSPA_PATH",
       GST_LADSPA_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);

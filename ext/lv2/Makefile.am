@@ -8,7 +8,7 @@ libgstlv2_la_CFLAGS = \
 libgstlv2_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor-@GST_MAJORMINOR@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
-	$(LIBM) $(SLV2_LIBS)
+	$(GST_CONTROLLER_LIBS) $(LIBM) $(SLV2_LIBS)
 libgstlv2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstlv2_la_LIBTOOLFLAGS = --tag=disable-static
 

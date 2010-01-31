@@ -875,6 +875,9 @@ plugin_init (GstPlugin * plugin)
   side_left_role = slv2_value_new_uri (world, NS_PG "sideLeftChannel");
   side_right_role = slv2_value_new_uri (world, NS_PG "sideRightChannel");
 
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
+
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   gst_lv2_plugin = plugin;
