@@ -520,11 +520,12 @@ gst_video_test_src_getcaps (GstBaseSrc * bsrc)
 static gboolean
 gst_video_test_src_parse_caps (const GstCaps * caps,
     gint * width, gint * height, gint * rate_numerator, gint * rate_denominator,
-    struct fourcc_list_struct **fourcc)
+    struct fourcc_list_struct **fourcc, GstVideoTestSrcColorSpec * color_spec)
 {
   const GstStructure *structure;
   GstPadLinkReturn ret;
   const GValue *framerate;
+  const char *csp;
 
   GST_DEBUG ("parsing caps");
 
@@ -545,6 +546,20 @@ gst_video_test_src_parse_caps (const GstCaps * caps,
     *rate_denominator = gst_value_get_fraction_denominator (framerate);
   } else
     goto no_framerate;
+
+  csp = gst_structure_get_string (structure, "color-matrix");
+  if (csp) {
+    if (strcmp (csp, "sdtv") == 0) {
+      *color_spec = GST_VIDEO_TEST_SRC_BT601;
+    } else if (strcmp (csp, "hdtv") == 0) {
+      *color_spec = GST_VIDEO_TEST_SRC_BT709;
+    } else {
+      GST_DEBUG ("unknown color-matrix");
+      return FALSE;
+    }
+  } else {
+    *color_spec = GST_VIDEO_TEST_SRC_BT601;
+  }
 
   return ret;
 
@@ -568,11 +583,12 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   gint width, height, rate_denominator, rate_numerator;
   struct fourcc_list_struct *fourcc;
   GstVideoTestSrc *videotestsrc;
+  GstVideoTestSrcColorSpec color_spec;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   res = gst_video_test_src_parse_caps (caps, &width, &height,
-      &rate_numerator, &rate_denominator, &fourcc);
+      &rate_numerator, &rate_denominator, &fourcc, &color_spec);
   if (res) {
     /* looks ok here */
     videotestsrc->fourcc = fourcc;
@@ -581,6 +597,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     videotestsrc->rate_numerator = rate_numerator;
     videotestsrc->rate_denominator = rate_denominator;
     videotestsrc->bpp = videotestsrc->fourcc->bitspp;
+    videotestsrc->color_spec = color_spec;
 
     GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %d/%d fps",
         videotestsrc->width, videotestsrc->height,
