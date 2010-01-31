@@ -48,8 +48,6 @@
 #define LADSPA_VERSION "1.0"
 #endif
 
-#define GST_LADSPA_DESCRIPTOR_QDATA g_quark_from_static_string("ladspa-descriptor")
-
 #define GST_LADSPA_DEFAULT_PATH \
   "/usr/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
   "/usr/local/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
@@ -73,6 +71,8 @@ static GstPlugin *ladspa_plugin;
 GST_DEBUG_CATEGORY_STATIC (ladspa_debug);
 #define GST_CAT_DEFAULT ladspa_debug
 
+static GQuark descriptor_quark = 0;
+
 
 static void
 gst_ladspa_base_init (gpointer g_class)
@@ -91,7 +91,7 @@ gst_ladspa_base_init (gpointer g_class)
   GST_DEBUG ("base_init %p", g_class);
 
   desc = (LADSPA_Descriptor *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
-      GST_LADSPA_DESCRIPTOR_QDATA);
+      descriptor_quark);
   g_assert (desc);
   klass->descriptor = desc;
 
@@ -724,7 +724,7 @@ ladspa_describe_plugin (LADSPA_Descriptor_Function descriptor_function)
         0);
     /* FIXME: not needed anymore when we can add pad templates, etc in class_init
      * as class_data contains the LADSPA_Descriptor too */
-    g_type_set_qdata (type, GST_LADSPA_DESCRIPTOR_QDATA, (gpointer) desc);
+    g_type_set_qdata (type, descriptor_quark, (gpointer) desc);
 
     if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
       goto next;
@@ -896,6 +896,7 @@ plugin_init (GstPlugin * plugin)
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   ladspa_plugin = plugin;
+  descriptor_quark = g_quark_from_static_string ("ladspa-descriptor");
 
   return ladspa_plugin_path_search ();
 }
