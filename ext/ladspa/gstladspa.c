@@ -436,7 +436,8 @@ gst_ladspa_class_init (GstLADSPAClass * klass, LADSPA_Descriptor * desc)
 {
   GObjectClass *gobject_class;
   GstSignalProcessorClass *gsp_class;
-  gint i;
+  GParamSpec *p;
+  gint i, ix;
 
   GST_DEBUG ("class_init %p", klass);
 
@@ -451,25 +452,19 @@ gst_ladspa_class_init (GstLADSPAClass * klass, LADSPA_Descriptor * desc)
   gsp_class->cleanup = gst_ladspa_cleanup;
   gsp_class->process = gst_ladspa_process;
 
+  /* properties have an offset of 1 */
+  ix = 1;
+
   /* register properties */
 
-  for (i = 0; i < gsp_class->num_control_in; i++) {
-    GParamSpec *p;
-
+  for (i = 0; i < gsp_class->num_control_in; i++, ix++) {
     p = gst_ladspa_class_get_param_spec (klass, klass->control_in_portnums[i]);
-
-    /* properties have an offset of 1 */
-    g_object_class_install_property (G_OBJECT_CLASS (klass), i + 1, p);
+    g_object_class_install_property (gobject_class, ix, p);
   }
 
-  for (i = 0; i < gsp_class->num_control_out; i++) {
-    GParamSpec *p;
-
+  for (i = 0; i < gsp_class->num_control_out; i++, ix++) {
     p = gst_ladspa_class_get_param_spec (klass, klass->control_out_portnums[i]);
-
-    /* properties have an offset of 1, and we already added num_control_in */
-    g_object_class_install_property (G_OBJECT_CLASS (klass),
-        gsp_class->num_control_in + i + 1, p);
+    g_object_class_install_property (gobject_class, ix, p);
   }
 }
 
