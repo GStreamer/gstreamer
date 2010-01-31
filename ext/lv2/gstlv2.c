@@ -45,6 +45,10 @@
 #include "gstlv2.h"
 #include <slv2/slv2.h>
 
+#define GST_LV2_DEFAULT_PATH \
+  "/usr/lib/lv2" G_SEARCHPATH_SEPARATOR_S \
+  "/usr/local/lib/lv2" G_SEARCHPATH_SEPARATOR_S \
+  LIBDIR "/lv2"
 
 static void gst_lv2_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -880,6 +884,9 @@ plugin_init (GstPlugin * plugin)
 
   /* initialize gst controller library */
   gst_controller_init (NULL, NULL);
+
+  gst_plugin_add_dependency_simple (plugin,
+      "LV2_PATH", GST_LV2_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
