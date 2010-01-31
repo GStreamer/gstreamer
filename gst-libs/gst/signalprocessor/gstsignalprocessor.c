@@ -213,38 +213,38 @@ static void
 gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
     GstPadTemplate * templ)
 {
-  GstPad *new;
+  GstPad *pad;
 
-  new = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD,
+  pad = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD,
       "name", GST_OBJECT_NAME (templ), "direction", templ->direction,
       "template", templ, NULL);
-  GST_SIGNAL_PROCESSOR_PAD (new)->index =
+  GST_SIGNAL_PROCESSOR_PAD (pad)->index =
       GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (templ)->index;
-  GST_SIGNAL_PROCESSOR_PAD (new)->channels =
+  GST_SIGNAL_PROCESSOR_PAD (pad)->channels =
       GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (templ)->channels;
 
-  gst_pad_set_setcaps_function (new,
+  gst_pad_set_setcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_signal_processor_setcaps));
 
   if (templ->direction == GST_PAD_SINK) {
-    GST_DEBUG ("added new sink pad");
+    GST_DEBUG_OBJECT (pad, "added new sink pad");
 
-    gst_pad_set_event_function (new,
+    gst_pad_set_event_function (pad,
         GST_DEBUG_FUNCPTR (gst_signal_processor_event));
-    gst_pad_set_chain_function (new,
+    gst_pad_set_chain_function (pad,
         GST_DEBUG_FUNCPTR (gst_signal_processor_chain));
-    gst_pad_set_activatepush_function (new,
+    gst_pad_set_activatepush_function (pad,
         GST_DEBUG_FUNCPTR (gst_signal_processor_sink_activate_push));
   } else {
-    GST_DEBUG ("added new src pad");
+    GST_DEBUG_OBJECT (pad, "added new src pad");
 
-    gst_pad_set_getrange_function (new,
+    gst_pad_set_getrange_function (pad,
         GST_DEBUG_FUNCPTR (gst_signal_processor_getrange));
-    gst_pad_set_activatepull_function (new,
+    gst_pad_set_activatepull_function (pad,
         GST_DEBUG_FUNCPTR (gst_signal_processor_src_activate_pull));
   }
 
-  gst_element_add_pad (GST_ELEMENT (self), new);
+  gst_element_add_pad (GST_ELEMENT (self), pad);
 }
 
 static void
