@@ -513,7 +513,7 @@ setcaps_pull_failed:
   }
 }
 
-/** De-interleave a pad (gstreamer => plugin) */
+/* De-interleave a pad (gstreamer => plugin) */
 static void
 gst_signal_processor_deinterleave_group (GstSignalProcessorGroup * group,
     guint nframes)
@@ -528,7 +528,7 @@ gst_signal_processor_deinterleave_group (GstSignalProcessorGroup * group,
           = group->interleaved_buffer[(i * group->channels) + j];
 }
 
-/** Interleave a pad (plugin => gstreamer) */
+/* Interleave a pad (plugin => gstreamer) */
 static void
 gst_signal_processor_interleave_group (GstSignalProcessorGroup * group,
     guint nframes)
