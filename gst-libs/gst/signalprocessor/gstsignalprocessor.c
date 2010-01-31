@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/controller/gstcontroller.h>
 #include <gst/audio/audio.h>
 #include "gstsignalprocessor.h"
 
@@ -576,6 +577,15 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+/*
+ * gst_signal_processor_prepare:
+ * @self: the element
+ * nframes: wanted sample frames
+ *
+ * Checks if wan
+ *
+ * Returns: available sample frames
+ */
 static guint
 gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 {
@@ -584,6 +594,8 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
   GList *sinks, *srcs;
   guint samples_avail = nframes;
   guint i, in_group_index = 0, out_group_index = 0;
+  gboolean is_gap = FALSE;
+  GstClockTime ts, tss = GST_CLOCK_TIME_NONE, tse = GST_CLOCK_TIME_NONE;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
@@ -617,7 +629,31 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
     }
   }
 
+  GST_LOG_OBJECT (self, "want %u samples, have %u samples", nframes,
+      samples_avail);
+
   /* FIXME: return if samples_avail==0 ? */
+
+  if ((sinks = elem->sinkpads)) {
+    is_gap = TRUE;
+    while (sinks) {
+      GstSignalProcessorPad *sinkpad = (GstSignalProcessorPad *) sinks->data;
+
+      is_gap &= GST_BUFFER_FLAG_IS_SET (sinkpad->pen, GST_BUFFER_FLAG_GAP);
+      ts = GST_BUFFER_TIMESTAMP (sinkpad->pen);
+      if (GST_CLOCK_TIME_IS_VALID (ts)) {
+        tss = !GST_CLOCK_TIME_IS_VALID (tss) ? ts : MIN (tss, ts);
+        tse = !GST_CLOCK_TIME_IS_VALID (tse) ? ts : MAX (tse, ts);
+      }
+      sinks = sinks->next;
+    }
+    ts = (tss == tse) ? tss : GST_CLOCK_TIME_NONE;
+    GST_LOG_OBJECT (self, "is gap: %d, tss %" GST_TIME_FORMAT ", tse %"
+        GST_TIME_FORMAT, is_gap, GST_TIME_ARGS (tss), GST_TIME_ARGS (tse));
+  } else {
+    /* FIXME: calculate own timestamps */
+    ts = GST_CLOCK_TIME_NONE;
+  }
 
   /* now assign output buffers. we can avoid allocation by reusing input
      buffers, but only if process() can work in place, and if the input buffer
@@ -682,7 +718,16 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
       self->pending_out++;
     }
 
+    /* set time stamp */
+    GST_BUFFER_TIMESTAMP (srcpad->pen) = ts;
+    /* FIXME: handle gap flag ? */
+
     srcs = srcs->next;
+  }
+
+  /* update controlled parameters */
+  if (samples_avail && GST_CLOCK_TIME_IS_VALID (ts)) {
+    gst_object_sync_values ((GObject *) self, ts);
   }
 
   return samples_avail;
