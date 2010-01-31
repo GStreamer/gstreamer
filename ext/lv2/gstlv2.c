@@ -45,7 +45,6 @@
 #include "gstlv2.h"
 #include <slv2/slv2.h>
 
-#define GST_SLV2_PLUGIN_QDATA g_quark_from_static_string("slv2-plugin")
 
 static void gst_lv2_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -89,6 +88,9 @@ static GstPlugin *gst_lv2_plugin;
 
 GST_DEBUG_CATEGORY_STATIC (lv2_debug);
 #define GST_CAT_DEFAULT lv2_debug
+
+static GQuark descriptor_quark = 0;
+
 
 /* Convert an LV2 port role to a Gst channel positon
  * WARNING: If the group has only a single port,
@@ -181,12 +183,13 @@ gst_lv2_base_init (gpointer g_class)
   guint j, in_pad_index = 0, out_pad_index = 0;
   gchar *klass_tags;
 
-  GST_DEBUG ("base_init %p", g_class);
-
   lv2plugin = (SLV2Plugin) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
-      GST_SLV2_PLUGIN_QDATA);
+      descriptor_quark);
 
   g_assert (lv2plugin);
+
+  GST_DEBUG ("base_init %p, plugin %s", g_class,
+      slv2_value_as_string (slv2_plugin_get_uri (lv2plugin)));
 
   gsp_class->num_group_in = 0;
   gsp_class->num_group_out = 0;
@@ -828,7 +831,7 @@ lv2_plugin_discover (void)
 
     /* FIXME: not needed anymore when we can add pad templates, etc in class_init
      * as class_data contains the LADSPA_Descriptor too */
-    g_type_set_qdata (type, GST_SLV2_PLUGIN_QDATA, (gpointer) lv2plugin);
+    g_type_set_qdata (type, descriptor_quark, (gpointer) lv2plugin);
 
     if (!gst_element_register (gst_lv2_plugin, type_name, GST_RANK_NONE, type))
       goto next;
@@ -881,6 +884,7 @@ plugin_init (GstPlugin * plugin)
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   gst_lv2_plugin = plugin;
+  descriptor_quark = g_quark_from_static_string ("slv2-plugin");
 
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
