@@ -43,7 +43,7 @@
  *   <programlisting>
  *      +--- group0 ----------------------+--- group1 ------------+
  *      |   buffer0   buffer1   buffer2   |   buffer3   buffer4   |
- *    ^   ^         ^         ^         ^   ^         ^         ^
+ *      ^   ^         ^         ^         ^   ^         ^         ^
  *    Iterator positions
  *   </programlisting>
  * </informalexample>
