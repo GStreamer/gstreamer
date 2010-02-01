@@ -510,10 +510,26 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           goto error;
         break;
 
+      case COM:{               /* read comment and post as tag */
+        GstTagList *tags;
+        const guint8 *comment;
+
+        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+          goto error;
+        if (!gst_byte_reader_get_data (&reader, size - 2, &comment))
+          goto error;
+
+        tags = gst_tag_list_new ();
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_COMMENT, comment, NULL);
+        gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
+            parse->priv->srcpad, tags);
+        break;
+      }
+
       case APP0:
       case APP1:
       case APP15:
-      case COM:
       case DHT:
       case DQT:
         /* Ignore these codes */
