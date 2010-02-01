@@ -1,10 +1,7 @@
-<Type Name="MultiQueue" FullName="Gst.CorePlugins.MultiQueue">
-  <TypeSignature Language="C#" Value="public sealed class MultiQueue : Gst.Element" />
+<Type Name="Queue2" FullName="Gst.CorePlugins.Queue2">
+  <TypeSignature Language="C#" Value="public sealed class Queue2 : Gst.Element" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
-    <AssemblyVersion>0.9.0.0</AssemblyVersion>
-    <AssemblyVersion>0.9.1.0</AssemblyVersion>
-    <AssemblyVersion>0.9.2.0</AssemblyVersion>
     <AssemblyVersion>0.9.3.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -13,7 +10,7 @@
   <Interfaces />
   <Attributes>
     <Attribute>
-      <AttributeName>Gst.GTypeName("GstMultiQueue")</AttributeName>
+      <AttributeName>Gst.GTypeName("GstQueue2")</AttributeName>
     </Attribute>
   </Attributes>
   <Docs>
@@ -22,12 +19,9 @@
   </Docs>
   <Members>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MultiQueue ();" />
+      <MemberSignature Language="C#" Value="public Queue2 ();" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
@@ -37,12 +31,9 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MultiQueue (IntPtr raw);" />
+      <MemberSignature Language="C#" Value="public Queue2 (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -55,12 +46,9 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MultiQueue (string name);" />
+      <MemberSignature Language="C#" Value="public Queue2 (string name);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -72,18 +60,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="ExtraSizeBuffers">
-      <MemberSignature Language="C#" Value="public uint ExtraSizeBuffers { set; get; }" />
+    <Member MemberName="CurrentLevelBuffers">
+      <MemberSignature Language="C#" Value="public uint CurrentLevelBuffers { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>Gst.GLib.Property("extra-size-buffers")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-buffers")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -95,18 +80,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="ExtraSizeBytes">
-      <MemberSignature Language="C#" Value="public uint ExtraSizeBytes { set; get; }" />
+    <Member MemberName="CurrentLevelBytes">
+      <MemberSignature Language="C#" Value="public uint CurrentLevelBytes { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>Gst.GLib.Property("extra-size-bytes")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-bytes")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -118,18 +100,15 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="ExtraSizeTime">
-      <MemberSignature Language="C#" Value="public ulong ExtraSizeTime { set; get; }" />
+    <Member MemberName="CurrentLevelTime">
+      <MemberSignature Language="C#" Value="public ulong CurrentLevelTime { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
         <Attribute>
-          <AttributeName>Gst.GLib.Property("extra-size-time")</AttributeName>
+          <AttributeName>Gst.GLib.Property("current-level-time")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -182,16 +161,13 @@
       </Docs>
     </Member>
     <Member MemberName="Make">
-      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.MultiQueue Make ();" />
+      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.Queue2 Make ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.MultiQueue</ReturnType>
+        <ReturnType>Gst.CorePlugins.Queue2</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
@@ -201,16 +177,13 @@
       </Docs>
     </Member>
     <Member MemberName="Make">
-      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.MultiQueue Make (string name);" />
+      <MemberSignature Language="C#" Value="public static Gst.CorePlugins.Queue2 Make (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>Gst.CorePlugins.MultiQueue</ReturnType>
+        <ReturnType>Gst.CorePlugins.Queue2</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="name" Type="System.String" />
@@ -226,9 +199,6 @@
       <MemberSignature Language="C#" Value="public uint MaxSizeBuffers { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -249,9 +219,6 @@
       <MemberSignature Language="C#" Value="public uint MaxSizeBytes { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -272,9 +239,6 @@
       <MemberSignature Language="C#" Value="public ulong MaxSizeTime { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -291,37 +255,63 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Overrun">
-      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Overrun;" />
-      <MemberType>Event</MemberType>
+    <Member MemberName="TempLocation">
+      <MemberSignature Language="C#" Value="public string TempLocation { set; get; }" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("temp-location")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.SignalHandler</ReturnType>
+        <ReturnType>System.String</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
+        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Underrun">
-      <MemberSignature Language="C#" Value="public event Gst.SignalHandler Underrun;" />
-      <MemberType>Event</MemberType>
+    <Member MemberName="TempRemove">
+      <MemberSignature Language="C#" Value="public bool TempRemove { set; get; }" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>0.9.0.0</AssemblyVersion>
-        <AssemblyVersion>0.9.1.0</AssemblyVersion>
-        <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("temp-remove")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
-        <ReturnType>Gst.SignalHandler</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="TempTemplate">
+      <MemberSignature Language="C#" Value="public string TempTemplate { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("temp-template")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -334,6 +324,26 @@
       <Attributes>
         <Attribute>
           <AttributeName>Gst.GLib.Property("use-buffering")</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UseRateEstimate">
+      <MemberSignature Language="C#" Value="public bool UseRateEstimate { set; get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>Gst.GLib.Property("use-rate-estimate")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>

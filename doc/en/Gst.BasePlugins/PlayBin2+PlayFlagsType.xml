@@ -39,6 +39,19 @@
         <summary>To be added.</summary>
       </Docs>
     </Member>
+    <Member MemberName="Buffering">
+      <MemberSignature Language="C#" Value="Buffering" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.BasePlugins.PlayBin2+PlayFlagsType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
     <Member MemberName="Download">
       <MemberSignature Language="C#" Value="Download" />
       <MemberType>Field</MemberType>

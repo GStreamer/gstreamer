@@ -318,6 +318,7 @@
       <Type Name="MultiQueue" Kind="Class" />
       <Type Name="Queue" Kind="Class" />
       <Type Name="Queue+LeakyType" Kind="Enumeration" />
+      <Type Name="Queue2" Kind="Class" />
       <Type Name="Tee" Kind="Class" />
       <Type Name="Tee+PullModeType" Kind="Enumeration" />
       <Type Name="TypeFindElement" Kind="Class" />

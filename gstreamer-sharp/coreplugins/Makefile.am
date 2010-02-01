@@ -1,4 +1,4 @@
-ELEMENTS = capsfilter fakesrc fakesink fdsrc fdsink filesrc filesink identity queue tee typefind multiqueue
+ELEMENTS = capsfilter fakesrc fakesink fdsrc fdsink filesrc filesink identity queue queue2 tee typefind multiqueue
 
 NAMESPACE = Gst.CorePlugins
 INSPECT_FILES = $(patsubst %,$(srcdir)/inspect/%.raw,$(ELEMENTS))

@@ -4,7 +4,7 @@
   <long-name>Decoder Bin</long-name>
   <class>Generic/Bin/Decoder</class>
   <description>Autoplug and decode to raw media</description>
-  <authors>Edward Hervey &lt;edward@fluendo.com&gt;</authors>
+  <authors>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</authors>
  </details>
  <object name="GstDecodeBin2">
   <object name="GstBin">
@@ -21,15 +21,15 @@
  </interfaces>
  <pad-templates>
   <pad-template>
-   <name>src%d</name>
-   <direction>src</direction>
-   <presence>sometimes</presence>
-   <caps>ANY</caps>
-  </pad-template>
-  <pad-template>
    <name>sink</name>
    <direction>sink</direction>
    <presence>always</presence>
+   <caps>ANY</caps>
+  </pad-template>
+  <pad-template>
+   <name>src%d</name>
+   <direction>src</direction>
+   <presence>sometimes</presence>
    <caps>ANY</caps>
   </pad-template>
  </pad-templates>
@@ -84,6 +84,67 @@
    <blurb>The caps of the input data. (NULL = use typefind element)</blurb>
    <flags>RW</flags>
    <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>use-buffering</name>
+   <type>gboolean</type>
+   <nick>Use Buffering</nick>
+   <blurb>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
+  <element-property>
+   <name>low-percent</name>
+   <type>gint</type>
+   <nick>Low percent</nick>
+   <blurb>Low threshold for buffering to start</blurb>
+   <flags>RW</flags>
+   <range min="0" max="100"/>
+   <default>10</default>
+  </element-property>
+  <element-property>
+   <name>high-percent</name>
+   <type>gint</type>
+   <nick>High percent</nick>
+   <blurb>High threshold for buffering to finish</blurb>
+   <flags>RW</flags>
+   <range min="0" max="100"/>
+   <default>99</default>
+  </element-property>
+  <element-property>
+   <name>max-size-bytes</name>
+   <type>guint</type>
+   <nick>Max. size (bytes)</nick>
+   <blurb>Max. amount of bytes in the queue (0=automatic)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>max-size-buffers</name>
+   <type>guint</type>
+   <nick>Max. size (buffers)</nick>
+   <blurb>Max. number of buffers in the queue (0=automatic)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="4294967295"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>max-size-time</name>
+   <type>guint64</type>
+   <nick>Max. size (ns)</nick>
+   <blurb>Max. amount of data in the queue (in ns, 0=automatic)</blurb>
+   <flags>RW</flags>
+   <range min="0" max="18446744073709551615"/>
+   <default>0</default>
+  </element-property>
+  <element-property>
+   <name>post-stream-topology</name>
+   <type>gboolean</type>
+   <nick>Post Stream Topology</nick>
+   <blurb>Post stream-topology messages</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
   </element-property>
  </element-properties>
  <element-signals>

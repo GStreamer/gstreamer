@@ -18,16 +18,16 @@
  </interfaces>
  <pad-templates>
   <pad-template>
+   <name>sink</name>
+   <direction>sink</direction>
+   <presence>always</presence>
+   <caps>ANY</caps>
+  </pad-template>
+  <pad-template>
    <name>src%d</name>
    <direction>src</direction>
    <presence>request</presence>
    <request-function>gst_tee_request_new_pad</request-function>
-   <caps>ANY</caps>
-  </pad-template>
-  <pad-template>
-   <name>sink</name>
-   <direction>sink</direction>
-   <presence>always</presence>
    <caps>ANY</caps>
   </pad-template>
  </pad-templates>

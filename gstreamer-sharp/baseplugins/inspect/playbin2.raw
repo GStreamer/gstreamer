@@ -80,6 +80,7 @@
     <flag value="32" nick="native-audio"/>
     <flag value="64" nick="native-video"/>
     <flag value="128" nick="download"/>
+    <flag value="256" nick="buffering"/>
    </flags-values>
   </element-property>
   <element-property>
@@ -173,14 +174,6 @@
    <type>GstElement</type>
    <nick>Text plugin</nick>
    <blurb>the text output element to use (NULL = default textoverlay)</blurb>
-   <flags>RW</flags>
-   <object-type>GstElement</object-type>
-  </element-property>
-  <element-property>
-   <name>subpic-sink</name>
-   <type>GstElement</type>
-   <nick>Subpicture plugin</nick>
-   <blurb>the subpicture output element to use (NULL = default dvdspu)</blurb>
    <flags>RW</flags>
    <object-type>GstElement</object-type>
   </element-property>

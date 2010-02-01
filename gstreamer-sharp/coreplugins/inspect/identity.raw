@@ -20,14 +20,14 @@
  </interfaces>
  <pad-templates>
   <pad-template>
-   <name>sink</name>
-   <direction>sink</direction>
+   <name>src</name>
+   <direction>src</direction>
    <presence>always</presence>
    <caps>ANY</caps>
   </pad-template>
   <pad-template>
-   <name>src</name>
-   <direction>src</direction>
+   <name>sink</name>
+   <direction>sink</direction>
    <presence>always</presence>
    <caps>ANY</caps>
   </pad-template>

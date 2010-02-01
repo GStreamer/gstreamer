@@ -1,12 +1,12 @@
 <element>
- <name>queue</name>
+ <name>queue2</name>
  <details>
-  <long-name>Queue</long-name>
+  <long-name>Queue 2</long-name>
   <class>Generic</class>
   <description>Simple data queue</description>
-  <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</authors>
+  <authors>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</authors>
  </details>
- <object name="GstQueue">
+ <object name="GstQueue2">
   <object name="GstElement">
    <object name="GstObject">
     <object name="GObject">
@@ -33,7 +33,7 @@
  <element-flags>
  </element-flags>
  <element-implementation>
-  <state-change function="gst_element_change_state_func"/>
+  <state-change function="gst_queue2_change_state"/>
   <save function="gst_element_save_thyself"/>
   <load function="gst_element_restore_thyself"/>
  </element-implementation>
@@ -45,8 +45,9 @@
    <direction>src</direction>
    <template>src</template>
    <implementation>
-    <event-function function="gst_queue_handle_src_event"/>
-    <query-function function="gst_queue_handle_src_query"/>
+    <get-range-based function="gst_queue2_get_range"/>
+    <event-function function="gst_queue2_handle_src_event"/>
+    <query-function function="gst_queue2_handle_src_query"/>
    </implementation>
   </pad>
   <pad>
@@ -54,9 +55,9 @@
    <direction>sink</direction>
    <template>sink</template>
    <implementation>
-    <chain-based function="gst_queue_chain"/>
-    <event-function function="gst_queue_handle_sink_event"/>
-    <bufferalloc-function function="gst_queue_bufferalloc"/>
+    <chain-based function="gst_queue2_chain"/>
+    <event-function function="gst_queue2_handle_sink_event"/>
+    <bufferalloc-function function="gst_queue2_bufferalloc"/>
    </implementation>
   </pad>
  </pads>
@@ -95,7 +96,7 @@
    <blurb>Max. number of buffers in the queue (0=disable)</blurb>
    <flags>RW</flags>
    <range min="0" max="4294967295"/>
-   <default>200</default>
+   <default>100</default>
   </element-property>
   <element-property>
    <name>max-size-bytes</name>
@@ -104,7 +105,7 @@
    <blurb>Max. amount of data in the queue (bytes, 0=disable)</blurb>
    <flags>RW</flags>
    <range min="0" max="4294967295"/>
-   <default>10485760</default>
+   <default>2097152</default>
   </element-property>
   <element-property>
    <name>max-size-time</name>
@@ -113,78 +114,68 @@
    <blurb>Max. amount of data in the queue (in ns, 0=disable)</blurb>
    <flags>RW</flags>
    <range min="0" max="18446744073709551615"/>
-   <default>1000000000</default>
+   <default>2000000000</default>
   </element-property>
   <element-property>
-   <name>min-threshold-buffers</name>
-   <type>guint</type>
-   <nick>Min. threshold (buffers)</nick>
-   <blurb>Min. number of buffers in the queue to allow reading (0=disable)</blurb>
+   <name>use-buffering</name>
+   <type>gboolean</type>
+   <nick>Use buffering</nick>
+   <blurb>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds</blurb>
    <flags>RW</flags>
-   <range min="0" max="4294967295"/>
-   <default>0</default>
+   <default>FALSE</default>
   </element-property>
   <element-property>
-   <name>min-threshold-bytes</name>
-   <type>guint</type>
-   <nick>Min. threshold (kB)</nick>
-   <blurb>Min. amount of data in the queue to allow reading (bytes, 0=disable)</blurb>
+   <name>use-rate-estimate</name>
+   <type>gboolean</type>
+   <nick>Use Rate Estimate</nick>
+   <blurb>Estimate the bitrate of the stream to calculate time level</blurb>
    <flags>RW</flags>
-   <range min="0" max="4294967295"/>
-   <default>0</default>
+   <default>TRUE</default>
   </element-property>
   <element-property>
-   <name>min-threshold-time</name>
-   <type>guint64</type>
-   <nick>Min. threshold (ns)</nick>
-   <blurb>Min. amount of data in the queue to allow reading (in ns, 0=disable)</blurb>
+   <name>low-percent</name>
+   <type>gint</type>
+   <nick>Low percent</nick>
+   <blurb>Low threshold for buffering to start</blurb>
    <flags>RW</flags>
-   <range min="0" max="18446744073709551615"/>
-   <default>0</default>
+   <range min="0" max="100"/>
+   <default>10</default>
   </element-property>
   <element-property>
-   <name>leaky</name>
-   <type>GstQueueLeaky</type>
-   <nick>Leaky</nick>
-   <blurb>Where the queue leaks, if at all</blurb>
+   <name>high-percent</name>
+   <type>gint</type>
+   <nick>High percent</nick>
+   <blurb>High threshold for buffering to finish</blurb>
    <flags>RW</flags>
-   <default>0</default>
-   <enum-values>
-    <value value="0" nick="no"/>
-    <value value="1" nick="upstream"/>
-    <value value="2" nick="downstream"/>
-   </enum-values>
+   <range min="0" max="100"/>
+   <default>99</default>
+  </element-property>
+  <element-property>
+   <name>temp-template</name>
+   <type>gchararray</type>
+   <nick>Temporary File Template</nick>
+   <blurb>File template to store temporary files in, should contain directory and XXXXXX. (NULL == disabled)</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>temp-location</name>
+   <type>gchararray</type>
+   <nick>Temporary File Location</nick>
+   <blurb>Location to store temporary files in (Deprecated: Only read this property, use temp-template to configure the name template)</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>temp-remove</name>
+   <type>gboolean</type>
+   <nick>Remove the Temporary File</nick>
+   <blurb>Remove the temp-location after use</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
   </element-property>
  </element-properties>
  <element-signals>
-  <signal>
-   <name>underrun</name>
-   <return-type>void</return-type>
-   <object-type>GstQueue</object-type>
-   <params>
-   </params>
-  </signal>
-  <signal>
-   <name>running</name>
-   <return-type>void</return-type>
-   <object-type>GstQueue</object-type>
-   <params>
-   </params>
-  </signal>
-  <signal>
-   <name>overrun</name>
-   <return-type>void</return-type>
-   <object-type>GstQueue</object-type>
-   <params>
-   </params>
-  </signal>
-  <signal>
-   <name>pushing</name>
-   <return-type>void</return-type>
-   <object-type>GstQueue</object-type>
-   <params>
-   </params>
-  </signal>
  </element-signals>
  <element-actions>
  </element-actions>
