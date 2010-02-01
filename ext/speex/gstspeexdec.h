@@ -70,7 +70,6 @@ struct _GstSpeexDec {
   guint64               packetno;
 
   GstSegment            segment;    /* STREAM LOCK */
-  gint64                granulepos; /* -1 = needs to be set from current time */
 };
 
 struct _GstSpeexDecClass {

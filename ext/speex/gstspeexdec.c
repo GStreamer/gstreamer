@@ -144,7 +144,6 @@ static void
 gst_speex_dec_reset (GstSpeexDec * dec)
 {
   gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
-  dec->granulepos = -1;
   dec->packetno = 0;
   dec->frame_size = 0;
   dec->frame_duration = 0;
@@ -475,8 +474,6 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, GST_FORMAT_TIME, start, stop, time);
 
-      dec->granulepos = -1;
-
       GST_DEBUG_OBJECT (dec, "segment now: cur = %" GST_TIME_FORMAT " [%"
           GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]",
           GST_TIME_ARGS (dec->segment.last_stop),
@@ -647,9 +644,13 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
   guint8 *data;
   SpeexBits *bits;
 
+  if (!dec->frame_duration)
+    goto not_negotiated;
+
   if (timestamp != -1) {
     dec->segment.last_stop = timestamp;
-    dec->granulepos = -1;
+  } else {
+    timestamp = dec->segment.last_stop;
   }
 
   if (buf) {
@@ -663,16 +664,6 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     bits = &dec->bits;
 
     GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d", size, fpp);
-
-    if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)
-        && GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
-      dec->granulepos = GST_BUFFER_OFFSET_END (buf);
-      GST_DEBUG_OBJECT (dec,
-          "Taking granulepos from upstream: %" G_GUINT64_FORMAT,
-          dec->granulepos);
-    }
-
-    /* copy timestamp */
   } else {
     /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "creating concealment data");
@@ -724,29 +715,11 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
     if (dec->header->nb_channels == 2)
       speex_decode_stereo_int (out_data, dec->frame_size, &dec->stereo);
 
-    if (dec->granulepos == -1) {
-      if (dec->segment.format != GST_FORMAT_TIME) {
-        GST_WARNING_OBJECT (dec, "segment not initialized or not TIME format");
-        dec->granulepos = dec->frame_size;
-      } else {
-        dec->granulepos = gst_util_uint64_scale_int (dec->segment.last_stop,
-            dec->header->rate, GST_SECOND) + dec->frame_size;
-      }
-      GST_DEBUG_OBJECT (dec, "granulepos=%" G_GINT64_FORMAT, dec->granulepos);
-    }
-
-    if (timestamp == -1) {
-      timestamp = gst_util_uint64_scale_int (dec->granulepos - dec->frame_size,
-          GST_SECOND, dec->header->rate);
-    }
-
-    GST_BUFFER_OFFSET (outbuf) = dec->granulepos - dec->frame_size;
-    GST_BUFFER_OFFSET_END (outbuf) = dec->granulepos;
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = dec->frame_duration;
 
-    dec->granulepos += dec->frame_size;
     dec->segment.last_stop += dec->frame_duration;
+    timestamp = dec->segment.last_stop;
 
     GST_LOG_OBJECT (dec, "pushing buffer with ts=%" GST_TIME_FORMAT ", dur=%"
         GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
@@ -758,10 +731,17 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
       GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
       break;
     }
-    timestamp = -1;
   }
 
   return res;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
+        ("decoder not initialized"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstFlowReturn
@@ -780,10 +760,29 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
       res = speex_dec_chain_parse_comments (dec, buf);
       break;
     default:
+    {
+      GstClockTime timestamp;
+
+      /* FIXME minor old oggdemux compatibility, remove ... */
+      if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)
+          && GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
+        gint64 granulepos = GST_BUFFER_OFFSET_END (buf);
+
+        GST_DEBUG_OBJECT (dec,
+            "Taking granulepos from upstream: %" G_GUINT64_FORMAT, granulepos);
+        granulepos -= dec->frame_size * dec->header->frames_per_packet;
+        if (granulepos < 0)
+          granulepos = 0;
+        timestamp = gst_util_uint64_scale_int (granulepos,
+            GST_SECOND, dec->header->rate);
+      } else {
+        timestamp = GST_BUFFER_TIMESTAMP (buf);
+      }
       res =
-          speex_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+          speex_dec_chain_parse_data (dec, buf, timestamp,
           GST_BUFFER_DURATION (buf));
       break;
+    }
   }
 
   dec->packetno++;
