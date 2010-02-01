@@ -500,21 +500,23 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 static void
 gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
 {
-  appsrc->priv = G_TYPE_INSTANCE_GET_PRIVATE (appsrc, GST_TYPE_APP_SRC,
+  GstAppSrcPrivate *priv;
+
+  priv = appsrc->priv = G_TYPE_INSTANCE_GET_PRIVATE (appsrc, GST_TYPE_APP_SRC,
       GstAppSrcPrivate);
 
-  appsrc->priv->mutex = g_mutex_new ();
-  appsrc->priv->cond = g_cond_new ();
-  appsrc->priv->queue = g_queue_new ();
+  priv->mutex = g_mutex_new ();
+  priv->cond = g_cond_new ();
+  priv->queue = g_queue_new ();
 
-  appsrc->priv->size = DEFAULT_PROP_SIZE;
-  appsrc->priv->stream_type = DEFAULT_PROP_STREAM_TYPE;
-  appsrc->priv->max_bytes = DEFAULT_PROP_MAX_BYTES;
-  appsrc->priv->format = DEFAULT_PROP_FORMAT;
-  appsrc->priv->block = DEFAULT_PROP_BLOCK;
-  appsrc->priv->min_latency = DEFAULT_PROP_MIN_LATENCY;
-  appsrc->priv->max_latency = DEFAULT_PROP_MAX_LATENCY;
-  appsrc->priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
+  priv->size = DEFAULT_PROP_SIZE;
+  priv->stream_type = DEFAULT_PROP_STREAM_TYPE;
+  priv->max_bytes = DEFAULT_PROP_MAX_BYTES;
+  priv->format = DEFAULT_PROP_FORMAT;
+  priv->block = DEFAULT_PROP_BLOCK;
+  priv->min_latency = DEFAULT_PROP_MIN_LATENCY;
+  priv->max_latency = DEFAULT_PROP_MAX_LATENCY;
+  priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
 
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
@@ -523,20 +525,22 @@ static void
 gst_app_src_flush_queued (GstAppSrc * src)
 {
   GstBuffer *buf;
+  GstAppSrcPrivate *priv = src->priv;
 
-  while ((buf = g_queue_pop_head (src->priv->queue)))
+  while ((buf = g_queue_pop_head (priv->queue)))
     gst_buffer_unref (buf);
-  src->priv->queued_bytes = 0;
+  priv->queued_bytes = 0;
 }
 
 static void
 gst_app_src_dispose (GObject * obj)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (obj);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (obj);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  if (appsrc->priv->caps) {
-    gst_caps_unref (appsrc->priv->caps);
-    appsrc->priv->caps = NULL;
+  if (priv->caps) {
+    gst_caps_unref (priv->caps);
+    priv->caps = NULL;
   }
   gst_app_src_flush_queued (appsrc);
 
@@ -546,11 +550,12 @@ gst_app_src_dispose (GObject * obj)
 static void
 gst_app_src_finalize (GObject * obj)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (obj);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (obj);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_free (appsrc->priv->mutex);
-  g_cond_free (appsrc->priv->cond);
-  g_queue_free (appsrc->priv->queue);
+  g_mutex_free (priv->mutex);
+  g_cond_free (priv->cond);
+  g_queue_free (priv->queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -559,7 +564,8 @@ static void
 gst_app_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (object);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (object);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
   switch (prop_id) {
     case PROP_CAPS:
@@ -575,10 +581,10 @@ gst_app_src_set_property (GObject * object, guint prop_id,
       gst_app_src_set_max_bytes (appsrc, g_value_get_uint64 (value));
       break;
     case PROP_FORMAT:
-      appsrc->priv->format = g_value_get_enum (value);
+      priv->format = g_value_get_enum (value);
       break;
     case PROP_BLOCK:
-      appsrc->priv->block = g_value_get_boolean (value);
+      priv->block = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (appsrc),
@@ -605,7 +611,8 @@ static void
 gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (object);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (object);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
   switch (prop_id) {
     case PROP_CAPS:
@@ -629,10 +636,10 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint64 (value, gst_app_src_get_max_bytes (appsrc));
       break;
     case PROP_FORMAT:
-      g_value_set_enum (value, appsrc->priv->format);
+      g_value_set_enum (value, priv->format);
       break;
     case PROP_BLOCK:
-      g_value_set_boolean (value, appsrc->priv->block);
+      g_value_set_boolean (value, priv->block);
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (appsrc)));
@@ -665,13 +672,14 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_app_src_unlock (GstBaseSrc * bsrc)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_lock (appsrc->priv->mutex);
+  g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock start");
-  appsrc->priv->flushing = TRUE;
-  g_cond_broadcast (appsrc->priv->cond);
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv->flushing = TRUE;
+  g_cond_broadcast (priv->cond);
+  g_mutex_unlock (priv->mutex);
 
   return TRUE;
 }
@@ -679,13 +687,14 @@ gst_app_src_unlock (GstBaseSrc * bsrc)
 static gboolean
 gst_app_src_unlock_stop (GstBaseSrc * bsrc)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_lock (appsrc->priv->mutex);
+  g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock stop");
-  appsrc->priv->flushing = FALSE;
-  g_cond_broadcast (appsrc->priv->cond);
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv->flushing = FALSE;
+  g_cond_broadcast (priv->cond);
+  g_mutex_unlock (priv->mutex);
 
   return TRUE;
 }
@@ -693,18 +702,19 @@ gst_app_src_unlock_stop (GstBaseSrc * bsrc)
 static gboolean
 gst_app_src_start (GstBaseSrc * bsrc)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_lock (appsrc->priv->mutex);
+  g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "starting");
-  appsrc->priv->started = TRUE;
+  priv->started = TRUE;
   /* set the offset to -1 so that we always do a first seek. This is only used
    * in random-access mode. */
-  appsrc->priv->offset = -1;
-  appsrc->priv->flushing = FALSE;
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv->offset = -1;
+  priv->flushing = FALSE;
+  g_mutex_unlock (priv->mutex);
 
-  gst_base_src_set_format (bsrc, appsrc->priv->format);
+  gst_base_src_set_format (bsrc, priv->format);
 
   return TRUE;
 }
@@ -712,15 +722,16 @@ gst_app_src_start (GstBaseSrc * bsrc)
 static gboolean
 gst_app_src_stop (GstBaseSrc * bsrc)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_lock (appsrc->priv->mutex);
+  g_mutex_lock (priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "stopping");
-  appsrc->priv->is_eos = FALSE;
-  appsrc->priv->flushing = TRUE;
-  appsrc->priv->started = FALSE;
+  priv->is_eos = FALSE;
+  priv->flushing = TRUE;
+  priv->started = FALSE;
   gst_app_src_flush_queued (appsrc);
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_mutex_unlock (priv->mutex);
 
   return TRUE;
 }
@@ -728,10 +739,11 @@ gst_app_src_stop (GstBaseSrc * bsrc)
 static gboolean
 gst_app_src_is_seekable (GstBaseSrc * src)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (src);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
+  GstAppSrcPrivate *priv = appsrc->priv;
   gboolean res = FALSE;
 
-  switch (appsrc->priv->stream_type) {
+  switch (priv->stream_type) {
     case GST_APP_STREAM_TYPE_STREAM:
       break;
     case GST_APP_STREAM_TYPE_SEEKABLE:
@@ -745,10 +757,11 @@ gst_app_src_is_seekable (GstBaseSrc * src)
 static gboolean
 gst_app_src_check_get_range (GstBaseSrc * src)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (src);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
+  GstAppSrcPrivate *priv = appsrc->priv;
   gboolean res = FALSE;
 
-  switch (appsrc->priv->stream_type) {
+  switch (priv->stream_type) {
     case GST_APP_STREAM_TYPE_STREAM:
     case GST_APP_STREAM_TYPE_SEEKABLE:
       break;
@@ -762,7 +775,7 @@ gst_app_src_check_get_range (GstBaseSrc * src)
 static gboolean
 gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (src);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
 
   *size = gst_app_src_get_size (appsrc);
 
@@ -772,7 +785,8 @@ gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
 static gboolean
 gst_app_src_query (GstBaseSrc * src, GstQuery * query)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (src);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
+  GstAppSrcPrivate *priv = appsrc->priv;
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -785,12 +799,12 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
       res = gst_base_src_query_latency (src, &live, &min, &max);
 
       /* overwrite with our values when we need to */
-      g_mutex_lock (appsrc->priv->mutex);
-      if (appsrc->priv->min_latency != -1)
-        min = appsrc->priv->min_latency;
-      if (appsrc->priv->max_latency != -1)
-        max = appsrc->priv->max_latency;
-      g_mutex_unlock (appsrc->priv->mutex);
+      g_mutex_lock (priv->mutex);
+      if (priv->min_latency != -1)
+        min = priv->min_latency;
+      if (priv->max_latency != -1)
+        max = priv->max_latency;
+      g_mutex_unlock (priv->mutex);
 
       gst_query_set_latency (query, live, min, max);
       break;
@@ -807,7 +821,8 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
 static gboolean
 gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (src);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (src);
+  GstAppSrcPrivate *priv = appsrc->priv;
   gint64 desired_position;
   gboolean res = FALSE;
 
@@ -817,18 +832,17 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
       desired_position, gst_format_get_name (segment->format));
 
   /* no need to try to seek in streaming mode */
-  if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_STREAM)
+  if (priv->stream_type == GST_APP_STREAM_TYPE_STREAM)
     return TRUE;
 
-  if (appsrc->priv->callbacks.seek_data)
-    res = appsrc->priv->callbacks.seek_data (appsrc, desired_position,
-        appsrc->priv->user_data);
+  if (priv->callbacks.seek_data)
+    res = priv->callbacks.seek_data (appsrc, desired_position, priv->user_data);
   else {
     gboolean emit;
 
-    g_mutex_lock (appsrc->priv->mutex);
-    emit = appsrc->priv->emit_signals;
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_lock (priv->mutex);
+    emit = priv->emit_signals;
+    g_mutex_unlock (priv->mutex);
 
     if (emit)
       g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_SEEK_DATA], 0,
@@ -838,7 +852,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
   if (res) {
     GST_DEBUG_OBJECT (appsrc, "flushing queue");
     gst_app_src_flush_queued (appsrc);
-    appsrc->priv->is_eos = FALSE;
+    priv->is_eos = FALSE;
   } else {
     GST_WARNING_OBJECT (appsrc, "seek failed");
   }
@@ -850,31 +864,31 @@ static GstFlowReturn
 gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     GstBuffer ** buf)
 {
-  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
   GstFlowReturn ret;
 
-  g_mutex_lock (appsrc->priv->mutex);
+  g_mutex_lock (priv->mutex);
   /* check flushing first */
-  if (G_UNLIKELY (appsrc->priv->flushing))
+  if (G_UNLIKELY (priv->flushing))
     goto flushing;
 
-  if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+  if (priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
     /* if we are dealing with a random-access stream, issue a seek if the offset
      * changed. */
-    if (G_UNLIKELY (appsrc->priv->offset != offset)) {
+    if (G_UNLIKELY (priv->offset != offset)) {
       gboolean res;
       gboolean emit;
 
-      emit = appsrc->priv->emit_signals;
-      g_mutex_unlock (appsrc->priv->mutex);
+      emit = priv->emit_signals;
+      g_mutex_unlock (priv->mutex);
 
       GST_DEBUG_OBJECT (appsrc,
           "we are at %" G_GINT64_FORMAT ", seek to %" G_GINT64_FORMAT,
-          appsrc->priv->offset, offset);
+          priv->offset, offset);
 
-      if (appsrc->priv->callbacks.seek_data)
-        res = appsrc->priv->callbacks.seek_data (appsrc, offset,
-            appsrc->priv->user_data);
+      if (priv->callbacks.seek_data)
+        res = priv->callbacks.seek_data (appsrc, offset, priv->user_data);
       else if (emit)
         g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_SEEK_DATA], 0,
             offset, &res);
@@ -883,53 +897,52 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         /* failing to seek is fatal */
         goto seek_error;
 
-      g_mutex_lock (appsrc->priv->mutex);
+      g_mutex_lock (priv->mutex);
 
-      appsrc->priv->offset = offset;
+      priv->offset = offset;
     }
   }
 
   while (TRUE) {
     /* return data as long as we have some */
-    if (!g_queue_is_empty (appsrc->priv->queue)) {
+    if (!g_queue_is_empty (priv->queue)) {
       guint buf_size;
 
-      *buf = g_queue_pop_head (appsrc->priv->queue);
+      *buf = g_queue_pop_head (priv->queue);
       buf_size = GST_BUFFER_SIZE (*buf);
 
       GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
 
-      appsrc->priv->queued_bytes -= buf_size;
+      priv->queued_bytes -= buf_size;
 
       /* only update the offset when in random_access mode */
-      if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
-        appsrc->priv->offset += buf_size;
+      if (priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+        priv->offset += buf_size;
       }
 
-      gst_buffer_set_caps (*buf, appsrc->priv->caps);
+      gst_buffer_set_caps (*buf, priv->caps);
 
       /* signal that we removed an item */
-      g_cond_broadcast (appsrc->priv->cond);
+      g_cond_broadcast (priv->cond);
 
       ret = GST_FLOW_OK;
       break;
     } else {
       gboolean emit;
 
-      emit = appsrc->priv->emit_signals;
-      g_mutex_unlock (appsrc->priv->mutex);
+      emit = priv->emit_signals;
+      g_mutex_unlock (priv->mutex);
 
       /* we have no data, we need some. We fire the signal with the size hint. */
-      if (appsrc->priv->callbacks.need_data)
-        appsrc->priv->callbacks.need_data (appsrc, size,
-            appsrc->priv->user_data);
+      if (priv->callbacks.need_data)
+        priv->callbacks.need_data (appsrc, size, priv->user_data);
       else if (emit)
         g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_NEED_DATA], 0, size,
             NULL);
 
-      g_mutex_lock (appsrc->priv->mutex);
+      g_mutex_lock (priv->mutex);
       /* we can be flushing now because we released the lock */
-      if (G_UNLIKELY (appsrc->priv->flushing))
+      if (G_UNLIKELY (priv->flushing))
         goto flushing;
 
       /* if we have a buffer now, continue the loop and try to return it. In
@@ -937,20 +950,20 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
        * signal) we can still be empty because the pushed buffer got flushed or
        * when the application pushes the requested buffer later, we support both
        * possiblities. */
-      if (!g_queue_is_empty (appsrc->priv->queue))
+      if (!g_queue_is_empty (priv->queue))
         continue;
 
       /* no buffer yet, maybe we are EOS, if not, block for more data. */
     }
 
     /* check EOS */
-    if (G_UNLIKELY (appsrc->priv->is_eos))
+    if (G_UNLIKELY (priv->is_eos))
       goto eos;
 
     /* nothing to return, wait a while for new data or flushing. */
-    g_cond_wait (appsrc->priv->cond, appsrc->priv->mutex);
+    g_cond_wait (priv->cond, priv->mutex);
   }
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_mutex_unlock (priv->mutex);
 
   return ret;
 
@@ -958,13 +971,13 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "we are flushing");
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_unlock (priv->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "we are EOS");
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_unlock (priv->mutex);
     return GST_FLOW_UNEXPECTED;
   }
 seek_error:
@@ -993,16 +1006,19 @@ void
 gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 {
   GstCaps *old;
+  GstAppSrcPrivate *priv;
 
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
+  priv = appsrc->priv;
+
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
-  if ((old = appsrc->priv->caps) != caps) {
+  if ((old = priv->caps) != caps) {
     if (caps)
-      appsrc->priv->caps = gst_caps_copy (caps);
+      priv->caps = gst_caps_copy (caps);
     else
-      appsrc->priv->caps = NULL;
+      priv->caps = NULL;
     if (old)
       gst_caps_unref (old);
   }
@@ -1023,12 +1039,14 @@ GstCaps *
 gst_app_src_get_caps (GstAppSrc * appsrc)
 {
   GstCaps *caps;
+  GstAppSrcPrivate *priv;
 
-  g_return_val_if_fail (appsrc != NULL, NULL);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), NULL);
 
+  priv = appsrc->priv;
+
   GST_OBJECT_LOCK (appsrc);
-  if ((caps = appsrc->priv->caps))
+  if ((caps = priv->caps))
     gst_caps_ref (caps);
   GST_DEBUG_OBJECT (appsrc, "getting caps of %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsrc);
@@ -1051,13 +1069,15 @@ gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
 {
   GstSegment *segment;
   gboolean bytes_segment;
+  GstAppSrcPrivate *priv;
 
-  g_return_if_fail (appsrc != NULL);
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
+
+  priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting size of %" G_GINT64_FORMAT, size);
-  appsrc->priv->size = size;
+  priv->size = size;
 
   segment = &GST_BASE_SRC_CAST (appsrc)->segment;
   bytes_segment = (segment->format == GST_FORMAT_BYTES);
@@ -1086,12 +1106,14 @@ gint64
 gst_app_src_get_size (GstAppSrc * appsrc)
 {
   gint64 size;
+  GstAppSrcPrivate *priv;
 
-  g_return_val_if_fail (appsrc != NULL, -1);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
 
+  priv = appsrc->priv;
+
   GST_OBJECT_LOCK (appsrc);
-  size = appsrc->priv->size;
+  size = priv->size;
   GST_DEBUG_OBJECT (appsrc, "getting size of %" G_GINT64_FORMAT, size);
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -1113,12 +1135,15 @@ gst_app_src_get_size (GstAppSrc * appsrc)
 void
 gst_app_src_set_stream_type (GstAppSrc * appsrc, GstAppStreamType type)
 {
-  g_return_if_fail (appsrc != NULL);
+  GstAppSrcPrivate *priv;
+
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
+
+  priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting stream_type of %d", type);
-  appsrc->priv->stream_type = type;
+  priv->stream_type = type;
   GST_OBJECT_UNLOCK (appsrc);
 }
 
@@ -1137,12 +1162,14 @@ GstAppStreamType
 gst_app_src_get_stream_type (GstAppSrc * appsrc)
 {
   gboolean stream_type;
+  GstAppSrcPrivate *priv;
 
-  g_return_val_if_fail (appsrc != NULL, FALSE);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), FALSE);
 
+  priv = appsrc->priv;
+
   GST_OBJECT_LOCK (appsrc);
-  stream_type = appsrc->priv->stream_type;
+  stream_type = priv->stream_type;
   GST_DEBUG_OBJECT (appsrc, "getting stream_type of %d", stream_type);
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -1163,16 +1190,20 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
 void
 gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 {
+  GstAppSrcPrivate *priv;
+
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  g_mutex_lock (appsrc->priv->mutex);
-  if (max != appsrc->priv->max_bytes) {
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
+  if (max != priv->max_bytes) {
     GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %" G_GUINT64_FORMAT, max);
-    appsrc->priv->max_bytes = max;
+    priv->max_bytes = max;
     /* signal the change */
-    g_cond_broadcast (appsrc->priv->cond);
+    g_cond_broadcast (priv->cond);
   }
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_mutex_unlock (priv->mutex);
 }
 
 /**
@@ -1189,13 +1220,16 @@ guint64
 gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 {
   guint64 result;
+  GstAppSrcPrivate *priv;
 
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
 
-  g_mutex_lock (appsrc->priv->mutex);
-  result = appsrc->priv->max_bytes;
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
+  result = priv->max_bytes;
   GST_DEBUG_OBJECT (appsrc, "getting max-bytes of %" G_GUINT64_FORMAT, result);
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_mutex_unlock (priv->mutex);
 
   return result;
 }
@@ -1205,17 +1239,18 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
     gboolean do_max, guint64 max)
 {
   gboolean changed = FALSE;
+  GstAppSrcPrivate *priv = appsrc->priv;
 
-  g_mutex_lock (appsrc->priv->mutex);
-  if (do_min && appsrc->priv->min_latency != min) {
-    appsrc->priv->min_latency = min;
+  g_mutex_lock (priv->mutex);
+  if (do_min && priv->min_latency != min) {
+    priv->min_latency = min;
     changed = TRUE;
   }
-  if (do_max && appsrc->priv->max_latency != max) {
-    appsrc->priv->max_latency = max;
+  if (do_max && priv->max_latency != max) {
+    priv->max_latency = max;
     changed = TRUE;
   }
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_mutex_unlock (priv->mutex);
 
   if (changed) {
     GST_DEBUG_OBJECT (appsrc, "posting latency changed");
@@ -1254,14 +1289,18 @@ gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
 void
 gst_app_src_get_latency (GstAppSrc * appsrc, guint64 * min, guint64 * max)
 {
+  GstAppSrcPrivate *priv;
+
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  g_mutex_lock (appsrc->priv->mutex);
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
   if (min)
-    *min = appsrc->priv->min_latency;
+    *min = priv->min_latency;
   if (max)
-    *max = appsrc->priv->max_latency;
-  g_mutex_unlock (appsrc->priv->mutex);
+    *max = priv->max_latency;
+  g_mutex_unlock (priv->mutex);
 }
 
 /**
@@ -1278,11 +1317,15 @@ gst_app_src_get_latency (GstAppSrc * appsrc, guint64 * min, guint64 * max)
 void
 gst_app_src_set_emit_signals (GstAppSrc * appsrc, gboolean emit)
 {
+  GstAppSrcPrivate *priv;
+
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  g_mutex_lock (appsrc->priv->mutex);
-  appsrc->priv->emit_signals = emit;
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
+  priv->emit_signals = emit;
+  g_mutex_unlock (priv->mutex);
 }
 
 /**
@@ -1300,12 +1343,15 @@ gboolean
 gst_app_src_get_emit_signals (GstAppSrc * appsrc)
 {
   gboolean result;
+  GstAppSrcPrivate *priv;
 
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), FALSE);
 
-  g_mutex_lock (appsrc->priv->mutex);
-  result = appsrc->priv->emit_signals;
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
+  result = priv->emit_signals;
+  g_mutex_unlock (priv->mutex);
 
   return result;
 }
@@ -1315,50 +1361,51 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
     gboolean steal_ref)
 {
   gboolean first = TRUE;
+  GstAppSrcPrivate *priv;
 
-  g_return_val_if_fail (appsrc, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  g_mutex_lock (appsrc->priv->mutex);
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
 
   while (TRUE) {
     /* can't accept buffers when we are flushing or EOS */
-    if (appsrc->priv->flushing)
+    if (priv->flushing)
       goto flushing;
 
-    if (appsrc->priv->is_eos)
+    if (priv->is_eos)
       goto eos;
 
-    if (appsrc->priv->max_bytes
-        && appsrc->priv->queued_bytes >= appsrc->priv->max_bytes) {
+    if (priv->max_bytes && priv->queued_bytes >= priv->max_bytes) {
       GST_DEBUG_OBJECT (appsrc,
           "queue filled (%" G_GUINT64_FORMAT " >= %" G_GUINT64_FORMAT ")",
-          appsrc->priv->queued_bytes, appsrc->priv->max_bytes);
+          priv->queued_bytes, priv->max_bytes);
 
       if (first) {
         gboolean emit;
 
-        emit = appsrc->priv->emit_signals;
+        emit = priv->emit_signals;
         /* only signal on the first push */
-        g_mutex_unlock (appsrc->priv->mutex);
+        g_mutex_unlock (priv->mutex);
 
-        if (appsrc->priv->callbacks.enough_data)
-          appsrc->priv->callbacks.enough_data (appsrc, appsrc->priv->user_data);
+        if (priv->callbacks.enough_data)
+          priv->callbacks.enough_data (appsrc, priv->user_data);
         else if (emit)
           g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0,
               NULL);
 
-        g_mutex_lock (appsrc->priv->mutex);
+        g_mutex_lock (priv->mutex);
         /* continue to check for flushing/eos after releasing the lock */
         first = FALSE;
         continue;
       }
-      if (appsrc->priv->block) {
+      if (priv->block) {
         GST_DEBUG_OBJECT (appsrc, "waiting for free space");
         /* we are filled, wait until a buffer gets popped or when we
          * flush. */
-        g_cond_wait (appsrc->priv->cond, appsrc->priv->mutex);
+        g_cond_wait (priv->cond, priv->mutex);
       } else {
         /* no need to wait for free space, we just pump more data into the
          * queue hoping that the caller reacts to the enough-data signal and
@@ -1372,10 +1419,10 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
   GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
   if (!steal_ref)
     gst_buffer_ref (buffer);
-  g_queue_push_tail (appsrc->priv->queue, buffer);
-  appsrc->priv->queued_bytes += GST_BUFFER_SIZE (buffer);
-  g_cond_broadcast (appsrc->priv->cond);
-  g_mutex_unlock (appsrc->priv->mutex);
+  g_queue_push_tail (priv->queue, buffer);
+  priv->queued_bytes += GST_BUFFER_SIZE (buffer);
+  g_cond_broadcast (priv->cond);
+  g_mutex_unlock (priv->mutex);
 
   return GST_FLOW_OK;
 
@@ -1385,7 +1432,7 @@ flushing:
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are flushing", buffer);
     if (steal_ref)
       gst_buffer_unref (buffer);
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_unlock (priv->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
@@ -1393,7 +1440,7 @@ eos:
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are EOS", buffer);
     if (steal_ref)
       gst_buffer_unref (buffer);
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_unlock (priv->mutex);
     return GST_FLOW_UNEXPECTED;
   }
 }
@@ -1444,26 +1491,29 @@ gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
 GstFlowReturn
 gst_app_src_end_of_stream (GstAppSrc * appsrc)
 {
-  g_return_val_if_fail (appsrc, GST_FLOW_ERROR);
+  GstAppSrcPrivate *priv;
+
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
 
-  g_mutex_lock (appsrc->priv->mutex);
+  priv = appsrc->priv;
+
+  g_mutex_lock (priv->mutex);
   /* can't accept buffers when we are flushing. We can accept them when we are 
    * EOS although it will not do anything. */
-  if (appsrc->priv->flushing)
+  if (priv->flushing)
     goto flushing;
 
   GST_DEBUG_OBJECT (appsrc, "sending EOS");
-  appsrc->priv->is_eos = TRUE;
-  g_cond_broadcast (appsrc->priv->cond);
-  g_mutex_unlock (appsrc->priv->mutex);
+  priv->is_eos = TRUE;
+  g_cond_broadcast (priv->cond);
+  g_mutex_unlock (priv->mutex);
 
   return GST_FLOW_OK;
 
   /* ERRORS */
 flushing:
   {
-    g_mutex_unlock (appsrc->priv->mutex);
+    g_mutex_unlock (priv->mutex);
     GST_DEBUG_OBJECT (appsrc, "refuse EOS, we are flushing");
     return GST_FLOW_WRONG_STATE;
   }
@@ -1491,30 +1541,32 @@ gst_app_src_set_callbacks (GstAppSrc * appsrc,
     GstAppSrcCallbacks * callbacks, gpointer user_data, GDestroyNotify notify)
 {
   GDestroyNotify old_notify;
+  GstAppSrcPrivate *priv;
 
-  g_return_if_fail (appsrc != NULL);
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
   g_return_if_fail (callbacks != NULL);
 
+  priv = appsrc->priv;
+
   GST_OBJECT_LOCK (appsrc);
-  old_notify = appsrc->priv->notify;
+  old_notify = priv->notify;
 
   if (old_notify) {
     gpointer old_data;
 
-    old_data = appsrc->priv->user_data;
+    old_data = priv->user_data;
 
-    appsrc->priv->user_data = NULL;
-    appsrc->priv->notify = NULL;
+    priv->user_data = NULL;
+    priv->notify = NULL;
     GST_OBJECT_UNLOCK (appsrc);
 
     old_notify (old_data);
 
     GST_OBJECT_LOCK (appsrc);
   }
-  appsrc->priv->callbacks = *callbacks;
-  appsrc->priv->user_data = user_data;
-  appsrc->priv->notify = notify;
+  priv->callbacks = *callbacks;
+  priv->user_data = user_data;
+  priv->notify = notify;
   GST_OBJECT_UNLOCK (appsrc);
 }
 
