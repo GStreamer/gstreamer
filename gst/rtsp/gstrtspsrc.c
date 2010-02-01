@@ -150,6 +150,8 @@ enum
 #define DEFAULT_DO_RTCP          TRUE
 #define DEFAULT_PROXY            NULL
 #define DEFAULT_RTP_BLOCKSIZE    0
+#define DEFAULT_USER_ID          NULL
+#define DEFAULT_USER_PW          NULL
 
 enum
 {
@@ -222,6 +224,9 @@ static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
 
 static void gst_rtspsrc_sdp_attributes_to_caps (GArray * attributes,
     GstCaps * caps);
+
+static gboolean gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy);
+static void gst_rtspsrc_set_tcp_timeout (GstRTSPSrc * rtspsrc, guint64 timeout);
 
 static GstCaps *gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media);
 
@@ -303,52 +308,52 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "RTSP Location",
           "Location of the RTSP url to read",
-          DEFAULT_LOCATION, G_PARAM_READWRITE));
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
-          DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
           "Dump request and response messages to stdout",
-          DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RETRY,
       g_param_spec_uint ("retry", "Retry",
           "Max number of retries when allocating RTP ports.",
           0, G_MAXUINT16, DEFAULT_RETRY,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Retry TCP transport after UDP timeout microseconds (0 = disabled)",
           0, G_MAXUINT64, DEFAULT_TIMEOUT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TCP_TIMEOUT,
       g_param_spec_uint64 ("tcp-timeout", "TCP Timeout",
           "Fail after timeout microseconds on TCP connections (0 = disabled)",
           0, G_MAXUINT64, DEFAULT_TCP_TIMEOUT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
           0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NAT_METHOD,
       g_param_spec_enum ("nat-method", "NAT Method",
           "Method to use for traversing firewalls and NAT",
           GST_TYPE_RTSP_NAT_METHOD, DEFAULT_NAT_METHOD,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::do-rtcp
@@ -361,7 +366,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DO_RTCP,
       g_param_spec_boolean ("do-rtcp", "Do RTCP",
           "Send RTCP packets, disable for old incompatible server.",
-          DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::proxy
@@ -374,7 +379,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
-          DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRTSPSrc::rtp_blocksize
@@ -387,17 +392,17 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
       g_param_spec_uint ("rtp-blocksize", "RTP Blocksize",
           "RTP package size to suggest to server (0 = disabled)",
           0, 65536, DEFAULT_RTP_BLOCKSIZE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_USER_ID,
       g_param_spec_string ("user-id", "user-id",
-          "RTSP location URI user id for authentication", NULL,
-          G_PARAM_READWRITE));
+          "RTSP location URI user id for authentication", DEFAULT_USER_ID,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_USER_PW,
       g_param_spec_string ("user-pw", "user-pw",
-          "RTSP location URI user password for authentication", NULL,
-          G_PARAM_READWRITE));
+          "RTSP location URI user password for authentication", DEFAULT_USER_PW,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -419,6 +424,19 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 
   src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
+  src->protocols = DEFAULT_PROTOCOLS;
+  src->debug = DEFAULT_DEBUG;
+  src->retry = DEFAULT_RETRY;
+  src->udp_timeout = DEFAULT_TIMEOUT;
+  gst_rtspsrc_set_tcp_timeout (src, DEFAULT_TCP_TIMEOUT);
+  src->latency = DEFAULT_LATENCY_MS;
+  src->connection_speed = DEFAULT_CONNECTION_SPEED;
+  src->nat_method = DEFAULT_NAT_METHOD;
+  src->do_rtcp = DEFAULT_DO_RTCP;
+  gst_rtspsrc_set_proxy (src, DEFAULT_PROXY);
+  src->rtp_blocksize = DEFAULT_RTP_BLOCKSIZE;
+  src->user_id = g_strdup (DEFAULT_USER_ID);
+  src->user_pw = g_strdup (DEFAULT_USER_PW);
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -524,6 +542,18 @@ gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy)
 }
 
 static void
+gst_rtspsrc_set_tcp_timeout (GstRTSPSrc * rtspsrc, guint64 timeout)
+{
+  rtspsrc->tcp_timeout.tv_sec = timeout / G_USEC_PER_SEC;
+  rtspsrc->tcp_timeout.tv_usec = timeout % G_USEC_PER_SEC;
+
+  if (timeout != 0)
+    rtspsrc->ptcp_timeout = &rtspsrc->tcp_timeout;
+  else
+    rtspsrc->ptcp_timeout = NULL;
+}
+
+static void
 gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
@@ -549,18 +579,8 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       rtspsrc->udp_timeout = g_value_get_uint64 (value);
       break;
     case PROP_TCP_TIMEOUT:
-    {
-      guint64 timeout = g_value_get_uint64 (value);
-
-      rtspsrc->tcp_timeout.tv_sec = timeout / G_USEC_PER_SEC;
-      rtspsrc->tcp_timeout.tv_usec = timeout % G_USEC_PER_SEC;
-
-      if (timeout != 0)
-        rtspsrc->ptcp_timeout = &rtspsrc->tcp_timeout;
-      else
-        rtspsrc->ptcp_timeout = NULL;
+      gst_rtspsrc_set_tcp_timeout (rtspsrc, g_value_get_uint64 (value));
       break;
-    }
     case PROP_LATENCY:
       rtspsrc->latency = g_value_get_uint (value);
       break;
