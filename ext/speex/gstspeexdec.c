@@ -761,25 +761,8 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
       break;
     default:
     {
-      GstClockTime timestamp;
-
-      /* FIXME minor old oggdemux compatibility, remove ... */
-      if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)
-          && GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
-        gint64 granulepos = GST_BUFFER_OFFSET_END (buf);
-
-        GST_DEBUG_OBJECT (dec,
-            "Taking granulepos from upstream: %" G_GUINT64_FORMAT, granulepos);
-        granulepos -= dec->frame_size * dec->header->frames_per_packet;
-        if (granulepos < 0)
-          granulepos = 0;
-        timestamp = gst_util_uint64_scale_int (granulepos,
-            GST_SECOND, dec->header->rate);
-      } else {
-        timestamp = GST_BUFFER_TIMESTAMP (buf);
-      }
       res =
-          speex_dec_chain_parse_data (dec, buf, timestamp,
+          speex_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
           GST_BUFFER_DURATION (buf));
       break;
     }
