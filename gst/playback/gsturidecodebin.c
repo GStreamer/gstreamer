@@ -1173,10 +1173,18 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
       gst_element_set_state (decoder, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (bin), decoder);
     } else {
+      GstCaps *caps;
+
       gst_element_set_state (decoder, GST_STATE_READY);
       /* add it to our list of pending decodebins */
       g_object_ref (decoder);
       gst_bin_remove (GST_BIN_CAST (bin), decoder);
+      /* restore some properties we might have changed */
+      g_object_set (G_OBJECT (decoder), "sink-caps", NULL, NULL);
+      caps = DEFAULT_CAPS;
+      g_object_set (G_OBJECT (decoder), "caps", caps, NULL);
+      gst_caps_unref (caps);
+
       bin->pending_decodebins =
           g_slist_prepend (bin->pending_decodebins, decoder);
     }
