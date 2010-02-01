@@ -1926,6 +1926,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             "Unknown stream header tag %" GST_FOURCC_FORMAT ", ignoring",
             GST_FOURCC_ARGS (tag));
         /* fall-through */
+      case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
         break;
     }
@@ -2167,6 +2168,7 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
             "Unknown tag %" GST_FOURCC_FORMAT " in ODML header",
             GST_FOURCC_ARGS (tag));
         /* fall-through */
+      case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
       next:
         /* skip and move to next chunk */
@@ -2920,6 +2922,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                       GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA
                               (sub))));
                   /* fall-through */
+                case GST_RIFF_TAG_JUNQ:
                 case GST_RIFF_TAG_JUNK:
                   goto next;
               }
@@ -2932,6 +2935,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                   "Unknown off %d tag %" GST_FOURCC_FORMAT " in AVI header",
                   offset, GST_FOURCC_ARGS (tag));
               /* fall-through */
+            case GST_RIFF_TAG_JUNQ:
             case GST_RIFF_TAG_JUNK:
             next:
               /* move to next chunk */
@@ -3356,6 +3360,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             GST_MEMDUMP_OBJECT (avi, "Unknown list", GST_BUFFER_DATA (sub),
                 GST_BUFFER_SIZE (sub));
             /* fall-through */
+          case GST_RIFF_TAG_JUNQ:
           case GST_RIFF_TAG_JUNK:
             goto next;
         }
@@ -3371,6 +3376,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         GST_MEMDUMP_OBJECT (avi, "Unknown tag", GST_BUFFER_DATA (sub),
             GST_BUFFER_SIZE (sub));
         /* fall-through */
+      case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
       next:
         if (sub)
@@ -4472,7 +4478,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         continue;
       }
       return GST_FLOW_OK;
-    } else if (tag == GST_RIFF_TAG_JUNK) {
+    } else if (tag == GST_RIFF_TAG_JUNK || tag == GST_RIFF_TAG_JUNQ) {
       /* rec list might contain JUNK chunks */
       GST_DEBUG ("Found JUNK tag");
       if (gst_avi_demux_peek_chunk (avi, &tag, &size) || size == 0) {
