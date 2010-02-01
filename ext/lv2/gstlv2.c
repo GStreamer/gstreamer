@@ -600,7 +600,6 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
   GstLV2Class *oclass;
   GstSignalProcessorClass *gsp_class;
   GstStructure *s;
-  gint sample_rate;
   gint i;
   GstLV2Group *group = NULL;
   GstAudioChannelPosition *positions = NULL;
@@ -613,14 +612,10 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
 
   g_return_val_if_fail (lv2->activated == FALSE, FALSE);
 
-  s = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (s, "rate", &sample_rate))
-    goto no_sample_rate;
-
-  GST_DEBUG_OBJECT (lv2, "instantiating the plugin at %d Hz", sample_rate);
+  GST_DEBUG_OBJECT (lv2, "instantiating the plugin at %d Hz", gsp->sample_rate);
 
   if (!(lv2->instance =
-          slv2_plugin_instantiate (oclass->plugin, sample_rate, NULL)))
+          slv2_plugin_instantiate (oclass->plugin, gsp->sample_rate, NULL)))
     goto no_instance;
 
   /* connect the control ports */
@@ -673,11 +668,6 @@ gst_lv2_setup (GstSignalProcessor * gsp, GstCaps * caps)
   }
   return TRUE;
 
-no_sample_rate:
-  {
-    GST_WARNING_OBJECT (gsp, "got no sample-rate");
-    return FALSE;
-  }
 no_instance:
   {
     GST_WARNING_OBJECT (gsp, "could not create instance");

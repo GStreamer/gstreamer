@@ -471,12 +471,18 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
   /* the whole processor has one caps; if the sample rate changes, let subclass
      implementations know */
   if (!gst_caps_is_equal (caps, self->caps)) {
+    GstStructure *s;
+
     GST_DEBUG_OBJECT (pad, "got caps %" GST_PTR_FORMAT, caps);
 
     if (GST_SIGNAL_PROCESSOR_IS_RUNNING (self))
       gst_signal_processor_stop (self);
     if (GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self))
       gst_signal_processor_cleanup (self);
+
+    s = gst_caps_get_structure (caps, 0);
+    if (!gst_structure_get_int (s, "rate", &self->sample_rate))
+      goto no_sample_rate;
 
     if (!gst_signal_processor_setup (self, caps))
       goto start_or_setup_failed;
@@ -502,13 +508,21 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 
+no_sample_rate:
+  {
+    GST_WARNING_OBJECT (self, "got no sample-rate");
+    gst_object_unref (self);
+    return FALSE;
+  }
 start_or_setup_failed:
   {
+    GST_WARNING_OBJECT (self, "start or setup failed");
     gst_object_unref (self);
     return FALSE;
   }
 setcaps_pull_failed:
   {
+    GST_WARNING_OBJECT (self, "activating in pull-mode failed");
     gst_object_unref (self);
     return FALSE;
   }

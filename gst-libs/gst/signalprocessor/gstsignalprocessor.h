@@ -100,6 +100,10 @@ struct _GstSignalProcessor {
   /* controls */
   gfloat *control_in;
   gfloat *control_out;
+  
+  /* sampling rate */
+  gint sample_rate;
+
 };
 
 struct _GstSignalProcessorClass {
