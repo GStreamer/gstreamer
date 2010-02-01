@@ -56,6 +56,7 @@
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Timestamp']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Caps']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='FreeFunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Parent']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/field[@name='Size']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_get_caps']" name="hidden">1</attr>
   <attr path="/api/namespace/mini-object[@name='Buffer']/method[@cname='gst_buffer_set_caps']" name="hidden">1</attr>
@@ -132,6 +133,7 @@
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_union']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_normalize']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_subtract']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_set_value']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_full']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_full_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_simple']" name="hidden">1</attr>
@@ -362,6 +364,7 @@
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
+  <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_UNKNOWN']" name="value">0</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_FLUSH_START']" name="value">19</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_FLUSH_STOP']" name="value">39</attr>
@@ -369,6 +372,7 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NEWSEGMENT']" name="value">102</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_TAG']" name="value">118</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_BUFFERSIZE']" name="value">134</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SINK_MESSAGE']" name="value">150</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_QOS']" name="value">241</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SEEK']" name="value">257</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NAVIGATION']" name="value">273</attr>
@@ -386,6 +390,7 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NEWSEGMENT']" name="name">NewSegment</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_TAG']" name="name">Tag</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_BUFFERSIZE']" name="name">BufferSize</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SINK_MESSAGE']" name="name">SinkMessage</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_QOS']" name="name">Qos</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SEEK']" name="name">Seek</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NAVIGATION']" name="name">Navigation</attr>
@@ -560,11 +565,13 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_query_peer_convert']/parameters/parameter[@name='dest_format']" name="pass_as">ref</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_parent_element']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_caps_reffed']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_allowed_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_negotiated_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_pad_template_caps']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_get_peer']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_peer_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_peer_get_caps_reffed']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_blocked_async']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_set_blocked_async_full']" name="name">SetBlocked</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@cname='gst_pad_remove_buffer_probe']" name="hidden">1</attr>
@@ -755,6 +762,7 @@
       </method>
   </add-node>
   <remove-node path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_list_free']" />
+  <remove-node path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_list_copy']" />
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_type_name_filter']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Print']" name="hidden">1</attr>
@@ -870,6 +878,8 @@
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set_value']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_has_field']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_has_field_typed']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_remove_fields']" name="hidden">1</attr>
@@ -1019,6 +1029,11 @@
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_ceil']" name="name">ScaleUInt64Ceil</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int_ceil']" name="name">ScaleUInt64Ceil</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_value_from_string']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_double_to_fraction']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_fraction_add']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_fraction_multiply']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_fraction_to_double']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_greatest_common_divisor']" name="hidden">1</attr>
 
   <!-- We implement this ourselves -->
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
@@ -1053,6 +1068,19 @@
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='create']/parameters/parameter[@name='buf']" name="pass_as">out</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/virtual_method[@cname='query']" name="name">SrcQuery</attr>
   <attr path="/api/namespace/object[@cname='GstBaseSrc']/method[@name='IsLive']" name="name">GetLive</attr>
+  <attr path="/api/namespace/object[@cname='GstBaseSrc']/method[@name='IsLive']" name="name">GetLive</attr>
+  <remove-node path="/api/namespace/object[@cname='GstBaseSrc']/constructor[@cname='gst_base_src_new_seamless_segment']"/>
+  <add-node path="/api/namespace/object[@cname='GstBaseSrc']">
+     <method name="NewSeamlessSegment" cname="gst_base_src_new_seamless_segment">
+       <return-type type="gboolean" />
+       <parameters>
+         <parameter type="GstBaseSrc*" name="src" />
+         <parameter type="gint64" name="start" />
+         <parameter type="gint64" name="stop" />
+         <parameter type="gint64" name="position" />
+       </parameters>
+     </method>
+  </add-node>
 
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='transform_caps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@cname='GstBaseTransform']/virtual_method[@cname='prepare_output_buffer']/parameters/parameter[@name='buf']" name="owned">true</attr>
@@ -1167,6 +1195,341 @@
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_string_utf8']" name="name">PeekString</attr>
   <attr path="/api/namespace/struct[@cname='GstByteReader']/method[@cname='gst_byte_reader_peek_string_utf8']/parameters/parameter[@name='str']" name="pass_as">out</attr>
 
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/field" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_free_and_get_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_free_and_get_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_init']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_init_with_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_init_with_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_init_with_size']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/constructor[@cname='gst_byte_writer_new_with_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_string_utf16']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_string_utf32']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_string_utf8']" name="name">PutString</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint8']" name="name">PutUInt8</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint16_be']" name="name">PutUInt16Be</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint16_le']" name="name">PutUInt16Le</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint24_be']" name="name">PutUInt24Be</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint24_le']" name="name">PutUInt24Le</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint32_be']" name="name">PutUInt32Be</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint32_le']" name="name">PutUInt32Le</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint64_be']" name="name">PutUInt64Be</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint64_le']" name="name">PutUInt64Le</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_reset_and_get_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/constructor[@cname='gst_byte_writer_new_with_buffer']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_reset_and_get_data_as_buffer']/return-type" name="owned">true</attr>
+  <add-node path="/api/namespace/struct[@cname='GstByteWriter']">
+      <method name="GetFloat32Be" cname="gst_byte_reader_get_float32_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gfloat*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetFloat32Le" cname="gst_byte_reader_get_float32_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gfloat*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetFloat64Be" cname="gst_byte_reader_get_float64_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetFloat64Le" cname="gst_byte_reader_get_float64_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt16Be" cname="gst_byte_reader_get_int16_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint16*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt16Le" cname="gst_byte_reader_get_int16_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint16*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt24Be" cname="gst_byte_reader_get_int24_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt24Le" cname="gst_byte_reader_get_int24_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt32Be" cname="gst_byte_reader_get_int32_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt32Le" cname="gst_byte_reader_get_int32_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt64Be" cname="gst_byte_reader_get_int64_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint64*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt64Le" cname="gst_byte_reader_get_int64_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint64*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetInt8" cname="gst_byte_reader_get_int8">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint8*" name="val" />
+        </parameters>
+      </method>
+      <method name="GetPos" cname="gst_byte_reader_get_pos">
+        <return-type type="guint" />
+      </method>
+      <method name="GetRemainingReadable" cname="gst_byte_reader_get_remaining">
+        <return-type type="guint" />
+      </method>
+      <method name="GetSize" cname="gst_byte_reader_get_size">
+        <return-type type="guint" />
+      </method>
+      <method cname="gst_byte_reader_get_string_utf8" name="GetString">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar**" name="str" pass_as="out" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint16_be" name="GetUInt16Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint16*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint16_le" name="GetUInt16Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint16*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint24_be" name="GetUInt24Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint24_le" name="GetUInt24Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint32_be" name="GetUInt32Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint32_le" name="GetUInt32Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint64_be" name="GetUInt64Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint64_le" name="GetUint64Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_get_uint8" name="GetUInt8">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint8*" name="val" />
+        </parameters>
+      </method>
+      <method name="MaskedScanUint32" cname="gst_byte_reader_masked_scan_uint32">
+        <return-type type="guint" />
+        <parameters>
+          <parameter type="guint32" name="mask" />
+          <parameter type="guint32" name="pattern" />
+          <parameter type="guint" name="offset" />
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
+      <method name="PeekFloat32Be" cname="gst_byte_reader_peek_float32_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gfloat*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekFloat32Le" cname="gst_byte_reader_peek_float32_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gfloat*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekFloat64Be" cname="gst_byte_reader_peek_float64_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekFloat64Le" cname="gst_byte_reader_peek_float64_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt16Be" cname="gst_byte_reader_peek_int16_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint16*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt16Le" cname="gst_byte_reader_peek_int16_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint16*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt24Be" cname="gst_byte_reader_peek_int24_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt24Le" cname="gst_byte_reader_peek_int24_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt32Be" cname="gst_byte_reader_peek_int32_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt32Le" cname="gst_byte_reader_peek_int32_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint32*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt64Be" cname="gst_byte_reader_peek_int64_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint64*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt64Le" cname="gst_byte_reader_peek_int64_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint64*" name="val" />
+        </parameters>
+      </method>
+      <method name="PeekInt8" cname="gst_byte_reader_peek_int8">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gint8*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_string_utf8" name="PeekString">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="const-gchar**" name="str" pass_as="out" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint16_be" name="PeekUInt16Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint16*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint16_le" name="PeekUInt16Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint16*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint24_be" name="PeekUInt24Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint24_le" name="PeekUInt24Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint32_be" name="PeekUInt32Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint32_le" name="PeekUInt32Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint32*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint64_be" name="PeekUInt64Be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint64_le" name="PeekUint64Le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint64*" name="val" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_peek_uint8" name="PeekUInt8">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint8*" name="val" />
+        </parameters>
+      </method>
+      <method name="SetPos" cname="gst_byte_reader_set_pos">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint" name="pos" />
+        </parameters>
+      </method>
+      <method name="Skip" cname="gst_byte_reader_skip">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint" name="nbytes" />
+        </parameters>
+      </method>
+      <method cname="gst_byte_reader_skip_string_utf8" name="SkipString">
+        <return-type type="gboolean" />
+      </method>
+  </add-node>
 
   <!-- FIXME: Why can't this be parsed?! -->
   <add-node path="/api/namespace[@name='Gst.Base']">
@@ -1411,6 +1774,10 @@
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y41b']" name="name">Y41B</attr>
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Y42b']" name="name">Y42B</attr>
   <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Yvyu']" name="name">YVYU</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Nv12']" name="name">NV12</attr>
+  <attr path="/api/namespace/enum[@cname='GstVideoFormat']/member[@name='Nv21']" name="name">NV21</attr>
+
+  <attr path="/api/namespace/class[@cname='GstVideoEvent_']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@cname='GstVideoSink']/method[@cname='gst_video_sink_center_rect']/parameters/parameter[@name='result']" name="pass_as">ref</attr>
 

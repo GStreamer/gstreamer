@@ -5,6 +5,7 @@
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.1.0</AssemblyVersion>
     <AssemblyVersion>0.9.2.0</AssemblyVersion>
+    <AssemblyVersion>0.9.3.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Object</BaseTypeName>
@@ -35,6 +36,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -52,6 +54,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="raw" Type="System.IntPtr" />
@@ -71,6 +74,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="element_type" Type="System.Type" />
@@ -92,6 +96,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="n_preallocs" Type="System.UInt32" />
@@ -115,6 +120,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -135,6 +141,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.IntPtr</ReturnType>
@@ -152,6 +159,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Object</ReturnType>
@@ -170,6 +178,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -192,6 +201,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -209,6 +219,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -226,6 +237,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Type</ReturnType>
@@ -242,6 +254,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -259,6 +272,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Collections.IEnumerator</ReturnType>
@@ -277,6 +291,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.IntPtr</ReturnType>
@@ -294,6 +309,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -311,6 +327,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Object</ReturnType>
@@ -332,6 +349,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -352,6 +370,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -376,6 +395,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Object</ReturnType>

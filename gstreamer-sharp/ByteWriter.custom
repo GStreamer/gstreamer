@@ -1,0 +1,61 @@
+Gst.Buffer buffer = null;
+public Gst.Buffer Buffer {
+  get {
+    return buffer;
+  }
+}
+
+[DllImport ("libgstbase-0.10.dll", CallingConvention = CallingConvention.Cdecl) ]
+static extern IntPtr gst_byte_writer_new_with_buffer (IntPtr buffer, bool initialized);
+
+public ByteWriter (Gst.Buffer buffer, bool initialized) {
+  Raw = gst_byte_writer_new_with_buffer (buffer == null ? IntPtr.Zero : buffer.Handle, initialized);
+  this.buffer = buffer;
+}
+
+[DllImport ("libgstbase-0.10.dll", CallingConvention = CallingConvention.Cdecl) ]
+static extern bool gst_byte_writer_put_data (IntPtr writer, IntPtr data, uint size);
+
+public bool PutData (byte[] data) {
+  IntPtr data_raw = Marshal.AllocHGlobal (data.Length);
+  Marshal.Copy (data, 0, data_raw, data.Length);
+  bool ret = gst_byte_writer_put_data (Handle, data_raw, (uint) data.Length);
+  Marshal.FreeHGlobal (data_raw);
+  return ret;
+}
+
+[DllImport ("libgstbase-0.10.dll", CallingConvention = CallingConvention.Cdecl) ]
+static extern bool gst_byte_reader_peek_data (IntPtr raw, uint size, out IntPtr val);
+
+public bool PeekData (uint size, out byte[] val) {
+  IntPtr raw_ret;
+
+  bool ret = gst_byte_reader_peek_data (Handle, size, out raw_ret);
+
+  if (!ret || raw_ret == IntPtr.Zero) {
+    val = null;
+  } else {
+    val = new byte[size];
+    Marshal.Copy (raw_ret, val, 0, (int) size);
+  }
+
+  return ret;
+}
+
+[DllImport ("libgstbase-0.10.dll", CallingConvention = CallingConvention.Cdecl) ]
+static extern bool gst_byte_reader_get_data (IntPtr raw, uint size, out IntPtr val);
+
+public bool GetData (uint size, out byte[] val) {
+  IntPtr raw_ret;
+
+  bool ret = gst_byte_reader_get_data (Handle, size, out raw_ret);
+
+  if (!ret || raw_ret == IntPtr.Zero) {
+    val = null;
+  } else {
+    val = new byte[size];
+    Marshal.Copy (raw_ret, val, 0, (int) size);
+  }
+
+  return ret;
+}

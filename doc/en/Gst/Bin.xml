@@ -5,6 +5,7 @@
     <AssemblyVersion>0.9.0.0</AssemblyVersion>
     <AssemblyVersion>0.9.1.0</AssemblyVersion>
     <AssemblyVersion>0.9.2.0</AssemblyVersion>
+    <AssemblyVersion>0.9.3.0</AssemblyVersion>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -27,6 +28,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -41,6 +43,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -59,6 +62,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
@@ -77,6 +81,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -99,6 +104,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -127,6 +133,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -150,6 +157,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -172,6 +180,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -194,6 +203,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -212,6 +222,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -234,6 +245,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -256,6 +268,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -278,6 +291,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -296,6 +310,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -314,6 +329,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -332,6 +348,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -353,6 +370,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -374,6 +392,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -415,6 +434,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Iterator</ReturnType>
@@ -436,6 +456,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -477,6 +498,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Gst.Element</ReturnType>
@@ -498,6 +520,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -520,6 +543,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -542,6 +566,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -564,6 +589,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -586,6 +612,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -608,6 +635,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -626,6 +654,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -653,6 +682,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -679,6 +709,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -705,6 +736,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -729,6 +761,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -755,6 +788,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -781,6 +815,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -807,6 +842,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
@@ -834,6 +870,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -853,6 +890,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -875,6 +913,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -903,6 +942,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
@@ -921,6 +961,7 @@
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
         <AssemblyVersion>0.9.1.0</AssemblyVersion>
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>

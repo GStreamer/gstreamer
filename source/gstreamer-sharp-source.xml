@@ -21,6 +21,8 @@
         <!-- Private headers -->
         <exclude>../../gstreamer/gst/gstregistrybinary.h</exclude>
         <exclude>../../gstreamer/gst/gstregistryxml.h</exclude>
+        <exclude>../../gstreamer/gst/gstregistrychunks.h</exclude>
+        <exclude>../../gstreamer/gst/gstpluginloader.h</exclude>
         <exclude>../../gstreamer/gst/gst_private.h</exclude>
         <exclude>../../gstreamer/gst/glib-compat-private.h</exclude>
         <exclude>../../gstreamer/gst/glib-i18n-lib.h</exclude>

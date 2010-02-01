@@ -1,0 +1,57 @@
+<Type Name="VideoEvent" FullName="Gst.Video.VideoEvent">
+  <TypeSignature Language="C#" Value="public static class VideoEvent" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.3.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="NewStillFrame">
+      <MemberSignature Language="C#" Value="public static Gst.Event NewStillFrame (bool in_still);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Event</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="in_still" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="in_still">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ParseStillFrame">
+      <MemberSignature Language="C#" Value="public static bool ParseStillFrame (Gst.Event evnt, out bool in_still);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="evnt" Type="Gst.Event" />
+        <Parameter Name="in_still" Type="System.Boolean&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="evnt">To be added.</param>
+        <param name="in_still">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

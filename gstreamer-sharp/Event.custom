@@ -251,6 +251,27 @@ public void ParseBufferSize (out Gst.Format format, out long min, out long max, 
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_sink_message (IntPtr msg);
+
+public static Gst.Event NewSinkMessage (Gst.Message msg) {
+  Gst.Event ev = (Gst.Event) Gst.MiniObject.GetObject (gst_event_new_sink_message (msg.Handle), true);
+
+  return ev;
+}
+
+[DllImport ("libgstreamer-0.10.dll") ]
+static extern void gst_event_parse_sink_message (IntPtr ev, out IntPtr msg);
+
+public void ParseSinkMessage (out Gst.Message msg) {
+  if (Type != EventType.SinkMessage)
+    throw new ArgumentException ();
+
+  IntPtr msg_raw;
+  gst_event_parse_sink_message (Handle, out msg_raw);
+  msg = (Gst.Message) Gst.MiniObject.GetObject (msg_raw, true);
+}
+
+[DllImport ("libgstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_qos (double proportion, long diff, ulong timestamp);
 
 public static Gst.Event NewQos (double proportion, long diff, ulong timestamp) {

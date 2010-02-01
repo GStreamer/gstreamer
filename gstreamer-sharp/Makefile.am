@@ -55,6 +55,7 @@ sources = \
 	NavigationMessage.cs \
 	NavigationEvent.cs \
 	NavigationQuery.cs \
+	VideoEvent.cs \
 	coreplugins/*.cs \
 	glib-sharp/*.cs
 
@@ -117,6 +118,7 @@ customs = 			\
 	VideoUtil.custom	\
 	BitReader.custom        \
 	ByteReader.custom       \
+	ByteWriter.custom       \
 	MissingPluginMessage.cs
 
 plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \

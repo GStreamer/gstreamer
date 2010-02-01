@@ -80,3 +80,10 @@ public static void MergeUseFirst (out Gst.GLib.Value dest, ref Gst.GLib.Value sr
 		 public const string GeoLocationLatitude = "geo-location-latitude";
 		 public const string GeoLocationLongitude = "geo-location-longitude";
 		 public const string GeoLocationElevation = "geo-location-elevation";
+		 public const string ShowName = "show-name";
+		 public const string ShowSortname = "show-sortname";
+		 public const string ShowEpisodeNumber = "show-episode-number";
+		 public const string ShowSeasonNumber = "show-season-number";
+		 public const string Lyrics = "lyrics";
+		 public const string ComposerSortname = "composer-sortname";
+		 public const string Grouping = "grouping";

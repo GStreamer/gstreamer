@@ -1,6 +1,6 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gstreamer-sharp" Version="0.9.2.0">
+    <Assembly Name="gstreamer-sharp" Version="0.9.3.0">
       <Attributes>
         <Attribute>
           <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
@@ -244,6 +244,7 @@
       <Type Name="BaseTransform" Kind="Class" />
       <Type Name="BitReader" Kind="Class" />
       <Type Name="ByteReader" Kind="Class" />
+      <Type Name="ByteWriter" Kind="Class" />
       <Type Name="PushSrc" Kind="Class" />
       <Type Name="TypeFindHelper" Kind="Class" />
       <Type Name="TypeFindHelperGetRangeFunction" Kind="Delegate" />
@@ -475,6 +476,7 @@
       <Type Name="MissingDetail" Kind="Class" />
     </Namespace>
     <Namespace Name="Gst.Video">
+      <Type Name="VideoEvent" Kind="Class" />
       <Type Name="VideoFilter" Kind="Class" />
       <Type Name="VideoFormat" Kind="Enumeration" />
       <Type Name="VideoRectangle" Kind="Structure" />
