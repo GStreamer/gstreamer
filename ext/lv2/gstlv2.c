@@ -790,6 +790,7 @@ lv2_plugin_discover (void)
   for (i = 0; i < slv2_plugins_size (plugins); ++i) {
     SLV2Plugin lv2plugin = slv2_plugins_get_at (plugins, i);
     gint num_audio_ports = 0;
+    const gchar *plugin_uri, *p;
     gchar *type_name;
     GTypeInfo typeinfo = {
       sizeof (GstLV2Class),
@@ -804,9 +805,14 @@ lv2_plugin_discover (void)
     };
     GType type;
 
+    plugin_uri = slv2_value_as_uri (slv2_plugin_get_uri (lv2plugin));
     /* construct the type name from plugin URI */
-    type_name = g_strdup_printf ("%s",
-        slv2_value_as_uri (slv2_plugin_get_uri (lv2plugin)));
+    if ((p = strstr (plugin_uri, "://"))) {
+      /* cut off the protocol (e.g. http://) */
+      type_name = g_strdup (&p[3]);
+    } else {
+      type_name = g_strdup (plugin_uri);
+    }
     g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
 
     /* if it's already registered, drop it */

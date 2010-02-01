@@ -13,6 +13,14 @@ Example Pipeline:
 
 Requires swh-lv2 <http://plugin.org.uk/releases/>
 
-gst-launch-0.10 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! http---plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! alsasink
+gst-launch-0.10 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! audioconvert ! plugin-org-uk-swh-plugins-djFlanger ! audioconvert ! alsasink
 
 (A longer wav will be a better example)
+
+
+Requires calf <http://calf.sourceforge.net/>
+
+GST_DEBUG="*:2,gst-dsp:5,lv2:5" 
+gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" ! pulsesink
+gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" name=ms ! pulsesink ms. ! fakesink
+
