@@ -214,7 +214,7 @@ gst_lv2_base_init (gpointer g_class)
     const SLV2Port port = slv2_plugin_get_port_by_index (lv2plugin, j);
     const gboolean is_input = slv2_port_is_a (lv2plugin, port, input_class);
     gboolean in_group = FALSE;
-    struct _GstLV2Port desc = { j, 0 };
+    struct _GstLV2Port desc = { j, 0, };
     values = slv2_port_get_value (lv2plugin, port, in_group_pred);
 
     if (slv2_values_size (values) > 0) {
@@ -287,6 +287,7 @@ gst_lv2_base_init (gpointer g_class)
           g_array_append_val (klass->control_out_ports, desc);
       } else {
         /* unknown port type */
+        GST_INFO ("unhandled port %d", j);
         continue;
       }
     }
@@ -727,7 +728,7 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 {
   GstSignalProcessorClass *gsp_class;
   GstLV2 *lv2;
-  GstLV2Class *oclass;
+  GstLV2Class *lv2_class;
   GstLV2Group *lv2_group;
   GstLV2Port *lv2_port;
   GstSignalProcessorGroup *gst_group;
@@ -735,10 +736,11 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
 
   gsp_class = GST_SIGNAL_PROCESSOR_GET_CLASS (gsp);
   lv2 = (GstLV2 *) gsp;
-  oclass = (GstLV2Class *) gsp_class;
+  lv2_class = (GstLV2Class *) gsp_class;
 
+  /* multi channel inputs */
   for (i = 0; i < gsp_class->num_group_in; i++) {
-    lv2_group = &g_array_index (oclass->in_groups, GstLV2Group, i);
+    lv2_group = &g_array_index (lv2_class->in_groups, GstLV2Group, i);
     gst_group = &gsp->group_in[i];
     for (j = 0; j < lv2_group->ports->len; ++j) {
       lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, j);
@@ -746,13 +748,15 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
           gst_group->buffer + (j * nframes));
     }
   }
+  /* mono inputs */
   for (i = 0; i < gsp_class->num_audio_in; i++) {
-    lv2_port = &g_array_index (oclass->audio_in_ports, GstLV2Port, i);
+    lv2_port = &g_array_index (lv2_class->audio_in_ports, GstLV2Port, i);
     slv2_instance_connect_port (lv2->instance, lv2_port->index,
         gsp->audio_in[i]);
   }
+  /* multi channel outputs */
   for (i = 0; i < gsp_class->num_group_out; i++) {
-    lv2_group = &g_array_index (oclass->out_groups, GstLV2Group, i);
+    lv2_group = &g_array_index (lv2_class->out_groups, GstLV2Group, i);
     gst_group = &gsp->group_out[i];
     for (j = 0; j < lv2_group->ports->len; ++j) {
       lv2_port = &g_array_index (lv2_group->ports, GstLV2Port, j);
@@ -760,8 +764,9 @@ gst_lv2_process (GstSignalProcessor * gsp, guint nframes)
           gst_group->buffer + (j * nframes));
     }
   }
+  /* mono outputs */
   for (i = 0; i < gsp_class->num_audio_out; i++) {
-    lv2_port = &g_array_index (oclass->audio_out_ports, GstLV2Port, i);
+    lv2_port = &g_array_index (lv2_class->audio_out_ports, GstLV2Port, i);
     slv2_instance_connect_port (lv2->instance, lv2_port->index,
         gsp->audio_out[i]);
   }
