@@ -47,64 +47,6 @@
 
 #include "gstjpegparse.h"
 
-/*
- * JPEG Markers
- */
-#define SOF0      0xc0
-#define SOF1      0xc1
-#define SOF2      0xc2
-#define SOF3      0xc3
-
-#define SOF5      0xc5
-#define SOF6      0xc6
-#define SOF7      0xc7
-
-#define JPG       0xc8
-#define SOF9      0xc9
-#define SOF10     0xca
-#define SOF11     0xcb
-#define SOF13     0xcd
-#define SOF14     0xce
-#define SOF15     0xcf
-
-#define DHT       0xc4
-
-#define DAC       0xcc
-
-#define RST0      0xd0
-#define RST1      0xd1
-#define RST2      0xd2
-#define RST3      0xd3
-#define RST4      0xd4
-#define RST5      0xd5
-#define RST6      0xd6
-#define RST7      0xd7
-
-#define SOI       0xd8
-#define EOI       0xd9
-#define SOS       0xda
-#define DQT       0xdb
-#define DNL       0xdc
-#define DRI       0xdd
-#define DHP       0xde
-#define EXP       0xdf
-
-#define APP0      0xe0
-#define APP1      0xe1
-#define APP15     0xef
-
-#define JPG0      0xf0
-#define JPG13     0xfd
-#define COM       0xfe
-
-#define TEM       0x01
-
-static const GstElementDetails gst_jpeg_parse_details =
-GST_ELEMENT_DETAILS ("JPEG stream parser",
-    "Codec/Parser/Video",
-    "Parse JPEG images into single-frame buffers",
-    "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
-
 static GstStaticPadTemplate gst_jpeg_parse_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -126,9 +68,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_DEBUG_CATEGORY_STATIC (jpeg_parse_debug);
 #define GST_CAT_DEFAULT jpeg_parse_debug
-
-#define GST_JPEG_PARSE_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_JPEG_PARSE, GstJpegParsePrivate))
 
 struct _GstJpegParsePrivate
 {
@@ -192,7 +131,11 @@ gst_jpeg_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_jpeg_parse_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_jpeg_parse_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_jpeg_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "JPEG stream parser",
+      "Codec/Parser/Video",
+      "Parse JPEG images into single-frame buffers",
+      "Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>");
 }
 
 static void
@@ -216,7 +159,8 @@ gst_jpeg_parse_init (GstJpegParse * parse, GstJpegParseClass * g_class)
 {
   GstPad *sinkpad;
 
-  parse->priv = GST_JPEG_PARSE_GET_PRIVATE (parse);
+  parse->priv = G_TYPE_INSTANCE_GET_PRIVATE (parse, GST_TYPE_JPEG_PARSE,
+      GstJpegParsePrivate);
 
   /* create the sink and src pads */
   sinkpad = gst_pad_new_from_static_template (&gst_jpeg_parse_sink_pad_template,
@@ -275,9 +219,16 @@ gst_jpeg_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
-/* Flush everything until the next JPEG header.  The header is considered
- * to be the a start marker (0xff 0xd8) followed by any other marker (0xff ...).
- * Returns TRUE if the header was found, FALSE if more data is needed. */
+/*
+ * gst_jpeg_parse_skip_to_jpeg_header:
+ * @parse: the parser
+ *
+ * Flush everything until the next JPEG header.  The header is considered
+ * to be the a start marker SOI (0xff 0xd8) followed by any other marker
+ * (0xff ...).
+ *
+ * Returns: TRUE if the header was found, FALSE if more data is needed.
+ */
 static gboolean
 gst_jpeg_parse_skip_to_jpeg_header (GstJpegParse * parse)
 {
@@ -308,9 +259,16 @@ gst_jpeg_parse_parse_tag_has_entropy_segment (guint8 tag)
   return FALSE;
 }
 
-/* Find the next marker, based on the marker at data.  data[0] must be 0xff.
- * Returns the offset of the next valid marker.  Returns -1 if adapter doesn't
- * have enough data. */
+/*
+ * gst_jpeg_parse_match_next_marker:
+ * @data: data to scan (must start with 0xff)
+ * @size: amount of bytes in @data (must be >=2)
+ *
+ * Find the next marker, based on the marker at @data.
+ * 
+ * Returns: the offset of the next valid marker or -1 if buffer doesn't have
+ * enough data.
+ */
 static guint
 gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
 {
@@ -327,9 +285,13 @@ gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
     return -1;
   else
     marker_len = GST_READ_UINT16_BE (data + 2) + 2;
+
+  GST_LOG ("Have marker %x with length %u", data[1], marker_len);
+
   /* Need marker_len for this marker, plus two for the next marker. */
   if (G_UNLIKELY (marker_len + 2 >= size))
     return -1;
+
   if (G_UNLIKELY (gst_jpeg_parse_parse_tag_has_entropy_segment (tag))) {
     while (!(data[marker_len] == 0xff && data[marker_len + 1] != 0x00)) {
       if (G_UNLIKELY (marker_len + 2 >= size))
@@ -340,8 +302,16 @@ gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
   return marker_len;
 }
 
-/* Returns the position beyond the end marker, -1 if insufficient data and -2
-   if marker lengths are inconsistent. data must start with 0xff. */
+/*
+ * gst_jpeg_parse_find_end_marker:
+ * @data: data to scan (must start with 0xff)
+ * @size: amount of bytes in @data
+ *
+ * Find next position beyond end maker.
+ *
+ * Returns: the position, -1 if insufficient data and -2 if marker lengths are
+ * inconsistent. 
+ */
 static guint
 gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
     guint size)
@@ -405,6 +375,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 
   if (offset == -1) {
     GST_DEBUG_OBJECT (parse, "Insufficient data.");
+    /* FIXME: remember size, so that we don't rescan from begin */
     return 0;
   } else if (G_UNLIKELY (offset == -2)) {
     GST_DEBUG_OBJECT (parse, "Lost sync, resyncing.");
@@ -442,6 +413,7 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   guint8 i, value;
   gint temp;
 
+  /* flush length field */
   if (!gst_byte_reader_skip (reader, 2))
     return FALSE;
 
@@ -501,6 +473,8 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
     return FALSE;
   }
 
+  GST_DEBUG_OBJECT (parse, "Header parsed");
+
   return TRUE;
 }
 
@@ -509,7 +483,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
   guint8 marker;
-  guint16 comsize;
+  guint16 size;
   gboolean foundSOF = FALSE;
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
@@ -522,7 +496,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
     if (!gst_byte_reader_get_uint8 (&reader, &marker))
       goto error;
 
-    GST_INFO_OBJECT (parse, "marker = %x", marker);
+    GST_DEBUG_OBJECT (parse, "marker = %x", marker);
 
     switch (marker) {
       case SOS:                /* start of scan (begins compressed data) */
@@ -543,25 +517,27 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
       case DHT:
       case DQT:
         /* Ignore these codes */
-        if (!gst_byte_reader_get_uint16_be (&reader, &comsize))
+        if (!gst_byte_reader_get_uint16_be (&reader, &size))
           goto error;
-        if (!gst_byte_reader_skip (&reader, comsize - 2))
+        if (!gst_byte_reader_skip (&reader, size - 2))
           goto error;
-        GST_LOG_OBJECT (parse, "comment skiping %u bytes", comsize - 2);
+        GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+            size - 2);
         break;
 
       case SOF2:
         parse->priv->interlaced = TRUE;
-
+        /* fall through */
       case SOF0:
-        /* Flush length field */
         foundSOF = TRUE;
+        /* parse Start Of Frame */
         if (!gst_jpeg_parse_sof (parse, &reader))
           goto error;
 
         return TRUE;
 
       default:
+        GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
         /* Not SOF or SOI.  Must not be a JPEG file (or file pointer
          * is placed wrong).  In either case, it's an error. */
         return FALSE;
@@ -583,6 +559,9 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
 {
   GstCaps *caps;
   gboolean res;
+
+  GST_DEBUG_OBJECT (parse, "setting caps on srcpad (hdr_ok=%d, have_fps=%d)",
+      header_ok, parse->priv->has_fps);
 
   caps = gst_caps_new_simple ("image/jpeg",
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -611,9 +590,12 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
     parse->priv->duration = GST_CLOCK_TIME_NONE;
   }
 
-  GST_DEBUG_OBJECT (parse, "setting downstream caps to %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (parse,
+      "setting downstream caps on %s:%s to %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (parse->priv->srcpad), caps);
   res = gst_pad_set_caps (parse->priv->srcpad, caps);
   gst_caps_unref (caps);
+  gst_pad_use_fixed_caps (parse->priv->srcpad);
 
   return res;
 
@@ -727,14 +709,14 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
       guint available = gst_adapter_available (parse->priv->adapter);
       if (available > 0)
         gst_jpeg_parse_push_buffer (parse, available);
-      gst_pad_push_event (parse->priv->srcpad, event);
+      res = gst_pad_push_event (parse->priv->srcpad, event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
       /* Discard any data in the adapter.  There should have been an EOS before
        * to flush it. */
       gst_adapter_clear (parse->priv->adapter);
-      gst_pad_push_event (parse->priv->srcpad, event);
+      res = gst_pad_push_event (parse->priv->srcpad, event);
       parse->priv->new_segment = TRUE;
       break;
     default:
