@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 #define GST_RIFF_TAG_strf GST_MAKE_FOURCC ('s','t','r','f')
 #define GST_RIFF_TAG_vedt GST_MAKE_FOURCC ('v','e','d','t')
 #define GST_RIFF_TAG_JUNK GST_MAKE_FOURCC ('J','U','N','K')
+#define GST_RIFF_TAG_JUNQ GST_MAKE_FOURCC ('J','U','N','Q')
 #define GST_RIFF_TAG_idx1 GST_MAKE_FOURCC ('i','d','x','1')
 #define GST_RIFF_TAG_dmlh GST_MAKE_FOURCC ('d','m','l','h')
 /* WAV stuff */
