@@ -537,6 +537,7 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
     dec->callback.callback_id = SPEEX_INBAND_STEREO;
     dec->callback.func = speex_std_stereo_request_handler;
     dec->callback.data = &dec->stereo;
+    dec->stereo = (SpeexStereoState) SPEEX_STEREO_STATE_INIT;
     speex_decoder_ctl (dec->state, SPEEX_SET_HANDLER, &dec->callback);
   }
 
