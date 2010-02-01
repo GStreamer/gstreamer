@@ -113,6 +113,7 @@ static void gst_jpeg_parse_dispose (GObject * object);
 static GstFlowReturn gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_parse_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event);
+static GstCaps *gst_jpeg_parse_src_getcaps (GstPad * pad);
 static GstStateChangeReturn gst_jpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -176,6 +177,8 @@ gst_jpeg_parse_init (GstJpegParse * parse, GstJpegParseClass * g_class)
   parse->priv->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_parse_src_pad_template,
       "src");
+  gst_pad_set_getcaps_function (parse->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_parse_src_getcaps));
   gst_element_add_pad (GST_ELEMENT (parse), parse->priv->srcpad);
 
   parse->priv->next_ts = GST_CLOCK_TIME_NONE;
@@ -217,6 +220,21 @@ gst_jpeg_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   return TRUE;
+}
+
+static GstCaps *
+gst_jpeg_parse_src_getcaps (GstPad * pad)
+{
+  GstCaps *result;
+
+  if ((result = GST_PAD_CAPS (pad))) {
+    result = gst_caps_ref (result);
+    GST_DEBUG_OBJECT (pad, "using pad caps %" GST_PTR_FORMAT, result);
+  } else {
+    result = gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
+    GST_DEBUG_OBJECT (pad, "using pad template caps %" GST_PTR_FORMAT, result);
+  }
+  return result;
 }
 
 /*
@@ -604,6 +622,7 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
   } else {
     /* unknown duration */
     parse->priv->duration = GST_CLOCK_TIME_NONE;
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
   }
 
   GST_DEBUG_OBJECT (parse,
@@ -611,7 +630,6 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
       GST_DEBUG_PAD_NAME (parse->priv->srcpad), caps);
   res = gst_pad_set_caps (parse->priv->srcpad, caps);
   gst_caps_unref (caps);
-  gst_pad_use_fixed_caps (parse->priv->srcpad);
 
   return res;
 
