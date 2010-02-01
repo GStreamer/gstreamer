@@ -4329,12 +4329,14 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "protocols = 0x%x, protocol mask = 0x%x", protocols,
         protocol_masks[mask]);
     /* create a string with first transport in line */
+    transports = NULL;
     res = gst_rtspsrc_create_transports_string (src,
         protocols & protocol_masks[mask], &transports);
     if (res < 0 || transports == NULL)
       goto setup_transport_failed;
 
     if (strlen (transports) == 0) {
+      g_free (transports);
       GST_DEBUG_OBJECT (src, "no transports found");
       mask++;
       goto next_protocol;
@@ -4346,8 +4348,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
      * allocate UDP ports and other info needed to execute the setup request */
     res = gst_rtspsrc_prepare_transports (stream, &transports,
         retry > 0 ? rtpport : 0, retry > 0 ? rtcpport : 0);
-    if (res < 0)
+    if (res < 0) {
+      g_free (transports);
       goto setup_transport_failed;
+    }
 
     GST_DEBUG_OBJECT (src, "transport is now %s", GST_STR_NULL (transports));
 
@@ -4355,8 +4359,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     res =
         gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
         stream->setup_url);
-    if (res < 0)
+    if (res < 0) {
+      g_free (transports);
       goto create_request_failed;
+    }
 
     /* select transport, copy is made when adding to header so we can free it. */
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
