@@ -62,7 +62,7 @@ GstBuffer *gst_byte_writer_free_and_get_buffer (GstByteWriter *writer);
 
 void gst_byte_writer_reset (GstByteWriter *writer);
 guint8 * gst_byte_writer_reset_and_get_data (GstByteWriter *writer);
-GstBuffer *gst_byte_writer_reset_and_get_data_as_buffer (GstByteWriter *writer);
+GstBuffer *gst_byte_writer_reset_and_get_buffer (GstByteWriter *writer);
 
 /**
  * gst_byte_writer_get_pos:
