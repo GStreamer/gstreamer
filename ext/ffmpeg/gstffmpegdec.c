@@ -2069,9 +2069,6 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
                 in_duration)))
       goto clipped;
 
-  } else if (len > 0 && have_data == 0) {
-    /* cache output, because it may be used for caching (in-place) */
-    *outbuf = NULL;
   } else {
     gst_buffer_unref (*outbuf);
     *outbuf = NULL;
