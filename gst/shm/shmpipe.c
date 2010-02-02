@@ -711,6 +711,11 @@ sp_writer_accept_client (ShmPipe * self)
 
   fd = accept (self->main_socket, NULL, NULL);
 
+  if (fd < 0) {
+    fprintf (stderr, "Could not client connection");
+    return NULL;
+  }
+
   cb.payload.new_shm_area.size = self->shm_area->shm_area_len;
   cb.payload.new_shm_area.path_size = pathlen;
   if (!send_command (fd, &cb, COMMAND_NEW_SHM_AREA, self->shm_area->id)) {
