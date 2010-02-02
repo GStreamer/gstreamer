@@ -291,6 +291,8 @@ gst_shm_sink_start (GstBaseSink * bsink)
   g_free (self->socket_path);
   self->socket_path = g_strdup (sp_writer_get_path (self->pipe));
 
+  GST_DEBUG ("Created socket at %s", self->socket_path);
+
   self->poll = gst_poll_new (TRUE);
   gst_poll_fd_init (&self->serverpollfd);
   self->serverpollfd.fd = sp_get_fd (self->pipe);

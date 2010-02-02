@@ -199,6 +199,8 @@ gst_shm_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
+  GST_DEBUG ("Opening socket %s", self->socket_path);
+
   GST_OBJECT_LOCK (self);
   gstpipe->pipe = sp_client_open (self->socket_path);
   GST_OBJECT_UNLOCK (self);
@@ -317,8 +319,6 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GST_BUFFER_SIZE (*outbuf) = rv;
   GST_BUFFER_MALLOCDATA (*outbuf) = (guint8 *) gsb;
   GST_BUFFER_FREE_FUNC (*outbuf) = free_buffer;
-
-  GST_LOG_OBJECT (self, "BUFFER %p", *outbuf);
 
   return GST_FLOW_OK;
 }
