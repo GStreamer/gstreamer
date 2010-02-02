@@ -172,7 +172,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
 
-  if (!self->main_socket < 0) {
+  if (self->main_socket < 0) {
     RETURN_ERROR ("Could not create socket (%d): %s\n", errno,
         strerror (errno));
   }
@@ -680,7 +680,7 @@ sp_client_open (const char *path)
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
-  if (!self->main_socket < 0) {
+  if (self->main_socket < 0) {
     sp_close (self);
     return NULL;
   }
