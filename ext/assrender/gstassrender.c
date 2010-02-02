@@ -792,7 +792,7 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
       dar, ((gdouble) render->width) / ((gdouble) render->height));
 #endif
   ass_set_font_scale (render->ass_renderer, 1.0);
-  ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
+  ass_set_hinting (render->ass_renderer, ASS_HINTING_LIGHT);
 
 #if !defined(LIBASS_VERSION) || LIBASS_VERSION < 0x00907000
   ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
