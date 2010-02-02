@@ -521,8 +521,15 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
      * of the video.
      */
     RECT rect;
-    VIDEOINFOHEADER *vi = (VIDEOINFOHEADER *)sink->mediatype.pbFormat;
+    AM_MEDIA_TYPE pmt = (AM_MEDIA_TYPE)sink->mediatype;
+    VIDEOINFOHEADER *vi = (VIDEOINFOHEADER *)pmt.pbFormat;
 
+    if (vi == NULL)
+    {
+        GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, ("Unknown media format"), (NULL));
+        return NULL;
+    }
+	
     /* rcTarget is the aspect-ratio-corrected size of the video. */
     width = vi->rcTarget.right + GetSystemMetrics (SM_CXSIZEFRAME) * 2;
     height = vi->rcTarget.bottom + GetSystemMetrics (SM_CYCAPTION) +
