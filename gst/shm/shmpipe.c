@@ -187,7 +187,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   }
 
   sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path));
+  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
 
   while (bind (self->main_socket, (struct sockaddr *) &sun,
           sizeof (struct sockaddr_un)) < 0) {
@@ -686,7 +686,7 @@ sp_client_open (const char *path)
   }
 
   sun.sun_family = AF_UNIX;
-  strncpy (sun.sun_path, path, sizeof (sun.sun_path));
+  strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
 
   if (connect (self->main_socket, (struct sockaddr *) &sun,
           sizeof (struct sockaddr_un)) < 0)
