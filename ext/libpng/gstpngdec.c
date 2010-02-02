@@ -397,7 +397,11 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     png_set_gray_to_rgb (pngdec->png);
     if (bpc < 8) {              /* Convert to 8 bits */
       GST_LOG_OBJECT (pngdec, "converting grayscale image to 8 bits");
+#if PNG_LIBPNG_VER < 10400
       png_set_gray_1_2_4_to_8 (pngdec->png);
+#else
+      png_set_expand_gray_1_2_4_to_8 (pngdec->png);
+#endif
     }
   }
 
