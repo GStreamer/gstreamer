@@ -238,7 +238,6 @@ gst_ass_render_init (GstAssRender * render, GstAssRenderClass * gclass)
 #if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
   ass_set_message_cb (render->ass_library, _libass_message_cb, render);
 #endif
-  ass_set_fonts_dir (render->ass_library, "./");
   ass_set_extract_fonts (render->ass_library, 1);
 
   render->ass_renderer = ass_renderer_init (render->ass_library);
