@@ -125,6 +125,9 @@ struct MpegTsMux {
 
   GstClockTime last_ts;
   gboolean is_delta;
+
+  GList *streamheader;
+  gboolean streamheader_sent;
 };
 
 struct MpegTsMuxClass  {

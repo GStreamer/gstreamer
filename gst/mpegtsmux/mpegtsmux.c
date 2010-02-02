@@ -148,6 +148,7 @@ static GstPad *mpegtsmux_request_new_pad (GstElement * element,
 static void mpegtsmux_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn mpegtsmux_change_state (GstElement * element,
     GstStateChange transition);
+static void mpegtsdemux_set_header_on_caps (MpegTsMux * mux);
 
 GST_BOILERPLATE (MpegTsMux, mpegtsmux, GstElement, GST_TYPE_ELEMENT);
 
@@ -233,6 +234,8 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->is_delta = TRUE;
 
   mux->prog_map = NULL;
+  mux->streamheader = NULL;
+  mux->streamheader_sent = FALSE;
 }
 
 static void
@@ -261,7 +264,19 @@ mpegtsmux_dispose (GObject * object)
     g_free (mux->programs);
     mux->programs = NULL;
   }
+  if (mux->streamheader) {
+    GstBuffer *buf;
+    GList *sh;
 
+    sh = mux->streamheader;
+    while (sh) {
+      buf = sh->data;
+      gst_buffer_unref (buf);
+      sh = g_list_next (sh);
+    }
+    g_list_free (mux->streamheader);
+    mux->streamheader = NULL;
+  }
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
@@ -903,13 +918,6 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
     /* In case of Normal Ts packets */
     GST_LOG_OBJECT (mux, "Outputting a packet of length %d", len);
     buf = gst_buffer_new_and_alloc (len);
-    if (mux->is_delta) {
-      GST_LOG_OBJECT (mux, "marking as delta unit");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    } else {
-      GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
-      mux->is_delta = TRUE;
-    }
     if (G_UNLIKELY (buf == NULL)) {
       mux->last_flow_ret = GST_FLOW_ERROR;
       return FALSE;
@@ -918,6 +926,28 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
 
     memcpy (GST_BUFFER_DATA (buf), data, len);
     GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
+
+    if (!mux->streamheader_sent) {
+      guint pid = ((data[1] & 0x1f) << 8) | data[2];
+      if (pid == 0x00 || pid == 0x02) { /* if it's a PAT or a PMT */
+        mux->streamheader =
+            g_list_append (mux->streamheader, gst_buffer_copy (buf));
+      } else if (mux->streamheader) {
+        mpegtsdemux_set_header_on_caps (mux);
+        mux->streamheader_sent = TRUE;
+        /* don't unset the streamheaders by pushing old caps */
+        gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+      }
+    }
+
+    if (mux->is_delta) {
+      GST_LOG_OBJECT (mux, "marking as delta unit");
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    } else {
+      GST_DEBUG_OBJECT (mux, "marking as non-delta unit");
+      mux->is_delta = TRUE;
+    }
+
     ret = gst_pad_push (mux->srcpad, buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       mux->last_flow_ret = ret;
@@ -926,6 +956,40 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
   }
 
   return TRUE;
+}
+
+static void
+mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
+{
+  GstBuffer *buf;
+  GstStructure *structure;
+  GValue array = { 0 };
+  GValue value = { 0 };
+  GstCaps *caps = GST_PAD_CAPS (mux->srcpad);
+  GList *sh;
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  sh = mux->streamheader;
+  while (sh) {
+    buf = sh->data;
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    g_value_init (&value, GST_TYPE_BUFFER);
+    gst_value_take_buffer (&value, buf);
+    gst_value_array_append_value (&array, &value);
+    g_value_unset (&value);
+    sh = g_list_next (sh);
+  }
+
+  g_list_free (mux->streamheader);
+  mux->streamheader = NULL;
+
+  gst_structure_set_value (structure, "streamheader", &array);
+  gst_pad_set_caps (mux->srcpad, caps);
+  g_value_unset (&array);
 }
 
 static gboolean
