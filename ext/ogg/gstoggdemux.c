@@ -475,7 +475,7 @@ static GstFlowReturn
 gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     gboolean push_headers)
 {
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   GstFlowReturn ret, cret;
   GstOggDemux *ogg = pad->ogg;
   gint64 current_time;
@@ -647,6 +647,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* don't push the header packets when we are asked to skip them */
   if (!packet->b_o_s || push_headers) {
     ret = gst_pad_push (GST_PAD_CAST (pad), buf);
+    buf = NULL;
 
     /* combine flows */
     cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
@@ -684,6 +685,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_TIME_ARGS (current_time));
 
 done:
+  if (buf)
+    gst_buffer_unref (buf);
   /* return combined flow result */
   return cret;
 
