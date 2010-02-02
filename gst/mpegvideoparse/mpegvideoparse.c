@@ -275,6 +275,14 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
     }
     gst_caps_unref (caps);
 
+    if (new_hdr.bitrate > 0) {
+      GstTagList *taglist;
+
+      taglist = gst_tag_list_new_full (GST_TAG_BITRATE, new_hdr.bitrate, NULL);
+      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (mpegvideoparse),
+          mpegvideoparse->srcpad, taglist);
+    }
+
     /* And update the new_hdr into our stored version */
     mpegvideoparse->seq_hdr = new_hdr;
   }

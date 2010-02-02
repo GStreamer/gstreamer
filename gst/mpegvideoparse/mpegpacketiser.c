@@ -562,6 +562,15 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   fps_idx = code & 0xf;
   set_fps_from_code (hdr, fps_idx);
 
+  hdr->bitrate = ((data[6] >> 6) | (data[5] << 2) | (data[4] << 10));
+  if (hdr->bitrate == 0x3ffff) {
+    /* VBR stream */
+    hdr->bitrate = 0;
+  } else {
+    /* Value in header is in units of 400 bps */
+    hdr->bitrate *= 400;
+  }
+
   constrained_flag = (data[7] >> 2) & 0x01;
   load_intra_flag = (data[7] >> 1) & 0x01;
   if (load_intra_flag) {
