@@ -43,6 +43,7 @@
 #include <config.h>
 #endif
 
+#include <string.h>
 #include <gst/base/gstbytereader.h>
 
 #include "gstjpegparse.h"
@@ -74,6 +75,7 @@ struct _GstJpegParsePrivate
   GstPad *srcpad;
 
   GstAdapter *adapter;
+  guint last_offset;
 
   /* negotiated state */
   gint caps_width, caps_height;
@@ -256,6 +258,7 @@ gst_jpeg_parse_skip_to_jpeg_header (GstJpegParse * parse)
   available = gst_adapter_available (parse->priv->adapter);
   if (available < 4)
     return FALSE;
+
   flush = gst_adapter_masked_scan_uint32 (parse->priv->adapter, 0xffffff00,
       0xffd8ff00, 0, available);
   if (flush == -1) {
@@ -300,24 +303,30 @@ gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
   if (tag >= RST0 && tag <= EOI)
     marker_len = 2;
   else if (G_UNLIKELY (size < 4))
-    return -1;
+    goto need_more_data;
   else
     marker_len = GST_READ_UINT16_BE (data + 2) + 2;
 
-  GST_LOG ("Have marker %x with length %u", data[1], marker_len);
+  /* we log this in gst_jpeg_parse_find_end_marker() already
+     GST_LOG ("Have marker %x with length %u", data[1], marker_len);
+   */
 
   /* Need marker_len for this marker, plus two for the next marker. */
   if (G_UNLIKELY (marker_len + 2 >= size))
-    return -1;
+    goto need_more_data;
 
   if (G_UNLIKELY (gst_jpeg_parse_parse_tag_has_entropy_segment (tag))) {
     while (!(data[marker_len] == 0xff && data[marker_len + 1] != 0x00)) {
-      if (G_UNLIKELY (marker_len + 2 >= size))
-        return -1;
       ++marker_len;
+      if (G_UNLIKELY (marker_len > size))
+        goto need_more_data;
     }
   }
   return marker_len;
+
+need_more_data:
+  GST_LOG ("need more data");
+  return -1;
 }
 
 /*
@@ -334,7 +343,7 @@ static guint
 gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
     guint size)
 {
-  guint offset = 0;
+  guint offset = parse->priv->last_offset;
 
   while (1) {
     guint marker_len;
@@ -343,6 +352,7 @@ gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
     if (offset + 1 >= size)
       return -1;
 
+    /* all jpeg marker start with 0xff */
     if (data[offset] != 0xff)
       return -2;
 
@@ -355,7 +365,8 @@ gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
     /* Check for EOI */
     if (G_UNLIKELY (tag == EOI)) {
       GST_DEBUG_OBJECT (parse, "EOI at %u", offset);
-      return offset + 2;
+      parse->priv->last_offset = offset;
+      return offset;
     }
     /* Skip over this marker. */
     marker_len = gst_jpeg_parse_match_next_marker (data + offset,
@@ -365,6 +376,8 @@ gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
     } else {
       GST_LOG_OBJECT (parse, "At offset %u: marker %02x, length %u", offset,
           tag, marker_len);
+      /* remember last found marker, so that we don't rescan from begin */
+      parse->priv->last_offset = offset;
       offset += marker_len;
     }
   }
@@ -375,7 +388,7 @@ static guint
 gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 {
   const guint8 *data;
-  guint size, offset, start = 2;
+  guint size, offset;
 
   size = gst_adapter_available (parse->priv->adapter);
   if (size < 4) {
@@ -386,35 +399,34 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 
   g_return_val_if_fail (data[0] == 0xff && data[1] == SOI, 0);
 
-  GST_DEBUG_OBJECT (parse, "Parsing jpeg image data (%u bytes)", size);
-
-  /* skip start marker */
-  offset = gst_jpeg_parse_find_end_marker (parse, data + 2, size - 2);
+  offset = gst_jpeg_parse_find_end_marker (parse, data, size);
 
   if (offset == -1) {
-    GST_DEBUG_OBJECT (parse, "Insufficient data.");
-    /* FIXME: remember size, so that we don't rescan from begin */
+    GST_LOG_OBJECT (parse, "Insufficient data.");
     return 0;
   } else if (G_UNLIKELY (offset == -2)) {
+    guint start = parse->priv->last_offset;
     GST_DEBUG_OBJECT (parse, "Lost sync, resyncing.");
     /* FIXME does this make sense at all?  This can only happen for broken
      * images, and the most likely breakage is that it's truncated.  In that
      * case, however, we should be looking for a new start marker... */
     while (offset == -2 || offset == -1) {
       start++;
+      /* scan for 0xff */
       while (start + 1 < size && data[start] != 0xff)
         start++;
       if (G_UNLIKELY (start + 1 >= size)) {
         GST_DEBUG_OBJECT (parse, "Insufficient data while resyncing.");
         return 0;
       }
-      GST_LOG_OBJECT (parse, "Resyncing from offset %u.", start);
-      offset = gst_jpeg_parse_find_end_marker (parse, data + start, size -
-          start);
+      GST_LOG_OBJECT (parse, "Resyncing from offset %u (size %u).",
+          start, size);
+      parse->priv->last_offset = start;
+      offset = gst_jpeg_parse_find_end_marker (parse, data, size);
     }
   }
 
-  return start + offset;
+  return offset;
 }
 
 static gboolean
@@ -547,7 +559,21 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
       case APP0:
       case APP1:
-      case APP15:
+      case APP2:
+      case APP13:
+      case APP14:
+      case APP15:{
+        const gchar *id_str;
+        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+          goto error;
+        if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+          goto error;
+        if (!gst_byte_reader_skip (&reader, size - 3 - strlen (id_str)))
+          goto error;
+        GST_LOG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
+            marker, id_str, size - 2);
+        break;
+      }
       case DHT:
       case DQT:
         /* Ignore these codes */
@@ -571,10 +597,38 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         return TRUE;
 
       default:
-        GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
-        /* Not SOF or SOI.  Must not be a JPEG file (or file pointer
-         * is placed wrong).  In either case, it's an error. */
-        return FALSE;
+        if (marker == JPG || (marker >= JPG0 && marker <= JPG13)) {
+          /* we'd like to remove them from the buffer */
+#if 1
+          guint pos = gst_byte_reader_get_pos (&reader);
+          guint8 *data = GST_BUFFER_DATA (buffer);
+
+          if (!gst_byte_reader_peek_uint16_be (&reader, &size))
+            goto error;
+          if (gst_byte_reader_get_remaining (&reader) < size)
+            goto error;
+
+          GST_LOG_OBJECT (parse, "unhandled marker %x removing %u bytes",
+              marker, size);
+
+          memmove (&data[pos], &data[pos + size],
+              GST_BUFFER_SIZE (buffer) - (pos + size));
+          GST_BUFFER_SIZE (buffer) -= size;
+          reader.size -= size;
+#else
+          if (!gst_byte_reader_get_uint16_be (&reader, &size))
+            goto error;
+          if (!gst_byte_reader_skip (&reader, size - 2))
+            goto error;
+          GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
+              size - 2);
+#endif
+        } else {
+          GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
+          /* Not SOF or SOI.  Must not be a JPEG file (or file pointer
+           * is placed wrong).  In either case, it's an error. */
+          return FALSE;
+        }
     }
 
     if (!gst_byte_reader_peek_uint8 (&reader, &marker))
@@ -584,7 +638,9 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
   return foundSOF;
 
 error:
-  GST_WARNING_OBJECT (parse, "Error parsing image header");
+  GST_WARNING_OBJECT (parse,
+      "Error parsing image header (need more that %u bytes available)",
+      gst_byte_reader_get_remaining (&reader));
   return FALSE;
 }
 
@@ -641,6 +697,9 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean header_ok;
+
+  /* reset the offset (only when we flushed) */
+  parse->priv->last_offset = 2;
 
   outbuf = gst_adapter_take_buffer (parse->priv->adapter, len);
   if (outbuf == NULL) {
@@ -716,10 +775,12 @@ gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buf)
 
     parse->priv->duration = duration;
 
+    /* check if we already have a EOI */
     len = gst_jpeg_parse_get_image_length (parse);
     if (len == 0)
       return GST_FLOW_OK;
 
+    /* now we have enough in the adapter to process a full jpeg image */
     ret = gst_jpeg_parse_push_buffer (parse, len);
   }
 
@@ -786,6 +847,8 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
       parse->priv->new_segment = FALSE;
 
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+
+      parse->priv->last_offset = 2;
     default:
       break;
   }
