@@ -1,5 +1,5 @@
 /* 
- * Copyright 2006, 2007, 2008 Fluendo S.A. 
+ * Copyright 2006, 2007, 2008, 2009, 2010 Fluendo S.A. 
  *  Authors: Jan Schmidt <jan@fluendo.com>
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
@@ -350,6 +350,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
       GST_DEBUG_OBJECT (pad, "we have additional codec data (%d bytes)",
           GST_BUFFER_SIZE (ts_data->codec_data));
       ts_data->prepare_func = mpegtsmux_prepare_h264;
+      ts_data->free_func = mpegtsmux_free_h264;
     } else {
       ts_data->codec_data = NULL;
     }
@@ -713,7 +714,9 @@ mpegtsmux_request_new_pad (GstElement * element,
   pad_data->pid = pid;
   pad_data->last_ts = GST_CLOCK_TIME_NONE;
   pad_data->codec_data = NULL;
+  pad_data->prepare_data = NULL;
   pad_data->prepare_func = NULL;
+  pad_data->free_func = NULL;
   pad_data->prog_id = -1;
   pad_data->prog = NULL;
 
@@ -756,6 +759,10 @@ mpegtsmux_release_pad (GstElement * element, GstPad * pad)
       GST_DEBUG_OBJECT (element, "releasing codec_data reference");
       gst_buffer_unref (pad_data->codec_data);
       pad_data->codec_data = NULL;
+    }
+    if (pad_data->prepare_data && pad_data->free_func) {
+      pad_data->free_func (pad_data->prepare_data);
+      pad_data->prepare_data = pad_data->free_func = NULL;
     }
   }
   GST_OBJECT_UNLOCK (pad);

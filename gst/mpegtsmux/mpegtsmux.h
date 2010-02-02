@@ -1,5 +1,5 @@
 /* 
- * Copyright 2006, 2007, 2008 Fluendo S.A. 
+ * Copyright 2006, 2007, 2008, 2009, 2010 Fluendo S.A. 
  *  Authors: Jan Schmidt <jan@fluendo.com>
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
@@ -101,6 +101,8 @@ typedef struct MpegTsPadData MpegTsPadData;
 typedef GstBuffer * (*MpegTsPadDataPrepareFunction) (GstBuffer * buf,
     MpegTsPadData * data, MpegTsMux * mux);
 
+typedef void (*MpegTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
+
 struct MpegTsMux {
   GstElement parent;
 
@@ -140,7 +142,11 @@ struct MpegTsPadData {
 
   GstBuffer * codec_data; /* Optional codec data available in the caps */
 
+  gpointer prepare_data; /* Opaque data pointer to a structure used by the
+                            prepare function */
+
   MpegTsPadDataPrepareFunction prepare_func; /* Handler to prepare input data */
+  MpegTsPadDataFreePrepareDataFunction free_func; /* Handler to free the private data */
 
   gboolean eos;
 
