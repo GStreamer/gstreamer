@@ -8399,7 +8399,7 @@
       <method name="ResetAndGetData" cname="gst_byte_writer_reset_and_get_data">
         <return-type type="guint8*" />
       </method>
-      <method name="ResetAndGetDataAsBuffer" cname="gst_byte_writer_reset_and_get_data_as_buffer">
+      <method name="ResetAndGetBuffer" cname="gst_byte_writer_reset_and_get_buffer">
         <return-type type="GstBuffer*" />
       </method>
     </struct>

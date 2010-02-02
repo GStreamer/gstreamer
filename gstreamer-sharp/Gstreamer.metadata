@@ -1218,7 +1218,7 @@
   <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_put_uint64_le']" name="name">PutUInt64Le</attr>
   <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_reset_and_get_data']" name="hidden">1</attr>
   <attr path="/api/namespace/struct[@cname='GstByteWriter']/constructor[@cname='gst_byte_writer_new_with_buffer']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_reset_and_get_data_as_buffer']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/struct[@cname='GstByteWriter']/method[@cname='gst_byte_writer_reset_and_get_buffer']/return-type" name="owned">true</attr>
   <add-node path="/api/namespace/struct[@cname='GstByteWriter']">
       <method name="GetFloat32Be" cname="gst_byte_reader_get_float32_be">
         <return-type type="gboolean" />
