@@ -120,7 +120,9 @@ struct MpegTsMux {
   gint64 previous_pcr;
   gboolean m2ts_mode;
   gboolean first_pcr;
-  
+  guint pat_interval;
+  guint pmt_interval;
+
   GstClockTime last_ts;
   gboolean is_delta;
 };

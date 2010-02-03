@@ -98,7 +98,9 @@ enum
 {
   ARG_0,
   ARG_PROG_MAP,
-  ARG_M2TS_MODE
+  ARG_M2TS_MODE,
+  ARG_PAT_INTERVAL,
+  ARG_PMT_INTERVAL
 };
 
 static GstStaticPadTemplate mpegtsmux_sink_factory =
@@ -192,6 +194,15 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
           "Defines what packet size to use, normal TS format ie .ts(188 bytes) "
           "or Blue-Ray disc ie .m2ts(192 bytes).", FALSE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAT_INTERVAL,
+      g_param_spec_uint ("pat-interval", "PAT interval",
+          "Set the interval (in ticks of the 90kHz clock) for writing out the PAT table",
+          1, G_MAXUINT, TSMUX_DEFAULT_PAT_INTERVAL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PMT_INTERVAL,
+      g_param_spec_uint ("pmt-interval", "PMT interval",
+          "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
+          1, G_MAXUINT, TSMUX_DEFAULT_PMT_INTERVAL, G_PARAM_READWRITE));
 }
 
 static void
@@ -215,6 +226,8 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->last_flow_ret = GST_FLOW_OK;
   mux->adapter = gst_adapter_new ();
   mux->m2ts_mode = FALSE;
+  mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
+  mux->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
   mux->first_pcr = TRUE;
   mux->last_ts = 0;
   mux->is_delta = TRUE;
@@ -257,6 +270,7 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   MpegTsMux *mux = GST_MPEG_TSMUX (object);
+  GSList *walk;
 
   switch (prop_id) {
     case ARG_M2TS_MODE:
@@ -275,6 +289,22 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
         mux->prog_map = NULL;
       break;
     }
+    case ARG_PAT_INTERVAL:
+      mux->pat_interval = g_value_get_uint (value);
+      if (mux->tsmux)
+        tsmux_set_pat_interval (mux->tsmux, mux->pat_interval);
+      break;
+    case ARG_PMT_INTERVAL:
+      walk = mux->collect->data;
+      mux->pmt_interval = g_value_get_uint (value);
+
+      while (walk) {
+        MpegTsPadData *ts_data = (MpegTsPadData *) walk->data;
+
+        tsmux_set_pmt_interval (ts_data->prog, mux->pmt_interval);
+        walk = g_slist_next (walk);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -293,6 +323,12 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PROG_MAP:
       gst_value_set_structure (value, mux->prog_map);
+      break;
+    case ARG_PAT_INTERVAL:
+      g_value_set_uint (value, mux->pat_interval);
+      break;
+    case ARG_PMT_INTERVAL:
+      g_value_set_uint (value, mux->pmt_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -489,6 +525,7 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       ts_data->prog = tsmux_program_new (mux->tsmux);
       if (ts_data->prog == NULL)
         goto no_program;
+      tsmux_set_pmt_interval (ts_data->prog, mux->pmt_interval);
       mux->programs[ts_data->prog_id] = ts_data->prog;
     }
 

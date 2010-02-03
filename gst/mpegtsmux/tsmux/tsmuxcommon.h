@@ -115,6 +115,11 @@ G_BEGIN_DECLS
 #define TSMUX_PACKET_FLAG_PES_WRITE_ESCR    (1 << 11)
 #define TSMUX_PACKET_FLAG_PES_EXT_STREAMID  (1 << 12)
 
+/* PAT interval (1/10th sec) */
+#define TSMUX_DEFAULT_PAT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
+/* PMT interval (1/10th sec) */
+#define TSMUX_DEFAULT_PMT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
+
 typedef struct TsMuxPacketInfo TsMuxPacketInfo;
 typedef struct TsMuxProgram TsMuxProgram;
 typedef struct TsMuxStream TsMuxStream;

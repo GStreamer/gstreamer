@@ -110,11 +110,6 @@
 /* Times per second to write PCR */
 #define TSMUX_DEFAULT_PCR_FREQ (25)
 
-/* PAT interval (1/10th sec) */
-#define TSMUX_DEFAULT_PAT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
-/* PMT interval (1/10th sec) */
-#define TSMUX_DEFAULT_PMT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
-
 static gboolean tsmux_write_pat (TsMux * mux);
 static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
 
