@@ -237,7 +237,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = sizeof (float) * dec->vi.channels;
+          scale = dec->width * dec->vi.channels;
         case GST_FORMAT_DEFAULT:
           *dest_value =
               scale * gst_util_uint64_scale_int (src_value, dec->vi.rate,
@@ -250,7 +250,7 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * sizeof (float) * dec->vi.channels;
+          *dest_value = src_value * dec->width * dec->vi.channels;
           break;
         case GST_FORMAT_TIME:
           *dest_value =
@@ -263,11 +263,11 @@ vorbis_dec_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / (sizeof (float) * dec->vi.channels);
+          *dest_value = src_value / (dec->width * dec->vi.channels);
           break;
         case GST_FORMAT_TIME:
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->vi.rate * sizeof (float) * dec->vi.channels);
+              dec->vi.rate * dec->width * dec->vi.channels);
           break;
         default:
           res = FALSE;
@@ -589,10 +589,11 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     }
   }
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, vd->vi.rate,
-      "channels", G_TYPE_INT, vd->vi.channels,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+  vd->width = 4;
+
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (vd->srcpad));
+  gst_caps_set_simple (caps, "rate", G_TYPE_INT, vd->vi.rate,
+      "channels", G_TYPE_INT, vd->vi.channels);
 
   if (pos) {
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
@@ -797,7 +798,7 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
 
   /* clip */
   if (!(buf = gst_audio_buffer_clip (buf, &dec->segment, dec->vi.rate,
-              dec->vi.channels * sizeof (float)))) {
+              dec->vi.channels * dec->width))) {
     GST_LOG_OBJECT (dec, "clipped buffer");
     return GST_FLOW_OK;
   }
@@ -882,7 +883,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
     goto done;
 
-  size = sample_count * vd->vi.channels * sizeof (float);
+  size = sample_count * vd->vi.channels * vd->width;
   GST_LOG_OBJECT (vd, "%d samples ready for reading, size %d", sample_count,
       size);
 

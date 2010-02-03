@@ -59,6 +59,7 @@ struct _GstVorbisDec {
   vorbis_block      vb;
 
   gboolean          initialized;
+  guint             width;
 
   /* list of buffers that need timestamps */
   GList            *queued;
