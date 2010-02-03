@@ -110,10 +110,10 @@
 /* Times per second to write PCR */
 #define TSMUX_DEFAULT_PCR_FREQ (25)
 
-/* PAT frequency (1/10th sec) */
-#define TSMUX_DEFAULT_PAT_FREQ (TSMUX_CLOCK_FREQ / 10)
-/* PMT frequency (1/10th sec) */
-#define TSMUX_DEFAULT_PMT_FREQ (TSMUX_CLOCK_FREQ / 10)
+/* PAT interval (1/10th sec) */
+#define TSMUX_DEFAULT_PAT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
+/* PMT interval (1/10th sec) */
+#define TSMUX_DEFAULT_PMT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
 
 static gboolean tsmux_write_pat (TsMux * mux);
 static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
@@ -140,7 +140,7 @@ tsmux_new ()
 
   mux->pat_changed = TRUE;
   mux->last_pat_ts = -1;
-  mux->pat_frequency = TSMUX_DEFAULT_PAT_FREQ;
+  mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
 
   return mux;
 }
@@ -164,39 +164,38 @@ tsmux_set_write_func (TsMux * mux, TsMuxWriteFunc func, void *user_data)
 }
 
 /**
- * tsmux_set_pat_frequency:
+ * tsmux_set_pat_interval:
  * @mux: a #TsMux
- * @freq: a new PAT frequency
+ * @freq: a new PAT interval
  *
- * Set the frequency (against the 90Hz clock) for writing out the PAT table.
- * A frequency of 0 will only write the PAT table when it changes.
+ * Set the interval (in cycles of the 90kHz clock) for writing out the PAT table.
  *
  * Many transport stream clients might have problems if the PAT table is not
  * inserted in the stream at regular intervals, especially when initially trying
  * to figure out the contents of the stream.
  */
 void
-tsmux_set_pat_frequency (TsMux * mux, guint freq)
+tsmux_set_pat_interval (TsMux * mux, guint freq)
 {
   g_return_if_fail (mux != NULL);
 
-  mux->pat_frequency = freq;
+  mux->pat_interval = freq;
 }
 
 /**
- * tsmux_get_pat_frequency:
+ * tsmux_get_pat_interval:
  * @mux: a #TsMux
  *
- * Get the configured PAT frequency. See also tsmux_set_pat_frequency().
+ * Get the configured PAT interval. See also tsmux_set_pat_interval().
  *
- * Returns: the configured PAT frequency
+ * Returns: the configured PAT interval
  */
 guint
-tsmux_get_pat_frequency (TsMux * mux)
+tsmux_get_pat_interval (TsMux * mux)
 {
   g_return_val_if_fail (mux != NULL, 0);
 
-  return mux->pat_frequency;
+  return mux->pat_interval;
 }
 
 /**
@@ -256,7 +255,7 @@ tsmux_program_new (TsMux * mux)
 
   program->pmt_changed = TRUE;
   program->last_pmt_ts = -1;
-  program->pmt_frequency = TSMUX_DEFAULT_PMT_FREQ;
+  program->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
 
   program->pgm_number = mux->next_pgm_no++;
   program->pmt_pid = mux->next_pmt_pid++;
@@ -273,39 +272,38 @@ tsmux_program_new (TsMux * mux)
 }
 
 /**
- * tsmux_set_pmt_frequency:
+ * tsmux_set_pmt_interval:
  * @program: a #TsMuxProgram
- * @freq: a new PMT frequency
+ * @freq: a new PMT interval
  *
- * Set the frequency (against the 90Hz clock) for writing out the PMT table.
- * A frequency of 0 will only write the PMT table when it changes.
+ * Set the interval (in cycles of the 90kHz clock) for writing out the PMT table.
  *
  * Many transport stream clients might have problems if the PMT table is not
  * inserted in the stream at regular intervals, especially when initially trying
  * to figure out the contents of the stream.
  */
 void
-tsmux_set_pmt_frequency (TsMuxProgram * program, guint freq)
+tsmux_set_pmt_interval (TsMuxProgram * program, guint freq)
 {
   g_return_if_fail (program != NULL);
 
-  program->pmt_frequency = freq;
+  program->pmt_interval = freq;
 }
 
 /**
- * tsmux_get_pmt_frequency:
+ * tsmux_get_pmt_interval:
  * @program: a #TsMuxProgram
  *
- * Get the configured PMT frequency. See also tsmux_set_pmt_frequency().
+ * Get the configured PMT interval. See also tsmux_set_pmt_interval().
  *
- * Returns: the configured PMT frequency
+ * Returns: the configured PMT interval
  */
 guint
-tsmux_get_pmt_frequency (TsMuxProgram * program)
+tsmux_get_pmt_interval (TsMuxProgram * program)
 {
   g_return_val_if_fail (program != NULL, 0);
 
-  return program->pmt_frequency;
+  return program->pmt_interval;
 }
 
 /**
@@ -746,13 +744,13 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     /* check if we need to rewrite pat */
     if (mux->last_pat_ts == -1 || mux->pat_changed)
       write_pat = TRUE;
-    else if (cur_pcr >= mux->last_pat_ts + mux->pat_frequency)
+    else if (cur_pts >= mux->last_pat_ts + mux->pat_interval)
       write_pat = TRUE;
     else
       write_pat = FALSE;
 
     if (write_pat) {
-      mux->last_pat_ts = cur_pcr;
+      mux->last_pat_ts = cur_pts;
       if (!tsmux_write_pat (mux))
         return FALSE;
     }
@@ -765,13 +763,13 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
       if (program->last_pmt_ts == -1 || program->pmt_changed)
         write_pmt = TRUE;
-      else if (cur_pcr >= program->last_pmt_ts + program->pmt_frequency)
+      else if (cur_pts >= program->last_pmt_ts + program->pmt_interval)
         write_pmt = TRUE;
       else
         write_pmt = FALSE;
 
       if (write_pmt) {
-        program->last_pmt_ts = cur_pcr;
+        program->last_pmt_ts = cur_pts;
         if (!tsmux_write_pmt (mux, program))
           return FALSE;
       }
