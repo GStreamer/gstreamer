@@ -67,8 +67,8 @@ G_BEGIN_DECLS
 #define SOS       0xda  /* Start Of Scan */
 
 #define DHT       0xc4  /* Huffman Table(s) */
-#define DAC       0xcc
-#define DQT       0xdb  /* Huffman Table(s) */
+#define DAC       0xcc  /* Algorithmic Coding Table */
+#define DQT       0xdb  /* Quantisation Table(s) */
 #define DNL       0xdc  /* Number of lines */
 #define DRI       0xdd  /* Restart Interval */
 #define DHP       0xde  /* Hierarchical progression */
