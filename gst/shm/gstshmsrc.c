@@ -207,7 +207,8 @@ gst_shm_src_start (GstBaseSrc * bsrc)
 
   if (!gstpipe->pipe) {
     GST_ELEMENT_ERROR (bsrc, RESOURCE, OPEN_READ_WRITE,
-        ("Could not open socket: %d %s", errno, strerror (errno)), (NULL));
+        ("Could not open socket %s: %d %s", self->socket_path, errno,
+            strerror (errno)), (NULL));
     gst_shm_pipe_dec (gstpipe);
     return FALSE;
   }
