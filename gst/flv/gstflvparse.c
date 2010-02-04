@@ -1060,10 +1060,10 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
       }
       case 1:
         /* H.264 NALU packet */
-        GST_LOG_OBJECT (demux, "got a H.264 NALU audio packet");
+        GST_LOG_OBJECT (demux, "got a H.264 NALU video packet");
         break;
       default:
-        GST_WARNING_OBJECT (demux, "invalid AAC packet type %u",
+        GST_WARNING_OBJECT (demux, "invalid video packet type %u",
             avc_packet_type);
     }
   }
