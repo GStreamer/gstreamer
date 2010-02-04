@@ -99,6 +99,9 @@ struct _GstQTDemux {
   /* gst index support */
   GstIndex *element_index;
   gint index_id;
+
+  gint64 requested_seek_time;
+  guint64 seek_offset;
 };
 
 struct _GstQTDemuxClass {
