@@ -1,15 +1,15 @@
 # Hungarian translation of gst-plugins-good
 # This file is distributed under the same license as the gst-plugins-good package.
-# Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-27 01:52+0000\n"
-"PO-Revision-Date: 2009-08-12 23:38+0200\n"
+"POT-Creation-Date: 2010-02-04 18:56+0000\n"
+"PO-Revision-Date: 2010-02-01 12:46+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,7 @@ msgstr "A hangkiszolgáló képességeinek lekérdezése meghiúsult"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "„%s” ettől: „%s”"
 
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
@@ -69,14 +69,13 @@ msgstr ""
 "Nem található támogatott adatfolyam. Telepítse a GStreamer RTSP bővítményt a "
 "Real media adatfolyamokhoz."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Nem található támogatott adatfolyam. Lehet, hogy hiányzik a megfelelő "
-"GStreamer RTSP bővítmény."
+"Nem található támogatott adatfolyam. Lehet, hogy több átviteli protokollt "
+"kell engedélyezni, vagy hiányzik a megfelelő GStreamer RTSP bővítmény."
 
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."

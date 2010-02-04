@@ -1,15 +1,15 @@
 # Bulgarian translation of gst-plugins-good.
-# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Alexander Shopov <ash@contact.bg>, 2007, 2008, 2009.
+# Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-27 01:52+0000\n"
-"PO-Revision-Date: 2009-09-19 13:02+0300\n"
-"Last-Translator: Alexander Shopov <ash@contact.bg>\n"
+"POT-Creation-Date: 2010-02-04 18:56+0000\n"
+"PO-Revision-Date: 2010-01-29 14:49+0200\n"
+"Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -24,7 +24,7 @@ msgstr "Неуспех при запитването за възможности
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "„%s“ от „%s“"
 
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
@@ -65,13 +65,13 @@ msgstr ""
 "Не е открит поддържан поток. Може да трябва да инсталирате приставката на "
 "GStreamer — RTSP, който поддържа потоци на Real."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Не е открит поддържан поток. Може би липсва приставката на GStreamer — RTSP."
+"Не е открит поддържан поток. Може би трябва да разрешите повече транспортни "
+"протоколи или ви липсва правилната приставка на GStreamer за RTSP."
 
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка в потока с данни."
