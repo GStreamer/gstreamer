@@ -175,6 +175,7 @@ gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   GstStructure *caps_structure = gst_caps_get_structure (caps, 0);
   GstRtpJ2KPay *pay;
   gint width = 0, height = 0;
+  gboolean res;
 
   pay = GST_RTP_J2K_PAY (basepayload);
 
@@ -188,9 +189,9 @@ gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   gst_basertppayload_set_options (basepayload, "video", TRUE, "JPEG2000",
       90000);
-  gst_basertppayload_set_outcaps (basepayload, NULL);
+  res = gst_basertppayload_set_outcaps (basepayload, NULL);
 
-  return TRUE;
+  return res;
 }
 
 

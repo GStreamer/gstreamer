@@ -143,6 +143,7 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstBaseRTPAudioPayload *basertpaudiopayload;
   GstRtpG726Pay *pay;
   GstCaps *peercaps;
+  gboolean res;
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (payload);
   pay = GST_RTP_G726_PAY (payload);
@@ -242,11 +243,11 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   }
 
   gst_basertppayload_set_options (payload, "audio", TRUE, encoding_name, 8000);
-  gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
 
   g_free (encoding_name);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 invalid_bitrate:

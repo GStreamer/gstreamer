@@ -274,6 +274,7 @@ gst_rtp_jpeg_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 {
   GstStructure *caps_structure = gst_caps_get_structure (caps, 0);
   GstRtpJPEGPay *pay;
+  gboolean res;
   gint width = 0, height = 0;
 
   pay = GST_RTP_JPEG_PAY (basepayload);
@@ -293,9 +294,9 @@ gst_rtp_jpeg_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   pay->width = width / 8;
 
   gst_basertppayload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
-  gst_basertppayload_set_outcaps (basepayload, NULL);
+  res = gst_basertppayload_set_outcaps (basepayload, NULL);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 invalid_dimension:

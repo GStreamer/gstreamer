@@ -114,10 +114,12 @@ gst_rtp_mp2t_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  gst_basertppayload_set_options (payload, "video", TRUE, "MP2T-ES", 90000);
-  gst_basertppayload_set_outcaps (payload, NULL);
+  gboolean res;
 
-  return TRUE;
+  gst_basertppayload_set_options (payload, "video", TRUE, "MP2T-ES", 90000);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
+
+  return res;
 }
 
 static GstFlowReturn

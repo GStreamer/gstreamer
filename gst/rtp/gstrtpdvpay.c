@@ -191,7 +191,7 @@ static gboolean
 gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, guint size)
 {
   gchar *encode, *media;
-  gboolean audio_bundled;
+  gboolean audio_bundled, res;
 
   if ((data[3] & 0x80) == 0) {  /* DSF flag */
     /* it's an NTSC format */
@@ -232,14 +232,14 @@ gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, guint size)
       "DV", 90000);
 
   if (audio_bundled) {
-    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
+    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
         "encode", G_TYPE_STRING, encode,
         "audio", G_TYPE_STRING, "bundled", NULL);
   } else {
-    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
+    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
         "encode", G_TYPE_STRING, encode, NULL);
   }
-  return TRUE;
+  return res;
 }
 
 static gboolean
