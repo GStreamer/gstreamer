@@ -2385,6 +2385,16 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     default:
       break;
   }
+
+  /* fixup of default settings */
+  switch (codec_id) {
+    case CODEC_ID_QCELP:
+      /* QCELP is always mono, no matter what the caps say */
+      context->channels = 1;
+      break;
+    default:
+      break;
+  }
 }
 
 /* _formatid_to_caps () is meant for muxers/demuxers, it
