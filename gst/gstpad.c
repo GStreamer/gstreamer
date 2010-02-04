@@ -4791,8 +4791,9 @@ not_connected:
 pull_range_failed:
   {
     *buffer = NULL;
-    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pullrange failed %s", gst_flow_get_name (ret));
+    GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
+        (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
+        pad, "pullrange failed, flow: %s", gst_flow_get_name (ret));
     return ret;
   }
 dropping:
