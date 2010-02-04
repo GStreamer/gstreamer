@@ -130,8 +130,10 @@ mpegtsmux_process_codec_data_h264 (MpegTsPadData * data, MpegTsMux * mux)
 
   /* Detect a codec data change */
   if (h264_data->last_codec_data != data->codec_data) {
-    gst_buffer_unref (h264_data->cached_es);
-    h264_data->cached_es = NULL;
+    if (h264_data->cached_es) {
+      gst_buffer_unref (h264_data->cached_es);
+      h264_data->cached_es = NULL;
+    }
     ret = TRUE;
   }
 
