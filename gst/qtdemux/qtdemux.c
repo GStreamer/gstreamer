@@ -1423,8 +1423,8 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
         }
         /* determine min/max time */
         time = str->samples[i].timestamp + str->samples[i].pts_offset;
-        if (min_time == -1 || (fw && min_time > time) ||
-            (!fw && min_time < time)) {
+        if (min_time == -1 || (!fw && min_time > time) ||
+            (fw && min_time < time)) {
           min_time = time;
           ts_timescale = str->timescale;
         }
