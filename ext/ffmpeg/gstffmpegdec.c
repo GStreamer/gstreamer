@@ -823,11 +823,17 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height",
       &ffmpegdec->format.video.clip_height);
 
+  GST_DEBUG_OBJECT (pad, "clipping to %dx%d",
+      ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
+
   /* take into account the lowres property */
   if (ffmpegdec->format.video.clip_width != -1)
     ffmpegdec->format.video.clip_width >>= ffmpegdec->lowres;
   if (ffmpegdec->format.video.clip_height != -1)
     ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
+
+  GST_DEBUG_OBJECT (pad, "final clipping to %dx%d",
+      ffmpegdec->format.video.clip_width, ffmpegdec->format.video.clip_height);
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -907,7 +913,8 @@ negotiate_failed:
   }
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed");
+    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed %d (%s)", ret,
+        gst_flow_get_name (ret));
     return ret;
   }
 }
@@ -1204,9 +1211,11 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 
       if (width != -1 && height != -1) {
         /* overwrite the output size with the dimension of the
-         * clipping region */
-        gst_caps_set_simple (caps,
-            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+         * clipping region but only if they are smaller. */
+        if (width < ffmpegdec->context->width)
+          gst_caps_set_simple (caps, "width", G_TYPE_INT, width, NULL);
+        if (height < ffmpegdec->context->height)
+          gst_caps_set_simple (caps, "height", G_TYPE_INT, height, NULL);
       }
       gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, interlaced,
           NULL);
@@ -1479,10 +1488,16 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
     /* figure out size of output buffer, this is the clipped output size because
-     * we will copy the picture into it. */
+     * we will copy the picture into it but only when the clipping region is
+     * smaller than the actual picture size. */
     if ((width = ffmpegdec->format.video.clip_width) == -1)
       width = ffmpegdec->context->width;
+    else if (width > ffmpegdec->context->width)
+      width = ffmpegdec->context->width;
+
     if ((height = ffmpegdec->format.video.clip_height) == -1)
+      height = ffmpegdec->context->height;
+    else if (height > ffmpegdec->context->height)
       height = ffmpegdec->context->height;
 
     GST_LOG_OBJECT (ffmpegdec, "clip width %d/height %d", width, height);
@@ -1724,6 +1739,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->picture->opaque);
   GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
       ffmpegdec->picture->repeat_pict);
+  GST_DEBUG_OBJECT (ffmpegdec, "interlaced_frame:%d",
+      ffmpegdec->picture->interlaced_frame);
 
   if (G_UNLIKELY (ffmpegdec->picture->interlaced_frame !=
           ffmpegdec->format.video.interlaced)) {
