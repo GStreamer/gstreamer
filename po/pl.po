@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-17 18:34+0200\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-01-27 17:31+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -77,9 +77,9 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Wyłączenie uaktualniania rejestru"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Wyłączenie użycia fork() przy przeszukiwaniu rejestru"
+msgstr ""
+"Wyłączenie uruchamiania procesu pomocniczego przy przeszukiwaniu rejestru"
 
 msgid "GStreamer Options"
 msgstr "Opcje GStreamera"
@@ -624,55 +624,52 @@ msgstr ""
 "metrach zgodnie z WSG84 (0 to średni poziom morza)"
 
 msgid "show name"
-msgstr ""
+msgstr "nazwa widowiska"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
+"Nazwa widowiska telewizyjnego/podcastu/serialu, z którego pochodzi utwór"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "artysta do sortowania"
+msgstr "nazwa widowiska do sortowania"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
+msgstr "Nazwa widowiska telewizyjnego/podcastu/serialu na potrzeby sortowania"
 
-#, fuzzy
 msgid "episode number"
-msgstr "numer płyty"
+msgstr "numer odcinka"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Numer odcinka w sezonie, z którego pochodzi utwór"
 
-#, fuzzy
 msgid "season number"
-msgstr "numer płyty"
+msgstr "numer sezonu"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Numer sezonu widowiska, z którego pochodzi utwór"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licencja"
+msgstr "tekst"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Tekst utworu, używany najczęściej dla piosenek"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "tytuł do sortowania"
+msgstr "nazwa kompozytora do sortowania"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "osoba lub osoby odpowiedzialne za nagranie - na potrzeby sortowania"
+msgstr "osoba lub osoby, które skomponowały nagranie - na potrzeby sortowania"
 
 msgid "grouping"
-msgstr ""
+msgstr "grupowanie"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Grupowanie powiązanych utworów rozciągające się na wiele ścieżek, jak różne "
+"części koncertu; jest to poziom wyższy niż ścieżka, a niższy niż album"
 
 msgid ", "
 msgstr ", "
@@ -797,11 +794,11 @@ msgid "Failed after iterations as requested."
 msgstr "Niepowodzenie po iteracjach jak żądano."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Nie podano katalogu tymczasowego."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nie udało się uzyskać informacji o \"%s\"."
+msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
 
 msgid "caps"
 msgstr "możliwości"
@@ -837,7 +834,7 @@ msgid "controllable"
 msgstr "sterowanie"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Pliki wykluczone:"
 
 msgid "Total count: "
 msgstr "Całkowita liczba: "
@@ -845,9 +842,9 @@ msgstr "Całkowita liczba: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d plik wykluczony"
+msgstr[1] "%d pliki wykluczone"
+msgstr[2] "%d plików wykluczonych"
 
 #, c-format
 msgid "%d plugin"
@@ -859,9 +856,9 @@ msgstr[2] "%d wtyczek"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d wpis wykluczony"
+msgstr[1] "%d wpisy wykluczone"
+msgstr[2] "%d wpisów wykluczonych"
 
 #, c-format
 msgid "%d feature"
@@ -874,9 +871,8 @@ msgid "Print all elements"
 msgstr "Wypisanie wszystkich elementów"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Wypisanie listy plików wykluczonych"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"

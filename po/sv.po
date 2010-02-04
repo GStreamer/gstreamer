@@ -1,15 +1,15 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004, 2005, 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2004-2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-18 17:34+0100\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-01-28 21:10+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -77,9 +77,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Inaktivera uppdatering av registret"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Inaktivera användningen av fork() vid avsökning av registret"
+msgstr "Inaktivera start av en hjälpprocess vid avsökning av registret"
 
 msgid "GStreamer Options"
 msgstr "GStreamer-alternativ"
@@ -633,55 +632,53 @@ msgstr ""
 "producerats enligt WGS84 (noll för genomsnittlig havsnivå)"
 
 msgid "show name"
-msgstr ""
+msgstr "visningsnamn"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Namn på tv-program/poddsändning/serie som mediat kommer från"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "sorteringsnamn för artist"
+msgstr "visa sorteringsnamn"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Namn på tv-program/poddsändning/serie som mediat kommer från, för "
+"sorteringsändamål"
 
-#, fuzzy
 msgid "episode number"
-msgstr "skivnummer"
+msgstr "avsnittsnummer"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Avsnittsnumret i säsongen som mediat är en del av"
 
-#, fuzzy
 msgid "season number"
-msgstr "skivnummer"
+msgstr "säsongsnummer"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Säsongsnumret för programmet som mediat är en del av"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licens"
+msgstr "låttexter"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Låttexter för mediat, används oftast för låtar"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "sorteringsnamn för titel"
+msgstr "sorteringsnamn för kompositör"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "person(er) som ansvarar för inspelningen för sorteringsändamål"
+msgstr "person(er) som komponerade inspelningen, för sorteringsändamål"
 
 msgid "grouping"
-msgstr ""
+msgstr "gruppering"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Grupprelaterade media som spänner över flera spår, såsom olika delar av en "
+"konsert. Det är en högre nivå än ett spår, men lägre än ett album"
 
 msgid ", "
 msgstr ", "
@@ -808,11 +805,11 @@ msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Ingen temporärkatalog angiven."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Kunde inte få information om \"%s\"."
+msgstr "Kunde inte skapa temporärfilen \"%s\"."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
 msgid "caps"
@@ -849,7 +846,7 @@ msgid "controllable"
 msgstr "kontrollerbar"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Svartlistade filer:"
 
 msgid "Total count: "
 msgstr "Totalt antal: "
@@ -857,8 +854,8 @@ msgstr "Totalt antal: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d svartlistad fil"
+msgstr[1] "%d svartlistade filer"
 
 #, c-format
 msgid "%d plugin"
@@ -869,8 +866,8 @@ msgstr[1] "%d insticksmoduler"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d svartlistad post"
+msgstr[1] "%d svartlistade poster"
 
 #, c-format
 msgid "%d feature"
@@ -882,9 +879,8 @@ msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Skriv ut lista över svartlistade filer"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
@@ -892,9 +888,11 @@ msgid ""
 "automatic plugin installation mechanisms"
 msgstr ""
 "Skriv ut en maskintolkningsbar lista över funktioner som den angivna "
-"insticksmodulen tillhandahåller.\n"
-"                                       Användbart tillsammans med externa "
-"mekanismer för automatisk installation av insticksmodul"
+"insticksmodulen\n"
+"                                       eller alla insticksmoduler "
+"tillhandahåller. Användbart\n"
+"                                       tillsammans med externa mekanismer "
+"för automatisk installation av insticksmoduler"
 
 msgid "List the plugin contents"
 msgstr "Lista insticksmodulens innehåll"

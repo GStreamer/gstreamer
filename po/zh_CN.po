@@ -1,13 +1,13 @@
 # Chinese (simplified) translation about gstreamer.
 # This file is put in the public domain.
 # Funda Wang <fundawang@linux.net.cn>, 2005.
-# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-05-01 11:53中国标准时间\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -71,9 +71,8 @@ msgstr "禁止跟踪装入插件时的段严重错误"
 msgid "Disable updating the registry"
 msgstr "禁止更新寄存器"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "扫描寄存器时禁用 fork() 例程"
+msgstr "扫描寄存器时不可启用帮助"
 
 msgid "GStreamer Options"
 msgstr "GStreamer 选项"
@@ -110,6 +109,7 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer 错误: 状态更改错误，而且某些组件无法对错误原因给出合适的错误信息。"
 
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
@@ -280,19 +280,17 @@ msgstr "排序后的专辑名"
 msgid "album containing this data for sorting purposes"
 msgstr "用于排序的包含此数据的专辑"
 
-#, fuzzy
 msgid "album artist"
-msgstr "艺术家"
+msgstr "专辑艺术家"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "所应当显示的整张专辑的艺术家"
 
-#, fuzzy
 msgid "album artist sortname"
-msgstr "排序后的艺术家"
+msgstr "专辑艺术家排序"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "排序后的整张专辑艺术家"
 
 msgid "date"
 msgstr "日期"
@@ -449,13 +447,11 @@ msgstr "字幕编码"
 msgid "codec the subtitle data is stored in"
 msgstr "字幕编码数据保存在"
 
-#, fuzzy
 msgid "container format"
-msgstr "联系人信息"
+msgstr "内容格式"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "数据以...编码存储"
+msgstr "数据以...格式存储"
 
 msgid "bitrate"
 msgstr "比特率"
@@ -568,11 +564,10 @@ msgstr "逗号分隔的描述数据内容的简要文本"
 msgid "geo location name"
 msgstr "地理位置名称"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr "易懂的位置描述或是此媒体在哪里录制或是产生"
+msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
 
 msgid "geo location latitude"
 msgstr "地理纬度"
@@ -607,55 +602,51 @@ msgstr ""
 "产生的）"
 
 msgid "show name"
-msgstr ""
+msgstr "显示名称"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "tv/podcast/series 的名称，此名称代表媒体来自何处"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "排序后的艺术家"
+msgstr "排名显示"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
+msgstr "tv/podcast/series 名称代表此媒体来自何处（排名显示）"
 
-#, fuzzy
 msgid "episode number"
-msgstr "碟片编号"
+msgstr "场景编号"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "媒体是一季中的第几场景"
 
-#, fuzzy
 msgid "season number"
-msgstr "碟片编号"
+msgstr "季号"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "媒体是第几季"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "许可证"
+msgstr "歌词"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "媒体歌词，通常用于歌曲"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "排序后的标题名"
+msgstr "排序后的作曲家"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "用于排序的负责录制的个人"
+msgstr "创作录音的人（排序显示）"
 
 msgid "grouping"
-msgstr ""
+msgstr "媒体组"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"媒体组横跨多个音轨，就好像是一场音乐会的不同时段。这个概念范围比音轨高，但小"
+"于专辑"
 
 msgid ", "
 msgstr ", "
@@ -720,7 +711,7 @@ msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "很多缓冲区正被丢弃。"
 
 msgid "Internal data flow problem."
 msgstr "内部数据流问题。"
@@ -780,11 +771,11 @@ msgid "Failed after iterations as requested."
 msgstr "在完成所要求的迭代操作后出错。"
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "未指定临时目录。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "无法在“%s”上获得信息。"
+msgstr "无法创建临时文件“%s”。"
 
 msgid "caps"
 msgstr "分析器"
@@ -820,7 +811,7 @@ msgid "controllable"
 msgstr "可控制"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "文件黑名单:"
 
 msgid "Total count: "
 msgstr "总数:"
@@ -828,7 +819,7 @@ msgstr "总数:"
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
+msgstr[0] "%d 个黑名单文件"
 
 #, c-format
 msgid "%d plugin"
@@ -838,7 +829,7 @@ msgstr[0] "%d 个插件"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
+msgstr[0] "%d 个黑名单记录"
 
 #, c-format
 msgid "%d feature"
@@ -849,16 +840,15 @@ msgid "Print all elements"
 msgstr "打印全部组件"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "显示黑名单文件列表"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"打印机器可解析的指定插件提供的特性列表。\n"
+"显示机器可解析的指定插件或所有插件提供的特性列表。\n"
 "                                       与外部自动插件安装机制连接时有用"
 
 msgid "List the plugin contents"
@@ -897,21 +887,21 @@ msgstr "错误: 无法解析命令行参数 %d: %s。\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "警告: 组件名‘%s’未找到。\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "从组件“%s”中获取信息(%s):"
+msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "从组件“%s”中获取信息(%s):"
+msgstr "从组件\"%2$s:%3$s\"(%4$s)中获取信息 #%1$u:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "从组件“%s”中获取信息(%s):"
+msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "获取信息 #%"
+msgstr "获取信息 #%u (%s):"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -923,14 +913,14 @@ msgstr "找到标识    :由组件“%s”找到。\n"
 
 #, fuzzy, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "找到标识    :由组件“%s:%s”找到。\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "找到标识    :由组件“%s”找到。\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "找到标识\n"
 
 #, c-format
 msgid ""

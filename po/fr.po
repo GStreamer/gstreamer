@@ -1,16 +1,16 @@
 # Translation of GStreamer to French
-# Copyright (C) 2003-2009 GStreamer core team
+# Copyright (C) 2003-2010 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
-# Claude Paroz <claude@2xlibre.net>, 2008-2009.
+# Claude Paroz <claude@2xlibre.net>, 2008-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-22 18:23+0200\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-01-30 21:23+0100\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
@@ -80,9 +80,9 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Désactive la mise à jour du registre"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Désactive l'utilisation de fork() lors de l'analyse du registre"
+msgstr ""
+"Désactive le lancement d'un processus annexe lors de l'analyse du registre"
 
 msgid "GStreamer Options"
 msgstr "Options de GStreamer"
@@ -626,55 +626,54 @@ msgstr ""
 "en mètres, conformément à WGS84 (zéro au niveau moyen de la mer)"
 
 msgid "show name"
-msgstr ""
+msgstr "nom d'émission"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Nom de l'émission TV, du podcast ou de la série d'où provient le média"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "nom d'artiste pour le tri"
+msgstr "nom d'émission pour le tri"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Nom de l'émission TV, du podcast ou de la série d'où provient le média, dans "
+"l'optique du tri"
 
-#, fuzzy
 msgid "episode number"
-msgstr "numéro de disque"
+msgstr "numéro d'épisode"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Le numéro d'épisode de la série dont fait partie le média"
 
-#, fuzzy
 msgid "season number"
-msgstr "numéro de disque"
+msgstr "numéro de saison"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Le numéro de la saison de l'émission dont fait partie le média"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licence"
+msgstr "paroles"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Les paroles du média, utilisé surtout pour les chansons"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "titre pour le tri"
+msgstr "nom du compositeur pour le tri"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "personne(s) responsable(s) de l'enregistrement, dans un but de tri"
+msgstr "personne(s) qui ont composé l'enregistrement, dans un but de tri"
 
 msgid "grouping"
-msgstr ""
+msgstr "regroupement"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Unité de groupe pour des médias qui contiennent plusieurs pistes, comme les "
+"différents morceaux d'un concerto. De plus haut niveau que la piste, mais de "
+"plus bas niveau que l'album"
 
 msgid ", "
 msgstr ", "
@@ -800,11 +799,11 @@ msgid "Failed after iterations as requested."
 msgstr "Échec suite aux itérations demandées."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Aucun répertoire temporaire indiqué."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Impossible d'obtenir des infos sur « %s »."
+msgstr "Impossible de créer le fichier temporaire « %s »."
 
 msgid "caps"
 msgstr "capacités"
@@ -840,7 +839,7 @@ msgid "controllable"
 msgstr "contrôlable"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Fichiers sur liste noire :"
 
 msgid "Total count: "
 msgstr "Nombre total :"
@@ -848,8 +847,8 @@ msgstr "Nombre total :"
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d fichier sur liste noire"
+msgstr[1] "%d fichiers sur liste noire"
 
 #, c-format
 msgid "%d plugin"
@@ -860,8 +859,8 @@ msgstr[1] "%d greffons"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d élément de liste noire"
+msgstr[1] "%d éléments de liste noire"
 
 #, c-format
 msgid "%d feature"
@@ -870,22 +869,21 @@ msgstr[0] "%d fonctionnalité"
 msgstr[1] "%d fonctionnalités"
 
 msgid "Print all elements"
-msgstr "Imprimer tous les éléments"
+msgstr "Affiche tous les éléments"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Affiche une liste des fichiers sur liste noire"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Imprime sous forme machine une liste de fonctionnalités offertes par le "
-"greffon spécifié.\n"
+"Affiche sous forme machine une liste de fonctionnalités offertes par le "
+"greffon indiqué ou tous les greffons.\n"
 "                                       Utile en lien avec des mécanismes "
-"d'installation automatique de greffons externes"
+"externes d'installation automatique de greffons"
 
 msgid "List the plugin contents"
 msgstr "Énumère le contenu du greffon"
@@ -1093,12 +1091,3 @@ msgstr "Définition du pipeline à NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Erreur lors de l'écriture du cache du registre vers %s : %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Erreur lors de la nouvelle analyse du registre %s : %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Erreur lors de la nouvelle analyse du registre %s"

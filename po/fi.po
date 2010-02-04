@@ -1,7 +1,7 @@
 # Finnish translations for gstreamer package.
 # Copyright (C) 2005, 2007-2008 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2005, 2007-2009.
+# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2005, 2007-2010.
 #
 # Words:
 #
@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-17 10:58+0300\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-01-27 17:50+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -80,9 +80,8 @@ msgstr "Ei muistialueen ylityksen tarkkailua liitännäisten latauksen aikana"
 msgid "Disable updating the registry"
 msgstr "Älä päivitä rekisteriä"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Älä käytä fork()-kutsua rekisterin skannauksessa"
+msgstr "Älä käynnistä apuprosessia rekisterin skannauksessa"
 
 msgid "GStreamer Options"
 msgstr "GStreamerin valitsimet"
@@ -629,55 +628,54 @@ msgstr ""
 "metreinä WGS84-koordinaateista (nolla on keskimääräinen merenpinta)"
 
 msgid "show name"
-msgstr ""
+msgstr "ohjelman nimi"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "TV/podcast/sarjan ohjelman nimi, josta tämä media on lähtöisin"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "esittäjä lajitteluun"
+msgstr "ohjelman lajittelunimi"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Lajitteluun käytettävä TV/podcast/sarjan ohjelman nimi, josta tämä media on "
+"lähtöisin"
 
-#, fuzzy
 msgid "episode number"
-msgstr "levynumero"
+msgstr "episodin numero"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Episodin numero kaudella, johon tämä media kuuluu"
 
-#, fuzzy
 msgid "season number"
-msgstr "levynumero"
+msgstr "Kauden numero"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Kauden numero ohjelmalle, johon tämä media kuuluu"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "lisenssi"
+msgstr "sanoitukset"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Median sanoitukset, yleensä käytössä lauluille"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "nimi lajitteluun"
+msgstr "säveltäjän lajittelunimi"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "nauhoituksesta vastuussa oleva(t) henkilö(t) lajittelua varten"
+msgstr "sävellyksestä vastuussa oleva(t) henkilö(t) lajittelua varten"
 
 msgid "grouping"
-msgstr ""
+msgstr "ryhmittely"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Ryhmittelee toisiinsa liittyvät media, jotka koostuvat useammasta raidasta, "
+"kuten konsertin eri osat. Tämä on korkeamman tason kuin raita, mutta "
+"matalamman tason kuin levy"
 
 msgid ", "
 msgstr ", "
@@ -803,11 +801,11 @@ msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Tilapäishakemistoa ei ole määritetty."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Ei saatu tietoja kohteesta \"%s\"."
+msgstr "Ei voitu luoda tilapäistiedostoa ”%s”."
 
 msgid "caps"
 msgstr "kyvyt"
@@ -843,7 +841,7 @@ msgid "controllable"
 msgstr "ohjattavissa"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Mustalistatut tiedostot:"
 
 msgid "Total count: "
 msgstr "Yhteismäärä: "
@@ -851,8 +849,8 @@ msgstr "Yhteismäärä: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d mustalistattu tiedosto"
+msgstr[1] "%d mustalistattua tiedostoa"
 
 #, c-format
 msgid "%d plugin"
@@ -863,8 +861,8 @@ msgstr[1] "%d liitännäistä"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d mustalistaustietue"
+msgstr[1] "%d mustalistaustietuetta"
 
 #, c-format
 msgid "%d feature"
@@ -876,9 +874,8 @@ msgid "Print all elements"
 msgstr "Tulosta kaikki elementit"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Tulista luettelo tiedostoista mustalla listalla"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"

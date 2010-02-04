@@ -1,15 +1,15 @@
 # Bulgarian translation of gstreamer.
-# Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Fondation, Inc.
+# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Fondation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009.
+# Alexander Shopov <ash@contact.bg>, 2005, 2006, 2007, 2008, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-19 12:04+0300\n"
-"Last-Translator: Alexander Shopov <ash@contact.bg>\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-01-29 14:48+0200\n"
+"Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -79,9 +79,8 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Регистърът да не се прочита"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "При прочитането на регистъра да не се ползва fork()"
+msgstr "Без стартирането на спомагателен процес при изчитането на регистъра"
 
 msgid "GStreamer Options"
 msgstr "Настройки на GStreamer"
@@ -614,65 +613,64 @@ msgstr ""
 "полукълбо)"
 
 msgid "geo location elevation"
-msgstr "географска височина"
+msgstr "надморска височина"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
-"географска височина на мястото на запис или създаване на медията в градуси "
+"надморска височина на мястото на запис или създаване на медията в метри "
 "според WGS84 (0 при средното морско равнище)"
 
 msgid "show name"
-msgstr ""
+msgstr "име на шоу"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
+"Името телевизионно или Интернет шоу, поредица от серии, от което е медията"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "име на изпълнител, ползва се при подреждане"
+msgstr "име на шоу за подреждане"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Името телевизионно или Интернет шоу, поредица от серии, от което е медията, "
+"ползва се при подреждане"
 
-#, fuzzy
 msgid "episode number"
-msgstr "номер на диска"
+msgstr "номер на епизода"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Номерът на епизода в поредицата за сезона"
 
-#, fuzzy
 msgid "season number"
-msgstr "номер на диска"
+msgstr "номер на сезона"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Номерът на сезона в поредицата, от която е медията"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "лиценз"
+msgstr "текст"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Текстът на медията, често се използва за песни"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "заглавие, ползва се при подреждане"
+msgstr "композитор при подреждане"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "отговорник/ци за записа, ползва се при подреждане"
+msgstr "Композитор/и за записа, ползва се при подреждане"
 
 msgid "grouping"
-msgstr ""
+msgstr "групиране"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Сбира в една група произведение, което е от няколко части, напр. частите на "
+"концерт. Това ниво е по-високо от песен, но по-ниско от албум."
 
 msgid ", "
 msgstr ", "
@@ -797,11 +795,11 @@ msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Не е указана временна папка"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Не може да се получи информация за „%s“."
+msgstr "Не може да се създаде временният файл „%s“."
 
 msgid "caps"
 msgstr "възможности"
@@ -837,7 +835,7 @@ msgid "controllable"
 msgstr "може да се контролира"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Забранени файлове:"
 
 msgid "Total count: "
 msgstr "Общ брой:"
@@ -845,8 +843,8 @@ msgstr "Общ брой:"
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d забранен файл"
+msgstr[1] "%d забранени файла"
 
 #, c-format
 msgid "%d plugin"
@@ -870,17 +868,16 @@ msgid "Print all elements"
 msgstr "Отпечатване на всички елементи"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Отпечатване на списъка със забранените файлове"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Отпечатване на списък с възможностите на указаната приставка във вид удобен "
-"за автоматичен анализ.\n"
+"Отпечатване на списък с възможностите на указаната приставка или всички "
+"приставки.\n"
 "                                       Удобно във връзка с външни механизми "
 "за автоматично инсталиране на приставки"
 
@@ -1090,12 +1087,3 @@ msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Конвейерът се освобождава…\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Грешка при запазването на кеша на регистъра в „%s“: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Грешка при повторното прочитане на регистъра „%s“: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Грешка при повторното прочитане на регистъра „%s“"

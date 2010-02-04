@@ -2,13 +2,13 @@
 # Copyright (c) 2006 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-26 17:05+0000\n"
-"PO-Revision-Date: 2009-09-17 23:54+0200\n"
+"POT-Creation-Date: 2010-02-04 16:49+0000\n"
+"PO-Revision-Date: 2010-02-01 15:04+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -76,9 +76,8 @@ msgstr "Szegmentálási hibák elfogásának letiltása a bővítménybetöltés
 msgid "Disable updating the registry"
 msgstr "A nyilvántartás frissítésének letiltása"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "A fork() hívás használatának letiltása a nyilvántartás elemzése közben"
+msgstr "Segédfolyamat indításának letiltása a nyilvántartás elemzése közben"
 
 msgid "GStreamer Options"
 msgstr "GStreamer beállításai"
@@ -624,55 +623,52 @@ msgstr ""
 "került méterben, a WGS84-nek megfelelően (nulla az átlagos tengerszinten)"
 
 msgid "show name"
-msgstr ""
+msgstr "műsornév"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "A tv/podcast/sorozat műsor neve, amelyből a média származik"
 
-#, fuzzy
 msgid "show sortname"
-msgstr "előadó rendezési neve"
+msgstr "műsor rendezési neve"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"A tv/podcast/sorozat műsor neve, amelyből a média származik, rendezési célra"
 
-#, fuzzy
 msgid "episode number"
-msgstr "lemezszám"
+msgstr "epizódszám"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Azon évadon belüli epizód száma, amelynek ez a média része"
 
-#, fuzzy
 msgid "season number"
-msgstr "lemezszám"
+msgstr "évadszám"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Azon műsor évadszáma, amelynek ez a média része"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licenc"
+msgstr "dalszöveg"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "A média dalszövege"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "cím rendezési neve"
+msgstr "szerző rendezési neve"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "a felvételért felelős személyek, rendezési céllal"
+msgstr "a felvételt szerző személyek, rendezési céllal"
 
 msgid "grouping"
-msgstr ""
+msgstr "csoportosítás"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Több számot átfogó média csoportosítása, például egy koncert különböző "
+"darabjai. Magasabb szintű a számnál, de alacsonyabb az albumnál"
 
 msgid ", "
 msgstr ", "
@@ -797,11 +793,11 @@ msgid "Failed after iterations as requested."
 msgstr "Ismétlések után kérésére meghiúsult."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Nincs megadva ideiglenes könyvtár."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nem kérhetők le információk a következőkről: „%s”."
+msgstr "Nem hozható létre a következő ideiglenes fájl: „%s”."
 
 msgid "caps"
 msgstr "képességek"
@@ -837,7 +833,7 @@ msgid "controllable"
 msgstr "vezérelhető"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Feketelistás fájlok:"
 
 msgid "Total count: "
 msgstr "Teljes szám: "
@@ -845,8 +841,8 @@ msgstr "Teljes szám: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d feketelistás fájl"
+msgstr[1] "%d feketelistás fájl"
 
 #, c-format
 msgid "%d plugin"
@@ -857,8 +853,8 @@ msgstr[1] "%d bővítmény"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d feketelista-bejegyzés"
+msgstr[1] "%d feketelista-bejegyzés"
 
 #, c-format
 msgid "%d feature"
@@ -870,9 +866,8 @@ msgid "Print all elements"
 msgstr "Az összes elem kiírása"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Feketelistás fájlok listájának kiírása"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
@@ -880,7 +875,7 @@ msgid ""
 "automatic plugin installation mechanisms"
 msgstr ""
 "A megadott bővítmény által biztosított szolgáltatások gépileg feldolgozható "
-"listájának nyomtatása.\n"
+"listájának kiírása.\n"
 "Külső bővítménytelepítési módszerekkel együtt hasznos."
 
 msgid "List the plugin contents"
@@ -1017,7 +1012,7 @@ msgid "Do not install a fault handler"
 msgstr "Ne telepítsen hibakezelőt"
 
 msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Foglalási nyomkövetés nyomtatása (ha fordításkor engedélyezték)"
+msgstr "Foglalási nyomkövetés kiírása (ha fordításkor engedélyezték)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "EOS kényszerítése a forrásokra az adatcsatorna leállítása előtt"
@@ -1083,21 +1078,3 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Hiba a nyilvántartás gyorsítótárának kiírása közben %s helyre: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Hiba a(z) %s nyilvántartás újraolvasása közben"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Belső GStreamer hiba: az állapotváltás meghiúsult."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Hiba a következő fájlleíróba íráskor: „%d”."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "A következő fájlleíró érvénytelen: „%d”."
