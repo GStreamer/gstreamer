@@ -129,7 +129,7 @@ enum
  */
 
 
-GST_DEBUG_CATEGORY_STATIC (gst_metadata_demux_debug);
+GST_DEBUG_CATEGORY (gst_metadata_demux_debug);
 #define GST_CAT_DEFAULT gst_metadata_demux_debug
 
 #define GOTO_DONE_IF_NULL(ptr) \

@@ -70,6 +70,9 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_metadata_demux_debug);
+#define GST_CAT_DEFAULT gst_metadata_demux_debug
+
 /*
  * defines and macros
  */

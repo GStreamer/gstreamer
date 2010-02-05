@@ -85,6 +85,9 @@
 #include <libiptcdata/iptc-jpeg.h>
 #endif
 
+GST_DEBUG_CATEGORY_EXTERN (gst_metadata_mux_debug);
+#define GST_CAT_DEFAULT gst_metadata_mux_debug
+
 /*
  * defines and macros
  */
