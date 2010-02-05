@@ -70,7 +70,7 @@ _make_buffers_out (GList * buffer_out, guint8 * test_data, gsize test_data_size)
   buffer = gst_buffer_new ();
   gst_buffer_set_data (buffer, test_data, test_data_size);
   gst_buffer_set_caps (buffer, gst_caps_new_simple ("image/jpeg", "parsed",
-          G_TYPE_BOOLEAN, TRUE, NULL));
+          G_TYPE_BOOLEAN, TRUE, "framerate", GST_TYPE_FRACTION, 1, 1, NULL));
   buffer_out = g_list_append (buffer_out, buffer);
   return buffer_out;
 }
