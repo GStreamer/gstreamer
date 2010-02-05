@@ -88,6 +88,7 @@ struct _GstQTDemux {
   /* offset of the mdat atom */
   guint64 mdatoffset;
   guint64 first_mdat;
+  gboolean got_moov;
 
   GstTagList *tag_list;
 

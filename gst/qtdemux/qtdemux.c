@@ -488,6 +488,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->adapter = gst_adapter_new ();
   qtdemux->offset = 0;
   qtdemux->first_mdat = -1;
+  qtdemux->got_moov = FALSE;
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -1675,6 +1676,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->posted_redirect = FALSE;
       qtdemux->offset = 0;
       qtdemux->first_mdat = -1;
+      qtdemux->got_moov = FALSE;
       qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
       if (qtdemux->mdatbuffer)
         gst_buffer_unref (qtdemux->mdatbuffer);
@@ -3177,6 +3179,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         if (fourcc == FOURCC_moov) {
           GST_DEBUG_OBJECT (demux, "Parsing [moov]");
 
+          demux->got_moov = TRUE;
+
           qtdemux_parse_moov (demux, data, demux->neededbytes);
           qtdemux_node_dump (demux, demux->moov_node);
           qtdemux_parse_tree (demux);
@@ -3216,7 +3220,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
           gst_adapter_flush (demux->adapter, demux->neededbytes);
 
-          if (demux->first_mdat != -1) {
+          if (demux->got_moov && demux->first_mdat != -1) {
             gboolean res;
 
             /* we need to seek back */
