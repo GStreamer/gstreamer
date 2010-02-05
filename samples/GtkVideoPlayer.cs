@@ -1,5 +1,6 @@
-// Authors
+﻿// Authors
 //   Copyright (C) 2008 Paul Burton <paulburton89@gmail.com>
+//   Copyright (C) 2010 Andoni Morales <ylatuya@gmail.com>
 using System;
 using System.Runtime.InteropServices;
 
@@ -162,7 +163,17 @@ public class MainWindow : Gtk.Window {
         }
       };
 
-      _playbin["uri"] = "file://" + dialog.Filename;
+      switch (System.Environment.OSVersion.Platform) {
+        case PlatformID.Unix:
+          _playbin["uri"] = "file://" + dialog.Filename;
+          break;
+        case PlatformID.Win32NT:
+        case PlatformID.Win32S:
+        case PlatformID.Win32Windows:
+        case PlatformID.WinCE:
+          _playbin["uri"] = "file:///" + dialog.Filename.Replace("\\","/");
+          break;
+      }
 
       StateChangeReturn sret = _playbin.SetState (Gst.State.Playing);
 
