@@ -178,7 +178,7 @@ metadata_chunk_array_append_sorted (MetadataChunkArray * array,
   }
   pos = array->len;
   for (i = array->len - 1; i >= 0; --i) {
-    if (chunk->offset_orig > array->chunk[i].offset_orig) {
+    if (chunk->offset_orig >= array->chunk[i].offset_orig) {
       break;
     }
   }
