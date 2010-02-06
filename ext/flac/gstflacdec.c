@@ -1271,8 +1271,8 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
   dec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (dec, "buffer with ts=%" GST_TIME_FORMAT ", end_offset=%"
-      G_GINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_BUFFER_OFFSET_END (buf));
+      G_GINT64_FORMAT ", size=%u", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_BUFFER_OFFSET_END (buf), GST_BUFFER_SIZE (buf));
 
   if (dec->init) {
     GST_DEBUG_OBJECT (dec, "initializing decoder");
@@ -1286,9 +1286,7 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     }
     GST_DEBUG_OBJECT (dec, "initialized (framed=%d)", dec->framed);
     dec->init = FALSE;
-  }
-
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+  } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     /* Clear the adapter and the decoder */
     gst_adapter_clear (dec->adapter);
     FLAC__stream_decoder_flush (dec->decoder);
