@@ -30,7 +30,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "jpegparse", GST_RANK_PRIMARY + 1,
+  if (!gst_element_register (plugin, "jpegparse", GST_RANK_NONE,
           GST_TYPE_JPEG_PARSE))
     return FALSE;
   if (!gst_element_register (plugin, "jifmux", GST_RANK_NONE, GST_TYPE_JIF_MUX))
