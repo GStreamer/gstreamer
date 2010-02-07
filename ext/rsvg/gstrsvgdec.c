@@ -32,14 +32,15 @@ static GstStaticPadTemplate sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/svg+xml; image/svg"));
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_BGRA
+#else
+#define GST_RSVG_VIDEO_CAPS GST_VIDEO_CAPS_ARGB
+#endif
+
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA)
-#else
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB)
-#endif
-    );
+    GST_STATIC_CAPS (GST_RSVG_VIDEO_CAPS));
 
 GST_BOILERPLATE (GstRsvgDec, gst_rsvg_dec, GstElement, GST_TYPE_ELEMENT);
 
