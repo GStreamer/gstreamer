@@ -1070,8 +1070,16 @@ moov_recov_write_file (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
 
   data = g_malloc (4096);
   while (!feof (mdatrf->file)) {
-    gint read = fread (data, 1, 4096, mdatrf->file);
-    fwrite (data, 1, read, outf);
+    gint read, write;
+
+    read = fread (data, 1, 4096, mdatrf->file);
+    write = fwrite (data, 1, read, outf);
+
+    if (write != read) {
+      g_set_error (err, ATOMS_RECOV_QUARK, ATOMS_RECOV_ERR_FILE,
+          "Failed to copy data to output file: %s", g_strerror (errno));
+      goto fail;
+    }
   }
   g_free (data);
 
