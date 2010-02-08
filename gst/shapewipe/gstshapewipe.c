@@ -1073,10 +1073,24 @@ gst_shape_wipe_video_sink_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event)
 {
+  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+
   GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      g_mutex_lock (self->mask_mutex);
+      gst_buffer_replace (&self->mask, NULL);
+      g_mutex_unlock (self->mask_mutex);
+      break;
+    default:
+      break;
+  }
 
   /* Dropping all events here */
   gst_event_unref (event);
+
+  gst_object_unref (self);
   return TRUE;
 }
 
