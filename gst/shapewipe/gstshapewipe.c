@@ -751,7 +751,7 @@ gst_shape_wipe_do_qos (GstShapeWipe * self, GstClockTime timestamp)
 }
 
 #define CREATE_AYUV_FUNCTIONS(depth, shift) \
-static GstFlowReturn \
+static void \
 gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     GstBuffer * maskbuf, GstBuffer * outbuf) \
 { \
@@ -813,15 +813,13 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     } \
     mask += mask_increment; \
   } \
-  \
-  return GST_FLOW_OK; \
 }
 
 CREATE_AYUV_FUNCTIONS (16, 0);
 CREATE_AYUV_FUNCTIONS (8, 8);
 
 #define CREATE_ARGB_FUNCTIONS(depth, name, shift, a, r, g, b) \
-static GstFlowReturn \
+static void \
 gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     GstBuffer * maskbuf, GstBuffer * outbuf) \
 { \
@@ -883,8 +881,6 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     } \
     mask += mask_increment; \
   } \
-  \
-  return GST_FLOW_OK; \
 }
 
 CREATE_ARGB_FUNCTIONS (16, argb, 0, 0, 1, 2, 3);
@@ -903,7 +899,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   gboolean new_outbuf = FALSE;
 
   if (G_UNLIKELY (self->fmt == GST_VIDEO_FORMAT_UNKNOWN))
-    return GST_FLOW_NOT_NEGOTIATED;
+    goto not_negotiated;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   timestamp =
@@ -917,41 +913,31 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (timestamp), self->mask_position);
 
   g_mutex_lock (self->mask_mutex);
-  if (self->shutdown) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
-  }
+  if (self->shutdown)
+    goto shutdown;
 
   if (!self->mask)
     g_cond_wait (self->mask_cond, self->mask_mutex);
 
-  if (self->mask == NULL) {
-    g_mutex_unlock (self->mask_mutex);
-    gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+  if (self->mask == NULL || self->shutdown) {
+    goto shutdown;
   } else {
     mask = gst_buffer_ref (self->mask);
   }
   g_mutex_unlock (self->mask_mutex);
 
-  if (!gst_shape_wipe_do_qos (self, GST_BUFFER_TIMESTAMP (buffer))) {
-    gst_buffer_unref (buffer);
-    gst_buffer_unref (mask);
-    return GST_FLOW_OK;
-  }
+  if (!gst_shape_wipe_do_qos (self, GST_BUFFER_TIMESTAMP (buffer)))
+    goto qos;
 
   /* Try to blend inplace, if it's not possible
-   * get a new buffer from downstream.
-   */
+   * get a new buffer from downstream. */
   if (!gst_buffer_is_writable (buffer)) {
     ret =
         gst_pad_alloc_buffer_and_set_caps (self->srcpad, GST_BUFFER_OFFSET_NONE,
         GST_BUFFER_SIZE (buffer), GST_PAD_CAPS (self->srcpad), &outbuf);
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      gst_buffer_unref (buffer);
-      gst_buffer_unref (mask);
-      return ret;
-    }
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
+
     gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_ALL);
     new_outbuf = TRUE;
   } else {
@@ -959,17 +945,17 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (self->fmt == GST_VIDEO_FORMAT_AYUV && self->mask_bpp == 16)
-    ret = gst_shape_wipe_blend_ayuv_16 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_ayuv_16 (self, buffer, mask, outbuf);
   else if (self->fmt == GST_VIDEO_FORMAT_AYUV)
-    ret = gst_shape_wipe_blend_ayuv_8 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_ayuv_8 (self, buffer, mask, outbuf);
   else if (self->fmt == GST_VIDEO_FORMAT_ARGB && self->mask_bpp == 16)
-    ret = gst_shape_wipe_blend_argb_16 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_argb_16 (self, buffer, mask, outbuf);
   else if (self->fmt == GST_VIDEO_FORMAT_ARGB)
-    ret = gst_shape_wipe_blend_argb_8 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_argb_8 (self, buffer, mask, outbuf);
   else if (self->fmt == GST_VIDEO_FORMAT_BGRA && self->mask_bpp == 16)
-    ret = gst_shape_wipe_blend_bgra_16 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_bgra_16 (self, buffer, mask, outbuf);
   else if (self->fmt == GST_VIDEO_FORMAT_BGRA)
-    ret = gst_shape_wipe_blend_bgra_8 (self, buffer, mask, outbuf);
+    gst_shape_wipe_blend_bgra_8 (self, buffer, mask, outbuf);
   else
     g_assert_not_reached ();
 
@@ -977,12 +963,35 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
   if (new_outbuf)
     gst_buffer_unref (buffer);
 
-  if (ret != GST_FLOW_OK) {
-    gst_buffer_unref (outbuf);
-    return ret;
-  }
-
   ret = gst_pad_push (self->srcpad, outbuf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto push_failed;
+
+  return ret;
+
+  /* Errors */
+not_negotiated:
+  GST_ERROR_OBJECT (self, "No valid caps yet");
+  gst_buffer_unref (buffer);
+  return GST_FLOW_NOT_NEGOTIATED;
+shutdown:
+  GST_DEBUG_OBJECT (self, "Shutting down");
+  gst_buffer_unref (buffer);
+  return GST_FLOW_WRONG_STATE;
+qos:
+  GST_DEBUG_OBJECT (self, "Dropping buffer because of QoS");
+  gst_buffer_unref (buffer);
+  gst_buffer_unref (mask);
+  return GST_FLOW_OK;
+alloc_failed:
+  GST_ERROR_OBJECT (self, "Buffer allocation from downstream failed: %s",
+      gst_flow_get_name (ret));
+  gst_buffer_unref (buffer);
+  gst_buffer_unref (mask);
+  return ret;
+push_failed:
+  GST_ERROR_OBJECT (self, "Pushing buffer downstream failed: %s",
+      gst_flow_get_name (ret));
   return ret;
 }
 
