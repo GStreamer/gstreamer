@@ -92,6 +92,9 @@ enum
   PROP_BORDER
 };
 
+#define DEFAULT_POSITION 0.0
+#define DEFAULT_BORDER 0.0
+
 static GstStaticPadTemplate video_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
@@ -153,11 +156,11 @@ gst_shape_wipe_class_init (GstShapeWipeClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_POSITION,
       g_param_spec_float ("position", "Position", "Position of the mask",
-          0.0, 1.0, 0.0,
+          0.0, 1.0, DEFAULT_POSITION,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_BORDER,
       g_param_spec_float ("border", "Border", "Border of the mask",
-          0.0, 1.0, 0.0,
+          0.0, 1.0, DEFAULT_BORDER,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   gstelement_class->change_state =
@@ -277,8 +280,6 @@ gst_shape_wipe_reset (GstShapeWipe * self)
 
   self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
   self->width = self->height = 0;
-  self->mask_position = 0.0;
-  self->mask_border = 0.0;
   self->mask_bpp = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
