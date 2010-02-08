@@ -2475,6 +2475,21 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
       return;
     }
   }
+  /* STM */
+  if ((data = gst_type_find_peek (tf, 20, 8)) != NULL) {
+    if (strncasecmp ((gchar *) data, "!Scream!", 8) == 0 ||
+        strncasecmp ((gchar *) data, "BMOD2STM", 8) == 0) {
+      guint8 *id, *stmtype;
+
+      if ((id = gst_type_find_peek (tf, 28, 1)) == NULL)
+        return;
+      if ((stmtype = gst_type_find_peek (tf, 29, 1)) == NULL)
+        return;
+      if (*id == 0x1A && *stmtype == 2)
+        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
+      return;
+    }
+  }
 }
 
 /*** application/x-shockwave-flash ***/
