@@ -44,7 +44,7 @@ gst_my_filter_change_state (GstElement * element, GstStateChange transition)
   <para>
     Obviously, the above doesn't do much useful. Instead of printing that the
     data is in, you would normally process the data there. Remember, however,
-    that buffers are not always writable. In more advanced elements (the ones
+    that buffers are not always writeable. In more advanced elements (the ones
     that do event processing), you may want to additionally specify an event
     handling function, which will be called when stream-events are sent (such
     as end-of-stream, discontinuities, tags, etc.).

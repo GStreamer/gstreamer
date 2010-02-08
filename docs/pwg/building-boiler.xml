@@ -199,7 +199,7 @@ GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
     </para>
     <itemizedlist>
       <listitem><para>
-        A long, english, name for the element.
+        A long, English, name for the element.
       </para></listitem><listitem><para>
         The type of the element, see the docs/design/draft-klass.txt document
         in the GStreamer core source tree for details and examples.

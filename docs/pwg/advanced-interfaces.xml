@@ -53,7 +53,7 @@
   <sect1 id="section-iface-general" xreflabel="How to Implement Interfaces">
     <title>How to Implement Interfaces</title>
     <para>
-      Implementing interfaces is intiated in the <function>_get_type ()</function>
+      Implementing interfaces is initiated in the <function>_get_type ()</function>
       of your element. You can register one or more interfaces after having
       registered the type itself. Some interfaces have dependencies on other
       interfaces or can only be registered by certain types of elements. You
@@ -325,7 +325,7 @@ gst_my_filter_mixer_interface_init (GstMixerClass *iface)
     <para>
       This interface requires the <ulink type="http"
       url="../../gstreamer/html/GstImplementsInterface.html"><classname>
-      GstImplemensInterface</classname></ulink>
+      GstImplementsInterface</classname></ulink>
       interface to work correctly.
     </para>
     <para>
@@ -365,7 +365,7 @@ gst_my_filter_get_type (void)
 				 &amp;implements_interface_info);
     g_type_add_interface_static (my_filter_type,
 				 GST_TYPE_TUNER,
-				 &amp;tunerr_interface_info);
+				 &amp;tuner_interface_info);
 [..]
 }
 
@@ -477,7 +477,7 @@ gst_my_filter_tuner_interface_init (GstTunerClass *iface)
       the property to create a <classname>GValueArray</classname>, and one to
       retrieve the current <classname>GValueArray</classname>. Those two are
       separated because probing might take a long time (several seconds). Also,
-      this simpliies interface implementation in elements. For the application,
+      this simplifies interface implementation in elements. For the application,
       there are functions that wrap those two. For more information on this,
       have a look at the API reference for the
       <!-- FIXME: add link, but this is in ./gst-plugins/gst-libs/gst/propertyprobe/propertyprobe.c-->
@@ -624,7 +624,7 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
       An X Overlay is basically a video output in a XFree86 drawable. Elements
       implementing this interface will draw video in a X11 window. Through this
       interface, applications will be proposed 2 different modes to work with
-      a plugin implemeting it. The first mode is a passive mode where the plugin
+      a plugin implementing it. The first mode is a passive mode where the plugin
       owns, creates and destroys the X11 window. The second mode is an active
       mode where the application handles the X11 window creation and then tell
       the plugin where it should output video. Let's get a bit deeper in those
@@ -635,7 +635,7 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
       window at one stage or another. Passive mode simply means that no window
       has been given to the plugin before that stage, so the plugin created the
       window by itself. In that case the plugin is responsible of destroying
-      that window when it's not needed anymore and it has to tell the 
+      that window when it's not needed any more and it has to tell the
       applications that a window has been created so that the application can
       use it. This is done using the <classname>have_xwindow_id</classname>
       signal that can be emitted from the plugin with the

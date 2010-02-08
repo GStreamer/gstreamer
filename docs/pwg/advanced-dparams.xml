@@ -6,8 +6,8 @@
   <para>
     Sometimes object properties are not powerful enough to control the
     parameters that affect the behaviour of your element.
-    When this is the case you can mark these parameters as beeing Controllable.
-    Aware appliations can use the controller subsystem to dynamically adjust
+    When this is the case you can mark these parameters as being Controllable.
+    Aware applications can use the controller subsystem to dynamically adjust
     the property values over time.
   </para>
 
@@ -77,7 +77,7 @@
   <sect2 id="chapter-dparam-loop-video">
     <title>The Data Processing Loop for Video Elements</title>
     <para>
-      For video processing elements it is the best to synchonise for every frame.
+      For video processing elements it is the best to synchronise for every frame.
       That means one would add the <function>gst_object_sync_values()</function>
       call described in the previous section to the data processing function of
       the element.
@@ -93,7 +93,7 @@
       standard audio it will be 44100 samples.
       It is rarely useful to synchronise controllable parameters that often. 
       The easiest solution is also to have just one synchronisation call per
-      buffer processing. This makes the control-rate dependend on the buffer 
+      buffer processing. This makes the control-rate depend on the buffer
       size.
     </para>
     <para>

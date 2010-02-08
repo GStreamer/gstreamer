@@ -89,7 +89,7 @@
       In order for a random data file to be recognized and played back as
       such, we need a way of recognizing their type out of the blue. For this
       purpose, <quote>typefinding</quote> was introduced. Typefinding is the
-      process of detecting the type of a datastream. Typefinding consists of
+      process of detecting the type of a data stream. Typefinding consists of
       two separate parts: first, there's an unlimited number of functions
       that we call <emphasis>typefind functions</emphasis>, which are each
       able to recognize one or more types from an input stream. Then,
@@ -486,7 +486,7 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry morerows="3">audio/mpeg</entry>
             <entry morerows="3">
-              Audio data compressed using the MPEG audio encoding scehem.
+              Audio data compressed using the MPEG audio encoding scheme.
             </entry>
             <entry>mpegversion</entry>
             <entry>integer</entry>
@@ -1060,7 +1060,7 @@ plugin_init (GstPlugin *plugin)
             <entry>integer</entry>
             <entry>1 to 64</entry>
             <entry>
-              Bitdepth of the used palette. This means that the palette
+              Bit depth of the used palette. This means that the palette
               that belongs to this format defines 2^depth colors.
             </entry>
           </row>

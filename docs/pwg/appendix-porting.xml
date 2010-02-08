@@ -39,7 +39,7 @@
           Most functions returning an object or an object property have
           been changed to return its own reference rather than a constant
           reference of the one owned by the object itself. The reason for
-          this change is primarily threadsafety. This means effectively
+          this change is primarily thread-safety. This means effectively
           that return values of functions such as
           <function>gst_element_get_pad ()</function>,
           <function>gst_pad_get_name ()</function>,
@@ -123,7 +123,7 @@
           <symbol>GST_STATE_PLAYING</symbol> have changed for elements that
           are not sink elements. Non-sink elements need to be able to accept
           and process data already in the <symbol>GST_STATE_PAUSED</symbol> 
-          state now (ie. when prerolling the pipeline). More details can be
+          state now (i.e. when prerolling the pipeline). More details can be
           found in <xref linkend="chapter-statemanage-states"/>.
         </para>
       </listitem>

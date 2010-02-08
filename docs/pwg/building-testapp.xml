@@ -28,7 +28,7 @@
       calling <function>gst_init ()</function>. You can alternatively call
       <function>gst_init_with_popt_tables ()</function>, which will return
       a pointer to popt tables. You can then use libpopt to handle the
-      given argument table, and this will finish the &GStreamer; intialization.
+      given argument table, and this will finish the &GStreamer; initialization.
     </para>
 
     <para>
@@ -97,7 +97,7 @@ bus_call (GstBus     *bus,
       g_error_free (err);
 
       if (debug) {
-        g_print ("Debug deails: %s\n", debug);
+        g_print ("Debug details: %s\n", debug);
         g_free (debug);
       }
 

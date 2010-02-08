@@ -43,7 +43,7 @@
       contain so that data flows smoothly. Another type of bin, called
       <emphasis>autoplugger</emphasis> elements, automatically add other
       elements to the bin and links them together so that they act as a
-      filter between two arbitary stream types.
+      filter between two arbitrary stream types.
     </para>
     <para>
       The plugin mechanism is used everywhere in &GStreamer;, even if only the
@@ -165,7 +165,7 @@
     <para>
       Events
       contain information on the state of the stream flowing between the two
-      linked pads. Events will only be sent if the element explicitely supports
+      linked pads. Events will only be sent if the element explicitly supports
       them, else the core will (try to) handle the events automatically. Events
       are used to indicate, for example, a clock discontinuity, the end of a
       media stream or that the cache should be flushed.
@@ -215,7 +215,7 @@
 	buffers created by filesrc act exactly like generic buffers, except
 	that they are read-only.  The buffer freeing code automatically
 	determines the correct method of freeing the underlying memory.
-	Downstream elements that recieve these kinds of buffers do not
+	Downstream elements that receive these kinds of buffers do not
 	need to do anything special to handle or unreference it.
       </para>
       <para>

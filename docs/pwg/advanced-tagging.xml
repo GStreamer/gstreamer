@@ -28,7 +28,7 @@
     Examples are <quote>codec</quote> or <quote>bitrate</quote>. Note that some
     container formats (like ID3) store various streaminfo tags as metadata in
     the file container, which means that they can be changed so that they don't
-    match the content in the file anymore. Still, they are called metadata
+    match the content in the file any more. Still, they are called metadata
     because <emphasis>technically</emphasis>, they can be changed without
     re-encoding the whole stream, even though that makes them invalid. Files
     with such metadata tags will have the same tag twice: once as metadata,

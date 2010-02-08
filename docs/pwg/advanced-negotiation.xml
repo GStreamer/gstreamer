@@ -19,13 +19,13 @@
     <para>
       Let's take the case of a file source, linked to a demuxer, linked to a
       decoder, linked to a converter with a caps filter and finally an audio
-      output. When dataflow originally starts, the demuxer will parse the
+      output. When data flow originally starts, the demuxer will parse the
       file header (e.g. the Ogg headers), and notice that there is, for
       example, a Vorbis stream in this Ogg file. Noticing that, it will
       create an output pad for the Vorbis elementary stream and set a
       Vorbis-caps on it. Lastly, it adds the pad. As of this point, the pad
       is ready to be used to stream data, and so the Ogg demuxer is now done.
-      This pad is <emphasis>not</emphasis> re-negotiatable, since the type of
+      This pad is <emphasis>not</emphasis> re-negotiable, since the type of
       the data stream is embedded within the data.
     </para>
     <para>
@@ -58,13 +58,13 @@
     <para>
       In order for caps negotiation on non-fixed links to work correctly,
       pads can optionally implement a function that tells peer elements what
-      formats it supports and/or preferes. When upstream renegotiation is
+      formats it supports and/or prefers. When upstream renegotiation is
       triggered, this becomes important.
     </para>
     <para>
       Downstream elements are notified of a newly set caps only when data
       is actually passing their pad. This is because caps is attached to
-      buffers during dataflow. So when the vorbis decoder sets a caps on
+      buffers during data flow. So when the vorbis decoder sets a caps on
       its source pad (to configure the output format), the converter will
       not yet be notified. Instead, the converter will only be notified
       when the decoder pushes a buffer over its source pad to the converter.
@@ -112,7 +112,7 @@
     </programlisting>
     <para>
       Elements that could implement fixed caps (on their source pads) are,
-      in general, all elements that are not renegotiatable. Examples include:
+      in general, all elements that are not renegotiable. Examples include:
     </para>
     <itemizedlist>
       <listitem>
@@ -125,14 +125,14 @@
         <para>
           Pretty much all demuxers, since the contained elementary data
           streams are defined in the file headers, and thus not
-          renegotiatable.
+          renegotiable.
         </para>
       </listitem>
       <listitem>
         <para>
-          Some decoders, where the format is embedded in the datastream
+          Some decoders, where the format is embedded in the data stream
           and not part of the peercaps <emphasis>and</emphasis> where the
-          decoder itself is not reconfigureable, too.
+          decoder itself is not reconfigurable, too.
         </para>
       </listitem>
     </itemizedlist>
@@ -316,7 +316,7 @@ gst_my_filter_chain (GstPad    *pad,
         does not contain the information required to know the output format
         yet; rather, the data headers need to be parsed, too. In many cases,
         fixed-caps will be enough, but in some cases, particularly in cases
-        where such decoders are renegotiatable, it is also possible to use
+        where such decoders are renegotiable, it is also possible to use
         full caps negotiation.
       </para>
       <para>
@@ -370,7 +370,7 @@ gst_my_filter_chain (GstPad    *pad,
       </listitem>
       <listitem>
         <para>
-          Elements that are renegotiatable should implement a
+          Elements that are renegotiable should implement a
           <quote>setcaps</quote>-function on their sourcepad as well.
         </para>
       </listitem>

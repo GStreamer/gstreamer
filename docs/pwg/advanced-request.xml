@@ -190,7 +190,7 @@ gst_my_filter_loopfunc (GstElement *element)
     <para>
       Note that we use a lot of checks everywhere to make sure that the content
       in the file is valid. This has two purposes: first, the file could be
-      erronous, in which case we prevent a crash. The second and most important
+      erroneous, in which case we prevent a crash. The second and most important
       reason is that - in extreme cases - the file could be used maliciously to
       cause undefined behaviour in the plugin, which might lead to security
       issues. <emphasis>Always</emphasis> assume that the file could be used to

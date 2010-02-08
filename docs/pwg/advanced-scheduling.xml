@@ -68,7 +68,7 @@
           function will have random data access (through
           <function>gst_pad_get_range ()</function>) over all sinkpads, and
           can push data over the sourcepads, which effectively means that
-          this element controls dataflow in the pipeline. Prerequisites for
+          this element controls data flow in the pipeline. Prerequisites for
           this mode are that all downstream elements can act in chain-based
           mode, and that all upstream elements allow random access (see below).
           Source elements can be told to act in this mode if their sourcepads
@@ -83,7 +83,7 @@
           start a task on their own. Rather, it means that they are pull
           slave for the downstream element, and have to provide random data
           access to it from their <function>_get_range ()</function>-function.
-          Requiremenents are that the a <function>_get_range
+          Requirements are that the a <function>_get_range
           ()</function>-function was set on this pad using the function
           <function>gst_pad_set_getrange_function ()</function>. Also, if
           the element has any sinkpads, all those pads (and thereby their
@@ -105,7 +105,7 @@
     <para>
       Sinkpads assigned to operate in pull-based mode, while none of its
       sourcepads operate in pull-based mode (or it has no sourcepads), can
-      start a task that will drive the pipeline dataflow. Within this
+      start a task that will drive the pipeline data flow. Within this
       function, those elements have random access over all of their sinkpads,
       and push data over their sourcepads. This can come in useful for
       several different kinds of elements:
@@ -123,7 +123,7 @@
       <listitem>
         <para>
           Certain kind of audio outputs, which require control over their
-          input dataflow, such as the Jack sound server.
+          input data flow, such as the Jack sound server.
         </para>
       </listitem>
     </itemizedlist>

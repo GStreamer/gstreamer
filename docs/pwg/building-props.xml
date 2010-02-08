@@ -101,7 +101,7 @@ gst_my_filter_get_property (GObject    *object,
   <para>
     The above is a very simple example of how arguments are used. Graphical
     applications - for example GStreamer Editor - will use these properties
-    and will display a user-controlleable widget with which these properties
+    and will display a user-controllable widget with which these properties
     can be changed. This means that - for the property to be as user-friendly
     as possible - you should be as exact as possible in the definition of the
     property. Not only in defining ranges in between which valid properties

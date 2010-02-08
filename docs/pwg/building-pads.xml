@@ -19,7 +19,7 @@
     you have to set a <function>_setcaps ()</function> function pointer and
     optionally a <function>_getcaps ()</function> function pointer. Also, you
     have to set a <function>_chain ()</function> function pointer.
-    Alternatively, pads can also operate in looping mode, which mans that they
+    Alternatively, pads can also operate in looping mode, which means that they
     can pull data themselves. More on this topic later. After that, you have
     to register the pad with the element. This happens like this:
   </para>
