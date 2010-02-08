@@ -16,8 +16,10 @@ EXPORTS
 	gst_tag_image_type_get_type
 	gst_tag_list_add_id3_image
 	gst_tag_list_from_vorbiscomment_buffer
+	gst_tag_list_from_xmp_buffer
 	gst_tag_list_new_from_id3v1
 	gst_tag_list_to_vorbiscomment_buffer
+	gst_tag_list_to_xmp_buffer
 	gst_tag_parse_extended_comment
 	gst_tag_register_musicbrainz_tags
 	gst_tag_to_id3_tag

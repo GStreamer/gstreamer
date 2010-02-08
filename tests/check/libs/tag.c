@@ -749,6 +749,110 @@ GST_START_TEST (test_language_utils)
 
 GST_END_TEST;
 
+GST_START_TEST (test_xmp_formatting)
+{
+  GstTagList *list;
+  GstBuffer *buf;
+  const gchar *text;
+  guint len;
+
+  /* test data */
+  list = gst_tag_list_new_full (GST_TAG_TITLE, "test title",
+      GST_TAG_DESCRIPTION, "test decription",
+      GST_TAG_KEYWORDS, "keyword1", GST_TAG_KEYWORDS, "keyword2", NULL);
+
+  buf = gst_tag_list_to_xmp_buffer (list, FALSE);
+  fail_unless (buf != NULL);
+
+  text = (const gchar *) GST_BUFFER_DATA (buf);
+  len = GST_BUFFER_SIZE (buf);
+
+  /* check the content */
+  fail_unless (g_strrstr_len (text, len, "<?xpacket begin") == text);
+  fail_unless (g_strrstr_len (text, len, ">test title<") != NULL);
+  fail_unless (g_strrstr_len (text, len, ">test decription<") != NULL);
+  fail_unless (g_strrstr_len (text, len, ">keyword1<") != NULL);
+  fail_unless (g_strrstr_len (text, len, ">keyword2<") != NULL);
+  fail_unless (g_strrstr_len (text, len, "<?xpacket end") != NULL);
+
+  gst_buffer_unref (buf);
+  gst_tag_list_free (list);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_xmp_parsing)
+{
+  GstTagList *list;
+  GstBuffer *buf;
+  guint i, result_size;
+  gchar *text;
+  const gchar *xmp_header =
+      "<?xpacket begin=\"\xEF\xBB\xBF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
+      "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"GStreamer\">"
+      "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">";
+  const gchar *xmp_footer =
+      "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>\n";
+  struct
+  {
+    const gchar *xmp_data;
+    gint result_size;
+    gint result_test;
+  } test_data[] = {
+    {
+    "", -1, -1}, {
+    "<rdf:Description rdf:about=\"\" />", 0, -1}, {
+    "<rdf:Description rdf:about=\"\"></rdf:Description>", 0, -1}, {
+    "<rdf:Description    rdf:about=\"\"    ></rdf:Description>", 0, -1}, {
+    "<rdf:Description rdf:about=\"\"><dc:description>test</dc:description></rdf:Description>",
+          1, 0}, {
+    "<rdf:Description rdf:about=\"\" dc:description=\"test\"></rdf:Description>",
+          1, 0}, {
+    NULL, -1, -1}
+  };
+
+  /* test data */
+  buf = gst_buffer_new ();
+
+  i = 0;
+  while (test_data[i].xmp_data) {
+    GST_DEBUG ("trying test-data %u", i);
+
+    text = g_strconcat (xmp_header, test_data[i].xmp_data, xmp_footer, NULL);
+    GST_BUFFER_DATA (buf) = (guint8 *) text;
+    GST_BUFFER_SIZE (buf) = strlen (text) + 1;
+
+
+    list = gst_tag_list_from_xmp_buffer (buf);
+    if (test_data[i].result_size >= 0) {
+      fail_unless (list != NULL);
+
+      result_size = gst_structure_n_fields ((GstStructure *) list);
+      fail_unless (result_size == test_data[i].result_size);
+
+      /* check the taglist content */
+      switch (test_data[i].result_test) {
+        case 0:
+          ASSERT_TAG_LIST_HAS_STRING (list, "description", "test");
+          break;
+        default:
+          break;
+      }
+    }
+    if (list)
+      gst_tag_list_free (list);
+
+    g_free (text);
+    i++;
+  }
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 tag_suite (void)
 {
@@ -762,6 +866,8 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_id3_tags);
   tcase_add_test (tc_chain, test_id3v1_utf8_tag);
   tcase_add_test (tc_chain, test_language_utils);
+  tcase_add_test (tc_chain, test_xmp_formatting);
+  tcase_add_test (tc_chain, test_xmp_parsing);
   return s;
 }
 

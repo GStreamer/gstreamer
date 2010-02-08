@@ -219,6 +219,11 @@ gboolean                gst_tag_list_add_id3_image (GstTagList   * tag_list,
                                                     guint          image_data_len,
                                                     guint          id3_picture_type);
 
+/* functions to  convert GstBuffers with xmp packets contents to GstTagLists and back */
+GstTagList *            gst_tag_list_from_xmp_buffer  (const GstBuffer *  buffer);
+GstBuffer *             gst_tag_list_to_xmp_buffer    (const GstTagList * list,
+                                                       gboolean           read_only);
+
 /* other tag-related functions */
 
 gboolean                gst_tag_parse_extended_comment (const gchar  * ext_comment,
