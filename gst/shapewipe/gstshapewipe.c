@@ -917,13 +917,18 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
       GST_TIME_ARGS (timestamp), self->mask_position);
 
   g_mutex_lock (self->mask_mutex);
+  if (self->shutdown) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_WRONG_STATE;
+  }
+
   if (!self->mask)
     g_cond_wait (self->mask_cond, self->mask_mutex);
 
   if (self->mask == NULL) {
     g_mutex_unlock (self->mask_mutex);
     gst_buffer_unref (buffer);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_WRONG_STATE;
   } else {
     mask = gst_buffer_ref (self->mask);
   }
@@ -1007,13 +1012,18 @@ gst_shape_wipe_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->shutdown = FALSE;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* Unblock video sink chain function */
+      g_mutex_lock (self->mask_mutex);
+      self->shutdown = TRUE;
+      g_cond_signal (self->mask_cond);
+      g_mutex_unlock (self->mask_mutex);
+      break;
     default:
       break;
   }
-
-  /* Unblock video sink chain function */
-  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
-    g_cond_signal (self->mask_cond);
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
     ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);

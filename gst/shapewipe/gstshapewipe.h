@@ -62,6 +62,8 @@ struct _GstShapeWipe
   GstVideoFormat fmt;
   gint width, height;
 
+  gboolean shutdown;
+
   gdouble proportion;
   GstClockTime earliest_time;
   GstClockTime frame_duration;
