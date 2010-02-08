@@ -276,7 +276,9 @@ gst_shape_wipe_reset (GstShapeWipe * self)
     gst_buffer_unref (self->mask);
   self->mask = NULL;
 
+  g_mutex_lock (self->mask_mutex);
   g_cond_signal (self->mask_cond);
+  g_mutex_unlock (self->mask_mutex);
 
   self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
   self->width = self->height = 0;
