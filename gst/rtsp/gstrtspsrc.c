@@ -5960,6 +5960,13 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
   gst_task_start (src->task);
 
+  /* mark discont */
+  GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    stream->discont = TRUE;
+  }
+
 done:
   GST_RTSP_STATE_UNLOCK (src);
 
