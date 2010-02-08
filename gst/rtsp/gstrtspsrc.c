@@ -3219,7 +3219,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           goto interrupt;
         case GST_RTSP_ETIMEOUT:
           /* send keep-alive, ignore the result, a warning will be posted. */
-          GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
+          GST_DEBUG_OBJECT (src, "timeout, sending keep-alive");
           gst_rtspsrc_send_keep_alive (src);
           continue;
         case GST_RTSP_EEOF:
