@@ -134,6 +134,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_faad_base_init (GstFaadClass * klass);
 static void gst_faad_class_init (GstFaadClass * klass);
 static void gst_faad_init (GstFaad * faad);
+static void gst_faad_reset (GstFaad * faad);
+
+static void clear_queued (GstFaad * faad);
 
 static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
@@ -203,20 +206,6 @@ gst_faad_class_init (GstFaadClass * klass)
 static void
 gst_faad_init (GstFaad * faad)
 {
-  faad->handle = NULL;
-  faad->samplerate = -1;
-  faad->channels = -1;
-  faad->tempbuf = NULL;
-  faad->need_channel_setup = TRUE;
-  faad->channel_positions = NULL;
-  faad->init = FALSE;
-  faad->next_ts = 0;
-  faad->prev_ts = GST_CLOCK_TIME_NONE;
-  faad->bytes_in = 0;
-  faad->sum_dur_out = 0;
-  faad->packetised = FALSE;
-  faad->error_count = 0;
-
   faad->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
   gst_pad_set_event_function (faad->sinkpad,
@@ -235,6 +224,31 @@ gst_faad_init (GstFaad * faad)
   gst_pad_set_event_function (faad->srcpad,
       GST_DEBUG_FUNCPTR (gst_faad_src_event));
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
+
+  gst_faad_reset (faad);
+}
+
+static void
+gst_faad_reset (GstFaad * faad)
+{
+  gst_segment_init (&faad->segment, GST_FORMAT_TIME);
+  faad->samplerate = -1;
+  faad->channels = -1;
+  faad->need_channel_setup = TRUE;
+  faad->init = FALSE;
+  faad->packetised = FALSE;
+  g_free (faad->channel_positions);
+  faad->channel_positions = NULL;
+  faad->next_ts = 0;
+  faad->prev_ts = GST_CLOCK_TIME_NONE;
+  faad->bytes_in = 0;
+  faad->sum_dur_out = 0;
+  faad->error_count = 0;
+  if (faad->tempbuf) {
+    gst_buffer_unref (faad->tempbuf);
+    faad->tempbuf = NULL;
+  }
+  clear_queued (faad);
 }
 
 static void
@@ -1521,7 +1535,6 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&faad->segment, GST_FORMAT_TIME);
       break;
     default:
       break;
@@ -1532,22 +1545,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      faad->samplerate = -1;
-      faad->channels = -1;
-      faad->need_channel_setup = TRUE;
-      faad->init = FALSE;
-      g_free (faad->channel_positions);
-      faad->channel_positions = NULL;
-      faad->next_ts = 0;
-      faad->prev_ts = GST_CLOCK_TIME_NONE;
-      faad->bytes_in = 0;
-      faad->sum_dur_out = 0;
-      faad->error_count = 0;
-      if (faad->tempbuf) {
-        gst_buffer_unref (faad->tempbuf);
-        faad->tempbuf = NULL;
-      }
-      clear_queued (faad);
+      gst_faad_reset (faad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_faad_close_decoder (faad);
