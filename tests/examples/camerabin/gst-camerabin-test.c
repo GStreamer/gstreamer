@@ -73,6 +73,7 @@
     --src-colorspace                  Colorspace format for videosource (e.g. YUY2, UYVY)
     --preview-caps                    Preview caps (e.g. video/x-raw-rgb,width=320,height=240)
     --video-source-filter                    Video filter to process all frames from video source
+    --viewfinder-filter               Filter to process all frames going to viewfinder sink
 
   */
 
@@ -125,6 +126,7 @@ static gchar *imagepp_name = NULL;
 static gchar *videomux_name = NULL;
 static gchar *vfsink_name = NULL;
 static gchar *src_csp = NULL;
+static gchar *src_format = NULL;
 static gint image_width = 1280;
 static gint image_height = 720;
 static gint view_framerate_num = 2825;
@@ -154,6 +156,7 @@ static gint audio_samplerate = 48000;
 static gint audio_channels = 1;
 
 static gchar *video_src_filter = NULL;
+static gchar *viewfinder_filter = NULL;
 
 static int x_width = 320;
 static int x_height = 240;
@@ -392,6 +395,7 @@ setup_pipeline (void)
   gboolean res = TRUE;
   GstElement *vmux = NULL, *ienc = NULL, *sink = NULL, *aenc = NULL, *ipp =
       NULL;
+  GstCaps *filter_caps = NULL;
 
   camera_bin = gst_element_factory_make ("camerabin", NULL);
   if (NULL == camera_bin) {
@@ -414,6 +418,7 @@ setup_pipeline (void)
   res &= setup_pipeline_element ("audio-source", audiosrc_name, NULL);
   res &= setup_pipeline_element ("video-source", videosrc_name, NULL);
   res &= setup_pipeline_element ("video-source-filter", video_src_filter, NULL);
+  res &= setup_pipeline_element ("viewfinder-filter", viewfinder_filter, NULL);
 
   if (audioenc_name) {
     aenc = create_audioencoder_bin ();
@@ -433,20 +438,19 @@ setup_pipeline (void)
   GST_INFO_OBJECT (camera_bin, "elements created");
 
   /* set properties */
-  if (src_csp && strlen (src_csp) == 4) {
-    GstCaps *filter_caps;
-
-    /* FIXME: why do we need to set this? */
+  if (src_format) {
+    filter_caps = gst_caps_from_string (src_format);
+  } else if (src_csp && strlen (src_csp) == 4) {
+    /* Set requested colorspace format, this is needed if the default 
+       colorspace negotiated for viewfinder doesn't match with e.g. encoders. */
     filter_caps = gst_caps_new_simple ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC,
         GST_MAKE_FOURCC (src_csp[0], src_csp[1], src_csp[2], src_csp[3]), NULL);
-    if (filter_caps) {
-      g_object_set (camera_bin, "filter-caps", filter_caps, NULL);
-      gst_caps_unref (filter_caps);
-    } else {
-      g_warning ("can't make filter-caps with format=%s\n", src_csp);
-      goto error;
-    }
+  }
+
+  if (filter_caps) {
+    g_object_set (camera_bin, "filter-caps", filter_caps, NULL);
+    gst_caps_unref (filter_caps);
   }
 
   g_object_set (sink, "sync", TRUE, NULL);
@@ -646,11 +650,15 @@ main (int argc, char *argv[])
     {"view-framerate-den", '\0', 0, G_OPTION_ARG_INT, &view_framerate_den,
         "Framerate denominator for viewfinder", NULL},
     {"src-colorspace", '\0', 0, G_OPTION_ARG_STRING, &src_csp,
-        "Colorspace format for videosource (e.g. YUY2, UYVY)", NULL},
+        "Colorspace format for video source (e.g. YUY2, UYVY)", NULL},
+    {"src-format", '\0', 0, G_OPTION_ARG_STRING, &src_format,
+        "Video format for video source", NULL},
     {"preview-caps", '\0', 0, G_OPTION_ARG_STRING, &preview_caps_name,
         "Preview caps (e.g. video/x-raw-rgb,width=320,height=240)", NULL},
     {"video-source-filter", '\0', 0, G_OPTION_ARG_STRING, &video_src_filter,
         "Video filter to process all frames from video source", NULL},
+    {"viewfinder-filter", '\0', 0, G_OPTION_ARG_STRING, &viewfinder_filter,
+        "Filter to process all frames going to viewfinder sink", NULL},
     {"x-width", '\0', 0, G_OPTION_ARG_INT, &x_width,
         "X window width (default = 320)", NULL},
     {"x-height", '\0', 0, G_OPTION_ARG_INT, &x_height,
@@ -716,6 +724,7 @@ main (int argc, char *argv[])
   g_free (videomux_name);
   g_free (vfsink_name);
   g_free (src_csp);
+  g_free (src_format);
   g_free (target_times);
 
   if (window)
