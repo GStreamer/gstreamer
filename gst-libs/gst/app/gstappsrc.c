@@ -1049,13 +1049,26 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
 void
 gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
 {
+  GstSegment *segment;
+  gboolean bytes_segment;
+
   g_return_if_fail (appsrc != NULL);
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting size of %" G_GINT64_FORMAT, size);
   appsrc->priv->size = size;
+
+  segment = &GST_BASE_SRC_CAST (appsrc)->segment;
+  bytes_segment = (segment->format == GST_FORMAT_BYTES);
+
+  if (bytes_segment)
+    gst_segment_set_duration (segment, GST_FORMAT_BYTES, size);
   GST_OBJECT_UNLOCK (appsrc);
+
+  if (bytes_segment)
+    gst_element_post_message (GST_ELEMENT (appsrc),
+        gst_message_new_duration (GST_OBJECT (appsrc), GST_FORMAT_BYTES, size));
 }
 
 /**
