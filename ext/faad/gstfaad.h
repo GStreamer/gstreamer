@@ -71,7 +71,7 @@ typedef struct _GstFaad {
   gboolean discont;
 
   /* segment handling */
-  GstSegment * segment;
+  GstSegment segment;
 
   /* list of raw output buffers for reverse playback */
   GList *queued;

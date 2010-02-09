@@ -134,7 +134,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_faad_base_init (GstFaadClass * klass);
 static void gst_faad_class_init (GstFaadClass * klass);
 static void gst_faad_init (GstFaad * faad);
-static void gst_faad_dispose (GObject * object);
 
 static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
@@ -194,12 +193,9 @@ gst_faad_base_init (GstFaadClass * klass)
 static void
 gst_faad_class_init (GstFaadClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_faad_dispose);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faad_change_state);
 }
@@ -220,7 +216,6 @@ gst_faad_init (GstFaad * faad)
   faad->sum_dur_out = 0;
   faad->packetised = FALSE;
   faad->error_count = 0;
-  faad->segment = gst_segment_new ();
 
   faad->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
@@ -240,19 +235,6 @@ gst_faad_init (GstFaad * faad)
   gst_pad_set_event_function (faad->srcpad,
       GST_DEBUG_FUNCPTR (gst_faad_src_event));
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
-}
-
-static void
-gst_faad_dispose (GObject * object)
-{
-  GstFaad *faad = GST_FAAD (object);
-
-  if (faad->segment) {
-    gst_segment_free (faad->segment);
-    faad->segment = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -816,7 +798,7 @@ gst_faad_drain (GstFaad * faad)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (faad->segment->rate < 0.0) {
+  if (faad->segment.rate < 0.0) {
     /* if we have some queued frames for reverse playback, flush
      * them now */
     ret = flush_queued (faad);
@@ -929,7 +911,7 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
             GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
             GST_TIME_ARGS (end));
-        gst_segment_set_newsegment (faad->segment, is_update, rate, fmt, start,
+        gst_segment_set_newsegment (&faad->segment, is_update, rate, fmt, start,
             end, base);
       } else if (fmt == GST_FORMAT_BYTES) {
         gint64 new_start = 0;
@@ -953,7 +935,7 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
         event = gst_event_new_new_segment (is_update, rate,
             GST_FORMAT_TIME, new_start, new_end, new_start);
 
-        gst_segment_set_newsegment (faad->segment, is_update, rate,
+        gst_segment_set_newsegment (&faad->segment, is_update, rate,
             GST_FORMAT_TIME, new_start, new_end, new_start);
 
         GST_DEBUG ("Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
@@ -1429,7 +1411,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
         GST_OBJECT_UNLOCK (faad);
 
-        if ((outbuf = gst_audio_buffer_clip (outbuf, faad->segment,
+        if ((outbuf = gst_audio_buffer_clip (outbuf, &faad->segment,
                     faad->samplerate, faad->bps * faad->channels))) {
           GST_LOG_OBJECT (faad,
               "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
@@ -1441,7 +1423,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
             faad->discont = FALSE;
           }
 
-          if (faad->segment->rate > 0.0) {
+          if (faad->segment.rate > 0.0) {
             ret = gst_pad_push (faad->srcpad, outbuf);
           } else {
             /* reverse playback, queue frame till later when we get a discont. */
@@ -1539,7 +1521,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (faad->segment, GST_FORMAT_TIME);
+      gst_segment_init (&faad->segment, GST_FORMAT_TIME);
       break;
     default:
       break;
