@@ -1101,7 +1101,8 @@ gst_multi_queue_loop (GstPad * pad)
     result = gst_single_queue_push_one (mq, sq, object);
     sq->srcresult = result;
 
-    if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED)
+    if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
+        && result != GST_FLOW_UNEXPECTED)
       goto out_flushing;
 
     GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
@@ -1148,7 +1149,6 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   GstSingleQueue *sq;
   GstMultiQueue *mq;
   GstMultiQueueItem *item;
-  GstFlowReturn ret = GST_FLOW_OK;
   guint32 curid;
   GstClockTime timestamp, duration;
 
@@ -1174,14 +1174,13 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   apply_buffer (mq, sq, timestamp, duration, &sq->sink_segment);
 
 done:
-  return ret;
+  return sq->srcresult;
 
   /* ERRORS */
 flushing:
   {
-    ret = sq->srcresult;
     GST_LOG_OBJECT (mq, "SingleQueue %d : exit because task paused, reason: %s",
-        sq->id, gst_flow_get_name (ret));
+        sq->id, gst_flow_get_name (sq->srcresult));
     gst_multi_queue_item_destroy (item);
     goto done;
   }
