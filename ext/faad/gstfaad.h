@@ -49,6 +49,7 @@ typedef struct _GstFaad {
   guint      samplerate; /* sample rate of the last MPEG frame    */
   guint      channels;   /* number of channels of the last frame  */
   guint      bps;        /* bytes per sample                      */
+  guchar    *channel_positions;
 
   guint8     fake_codec_data[2];
 
@@ -58,9 +59,6 @@ typedef struct _GstFaad {
   faacDecHandle handle;
   gboolean init;
 
-  /* FAAD channel setup */
-  guchar *channel_positions;
-  gboolean need_channel_setup;
   gboolean packetised; /* We must differentiate between raw and packetised streams */
 
   gint64  prev_ts;     /* timestamp of previous buffer                    */
