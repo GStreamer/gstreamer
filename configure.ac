@@ -766,6 +766,7 @@ sed \
     -e 's/.* PACKAGE_TARNAME$/#define PACKAGE_TARNAME "'$PACKAGE_TARNAME'"/' \
     -e 's/.* PACKAGE_VERSION$/#define PACKAGE_VERSION "'$PACKAGE_VERSION'"/' \
     -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-0.10"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-0.10"\n#endif/' \
+    -e 's/.* GST_PLUGIN_SCANNER_INSTALLED$/#define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\\\gst-plugin-scanner"/' \
     -e 's/.* VERSION$/#define VERSION "'$VERSION'"/' \
     config.h.in >win32/common/config.h-new
 
