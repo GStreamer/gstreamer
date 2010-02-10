@@ -1,13 +1,13 @@
 # Vietnamese Translation for GST Plugins Base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Clytie Siddall <clytie@riverland.net.au>, 2005-2009.
+# Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-27 00:55+0000\n"
-"PO-Revision-Date: 2009-09-18 17:15+0930\n"
+"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"PO-Revision-Date: 2010-02-09 22:34+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -483,18 +483,3 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Không thể hiển thị đồng thời phụ đề và ảnh phụ."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Chưa ghi rõ thư mục Tạm thời."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Không thể tạo tập tin tạm thời « %s »."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Không thể mở tập tin « %s » để đọc."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Lỗi luồng dữ liệu nội bộ."
