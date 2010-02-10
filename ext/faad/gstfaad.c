@@ -246,6 +246,7 @@ gst_faad_reset (GstFaad * faad)
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->error_count = 0;
+  faad->sync_flush = 0;
   gst_adapter_clear (faad->adapter);
   clear_queued (faad);
 }
@@ -971,6 +972,8 @@ looks_like_valid_header (guint8 * input_data, guint input_size)
   return FALSE;
 }
 
+#define FAAD_MAX_SYNC   10 * 8 * 1024
+
 static GstFlowReturn
 gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1021,9 +1024,14 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   if (!faad->packetised) {
     if (!gst_faad_sync (faad, input_data, input_size, &sync_off)) {
+      faad->sync_flush += sync_off;
       input_size -= sync_off;
-      goto out;
+      if (faad->sync_flush > FAAD_MAX_SYNC)
+        goto parse_failed;
+      else
+        goto out;
     } else {
+      faad->sync_flush = 0;
       input_data += sync_off;
       input_size -= sync_off;
     }
@@ -1200,6 +1208,13 @@ sample_overflow:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
         ("Output buffer too large"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+parse_failed:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("failed to parse non-packetized stream"));
     ret = GST_FLOW_ERROR;
     goto out;
   }

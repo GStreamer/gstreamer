@@ -68,6 +68,7 @@ typedef struct _GstFaad {
   guint64 sum_dur_out; /* sum of durations of decoded buffers we sent out */
   gint    error_count;
   gboolean discont;
+  gint    sync_flush;
 
   /* segment handling */
   GstSegment segment;
