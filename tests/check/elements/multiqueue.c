@@ -479,13 +479,14 @@ run_output_order_test (gint n_linked)
 
   /* Wait while the buffers are processed */
   g_mutex_lock (mutex);
-  while (eos_seen < 5) {
+  /* We wait until EOS has been pushed on all linked pads */
+  while (eos_seen < n_linked) {
     g_cond_wait (cond, mutex);
   }
   g_mutex_unlock (mutex);
 
   /* Clean up */
-  for (i = 0; i < 5; i++) {
+  for (i = 0; i < NPADS; i++) {
     GstPad *mq_input = gst_pad_get_peer (inputpads[i]);
 
     gst_pad_unlink (inputpads[i], mq_input);
