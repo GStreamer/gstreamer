@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -136,6 +136,48 @@
       </pads>
     </element>
     <element>
+      <name>rtpbvdepay</name>
+      <longname>RTP BroadcomVoice depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts BroadcomVoice audio from RTP packets (RFC 4298)</description>
+      <author>Wim Taymans &lt;wim.taymans@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)BV32</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-bv, mode=(int){ 16, 32 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpbvpay</name>
+      <longname>RTP BV Payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)</description>
+      <author>Wim Taymans &lt;wim.taymans@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)BV32</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-bv, mode=(int){ 16, 32 }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpceltdepay</name>
       <longname>RTP CELT depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -249,6 +291,48 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-dv</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg723depay</name>
+      <longname>RTP G.723 depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts G.723 audio from RTP packets (RFC 3551)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/G723, channels=(int)1, rate=(int)8000</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpg723pay</name>
+      <longname>RTP G.723 payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Packetize G.723 audio into RTP packets</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G723</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/G723, channels=(int)1, rate=(int)8000</details>
         </caps>
       </pads>
     </element>
@@ -711,7 +795,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean)true</details>
+          <details>audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw</details>
         </caps>
       </pads>
     </element>
@@ -726,7 +810,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)4</details>
+          <details>audio/mpeg, mpegversion=(int)4, stream-format=(string)raw</details>
         </caps>
         <caps>
           <name>src</name>
@@ -753,7 +837,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; audio/mpeg, mpegversion=(int)4</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw</details>
         </caps>
       </pads>
     </element>
@@ -768,7 +852,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; audio/mpeg, mpegversion=(int)4</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw</details>
         </caps>
         <caps>
           <name>src</name>

@@ -3,17 +3,17 @@
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
-  <version>0.10.17</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>gstrtpbin</name>
       <longname>RTP Bin</longname>
       <class>Filter/Network/RTP</class>
-      <description>Implement an RTP bin</description>
+      <description>Real-Time Transport Protocol bin</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>

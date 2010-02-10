@@ -33,8 +33,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>227 Hz</NICK>
-<BLURB>gain for the frequency band 227 Hz, ranging from -24 dB to +12 dB.</BLURB>
+<NICK>237 Hz</NICK>
+<BLURB>gain for the frequency band 237 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -451,7 +451,7 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
@@ -501,7 +501,7 @@
 <ARG>
 <NAME>GstUDPSrc::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP reception. (-1 = no socket).</BLURB>
@@ -699,6 +699,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::user-id</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>user-id</NICK>
+<BLURB>RTSP location URI user id for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::user-pw</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>user-pw</NICK>
+<BLURB>RTSP location URI user password for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -733,7 +753,7 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>mesage</NICK>
+<NICK>message</NICK>
 <BLURB>Post a level message for each passed interval.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
@@ -1036,6 +1056,16 @@
 <NICK>username</NICK>
 <BLURB>username.</BLURB>
 <DEFAULT>"source"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShout2send::public</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>public</NICK>
+<BLURB>If the stream should be listed on the server's stream directory.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1551,7 +1581,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,16]</RANGE>
+<RANGE>[G_MAXULONG,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -1729,6 +1759,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFlacEnc::seekpoints</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2147483647</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Seekpoints</NICK>
+<BLURB>Add SEEKTABLE metadata (if > 0, number of entries, if < 0, interval in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOssSink::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -1769,9 +1809,19 @@
 </ARG>
 
 <ARG>
+<NAME>GstMatroskaMux::min-index-interval</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum time between index entries</NICK>
+<BLURB>An index entry is created every so many nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>allowed timestamp deviation</NICK>
 <BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1781,7 +1831,7 @@
 <ARG>
 <NAME>GstTest::buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>buffer count</NICK>
 <BLURB>number of buffers in stream.</BLURB>
@@ -1791,7 +1841,7 @@
 <ARG>
 <NAME>GstTest::expected-buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected buffer count</NICK>
 <BLURB>expected number of buffers in stream.</BLURB>
@@ -1801,7 +1851,7 @@
 <ARG>
 <NAME>GstTest::expected-length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected length</NICK>
 <BLURB>expected length of stream.</BLURB>
@@ -1821,7 +1871,7 @@
 <ARG>
 <NAME>GstTest::length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>length</NICK>
 <BLURB>length of stream.</BLURB>
@@ -1841,7 +1891,7 @@
 <ARG>
 <NAME>GstTest::timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>timestamp deviation</NICK>
 <BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1911,7 +1961,7 @@
 <ARG>
 <NAME>GstBreakMyData::set-to</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,255]</RANGE>
+<RANGE>[G_MAXULONG,255]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>set-to</NICK>
 <BLURB>set changed bytes to this value (-1 means random value.</BLURB>
@@ -2241,7 +2291,7 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,32767]</RANGE>
+<RANGE>[G_MAXULONG,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2311,7 +2361,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sock</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket currently in use for UDP sending. (-1 == no socket).</BLURB>
@@ -2321,7 +2371,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -2351,7 +2401,7 @@
 <ARG>
 <NAME>GstMultiUDPSink::qos-dscp</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,63]</RANGE>
+<RANGE>[G_MAXULONG,63]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>QoS diff srv code point</NICK>
 <BLURB>Quality of Service, differentiated services code point (-1 default).</BLURB>
@@ -2671,7 +2721,7 @@
 <ARG>
 <NAME>GstAudioAmplify::amplification</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Amplification</NICK>
 <BLURB>Factor of amplification.</BLURB>
@@ -2931,7 +2981,7 @@
 <ARG>
 <NAME>GstV4l2Src::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
@@ -3091,7 +3141,7 @@
 <ARG>
 <NAME>GstAudioWSincBand::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[3,50000]</RANGE>
+<RANGE>[3,256000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
 <BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
@@ -3111,7 +3161,7 @@
 <ARG>
 <NAME>GstAudioWSincLimit::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[3,50000]</RANGE>
+<RANGE>[3,256000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
 <BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
@@ -3151,7 +3201,7 @@
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
 <TYPE>glong</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>[1,G_MAXINT]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>maximum</NICK>
 <BLURB>maximum buffer size.</BLURB>
@@ -3161,7 +3211,7 @@
 <ARG>
 <NAME>GstRndBufferSize::min</NAME>
 <TYPE>glong</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,G_MAXINT]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>mininum</NICK>
 <BLURB>mininum buffer size.</BLURB>
@@ -3171,7 +3221,7 @@
 <ARG>
 <NAME>GstRndBufferSize::seed</NAME>
 <TYPE>gulong</TYPE>
-<RANGE></RANGE>
+<RANGE><= G_MAXUINT</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>random number seed</NICK>
 <BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
@@ -3454,7 +3504,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>profile-level-id</NICK>
-<BLURB>The base64 profile-level-id to set in out caps (set to NULL to extract from stream).</BLURB>
+<BLURB>The base64 profile-level-id to set in the sink caps (deprecated).</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -3486,6 +3536,16 @@
 <NICK>Buffer List</NICK>
 <BLURB>Use Buffer Lists.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH264Pay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SPS PPS Send Interval</NICK>
+<BLURB>Send SPS and PPS Insertion Interval in seconds (sprop parameter sets will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19469,6 +19529,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpH264Depay::access-unit</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Access Unit</NICK>
+<BLURB>Merge NALU into AU (picture).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioKaraoke::filter-band</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,441]</RANGE>
@@ -19801,7 +19871,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,16]</RANGE>
+<RANGE>[G_MAXULONG,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -20075,7 +20145,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>Deinterlace Mode.</BLURB>
-<DEFAULT>Enfore deinterlacing</DEFAULT>
+<DEFAULT>Force deinterlacing</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20269,6 +20339,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::autoremove</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto Remove</NICK>
+<BLURB>Automatically removed timed out sources.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20391,7 +20471,7 @@
 <ARG>
 <NAME>GstV4l2Sink::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
