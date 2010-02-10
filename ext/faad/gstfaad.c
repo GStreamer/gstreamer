@@ -544,6 +544,9 @@ gst_faad_drain (GstFaad * faad)
     /* if we have some queued frames for reverse playback, flush
      * them now */
     ret = flush_queued (faad);
+  } else {
+    /* squeeze any possible remaining frames that are pending sync */
+    gst_faad_chain (faad->sinkpad, NULL);
   }
   return ret;
 }
@@ -898,7 +901,8 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
  * gst/typefind/) for ADTS because 12 bits isn't very reliable.
  */
 static gboolean
-gst_faad_sync (GstFaad * faad, guint8 * data, guint size, guint * off)
+gst_faad_sync (GstFaad * faad, guint8 * data, guint size, gboolean next,
+    guint * off)
 {
   guint n = 0;
   gint snc;
@@ -928,8 +932,16 @@ gst_faad_sync (GstFaad * faad, guint8 * data, guint size, guint * off)
       len = ((data[n + 3] & 0x03) << 11) |
           (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
       if (n + len + 2 >= size) {
-        GST_LOG_OBJECT (faad, "Next frame is not within reach");
-        break;
+        GST_LOG_OBJECT (faad, "Frame size %d, next frame is not within reach",
+            len);
+        if (next) {
+          break;
+        } else if (n + len <= size) {
+          GST_LOG_OBJECT (faad, "but have complete frame and no next frame; "
+              "accept ADTS syncpoint at offset 0x%x (framelen %u)", n, len);
+          ret = TRUE;
+          break;
+        }
       }
 
       snc = GST_READ_UINT16_BE (&data[n + len]);
@@ -994,22 +1006,28 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   gboolean run_loop = TRUE;
   guint sync_off;
   GstClockTime ts;
+  gboolean next;
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
 
-  GST_LOG_OBJECT (faad, "buffer of size %d with ts: %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+  if (G_LIKELY (buffer)) {
+    GST_LOG_OBJECT (faad, "buffer of size %d with ts: %" GST_TIME_FORMAT
+        ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
-  if (GST_BUFFER_IS_DISCONT (buffer)) {
-    gst_faad_drain (faad);
-    gst_faad_reset_stream_state (faad);
-    faad->discont = TRUE;
+    if (GST_BUFFER_IS_DISCONT (buffer)) {
+      gst_faad_drain (faad);
+      gst_faad_reset_stream_state (faad);
+      faad->discont = TRUE;
+    }
+
+    gst_adapter_push (faad->adapter, buffer);
+    buffer = NULL;
+    next = TRUE;
+  } else {
+    next = FALSE;
   }
-
-  gst_adapter_push (faad->adapter, buffer);
-  buffer = NULL;
 
   ts = gst_adapter_prev_timestamp (faad->adapter, NULL);
   if (GST_CLOCK_TIME_IS_VALID (ts) && (ts != faad->prev_ts))
@@ -1024,7 +1042,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   input_data = (guchar *) gst_adapter_peek (faad->adapter, available);
 
   if (!faad->packetised) {
-    if (!gst_faad_sync (faad, input_data, input_size, &sync_off)) {
+    if (!gst_faad_sync (faad, input_data, input_size, next, &sync_off)) {
       faad->sync_flush += sync_off;
       input_size -= sync_off;
       if (faad->sync_flush > FAAD_MAX_SYNC)
