@@ -1209,6 +1209,56 @@
 </ARG>
 
 <ARG>
+<NAME>GstTheoraEnc::cap-overflow</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Enable capping of bit reservoir overflows.  This property requires libtheora version >= 1.1.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::cap-underflow</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Enable capping of bit reservoir underflows.  This property requires libtheora version >= 1.1.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::drop-frames</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Allow or disallow frame dropping.  This property requires libtheora version >= 1.1.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::rate-buffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate Control Buffer</NICK>
+<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.  This property requires libtheora version >= 1.1.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::vp3-compatible</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Disables non-VP3 compatible features.  This property requires libtheora version >= 1.1.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGnomeVFSSrc::handle</NAME>
 <TYPE>GnomeVFSHandle*</TYPE>
 <RANGE></RANGE>
@@ -1556,6 +1606,16 @@
 <NICK>silent</NICK>
 <BLURB>Don't emit notify for dropped and duplicated frames.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::tolerance</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tolerance</NICK>
+<BLURB>Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2019,6 +2079,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSubParse::video-fps</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video framerate</NICK>
+<BLURB>Framerate of the video stream. This is needed by some subtitle formats to synchronize subtitles and video properly. If not set and the subtitle format requires it subtitles may be out of sync.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTheoraParse::synchronization-points</NAME>
 <TYPE>GValueArray*</TYPE>
 <RANGE></RANGE>
@@ -2145,6 +2215,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Use Buffering</NICK>
 <BLURB>Emit GST_MESSAGE_BUFFERING based on low-/high-percent thresholds.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::post-stream-topology</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Stream Topology</NICK>
+<BLURB>Post stream-topology messages.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -3066,5 +3146,25 @@
 <NICK>Volume</NICK>
 <BLURB>The audio volume, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSubtitleOverlay::font-desc</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subtitle font description</NICK>
+<BLURB>Pango font description of font to be used for subtitle rendering.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSubtitleOverlay::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Whether to show subtitles.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

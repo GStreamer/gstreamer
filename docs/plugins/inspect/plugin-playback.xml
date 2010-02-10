@@ -3,10 +3,10 @@
   <description>various playback elements</description>
   <filename>../../gst/playback/.libs/libgstplaybin.so</filename>
   <basename>libgstplaybin.so</basename>
-  <version>0.10.25.1</version>
+  <version>0.10.26</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -36,12 +36,6 @@
       <description>Convenience sink for multiple streams</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
-        <caps>
-          <name>subpic_sink</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>ANY</details>
-        </caps>
         <caps>
           <name>text_sink</name>
           <direction>sink</direction>
@@ -91,13 +85,13 @@
           <name>video_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb; video/x-raw-yuv</details>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb; video/x-raw-yuv</details>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>
