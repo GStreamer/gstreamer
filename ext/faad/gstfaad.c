@@ -72,8 +72,6 @@ extern gint8 faacDecInit2 (faacDecHandle, guint8 *, guint32,
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
 
-#define MAX_DECODE_ERRORS 5
-
 static const GstElementDetails faad_details =
 GST_ELEMENT_DETAILS ("AAC audio decoder",
     "Codec/Decoder/Audio",
@@ -972,6 +970,7 @@ looks_like_valid_header (guint8 * input_data, guint input_size)
   return FALSE;
 }
 
+#define FAAD_MAX_ERROR  10
 #define FAAD_MAX_SYNC   10 * 8 * 1024
 
 static GstFlowReturn
@@ -1096,14 +1095,23 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     out = faacDecDecode (faad->handle, &info, input_data, input_size);
 
     if (info.error > 0) {
-      GST_WARNING_OBJECT (faad, "decoding error: %s",
-          faacDecGetErrorMessage (info.error));
       /* mark discont for the next buffer */
       faad->discont = TRUE;
       /* flush a bit, arranges for resync next time */
       input_size--;
-      goto out;
+      faad->error_count++;
+      /* do not bail out at once, but know when to stop */
+      if (faad->error_count > FAAD_MAX_ERROR)
+        goto decode_failed;
+      else {
+        GST_WARNING_OBJECT (faad, "decoding error: %s",
+            faacDecGetErrorMessage (info.error));
+        goto out;
+      }
     }
+
+    /* ok again */
+    faad->error_count = 0;
 
     if (info.bytesconsumed > input_size)
       info.bytesconsumed = input_size;
@@ -1194,6 +1202,13 @@ init2_failed:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
         ("%s() failed", (faad->handle) ? "faacDecInit2" : "faacDecOpen"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+decode_failed:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("decoding error: %s", faacDecGetErrorMessage (info.error)));
     ret = GST_FLOW_ERROR;
     goto out;
   }
