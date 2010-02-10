@@ -1538,6 +1538,18 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
           "applied rate %g, format %d, start %" GST_TIME_FORMAT ", "
           "stop %" GST_TIME_FORMAT, update, rate, arate, GST_FORMAT_TIME,
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+      /* FIXME: workaround/safety check for broken files (don't want to end
+       * up with NULL events if stop < start). Figure out real cause of this
+       * and fix it. */
+      if (stop < start) {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+            (_("This file is invalid and cannot be played.")),
+            ("stop %" GST_TIME_FORMAT " < start %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (stop), GST_TIME_ARGS (start)));
+        return FALSE;
+      }
+
       gst_qtdemux_push_event (demux,
           gst_event_new_new_segment_full (update, rate, arate, GST_FORMAT_TIME,
               start, stop, start));
