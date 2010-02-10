@@ -804,9 +804,9 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
       \
       if (in < low_i) { \
         output[0] = 0x00;       /* A */ \
-        output[1] = 0x00;       /* Y */ \
-        output[2] = 0x80;       /* U */ \
-        output[3] = 0x80;       /* V */ \
+        output[1] = input[1];   /* Y */ \
+        output[2] = input[2];   /* U */ \
+        output[3] = input[3];   /* V */ \
       } else if (in >= high_i) { \
         output[0] = input[0];   /* A */ \
         output[1] = input[1];   /* Y */ \
@@ -873,9 +873,9 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
       \
       if (in < low_i) { \
         output[a] = 0x00;       /* A */ \
-        output[r] = 0x00;       /* R */ \
-        output[g] = 0x00;       /* G */ \
-        output[b] = 0x00;       /* B */ \
+        output[r] = input[r];   /* R */ \
+        output[g] = input[g];   /* G */ \
+        output[b] = input[b];   /* B */ \
       } else if (in >= high_i) { \
         output[a] = input[a];   /* A */ \
         output[r] = input[r];   /* R */ \
