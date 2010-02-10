@@ -808,14 +808,15 @@ gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
         output[2] = 0x80;       /* U */ \
         output[3] = 0x80;       /* V */ \
       } else if (in >= high_i) { \
-        output[0] = 0xff;       /* A */ \
+        output[0] = input[0];   /* A */ \
         output[1] = input[1];   /* Y */ \
         output[2] = input[2];   /* U */ \
         output[3] = input[3];   /* V */ \
       } else { \
         guint32 val; \
         /* Note: This will never overflow or be larger than 255! */ \
-        val = ((((in - low_i) << 16) + round_i) / (high_i - low_i)) >> 8; \
+        val = (((in - low_i) << 16) + round_i) / (high_i - low_i); \
+        val = (val * input[0] + 32768) >> 16; \
         \
         output[0] = val;        /* A */ \
         output[1] = input[1];   /* Y */ \
@@ -876,14 +877,15 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
         output[g] = 0x00;       /* G */ \
         output[b] = 0x00;       /* B */ \
       } else if (in >= high_i) { \
-        output[a] = 0xff;       /* A */ \
+        output[a] = input[a];   /* A */ \
         output[r] = input[r];   /* R */ \
         output[g] = input[g];   /* G */ \
         output[b] = input[b];   /* B */ \
       } else { \
         guint32 val; \
         /* Note: This will never overflow or be larger than 255! */ \
-        val = ((((in - low_i) << 16) + round_i) / (high_i - low_i)) >> 8; \
+        val = (((in - low_i) << 16) + round_i) / (high_i - low_i); \
+        val = (val * input[a] + 32768) >> 16; \
         \
         output[a] = val;        /* A */ \
         output[r] = input[r];   /* R */ \
