@@ -135,6 +135,7 @@ static void gst_faad_base_init (GstFaadClass * klass);
 static void gst_faad_class_init (GstFaadClass * klass);
 static void gst_faad_init (GstFaad * faad);
 static void gst_faad_reset (GstFaad * faad);
+static void gst_faad_finalize (GObject * object);
 
 static void clear_queued (GstFaad * faad);
 
@@ -196,8 +197,11 @@ static void
 gst_faad_class_init (GstFaadClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faad_finalize);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faad_change_state);
 }
@@ -222,6 +226,8 @@ gst_faad_init (GstFaad * faad)
       GST_DEBUG_FUNCPTR (gst_faad_src_event));
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
 
+  faad->adapter = gst_adapter_new ();
+
   gst_faad_reset (faad);
 }
 
@@ -240,11 +246,18 @@ gst_faad_reset (GstFaad * faad)
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->error_count = 0;
-  if (faad->tempbuf) {
-    gst_buffer_unref (faad->tempbuf);
-    faad->tempbuf = NULL;
-  }
+  gst_adapter_clear (faad->adapter);
   clear_queued (faad);
+}
+
+static void
+gst_faad_finalize (GObject * object)
+{
+  GstFaad *faad = GST_FAAD (object);
+
+  g_object_unref (faad->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -348,10 +361,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
 
     faad->init = TRUE;
 
-    if (faad->tempbuf) {
-      gst_buffer_unref (faad->tempbuf);
-      faad->tempbuf = NULL;
-    }
+    gst_adapter_clear (faad->adapter);
   } else if ((value = gst_structure_get_value (str, "framed")) &&
       g_value_get_boolean (value) == TRUE) {
     faad->packetised = TRUE;
@@ -604,19 +614,13 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      if (faad->tempbuf != NULL) {
-        gst_buffer_unref (faad->tempbuf);
-        faad->tempbuf = NULL;
-      }
+      gst_adapter_clear (faad->adapter);
       clear_queued (faad);
       res = gst_pad_push_event (faad->srcpad, event);
       break;
     case GST_EVENT_EOS:
       gst_faad_drain (faad);
-      if (faad->tempbuf != NULL) {
-        gst_buffer_unref (faad->tempbuf);
-        faad->tempbuf = NULL;
-      }
+      gst_adapter_clear (faad->adapter);
       res = gst_pad_push_event (faad->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -888,20 +892,18 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
  * gst/typefind/) for ADTS because 12 bits isn't very reliable.
  */
 static gboolean
-gst_faad_sync (GstFaad * faad, GstBuffer * buf, guint * off)
+gst_faad_sync (GstFaad * faad, guint8 * data, guint size, guint * off)
 {
-  guint8 *data = GST_BUFFER_DATA (buf);
-  guint size = GST_BUFFER_SIZE (buf), n;
+  guint n = 0;
   gint snc;
+  gboolean ret = FALSE;
 
   GST_LOG_OBJECT (faad, "Finding syncpoint");
 
   /* check for too small a buffer */
   if (size < 3)
-    return FALSE;
+    goto exit;
 
-  /* FIXME: for no-sync, we go over the same data for every new buffer.
-   * We should save the information somewhere. */
   for (n = 0; n < size - 3; n++) {
     snc = GST_READ_UINT16_BE (&data[n]);
     if ((snc & 0xfff6) == 0xfff0) {
@@ -914,37 +916,41 @@ gst_faad_sync (GstFaad * faad, GstBuffer * buf, guint * off)
 
       if (size - n < 5) {
         GST_LOG_OBJECT (faad, "Not enough data to parse ADTS header");
-        return FALSE;
+        break;
       }
 
-      *off = n;
       len = ((data[n + 3] & 0x03) << 11) |
           (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
       if (n + len + 2 >= size) {
         GST_LOG_OBJECT (faad, "Next frame is not within reach");
-        return FALSE;
+        break;
       }
 
       snc = GST_READ_UINT16_BE (&data[n + len]);
       if ((snc & 0xfff6) == 0xfff0) {
         GST_LOG_OBJECT (faad,
             "Found ADTS syncpoint at offset 0x%x (framelen %u)", n, len);
-        return TRUE;
+        ret = TRUE;
+        break;
       }
 
       GST_LOG_OBJECT (faad, "No next frame found... (should be at 0x%x)",
           n + len);
     } else if (!memcmp (&data[n], "ADIF", 4)) {
       /* we have an ADIF syncpoint. 4 bytes is enough. */
-      *off = n;
       GST_LOG_OBJECT (faad, "Found ADIF syncpoint at offset 0x%x", n);
-      return TRUE;
+      ret = TRUE;
+      break;
     }
   }
 
-  GST_LOG_OBJECT (faad, "Found no syncpoint");
+exit:
+  *off = n;
 
-  return FALSE;
+  if (!ret)
+    GST_LOG_OBJECT (faad, "Found no syncpoint");
+
+  return ret;
 }
 
 static gboolean
@@ -970,7 +976,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint input_size;
-  guint skip_bytes = 0;
+  guint available;
   guchar *input_data;
   GstFaad *faad;
   GstBuffer *outbuf;
@@ -978,16 +984,19 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   void *out;
   gboolean run_loop = TRUE;
   guint sync_off;
+  GstClockTime ts;
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
+
+  GST_LOG_OBJECT (faad, "buffer of size %d with ts: %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     gst_faad_drain (faad);
     faacDecPostSeekReset (faad->handle, 0);
-    if (faad->tempbuf != NULL) {
-      gst_buffer_unref (faad->tempbuf);
-      faad->tempbuf = NULL;
-    }
+    gst_adapter_clear (faad->adapter);
     faad->discont = TRUE;
   }
 
@@ -995,30 +1004,25 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   faad->bytes_in += GST_BUFFER_SIZE (buffer);
   GST_OBJECT_UNLOCK (faad);
 
-  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
-    /* some demuxers send multiple buffers in a row
-     *  with the same timestamp (e.g. matroskademux) */
-    if (GST_BUFFER_TIMESTAMP (buffer) != faad->prev_ts) {
-      faad->next_ts = GST_BUFFER_TIMESTAMP (buffer);
-      faad->prev_ts = GST_BUFFER_TIMESTAMP (buffer);
-    }
-    GST_LOG_OBJECT (faad, "Timestamp on incoming buffer: %" GST_TIME_FORMAT
-        ", next_ts: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-        GST_TIME_ARGS (faad->next_ts));
-  }
-  /* buffer + remaining data */
-  if (faad->tempbuf) {
-    buffer = gst_buffer_join (faad->tempbuf, buffer);
-    faad->tempbuf = NULL;
-  }
+  gst_adapter_push (faad->adapter, buffer);
+  buffer = NULL;
 
-  input_data = GST_BUFFER_DATA (buffer);
-  input_size = GST_BUFFER_SIZE (buffer);
+  ts = gst_adapter_prev_timestamp (faad->adapter, NULL);
+  if (GST_CLOCK_TIME_IS_VALID (ts) && (ts != faad->prev_ts))
+    faad->prev_ts = faad->next_ts = ts;
+
+  available = gst_adapter_available (faad->adapter);
+  input_size = available;
+
+  if (G_UNLIKELY (!available))
+    goto out;
+
+  input_data = (guchar *) gst_adapter_peek (faad->adapter, available);
 
   if (!faad->packetised) {
-    if (!gst_faad_sync (faad, buffer, &sync_off)) {
-      goto next;
+    if (!gst_faad_sync (faad, input_data, input_size, &sync_off)) {
+      input_size -= sync_off;
+      goto out;
     } else {
       input_data += sync_off;
       input_size -= sync_off;
@@ -1053,7 +1057,6 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
           (guint32) rate, ch);
     }
 
-    skip_bytes = 0;
     faad->init = TRUE;
 
     /* make sure we create new caps below */
@@ -1063,7 +1066,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* decode cycle */
-  info.bytesconsumed = input_size - skip_bytes;
+  info.bytesconsumed = input_size;
   info.error = 0;
 
   if (!faad->packetised) {
@@ -1082,14 +1085,15 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
-    out = faacDecDecode (faad->handle, &info, input_data + skip_bytes,
-        input_size - skip_bytes);
+    out = faacDecDecode (faad->handle, &info, input_data, input_size);
 
     if (info.error > 0) {
       GST_WARNING_OBJECT (faad, "decoding error: %s",
           faacDecGetErrorMessage (info.error));
       /* mark discont for the next buffer */
       faad->discont = TRUE;
+      /* flush a bit, arranges for resync next time */
+      input_size--;
       goto out;
     }
 
@@ -1160,22 +1164,12 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
-next:
-
-  /* Keep the leftovers in raw stream */
-  if (input_size > 0 && !faad->packetised) {
-    if (input_size < GST_BUFFER_SIZE (buffer)) {
-      faad->tempbuf = gst_buffer_create_sub (buffer,
-          GST_BUFFER_SIZE (buffer) - input_size, input_size);
-    } else {
-      faad->tempbuf = buffer;
-      gst_buffer_ref (buffer);
-    }
-  }
-
 out:
+  /* in raw case: (pretend) all consumed */
+  if (faad->packetised)
+    input_size = 0;
+  gst_adapter_flush (faad->adapter, available - input_size);
 
-  gst_buffer_unref (buffer);
   gst_object_unref (faad);
 
   return ret;

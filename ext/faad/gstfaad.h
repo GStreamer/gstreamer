@@ -21,6 +21,7 @@
 #define __GST_FAAD_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #ifdef FAAD_IS_NEAAC
 #include <neaacdec.h>
 #else
@@ -53,7 +54,7 @@ typedef struct _GstFaad {
 
   guint8     fake_codec_data[2];
 
-  GstBuffer *tempbuf;    /* used to keep input leftovers          */
+  GstAdapter *adapter;
 
   /* FAAD object */
   faacDecHandle handle;
