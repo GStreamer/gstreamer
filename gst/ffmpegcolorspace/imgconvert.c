@@ -2804,6 +2804,7 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_ABGR32, PIX_FMT_GRAY8, abgr32_to_gray},
   {PIX_FMT_ABGR32, PIX_FMT_GRAY16_L, abgr32_to_gray16_l},
   {PIX_FMT_ABGR32, PIX_FMT_GRAY16_B, abgr32_to_gray16_b},
+  {PIX_FMT_ABGR32, PIX_FMT_AYUV4444, abgr32_to_ayuv4444},
 
   {PIX_FMT_ARGB32, PIX_FMT_RGB24, argb32_to_rgb24},
   {PIX_FMT_ARGB32, PIX_FMT_RGBA32, argb32_to_rgba32},
@@ -2813,6 +2814,7 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_ARGB32, PIX_FMT_GRAY8, argb32_to_gray},
   {PIX_FMT_ARGB32, PIX_FMT_GRAY16_L, argb32_to_gray16_l},
   {PIX_FMT_ARGB32, PIX_FMT_GRAY16_B, argb32_to_gray16_b},
+  {PIX_FMT_ARGB32, PIX_FMT_AYUV4444, argb32_to_ayuv4444},
 
   {PIX_FMT_RGB555, PIX_FMT_RGB24, rgb555_to_rgb24},
   {PIX_FMT_RGB555, PIX_FMT_RGB32, rgb555_to_rgba32},
@@ -2901,6 +2903,9 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_V308, PIX_FMT_RGB24, v308_to_rgb24},
 
   {PIX_FMT_AYUV4444, PIX_FMT_RGBA32, ayuv4444_to_rgba32},
+  {PIX_FMT_AYUV4444, PIX_FMT_ARGB32, ayuv4444_to_argb32},
+  {PIX_FMT_AYUV4444, PIX_FMT_BGRA32, ayuv4444_to_bgra32},
+  {PIX_FMT_AYUV4444, PIX_FMT_ABGR32, ayuv4444_to_abgr32},
   {PIX_FMT_AYUV4444, PIX_FMT_RGB24, ayuv4444_to_rgb24},
 };
 
