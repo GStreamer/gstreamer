@@ -369,6 +369,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     faad->channels = 0;
 
     faad->init = TRUE;
+    gst_faad_send_tags (faad);
 
     gst_adapter_clear (faad->adapter);
   } else if ((value = gst_structure_get_value (str, "framed")) &&
@@ -399,9 +400,6 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
           (int) faad->fake_codec_data[1]);
     }
   }
-
-  if (!faad->packetised)
-    gst_faad_send_tags (faad);
 
   gst_object_unref (faad);
   return TRUE;
@@ -1069,11 +1067,11 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     faad->init = TRUE;
+    gst_faad_send_tags (faad);
 
     /* make sure we create new caps below */
     faad->samplerate = 0;
     faad->channels = 0;
-    gst_faad_send_tags (faad);
   }
 
   /* decode cycle */
