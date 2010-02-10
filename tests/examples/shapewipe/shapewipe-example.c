@@ -27,14 +27,26 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
   GMainLoop *loop = (GMainLoop *) user_data;
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
       g_warning ("Got ERROR");
+      gst_message_parse_error (message, &err, &debug);
+      g_warning ("%s: %s", err->message, debug);
       g_main_loop_quit (loop);
       break;
-    case GST_MESSAGE_WARNING:
+    }
+    case GST_MESSAGE_WARNING:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
       g_warning ("Got WARNING");
+      gst_message_parse_error (message, &err, &debug);
+      g_warning ("%s: %s", err->message, debug);
       g_main_loop_quit (loop);
       break;
+    }
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
       break;
