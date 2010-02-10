@@ -870,12 +870,12 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
     for (j = 0; j < width; j++) { \
       guint32 in = *mask << shift; \
       \
-      if (in < low) { \
+      if (in < low_i) { \
         output[a] = 0x00;       /* A */ \
         output[r] = 0x00;       /* R */ \
         output[g] = 0x00;       /* G */ \
         output[b] = 0x00;       /* B */ \
-      } else if (in >= high) { \
+      } else if (in >= high_i) { \
         output[a] = 0xff;       /* A */ \
         output[r] = input[r];   /* R */ \
         output[g] = input[g];   /* G */ \
