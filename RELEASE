@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.25 "Feel the burn"
+Release notes for GStreamer 0.10.26 "Think Twice"
         
 
 
@@ -37,58 +37,156 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Improve the byte-reader API
-      * GObject introspection support
-      * Improve clock accuracy on win32
-      * Optimisations in capabilities checking
-      * Optimisations and fixes in the basetransform base class
-      * new 64-bit scaling utility function variants
-      * Various bug-fixes and improvements (see ChangeLog and bugs list below)
+      * Threadsafe design and API
+      * registry: do plugin scanning (on *nix) using an external helper binary
+      * lots of performance improvements all over the place (ghostpads,
+        multiqueue, pad construction, superfluous type checks, registry loading)
+      * add GstByteWriter, a simple generic byte writer
+      * filesink: Use _wfopen on win32 to open files with non-ascii filenames correctly.
+      * queue2: add option to remove the temp-file (enabled by default)
+      * it is now allowed to use gst_caps_set_simple() on non-simple caps
+      * queue2: move from gst-plugins-base into the coreelements plugin in core
+        (this means you may need to remove libgstqueue2.so manually if you
+        installed from source and don't do make uninstall before upgrading, or
+        combine an older -base with a newer core)
+      * multiqueue: add support for buffering mode where we post BUFFERING
+        messages based on the level of the queues
+      * typefind: speed up typefinding a lot by first trying the typefinder for
+        the file's extension
+      * buffer: remove private/internal subbuffer subclass and keep track of
+        the parent buffer directly in the GstBuffer structure (this removes
+        quite a bit of special-casing and will allow for future improvements/
+        extensions that are harder to do if there's a separate subbuffer class.
+      * collectpads: add ability to install clipping functions
+      * new tags for TV/Radio shows/episodes, lyrics, composer sortname and
+        grouping
+      * miniobject: avoid race when recycling buffers
+      * basesrc: fix race in PLAYING->PAUSED->PLAYING
 
 Bugs fixed in this release
      
-      * 583999 : [basetransform] caps refcounting problem causing GST_IS_CAPS assertion failures
-      * 566881 : [GstIndex] support/caching in GstBin
-      * 588472 : [basetransform] problems in reverse-negotiating
-      * 589173 : macros cause spurious semicolon warnings
-      * 589314 : [basetransform] clears GAP flag in passthrough mode
-      * 589524 : gst_base_transform_acceptcaps() could provide more verbose debugging output
-      * 589849 : [segment] Clipping fails to handle start=stop < segment_start correctly
-      * 589991 : [queue] limited error handling might cause pipeline appearing to hang
-      * 590045 : Query position fails when pipeline is paused and format is not time
-      * 590430 : Add support for " album artist " tags
-      * 590841 : configure script check for libxml2 is incorrect
-      * 590919 : gst_util_uint64_scale_int() and friends don't round
-      * 591045 : [basesrc] Leaking GstTask instances
-      * 591318 : ghostpad : core dump : on_src_target_notify called with an invalid ghostpad
-      * 591441 : append mode for filesink
-      * 592209 : [GstPad] Deprecated markers missing in the header for internal links function related things
-      * 592314 : core/tests/examples/streams/ does not link to pthread
-      * 593460 : Broken win32-specific systemclock code
-      * 593719 : regression: segfault when using gstrtpbin and certain video codecs
-      * 594107 : [gstbin] : use of freed message : valgrind Invalid read
-      * 594225 : [API] [bytereader] add _unchecked() variants and inline most common functions
-      * 594990 : [introspection] pkg-config file madness and another bug
-      * 595130 : checks fail
-      * 595133 : gst/gstutils check fails
-      * 595209 : Fix out-of-tree build
-      * 368536 : bin_change_state makes children go through unnecessary state changes
+      * 476514 : [multiqueue] Doesn't forward EOS event in all cases
+      * 590941 : API: add gst_pad_get_caps() variant that avoids unneeded caps copies
+      * 595602 : g_child_proxy_get_valist doesn't initialize GValue correctly
+      * 535069 : basesrc no longer support non-flushing seeks on itself
+      * 560442 : GNOME Goal: Remove deprecated GLib symbols
+      * 595511 : Annotations for gst_element_query_{position,duration}
+      * 595886 : gst_pad_fixate_caps() does not return fixed caps in case of multiple structures
+      * 595964 : [multiqueue] can hang pipeline during startup
+      * 596366 : proxy_getcaps reverses direction of getcaps
+      * 597407 : GstPipeline calculates base_time incorrectly when a new clock appears during PAUSED state
+      * 597550 : basesrc: sometimes no buffers produced after PLAYING - PAUSED - PLAYING
+      * 597690 : Improve caps setters API
+      * 598297 : make check fails when any --disable option which changes the API has been used
+      * 598526 : bytewriter: fails to compile with gcc 4.2.4 on Ubuntu Hardy 64 bits
+      * 598700 : scripts: Parallelise git-update.sh build script
+      * 598895 : [GstRegistry] Use hash table for feature lookups
+      * 598896 : [GstRegistry] Cache lists of ElementFactory and TypeFindFactory
+      * 599147 : typefind : Avoid having to re-sort the typefind factory list
+      * 599759 : [qtdemux] Add support for more tags
+      * 600313 : Visualisations stop updating after seek
+      * 600922 : gst-launch: wake up less often to check for Ctrl-C
+      * 601587 : MiniObject race condition
+      * 601668 : [gstregistry] gstregistry.c uses a variable from gst.c
+      * 601669 : [tests] tests/examples/manual depends on libgstcheck
+      * 602093 : libgstcheck fails to export some symbols when built under et_EE locale
+      * 602275 : [API] Add new sink-message event
+      * 602419 : [basesink] Regression with position reporting
+      * 603059 : Totem crashes when DVD is encrypted but libdvdcss isn't available
+      * 603787 : [registry] Doesn't use GMappedFile
+      * 604091 : tee: cleanup requestpads in dispose
+      * 604093 : gst-inspect/launch: move gst_tools_print_version to avoid glib warning
+      * 605251 : tee causes segfault if there is no source pad
+      * 605930 : [shave] common/shave not existing yet when configure checks need it
+      * 606435 : gsttee not threadsafe
+      * 607283 : segfaults and/or miniobject warnings with GLib > = 2.23.2
+      * 607317 : [PATCH] fix unaligned detection for x86-64 when cross compiling
+      * 607431 : update common modules before freeze
+      * 607481 : Should define G_THREADS_MANDATORY everywhere
+      * 607739 : [queue2] Temporary file is removed although code claims the opposite
+      * 607842 : Audio comes out with short breaks after resume pipeline (paused- > playing)
+      * 608136 : multiqueue handles UNEXPECTED flowreturn wrongly
+      * 608398 : Initializing the glib thread system seems not to work
+      * 608442 : [filesrc] typo in warning message
+      * 608726 : bytewriter: mistake in .h/.c function naming
+      * 609166 : Buffer list docs ascii art
+      * 590669 : [API] need GstByteWriter or GstChunkWriter
+      * 601698 : Rename new plugin-scanner helper executable before release
+      * 604565 : [gstcheck] Update check to 0.9.8
+      * 596877 : New internal libcheck breaks the Solaris build
 
 API changed in this release
      
 - API additions:
     
-* gst_caps_can_intersect()
-* gst_util_uint64_scale_int_round()
-* gst_util_uint64_scale_int_ceil()
-* gst_util_uint64_scale_round()
-* gst_util_uint64_scale_ceil()
-* gst_iterator_new_single()
-* gst_byte_reader_skip_unchecked()
-* gst_byte_reader_peek_*_unchecked()
-* gst_byte_reader_get_*_unchecked()
-* gst_byte_reader_{peek,get,dup}_data_unchecked()
-* gst_byte_reader_get_float*_unchecked()
+* GST_DEBUG_REGISTER_FUNCPTR()
+* gst_base_src_new_seamless_segment()
+* gst_event_new_sink_message()
+* gst_event_parse_sink_message()
+* gst_util_fraction_add()
+* gst_util_fraction_multiply()
+* gst_util_greatest_common_divisor()
+* gst_util_double_to_fraction()
+* gst_util_fraction_to_double()
+* gst_registry_get_feature_list_cookie()
+* gst_default_registry_get_feature_list_cookie()
+* gst_pad_get_caps_reffed()
+* gst_pad_peer_get_caps_reffed()
+* gst_structure_id_has_field()
+* gst_structure_id_has_field_typed()
+* gst_plugin_feature_list_copy()
+* gst_caps_set_value()
+* gst_byte_writer_ensure_free_space()
+* gst_byte_writer_free()
+* gst_byte_writer_free_and_get_buffer()
+* gst_byte_writer_free_and_get_data()
+* gst_byte_writer_get_remaining()
+* gst_byte_writer_init()
+* gst_byte_writer_init_with_buffer()
+* gst_byte_writer_init_with_data()
+* gst_byte_writer_init_with_size()
+* gst_byte_writer_new()
+* gst_byte_writer_new_with_buffer()
+* gst_byte_writer_new_with_data()
+* gst_byte_writer_new_with_size()
+* gst_byte_writer_put_data()
+* gst_byte_writer_put_float32_be()
+* gst_byte_writer_put_float32_le()
+* gst_byte_writer_put_float64_be()
+* gst_byte_writer_put_float64_le()
+* gst_byte_writer_put_int16_be()
+* gst_byte_writer_put_int16_le()
+* gst_byte_writer_put_int24_be()
+* gst_byte_writer_put_int24_le()
+* gst_byte_writer_put_int32_be()
+* gst_byte_writer_put_int32_le()
+* gst_byte_writer_put_int64_be()
+* gst_byte_writer_put_int64_le()
+* gst_byte_writer_put_int8()
+* gst_byte_writer_put_string_utf16()
+* gst_byte_writer_put_string_utf32()
+* gst_byte_writer_put_string_utf8()
+* gst_byte_writer_put_uint16_be()
+* gst_byte_writer_put_uint16_le()
+* gst_byte_writer_put_uint24_be()
+* gst_byte_writer_put_uint24_le()
+* gst_byte_writer_put_uint32_be()
+* gst_byte_writer_put_uint32_le()
+* gst_byte_writer_put_uint64_be()
+* gst_byte_writer_put_uint64_le()
+* gst_byte_writer_put_uint8()
+* gst_byte_writer_reset()
+* gst_byte_writer_reset_and_get_buffer()
+* gst_byte_writer_reset_and_get_data()
+* gst_bit_reader_get_size()
+* gst_byte_reader_get_size()
+* gst_data_queue_new_full()
+* gst_collect_pads_set_clip_function()
+* gst_type_find_helper_get_range_ext()
+- API deprecations:
+    
+* gst_registry_xml_read_cache()
+* gst_registry_xml_write_cache()
 
 Download
 
@@ -122,22 +220,35 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Antoine Tremblay
-      * Aurelien Grimaud
+      * Andoni Morales Alastruey
+      * Bastien Nocera
       * Benjamin Otte
+      * Christian Schaller
       * David Schleef
       * Edward Hervey
+      * Frederic Crozat
+      * Havard Graff
+      * Håvard Graff
       * Jan Schmidt
-      * John Millikin
-      * Jonas Holmberg
-      * Kipp Cannon
-      * Laurent Glayal
+      * Javier Jardón
+      * Johan Bilien
+      * LRN
       * Mark Nauwelaerts
+      * Michael Smith
+      * Ole André Vadla Ravnås
+      * Olivier Crête
+      * Peter Kjellerstedt
+      * Peter van Hardenberg
+      * Priit Laes
+      * Rob Clark
+      * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
-      * Stian Selnes
+      * Thiago Santos
+      * Thiago Sousa Santos
       * Thijs Vermeir
       * Tim-Philipp Müller
+      * Tommi Myöhänen
       * Wim Taymans
       * Руслан Ижбулатов
  

@@ -934,7 +934,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Temporary File Location</NICK>
-<BLURB>Location to store temporary files in (Deprecated: Only read this property, use temp-tmpl to configure the name template).</BLURB>
+<BLURB>Location to store temporary files in (Deprecated: Only read this property, use temp-template to configure the name template).</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -965,6 +965,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Use Rate Estimate</NICK>
 <BLURB>Estimate the bitrate of the stream to calculate time level.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::temp-remove</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remove the Temporary File</NICK>
+<BLURB>Remove the temp-location after use.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
