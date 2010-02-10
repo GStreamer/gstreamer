@@ -1,14 +1,14 @@
 # Vietnamese Translation for GST Plugins Good.
-# Copyright © 2009 Free Software Foundation, Inc.
+# Copyright © 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Clytie Siddall <clytie@riverland.net.au>, 2005-2009.
+# Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-01-27 01:52+0000\n"
-"PO-Revision-Date: 2009-09-18 23:10+0930\n"
+"POT-Creation-Date: 2010-02-10 22:52+0000\n"
+"PO-Revision-Date: 2010-02-09 22:32+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
 
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "« %s » bởi « %s »"
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
@@ -67,14 +67,13 @@ msgstr ""
 "Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần phải cài đặt một "
 "phần bổ sung RTSP Gstreamer để xử lý luồng nhạc/phim loại Real."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Không tìm thấy luồng được hỗ trợ. Người dùng có thể chưa cài đặt phần bổ "
-"sung RTSP Gstreamer đúng."
+"Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần cho phép thêm giao "
+"thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
 
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
