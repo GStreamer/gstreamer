@@ -320,7 +320,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     if (csize < 2)
       goto wrong_length;
 
-    GST_DEBUG ("codec_data: object_type=%d, sample_rate=%d, channels=%d",
+    GST_DEBUG_OBJECT (faad,
+        "codec_data: object_type=%d, sample_rate=%d, channels=%d",
         ((cdata[0] & 0xf8) >> 3),
         (((cdata[0] & 0x07) << 1) | ((cdata[1] & 0x80) >> 7)),
         ((cdata[1] & 0x78) >> 3));
@@ -477,8 +478,8 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
         break;
       }
       default:{
-        GST_WARNING ("Unsupported FAAD channel position 0x%x encountered",
-            fpos[n]);
+        GST_WARNING_OBJECT (faad,
+            "Unsupported FAAD channel position 0x%x encountered", fpos[n]);
         *channel_map_failed = TRUE;
         break;
       }
@@ -632,7 +633,8 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
       gst_faad_drain (faad);
 
       if (fmt == GST_FORMAT_TIME) {
-        GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
+        GST_DEBUG_OBJECT (faad,
+            "Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
             GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
             GST_TIME_ARGS (end));
         gst_segment_set_newsegment (&faad->segment, is_update, rate, fmt, start,
@@ -641,7 +643,7 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
         gint64 new_start = 0;
         gint64 new_end = -1;
 
-        GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_BYTES (%"
+        GST_DEBUG_OBJECT (faad, "Got NEWSEGMENT event in GST_FORMAT_BYTES (%"
             G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT ")", start, end);
 
         if (gst_faad_src_convert (faad, GST_FORMAT_BYTES, start,
@@ -651,8 +653,8 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
                 GST_FORMAT_TIME, &new_end);
           }
         } else {
-          GST_DEBUG
-              ("no average bitrate yet, sending newsegment with start at 0");
+          GST_DEBUG_OBJECT (faad,
+              "no average bitrate yet, sending newsegment with start at 0");
         }
         gst_event_unref (event);
 
@@ -662,7 +664,8 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
         gst_segment_set_newsegment (&faad->segment, is_update, rate,
             GST_FORMAT_TIME, new_start, new_end, new_start);
 
-        GST_DEBUG ("Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (faad,
+            "Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
             " - %" GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
             GST_TIME_ARGS (new_end));
 
@@ -885,13 +888,13 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
  * gst/typefind/) for ADTS because 12 bits isn't very reliable.
  */
 static gboolean
-gst_faad_sync (GstBuffer * buf, guint * off)
+gst_faad_sync (GstFaad * faad, GstBuffer * buf, guint * off)
 {
   guint8 *data = GST_BUFFER_DATA (buf);
   guint size = GST_BUFFER_SIZE (buf), n;
   gint snc;
 
-  GST_DEBUG ("Finding syncpoint");
+  GST_LOG_OBJECT (faad, "Finding syncpoint");
 
   /* check for too small a buffer */
   if (size < 3)
@@ -906,10 +909,11 @@ gst_faad_sync (GstBuffer * buf, guint * off)
        * next syncpoint. */
       guint len;
 
-      GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...", n);
+      GST_LOG_OBJECT (faad,
+          "Found one ADTS syncpoint at offset 0x%x, tracing next...", n);
 
       if (size - n < 5) {
-        GST_DEBUG ("Not enough data to parse ADTS header");
+        GST_LOG_OBJECT (faad, "Not enough data to parse ADTS header");
         return FALSE;
       }
 
@@ -917,26 +921,28 @@ gst_faad_sync (GstBuffer * buf, guint * off)
       len = ((data[n + 3] & 0x03) << 11) |
           (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
       if (n + len + 2 >= size) {
-        GST_DEBUG ("Next frame is not within reach");
+        GST_LOG_OBJECT (faad, "Next frame is not within reach");
         return FALSE;
       }
 
       snc = GST_READ_UINT16_BE (&data[n + len]);
       if ((snc & 0xfff6) == 0xfff0) {
-        GST_DEBUG ("Found ADTS syncpoint at offset 0x%x (framelen %u)", n, len);
+        GST_LOG_OBJECT (faad,
+            "Found ADTS syncpoint at offset 0x%x (framelen %u)", n, len);
         return TRUE;
       }
 
-      GST_DEBUG ("No next frame found... (should be at 0x%x)", n + len);
+      GST_LOG_OBJECT (faad, "No next frame found... (should be at 0x%x)",
+          n + len);
     } else if (!memcmp (&data[n], "ADIF", 4)) {
       /* we have an ADIF syncpoint. 4 bytes is enough. */
       *off = n;
-      GST_DEBUG ("Found ADIF syncpoint at offset 0x%x", n);
+      GST_LOG_OBJECT (faad, "Found ADIF syncpoint at offset 0x%x", n);
       return TRUE;
     }
   }
 
-  GST_DEBUG ("Found no syncpoint");
+  GST_LOG_OBJECT (faad, "Found no syncpoint");
 
   return FALSE;
 }
@@ -1011,7 +1017,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   input_size = GST_BUFFER_SIZE (buffer);
 
   if (!faad->packetised) {
-    if (!gst_faad_sync (buffer, &sync_off)) {
+    if (!gst_faad_sync (faad, buffer, &sync_off)) {
       goto next;
     } else {
       input_data += sync_off;
@@ -1106,7 +1112,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         guint bufsize = info.samples * faad->bps;
         guint num_samples = info.samples / faad->channels;
 
-        GST_DEBUG_OBJECT (faad, "decoded %d samples", (guint) info.samples);
+        GST_LOG_OBJECT (faad, "decoded %d samples", (guint) info.samples);
 
         /* note: info.samples is total samples, not per channel */
         ret =
@@ -1143,7 +1149,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
             ret = gst_pad_push (faad->srcpad, outbuf);
           } else {
             /* reverse playback, queue frame till later when we get a discont. */
-            GST_DEBUG_OBJECT (faad, "queued frame");
+            GST_LOG_OBJECT (faad, "queued frame");
             faad->queued = g_list_prepend (faad->queued, outbuf);
             ret = GST_FLOW_OK;
           }
