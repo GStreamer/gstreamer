@@ -820,6 +820,23 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   gboolean ret;
   gboolean channel_map_failed;
   GstCaps *caps;
+  gboolean fmt_change = FALSE;
+
+  /* see if we need to renegotiate */
+  if (info->samplerate != faad->samplerate ||
+      info->channels != faad->channels || !faad->channel_positions) {
+    fmt_change = TRUE;
+  } else {
+    gint i;
+
+    for (i = 0; i < info->channels; i++) {
+      if (info->channel_position[i] != faad->channel_positions[i])
+        fmt_change = TRUE;
+    }
+  }
+
+  if (G_LIKELY (!fmt_change))
+    return TRUE;
 
   /* store new negotiation information */
   faad->samplerate = info->samplerate;
@@ -1077,37 +1094,12 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     input_data += info.bytesconsumed;
 
     if (out && info.samples > 0) {
-      gboolean fmt_change = FALSE;
+      if (!gst_faad_update_caps (faad, &info))
+        goto negotiation_failed;
 
-      /* see if we need to renegotiate */
-      if (info.samplerate != faad->samplerate ||
-          info.channels != faad->channels || !faad->channel_positions) {
-        fmt_change = TRUE;
-      } else {
-        gint i;
-
-        for (i = 0; i < info.channels; i++) {
-          if (info.channel_position[i] != faad->channel_positions[i])
-            fmt_change = TRUE;
-        }
-      }
-
-      if (fmt_change) {
-        if (!gst_faad_update_caps (faad, &info)) {
-          GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL),
-              ("Setting caps on source pad failed"));
-          ret = GST_FLOW_ERROR;
-          goto out;
-        }
-      }
-
-      if (info.samples > G_MAXUINT / faad->bps) {
-        /* C's lovely propensity for int overflow.. */
-        GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-            ("Output buffer too large"));
-        ret = GST_FLOW_ERROR;
-        goto out;
-      }
+      /* C's lovely propensity for int overflow.. */
+      if (info.samples > G_MAXUINT / faad->bps)
+        goto sample_overflow;
 
       /* play decoded data */
       if (info.samples > 0) {
@@ -1194,6 +1186,20 @@ init2_failed:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
         ("%s() failed", (faad->handle) ? "faacDecInit2" : "faacDecOpen"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+negotiation_failed:
+  {
+    GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL),
+        ("Setting caps on source pad failed"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+sample_overflow:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("Output buffer too large"));
     ret = GST_FLOW_ERROR;
     goto out;
   }
