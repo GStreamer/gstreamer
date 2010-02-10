@@ -1002,10 +1002,6 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     faad->discont = TRUE;
   }
 
-  GST_OBJECT_LOCK (faad);
-  faad->bytes_in += GST_BUFFER_SIZE (buffer);
-  GST_OBJECT_UNLOCK (faad);
-
   gst_adapter_push (faad->adapter, buffer);
   buffer = NULL;
 
@@ -1151,6 +1147,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         GST_OBJECT_LOCK (faad);
         faad->next_ts += GST_BUFFER_DURATION (outbuf);
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
+        faad->bytes_in += info.bytesconsumed;
         GST_OBJECT_UNLOCK (faad);
 
         if ((outbuf = gst_audio_buffer_clip (outbuf, &faad->segment,
