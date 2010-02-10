@@ -230,6 +230,16 @@ gst_faad_init (GstFaad * faad)
 }
 
 static void
+gst_faad_reset_stream_state (GstFaad * faad)
+{
+  faad->sync_flush = 0;
+  gst_adapter_clear (faad->adapter);
+  clear_queued (faad);
+  if (faad->handle)
+    faacDecPostSeekReset (faad->handle, 0);
+}
+
+static void
 gst_faad_reset (GstFaad * faad)
 {
   gst_segment_init (&faad->segment, GST_FORMAT_TIME);
@@ -244,10 +254,10 @@ gst_faad_reset (GstFaad * faad)
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->error_count = 0;
-  faad->sync_flush = 0;
-  gst_adapter_clear (faad->adapter);
-  clear_queued (faad);
+
+  gst_faad_reset_stream_state (faad);
 }
+
 
 static void
 gst_faad_finalize (GObject * object)
@@ -613,13 +623,12 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      gst_adapter_clear (faad->adapter);
-      clear_queued (faad);
+      gst_faad_reset_stream_state (faad);
       res = gst_pad_push_event (faad->srcpad, event);
       break;
     case GST_EVENT_EOS:
       gst_faad_drain (faad);
-      gst_adapter_clear (faad->adapter);
+      gst_faad_reset_stream_state (faad);
       res = gst_pad_push_event (faad->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -997,8 +1006,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     gst_faad_drain (faad);
-    faacDecPostSeekReset (faad->handle, 0);
-    gst_adapter_clear (faad->adapter);
+    gst_faad_reset_stream_state (faad);
     faad->discont = TRUE;
   }
 
