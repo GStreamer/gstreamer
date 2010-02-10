@@ -1906,7 +1906,13 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
                       GST_RTSP_HDR_X_SESSIONCOOKIE, NULL, 0) != GST_RTSP_OK)) {
             /* there is, prepare to read the body */
             builder->body_len = atol (hdrval);
-            builder->body_data = g_malloc (builder->body_len + 1);
+            builder->body_data = g_try_malloc (builder->body_len + 1);
+            /* we can't do much here, we need the length to know how many bytes
+             * we need to read next and when allocation fails, something is
+             * probably wrong with the length. */
+            if (builder->body_data == NULL)
+              goto invalid_body_len;
+
             builder->body_data[builder->body_len] = '\0';
             builder->offset = 0;
             builder->state = STATE_DATA_BODY;
@@ -1999,6 +2005,13 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
   }
 done:
   return res;
+
+  /* ERRORS */
+invalid_body_len:
+  {
+    GST_DEBUG ("could not allocate body");
+    return GST_RTSP_ERROR;
+  }
 }
 
 /**
