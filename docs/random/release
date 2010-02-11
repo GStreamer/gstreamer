@@ -69,9 +69,25 @@ RELEASE PROCEDURE:
 - prepare the release:
   - Make sure your www is up to date: Run bin/data-get in www/
   - Update the doap file to insert the new release info
-  - bin/new-release (module) (version) (checkoutdir) (release name)
-    - updates cvs
-    - allows you to update versioning in configure.ac
+  - Prepare the following in a text file for copy'n'paste purposes:
+    - list of noteworthy changes / new features, check changelog or shortlog:
+        - git log RELEASE-0.10.98..
+        - git shortlog RELEASE-0.10.98..
+        - wrap like this:
+         <feature>added this and that</feature>
+         <feature>foodemux now supports seek in twilight mode</feature>
+    - list of API additions, two useful sources:
+        - git diff RELEASE-0.10.98.. win32/common/*.def
+        - git log RELEASE-0.10.98.. --grep=API
+        - wrap like this:
+             <item>gst_new_func()</item>
+             <item>gst_new_func_full()</item>
+    - list of recently deprecated API, same as above:
+             <item>gst_broken_func()</item>
+  - in www, run bin/new-release (module) (version) (checkoutdir) (release name)
+    - updates git
+    - allows you to update versioning in configure.ac (don't forget to bump
+      core/base requirements from prereleases to released version if needed)
     - rebuilds
     - updates ChangeLog
     - adds a new releases/module/version.xml file and lets you edit
@@ -90,10 +106,10 @@ RELEASE PROCEDURE:
 - release:
   - 'git commit -a' in the tree
   - tag tree
-    for example for 0.6.3 :
-           git tag -a -m 'Release 0.6.3' RELEASE-0.6.3
+    for example for 0.10.42 :
+           git tag -a -m 'Release 0.10.42' RELEASE-0.10.42
     Make sure to use the -a option to create an *annotated* tag: 'git describe'
-    should show 'RELEASE-0.6.3'
+    should show 'RELEASE-0.10.42'
   - bump nano number in configure.ac, commit
   - sync source and packages to website
     + run /bin/data-put in www
@@ -111,4 +127,7 @@ RELEASE PROCEDURE:
   - Send release announcements to:
     gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
   - Update freshmeat with new releases (get Uraeus to do it)
+
+  - push release commit(s) to git repo
+  - push new tag to git repo: git push origin tag RELEASE-0.10.42
 
