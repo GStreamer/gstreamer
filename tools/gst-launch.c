@@ -387,6 +387,9 @@ play_signal_setup (void)
 static EventLoopResult
 event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 {
+#ifndef DISABLE_FAULT_HANDLER
+  gulong timeout_id;
+#endif
   GstBus *bus;
   GstMessage *message = NULL;
   EventLoopResult res = ELR_NO_ERROR;
@@ -395,7 +398,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
 #ifndef DISABLE_FAULT_HANDLER
-  g_timeout_add (250, (GSourceFunc) check_intr, pipeline);
+  timeout_id = g_timeout_add (250, (GSourceFunc) check_intr, pipeline);
 #endif
 
   while (TRUE) {
@@ -653,6 +656,9 @@ exit:
     if (message)
       gst_message_unref (message);
     gst_object_unref (bus);
+#ifndef DISABLE_FAULT_HANDLER
+    g_source_remove (timeout_id);
+#endif
     return res;
   }
 }
