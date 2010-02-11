@@ -22,7 +22,7 @@
  * SECTION:element-faac
  * @see_also: faad
  *
- * faac encodes raw audio to AAC (MPEG-4 part 10) streams.
+ * faac encodes raw audio to AAC (MPEG-4 part 3) streams.
  *
  * The #GstFaac:outputformat property determines whether or not the
  * AAC data needs additional framing provided by a container
