@@ -33,6 +33,12 @@ else
 check_faac =
 endif
 
+if USE_FAAD
+check_faad = elements/faad
+else
+check_faad =
+endif
+
 if USE_METADATA
 check_metadata = pipelines/metadata
 else
@@ -102,6 +108,7 @@ noinst_PROGRAMS = \
 check_PROGRAMS = \
 	generic/states \
 	$(check_faac)  \
+	$(check_faad)  \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
 	$(check_ofa)        \
