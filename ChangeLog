@@ -1,9 +1,147 @@
-=== release 0.10.17 ===
+=== release 0.10.18 ===
 
-2009-10-05  Jan Schmidt <jan.schmidt@sun.com>
+2010-02-11  Edward Hervey <bilboed@bilboed.com>
 
 	* configure.ac:
-	  releasing 0.10.17, "Shiny new button"
+	  releasing 0.10.18, "A pigeon carrying a 500ton block"
+
+2010-01-30 15:20:24 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 15d47a6 to 96dc793
+
+2010-01-25 20:27:39 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.17.2 pre-release
+
+2010-01-23 12:39:46 +0100  Luca Bruno <lucab@debian.org>
+
+	* gst/__init__.py:
+	  Fix importing of gst module on GNU/kFreeBSD
+
+2010-01-20 00:55:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 14cec89 to 15d47a6
+
+2010-01-15 17:49:03 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.13.ignore:
+	* gst/gst-0.10.14.ignore:
+	* gst/gst-0.10.15.ignore:
+	* gst/gst-0.10.16.ignore:
+	* gst/gst-0.10.18.ignore:
+	* gst/gst-pb-0.10.14.ignore:
+	* gst/gst-pb-0.10.16.ignore:
+	* gst/gst-pb-0.10.18.ignore:
+	* gst/gstversion.override.in:
+	* gst/interfaces.override:
+	* gst/pbutils.override:
+	  bump minimum requirement to 0.10.18 and remove cruft
+
+2010-01-15 17:44:41 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.26.ignore:
+	* gst/gst-pb-0.10.26.ignore:
+	* gst/gstversion.override.in:
+	  ignore new API additions for 0.10.26 core/base releases
+
+2010-01-15 17:26:20 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/base.defs:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/tag.defs:
+	* gst/video.defs:
+	  gst: Update .defs to new API
+
+2010-01-18 09:06:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/extend/discoverer.py:
+	  python: Do not pop tags in discoverer.py
+	  Do not use pop on dicts because it destroys the tags info.
+	  Fixes #592459
+
+2009-12-21 19:13:28 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47cb23a to 14cec89
+
+2009-12-01 15:08:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 87bf428 to 47cb23a
+
+2009-12-01 14:18:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From da4c75c to 87bf428
+
+2009-11-27 18:56:43 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 53a2485 to da4c75c
+
+2009-11-19 10:31:56 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 0702fe1 to 53a2485
+
+2009-10-16 10:17:39 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 85d1530 to 0702fe1
+
+2009-10-15 14:15:37 +0100  Zaheer Abbas Merali <zaheerabbas@merali.org>
+
+	* examples/Makefile.am:
+	* examples/maemogst.py:
+	  examples: add a simple Maemo 5 example
+
+2009-10-14 10:42:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a3e3ce4 to 85d1530
+
+2009-10-08 11:01:32 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 19fa4f3 to a3e3ce4
+
+2009-10-06 19:48:48 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  back to development -> 0.10.17.1
+
+2009-10-05 14:29:41 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst-python.doap:
+	  Add 0.10.17 release to the doap file
+
+=== release 0.10.17 ===
+
+2009-10-05 14:06:11 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.10.17
 
 2009-09-17 01:21:47 +0100  Jan Schmidt <thaytan@noraisin.net>
 
@@ -4237,16 +4375,4 @@
 	  back to HEAD
 	  Original commit message from CVS:
 	  back to HEAD
-
-=== release 0.10.0 ===
-
-2005-12-05 18:04:34 +0000  Thomas Vander Stichele <thomas@apestaart.org>
-
-	* ChangeLog:
-	* NEWS:
-	* RELEASE:
-	* configure.ac:
-	  releasing 0.10.0
-	  Original commit message from CVS:
-	  releasing 0.10.0
 

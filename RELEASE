@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.17 "Shiny new button"
+Release notes for GStreamer Python bindings 0.10.18 "A pigeon carrying a 500ton block"
         
 
 
@@ -17,16 +17,12 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Fix leak in gst_base_sink_get_last_buffer()
-      * Fix linking of pygstminiobject
-      * Add test_audio.py example
-      * Fix deadlocks calling gst_pad_link()
+      * Updates to 0.10.26 core/base API addition
 
 Bugs fixed in this release
      
-      * 590348 : [audio (and other modules)] can't use pygstminiobject !
-      * 590803 : checks fail in non-English locale
-      * 592447 : memory leak on certain pipelines with appsink
+      * 592459 : info.print_info() uses info.tags.pop() to get values, but pop is destructive, so calling print_info twice can return different results
+      * 599818 : Import of pygst fails with Element missing
 
 Download
 
@@ -55,11 +51,13 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Christian Schaller
       * Edward Hervey
       * Jan Schmidt
-      * Johannes Berg
-      * Marc-Andre Lureau
+      * Luca Bruno
+      * Mark Nauwelaerts
       * Sebastian Dröge
+      * Stefan Kost
+      * Thiago Santos
+      * Tim-Philipp Müller
+      * Zaheer Abbas Merali
  

@@ -1,4 +1,13 @@
-This is GStreamer Python Bindings 0.10.17, "Shiny new button"
+This is GStreamer Python Bindings 0.10.18, "A pigeon carrying a 500ton block"
+
+Changes since 0.10.17:
+
+      * Updates to 0.10.26 core/base API addition
+
+Bugs fixed since 0.10.17:
+
+      * 592459 : info.print_info() uses info.tags.pop() to get values, but pop is destructive, so calling print_info twice can return different results
+      * 599818 : Import of pygst fails with Element missing
 
 Changes since 0.10.16:
     
