@@ -7046,7 +7046,8 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case 0x68:                 /* AAC SSR */
       /* Override channels and rate based on the codec_data, as it's often
        * wrong. */
-      if (data_ptr && data_len >= 2) {
+      /* Only do so for basic setup without HE-AAC extension */
+      if (data_ptr && data_len == 2) {
         guint channels, rateindex;
         int rates[] = { 96000, 88200, 64000, 48000, 44100, 32000,
           24000, 22050, 16000, 12000, 11025, 8000
