@@ -383,7 +383,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   faad->fake_codec_data[0] = 0;
   faad->fake_codec_data[1] = 0;
 
-  if (faad->packetised) {
+  if (faad->packetised && !faad->init) {
     gint rate, channels;
 
     if (gst_structure_get_int (str, "rate", &rate) &&
@@ -1096,11 +1096,6 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   info.bytesconsumed = input_size;
   info.error = 0;
 
-  if (!faad->packetised) {
-    /* We must check that ourselves for raw stream */
-    run_loop = (input_size >= FAAD_MIN_STREAMSIZE);
-  }
-
   while ((input_size > 0) && run_loop) {
 
     if (faad->packetised) {
@@ -1133,6 +1128,9 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     /* ok again */
     faad->error_count = 0;
 
+    GST_LOG_OBJECT (faad, "%d bytes consumed, %d samples decoded",
+        (guint) info.bytesconsumed, (guint) info.samples);
+
     if (info.bytesconsumed > input_size)
       info.bytesconsumed = input_size;
 
@@ -1151,8 +1149,6 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       if (info.samples > 0) {
         guint bufsize = info.samples * faad->bps;
         guint num_samples = info.samples / faad->channels;
-
-        GST_LOG_OBJECT (faad, "decoded %d samples", (guint) info.samples);
 
         /* note: info.samples is total samples, not per channel */
         ret =
