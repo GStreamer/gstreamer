@@ -250,6 +250,7 @@ gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
  *
  * Convenience function to read a string with unknown character encoding. If
  * the string is already in UTF-8 encoding, it will be returned right away.
+ * If not it tries to detect byte-order-mark for UTF-16/32 cases and use that.
  * Otherwise, the environment will be searched for a number of environment
  * variables (whose names are specified in the NULL-terminated string array
  * @env_vars) containing a list of character encodings to try/use. If none
