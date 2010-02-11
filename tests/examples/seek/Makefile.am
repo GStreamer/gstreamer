@@ -8,6 +8,6 @@ noinst_PROGRAMS = $(examples)
 
 LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(GST_LIBS) $(GTK_LIBS)
+	$(GST_LIBS) $(GTK_LIBS) $(LIBM)
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GTK_CFLAGS) -I$(top_builddir)/gst-libs
