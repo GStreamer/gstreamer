@@ -18,6 +18,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-faad
+ * @seealso: faac
+ *
+ * faad decodes AAC (MPEG-4 part 3) stream.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * <programlisting>
+ * gst-launch filesrc location=example.mp4 ! qtdemux ! faad ! audioconvert ! audioresample ! autoaudiosink
+ * </programlisting>
+ * <programlisting>
+ * gst-launch filesrc location=example.adts ! faad ! audioconvert ! audioresample ! autoaudiosink
+ * </programlisting>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

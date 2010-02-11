@@ -43,6 +43,7 @@
     <xi:include href="xml/element-dvbsrc.xml" />
     <xi:include href="xml/element-dvdspu.xml" />
     <xi:include href="xml/element-faac.xml" />
+    <xi:include href="xml/element-faad.xml" />
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-flacparse.xml" />
     <xi:include href="xml/element-fpsdisplaysink.xml" />

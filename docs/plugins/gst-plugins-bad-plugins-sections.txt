@@ -419,6 +419,20 @@ gst_faac_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-faad</FILE>
+<TITLE>faad</TITLE>
+GstFaad
+<SUBSECTION Standard>
+GstFaadClass
+GST_TYPE_FAAD
+GST_FAAD
+GST_IS_FAAD
+GST_FAAD_CLASS
+GST_IS_FAAD_CLASS
+gst_faad_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-festival</FILE>
 <TITLE>festival</TITLE>
 GstFestival
