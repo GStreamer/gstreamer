@@ -38,6 +38,7 @@ typedef struct _QtNodeType QtNodeType;
 #define QT_UINT16(a)  (GST_READ_UINT16_BE(a))
 #define QT_UINT8(a)   (GST_READ_UINT8(a))
 #define QT_FP32(a)    ((GST_READ_UINT32_BE(a))/65536.0)
+#define QT_SFP32(a)   (((gint)(GST_READ_UINT32_BE(a)))/65536.0)
 #define QT_FP16(a)    ((GST_READ_UINT16_BE(a))/256.0)
 #define QT_FOURCC(a)  (GST_READ_UINT32_LE(a))
 #define QT_UINT64(a)  ((((guint64)QT_UINT32(a))<<32)|QT_UINT32(((guint8 *)a)+4))

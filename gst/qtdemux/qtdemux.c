@@ -6040,13 +6040,14 @@ qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
 
   /* +1 +1 = skip null-terminator and location role byte */
   offset += 1 + 1;
-  longitude = QT_FP32 (data + offset);
+  /* table in spec says unsigned, semantics say negative has meaning ... */
+  longitude = QT_SFP32 (data + offset);
 
   offset += 4;
-  latitude = QT_FP32 (data + offset);
+  latitude = QT_SFP32 (data + offset);
 
   offset += 4;
-  altitude = QT_FP32 (data + offset);
+  altitude = QT_SFP32 (data + offset);
 
   /* one invalid means all are invalid */
   if (longitude >= -180.0 && longitude <= 180.0 &&
