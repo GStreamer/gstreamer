@@ -1,30 +1,41 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstCameraBin GstChildProxy GstImplementsInterface GstTagSetter GstPhotography GstColorBalance
-RsnDvdBin GstURIHandler GstChildProxy
-DvbBaseBin GstURIHandler GstChildProxy
+GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter GstPhotography
+GstQTMoovRecover GstChildProxy
+RsnDvdBin GstChildProxy GstURIHandler
+DvbBaseBin GstChildProxy GstURIHandler
+GstRtpBin GstChildProxy
 GstFPSDisplaySink GstChildProxy
-GstSDPDemux GstChildProxy
 GstAutoConvert GstChildProxy
+GstSDPDemux GstChildProxy
+GstMetadataMux GstTagSetter
+GstXvidEnc GstPreset
+GstCDAudio GstURIHandler
+GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
+VdpSink GstImplementsInterface GstNavigation GstXOverlay
 GstApExSink GstImplementsInterface GstMixer
 GstOss4Sink GstPropertyProbe
-GstNeonhttpSrc GstURIHandler
+GstAmrWbEnc GstPreset
+GstMythtvSrc GstURIHandler
+GstMMS GstURIHandler
 GstOss4Source GstImplementsInterface GstMixer GstPropertyProbe
+GstNeonhttpSrc GstURIHandler
 GstVCDSrc GstURIHandler
 GstDataURISrc GstURIHandler
-GstXvidEnc GstPreset
-GstCeltEnc GstPreset GstTagSetter
-GstBaseVideoEncoder GstPreset
-GstDiracEnc GstPreset
-GstCDAudio GstURIHandler
 GstFaac GstPreset
-GstMetadataMux GstTagSetter
+GstBaseVideoEncoder GstPreset
+GstSchroEnc GstPreset
+GstDiracEnc GstPreset
+GstKateEnc GstTagSetter
+GstKateTag GstTagSetter
+GstCeltEnc GstTagSetter GstPreset
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
-GstAsfMux GstTagSetter
 GstQTMux GstTagSetter
 GstMP4Mux GstTagSetter
 GstGPPMux GstTagSetter
 GstMJ2Mux GstTagSetter
+GstJifMux GstTagSetter
+GstAsfMux GstTagSetter
 GstId3BaseMux GstTagSetter
 GstId3Mux GstTagSetter

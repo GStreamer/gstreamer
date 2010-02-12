@@ -91,6 +91,16 @@
       </pads>
     </element>
     <element>
+      <name>qtmoovrecover</name>
+      <longname>QT Moov Recover</longname>
+      <class>Util</class>
+      <description>Recovers unfinished qtmux files</description>
+      <author>Thiago Santos &lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+    
+      </pads>
+    </element>
+    <element>
       <name>qtmux</name>
       <longname>QuickTime Muxer</longname>
       <class>Codec/Muxer</class>

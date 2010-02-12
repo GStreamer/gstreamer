@@ -10,7 +10,7 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-compressor-mono</name>
+      <name>invadarecords-com-plugins-lv2-compressor-mono</name>
       <longname>Invada Compressor (mono)</longname>
       <class>Filter/Effect/Audio/LV2</class>
       <description>Invada Compressor (mono)</description>
@@ -31,7 +31,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-compressor-stereo</name>
+      <name>invadarecords-com-plugins-lv2-compressor-stereo</name>
       <longname>Invada Compressor (stereo)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Compressor (stereo)</description>
@@ -52,7 +52,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-delay-mono</name>
+      <name>invadarecords-com-plugins-lv2-delay-mono</name>
       <longname>Invada Delay Munge (mono in)</longname>
       <class>Sink/Analyzer/Audio/LV2</class>
       <description>Invada Delay Munge (mono in)</description>
@@ -73,7 +73,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-delay-sum</name>
+      <name>invadarecords-com-plugins-lv2-delay-sum</name>
       <longname>Invada Delay Munge (sum L+R in)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Delay Munge (sum L+R in)</description>
@@ -94,7 +94,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-erreverb-mono</name>
+      <name>invadarecords-com-plugins-lv2-erreverb-mono</name>
       <longname>Invada Early Reflection Reverb (mono in)</longname>
       <class>Sink/Analyzer/Audio/LV2</class>
       <description>Invada Early Reflection Reverb (mono in)</description>
@@ -115,7 +115,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-erreverb-sum</name>
+      <name>invadarecords-com-plugins-lv2-erreverb-sum</name>
       <longname>Invada Early Reflection Reverb (sum L+R in)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Early Reflection Reverb (sum L+R in)</description>
@@ -136,7 +136,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-filter-hpf-mono</name>
+      <name>invadarecords-com-plugins-lv2-filter-hpf-mono</name>
       <longname>Invada High Pass Filter (mono)</longname>
       <class>Filter/Effect/Audio/LV2</class>
       <description>Invada High Pass Filter (mono)</description>
@@ -157,7 +157,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-filter-hpf-stereo</name>
+      <name>invadarecords-com-plugins-lv2-filter-hpf-stereo</name>
       <longname>Invada High Pass Filter (stereo)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada High Pass Filter (stereo)</description>
@@ -178,7 +178,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-filter-lpf-mono</name>
+      <name>invadarecords-com-plugins-lv2-filter-lpf-mono</name>
       <longname>Invada Low Pass Filter (mono)</longname>
       <class>Filter/Effect/Audio/LV2</class>
       <description>Invada Low Pass Filter (mono)</description>
@@ -199,7 +199,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-filter-lpf-stereo</name>
+      <name>invadarecords-com-plugins-lv2-filter-lpf-stereo</name>
       <longname>Invada Low Pass Filter (stereo)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Low Pass Filter (stereo)</description>
@@ -220,7 +220,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-input</name>
+      <name>invadarecords-com-plugins-lv2-input</name>
       <longname>Invada Input Module</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Input Module</description>
@@ -241,7 +241,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-meter</name>
+      <name>invadarecords-com-plugins-lv2-meter</name>
       <longname>Invada Meter</longname>
       <class>Filter/Effect/Audio/LV2</class>
       <description>Invada Meter</description>
@@ -274,7 +274,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-phaser-mono</name>
+      <name>invadarecords-com-plugins-lv2-phaser-mono</name>
       <longname>Invada Stereo Phaser (mono in)</longname>
       <class>Sink/Analyzer/Audio/LV2</class>
       <description>Invada Stereo Phaser (mono in)</description>
@@ -295,7 +295,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-phaser-stereo</name>
+      <name>invadarecords-com-plugins-lv2-phaser-stereo</name>
       <longname>Invada Stereo Phaser (stereo in)</longname>
       <class>Sink/Analyzer/Audio/LV2</class>
       <description>Invada Stereo Phaser (stereo in)</description>
@@ -322,7 +322,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-phaser-sum</name>
+      <name>invadarecords-com-plugins-lv2-phaser-sum</name>
       <longname>Invada Stereo Phaser (sum L+R in)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Stereo Phaser (sum L+R in)</description>
@@ -343,7 +343,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-testtone</name>
+      <name>invadarecords-com-plugins-lv2-testtone</name>
       <longname>Invada Test Tones</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Test Tones</description>
@@ -358,7 +358,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-tube-mono</name>
+      <name>invadarecords-com-plugins-lv2-tube-mono</name>
       <longname>Invada Tube Distortion (mono)</longname>
       <class>Filter/Effect/Audio/LV2</class>
       <description>Invada Tube Distortion (mono)</description>
@@ -379,7 +379,7 @@
       </pads>
     </element>
     <element>
-      <name>http---invadarecords-com-plugins-lv2-tube-stereo</name>
+      <name>invadarecords-com-plugins-lv2-tube-stereo</name>
       <longname>Invada Tube Distortion (stereo)</longname>
       <class>Source/Audio/LV2</class>
       <description>Invada Tube Distortion (stereo)</description>

@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -41,7 +41,7 @@
 <ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Averaging Period</NICK>
 <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
@@ -91,7 +91,7 @@
 <ARG>
 <NAME>GstXvidEnc::buffer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Size</NICK>
 <BLURB>[CBR] Size of the video buffers.</BLURB>
@@ -121,7 +121,7 @@
 <ARG>
 <NAME>GstXvidEnc::container-frame-overhead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Container Frame Overhead</NICK>
 <BLURB>[PASS2] Average container overhead per frame.</BLURB>
@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstXvidEnc::flow-control-strength</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flow Control Strength</NICK>
 <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
@@ -211,7 +211,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-reduction</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Reduction</NICK>
 <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
@@ -221,7 +221,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Threshold</NICK>
 <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-degradation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Degradation</NICK>
 <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-improvement</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Improvement</NICK>
 <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstXvidEnc::reaction-delay-factor</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reaction Delay Factor</NICK>
 <BLURB>[CBR] Reaction delay factor.</BLURB>
@@ -1341,7 +1341,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -1691,7 +1691,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -8571,11 +8571,11 @@
 <ARG>
 <NAME>ladspa-tap-tubewarmth::Drive</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Drive</NICK>
 <BLURB>Drive.</BLURB>
-<DEFAULT>2,575</DEFAULT>
+<DEFAULT>2.575</DEFAULT>
 </ARG>
 
 <ARG>
@@ -8675,7 +8675,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Rotor-Horn-Mix</NICK>
 <BLURB>Rotor-Horn-Mix.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -8855,7 +8855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Fractal-Dimension</NICK>
 <BLURB>Fractal-Dimension.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -8901,17 +8901,17 @@
 <ARG>
 <NAME>ladspa-tap-limiter::latency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,2500,1]</RANGE>
+<RANGE>[0,2500.1]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>2500,1</DEFAULT>
+<DEFAULT>2500.1</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-1-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-1-Bandwidth--octaves-</NICK>
 <BLURB>Band-1-Bandwidth--octaves-.</BLURB>
@@ -8941,7 +8941,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-2-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-2-Bandwidth--octaves-</NICK>
 <BLURB>Band-2-Bandwidth--octaves-.</BLURB>
@@ -8971,7 +8971,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-3-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-3-Bandwidth--octaves-</NICK>
 <BLURB>Band-3-Bandwidth--octaves-.</BLURB>
@@ -9001,7 +9001,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-4-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-4-Bandwidth--octaves-</NICK>
 <BLURB>Band-4-Bandwidth--octaves-.</BLURB>
@@ -9031,7 +9031,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-5-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-5-Bandwidth--octaves-</NICK>
 <BLURB>Band-5-Bandwidth--octaves-.</BLURB>
@@ -9061,7 +9061,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-6-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-6-Bandwidth--octaves-</NICK>
 <BLURB>Band-6-Bandwidth--octaves-.</BLURB>
@@ -9091,7 +9091,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-7-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-7-Bandwidth--octaves-</NICK>
 <BLURB>Band-7-Bandwidth--octaves-.</BLURB>
@@ -9121,7 +9121,7 @@
 <ARG>
 <NAME>ladspa-tap-equalizer-bw::Band-8-Bandwidth--octaves-</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,5]</RANGE>
+<RANGE>[0.1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-8-Bandwidth--octaves-</NICK>
 <BLURB>Band-8-Bandwidth--octaves-.</BLURB>
@@ -9555,7 +9555,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pitch-Tracking</NICK>
 <BLURB>Pitch-Tracking.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -9565,7 +9565,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Time-Tracking</NICK>
 <BLURB>Time-Tracking.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -9785,13 +9785,13 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-pitchScaleHQ::Pitch-co-efficient</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,5,2]</RANGE>
+<RANGE>[0.5,2]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pitch-co-efficient</NICK>
 <BLURB>Pitch-co-efficient.</BLURB>
@@ -9805,7 +9805,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -9855,7 +9855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Frequency--Hz-</NICK>
 <BLURB>Frequency--Hz-.</BLURB>
-<DEFAULT>1,25</DEFAULT>
+<DEFAULT>1.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -9885,7 +9885,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10165,13 +10165,13 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-pitchScale::Pitch-co-efficient</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,5,2]</RANGE>
+<RANGE>[0.5,2]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pitch-co-efficient</NICK>
 <BLURB>Pitch-co-efficient.</BLURB>
@@ -10185,7 +10185,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10201,17 +10201,17 @@
 <ARG>
 <NAME>ladspa-pointerCastDistortion::Effect-cutoff-freq</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,13230]</RANGE>
+<RANGE>[4.41,13230]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Effect-cutoff-freq</NICK>
 <BLURB>Effect-cutoff-freq.</BLURB>
-<DEFAULT>32,6377</DEFAULT>
+<DEFAULT>32.6376</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-const::Signal-amplitude</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[-1,1,1]</RANGE>
+<RANGE>[-1,1.1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Signal-amplitude</NICK>
 <BLURB>Signal-amplitude.</BLURB>
@@ -10221,11 +10221,11 @@
 <ARG>
 <NAME>ladspa-lsFilter::Cutoff-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[88,2,22050]</RANGE>
+<RANGE>[88.2,22050]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-frequency</NICK>
 <BLURB>Cutoff-frequency.</BLURB>
-<DEFAULT>1394,56</DEFAULT>
+<DEFAULT>1394.56</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10611,61 +10611,61 @@
 <ARG>
 <NAME>ladspa-butthigh-iir::Cutoff-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-Frequency</NICK>
 <BLURB>Cutoff-Frequency.</BLURB>
-<DEFAULT>36,1195</DEFAULT>
+<DEFAULT>36.1195</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-butthigh-iir::Resonance</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,1,41]</RANGE>
+<RANGE>[0.1,1.41]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Resonance</NICK>
 <BLURB>Resonance.</BLURB>
-<DEFAULT>0,755</DEFAULT>
+<DEFAULT>0.755</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-buttlow-iir::Cutoff-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-Frequency</NICK>
 <BLURB>Cutoff-Frequency.</BLURB>
-<DEFAULT>36,1195</DEFAULT>
+<DEFAULT>36.1195</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-buttlow-iir::Resonance</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,1,41]</RANGE>
+<RANGE>[0.1,1.41]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Resonance</NICK>
 <BLURB>Resonance.</BLURB>
-<DEFAULT>0,755</DEFAULT>
+<DEFAULT>0.755</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-bwxover-iir::Cutoff-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-Frequency</NICK>
 <BLURB>Cutoff-Frequency.</BLURB>
-<DEFAULT>36,1195</DEFAULT>
+<DEFAULT>36.1195</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-bwxover-iir::Resonance</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,1,41]</RANGE>
+<RANGE>[0.1,1.41]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Resonance</NICK>
 <BLURB>Resonance.</BLURB>
-<DEFAULT>0,755</DEFAULT>
+<DEFAULT>0.755</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10705,7 +10705,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10745,27 +10745,27 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-notch-iir::Bandwidth</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth</NICK>
 <BLURB>Bandwidth.</BLURB>
-<DEFAULT>295,832</DEFAULT>
+<DEFAULT>295.832</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-notch-iir::Center-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Center-Frequency</NICK>
 <BLURB>Center-Frequency.</BLURB>
-<DEFAULT>295,832</DEFAULT>
+<DEFAULT>295.832</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10781,11 +10781,11 @@
 <ARG>
 <NAME>ladspa-lowpass-iir::Cutoff-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-Frequency</NICK>
 <BLURB>Cutoff-Frequency.</BLURB>
-<DEFAULT>2422,97</DEFAULT>
+<DEFAULT>2422.97</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10801,11 +10801,11 @@
 <ARG>
 <NAME>ladspa-highpass-iir::Cutoff-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Cutoff-Frequency</NICK>
 <BLURB>Cutoff-Frequency.</BLURB>
-<DEFAULT>36,1195</DEFAULT>
+<DEFAULT>36.1195</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10821,21 +10821,21 @@
 <ARG>
 <NAME>ladspa-bandpass-iir::Bandwidth</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth</NICK>
 <BLURB>Bandwidth.</BLURB>
-<DEFAULT>295,832</DEFAULT>
+<DEFAULT>295.832</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-bandpass-iir::Center-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Center-Frequency</NICK>
 <BLURB>Center-Frequency.</BLURB>
-<DEFAULT>295,832</DEFAULT>
+<DEFAULT>295.832</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10851,21 +10851,21 @@
 <ARG>
 <NAME>ladspa-bandpass-a-iir::Bandwidth</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth</NICK>
 <BLURB>Bandwidth.</BLURB>
-<DEFAULT>295,832</DEFAULT>
+<DEFAULT>295.832</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-bandpass-a-iir::Center-Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,19845]</RANGE>
+<RANGE>[4.41,19845]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Center-Frequency</NICK>
 <BLURB>Center-Frequency.</BLURB>
-<DEFAULT>36,1195</DEFAULT>
+<DEFAULT>36.1195</DEFAULT>
 </ARG>
 
 <ARG>
@@ -10961,7 +10961,7 @@
 <ARG>
 <NAME>ladspa-sinCos::Base-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,0441,22050]</RANGE>
+<RANGE>[0.0441,22050]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Base-frequency</NICK>
 <BLURB>Base-frequency.</BLURB>
@@ -10985,7 +10985,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11001,11 +11001,11 @@
 <ARG>
 <NAME>ladspa-gongBeater::Strike-duration</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,001,0,2]</RANGE>
+<RANGE>[0.001,0.2]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Strike-duration</NICK>
 <BLURB>Strike-duration.</BLURB>
-<DEFAULT>0,1005</DEFAULT>
+<DEFAULT>0.1005</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11041,7 +11041,7 @@
 <ARG>
 <NAME>ladspa-djFlanger::LFO-period</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,32]</RANGE>
+<RANGE>[0.1,32]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>LFO-period</NICK>
 <BLURB>LFO-period.</BLURB>
@@ -11055,23 +11055,23 @@
 <FLAGS>rwx</FLAGS>
 <NICK>LFO-sync</NICK>
 <BLURB>LFO-sync.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-giantFlange::Delay-1-range</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,10,5]</RANGE>
+<RANGE>[0,10.5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-1-range</NICK>
 <BLURB>Delay-1-range.</BLURB>
-<DEFAULT>2,625</DEFAULT>
+<DEFAULT>2.625</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-giantFlange::Delay-2-range</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,10,5]</RANGE>
+<RANGE>[0,10.5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-2-range</NICK>
 <BLURB>Delay-2-range.</BLURB>
@@ -11085,7 +11085,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Double-delay</NICK>
 <BLURB>Double-delay.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11341,7 +11341,7 @@
 <ARG>
 <NAME>ladspa-amPitchshift::Pitch-shift</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,25,4]</RANGE>
+<RANGE>[0.25,4]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pitch-shift</NICK>
 <BLURB>Pitch-shift.</BLURB>
@@ -11355,7 +11355,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11395,7 +11395,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11415,7 +11415,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11625,7 +11625,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-damping</NICK>
 <BLURB>Inner-damping.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11635,7 +11635,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-size-1</NICK>
 <BLURB>Inner-size-1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11645,7 +11645,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-size-2</NICK>
 <BLURB>Inner-size-2.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11655,7 +11655,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-size-3</NICK>
 <BLURB>Inner-size-3.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11665,7 +11665,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-size-4</NICK>
 <BLURB>Inner-size-4.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11675,7 +11675,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-1--</NICK>
 <BLURB>Inner-stiffness-1--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11685,7 +11685,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-1---1</NICK>
 <BLURB>Inner-stiffness-1---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11695,7 +11695,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-2--</NICK>
 <BLURB>Inner-stiffness-2--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11705,7 +11705,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-2---1</NICK>
 <BLURB>Inner-stiffness-2---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11715,7 +11715,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-3--</NICK>
 <BLURB>Inner-stiffness-3--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11725,7 +11725,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-3---1</NICK>
 <BLURB>Inner-stiffness-3---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11735,7 +11735,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-4--</NICK>
 <BLURB>Inner-stiffness-4--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11745,7 +11745,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Inner-stiffness-4---1</NICK>
 <BLURB>Inner-stiffness-4---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11755,7 +11755,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Mic-position</NICK>
 <BLURB>Mic-position.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11765,7 +11765,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-damping</NICK>
 <BLURB>Outer-damping.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11775,7 +11775,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-size-1</NICK>
 <BLURB>Outer-size-1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11785,7 +11785,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-size-2</NICK>
 <BLURB>Outer-size-2.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11795,7 +11795,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-size-3</NICK>
 <BLURB>Outer-size-3.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11805,7 +11805,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-size-4</NICK>
 <BLURB>Outer-size-4.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11815,7 +11815,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-1--</NICK>
 <BLURB>Outer-stiffness-1--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11825,7 +11825,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-1---1</NICK>
 <BLURB>Outer-stiffness-1---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11835,7 +11835,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-2--</NICK>
 <BLURB>Outer-stiffness-2--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11845,7 +11845,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-2---1</NICK>
 <BLURB>Outer-stiffness-2---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11855,7 +11855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-3--</NICK>
 <BLURB>Outer-stiffness-3--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11865,7 +11865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-3---1</NICK>
 <BLURB>Outer-stiffness-3---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11875,7 +11875,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-4--</NICK>
 <BLURB>Outer-stiffness-4--.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11885,7 +11885,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Outer-stiffness-4---1</NICK>
 <BLURB>Outer-stiffness-4---1.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11895,7 +11895,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Damping</NICK>
 <BLURB>Damping.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11905,17 +11905,17 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-wet-mix</NICK>
 <BLURB>Dry-wet-mix.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-plate::Reverb-time</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,8,5]</RANGE>
+<RANGE>[0.01,8.5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Reverb-time</NICK>
 <BLURB>Reverb-time.</BLURB>
-<DEFAULT>4,255</DEFAULT>
+<DEFAULT>4.255</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11955,7 +11955,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Tracking-speed</NICK>
 <BLURB>Tracking-speed.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -11971,7 +11971,7 @@
 <ARG>
 <NAME>ladspa-analogueOsc::Frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,0441,22005,9]</RANGE>
+<RANGE>[0.0441,22005.9]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Frequency</NICK>
 <BLURB>Frequency.</BLURB>
@@ -12081,11 +12081,11 @@
 <ARG>
 <NAME>ladspa-gate::Attack</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,1000]</RANGE>
+<RANGE>[0.01,1000]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Attack</NICK>
 <BLURB>Attack.</BLURB>
-<DEFAULT>250,008</DEFAULT>
+<DEFAULT>250.008</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12101,7 +12101,7 @@
 <ARG>
 <NAME>ladspa-gate::HF-key-filter</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[220,5,21609]</RANGE>
+<RANGE>[220.5,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>HF-key-filter</NICK>
 <BLURB>HF-key-filter.</BLURB>
@@ -12115,23 +12115,23 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Hold</NICK>
 <BLURB>Hold.</BLURB>
-<DEFAULT>1500,5</DEFAULT>
+<DEFAULT>1500.5</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-gate::LF-key-filter</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[30,87,4410]</RANGE>
+<RANGE>[30.87,4410]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>LF-key-filter</NICK>
 <BLURB>LF-key-filter.</BLURB>
-<DEFAULT>30,87</DEFAULT>
+<DEFAULT>30.87</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-gate::Output-select</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[G_MAXULONG,1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Output-select</NICK>
 <BLURB>Output-select.</BLURB>
@@ -12221,7 +12221,7 @@
 <ARG>
 <NAME>ladspa-crossoverDist::Crossover-amplitude</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,0,1]</RANGE>
+<RANGE>[0,0.1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Crossover-amplitude</NICK>
 <BLURB>Crossover-amplitude.</BLURB>
@@ -12245,7 +12245,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Compression-ratio</NICK>
 <BLURB>Compression-ratio.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12255,7 +12255,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Fast-compression-ratio</NICK>
 <BLURB>Fast-compression-ratio.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12275,13 +12275,13 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Release-time</NICK>
 <BLURB>Release-time.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-delayorama::Amplitude-change</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,2,5]</RANGE>
+<RANGE>[0.2,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Amplitude-change</NICK>
 <BLURB>Amplitude-change.</BLURB>
@@ -12301,7 +12301,7 @@
 <ARG>
 <NAME>ladspa-delayorama::Delay-change</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,2,5]</RANGE>
+<RANGE>[0.2,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-change</NICK>
 <BLURB>Delay-change.</BLURB>
@@ -12321,7 +12321,7 @@
 <ARG>
 <NAME>ladspa-delayorama::Delay-range</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,0001,6]</RANGE>
+<RANGE>[0.0001,6]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-range</NICK>
 <BLURB>Delay-range.</BLURB>
@@ -12495,7 +12495,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Attack-time</NICK>
 <BLURB>Attack-time.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12505,7 +12505,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Decay-time</NICK>
 <BLURB>Decay-time.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12525,7 +12525,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Modulation-depth</NICK>
 <BLURB>Modulation-depth.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12585,7 +12585,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Frequency-1</NICK>
 <BLURB>Frequency-1.</BLURB>
-<DEFAULT>5000,75</DEFAULT>
+<DEFAULT>5000.75</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12595,7 +12595,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Frequency-2</NICK>
 <BLURB>Frequency-2.</BLURB>
-<DEFAULT>10000,5</DEFAULT>
+<DEFAULT>10000.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12605,7 +12605,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Frequency-3</NICK>
 <BLURB>Frequency-3.</BLURB>
-<DEFAULT>15000,2</DEFAULT>
+<DEFAULT>15000.2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12635,7 +12635,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>LFO-depth</NICK>
 <BLURB>LFO-depth.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12665,7 +12665,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Damping</NICK>
 <BLURB>Damping.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12695,17 +12695,17 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Input-bandwidth</NICK>
 <BLURB>Input-bandwidth.</BLURB>
-<DEFAULT>0,75</DEFAULT>
+<DEFAULT>0.75</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-gverb::Reverb-time</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,30]</RANGE>
+<RANGE>[0.1,30]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Reverb-time</NICK>
 <BLURB>Reverb-time.</BLURB>
-<DEFAULT>7,575</DEFAULT>
+<DEFAULT>7.575</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12715,7 +12715,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Roomsize</NICK>
 <BLURB>Roomsize.</BLURB>
-<DEFAULT>75,75</DEFAULT>
+<DEFAULT>75.75</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12725,7 +12725,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Tail-level</NICK>
 <BLURB>Tail-level.</BLURB>
-<DEFAULT>-17,5</DEFAULT>
+<DEFAULT>-17.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12765,7 +12765,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12775,7 +12775,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Filter-Q</NICK>
 <BLURB>Filter-Q.</BLURB>
-<DEFAULT>0,25</DEFAULT>
+<DEFAULT>0.25</DEFAULT>
 </ARG>
 
 <ARG>
@@ -12975,13 +12975,13 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Average-stall</NICK>
 <BLURB>Average-stall.</BLURB>
-<DEFAULT>2,5</DEFAULT>
+<DEFAULT>2.5</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-retroFlange::Flange-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,5,8]</RANGE>
+<RANGE>[0.5,8]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Flange-frequency</NICK>
 <BLURB>Flange-frequency.</BLURB>
@@ -12991,7 +12991,7 @@
 <ARG>
 <NAME>ladspa-fadDelay::Delay</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay</NICK>
 <BLURB>Delay.</BLURB>
@@ -13041,11 +13041,11 @@
 <ARG>
 <NAME>ladspa-triplePara::Band-1-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,21609]</RANGE>
+<RANGE>[4.41,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-1-frequency</NICK>
 <BLURB>Band-1-frequency.</BLURB>
-<DEFAULT>36,8967</DEFAULT>
+<DEFAULT>36.8967</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13071,11 +13071,11 @@
 <ARG>
 <NAME>ladspa-triplePara::Band-2-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,21609]</RANGE>
+<RANGE>[4.41,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-2-frequency</NICK>
 <BLURB>Band-2-frequency.</BLURB>
-<DEFAULT>308,7</DEFAULT>
+<DEFAULT>308.7</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13101,11 +13101,11 @@
 <ARG>
 <NAME>ladspa-triplePara::Band-3-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,21609]</RANGE>
+<RANGE>[4.41,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Band-3-frequency</NICK>
 <BLURB>Band-3-frequency.</BLURB>
-<DEFAULT>2582,77</DEFAULT>
+<DEFAULT>2582.77</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13121,7 +13121,7 @@
 <ARG>
 <NAME>ladspa-triplePara::High-shelving-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,21609]</RANGE>
+<RANGE>[4.41,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>High-shelving-frequency</NICK>
 <BLURB>High-shelving-frequency.</BLURB>
@@ -13145,17 +13145,17 @@
 <FLAGS>rwx</FLAGS>
 <NICK>High-shelving-slope</NICK>
 <BLURB>High-shelving-slope.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-triplePara::Low-shelving-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[4,41,21609]</RANGE>
+<RANGE>[4.41,21609]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Low-shelving-frequency</NICK>
 <BLURB>Low-shelving-frequency.</BLURB>
-<DEFAULT>4,41</DEFAULT>
+<DEFAULT>4.41</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13175,7 +13175,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Low-shelving-slope</NICK>
 <BLURB>Low-shelving-slope.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13221,7 +13221,7 @@
 <ARG>
 <NAME>ladspa-decimator::Sample-rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[44,1,44100]</RANGE>
+<RANGE>[44.1,44100]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Sample-rate</NICK>
 <BLURB>Sample-rate.</BLURB>
@@ -13231,11 +13231,11 @@
 <ARG>
 <NAME>ladspa-flanger::Delay-base</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,25]</RANGE>
+<RANGE>[0.1,25]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Delay-base</NICK>
 <BLURB>Delay-base.</BLURB>
-<DEFAULT>6,325</DEFAULT>
+<DEFAULT>6.325</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13251,11 +13251,11 @@
 <ARG>
 <NAME>ladspa-flanger::LFO-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,05,100]</RANGE>
+<RANGE>[0.05,100]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>LFO-frequency</NICK>
 <BLURB>LFO-frequency.</BLURB>
-<DEFAULT>0,33437</DEFAULT>
+<DEFAULT>0.33437</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13265,7 +13265,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Max-slowdown</NICK>
 <BLURB>Max-slowdown.</BLURB>
-<DEFAULT>2,5</DEFAULT>
+<DEFAULT>2.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13325,7 +13325,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Voice-separation</NICK>
 <BLURB>Voice-separation.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13835,7 +13835,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Xover-lower-freq</NICK>
 <BLURB>Xover-lower-freq.</BLURB>
-<DEFAULT>1537,5</DEFAULT>
+<DEFAULT>1537.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13891,11 +13891,11 @@
 <ARG>
 <NAME>ladspa-fastLookaheadLimiter::Release-time</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,2]</RANGE>
+<RANGE>[0.01,2]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Release-time</NICK>
 <BLURB>Release-time.</BLURB>
-<DEFAULT>0,5075</DEFAULT>
+<DEFAULT>0.5075</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13905,7 +13905,7 @@
 <FLAGS>r</FLAGS>
 <NICK>latency</NICK>
 <BLURB>latency.</BLURB>
-<DEFAULT>-3,40282e+38</DEFAULT>
+<DEFAULT>-3.40282e+38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13921,7 +13921,7 @@
 <ARG>
 <NAME>ladspa-comb::Feedback</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[-0,99,0,99]</RANGE>
+<RANGE>[-0.99,0.99]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Feedback</NICK>
 <BLURB>Feedback.</BLURB>
@@ -14361,11 +14361,11 @@
 <ARG>
 <NAME>ladspa-Phaser1+LFO::LFO-frequency</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,30]</RANGE>
+<RANGE>[0.01,30]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>LFO-frequency</NICK>
 <BLURB>LFO-frequency.</BLURB>
-<DEFAULT>0,01</DEFAULT>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -14491,7 +14491,7 @@
 <ARG>
 <NAME>ladspa-Parametric1::Bandwidth-1</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,125,8]</RANGE>
+<RANGE>[0.125,8]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth-1</NICK>
 <BLURB>Bandwidth-1.</BLURB>
@@ -14501,7 +14501,7 @@
 <ARG>
 <NAME>ladspa-Parametric1::Bandwidth-2</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,125,8]</RANGE>
+<RANGE>[0.125,8]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth-2</NICK>
 <BLURB>Bandwidth-2.</BLURB>
@@ -14511,7 +14511,7 @@
 <ARG>
 <NAME>ladspa-Parametric1::Bandwidth-3</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,125,8]</RANGE>
+<RANGE>[0.125,8]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth-3</NICK>
 <BLURB>Bandwidth-3.</BLURB>
@@ -14521,7 +14521,7 @@
 <ARG>
 <NAME>ladspa-Parametric1::Bandwidth-4</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,125,8]</RANGE>
+<RANGE>[0.125,8]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Bandwidth-4</NICK>
 <BLURB>Bandwidth-4.</BLURB>
@@ -16761,21 +16761,21 @@
 <ARG>
 <NAME>ladspa-Chorus2::Mod-Frequency-1</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,003,10]</RANGE>
+<RANGE>[0.003,10]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mod-Frequency-1</NICK>
 <BLURB>Mod-Frequency-1.</BLURB>
-<DEFAULT>0,003</DEFAULT>
+<DEFAULT>0.003</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-Chorus2::Mod-Frequency-2</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,30]</RANGE>
+<RANGE>[0.01,30]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mod-Frequency-2</NICK>
 <BLURB>Mod-Frequency-2.</BLURB>
-<DEFAULT>0,01</DEFAULT>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -16811,21 +16811,21 @@
 <ARG>
 <NAME>ladspa-Chorus1::Mod-Frequency-1</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,003,10]</RANGE>
+<RANGE>[0.003,10]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mod-Frequency-1</NICK>
 <BLURB>Mod-Frequency-1.</BLURB>
-<DEFAULT>0,003</DEFAULT>
+<DEFAULT>0.003</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>ladspa-Chorus1::Mod-Frequency-2</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,30]</RANGE>
+<RANGE>[0.01,30]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Mod-Frequency-2</NICK>
 <BLURB>Mod-Frequency-2.</BLURB>
-<DEFAULT>0,01</DEFAULT>
+<DEFAULT>0.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -16865,7 +16865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17475,7 +17475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17515,7 +17515,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17815,7 +17815,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17855,7 +17855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18015,7 +18015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18171,7 +18171,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -22386,7 +22386,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22426,7 +22426,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22486,7 +22486,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22546,7 +22546,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22606,7 +22606,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22620,13 +22620,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>Overlap Length</NICK>
 <BLURB>Percentage of stride to overlap.</BLURB>
-<DEFAULT>0,2</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstScaletempo::rate</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-2,14748e+09,2,14748e+09]</RANGE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Playback Rate</NICK>
 <BLURB>Current playback rate.</BLURB>
@@ -22666,7 +22666,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22686,7 +22686,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
@@ -22711,6 +22711,26 @@
 <NICK>Program map</NICK>
 <BLURB>A GstStructure specifies the mapping from elementary streams to programs.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTsMux::pat-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PAT interval</NICK>
+<BLURB>Set the interval (in ticks of the 90kHz clock) for writing out the PAT table.</BLURB>
+<DEFAULT>9000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTsMux::pmt-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PMT interval</NICK>
+<BLURB>Set the interval (in ticks of the 90kHz clock) for writing out the PMT table.</BLURB>
+<DEFAULT>9000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22814,6 +22834,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMJ2Mux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGPPMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22861,6 +22891,16 @@
 <NICK>Include presentation-time info</NICK>
 <BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22914,6 +22954,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMux::faststart</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -22961,6 +23011,16 @@
 <NICK>Include presentation-time info</NICK>
 <BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::moov-recovery-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to store data for posterior moov atom recovery</NICK>
+<BLURB>File to be used to store data for moov atom making movie file recovery possible in case of a crash during muxing. Null for disabled. (Experimental).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23346,7 +23406,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23376,7 +23436,7 @@
 <ARG>
 <NAME>GstRTPDTMFSrc::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -23426,7 +23486,7 @@
 <ARG>
 <NAME>GstRTPMux::seqnum-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sequence number Offset</NICK>
 <BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
@@ -23446,7 +23506,7 @@
 <ARG>
 <NAME>GstRTPMux::timestamp-offset</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timestamp Offset</NICK>
 <BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
@@ -26600,7 +26660,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>1.01856e-312</DEFAULT>
+<DEFAULT>1.4854e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26640,7 +26700,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.03978e-312</DEFAULT>
+<DEFAULT>1.4854e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26650,7 +26710,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.061e-312</DEFAULT>
+<DEFAULT>1.4854e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26680,7 +26740,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.05617e-316</DEFAULT>
+<DEFAULT>1.7662e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26690,7 +26750,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>8.87875e-317</DEFAULT>
+<DEFAULT>1.59708e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26730,7 +26790,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>9.36751e-38</DEFAULT>
+<DEFAULT>8.65679e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26740,7 +26800,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>2.36943e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26750,7 +26810,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>2.36943e-38</DEFAULT>
+<DEFAULT>4.38446e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27080,7 +27140,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>6.96745e+252</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27090,7 +27150,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>5.62947e+188</DEFAULT>
+<DEFAULT>1.18576e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27100,7 +27160,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>6.09249e+247</DEFAULT>
+<DEFAULT>2.13486e-320</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27280,7 +27340,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>4.74303e-322</DEFAULT>
+<DEFAULT>1.12466e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27460,7 +27520,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>2.90942e-152</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28660,7 +28720,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Deviation (for Gauss function)</NICK>
 <BLURB>Used to calculate Gussian weights (only when using Gaussian window).</BLURB>
-<DEFAULT>1,5</DEFAULT>
+<DEFAULT>1.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -43161,5 +43221,2355 @@
 <NICK>mesage</NICK>
 <BLURB>Post a barcode message for each detected code.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::broken-input</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to broken input file</NICK>
+<BLURB>Path to broken input file. (If qtmux was on faststart mode, this file is the faststart file).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::faststart-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>If the broken input is from faststart mode</NICK>
+<BLURB>If the broken input is from faststart mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::fixed-output</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to write the fixed file</NICK>
+<BLURB>Path to write the fixed file to (used as output).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMoovRecover::recovery-input</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path to recovery file</NICK>
+<BLURB>Path to recovery file (used as input).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::dcoffset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>DC Offset</NICK>
+<BLURB>DC Offset.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::drive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,18]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::meterDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L In</NICK>
+<BLURB>L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R In</NICK>
+<BLURB>R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::mix</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mix</NICK>
+<BLURB>Mix.</BLURB>
+<DEFAULT>75</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-stereo::phase</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Tube Phase</NICK>
+<BLURB>Tube Phase.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::dcoffset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>DC Offset</NICK>
+<BLURB>DC Offset.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::drive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,18]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::meterDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::meterOut</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::mix</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mix</NICK>
+<BLURB>Mix.</BLURB>
+<DEFAULT>75</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-tube-mono::phase</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Tube Phase</NICK>
+<BLURB>Tube Phase.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-testtone::active</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Active</NICK>
+<BLURB>Active.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-testtone::frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,20000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-testtone::meterOut</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out Meter</NICK>
+<BLURB>Out Meter.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-testtone::trim</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-24,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Trim</NICK>
+<BLURB>Trim.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::cycle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.5,500]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Period</NICK>
+<BLURB>Period.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth.</BLURB>
+<DEFAULT>75.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::lampL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO L Lamp</NICK>
+<BLURB>LFO L Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::lampR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO R Lamp</NICK>
+<BLURB>LFO R Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::phase</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Phase Offset</NICK>
+<BLURB>Phase Offset.</BLURB>
+<DEFAULT>45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-sum::width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,15]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::cycle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.5,500]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Period</NICK>
+<BLURB>Period.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth.</BLURB>
+<DEFAULT>75.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::lampL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO L Lamp</NICK>
+<BLURB>LFO L Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::lampR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO R Lamp</NICK>
+<BLURB>LFO R Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In L</NICK>
+<BLURB>In L.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In R</NICK>
+<BLURB>In R.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::phase</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Phase Offset</NICK>
+<BLURB>Phase Offset.</BLURB>
+<DEFAULT>45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-stereo::width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,15]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::cycle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.5,500]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Period</NICK>
+<BLURB>Period.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::depth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth.</BLURB>
+<DEFAULT>75.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::lampL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO L Lamp</NICK>
+<BLURB>LFO L Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::lampR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO R Lamp</NICK>
+<BLURB>LFO R Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::phase</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-180,180]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Phase Offset</NICK>
+<BLURB>Phase Offset.</BLURB>
+<DEFAULT>45</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-phaser-mono::width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,15]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::meterL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Meter L In</NICK>
+<BLURB>Meter L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::meterPhase</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1.5708]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Phase Meter</NICK>
+<BLURB>Phase Meter.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::meterR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Meter R In</NICK>
+<BLURB>Meter R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec100</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>100Hz</NICK>
+<BLURB>100Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec1000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>1kHz</NICK>
+<BLURB>1kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec10000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>10Hz</NICK>
+<BLURB>10Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec125</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>125Hz</NICK>
+<BLURB>125Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec1250</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>1.25kHz</NICK>
+<BLURB>1.25kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec12500</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>12.5Hz</NICK>
+<BLURB>12.5Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec160</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>160Hz</NICK>
+<BLURB>160Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec1600</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>1.6kHz</NICK>
+<BLURB>1.6kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec16000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>16kHz</NICK>
+<BLURB>16kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec20</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>20Hz</NICK>
+<BLURB>20Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec200</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>200Hz</NICK>
+<BLURB>200Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec2000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>2kHz</NICK>
+<BLURB>2kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec20000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>20kHz</NICK>
+<BLURB>20kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec25</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>25Hz</NICK>
+<BLURB>25Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec250</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>250Hz</NICK>
+<BLURB>250Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec2500</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>2.5Hz</NICK>
+<BLURB>2.5Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec31</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>31Hz</NICK>
+<BLURB>31Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec315</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>315Hz</NICK>
+<BLURB>315Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec3150</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>3.15Hz</NICK>
+<BLURB>3.15Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec40</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>40Hz</NICK>
+<BLURB>40Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec400</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>400Hz</NICK>
+<BLURB>400Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec4000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>4Hz</NICK>
+<BLURB>4Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec50</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>50Hz</NICK>
+<BLURB>50Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec500</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>500Hz</NICK>
+<BLURB>500Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec5000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>5kHz</NICK>
+<BLURB>5kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec63</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>63Hz</NICK>
+<BLURB>63Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec630</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>630Hz</NICK>
+<BLURB>630Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec6300</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>6.3kHz</NICK>
+<BLURB>6.3kHz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec80</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>80Hz</NICK>
+<BLURB>80Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec800</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>800Hz</NICK>
+<BLURB>800Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::spec8000</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,12]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>8Hz</NICK>
+<BLURB>8Hz.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::vuL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Meter L In</NICK>
+<BLURB>Meter L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-meter::vuR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Meter R In</NICK>
+<BLURB>Meter R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-24,24]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive Lamp</NICK>
+<BLURB>Drive Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L In Meter</NICK>
+<BLURB>L In Meter.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R In Meter</NICK>
+<BLURB>R In Meter.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out Meter</NICK>
+<BLURB>L Out Meter.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out Meter</NICK>
+<BLURB>R Out Meter.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::meterPhase</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1.5708]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Phase Meter</NICK>
+<BLURB>Phase Meter.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::pan</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pan</NICK>
+<BLURB>Pan.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::phaseL</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Phase (L)</NICK>
+<BLURB>Phase (L).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::phaseR</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Phase (R)</NICK>
+<BLURB>Phase (R).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-input::width</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Stereo Width</NICK>
+<BLURB>Stereo Width.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,20000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L In</NICK>
+<BLURB>L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R In</NICK>
+<BLURB>R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-stereo::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,20000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::meterOut</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-lpf-mono::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,20000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L In</NICK>
+<BLURB>L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R In</NICK>
+<BLURB>R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-stereo::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::freq</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,20000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,12]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::meterOut</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-filter-hpf-mono::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::diffusion</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Diffusion</NICK>
+<BLURB>Diffusion.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::hpf</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,2000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>HPF</NICK>
+<BLURB>HPF.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::listFB</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,0.5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Listener (F/B)</NICK>
+<BLURB>Listener (F/B).</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::listLR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Listener Pan</NICK>
+<BLURB>Listener Pan.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::roomHeight</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Height</NICK>
+<BLURB>Room Height.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::roomLength</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Length</NICK>
+<BLURB>Room Length.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::roomWidth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Width</NICK>
+<BLURB>Room Width.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::sourceFB</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.5,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Source (F/B)</NICK>
+<BLURB>Source (F/B).</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::sourceLR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Source Pan</NICK>
+<BLURB>Source Pan.</BLURB>
+<DEFAULT>-0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-sum::warmth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Warmth</NICK>
+<BLURB>Warmth.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::diffusion</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Diffusion</NICK>
+<BLURB>Diffusion.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::hpf</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[20,2000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>HPF</NICK>
+<BLURB>HPF.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::listFB</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,0.5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Listener (F/B)</NICK>
+<BLURB>Listener (F/B).</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::listLR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Listener Pan</NICK>
+<BLURB>Listener Pan.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::roomHeight</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,30]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Height</NICK>
+<BLURB>Room Height.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::roomLength</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Length</NICK>
+<BLURB>Room Length.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::roomWidth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[3,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Room Width</NICK>
+<BLURB>Room Width.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::sourceFB</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.5,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Source (F/B)</NICK>
+<BLURB>Source (F/B).</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::sourceLR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Source Pan</NICK>
+<BLURB>Source Pan.</BLURB>
+<DEFAULT>-0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-erreverb-mono::warmth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Warmth</NICK>
+<BLURB>Warmth.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::LFOcycle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[2,200]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>LFO</NICK>
+<BLURB>LFO.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::LFOdepth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::LFOlamp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO Lamp</NICK>
+<BLURB>LFO Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::delay1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.02,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay 1</NICK>
+<BLURB>Delay 1.</BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::delay2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.02,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay 2</NICK>
+<BLURB>Delay 2.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::fb1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,133.333]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Feedback 1</NICK>
+<BLURB>Feedback 1.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::fb2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,133.333]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Feedback 2</NICK>
+<BLURB>Feedback 2.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::munge</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Munge</NICK>
+<BLURB>Munge.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::mungemode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Munge Mode</NICK>
+<BLURB>Munge Mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::pan1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pan 1</NICK>
+<BLURB>Pan 1.</BLURB>
+<DEFAULT>-0.7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::pan2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pan 2</NICK>
+<BLURB>Pan 2.</BLURB>
+<DEFAULT>0.7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::vol1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Volume 1</NICK>
+<BLURB>Volume 1.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-sum::vol2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Volume 2</NICK>
+<BLURB>Volume 2.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::LFOcycle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[2,200]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>LFO</NICK>
+<BLURB>LFO.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::LFOdepth</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Depth</NICK>
+<BLURB>Depth.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::LFOlamp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>LFO Lamp</NICK>
+<BLURB>LFO Lamp.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::delay1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.02,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay 1</NICK>
+<BLURB>Delay 1.</BLURB>
+<DEFAULT>0.3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::delay2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.02,2]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Delay 2</NICK>
+<BLURB>Delay 2.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::fb1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,133.333]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Feedback 1</NICK>
+<BLURB>Feedback 1.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::fb2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,133.333]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Feedback 2</NICK>
+<BLURB>Feedback 2.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::munge</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Munge</NICK>
+<BLURB>Munge.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::mungemode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Munge Mode</NICK>
+<BLURB>Munge Mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::pan1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pan 1</NICK>
+<BLURB>Pan 1.</BLURB>
+<DEFAULT>-0.7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::pan2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pan 2</NICK>
+<BLURB>Pan 2.</BLURB>
+<DEFAULT>0.7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::vol1</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Volume 1</NICK>
+<BLURB>Volume 1.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-delay-mono::vol2</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Volume 2</NICK>
+<BLURB>Volume 2.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::attack</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1e-05,0.75]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Attack</NICK>
+<BLURB>Attack.</BLURB>
+<DEFAULT>0.015</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-6,36]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::grmeter</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-36,0]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Gain Reduction</NICK>
+<BLURB>Gain Reduction.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::meterInL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L In</NICK>
+<BLURB>L In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::meterInR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R In</NICK>
+<BLURB>R In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::meterOutL</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>L Out</NICK>
+<BLURB>L Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::meterOutR</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>R Out</NICK>
+<BLURB>R Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::ratio</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,20]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Ratio</NICK>
+<BLURB>Ratio.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::release</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.001,5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Release</NICK>
+<BLURB>Release.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::rms</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>RMS</NICK>
+<BLURB>RMS.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-stereo::threshold</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-36,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::attack</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1e-05,0.75]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Attack</NICK>
+<BLURB>Attack.</BLURB>
+<DEFAULT>0.015</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::bypass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bypass</NICK>
+<BLURB>Bypass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-6,36]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::grmeter</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-36,0]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Gain Reduction</NICK>
+<BLURB>Gain Reduction.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::lampDrive</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drive</NICK>
+<BLURB>Drive.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::meterIn</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>In.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::meterOut</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-60,6]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Out.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::noClip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Soft Clip</NICK>
+<BLURB>Soft Clip.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::ratio</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[1,20]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Ratio</NICK>
+<BLURB>Ratio.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::release</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.001,5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Release</NICK>
+<BLURB>Release.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::rms</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>RMS</NICK>
+<BLURB>RMS.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>invadarecords-com-plugins-lv2-compressor-mono::threshold</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-36,0]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

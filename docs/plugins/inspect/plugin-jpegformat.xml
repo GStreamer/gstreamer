@@ -10,6 +10,27 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
+      <name>jifmux</name>
+      <longname>JPEG stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parse JPEG images into single-frame buffers</description>
+      <author>Arnout Vandecappelle (Essensium/Mind) &lt;arnout@mind.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>image/jpeg</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>image/jpeg</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>jpegparse</name>
       <longname>JPEG stream parser</longname>
       <class>Codec/Parser/Video</class>
