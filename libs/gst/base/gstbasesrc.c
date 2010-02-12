@@ -553,12 +553,15 @@ gst_base_src_is_live (GstBaseSrc * src)
  * If a format of GST_FORMAT_BYTES is set, the element will be able to
  * operate in pull mode if the #GstBaseSrc.is_seekable() returns TRUE.
  *
+ * This function must only be called in states < %GST_STATE_PAUSED.
+ *
  * Since: 0.10.1
  */
 void
 gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
 {
   g_return_if_fail (GST_IS_BASE_SRC (src));
+  g_return_if_fail (GST_STATE (src) <= GST_STATE_READY);
 
   GST_OBJECT_LOCK (src);
   gst_segment_init (&src->segment, format);
@@ -1340,9 +1343,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
    * copy the current segment info into the temp segment that we can actually
    * attempt the seek with. We only update the real segment if the seek suceeds. */
   if (!seekseg_configured) {
-    GST_OBJECT_LOCK (src);
     memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
-    GST_OBJECT_UNLOCK (src);
 
     /* now configure the final seek segment */
     if (event) {
@@ -1383,7 +1384,6 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, tevent);
   } else if (res && src->data.ABI.running) {
-    GST_OBJECT_LOCK (src);
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
@@ -1397,7 +1397,6 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
     gst_event_set_seqnum (src->priv->close_segment, seqnum);
-    GST_OBJECT_UNLOCK (src);
   }
 
   /* The subclass must have converted the segment to the processing format
@@ -1957,6 +1956,7 @@ no_sync:
   }
 }
 
+/* Called with STREAM_LOCK and LIVE_LOCK */
 static gboolean
 gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
 {
@@ -1967,12 +1967,10 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  GST_OBJECT_LOCK (src);
   format = src->segment.format;
   stop = src->segment.stop;
   /* get total file size */
   size = (guint64) src->segment.duration;
-  GST_OBJECT_UNLOCK (src);
 
   /* only operate if we are working with bytes */
   if (format != GST_FORMAT_BYTES)
@@ -2000,10 +1998,6 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
         if (!bclass->get_size (src, &size))
           size = -1;
 
-      GST_OBJECT_LOCK (src);
-      gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
-      GST_OBJECT_UNLOCK (src);
-
       /* make sure we don't exceed the configured segment stop
        * if it was set */
       if (stop != -1)
@@ -2022,9 +2016,10 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
     }
   }
 
-  /* keep track of current position. segment is in bytes, we checked
-   * that above. */
+  /* keep track of current position and update duration.
+   * segment is in bytes, we checked that above. */
   GST_OBJECT_LOCK (src);
+  gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
   gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
   GST_OBJECT_UNLOCK (src);
 
@@ -2316,7 +2311,6 @@ gst_base_src_loop (GstPad * pad)
 
   blocksize = src->blocksize;
 
-  GST_OBJECT_LOCK (src);
   /* if we operate in bytes, we can calculate an offset */
   if (src->segment.format == GST_FORMAT_BYTES) {
     position = src->segment.last_stop;
@@ -2333,7 +2327,6 @@ gst_base_src_loop (GstPad * pad)
     }
   } else
     position = -1;
-  GST_OBJECT_UNLOCK (src);
 
   GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %lu",
       GST_TIME_ARGS (position), blocksize);
@@ -2374,7 +2367,6 @@ gst_base_src_loop (GstPad * pad)
     g_list_free (tags);
   }
 
-  GST_OBJECT_LOCK (src);
   /* figure out the new position */
   switch (src->segment.format) {
     case GST_FORMAT_BYTES:
@@ -2437,9 +2429,10 @@ gst_base_src_loop (GstPad * pad)
       /* when going reverse, all buffers are DISCONT */
       src->priv->discont = TRUE;
     }
+    GST_OBJECT_LOCK (src);
     gst_segment_set_last_stop (&src->segment, src->segment.format, position);
+    GST_OBJECT_UNLOCK (src);
   }
-  GST_OBJECT_UNLOCK (src);
 
   if (G_UNLIKELY (src->priv->discont)) {
     buf = gst_buffer_make_metadata_writable (buf);
@@ -2487,11 +2480,9 @@ pause:
         gint64 last_stop;
 
         /* perform EOS logic */
-        GST_OBJECT_LOCK (src);
         flag_segment = (src->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0;
         format = src->segment.format;
         last_stop = src->segment.last_stop;
-        GST_OBJECT_UNLOCK (src);
 
         if (flag_segment) {
           GstMessage *message;
@@ -2664,9 +2655,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_OBJECT_FLAG_SET (basesrc, GST_BASE_SRC_STARTED);
 
-  GST_OBJECT_LOCK (basesrc);
   format = basesrc->segment.format;
-  GST_OBJECT_UNLOCK (basesrc);
 
   /* figure out the size */
   if (format == GST_FORMAT_BYTES) {

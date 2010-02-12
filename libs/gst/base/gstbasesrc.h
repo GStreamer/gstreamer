@@ -91,8 +91,9 @@ struct _GstBaseSrc {
   GstClockID     clock_id;      /* for syncing */
   GstClockTime   end_time;
 
-  /* MT-protected (with STREAM_LOCK) */
+  /* MT-protected (with STREAM_LOCK *and* OBJECT_LOCK) */
   GstSegment     segment;
+  /* MT-protected (with STREAM_LOCK) */
   gboolean       need_newsegment;
 
   guint64        offset;        /* current offset in the resource, unused */
