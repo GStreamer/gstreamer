@@ -43,6 +43,7 @@
 #endif
 
 #include "gstspeexdec.h"
+#include <stdlib.h>
 #include <string.h>
 #include <gst/tag/tag.h>
 
