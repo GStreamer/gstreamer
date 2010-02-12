@@ -1,8 +1,8 @@
 GstChildProxy GstObject
-GstTagSetter GstObject GstElement
 GstStreamVolume GObject
 GstImplementsInterface GstObject GstElement
 GstMixer GstObject GstImplementsInterface GstElement
+GstTagSetter GstObject GstElement
 GstTuner GstObject GstImplementsInterface GstElement
 GstColorBalance GstObject GstImplementsInterface GstElement
 GstVideoOrientation GstObject GstImplementsInterface GstElement

@@ -20548,3 +20548,23 @@
 <DEFAULT>8</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstShapeWipe::border</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Border</NICK>
+<BLURB>Border of the mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShapeWipe::position</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Position</NICK>
+<BLURB>Position of the mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
