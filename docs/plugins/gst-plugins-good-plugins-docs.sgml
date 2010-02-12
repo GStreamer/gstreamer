@@ -127,6 +127,7 @@
     <xi:include href="xml/element-rtpjpegpay.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-shagadelictv.xml" />
+    <xi:include href="xml/element-shapewipe.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
     <xi:include href="xml/element-smpte.xml" />
@@ -211,6 +212,7 @@
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-gstrtpmanager.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />
+    <xi:include href="xml/plugin-shapewipe.xml" />
     <xi:include href="xml/plugin-shout2send.xml" />
     <xi:include href="xml/plugin-smpte.xml" />
     <xi:include href="xml/plugin-soup.xml" />

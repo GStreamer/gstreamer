@@ -312,6 +312,7 @@ AG_GST_CHECK_PLUGIN(replaygain)
 AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(rtpmanager)
 AG_GST_CHECK_PLUGIN(rtsp)
+AG_GST_CHECK_PLUGIN(shapewipe)
 AG_GST_CHECK_PLUGIN(smpte)
 AG_GST_CHECK_PLUGIN(spectrum)
 AG_GST_CHECK_PLUGIN(udp)
@@ -1080,6 +1081,7 @@ gst/replaygain/Makefile
 gst/rtp/Makefile
 gst/rtpmanager/Makefile
 gst/rtsp/Makefile
+gst/shapewipe/Makefile
 gst/smpte/Makefile
 gst/spectrum/Makefile
 gst/udp/Makefile
@@ -1128,6 +1130,7 @@ tests/examples/audiofx/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile
+tests/examples/shapewipe/Makefile
 tests/examples/spectrum/Makefile
 tests/examples/v4l2/Makefile
 tests/files/Makefile

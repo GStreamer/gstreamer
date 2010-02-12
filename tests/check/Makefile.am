@@ -116,6 +116,7 @@ check_PROGRAMS = \
 	elements/rtpbin \
 	elements/rtpbin_buffer_list \
 	elements/rtpjitterbuffer \
+	elements/shapewipe \
 	elements/spectrum \
 	elements/udpsink \
 	elements/videocrop \

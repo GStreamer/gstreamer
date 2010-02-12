@@ -187,6 +187,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
+	$(top_srcdir)/gst/shapewipe/gstshapewipe.h \
 	$(top_srcdir)/gst/smpte/gstsmpte.h \
 	$(top_srcdir)/gst/smpte/gstsmptealpha.h \
 	$(top_srcdir)/gst/spectrum/gstspectrum.h \
