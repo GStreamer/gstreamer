@@ -462,7 +462,6 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
   priv->do_lost = DEFAULT_DO_LOST;
 
   priv->jbuf = rtp_jitter_buffer_new ();
-  rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
   priv->jbuf_lock = g_mutex_new ();
   priv->jbuf_cond = g_cond_new ();
 
@@ -948,6 +947,8 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       /* reset skew detection initialy */
       rtp_jitter_buffer_reset_skew (priv->jbuf);
       rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
+      rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
+      priv->active = TRUE;
       JBUF_UNLOCK (priv);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
