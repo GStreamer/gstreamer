@@ -940,6 +940,22 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   GstAppSrcPrivate *priv = appsrc->priv;
   GstFlowReturn ret;
 
+  GST_OBJECT_LOCK (appsrc);
+  if (G_UNLIKELY (priv->size != bsrc->segment.duration &&
+          bsrc->segment.format == GST_FORMAT_BYTES)) {
+    GST_DEBUG_OBJECT (appsrc,
+        "Size changed from %" G_GINT64_FORMAT " to %" G_GINT64_FORMAT,
+        bsrc->segment.duration, priv->size);
+    gst_segment_set_duration (&bsrc->segment, GST_FORMAT_BYTES, priv->size);
+    GST_OBJECT_UNLOCK (appsrc);
+
+    gst_element_post_message (GST_ELEMENT (appsrc),
+        gst_message_new_duration (GST_OBJECT (appsrc), GST_FORMAT_BYTES,
+            priv->size));
+  } else {
+    GST_OBJECT_UNLOCK (appsrc);
+  }
+
   g_mutex_lock (priv->mutex);
   /* check flushing first */
   if (G_UNLIKELY (priv->flushing))
@@ -1121,8 +1137,6 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
 void
 gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
 {
-  GstSegment *segment;
-  gboolean bytes_segment;
   GstAppSrcPrivate *priv;
 
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
@@ -1132,17 +1146,7 @@ gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting size of %" G_GINT64_FORMAT, size);
   priv->size = size;
-
-  segment = &GST_BASE_SRC_CAST (appsrc)->segment;
-  bytes_segment = (segment->format == GST_FORMAT_BYTES);
-
-  if (bytes_segment)
-    gst_segment_set_duration (segment, GST_FORMAT_BYTES, size);
   GST_OBJECT_UNLOCK (appsrc);
-
-  if (bytes_segment)
-    gst_element_post_message (GST_ELEMENT (appsrc),
-        gst_message_new_duration (GST_OBJECT (appsrc), GST_FORMAT_BYTES, size));
 }
 
 /**
