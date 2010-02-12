@@ -409,7 +409,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    * Make appsrc emit the "need-data" signal when the amount of bytes in the
    * queue drops below this percentage of max-bytes.
    *
-   * Since: 0.10.26
+   * Since: 0.10.27
    */
   g_object_class_install_property (gobject_class, PROP_MIN_PERCENT,
       g_param_spec_uint ("min-percent", "Min Percent",
