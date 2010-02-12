@@ -381,11 +381,14 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
 
   if (G_LIKELY (gstrtptime >= jbuf->base_rtptime))
     send_diff = gstrtptime - jbuf->base_rtptime;
-  else {
+  else if (time != -1) {
     /* elapsed time at sender, timestamps can go backwards and thus be smaller
      * than our base time, take a new base time in that case. */
     GST_WARNING ("backward timestamps at server, taking new base time");
     rtp_jitter_buffer_resync (jbuf, time, gstrtptime, ext_rtptime, FALSE);
+    send_diff = 0;
+  } else {
+    GST_WARNING ("backward timestamps at server but no timestamps");
     send_diff = 0;
   }
 
