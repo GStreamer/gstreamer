@@ -43,12 +43,14 @@ include $(top_srcdir)/common/coverage/lcov.mak
 CRUFT_FILES = \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
-	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib}
+	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib}
 
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
-	$(top_srcdir)/gst/flacparse
+	$(top_srcdir)/gst/flacparse \
+	$(top_srcdir)/gst/shapewipe
 
 include $(top_srcdir)/common/cruft.mak
 

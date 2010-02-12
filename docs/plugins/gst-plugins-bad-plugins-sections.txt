@@ -1032,21 +1032,6 @@ gst_speed_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-shapewipe</FILE>
-<TITLE>shapewipe</TITLE>
-GstShapeWipe
-<SUBSECTION Standard>
-GstShapeWipeClass
-GST_SHAPE_WIPE
-GST_SHAPE_WIPE_CLASS
-GST_IS_SHAPE_WIPE
-GST_IS_SHAPE_WIPE_CLASS
-GST_TYPE_SHAPE_WIPE
-gst_shape_wipe_get_type
-</SECTION>
-
-
-<SECTION>
 <FILE>element-stereo</FILE>
 <TITLE>stereo</TITLE>
 GstStereo

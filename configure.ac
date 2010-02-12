@@ -290,7 +290,6 @@ AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(selector)
-AG_GST_CHECK_PLUGIN(shapewipe)
 AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
@@ -1681,7 +1680,6 @@ gst/rtpmux/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/selector/Makefile
-gst/shapewipe/Makefile
 gst/siren/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
@@ -1722,7 +1720,6 @@ tests/examples/camerabin/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
-tests/examples/shapewipe/Makefile
 tests/examples/switch/Makefile
 tests/icles/Makefile
 ext/alsaspdif/Makefile

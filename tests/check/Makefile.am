@@ -123,7 +123,6 @@ check_PROGRAMS = \
 	elements/jpegparse \
 	elements/qtmux \
 	elements/selector \
-	elements/shapewipe \
 	elements/mxfdemux \
 	elements/mxfmux \
 	pipelines/mxf \

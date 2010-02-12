@@ -80,7 +80,6 @@
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
-    <xi:include href="xml/element-shapewipe.xml" />
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-stereo.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
@@ -163,7 +162,6 @@
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-sdp.xml" />
     <xi:include href="xml/plugin-selector.xml" />
-    <xi:include href="xml/plugin-shapewipe.xml" />
     <xi:include href="xml/plugin-sndfile.xml" />
     <xi:include href="xml/plugin-soundtouch.xml" />
     <xi:include href="xml/plugin-spcdec.xml" />
