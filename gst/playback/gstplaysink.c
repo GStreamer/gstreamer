@@ -445,8 +445,11 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
   }
   GST_PLAY_SINK_UNLOCK (playsink);
 
-  if (old)
+  if (old) {
+    if (old != sink)
+      gst_element_set_state (old, GST_STATE_NULL);
     gst_object_unref (old);
+  }
 }
 
 GstElement *
