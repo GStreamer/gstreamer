@@ -1533,7 +1533,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_AUTOREMOVE,
       g_param_spec_boolean ("autoremove", "Auto Remove",
-          "Automatically removed timed out sources", DEFAULT_AUTOREMOVE,
+          "Automatically remove timed out sources", DEFAULT_AUTOREMOVE,
           G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
