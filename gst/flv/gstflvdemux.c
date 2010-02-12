@@ -39,6 +39,7 @@
 #include "gstflvmux.h"
 
 #include <string.h>
+#include <gst/base/gstbytereader.h>
 
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -68,6 +69,9 @@ GST_BOILERPLATE (GstFLVDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
 /* 1 byte of tag type + 3 bytes of tag data size */
 #define FLV_TAG_TYPE_SIZE 4
 
+static gboolean flv_demux_handle_seek_push (GstFLVDemux * demux,
+    GstEvent * event);
+
 static void
 gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
 {
@@ -80,8 +84,8 @@ gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
 
   demux->flushing = FALSE;
 
-  /* Only in push mode */
-  if (!demux->random_access) {
+  /* Only in push mode and if we're not during a seek */
+  if (!demux->random_access && demux->state != FLV_STATE_SEEK) {
     /* After a flush we expect a tag_type */
     demux->state = FLV_STATE_TAG_TYPE;
     /* We reset the offset and will get one from first push */
@@ -171,6 +175,29 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
   }
 }
 
+/*
+ * Create and push a flushing seek event upstream
+ */
+static gboolean
+flv_demux_seek_to_offset (GstFLVDemux * demux, guint64 offset)
+{
+  GstEvent *event;
+  gboolean res = 0;
+
+  GST_DEBUG_OBJECT (demux, "Seeking to %" G_GUINT64_FORMAT, offset);
+
+  event =
+      gst_event_new_seek (1.0, GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
+      GST_SEEK_TYPE_NONE, -1);
+
+  res = gst_pad_push_event (demux->sinkpad, event);
+
+  if (res)
+    demux->offset = offset;
+  return res;
+}
+
 static GstFlowReturn
 gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -194,6 +221,13 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   gst_adapter_push (demux->adapter, buffer);
+
+  if (demux->seeking) {
+    demux->state = FLV_STATE_SEEK;
+    GST_OBJECT_LOCK (demux);
+    demux->seeking = FALSE;
+    GST_OBJECT_UNLOCK (demux);
+  }
 
 parse:
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
@@ -245,6 +279,11 @@ parse:
 
         gst_buffer_unref (buffer);
         demux->offset += FLV_TAG_TYPE_SIZE;
+
+        /* last tag is not an index => no index/don't know where the index is
+         * seek back to the beginning */
+        if (demux->seek_event && demux->state != FLV_STATE_TAG_SCRIPT)
+          goto no_index;
 
         goto parse;
       } else {
@@ -300,10 +339,66 @@ parse:
         demux->offset += demux->tag_size;
 
         demux->state = FLV_STATE_TAG_TYPE;
+
+        /* if there's a seek event we're here for the index so if we don't have it
+         * we seek back to the beginning */
+        if (demux->seek_event) {
+          if (demux->indexed)
+            demux->state = FLV_STATE_SEEK;
+          else
+            goto no_index;
+        }
+
         goto parse;
       } else {
         goto beach;
       }
+    }
+    case FLV_STATE_SEEK:
+    {
+      GstEvent *event;
+
+      ret = GST_FLOW_OK;
+
+      if (!demux->indexed) {
+        if (demux->offset == demux->file_size - sizeof (guint32)) {
+          GstBuffer *buffer =
+              gst_adapter_take_buffer (demux->adapter, sizeof (guint32));
+          GstByteReader *reader = gst_byte_reader_new_from_buffer (buffer);
+          guint64 seek_offset;
+
+          if (!gst_adapter_available (demux->adapter) >= sizeof (guint32)) {
+            /* error */
+          }
+
+          seek_offset =
+              demux->file_size - sizeof (guint32) -
+              gst_byte_reader_peek_uint32_be_unchecked (reader);
+          gst_byte_reader_free (reader);
+          gst_buffer_unref (buffer);
+
+          GST_INFO_OBJECT (demux,
+              "Seeking to beginning of last tag at %" G_GUINT64_FORMAT,
+              seek_offset);
+          demux->state = FLV_STATE_TAG_TYPE;
+          flv_demux_seek_to_offset (demux, seek_offset);
+          goto beach;
+        } else
+          goto no_index;
+      }
+
+      GST_OBJECT_LOCK (demux);
+      event = demux->seek_event;
+      demux->seek_event = NULL;
+      GST_OBJECT_UNLOCK (demux);
+
+      /* calculate and perform seek */
+      if (!flv_demux_handle_seek_push (demux, event))
+        goto seek_failed;
+
+      gst_event_unref (event);
+      demux->state = FLV_STATE_TAG_TYPE;
+      goto beach;
     }
     default:
       GST_DEBUG_OBJECT (demux, "unexpected demuxer state");
@@ -320,6 +415,26 @@ beach:
   gst_object_unref (demux);
 
   return ret;
+
+/* ERRORS */
+no_index:
+  {
+    GST_OBJECT_LOCK (demux);
+    demux->seeking = FALSE;
+    gst_event_unref (demux->seek_event);
+    demux->seek_event = NULL;
+    GST_OBJECT_UNLOCK (demux);
+    GST_WARNING_OBJECT (demux,
+        "failed to find an index, seeking back to beginning");
+    flv_demux_seek_to_offset (demux, 0);
+    return GST_FLOW_OK;
+  }
+seek_failed:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("seek failed"));
+    return GST_FLOW_ERROR;
+  }
+
 }
 
 static GstFlowReturn
@@ -664,7 +779,7 @@ gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
 }
 
 static gboolean
-gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
+flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
 {
   GstFormat format;
   GstSeekFlags flags;
@@ -744,6 +859,64 @@ wrong_format:
     GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
     return gst_pad_push_event (demux->sinkpad, event);
   }
+}
+
+static gboolean
+gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
+{
+  if (!demux->indexed) {
+    guint64 seek_offset;
+    gboolean building_index;
+    GstFormat fmt;
+
+    GST_OBJECT_LOCK (demux);
+    /* handle the seek in the chain function */
+    demux->seeking = TRUE;
+    demux->state = FLV_STATE_SEEK;
+
+    /* copy the event */
+    if (demux->seek_event)
+      gst_event_unref (demux->seek_event);
+    demux->seek_event = gst_event_ref (event);
+
+    /* set the building_index flag so that only one thread can setup the
+     * structures for index seeking. */
+    building_index = demux->building_index;
+    if (!building_index) {
+      demux->building_index = TRUE;
+      fmt = GST_FORMAT_BYTES;
+      if (!demux->file_size
+          && !gst_pad_query_peer_duration (demux->sinkpad, &fmt,
+              &demux->file_size)) {
+        GST_WARNING_OBJECT (demux,
+            "Cannot obtain file size - %" G_GINT64_FORMAT ", format %u",
+            demux->file_size, fmt);
+        GST_OBJECT_UNLOCK (demux);
+        return FALSE;
+      }
+
+      /* we hope the last tag is a scriptdataobject containing an index
+       * the size of the last tag is given in the last guint32 bits
+       * then we seek to the beginning of the tag, parse it and hopefully obtain an index */
+      seek_offset = demux->file_size - sizeof (guint32);
+      GST_DEBUG_OBJECT (demux,
+          "File size obtained, seeking to %" G_GUINT64_FORMAT, seek_offset);
+    }
+    GST_OBJECT_UNLOCK (demux);
+
+    if (!building_index) {
+      GST_INFO_OBJECT (demux, "Seeking to last 4 bytes at %" G_GUINT64_FORMAT,
+          seek_offset);
+      return flv_demux_seek_to_offset (demux, seek_offset);
+    }
+
+    /* FIXME: we have to always return true so that we don't block the seek
+     * thread.
+     * Note: maybe it is OK to return true if we're still building the index */
+    return TRUE;
+  }
+
+  return flv_demux_handle_seek_push (demux, event);
 }
 
 static gboolean

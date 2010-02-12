@@ -44,6 +44,7 @@ typedef enum
   FLV_STATE_TAG_VIDEO,
   FLV_STATE_TAG_AUDIO,
   FLV_STATE_TAG_SCRIPT,
+  FLV_STATE_SEEK,
   FLV_STATE_DONE,
   FLV_STATE_NONE
 } GstFLVDemuxState;
@@ -118,6 +119,12 @@ struct _GstFLVDemux
   gboolean flushing;
 
   gboolean no_more_pads;
+
+  gboolean seeking;
+  gboolean building_index;
+  gboolean indexed; /* TRUE if index is completely built */
+  gint64 file_size;
+  GstEvent *seek_event;
 };
 
 struct _GstFLVDemuxClass
