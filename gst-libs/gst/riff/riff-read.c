@@ -76,7 +76,7 @@ skip_junk:
       GST_FOURCC_ARGS (*tag), size);
 
   /* skip 'JUNK' chunks */
-  if (*tag == GST_RIFF_TAG_JUNK) {
+  if (*tag == GST_RIFF_TAG_JUNK || *tag == GST_RIFF_TAG_JUNQ) {
     size = GST_ROUND_UP_2 (size);
     *_offset += 8 + size;
     offset += 8 + size;
