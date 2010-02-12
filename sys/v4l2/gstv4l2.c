@@ -48,7 +48,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
           GST_TYPE_V4L2SRC) ||
-      !gst_element_register (plugin, "v4l2sink", GST_RANK_PRIMARY,
+      !gst_element_register (plugin, "v4l2sink", GST_RANK_MARGINAL,
           GST_TYPE_V4L2SINK) ||
       /*       !gst_element_register (plugin, "v4l2jpegsrc", */
       /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
