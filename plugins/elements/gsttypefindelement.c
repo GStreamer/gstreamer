@@ -1023,6 +1023,7 @@ gst_type_find_element_change_state (GstElement * element,
           (GFunc) gst_mini_object_unref, NULL);
       g_list_free (typefind->cached_events);
       typefind->cached_events = NULL;
+      typefind->mode = MODE_TYPEFIND;
       GST_OBJECT_UNLOCK (typefind);
       break;
     default:
