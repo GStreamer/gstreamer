@@ -1,0 +1,78 @@
+<element>
+ <name>dshowvideosrc</name>
+ <details>
+  <long-name>DirectShow video capture source</long-name>
+  <class>Source/Video</class>
+  <description>Receive data from a directshow video capture graph</description>
+  <authors>Sebastien Moutte &lt;sebastien@moutte.net&gt;</authors>
+ </details>
+ <object name="GstDshowVideoSrc">
+  <object name="GstPushSrc">
+   <object name="GstBaseSrc">
+    <object name="GstElement">
+     <object name="GstObject">
+      <object name="GObject">
+      </object>
+     </object>
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+  <interface name="GstPropertyProbe" />
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>src</name>
+   <direction>src</direction>
+   <presence>always</presence>
+   <caps>video/x-raw-rgb, bpp=(int)24, depth=(int)24, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], format=(fourcc)I420; video/x-raw-yuv, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], format=(fourcc)UYVY; video/x-raw-yuv, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], format=(fourcc)YUY2; video/x-dv, systemstream=(boolean)false, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], format=(fourcc)dvsd; video/x-dv, systemstream=(boolean)true</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_dshowvideosrc_change_state"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+  <pad>
+   <name>src</name>
+   <direction>src</direction>
+   <template>src</template>
+   <implementation>
+    <get-range-based function="gst_base_src_pad_get_range"/>
+    <event-function function="gst_base_src_event_handler"/>
+    <query-function function="gst_base_src_query"/>
+    <query-type-func function="gst_pad_get_query_types_default">
+    </query-type-func>
+    <intlink-function function="gst_pad_get_internal_links_default"/>
+   </implementation>
+  </pad>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>device</name>
+   <type>gchararray</type>
+   <nick>Device</nick>
+   <blurb>Directshow device path (@..classID/name)</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>device-name</name>
+   <type>gchararray</type>
+   <nick>Device name</nick>
+   <blurb>Human-readable name of the video device</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>

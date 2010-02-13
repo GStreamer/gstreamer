@@ -1,4 +1,4 @@
-SUBDIRS = . glue coreplugins baseplugins
+SUBDIRS = . glue coreplugins baseplugins goodplugins badplugins
 
 TARGET = $(ASSEMBLY)
 noinst_DATA = $(TARGET)

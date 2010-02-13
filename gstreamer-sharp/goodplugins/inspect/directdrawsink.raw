@@ -1,0 +1,81 @@
+<element>
+ <name>directdrawsink</name>
+ <details>
+  <long-name>Direct Draw Video Sink</long-name>
+  <class>Sink/Video</class>
+  <description>Output to a video card via Direct Draw</description>
+  <authors>Sebastien Moutte &lt;sebastien@moutte.net&gt;</authors>
+ </details>
+ <object name="GstDirectDrawSink">
+  <object name="GstVideoSink">
+   <object name="GstBaseSink">
+    <object name="GstElement">
+     <object name="GstObject">
+      <object name="GObject">
+      </object>
+     </object>
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+  <interface name="GstImplementsInterface" />
+  <interface name="GstXOverlay" />
+  <interface name="GstNavigation" />
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>sink</name>
+   <direction>sink</direction>
+   <presence>always</presence>
+   <caps>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_directdraw_sink_change_state"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+  <pad>
+   <name>sink</name>
+   <direction>sink</direction>
+   <template>sink</template>
+   <implementation>
+    <chain-based function="gst_base_sink_chain"/>
+    <event-function function="gst_base_sink_event"/>
+    <query-function function="gst_pad_query_default"/>
+    <query-type-func function="gst_pad_get_query_types_default">
+    </query-type-func>
+    <intlink-function function="gst_pad_get_internal_links_default"/>
+    <bufferalloc-function function="gst_base_sink_pad_buffer_alloc"/>
+   </implementation>
+  </pad>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>show-preroll-frame</name>
+   <type>gboolean</type>
+   <nick>Show preroll frame</nick>
+   <blurb>Whether to render video frames during preroll</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>force-aspect-ratio</name>
+   <type>gboolean</type>
+   <nick>Force aspect ratio</nick>
+   <blurb>When enabled, scaling will respect original aspect ratio</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>

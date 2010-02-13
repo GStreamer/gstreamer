@@ -1,0 +1,142 @@
+<element>
+ <name>dshowaudiosrc</name>
+ <details>
+  <long-name>Directshow audio capture source</long-name>
+  <class>Source/Audio</class>
+  <description>Receive data from a directshow audio capture graph</description>
+  <authors>Sebastien Moutte &lt;sebastien@moutte.net&gt;</authors>
+ </details>
+ <object name="GstDshowAudioSrc">
+  <object name="GstAudioSrc">
+   <object name="GstBaseAudioSrc">
+    <object name="GstPushSrc">
+     <object name="GstBaseSrc">
+      <object name="GstElement">
+       <object name="GstObject">
+        <object name="GObject">
+        </object>
+       </object>
+      </object>
+     </object>
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+  <interface name="GstPropertyProbe" />
+  <interface name="GstImplementsInterface" />
+  <interface name="GstMixer" />
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>src</name>
+   <direction>src</direction>
+   <presence>always</presence>
+   <caps>audio/x-raw-int, endianness=(int){ 1234 }, signed=(boolean){ true, false }, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean){ true, false }, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_dshowaudiosrc_change_state"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+  <pad>
+   <name>src</name>
+   <direction>src</direction>
+   <template>src</template>
+   <implementation>
+    <get-range-based function="gst_base_src_pad_get_range"/>
+    <event-function function="gst_base_src_event_handler"/>
+    <query-function function="gst_base_src_query"/>
+    <query-type-func function="gst_pad_get_query_types_default">
+    </query-type-func>
+    <intlink-function function="gst_pad_get_internal_links_default"/>
+   </implementation>
+  </pad>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>buffer-time</name>
+   <type>gint64</type>
+   <nick>Buffer Time</nick>
+   <blurb>Size of audio buffer in microseconds</blurb>
+   <flags>RW</flags>
+   <range min="1" max="9223372036854775807"/>
+   <default>200000</default>
+  </element-property>
+  <element-property>
+   <name>latency-time</name>
+   <type>gint64</type>
+   <nick>Latency Time</nick>
+   <blurb>Audio latency in microseconds</blurb>
+   <flags>RW</flags>
+   <range min="1" max="9223372036854775807"/>
+   <default>10000</default>
+  </element-property>
+  <element-property>
+   <name>actual-buffer-time</name>
+   <type>gint64</type>
+   <nick>Actual Buffer Time</nick>
+   <blurb>Actual configured size of audio buffer in microseconds</blurb>
+   <flags>R</flags>
+   <range min="-1" max="9223372036854775807"/>
+   <default>-1</default>
+  </element-property>
+  <element-property>
+   <name>actual-latency-time</name>
+   <type>gint64</type>
+   <nick>Actual Latency Time</nick>
+   <blurb>Actual configured audio latency in microseconds</blurb>
+   <flags>R</flags>
+   <range min="-1" max="9223372036854775807"/>
+   <default>-1</default>
+  </element-property>
+  <element-property>
+   <name>provide-clock</name>
+   <type>gboolean</type>
+   <nick>Provide Clock</nick>
+   <blurb>Provide a clock to be used as the global pipeline clock</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>slave-method</name>
+   <type>GstBaseAudioSrcSlaveMethod</type>
+   <nick>Slave Method</nick>
+   <blurb>Algorithm to use to match the rate of the masterclock</blurb>
+   <flags>RW</flags>
+   <default>2</default>
+   <enum-values>
+    <value value="0" nick="resample"/>
+    <value value="1" nick="re-timestamp"/>
+    <value value="2" nick="skew"/>
+    <value value="3" nick="none"/>
+   </enum-values>
+  </element-property>
+  <element-property>
+   <name>device</name>
+   <type>gchararray</type>
+   <nick>Device</nick>
+   <blurb>Directshow device reference (classID/name)</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+  <element-property>
+   <name>device-name</name>
+   <type>gchararray</type>
+   <nick>Device name</nick>
+   <blurb>Human-readable name of the sound device</blurb>
+   <flags>RW</flags>
+   <default>NULL</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>
