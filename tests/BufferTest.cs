@@ -90,5 +90,35 @@ public class BufferTest {
     Assert.IsTrue (b == 5 && 5 == data[reader.Pos-1]);
     Assert.IsFalse (reader.GetUInt8 (out b));
     Assert.IsTrue (reader.Pos == buffer.Size);
+
+    Gst.Base.ByteWriter writer = new Gst.Base.ByteWriter (buffer, true);
+    Assert.IsTrue (writer.Remaining == buffer.Size);
+    Assert.IsTrue (writer.RemainingReadable == buffer.Size);
+    Assert.IsTrue (writer.PutUInt8 (5));
+    Assert.IsTrue (writer.PutUInt16Be (0x0403));
+    Assert.IsTrue (writer.PutUInt8 (2));
+    Assert.IsTrue (writer.PutUInt16Le (0x0001));
+    Assert.IsTrue (writer.Remaining == 0);
+    Assert.IsTrue (writer.SetPos (0));
+    Assert.IsTrue (writer.PeekUInt32Be (out u));
+    Assert.IsTrue (u == 0x05040302);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 5 && 0 == data[writer.Pos-1]);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 4 && 1 == data[writer.Pos-1]);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 3 && 2 == data[writer.Pos-1]);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 2 && 3 == data[writer.Pos-1]);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 1 && 4 == data[writer.Pos-1]);
+    Assert.IsTrue (writer.GetUInt8 (out b));
+    Assert.IsTrue (b == 0 && 5 == data[writer.Pos-1]);
+    Assert.IsFalse (writer.GetUInt8 (out b));
+    Assert.IsTrue (writer.Pos == buffer.Size);
+
+    writer = new Gst.Base.ByteWriter (buffer, false);
+    Assert.IsTrue (writer.Remaining == buffer.Size);
+    Assert.IsTrue (writer.RemainingReadable == 0);
   }
 }
