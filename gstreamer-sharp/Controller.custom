@@ -52,6 +52,9 @@ public string[] Properties {
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 extern static uint gst__controllersharp_gst__controller_controller_get_object_offset ();
 
+[DllImport ("libgstcontroller-0.10.dll") ]
+static extern bool gst_object_set_controller (IntPtr raw, IntPtr contr);
+
 static uint object_offset = gst__controllersharp_gst__controller_controller_get_object_offset ();
 public Gst.GLib.Object Object {
   get {
@@ -59,6 +62,12 @@ public Gst.GLib.Object Object {
       IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + object_offset);
       return Gst.GLib.Object.GetObject ( (*raw_ptr));
     }
+  }
+
+  set {
+    bool ret = gst_object_set_controller (value.Handle, this.Handle);
+    if (!ret)
+      throw new ApplicationException ();
   }
 }
 
@@ -183,5 +192,42 @@ public System.Array GetValueArray (string property, ulong timestamp, int nsample
   Gst.GLib.Marshaller.Free (va.values);
 
   return values;
+}
+
+[DllImport ("libgstcontroller-0.10.dll") ]
+static extern IntPtr gst_object_get_controller (IntPtr raw);
+
+static Controller GetController (Gst.Object obj) {
+  IntPtr raw_ret = gst_object_get_controller (obj.Handle);
+  return Gst.GLib.Object.GetObject (raw_ret, true) as Controller;
+}
+
+[DllImport ("libgstcontroller-0.10.dll") ]
+static extern IntPtr gst_object_get_control_source (IntPtr raw, IntPtr property);
+
+public static ControlSource GetControlSource (Gst.Object obj, string property) {
+  IntPtr raw_property = Gst.GLib.Marshaller.StringToPtrGStrdup (property);
+  IntPtr raw_ret = gst_object_get_control_source (obj.Handle, raw_property);
+
+  Gst.GLib.Marshaller.Free (raw_property);
+  return Gst.GLib.Object.GetObject (raw_ret, true) as ControlSource;
+}
+
+[DllImport ("libgstcontroller-0.10.dll") ]
+static extern bool gst_object_set_control_source (IntPtr raw, IntPtr property, IntPtr csrc);
+
+public static bool SetControlSource (Gst.Object obj, string property, ControlSource csrc) {
+  IntPtr raw_property = Gst.GLib.Marshaller.StringToPtrGStrdup (property);
+  bool ret = gst_object_set_control_source (obj.Handle, raw_property, csrc.Handle);
+  Gst.GLib.Marshaller.Free (raw_property);
+
+  return ret;
+}
+
+[DllImport ("libgstcontroller-0.10.dll") ]
+static extern bool gst_object_sync_values (IntPtr raw, ulong timestamp);
+
+public static bool SyncValue (Gst.Object obj, ulong timestamp) {
+  return gst_object_sync_values (obj.Handle, timestamp);
 }
 
