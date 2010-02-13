@@ -119,6 +119,7 @@ check_PROGRAMS = \
 	elements/autoconvert \
 	elements/asfmux \
 	elements/capssetter \
+	elements/dataurisrc \
 	elements/legacyresample \
 	elements/jpegparse \
 	elements/qtmux \
