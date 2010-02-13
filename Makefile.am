@@ -50,7 +50,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/flacparse \
-	$(top_srcdir)/gst/shapewipe
+	$(top_srcdir)/gst/shapewipe \
+	$(top_srcdir)/tests/examples/shapewipe
 
 include $(top_srcdir)/common/cruft.mak
 
