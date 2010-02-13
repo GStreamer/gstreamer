@@ -579,10 +579,16 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
   /* Combine them */
   pts |= pts_ext << 24;
 
-  if (GST_BUFFER_SIZE (buffer) < 12) {
-    GST_ERROR_OBJECT (demux, "Too small tag size");
+  /* Error out on tags with too small headers */
+  if (GST_BUFFER_SIZE (buffer) < 11) {
+    GST_ERROR_OBJECT (demux, "Too small tag size (%d)",
+        GST_BUFFER_SIZE (buffer));
     return GST_FLOW_ERROR;
   }
+
+  /* Silently skip buffers with no data */
+  if (GST_BUFFER_SIZE (buffer) == 11)
+    return GST_FLOW_OK;
 
   /* Skip the stream id and go directly to the flags */
   flags = GST_READ_UINT8 (data + 7);
