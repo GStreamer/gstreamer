@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 plugins-update: $(patsubst $(srcdir)/inspect/%.raw, inspect-%, $(INSPECT_FILES))
 inspect-%:
-	$(top_builddir)/elementgen/gsts-xmlinspect $(patsubst inspect-%,%,$@) > inspect/$(patsubst inspect-%,%,$@).raw
+	$(top_builddir)/elementgen/gsts-xmlinspect $(patsubst inspect-%,%,$@) > inspect/$(patsubst inspect-%,%,$@).raw.tmp && mv inspect/$(patsubst inspect-%,%,$@).raw.tmp inspect/$(patsubst inspect-%,%,$@).raw || (rm inspect/$(patsubst inspect-%,%,$@).raw.tmp && true)
 
 all: $(XML_FILES) $(CS_FILES)
 	touch generated
