@@ -1,0 +1,131 @@
+<element>
+ <name>directdrawsink</name>
+ <details>
+  <long-name>Direct Sound Audio Sink</long-name>
+  <class>Sink/Audio</class>
+  <description>Output to a sound card via Direct Sound</description>
+  <authors>Sebastien Moutte &lt;sebastien@moutte.net&gt;</authors>
+ </details>
+ <object name="GstDirectSoundSink">
+  <object name="GstAudioSink">
+   <object name="GstBaseAudioSink">
+    <object name="GstBaseSink">
+     <object name="GstElement">
+      <object name="GstObject">
+       <object name="GObject">
+       </object>
+      </object>
+     </object>
+    </object>
+   </object>
+  </object>
+ </object>
+ <interfaces>
+  <interface name="GstImplementsInterface" />
+  <interface name="GstMixer" />
+ </interfaces>
+ <pad-templates>
+  <pad-template>
+   <name>sink</name>
+   <direction>sink</direction>
+   <presence>always</presence>
+   <caps>audio/x-raw-int,signed = (boolean) { TRUE, FALSE }, width = (int) 16, depth = (int) 16, rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; audio/x-raw-int, signed = (boolean) { TRUE, FALSE }, width = (int) 8, depth = (int) 8, rate = (int) [ 1, MAX ], channels = (int) [ 1, 2 ]</caps>
+  </pad-template>
+ </pad-templates>
+ <element-flags>
+ </element-flags>
+ <element-implementation>
+  <state-change function="gst_base_audio_sink_change_state"/>
+  <save function="gst_element_save_thyself"/>
+  <load function="gst_element_restore_thyself"/>
+ </element-implementation>
+ <clocking-interaction>
+ </clocking-interaction>
+ <pads>
+  <pad>
+   <name>sink</name>
+   <direction>sink</direction>
+   <template>sink</template>
+   <implementation>
+    <chain-based function="gst_base_sink_chain"/>
+    <event-function function="gst_base_sink_event"/>
+    <query-function function="gst_base_audio_sink_query_pad"/>
+    <query-type-func function="gst_pad_get_query_types_default">
+    </query-type-func>
+    <intlink-function function="gst_pad_get_internal_links_default"/>
+    <bufferalloc-function function="gst_base_sink_pad_buffer_alloc"/>
+   </implementation>
+  </pad>
+ </pads>
+ <element-properties>
+  <element-property>
+   <name>buffer-time</name>
+   <type>gint64</type>
+   <nick>Buffer Time</nick>
+   <blurb>Size of audio buffer in microseconds</blurb>
+   <flags>RW</flags>
+   <range min="1" max="9223372036854775807"/>
+   <default>200000</default>
+  </element-property>
+  <element-property>
+   <name>latency-time</name>
+   <type>gint64</type>
+   <nick>Latency Time</nick>
+   <blurb>Audio latency in microseconds</blurb>
+   <flags>RW</flags>
+   <range min="1" max="9223372036854775807"/>
+   <default>10000</default>
+  </element-property>
+  <element-property>
+   <name>provide-clock</name>
+   <type>gboolean</type>
+   <nick>Provide Clock</nick>
+   <blurb>Provide a clock to be used as the global pipeline clock</blurb>
+   <flags>RW</flags>
+   <default>TRUE</default>
+  </element-property>
+  <element-property>
+   <name>slave-method</name>
+   <type>GstBaseAudioSinkSlaveMethod</type>
+   <nick>Slave Method</nick>
+   <blurb>Algorithm to use to match the rate of the masterclock</blurb>
+   <flags>RW</flags>
+   <default>1</default>
+   <enum-values>
+    <value value="0" nick="resample"/>
+    <value value="1" nick="skew"/>
+    <value value="2" nick="none"/>
+   </enum-values>
+  </element-property>
+  <element-property>
+   <name>can-activate-pull</name>
+   <type>gboolean</type>
+   <nick>Allow Pull Scheduling</nick>
+   <blurb>Allow pull-based scheduling</blurb>
+   <flags>RW</flags>
+   <default>FALSE</default>
+  </element-property>
+  <element-property>
+   <name>drift-tolerance</name>
+   <type>gint64</type>
+   <nick>Drift Tolerance</nick>
+   <blurb>Tolerance for timestamp and clock drift in microseconds</blurb>
+   <flags>RW</flags>
+   <range min="1" max="9223372036854775807"/>
+   <default>40000</default>
+  </element-property>
+  <element-property>
+   <name>volume</name>
+   <type>gdouble</type>
+   <nick>Volume</nick>
+   <blurb>Volume of this stream</blurb>
+   <flags>RW</flags>
+   <range min="0.0" max="1.0"/>
+   <default>1.0</default>
+  </element-property>
+ </element-properties>
+ <element-signals>
+ </element-signals>
+ <element-actions>
+ </element-actions>
+</element>

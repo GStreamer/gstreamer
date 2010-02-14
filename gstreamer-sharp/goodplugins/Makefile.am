@@ -1,8 +1,8 @@
-ELEMENTS = directdrawsink
+ELEMENTS = directsoundsink
 
 NAMESPACE = Gst.GoodPlugins
 INSPECT_FILES = $(patsubst %,$(srcdir)/inspect/%.raw,$(ELEMENTS))
-METADATA_FILES = $(srcdir)/decodebin2.metadata $(srcdir)/playbin2.metadata
+METADATA_FILES = 
 CS_FILES = $(patsubst %,$(builddir)/generated/%.cs,$(ELEMENTS))
 XML_FILES = $(patsubst %,$(builddir)/%.xml,$(ELEMENTS))
 
