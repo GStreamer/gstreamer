@@ -42,10 +42,11 @@ static GType gst_codec_src_get_type (void);
     { g_setenv("USE_DECODEBIN2", "1", TRUE); func(); }   \
     GST_END_TEST;
 
-DEFINE_TEST (test_sink_usage_video_only_stream)
+DEFINE_TEST (test_sink_usage_video_only_stream);
 
 /* make sure the audio sink is not touched for video-only streams */
-     static void test_sink_usage_video_only_stream (void)
+static void
+test_sink_usage_video_only_stream (void)
 {
   GstElement *playbin, *fakevideosink, *fakeaudiosink;
   GstState cur_state, pending_state;
@@ -96,9 +97,10 @@ DEFINE_TEST (test_sink_usage_video_only_stream)
 }
 
 /* this tests async error handling when setting up the subbin */
-DEFINE_TEST (test_suburi_error_unknowntype)
+DEFINE_TEST (test_suburi_error_unknowntype);
 
-     static void test_suburi_error_unknowntype (void)
+static void
+test_suburi_error_unknowntype (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -130,9 +132,10 @@ DEFINE_TEST (test_suburi_error_unknowntype)
   gst_object_unref (playbin);
 }
 
-DEFINE_TEST (test_suburi_error_invalidfile)
+DEFINE_TEST (test_suburi_error_invalidfile);
 
-     static void test_suburi_error_invalidfile (void)
+static void
+test_suburi_error_invalidfile (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -163,9 +166,10 @@ DEFINE_TEST (test_suburi_error_invalidfile)
   gst_object_unref (playbin);
 }
 
-DEFINE_TEST (test_suburi_error_wrongproto)
+DEFINE_TEST (test_suburi_error_wrongproto);
 
-     static void test_suburi_error_wrongproto (void)
+static void
+test_suburi_error_wrongproto (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -222,9 +226,10 @@ create_playbin (const gchar * uri)
   return playbin;
 }
 
-DEFINE_TEST (test_missing_urisource_handler)
+DEFINE_TEST (test_missing_urisource_handler);
 
-     static void test_missing_urisource_handler (void)
+static void
+test_missing_urisource_handler (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -273,9 +278,10 @@ DEFINE_TEST (test_missing_urisource_handler)
   gst_object_unref (playbin);
 }
 
-DEFINE_TEST (test_missing_suburisource_handler)
+DEFINE_TEST (test_missing_suburisource_handler);
 
-     static void test_missing_suburisource_handler (void)
+static void
+test_missing_suburisource_handler (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -325,8 +331,10 @@ DEFINE_TEST (test_missing_suburisource_handler)
   gst_object_unref (playbin);
 }
 
-DEFINE_TEST (test_missing_primary_decoder)
-     static void test_missing_primary_decoder (void)
+DEFINE_TEST (test_missing_primary_decoder);
+
+static void
+test_missing_primary_decoder (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -383,6 +391,7 @@ gst_red_video_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_red_video_src_uri_get_protocols (void)
 {
@@ -492,6 +501,7 @@ gst_codec_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_codec_src_uri_get_protocols (void)
 {
