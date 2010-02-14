@@ -149,7 +149,7 @@ GST_START_TEST (test_general)
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       /* This is green */
-      data[0] = 0;              /* A */
+      data[0] = 255;            /* A */
       data[1] = 173;            /* Y */
       data[2] = 42;             /* U */
       data[3] = 26;             /* V */
@@ -185,9 +185,9 @@ GST_START_TEST (test_general)
     for (j = 0; j < 400; j++) {
       if (i < 100 && j < 100) {
         fail_unless_equals_int (data[0], 0);    /* A */
-        fail_unless_equals_int (data[1], 0);    /* Y */
-        fail_unless_equals_int (data[2], 128);  /* U */
-        fail_unless_equals_int (data[3], 128);  /* V */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       } else {
         fail_unless_equals_int (data[0], 255);  /* A */
         fail_unless_equals_int (data[1], 173);  /* Y */
@@ -210,9 +210,9 @@ GST_START_TEST (test_general)
     for (j = 0; j < 400; j++) {
       if (i < 200 && j < 200) {
         fail_unless_equals_int (data[0], 0);    /* A */
-        fail_unless_equals_int (data[1], 0);    /* Y */
-        fail_unless_equals_int (data[2], 128);  /* U */
-        fail_unless_equals_int (data[3], 128);  /* V */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       } else {
         fail_unless_equals_int (data[0], 255);  /* A */
         fail_unless_equals_int (data[1], 173);  /* Y */
@@ -235,9 +235,9 @@ GST_START_TEST (test_general)
     for (j = 0; j < 400; j++) {
       if (i < 300 && j < 300) {
         fail_unless_equals_int (data[0], 0);    /* A */
-        fail_unless_equals_int (data[1], 0);    /* Y */
-        fail_unless_equals_int (data[2], 128);  /* U */
-        fail_unless_equals_int (data[3], 128);  /* V */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       } else {
         fail_unless_equals_int (data[0], 255);  /* A */
         fail_unless_equals_int (data[1], 173);  /* Y */
@@ -259,9 +259,9 @@ GST_START_TEST (test_general)
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       fail_unless_equals_int (data[0], 0);      /* A */
-      fail_unless_equals_int (data[1], 0);      /* Y */
-      fail_unless_equals_int (data[2], 128);    /* U */
-      fail_unless_equals_int (data[3], 128);    /* V */
+      fail_unless_equals_int (data[1], 173);    /* Y */
+      fail_unless_equals_int (data[2], 42);     /* U */
+      fail_unless_equals_int (data[3], 26);     /* V */
       data += 4;
     }
   }
