@@ -199,6 +199,8 @@ gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config
 gstreamer-sharp/coreplugins/Makefile
 gstreamer-sharp/baseplugins/Makefile
+gstreamer-sharp/goodplugins/Makefile
+gstreamer-sharp/badplugins/Makefile
 gstreamer-sharp/glue/Makefile
 doc/Makefile
 tests/Makefile

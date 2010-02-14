@@ -122,7 +122,9 @@ customs = 			\
 	MissingPluginMessage.cs
 
 plugin_csfiles = $(builddir)/coreplugins/generated/*.cs \
-	$(builddir)/baseplugins/generated/*.cs
+	$(builddir)/baseplugins/generated/*.cs \
+	$(builddir)/goodplugins/generated/*.cs \
+	$(builddir)/badplugins/generated/*.cs
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 
@@ -159,6 +161,14 @@ baseplugins/generated/*.cs: $(API) $(builddir)/baseplugins/generated
 baseplugins/generated: $(API) $(srcdir)/baseplugins/*.metadata $(srcdir)/baseplugins/inspect/*.raw
 	$(MAKE) -C baseplugins
 
+goodplugins/generated/*.cs: $(API) $(builddir)/goodplugins/generated
+goodplugins/generated: $(API) $(srcdir)/goodplugins/inspect/*.raw
+	$(MAKE) -C goodplugins
+
+badplugins/generated/*.cs: $(API) $(builddir)/badplugins/generated
+badplugins/generated: $(API) $(srcdir)/badplugins/inspect/*.raw
+	$(MAKE) -C badplugins
+
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk
 	cp $(top_srcdir)/gstreamer-sharp.snk .
 
@@ -168,4 +178,6 @@ $(ASSEMBLY): $(build_sources) generated-stamp $(KEYFILE) $(plugin_csfiles)
 plugins-update:
 	$(MAKE) -C coreplugins plugins-update
 	$(MAKE) -C baseplugins plugins-update
+	$(MAKE) -C goodplugins plugins-update
+	$(MAKE) -C badplugins plugins-update
 
