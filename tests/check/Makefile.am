@@ -100,6 +100,7 @@ check_PROGRAMS = \
 	elements/gdppay \
 	elements/multifdsink \
 	elements/playbin \
+	elements/playbin2 \
 	$(check_subparse) \
 	elements/videorate \
 	elements/videoscale \
@@ -131,7 +132,7 @@ VALGRIND_TO_FIX = \
 	libs/video
 
 # these tests don't even pass
-noinst_PROGRAMS = $(check_libvisual) elements/playbin2
+noinst_PROGRAMS = $(check_libvisual)
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
