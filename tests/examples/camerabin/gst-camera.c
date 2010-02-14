@@ -832,6 +832,14 @@ on_buttonPause_clicked (GtkButton * button, gpointer user_data)
   }
 }
 
+void
+on_drawingareaView_realize (GtkWidget * widget, gpointer data)
+{
+#if GTK_CHECK_VERSION (2, 18, 0)
+  gdk_window_ensure_native (widget->window);
+#endif
+}
+
 gboolean
 on_drawingareaView_configure_event (GtkWidget * widget,
     GdkEventConfigure * event, gpointer data)

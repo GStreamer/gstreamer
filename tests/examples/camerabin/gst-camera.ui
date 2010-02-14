@@ -374,6 +374,7 @@
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
                         <signal name="configure_event" handler="on_drawingareaView_configure_event"/>
+                        <signal name="realize" handler="on_drawingareaView_realize"/>
                       </object>
                     </child>
                   </object>
