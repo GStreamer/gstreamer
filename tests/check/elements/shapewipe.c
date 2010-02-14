@@ -165,10 +165,10 @@ GST_START_TEST (test_general)
   data = GST_BUFFER_DATA (output);
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
-      fail_unless (data[0] == 255);     /* A */
-      fail_unless (data[1] == 173);     /* Y */
-      fail_unless (data[2] == 42);      /* U */
-      fail_unless (data[3] == 26);      /* V */
+      fail_unless_equals_int (data[0], 255);    /* A */
+      fail_unless_equals_int (data[1], 173);    /* Y */
+      fail_unless_equals_int (data[2], 42);     /* U */
+      fail_unless_equals_int (data[3], 26);     /* V */
       data += 4;
     }
   }
@@ -184,15 +184,15 @@ GST_START_TEST (test_general)
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 100 && j < 100) {
-        fail_unless (data[0] == 0);     /* A */
-        fail_unless (data[1] == 0);     /* Y */
-        fail_unless (data[2] == 128);   /* U */
-        fail_unless (data[3] == 128);   /* V */
+        fail_unless_equals_int (data[0], 0);    /* A */
+        fail_unless_equals_int (data[1], 0);    /* Y */
+        fail_unless_equals_int (data[2], 128);  /* U */
+        fail_unless_equals_int (data[3], 128);  /* V */
       } else {
-        fail_unless (data[0] == 255);   /* A */
-        fail_unless (data[1] == 173);   /* Y */
-        fail_unless (data[2] == 42);    /* U */
-        fail_unless (data[3] == 26);    /* V */
+        fail_unless_equals_int (data[0], 255);  /* A */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       }
       data += 4;
     }
@@ -209,15 +209,15 @@ GST_START_TEST (test_general)
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 200 && j < 200) {
-        fail_unless (data[0] == 0);     /* A */
-        fail_unless (data[1] == 0);     /* Y */
-        fail_unless (data[2] == 128);   /* U */
-        fail_unless (data[3] == 128);   /* V */
+        fail_unless_equals_int (data[0], 0);    /* A */
+        fail_unless_equals_int (data[1], 0);    /* Y */
+        fail_unless_equals_int (data[2], 128);  /* U */
+        fail_unless_equals_int (data[3], 128);  /* V */
       } else {
-        fail_unless (data[0] == 255);   /* A */
-        fail_unless (data[1] == 173);   /* Y */
-        fail_unless (data[2] == 42);    /* U */
-        fail_unless (data[3] == 26);    /* V */
+        fail_unless_equals_int (data[0], 255);  /* A */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       }
       data += 4;
     }
@@ -234,15 +234,15 @@ GST_START_TEST (test_general)
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 300 && j < 300) {
-        fail_unless (data[0] == 0);     /* A */
-        fail_unless (data[1] == 0);     /* Y */
-        fail_unless (data[2] == 128);   /* U */
-        fail_unless (data[3] == 128);   /* V */
+        fail_unless_equals_int (data[0], 0);    /* A */
+        fail_unless_equals_int (data[1], 0);    /* Y */
+        fail_unless_equals_int (data[2], 128);  /* U */
+        fail_unless_equals_int (data[3], 128);  /* V */
       } else {
-        fail_unless (data[0] == 255);   /* A */
-        fail_unless (data[1] == 173);   /* Y */
-        fail_unless (data[2] == 42);    /* U */
-        fail_unless (data[3] == 26);    /* V */
+        fail_unless_equals_int (data[0], 255);  /* A */
+        fail_unless_equals_int (data[1], 173);  /* Y */
+        fail_unless_equals_int (data[2], 42);   /* U */
+        fail_unless_equals_int (data[3], 26);   /* V */
       }
       data += 4;
     }
@@ -258,10 +258,10 @@ GST_START_TEST (test_general)
   data = GST_BUFFER_DATA (output);
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
-      fail_unless (data[0] == 0);       /* A */
-      fail_unless (data[1] == 0);       /* Y */
-      fail_unless (data[2] == 128);     /* U */
-      fail_unless (data[3] == 128);     /* V */
+      fail_unless_equals_int (data[0], 0);      /* A */
+      fail_unless_equals_int (data[1], 0);      /* Y */
+      fail_unless_equals_int (data[2], 128);    /* U */
+      fail_unless_equals_int (data[3], 128);    /* V */
       data += 4;
     }
   }
