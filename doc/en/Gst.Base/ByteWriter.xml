@@ -1598,8 +1598,8 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="ResetAndGetDataAsBuffer">
-      <MemberSignature Language="C#" Value="public Gst.Buffer ResetAndGetDataAsBuffer ();" />
+    <Member MemberName="ResetAndGetBuffer">
+      <MemberSignature Language="C#" Value="public Gst.Buffer ResetAndGetBuffer ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>

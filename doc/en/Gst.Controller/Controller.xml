@@ -153,6 +153,27 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetControlSource">
+      <MemberSignature Language="C#" Value="public static Gst.Controller.ControlSource GetControlSource (Gst.Object obj, string property);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>Gst.Controller.ControlSource</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="Gst.Object" />
+        <Parameter Name="property" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <param name="property">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetValueArray">
       <MemberSignature Language="C#" Value="public Array GetValueArray (string property, ulong timestamp, int nsamples, ulong interval);" />
       <MemberType>Method</MemberType>
@@ -200,7 +221,7 @@
       </Docs>
     </Member>
     <Member MemberName="Object">
-      <MemberSignature Language="C#" Value="public Gst.GLib.Object Object { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.GLib.Object Object { set; get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.0.0</AssemblyVersion>
@@ -303,6 +324,29 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="SetControlSource">
+      <MemberSignature Language="C#" Value="public static bool SetControlSource (Gst.Object obj, string property, Gst.Controller.ControlSource csrc);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="Gst.Object" />
+        <Parameter Name="property" Type="System.String" />
+        <Parameter Name="csrc" Type="Gst.Controller.ControlSource" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <param name="property">To be added.</param>
+        <param name="csrc">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SetPropertyDisabled">
       <MemberSignature Language="C#" Value="public void SetPropertyDisabled (string property_name, bool disabled);" />
       <MemberType>Method</MemberType>
@@ -340,6 +384,27 @@
       </ReturnValue>
       <Parameters />
       <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SyncValue">
+      <MemberSignature Language="C#" Value="public static bool SyncValue (Gst.Object obj, ulong timestamp);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="Gst.Object" />
+        <Parameter Name="timestamp" Type="System.UInt64" />
+      </Parameters>
+      <Docs>
+        <param name="obj">To be added.</param>
+        <param name="timestamp">To be added.</param>
         <summary>To be added.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>

@@ -236,6 +236,13 @@
       <Type Name="SeekDataArgs" Kind="Class" />
       <Type Name="SeekDataHandler" Kind="Delegate" />
     </Namespace>
+    <Namespace Name="Gst.BadPlugins">
+      <Type Name="DirectDrawSink" Kind="Class" />
+      <Type Name="DshowAudioSrc" Kind="Class" />
+      <Type Name="DshowAudioSrc+BaseAudioSrcSlaveMethodType" Kind="Enumeration" />
+      <Type Name="DshowVideoSink" Kind="Class" />
+      <Type Name="DshowVideoSrc" Kind="Class" />
+    </Namespace>
     <Namespace Name="Gst.Base">
       <Type Name="Adapter" Kind="Class" />
       <Type Name="BaseSink" Kind="Class" />
@@ -409,6 +416,10 @@
       <Type Name="UnwrappedObject" Kind="Class" />
       <Type Name="Value" Kind="Structure" />
       <Type Name="ValueArray" Kind="Class" />
+    </Namespace>
+    <Namespace Name="Gst.GoodPlugins">
+      <Type Name="DirectSoundSink" Kind="Class" />
+      <Type Name="DirectSoundSink+BaseAudioSinkSlaveMethodType" Kind="Enumeration" />
     </Namespace>
     <Namespace Name="Gst.Interfaces">
       <Type Name="ChannelChangedArgs" Kind="Class" />
