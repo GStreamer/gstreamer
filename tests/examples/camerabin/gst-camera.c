@@ -836,12 +836,10 @@ gboolean
 on_drawingareaView_configure_event (GtkWidget * widget,
     GdkEventConfigure * event, gpointer data)
 {
-  Display *display = GDK_WINDOW_XDISPLAY (GDK_WINDOW (widget->window));
-
-  XMoveResizeWindow (display, GDK_WINDOW_XID (GDK_WINDOW (widget->window)),
+  gdk_window_move_resize (widget->window,
       widget->allocation.x, widget->allocation.y,
       widget->allocation.width, widget->allocation.height);
-  XSync (display, False);
+  gdk_display_sync (gtk_widget_get_display (widget));
 
   return TRUE;
 }
