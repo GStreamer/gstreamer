@@ -47,13 +47,16 @@ static GList *
 _make_buffers_in (GList * buffer_in, guint8 * test_data, gsize test_data_size)
 {
   GstBuffer *buffer;
+  GstCaps *caps;
   gsize i;
 
   for (i = 0; i < test_data_size; i++) {
     buffer = gst_buffer_new ();
     gst_buffer_set_data (buffer, test_data + i, 1);
-    gst_buffer_set_caps (buffer, gst_caps_new_simple ("image/jpeg", "parsed",
-            G_TYPE_BOOLEAN, FALSE, NULL));
+    caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
+        NULL);
+    gst_buffer_set_caps (buffer, caps);
+    gst_caps_unref (caps);
     buffer_in = g_list_append (buffer_in, buffer);
   }
   return buffer_in;
@@ -66,11 +69,16 @@ static GList *
 _make_buffers_out (GList * buffer_out, guint8 * test_data, gsize test_data_size)
 {
   GstBuffer *buffer;
+  GstCaps *caps;
 
   buffer = gst_buffer_new ();
   gst_buffer_set_data (buffer, test_data, test_data_size);
-  gst_buffer_set_caps (buffer, gst_caps_new_simple ("image/jpeg", "parsed",
-          G_TYPE_BOOLEAN, TRUE, "framerate", GST_TYPE_FRACTION, 1, 1, NULL));
+
+  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
+
   buffer_out = g_list_append (buffer_out, buffer);
   return buffer_out;
 }
