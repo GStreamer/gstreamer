@@ -318,8 +318,7 @@ static void
 gst_cairo_render_init (GstCairoRender * c, GstCairoRenderClass * klass)
 {
   /* The sink */
-  c->snk =
-      gst_pad_new_from_template (gst_static_pad_template_get (&t_snk), "sink");
+  c->snk = gst_pad_new_from_static_template (&t_snk, "sink");
   gst_pad_set_event_function (c->snk, gst_cairo_render_event);
   gst_pad_set_chain_function (c->snk, gst_cairo_render_chain);
   gst_pad_set_setcaps_function (c->snk, gst_cairo_render_setcaps_sink);
@@ -327,8 +326,7 @@ gst_cairo_render_init (GstCairoRender * c, GstCairoRenderClass * klass)
   gst_element_add_pad (GST_ELEMENT (c), c->snk);
 
   /* The source */
-  c->src =
-      gst_pad_new_from_template (gst_static_pad_template_get (&t_src), "src");
+  c->src = gst_pad_new_from_static_template (&t_src, "src");
   gst_pad_use_fixed_caps (c->src);
   gst_element_add_pad (GST_ELEMENT (c), c->src);
 
