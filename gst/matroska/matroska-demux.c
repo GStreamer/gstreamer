@@ -4399,7 +4399,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
                   lace_time < demux->segment.stop)) {
             GST_DEBUG_OBJECT (demux,
                 "Gap of %" G_GINT64_FORMAT " ns detected in"
-                "stream %d (" GST_TIME_FORMAT " -> " GST_TIME_FORMAT "). "
+                "stream %d (%" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "). "
                 "Sending updated NEWSEGMENT events", diff,
                 stream->index, GST_TIME_ARGS (stream->pos),
                 GST_TIME_ARGS (lace_time));
