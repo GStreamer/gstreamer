@@ -160,15 +160,13 @@ _gst_tag_initialize (void)
       gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_LOCATION, GST_TAG_FLAG_META,
       G_TYPE_STRING,
-      _("location"),
-      _
-      ("Origin of media as a URI (location, where the original of the file or stream is hosted)"),
+      _("location"), _("Origin of media as a URI (location, where the "
+          "original of the file or stream is hosted)"),
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_HOMEPAGE, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("homepage"),
-      _
-      ("Homepage for this media (i.e. artist or movie homepage)"),
+      _("Homepage for this media (i.e. artist or movie homepage)"),
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_DESCRIPTION, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("description"), _("short text describing the content of the data"),
@@ -179,8 +177,9 @@ _gst_tag_initialize (void)
       _
       ("International Standard Recording Code - see http://www.ifpi.org/isrc/"),
       NULL);
-  gst_tag_register (GST_TAG_ORGANIZATION, GST_TAG_FLAG_META, G_TYPE_STRING, _("organization"), _("organization"),       /* FIXME */
-      gst_tag_merge_strings_with_comma);
+  /* FIXME: organization (fix what? tpm) */
+  gst_tag_register (GST_TAG_ORGANIZATION, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("organization"), _("organization"), gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_COPYRIGHT, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("copyright"), _("copyright notice of the data"), NULL);
   gst_tag_register (GST_TAG_COPYRIGHT_URI, GST_TAG_FLAG_META,
@@ -267,25 +266,22 @@ _gst_tag_initialize (void)
       _("keywords"), _("comma separated keywords describing the content"),
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_GEO_LOCATION_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
-      _("geo location name"),
-      _
-      ("human readable descriptive location of where the media has been recorded or produced"),
-      NULL);
+      _("geo location name"), _("human readable descriptive location of where "
+          "the media has been recorded or produced"), NULL);
   gst_tag_register (GST_TAG_GEO_LOCATION_LATITUDE, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("geo location latitude"),
-      _
-      ("geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"),
-      NULL);
+      _("geo latitude location of where the media has been recorded or "
+          "produced in degrees according to WGS84 (zero at the equator, "
+          "negative values for southern latitudes)"), NULL);
   gst_tag_register (GST_TAG_GEO_LOCATION_LONGITUDE, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("geo location longitude"),
-      _
-      ("geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"),
-      NULL);
+      _("geo longitude location of where the media has been recorded or "
+          "produced in degrees according to WGS84 (zero at the prime meridian "
+          "in Greenwich/UK,  negative values for western longitudes)"), NULL);
   gst_tag_register (GST_TAG_GEO_LOCATION_ELEVATION, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("geo location elevation"),
-      _
-      ("geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"),
-      NULL);
+      _("geo elevation of where the media has been recorded or produced in "
+          "meters according to WGS84 (zero is average sea level)"), NULL);
   gst_tag_register (GST_TAG_SHOW_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
       /* TRANSLATORS: 'show name' is a compound noun here, not verb+noun */
       _("show name"),
