@@ -95,6 +95,7 @@ check_PROGRAMS = \
 	elements/audioresample \
 	elements/audiotestsrc \
 	elements/decodebin \
+	elements/decodebin2 \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
@@ -263,6 +264,9 @@ elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_decodebin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_decodebin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
