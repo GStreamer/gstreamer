@@ -598,7 +598,7 @@ gboolean
 gst_v4l2_set_norm (GstV4l2Object * v4l2object, v4l2_std_id norm)
 {
   GST_DEBUG_OBJECT (v4l2object->element, "trying to set norm to "
-      "%" G_GINT64_MODIFIER "x", norm);
+      "%" G_GINT64_MODIFIER "x", (guint64) norm);
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
