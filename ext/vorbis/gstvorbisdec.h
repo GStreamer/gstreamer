@@ -24,7 +24,7 @@
 
 
 #include <gst/gst.h>
-#include <vorbis/codec.h>
+#include "gstvorbisdeclib.h"
 
 G_BEGIN_DECLS
 

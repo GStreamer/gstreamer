@@ -584,6 +584,29 @@ AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
     )
 ])
 
+dnl *** ivorbis ***
+dnl AM_PATH_IVORBIS only takes two options
+translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
+AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
+  AG_GST_PKG_CHECK_MODULES(IVORBIS, vorbisidec)
+  if test $HAVE_IVORBIS = no
+  then
+    IVORBIS_LIBS=
+    IVORBIS_CFLAGS=
+    AC_CHECK_LIB(vorbisidec, vorbis_block_init,
+      [IVORBIS_LIBS=-lvorbisidec
+      HAVE_IVORBIS=yes
+      case $host in
+      arm-*-*)
+        IVORBIS_CFLAGS="-D_ARM_ASSEM_ $IVORBIS_CFLAGS"
+      esac
+      ],
+      HAVE_IVORBIS=no)
+    AC_SUBST(IVORBIS_LIBS)
+    AC_SUBST(IVORBIS_CFLAGS)
+  fi
+])
+
 dnl *** libgio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [

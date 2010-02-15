@@ -42,8 +42,16 @@ endif
 
 if USE_VORBIS
 VORBIS_DIR=vorbis
-else
+endif
+
+if USE_IVORBIS
+VORBIS_DIR=vorbis
+endif
+
+if !USE_VORBIS
+if !USE_IVORBIS
 VORBIS_DIR=
+endif
 endif
 
 if USE_THEORA

@@ -52,25 +52,13 @@ GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
 
 static const GstElementDetails vorbis_dec_details =
-GST_ELEMENT_DETAILS ("Vorbis audio decoder",
-    "Codec/Decoder/Audio",
-    "decode raw vorbis streams to float audio",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+    GST_VORBIS_DEC_ELEMENT_DETAILS;
 
 static GstStaticPadTemplate vorbis_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 256 ], " "endianness = (int) BYTE_ORDER, "
-/* no ifdef in macros, please
-#ifdef GST_VORBIS_DEC_SEQUENTIAL
-      "layout = \"sequential\", "
-#endif
-*/
-        "width = (int) 32")
-    );
+    GST_VORBIS_DEC_SRC_CAPS);
 
 static GstStaticPadTemplate vorbis_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -79,7 +67,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
 
-GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GST_VORBIS_DEC_GLIB_TYPE_NAME, gst_vorbis_dec, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void vorbis_dec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
@@ -560,6 +549,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
   GstCaps *caps;
   const GstAudioChannelPosition *pos = NULL;
+  gint width = GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH;
 
   switch (vd->vi.channels) {
     case 1:
@@ -589,11 +579,24 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     }
   }
 
-  vd->width = 4;
+  /* negotiate width with downstream */
+  caps = gst_pad_get_allowed_caps (vd->srcpad);
+  if (caps) {
+    if (!gst_caps_is_empty (caps)) {
+      GstStructure *s;
+
+      s = gst_caps_get_structure (caps, 0);
+      /* template ensures 16 or 32 */
+      gst_structure_get_int (s, "width", &width);
+    }
+    gst_caps_unref (caps);
+  }
+  vd->width = width >> 3;
 
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (vd->srcpad));
   gst_caps_set_simple (caps, "rate", G_TYPE_INT, vd->vi.rate,
-      "channels", G_TYPE_INT, vd->vi.channels);
+      "channels", G_TYPE_INT, vd->vi.channels,
+      "width", G_TYPE_INT, width, NULL);
 
   if (pos) {
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
@@ -620,8 +623,8 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
 
   buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = packet->packet;
-  GST_BUFFER_SIZE (buf) = packet->bytes;
+  GST_BUFFER_DATA (buf) = gst_ogg_packet_data (packet);
+  GST_BUFFER_SIZE (buf) = gst_ogg_packet_size (packet);
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
@@ -738,12 +741,12 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
   GST_DEBUG_OBJECT (vd, "parsing header packet");
 
   /* Packetno = 0 if the first byte is exactly 0x01 */
-  packet->b_o_s = (packet->packet[0] == 0x1) ? 1 : 0;
+  packet->b_o_s = ((gst_ogg_packet_data (packet))[0] == 0x1) ? 1 : 0;
 
   if ((ret = vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet)))
     goto header_read_error;
 
-  switch (packet->packet[0]) {
+  switch ((gst_ogg_packet_data (packet))[0]) {
     case 0x01:
       res = vorbis_handle_identification_packet (vd);
       break;
@@ -768,27 +771,6 @@ header_read_error:
         (NULL), ("couldn't read header packet (%d)", ret));
     return GST_FLOW_ERROR;
   }
-}
-
-/* These samples can be outside of the float -1.0 -- 1.0 range, this
- * is allowed, downstream elements are supposed to clip */
-static void
-copy_samples (float *out, float **in, guint samples, gint channels)
-{
-  gint i, j;
-
-#ifdef GST_VORBIS_DEC_SEQUENTIAL
-  for (i = 0; i < channels; i++) {
-    memcpy (out, in[i], samples * sizeof (float));
-    out += samples;
-  }
-#else
-  for (j = 0; j < samples; j++) {
-    for (i = 0; i < channels; i++) {
-      *out++ = in[i][j];
-    }
-  }
-#endif
 }
 
 static GstFlowReturn
@@ -855,7 +837,7 @@ static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
-  float **pcm;
+  vorbis_sample_t **pcm;
   guint sample_count;
   GstBuffer *out;
   GstFlowReturn result;
@@ -899,8 +881,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     goto wrong_samples;
 
   /* copy samples in buffer */
-  copy_samples ((float *) GST_BUFFER_DATA (out), pcm, sample_count,
-      vd->vi.channels);
+  copy_samples ((vorbis_sample_t *) GST_BUFFER_DATA (out), pcm, sample_count,
+      vd->vi.channels, vd->width);
 
   GST_LOG_OBJECT (vd, "setting output size to %d", size);
   GST_BUFFER_SIZE (out) = size;
@@ -952,22 +934,24 @@ wrong_samples:
 static GstFlowReturn
 vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
 {
-  ogg_packet packet;
+  ogg_packet *packet;
+  ogg_packet_wrapper packet_wrapper;
   GstFlowReturn result = GST_FLOW_OK;
 
   /* make ogg_packet out of the buffer */
-  packet.packet = GST_BUFFER_DATA (buffer);
-  packet.bytes = GST_BUFFER_SIZE (buffer);
-  packet.granulepos = -1;
-  packet.packetno = 0;          /* we don't care */
+  gst_ogg_packet_wrapper_from_buffer (&packet_wrapper, buffer);
+  packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
+  /* set some more stuff */
+  packet->granulepos = -1;
+  packet->packetno = 0;         /* we don't care */
   /* EOS does not matter, it is used in vorbis to implement clipping the last
    * block of samples based on the granulepos. We clip based on segments. */
-  packet.e_o_s = 0;
+  packet->e_o_s = 0;
 
-  GST_LOG_OBJECT (vd, "decode buffer of size %ld", packet.bytes);
+  GST_LOG_OBJECT (vd, "decode buffer of size %ld", packet->bytes);
 
   /* error out on empty header packets, but just skip empty data packets */
-  if (G_UNLIKELY (packet.bytes == 0)) {
+  if (G_UNLIKELY (packet->bytes == 0)) {
     if (vd->initialized)
       goto empty_buffer;
     else
@@ -975,19 +959,19 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
   }
 
   /* switch depending on packet type */
-  if (packet.packet[0] & 1) {
+  if ((gst_ogg_packet_data (packet))[0] & 1) {
     if (vd->initialized) {
       GST_WARNING_OBJECT (vd, "Already initialized, so ignoring header packet");
       goto done;
     }
-    result = vorbis_handle_header_packet (vd, &packet);
+    result = vorbis_handle_header_packet (vd, packet);
   } else {
     GstClockTime timestamp, duration;
 
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
 
-    result = vorbis_handle_data_packet (vd, &packet, timestamp, duration);
+    result = vorbis_handle_data_packet (vd, packet, timestamp, duration);
   }
 
 done:
