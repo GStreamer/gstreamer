@@ -3316,7 +3316,16 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   /* ERRORS */
 no_decodebin:
   {
+    GstMessage *msg;
+
     GST_SOURCE_GROUP_UNLOCK (group);
+    msg =
+        gst_missing_element_message_new (GST_ELEMENT_CAST (playbin),
+        "uridecodebin");
+    gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+
+    GST_ELEMENT_ERROR (playbin, CORE, MISSING_PLUGIN,
+        (_("Could not create \"uridecodebin\" element.")), (NULL));
     return FALSE;
   }
 uridecodebin_failure:
