@@ -499,20 +499,6 @@ GST_INPUT_SELECTOR_WAIT
 </SECTION>
 
 <SECTION>
-<FILE>element-ivorbisdec</FILE>
-<TITLE>ivorbisdec</TITLE>
-GstIVorbisDec
-<SUBSECTION Standard>
-GstIVorbisDecClass
-GST_IVORBIS_DEC
-GST_IVORBIS_DEC_CLASS
-GST_IS_IVORBIS_DEC
-GST_IS_IVORBIS_DEC_CLASS
-GST_TYPE_IVORBIS_DEC
-gst_ivorbis_dec_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-jackaudiosrc</FILE>
 <TITLE>jackaudiosrc</TITLE>
 GstJackAudioSrc

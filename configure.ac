@@ -872,25 +872,6 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AC_SUBST(GSM_LIBS)
 ])
 
-dnl *** ivorbis ***
-dnl AM_PATH_IVORBIS only takes two options
-translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
-AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
-  IVORBIS_LIBS=
-  IVORBIS_CFLAGS=
-  AC_CHECK_LIB(vorbisidec, vorbis_block_init,
-    [IVORBIS_LIBS=-lvorbisidec
-     HAVE_IVORBIS=yes
-     case $host in
-     arm-*-*)
-       IVORBIS_CFLAGS="-D_ARM_ASSEM_ $IVORBIS_CFLAGS"
-     esac
-    ],
-    HAVE_IVORBIS=no)
-  AC_SUBST(IVORBIS_LIBS)
-  AC_SUBST(IVORBIS_CFLAGS)
-])
-
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
@@ -1533,7 +1514,6 @@ AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_GSM, false)
-AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JP2K, false)
 AM_CONDITIONAL(USE_KATE, false)
@@ -1739,7 +1719,6 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
-ext/ivorbis/Makefile
 ext/jack/Makefile
 ext/jp2k/Makefile
 ext/kate/Makefile

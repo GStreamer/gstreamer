@@ -45,6 +45,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib}
+	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib}
 
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
@@ -52,6 +53,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/tests/examples/shapewipe
+	$(top_srcdir)/ext/ivorbis
 
 include $(top_srcdir)/common/cruft.mak
 

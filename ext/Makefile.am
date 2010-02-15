@@ -142,12 +142,6 @@ endif
 HERMES_DIR=
 # endif
 
-if USE_IVORBIS
- IVORBIS_DIR=ivorbis
-else
- IVORBIS_DIR=
-endif
-
 if USE_JACK
 JACK_DIR=jack
 else
