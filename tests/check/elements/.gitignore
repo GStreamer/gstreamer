@@ -7,6 +7,7 @@ audiorate
 audioresample
 audiotestsrc
 decodebin
+decodebin2
 gdpdepay
 gdppay
 gnomevfssink
