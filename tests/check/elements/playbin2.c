@@ -36,6 +36,9 @@ GST_START_TEST (test_sink_usage_video_only_stream)
 {
   GstElement *playbin, *fakevideosink, *fakeaudiosink;
   GstState cur_state, pending_state;
+  GstElement *source;
+  GstBuffer *last_frame;
+  gint nstreams;
 
   fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
           gst_red_video_src_get_type ()));
@@ -69,14 +72,22 @@ GST_START_TEST (test_sink_usage_video_only_stream)
   fail_unless_equals_int (cur_state, GST_STATE_NULL);
   fail_unless_equals_int (pending_state, GST_STATE_VOID_PENDING);
 
-  {
-    GValueArray *stream_info = NULL;
+  g_object_get (playbin, "n-video", &nstreams, NULL);
+  fail_unless_equals_int (nstreams, 1);
 
-    g_object_get (playbin, "stream-info-value-array", &stream_info, NULL);
-    fail_unless (stream_info != NULL);
-    fail_unless_equals_int (stream_info->n_values, 1);
-    g_value_array_free (stream_info);
-  }
+  g_object_get (playbin, "n-audio", &nstreams, NULL);
+  fail_unless_equals_int (nstreams, 0);
+
+  g_object_get (playbin, "n-text", &nstreams, NULL);
+  fail_unless_equals_int (nstreams, 0);
+
+  g_object_get (playbin, "source", &source, NULL);
+  fail_unless (G_TYPE_FROM_INSTANCE (source) == gst_red_video_src_get_type ());
+  gst_object_unref (source);
+
+  g_object_get (playbin, "frame", &last_frame, NULL);
+  fail_unless (GST_IS_BUFFER (last_frame));
+  gst_buffer_unref (last_frame);
 
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
@@ -294,11 +305,11 @@ GST_START_TEST (test_missing_suburisource_handler)
   fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
   gst_message_unref (msg);
 
-  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, -1);
-  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+  msg = gst_bus_poll (bus, GST_MESSAGE_WARNING, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_WARNING);
 
-  /* make sure the error is a CORE MISSING_PLUGIN one */
-  gst_message_parse_error (msg, &err, NULL);
+  /* make sure the *warning* is a CORE MISSING_PLUGIN one */
+  gst_message_parse_warning (msg, &err, NULL);
   fail_unless (err != NULL);
   fail_unless (err->domain == GST_CORE_ERROR, "error has wrong error domain "
       "%s instead of core-error-quark", g_quark_to_string (err->domain));
@@ -306,6 +317,22 @@ GST_START_TEST (test_missing_suburisource_handler)
       "code %u instead of GST_CORE_ERROR_MISSING_PLUGIN", err->code);
   g_error_free (err);
   gst_message_unref (msg);
+
+  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+
+  /* make sure the error is a RESOURCE NOT_FOUND one */
+  gst_message_parse_error (msg, &err, NULL);
+  fail_unless (err != NULL);
+  fail_unless (err->domain == GST_RESOURCE_ERROR,
+      "error has wrong error domain " "%s instead of resource-error-quark",
+      g_quark_to_string (err->domain));
+  fail_unless (err->code == GST_RESOURCE_ERROR_NOT_FOUND,
+      "error has wrong " "code %u instead of GST_RESOURCE_ERROR_NOT_FOUND",
+      err->code);
+  g_error_free (err);
+  gst_message_unref (msg);
+
   gst_object_unref (bus);
 
   gst_element_set_state (playbin, GST_STATE_NULL);
@@ -346,11 +373,11 @@ GST_START_TEST (test_missing_primary_decoder)
   fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
   gst_message_unref (msg);
 
-  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, -1);
-  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+  msg = gst_bus_poll (bus, GST_MESSAGE_WARNING, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_WARNING);
 
-  /* make sure the error is a STREAM CODEC_NOT_FOUND one */
-  gst_message_parse_error (msg, &err, NULL);
+  /* make sure the *warning* is a STREAM CODEC_NOT_FOUND one */
+  gst_message_parse_warning (msg, &err, NULL);
   fail_unless (err != NULL);
   fail_unless (err->domain == GST_STREAM_ERROR, "error has wrong error domain "
       "%s instead of stream-error-quark", g_quark_to_string (err->domain));
@@ -358,6 +385,20 @@ GST_START_TEST (test_missing_primary_decoder)
       "code %u instead of GST_STREAM_ERROR_CODEC_NOT_FOUND", err->code);
   g_error_free (err);
   gst_message_unref (msg);
+
+  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+
+  /* make sure the error is a CORE MISSING_PLUGIN one */
+  gst_message_parse_error (msg, &err, NULL);
+  fail_unless (err != NULL);
+  fail_unless (err->domain == GST_CORE_ERROR, "error has wrong error domain "
+      "%s instead of core-error-quark", g_quark_to_string (err->domain));
+  fail_unless (err->code == GST_CORE_ERROR_MISSING_PLUGIN, "error has wrong "
+      "code %u instead of GST_CORE_ERROR_MISSING_PLUGIN", err->code);
+  g_error_free (err);
+  gst_message_unref (msg);
+
   gst_object_unref (bus);
 
   gst_element_set_state (playbin, GST_STATE_NULL);
@@ -649,15 +690,13 @@ playbin2_suite (void)
   suite_add_tcase (s, tc_chain);
 
 #ifndef GST_DISABLE_REGISTRY
-  if (0) {
-    tcase_add_test (tc_chain, test_sink_usage_video_only_stream);
-    tcase_add_test (tc_chain, test_suburi_error_wrongproto);
-    tcase_add_test (tc_chain, test_suburi_error_invalidfile);
-    tcase_add_test (tc_chain, test_suburi_error_unknowntype);
-    tcase_add_test (tc_chain, test_missing_urisource_handler);
-    tcase_add_test (tc_chain, test_missing_suburisource_handler);
-    tcase_add_test (tc_chain, test_missing_primary_decoder);
-  }
+  tcase_add_test (tc_chain, test_sink_usage_video_only_stream);
+  tcase_add_test (tc_chain, test_suburi_error_wrongproto);
+  tcase_add_test (tc_chain, test_suburi_error_invalidfile);
+  tcase_add_test (tc_chain, test_suburi_error_unknowntype);
+  tcase_add_test (tc_chain, test_missing_urisource_handler);
+  tcase_add_test (tc_chain, test_missing_suburisource_handler);
+  tcase_add_test (tc_chain, test_missing_primary_decoder);
   tcase_add_test (tc_chain, test_refcount);
 
   /* one day we might also want to have the following checks:
