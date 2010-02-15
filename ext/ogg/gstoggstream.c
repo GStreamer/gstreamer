@@ -312,14 +312,14 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
         G_TYPE_INT, h, NULL);
   }
 
+  /* PAR of 0:N, N:0 and 0:0 is allowed and maps to 1:1 */
+  if (par_n == 0 || par_d == 0)
+    par_n = par_d = 1;
+
   /* only add framerate now so caps look prettier, with width/height first */
   gst_caps_set_simple (pad->caps, "framerate", GST_TYPE_FRACTION,
-      pad->granulerate_n, pad->granulerate_d, NULL);
-
-  if (par_n > 0 && par_d > 0) {
-    gst_caps_set_simple (pad->caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        par_n, par_d, NULL);
-  }
+      pad->granulerate_n, pad->granulerate_d, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, par_n, par_d, NULL);
 
   return TRUE;
 }
