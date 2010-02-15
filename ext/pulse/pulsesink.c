@@ -2232,8 +2232,8 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
         gst_tag_list_get_string (l, GST_TAG_PERFORMER, &artist);
 
       if (title && artist)
-        t = buf =
-            g_strdup_printf (_("'%s' by '%s'"), g_strstrip (title),
+        /* TRANSLATORS: 'song title' by 'artist name' */
+        t = buf = g_strdup_printf (_("'%s' by '%s'"), g_strstrip (title),
             g_strstrip (artist));
       else if (title)
         t = g_strstrip (title);
