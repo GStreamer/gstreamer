@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 22:52+0000\n"
+"POT-Creation-Date: 2010-02-15 00:46+0000\n"
 "PO-Revision-Date: 2009-11-12 00:27+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -19,6 +19,7 @@ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 msgid "Failed to query sound server capabilities"
 msgstr "Ses sunucusu olanakları sorgulanamadı"
 
+#. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "'%s' tarafından '%s'"

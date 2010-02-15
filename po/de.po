@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 22:52+0000\n"
+"POT-Creation-Date: 2010-02-15 00:46+0000\n"
 "PO-Revision-Date: 2009-11-13 23:01+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -30,6 +30,7 @@ msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
 msgid "Failed to query sound server capabilities"
 msgstr "Abfrage der Fähigkeiten des Audio-Servers ist fehlgeschlagen"
 
+#. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "»%s« durch »%s«"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 22:52+0000\n"
+"POT-Creation-Date: 2010-02-15 00:46+0000\n"
 "PO-Revision-Date: 2009-11-14 05:38+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -21,6 +21,7 @@ msgstr "Tak dapat membangun koneksi ke server suara"
 msgid "Failed to query sound server capabilities"
 msgstr "Gagal untuk kueri kemampuan server suara"
 
+#. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "'%s' oleh '%s'"

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 22:52+0000\n"
+"POT-Creation-Date: 2010-02-15 00:46+0000\n"
 "PO-Revision-Date: 2009-11-29 19:29-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -26,6 +26,7 @@ msgstr "Não foi possível estabelecer uma conexão com servidor de som"
 msgid "Failed to query sound server capabilities"
 msgstr "Falha ao examinar os recursos do servidor de som"
 
+#. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "\"%s\" por \"%s\""
