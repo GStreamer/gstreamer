@@ -24,7 +24,6 @@
 
 /**
  * SECTION:element-queue2
- * @short_description: Asynchronous data queue.
  *
  * Data is queued until one of the limits specified by the
  * #GstQueue2:max-size-buffers, #GstQueue2:max-size-bytes and/or
