@@ -1105,6 +1105,7 @@ static void
 free_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   g_free (group->uri);
+  g_free (group->suburi);
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
