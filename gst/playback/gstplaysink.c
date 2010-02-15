@@ -1002,10 +1002,19 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
      * need a lot of buffers as this consumes a lot of memory and we don't want
      * too little because else we would be context switching too quickly. */
     chain->queue = gst_element_factory_make ("queue", "vqueue");
-    g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-        "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
-    gst_bin_add (bin, chain->queue);
-    head = prev = chain->queue;
+    if (chain->queue == NULL) {
+      post_missing_element_message (playsink, "queue");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "queue"), ("video rendering might be suboptimal"));
+      head = chain->sink;
+      prev = NULL;
+    } else {
+      g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+          "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+      gst_bin_add (bin, chain->queue);
+      head = prev = chain->queue;
+    }
   } else {
     head = chain->sink;
     prev = NULL;
@@ -1214,10 +1223,17 @@ gen_text_chain (GstPlaySink * playsink)
     if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
       /* make a little queue */
       chain->queue = gst_element_factory_make ("queue", "vqueue");
-      g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-          "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
-      gst_bin_add (bin, chain->queue);
-      videosinkpad = gst_element_get_static_pad (chain->queue, "sink");
+      if (chain->queue == NULL) {
+        post_missing_element_message (playsink, "queue");
+        GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+            (_("Missing element '%s' - check your GStreamer installation."),
+                "queue"), ("video rendering might be suboptimal"));
+      } else {
+        g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+            "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+        gst_bin_add (bin, chain->queue);
+        videosinkpad = gst_element_get_static_pad (chain->queue, "sink");
+      }
 
       chain->overlay =
           gst_element_factory_make ("subtitleoverlay", "suboverlay");
@@ -1250,11 +1266,18 @@ gen_text_chain (GstPlaySink * playsink)
      * thing we can do is insert an identity and ghost the src
      * and sink pads. */
     chain->identity = gst_element_factory_make ("identity", "tidentity");
-    g_object_set (chain->identity, "signal-handoffs", FALSE, NULL);
-    g_object_set (chain->identity, "silent", TRUE, NULL);
-    gst_bin_add (bin, chain->identity);
-    srcpad = gst_element_get_static_pad (chain->identity, "src");
-    videosinkpad = gst_element_get_static_pad (chain->identity, "sink");
+    if (chain->identity == NULL) {
+      post_missing_element_message (playsink, "identity");
+      GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "identity"), (NULL));
+    } else {
+      g_object_set (chain->identity, "signal-handoffs", FALSE, NULL);
+      g_object_set (chain->identity, "silent", TRUE, NULL);
+      gst_bin_add (bin, chain->identity);
+      srcpad = gst_element_get_static_pad (chain->identity, "src");
+      videosinkpad = gst_element_get_static_pad (chain->identity, "sink");
+    }
   }
 
   /* expose the ghostpads */
@@ -1362,8 +1385,17 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
      * visualisations */
     GST_DEBUG_OBJECT (playsink, "adding audio queue");
     chain->queue = gst_element_factory_make ("queue", "aqueue");
-    gst_bin_add (bin, chain->queue);
-    prev = head = chain->queue;
+    if (chain->queue == NULL) {
+      post_missing_element_message (playsink, "queue");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "queue"), ("audio playback and visualizations might not work"));
+      head = chain->sink;
+      prev = NULL;
+    } else {
+      gst_bin_add (bin, chain->queue);
+      prev = head = chain->queue;
+    }
   } else {
     head = chain->sink;
     prev = NULL;
@@ -1660,6 +1692,8 @@ gen_vis_chain (GstPlaySink * playsink)
   /* we're queuing raw audio here, we can remove this queue when we can disable
    * async behaviour in the video sink. */
   chain->queue = gst_element_factory_make ("queue", "visqueue");
+  if (chain->queue == NULL)
+    goto no_queue;
   gst_bin_add (bin, chain->queue);
 
   chain->conv = gst_element_factory_make ("audioconvert", "aconv");
@@ -1710,6 +1744,15 @@ gen_vis_chain (GstPlaySink * playsink)
   return chain;
 
   /* ERRORS */
+no_queue:
+  {
+    post_missing_element_message (playsink, "queue");
+    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "queue"), (NULL));
+    free_chain ((GstPlayChain *) chain);
+    return NULL;
+  }
 no_audioconvert:
   {
     post_missing_element_message (playsink, "audioconvert");
@@ -2192,10 +2235,19 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         /* create tee when needed. This element will feed the audio sink chain
          * and the vis chain. */
         playsink->audio_tee = gst_element_factory_make ("tee", "audiotee");
-        playsink->audio_tee_sink =
-            gst_element_get_static_pad (playsink->audio_tee, "sink");
-        gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
-        gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
+        if (playsink->audio_tee == NULL) {
+          post_missing_element_message (playsink, "tee");
+          GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+              (_("Missing element '%s' - check your GStreamer installation."),
+                  "tee"), (NULL));
+          res = NULL;
+          break;
+        } else {
+          playsink->audio_tee_sink =
+              gst_element_get_static_pad (playsink->audio_tee, "sink");
+          gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
+          gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
+        }
       } else {
         gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
       }
