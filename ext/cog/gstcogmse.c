@@ -327,6 +327,7 @@ gst_mse_chain_ref (GstPad * pad, GstBuffer * buffer)
     g_cond_wait (fs->cond, fs->lock);
     if (fs->cancel) {
       g_mutex_unlock (fs->lock);
+      gst_object_unref (fs);
       return GST_FLOW_WRONG_STATE;
     }
   }
@@ -358,6 +359,7 @@ gst_mse_chain_test (GstPad * pad, GstBuffer * buffer)
     g_cond_wait (fs->cond, fs->lock);
     if (fs->cancel) {
       g_mutex_unlock (fs->lock);
+      gst_object_unref (fs);
       return GST_FLOW_WRONG_STATE;
     }
   }
@@ -419,7 +421,8 @@ gst_mse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
 
-      GST_DEBUG ("new_segment %d %g %g %d %lld %lld %lld",
+      GST_DEBUG ("new_segment %d %g %g %d %" G_GINT64_FORMAT
+          " %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
           update, rate, applied_rate, format, start, stop, position);
 
     }
@@ -435,6 +438,7 @@ gst_mse_sink_event (GstPad * pad, GstEvent * event)
   }
 
   gst_pad_push_event (fs->srcpad, event);
+  gst_object_unref (fs);
 
   return TRUE;
 }
