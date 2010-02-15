@@ -30,8 +30,6 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 
-#include <X11/Xlib.h>
-
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/propertyprobe.h>
@@ -166,11 +164,6 @@ main (int argc, char **argv)
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
-
-  if (!XInitThreads ()) {
-    g_print ("XInitThreads failed\n");
-    exit (-1);
-  }
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
