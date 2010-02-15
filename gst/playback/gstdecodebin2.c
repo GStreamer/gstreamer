@@ -2175,6 +2175,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
       gst_element_remove_pad (GST_ELEMENT_CAST (chain->dbin),
           GST_PAD_CAST (chain->endpad));
 
+    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->endpad), NULL);
     chain->endpad->exposed = FALSE;
     if (!hide) {
       gst_object_unref (chain->endpad);
