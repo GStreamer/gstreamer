@@ -32,6 +32,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/pbutils/missing-plugins.h>
 
 #include "gstfactorylists.h"
 #include "gstplay-marshal.h"
@@ -980,7 +981,13 @@ no_source:
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
     if (prot) {
-      GST_ELEMENT_ERROR (decoder, RESOURCE, FAILED,
+      GstMessage *msg;
+
+      msg =
+          gst_missing_uri_source_message_new (GST_ELEMENT_CAST (decoder), prot);
+      gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+
+      GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
     } else
@@ -1059,6 +1066,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   gboolean done = FALSE;
   gboolean res = TRUE;
   GstCaps *rawcaps;
+  GstPad *pad;
 
   *have_out = FALSE;
   *is_raw = FALSE;
@@ -1070,8 +1078,6 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
 
   pads_iter = gst_element_iterate_src_pads (decoder->source);
   while (!done) {
-    GstPad *pad;
-
     switch (gst_iterator_next (pads_iter, (gpointer) & pad)) {
       case GST_ITERATOR_ERROR:
         res = FALSE;
@@ -1105,6 +1111,9 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
 
             /* insert a queue element right before the raw pad */
             outelem = gst_element_factory_make ("queue2", NULL);
+            if (!outelem)
+              goto no_queue2;
+
             gst_bin_add (GST_BIN_CAST (decoder), outelem);
 
             sinkpad = gst_element_get_static_pad (outelem, "sink");
@@ -1152,6 +1161,23 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   }
 
   return res;
+no_queue2:
+  {
+    GstMessage *msg;
+
+    msg =
+        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder), "queue2");
+    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+
+    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
+        (_("Could not create \"queue2\" element.")), (NULL));
+
+    gst_object_unref (pad);
+    gst_iterator_free (pads_iter);
+    gst_caps_unref (rawcaps);
+
+    return FALSE;
+  }
 }
 
 /* Remove all decodebin2 from ourself 
@@ -1366,6 +1392,13 @@ make_decoder (GstURIDecodeBin * decoder)
   /* ERRORS */
 no_decodebin:
   {
+    GstMessage *msg;
+
+    msg =
+        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder),
+        "decodebin2");
+    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
         (_("Could not create \"decodebin2\" element.")), (NULL));
     return NULL;
@@ -1470,6 +1503,12 @@ could_not_link:
   }
 no_queue2:
   {
+    GstMessage *msg;
+
+    msg =
+        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder), "queue2");
+    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
         (_("Could not create \"queue2\" element.")), (NULL));
     return;
@@ -1509,6 +1548,13 @@ setup_streaming (GstURIDecodeBin * decoder)
   /* ERRORS */
 no_typefind:
   {
+    GstMessage *msg;
+
+    msg =
+        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder),
+        "typefind");
+    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
+
     GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
         (_("Could not create \"typefind\" element.")), (NULL));
     return FALSE;
