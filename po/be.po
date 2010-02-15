@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -544,6 +544,7 @@ msgstr ""
 msgid "image related to this stream"
 msgstr ""
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr ""
 
@@ -602,12 +603,14 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 msgid "show sortname"
 msgstr ""
 

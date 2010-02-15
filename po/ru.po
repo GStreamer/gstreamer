@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -559,6 +559,7 @@ msgstr "изображение"
 msgid "image related to this stream"
 msgstr "изображение, связанное с этим потоком"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "изображение для предпросмотра"
 
@@ -629,12 +630,14 @@ msgstr ""
 "производство данных, в метрах согласно системе координат WGS84 (0 на среднем "
 "уровне моря)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 #, fuzzy
 msgid "show sortname"
 msgstr "исполнитель (для сортировки)"

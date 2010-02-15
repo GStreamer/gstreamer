@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2010-01-28 10:04-0500\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -555,6 +555,7 @@ msgstr "citra"
 msgid "image related to this stream"
 msgstr "citra yang berhubungan dengan arus ini"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "citra pratayang"
 
@@ -622,12 +623,14 @@ msgstr ""
 "ketinggian geografis tempat media direkam atau dihasilkan dalam meter "
 "menurut WGS84 (nol adalah permukaan laut rata-rata)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr "tampilkan nama"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Nama dari acara tv/podcast/serial media berasal"
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 msgid "show sortname"
 msgstr "tampilkan nama singkat"
 

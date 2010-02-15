@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2009-09-18 16:57+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -552,6 +552,7 @@ msgstr "ảnh"
 msgid "image related to this stream"
 msgstr "ảnh liên quan đến luồng này"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "ảnh xem thử"
 
@@ -617,12 +618,14 @@ msgstr ""
 "độ cao định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo mét tùy theo "
 "WSG84 (mặt biển trung bình là số không)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 #, fuzzy
 msgid "show sortname"
 msgstr "tên sắp nghệ sĩ"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2010-01-27 17:31+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -555,6 +555,7 @@ msgstr "obrazek"
 msgid "image related to this stream"
 msgstr "obrazek związany z tym strumieniem"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "podgląd obrazka"
 
@@ -623,6 +624,7 @@ msgstr ""
 "wysokość miejsca, gdzie utwór został nagrany lub wyprodukowany wyrażona w "
 "metrach zgodnie z WSG84 (0 to średni poziom morza)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr "nazwa widowiska"
 
@@ -630,6 +632,7 @@ msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 "Nazwa widowiska telewizyjnego/podcastu/serialu, z którego pochodzi utwór"
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 msgid "show sortname"
 msgstr "nazwa widowiska do sortowania"
 

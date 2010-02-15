@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -555,6 +555,7 @@ msgstr "obrázek"
 msgid "image related to this stream"
 msgstr "obrázek související s tímto proudem"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "obrázek náhledu"
 
@@ -622,12 +623,14 @@ msgstr ""
 "zeměpisná výška místa, kde bylo médium nahráno nebo vytvořeno, v metrech "
 "podle WGS84 (nula je průměrná hladina moře)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 #, fuzzy
 msgid "show sortname"
 msgstr "umělec pro řazení"

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-09 00:56+0000\n"
+"POT-Creation-Date: 2010-02-15 00:27+0000\n"
 "PO-Revision-Date: 2010-01-27 17:50+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -558,6 +558,7 @@ msgstr "kuva"
 msgid "image related to this stream"
 msgstr "kuva, joka liittyy tähän virtaan"
 
+#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
 msgid "preview image"
 msgstr "esikatselukuva"
 
@@ -627,12 +628,14 @@ msgstr ""
 "maantietellinen korkeustaso, jossa media on nauhoitettu tai tuotettu "
 "metreinä WGS84-koordinaateista (nolla on keskimääräinen merenpinta)"
 
+#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
 msgstr "ohjelman nimi"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "TV/podcast/sarjan ohjelman nimi, josta tämä media on lähtöisin"
 
+#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
 msgid "show sortname"
 msgstr "ohjelman lajittelunimi"
 
