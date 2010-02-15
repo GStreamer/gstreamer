@@ -30,7 +30,7 @@ plugin_init (GstPlugin * plugin)
 {
 
   /* if tremor is around, there is probably good reason for it, so preferred */
-  if (!gst_element_register (plugin, "ivorbisdec", GST_RANK_PRIMARY + 1,
+  if (!gst_element_register (plugin, "ivorbisdec", GST_RANK_SECONDARY,
           gst_vorbis_dec_get_type ()))
     return FALSE;
 
