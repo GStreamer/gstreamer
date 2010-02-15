@@ -65,9 +65,6 @@ struct _Gst1394Clock {
 
 struct _Gst1394ClockClass {
   GstSystemClockClass parent_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_1394_clock_get_type        (void);

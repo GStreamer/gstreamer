@@ -55,16 +55,10 @@ typedef struct _GstEbmlWrite {
   GstFlowReturn last_write_result;
 
   gboolean need_newsegment;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 } GstEbmlWrite;
 
 typedef struct _GstEbmlWriteClass {
   GstObjectClass parent;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 } GstEbmlWriteClass;
 
 GType   gst_ebml_write_get_type      (void);

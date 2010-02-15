@@ -59,9 +59,7 @@ struct _GstRtpJitterBuffer
   GstElement parent;
 
   /*< private >*/
-  GstRtpJitterBufferPrivate *priv;
-
-  gpointer _gst_reserved[GST_PADDING];
+  GstRtpJitterBufferPrivate *priv; /* FIXME: remove? */
 };
 
 struct _GstRtpJitterBufferClass
@@ -78,9 +76,6 @@ struct _GstRtpJitterBufferClass
   void     (*clear_pt_map)   (GstRtpJitterBuffer *buffer);
 
   GstClockTime (*set_active)     (GstRtpJitterBuffer *buffer, gboolean active, guint64 elapsed);
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_rtp_jitter_buffer_get_type (void);
