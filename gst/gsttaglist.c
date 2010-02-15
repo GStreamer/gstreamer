@@ -256,6 +256,7 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("image"), _("image related to this stream"), gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+      /* TRANSLATORS: 'preview image' is a compound noun here, not verb+noun */
       _("preview image"), _("preview image related to this stream"), NULL);
   gst_tag_register (GST_TAG_ATTACHMENT, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("attachment"), _("file attached to this stream"),
@@ -286,10 +287,12 @@ _gst_tag_initialize (void)
       ("geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"),
       NULL);
   gst_tag_register (GST_TAG_SHOW_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      /* TRANSLATORS: 'show name' is a compound noun here, not verb+noun */
       _("show name"),
       _("Name of the tv/podcast/series show the media is from"),
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_SHOW_SORTNAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      /* TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun */
       _("show sortname"),
       _("Name of the tv/podcast/series show the media is from, for sorting "
           "purposes"), NULL);
