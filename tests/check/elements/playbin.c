@@ -341,6 +341,8 @@ test_missing_primary_decoder (void)
   GstElement *playbin;
   GError *err = NULL;
   GstBus *bus;
+  gchar *use_decodebin2 = getenv ("USE_DECODEBIN2");
+  gboolean decodebin2 = use_decodebin2 != NULL && *use_decodebin2 == '1';
 
   fail_unless (gst_element_register (NULL, "codecsrc", GST_RANK_PRIMARY,
           gst_codec_src_get_type ()));
@@ -372,10 +374,19 @@ test_missing_primary_decoder (void)
   /* make sure the error is a STREAM CODEC_NOT_FOUND one */
   gst_message_parse_error (msg, &err, NULL);
   fail_unless (err != NULL);
-  fail_unless (err->domain == GST_STREAM_ERROR, "error has wrong error domain "
-      "%s instead of stream-error-quark", g_quark_to_string (err->domain));
-  fail_unless (err->code == GST_STREAM_ERROR_CODEC_NOT_FOUND, "error has wrong "
-      "code %u instead of GST_STREAM_ERROR_CODEC_NOT_FOUND", err->code);
+  if (decodebin2) {
+    fail_unless (err->domain == GST_CORE_ERROR, "error has wrong error domain "
+        "%s instead of core-error-quark", g_quark_to_string (err->domain));
+    fail_unless (err->code == GST_CORE_ERROR_MISSING_PLUGIN, "error has wrong "
+        "code %u instead of GST_RESOURCE_ERROR_MISSING_PLUGIN", err->code);
+  } else {
+    fail_unless (err->domain == GST_STREAM_ERROR,
+        "error has wrong error domain " "%s instead of stream-error-quark",
+        g_quark_to_string (err->domain));
+    fail_unless (err->code == GST_STREAM_ERROR_CODEC_NOT_FOUND,
+        "error has wrong "
+        "code %u instead of GST_STREAM_ERROR_CODEC_NOT_FOUND", err->code);
+  }
   g_error_free (err);
   gst_message_unref (msg);
   gst_object_unref (bus);
@@ -620,10 +631,7 @@ playbin_suite (void)
   tcase_add_test (tc_chain, test_missing_primary_decoder_decodebin1);
 
   /* and again with decodebin2 */
-  if (0) {
-    /* THIS TEST DOES NOT PASS WITH DECODEBIN2 */
-    tcase_add_test (tc_chain, test_missing_primary_decoder_decodebin2);
-  }
+  tcase_add_test (tc_chain, test_missing_primary_decoder_decodebin2);
   tcase_add_test (tc_chain, test_sink_usage_video_only_stream_decodebin2);
   tcase_add_test (tc_chain, test_suburi_error_wrongproto_decodebin2);
   tcase_add_test (tc_chain, test_suburi_error_invalidfile_decodebin2);
