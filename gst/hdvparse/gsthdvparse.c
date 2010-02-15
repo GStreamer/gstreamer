@@ -549,9 +549,9 @@ parse_video_frame (GstHDVParse * filter, guint8 * data, guint64 size,
      * 37   | Tens of Years |Units of Years |
      *      ---------------------------------
      */
-    ds = data[32] >> 7;
-    tm = (data[32] >> 6) & 0x1;
-    tz = BCD (data[32] & 0x3f);
+    ds = data[34] >> 7;
+    tm = (data[34] >> 6) & 0x1;
+    tz = BCD (data[34] & 0x3f);
     day = BCD (data[35] & 0x3f);
     dow = data[36] >> 5;
     month = BCD (data[36] & 0x1f);
