@@ -462,7 +462,7 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
   GstOggDemux *ogg = pad->ogg;
 #endif
 
-  GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08x", pad,
+  GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08lx", pad,
       pad->map.serialno);
 
   pad->map.queued = g_list_append (pad->map.queued, _ogg_packet_copy (packet));
@@ -488,7 +488,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   gboolean delta_unit = FALSE;
 
   GST_DEBUG_OBJECT (ogg,
-      "%p streaming to peer serial %08x", pad, pad->map.serialno);
+      "%p streaming to peer serial %08lx", pad, pad->map.serialno);
 
   if (pad->map.is_ogm) {
     const guint8 *data;
@@ -706,7 +706,7 @@ no_timestamp:
 no_buffer:
   {
     GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08x, %d (%s), combined %d (%s)",
+        "%p could not get buffer from peer %08lx, %d (%s), combined %d (%s)",
         pad, pad->map.serialno, ret, gst_flow_get_name (ret),
         cret, gst_flow_get_name (cret));
     goto done;
@@ -725,7 +725,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   GstOggDemux *ogg = pad->ogg;
 
-  GST_DEBUG_OBJECT (ogg, "%p submit packet serial %08x", pad,
+  GST_DEBUG_OBJECT (ogg, "%p submit packet serial %08lx", pad,
       pad->map.serialno);
 
   if (!pad->have_type) {
@@ -912,8 +912,8 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
 could_not_submit:
   {
     GST_WARNING_OBJECT (ogg,
-        "could not submit packet for stream %08x, error: %d", pad->map.serialno,
-        result);
+        "could not submit packet for stream %08lx, error: %d",
+        pad->map.serialno, result);
     gst_ogg_pad_reset (pad);
     return result;
   }
@@ -1005,7 +1005,7 @@ done:
 choked:
   {
     GST_WARNING_OBJECT (ogg,
-        "ogg stream choked on page (serial %08x), resetting stream",
+        "ogg stream choked on page (serial %08lx), resetting stream",
         pad->map.serialno);
     gst_ogg_pad_reset (pad);
     /* we continue to recover */
@@ -1945,7 +1945,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     /* get time of the keyframe */
     keyframe_time =
         gst_ogg_stream_granule_to_time (&pad->map, pad->keyframe_granule);
-    GST_LOG_OBJECT (ogg, "stream %08x granule time %" GST_TIME_FORMAT,
+    GST_LOG_OBJECT (ogg, "stream %08lx granule time %" GST_TIME_FORMAT,
         pad->map.serialno, GST_TIME_ARGS (keyframe_time));
 
     /* collect smallest value */
@@ -2428,7 +2428,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-      GST_LOG_OBJECT (ogg, "serial %08x time %" GST_TIME_FORMAT,
+      GST_LOG_OBJECT (ogg, "serial %08lx time %" GST_TIME_FORMAT,
           pad->map.serialno, GST_TIME_ARGS (pad->start_time));
 
       if (pad->map.serialno == serial) {
@@ -2452,7 +2452,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
       if (!pad->map.is_skeleton)
         done &= (pad->start_time != GST_CLOCK_TIME_NONE);
 
-      GST_LOG_OBJECT (ogg, "done %08x now %d", pad->map.serialno, done);
+      GST_LOG_OBJECT (ogg, "done %08lx now %d", pad->map.serialno, done);
     }
 
     /* we read a page not belonging to the current chain: seek back to the
@@ -2764,7 +2764,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
   granule = ogg_page_granulepos (page);
 
   GST_LOG_OBJECT (ogg,
-      "processing ogg page (serial %08x, pageno %ld, granulepos %"
+      "processing ogg page (serial %08lx, pageno %ld, granulepos %"
       G_GINT64_FORMAT ", bos %d)",
       serialno, ogg_page_pageno (page), granule, ogg_page_bos (page));
 
@@ -2835,7 +2835,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
     /* no pad. This means an ogg page without bos has been seen for this
      * serialno. we just ignore it but post a warning... */
     GST_ELEMENT_WARNING (ogg, STREAM, DECODE,
-        (NULL), ("unknown ogg pad for serial %08x detected", serialno));
+        (NULL), ("unknown ogg pad for serial %08lx detected", serialno));
     return GST_FLOW_OK;
   }
   return result;
@@ -2844,7 +2844,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
 unknown_chain:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        (NULL), ("unknown ogg chain for serial %08x detected", serialno));
+        (NULL), ("unknown ogg chain for serial %08lx detected", serialno));
     return GST_FLOW_ERROR;
   }
 }
@@ -3357,7 +3357,7 @@ gst_ogg_print (GstOggDemux * ogg)
     for (j = 0; j < chain->streams->len; j++) {
       GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, j);
 
-      GST_INFO_OBJECT (ogg, "  stream %08x:", stream->map.serialno);
+      GST_INFO_OBJECT (ogg, "  stream %08lx:", stream->map.serialno);
       GST_INFO_OBJECT (ogg, "   start time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->start_time));
     }
