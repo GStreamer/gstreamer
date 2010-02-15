@@ -336,8 +336,8 @@ gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
 }
 
 /**
- * gst_check_element_push_buffer:
- * @element: name of the element that needs to be created
+ * gst_check_element_push_buffer_list:
+ * @element_name: name of the element that needs to be created
  * @buffer_in: a list of buffers that needs to be puched to the element
  * @buffer_out: a list of buffers that we expect from the element
  * @last_flow_return: the last buffer push needs to give this GstFlowReturn
@@ -353,6 +353,7 @@ gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
  * 
  * Since: 0.10.18
  */
+/* FIXME 0.11: rename this function now that there's GstBufferList? */
 void
 gst_check_element_push_buffer_list (const gchar * element_name,
     GList * buffer_in, GList * buffer_out, GstFlowReturn last_flow_return)
