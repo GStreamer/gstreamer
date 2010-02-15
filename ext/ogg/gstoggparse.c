@@ -529,7 +529,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               GstOggStream *stream = (GstOggStream *) l->data;
 
               if (g_list_length (stream->headers) == 0) {
-                GST_LOG_OBJECT (ogg, "No primary header found for stream %u",
+                GST_LOG_OBJECT (ogg, "No primary header found for stream %08lx",
                     stream->serialno);
                 goto failure;
               }
