@@ -16,7 +16,6 @@ EXTRA_DIST = \
 	gst-alsa.m4 \
 	gst-artsc.m4 \
 	gst-fionread.m4 \
-	gst-ivorbis.m4 \
 	gst-matroska.m4 \
 	gst-sdl.m4 \
 	gst-shout2.m4 \

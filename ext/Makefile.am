@@ -391,7 +391,6 @@ SUBDIRS=\
 	$(GSM_DIR) \
 	$(G729_DIR) \
 	$(HERMES_DIR) \
-	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
 	$(JP2K_DIR) \
 	$(KATE_DIR) \
@@ -445,7 +444,6 @@ DIST_SUBDIRS = \
 	faad \
 	flite \
 	gsm \
-	ivorbis \
 	ladspa \
 	jack \
 	jp2k \
@@ -477,4 +475,4 @@ DIST_SUBDIRS = \
 	theora \
 	timidity \
 	xvid \
-        	zbar
+	zbar
