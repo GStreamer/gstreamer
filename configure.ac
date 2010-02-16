@@ -656,6 +656,7 @@ dnl plugin scanner locations
 AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/gstreamer-$GST_MAJORMINOR/gst-plugin-scanner)
 AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
+AC_SUBST(GST_PLUGIN_SCANNER_INSTALLED)
 
 dnl things for our internal libcheck (must be called even if building
 dnl libcheck is disabled because it defines conditionals)

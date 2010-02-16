@@ -283,3 +283,15 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
+
+# try to prevent packaging errors
+check-libexecdir-consistency:
+	if test "${GST_PLUGIN_SCANNER_INSTALLED}" != "${libexecdir}/gstreamer-$(GST_MAJORMINOR)/gst-plugin-scanner"; then \
+	  echo "*** Inconsistent libexecdir! Please use ./configure --libexecdir=/foo/bar"; \
+	  echo "*** to set the libexecdir and not make libexecdir=/foo/bar or the like."; \
+	  echo "*** The same goes for prefix, libdir etc."; \
+	  echo "*** ${GST_PLUGIN_SCANNER_INSTALLED} != ${libexecdir}/gstreamer-$(GST_MAJORMINOR)/gst-plugin-scanner"; \
+	  exit 1; \
+	fi
+
+all-local: check-libexecdir-consistency
