@@ -351,6 +351,18 @@ get_line_end (const guint8 * data, const guint8 * dataend, guint8 ** end,
   return FALSE;
 }
 
+static guint
+get_mime_len (const guint8 * data, guint maxlen)
+{
+  guint8 *x;
+
+  x = (guint8 *) data;
+  while (*x != '\0' && *x != '\r' && *x != '\n' && *x != ';') {
+    x++;
+  }
+  return x - data;
+}
+
 static gint
 multipart_parse_header (GstMultipartDemux * multipart)
 {
@@ -427,8 +439,14 @@ multipart_parse_header (GstMultipartDemux * multipart)
     }
 
     if (len >= 14 && !g_ascii_strncasecmp ("content-type:", (gchar *) pos, 13)) {
+      guint mime_len;
+
+      /* only take the mime type up to the first ; if any. After ; there can be
+       * properties that we don't handle yet. */
+      mime_len = get_mime_len (pos + 14, len - 14);
+
       g_free (multipart->mime_type);
-      multipart->mime_type = g_ascii_strdown ((gchar *) pos + 14, len - 14);
+      multipart->mime_type = g_ascii_strdown ((gchar *) pos + 14, mime_len);
     } else if (len >= 15 &&
         !g_ascii_strncasecmp ("content-length:", (gchar *) pos, 15)) {
       multipart->content_length =
