@@ -2802,6 +2802,8 @@ atom_hdlr_set_type (AtomHDLR * hdlr, AtomsContext * context, guint32 comp_type,
 static void
 atom_hdlr_set_name (AtomHDLR * hdlr, char *name)
 {
+  if (hdlr->name)
+    g_free (hdlr->name);
   hdlr->name = g_strdup (name);
 }
 
