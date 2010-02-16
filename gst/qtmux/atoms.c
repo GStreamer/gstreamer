@@ -3158,6 +3158,16 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 }
 
 AtomInfo *
+build_mov_alac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
+{
+  AtomInfo *alac;
+
+  alac = build_codec_data_extension (FOURCC_alac, codec_data);
+
+  return build_mov_wave_extension (trak, FOURCC_alac, NULL, alac, TRUE);
+}
+
+AtomInfo *
 build_fiel_extension (gint fields)
 {
   AtomData *atom_data;

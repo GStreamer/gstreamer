@@ -2065,6 +2065,35 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
     entry.compression_id = -1;
 
     ext_atom = build_ima_adpcm_extension (channels, rate, blocksize);
+  } else if (strcmp (mimetype, "audio/x-alac") == 0) {
+    GstBuffer *codec_config;
+    gint len;
+
+    entry.fourcc = FOURCC_alac;
+    /* let's check if codec data already comes with 'alac' atom prefix */
+    if (!codec_data || (len = GST_BUFFER_SIZE (codec_data)) < 28) {
+      GST_DEBUG_OBJECT (qtmux, "broken caps, codec data missing");
+      goto refuse_caps;
+    }
+    if (GST_READ_UINT32_LE (GST_BUFFER_DATA (codec_data) + 4) == FOURCC_alac) {
+      len -= 8;
+      codec_config = gst_buffer_create_sub ((GstBuffer *) codec_data, 8, len);
+    } else {
+      codec_config = gst_buffer_ref ((GstBuffer *) codec_data);
+    }
+    if (len != 28) {
+      /* does not look good, but perhaps some trailing unneeded stuff */
+      GST_WARNING_OBJECT (qtmux, "unexpected codec-data size, possibly broken");
+    }
+    if (format == GST_QT_MUX_FORMAT_QT)
+      ext_atom = build_mov_alac_extension (qtpad->trak, codec_config);
+    else
+      ext_atom = build_codec_data_extension (FOURCC_alac, codec_config);
+    /* set some more info */
+    entry.bytes_per_sample = 2;
+    entry.samples_per_packet =
+        GST_READ_UINT32_BE (GST_BUFFER_DATA (codec_config) + 4);
+    gst_buffer_unref (codec_config);
   }
 
   if (!entry.fourcc)
