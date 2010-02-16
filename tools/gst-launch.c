@@ -715,8 +715,6 @@ main (int argc, char *argv[])
 
   g_thread_init (NULL);
 
-  gst_tools_print_version ("gst-launch");
-
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
@@ -732,6 +730,8 @@ main (int argc, char *argv[])
 #else
   gst_init (&argc, &argv);
 #endif
+
+  gst_tools_print_version ("gst-launch");
 
 #ifndef DISABLE_FAULT_HANDLER
   if (!no_fault)

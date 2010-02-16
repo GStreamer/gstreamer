@@ -1491,8 +1491,6 @@ main (int argc, char *argv[])
 
   g_thread_init (NULL);
 
-  gst_tools_print_version ("gst-inspect");
-
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
@@ -1505,6 +1503,8 @@ main (int argc, char *argv[])
 #else
   gst_init (&argc, &argv);
 #endif
+
+  gst_tools_print_version ("gst-inspect");
 
   if (print_all && argc > 1) {
     g_print ("-a requires no extra arguments\n");
