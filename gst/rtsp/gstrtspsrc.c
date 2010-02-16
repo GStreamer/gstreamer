@@ -3425,7 +3425,10 @@ pause:
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->running = FALSE;
-    gst_task_pause (src->task);
+    if (src->task) {
+      /* can be NULL when we stopped and unreffed already */
+      gst_task_pause (src->task);
+    }
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       if (ret == GST_FLOW_UNEXPECTED) {
         /* perform EOS logic */
