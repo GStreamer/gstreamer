@@ -3100,42 +3100,34 @@ build_esds_extension (AtomTRAK * trak, guint8 object_type, guint8 stream_type,
       atom_esds_free);
 }
 
-AtomInfo *
-build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
+static AtomInfo *
+build_mov_wave_extension (AtomTRAK * trak, guint32 fourcc, AtomInfo * atom1,
+    AtomInfo * atom2, gboolean terminator)
 {
   AtomWAVE *wave;
   AtomFRMA *frma;
   Atom *ext_atom;
-  GstBuffer *buf;
 
-  /* Add WAVE atom to the MP4A sample table entry */
+  /* Build WAVE atom for sample table entry */
   wave = atom_wave_new ();
 
   /* Prepend Terminator atom to the WAVE list first, so it ends up last */
-  ext_atom = (Atom *) atom_data_new (FOURCC_null);
-  wave->extension_atoms =
-      atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) ext_atom,
-      (AtomCopyDataFunc) atom_data_copy_data, (AtomFreeFunc) atom_data_free);
+  if (terminator) {
+    ext_atom = (Atom *) atom_data_new (FOURCC_null);
+    wave->extension_atoms =
+        atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) ext_atom,
+        (AtomCopyDataFunc) atom_data_copy_data, (AtomFreeFunc) atom_data_free);
+  }
 
-  /* Add ESDS atom to WAVE */
-  wave->extension_atoms = g_list_prepend (wave->extension_atoms,
-      build_esds_extension (trak, ESDS_OBJECT_TYPE_MPEG4_P3,
-          ESDS_STREAM_TYPE_AUDIO, codec_data));
-
-  /* Add MP4A atom to the WAVE:
-   * not really in spec, but makes offset based players happy */
-  buf = gst_buffer_new_and_alloc (4);
-  *((guint32 *) GST_BUFFER_DATA (buf)) = 0;
-  ext_atom = (Atom *) atom_data_new_from_gst_buffer (FOURCC_mp4a, buf);
-  gst_buffer_unref (buf);
-
-  wave->extension_atoms =
-      atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) ext_atom,
-      (AtomCopyDataFunc) atom_data_copy_data, (AtomFreeFunc) atom_data_free);
+  /* Add supplied atoms to WAVE */
+  if (atom2)
+    wave->extension_atoms = g_list_prepend (wave->extension_atoms, atom2);
+  if (atom1)
+    wave->extension_atoms = g_list_prepend (wave->extension_atoms, atom1);
 
   /* Add FRMA to the WAVE */
   frma = atom_frma_new ();
-  frma->media_type = FOURCC_mp4a;
+  frma->media_type = fourcc;
 
   wave->extension_atoms =
       atom_info_list_prepend_atom (wave->extension_atoms, (Atom *) frma,
@@ -3143,6 +3135,26 @@ build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 
   return build_atom_info_wrapper ((Atom *) wave, atom_wave_copy_data,
       atom_wave_free);
+}
+
+AtomInfo *
+build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
+{
+  AtomInfo *esds, *mp4a;
+  GstBuffer *buf;
+
+  /* Add ESDS atom to WAVE */
+  esds = build_esds_extension (trak, ESDS_OBJECT_TYPE_MPEG4_P3,
+      ESDS_STREAM_TYPE_AUDIO, codec_data);
+
+  /* Add MP4A atom to the WAVE:
+   * not really in spec, but makes offset based players happy */
+  buf = gst_buffer_new_and_alloc (4);
+  *((guint32 *) GST_BUFFER_DATA (buf)) = 0;
+  mp4a = build_codec_data_extension (FOURCC_mp4a, buf);
+  gst_buffer_unref (buf);
+
+  return build_mov_wave_extension (trak, FOURCC_mp4a, mp4a, esds, TRUE);
 }
 
 AtomInfo *
