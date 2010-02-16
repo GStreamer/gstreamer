@@ -719,8 +719,6 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
     }
   }
 
-  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
-
   src.w = ximage->width;
   src.h = ximage->height;
   dst.w = ximagesink->xwindow->width;
@@ -1079,6 +1077,10 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
         exposed = TRUE;
         break;
       case ConfigureNotify:
+        g_mutex_unlock (ximagesink->x_lock);
+        gst_ximagesink_xwindow_update_geometry (ximagesink,
+            ximagesink->xwindow);
+        g_mutex_lock (ximagesink->x_lock);
         configured = TRUE;
         break;
       default:
@@ -1805,7 +1807,6 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   }
 
   /* What is our geometry */
-  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
   dst.w = ximagesink->xwindow->width;
   dst.h = ximagesink->xwindow->height;
 
@@ -2061,6 +2062,7 @@ gst_ximagesink_expose (GstXOverlay * overlay)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
 
+  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
   gst_ximagesink_ximage_put (ximagesink, NULL);
 }
 

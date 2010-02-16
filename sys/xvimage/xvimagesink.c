@@ -808,8 +808,6 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
     }
   }
 
-  gst_xvimagesink_xwindow_update_geometry (xvimagesink, xvimagesink->xwindow);
-
   /* We use the calculated geometry from _setcaps as a source to respect
      source and screen pixel aspect ratios. */
   src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
@@ -1266,6 +1264,10 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
         exposed = TRUE;
         break;
       case ConfigureNotify:
+        g_mutex_unlock (xvimagesink->x_lock);
+        gst_xvimagesink_xwindow_update_geometry (xvimagesink,
+            xvimagesink->xwindow);
+        g_mutex_lock (xvimagesink->x_lock);
         configured = TRUE;
         break;
       default:
@@ -2809,6 +2811,7 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
+  gst_xvimagesink_xwindow_update_geometry (xvimagesink, xvimagesink->xwindow);
   gst_xvimagesink_xvimage_put (xvimagesink, NULL);
 }
 
