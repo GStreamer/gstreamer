@@ -4047,13 +4047,6 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (avi, "sending flush stop");
     gst_avi_demux_push_event (avi, gst_event_ref (fevent));
     gst_pad_push_event (avi->sinkpad, fevent);
-
-    /* reset the last flow and mark discont, FLUSH is always DISCONT */
-    for (i = 0; i < avi->num_streams; i++) {
-      GST_DEBUG_OBJECT (avi, "marking DISCONT");
-      avi->stream[i].last_flow = GST_FLOW_OK;
-      avi->stream[i].discont = TRUE;
-    }
   } else if (avi->segment_running) {
     GstEvent *seg;
 
@@ -4100,6 +4093,12 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     avi->segment_running = TRUE;
     gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
         avi->sinkpad);
+  }
+  /* reset the last flow and mark discont, seek is always DISCONT */
+  for (i = 0; i < avi->num_streams; i++) {
+    GST_DEBUG_OBJECT (avi, "marking DISCONT");
+    avi->stream[i].last_flow = GST_FLOW_OK;
+    avi->stream[i].discont = TRUE;
   }
   GST_PAD_STREAM_UNLOCK (avi->sinkpad);
 
