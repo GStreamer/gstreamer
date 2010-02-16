@@ -137,6 +137,9 @@
   "block_align = (int)[64, 8096], " \
   COMMON_AUDIO_CAPS(2, MAX)
 
+#define ALAC_CAPS \
+  "audio/x-alac, " \
+  COMMON_AUDIO_CAPS(2, MAX)
 
 /* FIXME 0.11 - take a look at bugs #580005 and #340375 */
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
@@ -166,7 +169,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             MP3_CAPS " ; "
             AAC_CAPS " ; "
             ADPCM_CAPS " ; "
-            "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; " AMR_CAPS)
+            "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; "
+            AMR_CAPS " ; " ALAC_CAPS)
       }
   ,
   /* ISO 14496-14: mp42 as ISO base media extension
@@ -179,7 +183,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
-        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
+        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " ALAC_CAPS)
       }
   ,
   /* 3GPP Technical Specification 26.244 V7.3.0
