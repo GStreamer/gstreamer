@@ -2298,7 +2298,7 @@ seek_error:
   {
     GST_OBJECT_UNLOCK (demux);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, NULL, ("Got a seek error"));
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("Got a seek error"));
     return FALSE;
   }
 }
