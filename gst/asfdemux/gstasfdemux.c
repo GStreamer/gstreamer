@@ -661,9 +661,12 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
           GST_TIME_ARGS (seek_time), offset, demux->data_offset,
           demux->packet_size, packet);
     } else {
-      /* Hackety hack, this sucks. We just seek to an earlier position
-       *  and let the sinks throw away the stuff before the segment start */
-      if (flush && (demux->accurate || keyunit_sync)) {
+      /* FIXME: For streams containing video, seek to an earlier position in
+       * the hope of hitting a keyframe and let the sinks throw away the stuff
+       * before the segment start. For audio-only this is unnecessary as every
+       * frame is 'key'. */
+      if (flush && (demux->accurate || keyunit_sync)
+          && demux->num_video_streams > 0) {
         seek_time -= 5 * GST_SECOND;
         if (seek_time < 0)
           seek_time = 0;
