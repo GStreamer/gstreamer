@@ -26,12 +26,12 @@
  *
  * <refsect2>
  * <title>Example launch lines</title>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=example.mp4 ! qtdemux ! faad ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * <programlisting>
+ * ]| Play aac from mp4 file.
+ * |[
  * gst-launch filesrc location=example.adts ! faad ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
+ * ]| Play standalone aac bitstream.
  * </refsect2>
  */
 

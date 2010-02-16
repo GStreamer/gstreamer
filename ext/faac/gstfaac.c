@@ -36,9 +36,9 @@
  *
  * <refsect2>
  * <title>Example launch line</title>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc wave=sine num-buffers=100 ! audioconvert ! faac ! matroskamux ! filesink location=sine.mkv
- * </programlisting>
+ * ]| Encode a sine beep as aac and write to matroska container.
  * </refsect2>
  */
 
