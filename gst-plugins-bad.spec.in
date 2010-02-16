@@ -122,7 +122,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
 %{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
@@ -160,7 +159,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_BZ2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
-@USE_IVORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstivorbis.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsaspdif.so
 @USE_MUSEPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
