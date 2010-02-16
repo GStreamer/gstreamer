@@ -73,7 +73,7 @@ static const TestBuffer buf0 = {
       "Script Updated By: version 2.8.01\n"
       "ScriptType: v4.00\n"
       "Collisions: Normal\n"
-      "PlayResY: 600\n"
+      "PlayResY: 200\n"
       "PlayDepth: 0\n"
       "Timer: 100,0000\n"
       " \n"
@@ -83,13 +83,13 @@ static const TestBuffer buf0 = {
       "Style: DefaultVCD, Arial,28,11861244,11861244,11861244,-2147483640,-1,0,1,1,2,2,30,30,30,0,0\n"
       " \n"
       "[Events]\n"
-      "Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+      "Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
 };
 
 static const TestBuffer buf1 = {
   40 * GST_MSECOND,
-  40 * GST_MSECOND,
-  "Dialogue: Marked=0,0:00:00.04,0:00:00.10,DefaultVCD, NTP,0000,0000,0000,,Some Test Blabla\n"
+  60 * GST_MSECOND,
+  "1,,DefaultVCD, NTP,0000,0000,0000,,Some Test Blabla"
 };
 
 static void
@@ -111,8 +111,26 @@ sink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
     }
   }
 
-  fail_unless (contains_text || all_red);
+  fail_unless (contains_text != all_red,
+      "Frame %d is incorrect (all red %d, contains text %d)", *sink_pos,
+      all_red, contains_text);
   *sink_pos = *sink_pos + 1;
+}
+
+static void
+_dummy_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  GST_LOG_OBJECT (pad, "pad blocked: %d", blocked);
+}
+
+static gboolean
+src_buffer_probe_cb (GstPad * pad, GstBuffer * buffer, gpointer user_data)
+{
+  GstPad *otherpad = GST_PAD (user_data);
+
+  if (GST_BUFFER_TIMESTAMP (buffer) == buf1.ts)
+    gst_pad_set_blocked_async (otherpad, FALSE, _dummy_blocked_cb, NULL);
+  return TRUE;
 }
 
 GST_START_TEST (test_assrender_basic)
@@ -125,19 +143,10 @@ GST_START_TEST (test_assrender_basic)
   GstBuffer *buf;
   GstBus *bus;
   GMainLoop *loop;
+  GstPad *pad, *blocked_pad;
 
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
-
-  appsrc = gst_element_factory_make ("appsrc", NULL);
-  fail_unless (appsrc != NULL);
-  text_caps = gst_caps_new_simple ("application/x-ssa", NULL);
-  gst_app_src_set_caps (GST_APP_SRC (appsrc), text_caps);
-  g_object_set (appsrc, "format", GST_FORMAT_TIME, NULL);
-
-  videotestsrc = gst_element_factory_make ("videotestsrc", NULL);
-  fail_unless (videotestsrc != NULL);
-  g_object_set (videotestsrc, "num-buffers", 5, "pattern", 4, NULL);
 
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
   fail_unless (capsfilter != NULL);
@@ -145,6 +154,30 @@ GST_START_TEST (test_assrender_basic)
       gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
   g_object_set (capsfilter, "caps", video_caps, NULL);
   gst_caps_unref (video_caps);
+  blocked_pad = gst_element_get_static_pad (capsfilter, "src");
+  gst_pad_set_blocked_async (blocked_pad, TRUE, _dummy_blocked_cb, NULL);
+
+  appsrc = gst_element_factory_make ("appsrc", NULL);
+  fail_unless (appsrc != NULL);
+  buf = gst_buffer_new_and_alloc (strlen (buf0.buf) + 1);
+  memcpy (GST_BUFFER_DATA (buf), buf0.buf, GST_BUFFER_SIZE (buf));
+  GST_BUFFER_TIMESTAMP (buf) = buf0.ts;
+  GST_BUFFER_DURATION (buf) = buf0.duration;
+  text_caps =
+      gst_caps_new_simple ("application/x-ssa", "codec_data", GST_TYPE_BUFFER,
+      buf, NULL);
+  gst_buffer_unref (buf);
+  gst_app_src_set_caps (GST_APP_SRC (appsrc), text_caps);
+  g_object_set (appsrc, "format", GST_FORMAT_TIME, NULL);
+  pad = gst_element_get_static_pad (appsrc, "src");
+  gst_pad_add_buffer_probe_full (pad, G_CALLBACK (src_buffer_probe_cb),
+      gst_object_ref (blocked_pad), (GDestroyNotify) gst_object_unref);
+  gst_object_unref (blocked_pad);
+  gst_object_unref (pad);
+
+  videotestsrc = gst_element_factory_make ("videotestsrc", NULL);
+  fail_unless (videotestsrc != NULL);
+  g_object_set (videotestsrc, "num-buffers", 5, "pattern", 4, NULL);
 
   assrender = gst_element_factory_make ("assrender", NULL);
   fail_unless (assrender != NULL);
@@ -175,12 +208,6 @@ GST_START_TEST (test_assrender_basic)
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
       GST_STATE_CHANGE_SUCCESS);
 
-  buf = gst_buffer_new_and_alloc (strlen (buf0.buf) + 1);
-  memcpy (GST_BUFFER_DATA (buf), buf0.buf, GST_BUFFER_SIZE (buf));
-  gst_buffer_set_caps (buf, text_caps);
-  GST_BUFFER_TIMESTAMP (buf) = buf0.ts;
-  GST_BUFFER_DURATION (buf) = buf0.duration;
-  gst_app_src_push_buffer (GST_APP_SRC (appsrc), buf);
   buf = gst_buffer_new_and_alloc (strlen (buf1.buf) + 1);
   memcpy (GST_BUFFER_DATA (buf), buf1.buf, GST_BUFFER_SIZE (buf));
   gst_buffer_set_caps (buf, text_caps);
