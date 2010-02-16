@@ -514,6 +514,11 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   end[1] = base[1] + (height / 2) * I420_U_ROWSTRIDE (width);
   end[2] = base[2] + (height / 2) * I420_V_ROWSTRIDE (width);
 
+  /* FIXME: shouldn't we also set
+   * - jpegenc->cinfo.max_{v,h}_samp_factor
+   * - jpegenc->cinfo.comp_info[0,1,2].{v,h}_samp_factor
+   * accordingly?
+   */
   jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (jpegenc->output_buffer);
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (jpegenc->output_buffer);
 
