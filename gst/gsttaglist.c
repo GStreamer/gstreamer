@@ -343,7 +343,6 @@ void
 gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
 {
   GString *str;
-
   gint i, count;
 
   count = gst_value_list_get_size (src);
@@ -409,7 +408,6 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
     const gchar * nick, const gchar * blurb, GstTagMergeFunc func)
 {
   GQuark key;
-
   GstTagInfo *info;
 
   g_return_if_fail (name != NULL);
