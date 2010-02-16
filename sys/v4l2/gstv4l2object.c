@@ -1860,11 +1860,11 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
-  memset (&format, 0x00, sizeof (struct v4l2_format));
-  format.type = v4l2object->type;
-
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
     return TRUE;
+
+  memset (&format, 0x00, sizeof (struct v4l2_format));
+  format.type = v4l2object->type;
 
   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
@@ -1873,12 +1873,13 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   format.fmt.pix.width = width;
   format.fmt.pix.height = height;
   format.fmt.pix.pixelformat = pixelformat;
-  /* request whole frames; change when gstreamer supports interlaced video
+  /* FIXME: request whole frames; need to use gstreamer interlace support
    * (INTERLACED mode returns frames where the fields have already been
    *  combined, there are other modes for requesting fields individually) */
   format.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
   if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+    /* we might also get EBUSY here */
     if (errno != EINVAL)
       goto set_fmt_failed;
 
