@@ -8179,6 +8179,13 @@
           <parameter type="guint" name="size" />
         </parameters>
       </method>
+      <method name="Fill" cname="gst_byte_writer_fill">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="guint8" name="byte" />
+          <parameter type="guint" name="size" />
+        </parameters>
+      </method>
       <method name="Free" cname="gst_byte_writer_free">
         <return-type type="void" />
       </method>
