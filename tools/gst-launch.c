@@ -715,6 +715,8 @@ main (int argc, char *argv[])
 
   g_thread_init (NULL);
 
+  gst_tools_set_prgname ("gst-launch");
+
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
