@@ -3688,16 +3688,26 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         break;
       }
       case FOURCC_mp4a:
+      case FOURCC_alac:
       {
         guint32 version;
         guint32 offset;
+        guint min_size;
+
+        /* also read alac (or whatever) in stead of mp4a in the following,
+         * since a similar layout is used in other cases as well */
+        if (fourcc == FOURCC_mp4a)
+          min_size = 20;
+        else
+          min_size = 40;
 
         /* There are two things we might encounter here: a true mp4a atom, and
            an mp4a entry in an stsd atom. The latter is what we're interested
            in, and it looks like an atom, but isn't really one. The true mp4a
            atom is short, so we detect it based on length here. */
-        if (length < 20) {
-          GST_LOG_OBJECT (qtdemux, "skipping small mp4a box");
+        if (length < min_size) {
+          GST_LOG_OBJECT (qtdemux, "skipping small %" GST_FOURCC_FORMAT " box",
+              GST_FOURCC_ARGS (fourcc));
           break;
         }
 
@@ -3707,7 +3717,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
            in Movies.h) */
         version = QT_UINT16 (buffer + 16);
 
-        GST_DEBUG_OBJECT (qtdemux, "mp4a version 0x%08x", version);
+        GST_DEBUG_OBJECT (qtdemux, "%" GST_FOURCC_FORMAT " version 0x%08x",
+            GST_FOURCC_ARGS (fourcc), version);
 
         /* parse any esds descriptors */
         switch (version) {
@@ -3721,8 +3732,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
             offset = 0x48;
             break;
           default:
-            GST_WARNING_OBJECT (qtdemux, "unhandled mp4a version 0x%08x",
-                version);
+            GST_WARNING_OBJECT (qtdemux,
+                "unhandled %" GST_FOURCC_FORMAT " version 0x%08x",
+                GST_FOURCC_ARGS (fourcc), version);
             offset = 0;
             break;
         }
@@ -5768,14 +5780,35 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_alac:
         {
-          gint len = QT_UINT32 (stsd_data);
+          GNode *alac, *wave = NULL;
 
-          if (len >= 132) {
-            GstBuffer *buf = gst_buffer_new_and_alloc (36);
-            memcpy (GST_BUFFER_DATA (buf), stsd_data + 88, 36);
-            gst_caps_set_simple (stream->caps,
-                "codec_data", GST_TYPE_BUFFER, buf, NULL);
-            gst_buffer_unref (buf);
+          /* apparently, m4a has this atom appended directly in the stsd entry,
+           * while mov has it in a wave atom */
+          alac = qtdemux_tree_get_child_by_type (stsd, FOURCC_alac);
+          if (alac) {
+            /* alac now refers to stsd entry atom */
+            wave = qtdemux_tree_get_child_by_type (alac, FOURCC_wave);
+            if (wave)
+              alac = qtdemux_tree_get_child_by_type (wave, FOURCC_alac);
+            else
+              alac = qtdemux_tree_get_child_by_type (alac, FOURCC_alac);
+          }
+          if (alac) {
+            gint len = QT_UINT32 (alac->data);
+            GstBuffer *buf;
+
+            if (len < 36) {
+              GST_DEBUG_OBJECT (qtdemux,
+                  "discarding alac atom with unexpected len %d", len);
+            } else {
+              /* codec-data contains alac atom size and prefix,
+               * ffmpeg likes it that way, not quite gst-ish though ...*/
+              buf = gst_buffer_new_and_alloc (len);
+              memcpy (GST_BUFFER_DATA (buf), alac->data, len);
+              gst_caps_set_simple (stream->caps,
+                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
+              gst_buffer_unref (buf);
+            }
           }
           gst_caps_set_simple (stream->caps,
               "samplesize", G_TYPE_INT, samplesize, NULL);
