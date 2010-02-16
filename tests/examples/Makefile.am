@@ -8,6 +8,6 @@ if USE_GIO
 GIO_SUBDIRS = gio
 endif
 
-SUBDIRS = app $(FT2_SUBDIRS) $(GIO_SUBDIRS) volume dynamic v4l
+SUBDIRS = app $(FT2_SUBDIRS) $(GIO_SUBDIRS) volume dynamic v4l overlay
 
-DIST_SUBDIRS = app seek volume dynamic snapshot gio v4l
+DIST_SUBDIRS = app seek volume dynamic snapshot gio v4l overlay

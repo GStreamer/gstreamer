@@ -1,0 +1,92 @@
+/* GStreamer
+ * Copyright (C) <2010> Stefan Kost <ensonic@users.sf.net>
+ *
+ * gtk-xoverlay: demonstrate overlay handling using gtk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <glib.h>
+#include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+
+#include <gst/gst.h>
+#include <gst/interfaces/xoverlay.h>
+
+static void
+window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
+{
+  GstElement *pipeline = user_data;
+
+  gtk_widget_hide_all (widget);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gtk_main_quit ();
+}
+
+int
+main (int argc, char **argv)
+{
+  GtkWidget *window, *video_window;
+  GstElement *pipeline, *src, *sink;
+  gulong embed_xid;
+  GstStateChangeReturn sret;
+
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+
+  gst_init (&argc, &argv);
+  gtk_init (&argc, &argv);
+
+  /* prepare the pipeline */
+
+  pipeline = gst_pipeline_new ("xvoverlay");
+  src = gst_element_factory_make ("videotestsrc", NULL);
+  sink = gst_element_factory_make ("xvimagesink", NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+  gst_element_link (src, sink);
+
+  /* prepare the ui */
+
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  g_signal_connect (G_OBJECT (window), "delete-event",
+      G_CALLBACK (window_closed), (gpointer) pipeline);
+  gtk_window_set_default_size (GTK_WINDOW (window), 320, 240);
+
+  video_window = gtk_drawing_area_new ();
+  gtk_widget_set_double_buffered (video_window, FALSE);
+  gtk_container_add (GTK_CONTAINER (window), video_window);
+
+  gtk_widget_show_all (window);
+  gtk_widget_realize (window);
+
+  embed_xid = GDK_WINDOW_XID (video_window->window);
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), embed_xid);
+
+  /* run the pipeline */
+
+  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (sret == GST_STATE_CHANGE_FAILURE)
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+  else
+    gtk_main ();
+
+  gst_object_unref (pipeline);
+  return 0;
+}

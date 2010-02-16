@@ -59,7 +59,7 @@
  * from the video sink element. To solve this issue a #GstMessage is posted on
  * the bus to inform the application that it should set the Window identifier
  * immediately. Here is an example on how to do that correctly:
- * <programlisting>
+ * |[
  * static GstBusSyncReply
  * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
  * {
@@ -94,7 +94,7 @@
  *  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline);
  * ...
  * }
- * </programlisting>
+ * ]|
  * </para>
  * </refsect2>
  * <refsect2>
@@ -142,7 +142,7 @@
  * <refsect2>
  * <title>GstXOverlay and Gtk+</title>
  * <para>
- * <programlisting>
+ * |[
  * #include &lt;gtk/gtk.h&gt;
  * #ifdef GDK_WINDOWING_X11
  * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
@@ -225,13 +225,67 @@
  *   gst_element_set_state (pipeline, GST_STATE_PLAYING);
  *   ...
  * }
- * </programlisting>
+ * ]|
  * </para>
  * </refsect2>
  * <refsect2>
  * <title>GstXOverlay and Qt</title>
  * <para>
- * FIXME: write me
+ * |[
+ * #include &lt;glib.h&gt;
+ * #include &lt;gst/gst.h&gt;
+ * #include &lt;gst/interfaces/xoverlay.h&gt;
+ * 
+ * #include &lt;QApplication&gt;
+ * #include &lt;QTimer&gt;
+ * #include &lt;QWidget&gt;
+ * 
+ * int main(int argc, char *argv[])
+ * {
+ *   if (!g_thread_supported ())
+ *     g_thread_init (NULL);
+ * 
+ *   gst_init (&argc, &argv);
+ *   QApplication app(argc, argv);
+ *   app.connect(&app, SIGNAL(lastWindowClosed()), &app, SLOT(quit ()));
+ * 
+ *   // prepare the pipeline
+ * 
+ *   GstElement *pipeline = gst_pipeline_new ("xvoverlay");
+ *   GstElement *src = gst_element_factory_make ("videotestsrc", NULL);
+ *   GstElement *sink = gst_element_factory_make ("xvimagesink", NULL);
+ *   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
+ *   gst_element_link (src, sink);
+ *   
+ *   // prepare the ui
+ * 
+ *   QWidget window;
+ *   window.resize(320, 240);
+ *   window.show();
+ *   
+ *   WId xwinid = window.winId();
+ *   gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), xwinid);
+ * 
+ *   // run the pipeline
+ * 
+ *   GstStateChangeReturn sret = gst_element_set_state (pipeline,
+ *       GST_STATE_PLAYING);
+ *   if (sret == GST_STATE_CHANGE_FAILURE) {
+ *     gst_element_set_state (pipeline, GST_STATE_NULL);
+ *     gst_object_unref (pipeline);
+ *     // Exit application
+ *     QTimer::singleShot(0, QApplication::activeWindow(), SLOT(quit()));
+ *   }
+ * 
+ *   int ret = app.exec();
+ *   
+ *   window.hide();
+ *   gst_element_set_state (pipeline, GST_STATE_NULL);
+ *   gst_object_unref (pipeline);
+ * 
+ *   return ret;
+ * }
+ * ]|
  * </para>
  * </refsect2>
  */

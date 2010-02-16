@@ -127,6 +127,14 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AC_PROG_CXX
+
+dnl determine if c++ is available on this system
+AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+
+dnl determine c++ preprocessor
+dnl FIXME: do we need this ?
+AC_PROG_CXXCPP
 
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
@@ -273,6 +281,12 @@ PKG_CHECK_MODULES(GTK_X11, gtk+-x11-2.0 >= 2.14.0,
     HAVE_GTK_X11=yes, HAVE_GTK_X11=no)
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
+dnl QT is optional and only used in examples
+PKG_CHECK_MODULES(QT, QtGui >= 4.0, HAVE_QT=yes, HAVE_QT=no)
+AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
+PKG_CHECK_MODULES(QT, QtGui >= 4.6, HAVE_QT_GV=yes, HAVE_QT_GV=no)
+AM_CONDITIONAL(HAVE_QT_GV, test "x$HAVE_QT_GV" = "xyes")
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice
@@ -285,6 +299,9 @@ AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($GST_GIT)
+
+dnl define an ERROR_CXXFLAGS Makefile variable
+AG_GST_SET_ERROR_CXXFLAGS($GST_GIT)
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
@@ -757,9 +774,12 @@ else
 fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
-dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
+dnl every flag in GST_OPTION_CFLAGS and GST_OPTION_CXXFLAGS can be overridden
+dnl at make time with e.g. make ERROR_CFLAGS=""
 GST_OPTION_CFLAGS="\$(ERROR_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
+GST_OPTION_CXXFLAGS="\$(ERROR_CXXFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
+AC_SUBST(GST_OPTION_CXXFLAGS)
 
 dnl our libraries need to be versioned correctly
 AC_SUBST(GST_LT_LDFLAGS)
@@ -772,8 +792,10 @@ AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl add GST_OPTION_CFLAGS, but overridable
+GST_CXXFLAGS="$GST_CFLAGS \$(GST_OPTION_CXXFLAGS)"
 GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_CXXFLAGS)
 dnl add GCOV libs because libtool strips -fprofile-arcs -ftest-coverage
 GST_LIBS="$GST_LIBS \$(GCOV_LIBS)"
 AC_SUBST(GST_LIBS)
@@ -888,6 +910,7 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/app/Makefile
 tests/examples/dynamic/Makefile
+tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/volume/Makefile
 tests/examples/snapshot/Makefile
