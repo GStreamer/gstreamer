@@ -738,6 +738,10 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     return NULL;
   }
 
+  GST_MEMDUMP ("SEI", nal[0].p_payload, nal[0].i_payload);
+  GST_MEMDUMP ("SPS", nal[1].p_payload, nal[1].i_payload);
+  GST_MEMDUMP ("PPS", nal[2].p_payload, nal[2].i_payload);
+
   /* nal payloads with emulation_prevention_three_byte, and some header data */
   buffer_size = (nal[1].i_payload + nal[2].i_payload) * 4 + 100;
   buffer = g_malloc (buffer_size);
@@ -751,9 +755,9 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 #endif
 
   buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
-  buffer[1] = sps[0];           /* profile_idc                             */
-  buffer[2] = sps[1];           /* profile_compability                     */
-  buffer[3] = sps[2];           /* level_idc                               */
+  buffer[1] = sps[1];           /* profile_idc                             */
+  buffer[2] = sps[2];           /* profile_compability                     */
+  buffer[3] = sps[3];           /* level_idc                               */
   buffer[4] = 0xfc | (4 - 1);   /* nal_length_size_minus1                  */
 
   i_size = 5;
@@ -785,6 +789,8 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   buf = gst_buffer_new_and_alloc (i_size);
   memcpy (GST_BUFFER_DATA (buf), buffer, i_size);
   g_free (buffer);
+
+  GST_MEMDUMP ("header", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   return buf;
 }
