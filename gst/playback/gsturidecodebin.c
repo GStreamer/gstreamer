@@ -1037,6 +1037,19 @@ done:
   return res;
 }
 
+static void
+post_missing_plugin_error (GstElement * dec, const gchar * element_name)
+{
+  GstMessage *msg;
+
+  msg = gst_missing_element_message_new (dec, element_name);
+  gst_element_post_message (dec, msg);
+
+  GST_ELEMENT_ERROR (dec, CORE, MISSING_PLUGIN,
+      (_("Missing element '%s' - check your GStreamer installation."),
+          element_name), (NULL));
+}
+
 /**
  * analyse_source:
  * @decoder: a #GstURIDecodeBin
@@ -1163,14 +1176,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
   return res;
 no_queue2:
   {
-    GstMessage *msg;
-
-    msg =
-        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder), "queue2");
-    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
-
-    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
-        (_("Could not create \"queue2\" element.")), (NULL));
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "queue2");
 
     gst_object_unref (pad);
     gst_iterator_free (pads_iter);
@@ -1392,15 +1398,7 @@ make_decoder (GstURIDecodeBin * decoder)
   /* ERRORS */
 no_decodebin:
   {
-    GstMessage *msg;
-
-    msg =
-        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder),
-        "decodebin2");
-    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
-
-    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
-        (_("Could not create \"decodebin2\" element.")), (NULL));
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "decodebin2");
     return NULL;
   }
 }
@@ -1503,14 +1501,7 @@ could_not_link:
   }
 no_queue2:
   {
-    GstMessage *msg;
-
-    msg =
-        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder), "queue2");
-    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
-
-    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
-        (_("Could not create \"queue2\" element.")), (NULL));
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "queue2");
     return;
   }
 }
@@ -1548,15 +1539,7 @@ setup_streaming (GstURIDecodeBin * decoder)
   /* ERRORS */
 no_typefind:
   {
-    GstMessage *msg;
-
-    msg =
-        gst_missing_element_message_new (GST_ELEMENT_CAST (decoder),
-        "typefind");
-    gst_element_post_message (GST_ELEMENT_CAST (decoder), msg);
-
-    GST_ELEMENT_ERROR (decoder, CORE, MISSING_PLUGIN,
-        (_("Could not create \"typefind\" element.")), (NULL));
+    post_missing_plugin_error (GST_ELEMENT_CAST (decoder), "typefind");
     return FALSE;
   }
 could_not_link:
