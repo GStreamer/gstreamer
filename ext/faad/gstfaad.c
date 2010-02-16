@@ -353,6 +353,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     faad->packetised = TRUE;
     buf = gst_value_get_buffer (value);
 
+    g_return_val_if_fail (buf != NULL, FALSE);
+
     cdata = GST_BUFFER_DATA (buf);
     csize = GST_BUFFER_SIZE (buf);
 
