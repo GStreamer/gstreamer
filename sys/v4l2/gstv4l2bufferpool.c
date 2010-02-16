@@ -91,8 +91,9 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   GST_V4L2_BUFFER_POOL_UNLOCK (pool);
 
   if (!resuscitated) {
-    GST_LOG_OBJECT (pool->v4l2elem, "buffer %p not recovered, unmapping",
-        buffer);
+    GST_LOG_OBJECT (pool->v4l2elem,
+        "buffer %p (data %p, len %u) not recovered, unmapping",
+        buffer, GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
     v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
 
