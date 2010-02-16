@@ -3809,7 +3809,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         break;
     }
   }
-  GST_LOG_OBJECT (qtdemux, "parsed '%" GST_FOURCC_FORMAT,
+  GST_LOG_OBJECT (qtdemux, "parsed '%" GST_FOURCC_FORMAT "'",
       GST_FOURCC_ARGS (fourcc));
   return TRUE;
 
