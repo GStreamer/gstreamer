@@ -51,8 +51,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VIDEO_CAPS_STRING));
 
 
-GstElement *
-setup_x264enc ()
+static GstElement *
+setup_x264enc (void)
 {
   GstElement *x264enc;
 
@@ -66,7 +66,7 @@ setup_x264enc ()
   return x264enc;
 }
 
-void
+static void
 cleanup_x264enc (GstElement * x264enc)
 {
   GST_DEBUG ("cleanup_x264enc");
@@ -77,6 +77,44 @@ cleanup_x264enc (GstElement * x264enc)
   gst_check_teardown_src_pad (x264enc);
   gst_check_teardown_sink_pad (x264enc);
   gst_check_teardown_element (x264enc);
+}
+
+static void
+check_caps (GstCaps * caps)
+{
+  GstStructure *s;
+  const GValue *sf, *avcc;
+  const gchar *stream_format;
+
+  fail_unless (caps != NULL);
+
+  GST_INFO ("caps %" GST_PTR_FORMAT, caps);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (s != NULL);
+  fail_if (!gst_structure_has_name (s, "video/x-h264"));
+  sf = gst_structure_get_value (s, "stream-format");
+  fail_unless (sf != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (sf));
+  stream_format = g_value_get_string (sf);
+  fail_unless (stream_format != NULL);
+  if (strcmp (stream_format, "avc-sample") == 0) {
+    const guint8 *data;
+    GstBuffer *buf;
+
+    avcc = gst_structure_get_value (s, "codec_data");
+    fail_unless (avcc != NULL);
+    fail_unless (GST_VALUE_HOLDS_BUFFER (avcc));
+    buf = gst_value_get_buffer (avcc);
+    fail_unless (buf != NULL);
+    data = GST_BUFFER_DATA (buf);
+    fail_unless_equals_int (data[0], 1);
+    /* should be either baseline, main profile or extended profile */
+    fail_unless (data[1] == 0x42 || data[1] == 0x4D || data[1] == 0x58);
+  } else if (strcmp (stream_format, "byte-stream") == 0) {
+    fail_if (gst_structure_get_value (s, "codec_data") != NULL);
+  } else {
+    fail_if (TRUE, "unexpected stream-format in caps: %s", stream_format);
+  }
 }
 
 GST_START_TEST (test_video_pad)
@@ -119,6 +157,8 @@ GST_START_TEST (test_video_pad)
         gint nsize, npos, j, type;
         guint8 *data = GST_BUFFER_DATA (outbuffer);
         gint size = GST_BUFFER_SIZE (outbuffer);
+
+        check_caps (GST_BUFFER_CAPS (outbuffer));
 
         npos = 0;
         j = 0;
