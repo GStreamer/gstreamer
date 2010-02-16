@@ -361,6 +361,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * GstRtpJitterBuffer::percent:
    *
    * The percent of the jitterbuffer that is filled.
+   *
+   * Since: 0.10.19
    */
   g_object_class_install_property (gobject_class, PROP_PERCENT,
       g_param_spec_int ("percent", "percent",
@@ -425,6 +427,8 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * useful in buffering mode.
    *
    * Returns: the time of the last pushed packet.
+   *
+   * Since: 0.10.19
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_SET_ACTIVE] =
       g_signal_new ("set-active", G_TYPE_FROM_CLASS (klass),
