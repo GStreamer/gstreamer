@@ -852,6 +852,9 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
     ret = TRUE;
   } else if (!render->ass_track) {
     render->ass_track = ass_new_track (render->ass_library);
+
+    render->track_init_ok = TRUE;
+
     ret = TRUE;
   }
 
