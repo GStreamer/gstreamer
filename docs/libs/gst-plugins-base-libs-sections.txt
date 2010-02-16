@@ -60,6 +60,7 @@ gst_app_sink_set_drop
 gst_app_sink_get_drop
 gst_app_sink_pull_preroll
 gst_app_sink_pull_buffer
+gst_app_sink_pull_buffer_list
 GstAppSinkCallbacks
 gst_app_sink_set_callbacks
 <SUBSECTION Standard>
@@ -93,6 +94,11 @@ gst_audio_duration_from_pad_buffer
 gst_audio_is_buffer_framed
 gst_audio_structure_set_int
 gst_audio_buffer_clip
+<SUBSECTION Standard>
+GST_TYPE_BUFFER_FORMAT
+GST_TYPE_BUFFER_FORMAT_TYPE
+gst_buffer_format_get_type
+gst_buffer_format_type_get_type
 </SECTION>
 
 <SECTION>
@@ -101,6 +107,9 @@ gst_audio_buffer_clip
 GstAudioClock
 GstAudioClockGetTimeFunc
 gst_audio_clock_new
+gst_audio_clock_adjust
+gst_audio_clock_get_time
+gst_audio_clock_reset
 <SUBSECTION Standard>
 GstAudioClockClass
 GST_AUDIO_CLOCK
@@ -109,6 +118,7 @@ GST_TYPE_AUDIO_CLOCK
 gst_audio_clock_get_type
 GST_AUDIO_CLOCK_CLASS
 GST_IS_AUDIO_CLOCK_CLASS
+GST_AUDIO_CLOCK_CAST
 </SECTION>
 
 <SECTION>
@@ -124,6 +134,8 @@ GST_TYPE_AUDIO_FILTER
 gst_audio_filter_get_type
 GST_AUDIO_FILTER_CLASS
 GST_IS_AUDIO_FILTER_CLASS
+GST_AUDIO_FILTER_CAST
+GST_AUDIO_FILTER_CLASS_CAST
 </SECTION>
 
 <SECTION>
@@ -186,6 +198,8 @@ GST_BASE_AUDIO_SINK_CLASS
 GST_IS_BASE_AUDIO_SINK_CLASS
 GST_BASE_AUDIO_SINK_GET_CLASS
 GstBaseAudioSinkPrivate
+gst_base_audio_sink_slave_method_get_type
+GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD
 </SECTION>
 
 <SECTION>
@@ -193,13 +207,17 @@ GstBaseAudioSinkPrivate
 <INCLUDE>gst/audio/gstbaseaudiosrc.h</INCLUDE>
 GstBaseAudioSrc
 GstBaseAudioSrcClass
+GstBaseAudioSrcSlaveMethod
 
 GST_BASE_AUDIO_SRC_CLOCK
 GST_BASE_AUDIO_SRC_PAD
 gst_base_audio_src_create_ringbuffer
 gst_base_audio_src_set_provide_clock
 gst_base_audio_src_get_provide_clock
+gst_base_audio_src_get_slave_method
+gst_base_audio_src_set_slave_method
 <SUBSECTION Standard>
+GstBaseAudioSrcPrivate
 GST_BASE_AUDIO_SRC
 GST_IS_BASE_AUDIO_SRC
 GST_TYPE_BASE_AUDIO_SRC
@@ -207,6 +225,8 @@ gst_base_audio_src_get_type
 GST_BASE_AUDIO_SRC_CLASS
 GST_IS_BASE_AUDIO_SRC_CLASS
 GST_BASE_AUDIO_SRC_GET_CLASS
+gst_base_audio_src_slave_method_get_type
+GST_TYPE_BASE_AUDIO_SRC_SLAVE_METHOD
 </SECTION>
 
 <SECTION>
@@ -284,7 +304,10 @@ GST_IS_RING_BUFFER
 GST_IS_RING_BUFFER_CLASS
 GST_RING_BUFFER_CAST
 gst_ring_buffer_get_type
-
+GST_TYPE_RING_BUFFER_SEG_STATE
+gst_ring_buffer_seg_state_get_type
+GST_TYPE_RING_BUFFER_STATE
+gst_ring_buffer_state_get_type
 <SUBSECTION Private>
 gst_ring_buffer_debug_spec_buff
 gst_ring_buffer_debug_spec_caps
@@ -302,6 +325,8 @@ GstCddaBaseSrcTrack
 GstCddaBaseSrcMode
 gst_cdda_base_src_add_track
 <SUBSECTION Standard>
+GST_TYPE_CDDA_BASE_SRC_MODE
+gst_cdda_base_src_mode_get_type
 GST_CDDA_BASE_SRC
 GST_CDDA_BASE_SRC_CLASS
 GST_CDDA_BASE_SRC_GET_CLASS
@@ -330,6 +355,19 @@ gst_fft_s16_fft
 gst_fft_s16_inverse_fft
 gst_fft_s16_window
 gst_fft_s16_free
+<SUBSECTION Standard>
+kiss_fft_s16
+kiss_fft_s16_alloc
+kiss_fft_s16_cfg
+kiss_fft_s16_cleanup
+kiss_fft_s16_cpx
+kiss_fft_s16_free
+kiss_fft_s16_next_fast_size
+kiss_fft_s16_scalar
+kiss_fft_s16_stride
+KISS_FFT_S16_COS
+KISS_FFT_S16_MALLOC
+KISS_FFT_S16_SIN
 </SECTION>
 
 <SECTION>
@@ -342,6 +380,20 @@ gst_fft_s32_fft
 gst_fft_s32_inverse_fft
 gst_fft_s32_window
 gst_fft_s32_free
+<SUBSECTION Standard>
+kiss_fft_s32
+kiss_fft_s32_alloc
+kiss_fft_s32_cfg
+kiss_fft_s32_cleanup
+kiss_fft_s32_cpx
+kiss_fft_s32_free
+kiss_fft_s32_next_fast_size
+kiss_fft_s32_scalar
+kiss_fft_s32_stride
+KISS_FFT_S32_COS
+KISS_FFT_S32_MALLOC
+KISS_FFT_S32_SIN
+
 </SECTION>
 
 <SECTION>
@@ -354,6 +406,19 @@ gst_fft_f32_fft
 gst_fft_f32_inverse_fft
 gst_fft_f32_window
 gst_fft_f32_free
+<SUBSECTION Standard>
+kiss_fft_f32
+kiss_fft_f32_alloc
+kiss_fft_f32_cfg
+kiss_fft_f32_cleanup
+kiss_fft_f32_cpx
+kiss_fft_f32_free
+kiss_fft_f32_next_fast_size
+kiss_fft_f32_scalar
+kiss_fft_f32_stride
+KISS_FFT_F32_COS
+KISS_FFT_F32_MALLOC
+KISS_FFT_F32_SIN
 </SECTION>
 
 <SECTION>
@@ -366,6 +431,19 @@ gst_fft_f64_fft
 gst_fft_f64_inverse_fft
 gst_fft_f64_window
 gst_fft_f64_free
+<SUBSECTION Standard>
+kiss_fft_f64
+kiss_fft_f64_alloc
+kiss_fft_f64_cfg
+kiss_fft_f64_cleanup
+kiss_fft_f64_cpx
+kiss_fft_f64_free
+kiss_fft_f64_next_fast_size
+kiss_fft_f64_scalar
+kiss_fft_f64_stride
+KISS_FFT_F64_COS
+KISS_FFT_F64_MALLOC
+KISS_FFT_F64_SIN
 </SECTION>
 
 # floatcast
@@ -483,6 +561,7 @@ GST_MIXER_OPTIONS
 GST_MIXER_OPTIONS_CLASS
 GST_IS_MIXER_OPTIONS
 GST_IS_MIXER_OPTIONS_CLASS
+GST_MIXER_OPTIONS_GET_CLASS
 gst_mixer_options_get_type
 </SECTION>
 
@@ -510,6 +589,7 @@ gst_mixer_track_get_type
 GstNavigation
 GstNavigationInterface
 GstNavigationCommand
+GstNavigationEventType
 GstNavigationMessageType
 GstNavigationQueryType
 
@@ -518,11 +598,16 @@ gst_navigation_send_key_event
 gst_navigation_send_mouse_event
 gst_navigation_send_command
 
+gst_navigation_event_parse_command
+gst_navigation_event_parse_key_event
+gst_navigation_event_parse_mouse_button_event
+gst_navigation_event_parse_mouse_move_event
 gst_navigation_message_get_type
 gst_navigation_message_new_angles_changed
 gst_navigation_message_new_commands_changed
 gst_navigation_message_new_mouse_over
 gst_navigation_message_parse_mouse_over
+gst_navigation_message_parse_angles_changed
 gst_navigation_query_new_angles
 gst_navigation_query_get_type
 gst_navigation_query_new_commands
@@ -546,10 +631,13 @@ GST_TYPE_NAVIGATION
 GST_NAVIGATION
 GST_NAVIGATION_GET_IFACE
 GST_TYPE_NAVIGATION_COMMAND
+GST_TYPE_NAVIGATION_EVENT_TYPE
 GST_TYPE_NAVIGATION_MESSAGE_TYPE
 GST_TYPE_NAVIGATION_QUERY_TYPE
 GST_IS_NAVIGATION
 gst_navigation_get_type
+gst_navigation_event_get_type
+gst_navigation_event_type_get_type
 gst_navigation_message_type_get_type
 gst_navigation_query_type_get_type
 gst_navigation_command_get_type
@@ -787,6 +875,7 @@ GST_RIFF_CCC
 GST_RIFF_CRAM
 GST_RIFF_CVID
 GST_RIFF_CYUV
+GST_RIFF_DIB
 GST_RIFF_DISP
 GST_RIFF_DIV3
 GST_RIFF_DMB1
@@ -850,6 +939,7 @@ GST_RIFF_MVI1
 GST_RIFF_NONE
 GST_RIFF_PACK
 GST_RIFF_Q1_0
+GST_RIFF_RAW
 GST_RIFF_RGB
 GST_RIFF_RIFF_AVI
 GST_RIFF_RIFF_CDXA
@@ -858,8 +948,11 @@ GST_RIFF_RLE4
 GST_RIFF_RLE8
 GST_RIFF_RT21
 GST_RIFF_SFMC
+GST_RIFF_TAG_acid
+GST_RIFF_TAG_AVF0
 GST_RIFF_TAG_BEXT
 GST_RIFF_TAG_JUNK
+GST_RIFF_TAG_JUNQ
 GST_RIFF_TAG_LIST
 GST_RIFF_TAG_RIFF
 GST_RIFF_TAG_RIFX
@@ -933,6 +1026,7 @@ GST_RIFF_y41p
 GST_RIFF_yuy2
 GST_RIFF_yv12
 
+gst_riff_acid
 gst_riff_create_audio_caps
 gst_riff_create_audio_template_caps
 gst_riff_create_iavs_caps
@@ -972,12 +1066,15 @@ gst_base_rtp_audio_payload_set_sample_based
 gst_base_rtp_audio_payload_set_sample_options
 gst_base_rtp_audio_payload_get_adapter
 gst_base_rtp_audio_payload_push
+gst_base_rtp_audio_payload_flush
+gst_base_rtp_audio_payload_set_samplebits_options
 <SUBSECTION Standard>
 GST_TYPE_BASE_RTP_AUDIO_PAYLOAD
 GST_BASE_RTP_AUDIO_PAYLOAD
 GST_BASE_RTP_AUDIO_PAYLOAD_CLASS
 GST_IS_BASE_RTP_AUDIO_PAYLOAD
 GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS
+GST_BASE_RTP_AUDIO_PAYLOAD_CAST
 gst_base_rtp_audio_payload_get_type
 GstBaseRTPAudioPayloadPrivate
 </SECTION>
@@ -1002,7 +1099,9 @@ GST_BASE_RTP_DEPAYLOAD_CLASS
 GST_BASE_RTP_DEPAYLOAD_GET_CLASS
 GST_IS_BASE_RTP_DEPAYLOAD
 GST_IS_BASE_RTP_DEPAYLOAD_CLASS
+GST_BASE_RTP_PAYLOAD_CAST
 gst_base_rtp_depayload_get_type
+GstBaseRTPPayloadPrivate
 
 <SUBSECTION Private>
 QUEUE_LOCK_INIT
@@ -1470,6 +1569,7 @@ gst_sdp_message_medias_len
 gst_sdp_message_get_media
 gst_sdp_message_add_media
 gst_sdp_message_dump
+gst_sdp_message_as_text
 
 gst_sdp_media_new
 gst_sdp_media_init
@@ -1500,6 +1600,7 @@ gst_sdp_media_get_attribute
 gst_sdp_media_get_attribute_val
 gst_sdp_media_get_attribute_val_n
 gst_sdp_media_add_attribute
+gst_sdp_media_as_text
 </SECTION>
 
 # tag
@@ -1524,6 +1625,7 @@ GST_TAG_CMML_STREAM
 gst_tag_register_musicbrainz_tags
 gst_tag_freeform_string_to_utf8
 gst_tag_parse_extended_comment
+gst_tag_image_data_to_image_buffer
 GstTagImageType
 <SUBSECTION Standard>
 GST_TYPE_TAG_IMAGE_TYPE
@@ -1557,6 +1659,7 @@ gst_tag_list_new_from_id3v1
 gst_tag_from_id3_tag
 gst_tag_from_id3_user_tag
 gst_tag_to_id3_tag
+gst_tag_list_add_id3_image
 </SECTION>
 
 <SECTION>
@@ -1565,6 +1668,16 @@ gst_tag_to_id3_tag
 GstTagDemux
 GstTagDemuxClass
 GstTagDemuxResult
+<SUBSECTION Standard>
+GstTagDemuxPrivate
+GST_IS_TAG_DEMUX
+GST_IS_TAG_DEMUX_CLASS
+GST_TAG_DEMUX
+GST_TAG_DEMUX_CLASS
+GST_TYPE_TAG_DEMUX
+GST_TYPE_TAG_DEMUX_RESULT
+gst_tag_demux_get_type
+gst_tag_demux_result_get_type
 </SECTION>
 
 <SECTION>
@@ -1625,6 +1738,11 @@ GstInstallPluginsContext
 gst_install_plugins_context_new
 gst_install_plugins_context_free
 gst_install_plugins_context_set_xid
+<SUBSECTION Standard>
+GST_TYPE_INSTALL_PLUGINS_CONTEXT
+GST_TYPE_INSTALL_PLUGINS_RETURN
+gst_install_plugins_context_get_type
+gst_install_plugins_return_get_type
 </SECTION>
 
 <SECTION>
@@ -1742,6 +1860,7 @@ GST_VIDEO_SINK_PAD
 GST_VIDEO_SINK_WIDTH
 gst_video_sink_center_rect
 <SUBSECTION Standard>
+GstVideoSinkPrivate
 GST_TYPE_VIDEO_SINK
 GST_VIDEO_SINK
 GST_VIDEO_SINK_CAST
