@@ -27,6 +27,12 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
+if USE_ASSRENDER
+check_assrender = elements/assrender
+else
+check_assrender =
+endif
+
 if USE_FAAC
 check_faac = elements/faac
 else
@@ -107,6 +113,7 @@ noinst_PROGRAMS = \
 
 check_PROGRAMS = \
 	generic/states \
+	$(check_assrender) \
 	$(check_faac)  \
 	$(check_faad)  \
 	$(check_mpeg2enc)  \
@@ -158,5 +165,8 @@ elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_rtpmux_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
+
+elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.10
 
 EXTRA_DIST = gst-plugins-bad.supp
