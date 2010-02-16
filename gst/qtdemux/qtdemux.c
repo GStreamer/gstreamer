@@ -5902,6 +5902,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || !qtdemux_parse_samples (qtdemux, stream, 0))
     goto samples_failed;
 
+  /* look for non-zero min_duration as it is used to set the frame rate cap */
+  if (G_UNLIKELY (stream->min_duration == 0)) {
+    guint32 sample_num = 1;
+
+    while (sample_num <= stream->n_samples && stream->min_duration == 0) {
+      if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
+        goto samples_failed;
+      ++sample_num;
+    }
+  }
   /* configure segments */
   if (!qtdemux_parse_segments (qtdemux, stream, trak))
     goto segments_failed;
