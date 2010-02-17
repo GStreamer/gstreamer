@@ -50,14 +50,19 @@
 #endif
 
 #include <sys/stat.h>
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 #include <fcntl.h>
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #ifdef _MSC_VER
-#include <io.h>
+#undef stat
+#define stat _stat
+#define fstat _fstat
+#define S_ISREG(m)	(((m)&S_IFREG)==S_IFREG)
 #endif
 #include <errno.h>
 #include <string.h>

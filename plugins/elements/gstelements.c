@@ -57,6 +57,10 @@ static struct _elements_entry _elements[] = {
   {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
   {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
 #endif
+#ifdef _MSC_VER
+  {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
+  {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
+#endif
   {"filesrc", GST_RANK_PRIMARY, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"queue", GST_RANK_NONE, gst_queue_get_type},
