@@ -1095,29 +1095,17 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
       demux->duration < GST_BUFFER_TIMESTAMP (outbuf))
     demux->duration = GST_BUFFER_TIMESTAMP (outbuf);
 
-  if (!demux->indexed) {
-    if (!keyframe) {
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-      if (demux->index && !demux->random_access) {
-        GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-            G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-            demux->cur_tag_offset);
-        gst_index_add_association (demux->index, demux->index_id,
-            GST_ASSOCIATION_FLAG_NONE,
-            GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
-            GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
-      }
-    } else {
-      if (demux->index && !demux->random_access) {
-        GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-            G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-            demux->cur_tag_offset);
-        gst_index_add_association (demux->index, demux->index_id,
-            GST_ASSOCIATION_FLAG_KEY_UNIT,
-            GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
-            GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
-      }
-    }
+  if (!keyframe)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (!demux->indexed && demux->index && !demux->random_access) {
+    GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+        G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        demux->cur_tag_offset);
+    gst_index_add_association (demux->index, demux->index_id,
+        keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
+        GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
   }
 
   if (G_UNLIKELY (demux->video_need_discont)) {
