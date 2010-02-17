@@ -2206,7 +2206,7 @@ gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
   GstBaseSrc *src;
   GstFlowReturn res;
 
-  src = GST_BASE_SRC (gst_pad_get_parent (pad));
+  src = GST_BASE_SRC_CAST (gst_object_ref (GST_OBJECT_PARENT (pad)));
 
   GST_LIVE_LOCK (src);
   if (G_UNLIKELY (src->priv->flushing))
