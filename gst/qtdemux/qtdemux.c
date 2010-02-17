@@ -305,8 +305,8 @@ struct _QtDemuxStream
   guint32 stts_samples;
   guint32 n_sample_times;
   guint32 stts_sample_index;
-  guint64 stts_time;
-  guint64 stts_duration;
+  guint32 stts_time;
+  guint32 stts_duration;
   /* stss */
   gboolean stss_present;
   guint32 n_sample_syncs;
@@ -4508,7 +4508,7 @@ done2:
     for (i = stream->stts_index; i < n_sample_times; i++) {
       guint32 stts_samples;
       guint32 stts_duration;
-      guint64 stts_time;
+      guint32 stts_time;
 
       if (stream->stts_sample_index >= stream->stts_samples
           || !stream->stts_sample_index) {
