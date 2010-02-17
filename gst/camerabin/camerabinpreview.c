@@ -204,10 +204,9 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
 
   g_signal_emit_by_name (src, "push-buffer", buf, &fret);
 
-  /* TODO: do we need to use a bus poll, can we just register a callback to the bus? */
   bus = gst_element_get_bus (pipeline);
-  msg =
-      gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_EOS, 25 * GST_SECOND);
+  msg = gst_bus_timed_pop_filtered (bus, (25 * GST_SECOND),
+      GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 
   if (msg) {
     switch (GST_MESSAGE_TYPE (msg)) {
