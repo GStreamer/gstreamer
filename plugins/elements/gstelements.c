@@ -53,11 +53,7 @@ static struct _elements_entry _elements[] = {
   {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},
   {"fakesrc", GST_RANK_NONE, gst_fake_src_get_type},
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
-#ifdef HAVE_SYS_SOCKET_H
-  {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
-  {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
-#endif
-#ifdef _MSC_VER
+#if defined(HAVE_SYS_SOCKET_H) || defined(_MSC_VER)
   {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
   {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
 #endif
