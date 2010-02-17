@@ -9,6 +9,7 @@ capssetter
 deinterleave
 dataurisrc
 faac
+faad
 gdpdepay
 gdppay
 interleave
