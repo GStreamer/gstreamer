@@ -34,8 +34,8 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@include_HEAD
 gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
+gir_cincludes=$(patsubst %,--c-include='gst/video/%',$(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='gst/video/%',$(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 
 GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMINOR@.la
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
