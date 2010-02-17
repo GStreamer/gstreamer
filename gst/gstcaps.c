@@ -940,9 +940,12 @@ gst_caps_set_simple_valist (GstCaps * caps, const char *field, va_list varargs)
       g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
       type = GST_TYPE_DATE;
     }
-
+#ifndef G_VALUE_COLLECT_INIT
     g_value_init (&value, type);
     G_VALUE_COLLECT (&value, varargs, 0, &err);
+#else
+    G_VALUE_COLLECT_INIT (&value, type, varargs, 0, &err);
+#endif
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
       return;
