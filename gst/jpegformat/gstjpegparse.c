@@ -425,8 +425,8 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
       offset = gst_jpeg_parse_find_end_marker (parse, data, size);
     }
   }
-
-  return offset;
+  /* position of EOI + the length of the marker */
+  return offset + 2;
 }
 
 static gboolean
