@@ -318,7 +318,7 @@ gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
   if (G_UNLIKELY (gst_jpeg_parse_parse_tag_has_entropy_segment (tag))) {
     while (!(data[marker_len] == 0xff && data[marker_len + 1] != 0x00)) {
       ++marker_len;
-      if (G_UNLIKELY (marker_len > size))
+      if (G_UNLIKELY (marker_len + 2 > size))
         goto need_more_data;
     }
   }
