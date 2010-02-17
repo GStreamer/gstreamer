@@ -204,9 +204,9 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 static void
 gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
-  fdsrc->new_fd = 0;
+  fdsrc->new_fd = DEFAULT_FD;
   fdsrc->seekable_fd = FALSE;
-  fdsrc->fd = DEFAULT_FD;
+  fdsrc->fd = -1;
   fdsrc->timeout = DEFAULT_TIMEOUT;
   fdsrc->uri = g_strdup_printf ("fd://0");
   fdsrc->curoffset = 0;
@@ -228,6 +228,9 @@ gst_fd_src_update_fd (GstFdSrc * src)
 {
   struct stat stat_results;
 
+  GST_DEBUG_OBJECT (src, "fdset %p, old_fd %d, new_fd %d", src->fdset, src->fd,
+      src->new_fd);
+
   /* we need to always update the fdset since it may not have existed when
    * gst_fd_src_update_fd () was called earlier */
   if (src->fdset != NULL) {
@@ -235,6 +238,7 @@ gst_fd_src_update_fd (GstFdSrc * src)
 
     if (src->fd >= 0) {
       fd.fd = src->fd;
+      /* this will log a harmless warning, if it was never added */
       gst_poll_remove_fd (src->fdset, &fd);
     }
 
