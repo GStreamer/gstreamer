@@ -898,7 +898,7 @@ gst_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   GstFileSrc *src;
   GstFlowReturn ret;
 
-  src = GST_FILE_SRC (basesrc);
+  src = GST_FILE_SRC_CAST (basesrc);
 
 #ifdef HAVE_MMAP
   if (src->using_mmap) {
