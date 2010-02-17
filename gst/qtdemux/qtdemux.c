@@ -2097,9 +2097,10 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   }
 
   /* segment lies beyond total indicated duration */
-  if (G_UNLIKELY (segment->duration != -1 && segment->time > segment->duration)) {
-    GST_WARNING_OBJECT (qtdemux, "segment->duration %" G_GUINT64_FORMAT
-        " < segment->time %" G_GUINT64_FORMAT, segment->duration,
+  if (G_UNLIKELY (qtdemux->segment.duration != -1 &&
+          segment->time > qtdemux->segment.duration)) {
+    GST_WARNING_OBJECT (qtdemux, "file duration %" G_GINT64_FORMAT
+        " < segment->time %" G_GUINT64_FORMAT, qtdemux->segment.duration,
         segment->time);
     return FALSE;
   }
