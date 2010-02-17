@@ -24,6 +24,7 @@
 #define __GST_X_OVERLAY_H__
 
 #include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
 
 G_BEGIN_DECLS
 
@@ -62,27 +63,34 @@ struct _GstXOverlayClass {
   GTypeInterface klass;
 
   /* virtual functions */
-  void (* set_xwindow_id) (GstXOverlay *overlay,
-                           gulong       xwindow_id);
+  void (* set_xwindow_id)      (GstXOverlay *overlay,
+                                gulong       xwindow_id);
 
-  void (* expose)         (GstXOverlay *overlay);
+  void (* expose)              (GstXOverlay *overlay);
   
-  void (* handle_events)  (GstXOverlay *overlay,
-                           gboolean     handle_events);  
+  void (* handle_events)       (GstXOverlay *overlay,
+                                gboolean     handle_events);  
 
-  /*< private >*/
-  gpointer                 _gst_reserved[GST_PADDING - 1];
+  void (* set_render_rectangle) (GstXOverlay *overlay,
+                                GstVideoRectangle *rect);
+    /*< private >*/
+  gpointer                 _gst_reserved[GST_PADDING - 2];
 };
 
 GType   gst_x_overlay_get_type          (void);
 
 /* virtual class function wrappers */
-void gst_x_overlay_set_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);
+void gst_x_overlay_set_xwindow_id      (GstXOverlay *overlay, 
+                                        gulong xwindow_id);
 
-void gst_x_overlay_expose             (GstXOverlay *overlay);
+gboolean gst_x_overlay_set_render_rectangle (GstXOverlay *overlay,
+                                        GstVideoRectangle *rect);
 
-void gst_x_overlay_handle_events      (GstXOverlay *overlay,
-                                       gboolean     handle_events);
+void gst_x_overlay_expose              (GstXOverlay *overlay);
+
+void gst_x_overlay_handle_events       (GstXOverlay *overlay,
+                                        gboolean     handle_events);
+
 
 /* public methods to dispatch bus messages */
 void gst_x_overlay_got_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);

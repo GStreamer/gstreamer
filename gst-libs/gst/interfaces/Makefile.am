@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la
 libgstinterfacesincludedir = \
-        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces
+        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces \
+        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 
 headers_interfaces = 		\
 	colorbalance.h		\
@@ -89,10 +90,13 @@ GstInterfaces-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@G
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
+		--add-include-path=$(builddir)/../video \
 		--library=gstinterfaces-0.10 \
 		--include=Gst-0.10 \
+		--include=GstVideo-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
+		--pkg gstreamer-video-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

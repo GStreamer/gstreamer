@@ -790,6 +790,7 @@ gst_x_overlay_got_xwindow_id
 gst_x_overlay_prepare_xwindow_id
 gst_x_overlay_expose
 gst_x_overlay_handle_events
+gst_x_overlay_set_render_rectangle
 <SUBSECTION Standard>
 GST_TYPE_X_OVERLAY
 GST_X_OVERLAY
