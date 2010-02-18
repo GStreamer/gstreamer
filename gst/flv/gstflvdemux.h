@@ -125,6 +125,9 @@ struct _GstFLVDemux
   gboolean indexed; /* TRUE if index is completely built */
   gint64 file_size;
   GstEvent *seek_event;
+
+  GstClockTime index_max_time;
+  gint64 index_max_pos;
 };
 
 struct _GstFLVDemuxClass

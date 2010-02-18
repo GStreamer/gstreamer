@@ -119,6 +119,9 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
   demux->indexed = FALSE;
   demux->file_size = 0;
 
+  demux->index_max_pos = 0;
+  demux->index_max_time = 0;
+
   demux->audio_start = demux->video_start = GST_CLOCK_TIME_NONE;
 
   demux->no_more_pads = FALSE;
@@ -583,33 +586,103 @@ gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
 }
 
 static void
-gst_flv_demux_create_index (GstFLVDemux * demux)
+gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
 {
   gint64 size;
   GstFormat fmt = GST_FORMAT_BYTES;
   size_t tag_size;
   guint64 old_offset;
   GstBuffer *buffer;
+  GstClockTime tag_time;
 
   if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
           fmt != GST_FORMAT_BYTES))
     return;
 
+  GST_DEBUG_OBJECT (demux, "building index at %" G_GINT64_FORMAT
+      " looking for time %" GST_TIME_FORMAT, pos, GST_TIME_ARGS (ts));
+
   old_offset = demux->offset;
+  demux->offset = pos;
 
   while (gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
           &buffer) == GST_FLOW_OK) {
-    if (G_UNLIKELY (gst_flv_parse_tag_timestamp (demux, buffer,
-                &tag_size) == GST_CLOCK_TIME_NONE)) {
-      gst_buffer_unref (buffer);
-      break;
-    }
+    tag_time = gst_flv_parse_tag_timestamp (demux, TRUE, buffer, &tag_size);
 
     gst_buffer_unref (buffer);
+
+    if (G_UNLIKELY (tag_time == GST_CLOCK_TIME_NONE || tag_time > ts))
+      goto exit;
+
     demux->offset += tag_size;
   }
 
+  /* file ran out, so mark we have complete index */
+  demux->indexed = TRUE;
+
+exit:
   demux->offset = old_offset;
+}
+
+static gint64
+gst_flv_demux_get_metadata (GstFLVDemux * demux)
+{
+  gint64 ret, offset;
+  GstFormat fmt = GST_FORMAT_BYTES;
+  size_t tag_size, size;
+  GstBuffer *buffer = NULL;
+
+  if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &offset)
+          || fmt != GST_FORMAT_BYTES))
+    goto exit;
+
+  ret = offset;
+  GST_DEBUG_OBJECT (demux, "upstream size: %" G_GINT64_FORMAT, offset);
+  if (G_UNLIKELY (offset < 4))
+    goto exit;
+
+  offset -= 4;
+  if (GST_FLOW_OK != gst_flv_demux_pull_range (demux, demux->sinkpad, offset,
+          4, &buffer))
+    goto exit;
+
+  tag_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
+  GST_DEBUG_OBJECT (demux, "last tag size: %d", tag_size);
+  gst_buffer_unref (buffer);
+  buffer = NULL;
+
+  offset -= tag_size;
+  if (GST_FLOW_OK != gst_flv_demux_pull_range (demux, demux->sinkpad, offset,
+          12, &buffer))
+    goto exit;
+
+  /* a consistency check */
+  size = GST_READ_UINT24_BE (GST_BUFFER_DATA (buffer) + 1);
+  if (size != tag_size - 11) {
+    GST_DEBUG_OBJECT (demux, "tag size %d, expected %d, ",
+        "corrupt or truncated file", size, tag_size - 11);
+    goto exit;
+  }
+
+  /* try to update duration with timestamp in any case */
+  gst_flv_parse_tag_timestamp (demux, FALSE, buffer, &size);
+
+  /* maybe get some more metadata */
+  if (GST_BUFFER_DATA (buffer)[0] == 18) {
+    gst_buffer_unref (buffer);
+    buffer = NULL;
+    GST_DEBUG_OBJECT (demux, "script tag, pulling it to parse");
+    offset += 4;
+    if (GST_FLOW_OK == gst_flv_demux_pull_range (demux, demux->sinkpad, offset,
+            tag_size, &buffer))
+      gst_flv_parse_tag_script (demux, buffer);
+  }
+
+exit:
+  if (buffer)
+    gst_buffer_unref (buffer);
+
+  return ret;
 }
 
 static void
@@ -625,15 +698,21 @@ gst_flv_demux_loop (GstPad * pad)
     switch (demux->state) {
       case FLV_STATE_TAG_TYPE:
         ret = gst_flv_demux_pull_tag (pad, demux);
+        /* if we have seen real data, we probably passed a possible metadata
+         * header located at start.  So if we do not yet have an index,
+         * try to pick up metadata (index, duration) at the end */
+        if (G_UNLIKELY (!demux->file_size && !demux->indexed &&
+                (demux->has_video || demux->has_audio)))
+          demux->file_size = gst_flv_demux_get_metadata (demux);
         break;
       case FLV_STATE_DONE:
         ret = GST_FLOW_UNEXPECTED;
         break;
       default:
         ret = gst_flv_demux_pull_header (pad, demux);
-        if (ret == GST_FLOW_OK)
-          gst_flv_demux_create_index (demux);
-
+        /* index scans start after header */
+        demux->index_max_pos = demux->offset;
+        break;
     }
 
     /* pause if something went wrong */
@@ -663,7 +742,7 @@ gst_flv_demux_loop (GstPad * pad)
       default:
         ret = gst_flv_demux_pull_header (pad, demux);
         if (ret == GST_FLOW_OK)
-          gst_flv_demux_create_index (demux);
+          gst_flv_demux_create_index (demux, demux->offset, G_MAXINT64);
     }
 
     /* pause if something went wrong */
@@ -978,6 +1057,15 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
 
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     /* Do the actual seeking */
+    /* index is reliable if it is complete or we do not go to far ahead */
+    if (!demux->indexed &&
+        seeksegment.last_stop > demux->index_max_time + 10 * GST_SECOND) {
+      /* scan and build index from current maximum offset to desired time */
+      /* NOTE this will _pull_range from seeking thread, but should be ok ... */
+      gst_flv_demux_create_index (demux, demux->index_max_pos,
+          seeksegment.last_stop);
+    }
+    /* now index should be as reliable as it can be for current purpose */
     demux->offset = gst_flv_demux_find_offset (demux, &seeksegment);
 
     /* Tell all the stream we moved to a different position (discont) */

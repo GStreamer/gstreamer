@@ -36,7 +36,8 @@ GstFlowReturn gst_flv_parse_tag_type (GstFLVDemux * demux, GstBuffer *buffer);
 
 GstFlowReturn gst_flv_parse_header (GstFLVDemux * demux, GstBuffer *buffer);
 
-GstClockTime gst_flv_parse_tag_timestamp (GstFLVDemux *demux, GstBuffer *buffer, size_t *tag_data_size);
+GstClockTime gst_flv_parse_tag_timestamp (GstFLVDemux *demux, gboolean index,
+                                          GstBuffer *buffer, size_t *tag_data_size);
 
 G_END_DECLS
 #endif /* __FLV_PARSE_H__ */

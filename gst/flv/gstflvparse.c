@@ -44,6 +44,11 @@ gst_flv_parse_add_index_entry (GstFLVDemux * demux, GstClockTime ts,
   gst_index_add_associationv (demux->index, demux->index_id,
       (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
       2, (const GstIndexAssociation *) &associations);
+
+  if (pos > demux->index_max_pos)
+    demux->index_max_pos = pos;
+  if (ts > demux->index_max_time)
+    demux->index_max_time = ts;
 }
 
 static gchar *
@@ -440,11 +445,10 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
 
     g_free (function_name);
 
-    if (demux->index && demux->times && demux->filepositions
-        && !demux->random_access) {
+    if (demux->index && demux->times && demux->filepositions) {
       guint num;
 
-      /* If an index was found and we're in push mode, insert associations */
+      /* If an index was found, insert associations */
       num = MIN (demux->times->len, demux->filepositions->len);
       for (i = 0; i < num; i++) {
         guint64 time, fileposition;
@@ -1182,8 +1186,8 @@ beach:
 }
 
 GstClockTime
-gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
-    size_t * tag_size)
+gst_flv_parse_tag_timestamp (GstFLVDemux * demux, gboolean index,
+    GstBuffer * buffer, size_t * tag_size)
 {
   guint32 pts = 0, pts_ext = 0;
   guint32 tag_data_size;
@@ -1239,7 +1243,7 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
   ret = pts * GST_MSECOND;
   GST_LOG_OBJECT (demux, "pts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ret));
 
-  if (demux->index && !demux->indexed && (type == 9 || (type == 8
+  if (index && demux->index && !demux->indexed && (type == 9 || (type == 8
               && !demux->has_video))) {
     gst_flv_parse_add_index_entry (demux, ret, demux->offset, keyframe);
   }
