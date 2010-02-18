@@ -300,6 +300,8 @@ static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
     GstCaps * new_caps);
 static void gst_camerabin_configure_format (GstCameraBin * camera,
     GstCaps * caps);
+static gboolean
+copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data);
 
 /*
  * GObject callback functions declaration
@@ -2249,10 +2251,13 @@ static void
 gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
 {
   GstStructure *in_st, *new_st, *req_st;
-  gint i, in_width = 0, in_height = 0, req_width = 0, req_height = 0, crop = 0;
-  const gchar *field_name;
+  gint in_width = 0, in_height = 0, req_width = 0, req_height = 0, crop = 0;
   gdouble ratio_w, ratio_h;
   GstCaps *filter_caps = NULL;
+
+  GST_LOG_OBJECT (camera, "in caps: %" GST_PTR_FORMAT, in_caps);
+  GST_LOG_OBJECT (camera, "requested caps: %" GST_PTR_FORMAT,
+      camera->image_capture_caps);
 
   in_st = gst_caps_get_structure (in_caps, 0);
   gst_structure_get_int (in_st, "width", &in_width);
@@ -2265,16 +2270,18 @@ gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
   GST_INFO_OBJECT (camera, "we requested %dx%d, and got %dx%d", req_width,
       req_height, in_width, in_height);
 
-  /* If new fields have been added, we need to copy them */
   new_st = gst_structure_copy (req_st);
-  for (i = 0; i < gst_structure_n_fields (in_st); i++) {
-    field_name = gst_structure_nth_field_name (in_st, i);
-    if (!gst_structure_has_field (new_st, field_name)) {
-      GST_DEBUG_OBJECT (camera, "new field in new caps: %s", field_name);
-      gst_structure_set_value (new_st, field_name,
-          gst_structure_get_value (in_st, field_name));
-    }
+  /* If new fields have been added, we need to copy them */
+  gst_structure_foreach (in_st, copy_missing_fields, new_st);
+
+  if (!(camera->flags & GST_CAMERABIN_FLAG_SOURCE_RESIZE)) {
+    GST_DEBUG_OBJECT (camera,
+        "source-resize flag disabled, unable to adapt resolution");
+    gst_structure_set (new_st, "width", G_TYPE_INT, in_width, "height",
+        G_TYPE_INT, in_height, NULL);
   }
+
+  GST_LOG_OBJECT (camera, "new image capture caps: %" GST_PTR_FORMAT, new_st);
 
   /* Crop if requested aspect ratio differs from incoming frame aspect ratio */
   if (camera->src_zoom_crop) {
@@ -2345,6 +2352,19 @@ gst_camerabin_configure_format (GstCameraBin * camera, GstCaps * caps)
     gst_structure_get_fraction (st, "framerate", &camera->fps_n,
         &camera->fps_d);
   }
+}
+
+static gboolean
+copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  GstStructure *st = (GstStructure *) user_data;
+  const GValue *val = gst_structure_id_get_value (st, field_id);
+
+  if (G_UNLIKELY (val == NULL)) {
+    gst_structure_id_set_value (st, field_id, value);
+  }
+
+  return TRUE;
 }
 
 /*
