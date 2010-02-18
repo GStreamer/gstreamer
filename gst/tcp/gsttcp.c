@@ -284,7 +284,7 @@ ioctl_error:
 got_eos:
   {
     GST_DEBUG_OBJECT (this, "Got EOS on socket stream");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_UNEXPECTED;
   }
 read_error:
   {
