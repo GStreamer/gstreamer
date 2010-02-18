@@ -443,6 +443,13 @@ gst_check_element_push_buffer_list (const gchar * element_name,
     GstBuffer *new = GST_BUFFER (buffers->data);
     GstBuffer *orig = GST_BUFFER (buffer_out->data);
 
+    GST_LOG ("orig buffer: size %u, caps %" GST_PTR_FORMAT,
+        GST_BUFFER_SIZE (orig), GST_BUFFER_CAPS (orig));
+    GST_LOG ("new  buffer: size %u, caps %" GST_PTR_FORMAT,
+        GST_BUFFER_SIZE (new), GST_BUFFER_CAPS (new));
+    GST_MEMDUMP ("orig buffer", GST_BUFFER_DATA (orig), GST_BUFFER_SIZE (orig));
+    GST_MEMDUMP ("new  buffer", GST_BUFFER_DATA (new), GST_BUFFER_SIZE (new));
+
     /* remove the buffers */
     buffers = g_list_remove (buffers, new);
     buffer_out = g_list_remove (buffer_out, orig);
