@@ -421,8 +421,8 @@ gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
     }
   }
 
-  if (entry) {
-    if ((GST_INDEX_ASSOC_FLAGS (entry) & flags) != flags) {
+  if (entry && ((GST_INDEX_ASSOC_FLAGS (entry) & flags) != flags)) {
+    if (method != GST_INDEX_LOOKUP_EXACT) {
       GList *l_entry = g_list_find (memindex->associations, entry);
 
       entry = NULL;
@@ -439,6 +439,8 @@ gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
           l_entry = g_list_previous (l_entry);
         }
       }
+    } else {
+      entry = NULL;
     }
   }
 
