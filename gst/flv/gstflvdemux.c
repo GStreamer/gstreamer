@@ -117,6 +117,7 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
   demux->got_par = FALSE;
 
   demux->indexed = FALSE;
+  demux->file_size = 0;
 
   demux->audio_start = demux->video_start = GST_CLOCK_TIME_NONE;
 
