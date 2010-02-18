@@ -771,10 +771,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
       demux->duration < GST_BUFFER_TIMESTAMP (outbuf))
     demux->duration = GST_BUFFER_TIMESTAMP (outbuf);
 
-  /* Only add audio frames to the index if we have no video, if we don't have
-   * random access and if the index is not yet complete */
-  if (!demux->has_video && demux->index && !demux->random_access
-      && !demux->indexed) {
+  /* Only add audio frames to the index if we have no video,
+   * and if the index is not yet complete */
+  if (!demux->has_video && demux->index && !demux->indexed) {
     gst_flv_parse_add_index_entry (demux, GST_BUFFER_TIMESTAMP (outbuf),
         demux->cur_tag_offset, TRUE);
   }
@@ -1108,7 +1107,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
   if (!keyframe)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  if (!demux->indexed && demux->index && !demux->random_access) {
+  if (!demux->indexed && demux->index) {
     gst_flv_parse_add_index_entry (demux, GST_BUFFER_TIMESTAMP (outbuf),
         demux->cur_tag_offset, keyframe);
   }
