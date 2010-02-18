@@ -30,6 +30,8 @@
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 
+#include <string.h>
+
 static void
 window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
 {
@@ -38,6 +40,48 @@ window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
   gtk_widget_hide_all (widget);
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gtk_main_quit ();
+}
+
+/* slightly convoluted way to find a working video sink that's not a bin */
+static GstElement *
+find_video_sink (void)
+{
+  GstStateChangeReturn sret;
+  GstElement *sink;
+
+  sink = gst_element_factory_make ("xvimagesink", NULL);
+  sret = gst_element_set_state (sink, GST_STATE_READY);
+  if (sret == GST_STATE_CHANGE_SUCCESS)
+    return sink;
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_object_unref (sink);
+
+  sink = gst_element_factory_make ("ximagesink", NULL);
+  sret = gst_element_set_state (sink, GST_STATE_READY);
+  if (sret == GST_STATE_CHANGE_SUCCESS)
+    return sink;
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_object_unref (sink);
+
+  if (strcmp (DEFAULT_VIDEOSINK, "xvimagesink") == 0 ||
+      strcmp (DEFAULT_VIDEOSINK, "ximagesink") == 0)
+    return NULL;
+
+  sink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
+  if (GST_IS_BIN (sink)) {
+    gst_object_unref (sink);
+    return NULL;
+  }
+
+  sret = gst_element_set_state (sink, GST_STATE_READY);
+  if (sret == GST_STATE_CHANGE_SUCCESS)
+    return sink;
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_object_unref (sink);
+  return NULL;
 }
 
 int
@@ -58,7 +102,11 @@ main (int argc, char **argv)
 
   pipeline = gst_pipeline_new ("xvoverlay");
   src = gst_element_factory_make ("videotestsrc", NULL);
-  sink = gst_element_factory_make ("xvimagesink", NULL);
+  sink = find_video_sink ();
+
+  if (sink == NULL)
+    g_error ("Couldn't find a working video sink.");
+
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
@@ -68,10 +116,12 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (window), "delete-event",
       G_CALLBACK (window_closed), (gpointer) pipeline);
   gtk_window_set_default_size (GTK_WINDOW (window), 320, 240);
+  gtk_window_set_title (GTK_WINDOW (window), "GstXOverlay Gtk+ demo");
 
   video_window = gtk_drawing_area_new ();
   gtk_widget_set_double_buffered (video_window, FALSE);
   gtk_container_add (GTK_CONTAINER (window), video_window);
+  gtk_container_set_border_width (GTK_CONTAINER (window), 16);
 
   gtk_widget_show_all (window);
   gtk_widget_realize (window);
