@@ -2810,6 +2810,13 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (g_str_has_suffix (in_plugin->name, "_xvmc")) {
+      GST_DEBUG
+          ("Ignoring XVMC decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
