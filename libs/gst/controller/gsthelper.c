@@ -110,6 +110,7 @@ gst_object_uncontrol_properties (GObject * object, ...)
  * Returns: the controller handling some of the given element's properties, %NULL if no controller
  * Since: 0.9
  */
+/* FIXME 0.11: This should return a new reference */
 GstController *
 gst_object_get_controller (GObject * object)
 {
@@ -128,6 +129,7 @@ gst_object_get_controller (GObject * object)
  * Returns: %FALSE if the GObject already has an controller, %TRUE otherwise
  * Since: 0.9
  */
+/* FIXME 0.11: This should increase the refcount before storing */
 gboolean
 gst_object_set_controller (GObject * object, GstController * controller)
 {
