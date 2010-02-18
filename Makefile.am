@@ -103,6 +103,7 @@ win32-update:
 	for f in gstversion.h gstenumtypes.c gstenumtypes.h; do \
 		cp $(top_builddir)/gst/$$f win32/common; done
 	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
+	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
 	cp $(top_builddir)/win32/common/config.h-new \
 		$(top_srcdir)/win32/common/config.h
 
