@@ -1002,7 +1002,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
 
   for (plane = 0; plane < 3; plane++) {
     width = gst_video_format_get_component_width (format, plane, dec->width);
-    height = gst_video_format_get_component_width (format, plane, dec->height);
+    height = gst_video_format_get_component_height (format, plane, dec->height);
     stride = gst_video_format_get_row_stride (format, plane, dec->width);
 
     dest =
