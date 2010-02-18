@@ -1,14 +1,14 @@
 # Vietnamese Translation for GStreamer.
-# Copyright © 2009 Free Software Foundation, Inc.
+# Copyright © 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Clytie Siddall <clytie@riverland.net.au>, 2005-2009.
+# Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
-"PO-Revision-Date: 2009-09-18 16:57+0930\n"
+"POT-Creation-Date: 2010-02-18 14:06+0000\n"
+"PO-Revision-Date: 2010-02-09 23:00+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -76,9 +76,9 @@ msgstr "Tắt chức năng bắt lỗi phân đoạn trong khi nạp phần bổ
 msgid "Disable updating the registry"
 msgstr "Tắt khả năng cập nhật bộ đăng ký"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Tắt khả năng dùng fork() trong khi quét bộ đăng ký"
+msgstr ""
+"Tắt khả năng tạo và thực hiện tiến trình bổ trợ trong khi quét bộ đăng ký"
 
 msgid "GStreamer Options"
 msgstr "Tùy chọn GStreamer"
@@ -620,56 +620,55 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
-msgstr ""
+msgstr "hiện tên"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Tên của cuộc biểu diễn TV/podcast/bộ là gốc của phương tiện này"
 
 #. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
-#, fuzzy
 msgid "show sortname"
-msgstr "tên sắp nghệ sĩ"
+msgstr "hiện tên sắp"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Tên của cuộc biểu diễn TV/podcast/bộ là gốc của phương tiện này, cho mục "
+"đích sắp xếp"
 
-#, fuzzy
 msgid "episode number"
-msgstr "số đĩa"
+msgstr "số tình tiết"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Số thứ tự tình tiết trong mùa cung cấp phương tiện này"
 
-#, fuzzy
 msgid "season number"
-msgstr "số đĩa"
+msgstr "số mùa"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Số thứ tự mùa trong cuộc biểu diễn cung cấp phương tiện này"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "giấy phép"
+msgstr "lời nhạc"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Lời nhạc của phương tiện, thường dùng cho bài hát"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "tên sắp tựa"
+msgstr "tên sắp nhạc sĩ"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "(các) người chịu trách nhiệm về bản thu, cho mục đích sắp xếp"
+msgstr "(các) người đã soạn bản thu, cho mục đích sắp xếp"
 
 msgid "grouping"
-msgstr ""
+msgstr "nhóm lại"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Nhóm lại các phương tiện liên quan mà chiếm giữ nhiều rãnh khác nhau (v.d. "
+"các phần khác nhau của một côngxectô). Cấp này cao hơn rãnh còn thấp hơn tập "
+"nhạc."
 
 msgid ", "
 msgstr ", "
@@ -800,11 +799,11 @@ msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Chưa xác định thư mục tạm thời."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Không thể lấy thông tin về « %s »."
+msgstr "Không thể tạo tập tin tạm thời « %s »."
 
 msgid "caps"
 msgstr "khả năng"
@@ -840,7 +839,7 @@ msgid "controllable"
 msgstr "điều khiển được"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Tập tin bị cấm:"
 
 msgid "Total count: "
 msgstr "Đếm tổng: "
@@ -848,7 +847,7 @@ msgstr "Đếm tổng: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
+msgstr[0] "%d tập tin bị cấm"
 
 #, c-format
 msgid "%d plugin"
@@ -858,7 +857,7 @@ msgstr[0] "%d phần bổ sung"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
+msgstr[0] "%d mục nhập bị cấm"
 
 #, c-format
 msgid "%d feature"
@@ -869,9 +868,8 @@ msgid "Print all elements"
 msgstr "In ra mọi yếu tố"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "In danh sách các tập tin bị cấm"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
@@ -879,7 +877,7 @@ msgid ""
 "automatic plugin installation mechanisms"
 msgstr ""
 "In ra danh sách cho máy phân tích được chứa các tính năng của phần bổ sung "
-"đã ghi rõ.\n"
+"đã ghi rõ hoặc mọi phần bổ sung.\n"
 "\t\t\t\tCó ích khi dùng cơ chế tự động bên ngoài mà cài đặt phần bổ sung."
 
 msgid "List the plugin contents"
@@ -1084,12 +1082,3 @@ msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Lỗi ghi bộ nhớ tạm đăng ký vào %s: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Lỗi quét lại bộ đăng ký %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Lỗi quét lại bộ đăng ký %s"
