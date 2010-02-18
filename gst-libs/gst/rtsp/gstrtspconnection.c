@@ -946,6 +946,9 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       gchar *user_pass64;
       gchar *auth_string;
 
+      if (conn->username == NULL || conn->passwd == NULL)
+        break;
+
       user_pass = g_strdup_printf ("%s:%s", conn->username, conn->passwd);
       user_pass64 = g_base64_encode ((guchar *) user_pass, strlen (user_pass));
       auth_string = g_strdup_printf ("Basic %s", user_pass64);
@@ -967,7 +970,8 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
       const gchar *method;
 
       /* we need to have some params set */
-      if (conn->auth_params == NULL)
+      if (conn->auth_params == NULL || conn->username == NULL ||
+          conn->passwd == NULL)
         break;
 
       /* we need the realm and nonce */
