@@ -16,3 +16,5 @@ tmpl
 tmpl-build.stamp
 tmpl.stamp
 xml
+inspect-registry.*
+gstreamer-plugins*.bak
