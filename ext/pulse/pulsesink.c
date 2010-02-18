@@ -1905,6 +1905,7 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
   gboolean mute = FALSE;
 
   pa_threaded_mainloop_lock (psink->mainloop);
+  mute = psink->mute;
 
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
@@ -1922,8 +1923,6 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
     if (gst_pulsering_is_dead (psink, pbuf))
       goto unlock;
   }
-
-  mute = psink->mute;
 
 unlock:
   if (o)
