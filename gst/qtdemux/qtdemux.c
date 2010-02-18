@@ -5940,7 +5940,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (G_UNLIKELY (stream->min_duration == 0)) {
     guint32 sample_num = 1;
 
-    while (sample_num <= stream->n_samples && stream->min_duration == 0) {
+    while (sample_num < stream->n_samples && stream->min_duration == 0) {
       if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
         goto samples_failed;
       ++sample_num;
