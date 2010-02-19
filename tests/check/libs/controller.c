@@ -950,13 +950,21 @@ GST_START_TEST (controller_interpolation_unset)
   res = gst_interpolation_control_source_unset (csource, 1 * GST_SECOND);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
-
   /* verify value again */
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);
+
+  /* unset all values, reset and try to unset again */
+  fail_unless (gst_interpolation_control_source_unset (csource,
+          0 * GST_SECOND));
+  fail_unless (gst_interpolation_control_source_unset (csource,
+          2 * GST_SECOND));
+  gst_interpolation_control_source_unset_all (csource);
+  fail_if (gst_interpolation_control_source_unset (csource, 2 * GST_SECOND));
+
+  g_object_unref (csource);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);

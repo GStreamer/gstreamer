@@ -562,7 +562,7 @@ gst_interpolation_control_source_unset (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   /* check if a control point for the timestamp exists */
-  if ((iter =
+  if (G_LIKELY (self->priv->values) && (iter =
           g_sequence_search (self->priv->values, &timestamp,
               (GCompareDataFunc) gst_control_point_find, NULL))) {
     GstControlPoint *cp;
