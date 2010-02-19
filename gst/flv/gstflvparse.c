@@ -424,8 +424,8 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
         && !demux->random_access) {
       /* If an index was found and we're in push mode, insert associations */
       for (i = 0; i < MIN (demux->times->len, demux->filepositions->len); i++) {
+        GstIndexAssociation associations[2];
         guint64 time, fileposition;
-        static GstIndexAssociation associations[2];
 
         time = g_array_index (demux->times, gdouble, i) * GST_SECOND;
         fileposition = g_array_index (demux->filepositions, gdouble, i);
@@ -437,8 +437,7 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
         associations[1].value = fileposition;
 
         gst_index_add_associationv (demux->index, demux->index_id,
-            GST_ASSOCIATION_FLAG_KEY_UNIT, 2,
-            (const GstIndexAssociation *) &associations);
+            GST_ASSOCIATION_FLAG_KEY_UNIT, 2, associations);
       }
       demux->indexed = TRUE;
     }
@@ -1249,7 +1248,8 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
 
   if (demux->index && !demux->indexed && (type == 9 || (type == 8
               && !demux->has_video))) {
-    static GstIndexAssociation associations[2];
+    GstIndexAssociation associations[2];
+
     GST_LOG_OBJECT (demux,
         "adding association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
         GST_TIME_ARGS (ret), demux->offset);
@@ -1261,7 +1261,7 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
 
     gst_index_add_associationv (demux->index, demux->index_id,
         (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-        2, (const GstIndexAssociation *) &associations);
+        2, associations);
   }
 
   if (demux->duration == GST_CLOCK_TIME_NONE || demux->duration < ret)
