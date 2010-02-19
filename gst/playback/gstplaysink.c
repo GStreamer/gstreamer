@@ -1876,8 +1876,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       /* if we are not part of vis or subtitles, set the ghostpad target */
-      if (!need_vis && !need_text && !playsink->text_pad
-          && !playsink->textchain) {
+      if (!need_vis && !need_text && !playsink->textchain) {
         GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
         gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
             playsink->videochain->sinkpad);
