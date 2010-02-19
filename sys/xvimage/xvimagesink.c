@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Julien Moutte <julien@moutte.net>
+ *               <2009>,<2010> Stefan Kost <stefan.kost@nokia.com> 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -147,7 +148,7 @@ static GstBufferClass *xvimage_buffer_parent_class = NULL;
 static void gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage);
 
 static void gst_xvimagesink_xwindow_update_geometry (GstXvImageSink *
-    xvimagesink, GstXWindow * xwindow);
+    xvimagesink);
 static gint gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
     GstCaps * caps);
 static void gst_xvimagesink_expose (GstXOverlay * overlay);
@@ -731,6 +732,8 @@ static void
 gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
     GstXWindow * xwindow, GstVideoRectangle rect)
 {
+  gint t1, t2;
+
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (xwindow != NULL);
 
@@ -738,27 +741,33 @@ gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
       xvimagesink->xcontext->black);
 
   /* Left border */
-  if (rect.x > 0) {
+  if (rect.x > xvimagesink->render_rect.x) {
     XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        0, 0, rect.x, xwindow->height);
+        xvimagesink->render_rect.x, xvimagesink->render_rect.y,
+        rect.x - xvimagesink->render_rect.x, xvimagesink->render_rect.h);
   }
 
   /* Right border */
-  if ((rect.x + rect.w) < xwindow->width) {
+  t1 = rect.x + rect.w;
+  t2 = xvimagesink->render_rect.x + xvimagesink->render_rect.w;
+  if (t1 < t2) {
     XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        rect.x + rect.w, 0, xwindow->width, xwindow->height);
+        t1, xvimagesink->render_rect.y, t2 - t1, xvimagesink->render_rect.h);
   }
 
   /* Top border */
-  if (rect.y > 0) {
+  if (rect.y > xvimagesink->render_rect.y) {
     XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        0, 0, xwindow->width, rect.y);
+        xvimagesink->render_rect.x, xvimagesink->render_rect.y,
+        xvimagesink->render_rect.w, rect.y - xvimagesink->render_rect.y);
   }
 
   /* Bottom border */
-  if ((rect.y + rect.h) < xwindow->height) {
+  t1 = rect.y + rect.h;
+  t2 = xvimagesink->render_rect.y + xvimagesink->render_rect.h;
+  if (t1 < t2) {
     XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-        0, rect.y + rect.h, xwindow->width, xwindow->height);
+        xvimagesink->render_rect.x, t1, xvimagesink->render_rect.w, t2 - t1);
   }
 }
 
@@ -768,7 +777,7 @@ static gboolean
 gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
     GstXvImageBuffer * xvimage)
 {
-  GstVideoRectangle src, dst, result;
+  GstVideoRectangle result;
   gboolean draw_border = FALSE;
 
   /* We take the flow_lock. If expose is in there we don't want to run
@@ -808,19 +817,21 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
     }
   }
 
-  /* We use the calculated geometry from _setcaps as a source to respect
-     source and screen pixel aspect ratios. */
-  src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
-  src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-  dst.w = xvimagesink->xwindow->width;
-  dst.h = xvimagesink->xwindow->height;
-
   if (xvimagesink->keep_aspect) {
+    GstVideoRectangle src, dst;
+
+    /* We use the calculated geometry from _setcaps as a source to respect
+       source and screen pixel aspect ratios. */
+    src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+    src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
+    dst.w = xvimagesink->render_rect.w;
+    dst.h = xvimagesink->render_rect.h;
+
     gst_video_sink_center_rect (src, dst, &result, TRUE);
+    result.x += xvimagesink->render_rect.x;
+    result.y += xvimagesink->render_rect.y;
   } else {
-    result.x = result.y = 0;
-    result.w = dst.w;
-    result.h = dst.h;
+    memcpy (&result, &xvimagesink->render_rect, sizeof (GstVideoRectangle));
   }
 
   g_mutex_lock (xvimagesink->x_lock);
@@ -838,7 +849,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
         "XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
         GST_PTR_FORMAT,
         xvimage->width, xvimage->height,
-        xvimagesink->xwindow->width, xvimagesink->xwindow->height, xvimage);
+        xvimagesink->render_rect.w, xvimagesink->render_rect.h, xvimage);
 
     XvShmPutImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
@@ -959,6 +970,10 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
 
   xwindow = g_new0 (GstXWindow, 1);
 
+  xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
+  xvimagesink->render_rect.w = width;
+  xvimagesink->render_rect.h = height;
+
   xwindow->width = width;
   xwindow->height = height;
   xwindow->internal = TRUE;
@@ -967,8 +982,7 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
 
   xwindow->win = XCreateSimpleWindow (xvimagesink->xcontext->disp,
       xvimagesink->xcontext->root,
-      0, 0, xwindow->width, xwindow->height,
-      0, 0, xvimagesink->xcontext->black);
+      0, 0, width, height, 0, 0, xvimagesink->xcontext->black);
 
   /* We have to do that to prevent X from redrawing the background on
    * ConfigureNotify. This takes away flickering of video when resizing. */
@@ -1036,13 +1050,12 @@ gst_xvimagesink_xwindow_destroy (GstXvImageSink * xvimagesink,
 }
 
 static void
-gst_xvimagesink_xwindow_update_geometry (GstXvImageSink * xvimagesink,
-    GstXWindow * xwindow)
+gst_xvimagesink_xwindow_update_geometry (GstXvImageSink * xvimagesink)
 {
   XWindowAttributes attr;
 
-  g_return_if_fail (xwindow != NULL);
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
+  g_return_if_fail (xvimagesink->xwindow != NULL);
 
   /* Update the window geometry */
   g_mutex_lock (xvimagesink->x_lock);
@@ -1052,6 +1065,12 @@ gst_xvimagesink_xwindow_update_geometry (GstXvImageSink * xvimagesink,
 
   xvimagesink->xwindow->width = attr.width;
   xvimagesink->xwindow->height = attr.height;
+
+  if (!xvimagesink->have_render_rect) {
+    xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
+    xvimagesink->render_rect.w = attr.width;
+    xvimagesink->render_rect.h = attr.height;
+  }
 
   g_mutex_unlock (xvimagesink->x_lock);
 }
@@ -1072,7 +1091,8 @@ gst_xvimagesink_xwindow_clear (GstXvImageSink * xvimagesink,
       xvimagesink->xcontext->black);
 
   XFillRectangle (xvimagesink->xcontext->disp, xwindow->win, xwindow->gc,
-      0, 0, xwindow->width, xwindow->height);
+      xvimagesink->render_rect.x, xvimagesink->render_rect.y,
+      xvimagesink->render_rect.w, xvimagesink->render_rect.h);
 
   XSync (xvimagesink->xcontext->disp, FALSE);
 
@@ -1265,8 +1285,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
         break;
       case ConfigureNotify:
         g_mutex_unlock (xvimagesink->x_lock);
-        gst_xvimagesink_xwindow_update_geometry (xvimagesink,
-            xvimagesink->xwindow);
+        gst_xvimagesink_xwindow_update_geometry (xvimagesink);
         g_mutex_lock (xvimagesink->x_lock);
         configured = TRUE;
         break;
@@ -2677,22 +2696,22 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
       return;
     }
 
-    /* We get the frame position using the calculated geometry from _setcaps
-       that respect pixel aspect ratios */
-    src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
-    src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-    dst.w = xvimagesink->xwindow->width;
-    dst.h = xvimagesink->xwindow->height;
+    if (xvimagesink->keep_aspect) {
+      /* We get the frame position using the calculated geometry from _setcaps
+         that respect pixel aspect ratios */
+      src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+      src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
+      dst.w = xvimagesink->render_rect.w;
+      dst.h = xvimagesink->render_rect.h;
+
+      gst_video_sink_center_rect (src, dst, &result, TRUE);
+      result.x += xvimagesink->render_rect.x;
+      result.y += xvimagesink->render_rect.y;
+    } else {
+      memcpy (&result, &xvimagesink->render_rect, sizeof (GstVideoRectangle));
+    }
 
     g_mutex_unlock (xvimagesink->flow_lock);
-
-    if (xvimagesink->keep_aspect) {
-      gst_video_sink_center_rect (src, dst, &result, TRUE);
-    } else {
-      result.x = result.y = 0;
-      result.w = dst.w;
-      result.h = dst.h;
-    }
 
     /* We calculate scaling using the original video frames geometry to include
        pixel aspect ratio scaling. */
@@ -2729,7 +2748,6 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
   GstXWindow *xwindow = NULL;
-  XWindowAttributes attr;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
@@ -2779,15 +2797,10 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     }
   } else {
     xwindow = g_new0 (GstXWindow, 1);
-
     xwindow->win = xwindow_id;
 
-    /* We get window geometry, set the event we want to receive,
-       and create a GC */
+    /* Set the event we want to receive and create a GC */
     g_mutex_lock (xvimagesink->x_lock);
-    XGetWindowAttributes (xvimagesink->xcontext->disp, xwindow->win, &attr);
-    xwindow->width = attr.width;
-    xwindow->height = attr.height;
     xwindow->internal = FALSE;
     if (xvimagesink->handle_events) {
       XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
@@ -2811,7 +2824,7 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
-  gst_xvimagesink_xwindow_update_geometry (xvimagesink, xvimagesink->xwindow);
+  gst_xvimagesink_xwindow_update_geometry (xvimagesink);
   gst_xvimagesink_xvimage_put (xvimagesink, NULL);
 }
 
@@ -2852,11 +2865,29 @@ gst_xvimagesink_set_event_handling (GstXOverlay * overlay,
 }
 
 static void
+gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay,
+    GstVideoRectangle * rect)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
+
+  if (rect) {
+    memcpy (&xvimagesink->render_rect, rect, sizeof (GstVideoRectangle));
+    xvimagesink->have_render_rect = TRUE;
+  } else {
+    xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
+    xvimagesink->render_rect.w = xvimagesink->xwindow->width;
+    xvimagesink->render_rect.h = xvimagesink->xwindow->height;
+    xvimagesink->have_render_rect = FALSE;
+  }
+}
+
+static void
 gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_xvimagesink_set_xwindow_id;
   iface->expose = gst_xvimagesink_expose;
   iface->handle_events = gst_xvimagesink_set_event_handling;
+  iface->set_render_rectangle = gst_xvimagesink_set_render_rectangle;
 }
 
 static const GList *
@@ -3307,6 +3338,10 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
     gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
     xvimagesink->xwindow = NULL;
   }
+
+  xvimagesink->render_rect.x = xvimagesink->render_rect.y =
+      xvimagesink->render_rect.w = xvimagesink->render_rect.h = 0;
+  xvimagesink->have_render_rect = FALSE;
 
   gst_xvimagesink_xcontext_clear (xvimagesink);
 }

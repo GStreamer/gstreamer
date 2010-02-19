@@ -286,6 +286,10 @@ struct _GstXvImageSink {
   
   /* stream metadata */
   gchar *media_title;
+
+  /* target video rectagle */
+  GstVideoRectangle render_rect;
+  gboolean have_render_rect;
 };
 
 struct _GstXvImageSinkClass {
