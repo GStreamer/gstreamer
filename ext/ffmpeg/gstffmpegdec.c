@@ -2441,9 +2441,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
    * interpollation can work. */
   ffmpegdec->clear_ts = TRUE;
 
-  /* append the unaltered buffer timestamp to list */
-  gst_ts_handler_append (ffmpegdec, inbuf);
-
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
@@ -2457,6 +2454,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");
     ffmpegdec->waiting_for_key = FALSE;
   }
+
+  /* append the unaltered buffer timestamp to list */
+  gst_ts_handler_append (ffmpegdec, inbuf);
 
   in_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   in_duration = GST_BUFFER_DURATION (inbuf);
