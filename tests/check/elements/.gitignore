@@ -38,6 +38,7 @@ rtp-payloading
 rtpbin
 rtpbin_buffer_list
 rtpjitterbuffer
+shapewipe
 souphttpsrc
 spectrum
 sunaudio
