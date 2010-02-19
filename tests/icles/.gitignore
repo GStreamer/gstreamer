@@ -4,4 +4,5 @@ test-textoverlay
 test-scale
 test-box
 test-colorkey
+test-xoverlay
 playbin-text
