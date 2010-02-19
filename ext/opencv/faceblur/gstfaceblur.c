@@ -118,6 +118,8 @@ gst_faceblur_finalize (GObject * obj)
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvGray);
   }
+  
+  g_free (filter->profile);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -184,7 +186,7 @@ gst_faceblur_init (Gstfaceblur * filter, GstfaceblurClass * gclass)
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->profile = DEFAULT_PROFILE;
+  filter->profile = g_strdup (DEFAULT_PROFILE);
   gst_faceblur_load_profile (filter);
 }
 
@@ -196,6 +198,7 @@ gst_faceblur_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
+      g_free (filter->profile);
       filter->profile = g_value_dup_string (value);
       gst_faceblur_load_profile (filter);
       break;
@@ -213,7 +216,7 @@ gst_faceblur_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      g_value_take_string (value, filter->profile);
+      g_value_set_string (value, filter->profile);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
