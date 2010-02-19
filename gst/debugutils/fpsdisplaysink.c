@@ -228,6 +228,9 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
   /* create child elements */
   self->video_sink = video_sink;
 
+  if (self->video_sink == NULL)
+    return;
+
   fps_display_sink_update_sink_sync (self);
 
   /* take a ref before bin takes the ownership */
@@ -240,7 +243,6 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
   self->data_probe_id = gst_pad_add_data_probe (sink_pad,
       G_CALLBACK (on_video_sink_data_flow), (gpointer) self);
   gst_object_unref (sink_pad);
-
 }
 
 static void
@@ -467,6 +469,7 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
 
       if (self->video_sink == NULL) {
         GstElement *video_sink;
+
         GST_DEBUG_OBJECT (self, "No video sink set, creating autovideosink");
         video_sink = gst_element_factory_make ("autovideosink",
             "fps-display-video_sink");
@@ -476,8 +479,8 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
       if (self->video_sink != NULL) {
         fps_display_sink_start (self);
       } else {
-        GST_ERROR_OBJECT (self, "Internal sink isn't set and autovideosink "
-            "could not be created");
+        GST_ELEMENT_ERROR (self, LIBRARY, INIT,
+            ("No video sink set and autovideosink is not available"), (NULL));
         ret = GST_STATE_CHANGE_FAILURE;
       }
       break;
