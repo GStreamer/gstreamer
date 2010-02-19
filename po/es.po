@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-29 20:36+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -226,15 +226,6 @@ msgstr "Este tipo de flujo no se puede reproducir aún."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "No existe un manejador URI implementado para «%s»."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "No se pudo crear el elemento «decodebin2»."
-
-msgid "Could not create \"queue2\" element."
-msgstr "No se pudo crear el elemento «queue2»."
-
-msgid "Could not create \"typefind\" element."
-msgstr "No se pudo crear el elemento «typefind»."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -483,6 +474,15 @@ msgstr "El dispositivo «%s» ya se está usando."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "No se pudo abrir el dispositivo «%s» para su lectura y escritura."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "No se pudo crear el elemento «decodebin2»."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "No se pudo crear el elemento «queue2»."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "No se pudo crear el elemento «typefind»."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "No se pueden mostrar a la vez subtítulos de texto y subimágenes."

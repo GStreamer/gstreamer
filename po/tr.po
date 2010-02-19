@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-18 18:06+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -220,15 +220,6 @@ msgstr "Bu akış türü henüz çalınamıyor."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Hiç bir URI bağlantısı sağlanmadı \"%s\"."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Bir \"decodebin2\" öğesi oluşturamıyor."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Bir \"queue2\" öğesi oluşturamıyor."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Bir \"typefind\" öğesi oluşturamıyor."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -492,6 +483,15 @@ msgstr "Şu aygıtı\"%s\" for okuma veya yazma için açamıyor."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "İç veri akışı hatası."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Bir \"decodebin2\" öğesi oluşturamıyor."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Bir \"queue2\" öğesi oluşturamıyor."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Bir \"typefind\" öğesi oluşturamıyor."
 
 #~ msgid "No file name specified."
 #~ msgstr "Dosya adı belirtilmedi."

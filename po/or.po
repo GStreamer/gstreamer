@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -227,16 +227,6 @@ msgstr ""
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
-
-msgid "Could not create \"decodebin2\" element."
-msgstr ""
-
-msgid "Could not create \"queue2\" element."
-msgstr ""
-
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -485,6 +475,10 @@ msgstr "\"%s\" ଓ.ଏସ.ଏସ. ଯନ୍ତ୍ର ପୂର୍ବରୁ ଅ�
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#, fuzzy
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

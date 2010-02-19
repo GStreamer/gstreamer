@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -225,16 +225,6 @@ msgstr ""
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
-
-msgid "Could not create \"decodebin2\" element."
-msgstr ""
-
-msgid "Could not create \"queue2\" element."
-msgstr ""
-
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "I pamundur shkrimi tek file \"%s\"."
 
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -483,6 +473,10 @@ msgstr "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
+
+#, fuzzy
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "I pamundur shkrimi tek file \"%s\"."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -220,15 +220,6 @@ msgstr "此类型的数据流尚不能播放。"
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "无法创建“decodebin”组件。"
-
-msgid "Could not create \"queue2\" element."
-msgstr "无法创建“queue2”组件。"
-
-msgid "Could not create \"typefind\" element."
-msgstr "无法创建“typefind”组件。"
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -483,3 +474,9 @@ msgstr "无法打开设备“%s”读取。"
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "无法打开文件“%s”读取。"
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "无法创建“decodebin”组件。"
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "无法创建“queue2”组件。"

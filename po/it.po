@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-17 23:19+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -231,15 +231,6 @@ msgstr "Non è ancora possibile riprodurre questo tipo di stream."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nessun gestore di URI implementato per «%s»."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Impossibile creare l'elemento «decodebin2»."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Impossibile creare l'elemento «queue2»."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Impossibile creare l'elemento «typefind»."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -506,6 +497,15 @@ msgstr "Il device «%s» è già in uso."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Impossibile creare l'elemento «decodebin2»."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Impossibile creare l'elemento «queue2»."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Impossibile creare l'elemento «typefind»."
 
 # NOTA NOTA NOTA
 # questo messaggio è stanissimo

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2007-11-03 14:50+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -223,15 +223,6 @@ msgstr ""
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr ""
-
-msgid "Could not create \"decodebin2\" element."
-msgstr ""
-
-msgid "Could not create \"queue2\" element."
-msgstr ""
-
-msgid "Could not create \"typefind\" element."
 msgstr ""
 
 #, c-format

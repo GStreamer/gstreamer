@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2010-01-29 14:48+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -227,15 +227,6 @@ msgstr "Потоци от този тип все още не могат да б�
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Обработката на адреси „%s“ не е реализирана."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Не може да се създаде елемент „decodebin2“."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Не може да се създаде елемент „queue2“."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Не може да се създаде елемент „typefind“."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -484,3 +475,12 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Не може да се създаде елемент „decodebin2“."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Не може да се създаде елемент „queue2“."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Не може да се създаде елемент „typefind“."

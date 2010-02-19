@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-05-04 12:58+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -231,15 +231,6 @@ msgstr "Deze stroom kan nog niet afgespeeld worden."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Kan het element \"decodebin2\" niet aanmaken."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Kan het element \"queue2\" niet aanmaken."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Kan \"typefind\"-element niet aanmaken."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -488,6 +479,15 @@ msgstr "Apparaat \"%s\" is al in gebruik."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kan apparaat \"%s\" niet openen voor lezen en schrijven."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Kan het element \"decodebin2\" niet aanmaken."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Kan het element \"queue2\" niet aanmaken."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Kan \"typefind\"-element niet aanmaken."
 
 #, fuzzy
 #~ msgid "Can't display both text subtitles and subpictures."

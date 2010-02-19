@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-21 01:21+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -227,15 +227,6 @@ msgstr "Tento typ proudu zatím nemůže být přehrán."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "U \"%s\" není prováděna obsluha URI."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Nezdařilo se vytvoření prvku \"decodebin2\"."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Nezdařilo se vytvoření prvku \"queue2\"."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Nezdařilo se vytvoření prvku \"typefind\"."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -484,6 +475,15 @@ msgstr "Zařízení \"%s\" je již používáno."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Zařízení \"%s\" se nezdařilo otevřít ke čtení a k zápisu."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nezdařilo se vytvoření prvku \"decodebin2\"."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nezdařilo se vytvoření prvku \"queue2\"."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Nezdařilo se vytvoření prvku \"typefind\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Textové titulky ani podřazené obrázky nelze zobrazit."

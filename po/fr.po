@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-22 19:21+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -232,15 +232,6 @@ msgstr "Ce type de flux ne peut pas encore être lu."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Aucun gestionnaire d'URI implémenté pour « %s »."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Impossible de créer un élément « decodebin2 »."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Impossible de créer un élément « queue2 »."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Impossible de créer un élément « typefind »."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -490,6 +481,15 @@ msgstr "Le périphérique « %s » est déjà en cours d'utilisation."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Impossible de créer un élément « decodebin2 »."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Impossible de créer un élément « queue2 »."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Impossible de créer un élément « typefind »."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Impossible d'afficher à la fois des sous-titres et des sous-images."

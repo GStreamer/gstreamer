@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-10-21 23:53+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -228,15 +228,6 @@ msgstr "Ez az adatfolyamtípus még nem játszható le."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nincs URI kezelő megvalósítva a következőhöz: „%s”."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Nem hozható létre „decodebin2” elem."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Nem hozható létre „queue2” elem."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Nem hozható létre „typefind” elem."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -485,6 +476,15 @@ msgstr "Az eszköz („%s”) már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nem hozható létre „decodebin2” elem."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nem hozható létre „queue2” elem."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Nem hozható létre „typefind” elem."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Nem jeleníthető meg együtt a szöveges felirat és a részképek."

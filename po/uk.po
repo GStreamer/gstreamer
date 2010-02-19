@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -228,16 +228,6 @@ msgstr "Цей потік поки-що не може бути відтворе�
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Не реалізовано обробник URI для \"%s\"."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Не вдається створити елемент \"decodebin2\"."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Не вдається створити елемент \"queue2\"."
-
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "Не вдається створити елемент \"decodebin\"."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -487,6 +477,16 @@ msgstr "Пристрій \"%s\" вже використовується іншо
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Не вдається створити елемент \"decodebin2\"."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Не вдається створити елемент \"queue2\"."
+
+#, fuzzy
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Не вдається створити елемент \"decodebin\"."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

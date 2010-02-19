@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-01-11 20:45+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -232,15 +232,6 @@ msgstr "このストリームタイプをまだ再生することはできませ
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "\"%s\" 用の URI ハンドラの実装はありません"
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "\"decodebin2\" エレメントを作成できませんでした"
-
-msgid "Could not create \"queue2\" element."
-msgstr "\"queue2\" エレメントを作成できませんでした"
-
-msgid "Could not create \"typefind\" element."
-msgstr "\"typefind\" エレメントを作成できませんでした"
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -489,6 +480,15 @@ msgstr "デバイス \"%s\" は既に使われています"
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした"
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "\"queue2\" エレメントを作成できませんでした"
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "\"typefind\" エレメントを作成できませんでした"
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

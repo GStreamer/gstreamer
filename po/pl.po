@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-17 18:51+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -231,15 +231,6 @@ msgstr "Tego strumienia jeszcze nie można odtworzyć."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Nie udało się utworzyć elementu \"decodebin2\"."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Nie udało się utworzyć elementu \"queue2\"."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Nie udało się utworzyć elementu \"typefind\"."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -488,6 +479,15 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nie udało się utworzyć elementu \"decodebin2\"."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nie udało się utworzyć elementu \"queue2\"."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Nie udało się utworzyć elementu \"typefind\"."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Nie można wyświetlać jednocześnie podpisów tekstowych i podobrazów."

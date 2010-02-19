@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-18 17:37+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -226,15 +226,6 @@ msgstr "Den här strömtypen kan inte spelas upp än."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-hanterare implementerad för \"%s\"."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Kunde inte skapa \"decodebin2\"-element."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Kunde inte skapa \"queue2\"-element."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Kunde inte skapa \"typefind\"-element."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -483,6 +474,15 @@ msgstr "Enheten \"%s\" används redan."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Kunde inte skapa \"decodebin2\"-element."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Kunde inte skapa \"queue2\"-element."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Kunde inte skapa \"typefind\"-element."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Kan inte visa både undertexter och underbilder."

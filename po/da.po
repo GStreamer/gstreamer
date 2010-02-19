@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2009-09-17 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -227,17 +227,6 @@ msgstr "Denne type lydstrøm kan ikke afspilles endnu."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-håndtering er implementeret for \"%s\"."
-
-# eller oprette (evt. sammensat).
-# beholdt danne og ikke sammensat da tillægsord.
-msgid "Could not create \"decodebin2\" element."
-msgstr "Kunne ikke danne et \"decodebin2\" element."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Kunne ikke danne et \"queue2\" element."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Kunne ikke danne et \"typefind\" element."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -490,6 +479,17 @@ msgstr "Enheden \"%s\" er allerede i brug."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke tilgå enheden \"%s\"."
+
+# eller oprette (evt. sammensat).
+# beholdt danne og ikke sammensat da tillægsord.
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Kunne ikke danne et \"decodebin2\" element."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Kunne ikke danne et \"queue2\" element."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Kunne ikke danne et \"typefind\" element."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Kan ikke vise både undertekster og underbilleder."

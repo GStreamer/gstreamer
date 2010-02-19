@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-10 19:43+0000\n"
+"POT-Creation-Date: 2010-02-18 20:27+0000\n"
 "PO-Revision-Date: 2010-02-09 22:34+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -221,15 +221,6 @@ msgstr "Chưa có khả năng phát kiểu luồng này."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho « %s »."
-
-msgid "Could not create \"decodebin2\" element."
-msgstr "Không thể tạo phần tử « decodebin2 »."
-
-msgid "Could not create \"queue2\" element."
-msgstr "Không thể tạo phần tử « queue2 »."
-
-msgid "Could not create \"typefind\" element."
-msgstr "Không thể tạo phần tử « typefind »."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -483,3 +474,12 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Không thể tạo phần tử « decodebin2 »."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Không thể tạo phần tử « queue2 »."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Không thể tạo phần tử « typefind »."
