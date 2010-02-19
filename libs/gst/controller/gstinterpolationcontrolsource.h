@@ -97,8 +97,8 @@ GType gst_interpolation_control_source_get_type (void);
 
 GstInterpolationControlSource *gst_interpolation_control_source_new (void);
 gboolean gst_interpolation_control_source_set_interpolation_mode (GstInterpolationControlSource *self, GstInterpolateMode mode);
-gboolean gst_interpolation_control_source_set (GstInterpolationControlSource * self, GstClockTime timestamp, GValue * value);
-gboolean gst_interpolation_control_source_set_from_list (GstInterpolationControlSource * self, GSList * timedvalues);
+gboolean gst_interpolation_control_source_set (GstInterpolationControlSource * self, GstClockTime timestamp, const GValue * value);
+gboolean gst_interpolation_control_source_set_from_list (GstInterpolationControlSource * self, const GSList * timedvalues);
 gboolean gst_interpolation_control_source_unset (GstInterpolationControlSource * self, GstClockTime timestamp);
 void gst_interpolation_control_source_unset_all (GstInterpolationControlSource *self);
 GList *gst_interpolation_control_source_get_all (GstInterpolationControlSource * self);

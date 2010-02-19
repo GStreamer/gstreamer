@@ -421,7 +421,7 @@ gst_control_point_find (gconstpointer p1, gconstpointer p2)
 
 static GstControlPoint *
 _make_new_cp (GstInterpolationControlSource * self, GstClockTime timestamp,
-    GValue * value)
+    const GValue * value)
 {
   GstControlPoint *cp;
 
@@ -436,7 +436,7 @@ _make_new_cp (GstInterpolationControlSource * self, GstClockTime timestamp,
 
 static void
 gst_interpolation_control_source_set_internal (GstInterpolationControlSource *
-    self, GstClockTime timestamp, GValue * value)
+    self, GstClockTime timestamp, const GValue * value)
 {
   GSequenceIter *iter;
 
@@ -486,7 +486,7 @@ done:
  */
 gboolean
 gst_interpolation_control_source_set (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GValue * value)
+    GstClockTime timestamp, const GValue * value)
 {
   g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
@@ -511,9 +511,9 @@ gst_interpolation_control_source_set (GstInterpolationControlSource * self,
  */
 gboolean
 gst_interpolation_control_source_set_from_list (GstInterpolationControlSource *
-    self, GSList * timedvalues)
+    self, const GSList * timedvalues)
 {
-  GSList *node;
+  const GSList *node;
   GstTimedValue *tv;
   gboolean res = FALSE;
 
