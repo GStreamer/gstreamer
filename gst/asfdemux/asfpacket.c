@@ -357,7 +357,10 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
     if (payload.rep_data_len >= 8) {
       payload.mo_size = GST_READ_UINT32_LE (payload.rep_data);
       payload.ts = GST_READ_UINT32_LE (payload.rep_data + 4) * GST_MSECOND;
-      payload.ts -= demux->preroll;
+      if (G_UNLIKELY (payload.ts < demux->preroll))
+        payload.ts = 0;
+      else
+        payload.ts -= demux->preroll;
       asf_payload_parse_replicated_data_extensions (stream, &payload);
 
       GST_LOG_OBJECT (demux, "media object size   : %u", payload.mo_size);
@@ -412,7 +415,11 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
     *p_data += payload_len;
     *p_size -= payload_len;
 
-    ts = payload.mo_offset * GST_MSECOND - demux->preroll;
+    ts = payload.mo_offset * GST_MSECOND;
+    if (G_UNLIKELY (ts < demux->preroll))
+      ts = 0;
+    else
+      ts -= demux->preroll;
     ts_delta = payload.rep_data[0] * GST_MSECOND;
 
     for (num = 0; payload_len > 0; ++num) {
