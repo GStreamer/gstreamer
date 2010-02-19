@@ -422,8 +422,11 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
 
     if (demux->index && demux->times && demux->filepositions
         && !demux->random_access) {
+      guint num;
+
       /* If an index was found and we're in push mode, insert associations */
-      for (i = 0; i < MIN (demux->times->len, demux->filepositions->len); i++) {
+      num = MIN (demux->times->len, demux->filepositions->len);
+      for (i = 0; i < num; i++) {
         GstIndexAssociation associations[2];
         guint64 time, fileposition;
 
