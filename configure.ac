@@ -267,6 +267,7 @@ else
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec \
 		 -I \$(top_srcdir)/gst-libs/ext/ffmpeg \
+		 -I \$(top_builddir)/gst-libs/ext/ffmpeg \
                  -Wno-deprecated-declarations"
 
   dnl libgstffmpeg.la: libs to statically link to        
@@ -278,6 +279,7 @@ else
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec 	\
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
+		   -I \$(top_builddir)/gst-libs/ext/ffmpeg \
                    -Wno-deprecated-declarations"
 
   dnl libgstpostproc.la: libs to statically link to
@@ -288,6 +290,7 @@ else
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libswscale	\
                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
+		   -I \$(top_builddir)/gst-libs/ext/ffmpeg \
                   -Wno-deprecated-declarations"
 
   dnl libgstswscale.la: libs to statically link to
