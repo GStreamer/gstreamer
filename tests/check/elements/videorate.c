@@ -53,10 +53,23 @@ static GstPad *mysrcpad, *mysinkpad;
     "framerate = (fraction) 25/1 , "	\
     "format = (fourcc) I420"
 
+#define VIDEO_CAPS_UNUSUAL_FRAMERATE    \
+    "video/x-raw-yuv, "                 \
+    "width = (int) 240, "               \
+    "height = (int) 120, "              \
+    "framerate = (fraction) 999/7 , "	\
+    "format = (fourcc) I420"
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
+    );
+static GstStaticPadTemplate downstreamsinktemplate =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VIDEO_CAPS_STRING)
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -89,18 +102,25 @@ G_STMT_START {                                                          \
 }
 
 static GstElement *
-setup_videorate (void)
+setup_videorate_full (GstStaticPadTemplate * srctemplate,
+    GstStaticPadTemplate * sinktemplate)
 {
   GstElement *videorate;
 
   GST_DEBUG ("setup_videorate");
   videorate = gst_check_setup_element ("videorate");
-  mysrcpad = gst_check_setup_src_pad (videorate, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (videorate, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (videorate, srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (videorate, sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
   return videorate;
+}
+
+static GstElement *
+setup_videorate (void)
+{
+  return setup_videorate_full (&srctemplate, &sinktemplate);
 }
 
 static void
@@ -657,6 +677,89 @@ GST_START_TEST (test_non_ok_flow)
 
 GST_END_TEST;
 
+GST_START_TEST (test_upstream_caps_nego)
+{
+  GstElement *videorate;
+  GstPad *videorate_pad;
+  GstCaps *expected_caps;
+  GstCaps *caps;
+  GstStructure *structure;
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  videorate_pad = gst_element_get_pad (videorate, "sink");
+  caps = gst_pad_get_caps (videorate_pad);
+
+  /* assemble the expected caps */
+  structure = gst_structure_from_string (VIDEO_CAPS_STRING, NULL);
+  expected_caps = gst_caps_new_empty ();
+  gst_caps_append_structure (expected_caps, structure);
+  structure = gst_structure_copy (structure);
+  gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
+      0, 1, G_MAXINT, 1, NULL);
+  gst_caps_append_structure (expected_caps, structure);
+
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+  gst_object_unref (videorate_pad);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_selected_caps)
+{
+  GstElement *videorate;
+  GstElement *pipeline;
+  GstBus *bus;
+  GstMessage *msg;
+
+  GstPad *videorate_pad;
+  GstCaps *caps = NULL;
+  GstCaps *expected_caps = NULL;
+
+  pipeline = gst_parse_launch ("videotestsrc num-buffers=1 ! "
+      "! identity ! videorate name=videorate0 ! " VIDEO_CAPS_UNUSUAL_FRAMERATE
+      " ! fakesink", NULL);
+  fail_if (pipeline == NULL);
+  videorate = gst_bin_get_by_name (GST_BIN (pipeline), "videorate0");
+  fail_if (videorate == NULL);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  fail_if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE,
+      "could not set to playing");
+
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_if (msg == NULL || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+
+  videorate_pad = gst_element_get_pad (videorate, "sink");
+  g_object_get (videorate_pad, "caps", &caps, NULL);
+  expected_caps = gst_caps_from_string (VIDEO_CAPS_UNUSUAL_FRAMERATE);
+
+  fail_unless (gst_caps_is_equal (expected_caps, caps));
+
+  /* cleanup */
+  gst_object_unref (bus);
+  gst_message_unref (msg);
+  gst_caps_unref (caps);
+  gst_caps_unref (expected_caps);
+  gst_object_unref (videorate_pad);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -671,6 +774,8 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_no_framerate);
   tcase_add_test (tc_chain, test_changing_size);
   tcase_add_test (tc_chain, test_non_ok_flow);
+  tcase_add_test (tc_chain, test_upstream_caps_nego);
+  tcase_add_test (tc_chain, test_selected_caps);
 
   return s;
 }
