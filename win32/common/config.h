@@ -66,7 +66,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -187,6 +187,9 @@
 
 /* make use of iso-codes for ISO-639 */
 #undef HAVE_ISO_CODES
+
+/* Define to enable integer vorbis plug-in (used by ivorbisdec). */
+#undef HAVE_IVORBIS
 
 /* Define to 1 if you have the `asound' library (-lasound). */
 #undef HAVE_LIBASOUND
@@ -319,7 +322,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.26"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.26.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -328,7 +331,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.26"
+#define PACKAGE_VERSION "0.10.26.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -356,7 +359,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.26"
+#define VERSION "0.10.26.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
