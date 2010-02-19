@@ -727,6 +727,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
   GstRingBufferSpec *spec;
   GstClockTime now;
+  GstClockTime crate_num, crate_denom;
 
   if (!sink->ringbuffer)
     return FALSE;
@@ -764,6 +765,13 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
     gst_ring_buffer_activate (sink->ringbuffer, TRUE);
   }
+
+  /* due to possible changes in the spec file we should recalibrate the clock */
+  gst_clock_get_calibration (sink->provided_clock, NULL, NULL,
+      &crate_num, &crate_denom);
+  gst_clock_set_calibration (sink->provided_clock,
+      gst_clock_get_internal_time (sink->provided_clock), now, crate_num,
+      crate_denom);
 
   /* calculate actual latency and buffer times.
    * FIXME: In 0.11, store the latency_time internally in ns */
