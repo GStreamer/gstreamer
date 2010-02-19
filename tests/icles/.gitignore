@@ -3,3 +3,5 @@ metadata_editor
 output-selector-test
 test-oss4
 pitch-test
+cog-test
+cog-test.c
