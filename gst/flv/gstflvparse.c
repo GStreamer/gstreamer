@@ -433,32 +433,49 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
     GST_LOG_OBJECT (demux, "function name is %s", GST_STR_NULL (function_name));
 
     if (function_name != NULL && strcmp (function_name, "onMetaData") == 0) {
-      guint32 nb_elems = 0;
       gboolean end_marker = FALSE;
-
       GST_DEBUG_OBJECT (demux, "we have a metadata script object");
 
-      /* Next type must be a ECMA array */
-      if (!gst_byte_reader_get_uint8 (&reader, &type) || type != 8) {
+      if (!gst_byte_reader_get_uint8 (&reader, &type)) {
         g_free (function_name);
         return GST_FLOW_OK;
       }
 
-      if (!gst_byte_reader_get_uint32_be (&reader, &nb_elems)) {
-        g_free (function_name);
-        return GST_FLOW_OK;
-      }
+      switch (type) {
+        case 8:
+        {
+          guint32 nb_elems = 0;
 
-      GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
-          nb_elems);
+          /* ECMA array */
+          if (!gst_byte_reader_get_uint32_be (&reader, &nb_elems)) {
+            g_free (function_name);
+            return GST_FLOW_OK;
+          }
 
-      while (nb_elems-- && !end_marker) {
-        gboolean ok = gst_flv_parse_metadata_item (demux, &reader, &end_marker);
-
-        if (G_UNLIKELY (!ok)) {
-          GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
-          break;
+          /* The number of elements is just a hint, some files have 
+             nb_elements == 0 and actually contain items. */
+          GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
+              nb_elems);
         }
+          /* fallthrough to read data */
+        case 3:
+        {
+          /* Object */
+          while (!end_marker) {
+            gboolean ok =
+                gst_flv_parse_metadata_item (demux, &reader, &end_marker);
+
+            if (G_UNLIKELY (!ok)) {
+              GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
+              break;
+            }
+          }
+        }
+          break;
+        default:
+          GST_DEBUG_OBJECT (demux, "Unhandled script data type : %d", type);
+          g_free (function_name);
+          return GST_FLOW_OK;
       }
 
       demux->push_tags = TRUE;
