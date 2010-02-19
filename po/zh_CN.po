@@ -3,23 +3,22 @@
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Wenzheng Hu <db_lobster@163.com>, 2007.
 # LI Daobing <lidaobing@gmail.com>, 2008.
-# Ji ZhengYu <zhengyuji@gmail.com>, 2008.
+# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-11-23 10:32+0100\n"
-"PO-Revision-Date: 2009-01-14 12:04+0800\n"
+"POT-Creation-Date: 2010-02-19 08:51+0000\n"
+"PO-Revision-Date: 2009-11-20 18:12中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
-"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
-"sourceforge.net>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not read title information for DVD."
-msgstr "无法读取 DVD 的标头信息。"
+msgstr "无法读取 DVD 的标题信息。"
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
@@ -71,11 +70,10 @@ msgstr ""
 "无法打开音频设备进行音量控制操作。此部件不支持开放声音系统(OSS)的版本。"
 
 msgid "Volume"
-msgstr ""
+msgstr "音量"
 
-#, fuzzy
 msgid "Master"
-msgstr "快"
+msgstr "主声道"
 
 msgid "Front"
 msgstr "前置声道"
@@ -86,14 +84,12 @@ msgstr "后置声道"
 msgid "Headphones"
 msgstr "头戴式耳机"
 
-#, fuzzy
 msgid "Center"
-msgstr "中置/低音炮"
+msgstr "中置"
 
 msgid "LFE"
-msgstr ""
+msgstr "低音炮"
 
-#, fuzzy
 msgid "Surround"
 msgstr "立体声环绕"
 
@@ -101,173 +97,164 @@ msgid "Side"
 msgstr "左右声道"
 
 msgid "Built-in Speaker"
-msgstr ""
+msgstr "内建扬声器"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 输出"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 输出"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX 输出"
 
 msgid "Bass"
-msgstr ""
+msgstr "Bass"
 
 msgid "Treble"
-msgstr ""
+msgstr "Treble"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D Depth"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D Center"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "3D Enhance"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "头戴式耳机"
-
-msgid "Microphone"
 msgstr "话筒"
 
-msgid "Line Out"
-msgstr ""
+msgid "Microphone"
+msgstr "麦克风"
 
-#, fuzzy
+msgid "Line Out"
+msgstr "线路输出"
+
 msgid "Line In"
 msgstr "线路输入"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "内部 CD 音频"
 
 msgid "Video In"
-msgstr ""
+msgstr "视频输入"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 输入"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 输入"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX 输入"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Record Gain"
-msgstr ""
+msgstr "录音增益"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "输出增益"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "话筒"
+msgstr "麦克风增益"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Loopback"
 
+#, fuzzy
 msgid "Diagnostic"
-msgstr ""
+msgstr "采样分析"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Bass 增益"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "回放端口"
 
 msgid "Input"
 msgstr "输入"
 
 msgid "Record Source"
-msgstr ""
+msgstr "录音来源"
 
 msgid "Monitor Source"
-msgstr ""
+msgstr "监视器来源"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "按键声音"
 
 msgid "Monitor"
-msgstr ""
+msgstr "监视器"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "模拟立体声"
 
 msgid "Stereo"
 msgstr "立体声"
 
-#, fuzzy
 msgid "Surround Sound"
 msgstr "立体声环绕"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "话筒"
+msgstr "麦克风增益"
 
 msgid "Speaker Source"
-msgstr ""
+msgstr "扬声器音源"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "话筒"
+msgstr "麦克风音源"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
 msgstr "中置/低音炮"
 
-#, fuzzy
 msgid "Stereo Mix"
 msgstr "立体声"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "单声道"
 
-#, fuzzy
 msgid "Input Mix"
 msgstr "混音输入"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF 输入"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF 输出"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "话筒"
+msgstr "麦克风 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "话筒"
+msgstr "麦克风 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "数字输出"
 
 msgid "Digital In"
-msgstr ""
+msgstr "数字输入"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI(高清)"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "手持设备"
 
 msgid "Other"
-msgstr ""
+msgstr "其它设备"
 
 msgid "None"
-msgstr ""
+msgstr "无"
 
 msgid "On"
 msgstr "开"
@@ -276,13 +263,13 @@ msgid "Off"
 msgstr "关"
 
 msgid "Mute"
-msgstr ""
+msgstr "静音"
 
 msgid "Fast"
 msgstr "快"
 
 msgid "Very Low"
-msgstr ""
+msgstr "很慢"
 
 msgid "Low"
 msgstr "慢"
@@ -293,28 +280,23 @@ msgstr "中等"
 msgid "High"
 msgstr "高"
 
-#, fuzzy
 msgid "Very High"
 msgstr "很高"
 
 msgid "Production"
 msgstr "生产商"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "话筒面板"
+msgstr "麦克风面板"
 
-#, fuzzy
 msgid "Front Panel Line In"
 msgstr "线路输入面板"
 
-#, fuzzy
 msgid "Front Panel Headphones"
 msgstr "头戴式耳机面板"
 
-#, fuzzy
 msgid "Front Panel Line Out"
-msgstr "线路输入面板"
+msgstr "线路输出面板"
 
 #, fuzzy
 msgid "Green Connector"
@@ -389,12 +371,11 @@ msgid "Yellow Front Panel Connector"
 msgstr "Midi 输出/游戏摇杆面板"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Spread 输出"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Downmix"
 
-#, fuzzy
 msgid "Virtual Mixer Input"
 msgstr "模拟混音输入"
 
@@ -402,17 +383,16 @@ msgstr "模拟混音输入"
 msgid "Virtual Mixer Output"
 msgstr "模拟混音输出"
 
-#, fuzzy
 msgid "Virtual Mixer Channels"
 msgstr "模拟混音输入"
 
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "%s 功能"
 
 #, c-format
 msgid "%s %d"
-msgstr ""
+msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
