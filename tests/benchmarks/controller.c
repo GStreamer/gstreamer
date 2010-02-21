@@ -147,6 +147,27 @@ main (gint argc, gchar * argv[])
   printf ("random insert of control-points: %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (elapsed));
 
+  {
+    GstClockTime sample_duration =
+        gst_util_uint64_scale_int (1, GST_SECOND, 44100);
+    GstValueArray va = { "freq",
+      BLOCK_SIZE * NUM_CP,
+      sample_duration,
+      NULL
+    };
+
+    gdouble *values = g_new0 (gdouble, BLOCK_SIZE * NUM_CP);
+    va.values = (gpointer *) values;
+
+    bt = gst_util_get_timestamp ();
+    gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource), 0, &va);
+    ct = gst_util_get_timestamp ();
+    g_free (values);
+    elapsed = GST_CLOCK_DIFF (bt, ct);
+    printf ("linear array for control-points: %" GST_TIME_FORMAT "\n",
+        GST_TIME_ARGS (elapsed));
+  }
+
   g_object_unref (csource);
 
   /* play, this test sequential reads */
@@ -160,7 +181,7 @@ main (gint argc, gchar * argv[])
 
   ct = gst_util_get_timestamp ();
   elapsed = GST_CLOCK_DIFF (bt, ct);
-  printf ("linear read   of control-points: %" GST_TIME_FORMAT "\n",
+  printf ("linear read of control-points  : %" GST_TIME_FORMAT "\n",
       GST_TIME_ARGS (elapsed));
 
   /* cleanup */
