@@ -372,7 +372,6 @@ struct _GstPlayBin
   gint current_video;           /* the currently selected stream */
   gint current_audio;           /* the currently selected stream */
   gint current_text;            /* the currently selected stream */
-  gchar *encoding;              /* subtitle encoding */
 
   guint64 buffer_duration;      /* When buffering, the max buffer duration (ns) */
   guint buffer_size;            /* When buffering, the max buffer size (bytes) */
@@ -1184,8 +1183,6 @@ gst_play_bin_init (GstPlayBin * playbin)
   g_signal_connect (playbin->playsink, "notify::mute",
       G_CALLBACK (notify_mute_cb), playbin);
 
-  playbin->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
-
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
   playbin->current_text = DEFAULT_CURRENT_TEXT;
@@ -1214,7 +1211,6 @@ gst_play_bin_finalize (GObject * object)
     gst_object_unref (playbin->text_sink);
 
   g_value_array_free (playbin->elements);
-  g_free (playbin->encoding);
   g_mutex_free (playbin->lock);
   g_mutex_free (playbin->dyn_lock);
   g_mutex_free (playbin->elements_lock);
@@ -1714,27 +1710,6 @@ no_channels:
 }
 
 static void
-gst_play_bin_set_encoding (GstPlayBin * playbin, const gchar * encoding)
-{
-  GstElement *elem;
-
-  GST_PLAY_BIN_LOCK (playbin);
-  g_free (playbin->encoding);
-  playbin->encoding = g_strdup (encoding);
-
-  /* set subtitles on all current and next decodebins. */
-  if ((elem = playbin->groups[0].uridecodebin))
-    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
-  if ((elem = playbin->groups[0].suburidecodebin))
-    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
-  if ((elem = playbin->groups[1].uridecodebin))
-    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
-  if ((elem = playbin->groups[1].suburidecodebin))
-    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
-  GST_PLAY_BIN_UNLOCK (playbin);
-}
-
-static void
 gst_play_bin_set_sink (GstPlayBin * playbin, GstElement ** elem,
     const gchar * dbg, GstElement * sink)
 {
@@ -1784,7 +1759,8 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_current_text_stream (playbin, g_value_get_int (value));
       break;
     case PROP_SUBTITLE_ENCODING:
-      gst_play_bin_set_encoding (playbin, g_value_get_string (value));
+      gst_play_sink_set_subtitle_encoding (playbin->playsink,
+          g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
       gst_play_bin_set_sink (playbin, &playbin->video_sink, "video",
@@ -1943,7 +1919,8 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SUBTITLE_ENCODING:
       GST_PLAY_BIN_LOCK (playbin);
-      g_value_set_string (value, playbin->encoding);
+      g_value_take_string (value,
+          gst_play_sink_get_subtitle_encoding (playbin->playsink));
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_VIDEO_SINK:
@@ -3185,8 +3162,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   else
     g_object_set (uridecodebin, "download", FALSE, NULL);
 
-  /* configure subtitle encoding */
-  g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
   /* configure buffering of demuxed/parsed data */
@@ -3250,9 +3225,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     /* configure connection speed */
     g_object_set (suburidecodebin, "connection-speed",
         playbin->connection_speed, NULL);
-    /* configure subtitle encoding */
-    g_object_set (suburidecodebin, "subtitle-encoding", playbin->encoding,
-        NULL);
     /* configure uri */
     g_object_set (suburidecodebin, "uri", group->suburi, NULL);
 

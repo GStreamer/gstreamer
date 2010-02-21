@@ -75,7 +75,8 @@ enum
 {
   PROP_0,
   PROP_SILENT,
-  PROP_FONT_DESC
+  PROP_FONT_DESC,
+  PROP_SUBTITLE_ENCODING
 };
 
 GST_BOILERPLATE (GstSubtitleOverlay, gst_subtitle_overlay, GstBin,
@@ -134,6 +135,11 @@ gst_subtitle_overlay_finalize (GObject * object)
   if (self->font_desc) {
     g_free (self->font_desc);
     self->font_desc = NULL;
+  }
+
+  if (self->encoding) {
+    g_free (self->encoding);
+    self->encoding = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -656,6 +662,27 @@ _get_silent_property (GstElement * element, gboolean * invert)
   return NULL;
 }
 
+static gboolean
+_has_subtitle_encoding_property (GstElement * element)
+{
+  GParamSpec *pspec;
+
+  pspec =
+      g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+      "subtitle-encoding");
+  return (pspec && pspec->value_type == G_TYPE_STRING);
+}
+
+static gboolean
+_has_font_desc_property (GstElement * element)
+{
+  GParamSpec *pspec;
+
+  pspec =
+      g_object_class_find_property (G_OBJECT_GET_CLASS (element), "font-desc");
+  return (pspec && pspec->value_type == G_TYPE_STRING);
+}
+
 static void
 _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
 {
@@ -848,6 +875,9 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
           gst_caps_unref (video_caps);
         gst_object_unref (video_peer);
       }
+
+      if (_has_subtitle_encoding_property (self->parser))
+        g_object_set (self->parser, "subtitle-encoding", self->encoding, NULL);
 
       /* Try to set video fps on the parser */
       gst_subtitle_overlay_set_fps (self);
@@ -1049,6 +1079,11 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
       } else {
         self->silent_property =
             _get_silent_property (element, &self->silent_property_invert);
+        if (_has_subtitle_encoding_property (self->renderer))
+          g_object_set (self->renderer, "subtitle-encoding", self->encoding,
+              NULL);
+        if (_has_font_desc_property (self->renderer))
+          g_object_set (self->renderer, "font-desc", self->font_desc, NULL);
       }
 
       /* First link everything internally */
@@ -1408,6 +1443,11 @@ gst_subtitle_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, self->font_desc);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
+    case PROP_SUBTITLE_ENCODING:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      g_value_set_string (value, self->encoding);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1449,6 +1489,21 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
       GST_SUBTITLE_OVERLAY_LOCK (self);
       g_free (self->font_desc);
       self->font_desc = g_value_dup_string (value);
+      if (self->overlay)
+        g_object_set (self->overlay, "font-desc", self->font_desc, NULL);
+      else if (self->renderer && _has_font_desc_property (self->renderer))
+        g_object_set (self->renderer, "font-desc", self->font_desc, NULL);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      g_free (self->encoding);
+      self->encoding = g_value_dup_string (value);
+      if (self->renderer && _has_subtitle_encoding_property (self->renderer))
+        g_object_set (self->renderer, "subtitle-encoding", self->encoding,
+            NULL);
+      if (self->parser && _has_subtitle_encoding_property (self->parser))
+        g_object_set (self->parser, "subtitle-encoding", self->encoding, NULL);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
     default:
@@ -1498,6 +1553,14 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
           "Subtitle font description",
           "Pango font description of font "
           "to be used for subtitle rendering", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SUBTITLE_ENCODING,
+      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state =

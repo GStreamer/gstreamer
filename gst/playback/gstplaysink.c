@@ -146,6 +146,7 @@ struct _GstPlaySink
   gdouble volume;
   gboolean mute;
   gchar *font_desc;             /* font description */
+  gchar *subtitle_encoding;     /* subtitle encoding */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
   gint count;
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
@@ -192,6 +193,7 @@ enum
   PROP_MUTE,
   PROP_VOLUME,
   PROP_FONT_DESC,
+  PROP_SUBTITLE_ENCODING,
   PROP_VIS_PLUGIN,
   PROP_LAST
 };
@@ -274,6 +276,13 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           "Pango font description of font "
           "to be used for subtitle rendering", NULL,
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
+      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VIS_PLUGIN,
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = default)",
@@ -323,6 +332,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->text_sink = NULL;
   playsink->volume = 1.0;
   playsink->font_desc = NULL;
+  playsink->subtitle_encoding = NULL;
   playsink->flags = DEFAULT_FLAGS;
 
   g_static_rec_mutex_init (&playsink->lock);
@@ -397,6 +407,9 @@ gst_play_sink_dispose (GObject * object)
 
   g_free (playsink->font_desc);
   playsink->font_desc = NULL;
+
+  g_free (playsink->subtitle_encoding);
+  playsink->subtitle_encoding = NULL;
 
   G_OBJECT_CLASS (gst_play_sink_parent_class)->dispose (object);
 }
@@ -1249,6 +1262,10 @@ gen_text_chain (GstPlaySink * playsink)
         if (playsink->font_desc) {
           g_object_set (G_OBJECT (chain->overlay), "font-desc",
               playsink->font_desc, NULL);
+        }
+        if (playsink->subtitle_encoding) {
+          g_object_set (G_OBJECT (chain->overlay), "subtitle-encoding",
+              playsink->subtitle_encoding, NULL);
         }
 
         gst_element_link_pads (chain->queue, "src", chain->overlay,
@@ -2158,6 +2175,41 @@ gst_play_sink_get_font_desc (GstPlaySink * playsink)
   return result;
 }
 
+void
+gst_play_sink_set_subtitle_encoding (GstPlaySink * playsink,
+    const gchar * encoding)
+{
+  GstPlayTextChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  chain = (GstPlayTextChain *) playsink->textchain;
+  g_free (playsink->subtitle_encoding);
+  playsink->subtitle_encoding = g_strdup (encoding);
+  if (chain && chain->overlay) {
+    g_object_set (chain->overlay, "subtitle-encoding", encoding, NULL);
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+gchar *
+gst_play_sink_get_subtitle_encoding (GstPlaySink * playsink)
+{
+  gchar *result = NULL;
+  GstPlayTextChain *chain;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  chain = (GstPlayTextChain *) playsink->textchain;
+  if (chain && chain->overlay) {
+    g_object_get (chain->overlay, "subtitle-encoding", &result, NULL);
+    playsink->subtitle_encoding = g_strdup (result);
+  } else {
+    result = g_strdup (playsink->subtitle_encoding);
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
+
 /**
  * gst_play_sink_get_last_frame:
  * @playsink: a #GstPlaySink
@@ -2648,6 +2700,10 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_FONT_DESC:
       gst_play_sink_set_font_desc (playsink, g_value_get_string (value));
       break;
+    case PROP_SUBTITLE_ENCODING:
+      gst_play_sink_set_subtitle_encoding (playsink,
+          g_value_get_string (value));
+      break;
     case PROP_VIS_PLUGIN:
       gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
       break;
@@ -2675,6 +2731,10 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FONT_DESC:
       g_value_take_string (value, gst_play_sink_get_font_desc (playsink));
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      g_value_take_string (value,
+          gst_play_sink_get_subtitle_encoding (playsink));
       break;
     case PROP_VIS_PLUGIN:
       g_value_take_object (value, gst_play_sink_get_vis_plugin (playsink));

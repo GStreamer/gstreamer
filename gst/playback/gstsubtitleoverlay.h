@@ -62,6 +62,7 @@ struct _GstSubtitleOverlay
 
   gboolean silent;
   gchar *font_desc;
+  gchar *encoding;
 
   /* < private > */
   gboolean do_async;

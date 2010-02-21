@@ -88,6 +88,8 @@ GstPlayFlags     gst_play_sink_get_flags      (GstPlaySink * playsink);
 
 void             gst_play_sink_set_font_desc  (GstPlaySink *playsink, const gchar * desc);
 gchar *          gst_play_sink_get_font_desc  (GstPlaySink *playsink);
+void             gst_play_sink_set_subtitle_encoding  (GstPlaySink *playsink, const gchar * encoding);
+gchar *          gst_play_sink_get_subtitle_encoding  (GstPlaySink *playsink);
 
 GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
 
