@@ -305,7 +305,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
 
   /* reset pad data */
-  for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+  for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
     GstQTPad *qtpad = (GstQTPad *) walk->data;
     gst_qt_mux_pad_reset (qtpad);
 
@@ -317,7 +317,7 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   if (alloc) {
     qtmux->moov = atom_moov_new (qtmux->context);
     /* ensure all is as nice and fresh as request_new_pad would provide it */
-    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+    for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
       GstQTPad *qtpad = (GstQTPad *) walk->data;
 
       qtpad->trak = atom_trak_new (qtmux->context);
@@ -341,6 +341,7 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   gst_pad_use_fixed_caps (qtmux->srcpad);
   gst_element_add_pad (GST_ELEMENT (qtmux), qtmux->srcpad);
 
+  qtmux->sinkpads = NULL;
   qtmux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (qtmux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_qt_mux_collected), qtmux);
@@ -1283,7 +1284,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
 
       if (!atoms_recov_write_headers (qtmux->moov_recov_file, ftyp, prefix,
               qtmux->moov, qtmux->timescale,
-              g_slist_length (qtmux->collect->data))) {
+              g_slist_length (qtmux->sinkpads))) {
         GST_WARNING_OBJECT (qtmux, "Failed to write moov recovery file "
             "headers");
         fail = TRUE;
@@ -1293,8 +1294,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       if (prefix)
         gst_buffer_unref (prefix);
 
-      for (walk = qtmux->collect->data; walk && !fail;
-          walk = g_slist_next (walk)) {
+      for (walk = qtmux->sinkpads; walk && !fail; walk = g_slist_next (walk)) {
         GstCollectData *cdata = (GstCollectData *) walk->data;
         GstQTPad *qpad = (GstQTPad *) cdata;
         /* write info for each stream */
@@ -2471,10 +2471,25 @@ static void
 gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstQTMux *mux = GST_QT_MUX_CAST (element);
+  GSList *walk;
+  gboolean to_remove;
 
   /* let GstCollectPads complain if it is some unknown pad */
-  if (gst_collect_pads_remove_pad (mux->collect, pad))
+  if (gst_collect_pads_remove_pad (mux->collect, pad)) {
     gst_element_remove_pad (element, pad);
+    to_remove = TRUE;
+    for (walk = mux->sinkpads; walk; walk = g_slist_next (walk)) {
+      GstQTPad *qtpad = (GstQTPad *) walk->data;
+      if (qtpad->collect.pad == pad) {
+        /* this is it, remove */
+        mux->sinkpads = g_slist_delete_link (mux->sinkpads, walk);
+        to_remove = FALSE;
+        break;
+      }
+    }
+    if (to_remove)
+      GST_WARNING_OBJECT (mux, "Released pad not in internal sinkpad list");
+  }
 }
 
 static GstPad *
@@ -2515,6 +2530,7 @@ gst_qt_mux_request_new_pad (GstElement * element,
   gst_qt_mux_pad_reset (collect_pad);
   collect_pad->trak = atom_trak_new (qtmux->context);
   atom_moov_add_trak (qtmux->moov, collect_pad->trak);
+  qtmux->sinkpads = g_slist_append (qtmux->sinkpads, collect_pad);
 
   /* set up pad functions */
   if (audio)
