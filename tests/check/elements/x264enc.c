@@ -97,7 +97,7 @@ check_caps (GstCaps * caps)
   fail_unless (G_VALUE_HOLDS_STRING (sf));
   stream_format = g_value_get_string (sf);
   fail_unless (stream_format != NULL);
-  if (strcmp (stream_format, "avc-sample") == 0) {
+  if (strcmp (stream_format, "avc") == 0) {
     const guint8 *data;
     GstBuffer *buf;
 
