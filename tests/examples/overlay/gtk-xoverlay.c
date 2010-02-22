@@ -42,44 +42,49 @@ window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
   gtk_main_quit ();
 }
 
-/* slightly convoluted way to find a working video sink that's not a bin */
+/* slightly convoluted way to find a working video sink that's not a bin,
+ * one could use autovideosink from gst-plugins-good instead
+ */
 static GstElement *
 find_video_sink (void)
 {
   GstStateChangeReturn sret;
   GstElement *sink;
 
-  sink = gst_element_factory_make ("xvimagesink", NULL);
-  sret = gst_element_set_state (sink, GST_STATE_READY);
-  if (sret == GST_STATE_CHANGE_SUCCESS)
-    return sink;
+  if ((sink = gst_element_factory_make ("xvimagesink", NULL))) {
+    sret = gst_element_set_state (sink, GST_STATE_READY);
+    if (sret == GST_STATE_CHANGE_SUCCESS)
+      return sink;
 
-  gst_element_set_state (sink, GST_STATE_NULL);
+    gst_element_set_state (sink, GST_STATE_NULL);
+  }
   gst_object_unref (sink);
 
-  sink = gst_element_factory_make ("ximagesink", NULL);
-  sret = gst_element_set_state (sink, GST_STATE_READY);
-  if (sret == GST_STATE_CHANGE_SUCCESS)
-    return sink;
+  if ((sink = gst_element_factory_make ("ximagesink", NULL))) {
+    sret = gst_element_set_state (sink, GST_STATE_READY);
+    if (sret == GST_STATE_CHANGE_SUCCESS)
+      return sink;
 
-  gst_element_set_state (sink, GST_STATE_NULL);
+    gst_element_set_state (sink, GST_STATE_NULL);
+  }
   gst_object_unref (sink);
 
   if (strcmp (DEFAULT_VIDEOSINK, "xvimagesink") == 0 ||
       strcmp (DEFAULT_VIDEOSINK, "ximagesink") == 0)
     return NULL;
 
-  sink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
-  if (GST_IS_BIN (sink)) {
-    gst_object_unref (sink);
-    return NULL;
+  if ((sink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL))) {
+    if (GST_IS_BIN (sink)) {
+      gst_object_unref (sink);
+      return NULL;
+    }
+
+    sret = gst_element_set_state (sink, GST_STATE_READY);
+    if (sret == GST_STATE_CHANGE_SUCCESS)
+      return sink;
+
+    gst_element_set_state (sink, GST_STATE_NULL);
   }
-
-  sret = gst_element_set_state (sink, GST_STATE_READY);
-  if (sret == GST_STATE_CHANGE_SUCCESS)
-    return sink;
-
-  gst_element_set_state (sink, GST_STATE_NULL);
   gst_object_unref (sink);
   return NULL;
 }
