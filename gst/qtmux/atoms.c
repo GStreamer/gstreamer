@@ -2234,7 +2234,8 @@ atom_udta_copy_data (AtomUDTA * udta, guint8 ** buffer, guint64 * size,
     if (!atom_meta_copy_data (udta->meta, buffer, size, offset)) {
       return 0;
     }
-  } else if (udta->entries) {
+  }
+  if (udta->entries) {
     /* extra atoms */
     if (!atom_info_list_copy_data (udta->entries, buffer, size, offset))
       return 0;
