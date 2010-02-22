@@ -123,6 +123,7 @@ struct _GstQTMux
 
   GstPad *srcpad;
   GstCollectPads *collect;
+  GSList *sinkpads;
 
   /* state */
   GstQTMuxState state;
