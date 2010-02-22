@@ -546,8 +546,12 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
                   rtpmp4gdepay->constantDuration);
             }
 
-            /* get the number of packets by dividing with the duration */
-            diff /= rtpmp4gdepay->constantDuration;
+            if (rtpmp4gdepay->constantDuration > 0) {
+              /* get the number of packets by dividing with the duration */
+              diff /= rtpmp4gdepay->constantDuration;
+            } else {
+              diff = 0;
+            }
 
             rtpmp4gdepay->last_AU_index += diff;
             rtpmp4gdepay->prev_AU_index = AU_index;
