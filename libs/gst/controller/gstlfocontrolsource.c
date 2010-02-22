@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstlfocontrolsource.c: Control source that provides some periodic waveforms
  *                        as control values.
@@ -62,18 +62,13 @@ _calculate_pos (GstClockTime timestamp, GstClockTime timeshift,
 }
 
 #define DEFINE_SINE(type,round,convert) \
-\
 static inline g##type \
-_sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
+_sine_get_##type (GstLFOControlSource *self, g##type max, g##type min, gdouble amp, gdouble off, GstClockTime timeshift, GstClockTime period, gdouble frequency, GstClockTime timestamp) \
 { \
   gdouble ret; \
-  g##type max = g_value_get_##type (&self->priv->maximum_value); \
-  g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
-  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
-  GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, self->priv->period); \
+  GstClockTime pos = _calculate_pos (timestamp, timeshift, period); \
   \
-  ret = sin (2.0 * M_PI * (self->priv->frequency / GST_SECOND) * gst_guint64_to_gdouble (pos)); \
+  ret = sin (2.0 * M_PI * (frequency / GST_SECOND) * gst_guint64_to_gdouble (pos)); \
   ret *= amp; \
   ret += off; \
   \
@@ -87,9 +82,20 @@ static gboolean \
 waveform_sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
     GValue *value) \
 { \
-  g##type ret; \
+  g##type ret, max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _sine_get_##type (self, timestamp); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
+  ret = _sine_get_##type (self, max, min, amp, off, timeshift, period, frequency, timestamp); \
   g_value_set_##type (value, ret); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -102,10 +108,21 @@ waveform_sine_get_##type##_value_array (GstLFOControlSource *self, \
   gint i; \
   GstClockTime ts = timestamp; \
   g##type *values = (g##type *) value_array->values; \
+  g##type max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
   \
   g_mutex_lock (self->lock); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = _sine_get_##type (self, ts); \
+    *values = _sine_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -116,7 +133,6 @@ waveform_sine_get_##type##_value_array (GstLFOControlSource *self, \
 DEFINE_SINE (int, TRUE, EMPTY);
 DEFINE_SINE (uint, TRUE, EMPTY);
 DEFINE_SINE (long, TRUE, EMPTY);
-
 DEFINE_SINE (ulong, TRUE, EMPTY);
 DEFINE_SINE (int64, TRUE, EMPTY);
 DEFINE_SINE (uint64, TRUE, gst_guint64_to_gdouble);
@@ -145,14 +161,9 @@ static GstWaveformImplementation waveform_sine = {
 #define DEFINE_SQUARE(type,round, convert) \
 \
 static inline g##type \
-_square_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
+_square_get_##type (GstLFOControlSource *self, g##type max, g##type min, gdouble amp, gdouble off, GstClockTime timeshift, GstClockTime period, gdouble frequency, GstClockTime timestamp) \
 { \
-  g##type max = g_value_get_##type (&self->priv->maximum_value); \
-  g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
-  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
-  GstClockTime period = self->priv->period; \
-  GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
+  GstClockTime pos = _calculate_pos (timestamp, timeshift, period); \
   gdouble ret; \
   \
   if (pos >= period / 2) \
@@ -172,9 +183,20 @@ static gboolean \
 waveform_square_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
     GValue *value) \
 { \
-  g##type ret; \
+  g##type ret, max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _square_get_##type (self, timestamp); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
+  ret = _square_get_##type (self, max, min, amp, off, timeshift, period, frequency, timestamp); \
   g_value_set_##type (value, ret); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -187,10 +209,21 @@ waveform_square_get_##type##_value_array (GstLFOControlSource *self, \
   gint i; \
   GstClockTime ts = timestamp; \
   g##type *values = (g##type *) value_array->values; \
+  g##type max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
   \
   g_mutex_lock (self->lock); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = _square_get_##type (self, ts); \
+    *values = _square_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -199,10 +232,8 @@ waveform_square_get_##type##_value_array (GstLFOControlSource *self, \
 }
 
 DEFINE_SQUARE (int, TRUE, EMPTY);
-
 DEFINE_SQUARE (uint, TRUE, EMPTY);
 DEFINE_SQUARE (long, TRUE, EMPTY);
-
 DEFINE_SQUARE (ulong, TRUE, EMPTY);
 DEFINE_SQUARE (int64, TRUE, EMPTY);
 DEFINE_SQUARE (uint64, TRUE, gst_guint64_to_gdouble);
@@ -231,14 +262,9 @@ static GstWaveformImplementation waveform_square = {
 #define DEFINE_SAW(type,round,convert) \
 \
 static inline g##type \
-_saw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
+_saw_get_##type (GstLFOControlSource *self, g##type max, g##type min, gdouble amp, gdouble off, GstClockTime timeshift, GstClockTime period, gdouble frequency, GstClockTime timestamp) \
 { \
-  g##type max = g_value_get_##type (&self->priv->maximum_value); \
-  g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
-  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
-  GstClockTime period = self->priv->period; \
-  GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
+  GstClockTime pos = _calculate_pos (timestamp, timeshift, period); \
   gdouble ret; \
   \
   ret = - ((gst_guint64_to_gdouble (pos) - gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_guint64_to_gdouble (period)));\
@@ -255,9 +281,20 @@ static gboolean \
 waveform_saw_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
     GValue *value) \
 { \
-  g##type ret; \
+  g##type ret, max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _saw_get_##type (self, timestamp); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
+  ret = _saw_get_##type (self, max, min, amp, off, timeshift, period, frequency, timestamp); \
   g_value_set_##type (value, ret); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -270,10 +307,21 @@ waveform_saw_get_##type##_value_array (GstLFOControlSource *self, \
   gint i; \
   GstClockTime ts = timestamp; \
   g##type *values = (g##type *) value_array->values; \
+  g##type max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
   \
   g_mutex_lock (self->lock); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = _saw_get_##type (self, ts); \
+    *values = _saw_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -282,10 +330,8 @@ waveform_saw_get_##type##_value_array (GstLFOControlSource *self, \
 }
 
 DEFINE_SAW (int, TRUE, EMPTY);
-
 DEFINE_SAW (uint, TRUE, EMPTY);
 DEFINE_SAW (long, TRUE, EMPTY);
-
 DEFINE_SAW (ulong, TRUE, EMPTY);
 DEFINE_SAW (int64, TRUE, EMPTY);
 DEFINE_SAW (uint64, TRUE, gst_guint64_to_gdouble);
@@ -314,14 +360,9 @@ static GstWaveformImplementation waveform_saw = {
 #define DEFINE_RSAW(type,round,convert) \
 \
 static inline g##type \
-_rsaw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
+_rsaw_get_##type (GstLFOControlSource *self, g##type max, g##type min, gdouble amp, gdouble off, GstClockTime timeshift, GstClockTime period, gdouble frequency, GstClockTime timestamp) \
 { \
-  g##type max = g_value_get_##type (&self->priv->maximum_value); \
-  g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
-  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
-  GstClockTime period = self->priv->period; \
-  GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
+  GstClockTime pos = _calculate_pos (timestamp, timeshift, period); \
   gdouble ret; \
   \
   ret = ((gst_guint64_to_gdouble (pos) - gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_guint64_to_gdouble (period)));\
@@ -338,9 +379,20 @@ static gboolean \
 waveform_rsaw_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
     GValue *value) \
 { \
-  g##type ret; \
+  g##type ret, max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _rsaw_get_##type (self, timestamp); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
+  ret = _rsaw_get_##type (self, max, min, amp, off, timeshift, period, frequency, timestamp); \
   g_value_set_##type (value, ret); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -353,10 +405,21 @@ waveform_rsaw_get_##type##_value_array (GstLFOControlSource *self, \
   gint i; \
   GstClockTime ts = timestamp; \
   g##type *values = (g##type *) value_array->values; \
+  g##type max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
   \
   g_mutex_lock (self->lock); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = _rsaw_get_##type (self, ts); \
+    *values = _rsaw_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -365,10 +428,8 @@ waveform_rsaw_get_##type##_value_array (GstLFOControlSource *self, \
 }
 
 DEFINE_RSAW (int, TRUE, EMPTY);
-
 DEFINE_RSAW (uint, TRUE, EMPTY);
 DEFINE_RSAW (long, TRUE, EMPTY);
-
 DEFINE_RSAW (ulong, TRUE, EMPTY);
 DEFINE_RSAW (int64, TRUE, EMPTY);
 DEFINE_RSAW (uint64, TRUE, gst_guint64_to_gdouble);
@@ -397,14 +458,9 @@ static GstWaveformImplementation waveform_rsaw = {
 #define DEFINE_TRIANGLE(type,round,convert) \
 \
 static inline g##type \
-_triangle_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
+_triangle_get_##type (GstLFOControlSource *self, g##type max, g##type min, gdouble amp, gdouble off, GstClockTime timeshift, GstClockTime period, gdouble frequency, GstClockTime timestamp) \
 { \
-  g##type max = g_value_get_##type (&self->priv->maximum_value); \
-  g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
-  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
-  GstClockTime period = self->priv->period; \
-  GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
+  GstClockTime pos = _calculate_pos (timestamp, timeshift, period); \
   gdouble ret; \
   \
   if (gst_guint64_to_gdouble (pos) <= gst_guint64_to_gdouble (period) / 4.0) \
@@ -426,9 +482,20 @@ static gboolean \
 waveform_triangle_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
     GValue *value) \
 { \
-  g##type ret; \
+  g##type ret, max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _triangle_get_##type (self, timestamp); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
+  ret = _triangle_get_##type (self, max, min, amp, off, timeshift, period, frequency, timestamp); \
   g_value_set_##type (value, ret); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -441,10 +508,21 @@ waveform_triangle_get_##type##_value_array (GstLFOControlSource *self, \
   gint i; \
   GstClockTime ts = timestamp; \
   g##type *values = (g##type *) value_array->values; \
+  g##type max, min; \
+  gdouble amp, off, frequency; \
+  GstClockTime timeshift, period; \
   \
   g_mutex_lock (self->lock); \
+  max = g_value_get_##type (&self->priv->maximum_value); \
+  min = g_value_get_##type (&self->priv->minimum_value); \
+  amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  off = convert (g_value_get_##type (&self->priv->offset)); \
+  timeshift = self->priv->timeshift; \
+  period = self->priv->period; \
+  frequency = self->priv->frequency; \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = _triangle_get_##type (self, ts); \
+    *values = _triangle_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -453,10 +531,8 @@ waveform_triangle_get_##type##_value_array (GstLFOControlSource *self, \
 }
 
 DEFINE_TRIANGLE (int, TRUE, EMPTY);
-
 DEFINE_TRIANGLE (uint, TRUE, EMPTY);
 DEFINE_TRIANGLE (long, TRUE, EMPTY);
-
 DEFINE_TRIANGLE (ulong, TRUE, EMPTY);
 DEFINE_TRIANGLE (int64, TRUE, EMPTY);
 DEFINE_TRIANGLE (uint64, TRUE, gst_guint64_to_gdouble);
