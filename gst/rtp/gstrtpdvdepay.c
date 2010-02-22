@@ -264,22 +264,22 @@ calculate_difblock_location (guint8 * block)
   dif_sequence = block[1] >> 4;
   dif_block = block[2];
 
+  location = dif_sequence * 150;
+
   switch (block_type) {
-    case 0:                    /* Header block */
-      location = dif_sequence * 150 * 80;
+    case 0:                    /* Header block, no offset */
       break;
     case 1:                    /* Subcode block */
-      location = dif_sequence * 150 * 80 + (1 + dif_block) * 80;
+      location += (1 + dif_block);
       break;
     case 2:                    /* VAUX block */
-      location = dif_sequence * 150 * 80 + (3 + dif_block) * 80;
+      location += (3 + dif_block);
       break;
     case 3:                    /* Audio block */
-      location = dif_sequence * 150 * 80 + (6 + dif_block * 16) * 80;
+      location += (6 + dif_block * 16);
       break;
     case 4:                    /* Video block */
-      location = dif_sequence * 150 * 80 +
-          (7 + (dif_block / 15) + dif_block) * 80;
+      location += (7 + (dif_block / 15) + dif_block);
       break;
     default:                   /* Something bogus */
       GST_DEBUG ("UNKNOWN BLOCK");
@@ -327,28 +327,43 @@ gst_rtp_dv_depay_process (GstBaseRTPDepayload * base, GstBuffer * in)
 
   /* copy all DIF chunks in their place. */
   while (payload_len >= 80) {
+    guint offset;
+
     /* Calculate where in the frame the payload should go */
     location = calculate_difblock_location (payload);
 
-    /* Check if we received a header. We will not pass on frames until
-     * we've received a header, otherwise the DV decoder goes wacko. */
-    if (location == 0)
-      dvdepay->have_header = TRUE;
+    if (location < 6) {
+      /* part of a header, set the flag to mark that we have the header. */
+      dvdepay->header_mask |= (1 << location);
+      GST_LOG_OBJECT (dvdepay, "got header at location %d, now %02x", location,
+          dvdepay->header_mask);
+    } else {
+      GST_LOG_OBJECT (dvdepay, "got block at location %d", location);
+    }
+
+    /* get the byte offset of the dif block */
+    offset = location * 80;
 
     /* And copy it in, provided the location is sane. */
-    if (location >= 0 && location <= dvdepay->frame_size - 80)
-      memcpy (GST_BUFFER_DATA (dvdepay->acc) + location, payload, 80);
+    if (offset >= 0 && offset <= dvdepay->frame_size - 80)
+      memcpy (GST_BUFFER_DATA (dvdepay->acc) + offset, payload, 80);
 
     payload += 80;
     payload_len -= 80;
   }
 
   if (marker) {
-    /* The marker marks the end of a frame that we need to push. The next frame
-     * will change the timestamp but we won't copy the accumulator again because
-     * we set the prev_ts to -1. */
-    out = gst_buffer_copy (dvdepay->acc);
     GST_DEBUG_OBJECT (dvdepay, "marker bit complete frame %u", rtp_ts);
+    /* only copy the frame when we have a complete header */
+    if (dvdepay->header_mask == 0x3f) {
+      /* The marker marks the end of a frame that we need to push. The next frame
+       * will change the timestamp but we won't copy the accumulator again because
+       * we set the prev_ts to -1. */
+      out = gst_buffer_copy (dvdepay->acc);
+    } else {
+      GST_WARNING_OBJECT (dvdepay, "waiting for frame headers %02x",
+          dvdepay->header_mask);
+    }
     dvdepay->prev_ts = -1;
   } else {
     /* save last timestamp */
@@ -365,8 +380,7 @@ gst_rtp_dv_depay_reset (GstRTPDVDepay * depay)
   depay->acc = NULL;
 
   depay->prev_ts = -1;
-  depay->have_header = FALSE;
-  depay->frame_nr = 0;
+  depay->header_mask = 0;
 }
 
 static GstStateChangeReturn

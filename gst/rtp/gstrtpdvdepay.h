@@ -45,9 +45,8 @@ struct _GstRTPDVDepay
 
   GstBuffer *acc;
   guint frame_size;
-  guint frame_nr;
   guint32 prev_ts;
-  gboolean have_header;
+  guint8 header_mask;
 
   gint width, height;
   gint rate_num, rate_denom;
