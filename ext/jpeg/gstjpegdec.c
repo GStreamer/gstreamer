@@ -486,10 +486,10 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: finding entropy segment length",
           (gint64) (data - start - 1));
       while (1) {
-        if (d2[eseglen] == 0xff && d2[eseglen + 1] != 0x00)
-          break;
         if (d2 + eseglen >= end - 1)
           return 0;             /* need more data */
+        if (d2[eseglen] == 0xff && d2[eseglen + 1] != 0x00)
+          break;
         ++eseglen;
       }
       frame_len += eseglen;
