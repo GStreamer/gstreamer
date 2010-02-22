@@ -47,7 +47,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbytewriter.h>
-
+#include <gst/tag/tag.h>
 
 /**
  * Creates a new AtomsContext for the given flavor.
@@ -2770,6 +2770,22 @@ void
 atom_moov_add_3gp_uint_tag (AtomMOOV * moov, guint32 fourcc, guint16 value)
 {
   atom_moov_add_3gp_str_int_tag (moov, fourcc, NULL, value);
+}
+
+void
+atom_moov_add_xmp_tags (AtomMOOV * moov, const GstTagList * tags)
+{
+  GstBuffer *xmpbuffer = gst_tag_list_to_xmp_buffer (tags, TRUE);
+  AtomData *data_atom = NULL;
+
+  data_atom = atom_data_new_from_gst_buffer (FOURCC_XMP_, xmpbuffer);
+  gst_buffer_unref (xmpbuffer);
+
+  atom_moov_init_metatags (moov, &moov->context);
+
+  moov->udta->entries = g_list_append (moov->udta->entries,
+      build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
+          atom_data_free));
 }
 
 /*

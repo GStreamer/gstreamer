@@ -878,6 +878,19 @@ static const GstTagToFourcc tag_matches_3gp[] = {
 #define GST_QT_DEMUX_PRIVATE_TAG "private-qt-tag"
 
 static void
+gst_qt_mux_add_xmp_tags (GstQTMux * qtmux, const GstTagList * list)
+{
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
+    return;                     /* adobe spec only specs for qt */
+
+  GST_DEBUG_OBJECT (qtmux, "Adding xmp tags");
+
+  atom_moov_add_xmp_tags (qtmux->moov, list);
+}
+
+static void
 gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
 {
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
@@ -969,6 +982,7 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
   if (tags && !gst_tag_list_is_empty (tags)) {
     GST_DEBUG_OBJECT (qtmux, "Formatting tags");
     gst_qt_mux_add_metadata_tags (qtmux, tags);
+    gst_qt_mux_add_xmp_tags (qtmux, tags);
   } else {
     GST_DEBUG_OBJECT (qtmux, "No tags received");
   }

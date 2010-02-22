@@ -14,8 +14,8 @@ libgstqtmux_la_SOURCES = gstqtmux.c \
 
 # flags used to compile this plugin
 # add other _CFLAGS and _LIBS as needed
-libgstqtmux_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
-libgstqtmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
+libgstqtmux_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+libgstqtmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR)
 libgstqtmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstqtmux_la_LIBTOOLFLAGS = --tag=disable-static
 
