@@ -1168,7 +1168,7 @@ static guint
 gst_h264_parse_parse_stream_format (GstH264Parse * h264parse,
     const gchar * stream_format)
 {
-  if (strcmp (stream_format, "avc-sample") == 0) {
+  if (strcmp (stream_format, "avc") == 0) {
     return GST_H264_PARSE_FORMAT_SAMPLE;
   } else if (strcmp (stream_format, "byte-stream") == 0) {
     return GST_H264_PARSE_FORMAT_BYTE;
@@ -1269,12 +1269,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   if (stream_format == NULL) {
     gst_structure_remove_field (structure, "stream-format");
     if (h264parse->format == GST_H264_PARSE_FORMAT_SAMPLE) {
-      stream_format = "avc-sample";
+      stream_format = "avc";
     } else if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE) {
       stream_format = "byte-stream";
     } else {
       if (h264parse->packetized) {
-        stream_format = "avc-sample";
+        stream_format = "avc";
       } else {
         stream_format = "byte-stream";
       }
