@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
- * Copyright (C) 2007,2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2007-2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * gstinterpolation.c: Interpolation methods for dynamic properties
  *
@@ -66,10 +66,16 @@ static GSequenceIter *gst_interpolation_control_source_find_control_point_iter
       g_sequence_search (self->priv->values, &timestamp,
       (GCompareDataFunc) gst_control_point_find, NULL);
 
+  if (!iter)
+    return NULL;
+
   /* g_sequence_search() returns the iter where timestamp
    * would be inserted, i.e. the iter > timestamp, so
    * we need to get the previous one */
   iter = g_sequence_iter_prev (iter);
+
+  if (!iter)
+    return NULL;
 
   /* g_sequence_iter_prev () on the begin iter returns
    * the begin iter. Check if the prev iter is still
@@ -86,16 +92,29 @@ static GSequenceIter *gst_interpolation_control_source_find_control_point_iter
 
 /*  steps-like (no-)interpolation, default */
 /*  just returns the value for the most recent key-frame */
+static inline const GValue *
+_interpolate_none_get (GstInterpolationControlSource * self,
+    GSequenceIter * iter)
+{
+  const GValue *ret;
 
-#define DEFINE_NONE_GET(type) \
-static inline GValue * \
-_interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp) \
+  if (iter) {
+    GstControlPoint *cp = g_sequence_get (iter);
+
+    ret = &cp->value;
+  } else {
+    ret = &self->priv->default_value;
+  }
+  return ret;
+}
+
+#define DEFINE_NONE_GET_FUNC_COMPARABLE(type) \
+static inline const GValue * \
+_interpolate_none_get_##type (GstInterpolationControlSource *self, GSequenceIter *iter) \
 { \
-  GValue *ret; \
-  GSequenceIter *iter; \
+  const GValue *ret; \
   \
-  if ((iter = \
-          gst_interpolation_control_source_find_control_point_iter (self, timestamp))) { \
+  if (iter) { \
     GstControlPoint *cp = g_sequence_get (iter); \
     g##type ret_val = g_value_get_##type (&cp->value); \
     \
@@ -109,19 +128,19 @@ _interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime 
     ret = &self->priv->default_value; \
   } \
   return ret; \
-} \
-\
+}
+
+#define DEFINE_NONE_GET(type,ctype,get_func) \
 static gboolean \
 interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
 { \
-  GValue *ret; \
+  const GValue *ret; \
+  GSequenceIter *iter; \
+  \
   g_mutex_lock (self->lock); \
   \
-  ret = _interpolate_none_get_##type (self, timestamp); \
-  if (!ret) { \
-    g_mutex_unlock (self->lock); \
-    return FALSE; \
-  } \
+  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
+  ret = get_func (self, iter); \
   g_value_copy (ret, value); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -133,17 +152,34 @@ interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, 
 { \
   gint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
-  GValue *ret; \
+  GstClockTime next_ts = 0; \
+  ctype *values = (ctype *) value_array->values; \
+  const GValue *ret_val = NULL; \
+  ctype ret = 0; \
+  GSequenceIter *iter1 = NULL, *iter2 = NULL; \
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    ret = _interpolate_none_get_##type (self, ts); \
-    if (!ret) { \
-      g_mutex_unlock (self->lock); \
-      return FALSE; \
+    if (!ret_val || ts >= next_ts) { \
+      iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
+      if (!iter1) \
+        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+      else \
+        iter2 = g_sequence_iter_next (iter1); \
+      \
+      if (iter2 && !g_sequence_iter_is_end (iter2)) { \
+        GstControlPoint *cp; \
+        \
+        cp = g_sequence_get (iter2); \
+        next_ts = cp->timestamp; \
+      } else { \
+        next_ts = GST_CLOCK_TIME_NONE; \
+      } \
+      \
+      ret_val = get_func (self, iter1); \
+      ret = g_value_get_##type (ret_val); \
     } \
-    *values = g_value_get_##type (ret); \
+    *values = ret; \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -151,126 +187,26 @@ interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, 
   return TRUE; \
 }
 
+DEFINE_NONE_GET_FUNC_COMPARABLE (int);
+DEFINE_NONE_GET (int, gint, _interpolate_none_get_int);
+DEFINE_NONE_GET_FUNC_COMPARABLE (uint);
+DEFINE_NONE_GET (uint, guint, _interpolate_none_get_uint);
+DEFINE_NONE_GET_FUNC_COMPARABLE (long);
+DEFINE_NONE_GET (long, glong, _interpolate_none_get_long);
+DEFINE_NONE_GET_FUNC_COMPARABLE (ulong);
+DEFINE_NONE_GET (ulong, gulong, _interpolate_none_get_ulong);
+DEFINE_NONE_GET_FUNC_COMPARABLE (int64);
+DEFINE_NONE_GET (int64, gint64, _interpolate_none_get_int64);
+DEFINE_NONE_GET_FUNC_COMPARABLE (uint64);
+DEFINE_NONE_GET (uint64, guint64, _interpolate_none_get_uint64);
+DEFINE_NONE_GET_FUNC_COMPARABLE (float);
+DEFINE_NONE_GET (float, gfloat, _interpolate_none_get_float);
+DEFINE_NONE_GET_FUNC_COMPARABLE (double);
+DEFINE_NONE_GET (double, gdouble, _interpolate_none_get_double);
 
-DEFINE_NONE_GET (int);
-DEFINE_NONE_GET (uint);
-DEFINE_NONE_GET (long);
-
-DEFINE_NONE_GET (ulong);
-DEFINE_NONE_GET (int64);
-DEFINE_NONE_GET (uint64);
-DEFINE_NONE_GET (float);
-DEFINE_NONE_GET (double);
-
-static inline GValue *
-_interpolate_none_get (GstInterpolationControlSource * self,
-    GstClockTime timestamp)
-{
-  GSequenceIter *iter;
-  GValue *ret;
-
-  if ((iter =
-          gst_interpolation_control_source_find_control_point_iter (self,
-              timestamp))) {
-    GstControlPoint *cp = g_sequence_get (iter);
-
-    ret = &cp->value;
-  } else {
-    ret = &self->priv->default_value;
-  }
-  return ret;
-}
-
-static gboolean
-interpolate_none_get (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GValue * value)
-{
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  ret = _interpolate_none_get (self, timestamp);
-
-  if (!ret) {
-    g_mutex_unlock (self->lock);
-    return FALSE;
-  }
-
-  g_value_copy (ret, value);
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_none_get_boolean_value_array (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gboolean *values = (gboolean *) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = g_value_get_boolean (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_none_get_enum_value_array (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gint *values = (gint *) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = g_value_get_enum (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_none_get_string_value_array (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gchar **values = (gchar **) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = (gchar *) g_value_get_string (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
+DEFINE_NONE_GET (boolean, gboolean, _interpolate_none_get);
+DEFINE_NONE_GET (enum, gint, _interpolate_none_get);
+DEFINE_NONE_GET (string, const gchar *, _interpolate_none_get);
 
 static GstInterpolateMethod interpolate_none = {
   (GstControlSourceGetValue) interpolate_none_get_int,
@@ -289,27 +225,43 @@ static GstInterpolateMethod interpolate_none = {
   (GstControlSourceGetValueArray) interpolate_none_get_float_value_array,
   (GstControlSourceGetValue) interpolate_none_get_double,
   (GstControlSourceGetValueArray) interpolate_none_get_double_value_array,
-  (GstControlSourceGetValue) interpolate_none_get,
+  (GstControlSourceGetValue) interpolate_none_get_boolean,
   (GstControlSourceGetValueArray) interpolate_none_get_boolean_value_array,
-  (GstControlSourceGetValue) interpolate_none_get,
+  (GstControlSourceGetValue) interpolate_none_get_enum,
   (GstControlSourceGetValueArray) interpolate_none_get_enum_value_array,
-  (GstControlSourceGetValue) interpolate_none_get,
+  (GstControlSourceGetValue) interpolate_none_get_string,
   (GstControlSourceGetValueArray) interpolate_none_get_string_value_array
 };
 
 /*  returns the default value of the property, except for times with specific values */
 /*  needed for one-shot events, such as notes and triggers */
+static inline const GValue *
+_interpolate_trigger_get (GstInterpolationControlSource * self,
+    GSequenceIter * iter, GstClockTime timestamp)
+{
+  GstControlPoint *cp;
 
-#define DEFINE_TRIGGER_GET(type) \
-static inline GValue * \
-_interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp) \
+  /* check if there is a value at the registered timestamp */
+  if (iter) {
+    cp = g_sequence_get (iter);
+    if (timestamp == cp->timestamp) {
+      return &cp->value;
+    }
+  }
+  if (self->priv->nvalues > 0)
+    return &self->priv->default_value;
+  else
+    return NULL;
+}
+
+#define DEFINE_TRIGGER_GET_FUNC_COMPARABLE(type) \
+static inline const GValue * \
+_interpolate_trigger_get_##type (GstInterpolationControlSource *self, GSequenceIter *iter, GstClockTime timestamp) \
 { \
-  GSequenceIter *iter; \
   GstControlPoint *cp; \
   \
   /* check if there is a value at the registered timestamp */ \
-  if ((iter = \
-          gst_interpolation_control_source_find_control_point_iter (self, timestamp))) { \
+  if (iter) { \
     cp = g_sequence_get (iter); \
     if (timestamp == cp->timestamp) { \
       g##type ret = g_value_get_##type (&cp->value); \
@@ -326,18 +278,24 @@ _interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTi
     return &self->priv->default_value; \
   else \
     return NULL; \
-} \
-\
+}
+
+#define DEFINE_TRIGGER_GET(type, ctype, get_func) \
 static gboolean \
 interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
 { \
-  GValue *ret; \
+  const GValue *ret; \
+  GSequenceIter *iter; \
+  \
   g_mutex_lock (self->lock); \
-  ret = _interpolate_trigger_get_##type (self, timestamp); \
+  \
+  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
+  ret = get_func (self, iter, timestamp); \
   if (!ret) { \
     g_mutex_unlock (self->lock); \
     return FALSE; \
   } \
+  \
   g_value_copy (ret, value); \
   g_mutex_unlock (self->lock); \
   return TRUE; \
@@ -349,17 +307,48 @@ interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *sel
 { \
   gint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
-  GValue *ret; \
+  GstClockTime next_ts = 0; \
+  ctype *values = (ctype *) value_array->values; \
+  const GValue *ret_val = NULL; \
+  ctype ret = 0; \
+  GSequenceIter *iter1 = NULL, *iter2 = NULL; \
+  gboolean triggered = FALSE; \
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    ret = _interpolate_trigger_get_##type (self, ts); \
-    if (!ret) { \
-      g_mutex_unlock (self->lock); \
-      return FALSE; \
+    if (!ret_val || ts >= next_ts) { \
+      iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
+      if (!iter1) \
+        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+      else \
+        iter2 = g_sequence_iter_next (iter1); \
+      \
+      if (iter2 && !g_sequence_iter_is_end (iter2)) { \
+        GstControlPoint *cp; \
+        \
+        cp = g_sequence_get (iter2); \
+        next_ts = cp->timestamp; \
+      } else { \
+        next_ts = GST_CLOCK_TIME_NONE; \
+      } \
+      \
+      ret_val = get_func (self, iter1, ts); \
+      if (!ret_val) { \
+        g_mutex_unlock (self->lock); \
+        return FALSE; \
+      } \
+      ret = g_value_get_##type (ret_val); \
+      triggered = TRUE; \
+    } else if (triggered) { \
+      ret_val = get_func (self, iter1, ts); \
+      if (!ret_val) { \
+        g_mutex_unlock (self->lock); \
+        return FALSE; \
+      } \
+      ret = g_value_get_##type (ret_val); \
+      triggered = FALSE; \
     } \
-    *values = g_value_get_##type (ret); \
+    *values = ret; \
     ts += value_array->sample_interval; \
     values++; \
   } \
@@ -367,128 +356,26 @@ interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *sel
   return TRUE; \
 }
 
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (int);
+DEFINE_TRIGGER_GET (int, gint, _interpolate_trigger_get_int);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (uint);
+DEFINE_TRIGGER_GET (uint, guint, _interpolate_trigger_get_uint);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (long);
+DEFINE_TRIGGER_GET (long, glong, _interpolate_trigger_get_long);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (ulong);
+DEFINE_TRIGGER_GET (ulong, gulong, _interpolate_trigger_get_ulong);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (int64);
+DEFINE_TRIGGER_GET (int64, gint64, _interpolate_trigger_get_int64);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (uint64);
+DEFINE_TRIGGER_GET (uint64, guint64, _interpolate_trigger_get_uint64);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (float);
+DEFINE_TRIGGER_GET (float, gfloat, _interpolate_trigger_get_float);
+DEFINE_TRIGGER_GET_FUNC_COMPARABLE (double);
+DEFINE_TRIGGER_GET (double, gdouble, _interpolate_trigger_get_double);
 
-DEFINE_TRIGGER_GET (int);
-
-DEFINE_TRIGGER_GET (uint);
-DEFINE_TRIGGER_GET (long);
-
-DEFINE_TRIGGER_GET (ulong);
-DEFINE_TRIGGER_GET (int64);
-DEFINE_TRIGGER_GET (uint64);
-DEFINE_TRIGGER_GET (float);
-DEFINE_TRIGGER_GET (double);
-
-static inline GValue *
-_interpolate_trigger_get (GstInterpolationControlSource * self,
-    GstClockTime timestamp)
-{
-  GSequenceIter *iter;
-  GstControlPoint *cp;
-
-  /* check if there is a value at the registered timestamp */
-  if ((iter =
-          gst_interpolation_control_source_find_control_point_iter (self,
-              timestamp))) {
-    cp = g_sequence_get (iter);
-    if (timestamp == cp->timestamp) {
-      return &cp->value;
-    }
-  }
-  if (self->priv->nvalues > 0)
-    return &self->priv->default_value;
-  else
-    return NULL;
-}
-
-static gboolean
-interpolate_trigger_get (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GValue * value)
-{
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  ret = _interpolate_trigger_get (self, timestamp);
-  if (!ret) {
-    g_mutex_unlock (self->lock);
-    return FALSE;
-  }
-  g_value_copy (ret, value);
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_trigger_get_boolean_value_array (GstInterpolationControlSource *
-    self, GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gint *values = (gint *) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = g_value_get_boolean (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_trigger_get_enum_value_array (GstInterpolationControlSource * self,
-    GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gint *values = (gint *) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = g_value_get_enum (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
-
-static gboolean
-interpolate_trigger_get_string_value_array (GstInterpolationControlSource *
-    self, GstClockTime timestamp, GstValueArray * value_array)
-{
-  gint i;
-  GstClockTime ts = timestamp;
-  gchar **values = (gchar **) value_array->values;
-  GValue *ret;
-
-  g_mutex_lock (self->lock);
-  for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, ts);
-    if (!ret) {
-      g_mutex_unlock (self->lock);
-      return FALSE;
-    }
-    *values = (gchar *) g_value_get_string (ret);
-    ts += value_array->sample_interval;
-    values++;
-  }
-  g_mutex_unlock (self->lock);
-  return TRUE;
-}
+DEFINE_TRIGGER_GET (boolean, gboolean, _interpolate_trigger_get);
+DEFINE_TRIGGER_GET (enum, gint, _interpolate_trigger_get);
+DEFINE_TRIGGER_GET (string, const gchar *, _interpolate_trigger_get);
 
 static GstInterpolateMethod interpolate_trigger = {
   (GstControlSourceGetValue) interpolate_trigger_get_int,
@@ -507,29 +394,51 @@ static GstInterpolateMethod interpolate_trigger = {
   (GstControlSourceGetValueArray) interpolate_trigger_get_float_value_array,
   (GstControlSourceGetValue) interpolate_trigger_get_double,
   (GstControlSourceGetValueArray) interpolate_trigger_get_double_value_array,
-  (GstControlSourceGetValue) interpolate_trigger_get,
+  (GstControlSourceGetValue) interpolate_trigger_get_boolean,
   (GstControlSourceGetValueArray) interpolate_trigger_get_boolean_value_array,
-  (GstControlSourceGetValue) interpolate_trigger_get,
+  (GstControlSourceGetValue) interpolate_trigger_get_enum,
   (GstControlSourceGetValueArray) interpolate_trigger_get_enum_value_array,
-  (GstControlSourceGetValue) interpolate_trigger_get,
+  (GstControlSourceGetValue) interpolate_trigger_get_string,
   (GstControlSourceGetValueArray) interpolate_trigger_get_string_value_array
 };
 
 /*  linear interpolation */
 /*  smoothes inbetween values */
-
-#define DEFINE_LINEAR_GET(vtype,round,convert) \
-static inline gboolean \
-_interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
+#define DEFINE_LINEAR_GET(vtype, round, convert) \
+static inline void \
+_interpolate_linear_internal_##vtype (GstClockTime timestamp1, g##vtype value1, GstClockTime timestamp2, g##vtype value2, GstClockTime timestamp, g##vtype min, g##vtype max, g##vtype *ret) \
 { \
+  if (GST_CLOCK_TIME_IS_VALID (timestamp2)) { \
+    gdouble slope; \
+    \
+    slope = ((gdouble) convert (value2) - (gdouble) convert (value1)) / gst_guint64_to_gdouble (timestamp2 - timestamp1); \
+    \
+    if (round) \
+      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - timestamp1) * slope + 0.5); \
+    else \
+      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - timestamp1) * slope); \
+  } else { \
+    *ret = value1; \
+  } \
+  *ret = CLAMP (*ret, min, max); \
+} \
+\
+static gboolean \
+interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
+{ \
+  g##vtype ret, min, max; \
   GSequenceIter *iter; \
-  GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
+  GstControlPoint *cp1, *cp2 = NULL, cp = {0, }; \
+  \
+  g_mutex_lock (self->lock); \
+  \
+  min = g_value_get_##vtype (&self->priv->minimum_value); \
+  max = g_value_get_##vtype (&self->priv->maximum_value); \
   \
   iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
   if (iter) { \
     cp1 = g_sequence_get (iter); \
     iter = g_sequence_iter_next (iter); \
-    iter = g_sequence_iter_is_end (iter) ? NULL : iter; \
   } else { \
     cp.timestamp = G_GUINT64_CONSTANT(0); \
     g_value_init (&cp.value, self->priv->type); \
@@ -538,40 +447,15 @@ _interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTi
     if (G_LIKELY (self->priv->values)) \
       iter = g_sequence_get_begin_iter (self->priv->values); \
   } \
-  if (iter) { \
-    gdouble slope; \
-    g##vtype value1,value2; \
-    \
+  if (iter && !g_sequence_iter_is_end (iter)) \
     cp2 = g_sequence_get (iter); \
-    \
-    value1 = g_value_get_##vtype (&cp1->value); \
-    value2 = g_value_get_##vtype (&cp2->value); \
-    slope = ((gdouble) convert (value2) - (gdouble) convert (value1)) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
-    \
-    if (round) \
-      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
-    else \
-      *ret = (g##vtype) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
-  } \
-  else { \
-    *ret = g_value_get_##vtype (&cp1->value); \
-  } \
-  *ret = CLAMP (*ret, g_value_get_##vtype (&self->priv->minimum_value), g_value_get_##vtype (&self->priv->maximum_value)); \
-  return TRUE; \
-} \
-\
-static gboolean \
-interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
-{ \
-  g##vtype ret; \
-  g_mutex_lock (self->lock); \
-  if (_interpolate_linear_get_##vtype (self, timestamp, &ret)) { \
-    g_value_set_##vtype (value, ret); \
-    g_mutex_unlock (self->lock); \
-    return TRUE; \
-  } \
+  \
+  _interpolate_linear_internal_##vtype (cp1->timestamp, g_value_get_##vtype (&cp1->value), (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE), (cp2 ? g_value_get_##vtype (&cp2->value) : 0), timestamp, min, max, &ret); \
+  g_value_set_##vtype (value, ret); \
   g_mutex_unlock (self->lock); \
-  return FALSE; \
+  if (cp1 == &cp) \
+    g_value_unset (&cp.value); \
+  return TRUE; \
 } \
 \
 static gboolean \
@@ -580,26 +464,54 @@ interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *sel
 { \
   gint i; \
   GstClockTime ts = timestamp; \
+  GstClockTime next_ts = 0; \
   g##vtype *values = (g##vtype *) value_array->values; \
+  GSequenceIter *iter1, *iter2 = NULL; \
+  GstControlPoint *cp1 = NULL, *cp2 = NULL, cp = {0, }; \
+  g##vtype val1 = 0, val2 = 0, min, max; \
   \
   g_mutex_lock (self->lock); \
+  \
+  cp.timestamp = G_GUINT64_CONSTANT(0); \
+  g_value_init (&cp.value, self->priv->type); \
+  g_value_copy (&self->priv->default_value, &cp.value); \
+  \
+  min = g_value_get_##vtype (&self->priv->minimum_value); \
+  max = g_value_get_##vtype (&self->priv->maximum_value); \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    if (! _interpolate_linear_get_##vtype (self, ts, values)) { \
-      g_mutex_unlock (self->lock); \
-      return FALSE; \
+    if (timestamp >= next_ts) { \
+      iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
+      if (!iter1) { \
+        cp1 = &cp; \
+        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+      } else { \
+        cp1 = g_sequence_get (iter1); \
+        iter2 = g_sequence_iter_next (iter1); \
+      } \
+      \
+      if (iter2 && !g_sequence_iter_is_end (iter2)) { \
+        cp2 = g_sequence_get (iter2); \
+        next_ts = cp2->timestamp; \
+      } else { \
+        next_ts = GST_CLOCK_TIME_NONE; \
+      } \
+      val1 = g_value_get_##vtype (&cp1->value); \
+      if (cp2) \
+        val2 = g_value_get_##vtype (&cp2->value); \
     } \
+    _interpolate_linear_internal_##vtype (cp1->timestamp, val1, (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE), (cp2 ? val2 : 0), ts, min, max, values); \
     ts += value_array->sample_interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
+  g_value_unset (&cp.value); \
   return TRUE; \
 }
 
 DEFINE_LINEAR_GET (int, TRUE, EMPTY);
-
 DEFINE_LINEAR_GET (uint, TRUE, EMPTY);
 DEFINE_LINEAR_GET (long, TRUE, EMPTY);
-
 DEFINE_LINEAR_GET (ulong, TRUE, EMPTY);
 DEFINE_LINEAR_GET (int64, TRUE, EMPTY);
 DEFINE_LINEAR_GET (uint64, TRUE, gst_guint64_to_gdouble);
@@ -730,41 +642,17 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   g_free (z); \
 } \
 \
-static inline gboolean \
-_interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, g##vtype *ret) \
+static inline void \
+_interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstControlPoint *cp1, g##vtype value1, GstControlPoint *cp2, g##vtype value2, GstClockTime timestamp, g##vtype min, g##vtype max, g##vtype *ret) \
 { \
-  GSequenceIter *iter; \
-  GstControlPoint *cp1 = NULL, *cp2, cp={0,}; \
-  \
-  if (self->priv->nvalues <= 2) \
-    return _interpolate_linear_get_##vtype (self, timestamp, ret); \
-  \
   if (!self->priv->valid_cache) { \
     _interpolate_cubic_update_cache_##vtype (self); \
     self->priv->valid_cache = TRUE; \
   } \
   \
-  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
-  if (iter) { \
-    cp1 = g_sequence_get (iter); \
-    iter = g_sequence_iter_next (iter); \
-    iter = g_sequence_iter_is_end (iter) ? NULL : iter; \
-  } else { \
-    cp.timestamp = G_GUINT64_CONSTANT(0); \
-    g_value_init (&cp.value, self->priv->type); \
-    g_value_copy (&self->priv->default_value, &cp.value); \
-    cp1 = &cp; \
-    iter = g_sequence_get_begin_iter (self->priv->values); \
-  } \
-  if (iter) { \
+  if (cp2) { \
     gdouble diff1, diff2; \
-    g##vtype value1,value2; \
     gdouble out; \
-    \
-    cp2 = g_sequence_get (iter); \
-    \
-    value1 = g_value_get_##vtype (&cp1->value); \
-    value2 = g_value_get_##vtype (&cp2->value); \
     \
     diff1 = gst_guint64_to_gdouble (timestamp - cp1->timestamp); \
     diff2 = gst_guint64_to_gdouble (cp2->timestamp - timestamp); \
@@ -779,24 +667,47 @@ _interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTim
       *ret = (g##vtype) out; \
   } \
   else { \
-    *ret = g_value_get_##vtype (&cp1->value); \
+    *ret = value1; \
   } \
-  *ret = CLAMP (*ret, g_value_get_##vtype (&self->priv->minimum_value), g_value_get_##vtype (&self->priv->maximum_value)); \
-  return TRUE; \
+  *ret = CLAMP (*ret, min, max); \
 } \
 \
 static gboolean \
 interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime timestamp, GValue *value) \
 { \
-  g##vtype ret; \
+  g##vtype ret, min, max; \
+  GSequenceIter *iter; \
+  GstControlPoint *cp1, *cp2 = NULL, cp = {0, }; \
+  \
+  if (self->priv->nvalues <= 2) \
+    return interpolate_linear_get_##vtype (self, timestamp, value); \
+  \
   g_mutex_lock (self->lock); \
-  if (_interpolate_cubic_get_##vtype (self, timestamp, &ret)) { \
-    g_value_set_##vtype (value, ret); \
-    g_mutex_unlock (self->lock); \
-    return TRUE; \
+  \
+  min = g_value_get_##vtype (&self->priv->minimum_value); \
+  max = g_value_get_##vtype (&self->priv->maximum_value); \
+  \
+  iter = gst_interpolation_control_source_find_control_point_iter (self, timestamp); \
+  if (iter) { \
+    cp1 = g_sequence_get (iter); \
+    iter = g_sequence_iter_next (iter); \
+  } else { \
+    cp.timestamp = G_GUINT64_CONSTANT(0); \
+    g_value_init (&cp.value, self->priv->type); \
+    g_value_copy (&self->priv->default_value, &cp.value); \
+    cp1 = &cp; \
+    if (G_LIKELY (self->priv->values)) \
+      iter = g_sequence_get_begin_iter (self->priv->values); \
   } \
+  if (iter && !g_sequence_iter_is_end (iter)) \
+    cp2 = g_sequence_get (iter); \
+  \
+  _interpolate_cubic_get_##vtype (self, cp1, g_value_get_##vtype (&cp1->value), cp2, (cp2 ? g_value_get_##vtype (&cp2->value) : 0), timestamp, min, max, &ret); \
+  g_value_set_##vtype (value, ret); \
   g_mutex_unlock (self->lock); \
-  return FALSE; \
+  if (cp1 == &cp) \
+    g_value_unset (&cp.value); \
+  return TRUE; \
 } \
 \
 static gboolean \
@@ -805,26 +716,57 @@ interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self
 { \
   gint i; \
   GstClockTime ts = timestamp; \
+  GstClockTime next_ts = 0; \
   g##vtype *values = (g##vtype *) value_array->values; \
+  GSequenceIter *iter1, *iter2 = NULL; \
+  GstControlPoint *cp1 = NULL, *cp2 = NULL, cp = {0, }; \
+  g##vtype val1 = 0, val2 = 0, min, max; \
+  \
+  if (self->priv->nvalues <= 2) \
+    return interpolate_linear_get_##vtype##_value_array (self, timestamp, value_array); \
   \
   g_mutex_lock (self->lock); \
+  \
+  cp.timestamp = G_GUINT64_CONSTANT(0); \
+  g_value_init (&cp.value, self->priv->type); \
+  g_value_copy (&self->priv->default_value, &cp.value); \
+  \
+  min = g_value_get_##vtype (&self->priv->minimum_value); \
+  max = g_value_get_##vtype (&self->priv->maximum_value); \
+  \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    if (! _interpolate_cubic_get_##vtype (self, ts, values)) { \
-      g_mutex_unlock (self->lock); \
-      return FALSE; \
+    if (timestamp >= next_ts) { \
+      iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
+      if (!iter1) { \
+        cp1 = &cp; \
+        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+      } else { \
+        cp1 = g_sequence_get (iter1); \
+        iter2 = g_sequence_iter_next (iter1); \
+      } \
+      \
+      if (iter2 && !g_sequence_iter_is_end (iter2)) { \
+        cp2 = g_sequence_get (iter2); \
+        next_ts = cp2->timestamp; \
+      } else { \
+        next_ts = GST_CLOCK_TIME_NONE; \
+      } \
+      val1 = g_value_get_##vtype (&cp1->value); \
+      if (cp2) \
+        val2 = g_value_get_##vtype (&cp2->value); \
     } \
+    _interpolate_cubic_get_##vtype (self, cp1, val1, cp2, val2, timestamp, min, max, values); \
     ts += value_array->sample_interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
+  g_value_unset (&cp.value); \
   return TRUE; \
 }
 
 DEFINE_CUBIC_GET (int, TRUE, EMPTY);
-
 DEFINE_CUBIC_GET (uint, TRUE, EMPTY);
 DEFINE_CUBIC_GET (long, TRUE, EMPTY);
-
 DEFINE_CUBIC_GET (ulong, TRUE, EMPTY);
 DEFINE_CUBIC_GET (int64, TRUE, EMPTY);
 DEFINE_CUBIC_GET (uint64, TRUE, gst_guint64_to_gdouble);
