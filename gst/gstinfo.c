@@ -641,6 +641,24 @@ gst_debug_print_object (gpointer ptr)
       }
     }
   }
+  if (GST_IS_EVENT (object)) {
+    GstEvent *event = GST_EVENT_CAST (object);
+    gchar *s, *ret;
+
+    if (event->structure) {
+      s = gst_info_structure_to_string (event->structure);
+    } else {
+      s = g_strdup ("(NULL)");
+    }
+
+    ret = g_strdup_printf ("%s event from '%s' at time %"
+        GST_TIME_FORMAT ": %s",
+        GST_EVENT_TYPE_NAME (event), (event->src != NULL) ?
+        GST_OBJECT_NAME (event->src) : "(NULL)",
+        GST_TIME_ARGS (event->timestamp), s);
+    g_free (s);
+    return ret;
+  }
 
   return g_strdup_printf ("%p", ptr);
 }
