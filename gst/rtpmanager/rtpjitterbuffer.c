@@ -763,6 +763,9 @@ rtp_jitter_buffer_get_percent (RTPJitterBuffer * jbuf)
   gint percent;
   guint64 level;
 
+  if (G_UNLIKELY (jbuf->high_level == 0))
+    return 100;
+
   level = get_buffer_level (jbuf);
   percent = (level * 100 / jbuf->high_level);
   percent = MIN (percent, 100);
