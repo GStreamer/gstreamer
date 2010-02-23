@@ -1791,7 +1791,7 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
             GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (granuletime));
 
         granuletime -= pad->start_time;
-        granuletime += begintime;
+        granuletime += chain->begin_time;
 
         GST_DEBUG_OBJECT (ogg,
             "found page with granule %" G_GINT64_FORMAT " and time %"
