@@ -220,6 +220,7 @@ struct _GstBaseSrcPrivate
   /* two segments to be sent in the streaming thread with STREAM_LOCK */
   GstEvent *close_segment;
   GstEvent *start_segment;
+  gboolean newsegment_pending;
 
   /* if EOS is pending (atomic) */
   gint pending_eos;
@@ -746,7 +747,7 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
       GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
 
   GST_OBJECT_LOCK (src);
-  if (src->data.ABI.running) {
+  if (src->data.ABI.running && !src->priv->newsegment_pending) {
     if (src->priv->close_segment)
       gst_event_unref (src->priv->close_segment);
     src->priv->close_segment =
@@ -1457,6 +1458,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
           seeksegment.start, seeksegment.last_stop, seeksegment.time);
     }
     gst_event_set_seqnum (src->priv->start_segment, seqnum);
+    src->priv->newsegment_pending = TRUE;
   }
 
   src->priv->discont = TRUE;
@@ -2384,6 +2386,7 @@ gst_base_src_loop (GstPad * pad)
     gst_pad_push_event (pad, src->priv->start_segment);
     src->priv->start_segment = NULL;
   }
+  src->priv->newsegment_pending = FALSE;
 
   GST_OBJECT_LOCK (src);
   /* take the tags */
@@ -2676,6 +2679,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_OBJECT_UNLOCK (basesrc);
 
   basesrc->data.ABI.running = FALSE;
+  basesrc->priv->newsegment_pending = FALSE;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->start)
