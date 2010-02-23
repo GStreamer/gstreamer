@@ -68,6 +68,7 @@ struct _GstAssRender
   gboolean subtitle_flushing;
   GstSegment subtitle_segment;
 
+  GMutex *ass_mutex;
   ASS_Library *ass_library;
   ASS_Renderer *ass_renderer;
   ASS_Track *ass_track;
