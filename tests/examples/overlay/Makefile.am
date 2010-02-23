@@ -36,7 +36,7 @@ nodist_qtgv_xoverlay_SOURCES = moc_qtgv-xoverlay.cpp
 moc_%.cpp:%.h
 	moc $< -o $@
 
-EXTRA_DIST = $(nodist_qtgv_xoverlay_SOURCES:moc_%.cpp=%.h) 
+EXTRA_DIST = $(nodist_qtgv_xoverlay_SOURCES:moc_%.cpp=%.h) qtgv-xoverlay.h
 CLEANFILES = $(nodist_qtgv_xoverlay_SOURCES)
 
 endif
