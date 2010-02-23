@@ -469,6 +469,11 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
   priv->jbuf_lock = g_mutex_new ();
   priv->jbuf_cond = g_cond_new ();
 
+  /* reset skew detection initialy */
+  rtp_jitter_buffer_reset_skew (priv->jbuf);
+  rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
+  rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
+
   priv->srcpad =
       gst_pad_new_from_static_template (&gst_rtp_jitter_buffer_src_template,
       "src");
