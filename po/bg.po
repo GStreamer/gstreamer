@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
-"PO-Revision-Date: 2010-01-29 14:48+0200\n"
+"POT-Creation-Date: 2010-02-24 00:16+0000\n"
+"PO-Revision-Date: 2010-02-23 10:27+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -858,8 +858,8 @@ msgstr[1] "%d приставки"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d забранен запис"
+msgstr[1] "%d забранени записа"
 
 #, c-format
 msgid "%d feature"

@@ -1,18 +1,18 @@
-# translation of gstreamer-0.10.22.2.nl.po to Dutch
+# translation of gstreamer-0.10.26.2.po to Dutch
 # Dutch translation of gstreamer
-# Copyright (C) 2003-2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.22.2\n"
+"Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
-"PO-Revision-Date: 2009-05-04 13:12+0200\n"
-"Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
+"POT-Creation-Date: 2010-02-24 00:16+0000\n"
+"PO-Revision-Date: 2010-02-21 15:19+0100\n"
+"Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -81,9 +81,10 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Zet het het bijwerken van de registry uit"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Zet het gebruik van fork() uit tijdens het doorlopen van de registry"
+msgstr ""
+"Zet het starten van een hulpprogramma uit tijdens het doorlopen van de "
+"registry"
 
 msgid "GStreamer Options"
 msgstr "GStreamer-opties"
@@ -122,6 +123,8 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"GStreamer-fout: statuswijziging is mislukt en een element heeft geen goede "
+"foutmelding afgegeven met een reden voor het mislukken."
 
 msgid "Internal GStreamer error: pad problem."
 msgstr "Interne GStreamer-fout: padprobleem."
@@ -295,19 +298,19 @@ msgstr "naam album voor sorteren"
 msgid "album containing this data for sorting purposes"
 msgstr "album waarop dit stuk staat voor sorteren"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artiest"
+msgstr "albumartiest"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "De artiest van het gehele album, zoals dat zou moeten worden getoond"
 
-#, fuzzy
 msgid "album artist sortname"
 msgstr "naam artiest voor sorteren"
 
 msgid "The artist of the entire album, as it should be sorted"
 msgstr ""
+"De artiest van het gehele album, zoals dat zou moeten worden gebruikt voor "
+"sorteren"
 
 msgid "date"
 msgstr "datum"
@@ -468,13 +471,11 @@ msgstr "codec voor ondertiteling"
 msgid "codec the subtitle data is stored in"
 msgstr "codec waarin de ondertiteling is opgeslagen"
 
-#, fuzzy
 msgid "container format"
-msgstr "contactinformatie"
+msgstr "containerindeling"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "codec waarin het stuk is opgeslagen"
+msgstr "containerindeling waarin de gegevens zijn opgeslagen"
 
 msgid "bitrate"
 msgstr "bitsnelheid"
@@ -588,7 +589,6 @@ msgstr "komma gescheiden trefwoorden die de inhoud omschrijven"
 msgid "geo location name"
 msgstr "naam geografische locatie"
 
-#, fuzzy
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
@@ -632,56 +632,54 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
 msgid "show name"
-msgstr ""
+msgstr "naam tonen"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Mediumnaam van de show van de tv/podcast/serie"
 
 #. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
-#, fuzzy
 msgid "show sortname"
-msgstr "naam artiest voor sorteren"
+msgstr "naam voor sorteren"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr ""
+msgstr "Mediumnaam van de show van de tv/podcast/serie, voor sorteren"
 
-#, fuzzy
 msgid "episode number"
-msgstr "schijfnummer"
+msgstr "episodenummer"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Het episodenummer in het seizoen waar het medium deel van is"
 
-#, fuzzy
 msgid "season number"
-msgstr "schijfnummer"
+msgstr "seizoennummer"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Het nummer van het seizoen van de show waar het medium deel van is"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licentie"
+msgstr "liedtekst"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "De liedtekst van het medium, gewoonlijk voor songs gebruikt"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "titel voor het sorteren"
+msgstr "componist voor sorteren"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "perso(o)n(en) die de opname gemaakt hebben gebruikt voor sorteren"
+msgstr ""
+"perso(o)n(en) die de opname gecomponeerd he(eft)bben, gebruikt voor sorteren"
 
 msgid "grouping"
-msgstr ""
+msgstr "groepering"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Groepen gerelateerde media die meerdere tracks omvatten, zoals de "
+"verschillende delen van een concert. Het is een hoger niveau dan een track, "
+"maat lager dan een album"
 
 msgid ", "
 msgstr ", "
@@ -746,7 +744,7 @@ msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Er worden veel buffers gedropt."
 
 msgid "Internal data flow problem."
 msgstr "Intern probleem met gegevensdoorvoer."
@@ -807,11 +805,11 @@ msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Geen tijdelijke map opgegeven."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Kan geen info over \"%s\" krijgen."
+msgstr "Kon geen tijdelijk bestand \"%s\" aanmaken."
 
 msgid "caps"
 msgstr "mogelijkheden"
@@ -847,7 +845,7 @@ msgid "controllable"
 msgstr "controleerbaar"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Bestanden op de zwarte lijst:"
 
 msgid "Total count: "
 msgstr "Totaal aantal: "
@@ -855,8 +853,8 @@ msgstr "Totaal aantal: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d bestand op de zwarte lijst"
+msgstr[1] "%d bestanden op de zwarte lijst"
 
 #, c-format
 msgid "%d plugin"
@@ -867,8 +865,8 @@ msgstr[1] "%d plugins"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d item op de zwarte lijst"
+msgstr[1] "%d items op de zwarte lijst"
 
 #, c-format
 msgid "%d feature"
@@ -880,9 +878,8 @@ msgid "Print all elements"
 msgstr "Alle elementen weergeven"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Druk de lijst met bestanden op de zwarte lijst af"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
@@ -890,7 +887,7 @@ msgid ""
 "automatic plugin installation mechanisms"
 msgstr ""
 "Toon een door een machine te ontleden lijst van mogelijkheden die de "
-"gespecificeerde plugin aanbiedt.\n"
+"gespecificeerde plugin of alle plugins aanbieden.\n"
 "                                       Bruikbaar in verband met externe "
 "automatische plugin-installatiemechanismen"
 
@@ -934,21 +931,21 @@ msgstr "FOUT: kon argument %d op opdrachtregel niet verwerken: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Einde-stroom ontvangen van element \"%s\".\n"
+msgstr "Bericht #%u ontvangen uit element \"%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Bericht #%u ontvangen uit pad \"%s:%s\" (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Bericht #%u ontvangen uit object \"%s\" (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "Bericht #% ontvangen"
+msgstr "Bericht #%u (%s) ontvangen: "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -958,16 +955,16 @@ msgstr "Einde-stroom ontvangen van element \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door pad \"%s:%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door object \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "TAG GEVONDEN\n"
 
 #, c-format
 msgid ""
@@ -1097,21 +1094,3 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Fout bij het schrijven van de cache van de registry naar %s: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Fout bij het opnieuw doorlopen van de registry %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Fout bij het opnieuw doorlopen van de registry %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Interne GStreamer-fout: toestandsverandering mislukt."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Fout bij het schrijven naar bestandsaanduiding \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Bestandsaanduiding \"%d\" is niet geldig."
