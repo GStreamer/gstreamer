@@ -1,14 +1,15 @@
-# translation of gst-plugins-base-0.10.22.2.nl.po to Dutch
+# translation of gst-plugins-base-0.10.26.2.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
+# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009, 2010.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-18 20:27+0000\n"
-"PO-Revision-Date: 2009-05-04 12:58+0200\n"
-"Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
+"POT-Creation-Date: 2010-02-24 00:36+0000\n"
+"PO-Revision-Date: 2010-02-21 15:23+0100\n"
+"Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -125,9 +126,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Dit lijkt een tekstbestand te zijn"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Kan \"typefind\"-element niet aanmaken."
+msgstr "Kan het type stream niet bepalen"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -180,43 +180,39 @@ msgstr "Ontbrekend element '%s' - controleer de instalatie van uw GStreamer."
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "De elementen 'autoaudiosink' en 'alsasink' ontbreken beide."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "De elementen 'autovideosink' en 'xvimagesink' ontbreken beide."
+msgstr "De elementen 'autovideosink' en '%s' ontbreken beide."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "De elementen 'autovideosink' en 'xvimagesink' ontbreken beide."
+msgstr "Het element 'autovideosink' ontbreekt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "De elementen 'autovideosink' en 'xvimagesink' werken niet."
+msgstr "De elementen 'autovideosink' en '%s' werken beide niet."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "De elementen 'autovideosink' en 'xvimagesink' werken niet."
+msgstr "Het element 'autovideosink' werkt niet."
 
 msgid "Custom text sink element is not usable."
 msgstr "De aangepaste element 'tekst-sink' is niet bruikbaar."
 
 msgid "No volume control found"
-msgstr "Geen volume controle gevonden"
+msgstr "Geen volumecontrole gevonden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "De elementen 'autoaudiosink' en 'alsasink' ontbreken beide."
+msgstr "De elementen 'autoaudiosink' en '%s' ontbreken beide."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "De elementen 'autoaudiosink' en 'alsasink' ontbreken beide."
+msgstr "Het element 'autoaudiosink' ontbreekt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Beide elementen 'autoaudiosink' en 'alsasink' werken niet."
+msgstr "De elementen 'autoaudiosink' en '%s' werken beide niet."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Beide elementen 'autoaudiosink' en 'alsasink' werken niet."
+msgstr "Het element 'autoaudiosink' werkt niet."
 
 msgid "Can't play a text file without video."
 msgstr "Kan geen tekstbestand afspelen zonder video."
@@ -479,34 +475,3 @@ msgstr "Apparaat \"%s\" is al in gebruik."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kan apparaat \"%s\" niet openen voor lezen en schrijven."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Kan het element \"decodebin2\" niet aanmaken."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Kan het element \"queue2\" niet aanmaken."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Kan \"typefind\"-element niet aanmaken."
-
-#, fuzzy
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Kan geen tekst-ondertitels en onder-afbeeldingen en afspelen."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Geen apparaat opgegeven."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Kan het VFS-bestand \"%s\" niet sluiten."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kan bestand \"%s\" niet open voor lezen."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Interne fout in gegevensstroom."
-
-#~ msgid "No file name specified."
-#~ msgstr "Geen bestandsnaam opgegeven."
