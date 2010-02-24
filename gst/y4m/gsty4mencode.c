@@ -70,7 +70,7 @@ static GstStaticPadTemplate y4mencode_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, Y42B, Y41B, Y444 }"))
     );
 
 
@@ -146,6 +146,7 @@ gst_y4m_encode_reset (GstY4mEncode * filter)
   filter->width = filter->height = -1;
   filter->fps_num = filter->fps_den = 1;
   filter->par_num = filter->par_den = 1;
+  filter->colorspace = "unknown";
 }
 
 static gboolean
@@ -155,6 +156,7 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
   GstStructure *structure;
   gboolean res;
   gint w, h;
+  guint32 fourcc;
   const GValue *fps, *par, *interlaced;
 
   filter = GST_Y4M_ENCODE (GST_PAD_PARENT (pad));
@@ -164,6 +166,26 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
   res = gst_structure_get_int (structure, "width", &w);
   res &= gst_structure_get_int (structure, "height", &h);
   res &= ((fps = gst_structure_get_value (structure, "framerate")) != NULL);
+  res &= gst_structure_get_fourcc (structure, "format", &fourcc);
+
+  switch (fourcc) {             /* Translate fourcc to Y4M colorspace code */
+    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+    case GST_MAKE_FOURCC ('I', 'Y', 'U', 'V'):
+      filter->colorspace = "420";
+      break;
+    case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+      filter->colorspace = "422";
+      break;
+    case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
+      filter->colorspace = "411";
+      break;
+    case GST_MAKE_FOURCC ('Y', '4', '4', '4'):
+      filter->colorspace = "444";
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
 
   if (!res || w <= 0 || h <= 0 || !GST_VALUE_HOLDS_FRACTION (fps))
     return FALSE;
@@ -210,8 +232,8 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter)
   else if (filter->interlaced)
     interlaced = 'b';
 
-  header = g_strdup_printf ("YUV4MPEG2 W%d H%d I%c F%d:%d A%d:%d\n",
-      filter->width, filter->height, interlaced,
+  header = g_strdup_printf ("YUV4MPEG2 C%s W%d H%d I%c F%d:%d A%d:%d\n",
+      filter->colorspace, filter->width, filter->height, interlaced,
       filter->fps_num, filter->fps_den, filter->par_num, filter->par_den);
 
   buf = gst_buffer_new ();
