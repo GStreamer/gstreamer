@@ -162,6 +162,8 @@ gst_multi_file_sink_next_get_type (void)
     {GST_MULTI_FILE_SINK_NEXT_BUFFER, "New file for each buffer", "buffer"},
     {GST_MULTI_FILE_SINK_NEXT_DISCONT, "New file after each discontinuity",
         "discont"},
+    {GST_MULTI_FILE_SINK_NEXT_KEY_FRAME, "New file at each key frame "
+          "(Useful for MPEG-TS segmenting)", "key-frame"},
     {0, NULL, NULL}
   };
 
@@ -248,6 +250,8 @@ gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
   multifilesink->post_messages = DEFAULT_POST_MESSAGES;
 
   gst_base_sink_set_sync (GST_BASE_SINK (multifilesink), FALSE);
+
+  multifilesink->next_segment = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -416,6 +420,47 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
           g_free (filename);
           multifilesink->index++;
         }
+      }
+
+      if (multifilesink->file == NULL) {
+        filename = g_strdup_printf (multifilesink->filename,
+            multifilesink->index);
+        multifilesink->file = g_fopen (filename, "wb");
+        g_free (filename);
+
+        if (multifilesink->file == NULL)
+          goto stdio_write_error;
+      }
+
+      ret = fwrite (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 1,
+          multifilesink->file);
+      if (ret != 1)
+        goto stdio_write_error;
+
+      break;
+    case GST_MULTI_FILE_SINK_NEXT_KEY_FRAME:
+      if (multifilesink->next_segment == GST_CLOCK_TIME_NONE) {
+        if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+          multifilesink->next_segment = GST_BUFFER_TIMESTAMP (buffer) +
+              10 * GST_SECOND;
+        }
+      }
+
+      if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+          GST_BUFFER_TIMESTAMP (buffer) >= multifilesink->next_segment &&
+          !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        if (multifilesink->file) {
+          fclose (multifilesink->file);
+          multifilesink->file = NULL;
+
+          filename = g_strdup_printf (multifilesink->filename,
+              multifilesink->index);
+          gst_multi_file_sink_post_message (multifilesink, buffer, filename);
+          g_free (filename);
+          multifilesink->index++;
+        }
+
+        multifilesink->next_segment += 10 * GST_SECOND;
       }
 
       if (multifilesink->file == NULL) {

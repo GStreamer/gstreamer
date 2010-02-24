@@ -53,7 +53,8 @@ typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
 
 typedef enum {
   GST_MULTI_FILE_SINK_NEXT_BUFFER,
-  GST_MULTI_FILE_SINK_NEXT_DISCONT
+  GST_MULTI_FILE_SINK_NEXT_DISCONT,
+  GST_MULTI_FILE_SINK_NEXT_KEY_FRAME
 } GstMultiFileSinkNext;
 
 struct _GstMultiFileSink
@@ -65,6 +66,8 @@ struct _GstMultiFileSink
   gboolean post_messages;
   GstMultiFileSinkNext next_file;
   FILE *file;
+
+  gint64 next_segment;
 };
 
 struct _GstMultiFileSinkClass
