@@ -1117,6 +1117,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
 static void
 gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
 {
+  gst_base_src_set_format (GST_BASE_SRC (ximagesrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (ximagesrc), TRUE);
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (ximagesrc),
       gst_ximage_src_fixate);
