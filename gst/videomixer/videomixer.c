@@ -653,6 +653,7 @@ gst_videomixer_reset (GstVideoMixer * mix)
   }
 
   mix->next_sinkpad = 0;
+  mix->flush_stop_pending = FALSE;
 }
 
 static void
@@ -1341,6 +1342,11 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
   if (G_UNLIKELY (mix->in_width == 0))
     return GST_FLOW_NOT_NEGOTIATED;
 
+  if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE, FALSE)) {
+    GST_DEBUG_OBJECT (mix, "pending flush stop");
+    gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop ());
+  }
+
   GST_LOG_OBJECT (mix, "all pads are collected");
   GST_VIDEO_MIXER_STATE_LOCK (mix);
 
@@ -1548,10 +1554,30 @@ gst_videomixer_src_event (GstPad * pad, GstEvent * event)
       else
         mix->segment_position = 0;
       mix->sendseg = TRUE;
+
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        gst_collect_pads_set_flushing (mix->collect, FALSE);
+
+        /* we can't send FLUSH_STOP here since upstream could start pushing data
+         * after we unlock mix->collect.
+         * We set flush_stop_pending to TRUE instead and send FLUSH_STOP after
+         * forwarding the seek upstream or from gst_videomixer_collected,
+         * whichever happens first.
+         */
+        mix->flush_stop_pending = TRUE;
+      }
+
       GST_OBJECT_UNLOCK (mix->collect);
       gst_videomixer_reset_qos (mix);
 
       result = forward_event (mix, event);
+
+      if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending,
+              TRUE, FALSE)) {
+        GST_DEBUG_OBJECT (mix, "pending flush stop");
+        gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop ());
+      }
+
       break;
     }
     case GST_EVENT_NAVIGATION:
@@ -1587,6 +1613,7 @@ gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
        * and downstream (using our source pad, the bastard!).
        */
       videomixer->sendseg = TRUE;
+      videomixer->flush_stop_pending = FALSE;
       gst_videomixer_reset_qos (videomixer);
 
       /* Reset pad state after FLUSH_STOP */

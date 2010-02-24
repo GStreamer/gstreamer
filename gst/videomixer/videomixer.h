@@ -116,6 +116,8 @@ struct _GstVideoMixer
   BlendFunction blend;
   FillCheckerFunction fill_checker;
   FillColorFunction fill_color;
+
+  gboolean flush_stop_pending;
 };
 
 struct _GstVideoMixerClass
