@@ -27,6 +27,11 @@ AM_CONFIG_HEADER([config.h])
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 
+dnl use pretty build output with automake >= 1.11
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
+  [AM_DEFAULT_VERBOSITY=1
+   AC_SUBST(AM_DEFAULT_VERBOSITY)])
+
 AC_DEFINE_UNQUOTED(PYGST_MAJOR_VERSION, $PACKAGE_VERSION_MAJOR, [PyGst major version])
 AC_DEFINE_UNQUOTED(PYGST_MINOR_VERSION, $PACKAGE_VERSION_MINOR, [PyGst minor version])
 AC_DEFINE_UNQUOTED(PYGST_MICRO_VERSION, $PACKAGE_VERSION_MICRO, [PyGst micro version])
@@ -353,15 +358,11 @@ AM_CHECK_PYTHON_LIBS(,[AC_MSG_ERROR(could not find Python lib)])
 
 AG_GST_SET_PLUGINDIR
 
-SHAVE_INIT([common],[enable])
-
 AC_OUTPUT([
   Makefile
   codegen/Makefile
   common/Makefile
   common/m4/Makefile
-  common/shave
-  common/shave-libtool
   gst/Makefile
   gst/gstversion.override
   gst/extend/Makefile
