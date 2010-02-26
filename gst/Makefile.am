@@ -172,7 +172,7 @@ endif
 
 
 .defs.c: 
-	($(PYTHON) $(top_srcdir)/codegen/codegen.py \
+	$(AM_V_GEN)($(PYTHON) $(top_srcdir)/codegen/codegen.py \
 		--load-types $(srcdir)/arg-types.py \
 		--register $(srcdir)/gst-types.defs \
 		--override $(srcdir)/$*.override \

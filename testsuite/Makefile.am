@@ -16,7 +16,7 @@ testhelper_la_SOURCES = \
 
 # This is a hack to make sure a shared library is built
 testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
-	$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
 tests =  \
 	test_adapter.py \
