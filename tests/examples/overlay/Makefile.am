@@ -34,7 +34,7 @@ qtgv_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(QT_LIBS) \
 nodist_qtgv_xoverlay_SOURCES = moc_qtgv-xoverlay.cpp
 
 moc_%.cpp:%.h
-	moc $< -o $@
+	$(AM_V_GEN)moc $< -o $@
 
 EXTRA_DIST = $(nodist_qtgv_xoverlay_SOURCES:moc_%.cpp=%.h)
 CLEANFILES = $(nodist_qtgv_xoverlay_SOURCES)

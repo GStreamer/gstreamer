@@ -11,16 +11,16 @@ EXTRA_DIST = \
 
 # generate versioned scripts from templates
 %-@GST_MAJORMINOR@: %-m.m
-	sed -e s,\@GST_MAJORMINOR\@,@GST_MAJORMINOR@,g $< > $@
+	$(AM_V_GEN)sed -e s,\@GST_MAJORMINOR\@,@GST_MAJORMINOR@,g $< > $@ && \
 	chmod +x $@
 
 # generate man pages
 %-@GST_MAJORMINOR@.1: %.1.in
-	sed \
+	$(AM_V_GEN)sed \
                 -e s,gst-visualise,gst-visualise-@GST_MAJORMINOR@,g \
                 $< >$@
 
 all: all-am chmod
 
 chmod: $(bin_SCRIPTS)
-	chmod +x $^
+	@chmod +x $^

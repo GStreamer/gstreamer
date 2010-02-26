@@ -17,7 +17,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstnetbuffer_@GST_MAJORMINOR@_la_SOUR
 gir_cincludes=$(patsubst %,--c-include='gst/netbuffer/%',$(libgstnetbufferinclude_HEADERS))
 
 GstNetbuffer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnetbuffer-@GST_MAJORMINOR@.la
-	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstNetbuffer \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
@@ -41,7 +41,7 @@ typelibsdir = $(libdir)/girepository-1.0/
 typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+	$(AM_V_GEN)$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
