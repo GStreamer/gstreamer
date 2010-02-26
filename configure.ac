@@ -29,6 +29,11 @@ AM_MAINTAINER_MODE
 dnl sets host_* variables
 AC_CANONICAL_HOST
 
+dnl use pretty build output with automake >= 1.11
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
+  [AM_DEFAULT_VERBOSITY=1
+   AC_SUBST(AM_DEFAULT_VERBOSITY)])
+
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here for release candidates for a new series
@@ -662,12 +667,8 @@ dnl things for our internal libcheck (must be called even if building
 dnl libcheck is disabled because it defines conditionals)
 AG_GST_CHECK_CHECKS()
 
-SHAVE_INIT([common],[enable])
-
 AC_CONFIG_FILES(
 Makefile
-common/shave
-common/shave-libtool
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
@@ -790,7 +791,7 @@ Configuration
 	Version                    : ${VERSION}
 	Source code location       : ${srcdir}
 	Prefix                     : ${prefix}
-	Compiler                   : ${SHAVE_SAVED_CC}
+	Compiler                   : ${CC}
 	Package name               : ${GST_PACKAGE_NAME}
 	Package origin             : ${GST_PACKAGE_ORIGIN}
 
