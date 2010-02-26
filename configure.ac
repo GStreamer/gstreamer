@@ -30,6 +30,11 @@ AM_MAINTAINER_MODE
 dnl sets host_* variables
 AC_CANONICAL_HOST
 
+dnl use pretty build output with automake >= 1.11
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
+  [AM_DEFAULT_VERBOSITY=1
+   AC_SUBST(AM_DEFAULT_VERBOSITY)])
+
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_BAD_VERSION_MAJOR.$GST_PLUGINS_BAD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
@@ -1604,8 +1609,6 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
-SHAVE_INIT([common],[enable])
-
 dnl *** output files ***
 
 dnl po/Makefile.in
@@ -1613,8 +1616,6 @@ dnl po/Makefile.in
 AC_CONFIG_FILES(
 Makefile
 common/Makefile
-common/shave
-common/shave-libtool
 common/m4/Makefile
 gst-plugins-bad.spec
 gst/Makefile
