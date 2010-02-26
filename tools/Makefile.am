@@ -59,7 +59,7 @@ gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 
 gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
-	cp $(srcdir)/gst-feedback-m.m $@
+	$(AM_V_GEN)cp $(srcdir)/gst-feedback-m.m $@ && \
 	chmod +x $@
 
 # make sure each unversioned tool comes from gst-run.c
@@ -126,7 +126,7 @@ EXTRA_DIST = \
 	gst-plot-timeline.py
 
 %-@GST_MAJORMINOR@.1: %.1.in
-	sed \
+	$(AM_V_GEN)sed \
 		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \

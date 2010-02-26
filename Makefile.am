@@ -3,7 +3,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 all-local: gst-element-check-@GST_MAJORMINOR@.m4
 
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
-	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
 # note: keep in sync with configure.ac
 ACLOCAL_AMFLAGS = -I common/m4 -I .
@@ -108,7 +108,7 @@ win32-update:
 		$(top_srcdir)/win32/common/config.h
 
 check-enum-gettypes: $(top_builddir)/gst/gstenumtypes.h
-	echo 'Checking if all enum and flag _get_type() funcs are inited in gst_init()';                         \
+	@echo 'Checking if all enum and flag _get_type() funcs are inited in gst_init()';                        \
 	FUNCS=`grep '_get_type (' gst/gstenumtypes.h | sed -e 's/^.*gst_/gst_/' -e 's/_get_type.*$$/_get_type/'`;\
 	MISSING_FUNCS='';                                                                                        \
 	for f in $$FUNCS; do                                                                                     \
