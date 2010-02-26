@@ -114,7 +114,7 @@ typedef gboolean (*GstMetaDeserializeFunction) (GstBufferMeta *meta,
  * @serialize_func: function for serializing
  * @deserialize_func: function for deserializing
  *
- * The #GstBufferMetaInfo provides infomation about a specific metadata
+ * The #GstBufferMetaInfo provides information about a specific metadata
  * structure.
  */
 struct _GstBufferMetaInfo {

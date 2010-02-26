@@ -39,6 +39,20 @@ Requirements
  - We should be able to attach statically allocated metadata to a buffer. This
    is for metadata that does not change much.
 
+Use cases
+---------
+
+ * DSP vs CPU caches
+
+ Both DSP and CPU have separate MMUs and memory caches. When we exchange buffers
+ between two subsystems we need to flush caches so that one CPU can see the
+ modifications done by the other CPU. These cashes must only be flushed when one
+ CPU performed a write and the other CPU needs to do a read.
+
+ In order to implement this we need to be able to mark our read and write
+ operations on the buffer data.
+
+
 
 GstMiniObject
 ~~~~~~~~~~~~~
@@ -90,6 +104,9 @@ struct _GstBuffer {
   GstCaps               *caps;
   GstBuffer             *parent;
 
+  GstBufferDataMap       mmap_func;
+  GstBufferDataUnmap     munmap_func;
+
   gpointer _gst_padding[10];
 };
 
@@ -103,6 +120,24 @@ region of the buffer. The size of the free region is kept in the free_size field
 
 Buffers point to a GstCaps structure that contains the caps of the buffer data.
 
+We add two functions, map and unmap. We introduce explicit read and write transactions
+on the buffer data in order to be able to implement flushing of the data between
+different caches and mapping between different MMUs.
+
+  typedef enum {
+    GST_BUFFER_MAP_NONE,
+    GST_BUFFER_MAP_READ,
+    GST_BUFFER_MAP_WRITE,
+  } GstBufferMapFlags
+
+  gpointer gst_buffer_map   (GstBuffer *, guint offset, guint *size, GstBufferMapFlags);
+  gboolean gst_buffer_unmap (GstBuffer *, gpointer data,  guint size);
+
+The map functions always create a contiguous memory space for the requested
+area of the buffer. This might involve memcpy and other expensive operations. It
+is assumed that more specialized elements can deal with the different memory
+metadata structures in order to optimize access to the memory.
+
 
 GstBufferMeta
 ~~~~~~~~~~~~~
@@ -110,9 +145,8 @@ GstBufferMeta
 A GstBufferMeta is a structure as follows:
 
   struct _GstBufferMeta {
-    GstBufferMetaInfo *info;  /* tag and info for the meta item */
-    GstBufferMeta     *next;  /* pointer to the next item */
-  }
+    GstBufferMetaInfo *info;    /* tag and info for the meta item */
+  };
 
 The purpose of the this structure is to serve as a common header for all metadata
 information that we can attach to a buffer. Specific metadata, such as timing metadata,
@@ -133,9 +167,9 @@ Or another example for the buffer memory region
     GstBufferMeta      meta;
    
     /* pointer to data and its size */
-    guint8            *data;
+    gpointer          *data;
     guint              size;
-    guint8            *malloc_data;
+    gpointer          *data_orig;
     GFreeFunc          data_free;
     gpointer           data_user;
   };
@@ -146,6 +180,7 @@ GstBufferMetaInfo will point to more information about the metadata and looks li
     GQuark                     api;       /* api name */
     GQuark                     impl;      /* implementation name */
     gsize                      size;      /* size of the structure */
+    GstBufferMetaInfo         *parent     /* parent info */
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
@@ -154,7 +189,7 @@ GstBufferMetaInfo will point to more information about the metadata and looks li
     GstMetaSerializeFunction   serialize_func
     GstMetaDeserializeFunction deserialize_func
     GstMetaConvFunction        conv_func;
-  }
+  };
 
 Tag will contain a GQuark of the metadata name. We will be able to refer to specific
 metadata by name or by its (cached) GQuark.  A repository of registered MetaInfo
@@ -189,16 +224,18 @@ GstMiniObject            |     GType (GstBuffer)               |
                          +-------------------------------------+
 GstBuffer                |     caps, parent, subfunc           |
                          +.....................................+
+                         |     next                           ---+
+                         |     parent                         ------> NULL
                       +- |     info                           ------> GstBufferMetaInfo
-GstBufferMetaTiming   |  |     next                           ---+
-                      |  |                                     | |
+GstBufferMetaTiming   |  |                                     | |
                       |  |     dts                             | |
                       |  |     pts                             | |
                       |  |     duration                        | |
                       +- |     clock_rate                      | |
                          + . . . . . . . . . . . . . . . . . . + |
-                      +- |     info                           <--+ -> GstBufferMetaInfo
-GstBufferMetaMemory   |  |     next                           ---+
+                         |     next                           <--+
+                         |     parent                         ------> NULL
+GstBufferMetaMemory   +- |     info                           ------> GstBufferMetaInfo
                       |  |                                     | |
                       |  |     data                            | |
                       |  |     size                            | |
@@ -207,6 +244,7 @@ GstBufferMetaMemory   |  |     next                           ---+
                       +- |     data_user                       | |
                          + . . . . . . . . . . . . . . . . . . + .
                          .                                       .
+
 
 API examples
 ~~~~~~~~~~~~
@@ -452,5 +490,30 @@ Some of these overlap, we need to find a minimal set of metadata structures that
 allows us to define all use cases.
 
 
+
+Video Buffers
+-------------
+
+ #define GST_VIDEO_MAX_PLANES 4
+
+ struct GstVideoPlane {
+   guint8             *data;
+   guint               size;
+   guint               stride;
+
+   guint8             *data_orig;
+   guint               size_orig;
+   GFreeFunc           data_free;
+   gpointer            data_user;
+ };
+
+ struct GstBufferVideoMeta {
+   GstBufferMeta       meta
+
+   GstBufferVideoFlags flags
+
+   guint               n_planes;
+   GstVideoPlane       plane[GST_VIDEO_MAX_PLANES];
+ };
 
 
