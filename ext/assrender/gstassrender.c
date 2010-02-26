@@ -1066,6 +1066,8 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp, duration;
   GstClockTime sub_running_time, vid_running_time;
   GstClockTime sub_running_time_end;
+  gint64 cstart, cstop;
+  gboolean in_seg;
 
   if (render->subtitle_flushing) {
     gst_buffer_unref (buffer);
@@ -1082,6 +1084,21 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+
+  in_seg =
+      gst_segment_clip (&render->subtitle_segment, GST_FORMAT_TIME, timestamp,
+      timestamp + duration, &cstart, &cstop);
+  if (!in_seg) {
+    GST_DEBUG_OBJECT (render,
+        "Text buffer before segment start (%" GST_TIME_FORMAT " < %"
+        GST_TIME_FORMAT ")", GST_TIME_ARGS (timestamp),
+        GST_TIME_ARGS (render->subtitle_segment.start));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+  GST_BUFFER_TIMESTAMP (buffer) = timestamp = cstart;
+  GST_BUFFER_DURATION (buffer) = duration = cstop - cstart;
 
   gst_segment_set_last_stop (&render->subtitle_segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer));
