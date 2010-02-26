@@ -302,7 +302,10 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
     fclose (qtmux->moov_recov_file);
     qtmux->moov_recov_file = NULL;
   }
+
+  GST_OBJECT_LOCK (qtmux);
   gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
+  GST_OBJECT_UNLOCK (qtmux);
 
   /* reset pad data */
   for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
@@ -957,7 +960,9 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
 {
   const GstTagList *tags;
 
+  GST_OBJECT_LOCK (qtmux);
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (qtmux));
+  GST_OBJECT_UNLOCK (qtmux);
 
   GST_LOG_OBJECT (qtmux, "tags: %" GST_PTR_FORMAT, tags);
 
@@ -2450,11 +2455,16 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:{
       GstTagList *list;
       GstTagSetter *setter = GST_TAG_SETTER (qtmux);
-      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
+      GstTagMergeMode mode;
+
+      GST_OBJECT_LOCK (qtmux);
+      mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       GST_DEBUG_OBJECT (qtmux, "received tag event");
       gst_event_parse_tag (event, &list);
+
       gst_tag_setter_merge_tags (setter, list, mode);
+      GST_OBJECT_UNLOCK (qtmux);
       break;
     }
     default:
