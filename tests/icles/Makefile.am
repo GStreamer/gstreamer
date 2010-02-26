@@ -45,7 +45,7 @@ if USE_COG
 CLEANFILES = cog-test.c
 
 cog-test.c: $(srcdir)/../../ext/cog/cog.orc
-	$(ORCC) --test -o cog-test.c $(srcdir)/../../ext/cog/cog.orc
+	$(AM_V_GEN)$(ORCC) --test -o cog-test.c $(srcdir)/../../ext/cog/cog.orc
 
 nodist_cog_test_SOURCES = cog-test.c
 cog_test_CFLAGS = $(COG_CFLAGS)

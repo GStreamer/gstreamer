@@ -7,11 +7,15 @@ pcverfiles_uninstalled = \
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
+cp_verbose = $(cp_verbose_$(V))
+cp_verbose_ = $(cp_verbose_$(AM_DEFAULT_VERBOSITY))
+cp_verbose_0 = @echo "  CP     $@";
+
 ### how to generate versioned .pc files from .pc files in this dir
 %-@GST_MAJORMINOR@.pc: %.pc
-	cp $< $@
+	$(cp_verbose_0)cp $< $@
 %-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
-	cp $< $@
+	$(cp_verbose_0)cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(pcverfiles)
