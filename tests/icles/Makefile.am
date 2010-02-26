@@ -35,6 +35,14 @@ else
 PANGO_TESTS = 
 endif
 
+audio_trickplay_SOURCES = audio-trickplay.c
+audio_trickplay_CFLAGS  = $(GST_CFLAGS)
+audio_trickplay_LDADD = $(GST_LIBS) -lgstcontroller-$(GST_MAJORMINOR) $(LIBM)
+
+playbin_text_SOURCES = playbin-text.c
+playbin_text_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+playbin_text_LDADD = $(GST_LIBS) $(LIBM)
+
 stress_playbin_SOURCES = stress-playbin.c
 stress_playbin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 stress_playbin_LDADD = $(GST_LIBS) $(LIBM)
@@ -47,8 +55,5 @@ test_box_SOURCES = test-box.c
 test_box_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_box_LDADD = $(GST_LIBS) $(LIBM)
 
-playbin_text_SOURCES = playbin-text.c
-playbin_text_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-playbin_text_LDADD = $(GST_LIBS) $(LIBM)
-
-noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) stress-playbin test-scale test-box playbin-text
+noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
+        audio-trickplay playbin-text stress-playbin test-scale test-box
