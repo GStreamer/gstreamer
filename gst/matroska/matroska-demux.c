@@ -3532,19 +3532,21 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         GST_CLOCK_TIME_IS_VALID (demux->segment.last_stop) &&
         demux->segment.last_stop > demux->segment.start &&
         context->pos + (GST_SECOND / 2) < demux->segment.last_stop) {
+      gint64 new_start;
+
+      new_start = demux->segment.last_stop - (GST_SECOND / 2);
       GST_DEBUG_OBJECT (demux,
           "Synchronizing stream %d with others by advancing time " "from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
-          GST_TIME_ARGS (context->pos),
-          GST_TIME_ARGS (demux->segment.last_stop));
+          GST_TIME_ARGS (context->pos), GST_TIME_ARGS (new_start));
 
-      context->pos = demux->segment.last_stop;
+      context->pos = new_start;
 
       /* advance stream time */
       gst_pad_push_event (context->pad,
           gst_event_new_new_segment (TRUE, demux->segment.rate,
-              demux->segment.format, demux->segment.last_stop,
-              demux->segment.stop, demux->segment.last_stop));
+              demux->segment.format, new_start,
+              demux->segment.stop, new_start));
     }
   }
 }
