@@ -31,10 +31,31 @@ gst_flv_parse_add_index_entry (GstFLVDemux * demux, GstClockTime ts,
     guint64 pos, gboolean keyframe)
 {
   static GstIndexAssociation associations[2];
+  static GstIndexEntry *entry;
 
   GST_LOG_OBJECT (demux,
       "adding key=%d association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
       keyframe, GST_TIME_ARGS (ts), pos);
+
+  /* entry may already have been added before, avoid adding indefinitely */
+  entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
+      GST_INDEX_LOOKUP_EXACT, GST_ASSOCIATION_FLAG_NONE, GST_FORMAT_BYTES, pos);
+
+  if (entry) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gint64 time;
+    gboolean key;
+
+    gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
+    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
+        ", keyframe %d", GST_TIME_ARGS (time), key);
+    /* there is not really a way to delete the existing one */
+    if (time != ts || key != !!keyframe)
+      GST_DEBUG_OBJECT (demux, "metadata mismatch");
+#endif
+    return;
+  }
 
   associations[0].format = GST_FORMAT_TIME;
   associations[0].value = ts;
