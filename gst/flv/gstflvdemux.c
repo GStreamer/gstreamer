@@ -71,6 +71,8 @@ GST_BOILERPLATE (GstFLVDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean flv_demux_handle_seek_push (GstFLVDemux * demux,
     GstEvent * event);
+static gboolean gst_flv_demux_handle_seek_pull (GstFLVDemux * demux,
+    GstEvent * event, gboolean seeking);
 
 static void
 gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
@@ -585,7 +587,7 @@ gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
   return ret;
 }
 
-static void
+static GstFlowReturn
 gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
 {
   gint64 size;
@@ -594,10 +596,11 @@ gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
   guint64 old_offset;
   GstBuffer *buffer;
   GstClockTime tag_time;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
           fmt != GST_FORMAT_BYTES))
-    return;
+    return GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (demux, "building index at %" G_GINT64_FORMAT
       " looking for time %" GST_TIME_FORMAT, pos, GST_TIME_ARGS (ts));
@@ -605,8 +608,8 @@ gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
   old_offset = demux->offset;
   demux->offset = pos;
 
-  while (gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
-          &buffer) == GST_FLOW_OK) {
+  while ((ret = gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset,
+              12, &buffer)) == GST_FLOW_OK) {
     tag_time = gst_flv_parse_tag_timestamp (demux, TRUE, buffer, &tag_size);
 
     gst_buffer_unref (buffer);
@@ -617,11 +620,16 @@ gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
     demux->offset += tag_size;
   }
 
-  /* file ran out, so mark we have complete index */
-  demux->indexed = TRUE;
+  if (ret == GST_FLOW_UNEXPECTED) {
+    /* file ran out, so mark we have complete index */
+    demux->indexed = TRUE;
+    ret = GST_FLOW_OK;
+  }
 
 exit:
   demux->offset = old_offset;
+
+  return ret;
 }
 
 static gint64
@@ -707,6 +715,20 @@ gst_flv_demux_loop (GstPad * pad)
         break;
       case FLV_STATE_DONE:
         ret = GST_FLOW_UNEXPECTED;
+        break;
+      case FLV_STATE_SEEK:
+        /* seek issued with insufficient index;
+         * scan for index in task thread from current maximum offset to
+         * desired time and then perform seek */
+        /* TODO maybe some buffering message or so to indicate scan progress */
+        ret = gst_flv_demux_create_index (demux, demux->index_max_pos,
+            demux->seek_time);
+        if (ret != GST_FLOW_OK)
+          goto pause;
+        /* position and state arranged by seek,
+         * also unrefs event */
+        gst_flv_demux_handle_seek_pull (demux, demux->seek_event, FALSE);
+        demux->seek_event = NULL;
         break;
       default:
         ret = gst_flv_demux_pull_header (pad, demux);
@@ -1002,7 +1024,8 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
 }
 
 static gboolean
-gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
+gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event,
+    gboolean seeking)
 {
   GstFormat format;
   GstSeekFlags flags;
@@ -1015,10 +1038,14 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
 
-  gst_event_unref (event);
-
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
+
+  /* mark seeking thread entering flushing/pausing */
+  GST_OBJECT_LOCK (demux);
+  if (seeking)
+    demux->seeking = seeking;
+  GST_OBJECT_UNLOCK (demux);
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
@@ -1058,12 +1085,22 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     /* Do the actual seeking */
     /* index is reliable if it is complete or we do not go to far ahead */
-    if (!demux->indexed &&
+    if (seeking && !demux->indexed &&
         seeksegment.last_stop > demux->index_max_time + 10 * GST_SECOND) {
-      /* scan and build index from current maximum offset to desired time */
-      /* NOTE this will _pull_range from seeking thread, but should be ok ... */
-      gst_flv_demux_create_index (demux, demux->index_max_pos,
-          seeksegment.last_stop);
+      GST_DEBUG_OBJECT (demux, "delaying seek to post-scan; "
+          " index only up to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->index_max_time));
+      /* stop flushing for now */
+      if (flush)
+        gst_flv_demux_push_src_event (demux, gst_event_new_flush_stop ());
+      /* delegate scanning and index building to task thread to avoid
+       * occupying main (UI) loop */
+      if (demux->seek_event)
+        gst_event_unref (demux->seek_event);
+      demux->seek_event = gst_event_ref (event);
+      demux->seek_time = seeksegment.last_stop;
+      demux->state = FLV_STATE_SEEK;
+      goto exit;
     }
     /* now index should be as reliable as it can be for current purpose */
     demux->offset = gst_flv_demux_find_offset (demux, &seeksegment);
@@ -1136,17 +1173,32 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
     }
   }
 
-  gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_flv_demux_loop, demux->sinkpad);
+exit:
+  GST_OBJECT_LOCK (demux);
+  seeking = demux->seeking && !seeking;
+  demux->seeking = FALSE;
+  GST_OBJECT_UNLOCK (demux);
+
+  /* if we detect an external seek having started (and possibly already having
+   * flushed), do not restart task to give it a chance.
+   * Otherwise external one's flushing will take care to pause task */
+  if (seeking) {
+    gst_pad_pause_task (demux->sinkpad);
+  } else {
+    gst_pad_start_task (demux->sinkpad,
+        (GstTaskFunction) gst_flv_demux_loop, demux->sinkpad);
+  }
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
+  gst_event_unref (event);
   return ret;
 
   /* ERRORS */
 wrong_format:
   {
     GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
+    gst_event_unref (event);
     return FALSE;
   }
 }
@@ -1290,7 +1342,7 @@ gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       if (demux->random_access) {
-        ret = gst_flv_demux_handle_seek_pull (demux, event);
+        ret = gst_flv_demux_handle_seek_pull (demux, event, TRUE);
       } else {
         ret = gst_flv_demux_handle_seek_push (demux, event);
       }
