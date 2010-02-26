@@ -93,7 +93,7 @@ static const TestBuffer buf1 = {
 };
 
 static void
-sink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
+sink_handoff_cb_xRGB (GstElement * object, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   guint *sink_pos = (guint *) user_data;
@@ -108,6 +108,46 @@ sink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
       all_red = all_red && (data[i * 480 * 4 + j * 4 + 1] == 255 &&
           data[i * 480 * 4 + j * 4 + 2] == 0 &&
           data[i * 480 * 4 + j * 4 + 3] == 0);
+    }
+  }
+
+  fail_unless (contains_text != all_red,
+      "Frame %d is incorrect (all red %d, contains text %d)", *sink_pos,
+      all_red, contains_text);
+  *sink_pos = *sink_pos + 1;
+}
+
+static void
+sink_handoff_cb_I420 (GstElement * object, GstBuffer * buffer, GstPad * pad,
+    gpointer user_data)
+{
+  guint *sink_pos = (guint *) user_data;
+  gboolean contains_text = (*sink_pos == 1 || *sink_pos == 2);
+  guint c, i, j;
+  guint8 *data = GST_BUFFER_DATA (buffer);
+  gboolean all_red = TRUE;
+  guint8 *comp;
+  gint comp_stride, comp_width, comp_height;
+  const guint8 color[] = { 81, 90, 240 };
+
+  fail_unless_equals_int (GST_BUFFER_SIZE (buffer),
+      gst_video_format_get_size (GST_VIDEO_FORMAT_I420, 640, 480));
+
+  for (c = 0; c < 3; c++) {
+    comp =
+        data + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, c,
+        640, 480);
+    comp_stride =
+        gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, c, 640);
+    comp_width =
+        gst_video_format_get_component_width (GST_VIDEO_FORMAT_I420, c, 640);
+    comp_height =
+        gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, c, 480);
+
+    for (i = 0; i < comp_height; i++) {
+      for (j = 0; j < comp_width; j++) {
+        all_red = all_red && (comp[i * comp_stride + j] == color[c]);
+      }
     }
   }
 
@@ -133,101 +173,105 @@ src_buffer_probe_cb (GstPad * pad, GstBuffer * buffer, gpointer user_data)
   return TRUE;
 }
 
-GST_START_TEST (test_assrender_basic)
-{
-  GstElement *pipeline;
-  GstElement *appsrc, *videotestsrc, *capsfilter, *assrender, *fakesink;
-  guint sink_pos = 0;
-  GstCaps *video_caps;
-  GstCaps *text_caps;
-  GstBuffer *buf;
-  GstBus *bus;
-  GMainLoop *loop;
-  GstPad *pad, *blocked_pad;
-
-  pipeline = gst_pipeline_new ("pipeline");
-  fail_unless (pipeline != NULL);
-
-  capsfilter = gst_element_factory_make ("capsfilter", NULL);
-  fail_unless (capsfilter != NULL);
-  video_caps =
-      gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
-  g_object_set (capsfilter, "caps", video_caps, NULL);
-  gst_caps_unref (video_caps);
-  blocked_pad = gst_element_get_static_pad (capsfilter, "src");
-  gst_pad_set_blocked_async (blocked_pad, TRUE, _dummy_blocked_cb, NULL);
-
-  appsrc = gst_element_factory_make ("appsrc", NULL);
-  fail_unless (appsrc != NULL);
-  buf = gst_buffer_new_and_alloc (strlen (buf0.buf) + 1);
-  memcpy (GST_BUFFER_DATA (buf), buf0.buf, GST_BUFFER_SIZE (buf));
-  GST_BUFFER_TIMESTAMP (buf) = buf0.ts;
-  GST_BUFFER_DURATION (buf) = buf0.duration;
-  text_caps =
-      gst_caps_new_simple ("application/x-ssa", "codec_data", GST_TYPE_BUFFER,
-      buf, NULL);
-  gst_buffer_unref (buf);
-  gst_app_src_set_caps (GST_APP_SRC (appsrc), text_caps);
-  g_object_set (appsrc, "format", GST_FORMAT_TIME, NULL);
-  pad = gst_element_get_static_pad (appsrc, "src");
-  gst_pad_add_buffer_probe_full (pad, G_CALLBACK (src_buffer_probe_cb),
-      gst_object_ref (blocked_pad), (GDestroyNotify) gst_object_unref);
-  gst_object_unref (blocked_pad);
-  gst_object_unref (pad);
-
-  videotestsrc = gst_element_factory_make ("videotestsrc", NULL);
-  fail_unless (videotestsrc != NULL);
-  g_object_set (videotestsrc, "num-buffers", 5, "pattern", 4, NULL);
-
-  assrender = gst_element_factory_make ("assrender", NULL);
-  fail_unless (assrender != NULL);
-
-  fakesink = gst_element_factory_make ("fakesink", NULL);
-  fail_unless (fakesink != NULL);
-  g_object_set (fakesink, "signal-handoffs", TRUE, "async", FALSE, NULL);
-  g_signal_connect (fakesink, "handoff", G_CALLBACK (sink_handoff_cb),
-      &sink_pos);
-
-  gst_bin_add_many (GST_BIN (pipeline), appsrc, videotestsrc, capsfilter,
-      assrender, fakesink, NULL);
-
-  fail_unless (gst_element_link_pads (appsrc, "src", assrender, "text_sink"));
-  fail_unless (gst_element_link_pads (videotestsrc, "src", capsfilter, "sink"));
-  fail_unless (gst_element_link_pads (capsfilter, "src", assrender,
-          "video_sink"));
-  fail_unless (gst_element_link_pads (assrender, "src", fakesink, "sink"));
-
-  loop = g_main_loop_new (NULL, TRUE);
-  fail_unless (loop != NULL);
-
-  bus = gst_element_get_bus (pipeline);
-  fail_unless (bus != NULL);
-  gst_bus_add_watch (bus, bus_handler, loop);
-  gst_object_unref (bus);
-
-  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-      GST_STATE_CHANGE_SUCCESS);
-
-  buf = gst_buffer_new_and_alloc (strlen (buf1.buf) + 1);
-  memcpy (GST_BUFFER_DATA (buf), buf1.buf, GST_BUFFER_SIZE (buf));
-  gst_buffer_set_caps (buf, text_caps);
-  GST_BUFFER_TIMESTAMP (buf) = buf1.ts;
-  GST_BUFFER_DURATION (buf) = buf1.duration;
-  gst_app_src_push_buffer (GST_APP_SRC (appsrc), buf);
-  gst_caps_unref (text_caps);
-  gst_app_src_end_of_stream (GST_APP_SRC (appsrc));
-
-  g_main_loop_run (loop);
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-
-  fail_unless_equals_int (sink_pos, 5);
-
-  g_object_unref (pipeline);
-  g_main_loop_unref (loop);
-}
-
+#define CREATE_BASIC_TEST(format) \
+GST_START_TEST (test_assrender_basic_##format) \
+{ \
+  GstElement *pipeline; \
+  GstElement *appsrc, *videotestsrc, *capsfilter, *assrender, *fakesink; \
+  guint sink_pos = 0; \
+  GstCaps *video_caps; \
+  GstCaps *text_caps; \
+  GstBuffer *buf; \
+  GstBus *bus; \
+  GMainLoop *loop; \
+  GstPad *pad, *blocked_pad; \
+  \
+  pipeline = gst_pipeline_new ("pipeline"); \
+  fail_unless (pipeline != NULL); \
+  \
+  capsfilter = gst_element_factory_make ("capsfilter", NULL); \
+  fail_unless (capsfilter != NULL); \
+  video_caps = \
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_##format, 640, 480, 25, 1, 1, 1); \
+  g_object_set (capsfilter, "caps", video_caps, NULL); \
+  gst_caps_unref (video_caps); \
+  blocked_pad = gst_element_get_static_pad (capsfilter, "src"); \
+  gst_pad_set_blocked_async (blocked_pad, TRUE, _dummy_blocked_cb, NULL); \
+  \
+  appsrc = gst_element_factory_make ("appsrc", NULL); \
+  fail_unless (appsrc != NULL); \
+  buf = gst_buffer_new_and_alloc (strlen (buf0.buf) + 1); \
+  memcpy (GST_BUFFER_DATA (buf), buf0.buf, GST_BUFFER_SIZE (buf)); \
+  GST_BUFFER_TIMESTAMP (buf) = buf0.ts; \
+  GST_BUFFER_DURATION (buf) = buf0.duration; \
+  text_caps = \
+      gst_caps_new_simple ("application/x-ssa", "codec_data", GST_TYPE_BUFFER, \
+      buf, NULL); \
+  gst_buffer_unref (buf); \
+  gst_app_src_set_caps (GST_APP_SRC (appsrc), text_caps); \
+  g_object_set (appsrc, "format", GST_FORMAT_TIME, NULL); \
+  pad = gst_element_get_static_pad (appsrc, "src"); \
+  gst_pad_add_buffer_probe_full (pad, G_CALLBACK (src_buffer_probe_cb), \
+      gst_object_ref (blocked_pad), (GDestroyNotify) gst_object_unref); \
+  gst_object_unref (blocked_pad); \
+  gst_object_unref (pad); \
+  \
+  videotestsrc = gst_element_factory_make ("videotestsrc", NULL); \
+  fail_unless (videotestsrc != NULL); \
+  g_object_set (videotestsrc, "num-buffers", 5, "pattern", 4, NULL); \
+  \
+  assrender = gst_element_factory_make ("assrender", NULL); \
+  fail_unless (assrender != NULL); \
+  \
+  fakesink = gst_element_factory_make ("fakesink", NULL); \
+  fail_unless (fakesink != NULL); \
+  g_object_set (fakesink, "signal-handoffs", TRUE, "async", FALSE, NULL); \
+  g_signal_connect (fakesink, "handoff", G_CALLBACK (sink_handoff_cb_##format), \
+      &sink_pos); \
+  \
+  gst_bin_add_many (GST_BIN (pipeline), appsrc, videotestsrc, capsfilter, \
+      assrender, fakesink, NULL); \
+  \
+  fail_unless (gst_element_link_pads (appsrc, "src", assrender, "text_sink")); \
+  fail_unless (gst_element_link_pads (videotestsrc, "src", capsfilter, "sink")); \
+  fail_unless (gst_element_link_pads (capsfilter, "src", assrender, \
+          "video_sink")); \
+  fail_unless (gst_element_link_pads (assrender, "src", fakesink, "sink")); \
+  \
+  loop = g_main_loop_new (NULL, TRUE); \
+  fail_unless (loop != NULL); \
+  \
+  bus = gst_element_get_bus (pipeline); \
+  fail_unless (bus != NULL); \
+  gst_bus_add_watch (bus, bus_handler, loop); \
+  gst_object_unref (bus); \
+  \
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING), \
+      GST_STATE_CHANGE_SUCCESS); \
+  \
+  buf = gst_buffer_new_and_alloc (strlen (buf1.buf) + 1); \
+  memcpy (GST_BUFFER_DATA (buf), buf1.buf, GST_BUFFER_SIZE (buf)); \
+  gst_buffer_set_caps (buf, text_caps); \
+  GST_BUFFER_TIMESTAMP (buf) = buf1.ts; \
+  GST_BUFFER_DURATION (buf) = buf1.duration; \
+  gst_app_src_push_buffer (GST_APP_SRC (appsrc), buf); \
+  gst_caps_unref (text_caps); \
+  gst_app_src_end_of_stream (GST_APP_SRC (appsrc)); \
+  \
+  g_main_loop_run (loop); \
+  \
+  gst_element_set_state (pipeline, GST_STATE_NULL); \
+  \
+  fail_unless_equals_int (sink_pos, 5); \
+  \
+  g_object_unref (pipeline); \
+  g_main_loop_unref (loop); \
+} \
+\
 GST_END_TEST;
+
+CREATE_BASIC_TEST (xRGB);
+CREATE_BASIC_TEST (I420);
 
 Suite *
 assrender_suite (void)
@@ -239,7 +283,8 @@ assrender_suite (void)
   tcase_set_timeout (tc_chain, 120);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_assrender_basic);
+  tcase_add_test (tc_chain, test_assrender_basic_xRGB);
+  tcase_add_test (tc_chain, test_assrender_basic_I420);
 
   return s;
 }
