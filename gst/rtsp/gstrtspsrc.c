@@ -241,7 +241,7 @@ static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
 
 static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment);
-static gboolean gst_rtspsrc_pause (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle);
 static gboolean gst_rtspsrc_close (GstRTSPSrc * src);
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
@@ -1590,7 +1590,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* if we were playing, pause first */
   if (playing)
-    gst_rtspsrc_pause (src);
+    gst_rtspsrc_pause (src, FALSE);
 
   gst_rtspsrc_do_seek (src, &seeksegment);
 
@@ -2947,30 +2947,12 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     /* get the next timeout interval */
     gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
-    /* see if the timeout period expired */
-    if ((tv_timeout.tv_sec | tv_timeout.tv_usec) == 0) {
-      GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
-      /* send keep-alive, ignore the result, a warning will be posted. */
-      gst_rtspsrc_send_keep_alive (src);
-    }
+    GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
+        (gint) tv_timeout.tv_sec);
 
-    GST_DEBUG_OBJECT (src, "doing receive");
-
-    /* We need to check if playback has been paused while we have been
-     * doing something else in our own GstTask (e.g. pushing buffer). There
-     * is a slight chance that we have just received data buffer when PAUSE
-     * state change happens (in another thread). In this case we well be
-     * totally ignorant of that unless we explicitly check it here. */
-    GST_RTSP_STATE_LOCK (src);
-    if (src->state == GST_RTSP_STATE_READY) {
-      /* We are looping in a paused mode */
-      GST_RTSP_STATE_UNLOCK (src);
-      goto already_paused;
-    }
     /* protect the connection with the connection lock so that we can see when
      * we are finished doing server communication */
     res = gst_rtspsrc_connection_receive (src, &message, src->ptcp_timeout);
-    GST_RTSP_STATE_UNLOCK (src);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -2980,8 +2962,10 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
         /* we got interrupted this means we need to stop */
         goto interrupt;
       case GST_RTSP_ETIMEOUT:
-        /* no reply, go EOS */
-        goto timeout;
+        /* no reply, send keep alive */
+        GST_DEBUG_OBJECT (src, "timeout, sending keep-alive");
+        gst_rtspsrc_send_keep_alive (src);
+        continue;
       case GST_RTSP_EEOF:
         /* go EOS when the server closed the connection */
         goto server_eof;
@@ -3131,14 +3115,6 @@ unknown_stream:
     gst_rtsp_message_unset (&message);
     return GST_FLOW_OK;
   }
-timeout:
-  {
-    GST_DEBUG_OBJECT (src, "we got a timeout");
-    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
-        ("Timeout while waiting for server message."));
-    gst_rtsp_message_unset (&message);
-    return GST_FLOW_UNEXPECTED;
-  }
 server_eof:
   {
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
@@ -3154,11 +3130,6 @@ interrupt:
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
     /* unset flushing so we can do something else */
     gst_rtsp_connection_flush (src->connection, FALSE);
-    return GST_FLOW_WRONG_STATE;
-  }
-already_paused:
-  {
-    GST_DEBUG_OBJECT (src, "got interrupted: playback already paused");
     return GST_FLOW_WRONG_STATE;
   }
 receive_error:
@@ -3305,7 +3276,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
   /* pause to prepare for a restart */
-  gst_rtspsrc_pause (src);
+  gst_rtspsrc_pause (src, FALSE);
 
   if (src->task) {
     /* stop task, we cannot join as this would deadlock, the task will stop when
@@ -5176,6 +5147,19 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   if (src->state == GST_RTSP_STATE_PLAYING)
     goto was_playing;
 
+  if (!src->connection || !src->connected)
+    goto done;
+
+  /* waiting for connection idle, we were flushing so any attempt at doing data
+   * transfer will result in pausing the tasks. */
+  GST_DEBUG_OBJECT (src, "wait for connection idle");
+  GST_RTSP_CONN_LOCK (src);
+  GST_DEBUG_OBJECT (src, "connection is idle now");
+  GST_RTSP_CONN_UNLOCK (src);
+
+  GST_DEBUG_OBJECT (src, "stop connection flush");
+  gst_rtsp_connection_flush (src->connection, FALSE);
+
   /* do play */
   res =
       gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
@@ -5286,7 +5270,7 @@ send_error:
 }
 
 static gboolean
-gst_rtspsrc_pause (GstRTSPSrc * src)
+gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
@@ -5324,6 +5308,13 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
 
   gst_rtsp_message_unset (&request);
   gst_rtsp_message_unset (&response);
+
+  if (idle && src->task) {
+    GST_DEBUG_OBJECT (src, "starting idle task again");
+    src->base_time = -1;
+    gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
+    gst_task_start (src->task);
+  }
 
 no_connection:
   src->state = GST_RTSP_STATE_READY;
@@ -5461,14 +5452,14 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (rtspsrc, "PAUSED->PLAYING: stop connection flush");
-      gst_rtsp_connection_flush (rtspsrc->connection, FALSE);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_STOP, TRUE);
       /* send some dummy packets before we chain up to the parent to activate
        * the receive in the udp sources */
       gst_rtspsrc_send_dummy_packets (rtspsrc);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_DEBUG_OBJECT (rtspsrc, "shutdown: sending stop command");
+      GST_DEBUG_OBJECT (rtspsrc, "state change: sending stop command");
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_STOP, TRUE);
       break;
     default:
@@ -5485,7 +5476,8 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       gst_rtspsrc_play (rtspsrc, &rtspsrc->segment);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      gst_rtspsrc_pause (rtspsrc);
+      /* send pause request and keep the idle task around */
+      gst_rtspsrc_pause (rtspsrc, TRUE);
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
