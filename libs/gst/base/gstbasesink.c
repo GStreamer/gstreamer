@@ -2602,7 +2602,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   }
 
 done:
-  if (!late) {
+  if (!late || !GST_CLOCK_TIME_IS_VALID (priv->last_in_time)) {
     priv->last_in_time = start;
   }
   return late;
