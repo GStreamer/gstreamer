@@ -143,6 +143,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
+	$(top_srcdir)/gst/imagefreeze/gstimagefreeze.h \
 	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
 	$(top_srcdir)/gst/liveadder/liveadder.h \
 	$(top_srcdir)/gst/jpegformat/gstjpegparse.h \

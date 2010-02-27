@@ -1,0 +1,34 @@
+<plugin>
+  <name>imagefreeze</name>
+  <description>Still frame stream generator</description>
+  <filename>../../gst/imagefreeze/.libs/libgstimagefreeze.so</filename>
+  <basename>libgstimagefreeze.so</basename>
+  <version>0.10.17.3</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>imagefreeze</name>
+      <longname>Still frame stream generator</longname>
+      <class>Filter/Video</class>
+      <description>Generates a still frame stream from an image</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
