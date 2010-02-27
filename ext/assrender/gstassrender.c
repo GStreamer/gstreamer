@@ -988,17 +988,17 @@ gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
         gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer));
 
-    if (sub_running_time <= vid_running_time_end) {
-      gst_ass_render_process_text (render, render->subtitle_pending,
-          sub_running_time, sub_running_time_end - sub_running_time);
-      render->subtitle_pending = NULL;
-      g_cond_signal (render->subtitle_cond);
-    } else if (sub_running_time_end < vid_running_time) {
+    if (sub_running_time_end < vid_running_time) {
       gst_buffer_unref (render->subtitle_pending);
       GST_DEBUG_OBJECT (render,
           "Too late text buffer, dropping (%" GST_TIME_FORMAT " < %"
           GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time_end),
           GST_TIME_ARGS (vid_running_time));
+      render->subtitle_pending = NULL;
+      g_cond_signal (render->subtitle_cond);
+    } else if (sub_running_time <= vid_running_time_end + GST_SECOND / 2) {
+      gst_ass_render_process_text (render, render->subtitle_pending,
+          sub_running_time, sub_running_time_end - sub_running_time);
       render->subtitle_pending = NULL;
       g_cond_signal (render->subtitle_cond);
     }
@@ -1100,7 +1100,7 @@ gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
     vid_running_time +=
         gst_util_uint64_scale (GST_SECOND, render->fps_d, render->fps_n);
 
-  if (sub_running_time > vid_running_time) {
+  if (sub_running_time > vid_running_time + GST_SECOND / 2) {
     g_assert (render->subtitle_pending == NULL);
     g_mutex_lock (render->subtitle_mutex);
     if (G_UNLIKELY (render->subtitle_flushing)) {
