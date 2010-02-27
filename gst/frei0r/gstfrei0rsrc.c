@@ -113,12 +113,14 @@ gst_frei0r_src_create (GstPushSrc * src, GstBuffer ** buf)
 
   time = ((gdouble) GST_BUFFER_TIMESTAMP (outbuf)) / GST_SECOND;
 
+  GST_OBJECT_LOCK (self);
   if (klass->ftable->update2)
     klass->ftable->update2 (self->f0r_instance, time, NULL, NULL, NULL,
         (guint32 *) GST_BUFFER_DATA (outbuf));
   else
     klass->ftable->update (self->f0r_instance, time, NULL,
         (guint32 *) GST_BUFFER_DATA (outbuf));
+  GST_OBJECT_UNLOCK (self);
 
   *buf = outbuf;
 
@@ -291,10 +293,12 @@ gst_frei0r_src_get_property (GObject * object, guint prop_id, GValue * value,
   GstFrei0rSrc *self = GST_FREI0R_SRC (object);
   GstFrei0rSrcClass *klass = GST_FREI0R_SRC_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_get_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -304,10 +308,12 @@ gst_frei0r_src_set_property (GObject * object, guint prop_id,
   GstFrei0rSrc *self = GST_FREI0R_SRC (object);
   GstFrei0rSrcClass *klass = GST_FREI0R_SRC_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_set_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void

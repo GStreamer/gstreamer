@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2009,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -85,6 +85,7 @@ gst_frei0r_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   time = ((gdouble) GST_BUFFER_TIMESTAMP (inbuf)) / GST_SECOND;
 
+  GST_OBJECT_LOCK (self);
   if (klass->ftable->update2)
     klass->ftable->update2 (self->f0r_instance, time,
         (const guint32 *) GST_BUFFER_DATA (inbuf), NULL, NULL,
@@ -93,6 +94,7 @@ gst_frei0r_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     klass->ftable->update (self->f0r_instance, time,
         (const guint32 *) GST_BUFFER_DATA (inbuf),
         (guint32 *) GST_BUFFER_DATA (outbuf));
+  GST_OBJECT_UNLOCK (self);
 
   return GST_FLOW_OK;
 }
@@ -123,10 +125,12 @@ gst_frei0r_filter_get_property (GObject * object, guint prop_id, GValue * value,
   GstFrei0rFilter *self = GST_FREI0R_FILTER (object);
   GstFrei0rFilterClass *klass = GST_FREI0R_FILTER_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_get_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -136,10 +140,12 @@ gst_frei0r_filter_set_property (GObject * object, guint prop_id,
   GstFrei0rFilter *self = GST_FREI0R_FILTER (object);
   GstFrei0rFilterClass *klass = GST_FREI0R_FILTER_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_set_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void

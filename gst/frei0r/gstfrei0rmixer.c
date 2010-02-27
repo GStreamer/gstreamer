@@ -84,10 +84,12 @@ gst_frei0r_mixer_get_property (GObject * object, guint prop_id, GValue * value,
   GstFrei0rMixer *self = GST_FREI0R_MIXER (object);
   GstFrei0rMixerClass *klass = GST_FREI0R_MIXER_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_get_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -97,10 +99,12 @@ gst_frei0r_mixer_set_property (GObject * object, guint prop_id,
   GstFrei0rMixer *self = GST_FREI0R_MIXER (object);
   GstFrei0rMixerClass *klass = GST_FREI0R_MIXER_GET_CLASS (object);
 
+  GST_OBJECT_LOCK (self);
   if (!gst_frei0r_set_property (self->f0r_instance, klass->ftable,
           klass->properties, klass->n_properties, self->property_cache, prop_id,
           value))
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static GstStateChangeReturn
@@ -584,11 +588,13 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
   time = ((gdouble) GST_BUFFER_TIMESTAMP (outbuf)) / GST_SECOND;
 
+  GST_OBJECT_LOCK (self);
   klass->ftable->update2 (self->f0r_instance, time,
       (const guint32 *) GST_BUFFER_DATA (inbuf0),
       (const guint32 *) GST_BUFFER_DATA (inbuf1),
       (inbuf2) ? (const guint32 *) GST_BUFFER_DATA (inbuf2) : NULL,
       (guint32 *) GST_BUFFER_DATA (outbuf));
+  GST_OBJECT_UNLOCK (self);
 
   gst_buffer_unref (inbuf0);
   gst_buffer_unref (inbuf1);
