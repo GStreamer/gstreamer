@@ -296,6 +296,7 @@ AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(rtpmux)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
+AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(selector)
 AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
@@ -1667,6 +1668,7 @@ gst/real/Makefile
 gst/rtpmux/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
+gst/segmentclip/Makefile
 gst/selector/Makefile
 gst/siren/Makefile
 gst/speed/Makefile
