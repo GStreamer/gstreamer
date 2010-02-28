@@ -93,6 +93,7 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     g_free (filter->disttable);
@@ -106,6 +107,7 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     initDistTable (filter);
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -168,8 +170,7 @@ static GstFlowReturn
 gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
   GstWarpTV *warptv = GST_WARPTV (trans);
-  int width = warptv->width;
-  int height = warptv->height;
+  gint width, height;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out);
   gint xw, yw, cw;
@@ -177,6 +178,10 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint32 skip, *ctptr, *distptr;
   gint32 *ctable;
   GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_OBJECT_LOCK (warptv);
+  width = warptv->width;
+  height = warptv->height;
 
   xw = (gint) (sin ((warptv->tval + 100) * M_PI / 128) * 30);
   yw = (gint) (sin ((warptv->tval) * M_PI / 256) * -35);
@@ -221,6 +226,7 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   }
 
   warptv->tval = (warptv->tval + 1) & 511;
+  GST_OBJECT_UNLOCK (warptv);
 
   return ret;
 }

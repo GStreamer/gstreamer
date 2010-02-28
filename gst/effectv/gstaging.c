@@ -101,10 +101,12 @@ gst_agingtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -262,6 +264,7 @@ gst_agingtv_get_property (GObject * object, guint prop_id,
 {
   GstAgingTV *agingtv = GST_AGINGTV (object);
 
+  GST_OBJECT_LOCK (agingtv);
   switch (prop_id) {
     case PROP_SCRATCH_LINES:
       g_value_set_uint (value, agingtv->scratch_lines);
@@ -278,6 +281,7 @@ gst_agingtv_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
+  GST_OBJECT_UNLOCK (agingtv);
 }
 
 static void
@@ -323,12 +327,10 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
   GstAgingTV *agingtv = GST_AGINGTV (trans);
-  gint width = agingtv->width;
-  gint height = agingtv->height;
-  gint video_size = width * height;
+  gint width, height, video_size;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out);
-  gint area_scale = width * height / 64 / 480;
+  gint area_scale;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime timestamp, stream_time;
 
@@ -342,6 +344,12 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (agingtv), stream_time);
 
+  GST_OBJECT_LOCK (agingtv);
+  width = agingtv->width;
+  height = agingtv->height;
+  video_size = width * height;
+
+  area_scale = width * height / 64 / 480;
   if (area_scale <= 0)
     area_scale = 1;
 
@@ -355,6 +363,7 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
     pits (dest, width, height, area_scale, &agingtv->pits_interval);
   if (area_scale > 1 && agingtv->dusts)
     dusts (dest, width, height, &agingtv->dust_interval, area_scale);
+  GST_OBJECT_UNLOCK (agingtv);
 
   return ret;
 }
@@ -416,7 +425,4 @@ gst_agingtv_init (GstAgingTV * agingtv, GstAgingTVClass * klass)
   agingtv->color_aging = DEFAULT_COLOR_AGING;
   agingtv->pits = DEFAULT_PITS;
   agingtv->dusts = DEFAULT_DUSTS;
-
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (agingtv));
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (agingtv));
 }

@@ -44,6 +44,7 @@
 #include "gstvertigo.h"
 
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 
 GST_BOILERPLATE (GstVertigoTV, gst_vertigotv, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
@@ -86,6 +87,7 @@ gst_vertigotv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     gint area = filter->width * filter->height;
@@ -99,6 +101,7 @@ gst_vertigotv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -160,9 +163,22 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
   guint32 v;
   gint x, y, ox, oy, i, width, height, area;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
+
+  GST_OBJECT_LOCK (filter);
 
   width = filter->width;
   height = filter->height;
@@ -198,6 +214,7 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
   p = filter->current_buffer;
   filter->current_buffer = filter->alt_buffer;
   filter->alt_buffer = p;
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -218,6 +235,7 @@ gst_vertigotv_set_property (GObject * object, guint prop_id,
 {
   GstVertigoTV *filter = GST_VERTIGOTV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_SPEED:
       filter->phase_increment = g_value_get_float (value);
@@ -228,6 +246,7 @@ gst_vertigotv_set_property (GObject * object, guint prop_id,
     default:
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void

@@ -48,6 +48,7 @@
 #include "gstquark.h"
 #include "gsteffectv.h"
 
+#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
 /* number of frames of time-buffer. It should be as a configurable paramater */
@@ -91,12 +92,14 @@ gst_quarktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     gst_quarktv_planetable_clear (filter);
     filter->area = filter->width * filter->height;
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -109,27 +112,41 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
   gint area;
   guint32 *src, *dest;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp;
+  GstBuffer **planetable;
+  gint planes, current_plane;
 
-  area = filter->area;
-  src = (guint32 *) GST_BUFFER_DATA (in);
-  dest = (guint32 *) GST_BUFFER_DATA (out);
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (filter), timestamp);
 
   if (G_UNLIKELY (filter->planetable == NULL))
     return GST_FLOW_WRONG_STATE;
 
-  if (filter->planetable[filter->current_plane])
-    gst_buffer_unref (filter->planetable[filter->current_plane]);
+  GST_OBJECT_LOCK (filter);
+  area = filter->area;
+  src = (guint32 *) GST_BUFFER_DATA (in);
+  dest = (guint32 *) GST_BUFFER_DATA (out);
+  planetable = filter->planetable;
+  planes = filter->planes;
+  current_plane = filter->current_plane;
 
-  filter->planetable[filter->current_plane] = gst_buffer_ref (in);
+  if (planetable[current_plane])
+    gst_buffer_unref (planetable[current_plane]);
+  planetable[current_plane] = gst_buffer_ref (in);
 
   /* For each pixel */
   while (--area) {
     GstBuffer *rand;
 
     /* pick a random buffer */
-    rand =
-        filter->planetable[(filter->current_plane +
-            (fastrand () >> 24)) % filter->planes];
+    rand = planetable[(current_plane + (fastrand () >> 24)) % planes];
 
     /* Copy the pixel from the random buffer to dest */
     dest[area] =
@@ -138,7 +155,8 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
 
   filter->current_plane--;
   if (filter->current_plane < 0)
-    filter->current_plane = filter->planes - 1;
+    filter->current_plane = planes - 1;
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -194,6 +212,7 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstQuarkTV *filter = GST_QUARKTV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_PLANES:
     {
@@ -227,6 +246,7 @@ gst_quarktv_set_property (GObject * object, guint prop_id, const GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -274,7 +294,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
   g_object_class_install_property (gobject_class, PROP_PLANES,
       g_param_spec_int ("planes", "Planes",
           "Number of planes", 0, 64, PLANES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_quarktv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_quarktv_transform);

@@ -327,8 +327,6 @@ gst_radioactv_transform (GstBaseTransform * trans, GstBuffer * in,
   guint8 *diff, *p;
   guint32 *palette;
 
-  palette = &palettes[COLORS * filter->color];
-
   timestamp = GST_BUFFER_TIMESTAMP (in);
   stream_time =
       gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
@@ -342,6 +340,8 @@ gst_radioactv_transform (GstBaseTransform * trans, GstBuffer * in,
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
+  GST_OBJECT_LOCK (filter);
+  palette = &palettes[COLORS * filter->color];
   diff = filter->diff;
 
   if (filter->mode == 3 && filter->trigger)
@@ -395,6 +395,7 @@ gst_radioactv_transform (GstBaseTransform * trans, GstBuffer * in,
       filter->snaptime = filter->interval;
     }
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -409,11 +410,12 @@ gst_radioactv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     filter->buf_width_blocks = filter->width / 32;
     if (filter->buf_width_blocks > 255)
-      return FALSE;
+      goto out;
 
     filter->buf_width = filter->buf_width_blocks * 32;
     filter->buf_height = filter->height;
@@ -450,6 +452,8 @@ gst_radioactv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     ret = TRUE;
   }
+out:
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -502,6 +506,7 @@ gst_radioactv_set_property (GObject * object, guint prop_id,
 {
   GstRadioacTV *filter = GST_RADIOACTV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_MODE:
       filter->mode = g_value_get_enum (value);
@@ -521,6 +526,7 @@ gst_radioactv_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void

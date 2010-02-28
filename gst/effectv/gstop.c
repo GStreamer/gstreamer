@@ -206,8 +206,9 @@ gst_optv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   GstFlowReturn ret = GST_FLOW_OK;
   gint8 *p;
   guint8 *diff;
-  gint x, y;
+  gint x, y, width, height;
   GstClockTime timestamp, stream_time;
+  guint8 phase;
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
   stream_time =
@@ -225,6 +226,7 @@ gst_optv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   if (G_UNLIKELY (filter->opmap[0] == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
+  GST_OBJECT_LOCK (filter);
   switch (filter->mode) {
     default:
     case 0:
@@ -245,13 +247,17 @@ gst_optv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 
   diff = filter->diff;
   image_y_over (src, diff, filter->threshold, filter->width * filter->height);
+  height = filter->height;
+  width = filter->width;
+  phase = filter->phase;
 
-  for (y = 0; y < filter->height; y++) {
-    for (x = 0; x < filter->width; x++) {
-      *dest++ = palette[(((guint8) (*p + filter->phase)) ^ *diff++) & 255];
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      *dest++ = palette[(((guint8) (*p + phase)) ^ *diff++) & 255];
       p++;
     }
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -266,6 +272,7 @@ gst_optv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     gint i;
@@ -283,6 +290,7 @@ gst_optv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -325,6 +333,7 @@ gst_optv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstOpTV *filter = GST_OPTV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_MODE:
       filter->mode = g_value_get_enum (value);
@@ -339,6 +348,7 @@ gst_optv_set_property (GObject * object, guint prop_id, const GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void

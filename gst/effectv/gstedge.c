@@ -80,6 +80,7 @@ gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (edgetv);
   if (gst_structure_get_int (structure, "width", &edgetv->width) &&
       gst_structure_get_int (structure, "height", &edgetv->height)) {
     guint map_size;
@@ -94,6 +95,7 @@ gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     edgetv->map = (guint32 *) g_malloc0 (map_size);
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (edgetv);
 
   return ret;
 }
@@ -106,16 +108,26 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   guint32 *src, *dest;
   guint32 p, q;
   guint32 v0, v1, v2, v3;
+  gint height, width, map_height, map_width;
+  gint video_width_margin;
+  guint32 *map;
   GstFlowReturn ret = GST_FLOW_OK;
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
-  src += filter->width * 4 + 4;
-  dest += filter->width * 4 + 4;
+  GST_OBJECT_LOCK (filter);
+  map = filter->map;
+  height = filter->height;
+  width = filter->width;
+  map_height = filter->map_height;
+  map_width = filter->map_width;
+  video_width_margin = filter->video_width_margin;
+  src += width * 4 + 4;
+  dest += width * 4 + 4;
 
-  for (y = 1; y < filter->map_height - 1; y++) {
-    for (x = 1; x < filter->map_width - 1; x++) {
+  for (y = 1; y < map_height - 1; y++) {
+    for (x = 1; x < map_width - 1; x++) {
       p = *src;
       q = *(src - 4);
 
@@ -138,7 +150,7 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       v2 = (r << 17) | (g << 9) | b;
 
       /* difference between the current pixel and upper neighbor. */
-      q = *(src - filter->width * 4);
+      q = *(src - width * 4);
       r = ((p & 0xff0000) - (q & 0xff0000)) >> 16;
       g = ((p & 0xff00) - (q & 0xff00)) >> 8;
       b = (p & 0xff) - (q & 0xff);
@@ -156,10 +168,10 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
         b = 255;
       v3 = (r << 17) | (g << 9) | b;
 
-      v0 = filter->map[(y - 1) * filter->map_width * 2 + x * 2];
-      v1 = filter->map[y * filter->map_width * 2 + (x - 1) * 2 + 1];
-      filter->map[y * filter->map_width * 2 + x * 2] = v2;
-      filter->map[y * filter->map_width * 2 + x * 2 + 1] = v3;
+      v0 = map[(y - 1) * map_width * 2 + x * 2];
+      v1 = map[y * map_width * 2 + (x - 1) * 2 + 1];
+      map[y * map_width * 2 + x * 2] = v2;
+      map[y * map_width * 2 + x * 2 + 1] = v3;
       r = v0 + v1;
       g = r & 0x01010100;
       dest[0] = r | (g - (g >> 8));
@@ -170,23 +182,24 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       dest[3] = v3;
       r = v2 + v1;
       g = r & 0x01010100;
-      dest[filter->width] = r | (g - (g >> 8));
+      dest[width] = r | (g - (g >> 8));
       r = v2 + v3;
       g = r & 0x01010100;
-      dest[filter->width + 1] = r | (g - (g >> 8));
-      dest[filter->width + 2] = v3;
-      dest[filter->width + 3] = v3;
-      dest[filter->width * 2] = v2;
-      dest[filter->width * 2 + 1] = v2;
-      dest[filter->width * 3] = v2;
-      dest[filter->width * 3 + 1] = v2;
+      dest[width + 1] = r | (g - (g >> 8));
+      dest[width + 2] = v3;
+      dest[width + 3] = v3;
+      dest[width * 2] = v2;
+      dest[width * 2 + 1] = v2;
+      dest[width * 3] = v2;
+      dest[width * 3 + 1] = v2;
 
       src += 4;
       dest += 4;
     }
-    src += filter->width * 3 + 8 + filter->video_width_margin;
-    dest += filter->width * 3 + 8 + filter->video_width_margin;
+    src += width * 3 + 8 + video_width_margin;
+    dest += width * 3 + 8 + video_width_margin;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }

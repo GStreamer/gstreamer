@@ -53,6 +53,7 @@
 #include "gsteffectv.h"
 
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 
 #define DEFAULT_MODE 0
 
@@ -316,10 +317,22 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
   gint width, height;
   gint *p, *q, *r;
   gint8 *vp;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
+  GST_OBJECT_LOCK (filter);
   /* impact from the motion or rain drop */
   if (filter->mode)
     raindrop (filter);
@@ -433,6 +446,7 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
     dest += filter->width;
     vp += 2;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -447,6 +461,7 @@ gst_rippletv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
 
@@ -475,6 +490,7 @@ gst_rippletv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -527,6 +543,7 @@ gst_rippletv_set_property (GObject * object, guint prop_id,
 {
   GstRippleTV *filter = GST_RIPPLETV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_RESET:{
       memset (filter->map, 0,
@@ -540,6 +557,7 @@ gst_rippletv_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -589,12 +607,12 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
   g_object_class_install_property (gobject_class, PROP_RESET,
       g_param_spec_boolean ("reset", "Reset",
           "Reset all current ripples", FALSE,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
           "Mode", GST_TYPE_RIPPLETV_MODE, DEFAULT_MODE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_rippletv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_rippletv_transform);

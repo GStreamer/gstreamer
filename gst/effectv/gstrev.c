@@ -65,6 +65,7 @@
 #include "gstrev.h"
 
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 
 #define THE_COLOR 0xffffffff
 
@@ -108,10 +109,12 @@ gst_revtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -125,18 +128,34 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   guint32 *nsrc;
   gint y, x, R, G, B, yval;
   GstFlowReturn ret = GST_FLOW_OK;
+  gint linespace, vscale;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
+  GST_OBJECT_LOCK (filter);
   width = filter->width;
   height = filter->height;
 
   /* Clear everything to black */
   memset (dest, 0, width * height * sizeof (guint32));
 
+  linespace = filter->linespace;
+  vscale = filter->vscale;
+
   /* draw the offset lines */
-  for (y = 0; y < height; y += filter->linespace) {
+  for (y = 0; y < height; y += linespace) {
     for (x = 0; x <= width; x++) {
       nsrc = src + (y * width) + x;
 
@@ -145,13 +164,14 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       G = ((*nsrc) & 0xff00) >> (8 - 2);
       B = (*nsrc) & 0xff;
 
-      yval = y - ((short) (R + G + B) / filter->vscale);
+      yval = y - ((short) (R + G + B) / vscale);
 
       if (yval > 0) {
         dest[x + (yval * width)] = THE_COLOR;
       }
     }
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -162,6 +182,7 @@ gst_revtv_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstRevTV *filter = GST_REVTV (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_DELAY:
       filter->vgrabtime = g_value_get_int (value);
@@ -173,8 +194,10 @@ gst_revtv_set_property (GObject * object, guint prop_id, const GValue * value,
       filter->vscale = g_value_get_int (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
@@ -226,13 +249,15 @@ gst_revtv_class_init (GstRevTVClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELAY,
       g_param_spec_int ("delay", "Delay", "Delay in frames between updates",
-          1, 100, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          1, 100, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LINESPACE,
-      g_param_spec_int ("linespace", "Linespace", "Control line spacing",
-          1, 100, 6, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("linespace", "Linespace", "Control line spacing", 1,
+          100, 6,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GAIN,
-      g_param_spec_int ("gain", "Gain", "Control gain",
-          1, 200, 50, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("gain", "Gain", "Control gain", 1, 200, 50,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_revtv_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_revtv_transform);

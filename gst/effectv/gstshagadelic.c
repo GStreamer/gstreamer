@@ -86,6 +86,7 @@ gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     gint area = filter->width * filter->height;
@@ -99,6 +100,7 @@ gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gst_shagadelic_initialize (filter);
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -176,6 +178,7 @@ gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
+  GST_OBJECT_LOCK (filter);
   width = filter->width;
   height = filter->height;
 
@@ -210,6 +213,7 @@ gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
   filter->ry += filter->rvy;
   filter->bx += filter->bvx;
   filter->by += filter->bvy;
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }

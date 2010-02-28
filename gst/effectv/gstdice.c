@@ -104,6 +104,7 @@ gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     g_free (filter->dicemap);
@@ -111,6 +112,7 @@ gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gst_dicetv_create_map (filter);
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -122,8 +124,10 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   guint32 *src, *dest;
   gint i, map_x, map_y, map_i, base, dx, dy, di;
   gint video_width, g_cube_bits, g_cube_size;
+  gint g_map_height, g_map_width;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime timestamp, stream_time;
+  const guint8 *dicemap;
 
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
@@ -138,16 +142,21 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (filter), stream_time);
 
+  GST_OBJECT_LOCK (filter);
   video_width = filter->width;
   g_cube_bits = filter->g_cube_bits;
   g_cube_size = filter->g_cube_size;
+  g_map_height = filter->g_map_height;
+  g_map_width = filter->g_map_width;
+
+  dicemap = filter->dicemap;
 
   map_i = 0;
-  for (map_y = 0; map_y < filter->g_map_height; map_y++) {
-    for (map_x = 0; map_x < filter->g_map_width; map_x++) {
+  for (map_y = 0; map_y < g_map_height; map_y++) {
+    for (map_x = 0; map_x < g_map_width; map_x++) {
       base = (map_y << g_cube_bits) * video_width + (map_x << g_cube_bits);
 
-      switch (filter->dicemap[map_i]) {
+      switch (dicemap[map_i]) {
         case DICE_UP:
           for (dy = 0; dy < g_cube_size; dy++) {
             i = base + dy * video_width;
@@ -196,6 +205,7 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       map_i++;
     }
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -231,8 +241,10 @@ gst_dicetv_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case PROP_CUBE_BITS:
+      GST_OBJECT_LOCK (filter);
       filter->g_cube_bits = g_value_get_int (value);
       gst_dicetv_create_map (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -310,7 +322,4 @@ gst_dicetv_init (GstDiceTV * filter, GstDiceTVClass * klass)
   filter->g_cube_size = 0;
   filter->g_map_height = 0;
   filter->g_map_width = 0;
-
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
 }

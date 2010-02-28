@@ -95,6 +95,7 @@ gst_streaktv_transform (GstBaseTransform * trans, GstBuffer * in,
   gint plane = filter->plane;
   guint stride_mask, stride_shift, stride;
 
+  GST_OBJECT_LOCK (filter);
   if (filter->feedback) {
     stride_mask = 0xfcfcfcfc;
     stride = 8;
@@ -136,6 +137,7 @@ gst_streaktv_transform (GstBaseTransform * trans, GstBuffer * in,
 
   plane++;
   filter->plane = plane & (PLANES - 1);
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -150,6 +152,7 @@ gst_streaktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   structure = gst_caps_get_structure (incaps, 0);
 
+  GST_OBJECT_LOCK (filter);
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
     gint i;
@@ -165,6 +168,7 @@ gst_streaktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     ret = TRUE;
   }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
