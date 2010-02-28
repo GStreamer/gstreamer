@@ -251,6 +251,7 @@ gst_image_freeze_sink_getcaps (GstPad * pad)
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (gst_pad_get_parent (pad));
   GstCaps *ret, *tmp;
+  guint i, n;
 
   if (GST_PAD_CAPS (pad)) {
     ret = gst_caps_copy (GST_PAD_CAPS (pad));
@@ -263,6 +264,15 @@ gst_image_freeze_sink_getcaps (GstPad * pad)
     gst_caps_unref (tmp);
   } else {
     ret = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  }
+
+  n = gst_caps_get_size (ret);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (ret, i);
+
+    gst_structure_remove_field (s, "framerate");
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
+        1, NULL);
   }
 
 done:
