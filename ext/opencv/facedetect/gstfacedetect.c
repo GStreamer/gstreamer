@@ -120,6 +120,8 @@ gst_facedetect_finalize (GObject * obj)
     cvReleaseImage (&filter->cvGray);
   }
 
+  g_free (filter->profile);
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -189,7 +191,7 @@ gst_facedetect_init (Gstfacedetect * filter, GstfacedetectClass * gclass)
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->profile = DEFAULT_PROFILE;
+  filter->profile = g_strdup(DEFAULT_PROFILE);
   filter->display = TRUE;
   gst_facedetect_load_profile (filter);
 }
@@ -202,6 +204,7 @@ gst_facedetect_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
+      g_free (filter->profile);
       filter->profile = g_value_dup_string (value);
       gst_facedetect_load_profile (filter);
       break;
@@ -222,7 +225,7 @@ gst_facedetect_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PROFILE:
-      g_value_take_string (value, filter->profile);
+      g_value_set_string (value, filter->profile);
       break;
     case PROP_DISPLAY:
       g_value_set_boolean (value, filter->display);
