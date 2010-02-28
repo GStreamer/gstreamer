@@ -569,10 +569,22 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
 
       GST_OBJECT_LOCK (self);
       gst_event_replace (&self->close_segment, NULL);
-      self->close_segment =
-          gst_event_new_new_segment_full (TRUE, self->segment.rate,
-          self->segment.applied_rate, self->segment.format, self->segment.start,
-          self->segment.last_stop, self->segment.time);
+      if (self->segment.rate >= 0) {
+        self->close_segment =
+            gst_event_new_new_segment_full (TRUE, self->segment.rate,
+            self->segment.applied_rate, self->segment.format,
+            self->segment.start, self->segment.last_stop, self->segment.time);
+      } else {
+        gint64 stop;
+
+        if ((stop = self->segment.stop) == -1)
+          stop = self->segment.duration;
+
+        self->close_segment =
+            gst_event_new_new_segment_full (TRUE, self->segment.rate,
+            self->segment.applied_rate, self->segment.format,
+            self->segment.last_stop, stop, self->segment.last_stop);
+      }
 
       gst_segment_set_seek (&self->segment, rate, format, flags, start_type,
           start, stop_type, stop, NULL);
@@ -644,6 +656,7 @@ gst_image_freeze_src_loop (GstPad * pad)
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (GST_PAD_PARENT (pad));
   GstBuffer *buffer;
+  guint64 offset;
   GstClockTime timestamp, duration;
   gint64 cstart, cstop;
   gboolean in_seg, eos;
@@ -675,9 +688,15 @@ gst_image_freeze_src_loop (GstPad * pad)
         self->segment.stop, self->segment.start);
 
     GST_OBJECT_LOCK (self);
-    self->offset =
-        gst_util_uint64_scale (self->segment.start, self->fps_n,
-        self->fps_d * GST_SECOND);
+    if (self->segment.rate >= 0) {
+      self->offset =
+          gst_util_uint64_scale (self->segment.start, self->fps_n,
+          self->fps_d * GST_SECOND);
+    } else {
+      self->offset =
+          gst_util_uint64_scale (self->segment.stop, self->fps_n,
+          self->fps_d * GST_SECOND);
+    }
     GST_OBJECT_UNLOCK (self);
 
     self->need_segment = FALSE;
@@ -686,19 +705,24 @@ gst_image_freeze_src_loop (GstPad * pad)
   }
 
   GST_OBJECT_LOCK (self);
+  offset = self->offset;
+
   if (self->fps_n != 0) {
     timestamp =
-        gst_util_uint64_scale (self->offset, self->fps_d * GST_SECOND,
-        self->fps_n);
+        gst_util_uint64_scale (offset, self->fps_d * GST_SECOND, self->fps_n);
     duration = gst_util_uint64_scale_int (GST_SECOND, self->fps_d, self->fps_n);
   } else {
-    timestamp = 0;
+    timestamp = self->segment.start;
     duration = GST_CLOCK_TIME_NONE;
   }
-  eos = (self->segment.stop != -1 && timestamp > self->segment.stop) ||
-      (self->fps_n == 0 && self->offset > 0);
+  eos = (self->fps_n == 0 && offset > 0) ||
+      (self->segment.rate >= 0 && self->segment.stop != -1
+      && timestamp > self->segment.stop) || (self->segment.rate < 0
+      && offset == 0) || (self->segment.rate < 0
+      && self->segment.start != -1
+      && timestamp + duration < self->segment.start);
 
-  if (self->fps_n == 0 && self->offset > 0)
+  if (self->fps_n == 0 && offset > 0)
     in_seg = FALSE;
   else
     in_seg =
@@ -708,32 +732,22 @@ gst_image_freeze_src_loop (GstPad * pad)
   if (in_seg)
     gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME, cstart);
 
-  self->offset++;
+  if (self->segment.rate >= 0)
+    self->offset++;
+  else
+    self->offset--;
   GST_OBJECT_UNLOCK (self);
 
   GST_DEBUG_OBJECT (pad, "Handling buffer with timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
-
-  if (eos) {
-    if ((self->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
-      GstMessage *m;
-
-      GST_DEBUG_OBJECT (pad, "Sending segment done at end of segment");
-      m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
-          GST_FORMAT_TIME, self->segment.stop);
-      gst_element_post_message (GST_ELEMENT_CAST (self), m);
-    } else {
-      GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
-      gst_pad_push_event (self->srcpad, gst_event_new_eos ());
-    }
-    gst_pad_pause_task (self->srcpad);
-  }
 
   if (in_seg) {
     GstFlowReturn ret;
 
     GST_BUFFER_TIMESTAMP (buffer) = cstart;
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
+    GST_BUFFER_OFFSET (buffer) = offset;
+    GST_BUFFER_OFFSET_END (buffer) = offset + 1;
     gst_buffer_set_caps (buffer, GST_PAD_CAPS (self->srcpad));
     ret = gst_pad_push (self->srcpad, buffer);
     GST_DEBUG_OBJECT (pad, "Pushing buffer resulted in %s",
@@ -742,6 +756,25 @@ gst_image_freeze_src_loop (GstPad * pad)
       gst_pad_pause_task (self->srcpad);
   } else {
     gst_buffer_unref (buffer);
+  }
+
+  if (eos) {
+    if ((self->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
+      GstMessage *m;
+
+      GST_DEBUG_OBJECT (pad, "Sending segment done at end of segment");
+      if (self->segment.rate >= 0)
+        m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
+            GST_FORMAT_TIME, self->segment.stop);
+      else
+        m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
+            GST_FORMAT_TIME, self->segment.start);
+      gst_element_post_message (GST_ELEMENT_CAST (self), m);
+    } else {
+      GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
+      gst_pad_push_event (self->srcpad, gst_event_new_eos ());
+    }
+    gst_pad_pause_task (self->srcpad);
   }
 }
 
