@@ -48,6 +48,7 @@ typedef struct _GstDataPassThrough GstDataPassThrough;
 struct _GstDataPassThrough
 {
   guint64 ts;
+  guint64 duration;
   guint64 offset;
 };
 
@@ -57,6 +58,9 @@ struct _GstTSMap
 {
   /* timestamp */
   guint64 ts;
+
+  /* duration */
+  guint64 duration;
 
   /* offset */
   gint64 offset;
@@ -236,7 +240,7 @@ static void gst_ts_handler_append (GstFFMpegDec * ffmpegdec,
     GstBuffer * buffer);
 static void gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size);
 static guint64 gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec,
-    gint64 * offset);
+    gint64 * offset, guint64 * duration);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
 
@@ -1566,34 +1570,43 @@ flush_queued (GstFFMpegDec * ffmpegdec)
 }
 
 static gpointer
-opaque_store (GstFFMpegDec * ffmpegdec, guint64 ts, guint64 offset)
+opaque_store (GstFFMpegDec * ffmpegdec, guint64 ts, guint64 duration,
+    guint64 offset)
 {
   GstDataPassThrough *opaque = g_slice_new0 (GstDataPassThrough);
   opaque->ts = ts;
+  opaque->duration = duration;
   opaque->offset = offset;
   ffmpegdec->opaque = g_list_append (ffmpegdec->opaque, (gpointer) opaque);
-  GST_DEBUG_OBJECT (ffmpegdec, "Stored ts:%" GST_TIME_FORMAT ", offset:%"
-      G_GUINT64_FORMAT " as opaque %p", GST_TIME_ARGS (ts), offset,
-      (gpointer) opaque);
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "Stored ts:%" GST_TIME_FORMAT ", duration:%" GST_TIME_FORMAT ", offset:%"
+      G_GUINT64_FORMAT " as opaque %p", GST_TIME_ARGS (ts),
+      GST_TIME_ARGS (duration), offset, (gpointer) opaque);
   return opaque;
 }
 
 static gboolean
 opaque_find (GstFFMpegDec * ffmpegdec, gpointer opaque_val, guint64 * _ts,
-    gint64 * _offset)
+    guint64 * _duration, gint64 * _offset)
 {
   GstClockTime ts = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
   gint64 offset = GST_BUFFER_OFFSET_NONE;
   GList *i;
+
   for (i = ffmpegdec->opaque; i != NULL; i = g_list_next (i)) {
     if (i->data == (gpointer) opaque_val) {
       ts = ((GstDataPassThrough *) i->data)->ts;
+      duration = ((GstDataPassThrough *) i->data)->duration;
       offset = ((GstDataPassThrough *) i->data)->offset;
       GST_DEBUG_OBJECT (ffmpegdec,
-          "Found opaque %p - ts:%" GST_TIME_FORMAT ", offset:%" G_GINT64_FORMAT,
-          i->data, GST_TIME_ARGS (ts), offset);
+          "Found opaque %p - ts:%" GST_TIME_FORMAT ", duration:%"
+          GST_TIME_FORMAT ", offset:%" G_GINT64_FORMAT, i->data,
+          GST_TIME_ARGS (ts), GST_TIME_ARGS (duration), offset);
       if (_ts)
         *_ts = ts;
+      if (_duration)
+        *_duration = duration;
       if (_offset)
         *_offset = offset;
       g_slice_free (GstDataPassThrough, i->data);
@@ -1673,14 +1686,15 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       "Going to store opaque values, current ts:%" GST_TIME_FORMAT ", offset: %"
       G_GINT64_FORMAT, GST_TIME_ARGS (in_timestamp), in_offset);
 
-  out_timestamp = gst_ts_handler_get_ts (ffmpegdec, &out_offset);
+  out_timestamp = gst_ts_handler_get_ts (ffmpegdec, &out_offset, &out_duration);
   /* Never do this at home...
    * 1) We know that ffmpegdec->context->reordered_opaque is 64-bit, and thus
    * is capable of holding virtually anything including pointers
    * (unless we're on 128-bit platform...)
    */
   ffmpegdec->context->reordered_opaque = (gint64)
-      GPOINTER_TO_SIZE (opaque_store (ffmpegdec, out_timestamp, out_offset));
+      GPOINTER_TO_SIZE (opaque_store (ffmpegdec, out_timestamp, out_duration,
+          out_offset));
 
   /* now decode the frame */
   len = avcodec_decode_video (ffmpegdec->context,
@@ -1715,10 +1729,11 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   /* recuperate the reordered timestamp */
   if (!opaque_find (ffmpegdec,
           (gpointer) (gulong) ffmpegdec->picture->reordered_opaque, &out_pts,
-          &out_offset)) {
+          &out_duration, &out_offset)) {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to find opaque %p",
         (gpointer) (gulong) ffmpegdec->picture->reordered_opaque);
     out_pts = -1;
+    out_duration = -1;
     out_offset = GST_BUFFER_OFFSET_NONE;
   } else {
     GST_DEBUG_OBJECT (ffmpegdec,
@@ -1726,7 +1741,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
         G_GINT64_FORMAT, GST_TIME_ARGS (in_timestamp), in_offset);
   }
 
-  GST_DEBUG_OBJECT (ffmpegdec, "ts-handler: pts %" G_GUINT64_FORMAT, out_pts);
+  GST_DEBUG_OBJECT (ffmpegdec,
+      "ts-handler: pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
+      out_pts, out_duration);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT,
       (guint64) ffmpegdec->picture->pts);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d",
@@ -1857,12 +1874,15 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   /*
    * Duration:
    *
-   *  1) Copy input duration if valid
-   *  2) else use input framerate
-   *  3) else use ffmpeg framerate
+   *  1) Use reordered input duration if valid
+   *  2) Else use input duration
+   *  3) else use input framerate
+   *  4) else use ffmpeg framerate
    */
-  out_duration = -1;
-  if (!GST_CLOCK_TIME_IS_VALID (in_duration)) {
+  if (GST_CLOCK_TIME_IS_VALID (out_duration)) {
+    /* We have a valid (reordered) duration */
+    GST_LOG_OBJECT (ffmpegdec, "We have a valid (reordered) duration");
+  } else if (!GST_CLOCK_TIME_IS_VALID (in_duration)) {
     /* if we have an input framerate, use that */
     if (ffmpegdec->format.video.fps_n != -1 &&
         (ffmpegdec->format.video.fps_n != 1000 &&
@@ -2916,6 +2936,7 @@ gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
 {
   GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
   guint64 ts = GST_BUFFER_TIMESTAMP (buffer);
+  guint64 duration = GST_BUFFER_DURATION (buffer);
   gint size = GST_BUFFER_SIZE (buffer);
   guint64 offset = GST_BUFFER_OFFSET (buffer);
   gint ind = ts_handler->buf_head;
@@ -2929,9 +2950,11 @@ gst_ts_handler_append (GstFFMpegDec * ffmpegdec, GstBuffer * buffer)
         ts != -1 ? (double) ts / GST_SECOND : -1.0, size);
     **/
     GST_LOG_OBJECT (ffmpegdec, "store timestamp @ index [%02X] buf_count: %d"
-        " ts: %" GST_TIME_FORMAT ", offset: %" G_GUINT64_FORMAT ", size: %d",
-        ind, ts_handler->buf_count, GST_TIME_ARGS (ts), offset, size);
+        " ts: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT ", offset: %"
+        G_GUINT64_FORMAT ", size: %d", ind, ts_handler->buf_count,
+        GST_TIME_ARGS (ts), GST_TIME_ARGS (duration), offset, size);
     ts_handler->buffers[ind].ts = ts;
+    ts_handler->buffers[ind].duration = duration;
     ts_handler->buffers[ind].offset = offset;
     ts_handler->buffers[ind].size = size;
     ts_handler->buf_head = ind;
@@ -2989,17 +3012,24 @@ gst_ts_handler_consume (GstFFMpegDec * ffmpegdec, gint size)
 
 /** get the timestamp from the tail of the list */
 static guint64
-gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec, gint64 * _offset)
+gst_ts_handler_get_ts (GstFFMpegDec * ffmpegdec, gint64 * _offset,
+    guint64 * _duration)
 {
   GstTSHandler *ts_handler = &ffmpegdec->ts_handler;
   guint64 ts = ts_handler->buffers[ts_handler->buf_tail].ts;
+  guint64 duration = ts_handler->buffers[ts_handler->buf_tail].duration;
   gint64 offset = ts_handler->buffers[ts_handler->buf_tail].offset;
-  GST_LOG_OBJECT (ffmpegdec, "Index %d yielded ts %" GST_TIME_FORMAT
-      " offset %" G_GINT64_FORMAT, ts_handler->buf_tail,
-      GST_TIME_ARGS (ts), offset);
+
+  GST_LOG_OBJECT (ffmpegdec, "Index %d yielded ts: %" GST_TIME_FORMAT
+      ", duration: %" GST_TIME_FORMAT ", offset: %" G_GINT64_FORMAT,
+      ts_handler->buf_tail, GST_TIME_ARGS (ts), GST_TIME_ARGS (duration),
+      offset);
   if (_offset)
     *_offset = offset;
+  if (_duration)
+    *_duration = duration;
   ts_handler->buffers[ts_handler->buf_tail].ts = -1;
+  ts_handler->buffers[ts_handler->buf_tail].duration = -1;
   ts_handler->buffers[ts_handler->buf_tail].offset = -1;
   return ts;
 }
