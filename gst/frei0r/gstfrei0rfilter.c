@@ -26,6 +26,8 @@
 #include "gstfrei0r.h"
 #include "gstfrei0rfilter.h"
 
+#include <gst/controller/gstcontroller.h>
+
 GST_DEBUG_CATEGORY_EXTERN (frei0r_debug);
 #define GST_CAT_DEFAULT frei0r_debug
 
@@ -62,6 +64,24 @@ gst_frei0r_filter_stop (GstBaseTransform * trans)
   self->width = self->height = 0;
 
   return TRUE;
+}
+
+static void
+gst_frei0r_filter_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer)
+{
+  GstClockTime timestamp;
+  GstFrei0rFilter *self = GST_FREI0R_FILTER (trans);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  timestamp =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (self, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (self), timestamp);
 }
 
 static GstFlowReturn
@@ -193,6 +213,8 @@ gst_frei0r_filter_class_init (GstFrei0rFilterClass * klass,
   gsttrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_frei0r_filter_set_caps);
   gsttrans_class->stop = GST_DEBUG_FUNCPTR (gst_frei0r_filter_stop);
   gsttrans_class->transform = GST_DEBUG_FUNCPTR (gst_frei0r_filter_transform);
+  gsttrans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_frei0r_filter_before_transform);
 }
 
 static void

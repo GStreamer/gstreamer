@@ -26,6 +26,7 @@
 #include "gstfrei0rsrc.h"
 #include "gstfrei0rmixer.h"
 
+#include <gst/controller/gstcontroller.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY (frei0r_debug);
@@ -611,6 +612,8 @@ plugin_init (GstPlugin * plugin)
   gchar *path;
 
   GST_DEBUG_CATEGORY_INIT (frei0r_debug, "frei0r", 0, "frei0r");
+
+  gst_controller_init (NULL, NULL);
 
   gst_plugin_add_dependency_simple (plugin,
       "HOME/.frei0r-1/lib",

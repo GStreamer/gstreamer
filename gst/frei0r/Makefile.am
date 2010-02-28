@@ -6,8 +6,8 @@ libgstfrei0r_la_SOURCES = \
 	gstfrei0rsrc.c \
 	gstfrei0rmixer.c
 
-libgstfrei0r_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-libgstfrei0r_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+libgstfrei0r_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstfrei0r_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) \
 	-lgstvideo-@GST_MAJORMINOR@
 libgstfrei0r_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstfrei0r_la_LIBTOOLFLAGS = --tag=disable-static
