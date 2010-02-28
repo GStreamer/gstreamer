@@ -168,7 +168,6 @@
     <xi:include href="xml/plugin-stereo.xml" />
     <xi:include href="xml/plugin-swfdec.xml" />
     <xi:include href="xml/plugin-timidity.xml" />
-    <xi:include href="xml/plugin-tremor.xml" />
     <xi:include href="xml/plugin-tta.xml" />
     <xi:include href="xml/plugin-valve.xml" />
     <xi:include href="xml/plugin-vcdsrc.xml" />
