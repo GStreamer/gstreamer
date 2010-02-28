@@ -127,6 +127,7 @@ check_PROGRAMS = \
 	elements/asfmux \
 	elements/capssetter \
 	elements/dataurisrc \
+	elements/imagefreeze \
 	elements/legacyresample \
 	elements/jpegparse \
 	elements/qtmux \
@@ -169,5 +170,8 @@ elements_rtpmux_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.10
+
+elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10
 
 EXTRA_DIST = gst-plugins-bad.supp
