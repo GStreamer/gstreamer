@@ -257,6 +257,7 @@ rtp_source_create_stats (RTPSource * src)
       gst_structure_set (s,
           "octets-received", G_TYPE_UINT64, src->stats.octets_received,
           "packets-received", G_TYPE_UINT64, src->stats.packets_received,
+          "bitrate", G_TYPE_UINT64, src->bitrate,
           "have-sr", G_TYPE_BOOLEAN, have_sr,
           "sr-ntptime", G_TYPE_UINT64, ntptime,
           "sr-rtptime", G_TYPE_UINT, (guint) rtptime,
@@ -902,6 +903,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   guint16 seqnr, udelta;
   RTPSourceStats *stats;
   guint16 expected;
+  guint64 elapsed;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -982,6 +984,34 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   /* the source that sent the packet must be a sender */
   src->is_sender = TRUE;
   src->validated = TRUE;
+
+  if (src->prev_rtime) {
+    elapsed = arrival->running_time - src->prev_rtime;
+
+    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
+      guint64 rate;
+
+      rate =
+          gst_util_uint64_scale (src->stats.bytes_received, elapsed,
+          (G_GINT64_CONSTANT (1) << 29));
+
+      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
+          ", rate %" G_GUINT64_FORMAT, elapsed, src->stats.bytes_received,
+          rate);
+
+      if (src->bitrate == 0)
+        src->bitrate = rate;
+      else
+        src->bitrate = ((src->bitrate * 3) + rate) / 4;
+
+      src->prev_rtime = arrival->running_time;
+      src->stats.bytes_received = 0;
+    }
+  } else {
+    GST_LOG ("Reset bitrate measurement");
+    src->prev_rtime = arrival->running_time;
+    src->bitrate = 0;
+  }
 
   GST_LOG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
