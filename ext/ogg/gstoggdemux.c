@@ -373,75 +373,6 @@ gst_ogg_pad_reset (GstOggPad * pad)
   pad->is_eos = FALSE;
 }
 
-/* called when the skeleton fishead is found. Caller ensures the packet is
- * precisely the correct size; we don't re-check this here. */
-static void
-gst_ogg_pad_parse_skeleton_fishead (GstOggPad * pad, ogg_packet * packet)
-{
-  GstOggDemux *ogg = pad->ogg;
-  guint8 *data = packet->packet;
-  guint16 major, minor;
-  gint64 prestime_n, prestime_d;
-  gint64 basetime_n, basetime_d;
-
-  /* skip "fishead\0" */
-  major = GST_READ_UINT16_LE (data + 8);
-  minor = GST_READ_UINT16_LE (data + 10);
-  prestime_n = (gint64) GST_READ_UINT64_LE (data + 12);
-  prestime_d = (gint64) GST_READ_UINT64_LE (data + 20);
-  basetime_n = (gint64) GST_READ_UINT64_LE (data + 28);
-  basetime_d = (gint64) GST_READ_UINT64_LE (data + 36);
-
-  ogg->basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
-  ogg->prestime = gst_util_uint64_scale (GST_SECOND, prestime_n, prestime_d);
-  ogg->have_fishead = TRUE;
-  pad->map.is_skeleton = TRUE;
-  pad->start_time = GST_CLOCK_TIME_NONE;
-  GST_INFO_OBJECT (ogg, "skeleton fishead parsed (basetime: %"
-      GST_TIME_FORMAT ", prestime: %" GST_TIME_FORMAT ")",
-      GST_TIME_ARGS (ogg->basetime), GST_TIME_ARGS (ogg->prestime));
-}
-
-/* function called when a skeleton fisbone is found. Caller ensures that
- * the packet length is sufficient */
-static void
-gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
-{
-  GstOggPad *fisbone_pad;
-  gint64 start_granule;
-  guint32 serialno;
-  guint8 *data = packet->packet;
-
-  serialno = GST_READ_UINT32_LE (data + 12);
-
-  fisbone_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
-  if (fisbone_pad) {
-    if (fisbone_pad->map.have_fisbone)
-      /* already parsed */
-      return;
-
-    fisbone_pad->map.have_fisbone = TRUE;
-
-    fisbone_pad->map.granulerate_n = GST_READ_UINT64_LE (data + 20);
-    fisbone_pad->map.granulerate_d = GST_READ_UINT64_LE (data + 28);
-    start_granule = GST_READ_UINT64_LE (data + 36);
-    fisbone_pad->map.preroll = GST_READ_UINT32_LE (data + 44);
-    fisbone_pad->map.granuleshift = GST_READ_UINT8 (data + 48);
-
-    GST_INFO_OBJECT (pad->ogg, "skeleton fisbone parsed "
-        "(serialno: %08x start time: %" GST_TIME_FORMAT
-        " granulerate_n: %d granulerate_d: %d "
-        " preroll: %" G_GUINT32_FORMAT " granuleshift: %d)",
-        serialno, GST_TIME_ARGS (fisbone_pad->start_time),
-        fisbone_pad->map.granulerate_n, fisbone_pad->map.granulerate_d,
-        fisbone_pad->map.preroll, fisbone_pad->map.granuleshift);
-  } else {
-    GST_WARNING_OBJECT (pad->ogg,
-        "found skeleton fisbone for an unknown stream %" G_GUINT32_FORMAT,
-        serialno);
-  }
-}
-
 /* queue data, basically takes the packet, puts it in a buffer and store the
  * buffer in the queued list.  */
 static GstFlowReturn
@@ -751,13 +682,15 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       pad->map.serialno);
 
   if (!pad->have_type) {
-    if (!ogg->have_fishead && packet->bytes == SKELETON_FISHEAD_SIZE &&
-        !memcmp (packet->packet, "fishead\0", 8)) {
-      gst_ogg_pad_parse_skeleton_fishead (pad, packet);
-    }
     pad->have_type = gst_ogg_stream_setup_map (&pad->map, packet);
     if (!pad->have_type) {
       pad->map.caps = gst_caps_new_simple ("application/x-unknown", NULL);
+    }
+    if (pad->map.is_skeleton) {
+      GST_DEBUG_OBJECT (ogg, "we have a fishead");
+      /* copy values over to global ogg level */
+      ogg->basetime = pad->map.basetime;
+      ogg->prestime = pad->map.prestime;
     }
     if (pad->map.caps) {
       gst_pad_set_caps (GST_PAD (pad), pad->map.caps);
@@ -766,9 +699,24 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     }
   }
 
-  if (ogg->have_fishead && packet->bytes >= SKELETON_FISBONE_MIN_SIZE &&
-      !memcmp (packet->packet, "fisbone\0", 8)) {
-    gst_ogg_pad_parse_skeleton_fisbone (pad, packet);
+  if (pad->map.is_skeleton) {
+    guint32 serialno;
+    GstOggPad *fisbone_pad;
+
+    /* try to parse the serialno first */
+    if (gst_ogg_map_parse_fisbone (&pad->map, packet->packet, packet->bytes,
+            &serialno)) {
+      fisbone_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
+      if (fisbone_pad) {
+        /* parse the remainder of the fisbone in the pad with the serialno */
+        gst_ogg_map_add_fisbone (&fisbone_pad->map, packet->packet,
+            packet->bytes, &fisbone_pad->start_time);
+      } else {
+        GST_WARNING_OBJECT (pad->ogg,
+            "found skeleton fisbone for an unknown stream %" G_GUINT32_FORMAT,
+            serialno);
+      }
+    }
   }
 
   granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
@@ -3415,7 +3363,6 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       ogg->basetime = 0;
-      ogg->have_fishead = FALSE;
       ogg_sync_init (&ogg->sync);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -3441,7 +3388,6 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (ogg);
       ogg->running = FALSE;
       ogg->segment_running = FALSE;
-      ogg->have_fishead = FALSE;
       GST_OBJECT_UNLOCK (ogg);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

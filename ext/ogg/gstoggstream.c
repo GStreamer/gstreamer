@@ -689,7 +689,6 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   guint8 *data;
   gint64 prestime_n, prestime_d;
   gint64 basetime_n, basetime_d;
-  gint64 basetime;
 
   data = packet->packet;
 
@@ -706,14 +705,80 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
 
   /* FIXME: we don't use basetime anywhere in the demuxer! */
   if (basetime_d != 0)
-    basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
+    pad->basetime = gst_util_uint64_scale (GST_SECOND, basetime_n, basetime_d);
   else
-    basetime = -1;
+    pad->basetime = -1;
 
-  GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT ")",
-      GST_TIME_ARGS (basetime));
+  if (prestime_d != 0)
+    pad->prestime = gst_util_uint64_scale (GST_SECOND, prestime_n, prestime_d);
+  else
+    pad->prestime = -1;
+
+  GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT
+      ", prestime: %" GST_TIME_FORMAT ")", GST_TIME_ARGS (pad->basetime),
+      GST_TIME_ARGS (pad->prestime));
 
   pad->is_skeleton = TRUE;
+
+  return TRUE;
+}
+
+gboolean
+gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
+    guint32 * serialno)
+{
+  if (size < SKELETON_FISBONE_MIN_SIZE) {
+    GST_WARNING ("small fisbone packet of size %d, ignoring", size);
+    return FALSE;
+  }
+  if (memcmp (data, "fisbone\0", 8) != 0) {
+    GST_WARNING ("unknown skeleton packet %10.10s", data);
+    return FALSE;
+  }
+
+  if (pad->have_fisbone) {
+    GST_DEBUG ("already have fisbone, ignoring second one");
+    return FALSE;
+  }
+
+  if (serialno)
+    *serialno = GST_READ_UINT32_LE (data + 12);
+
+  return TRUE;
+}
+
+gboolean
+gst_ogg_map_add_fisbone (GstOggStream * pad,
+    const guint8 * data, guint size, GstClockTime * p_start_time)
+{
+  GstClockTime start_time;
+  gint64 start_granule;
+
+
+  /* skip "fisbone\0" + headers offset + serialno + num headers */
+  data += 8 + 4 + 4 + 4;
+
+  pad->have_fisbone = TRUE;
+
+  /* we just overwrite whatever was set before by the format-specific setup */
+  pad->granulerate_n = GST_READ_UINT64_LE (data);
+  pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
+
+  start_granule = GST_READ_UINT64_LE (data + 16);
+  pad->preroll = GST_READ_UINT32_LE (data + 24);
+  pad->granuleshift = GST_READ_UINT8 (data + 28);
+
+  start_time = granulepos_to_granule_default (pad, start_granule);
+
+  GST_INFO ("skeleton fisbone parsed "
+      "(start time: %" GST_TIME_FORMAT
+      " granulerate_n: %d granulerate_d: %d "
+      " preroll: %" G_GUINT32_FORMAT " granuleshift: %d)",
+      GST_TIME_ARGS (start_time),
+      pad->granulerate_n, pad->granulerate_d, pad->preroll, pad->granuleshift);
+
+  if (p_start_time)
+    *p_start_time = start_time;
 
   return TRUE;
 }

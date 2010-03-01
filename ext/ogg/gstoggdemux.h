@@ -160,7 +160,6 @@ struct _GstOggDemux
   GstEvent *newsegment;         /* pending newsegment to be sent from _loop */
 
   /* annodex stuff */
-  gboolean have_fishead;
   gint64 basetime;
   gint64 prestime;
 

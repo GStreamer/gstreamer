@@ -71,6 +71,10 @@ struct _GstOggStream
   /* OGM stuff */
   gboolean is_ogm;
   gboolean is_ogm_text;
+  /* fishead stuff */
+  gint64 prestime;
+  gint64 basetime;
+
 };
 
 
@@ -89,6 +93,11 @@ gboolean gst_ogg_stream_granulepos_is_key_frame (GstOggStream *pad,
     gint64 granulepos);
 gboolean gst_ogg_stream_packet_is_header (GstOggStream *pad, ogg_packet *packet);
 gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packet);
+
+gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
+    guint32 * serialno);
+gboolean gst_ogg_map_add_fisbone (GstOggStream * pad, const guint8 * data, guint size,
+    GstClockTime * p_start_time);
 
 
 G_END_DECLS
