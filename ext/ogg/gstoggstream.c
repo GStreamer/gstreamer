@@ -703,6 +703,8 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT ")",
       GST_TIME_ARGS (basetime));
 
+  pad->is_skeleton = TRUE;
+
   return TRUE;
 }
 
