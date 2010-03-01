@@ -63,7 +63,7 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
 static const GstElementDetails gst_nuv_demux_details =
 GST_ELEMENT_DETAILS ("Nuv demuxer",
     "Codec/Demuxer",
-    "Demultiplex a mythtv .nuv file into audio and video",
+    "Demultiplex a MythTV NuppleVideo .nuv file into audio and video",
     "Renato Araujo Oliveira Filho <renato.filho@indt.org.br>,"
     "Rosfran Borges <rosfran.borges@indt.org.br>");
 
@@ -941,5 +941,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "nuvdemux",
-    "Demuxes and muxes audio and video",
+    "Demuxes MythTV NuppelVideo files",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
