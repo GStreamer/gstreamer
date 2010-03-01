@@ -1406,7 +1406,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
      * position reporting if a live src is playing not so live content
      * (e.g. rtspsrc taking some time to fall back to tcp) */
     GST_BUFFER_TIMESTAMP (payload->buf) = payload->ts + demux->in_gap;
-    if (payload->duration == GST_CLOCK_TIME_NONE)
+    if (payload->duration == GST_CLOCK_TIME_NONE
+        && stream->ext_props.avg_time_per_frame != 0)
       GST_BUFFER_DURATION (payload->buf) =
           stream->ext_props.avg_time_per_frame * 100;
     else
