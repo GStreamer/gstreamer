@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY_STATIC (flxdec_debug);
 
 /* flx element information */
 static const GstElementDetails flxdec_details =
-GST_ELEMENT_DETAILS ("FLX audio decoder",
+GST_ELEMENT_DETAILS ("FLX video decoder",
     "Codec/Decoder/Video",
     "FLC/FLI/FLX video decoder",
     "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
