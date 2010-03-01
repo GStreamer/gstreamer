@@ -1267,7 +1267,7 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   /*
    * Copy the payload data in the buffer
    */
-  GST_DEBUG ("Copiing memory");
+  GST_DEBUG ("Copying memory");
   memcpy (payload, (guint8 *) package->payload_start, package->payload_len);
 
   /*
