@@ -137,7 +137,7 @@ typedef struct
 static const GstElementDetails vmnc_dec_details =
 GST_ELEMENT_DETAILS ("VMnc video decoder",
     "Codec/Decoder/Video",
-    "Decode VMnc to raw (RGB) video",
+    "Decode VmWare video to raw (RGB) video",
     "Michael Smith <msmith@xiph.org>");
 
 static GstStaticPadTemplate vmnc_dec_src_factory =
@@ -1142,5 +1142,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "vmnc",
-    "VMnc video plugin library",
+    "VmWare Video Codec plugins",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
