@@ -443,7 +443,10 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
             &payload_data, &payload_len, sub_payload_len);
 
         payload.ts = ts;
-        payload.duration = ts_delta;
+        if (G_LIKELY (ts_delta))
+          payload.duration = ts_delta;
+        else
+          payload.duration = GST_CLOCK_TIME_NONE;
 
         gst_asf_payload_queue_for_stream (demux, &payload, stream);
       }
