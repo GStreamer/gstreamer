@@ -180,6 +180,9 @@ gst_ogg_pad_dispose (GObject * object)
   g_list_free (pad->map.queued);
   pad->map.queued = NULL;
 
+  g_free (pad->map.index);
+  pad->map.index = NULL;
+
   /* clear continued pages */
   g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
   g_list_free (pad->continued);
@@ -701,20 +704,35 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   if (pad->map.is_skeleton) {
     guint32 serialno;
-    GstOggPad *fisbone_pad;
+    GstOggPad *skel_pad;
+    GstOggSkeleton type;
 
     /* try to parse the serialno first */
     if (gst_ogg_map_parse_fisbone (&pad->map, packet->packet, packet->bytes,
-            &serialno)) {
-      fisbone_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
-      if (fisbone_pad) {
-        /* parse the remainder of the fisbone in the pad with the serialno */
-        gst_ogg_map_add_fisbone (&fisbone_pad->map, packet->packet,
-            packet->bytes, &fisbone_pad->start_time);
+            &serialno, &type)) {
+
+      GST_WARNING_OBJECT (pad->ogg,
+          "got skeleton packet for stream %08lx", serialno);
+
+      skel_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
+      if (skel_pad) {
+        switch (type) {
+          case GST_OGG_SKELETON_FISBONE:
+            /* parse the remainder of the fisbone in the pad with the serialno */
+            gst_ogg_map_add_fisbone (&skel_pad->map, packet->packet,
+                packet->bytes, &skel_pad->start_time);
+            break;
+          case GST_OGG_SKELETON_INDEX:
+            gst_ogg_map_add_index (&skel_pad->map, packet->packet,
+                packet->bytes);
+            break;
+          default:
+            break;
+        }
+
       } else {
         GST_WARNING_OBJECT (pad->ogg,
-            "found skeleton fisbone for an unknown stream %" G_GUINT32_FORMAT,
-            serialno);
+            "found skeleton fisbone for an unknown stream %08lx", serialno);
       }
     }
   }
@@ -1880,6 +1898,45 @@ seek_error:
   }
 }
 
+static gboolean
+do_index_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
+    gint64 end, gint64 begintime, gint64 endtime, gint64 target,
+    gint64 * p_offset, gint64 * p_timestamp)
+{
+  guint i;
+  guint64 timestamp, offset;
+  guint64 r_timestamp, r_offset;
+  gboolean result = FALSE;
+
+  target -= begintime;
+
+  r_offset = -1;
+  r_timestamp = -1;
+
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    timestamp = target;
+    if (gst_ogg_map_search_index (&pad->map, TRUE, &timestamp, &offset)) {
+      GST_INFO ("found %" G_GUINT64_FORMAT " at offset %" G_GUINT64_FORMAT,
+          timestamp, offset);
+
+      if (r_offset == -1 || offset < r_offset) {
+        r_offset = offset;
+        r_timestamp = timestamp;
+      }
+      result |= TRUE;
+    }
+  }
+
+  if (p_timestamp)
+    *p_timestamp = r_timestamp;
+  if (p_offset)
+    *p_offset = r_offset;
+
+  return result;
+}
+
 /*
  * do seek to time @position, return FALSE or chain and TRUE
  */
@@ -1892,7 +1949,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   gint64 begin, end;
   gint64 begintime, endtime;
   gint64 target, keytarget;
-  gint64 best;
+  gint64 best, best_time;
   gint64 total;
   gint64 result = 0;
   GstFlowReturn ret;
@@ -1918,6 +1975,22 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   begintime = chain->begin_time;
   endtime = begintime + chain->total_time;
   target = position - total + begintime;
+
+  if (do_index_search (ogg, chain, begin, end, begintime, endtime, target,
+          &best, &best_time)) {
+    /* the index gave some result */
+    GST_DEBUG_OBJECT (ogg,
+        "found offset %" G_GINT64_FORMAT " with time %" G_GUINT64_FORMAT, best,
+        best_time);
+
+#if 1
+    keytarget = best_time + begintime;
+    best += begin;
+
+    gst_ogg_demux_seek (ogg, best);
+    goto done;
+#endif
+  }
 
   if (!do_binary_search (ogg, chain, begin, end, begintime, endtime, target,
           &best))

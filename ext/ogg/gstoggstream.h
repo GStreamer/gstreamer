@@ -28,6 +28,16 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+  GST_OGG_SKELETON_FISBONE,
+  GST_OGG_SKELETON_INDEX,
+} GstOggSkeleton;
+
+typedef struct {
+  guint64 offset;
+  guint64 timestamp;
+} GstOggIndex;
+
 typedef struct _GstOggStream GstOggStream;
 
 struct _GstOggStream
@@ -57,7 +67,7 @@ struct _GstOggStream
   gint bitrate;
 
   GstCaps *caps;
-  
+
   /* vorbis stuff */
   int nln_increments[4];
   int nsn_increment;
@@ -74,7 +84,10 @@ struct _GstOggStream
   /* fishead stuff */
   gint64 prestime;
   gint64 basetime;
-
+  /* index */
+  guint n_index;
+  GstOggIndex *index;
+  guint64 kp_denom;
 };
 
 
@@ -95,9 +108,13 @@ gboolean gst_ogg_stream_packet_is_header (GstOggStream *pad, ogg_packet *packet)
 gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packet);
 
 gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
-    guint32 * serialno);
+    guint32 * serialno, GstOggSkeleton *type);
 gboolean gst_ogg_map_add_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     GstClockTime * p_start_time);
+gboolean gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size);
+gboolean gst_ogg_map_search_index (GstOggStream * pad, gboolean before, guint64 *timestamp, guint64 *offset);
+
+
 
 
 G_END_DECLS

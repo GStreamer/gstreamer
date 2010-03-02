@@ -725,24 +725,34 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
 
 gboolean
 gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
-    guint32 * serialno)
+    guint32 * serialno, GstOggSkeleton * type)
 {
+  GstOggSkeleton stype;
+  guint serial_offset;
+
   if (size < SKELETON_FISBONE_MIN_SIZE) {
     GST_WARNING ("small fisbone packet of size %d, ignoring", size);
     return FALSE;
   }
-  if (memcmp (data, "fisbone\0", 8) != 0) {
+
+  if (memcmp (data, "fisbone\0", 8) == 0) {
+    GST_INFO ("got fisbone packet");
+    stype = GST_OGG_SKELETON_FISBONE;
+    serial_offset = 12;
+  } else if (memcmp (data, "index\0", 6) == 0) {
+    GST_INFO ("got index packet");
+    stype = GST_OGG_SKELETON_INDEX;
+    serial_offset = 6;
+  } else {
     GST_WARNING ("unknown skeleton packet %10.10s", data);
     return FALSE;
   }
 
-  if (pad->have_fisbone) {
-    GST_DEBUG ("already have fisbone, ignoring second one");
-    return FALSE;
-  }
-
   if (serialno)
-    *serialno = GST_READ_UINT32_LE (data + 12);
+    *serialno = GST_READ_UINT32_LE (data + serial_offset);
+
+  if (type)
+    *type = stype;
 
   return TRUE;
 }
@@ -754,6 +764,10 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
   GstClockTime start_time;
   gint64 start_granule;
 
+  if (pad->have_fisbone) {
+    GST_DEBUG ("already have fisbone, ignoring second one");
+    return FALSE;
+  }
 
   /* skip "fisbone\0" + headers offset + serialno + num headers */
   data += 8 + 4 + 4 + 4;
@@ -779,6 +793,107 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
 
   if (p_start_time)
     *p_start_time = start_time;
+
+  return TRUE;
+}
+
+static guint64
+read_vlc (const guint8 ** data, guint * size)
+{
+  gint shift = 0;
+  guint64 result = 0;
+  gint64 byte;
+
+  do {
+    byte = **data;
+    result |= ((byte & 0x7f) << shift);
+    shift += 7;
+    (*data)++;
+  } while ((byte & 0x80) != 0x80);
+
+  return result;
+}
+
+gboolean
+gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
+{
+  guint64 n_keypoints;
+  guint i;
+  guint64 offset, timestamp;
+
+  /* skip "index\0" + serialno */
+  data += 6 + 4;
+  size -= 6 + 4;
+
+  if (pad->index) {
+    GST_DEBUG ("already have index, ignoring second one");
+    return TRUE;
+  }
+
+  n_keypoints = GST_READ_UINT64_LE (data);
+  pad->kp_denom = GST_READ_UINT64_LE (data + 8);
+  data += 16;
+  size -= 16;
+
+  GST_INFO ("skeleton index has %" G_GUINT64_FORMAT " keypoints, denom: %"
+      G_GINT64_FORMAT, n_keypoints, pad->kp_denom);
+
+  pad->index = g_try_new (GstOggIndex, n_keypoints);
+  if (!pad->index)
+    return FALSE;
+
+  pad->n_index = n_keypoints;
+
+  offset = 0;
+  timestamp = 0;
+
+  for (i = 0; i < n_keypoints; i++) {
+    offset += read_vlc (&data, &size);
+    timestamp += read_vlc (&data, &size);
+
+    pad->index[i].offset = offset;
+    pad->index[i].timestamp = timestamp;
+
+    GST_INFO ("offset %" G_GUINT64_FORMAT " time %" G_GUINT64_FORMAT, offset,
+        timestamp);
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
+    guint64 * timestamp, guint64 * offset)
+{
+  guint64 n_index;
+  guint i, best;
+  guint64 ts;
+
+  n_index = pad->n_index;
+  if (n_index == 0 || pad->index == NULL)
+    return FALSE;
+
+  ts = gst_util_uint64_scale (*timestamp, pad->kp_denom, GST_SECOND);
+  GST_INFO ("timestamp %" G_GUINT64_FORMAT, ts);
+
+  best = -1;
+  for (i = 0; i < n_index; i++) {
+    if (pad->index[i].timestamp <= ts)
+      best = i;
+    else if (pad->index[i].timestamp > ts)
+      break;
+  }
+  if (best == -1)
+    return FALSE;
+
+  GST_INFO ("found at index %u", best);
+
+  if (offset)
+    *offset = pad->index[best].offset;
+  if (timestamp)
+    *timestamp =
+        gst_util_uint64_scale (pad->index[best].timestamp, GST_SECOND,
+        pad->kp_denom);
 
   return TRUE;
 }
