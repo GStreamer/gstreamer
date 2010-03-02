@@ -81,6 +81,9 @@ handle_image_captured_cb (gpointer data)
 {
   GMainLoop *loop = (GMainLoop *) data;
 
+  /* unblock viewfinder */
+  g_object_set (camera, "block-after-capture", FALSE, NULL);
+
   GST_DEBUG ("handle_image_captured_cb, cycle: %d", cycle_count);
   if (cycle_count == 0) {
     GST_DEBUG ("all cycles done");
@@ -660,6 +663,9 @@ GST_START_TEST (test_single_image_capture)
   /* set still image mode */
   g_object_set (camera, "mode", 0,
       "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
+
+  /* don't run viewfinder after capture */
+  g_object_set (camera, "block-after-capture", TRUE, NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);

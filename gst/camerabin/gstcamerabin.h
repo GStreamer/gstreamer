@@ -63,6 +63,7 @@ struct _GstCameraBin
   GstCameraBinFlags flags;
   gboolean stop_requested;        /* TRUE if capturing stop needed */
   gboolean paused;                /* TRUE if capturing paused */
+  gboolean block_viewfinder;      /* TRUE if viewfinder blocks after capture */
 
   /* Resolution of the buffers configured to camerabin */
   gint width;

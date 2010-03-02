@@ -223,6 +223,8 @@ static guint camerabin_signals[LAST_SIGNAL];
 /* FIXME: this is v4l2camsrc specific */
 #define DEFAULT_V4L2CAMSRC_DRIVER_NAME "omap3cam"
 
+#define DEFAULT_BLOCK_VIEWFINDER FALSE
+
 /* message names */
 #define PREVIEW_MESSAGE_NAME "preview-image"
 #define IMG_CAPTURED_MESSAGE_NAME "image-captured"
@@ -265,6 +267,9 @@ gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps);
 static void gst_camerabin_start_image_capture (GstCameraBin * camera);
 
 static void gst_camerabin_start_video_recording (GstCameraBin * camera);
+
+static void
+camerabin_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data);
 
 static gboolean
 gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
@@ -1592,6 +1597,11 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
     videopad = gst_element_get_static_pad (camera->vidbin, "sink");
     gst_pad_send_event (videopad, gst_event_new_eos ());
     gst_object_unref (videopad);
+    /* Block viewfinder after capturing if requested by application */
+    if (camera->block_viewfinder) {
+      gst_pad_set_blocked_async (camera->pad_src_view, TRUE,
+          (GstPadBlockCallback) camerabin_pad_blocked, camera);
+    }
     camera->eos_handled = TRUE;
   } else {
     GST_INFO_OBJECT (camera, "dropping duplicate EOS");
@@ -1599,15 +1609,15 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
 }
 
 /*
- * image_pad_blocked:
+ * camerabin_pad_blocked:
  * @pad: pad to block/unblock
  * @blocked: TRUE to block, FALSE to unblock
  * @u_data: camera bin object
  *
- * The pad will be unblocked when image bin posts eos message.
+ * Callback function for blocking a pad.
  */
 static void
-image_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
+camerabin_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
 {
   GstCameraBin *camera;
 
@@ -1802,6 +1812,12 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
   gst_camerabin_send_img_queue_custom_event (camera,
       gst_structure_new ("img-eos", NULL));
 
+  /* Prevent video source from pushing frames until we want them */
+  if (camera->block_viewfinder) {
+    gst_pad_set_blocked_async (camera->pad_src_view, TRUE,
+        (GstPadBlockCallback) camerabin_pad_blocked, camera);
+  }
+
   /* our work is done, disconnect */
   gst_pad_remove_buffer_probe (pad, camera->image_captured_id);
 
@@ -1865,7 +1881,7 @@ gst_camerabin_have_queue_data (GstPad * pad, GstMiniObject * mini_obj,
     } else if (evs && gst_structure_has_name (evs, "img-eos")) {
       GST_DEBUG_OBJECT (camera, "queue sending EOS to image pipeline");
       gst_pad_set_blocked_async (camera->pad_src_queue, TRUE,
-          (GstPadBlockCallback) image_pad_blocked, camera);
+          (GstPadBlockCallback) camerabin_pad_blocked, camera);
       gst_element_send_event (camera->imgbin, gst_event_new_eos ());
       ret = FALSE;
     }
@@ -2453,6 +2469,39 @@ copy_missing_fields (GQuark field_id, const GValue * value, gpointer user_data)
 }
 
 /*
+* gst_camerabin_change_viewfinder_blocking:
+* @camera: camerabin object
+* @blocked: new viewfinder blocking state
+*
+* Handle viewfinder blocking parameter change.
+*/
+static void
+gst_camerabin_change_viewfinder_blocking (GstCameraBin * camera,
+    gboolean blocked)
+{
+  gboolean old_value;
+
+  GST_OBJECT_LOCK (camera);
+  old_value = camera->block_viewfinder;
+  camera->block_viewfinder = blocked;
+  GST_OBJECT_UNLOCK (camera);
+
+  /* "block_viewfinder" is now set and will be checked after capture */
+  GST_DEBUG_OBJECT (camera, "viewfinder blocking set to %d, was %d",
+      camera->block_viewfinder, old_value);
+
+  if (old_value == blocked)
+    return;
+
+  if (!blocked && camera->pad_src_view
+      && gst_pad_is_blocked (camera->pad_src_view)) {
+    /* Unblock viewfinder: the pad is blocked and we need to unblock it */
+    gst_pad_set_blocked_async (camera->pad_src_view, FALSE,
+        (GstPadBlockCallback) camerabin_pad_blocked, camera);
+  }
+}
+
+/*
  * GObject callback functions implementation
  */
 
@@ -2738,6 +2787,23 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_param_spec_object ("viewfinder-filter", "viewfinder filter element",
           "viewfinder filter GStreamer element",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+
+  /**
+   * GstCameraBin:block-after-capture:
+   *
+   * Block viewfinder after capture.
+   * When set to TRUE, camerabin will freeze the viewfinder after capturing.
+   * This is useful if application wants to display the preview image
+   * and running the viewfinder at the same time would be just a waste of
+   * CPU cycles. Viewfinder can be enabled again by setting this property to
+   * FALSE.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_BLOCK_VIEWFINDER,
+      g_param_spec_boolean ("block-after-capture",
+          "Block viewfinder after capture",
+          "Block viewfinder after capturing an image or video",
+          DEFAULT_BLOCK_VIEWFINDER, G_PARAM_READWRITE));
 
   /**
    * GstCameraBin::capture-start:
@@ -3198,6 +3264,10 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         camera->app_viewfinder_filter = g_value_dup_object (value);
       }
       break;
+    case ARG_BLOCK_VIEWFINDER:
+      gst_camerabin_change_viewfinder_blocking (camera,
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3292,6 +3362,9 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       break;
     case ARG_VIEWFINDER_FILTER:
       g_value_set_object (value, camera->app_viewfinder_filter);
+      break;
+    case ARG_BLOCK_VIEWFINDER:
+      g_value_set_boolean (value, camera->block_viewfinder);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3408,7 +3481,7 @@ gst_camerabin_imgbin_finished (gpointer u_data)
 
   /* Unblock image queue pad to process next buffer */
   gst_pad_set_blocked_async (camera->pad_src_queue, FALSE,
-      (GstPadBlockCallback) image_pad_blocked, camera);
+      (GstPadBlockCallback) camerabin_pad_blocked, camera);
   GST_DEBUG_OBJECT (camera, "Queue srcpad unblocked");
 
   /* disconnect automatically */
