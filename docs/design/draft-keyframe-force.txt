@@ -50,6 +50,10 @@ Implementation:
 	                                 event.
 	 (G_TYPE_UINT64)"running-time" : the running time of the stream when the 
 	                                 event was triggered.
+	 (G_TYPE_BOOLEAN)"all-headers" : Send all headers, including those in
+                                         the caps or those sent at the start of
+                                         the stream.
+
 	 ....                          : optional other data fields.
 
   Note that this event is purely informational, no element is required to
