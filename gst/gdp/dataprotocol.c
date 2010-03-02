@@ -378,6 +378,11 @@ gst_dp_header_payload_type (const guint8 * header)
  * Returns: %TRUE if the header was successfully created.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
+    guint * length, guint8 ** header);
+#endif
 gboolean
 gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
@@ -410,6 +415,11 @@ gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
  * Returns: %TRUE if the packet was successfully created.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
+    guint * length, guint8 ** header, guint8 ** payload);
+#endif
 gboolean
 gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
@@ -442,6 +452,11 @@ gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
  * Returns: %TRUE if the packet was successfully created.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
+    guint * length, guint8 ** header, guint8 ** payload);
+#endif
 gboolean
 gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
