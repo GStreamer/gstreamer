@@ -106,18 +106,6 @@ gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
   return cache;
 }
 
-static int
-gst_registry_binary_cache_write (BinaryRegistryCache * cache,
-    unsigned long offset, const void *data, int length)
-{
-  cache->len = MAX (offset + length, cache->len);
-  cache->mem = g_realloc (cache->mem, cache->len);
-
-  memcpy (cache->mem + offset, data, length);
-
-  return length;
-}
-
 static gboolean
 gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
 {
