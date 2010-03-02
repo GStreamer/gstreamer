@@ -47,7 +47,6 @@
 #define __GST_textwrite_H__
 
 #include <gst/gst.h>
-//sreechage
 #include <cv.h>
 #include <cvaux.h>
 #include <highgui.h>

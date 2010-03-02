@@ -178,6 +178,7 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
       g_param_spec_int ("xpos", "horizontal position",
           "Sets the Horizontal position", 0, G_MAXINT,
           DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_YPOS,
       g_param_spec_int ("ypos", "vertical position",
           "Sets the Vertical position", 0, G_MAXINT,
