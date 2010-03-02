@@ -55,6 +55,8 @@ struct _GstTestTransClass
   GstBaseTransformClass parent_class;
 };
 
+GType gst_test_trans_get_type (void);
+
 GST_BOILERPLATE (GstTestTrans, gst_test_trans, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 

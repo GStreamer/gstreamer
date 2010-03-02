@@ -133,8 +133,6 @@ typedef struct _GstSignalObject GstSignalObject;
 typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
 static GType gst_signal_object_get_type (void);
-static void gst_signal_object_class_init (GstSignalObjectClass * klass);
-static void gst_signal_object_init (GstSignalObject * object);
 
 #ifndef GST_DISABLE_LOADSAVE
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };

@@ -1098,7 +1098,7 @@ typedef	void (* GstDebugFuncPtr)	(void);
 void	_gst_debug_register_funcptr	(GstDebugFuncPtr	func,
 					 const gchar *		ptrname);
 G_CONST_RETURN gchar *
-	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func);
+	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func) G_GNUC_NO_INSTRUMENT;
 
 /**
  * GST_DEBUG_REGISTER_FUNCPTR:

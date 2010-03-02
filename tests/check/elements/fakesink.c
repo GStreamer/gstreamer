@@ -864,6 +864,7 @@ GST_END_TEST;
 typedef GstPushSrc OOBSource;
 typedef GstPushSrcClass OOBSourceClass;
 
+GType oob_source_get_type (void);
 GST_BOILERPLATE (OOBSource, oob_source, GstPushSrc, GST_TYPE_PUSH_SRC);
 
 static void

@@ -47,8 +47,6 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_xml_class_init (GstXMLClass * klass);
-static void gst_xml_init (GstXML * xml);
 static void gst_xml_dispose (GObject * object);
 
 static void gst_xml_object_loaded (GstObject * private, GstObject * object,

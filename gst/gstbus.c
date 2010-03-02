@@ -88,8 +88,6 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_bus_class_init (GstBusClass * klass);
-static void gst_bus_init (GstBus * bus);
 static void gst_bus_dispose (GObject * object);
 
 static void gst_bus_set_main_context (GstBus * bus, GMainContext * ctx);

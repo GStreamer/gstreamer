@@ -513,8 +513,6 @@ _gst_plugin_fault_handler_setup (void)
 }
 #endif /* HAVE_SIGACTION */
 
-static void _gst_plugin_fault_handler_setup ();
-
 static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 
 #define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \

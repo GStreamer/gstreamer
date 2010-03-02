@@ -21,8 +21,6 @@
 
 #include "testrtpool.h"
 
-static void test_rt_pool_class_init (TestRTPoolClass * klass);
-static void test_rt_pool_init (TestRTPool * pool);
 static void test_rt_pool_finalize (GObject * object);
 
 typedef struct

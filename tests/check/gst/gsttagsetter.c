@@ -29,6 +29,7 @@ typedef GstElementClass GstDummyEncClass;
 
 static void gst_dummy_enc_add_interfaces (GType enc_type);
 
+GType gst_dummy_enc_get_type (void);
 GST_BOILERPLATE_FULL (GstDummyEnc, gst_dummy_enc, GstElement,
     GST_TYPE_ELEMENT, gst_dummy_enc_add_interfaces);
 
@@ -221,6 +222,7 @@ GST_START_TEST (test_merge_modes_skip_empty)
     }
   }
 }
+
 GST_END_TEST static Suite *
 gst_tag_setter_suite (void)
 {

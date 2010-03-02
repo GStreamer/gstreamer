@@ -70,10 +70,6 @@ typedef struct _GstBinaryRegistryMagic
   gchar version[GST_MAGIC_BINARY_VERSION_LEN];
 } GstBinaryRegistryMagic;
 
-/* Function prototypes */
-gboolean gst_registry_binary_write_cache(GstRegistry *registry, const char *location);
-gboolean gst_registry_binary_read_cache(GstRegistry *registry, const char *location);
-
 G_END_DECLS
 
 #endif /* !__GST_REGISTRYBINARY_H__ */

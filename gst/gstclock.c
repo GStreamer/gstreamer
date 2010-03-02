@@ -167,8 +167,6 @@ G_STMT_START {                                    \
   GST_OBJECT_UNLOCK (clock);                      \
 } G_STMT_END;
 
-static void gst_clock_class_init (GstClockClass * klass);
-static void gst_clock_init (GstClock * clock);
 static void gst_clock_dispose (GObject * object);
 static void gst_clock_finalize (GObject * object);
 

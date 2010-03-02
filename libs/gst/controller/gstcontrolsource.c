@@ -49,9 +49,6 @@
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
-static void gst_control_source_class_init (GstControlSourceClass * klass);
-static void gst_control_source_init (GstControlSource * self);
-
 G_DEFINE_ABSTRACT_TYPE (GstControlSource, gst_control_source, G_TYPE_OBJECT);
 
 static GObjectClass *parent_class = NULL;

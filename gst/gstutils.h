@@ -131,8 +131,6 @@ type_as_function ## _class_init_trampoline (gpointer g_class,		\
   type_as_function ## _class_init ((type ## Class *)g_class);		\
 }									\
 									\
-GType type_as_function ## _get_type (void);				\
-									\
 GType									\
 type_as_function ## _get_type (void)					\
 {									\

@@ -1493,12 +1493,9 @@ _gst_debug_get_category (const gchar * name)
 static GHashTable *__gst_function_pointers;     /* NULL */
 static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
 
-const gchar *
-_gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
-    G_GNUC_NO_INSTRUMENT;
-
 /* This function MUST NOT return NULL */
-     const gchar *_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
+const gchar *
+_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
   gchar *ptrname;
 

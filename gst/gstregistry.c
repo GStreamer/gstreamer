@@ -114,11 +114,7 @@
 
 #include "gst-i18n-lib.h"
 
-/* needed for fast retrieval of element and typefind factory lists */
-extern GType gst_type_find_factory_get_type (void);
-#define GST_TYPE_TYPE_FIND_FACTORY                 (gst_type_find_factory_get_type())
-extern GType gst_element_factory_get_type (void);
-#define GST_TYPE_ELEMENT_FACTORY                 (gst_element_factory_get_type())
+#include "gst.h"
 
 #ifdef G_OS_WIN32
 #include <windows.h>
