@@ -163,6 +163,9 @@ gst_plugin_error_quark (void)
 }
 
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void _gst_plugin_register_static (GstPluginDesc * desc);
+#endif
 /* this function can be called in the GCC constructor extension, before
  * the _gst_plugin_initialize() was called. In that case, we store the
  * plugin description in a list to initialize it when we open the main

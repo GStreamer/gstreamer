@@ -37,9 +37,9 @@
 #include "gstparse.h"
 #include "gsterror.h"
 #include "gstinfo.h"
-
-extern GstElement *_gst_parse_launch (const gchar *, GError **,
-    GstParseContext *, GstParseFlags);
+#ifndef GST_DISABLE_PARSE
+#include "parse/types.h"
+#endif
 
 /**
  * gst_parse_error_quark:

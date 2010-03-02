@@ -329,7 +329,6 @@ EXPORTS
 	gst_element_register
 	gst_element_release_request_pad
 	gst_element_remove_pad
-	gst_element_request_compatible_pad
 	gst_element_requires_clock
 	gst_element_seek
 	gst_element_seek_simple

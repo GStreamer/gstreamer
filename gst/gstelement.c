@@ -82,6 +82,7 @@
 #include <gobject/gvaluecollector.h>
 
 #include "gstelement.h"
+#include "gstelementdetails.h"
 #include "gstenumtypes.h"
 #include "gstbus.h"
 #include "gstmarshal.h"
@@ -107,10 +108,6 @@ enum
   ARG_0
       /* FILL ME */
 };
-
-extern void __gst_element_details_clear (GstElementDetails * dp);
-extern void __gst_element_details_copy (GstElementDetails * dest,
-    const GstElementDetails * src);
 
 static void gst_element_class_init (GstElementClass * klass);
 static void gst_element_init (GstElement * element);
@@ -1071,6 +1068,9 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * depending on the type of the pad.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GstPad *gst_element_get_pad (GstElement * element, const gchar * name);
+#endif
 GstPad *
 gst_element_get_pad (GstElement * element, const gchar * name)
 {

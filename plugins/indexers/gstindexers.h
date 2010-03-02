@@ -17,27 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst_private.h>
-#include <gst/gstversion.h>
-#include <gst/gstplugin.h>
+#ifndef __GST_INDEXERS_H__
+#define __GST_INDEXERS_H__
 
-#include "gstindexers.h"
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean res = TRUE;
 
-  res &= gst_mem_index_plugin_init (plugin);
-#if defined(HAVE_MMAP) && !defined(GST_DISABLE_LOADSAVE)
-  res &= gst_file_index_plugin_init (plugin);
+gboolean gst_mem_index_plugin_init (GstPlugin * plugin);
+
+#ifndef GST_DISABLE_LOADSAVE
+gboolean gst_file_index_plugin_init (GstPlugin * plugin);
 #endif
 
-  return res;
-}
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "coreindexers",
-    "GStreamer core indexers",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+G_END_DECLS
+
+#endif /* __GST_INDEXERS_H__ */

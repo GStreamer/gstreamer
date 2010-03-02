@@ -252,6 +252,7 @@ my_buffer_pool_drain_one (MyBufferPool * self)
   return buf;
 }
 
+GType my_recycle_buffer_get_type (void);
 G_DEFINE_TYPE (MyRecycleBuffer, my_recycle_buffer, GST_TYPE_BUFFER);
 
 static void my_recycle_buffer_finalize (GstMiniObject * mini_object);
@@ -365,6 +366,7 @@ enum
   PROP_BUFFER = 1
 };
 
+GType my_foo_get_type (void);
 G_DEFINE_TYPE (MyFoo, my_foo, G_TYPE_OBJECT);
 
 static void

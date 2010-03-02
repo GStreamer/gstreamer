@@ -993,7 +993,7 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
   return ret;
 }
 
-/**
+/*
  * gst_element_request_compatible_pad:
  * @element: a #GstElement.
  * @templ: the #GstPadTemplate to which the new pad should be able to link.
@@ -1003,7 +1003,7 @@ gst_element_get_pad_from_template (GstElement * element, GstPadTemplate * templ)
  *
  * Returns: a #GstPad, or %NULL if one could not be found or created.
  */
-GstPad *
+static GstPad *
 gst_element_request_compatible_pad (GstElement * element,
     GstPadTemplate * templ)
 {
@@ -2620,6 +2620,9 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * control.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src);
+#endif
 void
 gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 {
@@ -3044,6 +3047,9 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  *
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void gst_atomic_int_set (gint * atomic_int, gint value);
+#endif
 void
 gst_atomic_int_set (gint * atomic_int, gint value)
 {
@@ -3526,6 +3532,9 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
  * Deprecated: use gst_bin_find_unlinked_pad() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GstPad *gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction);
+#endif
 GstPad *
 gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
 {

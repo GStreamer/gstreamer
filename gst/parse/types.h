@@ -84,4 +84,7 @@ gst_parse_unescape (gchar *str)
   *str = '\0';
 }
 
+GstElement *_gst_parse_launch (const gchar *, GError **,
+    GstParseContext *, GstParseFlags);
+
 #endif /* __GST_PARSE_TYPES_H__ */

@@ -1021,6 +1021,11 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
  * Returns: FALSE if the values couldn't be set (ex : properties not handled by controller), TRUE otherwise
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_controller_set (GstController * self, const gchar * property_name,
+    GstClockTime timestamp, GValue * value);
+#endif
 gboolean
 gst_controller_set (GstController * self, const gchar * property_name,
     GstClockTime timestamp, GValue * value)
@@ -1065,6 +1070,11 @@ out:
  * Returns: %FALSE if the values couldn't be set (ex : properties not handled by controller), %TRUE otherwise
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_controller_set_from_list (GstController * self, const gchar * property_name,
+    GSList * timedvalues);
+#endif
 gboolean
 gst_controller_set_from_list (GstController * self, const gchar * property_name,
     GSList * timedvalues)
@@ -1111,6 +1121,11 @@ out:
  * Returns: %FALSE if the values couldn't be unset (ex : properties not handled by controller), %TRUE otherwise
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_controller_unset (GstController * self, const gchar * property_name,
+    GstClockTime timestamp);
+#endif
 gboolean
 gst_controller_unset (GstController * self, const gchar * property_name,
     GstClockTime timestamp)
@@ -1154,6 +1169,9 @@ out:
  * Since: 0.10.5
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean gst_controller_unset_all (GstController * self, const gchar * property_name);
+#endif
 gboolean
 gst_controller_unset_all (GstController * self, const gchar * property_name)
 {
@@ -1194,6 +1212,10 @@ out:
  * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+const GList *gst_controller_get_all (GstController * self,
+    const gchar * property_name);
+#endif
 const GList *
 gst_controller_get_all (GstController * self, const gchar * property_name)
 {
@@ -1237,6 +1259,11 @@ out:
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gboolean
+gst_controller_set_interpolation_mode (GstController * self,
+    const gchar * property_name, GstInterpolateMode mode);
+#endif
 gboolean
 gst_controller_set_interpolation_mode (GstController * self,
     const gchar * property_name, GstInterpolateMode mode)

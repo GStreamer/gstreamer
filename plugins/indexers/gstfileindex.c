@@ -27,6 +27,8 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include "gstindexers.h"
+
 #define GST_TYPE_FILE_INDEX             \
   (gst_file_index_get_type ())
 #define GST_FILE_INDEX(obj)             \

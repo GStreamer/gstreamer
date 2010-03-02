@@ -1471,6 +1471,11 @@ gst_pad_set_iterate_internal_links_function (GstPad * pad,
  * Deprecated: Use the thread-safe gst_pad_set_iterate_internal_links_function()
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void
+gst_pad_set_internal_link_function (GstPad * pad,
+    GstPadIntLinkFunction intlink);
+#endif
 void
 gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
 {
@@ -3387,6 +3392,9 @@ no_parent:
  * gst_pad_iterate_internal_links() instead.
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+GList *gst_pad_get_internal_links (GstPad * pad);
+#endif
 GList *
 gst_pad_get_internal_links (GstPad * pad)
 {

@@ -105,7 +105,7 @@ enum
 /* Copy of glib's g_fopen due to win32 libc/cross-DLL brokenness: we can't
  * use the 'file pointer' opened in glib (and returned from this function)
  * in this library, as they may have unrelated C runtimes. */
-FILE *
+static FILE *
 gst_fopen (const gchar * filename, const gchar * mode)
 {
 #ifdef G_OS_WIN32

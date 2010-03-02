@@ -184,7 +184,7 @@ typedef struct
   gboolean bufferalloc_blocked;
 } BufferAllocHarness;
 
-void
+static void
 buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
 {
   h->tee = gst_check_setup_element ("tee");
@@ -223,7 +223,7 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
       GST_PAD_LINK_OK);
 }
 
-void
+static void
 buffer_alloc_harness_teardown (BufferAllocHarness * h)
 {
   g_thread_join (h->app_thread);

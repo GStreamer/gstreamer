@@ -60,6 +60,7 @@
 #include "gst_private.h"
 
 #include "gstelement.h"
+#include "gstelementdetails.h"
 #include "gstinfo.h"
 #include "gsturi.h"
 #include "gstregistry.h"
@@ -70,7 +71,6 @@ GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
 
 static void gst_element_factory_finalize (GObject * object);
-void __gst_element_details_clear (GstElementDetails * dp);
 static void gst_element_factory_cleanup (GstElementFactory * factory);
 
 static GstPluginFeatureClass *parent_class = NULL;
@@ -146,45 +146,6 @@ gst_element_factory_find (const gchar * name)
    * present */
   GST_LOG ("no such element factory \"%s\"", name);
   return NULL;
-}
-
-void
-__gst_element_details_clear (GstElementDetails * dp)
-{
-  g_free (dp->longname);
-  g_free (dp->klass);
-  g_free (dp->description);
-  g_free (dp->author);
-  memset (dp, 0, sizeof (GstElementDetails));
-}
-
-#define VALIDATE_SET(__dest, __src, __entry)                            \
-G_STMT_START {                                                          \
-  if (g_utf8_validate (__src->__entry, -1, NULL)) {                     \
-    __dest->__entry = g_strdup (__src->__entry);                        \
-  } else {                                                              \
-    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",        \
-        __src->__entry);                                                \
-    __dest->__entry = g_strdup ("[ERROR: invalid UTF-8]");              \
-  }                                                                     \
-} G_STMT_END
-
-void
-__gst_element_details_set (GstElementDetails * dest,
-    const GstElementDetails * src)
-{
-  VALIDATE_SET (dest, src, longname);
-  VALIDATE_SET (dest, src, klass);
-  VALIDATE_SET (dest, src, description);
-  VALIDATE_SET (dest, src, author);
-}
-
-void
-__gst_element_details_copy (GstElementDetails * dest,
-    const GstElementDetails * src)
-{
-  __gst_element_details_clear (dest);
-  __gst_element_details_set (dest, src);
 }
 
 static void
