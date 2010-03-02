@@ -2278,6 +2278,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     context->pos = entry->time;
     context->set_discont = TRUE;
     context->last_flow = GST_FLOW_OK;
+    context->eos = FALSE;
   }
   demux->segment.last_stop = entry->time;
   demux->seek_block = entry->block;
@@ -4381,7 +4382,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_DEBUG_OBJECT (demux,
               "Stream %d after segment stop %" GST_TIME_FORMAT, stream->index,
               GST_TIME_ARGS (demux->segment.stop));
-          ret = GST_FLOW_UNEXPECTED;
+          stream->eos = TRUE;
+          ret = GST_FLOW_OK;
           /* combine flows */
           ret = gst_matroska_demux_combine_flows (demux, stream, ret);
           goto done;
@@ -5163,22 +5165,24 @@ gst_matroska_demux_loop (GstPad * pad)
     goto pause;
 
   /* check if we're at the end of a configured segment */
-  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))) {
+  if (G_LIKELY (demux->src->len)) {
     guint i;
 
     g_assert (demux->num_streams == demux->src->len);
     for (i = 0; i < demux->src->len; i++) {
       GstMatroskaTrackContext *context = g_ptr_array_index (demux->src, i);
-      if (context->pos >= demux->segment.stop) {
-        GST_INFO_OBJECT (demux, "Reached end of segment (%" G_GUINT64_FORMAT
-            "-%" G_GUINT64_FORMAT ") on pad %s:%s", demux->segment.start,
-            demux->segment.stop, GST_DEBUG_PAD_NAME (context->pad));
-        ret = GST_FLOW_UNEXPECTED;
-        goto pause;
-      }
+      GST_DEBUG_OBJECT (context->pad, "pos %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (context->pos));
+      if (context->eos == FALSE)
+        goto next;
     }
+
+    GST_INFO_OBJECT (demux, "All streams are EOS");
+    ret = GST_FLOW_UNEXPECTED;
+    goto pause;
   }
 
+next:
   if (G_UNLIKELY (ebml->offset == gst_ebml_read_get_length (ebml))) {
     GST_LOG_OBJECT (demux, "Reached end of stream, sending EOS");
     ret = GST_FLOW_UNEXPECTED;
