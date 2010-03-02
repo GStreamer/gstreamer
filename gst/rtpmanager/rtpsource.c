@@ -1015,7 +1015,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   src->stats.bytes_received += arrival->bytes;
   src->stats.packets_received++;
   /* for the bitrate estimation */
-  src->bytes_received += arrival->bytes;
+  src->bytes_received += arrival->payload_len;
   /* the source that sent the packet must be a sender */
   src->is_sender = TRUE;
   src->validated = TRUE;
