@@ -72,6 +72,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_textwrite_debug);
 #define DEFAULT_PROP_XPOS	50
 #define DEFAULT_PROP_YPOS	50
 #define DEFAULT_PROP_THICKNESS	2
+#define DEFAULT_PROP_COLOR	0
+
 
 /* Filter signals and args */
 enum
@@ -87,6 +89,9 @@ enum
   PROP_XPOS,
   PROP_YPOS,
   PROP_THICKNESS,
+  PROP_COLOR_R,
+  PROP_COLOR_G,
+  PROP_COLOR_B,
   PROP_TEXT,
   PROP_HEIGHT,
   PROP_WIDTH
@@ -186,10 +191,27 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
           "Sets the Vertical position", 0, G_MAXINT,
           DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-g_object_class_install_property (gobject_class, PROP_THICKNESS,
+ g_object_class_install_property (gobject_class, PROP_THICKNESS,
       g_param_spec_int ("thickness", "font thickness",
           "Sets the Thickness of Font", 0, G_MAXINT,
           DEFAULT_PROP_THICKNESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ g_object_class_install_property (gobject_class, PROP_COLOR_R,
+      g_param_spec_int ("colorR", "color -Red ",
+          "Sets the color -R", 0, 255,
+          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ g_object_class_install_property (gobject_class, PROP_COLOR_G,
+      g_param_spec_int ("colorG", "color -Green",
+          "Sets the color -G", 0, 255,
+          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ g_object_class_install_property (gobject_class, PROP_COLOR_B,
+      g_param_spec_int ("colorB", "color -Blue",
+          "Sets the color -B", 0, 255,
+          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
 
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_double ("height", "Height",
@@ -232,6 +254,9 @@ gst_textwrite_init (Gsttextwrite * filter,
   filter->xpos = DEFAULT_PROP_XPOS;
   filter->ypos = DEFAULT_PROP_YPOS;
   filter->thickness = DEFAULT_PROP_THICKNESS;
+  filter->colorR = DEFAULT_PROP_COLOR;
+  filter->colorG = DEFAULT_PROP_COLOR;
+  filter->colorB = DEFAULT_PROP_COLOR;
 
 }
 
@@ -255,6 +280,17 @@ gst_textwrite_set_property (GObject * object, guint prop_id,
     case PROP_THICKNESS:
       filter->thickness = g_value_get_int(value);
       break;
+
+    case PROP_COLOR_R:
+      filter->colorR = g_value_get_int(value);
+      break;
+    case PROP_COLOR_G:
+      filter->colorG = g_value_get_int(value);
+      break;
+    case PROP_COLOR_B:
+      filter->colorB = g_value_get_int(value);
+      break;
+
     case PROP_HEIGHT:
       filter->height = g_value_get_double(value);
       break;
@@ -285,6 +321,15 @@ gst_textwrite_get_property (GObject * object, guint prop_id,
       break;
     case PROP_THICKNESS:
       g_value_set_int (value, filter->thickness);
+      break;
+    case PROP_COLOR_R:
+      g_value_set_int (value, filter->colorR);
+      break;
+    case PROP_COLOR_G:
+      g_value_set_int (value, filter->colorG);
+      break;
+    case PROP_COLOR_B:
+      g_value_set_int (value, filter->colorB);
       break;
     case PROP_HEIGHT:
       g_value_set_double (value, filter->height);
@@ -339,7 +384,7 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
  
   cvInitFont(&(filter->font),CV_FONT_VECTOR0, filter->width,filter->height,0,filter->thickness,0);
   
-  cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(165,14,14,0));
+  cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(filter->colorR,filter->colorG,filter->colorB,0));
 
   gst_buffer_set_data (buf, filter->cvImage->imageData,filter->cvImage->imageSize);
  
