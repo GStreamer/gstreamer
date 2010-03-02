@@ -69,6 +69,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_textwrite_debug);
 #define DEFAULT_PROP_TEXT 	""
 #define DEFAULT_PROP_WIDTH 	1
 #define DEFAULT_PROP_HEIGHT 	1
+#define DEFAULT_PROP_XPOS	50
+#define DEFAULT_PROP_YPOS	50
 
 /* Filter signals and args */
 enum
@@ -81,6 +83,8 @@ enum
 enum
 {
   PROP_0,
+  PROP_XPOS,
+  PROP_YPOS,
   PROP_TEXT,
   PROP_HEIGHT,
   PROP_WIDTH
@@ -170,6 +174,15 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
           "Text to be display.", DEFAULT_PROP_TEXT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+ g_object_class_install_property (gobject_class, PROP_XPOS,
+      g_param_spec_int ("xpos", "horizontal position",
+          "Sets the Horizontal position", 0, G_MAXINT,
+          DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_YPOS,
+      g_param_spec_int ("ypos", "vertical position",
+          "Sets the Vertical position", 0, G_MAXINT,
+          DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_double ("height", "Height",
           "Sets the height of fonts",1.0,5.0,
@@ -208,6 +221,8 @@ gst_textwrite_init (Gsttextwrite * filter,
   filter->textbuf = g_strdup (DEFAULT_PROP_TEXT); 
   filter->width=DEFAULT_PROP_WIDTH;
   filter->height=DEFAULT_PROP_HEIGHT;
+  filter->xpos=DEFAULT_PROP_XPOS;
+  filter->ypos=DEFAULT_PROP_XPOS;
   
 }
 
@@ -221,6 +236,12 @@ gst_textwrite_set_property (GObject * object, guint prop_id,
     case PROP_TEXT:
       g_free (filter->textbuf);
       filter->textbuf = g_value_dup_string (value);
+      break;
+    case PROP_XPOS:
+      filter->xpos = g_value_get_int(value);
+      break;
+    case PROP_YPOS:
+      filter->ypos = g_value_get_int(value);
       break;
     case PROP_HEIGHT:
       filter->height = g_value_get_double(value);
@@ -243,6 +264,12 @@ gst_textwrite_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_TEXT:
       g_value_set_string (value, filter->textbuf);
+      break;
+    case PROP_XPOS:
+      g_value_set_int (value, filter->xpos);
+      break;
+    case PROP_YPOS:
+      g_value_set_int (value, filter->ypos);
       break;
     case PROP_HEIGHT:
       g_value_set_double (value, filter->height);
@@ -298,7 +325,7 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
   cvInitFont(&(filter->font),CV_FONT_VECTOR0, filter->width,filter->height,0,lineWidth,0);
 
   
-  cvPutText (filter->cvImage,filter->textbuf,cvPoint(100,100), &(filter->font), cvScalar(165,14,14,0));
+  cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(165,14,14,0));
 
 
   gst_buffer_set_data (buf, filter->cvImage->imageData,filter->cvImage->imageSize);

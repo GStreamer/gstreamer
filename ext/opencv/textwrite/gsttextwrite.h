@@ -79,6 +79,8 @@ struct _Gsttextwrite
   CvMemStorage *cvStorage;
   CvFont font;  
 
+  gint xpos;
+  gint ypos;
   gdouble height;
   gdouble width;
   gchar *textbuf;
