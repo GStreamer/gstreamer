@@ -3536,6 +3536,8 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
       gint64 new_start;
 
       new_start = demux->segment.last_stop - (GST_SECOND / 2);
+      if (GST_CLOCK_TIME_IS_VALID (demux->segment.stop))
+        new_start = MIN (new_start, demux->segment.stop);
       GST_DEBUG_OBJECT (demux,
           "Synchronizing stream %d with others by advancing time " "from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
