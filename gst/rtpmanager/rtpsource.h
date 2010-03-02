@@ -143,6 +143,7 @@ struct _RTPSource {
   guint64       bitrate;
   GstClockTime  prev_rtime;
   guint64       bytes_sent;
+  guint64       bytes_received;
 
   GQueue       *packets;
 

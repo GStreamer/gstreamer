@@ -886,6 +886,40 @@ init_seq (RTPSource * src, guint16 seq)
   GST_DEBUG ("base_seq %d", seq);
 }
 
+static void
+do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
+    guint64 * bytes_handled)
+{
+  guint64 elapsed;
+
+  if (src->prev_rtime) {
+    elapsed = running_time - src->prev_rtime;
+
+    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
+      guint64 rate;
+
+      rate =
+          gst_util_uint64_scale (*bytes_handled, elapsed,
+          (G_GINT64_CONSTANT (1) << 29));
+
+      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
+          ", rate %" G_GUINT64_FORMAT, elapsed, *bytes_handled, rate);
+
+      if (src->bitrate == 0)
+        src->bitrate = rate;
+      else
+        src->bitrate = ((src->bitrate * 3) + rate) / 4;
+
+      src->prev_rtime = running_time;
+      *bytes_handled = 0;
+    }
+  } else {
+    GST_LOG ("Reset bitrate measurement");
+    src->prev_rtime = running_time;
+    src->bitrate = 0;
+  }
+}
+
 /**
  * rtp_source_process_rtp:
  * @src: an #RTPSource
@@ -903,7 +937,6 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   guint16 seqnr, udelta;
   RTPSourceStats *stats;
   guint16 expected;
-  guint64 elapsed;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -981,37 +1014,13 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   src->stats.octets_received += arrival->payload_len;
   src->stats.bytes_received += arrival->bytes;
   src->stats.packets_received++;
+  /* for the bitrate estimation */
+  src->bytes_received += arrival->bytes;
   /* the source that sent the packet must be a sender */
   src->is_sender = TRUE;
   src->validated = TRUE;
 
-  if (src->prev_rtime) {
-    elapsed = arrival->running_time - src->prev_rtime;
-
-    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
-      guint64 rate;
-
-      rate =
-          gst_util_uint64_scale (src->stats.bytes_received, elapsed,
-          (G_GINT64_CONSTANT (1) << 29));
-
-      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
-          ", rate %" G_GUINT64_FORMAT, elapsed, src->stats.bytes_received,
-          rate);
-
-      if (src->bitrate == 0)
-        src->bitrate = rate;
-      else
-        src->bitrate = ((src->bitrate * 3) + rate) / 4;
-
-      src->prev_rtime = arrival->running_time;
-      src->stats.bytes_received = 0;
-    }
-  } else {
-    GST_LOG ("Reset bitrate measurement");
-    src->prev_rtime = arrival->running_time;
-    src->bitrate = 0;
-  }
+  do_bitrate_estimation (src, arrival->running_time, &src->bytes_received);
 
   GST_LOG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
@@ -1094,7 +1103,6 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   guint32 rtptime;
   guint64 ext_rtptime;
   guint64 rt_diff, rtp_diff;
-  guint64 elapsed;
   GstBufferList *list = NULL;
   GstBuffer *buffer = NULL;
   guint packets;
@@ -1133,32 +1141,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   src->stats.octets_sent += len;
   src->bytes_sent += len;
 
-  if (src->prev_rtime) {
-    elapsed = running_time - src->prev_rtime;
-
-    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
-      guint64 rate;
-
-      rate =
-          gst_util_uint64_scale (src->bytes_sent, elapsed,
-          (G_GINT64_CONSTANT (1) << 29));
-
-      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
-          ", rate %" G_GUINT64_FORMAT, elapsed, src->bytes_sent, rate);
-
-      if (src->bitrate == 0)
-        src->bitrate = rate;
-      else
-        src->bitrate = ((src->bitrate * 3) + rate) / 4;
-
-      src->prev_rtime = running_time;
-      src->bytes_sent = 0;
-    }
-  } else {
-    GST_LOG ("Reset bitrate measurement");
-    src->prev_rtime = running_time;
-    src->bitrate = 0;
-  }
+  do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
   if (is_list) {
     rtptime = gst_rtp_buffer_list_get_timestamp (list);
