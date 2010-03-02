@@ -80,6 +80,7 @@ struct _Gsttextwrite
 
   gint xpos;
   gint ypos;
+  gint thickness;
   gdouble height;
   gdouble width;
   gchar *textbuf;
