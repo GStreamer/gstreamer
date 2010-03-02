@@ -270,7 +270,6 @@ EXPORTS
 	gst_element_class_set_details_simple
 	gst_element_continue_state
 	gst_element_create_all_pads
-	gst_element_default_error
 	gst_element_factory_can_sink_caps
 	gst_element_factory_can_src_caps
 	gst_element_factory_create

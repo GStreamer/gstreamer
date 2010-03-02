@@ -293,33 +293,6 @@ gst_element_init (GstElement * element)
 }
 
 /**
- * gst_element_default_error:
- * @object: a #GObject that signalled the error.
- * @orig: the #GstObject that initiated the error.
- * @error: the GError.
- * @debug: an additional debug information string, or %NULL.
- *
- * A default error signal callback to attach to an element.
- * The user data passed to the g_signal_connect is ignored.
- *
- * The default handler will simply print the error string using g_print.
- *
- * MT safe.
- */
-void
-gst_element_default_error (GObject * object, GstObject * source, GError * error,
-    gchar * debug)
-{
-  gchar *name = gst_object_get_path_string (source);
-
-  g_print (_("ERROR: from element %s: %s\n"), name, error->message);
-  if (debug)
-    g_print (_("Additional debug info:\n%s\n"), debug);
-
-  g_free (name);
-}
-
-/**
  * gst_element_release_request_pad:
  * @element: a #GstElement to release the request pad of.
  * @pad: the #GstPad to release.
