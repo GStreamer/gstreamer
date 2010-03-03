@@ -432,7 +432,7 @@ plugin_loader_cleanup_child (GstPluginLoader * l)
 }
 
 gboolean
-_gst_plugin_loader_client_run ()
+_gst_plugin_loader_client_run (void)
 {
   GstPluginLoader *l;
 

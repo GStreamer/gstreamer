@@ -1148,7 +1148,7 @@ gst_version (guint * major, guint * minor, guint * micro, guint * nano)
  */
 
 gchar *
-gst_version_string ()
+gst_version_string (void)
 {
   guint major, minor, micro, nano;
 

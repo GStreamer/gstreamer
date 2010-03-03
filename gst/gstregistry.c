@@ -1256,7 +1256,7 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
 
 /* Unref and delete the default registry */
 void
-_priv_gst_registry_cleanup ()
+_priv_gst_registry_cleanup (void)
 {
   GstRegistry *registry;
 
