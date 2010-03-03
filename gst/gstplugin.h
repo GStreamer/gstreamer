@@ -160,7 +160,7 @@ struct _GstPluginDesc {
   gint major_version;
   gint minor_version;
   const gchar *name;
-  gchar *description;
+  const gchar *description;
   GstPluginInitFunc plugin_init;
   const gchar *version;
   const gchar *license;
@@ -329,7 +329,7 @@ void			_gst_plugin_register_static	(GstPluginDesc *desc);
 gboolean		gst_plugin_register_static	(gint major_version,
                                                          gint minor_version,
                                                          const gchar *name,
-                                                         gchar *description,
+                                                         const gchar *description,
                                                          GstPluginInitFunc init_func,
                                                          const gchar *version,
                                                          const gchar *license,
@@ -340,7 +340,7 @@ gboolean		gst_plugin_register_static	(gint major_version,
 gboolean		gst_plugin_register_static_full	(gint major_version,
                                                          gint minor_version,
                                                          const gchar *name,
-                                                         gchar *description,
+                                                         const gchar *description,
                                                          GstPluginInitFullFunc init_full_func,
                                                          const gchar *version,
                                                          const gchar *license,

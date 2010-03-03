@@ -866,7 +866,6 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gint pid;
   GstClockTime elapsed;
   gchar *obj = NULL;
-  gboolean free_obj = TRUE;
   gboolean is_colored;
 
   if (level > gst_debug_category_get_threshold (category))
@@ -881,15 +880,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   if (object) {
     obj = gst_debug_print_object (object);
   } else {
-    obj = "\0";
-    free_obj = FALSE;
+    obj = g_strdup ("");
   }
 
   if (is_colored) {
 #ifndef G_OS_WIN32
     /* colors, non-windows */
     gchar *color = NULL;
-    gchar *clear;
+    const gchar *clear;
     gchar pidcolor[10];
     const gchar *levelcolor;
 
@@ -947,8 +945,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #undef PRINT_FMT
   }
 
-  if (free_obj)
-    g_free (obj);
+  g_free (obj);
 }
 
 /**

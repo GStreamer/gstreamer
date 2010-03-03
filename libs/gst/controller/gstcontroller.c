@@ -217,7 +217,7 @@ gst_controller_find_controlled_property (GstController * self,
  */
 static GstController *
 gst_controller_add_property (GstController * self, GObject * object,
-    gchar * name, gboolean * ref_existing)
+    const gchar * name, gboolean * ref_existing)
 {
   /* test if this property isn't yet controlled */
   if (!self || !gst_controller_find_controlled_property (self, name)) {
@@ -454,7 +454,7 @@ gst_controller_remove_properties (GstController * self, ...)
 
 void
 gst_controller_set_property_disabled (GstController * self,
-    gchar * property_name, gboolean disabled)
+    const gchar * property_name, gboolean disabled)
 {
   GstControlledProperty *prop;
 
@@ -512,8 +512,8 @@ gst_controller_set_disabled (GstController * self, gboolean disabled)
  * Since: 0.10.14
  */
 gboolean
-gst_controller_set_control_source (GstController * self, gchar * property_name,
-    GstControlSource * csource)
+gst_controller_set_control_source (GstController * self,
+    const gchar * property_name, GstControlSource * csource)
 {
   GstControlledProperty *prop;
   gboolean ret = FALSE;
@@ -552,7 +552,8 @@ gst_controller_set_control_source (GstController * self, gchar * property_name,
  * Since: 0.10.14
  */
 GstControlSource *
-gst_controller_get_control_source (GstController * self, gchar * property_name)
+gst_controller_get_control_source (GstController * self,
+    const gchar * property_name)
 {
   GstControlledProperty *prop;
   GstControlSource *ret = NULL;
@@ -585,7 +586,7 @@ gst_controller_get_control_source (GstController * self, gchar * property_name)
  * property isn't handled by the controller
  */
 GValue *
-gst_controller_get (GstController * self, gchar * property_name,
+gst_controller_get (GstController * self, const gchar * property_name,
     GstClockTime timestamp)
 {
   GstControlledProperty *prop;
@@ -1021,7 +1022,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
  */
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
-gst_controller_set (GstController * self, gchar * property_name,
+gst_controller_set (GstController * self, const gchar * property_name,
     GstClockTime timestamp, GValue * value)
 {
   gboolean res = FALSE;
@@ -1065,7 +1066,7 @@ out:
  */
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
-gst_controller_set_from_list (GstController * self, gchar * property_name,
+gst_controller_set_from_list (GstController * self, const gchar * property_name,
     GSList * timedvalues)
 {
   gboolean res = FALSE;
@@ -1111,7 +1112,7 @@ out:
  */
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
-gst_controller_unset (GstController * self, gchar * property_name,
+gst_controller_unset (GstController * self, const gchar * property_name,
     GstClockTime timestamp)
 {
   gboolean res = FALSE;
@@ -1154,7 +1155,7 @@ out:
  */
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
-gst_controller_unset_all (GstController * self, gchar * property_name)
+gst_controller_unset_all (GstController * self, const gchar * property_name)
 {
   GstControlledProperty *prop;
 
@@ -1194,7 +1195,7 @@ out:
  */
 #ifndef GST_REMOVE_DEPRECATED
 const GList *
-gst_controller_get_all (GstController * self, gchar * property_name)
+gst_controller_get_all (GstController * self, const gchar * property_name)
 {
   const GList *res = NULL;
   GstControlledProperty *prop;
@@ -1238,7 +1239,7 @@ out:
 #ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_set_interpolation_mode (GstController * self,
-    gchar * property_name, GstInterpolateMode mode)
+    const gchar * property_name, GstInterpolateMode mode)
 {
   gboolean res = FALSE;
   GstControlledProperty *prop;

@@ -42,7 +42,7 @@ main (gint argc, gchar * argv[])
   GstElement *pipeline, *src, *sink, *current, *last;
   guint i, buffers = BUFFER_COUNT, identities = IDENTITY_COUNT;
   GstClockTime start, end;
-  gchar *src_name = SRC_ELEMENT, *sink_name = SINK_ELEMENT;
+  const gchar *src_name = SRC_ELEMENT, *sink_name = SINK_ELEMENT;
 
   gst_init (&argc, &argv);
 

@@ -24,7 +24,7 @@
 
 
 static GstElement *
-setup_pipeline (gchar * pipe_descr)
+setup_pipeline (const gchar * pipe_descr)
 {
   GstElement *pipeline;
 
@@ -43,7 +43,7 @@ setup_pipeline (gchar * pipe_descr)
  * the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipeline, gchar * descr,
+run_pipeline (GstElement * pipeline, const gchar * descr,
     GstMessageType message_types, GstMessageType tmessage)
 {
   GstBus *bus;
@@ -97,7 +97,7 @@ done:
 
 GST_START_TEST (test_2_elements)
 {
-  gchar *s;
+  const gchar *s;
 
   s = "fakesrc can-activate-push=false ! fakesink can-activate-pull=true";
   run_pipeline (setup_pipeline (s), s,
@@ -147,7 +147,7 @@ check_state_change_return (GstElement * pipeline, GstState state,
 
 GST_START_TEST (test_state_change_returns)
 {
-  gchar *s;
+  const gchar *s;
   GstElement *pipeline;
 
   s = "fakesrc can-activate-pull=false ! fakesink";
@@ -188,7 +188,7 @@ GST_END_TEST;
 G_GNUC_UNUSED
 GST_START_TEST (test_tee)
 {
-  gchar *s;
+  const gchar *s;
 
   s = "fakesrc can-activate-push=true ! tee ! fakesink can-activate-push=true";
   run_pipeline (setup_pipeline (s), s,

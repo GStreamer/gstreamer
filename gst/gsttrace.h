@@ -88,7 +88,7 @@ struct _GstTraceEntry {
   gchar message[112];
 };
 
-GstTrace*	gst_trace_new			(gchar *filename, gint size);
+GstTrace*	gst_trace_new			(const gchar *filename, gint size);
 
 void 		gst_trace_destroy		(GstTrace *trace);
 void 		gst_trace_flush			(GstTrace *trace);

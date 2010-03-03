@@ -102,15 +102,11 @@ gst_preset_test_class_init (GObjectClass * klass)
 static void
 gst_preset_test_base_init (GstPresetTestClass * klass)
 {
-  static const GstElementDetails details = {
-    "Element for unit tests",
-    "Testing",
-    "Use in unit tests",
-    "Stefan Kost <stefan.kost@nokia.com>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "Element for unit tests",
+      "Testing", "Use in unit tests", "Stefan Kost <stefan.kost@nokia.com>");
 }
 
 static GType

@@ -206,7 +206,7 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
  * Since: 0.10.14
  */
 gboolean
-gst_object_set_control_source (GObject * object, gchar * property_name,
+gst_object_set_control_source (GObject * object, const gchar * property_name,
     GstControlSource * csource)
 {
   GstController *ctrl = NULL;
@@ -234,7 +234,7 @@ gst_object_set_control_source (GObject * object, gchar * property_name,
  * Since: 0.10.14
  */
 GstControlSource *
-gst_object_get_control_source (GObject * object, gchar * property_name)
+gst_object_get_control_source (GObject * object, const gchar * property_name)
 {
   GstController *ctrl = NULL;
 

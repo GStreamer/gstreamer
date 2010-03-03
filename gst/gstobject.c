@@ -501,7 +501,8 @@ gst_object_dispatch_properties_changed (GObject * object,
 {
   GstObject *gst_object, *parent, *old_parent;
   guint i;
-  gchar *name, *debug_name;
+  gchar *name;
+  const gchar *debug_name;
 
   /* do the standard dispatching */
   parent_class->dispatch_properties_changed (object, n_pspecs, pspecs);
@@ -1075,7 +1076,7 @@ gst_object_get_path_string (GstObject * object)
   gchar *prevpath, *path;
   const gchar *typename;
   gchar *component;
-  gchar *separator;
+  const gchar *separator;
 
   /* ref object before adding to list */
   gst_object_ref (object);

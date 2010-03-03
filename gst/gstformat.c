@@ -65,7 +65,8 @@ _gst_format_initialize (void)
 
   while (standards->nick) {
     standards->quark = g_quark_from_static_string (standards->nick);
-    g_hash_table_insert (_nick_to_format, standards->nick, standards);
+    g_hash_table_insert (_nick_to_format, (gpointer) standards->nick,
+        standards);
     g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (standards->value),
         standards);
 
@@ -157,7 +158,7 @@ gst_format_register (const gchar * nick, const gchar * description)
   format->description = g_strdup (description);
   format->quark = g_quark_from_static_string (format->nick);
 
-  g_hash_table_insert (_nick_to_format, format->nick, format);
+  g_hash_table_insert (_nick_to_format, (gpointer) format->nick, format);
   g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (format->value),
       format);
   _gst_formats = g_list_append (_gst_formats, format);

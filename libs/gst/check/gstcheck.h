@@ -56,7 +56,7 @@ extern GCond *check_cond;
 
 typedef struct
 {
-  char *name;
+  const char *name;
   int size;
   int abi_size;
 }
@@ -74,10 +74,10 @@ void gst_check_teardown_element (GstElement * element);
 GstPad *gst_check_setup_src_pad (GstElement * element,
     GstStaticPadTemplate * template, GstCaps * caps);
 GstPad * gst_check_setup_src_pad_by_name (GstElement * element,
-          GstStaticPadTemplate * template, gchar *name);
+          GstStaticPadTemplate * template, const gchar *name);
 GstPad * gst_check_setup_sink_pad_by_name (GstElement * element, 
-          GstStaticPadTemplate * template, gchar *name);
-void gst_check_teardown_pad_by_name (GstElement * element, gchar *name);
+          GstStaticPadTemplate * template, const gchar *name);
+void gst_check_teardown_pad_by_name (GstElement * element, const gchar *name);
 void gst_check_teardown_src_pad (GstElement * element);
 void gst_check_drop_buffers ();
 void gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2);

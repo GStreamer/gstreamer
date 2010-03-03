@@ -37,7 +37,8 @@
 
 /* checks that a tag contains the given values and not more values */
 static void
-check_tags (const GstTagList * list, const gchar * tag, gchar * value, ...)
+check_tags (const GstTagList * list, const gchar * tag, const gchar * value,
+    ...)
 {
   va_list args;
   gchar *str;

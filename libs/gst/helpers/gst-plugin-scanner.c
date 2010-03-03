@@ -47,7 +47,7 @@ main (int argc, char *argv[])
   my_argc = 2;
   my_argv = g_malloc (my_argc * sizeof (char *));
   my_argv[0] = argv[0];
-  my_argv[1] = "--gst-disable-registry-update";
+  my_argv[1] = (char *) "--gst-disable-registry-update";
 
 #ifndef GST_DISABLE_REGISTRY
   _gst_disable_registry_cache = TRUE;

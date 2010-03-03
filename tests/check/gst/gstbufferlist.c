@@ -45,7 +45,7 @@ cleanup (void)
 }
 
 static GstBuffer *
-buffer_from_string (gchar * str)
+buffer_from_string (const gchar * str)
 {
   guint size;
   GstBuffer *buf;
@@ -472,7 +472,7 @@ GST_START_TEST (test_do)
           gst_buffer_list_iterator_do (it,
               (GstBufferListDoFunction) gst_buffer_ref, NULL)));
   fail_unless (buf == NULL);
-  data = "data";
+  data = (char *) "data";
   ASSERT_CRITICAL ((buf = gst_buffer_list_iterator_do (it, do_data_func,
               data)));
   fail_unless (buf == NULL);

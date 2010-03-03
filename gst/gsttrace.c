@@ -111,7 +111,7 @@ gint _gst_trace_on = 1;
  * Returns: a new #GstTrace.
  */
 GstTrace *
-gst_trace_new (gchar * filename, gint size)
+gst_trace_new (const gchar * filename, gint size)
 {
   GstTrace *trace = g_malloc (sizeof (GstTrace));
 

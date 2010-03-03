@@ -90,15 +90,15 @@ gboolean gst_controller_remove_properties_list (GstController * self,
 gboolean gst_controller_remove_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
 
 void gst_controller_set_disabled (GstController *self, gboolean disabled);
-void gst_controller_set_property_disabled (GstController *self, gchar * property_name, gboolean disabled);
-gboolean gst_controller_set_control_source (GstController *self, gchar * property_name, GstControlSource *csource);
-GstControlSource * gst_controller_get_control_source (GstController *self, gchar * property_name);
+void gst_controller_set_property_disabled (GstController *self, const gchar * property_name, gboolean disabled);
+gboolean gst_controller_set_control_source (GstController *self, const gchar * property_name, GstControlSource *csource);
+GstControlSource * gst_controller_get_control_source (GstController *self, const gchar * property_name);
 
 GstClockTime gst_controller_suggest_next_sync (GstController *self);
 gboolean gst_controller_sync_values (GstController * self,
     GstClockTime timestamp);
 
-GValue *gst_controller_get (GstController * self, gchar * property_name,
+GValue *gst_controller_get (GstController * self, const gchar * property_name,
     GstClockTime timestamp);
 gboolean gst_controller_get_value_arrays (GstController * self,
     GstClockTime timestamp, GSList * value_arrays);
@@ -116,8 +116,8 @@ gboolean gst_object_set_controller (GObject * object, GstController * controller
 GstClockTime gst_object_suggest_next_sync (GObject * object);
 gboolean gst_object_sync_values (GObject * object, GstClockTime timestamp);
 
-gboolean gst_object_set_control_source (GObject *object, gchar * property_name, GstControlSource *csource);
-GstControlSource * gst_object_get_control_source (GObject *object, gchar * property_name);
+gboolean gst_object_set_control_source (GObject *object, const gchar * property_name, GstControlSource *csource);
+GstControlSource * gst_object_get_control_source (GObject *object, const gchar * property_name);
 
 gboolean gst_object_get_value_arrays (GObject * object,
     GstClockTime timestamp, GSList * value_arrays);
@@ -134,20 +134,20 @@ gboolean gst_controller_init (int * argc, char ***argv);
 
 /* FIXME: deprecated functions */
 #ifndef GST_DISABLE_DEPRECATED
-gboolean gst_controller_set (GstController * self, gchar * property_name,
+gboolean gst_controller_set (GstController * self, const gchar * property_name,
     GstClockTime timestamp, GValue * value);
 gboolean gst_controller_set_from_list (GstController * self,
-    gchar * property_name, GSList * timedvalues);
+    const gchar * property_name, GSList * timedvalues);
 
-gboolean gst_controller_unset (GstController * self, gchar * property_name,
+gboolean gst_controller_unset (GstController * self, const gchar * property_name,
     GstClockTime timestamp);
-gboolean gst_controller_unset_all (GstController * self, gchar * property_name);
+gboolean gst_controller_unset_all (GstController * self, const gchar * property_name);
 
 const GList *gst_controller_get_all (GstController * self,
-    gchar * property_name);
+    const gchar * property_name);
 
 gboolean gst_controller_set_interpolation_mode (GstController * self,
-    gchar * property_name, GstInterpolateMode mode);
+    const gchar * property_name, GstInterpolateMode mode);
 #endif /* GST_DISABLE_DEPRECATED */
 
 G_END_DECLS

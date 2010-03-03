@@ -578,7 +578,7 @@ GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wredundant-decls -Wundef])
+AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wredundant-decls -Wundef -Wwrite-strings])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)

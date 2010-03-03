@@ -114,7 +114,7 @@ _gst_query_initialize (void)
 
   while (standards->nick) {
     standards->quark = g_quark_from_static_string (standards->nick);
-    g_hash_table_insert (_nick_to_query, standards->nick, standards);
+    g_hash_table_insert (_nick_to_query, (gpointer) standards->nick, standards);
     g_hash_table_insert (_query_type_to_nick,
         GINT_TO_POINTER (standards->value), standards);
 
@@ -245,7 +245,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   query->quark = g_quark_from_static_string (query->nick);
 
   g_static_mutex_lock (&mutex);
-  g_hash_table_insert (_nick_to_query, query->nick, query);
+  g_hash_table_insert (_nick_to_query, (gpointer) query->nick, query);
   g_hash_table_insert (_query_type_to_nick, GINT_TO_POINTER (query->value),
       query);
   _gst_queries = g_list_append (_gst_queries, query);

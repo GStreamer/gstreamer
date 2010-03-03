@@ -604,7 +604,7 @@ gst_fd_src_uri_get_type (void)
 static gchar **
 gst_fd_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "fd", NULL };
+  static gchar *protocols[] = { (char *) "fd", NULL };
 
   return protocols;
 }
