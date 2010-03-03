@@ -1935,8 +1935,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     }
     if (playsink->textchain) {
       GST_DEBUG_OBJECT (playsink, "adding text chain");
-      g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", FALSE,
-          NULL);
+      if (playsink->textchain->overlay != NULL)
+        g_object_set (playsink->textchain->overlay, "silent", FALSE, NULL);
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
 
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
