@@ -240,7 +240,7 @@ parse_debug_list (const gchar * list)
   gchar **split;
   gchar **walk;
 
-  g_return_if_fail (list != NULL);
+  g_assert (list);
 
   split = g_strsplit (list, ",", 0);
 
