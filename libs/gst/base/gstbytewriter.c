@@ -733,7 +733,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Since: 0.10.26
  */
 /**
- * gst_byte_writer_put_float_be:
+ * gst_byte_writer_put_float32_be:
  * @writer: #GstByteWriter instance
  * @val: Value to write
  *
@@ -744,7 +744,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Since: 0.10.26
  */
 /**
- * gst_byte_writer_put_double_be:
+ * gst_byte_writer_put_float64_be:
  * @writer: #GstByteWriter instance
  * @val: Value to write
  *
@@ -755,7 +755,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Since: 0.10.26
  */
 /**
- * gst_byte_writer_put_float_le:
+ * gst_byte_writer_put_float32_le:
  * @writer: #GstByteWriter instance
  * @val: Value to write
  *
@@ -766,7 +766,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Since: 0.10.26
  */
 /**
- * gst_byte_writer_put_double_le:
+ * gst_byte_writer_put_float64_le:
  * @writer: #GstByteWriter instance
  * @val: Value to write
  *
