@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
+"POT-Creation-Date: 2010-03-03 19:48+0000\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -578,7 +578,7 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "bu akımı kodlarken kullanılacak kodlayıcı"
 
-#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
 msgstr ""
 
@@ -640,14 +640,14 @@ msgid ""
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
-#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
-#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
 msgstr ""
 

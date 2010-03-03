@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
+"POT-Creation-Date: 2010-03-03 19:48+0000\n"
 "PO-Revision-Date: 2009-09-21 10:11+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -572,7 +572,7 @@ msgstr "obrázok"
 msgid "image related to this stream"
 msgstr "obrázok zodpovedajúci k tomuto prúdu údajov"
 
-#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
 msgstr "ukážka obrázku"
 
@@ -639,14 +639,14 @@ msgstr ""
 "zemepisná nadmorská výška  miesta, kde boli tieto médiá nahraté alebo "
 "produkované, v metroch podľa WGS84 (0 je priemerná hladina mora)"
 
-#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
-#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 #, fuzzy
 msgid "show sortname"
 msgstr "umelec/triedenie"

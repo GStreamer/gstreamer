@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-15 00:27+0000\n"
+"POT-Creation-Date: 2010-03-03 19:48+0000\n"
 "PO-Revision-Date: 2009-08-29 12:04+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -562,7 +562,7 @@ msgstr "irudia"
 msgid "image related to this stream"
 msgstr "korronte honi lotutako irudia"
 
-#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
 msgstr "aurrebista-irudia"
 
@@ -631,14 +631,14 @@ msgstr ""
 "multimedia grabatu edo ekoiztu den lekuaren geolokalizazioaren altitudea "
 "metrotan WGS84 estandarraren arabera (zero batez besteko itsasoaren maila da)"
 
-#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr ""
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
-#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 #, fuzzy
 msgid "show sortname"
 msgstr "artistarekiko ordenatu"

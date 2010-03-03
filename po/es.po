@@ -1,13 +1,13 @@
 # translation of gstreamer-0.10.26.2.po to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
-# Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010.
+# Jorge González González <aloriel@gmail.com>, 2009, 2010.
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-24 00:16+0000\n"
-"PO-Revision-Date: 2010-02-21 12:17+0100\n"
+"POT-Creation-Date: 2010-03-03 19:48+0000\n"
+"PO-Revision-Date: 2010-02-25 08:12+0100\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -560,7 +560,7 @@ msgstr "imagen"
 msgid "image related to this stream"
 msgstr "imagen relacionada con este flujo"
 
-#. TRANSLATORS: 'preview image' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
 msgstr "previsualizar imagen"
 
@@ -629,16 +629,16 @@ msgstr ""
 "elevación geográfica donde se ha grabado o producido el medio, en metros de "
 "acuerdo con WGS84 (cero es el nivel medio del mar)"
 
-#. TRANSLATORS: 'show name' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr "mostrar nombre"
+msgstr "nombre del programa"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Nombre del programa/podcast/serie"
 
-#. TRANSLATORS: 'show sortname' is a compound noun here, not verb+noun
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr "mostrar nombre corto"
+msgstr "nombre de ordenación del programa"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
