@@ -789,6 +789,16 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
         /* does not work, many stuff reads outside of the planes */
         ffmpegdec->current_dr = FALSE;
         ffmpegdec->extra_ref = TRUE;
+      } else if ((oclass->in_plugin->id == CODEC_ID_SVQ1) ||
+          (oclass->in_plugin->id == CODEC_ID_VP5) ||
+          (oclass->in_plugin->id == CODEC_ID_VP6) ||
+          (oclass->in_plugin->id == CODEC_ID_VP6F) ||
+          (oclass->in_plugin->id == CODEC_ID_VP6A)) {
+        GST_DEBUG_OBJECT (ffmpegdec,
+            "disable direct rendering setup for broken stride support");
+        /* does not work, uses a incompatible stride. See #610613 */
+        ffmpegdec->current_dr = FALSE;
+        ffmpegdec->extra_ref = TRUE;
       } else {
         GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
         ffmpegdec->current_dr = TRUE;
