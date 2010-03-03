@@ -1218,8 +1218,8 @@ gst_caps_structure_intersect (const GstStructure * struct1,
 {
   IntersectData data;
 
-  g_return_val_if_fail (struct1 != NULL, NULL);
-  g_return_val_if_fail (struct2 != NULL, NULL);
+  g_assert (struct1 != NULL);
+  g_assert (struct2 != NULL);
 
   if (G_UNLIKELY (struct1->name != struct2->name))
     return NULL;
@@ -1278,8 +1278,8 @@ static gboolean
 gst_caps_structure_can_intersect (const GstStructure * struct1,
     const GstStructure * struct2)
 {
-  g_return_val_if_fail (struct1 != NULL, FALSE);
-  g_return_val_if_fail (struct2 != NULL, FALSE);
+  g_assert (struct1 != NULL);
+  g_assert (struct2 != NULL);
 
   if (G_UNLIKELY (struct1->name != struct2->name))
     return FALSE;
