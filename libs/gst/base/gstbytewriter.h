@@ -138,10 +138,10 @@ gboolean gst_byte_writer_put_uint64_le (GstByteWriter *writer, guint64 val);
 gboolean gst_byte_writer_put_int64_be (GstByteWriter *writer, gint64 val);
 gboolean gst_byte_writer_put_int64_le (GstByteWriter *writer, gint64 val);
 
-gboolean gst_byte_writer_put_float_be (GstByteWriter *writer, gfloat val);
-gboolean gst_byte_writer_put_float_le (GstByteWriter *writer, gfloat val);
-gboolean gst_byte_writer_put_double_be (GstByteWriter *writer, gdouble val);
-gboolean gst_byte_writer_put_double_le (GstByteWriter *writer, gdouble val);
+gboolean gst_byte_writer_put_float32_be (GstByteWriter *writer, gfloat val);
+gboolean gst_byte_writer_put_float32_le (GstByteWriter *writer, gfloat val);
+gboolean gst_byte_writer_put_float64_be (GstByteWriter *writer, gdouble val);
+gboolean gst_byte_writer_put_float64_le (GstByteWriter *writer, gdouble val);
 
 gboolean gst_byte_writer_put_data (GstByteWriter *writer, const guint8 *data, guint size);
 gboolean gst_byte_writer_fill (GstByteWriter *writer, const guint8 value, guint size);
