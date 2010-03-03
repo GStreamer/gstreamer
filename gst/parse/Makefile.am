@@ -14,7 +14,8 @@ EXTRA_DIST = \
 nodist_libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
 CLEANFILES += grammar.tab.c lex._gst_parse_yy.c
 
-libgstparse_la_CFLAGS = $(GST_ALL_CFLAGS)
+# can't use GST_ALL_CFLAGS here because that'd pull in -Werror
+libgstparse_la_CFLAGS = $(GLIB_CFLAGS) $(XML_CFLAGS) $(GST_OPTION_CFLAGS)
 libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
 noinst_HEADERS = grammar.tab.h types.h
