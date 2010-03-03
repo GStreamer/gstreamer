@@ -1014,8 +1014,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_WMV3:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "format", GST_TYPE_FOURCC,
-          GST_MAKE_FOURCC ('W', 'M', 'V', '3'), NULL);
+          "wmvversion", G_TYPE_INT, 3, NULL);
       break;
     case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
