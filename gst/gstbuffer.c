@@ -119,6 +119,7 @@
 #include "gstinfo.h"
 #include "gstutils.h"
 #include "gstminiobject.h"
+#include "gstversion.h"
 
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
