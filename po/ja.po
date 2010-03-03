@@ -1,13 +1,13 @@
 # Japanese translation of gst-plugins-base
 # This file is put in the public domain.
 #
-# Makoto Kato <makoto.kt@gmail.com>, 2009.
+# Makoto Kato <makoto.kt@gmail.com>, 2009-2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-02-18 20:27+0000\n"
-"PO-Revision-Date: 2009-01-11 20:45+0900\n"
+"POT-Creation-Date: 2010-03-03 20:15+0000\n"
+"PO-Revision-Date: 2010-02-26 18:09+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -123,18 +123,17 @@ msgstr ""
 "せん"
 
 msgid "This appears to be a text file"
-msgstr ""
+msgstr "これはテキストファイルのようです"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "\"typefind\" エレメントを作成できませんでした"
+msgstr "ストリームの種類を判別できませんでした"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "不正な字幕 URI \"%s\"。字幕を無効にします。"
 
 msgid "No URI specified to play from."
-msgstr ""
+msgstr "再生するURIが指定されていません"
 
 #, c-format
 msgid "Invalid URI \"%s\"."
@@ -144,17 +143,17 @@ msgid "RTSP streams cannot be played yet."
 msgstr "RTSP ストリームをまだ再生できません"
 
 msgid "Could not create \"decodebin\" element."
-msgstr "\"decodebin\" エレメントを作成できません"
+msgstr "\"decodebin\" エレメントを作成できません。"
 
 msgid "Source element is invalid."
-msgstr "ソースエレメントが不正です"
+msgstr "ソースエレメントが不正です。"
 
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
-"字幕ストリームのみ認識しました。字幕ファイルかテキストファイルをロード中か、"
-"メディアファイルが認識されないのかどちらかです。"
+"字幕ストリームのみを認識しました。字幕ファイルかテキストファイルをロード中"
+"か、メディアファイルが認識されないのかどちらかです。"
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
@@ -170,7 +169,7 @@ msgid "A subtitle stream was detected, but no video stream."
 msgstr "字幕のストリームを認識しましたが、動画ストリームがありません"
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+msgstr "autovideosinkとxvimagesinkエレメントの両方が見つかりません。"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -179,48 +178,44 @@ msgstr ""
 "性があります"
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+msgstr "autovideosinkとalsasinkエレメントの両方が見つかりません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+msgstr "autovideosinkと%sエレメントの両方が見つかりません。"
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+msgstr "autovideosinkエレメントが見つかりません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+msgstr "autovideosinkと%sエレメントの両方が動作していません。"
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+msgstr "autovideosinkエレメントが動作していません。"
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "カスタムテキストシンクエレメントは使用できません。"
 
 msgid "No volume control found"
 msgstr "ボリュームコントロールが見つかりません"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+msgstr "autoaudiosinkと%sエレメントの両方が見つかりません。"
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+msgstr "autoaudiosinkエレメントが見つかりません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+msgstr "autoaudiosinkと%sエレメントの両方が動作していません。"
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+msgstr "autoaudiosinkエレメントが動作していません。"
 
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "ビデオなしでテキストファイルを再生できません。"
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -481,29 +476,14 @@ msgstr "デバイス \"%s\" は既に使われています"
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした"
 
+#~ msgid "No file name specified."
+#~ msgstr "ファイル名が指定されていません"
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
+
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "\"queue2\" エレメントを作成できませんでした"
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "\"typefind\" エレメントを作成できませんでした"
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "デバイスが指定されていません"
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "vfs ファイル \"%s\" をクローズできませんでした"
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "内部データストリームエラー"
-
-#~ msgid "No file name specified."
-#~ msgstr "ファイル名が指定されていません"
