@@ -143,6 +143,8 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display)
 {
     GstVaapiDisplayPrivate *priv = display->priv;
 
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
     return priv->display;
 }
 
@@ -238,6 +240,8 @@ gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display)
     VAStatus status;
     int major_version, minor_version;
 
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
     if (priv->display) {
         gst_vaapi_display_destroy_resources(display);
 
@@ -261,3 +265,61 @@ gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display)
         }
     }
 }
+
+gboolean
+gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile)
+{
+    guint i;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    for (i = 0; i < display->priv->num_profiles; i++)
+        if (display->priv->profiles[i] == profile)
+            return TRUE;
+    return FALSE;
+}
+
+static gboolean
+_gst_vaapi_display_has_format(
+    GstVaapiDisplay    *display,
+    GstVaapiImageFormat format,
+    const VAImageFormat *va_formats,
+    guint               num_va_formats
+)
+{
+    guint i;
+
+    g_return_val_if_fail(format != 0, FALSE);
+
+    for (i = 0; i < num_va_formats; i++)
+        if (gst_vaapi_image_format(&va_formats[i]) == format)
+            return TRUE;
+    return FALSE;
+}
+
+gboolean
+gst_vaapi_display_has_image_format(
+    GstVaapiDisplay    *display,
+    GstVaapiImageFormat format
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    return _gst_vaapi_display_has_format(display, format,
+                                         display->priv->image_formats,
+                                         display->priv->num_image_formats);
+}
+
+gboolean
+gst_vaapi_display_has_subpicture_format(
+    GstVaapiDisplay    *display,
+    GstVaapiImageFormat format
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    return _gst_vaapi_display_has_format(display, format,
+                                         display->priv->subpicture_formats,
+                                         display->priv->num_subpicture_formats);
+}
+

@@ -23,6 +23,7 @@
 
 #include <va/va.h>
 #include <gst/gst.h>
+#include <gst/vaapi/gstvaapiimageformat.h>
 
 G_BEGIN_DECLS
 
@@ -71,6 +72,21 @@ gst_vaapi_display_get_type(void);
 
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display);
+
+gboolean
+gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile);
+
+gboolean
+gst_vaapi_display_has_image_format(
+    GstVaapiDisplay    *display,
+    GstVaapiImageFormat format
+);
+
+gboolean
+gst_vaapi_display_has_subpicture_format(
+    GstVaapiDisplay    *display,
+    GstVaapiImageFormat format
+);
 
 G_END_DECLS
 
