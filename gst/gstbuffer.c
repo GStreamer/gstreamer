@@ -115,6 +115,13 @@
  */
 #include "gst_private.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #include "gstbuffer.h"
 #include "gstinfo.h"
 #include "gstutils.h"
@@ -126,6 +133,31 @@ static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 
 static GType _gst_buffer_type = 0;
 
+/* buffer alignment in bytes
+ * an alignment of 8 would be the same as malloc() guarantees
+ */
+#ifdef HAVE_POSIX_MEMALIGN
+#if defined(BUFFER_ALIGNMENT_MALLOC)
+static size_t _gst_buffer_data_alignment = 8;
+#elif defined(BUFFER_ALIGNMENT_PAGESIZE)
+static size_t _gst_buffer_data_alignment = 0;
+#elif defined(BUFFER_ALIGNMENT)
+static size_t _gst_buffer_data_alignment = BUFFER_ALIGNMENT;
+#else
+#error "No buffer alignment configured"
+#endif
+
+static inline gboolean
+aligned_malloc (gpointer * memptr, guint size)
+{
+  gint res;
+
+  res = posix_memalign (memptr, _gst_buffer_data_alignment, size);
+  return (res == 0);
+}
+
+#endif /* HAVE_POSIX_MEMALIGN */
+
 void
 _gst_buffer_initialize (void)
 {
@@ -133,6 +165,11 @@ _gst_buffer_initialize (void)
    * done from multiple threads;
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
   g_type_class_ref (gst_buffer_get_type ());
+#ifdef HAVE_GETPAGESIZE
+#ifdef BUFFER_ALIGNMENT_PAGESIZE
+  _gst_buffer_data_alignment = getpagesize ();
+#endif
+#endif
 }
 
 #define _do_init \
@@ -239,7 +276,26 @@ _gst_buffer_copy (GstBuffer * buffer)
   copy = gst_buffer_new ();
 
   /* we simply copy everything from our parent */
+#ifdef HAVE_POSIX_MEMALIGN
+  {
+    gpointer memptr = NULL;
+
+    if (G_LIKELY (buffer->size)) {
+      if (G_UNLIKELY (!aligned_malloc (&memptr, buffer->size))) {
+        /* terminate on error like g_memdup() would */
+        g_error ("%s: failed to allocate %" G_GSIZE_FORMAT " bytes",
+            G_STRLOC, buffer->size);
+      } else {
+        memcpy (memptr, buffer->data, buffer->size);
+      }
+    }
+    copy->data = (guint8 *) memptr;
+    GST_BUFFER_FREE_FUNC (copy) = free;
+  }
+#else
   copy->data = g_memdup (buffer->data, buffer->size);
+#endif
+
   /* make sure it gets freed (even if the parent is subclassed, we return a
      normal buffer) */
   copy->malloc_data = copy->data;
@@ -306,7 +362,23 @@ gst_buffer_new_and_alloc (guint size)
 
   newbuf = gst_buffer_new ();
 
+#ifdef HAVE_POSIX_MEMALIGN
+  {
+    gpointer memptr = NULL;
+
+    if (G_LIKELY (size)) {
+      if (G_UNLIKELY (!aligned_malloc (&memptr, size))) {
+        /* terminate on error like g_memdup() would */
+        g_error ("%s: failed to allocate %" G_GSIZE_FORMAT " bytes",
+            G_STRLOC, size);
+      }
+    }
+    newbuf->malloc_data = (guint8 *) memptr;
+    GST_BUFFER_FREE_FUNC (newbuf) = free;
+  }
+#else
   newbuf->malloc_data = g_malloc (size);
+#endif
   GST_BUFFER_DATA (newbuf) = newbuf->malloc_data;
   GST_BUFFER_SIZE (newbuf) = size;
 
@@ -336,13 +408,24 @@ gst_buffer_try_new_and_alloc (guint size)
 {
   GstBuffer *newbuf;
   guint8 *malloc_data;
+#ifdef HAVE_POSIX_MEMALIGN
+  gpointer memptr = NULL;
 
+  if (G_LIKELY (size)) {
+    if (G_UNLIKELY (!aligned_malloc (&memptr, size))) {
+      GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
+      return NULL;
+    }
+  }
+  malloc_data = (guint8 *) memptr;
+#else
   malloc_data = g_try_malloc (size);
 
   if (G_UNLIKELY (malloc_data == NULL && size != 0)) {
     GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
     return NULL;
   }
+#endif
 
   /* FIXME: there's no g_type_try_create_instance() in GObject yet, so this
    * will still abort if a new GstBuffer structure can't be allocated */
@@ -351,6 +434,9 @@ gst_buffer_try_new_and_alloc (guint size)
   GST_BUFFER_MALLOCDATA (newbuf) = malloc_data;
   GST_BUFFER_DATA (newbuf) = malloc_data;
   GST_BUFFER_SIZE (newbuf) = size;
+#ifdef HAVE_POSIX_MEMALIGN
+  GST_BUFFER_FREE_FUNC (newbuf) = free;
+#endif
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
 

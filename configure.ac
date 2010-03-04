@@ -400,6 +400,10 @@ dnl check for mmap()
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
+dnl check for posix_memalign(), getpagesize()
+AC_CHECK_FUNCS([posix_memalign])
+AC_CHECK_FUNCS([getpagesize])
+
 dnl Check for POSIX timers
 AC_CHECK_FUNCS(clock_gettime, [], [
   AC_CHECK_LIB(rt, clock_gettime, [
@@ -556,6 +560,24 @@ dnl bit of a misnomer, but keep the conditional named like this so we don't
 dnl have to change too much elsewhere
 AM_CONDITIONAL(HAVE_CHECK, test "x$BUILD_CHECK" = "xyes")
 
+dnl configure the desired buffer alignment
+AC_ARG_WITH([buffer-alignment],
+  AS_HELP_STRING([--with-buffer-alignment],[8,N,malloc,pagesize (default is 32)]),
+  [
+    if test "x$withval" = "xyes"
+    then
+      AC_DEFINE(BUFFER_ALIGNMENT, 32, [Buffer alignment to use])
+    else
+      case "${withval}" in
+        malloc) AC_DEFINE(BUFFER_ALIGNMENT_MALLOC, 1, [Buffer alignment by malloc default]) ;;
+        pagesize)  AC_DEFINE(BUFFER_ALIGNMENT_PAGESIZE, 1, [Buffer alignment by pagesize]) ;;
+        *)   AC_DEFINE_UNQUOTED(BUFFER_ALIGNMENT, ${withval}, [Buffer alignment to use]) ;;
+      esac
+    fi
+  ], [
+    AC_DEFINE(BUFFER_ALIGNMENT_MALLOC, 1, [Buffer alignment by malloc default]) 
+  ]
+)
 
 dnl *** set variables based on configure arguments
 
