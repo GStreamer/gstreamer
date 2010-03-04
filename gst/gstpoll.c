@@ -563,7 +563,7 @@ gst_poll_free (GstPoll * set)
 {
   g_return_if_fail (set != NULL);
 
-  GST_DEBUG_OBJECT (set, "Freeing");
+  GST_DEBUG ("%p: freeing", set);
 
 #ifndef G_OS_WIN32
   if (set->control_write_fd.fd >= 0)
@@ -614,7 +614,7 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
 {
   gint idx;
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   idx = find_index (set->fds, fd);
   if (idx < 0) {
@@ -644,7 +644,7 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
     fd->idx = set->fds->len - 1;
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   return TRUE;
@@ -700,7 +700,7 @@ gst_poll_remove_fd (GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   g_mutex_lock (set->lock);
 
@@ -719,7 +719,7 @@ gst_poll_remove_fd (GstPoll * set, GstPollFD * fd)
     /* mark fd as removed by setting the index to -1 */
     fd->idx = -1;
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   g_mutex_unlock (set->lock);
@@ -749,7 +749,7 @@ gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d), active : %d",
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d), active : %d", set,
       fd->fd, fd->idx, active);
 
   g_mutex_lock (set->lock);
@@ -770,7 +770,7 @@ gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
         active);
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   g_mutex_unlock (set->lock);
@@ -783,7 +783,7 @@ gst_poll_fd_ctl_read_unlocked (GstPoll * set, GstPollFD * fd, gboolean active)
 {
   gint idx;
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d), active : %d",
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d), active : %d", set,
       fd->fd, fd->idx, active);
 
   idx = find_index (set->fds, fd);
@@ -800,7 +800,7 @@ gst_poll_fd_ctl_read_unlocked (GstPoll * set, GstPollFD * fd, gboolean active)
     gst_poll_update_winsock_event_mask (set, idx, FD_READ | FD_ACCEPT, active);
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   return idx >= 0;
@@ -897,7 +897,7 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   g_mutex_lock (set->lock);
 
@@ -913,7 +913,7 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
     res = (wfd->events.lNetworkEvents & FD_CLOSE) != 0;
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   g_mutex_unlock (set->lock);
@@ -942,7 +942,7 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   g_mutex_lock (set->lock);
 
@@ -962,7 +962,7 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
         (wfd->events.iErrorCode[FD_CONNECT_BIT] != 0);
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   g_mutex_unlock (set->lock);
@@ -976,7 +976,7 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
   gboolean res = FALSE;
   gint idx;
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
@@ -990,7 +990,7 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
     res = (wfd->events.lNetworkEvents & (FD_READ | FD_ACCEPT)) != 0;
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   return res;
@@ -1046,7 +1046,7 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG_OBJECT (set, "fd (fd:%d, idx:%d)", fd->fd, fd->idx);
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   g_mutex_lock (set->lock);
 
@@ -1062,7 +1062,7 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
     res = (wfd->events.lNetworkEvents & FD_WRITE) != 0;
 #endif
   } else {
-    GST_WARNING_OBJECT (set, "Couldn't find fd !");
+    GST_WARNING ("%p: couldn't find fd !", set);
   }
 
   g_mutex_unlock (set->lock);
@@ -1379,7 +1379,7 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 {
   g_return_val_if_fail (set != NULL, FALSE);
 
-  GST_LOG_OBJECT (set, "controllable : %d", controllable);
+  GST_LOG ("%p: controllable : %d", set, controllable);
 
   g_mutex_lock (set->lock);
 
@@ -1416,7 +1416,7 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 #ifndef G_OS_WIN32
 no_socket_pair:
   {
-    GST_WARNING_OBJECT (set, "Can't create socket pair !");
+    GST_WARNING ("%p: can't create socket pair !", set);
     g_mutex_unlock (set->lock);
     return FALSE;
   }
