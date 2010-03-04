@@ -942,7 +942,7 @@ poll_func (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
   type = GST_MESSAGE_TYPE (message);
 
   if (type & poll_data->events) {
-    g_return_if_fail (poll_data->message == NULL);
+    g_assert (poll_data->message == NULL);
     /* keep ref to message */
     poll_data->message = gst_message_ref (message);
     GST_DEBUG ("mainloop %p quit", poll_data->loop);
