@@ -129,6 +129,8 @@ gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
 {
     GstVaapiDisplayX11Private *priv = display->priv;
 
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
+
     return priv->display;
 }
 
@@ -137,6 +139,8 @@ gst_vaapi_display_x11_set_display(GstVaapiDisplayX11 *display,
                                   Display            *x11_display)
 {
     GstVaapiDisplayX11Private *priv = display->priv;
+
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY_X11(display));
 
     if (x11_display) {
         VADisplay va_display = vaGetDisplay(x11_display);
