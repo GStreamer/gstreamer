@@ -111,7 +111,7 @@ gst_vaapi_surface_set_property(GObject      *object,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        priv->display = g_object_ref(g_value_get_pointer(value));
+        priv->display = g_object_ref(g_value_get_object(value));
         break;
     case PROP_WIDTH:
         priv->width = g_value_get_uint(value);
@@ -139,7 +139,8 @@ gst_vaapi_surface_get_property(GObject    *object,
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_pointer(value, g_object_ref(priv->display));
+        /* gst_vaapi_surface_get_display() already refs the object */
+        g_value_take_object(value, gst_vaapi_surface_get_display(surface));
         break;
     case PROP_SURFACE_ID:
         g_value_set_uint(value, gst_vaapi_surface_get_id(surface));
@@ -281,6 +282,14 @@ gst_vaapi_surface_get_id(GstVaapiSurface *surface)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), VA_INVALID_SURFACE);
 
     return priv->surface_id;
+}
+
+GstVaapiDisplay *
+gst_vaapi_surface_get_display(GstVaapiSurface *surface)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+
+    return g_object_ref(surface->priv->display);
 }
 
 guint

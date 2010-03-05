@@ -77,6 +77,9 @@ gst_vaapi_surface_new(GstVaapiDisplay *display,
 VASurfaceID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface);
 
+GstVaapiDisplay *
+gst_vaapi_surface_get_display(GstVaapiSurface *surface);
+
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface);
 
