@@ -140,12 +140,28 @@ struct _GstRTSPMediaStream {
 };
 
 /**
+ * GstRTSPMediaStatus:
+ * @GST_RTSP_MEDIA_STATUS_UNPREPARED: media pipeline not prerolled
+ * @GST_RTSP_MEDIA_STATUS_PREPARING: media pipeline is prerolling
+ * @GST_RTSP_MEDIA_STATUS_PREPARED: media pipeline is prerolled
+ * @GST_RTSP_MEDIA_STATUS_ERROR: media pipeline is in error
+ *
+ * The state of the media pipeline.
+ */
+typedef enum {
+  GST_RTSP_MEDIA_STATUS_UNPREPARED = 0,
+  GST_RTSP_MEDIA_STATUS_PREPARING  = 1,
+  GST_RTSP_MEDIA_STATUS_PREPARED   = 2,
+  GST_RTSP_MEDIA_STATUS_ERROR      = 3
+} GstRTSPMediaStatus;
+
+/**
  * GstRTSPMedia:
  * @shared: if this media can be shared between clients
  * @reusable: if this media can be reused after an unprepare
  * @element: the data providing element
  * @streams: the different streams provided by @element
- * @prepared: if the media is prepared for streaming
+ * @status: the status of the media pipeline
  * @pipeline: the toplevel pipeline
  * @source: the bus watch for pipeline messages.
  * @id: the id of the watch
@@ -161,33 +177,36 @@ struct _GstRTSPMediaStream {
  * This object is usually created from a #GstRTSPMediaFactory.
  */
 struct _GstRTSPMedia {
-  GObject       parent;
+  GObject            parent;
 
-  gboolean      shared;
-  gboolean      reusable;
-  gboolean      reused;
+  GMutex            *lock;
+  GCond             *cond;
 
-  GstElement   *element;
-  GArray       *streams;
-  GList        *dynamic;
-  gboolean      prepared;
-  gint          active;
+  gboolean           shared;
+  gboolean           reusable;
+  gboolean           reused;
+
+  GstElement        *element;
+  GArray            *streams;
+  GList             *dynamic;
+  GstRTSPMediaStatus status;
+  gint               active;
 
   /* the pipeline for the media */
-  GstElement   *pipeline;
-  GstElement   *fakesink;
-  GSource      *source;
-  guint         id;
+  GstElement        *pipeline;
+  GstElement        *fakesink;
+  GSource           *source;
+  guint              id;
 
-  gboolean      is_live;
-  gboolean      buffering;
-  GstState      target_state;
+  gboolean           is_live;
+  gboolean           buffering;
+  GstState           target_state;
 
   /* RTP session manager */
-  GstElement   *rtpbin;
+  GstElement        *rtpbin;
 
   /* the range of media */
-  GstRTSPTimeRange range;
+  GstRTSPTimeRange   range;
 };
 
 /**

@@ -197,7 +197,7 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-  g_return_val_if_fail (media->prepared, NULL);
+  g_return_val_if_fail (media->status == GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
 
   result = g_new0 (GstRTSPSessionMedia, 1);
   result->media = media;

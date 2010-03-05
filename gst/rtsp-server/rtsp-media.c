@@ -109,6 +109,8 @@ static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
   media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
+  media->lock = g_mutex_new ();
+  media->cond = g_cond_new ();
 }
 
 static void
@@ -168,6 +170,8 @@ gst_rtsp_media_finalize (GObject * obj)
     g_source_destroy (media->source);
     g_source_unref (media->source);
   }
+  g_mutex_free (media->lock);
+  g_cond_free (media->cond);
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
@@ -467,8 +471,6 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("done seeking %d", res);
     gst_element_get_state (media->pipeline, NULL, NULL, -1);
     GST_INFO ("prerolled again");
-
-    collect_media_stats (media);
   } else {
     GST_INFO ("no seek needed");
     res = TRUE;
@@ -1097,6 +1099,37 @@ unlock_streams (GstRTSPMedia * media)
   }
 }
 
+static void
+gst_rtsp_media_set_status (GstRTSPMedia *media, GstRTSPMediaStatus status)
+{
+  g_mutex_lock (media->lock);
+  /* never overwrite the error status */
+  if (media->status != GST_RTSP_MEDIA_STATUS_ERROR)
+    media->status = status;
+  GST_DEBUG ("setting new status to %d", status);
+  g_cond_broadcast (media->cond);
+  g_mutex_unlock (media->lock);
+}
+
+static GstRTSPMediaStatus
+gst_rtsp_media_get_status (GstRTSPMedia *media)
+{
+  GstRTSPMediaStatus result;
+
+  g_mutex_lock (media->lock);
+  /* while we are preparing, wait */
+  while (media->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
+    GST_DEBUG ("waiting for status change");
+    g_cond_wait (media->cond, media->lock);
+  }
+  /* could be success or error */
+  result = media->status;
+  GST_DEBUG ("got status %d", result);
+  g_mutex_unlock (media->lock);
+
+  return result;
+}
+
 static gboolean
 default_handle_message (GstRTSPMedia * media, GstMessage * message)
 {
@@ -1156,6 +1189,8 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       GST_WARNING ("%p: got error %s (%s)", media, gerror->message, debug);
       g_error_free (gerror);
       g_free (debug);
+
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
       break;
     }
     case GST_MESSAGE_WARNING:
@@ -1172,6 +1207,12 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_ELEMENT:
       break;
     case GST_MESSAGE_STREAM_STATUS:
+      break;
+    case GST_MESSAGE_ASYNC_DONE:
+      GST_INFO ("%p: got ASYNC_DONE", media);
+      collect_media_stats (media);
+
+      gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       break;
     default:
       GST_INFO ("%p: got message type %s", media,
@@ -1263,12 +1304,13 @@ gboolean
 gst_rtsp_media_prepare (GstRTSPMedia * media)
 {
   GstStateChangeReturn ret;
+  GstRTSPMediaStatus status;
   guint i, n_streams;
   GstRTSPMediaClass *klass;
   GstBus *bus;
   GList *walk;
 
-  if (media->prepared)
+  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
 
   if (!media->reusable && media->reused)
@@ -1279,6 +1321,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   /* reset some variables */
   media->is_live = FALSE;
   media->buffering = FALSE;
+  /* we're preparing now */
+  media->status = GST_RTSP_MEDIA_STATUS_PREPARING;
 
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
 
@@ -1344,16 +1388,11 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   }
 
   /* now wait for all pads to be prerolled */
-  ret = gst_element_get_state (media->pipeline, NULL, NULL, -1);
-  if (ret == GST_STATE_CHANGE_FAILURE)
+  status = gst_rtsp_media_get_status (media);
+  if (status == GST_RTSP_MEDIA_STATUS_ERROR)
     goto state_failed;
 
-  /* collect stats about the media */
-  collect_media_stats (media);
-
   GST_INFO ("object %p is prerolled", media);
-
-  media->prepared = TRUE;
 
   return TRUE;
 
@@ -1393,7 +1432,7 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   GstRTSPMediaClass *klass;
   gboolean success;
 
-  if (!media->prepared)
+  if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
     return TRUE;
 
   GST_INFO ("unprepare media %p", media);
@@ -1405,7 +1444,7 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   else
     success = TRUE;
 
-  media->prepared = FALSE;
+  media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
   media->reused = TRUE;
 
   /* when the media is not reusable, this will effectively unref the media and
