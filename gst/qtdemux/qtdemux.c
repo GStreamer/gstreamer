@@ -6636,6 +6636,7 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
 {
   GNode *meta;
   GNode *ilst;
+  GNode *xmp_;
   GNode *node;
   gint i;
 
@@ -6674,6 +6675,32 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   /* parsed nodes have been removed, pass along remainder as blob */
   g_node_children_foreach (ilst, G_TRAVERSE_ALL,
       (GNodeForeachFunc) qtdemux_tag_add_blob, qtdemux);
+
+  /* parse up XMP_ node if existing */
+  xmp_ = qtdemux_tree_get_child_by_type (udta, FOURCC_XMP_);
+  if (xmp_ != NULL) {
+    GstBuffer *buf;
+    GstTagList *taglist;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = ((guint8 *) xmp_->data) + 8;
+    GST_BUFFER_SIZE (buf) = QT_UINT32 ((guint8 *) xmp_->data) - 8;
+
+    taglist = gst_tag_list_from_xmp_buffer (buf);
+    gst_buffer_unref (buf);
+    if (taglist) {
+      if (qtdemux->tag_list) {
+        GST_DEBUG_OBJECT (qtdemux, "Found XMP tags");
+
+        /* prioritize native tags using _KEEP mode */
+        gst_tag_list_insert (qtdemux->tag_list, taglist, GST_TAG_MERGE_KEEP);
+        gst_tag_list_free (taglist);
+      } else
+        qtdemux->tag_list = taglist;
+    }
+  } else {
+    GST_DEBUG_OBJECT (qtdemux, "No XMP_ node found");
+  }
 
 }
 
