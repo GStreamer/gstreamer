@@ -29,11 +29,14 @@
  * Returns: a new sdp message for @media. gst_sdp_message_free() after usage.
  */
 GstSDPMessage *
-gst_rtsp_sdp_from_media (GstRTSPMedia *media)
+gst_rtsp_sdp_from_media (GstRTSPMedia * media)
 {
   GstSDPMessage *sdp;
   guint i, n_streams;
   gchar *rangestr;
+
+  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
 
   n_streams = gst_rtsp_media_n_streams (media);
 
@@ -41,7 +44,9 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
 
   /* some standard things first */
   gst_sdp_message_set_version (sdp, "0");
-  gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", "IP4", "127.0.0.1");
+
+  gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", "IP4",
+      "127.0.0.1");
   gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
   gst_sdp_message_set_information (sdp, "rtsp-server");
   gst_sdp_message_add_time (sdp, "0", "0", NULL);
@@ -101,7 +106,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
     if (caps_enc) {
       if (caps_params)
         tmp = g_strdup_printf ("%d %s/%d/%s", caps_pt, caps_enc, caps_rate,
-                      caps_params);
+            caps_params);
       else
         tmp = g_strdup_printf ("%d %s/%d", caps_pt, caps_enc, caps_rate);
 
@@ -125,25 +130,25 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
       fname = gst_structure_nth_field_name (s, j);
 
       /* filter out standard properties */
-      if (!strcmp (fname, "media")) 
+      if (!strcmp (fname, "media"))
         continue;
-      if (!strcmp (fname, "payload")) 
+      if (!strcmp (fname, "payload"))
         continue;
-      if (!strcmp (fname, "clock-rate")) 
+      if (!strcmp (fname, "clock-rate"))
         continue;
-      if (!strcmp (fname, "encoding-name")) 
+      if (!strcmp (fname, "encoding-name"))
         continue;
-      if (!strcmp (fname, "encoding-params")) 
+      if (!strcmp (fname, "encoding-params"))
         continue;
-      if (!strcmp (fname, "ssrc")) 
+      if (!strcmp (fname, "ssrc"))
         continue;
-      if (!strcmp (fname, "clock-base")) 
+      if (!strcmp (fname, "clock-base"))
         continue;
-      if (!strcmp (fname, "seqnum-base")) 
+      if (!strcmp (fname, "seqnum-base"))
         continue;
 
       if ((fval = gst_structure_get_string (s, fname))) {
-        g_string_append_printf (fmtp, "%s%s=%s", first ? "":";", fname, fval);
+        g_string_append_printf (fmtp, "%s%s=%s", first ? "" : ";", fname, fval);
         first = FALSE;
       }
     }
@@ -151,8 +156,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
       tmp = g_string_free (fmtp, FALSE);
       gst_sdp_media_add_attribute (smedia, "fmtp", tmp);
       g_free (tmp);
-    }
-    else {
+    } else {
       g_string_free (fmtp, TRUE);
     }
     gst_sdp_message_add_media (sdp, smedia);
@@ -160,4 +164,11 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
   }
 
   return sdp;
+
+  /* ERRORS */
+not_prepared:
+  {
+    GST_ERROR ("media %p is not prepared", media);
+    return NULL;
+  }
 }
