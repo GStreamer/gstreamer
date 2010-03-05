@@ -222,7 +222,7 @@ gst_vaapi_display_create_resources(GstVaapiDisplay *display)
     status = vaQuerySubpictureFormats(priv->display,
                                       priv->subpicture_formats,
                                       priv->subpicture_flags,
-                                      &priv->num_image_formats);
+                                      &priv->num_subpicture_formats);
     if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
         return FALSE;
 
