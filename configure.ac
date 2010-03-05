@@ -135,7 +135,8 @@ AC_OUTPUT([
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
     sys/Makefile
-    sys/vaapi/Makefile
+    sys/vaapiconvert/Makefile
+    sys/vaapisink/Makefile
     tests/Makefile
     tests/examples/Makefile
     tests/examples/generic/Makefile
