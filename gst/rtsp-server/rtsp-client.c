@@ -739,16 +739,42 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
   transports = g_strsplit (transport, ",", 0);
   gst_rtsp_transport_new (&ct);
 
-  /* loop through the transports, try to parse */
+  /* init transports */
   have_transport = FALSE;
-  for (i = 0; transports[i]; i++) {
+  gst_rtsp_transport_init (ct);
 
-    gst_rtsp_transport_init (ct);
+  /* our supported transports */
+  supported = GST_RTSP_LOWER_TRANS_UDP |
+    GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
+
+  /* loop through the transports, try to parse */
+  for (i = 0; transports[i]; i++) {
     res = gst_rtsp_transport_parse (transports[i], ct);
-    if (res == GST_RTSP_OK) {
-      have_transport = TRUE;
-      break;
+    if (res != GST_RTSP_OK) {
+      /* no valid transport, search some more */
+      GST_WARNING ("could not parse transport %s", transports[i]);
+      goto next;
     }
+
+    /* we have a transport, see if it's RTP/AVP */
+    if (ct->trans != GST_RTSP_TRANS_RTP ||
+      ct->profile != GST_RTSP_PROFILE_AVP) {
+      GST_WARNING ("invalid transport %s", transports[i]);
+      goto next;
+    }
+
+    if (!(ct->lower_transport & supported)) {
+      GST_WARNING ("unsupported transport %s", transports[i]);
+      goto next;
+    }
+
+    /* we have a valid transport */
+    GST_INFO ("found valid transport %s", transports[i]);
+    have_transport = TRUE;
+    break;
+
+next:
+    gst_rtsp_transport_init (ct);
   }
   g_strfreev (transports);
 
@@ -756,24 +782,17 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
   if (!have_transport)
     goto unsupported_transports;
 
-  /* we have a valid transport, check if we can handle it */
-  if (ct->trans != GST_RTSP_TRANS_RTP)
-    goto unsupported_transports;
-  if (ct->profile != GST_RTSP_PROFILE_AVP)
-    goto unsupported_transports;
-
-  supported = GST_RTSP_LOWER_TRANS_UDP |
-      GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
-  if (!(ct->lower_transport & supported))
-    goto unsupported_transports;
-
   if (client->session_pool == NULL)
     goto no_pool;
 
   /* we have a valid transport now, set the destination of the client. */
   g_free (ct->destination);
-  url = gst_rtsp_connection_get_url (client->connection);
-  ct->destination = g_strdup (url->host);
+  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    ct->destination = g_strdup ("224.2.0.1");
+  } else {
+    url = gst_rtsp_connection_get_url (client->connection);
+    ct->destination = g_strdup (url->host);
+  }
 
   if (session) {
     g_object_ref (session);
