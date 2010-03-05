@@ -277,11 +277,9 @@ gst_vaapi_surface_new(GstVaapiDisplay *display,
 VASurfaceID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface)
 {
-    GstVaapiSurfacePrivate * const priv = surface->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), VA_INVALID_SURFACE);
 
-    return priv->surface_id;
+    return surface->priv->surface_id;
 }
 
 GstVaapiDisplay *
@@ -295,29 +293,23 @@ gst_vaapi_surface_get_display(GstVaapiSurface *surface)
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
-    GstVaapiSurfacePrivate * const priv = surface->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return priv->width;
+    return surface->priv->width;
 }
 
 guint
 gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 {
-    GstVaapiSurfacePrivate * const priv = surface->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return priv->height;
+    return surface->priv->height;
 }
 
 guint
 gst_vaapi_surface_get_format(GstVaapiSurface *surface)
 {
-    GstVaapiSurfacePrivate *priv = surface->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
-    return priv->format;
+    return surface->priv->format;
 }
