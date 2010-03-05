@@ -46,6 +46,8 @@ static void gst_rtsp_client_finalize (GObject * obj);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 
+static void unlink_streams (GstRTSPClient * client);
+
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
 static void
@@ -98,6 +100,8 @@ gst_rtsp_client_finalize (GObject * obj)
     g_object_weak_unref (G_OBJECT (msession),
 	(GWeakNotify) client_session_finalized, client);
   }
+
+  unlink_streams (client);
 
   g_list_free (client->sessions);
 
