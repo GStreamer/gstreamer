@@ -282,9 +282,14 @@ PKG_CHECK_MODULES(GTK_X11, gtk+-x11-2.0 >= 2.14.0,
 AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
 
 dnl QT is optional and only used in examples
-PKG_CHECK_MODULES(QT, QtGui >= 4.0, HAVE_QT=yes, HAVE_QT=no)
+PKG_CHECK_MODULES(QT, QtGui >= 4.6, [
+  HAVE_QT_GV=yes
+  HAVE_QT=yes
+], [
+  HAVE_QT_GV=no
+  PKG_CHECK_MODULES(QT, QtGui >= 4.0, HAVE_QT=yes, HAVE_QT=no)
+])
 AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
-PKG_CHECK_MODULES(QT, QtGui >= 4.6, HAVE_QT_GV=yes, HAVE_QT_GV=no)
 AM_CONDITIONAL(HAVE_QT_GV, test "x$HAVE_QT_GV" = "xyes")
 
 dnl *** set variables based on configure arguments ***
