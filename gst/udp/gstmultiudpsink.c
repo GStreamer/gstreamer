@@ -754,79 +754,34 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-/* create a socket for sending to remote machine */
 static gboolean
-gst_multiudpsink_init_send (GstMultiUDPSink * sink)
+gst_multiudpsink_configure_client (GstMultiUDPSink * sink,
+    GstUDPClient * client)
 {
-  guint bc_val;
-  GList *clients;
-  GstUDPClient *client;
+  GST_DEBUG_OBJECT (sink, "configuring client %p", client);
 
-  if (sink->sockfd == -1) {
-    /* create sender socket try IP6, fall back to IP4 */
-    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1)
-      if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
-        goto no_socket;
-
-    sink->externalfd = FALSE;
-  } else {
-    /* we use the configured socket */
-    sink->sock = sink->sockfd;
-    sink->externalfd = TRUE;
-  }
-
-  bc_val = 1;
-  if (setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-          sizeof (bc_val)) < 0)
-    goto no_broadcast;
-
-  sink->bytes_to_serve = 0;
-  sink->bytes_served = 0;
-
-  gst_multiudpsink_setup_qos_dscp (sink);
-
-  /* look for multicast clients and join multicast groups appropriately
-     set also ttl and multicast loopback delivery appropriately  */
-  for (clients = sink->clients; clients; clients = g_list_next (clients)) {
-    client = (GstUDPClient *) clients->data;
-    if (gst_udp_is_multicast (&client->theiraddr)) {
-      if (sink->auto_multicast) {
-        if (gst_udp_join_group (*(client->sock), &client->theiraddr, NULL)
-            != 0)
-          goto join_group_failed;
-      }
-      if (gst_udp_set_loop (sink->sock, sink->loop) != 0)
-        goto loop_failed;
-      if (gst_udp_set_ttl (sink->sock, sink->ttl_mc, TRUE) != 0)
-        goto ttl_failed;
-    } else {
-      if (gst_udp_set_ttl (sink->sock, sink->ttl, FALSE) != 0)
-        goto ttl_failed;
+  if (gst_udp_is_multicast (&client->theiraddr)) {
+    GST_DEBUG_OBJECT (sink, "we have a multicast client %p", client);
+    if (sink->auto_multicast) {
+      GST_DEBUG_OBJECT (sink, "autojoining group");
+      if (gst_udp_join_group (*(client->sock), &client->theiraddr, NULL)
+          != 0)
+        goto join_group_failed;
     }
+    GST_DEBUG_OBJECT (sink, "setting loop to %d", sink->loop);
+    if (gst_udp_set_loop (sink->sock, sink->loop) != 0)
+      goto loop_failed;
+    GST_DEBUG_OBJECT (sink, "setting ttl to %d", sink->ttl_mc);
+    if (gst_udp_set_ttl (sink->sock, sink->ttl_mc, TRUE) != 0)
+      goto ttl_failed;
+  } else {
+    GST_DEBUG_OBJECT (sink, "setting unicast ttl to %d", sink->ttl);
+    if (gst_udp_set_ttl (sink->sock, sink->ttl, FALSE) != 0)
+      goto ttl_failed;
   }
   return TRUE;
 
   /* ERRORS */
-no_socket:
-  {
-    gchar *errormessage = socket_last_error_message ();
-    int errorcode = socket_last_error_code ();
-    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
-        ("Could not create socket (%d): %s", errorcode, errormessage));
-    g_free (errormessage);
-    return FALSE;
-  }
-no_broadcast:
-  {
-    gchar *errormessage = socket_last_error_message ();
-    int errorcode = socket_last_error_code ();
-    CLOSE_IF_REQUESTED (sink);
-    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not set broadcast socket option (%d): %s",
-            errorcode, errormessage));
-    g_free (errormessage);
-    return FALSE;
-  }
 join_group_failed:
   {
     gchar *errormessage = socket_last_error_message ();
@@ -860,6 +815,73 @@ loop_failed:
   }
 }
 
+/* create a socket for sending to remote machine */
+static gboolean
+gst_multiudpsink_init_send (GstMultiUDPSink * sink)
+{
+  guint bc_val;
+  GList *clients;
+  GstUDPClient *client;
+
+  if (sink->sockfd == -1) {
+    GST_DEBUG_OBJECT (sink, "creating sockets");
+    /* create sender socket try IP6, fall back to IP4 */
+    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1)
+      if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
+        goto no_socket;
+
+    GST_DEBUG_OBJECT (sink, "have socket");
+    sink->externalfd = FALSE;
+  } else {
+    GST_DEBUG_OBJECT (sink, "using configured socket");
+    /* we use the configured socket */
+    sink->sock = sink->sockfd;
+    sink->externalfd = TRUE;
+  }
+
+  bc_val = 1;
+  if (setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+          sizeof (bc_val)) < 0)
+    goto no_broadcast;
+
+  sink->bytes_to_serve = 0;
+  sink->bytes_served = 0;
+
+  gst_multiudpsink_setup_qos_dscp (sink);
+
+  /* look for multicast clients and join multicast groups appropriately
+     set also ttl and multicast loopback delivery appropriately  */
+  for (clients = sink->clients; clients; clients = g_list_next (clients)) {
+    client = (GstUDPClient *) clients->data;
+
+    if (!gst_multiudpsink_configure_client (sink, client))
+      return FALSE;
+  }
+  return TRUE;
+
+  /* ERRORS */
+no_socket:
+  {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
+        ("Could not create socket (%d): %s", errorcode, errormessage));
+    g_free (errormessage);
+    return FALSE;
+  }
+no_broadcast:
+  {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
+    CLOSE_IF_REQUESTED (sink);
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not set broadcast socket option (%d): %s",
+            errorcode, errormessage));
+    g_free (errormessage);
+    return FALSE;
+  }
+}
+
 static void
 gst_multiudpsink_close (GstMultiUDPSink * sink)
 {
@@ -886,16 +908,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   client->connect_time = GST_TIMEVAL_TO_TIME (now);
 
   if (*client->sock > 0) {
-    /* check if its a multicast address */
-    if (gst_udp_is_multicast (&client->theiraddr)) {
-      GST_DEBUG_OBJECT (sink, "multicast address detected");
-      if (sink->auto_multicast) {
-        GST_DEBUG_OBJECT (sink, "joining multicast group");
-        gst_udp_join_group (*(client->sock), &client->theiraddr, NULL);
-      }
-    } else {
-      GST_DEBUG_OBJECT (sink, "normal address detected");
-    }
+    gst_multiudpsink_configure_client (sink, client);
   }
 
   if (lock)
