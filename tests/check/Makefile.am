@@ -136,7 +136,8 @@ check_PROGRAMS = \
 	pipelines/mxf \
 	$(check_metadata) \
 	$(check_mimic) \
-	elements/rtpmux
+	elements/rtpmux \
+        pipelines/tagschecking
 
 noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
 
