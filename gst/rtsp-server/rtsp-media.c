@@ -1115,12 +1115,18 @@ static GstRTSPMediaStatus
 gst_rtsp_media_get_status (GstRTSPMedia *media)
 {
   GstRTSPMediaStatus result;
+  GTimeVal timeout;
 
   g_mutex_lock (media->lock);
+  g_get_current_time (&timeout);
+  g_time_val_add (&timeout, 20 * G_USEC_PER_SEC);
   /* while we are preparing, wait */
   while (media->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
     GST_DEBUG ("waiting for status change");
-    g_cond_wait (media->cond, media->lock);
+    if (!g_cond_timed_wait (media->cond, media->lock, &timeout)) {
+      GST_DEBUG ("timeout, assuming error status");
+      media->status = GST_RTSP_MEDIA_STATUS_ERROR;
+    }
   }
   /* could be success or error */
   result = media->status;
