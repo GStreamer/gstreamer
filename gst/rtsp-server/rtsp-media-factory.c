@@ -70,6 +70,9 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
    *
    * The description should return a pipeline with payloaders named pay0, pay1,
    * etc.. Each of the payloaders will result in a stream.
+   *
+   * Support for dynamic payloaders can be accomplished by adding payloaders
+   * named dynpay0, dynpay1, etc..
    */
   g_object_class_install_property (gobject_class, PROP_LAUNCH,
       g_param_spec_string ("launch", "Launch", "A launch description of the pipeline",
@@ -468,6 +471,9 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
+  if (!klass->create_pipeline)
+    goto no_create;
+
   if (klass->get_element)
     element = klass->get_element (factory, url);
   else
@@ -479,16 +485,20 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   media = gst_rtsp_media_new ();
   media->element = element;
 
-  if (!klass->create_pipeline)
-    goto no_pipeline;
-
   media->pipeline = klass->create_pipeline (factory, media);
+  if (media->pipeline == NULL)
+    goto no_pipeline;
 
   gst_rtsp_media_factory_collect_streams (factory, url, media);
 
   return media;
 
   /* ERRORS */
+no_create:
+  {
+    g_critical ("no create_pipeline function");
+    return NULL;
+  }
 no_element:
   {
     g_critical ("could not create element");
@@ -496,19 +506,31 @@ no_element:
   }
 no_pipeline:
   {
-    g_critical ("could not create pipeline");
-    return FALSE;
+    g_critical ("can't create pipeline");
+    g_object_unref (media);
+    return NULL;
   }
 }
 
 static GstElement*
-default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media) {
+default_create_pipeline (GstRTSPMediaFactory *factory, GstRTSPMedia *media)
+{
   GstElement *pipeline;
+
+  if (media->element == NULL)
+    goto no_element;
 
   pipeline = gst_pipeline_new ("media-pipeline");
   gst_bin_add (GST_BIN_CAST (pipeline), media->element);
 
   return pipeline;
+
+  /* ERRORS */
+no_element:
+  {
+    g_critical ("no element");
+    return NULL;
+  }
 }
 
 static void
