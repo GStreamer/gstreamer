@@ -491,9 +491,24 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
   st->trans = ct->trans;
   st->profile = ct->profile;
   st->lower_transport = ct->lower_transport;
-  st->client_port = ct->client_port;
-  st->interleaved = ct->interleaved;
-  st->server_port = stream->media_stream->server_port;
+
+  switch (st->lower_transport) {
+    case GST_RTSP_LOWER_TRANS_UDP:
+      st->client_port = ct->client_port;
+      st->server_port = stream->media_stream->server_port;
+      break;
+    case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+      ct->port = st->port = stream->media_stream->server_port;
+      st->destination = g_strdup (ct->destination);
+      break;
+    case GST_RTSP_LOWER_TRANS_TCP:
+      st->interleaved = ct->interleaved;
+    default:
+      break;
+  }
+
+  if (stream->media_stream->session)
+    g_object_get (stream->media_stream->session, "internal-ssrc", &st->ssrc, NULL);
 
   /* keep track of the transports in the stream. */
   if (stream->trans.transport)
