@@ -1587,23 +1587,22 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
 }
 
 /**
- * rtp_source_find_add_conflicting_address:
+ * rtp_source_find_conflicting_address:
  * @src: The source the packet came in
  * @address: address to check for
- * @time: The time when the packet that is in conflict arrived
+ * @time: The time when the packet that is possibly in conflict arrived
  *
- * Checks if an address which has a conflict is already known,
- *  otherwise remembers it to prevent loops.
+ * Checks if an address which has a conflict is already known. If it is
+ * a known conflict, remember the time
  *
  * Returns: TRUE if it was a known conflict, FALSE otherwise
  */
 
 gboolean
-rtp_source_find_add_conflicting_address (RTPSource * src,
-    GstNetAddress * address, GstClockTime time)
+rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
+    GstClockTime time)
 {
   GList *item;
-  RTPConflictingAddress *new_conflict;
 
   for (item = g_list_first (src->conflicting_addresses);
       item; item = g_list_next (item)) {
@@ -1615,6 +1614,24 @@ rtp_source_find_add_conflicting_address (RTPSource * src,
     }
   }
 
+  return FALSE;
+}
+
+/**
+ * rtp_source_add_conflicting_address:
+ * @src: The source the packet came in
+ * @address: address to remember
+ * @time: The time when the packet that is in conflict arrived
+ *
+ * Adds a new conflict address
+ */
+
+void
+rtp_source_add_conflicting_address (RTPSource * src,
+    GstNetAddress * address, GstClockTime time)
+{
+  RTPConflictingAddress *new_conflict;
+
   new_conflict = g_new0 (RTPConflictingAddress, 1);
 
   memcpy (&new_conflict->address, address, sizeof (GstNetAddress));
@@ -1622,8 +1639,6 @@ rtp_source_find_add_conflicting_address (RTPSource * src,
 
   src->conflicting_addresses = g_list_prepend (src->conflicting_addresses,
       new_conflict);
-
-  return FALSE;
 }
 
 /**

@@ -236,7 +236,11 @@ gboolean        rtp_source_get_last_rb         (RTPSource *src, guint8 *fraction
 
 void            rtp_source_reset               (RTPSource * src);
 
-gboolean        rtp_source_find_add_conflicting_address (RTPSource * src,
+gboolean        rtp_source_find_conflicting_address (RTPSource * src,
+                                                GstNetAddress *address,
+                                                GstClockTime time);
+
+void            rtp_source_add_conflicting_address (RTPSource * src,
                                                 GstNetAddress *address,
                                                 GstClockTime time);
 

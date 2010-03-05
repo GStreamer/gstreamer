@@ -191,6 +191,7 @@ struct _RTPSession {
   RTPSessionStats stats;
 
   gboolean      change_ssrc;
+  gboolean      favor_new;
 };
 
 /**
