@@ -497,6 +497,7 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
   if (GST_PAD_LINK_SUCCESSFUL (result)) {
     GST_QUEUE_MUTEX_LOCK (queue);
     if (queue->srcresult == GST_FLOW_OK) {
+      queue->push_newsegment = TRUE;
       gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
       GST_DEBUG_OBJECT (queue, "starting task as pad is linked");
     } else {
@@ -1037,6 +1038,28 @@ out_unexpected:
   }
 }
 
+static void
+gst_queue_push_newsegment (GstQueue * queue)
+{
+  GstSegment *s;
+  GstEvent *event;
+
+  s = &queue->src_segment;
+
+  if (s->accum != 0) {
+    event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0, s->format, 0,
+        s->accum, 0);
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+        "pushing accum newsegment event");
+    gst_pad_push_event (queue->srcpad, event);
+  }
+
+  event = gst_event_new_new_segment_full (FALSE, s->rate, s->applied_rate,
+      s->format, s->start, s->stop, s->time);
+  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "pushing real newsegment event");
+  gst_pad_push_event (queue->srcpad, event);
+}
+
 /* dequeue an item from the queue an push it downstream. This functions returns
  * the result of the push. */
 static GstFlowReturn
@@ -1080,6 +1103,9 @@ next:
     if (caps && caps != GST_PAD_CAPS (queue->srcpad))
       gst_pad_set_caps (queue->srcpad, caps);
 
+    if (queue->push_newsegment) {
+      gst_queue_push_newsegment (queue);
+    }
     result = gst_pad_push (queue->srcpad, buffer);
 
     /* need to check for srcresult here as well */
@@ -1126,6 +1152,9 @@ next:
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
+    if (queue->push_newsegment && type != GST_EVENT_NEWSEGMENT) {
+      gst_queue_push_newsegment (queue);
+    }
     gst_pad_push_event (queue->srcpad, event);
 
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
@@ -1183,6 +1212,7 @@ gst_queue_loop (GstPad * pad)
   }
 
   ret = gst_queue_push_one (queue);
+  queue->push_newsegment = FALSE;
   queue->srcresult = ret;
   if (ret != GST_FLOW_OK)
     goto out_flushing;
