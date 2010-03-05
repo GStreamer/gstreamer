@@ -471,6 +471,8 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("done seeking %d", res);
     gst_element_get_state (media->pipeline, NULL, NULL, -1);
     GST_INFO ("prerolled again");
+
+    collect_media_stats (media);
   } else {
     GST_INFO ("no seek needed");
     res = TRUE;
