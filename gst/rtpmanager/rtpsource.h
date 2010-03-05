@@ -101,9 +101,24 @@ typedef struct {
 } RTPSourceCallbacks;
 
 /**
+ * RTPConflictingAddress:
+ * @address: #GstNetAddress which conflicted
+ * @last_conflict_time: time when the last conflict was seen
+ *
+ * This structure is used to account for addresses that have conflicted to find
+ * loops.
+ */
+typedef struct {
+  GstNetAddress address;
+  GstClockTime time;
+} RTPConflictingAddress;
+
+/**
  * RTPSource:
  *
  * A source in the #RTPSession
+ *
+ * @conflicting_addresses: GList of conflicting addresses
  */
 struct _RTPSource {
   GObject       object;
@@ -151,6 +166,8 @@ struct _RTPSource {
   gpointer           user_data;
 
   RTPSourceStats stats;
+
+  GList         *conflicting_addresses;
 };
 
 struct _RTPSourceClass {
@@ -218,5 +235,14 @@ gboolean        rtp_source_get_last_rb         (RTPSource *src, guint8 *fraction
                                                 guint32 *lsr, guint32 *dlsr, guint32 *round_trip);
 
 void            rtp_source_reset               (RTPSource * src);
+
+gboolean        rtp_source_find_add_conflicting_address (RTPSource * src,
+                                                GstNetAddress *address,
+                                                GstClockTime time);
+
+void            rtp_source_timeout             (RTPSource * src,
+                                                GstClockTime current_time,
+                                                GstClockTime collision_timeout);
+
 
 #endif /* __RTP_SOURCE_H__ */

@@ -188,6 +188,9 @@ rtp_source_finalize (GObject * object)
 
   gst_caps_replace (&src->caps, NULL);
 
+  g_list_foreach (src->conflicting_addresses, (GFunc) g_free, NULL);
+  g_list_free (src->conflicting_addresses);
+
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
 
@@ -1581,4 +1584,77 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
     *round_trip = curr->round_trip;
 
   return TRUE;
+}
+
+/**
+ * rtp_source_find_add_conflicting_address:
+ * @src: The source the packet came in
+ * @address: address to check for
+ * @time: The time when the packet that is in conflict arrived
+ *
+ * Checks if an address which has a conflict is already known,
+ *  otherwise remembers it to prevent loops.
+ *
+ * Returns: TRUE if it was a known conflict, FALSE otherwise
+ */
+
+gboolean
+rtp_source_find_add_conflicting_address (RTPSource * src,
+    GstNetAddress * address, GstClockTime time)
+{
+  GList *item;
+  RTPConflictingAddress *new_conflict;
+
+  for (item = g_list_first (src->conflicting_addresses);
+      item; item = g_list_next (item)) {
+    RTPConflictingAddress *known_conflict = item->data;
+
+    if (gst_netaddress_equal (address, &known_conflict->address)) {
+      known_conflict->time = time;
+      return TRUE;
+    }
+  }
+
+  new_conflict = g_new0 (RTPConflictingAddress, 1);
+
+  memcpy (&new_conflict->address, address, sizeof (GstNetAddress));
+  new_conflict->time = time;
+
+  src->conflicting_addresses = g_list_prepend (src->conflicting_addresses,
+      new_conflict);
+
+  return FALSE;
+}
+
+/**
+ * rtp_source_timeout:
+ * @src: The #RTPSource
+ * @current_time: The current time
+ * @collision_timeout: The amount of time after which a collision is timed out
+ *
+ * This is processed on each RTCP interval. It times out old collisions.
+ */
+
+void
+rtp_source_timeout (RTPSource * src, GstClockTime current_time,
+    GstClockTime collision_timeout)
+{
+  GList *item;
+
+  item = g_list_first (src->conflicting_addresses);
+  while (item) {
+    RTPConflictingAddress *known_conflict = item->data;
+    GList *next_item = g_list_next (item);
+
+    if (known_conflict->time < current_time - collision_timeout) {
+      gchar buf[40];
+
+      src->conflicting_addresses =
+          g_list_delete_link (src->conflicting_addresses, item);
+      gst_netaddress_to_string (&known_conflict->address, buf, 40);
+      GST_DEBUG ("collision %p timed out: %s", known_conflict, buf);
+      g_free (known_conflict);
+    }
+    item = next_item;
+  }
 }
