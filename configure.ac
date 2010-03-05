@@ -80,6 +80,20 @@ PKG_CHECK_MODULES([GST_PLUGINS_BASE],
 AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 AC_SUBST(GST_PLUGINS_BASE_LIBS)
 
+dnl Check for GStreamer base
+PKG_CHECK_MODULES([GST_BASE],
+    [gstreamer-base-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
+)
+AC_SUBST(GST_BASE_CFLAGS)
+AC_SUBST(GST_BASE_LIBS)
+
+dnl Check for GStreamer video
+PKG_CHECK_MODULES([GST_VIDEO],
+    [gstreamer-video-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
+)
+AC_SUBST(GST_VIDEO_CFLAGS)
+AC_SUBST(GST_VIDEO_LIBS)
+
 dnl Check for the GStreamer plugins directory
 AC_MSG_CHECKING([for GStreamer plugins directory])
 GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
