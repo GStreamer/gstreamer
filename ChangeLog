@@ -1,9 +1,445 @@
-=== release 0.10.26 ===
+=== release 0.10.27 ===
 
-2010-02-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-03-05  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.26, "Think Twice"
+	  releasing 0.10.27, "You're Shocked, We Know"
+
+2010-03-04 18:39:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpoll.c:
+	  gstpoll: don't pass non-objects as first argument to GST_DEBUG_OBJECT()
+	  This may cause crashes when logging is enabled, especially on windows.
+	  It's not safe to pass random pointers to g_type_check_instance_is_a().
+	  Fixes #611719.
+
+2010-03-03 19:54:50 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  0.10.26.4 pre-release
+
+2010-03-03 19:49:34 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update translations
+
+2010-03-03 12:06:30 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstbytewriter.c:
+	  docs: fix up bytewriter doc chunks for float functions as well
+
+2010-03-03 11:28:27 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbytewriter.h:
+	  bytewriter: fix headers for float/double writing functions
+	  The functions are called gst_byte_writer_put_{float32|float64}_*() and not
+	  gst_byte_writer_put_{float|double}_*().
+	  Spotted by: Benjamin Otte <otte@redhat.com>
+
+2010-03-01 12:02:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  tags: try to make comment for translators more helpful
+
+2010-02-26 15:46:50 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: fix emergency rendering timestamp tracking
+	  Specifically, if all (including initial) buffers turn up late,
+	  emergency rendering should also kick in appropriately.
+	  Fixes #611087.
+
+2010-02-24 00:30:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  0.10.26.3 pre-release
+
+2010-02-24 00:29:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/bg.po:
+	* po/es.po:
+	* po/nl.po:
+	  po: update translations
+
+2010-02-19 13:26:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	* tests/check/libs/controller.c:
+	  interpolationcontrolsource: Don't pass NULL pointers to GSequence API
+	  This causes assertion failures. Fixes bug #610444.
+
+2010-02-19 13:20:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	* libs/gst/controller/gstinterpolationcontrolsource.h:
+	  interpolationcontrolsource: Add const qualifiers to values in the _set functions
+	  The values are not modified and are copied, a const before the parameter
+	  should make this even more obvious.
+
+2010-02-18 09:17:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/controller/gsthelper.c:
+	  controller: Add some FIXME 0.11 comments
+
+2010-02-17 10:04:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstelements.c:
+	  corelements: Combine redundant code
+
+2010-02-17 01:27:22 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	  Fix compilation of fdsink and fdsrc with MSVC
+
+2010-02-18 14:58:52 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* po/vi.po:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  0.10.26.2 pre-release
+
+2010-02-18 13:12:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/.gitignore:
+	  .gitignore: ignore some more temporary docs cruft
+
+2010-02-18 13:09:17 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Makefile.am:
+	  build: fix indenting in win32-update target
+	  No idea why we need to run gst-indent twice on that file, but it
+	  only seems to settle on a final format with minimal diff to the
+	  one in git after two runs.
+
+2010-02-18 13:08:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/check/gstcheck.c:
+	  gstcheck: more debug logging for gst_check_element_push_buffer_list()
+
+2010-02-18 11:52:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.h:
+	  collectpads: Improve docs about 'data' attribute
+	  Adds a reminder to 'data' attribute doc
+	  Fixes #610366
+
+2010-02-18 17:15:35 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* plugins/indexers/gstmemindex.c:
+	  memindex: avoid busy loop when doing EXACT lookup
+	  Fixes #610367.
+
+2009-12-22 11:09:10 +0800  Johan Bilien <jobi@litl.com>
+
+	* gst/gstelement.c:
+	  introspection: add annotation for gst_element_get_state
+	  state and pending are "out" arguments.
+	  Fixes #605189.
+
+2010-02-17 12:16:37 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstfilesrc.h:
+	  filesrc: Don't use expensive cast checks in _create
+	  _create() is a pad function set by ourselves, therefore we're sure basesrc
+	  is a GstFileSrc.
+	  Speeds up _create() by 17% and the total call by 8% (instruction calls measurements
+	  done with valgrind).
+	  Fixes #610246
+
+2010-02-17 12:14:09 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Don't use expensive cast checks in get_range.
+	  _get_range() is a pad function set by ourselves, therefore we're certain that
+	  the parent is a GstBaseSrc.
+	  Speeds up _get_range by 38%, and the total call by 30%. (valgrind instruction
+	  calls measurements).
+	  Fixes #610246
+
+2010-02-17 11:31:07 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* plugins/elements/gstfdsrc.c:
+	  fdsrc: cleanup parameter initialisation and add comemnt+logging
+	  Initialize new_fd with DEFAULT_FD and fd with -1. Setting the property will set
+	  new_fd and in _update_fd() we cehck fd against -1. Also add a coment about the
+	  warning we get in the log from gst_poll_remove_fd(). We could get rid of the
+	  warning if we want by tracking if fd has been added to fdset.
+
+2010-02-17 09:55:52 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/design/draft-metadata.txt:
+	  design: write about the current state of tag-handling
+	  Document the taghandling in gstreamer. List gaps and propose new mechanisms to
+	  deal with them.
+
+2010-02-16 10:27:18 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/gsttaglist.c:
+	  taglist: remove blank lines in variable declarations
+
+2010-02-16 11:30:35 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	* tools/gst-launch.c:
+	* tools/gst-typefind.c:
+	* tools/gst-xmlinspect.c:
+	* tools/tools.h:
+	  tools: call g_set_prgname() before doing the option parsing
+	  g_setprgname is implicitly called by g_option_context_new() with a check
+	  to see if it's been set already, so set it before g_option_context_new()
+	  Move version printing back until after the options have been parsed,
+	  otherwise it won't work, since it evaluates a flag set by the
+	  option parser.
+
+2010-02-16 11:24:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	* tools/gst-launch.c:
+	  Revert "tools: Move gst_tools_print_version call to avoid warning from new GLib."
+	  This reverts commit 93dd95f02ef3fa530f54ce81e8ffba96f3b679cb.
+	  This commit made --version not work any longer. The g_setprgname()
+	  warning is fixed in recent GLib versions.
+
+2010-02-16 08:26:59 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	  build: make sure gst-plugin-scanner gets installed where we expect it
+	  Add check to make sure gst-plugin-scanner really gets installed where
+	  we will look for it later, ie. paths and prefixes are set at configure
+	  time and not specified via make.
+	  Fixes #609941.
+
+2010-02-15 23:02:59 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* plugins/elements/gstqueue2.c:
+	  docs: prefer short desc from GstElementDetails
+
+2010-02-15 01:24:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/check/gstcheck.c:
+	  docs: fix gtk-doc chunk for gst_check_element_push_buffer_list()
+
+2010-02-15 00:31:16 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update po files for new comments
+
+2010-02-15 00:29:37 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  tags: wrap long string constants
+	  And fix indenting issue
+
+2010-02-15 00:21:43 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  tags: add some comments for translators so tag mnemonics get translated correctly
+	  We want 'preview image' translated as a noun, not as 'preview [the] image'.
+
+2010-02-04 17:43:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: don't print WARN debug statements for normal things like EOS
+
+2010-02-14 23:15:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96dc793 to 44ecce7
+
+2010-02-13 15:18:05 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Reset the working mode when going to READY/NULL
+	  This allows properly re-using typefind (else it would think it's
+	  already done the typefinding when being re-used with another
+	  stream).
+
+2010-01-22 11:38:59 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* tests/check/libs/bytewriter.c:
+	  bytewriter: Adds a test for _fill
+
+2010-01-22 09:19:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbytewriter.c:
+	* libs/gst/base/gstbytewriter.h:
+	* win32/common/libgstbase.def:
+	  bytewriter: add _fill function
+	  Adds a new function to GstByteWriter that writes
+	  a constant value to a memory area (aka memset).
+	  Useful for adding padding to buffers.
+	  Also updates .def file and docs.
+	  API: gst_byte_writer_fill()
+
+2010-01-28 11:57:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Avoid messing pads activation
+	  Typefind might mess up pads modes (pull/push) if a
+	  downstream element is plugged and its pads activated
+	  in 'step 2' of typefind pads activation.
+	  This happens because the following steps don't check
+	  if we already emitted typefound due to upstream setting
+	  caps on buffers being pulled in the typefind helpers.
+	  Avoid that by checking if typefound is already emmited.
+	  Fixes #608036
+
+2010-02-12 14:49:52 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	  basesrc: Make locking of the segment a bit more strict and update documentation
+	  Updating the segment values must only be done while holding the
+	  STREAM_LOCK and OBJECT_LOCK. This means, reading can be done as
+	  long as one of them is held, not both, which removes some lock-unlock
+	  blocks from performance critical code paths.
+	  Also document, that gst_base_src_set_format() *must* be called in
+	  states <= READY and add an assertion for this. Changing the format
+	  later will completely mess up the segment information.
+
+2010-02-08 09:12:01 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/advanced-dparams.xml:
+	* docs/pwg/advanced-interfaces.xml:
+	* docs/pwg/advanced-negotiation.xml:
+	* docs/pwg/advanced-request.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/advanced-types.xml:
+	* docs/pwg/appendix-porting.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/building-props.xml:
+	* docs/pwg/building-testapp.xml:
+	* docs/pwg/intro-basics.xml:
+	  pwg: several typo fixes
+	  Fixes #609286.
+
+2010-02-09 17:52:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Protect segment values from concurrent access from different threads
+	  This could happen easily in the query functions or when the size is set
+	  on appsrc from some non-streaming thread.
+
+2010-02-04 21:11:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: Protect internal fields from concurrent changes from different threads
+	  Fixes bug #608877.
+
+2010-02-11 20:14:59 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-launch.c:
+	  gst-launch: don't leak timeout GSource
+
+2010-02-11 00:18:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/random/release:
+	  docs: flesh out release doc some more
+
+2010-02-11 01:10:38 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* MAINTAINERS:
+	  Update MAINTAINERS, add myself
+
+2010-02-11 19:49:00 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: back to development
+	  Slushy freeze remains in effect.
+
+=== release 0.10.26 ===
+
+2010-02-10 19:17:28 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 0.10.26
 
 2010-02-10 15:32:06 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

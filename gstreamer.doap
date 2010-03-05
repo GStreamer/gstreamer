@@ -41,6 +41,17 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>0.10.27</revision>
+   <branch>0.10</branch>
+   <name>You're Shocked, We Know</name>
+   <created>2010-03-05</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.27.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.27.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.26</revision>
    <branch>0.10</branch>
    <name>Think Twice</name>

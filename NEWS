@@ -1,4 +1,36 @@
-This is GStreamer 0.10.26 "Think Twice"
+This is GStreamer 0.10.27 "You're Shocked, We Know"
+
+Changes since 0.10.26:
+
+      * basesrc: protect segment values from concurrent access from different threads
+      * typefind: protect internal fields from concurrent changes from different threads
+      * typefind: fix pad activation corner-case with have-type already having been emitted
+      * typefind: reset the working mode when going to READY/NULL, fixes re-use from
+        READY state as with decodebin2
+      * gstpoll: fix crash when logging is enabled for GST_POLL
+      * bytewriter: expose gst_byte_writer_put_{float32|float64}_*() properly in header
+      * basesink: fix emergency rendering timestamp tracking
+      * fdsink, fdsrc: fix compilation with MSVC
+      * memindex: avoid busy loop when doing EXACT lookup
+
+Bugs fixed since 0.10.26:
+
+      * 610366 : [gstcollectpads][doc] Add a reminder for 'data' doc
+      * 605189 : gst_element_get_state has wrong introspection
+      * 607771 : [API] Add gst_byte_writer_fill
+      * 608036 : [typefind] deadlock when upstream puts caps on buffers on pull mode
+      * 608877 : [typefind] Access to internal fields not threadsafe
+      * 609941 : GStreamer-WARNING **: External plugin loader failed.
+      * 610210 : [PATCH] Fix compilation of fdsink and fdsrc with MSVC
+      * 610246 : [optimization] Speed up _get_range()
+      * 610367 : [memindex] might busy loop upon EXACT lookup
+      * 610444 : [controller] Interpolation control source passes NULL pointers to GSequence API
+      * 611087 : [basesink] emergency rendering of late buffers fails after resuming from PAUSE
+      * 611719 : GST_DEBUG_OBJECT macros not fed with GObject* in gstpoll.c
+
+API additions since 0.10.26:
+
+      * gst_byte_writer_fill()
 
 Changes since 0.10.25:
 
