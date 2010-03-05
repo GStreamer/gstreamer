@@ -2398,16 +2398,19 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     rtp_port = transport->port.min;
     rtcp_port = transport->port.max;
+    /* multicast destination */
+    destination = transport->destination;
   } else {
     rtp_port = transport->server_port.min;
     rtcp_port = transport->server_port.max;
+    /* first take the source, then the endpoint to figure out where to send
+     * the RTCP. */
+    destination = transport->source;
+    if (destination == NULL)
+      destination = gst_rtsp_connection_get_ip (src->connection);
   }
-
-  /* first take the source, then the endpoint to figure out where to send
-   * the RTCP. */
-  destination = transport->source;
   if (destination == NULL)
-    destination = gst_rtsp_connection_get_ip (src->connection);
+    goto no_destination;
 
   /* try to construct the fakesrc to the RTP port of the server to open up any
    * NAT firewalls */
@@ -2421,6 +2424,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     if (stream->udpsink[0] == NULL)
       goto no_sink_element;
 
+    g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE, NULL);
+    g_object_set (G_OBJECT (stream->udpsink[0]), "loop", FALSE, NULL);
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[0]), "sync", FALSE, "async", FALSE,
         NULL);
@@ -2473,6 +2478,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     if (stream->udpsink[1] == NULL)
       goto no_sink_element;
 
+    g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE, NULL);
+    g_object_set (G_OBJECT (stream->udpsink[1]), "loop", FALSE, NULL);
     /* no sync needed */
     g_object_set (G_OBJECT (stream->udpsink[1]), "sync", FALSE, NULL);
     /* no async state changes needed */
@@ -2517,6 +2524,11 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   return TRUE;
 
   /* ERRORS */
+no_destination:
+  {
+    GST_DEBUG_OBJECT (src, "no destination address specified");
+    return FALSE;
+  }
 no_sink_element:
   {
     GST_DEBUG_OBJECT (src, "no UDP sink element found");
