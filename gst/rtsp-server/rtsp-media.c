@@ -107,8 +107,6 @@ static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
   media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
-  media->is_live = FALSE;
-  media->buffering = FALSE;
 }
 
 static void
@@ -248,7 +246,7 @@ collect_media_stats (GstRTSPMedia *media)
     }
 
     GST_INFO ("stats: position %"GST_TIME_FORMAT", duration %"GST_TIME_FORMAT,
-	GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+        GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
     if (position == -1) {
       media->range.min.type = GST_RTSP_TIME_NOW;
@@ -461,10 +459,10 @@ gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
   
   if (start != -1 || stop != -1) {
     GST_INFO ("seeking to %"GST_TIME_FORMAT" - %"GST_TIME_FORMAT,
-		GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+                GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
     res = gst_element_seek (media->pipeline, 1.0, GST_FORMAT_TIME,
-  	flags, start_type, start, stop_type, stop);
+        flags, start_type, start, stop_type, stop);
 
     /* and block for the seek to complete */
     GST_INFO ("done seeking %d", res);
@@ -647,6 +645,11 @@ again:
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
 
+  g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "auto-multicast", FALSE, NULL);
+  g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
+
   /* we keep these elements, we configure all in configure_transport when the
    * server told us to really use the UDP ports. */
   stream->udpsrc[0] = udpsrc0;
@@ -786,8 +789,8 @@ on_new_ssrc (GObject *session, GObject *source, GstRTSPMediaStream *stream)
       if ((trans = find_transport (stream, rtcp_from))) {
         GST_INFO ("%p: found transport %p for source  %p", stream, trans, source);
 
-	/* keep ref to the source */
-	trans->rtpsource = source;
+        /* keep ref to the source */
+        trans->rtpsource = source;
 
         g_object_set_qdata (source, ssrc_stream_map_key, trans);
       }
@@ -927,7 +930,7 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsink[i]);
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsrc[i]);
     gst_app_sink_set_callbacks (GST_APP_SINK_CAST (stream->appsink[i]),
-		  &sink_cb, stream, NULL);
+                  &sink_cb, stream, NULL);
   }
 
   /* hook up the stream to the RTP session elements. */
@@ -949,7 +952,7 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
 
   /* get the session */
   g_signal_emit_by_name (media->rtpbin, "get-internal-session", idx,
-		  &stream->session);
+                  &stream->session);
 
   g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
       stream);
@@ -1121,20 +1124,20 @@ default_handle_message (GstRTSPMedia *media, GstMessage *message)
           GST_INFO ("Buffering done, setting pipeline to PLAYING");
           gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
         }
-	else {
+        else {
           GST_INFO ("Buffering done");
-	}
+        }
       } else {
         /* buffering busy */
         if (media->buffering == FALSE) {
-	  if (media->target_state == GST_STATE_PLAYING) {
+          if (media->target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
             GST_INFO ("Buffering, setting pipeline to PAUSED ...");
             gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
-	  }
-	  else {
+          }
+          else {
             GST_INFO ("Buffering ...");
-	  }
+          }
         }
         media->buffering = TRUE;
       }
@@ -1273,6 +1276,10 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   GST_INFO ("preparing media %p", media);
 
+  /* reset some variables */
+  media->is_live = FALSE;
+  media->buffering = FALSE;
+
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
 
   /* add the pipeline bus to our custom mainloop */
@@ -1306,22 +1313,27 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
     g_signal_connect (elem, "pad-added", (GCallback) pad_added_cb, media);
     g_signal_connect (elem, "no-more-pads", (GCallback) no_more_pads_cb, media);
 
+    /* we add a fakesink here in order to make the state change async. We remove
+     * the fakesink again in the no-more-pads callback. */
     media->fakesink = gst_element_factory_make ("fakesink", "fakesink");
     gst_bin_add (GST_BIN (media->pipeline), media->fakesink);
   }
 
+  GST_INFO ("setting pipeline to PAUSED for media %p", media);
   /* first go to PAUSED */
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
   media->target_state = GST_STATE_PAUSED;
 
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
+      GST_INFO ("SUCCESS state change for media %p", media);
       break;
     case GST_STATE_CHANGE_ASYNC:
+      GST_INFO ("ASYNC state change for media %p", media);
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       /* we need to go to PLAYING */
-      GST_INFO ("live media %p", media);
+      GST_INFO ("NO_PREROLL state change: live media %p", media);
       media->is_live = TRUE;
       ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
@@ -1448,7 +1460,7 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to PAUSED, READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
-	remove = TRUE;
+        remove = TRUE;
       break;
     case GST_STATE_PLAYING:
       /* we're going to PLAYING, add */
@@ -1479,42 +1491,47 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
       case GST_RTSP_LOWER_TRANS_UDP:
       case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       {
-	gchar *dest;
-	gint min, max;
+        gchar *dest;
+        gint min, max;
 
-	dest = trans->destination;
-	min = trans->client_port.min;
-	max = trans->client_port.max;
+        dest = trans->destination;
+        if (trans->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+          min = trans->port.min;
+          max = trans->port.max;
+        } else {
+          min = trans->client_port.min;
+          max = trans->client_port.max;
+        }
 
-	if (add && !tr->active) {
+        if (add && !tr->active) {
           GST_INFO ("adding %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
-	  stream->transports = g_list_prepend (stream->transports, tr);
-	  tr->active = TRUE;
-	  media->active++;
-	} else if (remove && tr->active) {
+          stream->transports = g_list_prepend (stream->transports, tr);
+          tr->active = TRUE;
+          media->active++;
+        } else if (remove && tr->active) {
           GST_INFO ("removing %s:%d-%d", dest, min, max);
           g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
-	  stream->transports = g_list_remove (stream->transports, tr);
-	  tr->active = FALSE;
-	  media->active--;
-	}
+          stream->transports = g_list_remove (stream->transports, tr);
+          tr->active = FALSE;
+          media->active--;
+        }
         break;
       }
       case GST_RTSP_LOWER_TRANS_TCP:
-	if (add && !tr->active) {
+        if (add && !tr->active) {
           GST_INFO ("adding TCP %s", trans->destination);
-	  stream->transports = g_list_prepend (stream->transports, tr);
-	  tr->active = TRUE;
-	  media->active++;
-	} else if (remove && tr->active) {
+          stream->transports = g_list_prepend (stream->transports, tr);
+          tr->active = TRUE;
+          media->active++;
+        } else if (remove && tr->active) {
           GST_INFO ("removing TCP %s", trans->destination);
-	  stream->transports = g_list_remove (stream->transports, tr);
-	  tr->active = FALSE;
-	  media->active--;
-	}
+          stream->transports = g_list_remove (stream->transports, tr);
+          tr->active = FALSE;
+          media->active--;
+        }
         break;
       default:
         GST_INFO ("Unknown transport %d", trans->lower_transport);
