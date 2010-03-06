@@ -1,9 +1,586 @@
-=== release 0.10.26 ===
+=== release 0.10.27 ===
 
-2010-02-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-03-05  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.26, "You will know when you get there"
+	  releasing 0.10.27, "No Mistakes Allowed"
+
+2010-03-05 15:58:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: first check for QtGui >= 4.6, only then for >= 4.0
+	  If we first check for >= 4.0 the second check for >= 4.6 will just
+	  short-cut since we are using the same prefix for the variables for
+	  both checks, and they've already been set previously. So the examples
+	  requiring >= 4.6 were built even in the >= 4.0 case.
+
+2010-03-03 20:18:16 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.26.4 pre-release
+
+2010-03-03 20:17:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/ja.po:
+	  po: update translations
+
+2010-03-03 20:15:44 +0000  Josep Torra Valles <n770galaxy@gmail.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: avoid g_object_set() on NULL pointers
+	  There may not be an overlay element if a text-sink is set.
+	  Fixes #611702.
+
+2010-03-01 12:17:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: mark skeleton streams correctly
+	  Mark skeleton streams because we need to ignore them for calculating the
+	  duration of the stream.
+	  Fixes #611227
+
+2010-02-24 01:10:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* po/nl.po:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.26.3 pre-release
+
+2010-02-23 16:57:53 +0100  Götz Waschk <waschk@mandriva.org>
+
+	* tests/examples/overlay/Makefile.am:
+	  examples: Dist header file for the Qt graphics view example
+	  Fixes bug #610832.
+
+2010-02-23 11:41:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: use the chain begin_time instead of our counter
+	  We update the passed begintime argument to narrow our search region in the
+	  binary search. This means that it does not always contain the chain begin time
+	  after a couple of bisects. Use the real chain->begin_time to bring the
+	  granuletime to the time in the chain instead.
+	  Fixes #610005
+
+2010-02-19 18:24:40 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* tests/check/elements/videorate.c:
+	  videorate: tests: New unit tests for upstream caps nego
+	  Adds unit tests that check videorate's upstream caps
+	  negotiation works properly (put passthrough caps
+	  first)
+	  Fixes #608025
+
+2010-01-27 15:07:47 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: Improve upstream negotiation
+	  Put peer pad caps preferred framerates first, indicating
+	  they are videorate's first choices, removing an unnecessary
+	  conversion.
+	  Fixes #608025
+
+2010-02-21 19:52:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstplaysink.h:
+	* gst/playback/gstsubtitleoverlay.c:
+	* gst/playback/gstsubtitleoverlay.h:
+	  playbin2, playsink, subtitleoverlay: Set subtitle encoding properly
+	  For this add subtitle encoding properties to playsink and subtitleoverlay
+	  and update the values in the containing elements.
+	  Also update the font description in textoverlay or the used renderer
+	  element if it is changed during playback.
+	  Fixes bug #610310.
+
+2010-02-22 13:01:19 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/examples/overlay/gtk-xoverlay.c:
+	* tests/examples/overlay/qt-xoverlay.cpp:
+	* tests/examples/overlay/qtgv-xoverlay.cpp:
+	  examples: also add sink detection and set title to qt examples
+	  Also set a title in the qt examples like it is now done in the gtk example.
+	  Fix the newly added find_video_sink in the gtk example and add similar function
+	  to the qt examples.
+
+2010-02-19 14:40:43 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/examples/overlay/.gitignore:
+	  gitignore: ignore files in new example directroy
+
+2010-02-17 14:59:33 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/video/Makefile.am:
+	  make: fix copy and paste error in git rules (audio<->video)
+
+2010-02-19 17:44:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Ghost the video sinkpad if a text sinkpad is available
+	  Only don't ghost it if no visualizations are need and if
+	  no text is needed and no textchain was created yet.
+	  Fixes bug #610379.
+
+2010-02-19 00:22:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.26.2 pre-release
+
+2010-02-19 00:20:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translation files
+
+2010-02-19 00:17:51 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/examples/overlay/.gitignore:
+	  Ignore new overlay examples
+
+2010-02-18 23:47:35 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/examples/overlay/gtk-xoverlay.c:
+	  examples: don't hard-code xvimagesink for Gtk+ GstXOverlay example
+	  Try to find a working videosink, don't hardcode xvimagesink. Also
+	  add some borders to window and give it a title so that it's clear
+	  that this is really a Gtk+ window and not a window created by the
+	  videosink.
+
+2010-02-18 11:42:55 -0800  David Schleef <ds@schleef.org>
+
+	* gst/tcp/gsttcp.c:
+	  tcp(client/server)src: Fix handling of closed sockets
+	  The peer closing the socket should cause an EOS, instead of
+	  silently doing nothing.  This changes the behavior to be
+	  more like fdsrc.  Fixes: #610386
+
+2010-02-18 12:42:53 +0000  Patrick Radizi <patrick.radizi@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: make sure not to dereference NULL username or password
+	  Fixes #610268.
+
+2010-02-17 21:22:54 -0800  David Schleef <ds@schleef.org>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: Fix chroma copying for 4:2:2
+	  Fix mixup of height/width, causing only half the chroma lines to
+	  be copied when outputting buffers.  Fixes: #610329.
+
+2010-02-16 15:43:26 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst-libs/gst/interfaces/xoverlay.c:
+	* tests/examples/Makefile.am:
+	* tests/examples/overlay/Makefile.am:
+	* tests/examples/overlay/gtk-xoverlay.c:
+	* tests/examples/overlay/qt-xoverlay.cpp:
+	* tests/examples/overlay/qtgv-xoverlay.cpp:
+	* tests/examples/overlay/qtgv-xoverlay.h:
+	  examples: add video overlay examples for gtk, qt and qt graphics view
+	  Add simple videotestsrc ! xvimagesink examples using gtk and qt. This patch also
+	  adds all boilerplate to configure for using c++. The qt based examples are
+	  optional like their gtk counterparts.
+
+2010-02-16 17:20:01 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/libs/compiling.sgml:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  docs: cleanup library docs
+	  Correct name of included files. Remove files that are not used anymore. Add many
+	  new api entries to their sections.
+
+2010-02-15 11:11:04 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/icles/test-colorkey.c:
+	  test-colorkey: remove the XInitThreads()
+	  We don't do this is any other example, this should be done for us in gdk it if
+	  would be needed.
+
+2010-02-16 10:09:54 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: use same message string for missing elements as in playbin
+	  Use the same translated message string for missing core elements as
+	  playbin uses, which is a bit nicer and also indicates that there is
+	  something wrong with the user's GStreamer installation (which arguably
+	  is the case if elements like typefind or queue2 are missing).
+
+2010-02-08 13:54:57 +0200  Kaj-Michael Lang <milang@tal.org>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Handle stm module format
+	  Fixes #609314.
+
+2010-02-15 12:10:10 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vorbis/gstivorbisdec.c:
+	  ivorbisdec: set rank to SECONDARY
+
+2010-02-15 12:09:53 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/gstivorbisdec.c:
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisdec.h:
+	* ext/vorbis/gstvorbisdeclib.c:
+	* ext/vorbis/gstvorbisdeclib.h:
+	  vorbisdec: also support ivorbis tremor decoder
+	  ... which only needs a bit of refactoring and extracting to support
+	  the minor difference in (i)vorbis interface.
+	  Fixes #609063.
+
+2010-02-03 14:37:43 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisdec.h:
+	  vorbisdec: reduce some hard-coding
+	  ... such as assuming float all over, and base src caps on template caps.
+
+2010-02-15 10:23:13 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/playbin.c:
+	  playbin: Fix the primary-decoder-missing test with USE_DECODEBIN2
+
+2010-02-15 09:04:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggparse.c:
+	  oggparse: Fix another format string compiler warning
+
+2010-02-15 08:56:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Fix format string compiler warnings
+
+2010-02-15 08:48:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Post a missing element message and an error message if no uridecodebin can be found
+
+2010-02-15 08:46:26 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Post missing element messages if a core plugin is missing
+	  And post a warning in cases where we can still continue to work
+	  or an error when the missing element is fatal.
+
+2010-02-15 08:28:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/playbin2.c:
+	  playbin2: Enable all unit tests
+	  They're all working and valgrind clean now.
+
+2010-02-15 08:26:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: First post a missing-plugin message, then emit the unkown-type signal
+	  This makes sure that there *always* is a missing plugin message in the bus
+	  before any errors or warning messages.
+
+2010-02-15 08:20:41 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Missing decoder errors should be STREAM CODEC_NOT_FOUND
+	  and not CORE MISSING_PLUGIN.
+
+2010-02-15 08:18:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Free the subtitle URI
+
+2010-02-15 08:06:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Post missing plugin messages if a required element can't be created
+	  Especially if no suitable URI source can be found.
+
+2010-02-15 06:50:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/.gitignore:
+	  tests: Add decodebin2 test to .gitignore
+
+2010-02-15 01:18:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Set ghostpad targets to NULL when freeing a decode chain
+	  Otherwise the ghostpad will still be linked to the peer and there
+	  will still be a reference kept, leading to nothing being unlinked
+	  and destroyed until decodebin2 is finalized.
+	  This fixes reuse of decodebin2 if a raw stream is connected to
+	  its sinkpad.
+
+2010-02-15 01:17:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/decodebin2.c:
+	  decodebin2: Add simple unit test, mainly a copy of the decodebin unit test
+	  The only difference between the two unit tests right now is,
+	  that the decodebin2 test resets the element to READY before trying
+	  to reuse it instead of NULL. decodebin2 guarantees to be reusable
+	  without going back to NULL.
+
+2010-02-15 00:11:17 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  ogg: theora PAR of 0:N, N:0 or 0:0 is allowed and maps to 1:1
+	  See #609252.
+
+2010-02-14 23:16:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96dc793 to 44ecce7
+
+2010-02-14 23:10:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  playbin2: Enable playbin2 unit test
+	  It now contains a single working unit test and can be enabled.
+	  The other more useful unit tests still need fixing.
+
+2010-02-14 22:16:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/playbin.c:
+	  playbin: Fix indention in the unit test
+
+2010-02-13 01:08:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/volume/gstvolume.c:
+	  volume: Replace this variables by self
+
+2010-02-12 19:43:13 +0100  Josep Torra Valles <n770galaxy@gmail.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Reset the sink's state to NULL before unreffing it unless it's the same instance again
+	  This makes sure that we don't destroy the last reference before the
+	  element gets back to NULL state. Fixes assertion failures if a playbin2
+	  instance is reused but different sinks are automatically chosen because
+	  of different caps.
+
+2010-02-12 18:00:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: fix Since tag
+
+2010-02-12 14:19:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-read.c:
+	  riff: treat JUNQ chunks like JUNK chunks
+
+2010-02-12 14:29:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Update basesrc segment duration and post duration messages from the streaming thread
+
+2010-02-11 14:10:02 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/tags.c:
+	  tags: improve docs about determining the encoding
+
+2010-02-11 14:09:05 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  comment: fix wrong header comment
+
+2010-02-01 13:50:14 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	  riff: add a variant of the JUNK tag that several adobe products produce
+	  JUNQ has same semantics as JUNK.
+
+2010-02-01 19:01:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: add min-percent property
+	  Emit need-data when the amount of data in the internal queue drops below
+	  min-percent.
+	  Fixes #608309
+
+2010-02-01 18:56:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: cleanups
+	  Avoid some typechecks.
+	  Avoid dereferencing appsrc->priv all the time.
+
+2010-02-01 18:55:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c:
+	  appsink: cleanups
+	  Avoid some typecasting.
+	  Avoid dereferencing appsink->priv all the time.
+
+2010-02-01 15:09:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: avoid some typecasts
+
+2010-01-29 16:34:44 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: ignore \n and \r as the first line
+	  Be more forgiving for bad servers and ignore \r and \n when we are looking for
+	  the response/request line.
+	  See #608417
+
+2010-02-10 16:05:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: fail gracefully on bad Content-Length headers
+	  Be careful when allocating the amount of bytes specified in the Content-Length
+	  because it can be an insanely huge value. Try to allocate the memory but fail
+	  gracefully with a nice error when the allocation failed.
+
+2010-02-10 10:12:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Add conversions from all ARGB formats to AYUV and back
+
+2010-02-09 17:39:21 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Update segment duration and post a duration message if the duration changes
+	  Fixes bug #609423.
+
+2010-02-11 10:56:17 +0100  Benjamin Otte <otte@redhat.com>
+
+	* tests/examples/seek/Makefile.am:
+	  build: link to libm in examples that use it
+	  This fixes build failure in Fedora 13.
+
+2010-02-11 01:11:30 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* MAINTAINERS:
+	  Update MAINTAINERS, add myself
+
+2010-02-11 23:57:38 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: back to development
+	  Slushy freeze remains in effect.
+
+=== release 0.10.26 ===
+
+2010-02-10 20:17:36 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.10.26
+
+2010-02-10 20:16:37 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2010-02-08 11:21:35 +0100  Benjamin M. Schwartz <bens@alum.mit.edu>
 

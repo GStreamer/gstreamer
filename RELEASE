@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.26 "You will know when you get there"
+Release notes for GStreamer Base Plug-ins 0.10.27 "No Mistakes Allowed"
         
 
 
@@ -27,13 +27,13 @@ This module contains elements for, among others:
   containers: ogg
   codecs: vorbis, theora
   text: textoverlay, subparse
-  sources: audiotestsrc, videotestsrc, gnomevfssrc
+  sources: audiotestsrc, videotestsrc, gnomevfssrc, giosrc
   network: tcp
   typefind
-  audio processing: audioconvert, adder, audiorate, audioscale, volume
+  audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
   video processing: ffmpegcolorspace
-  aggregate elements: decodebin, playbin
+  aggregate elements: uridecodebin, decodebin2, playbin2, decodebin, playbin
 
 
 Other modules containing plug-ins are:
@@ -54,152 +54,51 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
-      * playbin2: make about-to-finish signal work for raw sources (e.g. audio CDs)
-      * playbin2: fix handling of the native audio/video flags
-      * playbin2: add flag to enable decodebin buffering
-      * playbin2: make subtitle error handling more robust and ignore late errors
-      * playbin2: improve subtitle passthrough in uridecodebin
-      * playbin2: new subtitleoverlay element for generic subtitle overlaying
-      * playbin2: proxy notify::volume and notify::mute from the volume/mute
-                elements (or audio sink)
-      * playbin2: don't stop completely on initialization errors from subtitle
-                elements; instead disable the subtitles and play the other
-                parts of the stream
-      * decodebin2: rewrite autoplugging and how groups of pads are exposed
-      * uridecodebin: add use-buffering property that will perform buffering on
-                parsed or demuxed media.
-      * GstXOverlay: flesh out docs and add example for use with Gtk+ >= 2.18
-      * libgsttag: add utility functions for ISO-639 language codes and tags
-      * oggdemux: use internal granulepos<->timestamp mapper and make oggdemux
-                more like a 'normal' demuxer that outputs timestamps
-      * oggdemux: seeking improvements
-      * subparse: add qttext support
-      * ffmpegcolorspace: prefer transforming alpha formats to alpha formats
-                and the other way around
-      * libgstvideo: add functions to create/parse still frame events.
-      * theoraenc: make the default quality property 48.
-      * videotestsrc: add pattern with out-of-gamut colors
-      * theora: port to 'new' theora 1.0 API; make misc. existing properties
-                have no effect (quick, keyframe-mindistance, noise-sensitivity,
-                sharpness, keyframe_threshold); those either never worked or
-                aren't needed/provided/useful any longer with the newer API
-      * typefinding: misc. performance improvements and fixes
-      * baseaudiosink: make drift tolerance configurable
+      * playbin2,decodebin2: lots of fixes for missing plugin installation
+      * playbin2, playsink, subtitleoverlay: Set subtitle encoding properly
+      * videorate: Improve upstream negotiation
+      * oggdemux: use the chain begin_time instead of our counter
+      * oggdemux: mark skeleton streams correctly
+      * oggdemux: theora PAR of 0:N, N:0 or 0:0 is allowed and maps to 1:1
+      * typefinding: detect stm module format
+      * ffmpegcolorspace: add conversions from all ARGB formats to AYUV and back
+      * theoradec: Fix chroma copying for 4:2:2
+      * tcpclientsrc,tcpserversrc: Fix handling of closed sockets
+      * examples,build: dist header file for the Qt graphics view example
+      * playsink: Reset the sink's state to NULL before unreffing it unless it's the same instance again
+      * rtspconnection: make sure not to dereference NULL username or password
+      * appsrc: Update segment duration and post a duration message if the duration changes
+      * vorbisdec: also support ivorbis tremor decoder
+      * rtsp: fail gracefully on bad Content-Length headers
+      * rtsp: ignore \n and \r as the first line
 
 Bugs fixed in this release
      
-      * 507131 : GStreamer does not play short ogg sounds
-      * 583376 : [typefind] Detects MP3 as h264
-      * 344013 : [oggdemux] use parsers to suck less
-      * 598114 : build overwrites interfaces/interfaces-enumtypes.h with wrong enumtypes
-      * 344706 : [playbin] problem changing subtitles and language
-      * 350748 : [ffmpegcolorspace] ffmpeg colorspace should prefer RGBA over RGB
-      * 499181 : audiorate inserting samples (due to rounding errors ?)
-      * 524771 : Can't seek in YouTube videos
-      * 537050 : [playbin2] QOS event problems
-      * 542758 : [playbin2] Hangs in PLAYING forever if caps are not a subset of pad template caps
-      * 549254 : [playbin/decodebin] Doesn't handle pads that are added much later than the other(s) correctly
-      * 563828 : [decodebin2] Complains about loops in the graph when demuxer output requires another demuxer
-      * 568014 : oggdemux/theoradec doesn't play last video frame
-      * 570753 : [playbin] Support subtitle renderers additional to subtitle parsers
-      * 574289 : [decodebin2] race in state change to PAUSED
-      * 577326 : tcpclientsrc stops working if set to PLAYING, PAUSED and PLAYING again
-      * 579394 : [playbin2] deadlock with wavpack files: type_found - > analyze_new_pad - > no_more_pads
-      * 584441 : [playbin2] if suburi preroll fails with error, playback should continue
-      * 584987 : [playbin2] [gapless] Fire a track-changed message on track change.
-      * 585681 : Subtitle selector doesn't work
-      * 585969 : [playbin2] [gapless] Position/Duration information mismatch on track change
-      * 587704 :  " GstDecodeBin2: This appears to be a text file " error when playing files from a samba share
-      * 591625 : [alsasrc] odd timestamping on start
-      * 591662 : [playbin2] can't handle both text subtitles and subpictures
-      * 591677 : Easy codec installation is not working
-      * 591706 : [playbin2] Support of files with subtitle subpicture streams
-      * 594729 : theora: Convert to libtheora 1.0 API
-      * 595123 : [playbin2] Should hide the difference between subtitles and subpictures
-      * 595401 : gobject assertion and null access to volume instance in playbin
-      * 595427 : avoid x event thread if not needed
-      * 595849 : Fix Y41B strides in videotestsrc and gstvideo
-      * 596159 : rtspsrc hangs when connecting over http tunneled rtsp
-      * 596694 : [typefind] Detects quicktime as mp3
-      * 596774 : Speed up subtitle display after seek/switch
-      * 596981 : [audioresample] Compilation failure due to warning about use of %lu for guint64 variable
-      * 597537 : [streamvolume.c]The cube root function is not defined in Microsoft's CRT
-      * 597539 : [gststrpconnection.c] 'close' is not defined in Microsoft's CRT
-      * 597786 : [tag] enhance gst_tag_freeform_string_to_utf8 to handle 16-bit Unicode
-      * 598288 : [decodebin2] Plays a wav file but issues an error
-      * 598533 : [decodebin2] Post element message with the stream topology on the bus
-      * 598936 : DKS subtitle format
-      * 599105 : [baseaudiosink] Remove pulsesink < 0.10.17 hack after gst-plugins-good release
-      * 599154 : RtpAudioPayload can send out buffers that are not exact multiple of the frame size
-      * 599266 : Requires restart after installing codecs
-      * 599471 : uridecodebin: Store unused decodebin2 instances for further usage.
-      * 599649 : Support for frame-based subtitles using playbin2 and subparse
-      * 600027 : [playbin2,playsink] Should notify about volume/mute changes
-      * 600370 : [subtitleoverlay] New element to overlay video with subtitles in every supported format
-      * 600469 : gdpdepay: Clear adapter on flush and state change
-      * 600479 : Deadlock when playing movie with subtitles
-      * 600726 : [queue2] implement buffering-left argument to buffer messages
-      * 600787 : playbin2 has a problem with Ogg stream with " info " 
-      * 600945 : silence buffers at start reusing pulsesrc
-      * 600948 : [uridecodebin] Improve all raw caps detection on pads
-      * 601104 : [cddabasesrc] always plays first track if device is specified
-      * 601627 : theoradec breaks timestamps
-      * 601772 : gst-rtsp-server crashing : bug fixed
-      * 601809 : seek example doesn't work with csw
-      * 601942 : Add a still-frame event to libgstvideo
-      * 602000 : [playbin2] [gapless] Does state change PLAYING- > PAUSED- > PLAYING while it should stay in PLAYING
-      * 602225 : Can't play another movie after using subtitles
-      * 602790 : New oggdemux parsers break theora/vorbis playback
-      * 602834 : [ffmpegcolorspace] does un-necessary conversion from RGB to ARGB
-      * 602924 : Text subtitle rendering regression
-      * 602954 : [oggdemux] can't get first chain on ogg/theora stream
-      * 603345 : [playbin2] textoverlay refcount issues in git
-      * 603357 : [subparse] support for QTtext
-      * 605100 : GNOME Goal: Remove deprecated glib symbols
-      * 605219 : Freezes nearly always when switching Audio CDs
-      * 605960 : new examples require GTK 2.18
-      * 606050 : Implement ptime support
-      * 606163 : textoverlay: Ignore zero framerate
-      * 606687 : playbin2: can't see video after setting native flags
-      * 606744 : Totem fails to play video file: " Can't display both text subtitles and subpictures. " 
-      * 606926 : Vorbis: Implement Proper Channel Orderings for 6.1 and 7.1 Configurations
-      * 607116 : [playbin2] no 'about-to-finish' signal with audio CDs
-      * 607226 : Disallow setting the playbin uri property in state > = PAUSED
-      * 607381 : GST_FRAMES_TO_CLOCK_TIME() GST_CLOCK_TIME_TO_FRAMES() should round result
-      * 607403 : rtpaudiopayload: ptime is in milli-seconds, convert to nanosecs
-      * 607569 : Playing a chained ogg stream from HTTP pauses or freezes between songs
-      * 607652 : segfault with an ogg annodex file
-      * 607848 : typefind wrong classifies mp4 file as mp3
-      * 607870 : [oggdemux] OGM parsing broken
-      * 607926 : [oggdemux] regression with certain chained ogg stream
-      * 607929 : [oggdemux] regression: headers pushed twice at the beginnign of each stream
-      * 608167 : [decodebin2] Doesn't push out full topology
-      * 608179 : caps filter appearing after adder results in deadlock
-      * 608446 : [playbin2] post an error message if no URI is set
-      * 608484 : [playbin2] problem with redirect and reset to READY
-      * 608699 : [oggdemux] memory leak while demuxing
-      * 609252 : [theoradec] Doesn't handle unknown pixel aspect ratio properly
-      * 596078 : Playbin2 takes ref of audio-/video-sink parameter
-      * 596183 : decodebin2: Rewrite autoplugging and how groups of pads are handled
-      * 601480 : [playback] Update factory lists not only after going back to NULL
-      * 596313 : gstv4lelement.c:168: error: ‘client’ may be used uninitialized in this function
-      * 606949 : [playbin2] verify type of volume property before using it
+      * 610449 : codec autodetection does not always work
+      * 608025 : [videorate] fails at upstream negotiation
+      * 608309 : [appsrc] Should request new data before the queue is empty
+      * 608417 : rtspsrc problem with \n and \r as first line
+      * 609063 : [vorbisdec] also support integer vorbis decoder (tremor) library implementation
+      * 609314 : typefind: Typefind does not handle .stm module format
+      * 609423 : [appsrc] gst_app_src_set_size() should update duration and post a duration message
+      * 610005 : [oggdemux] regression: bad seek granularity
+      * 610268 : [rtsp] NULL pointer reference in gstrtspconnection
+      * 610310 : [playbin2] Subtitle encoding property has no effect
+      * 610329 : [theoradec] doesn't copy all chroma lines for 4:2:2
+      * 610379 : [playbin2] doesn't play if text flag is unset and media has text subtitles
+      * 610386 : [tcpserversrc] Doesn't send EOS when socket is closed
+      * 610672 : overlay examples are now inconsistent and broken
+      * 610832 : missing header file in the tarball
+      * 611225 : [oggdemux] doesn't preroll big_buck_bunny_427x240.indexed.ogg in push mode
+      * 611227 : [oggdemux] no duration or seeking in local big_buck_bunny_427x240.indexed.ogg in pull mode
+      * 604131 : Totem can no longer open Matroska files that hold ASS subtitles
 
 API changed in this release
      
 - API additions:
     
-* gst_rtcp_sdes_name_to_type()
-* gst_rtcp_sdes_type_to_name()
-* gst_tag_get_language_name()
-* gst_tag_get_language_codes()
-* gst_tag_get_language_code_iso_639_1()
-* gst_tag_get_language_code_iso_639_2B()
-* gst_tag_get_language_code_iso_639_2T()
-* gst_video_event_new_still_frame()
-* gst_video_event_parse_still_frame()
+* appsrc::min-percent property
+* GST_RIFF_TAG_JUNQ
 
 Download
 
@@ -228,33 +127,16 @@ Applications
   
 Contributors to this release
     
-      * Benjamin M. Schwartz
       * Benjamin Otte
-      * Brijesh Singh
-      * Christian Schaller
       * David Schleef
-      * Edward Hervey
-      * Iago Toral
-      * Jan Schmidt
-      * Jonathan Matthew
-      * Josep Torra
+      * Götz Waschk
       * Josep Torra Valles
-      * Julien Moutte
-      * Kipp Cannon
+      * Kaj-Michael Lang
       * Mark Nauwelaerts
-      * Mark Yen
-      * Mart Raudsepp
-      * Olivier Crête
       * Patrick Radizi
-      * Peter Kjellerstedt
-      * Robert Swain
       * Sebastian Dröge
-      * Sreerenj B
       * Stefan Kost
       * Thiago Santos
-      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Tommi Myöhänen
-      * Vincent Penquerc'h
       * Wim Taymans
  

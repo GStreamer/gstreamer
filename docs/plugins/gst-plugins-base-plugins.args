@@ -3069,6 +3069,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAppSrc::min-percent</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min Percent</NICK>
+<BLURB>Emit need-data when queued bytes drops below this percent of max-bytes.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioResample::filter-length</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -3149,6 +3159,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlaySink::subtitle-encoding</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSubtitleOverlay::font-desc</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -3166,5 +3186,15 @@
 <NICK>Silent</NICK>
 <BLURB>Whether to show subtitles.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSubtitleOverlay::subtitle-encoding</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
