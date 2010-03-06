@@ -3,10 +3,10 @@
   <description>Create and parse Audio Interchange File Format (AIFF) files</description>
   <filename>../../gst/aiff/.libs/libgstaiff.so</filename>
   <basename>libgstaiff.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -25,6 +25,27 @@
         <caps>
           <name>src</name>
           <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-aiff</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>aiffparse</name>
+      <longname>AIFF audio demuxer</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Parse a .aiff file into raw audio</description>
+      <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-aiff</details>
         </caps>

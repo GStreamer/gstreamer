@@ -3,10 +3,10 @@
   <description>Kate plugin</description>
   <filename>../../ext/kate/.libs/libgstkate.so</filename>
   <basename>libgstkate.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -90,6 +90,33 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>tiger</name>
+      <longname>Kate stream renderer</longname>
+      <class>Mixer/Video/Overlay/Subtitle</class>
+      <description>Decodes and renders Kate streams on top of a video</description>
+      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
+        </caps>
+        <caps>
+          <name>subtitle_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
         </caps>
       </pads>
     </element>

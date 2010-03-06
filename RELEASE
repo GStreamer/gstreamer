@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.17 "Anny bobany"
+Release notes for GStreamer Bad Plug-ins 0.10.18 "Diminishing Returns"
         
 
 
@@ -60,31 +60,103 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Fix DVD playback
-      * New elements: DTMF tone source and detector
-      * ASS subtitle support improvements
-      * Fix compilation on OS/X Snow Leopard
-      * Support DVB 3.3 API
-      * Inputselector fixes
+      * aacparse: lots of fixes, now based on common baseparser class and merged into audioparser plugin
+      * ac3parse: new AC3 parser element based on common baseparser class and part of new audioparser plugin
+      * adpcmenc: new adpcm encoder element
+      * aiffmux: new aiff muxer element
+      * amrparse: use (default) time handling of baseparser class, merged into audioparser plugin
+      * apexsink: change volume property to a double to make work with playbin2
+      * asfmux: handle streams with different start times
+      * asfmux: improve compatibility with WMSP in WMP
+      * asfmux, rfbsrc, vmnc, mpegdemux, resindvd: fix alignment and endianness issues
+      * assrender: countless fixes and improvements
+      * audioparsers: rename baseparse GType name to avoid possible conflicts
+      * audioparsers: fix seek handling, newsegment sending, push mode data draining
+      * celt: make compile against earlier CELT versions
+      * configure: call $PKG_CONFIG instead of pkg-config to fix cross compilation
+      * dataurisrc: new source element for data:// URIs
+      * faac: lots of fixes (channel layout, output caps, bps estimation etc.)
+      * flacparse: fix multiple channel frame parsing; merged into new audioparser plugin
+      * fpsdisplaysink: expose video sink using a property
+      * h264parse: Correctly rewrite all nal prefixes
+      * h264parse: fix caps parameters setting, framerate calculation
+      * h264parse: fix regression in output buffer timestamping
+      * h264parse: optionally output AUs rather than NALUs or transform from bytestream to sample format and vice versa
+      * h264parse: parse SPS some more (e.g. for width/height)
+      * ivorbisdec: moved to -base (to reuse same codebase as vorbisdec)
+      * jpegformat: new jifmux element
+      * jpegparse: new jpeg parser element (not autoplugged for now)
+      * mmssrc: post error message in addition to redirect when connect fails
+      * mpegtsdemux: Handle eac3 in PMT
+      * mpegtsmux: add pat-interval and pmt-interval properties
+      * mpegtsmux: Do not crash on misinterpreted h264
+      * mpegtsmux: Fix mistake on previous commit
+      * mpegtsmux: fix PAT/PMT insertion frequency, add PAT/PMT in streamheader
+      * mpegtsmux: mark delta-unit on outgoing buffers
+      * qtmux: add moov recovery feature (to finalise recording after crash or so)
+      * qtmux: improves compatibility with some hardware players
+      * qtmux: add support for ALAC, SVQ3, IMA ADPCM; improve j2k handling
+      * qtmux: misc. tag writing fixes: write all udta children atoms; crash less
+      * shapewipe: moved to -bad
+      * vdpau: lots of fixes and refactoring
 
 Bugs fixed in this release
      
-      * 602106 : Bad atom size calculation
-      * 574434 : [camerabin] Changing default video/audio source for Windows
-      * 584361 : gppmux Support for 3gr6
-      * 586929 : [midi] Doesn't handle push
-      * 595161 : [mpegtsdemux] Internal dataflow problem with some streams.
-      * 598552 : faac: Clean up defaults
-      * 598763 : New plugin: aiffmux
-      * 598808 : mpegpsmux: Fix CLFAGS typo and reorder flags
-      * 599050 : [mpegvideoparse] Does not check width/height range
-      * 599469 : resindvd: problems pre-rolling in the absence of audio
-      * 600454 : aacparse detecting aac file as mpegversion=2 instead of 4
-      * 600461 : [zbar] Over-eager detection of barcodes
-      * 600662 : [assrender] Doesn't synchronize subtitle buffers
-      * 600707 : autoconvert depends on function from core 0.10.26
-      * 600724 : celt: fails to build against celt-0.7
-      * 599903 : Scaletempo plugin stops early when playing slowly
+      * 606657 : mpegtsmux crashes with h264parse in byte-stream mode
+      * 607513 : input-selector segfaults in g_object_notify()
+      * 440476 : RhythmBox displays an incorrect track length for .aac files.
+      * 530513 : [h264parse] no width and height in output caps
+      * 563433 : implement h264parse AVC output
+      * 575878 : assrender searches entire current working directory when searching for fonts to use
+      * 583098 : Add jpegparse element
+      * 598350 : qtmux with AAC streams (from faac) generate invalid files
+      * 598682 : make check fails due to fpsdisplaysink if xvimagesink does not exist
+      * 598916 : qtmux: support more of j2k
+      * 600409 : tremor/ivorbis: should pack result smarter
+      * 601108 : gst-camera requires glade
+      * 601417 : Problem compiling gst-plugins-bad 0.10.16
+      * 602161 : bad .17 VPATH build fix
+      * 602465 : gst/dtmf/tone_detect.h incompatible with MSVC
+      * 602524 : frei0r: GST_EXTRA_MODULE_SUFFIX never defined
+      * 602528 : lv2: vocoder plugin breaks gstreamer
+      * 603938 : assrender cannot load font attachments in Matroska container
+      * 603983 : gstdshowvideosink leaking DirectShow objects
+      * 603986 : gstdshowvideosink not releasing the filter media event interface
+      * 604099 : rtpmux: Make sure to call release_pad() when the element is disposed
+      * 604101 : rtpmux: update the current_ssrc from the caps
+      * 604280 : fpsdisplaysink: allow access to internal video sink used
+      * 604311 : gst-plugins-bad: fails to build against libcelt 0.4.0
+      * 604908 : [mpegtsmux] mark delta-unit on outgoing buffers
+      * 604925 : qtmux shouldn't accept adts aac
+      * 605720 : modplug: Add 32-bit depth caps
+      * 605721 : modplug: Allow 1-channel output for 16 and 32 bit depth too
+      * 605904 : mpegtsdemux doesn't handle e-ac-3 in PMT
+      * 606371 : mpegdemux2 plugin doesn't work on some ARM CPU due to the guint32*'s alignment
+      * 606636 : [mmssrc] no error message when connect to server fails
+      * 606665 : error: " __MSVCRT_VERSION__ " redefined
+      * 606677 : Port librdf (rdfsrc) to Windows
+      * 606726 : FAAC bitrate setting has no effect
+      * 606859 : Get mp4mux request pad  during decodebin2's new-decoded-pad event fails.
+      * 607105 : faac doesn't negotiate channel positions correctly
+      * 607285 : cdxaparse leaks memory
+      * 607555 : asfmux plugin generates data streams incompatible with WMSP (MMSH) and WMP
+      * 607747 : [dvbsrc] Pipeline does not stop when reception is very bad
+      * 608042 : [camerabin-example] v4l2 device busy after setting back to ready and changing the mode
+      * 608651 : dshowvideosink.cpp crash
+      * 608706 : assrender recursively scans directories for fonts
+      * 608751 : [assrender] Random crashes because libass is not threadsafe
+      * 608753 : assrender: use more compatible hinting method
+      * 608896 : mpegtsmux: PAT/PMT interval fixes
+      * 608998 : [jpegparse] unit test fails
+      * 609055 : [qtmux - mp4mux] crash when setting
+      * 609215 : [rsvg] fix compilation with MSVC
+      * 609478 : [faad] SIGSEGV when caps contains codec_data=(buffer)NULL
+      * 164870 : PNM [en,de]coder
+      * 383478 : Need ac3 parser to support seeking in unframed .ac3 files
+      * 606878 : [apexsink] crashes when changing volume in rhythmbox
+      * 580731 : qtmux needs mapping for ALAC
+      * 587922 : qtmux lacks mapping for Sorenson Video v3
+      * 601576 : qtmux feature: moov recovery
 
 Download
 
@@ -113,22 +185,49 @@ Applications
   
 Contributors to this release
     
-      * Bastian Hecht
-      * Chris Hills
+      * Carsten Kroll
+      * Alessandro Decina
+      * Arnaud Patard
+      * Arnout Vandecappelle
+      * Benjamin Otte
+      * Carl-Anton Ingmarsson
+      * Christian Schaller
+      * David Hoyt
       * David Schleef
       * Edward Hervey
-      * Gabriel Millaire
+      * Eric Appleman
+      * Grigori Goronzy
+      * Håkon Skjelten
+      * Håvard Graff
       * Jan Schmidt
-      * Julien Isorce
+      * Javier Jardón
+      * Julien Moutte
+      * Kaj-Michael Lang
+      * Kipp Cannon
+      * Lasse Laukkanen
+      * Linqiang Pu
+      * Marc-André Lureau
+      * Mark Nauwelaerts
       * Michael Smith
       * Olivier Crête
+      * Peter van Hardenberg
+      * Philippe Normand
       * René Stadler
-      * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
+      * Stephen Depooter
+      * Stephen McNamara
       * Teemu Katajisto
       * Thiago Santos
+      * Thiago Sousa Santos
+      * Thijs Vermeir
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tommi Myöhänen
+      * Vincent GENIEUX
+      * Vincent Penquerc'h
       * Wim Taymans
+      * Xavier Queralt Mateu
+      * Yaakov Selkowitz
+      * unknown
+      * Руслан Ижбулатов
  

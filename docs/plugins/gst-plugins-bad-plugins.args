@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstMpeg2enc::max-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250]</RANGE>
+<RANGE>[G_MAXULONG,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. GOP size</NICK>
 <BLURB>Maximal size per Group-of-Pictures (-1=default).</BLURB>
@@ -831,7 +831,7 @@
 <ARG>
 <NAME>GstMpeg2enc::min-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250]</RANGE>
+<RANGE>[G_MAXULONG,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Min. GOP size</NICK>
 <BLURB>Minimal size per Group-of-Pictures (-1=default).</BLURB>
@@ -911,7 +911,7 @@
 <ARG>
 <NAME>GstMpeg2enc::quantisation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,31]</RANGE>
+<RANGE>[G_MAXULONG,31]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quantisation</NICK>
 <BLURB>Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst).</BLURB>
@@ -26280,7 +26280,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>1.4854e-312</DEFAULT>
+<DEFAULT>1.20954e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26320,7 +26320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.4854e-312</DEFAULT>
+<DEFAULT>1.20954e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26330,7 +26330,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.4854e-312</DEFAULT>
+<DEFAULT>1.23076e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26360,7 +26360,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.7662e-316</DEFAULT>
+<DEFAULT>4.54199e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26370,7 +26370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>1.59708e-316</DEFAULT>
+<DEFAULT>6.2478e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26380,7 +26380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>3.50926e-317</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26410,7 +26410,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>8.65679e-38</DEFAULT>
+<DEFAULT>1.76852e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26430,7 +26430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>4.38446e-38</DEFAULT>
+<DEFAULT>1.28823e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26770,7 +26770,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>1.18576e-322</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26780,7 +26780,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>2.13486e-320</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>4.74303e-322</DEFAULT>
+<DEFAULT>6.12021e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26960,7 +26960,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>1.12466e-312</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27140,7 +27140,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>2.90942e-152</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>

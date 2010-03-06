@@ -3,7 +3,7 @@
   <description>Quicktime Muxer plugin</description>
   <filename>../../gst/qtmux/.libs/libgstqtmux.so</filename>
   <basename>libgstqtmux.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.18</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>gsoc2008 package</package>
@@ -20,7 +20,7 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc-sample, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>audio_%d</name>
@@ -74,13 +74,13 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc-sample, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>audio_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -111,13 +111,13 @@
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc-sample, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>audio_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8096 ], channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-alaw, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8096 ], channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-alaw, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
