@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.18 "Short Circuit"
+Release notes for GStreamer Good Plug-ins 0.10.19 "Closer to the Edit"
         
 
 
@@ -54,82 +54,58 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * v4l2src: implement GstURIHandler interface
-      * matroskamux: make index size configurable
-      * matroskademux: support push based mode
-      * matroskademux: improve stream synchronization
-      * flacdec: fix possible hanging in pull mode seeking
-      * flacdec: use a single decoder field for both push and pull mode
-      * flacenc: optionally add a seek table
-      * rtp: add BroadcomVoice payloader and depayloader
-      * rtp: add G.723 payloader and depayloader
-      * rtph264pay: add option to insert PPS/SPS in streams
-      * rtph264depay: optionally merge NALUs into Access Units
-      * rtspsrc: add user-id and user-pw properties; fix major memory leak
-      * avimux: many fixes, also better compatibility with Windows Media Player
-      * avidemux: per-stream index parsing (= much faster startup)
-      * qtdemux: progressive download support / seeking in push mode
-      * qtdemux: per sample parsing (= much faster start up)
-      * wavenc: Post warning if file hasn't been finalised properly
-      * videomixer: MMX optimisations and other improvements; implement basic QoS
-      * matroska, qtdemux, id3demux: fix language code writing and extraction
+      * shapewipe: moved from -bad to -good
+      * avidemux: push mode seeking support
+      * avidemux: drop video frames up to the desired keyframe after a seek
+      * configure: cross-compilation fixes (use $PKG_CONFIG instead of pkg-config)
+      * dvdepay: don't output frames until we have a header, fixes crash
+      * flacdec: fix tag extraction in push mode
+      * flvdemux: obtain the index from the end of an flv file in push mode
+      * flvdemux: audio tags without any content are valid; indexing improvements
+      * jpegdec: fix invalid memory access in parser
+      * jitterbuffer: new buffering modes: low/high watermark buffering, rtp timestamps
+      * matroskademux: seeking/segment fixes (esp. regression with gnonlin)
+      * matroskademux: subtitle stream improvements (advance sparse streams in smaller steps)
+      * multipartdemux: improve header mime-type parsing
+      * qtdemux: fix ALAC codec-data handling; handle signed values in 3GPP location tag
+      * qtdemux: fix frame rate cap regression; fix sample durations corner-case
+      * qtdemux: Use the correct duration when comparing segments
+      * pulsesink: avoid segfault when shutting down
+      * pulsesink: return previous mute state if sink is not active at the moment
+      * rtpbin: change how NTP time is calculated in RTCP, generating more accurate NTP timestamps if the system clock is synchronised with NTP or similar
+      * rtpmp4gdepay: avoid division by 0 in corner case
+      * v4l2sink: change rank to NONE so we don't try to autoplug it
+      * videomixer: fix timestamping problems for input streams with different lengths
+      * videomixer: fix problem when used with gnonlin (always send FLUSH_STOP)
 
 Bugs fixed in this release
      
-      * 609405 : [qtdemux] Issues when seeking with file with lots of tracks and edit lists
-      * 503582 : [avidemux] Extract date tag (contained in the IDIT chunk)
-      * 351595 : [flacenc] write seek tables
-      * 505823 : [matroskademux] language tags have wrong iso code
-      * 515073 : [goom] Update to goom2k4
-      * 539858 : not enough NEWSEGMENT events from matroskademux
-      * 554839 : [rtpbin] Automaticaly remove pads
-      * 582575 : [rtph263depay] dropping only part of key frames on lost fragmets
-      * 583367 : gstrtpL16pay ignores max-ptime property
-      * 583985 : [matroskamux] make index size configurable
-      * 587323 : rtpmp4vpay does not payload mp4v stream depayloaded with rtpmp4vdepay
-      * 593354 : rtpjitterbuffer sometimes outputs packets with timestamps in the past
-      * 595265 : SDES handling in RTPSource
-      * 597497 : can't play a redirecting .mov file via playbin
-      * 597823 : Add rtpg723pay plugin
-      * 599300 : [qtdemux] Doesn't populate video bitrate field
-      * 601143 : v4l2src: add GstURIHandler interface
-      * 601242 : [flvmux] ECMA array with file index lacks final 0x09 byte
-      * 601728 : [rtspsrc] Add username/password properties
-      * 602231 : Deadlock between rtpjitterbuffer and gstrtpbin
-      * 602508 : qtdemux: Parse stbl atom per sample instead of all at once
-      * 602887 : shout2send element won't change from PLAYING state to NULL
-      * 602940 : jitterbuffer is racy determining basetime
-      * 603376 : rtpsession : g_type_create_instance performance issue : avoid buffer ref
-      * 603471 : [flacdec] not timestamping output buffers
-      * 603547 : shout2send plugin sends data too fast
-      * 603779 : [ladspa] Remove ladspa plugin code
-      * 604352 : [rganalysis] miscomputes timestamps
-      * 604611 : [qtdemux] Provides invalid ALAC codec data
-      * 604679 : videomixer MMX code doesn't build on fedora12
-      * 604814 : videomixer make error
-      * 604872 : [udpsink] Add missing 'gssize len' parameter to g_convert()
-      * 604913 : rtph264pay/NALU/rtph264depay
-      * 605222 : Mobile Youtube RTSP streams time out at EOS
-      * 605269 : [shout2][patch] Setting public flag
-      * 605447 : Unable to play Real Audio stream for radioBERLIN.
-      * 605882 : rtpg723pay is incorrect
-      * 606198 : rtph264pay is causing alignment trap on ARM arch
-      * 606438 : multiudpsink: warningfixes for windows
-      * 606692 : Incorrect Center Frequency For Band3
-      * 606807 : audioamplify:  allow negative amplifications
-      * 607353 : rtph264pay & base: Don't crash if the other side specifies the profile-level-id
-      * 607440 : [wavenc] should post warning if the file isn't finished properly on pipeline shutting down
-      * 607718 : [qtdemux] Infinite loop doing negative rate playback for single audio stream
-      * 607949 : [avidemux] regression in stop position for mp3 streams
-      * 608209 : [videomixer] blend_mmx.h:173: Error: can't encode register '%ah' in an instruction requiring REX prefix
-      * 608255 : [speex] speexenc crash and leaks in rtpspeexpay and speexdec
-      * 608268 : [flvmux] index timestamps should be in seconds, not milliseconds
-      * 608629 : [pngdec] png_set_gray_1_2_4_to_8() removed in libpng > = 1.4.0
-      * 608671 : [mkv] issues when seeking
-      * 608990 : [qtdemux] Segment start timestamps can be broken
-      * 609107 : [qtdemux] Unknown atoms should also be skipped when looking for moov
-      * 598610 : [matroskademux] Support push mode operation
-      * 594381 : audiofirfilter: Implement FFT convolution
+      * 584536 : [PLUGIN-MOVE] Move shapewipe to -good
+      * 587304 : [jitterbuffer] don't handle correctly data burst from udpsrc
+      * 599292 : Synchronizing two RTP streams from different devices using RTCP is inaccurate.
+      * 604711 : Handling of mime type in multipartdemux
+      * 608026 : [videomixer] timestamping problems
+      * 608843 : [flacdec] Can't read tags in push mode
+      * 610004 : GST_CXXFLAGS should contain GST_CFLAGS
+      * 610053 : matroska fails to build with Sun Studio
+      * 610238 : Avoid an assertion in the rtspsrc element which abort the client application
+      * 610265 : gstrtpmp4gdepay issuing a SIGFPE crashing an application
+      * 610280 : [qtdemux] issue with corrupted 3gp file
+      * 610296 : [qtdemux] Confusion with gst/qt segments
+      * 610337 : pulsesink: gst_pulsesink_get_mute: set result earlier.
+      * 610483 : [jpegdec] invalid memory access
+      * 610556 : Memory violation when starting to decode a running DV PAL RTP stream
+      * 610839 : Unable to cross compile gst-plugins-good
+      * 610894 : send FLUSH_STOP after FLUSH_START in videomixer
+      * 611501 : [regression] matroskademux fails to output anything on some seeks
+      * 609724 : Add translator comment for %s in pulsesink
+
+API changed in this release
+     
+- API additions:
+    
+* jitterbuffer::mode
+* rtpbin::buffer-mode
 
 Download
 
@@ -159,31 +135,17 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Arnout Vandecappelle
-      * Arun Raghavan
-      * Aurelien Grimaud
-      * Bastien Nocera
-      * Branko Čibej
+      * Anders Skargren
+      * Brian Cameron
       * David Hoyt
       * Edward Hervey
-      * Havard Graff
-      * Jan Schmidt
-      * Jan Urbański
-      * Jonathan Conder
-      * Kipp Cannon
-      * Marco Ballesio
       * Mark Nauwelaerts
-      * Michael Smith
-      * Olivier Crête
-      * Pascal Buhler
-      * Peter van Hardenberg
+      * Philippe Normand
       * Robert Swain
-      * Robert Weidlich
-      * Roland Krikava
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
-      * Tiago Katcipis
       * Tim-Philipp Müller
+      * Volker Grabsch
       * Wim Taymans
  

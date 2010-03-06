@@ -582,7 +582,7 @@
 <NAME>GstRTSPSrc::debug</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Debug</NICK>
 <BLURB>Dump request and response messages to stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -602,7 +602,7 @@
 <NAME>GstRTSPSrc::protocols</NAME>
 <TYPE>GstRTSPLowerTrans</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Protocols</NICK>
 <BLURB>Allowed lower transport protocols.</BLURB>
 <DEFAULT>UDP Unicast Mode|UDP Multicast Mode|TCP interleaved mode</DEFAULT>
@@ -612,7 +612,7 @@
 <NAME>GstRTSPSrc::retry</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 65535</RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Retry</NICK>
 <BLURB>Max number of retries when allocating RTP ports.</BLURB>
 <DEFAULT>20</DEFAULT>
@@ -622,7 +622,7 @@
 <NAME>GstRTSPSrc::timeout</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Timeout</NICK>
 <BLURB>Retry TCP transport after UDP timeout microseconds (0 = disabled).</BLURB>
 <DEFAULT>5000000</DEFAULT>
@@ -632,17 +632,17 @@
 <NAME>GstRTSPSrc::latency</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Buffer latency in ms</NICK>
 <BLURB>Amount of ms to buffer.</BLURB>
-<DEFAULT>3000</DEFAULT>
+<DEFAULT>2000</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstRTSPSrc::tcp-timeout</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>TCP Timeout</NICK>
 <BLURB>Fail after timeout microseconds on TCP connections (0 = disabled).</BLURB>
 <DEFAULT>20000000</DEFAULT>
@@ -652,7 +652,7 @@
 <NAME>GstRTSPSrc::connection-speed</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 2147483</RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Connection Speed</NICK>
 <BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -662,7 +662,7 @@
 <NAME>GstRTSPSrc::nat-method</NAME>
 <TYPE>GstRTSPNatMethod</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>NAT Method</NICK>
 <BLURB>Method to use for traversing firewalls and NAT.</BLURB>
 <DEFAULT>Send Dummy packets</DEFAULT>
@@ -672,7 +672,7 @@
 <NAME>GstRTSPSrc::do-rtcp</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Do RTCP</NICK>
 <BLURB>Send RTCP packets, disable for old incompatible server.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
@@ -682,7 +682,7 @@
 <NAME>GstRTSPSrc::proxy</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Proxy</NICK>
 <BLURB>Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port].</BLURB>
 <DEFAULT>NULL</DEFAULT>
@@ -692,7 +692,7 @@
 <NAME>GstRTSPSrc::rtp-blocksize</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 65536</RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>RTP Blocksize</NICK>
 <BLURB>RTP package size to suggest to server (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -20344,8 +20344,18 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Auto Remove</NICK>
-<BLURB>Automatically removed timed out sources.</BLURB>
+<BLURB>Automatically remove timed out sources.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::buffer-mode</NAME>
+<TYPE>RTPJitterBufferMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Mode</NICK>
+<BLURB>Control the buffering algorithm in use.</BLURB>
+<DEFAULT>Slave receiver to sender clock</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20389,6 +20399,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpJitterBuffer::mode</NAME>
+<TYPE>RTPJitterBufferMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Control the buffering algorithm in use.</BLURB>
+<DEFAULT>Slave receiver to sender clock</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::percent</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>percent</NICK>
+<BLURB>The buffer filled percent.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpSession::bandwidth</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>>= 0</RANGE>
@@ -20414,7 +20444,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>NTP base time</NICK>
-<BLURB>The NTP base time corresponding to running_time 0.</BLURB>
+<BLURB>The NTP base time corresponding to running_time 0 (deprecated).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

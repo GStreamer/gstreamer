@@ -1,9 +1,1129 @@
-=== release 0.10.18 ===
+=== release 0.10.19 ===
 
-2010-02-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-03-06  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.18, "Short Circuit"
+	  releasing 0.10.19, "Closer to the Edit"
+
+2010-03-03 20:29:30 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.18.4 pre-release
+
+2010-03-02 18:29:41 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Make sure we don't send invalid newsegments
+	  Fixes #611501
+
+2010-03-02 14:09:14 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-ids.h:
+	  matroskademux: Mark streams as being EOS at the right time.
+	  This allows us to stop streaming only when all streams have gone past the
+	  segment.stop and not before.
+	  Fixes #611501
+
+2010-02-26 18:10:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Advance sparse streams only as much as required to keep the gap smaller than 500ms
+	  Changing it to the newest timestamp that was ever pushed will
+	  increase the segment start in 500ms jumps, which could be just
+	  after the next sparse stream buffer. E.g.
+	  Video at 1.0s, sparse stream at 0.5s would jump the
+	  sparse stream to 1.0s. Now a new sparse stream buffer could
+	  appear that has a timestamp of 0.9s and this would be
+	  dropped for no good reason because of bad luck.
+
+2010-02-24 01:36:07 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* po/es.po:
+	* win32/common/config.h:
+	  0.10.18.3 pre-release
+
+2010-02-24 02:05:49 +0100  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c:
+	* gst/videomixer/videomixer.h:
+	  Make sure FLUSH_STOP is sent so not to leave downstream flushing.
+
+2010-02-23 17:25:54 +0100  Volker Grabsch <bugzilla.gnome.org@v.notjusthosting.com>
+
+	* configure.ac:
+	  configure: Use $PKG_CONFIG instead of pkg-config to fix cross compilation
+	  Fixes bug #610839.
+
+2010-02-23 17:24:03 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: Reset skew detection after instantiating the jitterbuffer
+	  ...not only when going to READY. This sets high_level and friends to
+	  a more useful value.
+
+2010-02-23 17:19:14 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: Return 100 if high-level is 0 instead of dividing by zero
+
+2010-02-22 12:24:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	  rtpmp4gdepay: avoid division by 0
+	  Avoid a division by 0 when no constantDuration was specified and when out two
+	  timestamps are equal.
+	  Fixes #610265
+
+2010-02-22 18:20:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpdvdepay.c:
+	* gst/rtp/gstrtpdvdepay.h:
+	  dvdepay: don't output frames until we have a header
+	  Wait for the complete first 6 header DIF packets before outputting a frame.
+	  Decoders need this info to correctly decode the data.
+	  Fixes #610556
+
+2010-02-22 20:55:29 +0100  David Hoyt <dhoyt@llnl.gov>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Fix invalid memory access by first checking and then reading
+	  Fixes bug #610483.
+
+2010-02-18 09:05:50 +0100  Philippe Normand <phil@base-art.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: gst_pulsesink_get_mute: set result earlier.
+	  In the cases where no buffer was process yet or the index is not
+	  available, get_pulsesink_get_mute() would unconditionally return
+	  FALSE.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=610337
+
+2010-02-19 12:35:29 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* pkgconfig/gstreamer-plugins-good-uninstalled.pc.in:
+	  pkgconfig: fix gstreamer-plugins-good uninstalled .pc file
+	  Fix gst-plugins-base reference/requirement. This caused spurious
+	  problems with uninstalled -ugly/-bad not finding -good plugins in
+	  their unit tests (when distchecking).
+
+2010-02-19 01:03:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* po/lv.po:
+	* win32/common/config.h:
+	  0.10.18.2 pre-release
+
+2010-02-19 00:54:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/.gitignore:
+	* tests/examples/shapewipe/.gitignore:
+	  Make git ignore shapewipe examples and tests
+
+2010-02-19 00:46:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c:
+	  flvdemux: minor micro-optimisation
+	  We know these values don't change during the loop, but the compiler
+	  doesn't and has to re-check them for every iteration.
+
+2010-02-19 00:39:50 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c:
+	  flvdemux: remove static keyword from variables that shouldn't be static
+	  Multiple flvparse/flvdemux instances should be able to operate without
+	  trampling over each other by accidentally re-using the same (static)
+	  variables. (Spotted by Mark Nauwelaerts)
+
+2010-02-16 02:07:07 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  docs: add Since: markers for new jitterbuffer properties
+
+2010-02-18 18:20:24 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Fix off-by-one logic error in frame rate cap regression commit
+
+2010-02-17 16:27:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Use the correct duration when comparing segments
+	  Do not confuse QtDemuxSegments with GstSegments when
+	  comparing the total file duration with the segment duration
+	  Fixes #610296
+
+2010-02-17 18:06:29 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: add durations modulo 1<<32
+	  For calculating the durations of each sample, we are supposed to add each
+	  duration modulo 1<<32 so make the elapsed time counter a uint32.
+	  Fixes #610280
+
+2010-02-16 21:05:24 +0100  Anders Skargren <anders.skargren at axis.com>
+
+	* gst/multipart/multipartdemux.c:
+	  multipartdemux: improve header mime-type parsing
+	  Make the handing of the mime type within the "boundary" a bit less naive.
+	  The standard for MIME allows parameters to follow the "type" / "subtype"
+	  clause separated from the mime type by ';'.
+	  Modifies the multipartdemuxer's header parsing so it doesnt assume
+	  the whole line after "content-type:" is the mime type and thus makes it a bit
+	  more resilient to finding absurd mime types in the case where parameters are
+	  added.
+	  Fixes #604711
+
+2010-02-16 19:53:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: avoid stopping NULL tasks
+	  Check the task for NULL, it could be paused and set to NULL before.
+
+2010-02-16 16:22:28 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: fix ALAC codec-data handling
+	  ALAC codec-data apparently comes in (at least) two flavours (mov, mp4),
+	  so use atom based parsing to retrieve required data, rather than
+	  aiming for a specific offset.
+	  See also #580731.
+
+2010-02-16 15:50:23 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: fix debug message
+
+2010-02-11 19:39:04 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux_types.h:
+	  qtdemux: handle signed values in 3GPP location tag
+
+2010-02-08 21:35:53 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix typo in debug message
+
+2010-02-16 15:00:13 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: reset some more stream state after seek
+	  In particular, fixes non-flushing seek.
+
+2010-02-16 14:44:11 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c:
+	  qtdemux: Fix frame rate cap regression
+	  Look for a non-zero min_duration during initialisation to avoid
+	  incorrect frame rate caps.
+
+2010-02-16 10:13:17 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: log more details in buffer pool finalize
+	  Helps to align with the loggin from libv4l.
+
+2010-02-16 10:11:40 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: init datastructures after pre-conditions checks
+
+2010-02-16 10:10:45 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/jpeg/gstjpegenc.c:
+	  jpegenc: add a fixme for handling other YUV variants
+
+2010-02-16 01:40:19 +0000  Brian Cameron <brian.cameron@sun.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska: fix GST_ELEMENT_ERROR usage
+	  Fixes #610053.
+
+2010-02-16 00:50:15 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: fix up GST_CXXFLAGS properly
+	  We don't want C specific flags in GST_CXXFLAGS, so base it on the
+	  GST_CFLAGS that only contains the pkg-config CFLAGS but none of
+	  the GST_OPTION_CFLAGS. Also, we only need the local includes once.
+	  Fix typo as well (GST_FLAGS -> GST_CFLAGS).
+
+2010-02-15 23:13:46 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* configure.ac:
+	  configure: base GST_CXXFLAGS on --cflags from pkg-config
+	  pkg-config sets GST_CFLAGS and GST_LIBS. We need to use CFLAGS as a starting
+	  point for for both C and CXX settings.
+
+2010-01-20 18:52:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpbin: remove use of ntp_ns_base
+
+2010-01-20 18:22:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpstats.h:
+	  rtpbin: remove more ntpnstime and cleanups
+	  Remove some code where we pass ntpnstime around, we can do most things with the
+	  running_time just fine.
+	  Rename a variable in the ArrivalStats struct so that it's clear that this is the
+	  current system time.
+
+2010-01-20 18:19:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c:
+	  rtpsource: use running_time for jitter
+	  Use the running_time to calculate the jitter instead of the ntp time. Part of
+	  the plan to get rid of ntpnsbase.
+
+2010-01-20 17:04:03 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	  rtpbin: change how NTP time is calculated in RTCP
+	  Don't calculate the NTP time based on the running_time of the pipeline but from
+	  the systemclock. This allows us to generate more accurate NTP timestamps in case
+	  the systemclock is synchronized with NTP or similar.
+
+2010-02-15 12:12:36 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: printf format string fix
+	  The compiler wants a cast here even though the type is already
+	  typedefed as 64-bit integer (presumably because glib has typedefed
+	  guint64 to unsigned long here).
+
+2010-02-15 10:33:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska: fix printf format string
+
+2010-02-15 00:50:10 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/raw1394/gst1394clock.h:
+	* gst/matroska/ebml-write.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	  raw1394, matroska, rtpmanager: remove padding from structures
+	  None of these element and class structures are in public headers,
+	  so don't need padding.
+
+2010-02-15 00:47:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  po: update for new translator comment
+
+2010-02-15 00:45:51 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: add comment for translators for 'x by y' message
+	  Fixes #609724.
+
+2010-02-15 01:28:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/cairo/gstcairorender.c:
+	  cairorender: Fix leaking of pad templates
+
+2010-02-15 00:50:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/shapewipe.c:
+	  shapewipe: Fix unit test for latest changes
+	  Now the alpha is multiplied with the already existing alpha
+	  value instead of simply ignoring it and the luma/chroma values
+	  are kept, even if the output is 100% transparent.
+
+2010-02-15 00:47:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/shapewipe.c:
+	  shapewipe: Improve unit test output on errors
+
+2010-02-14 23:17:20 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96dc793 to 44ecce7
+
+2010-02-13 23:28:06 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: bump -base requirement to git
+	  For GST_RIFF_TAG_JUNQ.
+
+2010-02-12 16:11:30 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4l2sink: change rank to NONE so it is never autoplugged
+
+2010-02-13 18:18:42 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvparse.c:
+	  flvdemux: Audio tags without any content are valid.
+	  We silently ignore them instead of erroring out.
+
+2010-02-13 18:07:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvparse.c:
+	  flvdemux: Fix GST_CLOCK_DIFF usage.
+	  It was previously checking for DIFF(a, b > 6 * GST_SECOND) instead of
+	  the proper DIFF(a,b) > 6 * GST_SECOND
+
+2010-02-13 16:27:07 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Don't forget to reset the indexed variable when cleaning up
+
+2010-02-13 11:01:53 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/flv/gstflvparse.c:
+	  flvdemux: Speedup GstIndex usage
+	  Used the _add_associationv variant of GstIndex since we know how many
+	  associations we're adding. Trims up to 50% from index generation time.
+	  Note : It would be great if the index could be generated on the fly or
+	  on request as opposed to being fully created at startup.
+
+2010-02-12 19:32:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: don't resync to invalid timestamps
+	  If we detect backward timestamps on the server, don't try to resync when we
+	  don't have an input timestamp (such as when using RTSP over TCP) instead, do
+	  nothing but assume the timestamp was ok, it will correct itself when time goes
+	  forwards.
+
+2010-02-12 17:21:43 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: fix typo
+
+2010-02-12 16:47:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: start out active and not buffering
+	  There is no need to set the latency in the jittebuffer in _init, we will set
+	  that later when going to PAUSED.
+	  Set the jitterbuffer active and not buffering when starting.
+
+2010-01-27 17:57:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpbin: more buffering work
+	  When deactivating jitterbuffers when the buffering starts, keep the current
+	  percent of the jitterbuffer and also set the jitterbuffer in the buffering state
+	  so that we know when it's filled again.
+	  Add property to get the buffering percentage of the jitterbuffer.
+
+2009-10-14 16:29:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: adjust latency in buffer mode
+	  When we are in buffer mode, adjust the buffering low/high thresholds based on
+	  the total configured latency. If we don't and there is a huge queue or element
+	  with a big latency downstream we might drain the complete queue immediately and
+	  start buffering again.
+
+2009-10-12 11:54:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: add ts-offset to timestamp
+	  Add the ts-offset to the buffer timestamp to get the final output timestamp of
+	  the buffer.
+
+2009-10-08 19:23:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpbin: do more accurate buffer offsets
+	  Return the next timestamp in the jitterbuffer.
+	  Use the min-timestamp of the jitterbuffers to calculate an offset so that the
+	  next timestamp is pushed with a timestamp equal to running_time.
+	  Start producing timestamps from 0 in the buffering case too.
+
+2009-10-08 18:42:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: only start buffering when < 100%
+	  Only start buffering when the percentage message is < 100 %.
+
+2009-10-06 13:34:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	  rtpbin: keep track of elapsed pause time
+	  Keep track of the time we spend pausing the jitterbuffers when they were
+	  buffering and distribute this elapsed time to the jitterbuffers.
+	  Also keep the latency in nanosecond precision.
+
+2009-10-06 13:33:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	  jitterbuffer: keep track of offset
+	  Keep track of an outgoing offset that we add to each outgoing buffer to
+	  compensate for PAUSE when buffering.
+	  Adjust the offset when activating.
+
+2009-10-06 13:30:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: report level using high watermark
+
+2009-10-05 21:31:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtsp/gstrtspsrc.c:
+	  rtpbin: pass running_time to jitterbuffer pause
+	  Pass the current running time to the jitterbuffer when pausing or resuming so
+	  that it calculate the right offsets.
+	  Small cleanups and comments.
+	  Set the default rtspsrc latency to 2 seconds.
+
+2009-10-05 20:09:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpbin: add some comments
+
+2009-10-05 19:45:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpbin: more buffering updates
+	  Add signal to pause the jitterbuffer. This will be emitted from gstrtpbin when
+	  one of the jitterbuffers is buffering.
+	  Make rtpbin collect the buffering messages and post a new buffering message with
+	  the min value.
+	  Remove the stats callback from jitterbuffer but pass a percent integer to
+	  functions that affect the buffering state of the jitterbuffer. This allows us
+	  then to post buffering messages from outside of the jitterbuffer lock.
+
+2009-10-05 13:32:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpbin: propagate buffer-mode property
+	  Propagate buffer-mode property to the jitterbuffers.
+	  Intercept BUFFERING messages in rtpbin
+
+2009-10-01 17:14:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  jitterbuffer: do more buffering implementation
+	  Add callback for buffering stats.
+	  Configure the latency in the jitterbuffer instead of passing it with _insert.
+	  Calculate buffering levels when pushing and popping
+	  Post buffering messages.
+
+2009-10-01 12:46:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  jitterbuffer: flesh out buffering mode some more
+	  Add a buffering state to the jitterbuffer and wait until buffering ends before
+	  pushing out packets.
+
+2009-10-01 12:09:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  jitterbuffer: hook up the mode property
+	  Expose a mode property on the jitterbuffer.
+	  Fix the case where timestamps are -1 in the check for outgoing timestamps.
+
+2009-10-01 11:20:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  jitterbuffer: add buffering mode options
+	  Add getters and setters for different buffering modes that the jitterbuffer will
+	  support. Default to the current slave mode.
+
+2010-02-12 15:54:37 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4lsink: lower rank to MARGINAL
+
+2010-02-12 16:06:45 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c:
+	  flvdemux: Obtain the index from the end of an flv file in push mode
+	  Allows for better support of seeking in flv files when in push mode
+
+2010-01-21 11:55:15 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: Drop video frames up to the desired keyframe after a seek
+	  The audio packets in AVI are generally muxed ~0.5s before the
+	  corresponding video packet. This changes causes downstream to only
+	  receive packets with roughly corresponding timestamps.
+
+2010-01-19 18:35:49 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: more DISCONT handling
+	  Add some debug in the DISCONT handling code.
+	  When we receive a DISCONT in push mode, mark all streams as DISCONT.
+
+2010-01-19 10:51:08 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Fix _handle_seek_push () and new segement behaviour
+
+2010-01-18 17:13:06 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: cleanups
+	  Make sure we reset the demuxer correctly wrt parsing the index.
+	  Don't leak pending seek events.
+	  Rename some methods to reflect what they do and to avoid confusion with similar
+	  method names.
+	  Try to make the seeking threadsafe by protecting the setup code with a lock.
+	  Make sure we post errors when a seek fails.
+
+2010-01-18 11:45:38 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: rename some variables
+	  seek_event -> seg_event
+	  event_seek -> seek_event
+
+2010-01-15 18:00:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: take fallback duration from avih
+	  When we have not parsed any indexes yet, we don't know the length of the streams
+	  and we must take the length given in the avih as a fallback.
+	  Avoid some typechecking.
+
+2009-12-04 15:13:12 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: Push mode seeking support
+
+2010-02-01 16:04:41 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: cleanup properties
+	  Use more default constants.
+	  Use static strings param flag.
+	  Init properties explicitly instead of letting gobject do this.
+
+2010-02-12 15:34:38 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/speex/gstspeexdec.c:
+	  speex: add missing include
+
+2010-02-05 13:28:53 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/debugutils/gsttaginject.c:
+	  taginject: fix multi-value tag example
+	  We need to use {} to specify a list.
+
+2010-02-01 14:43:04 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	* gst/wavparse/gstwavparse.c:
+	  avi,wav: also handle JUNQ chunk in addition to JUNK
+
+2010-02-04 15:59:25 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpamrpay.c:
+	* gst/rtp/gstrtpdvpay.c:
+	* gst/rtp/gstrtpg726pay.c:
+	* gst/rtp/gstrtpj2kpay.c:
+	* gst/rtp/gstrtpjpegpay.c:
+	* gst/rtp/gstrtpmp2tpay.c:
+	  rtppay: don't ignore result from set_outcaps
+	  set_outcaps can fail and we need to propagate the result upstream.
+
+2010-02-04 15:36:24 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c:
+	  flvparse: fix confusing debug messages
+
+2010-01-27 13:28:13 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: add some more debug info
+
+2010-01-27 13:26:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: avoid segfault when shutting down
+	  when we are shutting down, we might still receive state updates from pulseaudio
+	  but since we are unparented we should not do anything with the NULL parent
+	  anymore.
+
+2010-01-26 18:33:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videomixer/videomixer.c:
+	* gst/videomixer/videomixer.h:
+	  videomixer: fix timestamp problems
+	  When the pad with the highest framerate goes EOS, instead of not timestamping
+	  output buffers, intepollate timestamps and durations from the last seen ones.
+	  Fixes #608026
+
+2010-02-12 11:32:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobalance.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	  docs: Update documentation
+
+2010-02-12 11:18:26 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* tests/check/Makefile.am:
+	* tests/examples/Makefile.am:
+	  Moved 'shapewipe' from -bad to -good
+	  Fixes bug #584536.
+
+2010-02-10 10:52:53 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 29/29] shapewipe: Preserve the input color values in all cases
+
+2010-02-10 10:50:49 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 28/29] shapewipe: Scale mask alpha values by the source alpha values
+
+2010-02-10 10:42:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 27/29] shapewipe: Fix ARGB processing
+
+2010-02-10 10:34:24 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/examples/shapewipe/shapewipe-example.c:
+	  [MOVED FROM BAD 26/29] shapewipe: Print some more details on error/warning messages
+
+2010-02-08 08:26:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 25/29] shapewipe: Improve/add debug output
+
+2010-02-08 08:20:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 24/29] shapewipe: Always hold the mask mutex before signalling the GCond
+
+2010-02-08 08:19:48 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 23/29] shapewipe: Move chain function error cases at the end of the function and add useful debug output
+
+2010-02-08 08:12:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	  [MOVED FROM BAD 22/29] shapewipe: Fix race condition during shutdown that can lead to a deadlock
+
+2010-02-08 08:11:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 21/29] shapewipe: Drop mask buffer on FLUSH events
+
+2010-02-08 08:09:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	  [MOVED FROM BAD 20/29] shapewipe: Update copyright year
+
+2010-02-08 08:08:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 19/29] shapewipe: Don't reset properties when going PAUSED->READY
+	  Also use defines for the default values of the properties.
+
+2010-01-16 16:52:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 18/29] shapewipe: Replace floating point arithmetic in the inner processing loops by integer arithmetic
+
+2009-12-10 10:40:10 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 17/29] shapewipe: Don't do pointer dereferences in the processing loop
+	  Lowers the time taken there in my testcase from 6.91% to 6.20%
+	  as measured by callgrind.
+
+2009-07-08 17:59:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 16/29] shapewipe: Add BGRA support for video in/output
+
+2009-07-02 11:24:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	  [MOVED FROM BAD 15/29] shapewipe: Add support for ARGB video input/output
+
+2009-06-23 18:23:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 14/29] shapewipe: Correctly handle 0/1 fps
+
+2009-06-09 19:14:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	  [MOVED FROM BAD 13/29] shapewipe: Implement basic QoS
+	  This change is based on Tim's QoS implementation
+	  for jpegdec.
+
+2009-06-09 18:45:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 12/29] shapewipe: Proxy queries on the video pads to the correct peers
+
+2009-06-09 18:37:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 11/29] shapewipe: Proxy bufferalloc on the video sinkpad
+
+2009-06-09 18:25:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 10/29] shapewipe: Try to work inplace if possible
+	  This saves one new, large allocation per frame for the
+	  most cases.
+
+2009-06-04 08:56:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/shapewipe.c:
+	  [MOVED FROM BAD 09/29] shapewipe: Increase timeout of the unit test
+
+2009-06-01 21:24:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 08/29] shapewipe: Fix some issues that were exposed by the new unit test
+
+2009-06-01 21:24:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/shapewipe.c:
+	  [MOVED FROM BAD 07/29] shapewipe: Add unit test for shapewipe
+
+2009-05-31 21:33:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 06/29] shapewipe: Add documentation and integrate into the build system
+
+2009-05-29 21:07:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  [MOVED FROM BAD 05/29] shapewipe: Adjust border to still have everything transparent at 1.0 and the other way around
+
+2009-05-29 16:55:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	  [MOVED FROM BAD 04/29] shapewipe: Divide the border value by two, otherwise we use a twice a wide border
+
+2009-05-29 16:51:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	  [MOVED FROM BAD 03/29] shapewipe: Add border property to allow smooth borders
+	  ...and use a border of 0.01 in the example application.
+
+2009-05-29 16:00:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/examples/shapewipe/Makefile.am:
+	  [MOVED FROM BAD 02/29] shapewipe: Fix Makefile of the example application
+
+2009-05-29 15:32:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/shapewipe/Makefile.am:
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/shapewipe/gstshapewipe.h:
+	* tests/examples/shapewipe/Makefile.am:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	  [MOVED FROM BAD 01/29] shapewipe: Add a simple shapewipe transition filter & example application
+
+2010-02-06 18:19:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: Only flush the FLAC decoder if it wasn't created right before
+	  If the FLAC decoder is flushed, its state will be set to frame-sync mode,
+	  which will sync to the next *audio* frame and makes it ignore all headers.
+	  This prevented tags and everything else to show up when using flacdec
+	  in push mode.
+	  Fixes bug #608843.
+
+2010-02-11 01:12:15 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* MAINTAINERS:
+	  Update MAINTAINERS
+
+2010-02-12 00:03:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: back to development
+	  Slushy freeze remains in effect.
+
+=== release 0.10.18 ===
+
+2010-02-10 23:18:22 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gamma.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobalance.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.10.18
+
+2010-02-10 23:17:21 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2010-02-10 20:36:56 +0000  Robert Swain <robert.swain@collabora.co.uk>
 

@@ -509,6 +509,15 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpJitterBuffer::set-active</NAME>
+<RETURNS>guint64</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpJitterBuffer *gstrtpjitterbuffer
+gboolean  arg1
+guint64  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
