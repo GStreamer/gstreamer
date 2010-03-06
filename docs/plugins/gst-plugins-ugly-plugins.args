@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstLame::highpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Highpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of highpass freq.</BLURB>
@@ -171,7 +171,7 @@
 <ARG>
 <NAME>GstLame::lowpass-width</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lowpass width</NICK>
 <BLURB>frequency(kHz) - default 15% of lowpass freq.</BLURB>
@@ -601,7 +601,7 @@
 <ARG>
 <NAME>GstMPEGParse::max-scr-gap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max SCR gap</NICK>
 <BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
@@ -681,7 +681,7 @@
 <ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at the specified speed (-1 = default).</BLURB>
@@ -791,7 +791,7 @@
 <ARG>
 <NAME>GstTwoLame::psymodel</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,4]</RANGE>
+<RANGE>[G_MAXULONG,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Psychoacoustic Model</NICK>
 <BLURB>Psychoacoustic model used to encode the audio.</BLURB>
@@ -1216,5 +1216,15 @@
 <NICK>Weighted B-Frames</NICK>
 <BLURB>Weighted prediction for B-frames.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::aud</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AUD</NICK>
+<BLURB>Use AU (Access Unit) delimiter.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

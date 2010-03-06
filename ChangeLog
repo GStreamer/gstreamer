@@ -1,9 +1,563 @@
-=== release 0.10.13 ===
+=== release 0.10.14 ===
 
-2009-10-21  Jan Schmidt <jan.schmidt@sun.com>
+2010-03-06  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.13, "Appointed Point"
+	  releasing 0.10.14, "Run Rabbit"
+
+2010-03-03 22:52:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.13.4 pre-release
+
+2010-02-22 19:13:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* tests/check/elements/x264enc.c:
+	  x264enc: Replace 'avc-sample' with 'avc' in caps
+	  In the element and in its tests
+	  Fixes #606662
+
+2010-03-01 14:07:20 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't set durations of 0 on outgoing buffers.
+	  Some (broken) streams don't have the extended stream properties in
+	  the header, resulting in applying a duration of zero on outgoing
+	  buffers.
+	  Fixes #611473
+
+2010-03-01 14:05:58 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Make sure we always set proper payload duration.
+	  Some (broken) streams will have a delta of 0, resulting in outgoing
+	  buffers having durations of 0.
+	  Fixes #611473
+
+2010-02-24 01:40:34 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.13.3 pre-release
+
+2010-02-19 10:13:34 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Make sure we don't end up with negative timestamps.
+	  Some files have payload with timestamps smaller than the preroll duration.
+	  Instead of blindly substracting the preroll value (and ending up with
+	  insanely high timestamps on the outgoing buffers), we make sure we
+	  never go below 0.
+	  Fixes #610432
+
+2010-02-19 01:07:08 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.13.2 pre-release
+	  Update core/base requirement to 0.10.26, since that's more likely
+	  to be the actual requirement.
+
+2010-02-19 01:06:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/LINGUAS:
+	* po/el.po:
+	* po/sl.po:
+	  po: update translations
+
+2010-02-16 14:08:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/x264enc.c:
+	  x264enc: add caps check to x264enc unit test
+	  Add some minimal caps checking to x264enc unit test.
+	  See #610089.
+
+2010-02-16 13:25:11 +0000  Vittorio Palmisano <vpalmisano@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix up avcC header construction and playback by flash players
+	  Fix off-by-one bug when constructing the avcC header chunk: we
+	  wrote wrong profile info into the header. The first byte in the
+	  SPS NAL we get from x264 is the nal type, not the profile_idc.
+	  Also add some debug logging.
+	  Fixes #610089.
+
+2010-02-16 12:59:54 +0100  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Improve seek behaviour for audio-only with no index
+	  Instead of seeking to seek_time - 5s in the hope of hitting a keyframe
+	  for video, we can just seek to seek_time instead.
+
+2010-02-16 00:24:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: fix up GST_CXXFLAGS properly
+	  We don't want C specific flags in GST_CXXFLAGS, so base it on the
+	  GST_CFLAGS that only contains the pkg-config CFLAGS but none of
+	  the GST_OPTION_CFLAGS. Also, we only need the local includes once.
+
+2010-02-11 01:12:43 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* MAINTAINERS:
+	  Update MAINTAINERS, add myself
+
+2010-02-15 23:16:32 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* configure.ac:
+	  configure: base GST_CXXFLAGS on --cflags from pkg-config
+	  pkg-config sets GST_CFLAGS and GST_LIBS. We need to use CFLAGS as a starting
+	  point for for both C and CXX settings.
+
+2010-02-14 23:18:44 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96dc793 to 44ecce7
+
+2010-02-01 01:33:22 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/common/.gitignore:
+	* win32/common/config.h:
+	  win32: change how win32/common/config.h is updated
+	  Generate win32/common/config.h-new directly from config.h.in,
+	  using shell variables in configure and some hard-coded information.
+	  Change top-level makefile so that 'make win32-update' copies the
+	  generated file to win32/common/config.h, which we keep in source
+	  control. It's kept in source control so that the git tree is
+	  buildable from VS.
+	  This change is similar to the ones applied a while ago to GStreamer
+	  core, gst-plugins-base and gst-plugins-good and prevents configure
+	  from changing files in source control. The generated config.h
+	  should be ok, but needs testing.
+
+2010-01-31 13:03:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: don't construct config header with uninitialised bytes
+	  Turns out 4 + 4 + 2 + (4 * 2) is actually 18 and not 22. This avoids
+	  a presumably unintentional padding of uninitialised bytes at the end
+	  of the CONT tags chunk, which should be harmless but causes warnings
+	  in valgrind (see #608533 for a test URL).
+
+2010-01-30 19:12:24 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: add finalize function so we can free streams and rulebook
+	  Fix memory leak in Real RTSP component (#608533).
+
+2010-01-30 19:10:45 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: fix minor memory leak
+	  Caps take their own reference when a buffer is added to them, so
+	  unref buffer after adding it to caps (#608533).
+
+2010-01-30 19:06:34 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rdtdepay.c:
+	  rdtdepay: unref input buffer when done
+	  Fixes memory leak, see #608533.
+
+2010-01-30 15:19:56 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 15d47a6 to 96dc793
+
+2010-01-29 19:47:03 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: make use of Access Unit delimiters configurable
+	  API: GstX264Enc:aud
+
+2010-01-22 15:40:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Do not subtract padding twice
+	  Only subtract implicit padding if an explicit one isn't
+	  provided. Avoids subtracting it twice and causing
+	  parsing errors.
+	  Fixes #607698
+
+2010-01-22 16:55:14 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/mpegstream/gstmpegpacketize.c:
+	  assert: g_assert_not_reached() cannot replace return statement
+	  Fix build with assert being turned off.
+
+2010-01-20 00:55:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 14cec89 to 15d47a6
+
+2010-01-18 18:01:55 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't forget to update flow variable
+	  Forgot to update the return value in the loop.
+
+2010-01-18 17:49:06 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Check flow return on every push
+	  We previously only aggregated flow returns after the while(push) loop,
+	  which meant that in some cases we would end-up not properly aggregating
+	  the flow returns.
+	  This is based on the same flow aggregation algorithm as oggdemux.
+
+2010-01-11 16:14:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add stream-format to output caps
+	  Adds stream-format to output caps of x264enc that
+	  informs if the stream is in bytestream of avc format.
+	  Fixes #606662
+
+2010-01-11 12:23:35 +0100  Arnaud Patard <apatard@mandriva.com>
+
+	* gst/mpegaudioparse/gstxingmux.c:
+	  xingmux: Fix unaligned memory access
+	  ARM/SPARC need 32bit alignment but xingmux accesses possibly
+	  unaligned memory, which leads to SIGBUS.
+	  Fixes bug #586464.
+
+2010-01-07 14:36:47 -0800  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Use GST_STR_NULL in a couple of places.
+	  Fixes crashing on some of the log statements on win32.
+
+2010-01-07 16:36:08 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Parse and post bitrate for streams
+	  Parse the bitrate of the streams and post their tags.
+	  Fixes #599299
+
+2010-01-07 13:54:21 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Post bitrate tag
+	  If stream bitrate object is available, post the bitrate
+	  tags.
+	  Fixes #599297
+
+2010-01-04 15:19:25 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mp3parse: minor validation check of (Xing, VBRI) metadata
+	  ... to detect e.g. a truncated file, rendering some of the metadata invalid.
+
+2010-01-04 14:59:06 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: use proper total_time and total_bytes in various cases
+	  The correct basis for (Xing, VBRI) seek table calculations is the
+	  byte size and duration provided by that metadata, rather than some
+	  other (possibly even estimated) one.  This also prevents an infinite
+	  conversion loop in (unlikely) case where a TOC is provided without
+	  such corresponding (duration) metdata.
+
+2009-12-08 19:55:04 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  mp3parse: conserve stop time for non-accurate seek
+	  Use the same strategy as accurate seeks to store
+	  pending non-accurate seeks to avoid overwriting non-definite
+	  stop times. When doing non-accurate seeks our position
+	  reporting might drift off by some secs and the stream can
+	  end up before it should.
+	  Fixes #603695
+
+2009-12-21 19:12:59 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47cb23a to 14cec89
+
+2009-12-18 16:04:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/amrwbdec/amrwb.c:
+	  amrwbdec: give decoder a rank so decodebin/playbin will use it
+
+2009-12-08 19:01:50 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: return false when we can't seek
+	  When upstream can't seek, we return false as well
+
+2009-12-02 11:21:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: Avoid crash when seeking before negotiating
+	  lame's 'lgv' variable is only initialized when the caps
+	  is negotiated, whenever a seek happens before that, it would
+	  attempt to call a function on an empty pointer, causing the crash.
+	  Fixes #603515
+
+2009-12-01 15:08:07 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 87bf428 to 47cb23a
+
+2009-12-01 14:17:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From da4c75c to 87bf428
+
+2009-11-27 18:56:13 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 53a2485 to da4c75c
+
+2009-11-26 15:54:45 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: fix non-flushing seek
+	  Specifically, in addition to clearing lots of variables/offsets
+	  when receiving newsegment, also clear leftover data to match.
+
+2009-11-20 21:32:31 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Make upstream GstForceKeyUnit thread-safe
+	  Also send the GstForceKeyUnit event downstream when an upstream on is received,
+	  allowing muxers or payloaders to take appropriate actions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=602556
+
+2009-11-19 10:31:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From a3e3ce4 to 53a2485
+
+2009-11-18 09:58:39 +0100  Benjamin Gaignard <benjamin@gaignard.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't call strlen() on NULL pointers
+	  Fixes bug #602280.
+
+2009-11-09 15:02:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Remove old pads when new ones are added
+	  The old pads were being removed before adding the new ones,
+	  we should add the new ones first.
+	  Fixes #599718
+
+2009-11-09 13:30:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Handle chained asfs on pull mode
+	  Adds chained asfs handling to pull mode. It now checks if
+	  there is a new asf header after the last packet (when it
+	  is possible to know how many packets are) or it tries
+	  checking if a processed packet that fails is an header
+	  object.
+	  Fixes #599718
+
+2009-11-09 10:24:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: properly do chained asfs on push mode
+	  To properly do chained asfs work with playbin2, we need to
+	  push eos on the old pads before removing them.
+	  Fixes #599718
+
+2009-10-27 17:48:03 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: add support for chained asfs (push mode)
+	  Adds support for detecting and playing chained asfs
+	  in push mode. asfdemux tries to detect a new asf start
+	  by identifying the header object guid in a input buffer.
+	  When it finds it, it resets its state, removing its pads
+	  and creates new ones for the new file.
+
+2009-11-05 18:33:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix two small leaks
+
+2009-11-05 18:19:58 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: prefer WM/TrackNumber over WM/Track, it's more reliable
+	  WM/Track has a 0 base but is often wrongly written as starting from 1,
+	  so not as reliable as WM/TrackNumber which always starts from 1.
+
+2009-11-05 18:11:55 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: WM/Track starts counting from 0, adjust to start from 1
+
+2009-11-05 18:11:14 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: map WM/TrackNumber to GST_TAG_TRACK_NUMBER as well
+	  There's both WM/Track and WM/TrackNumber.
+
+2009-11-04 15:52:09 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Fix debug statement: Pass pos variable instead of time() function
+
+2009-11-04 15:50:17 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Fix printf format string warning
+
+2009-11-04 15:46:04 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix bogus variable used uninitialised warnings
+
+2009-11-04 13:55:39 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/Makevars:
+	  po: Don't create backup .po files
+	  As well as preventing creation of useless backup files, it works
+	  around a bug in gettext 0.17 on OS/X
+
+2009-10-29 11:39:13 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: fix c99-style comments.
+
+2009-10-29 10:34:17 -0700  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: accept fragments in a continued packet where the subsequent fragments declare a size of 0. Fixes bug 600037.
+
+2009-10-27 12:33:24 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmutils.c:
+	  rmutils: fix byteswapping
+	  fix the byteswapping code that was wrong because of the side effects of the
+	  READ/WRITE macros.
+	  Fixes #599676
+
+2009-10-20 20:00:44 +0100  Robert Swain <robert.swain@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Adapt to slightly modified x264 API
+	  Fixes #599095.
+
+2009-10-26 17:31:19 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: careful to avoid crash on bogus data
+	  When receiving bogus data, we have to avoid subtracting a value
+	  larger than 'size' from 'size' variable, resulting in a wrap
+	  that would make 'size' a really large bogus value.
+	  Fixes #599333
+
+2009-10-26 00:56:37 +0000  Jan Schmidt <thaytan@noraisin.net>
+
+	* win32/common/config.h:
+	  win32: Commit bumped version number
+
+2009-10-17 13:46:13 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mpegaudioparse: Don't use expensive glib ways to get an enum nick.
+	  Fixes #598761
+	  This removes a good 50% of processing time for parsing a buffer.
+	  We do this by simply... getting the nicks that we already have handy
+	  instead of going through the expensive glib system.
+
+2009-10-24 20:36:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: And back to development we go...
+
+=== release 0.10.13 ===
+
+2009-10-21 17:16:00 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.10.13
+
+2009-10-21 17:02:42 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2009-10-16 10:16:55 +0300  Stefan Kost <ensonic@users.sf.net>
 
@@ -1810,8 +2364,7 @@
 2009-04-15 11:09:56 +0200  Josep Torra <n770galaxy@gmail.com>
 
 	* gst/realmedia/rtspreal.c:
-	  realmedia: add special Real header to DESCRIBE message only for Real
-	  servers
+	  realmedia: add special Real header to DESCRIBE message only for Real servers
 	  Add headers that are specific to real only if a real server had been
 	  detected by the OPTIONS message.
 

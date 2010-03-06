@@ -9,39 +9,41 @@ GObject
     GstElement
       GstBin
         GstPipeline
-      GstMpeg2dec
-      GstA52Dec
-      GstMad
       GstBaseSrc
         GstPushSrc
+          GstDvdReadSrc
           GstCddaBaseSrc
             GstCdioCddaSrc
-          GstDvdReadSrc
           GstPNMSrc
-      GstSidDec
-      GstTwoLame
+      GstMad
       GstX264Enc
+      GstTwoLame
+      GstSidDec
       GstLameMP3Enc
       GstLame
+      GstA52Dec
+      GstAmrwbDec
+      GstMpeg2dec
+      GstAmrnbDec
+      GstAmrnbEnc
+      GstDvdSubDec
+      GstDvdSubParse
+      AC3IEC
+      GstDvdLpcmDec
+      GstXingMux
+      GstMPEGAudioParse
+      GstMPEGParse
+        GstMPEGDemux
+          GstDVDDemux
       GstRMDemux
       GstRealAudioDemux
       GstRDTDepay
       GstRDTManager
       GstRTSPReal
-      GstDvdLpcmDec
-      GstDvdSubDec
-      GstDvdSubParse
-      AC3IEC
-      GstMPEGParse
-        GstMPEGDemux
-          GstDVDDemux
-      GstXingMux
-      GstMPEGAudioParse
       GstASFDemux
       GstRTSPWMS
       GstBaseRTPDepayload
         GstRtpAsfDepay
-      GstSynaesthesia
     GstBus
     GstTask
     GstTaskPool

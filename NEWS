@@ -1,4 +1,46 @@
-This is GStreamer Ugly Plug-ins 0.10.13 "Appointed Point"
+This is GStreamer Ugly Plug-ins 0.10.14 "Run Rabbit"
+
+Changes since 0.10.13:
+
+      * amrwbdec: give decoder a rank so decodebin/playbin will use it
+      * asfdemux: fix flow aggregation
+      * asfdemux: try harder to put sane timestamps and durations on buffers
+      * asfdemux: accept fragments in a continued packet where the subsequent fragments declare a size of 0
+      * asfdemux: improve seek behaviour for audio-only files without an index
+      * asfdemux: careful to avoid crash on bogus data; avoid strlen() on NULL pointers
+      * asfdemux: add support for chained asfs (push mode)
+      * asfdemux: map WM/TrackNumber to GST_TAG_TRACK_NUMBER and prefer over WM/Track
+      * asfdemux: post bitrate tags
+      * mp3parse: seeking fixes: fix non-flushing seek, conserve stop time for non-accurate seek
+      * rtspreal: memory leak fixes; make config header construction valgrind clean
+      * rmdemux: fix AC-3 in RealAudio playback; post bitrate tags
+      * x264enc: fix up avcC header construction and playback by flash players
+      * x264enc: Make upstream GstForceKeyUnit thread-safe
+      * x264enc: make use of Access Unit delimiters configurable
+      * x264enc: adapt to slightly modified x264 API
+      * xingmux: fix unaligned memory access, makes things work better on ARM/SPARC
+
+Bugs fixes since 0.10.13:
+
+      * 606662 : h264: add stream-format to output caps
+      * 563276 : Internal GStreamer error: negotiation problem - after opening avi file
+      * 586464 : [xingmux] Unit test failures on sparc and arm/eabi
+      * 598761 : [mpegaudioparse] Reduce processing time by 2
+      * 599095 : x264enc: Adapt to slightly modified x264 API
+      * 599297 : [asfdemux] Doesn't populate video bitrate field
+      * 599299 : [rmdemux] Doesn't populate video bitrate field
+      * 599333 : Segfault with asfdemuxer
+      * 599676 : RealAudio file with AC-3 audio no longer plays
+      * 600037 : [asfdemux] ASF MPEG4 Part 2 file captured from Linksys WVC200 Camera corrupted/fails
+      * 601419 : x264enc crashes
+      * 602280 : [asfdemux] fix segmentation fault when utf8 tag name is null
+      * 602556 : x264enc and ffenc upstream GstForceKeyUnit handling are not thread-safe
+      * 603695 : Innaccurate seeking in MP3 files results in cut off playback
+      * 608564 : [ffdec_cook] memory leak
+      * 610432 : [asfdemux] handle negative payload timestamps
+      * 611473 : [regression] outgoing buffers with a duration of zero
+      * 608533 : [real] memory leak in real audio stream via rtsp
+      * 610089 : Flash players are unable to show x264 encoded streams
 
 Changes since 0.10.12:
     
