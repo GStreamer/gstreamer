@@ -1,4 +1,28 @@
-This is GStreamer FFmpeg Plug-ins 0.10.9, "Shooting the moon"
+This is GStreamer FFmpeg Plug-ins 0.10.10, "It's the bomb"
+
+Changes since 0.10.9:
+
+      * Update to revision 21874 of ffmpeg (Feb 18th 2010)
+      * Various fixes for encoders
+      * Faster plugin/element creation
+      * Fix duration of out-of-order buffers
+
+Bugs fixed since 0.10.9:
+
+      * 610613 : a vp6 flv file crashes totem and pitivi
+      * 330681 : [real] RV20 video garbled
+      * 361177 : Need WMS decoder
+      * 578160 : ffenc_h263 doesn't list the resolutions it actually supports
+      * 593647 : ffdec_flashsv doesn't work
+      * 593651 : buffer-size property of ffenc_* is a cop-out
+      * 601421 : [fixed upstream] WMA9 support
+      * 601501 : [ffdec_vc1] Fails to decode some VC1 streams that work with mplayer
+      * 603331 : Feature request: intel indeo 4 & 5 codec support
+      * 610469 : flv file doesn't play in totem
+      * 610481 : [ffmpegdec] wrong output timestamps when non-keyframe following flush
+      * 611398 : [regression] outgoing buffer durations aren't correct
+      * 611722 : [regression] No decoder for video/x-wmv, wmvversion=(int)3, format=(fourcc)WMVA
+      * 611782 : [regression] Segmentation fault in demuxers
 
 Changes since 0.10.8:
     

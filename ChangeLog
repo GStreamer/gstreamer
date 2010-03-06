@@ -1,9 +1,413 @@
-=== release 0.10.9 ===
+=== release 0.10.10 ===
 
-2009-10-05  Jan Schmidt <jan.schmidt@sun.com>
+2010-03-06  Edward Hervey <bilboed@bilboed.com>
 
 	* configure.ac:
-	  releasing 0.10.9, "Shooting the moon"
+	  releasing 0.10.10, "It's the bomb"
+
+2010-03-04 09:55:33 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  0.10.9.4 pre-release
+
+2010-03-04 08:58:36 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: Use av_free_packet.
+	  Fixes #611782
+
+2010-03-03 18:46:25 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Disable direct-rendering for svq1/vp56 decoders.
+	  They use a non-standard stride which we can't support.
+	  Fixes #610613
+
+2010-03-03 18:35:40 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Remove 'format' specified for wmv3 decoder.
+	  Allows WMVA (Advanced Profile) videos to be properly auto-linked.
+	  Doesn't introduce a regression for VC1 files.
+	  Fixes #611722
+
+2010-02-28 15:10:34 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Handle durations in reordered frames
+	  The buffer durations were not being reordered along with the timestamp
+	  and offset of the buffers, resulting in buffers using the duration of the
+	  latest incoming frame instead of their original frame.
+	  Fixes #611398
+
+2010-02-24 22:05:50 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.9.3 pre-release
+
+2010-02-19 20:33:06 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: do not store timestamp for buffer that will be skipped
+	  Fixes #610481.
+
+2010-02-19 16:23:27 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.19.2 pre-release
+
+2010-02-19 17:40:07 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: Add build directories to CFLAGS
+	  Needed to pick up files created at compile time (like libavutil/avconfig.h)
+
+2010-02-18 13:28:40 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Don't enable xvmc decoders, we can't support the output
+
+2010-02-18 13:27:15 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Add mapping for Indeo 5
+
+2010-02-18 13:24:39 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Add mapping for Windows Media Speech
+
+2010-02-18 13:29:03 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Move to FFmpeg revision of Feb 18th 2010
+
+2010-02-14 23:18:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96dc793 to 44ecce7
+
+2010-02-04 17:08:41 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffdec: fixup QCELP to always be mono
+	  Make QCELP always mono, even if the caps tell us a different layout.
+
+2010-02-04 13:26:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: only clip to a smaller region
+	  When we have an input width/height that should be used for clipping, only
+	  perform the clipping if the rectangle is smaller than the actual picture size.
+	  Fixes #330681
+
+2010-02-01 15:25:11 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: free audio buffer when not decoded
+	  When we don't decode an audio frame (for audio codecs that need a previous audio
+	  frame) free the buffer we allocated.
+	  See #608564
+
+2010-01-30 15:20:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 15d47a6 to 96dc793
+
+2010-01-29 13:58:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: don't escape codec_data
+	  Don't escape the codec_data, it breaks some streams (but likely also fixes
+	  others). It's better to leave it as is, like most other players do.
+	  See #608332
+
+2010-01-25 16:40:20 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux/demux: Blacklist ASS/SSA 'demuxers'.
+	  They're not a container format, but a subtitle format, and we already
+	  have plugins to handle those subtitle formats.
+
+2010-01-25 11:59:29 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Update to ffmpeg/swscale checkouts of Mon Jan 25 2010
+	  ffmpeg received an overwhelming amount of h264 decoding improvements since
+	  the last checkout, some minor fixes here and there and no apparent regressions.
+	  Also set a specific swscale revision to checkout.
+
+2010-01-23 15:34:28 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Add proper mapping for Zip Block Motion Video
+
+2010-01-23 14:41:49 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Add proper mapping for LOCO Lossless codec
+
+2010-01-23 13:51:24 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Make a proper mapping for Autodesk Animator Codec
+
+2010-01-22 13:46:01 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  Revert a change I accidentally introduced in 7c91fb.
+	  I removed the plugin name from an error message for no good reason.
+
+2010-01-22 12:58:13 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* configure.ac:
+	  Fix the check if libswscale needs enabling explicitly under OS X.
+
+2010-01-22 11:43:39 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  Fix compiler warnings under OS X.
+
+2010-01-20 00:55:26 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 14cec89 to 15d47a6
+
+2010-01-15 22:21:42 +0100  Julien Moutte <julien@fluendo.com>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  ffvideoscale: Fix build warning.
+	  FFMpeg swscale function wants some const pointers.
+
+2010-01-06 11:53:23 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Add mappings for new codecs
+	  WMAPro
+	  Dolby TrueHD
+	  Atrac1
+	  TwinVQ
+
+2010-01-06 11:51:54 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: re-indent long line, remove --disable-vhook, use --disable-hwaccels
+
+2010-01-06 11:53:01 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Bump to ffmpeg r21150 from Jan 11th 2010
+
+2009-12-14 21:20:53 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: more consideration for upstream (audio) timestamps
+
+2009-12-21 19:13:14 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47cb23a to 14cec89
+
+2009-12-09 15:27:14 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: ignore all vdpau decoders
+	  Make check for vdpau decoders more generic. There might be vdpau
+	  decoders we don't expect when using an external ffmpeg version,
+	  and we want those blacklisted as well (e.g. ffdec_mpeg4_vdpau).
+
+2009-12-01 15:08:27 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 87bf428 to 47cb23a
+
+2009-12-01 14:18:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From da4c75c to 87bf428
+
+2009-11-27 18:56:28 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 53a2485 to da4c75c
+
+2009-11-20 20:28:06 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  caps: Use default audio channel layouts for some codecs
+	  For a few white-listed codecs, use default fallback channel
+	  layouts when ffmpeg doesn't inform us.
+
+2009-11-20 21:46:33 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	  ffenc: Make keyframe forcing thread-safe
+	  Make the keyframe forcing thread-safe, also emit a downstream event
+	  to allow muxers or payloaders to react appropriately.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=602556
+
+2009-11-19 10:31:39 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 0702fe1 to 53a2485
+
+2009-11-18 17:36:48 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  Move encoders and muxers to GST_RANK_SECONDARY.
+
+2009-11-16 13:54:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: remove clipping hack
+	  Remove a hack that seems to produce wrong clipping values.
+
+2009-10-01 02:48:35 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: VC-1/WMV3 fixes.
+	  Use format field in the pad caps to differentiate VC-1 from WMV3.
+	  Fix a typo in the caps creation and parsing - the field is called
+	  'format' - not 'fourcc'
+	  Add a dodgy hack to populate the extradata size field
+	  (first byte) when it is 0 - as it seems to be for some (Matroska)
+	  test files.
+
+2009-11-10 12:30:50 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  Always give the most video restricted caps possible
+	  When the video caps aren't fixed yet, make sure we return the most
+	  precise set of caps. It seems a regression was introduced in cc082f,
+	  causing restricted caps to never be used if the context == NULL
+	  None of the restricted caps generation uses the context, so no need to
+	  check whether the context.
+	  Fixes bug #578160.
+
+2009-11-09 19:19:25 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Only restore default in AVCodecContext when needed.
+	  Resetting default values is currently very complex in libavcodec, so
+	  we only call it when needed (i.e. when a context was previously used).
+	  Shaves off 10% of the setup of a decoder.
+
+2009-11-05 23:54:47 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: printf format fixes
+
+2009-11-02 09:05:13 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Don't use an allocated 1-entry structure for private data.
+	  If there's only one entry, just use that entry.
+
+2009-11-02 08:49:43 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmux: avoid generating caps when registering
+	  Don't generate caps when we register the class but delay that till when
+	  we actually create an instance of the class.
+
+2009-11-02 08:47:12 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffdemux: avoid generating caps when registering
+	  Don't generate caps when we register the class but delay that till when
+	  we actually create an instance of the class.
+
+2009-11-02 08:43:17 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	  ffenc: avoid generating caps when registering
+	  Don't generate caps when we register the class but delay that till when
+	  we actually create an instance of the class.
+
+2009-10-22 16:27:28 -0400  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: avoid generating caps when registering
+	  Don't generate caps when we register the class but delay that till when
+	  we actually create an instance of the class.
+
+2009-10-16 10:17:23 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 85d1530 to 0702fe1
+
+2009-10-14 10:41:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From a3e3ce4 to 85d1530
+
+2009-10-08 13:54:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Add a note to the buffer-size property description
+	  Setting it has no effect anymore and is deprecated.
+
+2009-10-08 13:52:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  Revert "ffenc: Make the buffer-size property read-only"
+	  This reverts commit 98439aacc752432022b6fc3e5bc487d60b12dc48.
+	  Instead of printing a warning when trying to set the property
+	  it should do nothing as before and the property description
+	  should contain a note that setting it has no effect.
+
+2009-10-08 12:27:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: Make the buffer-size property read-only
+	  ...instead of just doing nothing when setting it. This makes sure
+	  that people notice that they shouldn't set the property because
+	  it creates a warning now.
+
+2009-10-08 11:01:19 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 19fa4f3 to a3e3ce4
+
+2009-10-01 16:44:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: Make sure to always provide large enough buffers
+	  For audio always add the minimum ffmpeg buffer size, for video
+	  use the same weird buffer size as they use in ffmpeg.c:
+	  width*height*6 + 200
+	  Also make setting of the buffer-size property a no-op.
+	  Fixes bug #593651.
+
+2009-10-01 16:20:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Use dash instead of underscore in property names
+	  GLib internally converts them to dashs anyway.
+
+2009-10-06 19:50:37 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* configure.ac:
+	  back to development -> 0.10.9.1
+
+=== release 0.10.9 ===
 
 2009-10-05 14:34:22 +0100  Jan Schmidt <thaytan@noraisin.net>
 
@@ -604,8 +1008,7 @@
 2009-05-05 17:27:27 +0100  Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* gst-ffmpeg.spec.in:
-	  removing make flags in spec file to make things flow easy with
-	  GCC 4.4.0
+	  removing make flags in spec file to make things flow easy with GCC 4.4.0
 
 2009-05-04 13:00:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

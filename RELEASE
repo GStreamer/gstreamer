@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.9 "Shooting the moon"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.10 "It's the bomb"
         
 
 The GStreamer team is proud to announce a new release
@@ -34,28 +34,27 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Update FFmpeg snapshot to SVN 19580 on the 0.5 branch
-      * Improve tag passing
-      * Track timestamps and frame delay for improved timestamping
-      * Support 4khz ADPCM and g.721
+      * Update to revision 21874 of ffmpeg (Feb 18th 2010)
+      * Various fixes for encoders
+      * Faster plugin/element creation
+      * Fix duration of out-of-order buffers
 
 Bugs fixed in this release
      
-      * 574661 : [gstffmpegdec] Wrong usage of parsers
-      * 575545 : [gstffmpegenc] Wrong usage of AVCodec.pix_fmts
-      * 578278 : gst-ffmpeg: assign offsets (from upstream) to outgoing buffers
-      * 586894 : distclean removes gst-libs/ext/ffmpeg
-      * 586957 : [ffdemux_ape] APE file metadata not retained during transcode
-      * 588546 : Add AC3 audio codec to DVD Muxer
-      * 590172 : ffdec_theora does not work
-      * 590964 : Varying licensing in COPYING file in release tarballs
-      * 591038 : Colorspace error during negotiation in ffenc_mjpeg
-      * 591163 : Duration calculation is wrong for codecs with ticks_per_frame != 1
-      * 591469 : gst-ffmpeg won't build
-      * 591809 : [ffdec_adpcm_ima_wav] can't decode ADPCM file
-      * 593141 : Add AG_GST_ARG_WITH_PKG_CONFIG_PATH to configure
-      * 594306 : ffdec_* sets channel-positions for common mono and stereo cases
-      * 594454 : gstreamer does not support adpcm, g721  audio file ?
+      * 610613 : a vp6 flv file crashes totem and pitivi
+      * 330681 : [real] RV20 video garbled
+      * 361177 : Need WMS decoder
+      * 578160 : ffenc_h263 doesn't list the resolutions it actually supports
+      * 593647 : ffdec_flashsv doesn't work
+      * 593651 : buffer-size property of ffenc_* is a cop-out
+      * 601421 : [fixed upstream] WMA9 support
+      * 601501 : [ffdec_vc1] Fails to decode some VC1 streams that work with mplayer
+      * 603331 : Feature request: intel indeo 4 & 5 codec support
+      * 610469 : flv file doesn't play in totem
+      * 610481 : [ffmpegdec] wrong output timestamps when non-keyframe following flush
+      * 611398 : [regression] outgoing buffer durations aren't correct
+      * 611722 : [regression] No decoder for video/x-wmv, wmvversion=(int)3, format=(fourcc)WMVA
+      * 611782 : [regression] Segmentation fault in demuxers
 
 Download
 
@@ -84,16 +83,15 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
       * Edward Hervey
       * Jan Schmidt
-      * Jarkko Palviainen
-      * Jonathan Matthew
-      * Jordi Mas
+      * Julien Moutte
+      * Mark Nauwelaerts
       * Olivier Crête
       * Sebastian Dröge
       * Sjoerd Simons
       * Stefan Kost
       * Tim-Philipp Müller
       * Wim Taymans
-      * Руслан Ижбулатов
  
