@@ -357,11 +357,21 @@ static GstFlowReturn
 gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstAudioEcho *self = GST_AUDIO_ECHO (base);
-  guint num_samples =
-      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (self)->format.width / 8);
+  guint num_samples;
+  GstClockTime timestamp, stream_time;
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))
-    gst_object_sync_values (G_OBJECT (self), GST_BUFFER_TIMESTAMP (buf));
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (self, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (self), stream_time);
+
+  num_samples =
+      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (self)->format.width / 8);
 
   if (self->buffer == NULL) {
     guint width, rate, channels;

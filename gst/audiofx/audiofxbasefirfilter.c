@@ -822,15 +822,24 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   guint generated_samples;
   guint64 output_offset;
   gint64 diff = 0;
+  GstClockTime stream_time;
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+
   if (!GST_CLOCK_TIME_IS_VALID (timestamp)
       && !GST_CLOCK_TIME_IS_VALID (self->start_ts)) {
     GST_ERROR_OBJECT (self, "Invalid timestamp");
     return GST_FLOW_ERROR;
   }
 
-  gst_object_sync_values (G_OBJECT (self), timestamp);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (self, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (self), stream_time);
 
   g_return_val_if_fail (self->kernel != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (channels != 0, GST_FLOW_ERROR);

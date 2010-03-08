@@ -631,9 +631,17 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
   guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * filter->width);
+  GstClockTime timestamp, stream_time;
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
-    gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (outbuf));
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);

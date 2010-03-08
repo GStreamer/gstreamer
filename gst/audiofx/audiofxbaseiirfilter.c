@@ -355,11 +355,21 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf)
 {
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
-  guint num_samples =
-      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
+  guint num_samples;
+  GstClockTime timestamp, stream_time;
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))
-    gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (buf));
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
+
+  num_samples =
+      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
