@@ -328,11 +328,10 @@ gst_video_box_set_property (GObject * object, guint prop_id,
 static void
 gst_video_box_autocrop (GstVideoBox * video_box)
 {
-  gint crop_w = (video_box->in_width - video_box->out_width) / 2;
-  gint crop_h = (video_box->in_height - video_box->out_height) / 2;
+  gint crop_w = video_box->in_width - video_box->out_width;
+  gint crop_h = video_box->in_height - video_box->out_height;
 
-  g_mutex_lock (video_box->mutex);
-  video_box->box_left = crop_w;
+  video_box->box_left = crop_w / 2;
   if (video_box->box_left < 0) {
     video_box->border_left = -video_box->box_left;
     video_box->crop_left = 0;
@@ -341,7 +340,13 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     video_box->crop_left = video_box->box_left;
   }
 
-  video_box->box_right = crop_w;
+  /* Round down/up for odd width differences */
+  if (crop_w < 0)
+    crop_w -= 1;
+  else
+    crop_w += 1;
+
+  video_box->box_right = crop_w / 2;
   if (video_box->box_right < 0) {
     video_box->border_right = -video_box->box_right;
     video_box->crop_right = 0;
@@ -350,7 +355,7 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     video_box->crop_right = video_box->box_right;
   }
 
-  video_box->box_top = crop_h;
+  video_box->box_top = crop_h / 2;
   if (video_box->box_top < 0) {
     video_box->border_top = -video_box->box_top;
     video_box->crop_top = 0;
@@ -359,7 +364,13 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     video_box->crop_top = video_box->box_top;
   }
 
-  video_box->box_bottom = crop_h;
+  /* Round down/up for odd height differences */
+  if (crop_h < 0)
+    crop_h -= 1;
+  else
+    crop_h += 1;
+  video_box->box_bottom = crop_h / 2;
+
   if (video_box->box_bottom < 0) {
     video_box->border_bottom = -video_box->box_bottom;
     video_box->crop_bottom = 0;
@@ -367,8 +378,6 @@ gst_video_box_autocrop (GstVideoBox * video_box)
     video_box->border_bottom = 0;
     video_box->crop_bottom = video_box->box_bottom;
   }
-
-  g_mutex_unlock (video_box->mutex);
 }
 
 static void
@@ -504,6 +513,8 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   gboolean ret;
 
+  g_mutex_lock (video_box->mutex);
+
   ret =
       gst_video_format_parse_caps (in, &video_box->in_format,
       &video_box->in_width, &video_box->in_height);
@@ -526,6 +537,8 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   /* recalc the transformation strategy */
   ret = video_box_recalc_transform (video_box);
 
+  g_mutex_unlock (video_box->mutex);
+
   return ret;
 
   /* ERRORS */
@@ -533,6 +546,7 @@ no_caps:
   {
     GST_DEBUG_OBJECT (video_box,
         "Invalid caps: %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, in, out);
+    g_mutex_unlock (video_box->mutex);
     return FALSE;
   }
 }
