@@ -7597,7 +7597,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('m', 'p', '4', 'a'):
       _codec ("MPEG-4 AAC audio");
       caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE,
+          "stream-format", G_TYPE_STRING, "raw", NULL);
       break;
     case GST_MAKE_FOURCC ('Q', 'D', 'M', 'C'):
       _codec ("QDesign Music");
