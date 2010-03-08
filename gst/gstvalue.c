@@ -3696,6 +3696,10 @@ gst_value_deserialize_fraction (GValue * dest, const gchar * s)
     gst_value_set_fraction (dest, num, den);
     return TRUE;
   }
+  if (g_ascii_strcasecmp (s, "1/max") == 0) {
+    gst_value_set_fraction (dest, 1, G_MAXINT);
+    return TRUE;
+  }
   if (sscanf (s, "%d", &num) == 1) {
     gst_value_set_fraction (dest, num, 1);
     return TRUE;
