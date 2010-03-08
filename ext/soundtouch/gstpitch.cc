@@ -667,10 +667,6 @@ gst_pitch_src_query (GstPad * pad, GstQuery * query)
           GST_DEBUG ("Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-          g_print ("Calculated total latency : min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-
           gst_query_set_latency (query, live, min, max);
         }
         gst_object_unref (peer);
