@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.19 "Closer to the Edit"
+Release notes for GStreamer Good Plug-ins 0.10.20 "Lemonade"
         
 
 
@@ -54,58 +54,18 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * shapewipe: moved from -bad to -good
-      * avidemux: push mode seeking support
-      * avidemux: drop video frames up to the desired keyframe after a seek
-      * configure: cross-compilation fixes (use $PKG_CONFIG instead of pkg-config)
-      * dvdepay: don't output frames until we have a header, fixes crash
-      * flacdec: fix tag extraction in push mode
-      * flvdemux: obtain the index from the end of an flv file in push mode
-      * flvdemux: audio tags without any content are valid; indexing improvements
-      * jpegdec: fix invalid memory access in parser
-      * jitterbuffer: new buffering modes: low/high watermark buffering, rtp timestamps
-      * matroskademux: seeking/segment fixes (esp. regression with gnonlin)
-      * matroskademux: subtitle stream improvements (advance sparse streams in smaller steps)
-      * multipartdemux: improve header mime-type parsing
-      * qtdemux: fix ALAC codec-data handling; handle signed values in 3GPP location tag
-      * qtdemux: fix frame rate cap regression; fix sample durations corner-case
-      * qtdemux: Use the correct duration when comparing segments
-      * pulsesink: avoid segfault when shutting down
-      * pulsesink: return previous mute state if sink is not active at the moment
-      * rtpbin: change how NTP time is calculated in RTCP, generating more accurate NTP timestamps if the system clock is synchronised with NTP or similar
-      * rtpmp4gdepay: avoid division by 0 in corner case
-      * v4l2sink: change rank to NONE so we don't try to autoplug it
-      * videomixer: fix timestamping problems for input streams with different lengths
-      * videomixer: fix problem when used with gnonlin (always send FLUSH_STOP)
+      * Fixes for RTP h263 depayloader timestamping regressions that broke video calls
+      * Fixes for FLAC decoder when FLAC is embedded in a container such as Ogg or Matroska
+      * y4menc now supports more YUV pixel layouts
+      * rtpsource: bitrate estimation improvements
+      * rtspsrc, udp: multicast fixes
 
 Bugs fixed in this release
      
-      * 584536 : [PLUGIN-MOVE] Move shapewipe to -good
-      * 587304 : [jitterbuffer] don't handle correctly data burst from udpsrc
-      * 599292 : Synchronizing two RTP streams from different devices using RTCP is inaccurate.
-      * 604711 : Handling of mime type in multipartdemux
-      * 608026 : [videomixer] timestamping problems
-      * 608843 : [flacdec] Can't read tags in push mode
-      * 610004 : GST_CXXFLAGS should contain GST_CFLAGS
-      * 610053 : matroska fails to build with Sun Studio
-      * 610238 : Avoid an assertion in the rtspsrc element which abort the client application
-      * 610265 : gstrtpmp4gdepay issuing a SIGFPE crashing an application
-      * 610280 : [qtdemux] issue with corrupted 3gp file
-      * 610296 : [qtdemux] Confusion with gst/qt segments
-      * 610337 : pulsesink: gst_pulsesink_get_mute: set result earlier.
-      * 610483 : [jpegdec] invalid memory access
-      * 610556 : Memory violation when starting to decode a running DV PAL RTP stream
-      * 610839 : Unable to cross compile gst-plugins-good
-      * 610894 : send FLUSH_STOP after FLUSH_START in videomixer
-      * 611501 : [regression] matroskademux fails to output anything on some seeks
-      * 609724 : Add translator comment for %s in pulsesink
-
-API changed in this release
-     
-- API additions:
-    
-* jitterbuffer::mode
-* rtpbin::buffer-mode
+      * 532117 : [matroskamux] Doesn't update the track duration
+      * 610959 : [flacdec] certain flac-in-ogg file only plays after long delay
+      * 611213 : [rtpsource] estimate bitrate on receiver side
+      * 612154 : rtph263depay removes all timestamps from outgoing buffers
 
 Download
 
@@ -134,18 +94,8 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Anders Skargren
-      * Brian Cameron
-      * David Hoyt
-      * Edward Hervey
-      * Mark Nauwelaerts
-      * Philippe Normand
-      * Robert Swain
-      * Sebastian Dröge
-      * Stefan Kost
-      * Thiago Santos
+      * Benjamin M. Schwartz
       * Tim-Philipp Müller
-      * Volker Grabsch
+      * Tristan Matthews
       * Wim Taymans
  

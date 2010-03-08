@@ -3,7 +3,7 @@
   <description>RGBA to AYUV colorspace conversion preserving the alpha channel</description>
   <filename>../../gst/alpha/.libs/libgstalphacolor.so</filename>
   <basename>libgstalphacolor.so</basename>
-  <version>0.10.19</version>
+  <version>0.10.20</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

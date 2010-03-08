@@ -3,7 +3,7 @@
   <description>Flips and rotates video</description>
   <filename>../../gst/videofilter/.libs/libgstvideoflip.so</filename>
   <basename>libgstvideoflip.so</basename>
-  <version>0.10.19</version>
+  <version>0.10.20</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
