@@ -84,10 +84,7 @@ dirac_sequence_header_parse (DiracSequenceHeader * header,
   /* scan header */
   bit = schro_unpack_decode_bit (unpack);
   if (bit) {
-    header->interlaced = schro_unpack_decode_bit (unpack);
-    if (header->interlaced) {
-      header->top_field_first = schro_unpack_decode_bit (unpack);
-    }
+    header->interlaced = schro_unpack_decode_uint (unpack);
   }
 
   /* frame rate */
