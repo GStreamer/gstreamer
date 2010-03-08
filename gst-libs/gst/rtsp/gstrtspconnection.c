@@ -710,7 +710,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
     goto wrong_result;
 
   if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_X_SERVER_IP_ADDRESS,
-          &value, 0) != GST_RTSP_OK) {
+          &value, 0) == GST_RTSP_OK) {
     if (conn->proxy_host) {
       /* if we use a proxy we need to change the destination url */
       g_free (url->host);
@@ -719,7 +719,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
       hostparam = g_strdup_printf ("%s:%d", url->host, url_port);
     } else {
       /* and resolve the new ip address */
-      if (!(ip = do_resolve (conn->ip)))
+      if (!(ip = do_resolve (value)))
         goto not_resolved;
       g_free (conn->ip);
       conn->ip = ip;
