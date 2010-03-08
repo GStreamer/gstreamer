@@ -301,6 +301,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (rtph263depay->start) {
       /* frame is completed */
       guint avail;
+      guint32 timestamp;
 
       if (rtph263depay->offset) {
         /* push in the leftover */
@@ -319,7 +320,8 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
 
-      gst_base_rtp_depayload_push (depayload, outbuf);
+      timestamp = gst_rtp_buffer_get_timestamp (buf);
+      gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
       rtph263depay->offset = 0;
       rtph263depay->leftover = 0;
     } else {
