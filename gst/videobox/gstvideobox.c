@@ -65,14 +65,6 @@
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_video_box_details =
-GST_ELEMENT_DETAILS ("Video box filter",
-    "Filter/Effect/Video",
-    "Resizes a video by adding borders or cropping",
-    "Wim Taymans <wim@fluendo.com>");
-
-
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -129,7 +121,6 @@ static gboolean gst_video_box_get_unit_size (GstBaseTransform * trans,
 static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
-
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
 static GType
 gst_video_box_fill_get_type (void)
@@ -155,7 +146,10 @@ gst_video_box_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_video_box_details);
+  gst_element_class_set_details_simple (element_class, "Video box filter",
+      "Filter/Effect/Video",
+      "Resizes a video by adding borders or cropping",
+      "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_box_sink_template));
@@ -179,11 +173,8 @@ gst_video_box_finalize (GObject * object)
 static void
 gst_video_box_class_init (GstVideoBoxClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = (GObjectClass *) klass;
-  trans_class = (GstBaseTransformClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_video_box_set_property;
   gobject_class->get_property = gst_video_box_get_property;
@@ -192,30 +183,30 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILL_TYPE,
       g_param_spec_enum ("fill", "Fill", "How to fill the borders",
           GST_TYPE_VIDEO_BOX_FILL, DEFAULT_FILL_TYPE,
-          (GParamFlags) G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LEFT,
       g_param_spec_int ("left", "Left",
           "Pixels to box at left (<0  = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_LEFT, G_PARAM_READWRITE));
+          DEFAULT_LEFT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to box at right (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_RIGHT, G_PARAM_READWRITE));
+          DEFAULT_RIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TOP,
       g_param_spec_int ("top", "Top",
           "Pixels to box at top (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_TOP, G_PARAM_READWRITE));
+          DEFAULT_TOP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to box at bottom (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_BOTTOM, G_PARAM_READWRITE));
+          DEFAULT_BOTTOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha value picture", 0.0, 1.0,
-          DEFAULT_ALPHA, G_PARAM_READWRITE));
+          DEFAULT_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER_ALPHA,
-      g_param_spec_double ("border_alpha", "Border Alpha",
+      g_param_spec_double ("border-alpha", "Border Alpha",
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstVideoBox:autocrop
    *
@@ -226,16 +217,13 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTOCROP,
       g_param_spec_boolean ("autocrop", "Auto crop",
-          "Auto crop", FALSE, G_PARAM_READWRITE));
+          "Auto crop", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_box_transform);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_box_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_box_set_caps);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_box_get_unit_size);
-
-  GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
-      "Resizes a video by adding borders or cropping");
 }
 
 static void
@@ -324,7 +312,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
   video_box_recalc_transform (video_box);
 
   GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
-  gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_box));
+  gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (video_box));
 
   g_mutex_unlock (video_box->mutex);
 }
@@ -416,14 +404,12 @@ static GstCaps *
 gst_video_box_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * from)
 {
-  GstVideoBox *video_box;
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstCaps *to, *ret;
   const GstCaps *templ;
   GstStructure *structure;
   GstPad *other;
   gint width, height;
-
-  video_box = GST_VIDEO_BOX (trans);
 
   to = gst_caps_copy (from);
   structure = gst_caps_get_structure (to, 0);
@@ -438,7 +424,6 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   }
 
   if (!video_box->autocrop) {
-
     /* calculate width and height */
     if (gst_structure_get_int (structure, "width", &width)) {
       if (direction == GST_PAD_SINK) {
@@ -491,16 +476,18 @@ video_box_recalc_transform (GstVideoBox * video_box)
   gboolean res = TRUE;
 
   /* if we have the same format in and out and we don't need to perform any
-   * cropping at all, we can just operate in passthorugh mode */
+   * cropping at all, we can just operate in passthrough mode */
   if (video_box->in_fourcc == video_box->out_fourcc &&
       video_box->box_left == 0 && video_box->box_right == 0 &&
       video_box->box_top == 0 && video_box->box_bottom == 0) {
 
     GST_LOG_OBJECT (video_box, "we are using passthrough");
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM_CAST (video_box),
+        TRUE);
   } else {
     GST_LOG_OBJECT (video_box, "we are not using passthrough");
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM_CAST (video_box),
+        FALSE);
   }
   return res;
 }
@@ -508,11 +495,9 @@ video_box_recalc_transform (GstVideoBox * video_box)
 static gboolean
 gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
-  GstVideoBox *video_box;
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstStructure *structure;
   gboolean ret;
-
-  video_box = GST_VIDEO_BOX (trans);
 
   structure = gst_caps_get_structure (in, 0);
   ret = gst_structure_get_int (structure, "width", &video_box->in_width);
@@ -564,15 +549,12 @@ static gboolean
 gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
-
-  GstVideoBox *video_box;
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstStructure *structure = NULL;
   guint32 fourcc;
   gint width, height;
 
   g_assert (size);
-
-  video_box = GST_VIDEO_BOX (trans);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_fourcc (structure, "format", &fourcc);
@@ -650,7 +632,7 @@ gst_video_box_ayuv_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   guint32 *loc = destb;
   guint32 empty_pixel;
 
-  GST_LOG ("Processing AYUV -> AYUV data");
+  GST_LOG_OBJECT (video_box, "Processing AYUV -> AYUV data");
 
   crop_h = 0;
   crop_w = 0;
@@ -684,15 +666,13 @@ gst_video_box_ayuv_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     crop_h = video_box->in_height;
   }
 
-  GST_DEBUG ("Borders are: L:%d, R:%d, T:%d, B:%d", bl, br, bt, bb);
-  GST_DEBUG ("Alpha value is: %d", i_alpha);
+  GST_DEBUG_OBJECT (video_box, "Borders are: L:%d, R:%d, T:%d, B:%d", bl, br,
+      bt, bb);
+  GST_DEBUG_OBJECT (video_box, "Alpha value is: %d", i_alpha);
 
   if (crop_h <= 0 || crop_w <= 0) {
-
     oil_splat_u32_ns (destb, &empty_pixel, dblen);
-
   } else {
-
     guint32 *src_loc = srcb;
 
     /* Top border */
@@ -737,8 +717,7 @@ gst_video_box_ayuv_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     }
   }
 
-  GST_LOG ("image created");
-
+  GST_LOG_OBJECT (video_box, "image created");
 }
 
 static gpointer
@@ -774,7 +753,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   gint i, j;
   guint Ywidth, Uwidth, Vwidth;
 
-  GST_LOG ("AYUV to I420 conversion");
+  GST_LOG_OBJECT (video_box, "AYUV to I420 conversion");
 
   crop_h = 0;
   crop_w = 0;
@@ -831,18 +810,16 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   Utemp = g_malloc0 (Uwidth);
   Vtemp = g_malloc0 (Vwidth);
 
-  GST_LOG ("Borders are: L:%d, R:%d, T:%d, B:%d", bl, br, bt, bb);
+  GST_LOG_OBJECT (video_box, "Borders are: L:%d, R:%d, T:%d, B:%d", bl, br, bt,
+      bb);
 
-  GST_LOG ("Starting conversion");
+  GST_LOG_OBJECT (video_box, "Starting conversion");
 
   if (crop_h <= 0 || crop_w <= 0) {
-
     oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], Ysize);
     oil_splat_u8_ns (Udest, (guint8 *) & empty_px_values[1], Usize);
     oil_splat_u8_ns (Vdest, (guint8 *) & empty_px_values[2], Vsize);
-
   } else {
-
     gboolean sumbuff = FALSE;
     guint32 *src_loc1;
     gint a = 0;
@@ -866,7 +843,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
       Ydest += ((-bt) * Ywidth);
       Udest += (UVfloor (-bt) * Uwidth);
       Vdest += (UVfloor (-bt) * Vwidth);
-
     } else {
       src_loc1 = src_loc1 + (bt * video_box->in_width);
     }
@@ -874,13 +850,12 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     if (bl >= 0)
       src_loc1 += bl;
 
-    GST_LOG ("Cropped area");
-    GST_LOG ("Ydest value: %p Ywidth: %u", Ydest, Ywidth);
-    GST_LOG ("Udest value: %p Uwidth: %u", Udest, Uwidth);
-    GST_LOG ("Vdest value: %p Vwidth: %u", Vdest, Vwidth);
-    GST_LOG ("Rest: %d", rest);
+    GST_LOG_OBJECT (video_box, "Cropped area");
+    GST_LOG_OBJECT (video_box, "Ydest value: %p Ywidth: %u", Ydest, Ywidth);
+    GST_LOG_OBJECT (video_box, "Udest value: %p Uwidth: %u", Udest, Uwidth);
+    GST_LOG_OBJECT (video_box, "Vdest value: %p Vwidth: %u", Vdest, Vwidth);
+    GST_LOG_OBJECT (video_box, "Rest: %d", rest);
     for (i = 0; i < crop_h; i++) {
-
       a = 0;
       if (sumbuff) {
         /* left border */
@@ -925,9 +900,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         gst_video_box_clear (Vtemp, Vwidth);
         src_loc1 += video_box->in_width;
         sumbuff = FALSE;
-
       } else {
-
         /* left border */
         a = 0;
         if (bl < 0) {
@@ -941,7 +914,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         }
 
         for (j = 0; j < crop_w; j++) {
-
           /* check ARCH */
           Ydest[j] = ((guint8 *) & src_loc1[j])[1];
 
@@ -979,7 +951,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         Ydest += rest;
         src_loc1 += video_box->in_width;
         sumbuff = TRUE;
-
       }
     }
 
@@ -1011,7 +982,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     }
   }
 
-  GST_LOG ("image created");
+  GST_LOG_OBJECT (video_box, "image created");
   g_free (Utemp);
   g_free (Vtemp);
 }
@@ -1199,10 +1170,8 @@ static GstFlowReturn
 gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
-  GstVideoBox *video_box;
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   guint8 *indata, *outdata;
-
-  video_box = GST_VIDEO_BOX (trans);
 
   indata = GST_BUFFER_DATA (in);
   outdata = GST_BUFFER_DATA (out);
@@ -1252,6 +1221,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   oil_init ();
+
+  GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
+      "Resizes a video by adding borders or cropping");
 
   return gst_element_register (plugin, "videobox", GST_RANK_NONE,
       GST_TYPE_VIDEO_BOX);
