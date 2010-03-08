@@ -126,6 +126,8 @@ struct _GstFFMpegDec
   gboolean has_b_frames;
 
   /* parsing */
+  gboolean turnoff_parser;      /* used for turning off aac raw parsing
+                                 * See bug #566250 */
   AVCodecParserContext *pctx;
   GstBuffer *pcache;
   guint8 *padded;
@@ -647,11 +649,15 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       ffmpegdec->is_realvideo = TRUE;
       break;
     default:
-      ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
-      if (ffmpegdec->pctx)
-        GST_LOG_OBJECT (ffmpegdec, "Using parser %p", ffmpegdec->pctx);
-      else
-        GST_LOG_OBJECT (ffmpegdec, "No parser for codec");
+      if (!ffmpegdec->turnoff_parser) {
+        ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+        if (ffmpegdec->pctx)
+          GST_LOG_OBJECT (ffmpegdec, "Using parser %p", ffmpegdec->pctx);
+        else
+          GST_LOG_OBJECT (ffmpegdec, "No parser for codec");
+      } else {
+        GST_LOG_OBJECT (ffmpegdec, "Parser deactivated for format");
+      }
       break;
   }
 
@@ -728,6 +734,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
   ffmpegdec->context->draw_horiz_band = NULL;
+
+  /* default is to let format decide if it needs a parser */
+  ffmpegdec->turnoff_parser = FALSE;
 
   /* assume PTS as input, we will adapt when we detect timestamp reordering
    * in the output frames. */
@@ -811,6 +820,15 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     /* do *not* draw edges when in direct rendering, for some reason it draws
      * outside of the memory. */
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+  }
+
+  /* for AAC we only use av_parse if not on raw caps */
+  if (oclass->in_plugin->id == CODEC_ID_AAC) {
+    const gchar *format = gst_structure_get_string (structure, "stream-format");
+
+    if (format == NULL || strcmp (format, "raw") == 0) {
+      ffmpegdec->turnoff_parser = TRUE;
+    }
   }
 
   /* workaround encoder bugs */
@@ -2903,12 +2921,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
            libdv's quality is better though. leave as secondary.
            note: if you change this, see the code in gstdv.c in good/ext/dv. */
         rank = GST_RANK_SECONDARY;
-        break;
-      case CODEC_ID_AAC:
-        /* The ffmpeg AAC decoder isn't complete, and there's no way to figure out
-         * before decoding whether it will support the given stream or not.
-         * We therefore set it to NONE until it can handle the full specs. */
-        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;
