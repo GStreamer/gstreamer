@@ -67,7 +67,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/png, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0.0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate pngenc_sink_template =
