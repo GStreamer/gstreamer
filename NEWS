@@ -1,4 +1,16 @@
-This is GStreamer Base Plug-ins 0.10.27, "No Mistakes Allowed"
+This is GStreamer Base Plug-ins 0.10.28, "Those Norwegians"
+
+Changes since 0.10.27:
+
+      * Ogg/Dirac fixes
+      * build: really dist qtgv-xoverlay.h header file needed by overlay examples this time
+      * rtspconnection: fix handling of x-server-ip-address
+      * alsasrc fixes
+
+Bugs fixed since 0.10.27:
+
+      * 610832 : qtgv-xoverlay.h header file missing in the tarball
+      * 611900 : [oggdemux] Incorrect parsing of Dirac headers
 
 Changes since 0.10.26:
 

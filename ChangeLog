@@ -1,9 +1,131 @@
-=== release 0.10.27 ===
+=== release 0.10.28 ===
 
-2010-03-05  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-03-08  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.27, "No Mistakes Allowed"
+	  releasing 0.10.28, "Those Norwegians"
+
+2010-03-08 21:57:03 +0100  Benjamin Otte <otte@redhat.com>
+
+	* ext/theora/gsttheoraenc.c:
+	  theora: Fix SIGFPE when using 0/1 framerate
+	  libtheora crashes with a 0 framerate, so let's forbid it.
+	  https://bugzilla.redhat.com/show_bug.cgi?id=571289
+
+2010-03-08 14:50:25 +0000  David Schleef <ds@schleef.org>
+
+	* ext/ogg/dirac_parse.c:
+	  oggdemux: fix dirac header parsing
+	  Fixes #611900.
+
+2010-03-08 14:46:17 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/examples/overlay/Makefile.am:
+	  examples: make sure to dist qtgv-xoverlay.h header file
+	  This time for real.
+	  Fixes #610832.
+
+2010-03-08 12:11:01 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	  basedepay: clarify some documentation
+
+2010-03-08 11:25:01 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/alsa/gstalsasrc.c:
+	  alsasrc: return right number of bytes that we wrote
+
+2010-03-08 11:20:51 +0100  Dake Gu <gudake@gmail.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: fix handling of x-server-ip-address
+	  Fix handling of x-server-ip-address.
+
+2010-03-02 11:25:31 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/draft-keyframe-force.txt:
+	  docs: update keyframe force event
+	  Add field to send all headers.
+
+=== release 0.10.27 ===
+
+2010-03-06 00:09:29 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.10.27
+
+2010-03-06 00:08:23 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2010-03-05 15:58:44 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

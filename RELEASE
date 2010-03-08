@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.27 "No Mistakes Allowed"
+Release notes for GStreamer Base Plug-ins 0.10.28 "Those Norwegians"
         
 
 
@@ -27,13 +27,13 @@ This module contains elements for, among others:
   containers: ogg
   codecs: vorbis, theora
   text: textoverlay, subparse
-  sources: audiotestsrc, videotestsrc, gnomevfssrc, giosrc
+  sources: audiotestsrc, videotestsrc, giosrc, gnomevfssrc
   network: tcp
   typefind
   audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
   video processing: ffmpegcolorspace
-  aggregate elements: uridecodebin, decodebin2, playbin2, decodebin, playbin
+  aggregate elements: playbin2, decodebin2, uridecodebin, decodebin, playbin
 
 
 Other modules containing plug-ins are:
@@ -54,51 +54,15 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * playbin2,decodebin2: lots of fixes for missing plugin installation
-      * playbin2, playsink, subtitleoverlay: Set subtitle encoding properly
-      * videorate: Improve upstream negotiation
-      * oggdemux: use the chain begin_time instead of our counter
-      * oggdemux: mark skeleton streams correctly
-      * oggdemux: theora PAR of 0:N, N:0 or 0:0 is allowed and maps to 1:1
-      * typefinding: detect stm module format
-      * ffmpegcolorspace: add conversions from all ARGB formats to AYUV and back
-      * theoradec: Fix chroma copying for 4:2:2
-      * tcpclientsrc,tcpserversrc: Fix handling of closed sockets
-      * examples,build: dist header file for the Qt graphics view example
-      * playsink: Reset the sink's state to NULL before unreffing it unless it's the same instance again
-      * rtspconnection: make sure not to dereference NULL username or password
-      * appsrc: Update segment duration and post a duration message if the duration changes
-      * vorbisdec: also support ivorbis tremor decoder
-      * rtsp: fail gracefully on bad Content-Length headers
-      * rtsp: ignore \n and \r as the first line
+      * Ogg/Dirac fixes
+      * build: really dist qtgv-xoverlay.h header file needed by overlay examples this time
+      * rtspconnection: fix handling of x-server-ip-address
+      * alsasrc fixes
 
 Bugs fixed in this release
      
-      * 610449 : codec autodetection does not always work
-      * 608025 : [videorate] fails at upstream negotiation
-      * 608309 : [appsrc] Should request new data before the queue is empty
-      * 608417 : rtspsrc problem with \n and \r as first line
-      * 609063 : [vorbisdec] also support integer vorbis decoder (tremor) library implementation
-      * 609314 : typefind: Typefind does not handle .stm module format
-      * 609423 : [appsrc] gst_app_src_set_size() should update duration and post a duration message
-      * 610005 : [oggdemux] regression: bad seek granularity
-      * 610268 : [rtsp] NULL pointer reference in gstrtspconnection
-      * 610310 : [playbin2] Subtitle encoding property has no effect
-      * 610329 : [theoradec] doesn't copy all chroma lines for 4:2:2
-      * 610379 : [playbin2] doesn't play if text flag is unset and media has text subtitles
-      * 610386 : [tcpserversrc] Doesn't send EOS when socket is closed
-      * 610672 : overlay examples are now inconsistent and broken
-      * 610832 : missing header file in the tarball
-      * 611225 : [oggdemux] doesn't preroll big_buck_bunny_427x240.indexed.ogg in push mode
-      * 611227 : [oggdemux] no duration or seeking in local big_buck_bunny_427x240.indexed.ogg in pull mode
-      * 604131 : Totem can no longer open Matroska files that hold ASS subtitles
-
-API changed in this release
-     
-- API additions:
-    
-* appsrc::min-percent property
-* GST_RIFF_TAG_JUNQ
+      * 610832 : qtgv-xoverlay.h header file missing in the tarball
+      * 611900 : [oggdemux] Incorrect parsing of Dirac headers
 
 Download
 
@@ -128,15 +92,8 @@ Applications
 Contributors to this release
     
       * Benjamin Otte
+      * Dake Gu
       * David Schleef
-      * Götz Waschk
-      * Josep Torra Valles
-      * Kaj-Michael Lang
-      * Mark Nauwelaerts
-      * Patrick Radizi
-      * Sebastian Dröge
-      * Stefan Kost
-      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  
