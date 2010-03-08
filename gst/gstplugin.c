@@ -867,7 +867,7 @@ gst_plugin_is_loaded (GstPlugin * plugin)
  * @plugin: a plugin
  *
  * Gets the plugin specific data cache. If it is %NULL there is no cached data
- * stored. This is the case when the registry is getting rebuild.
+ * stored. This is the case when the registry is getting rebuilt.
  *
  * Returns: The cached data as a #GstStructure or %NULL.
  *
@@ -889,7 +889,7 @@ gst_plugin_get_cache_data (GstPlugin * plugin)
  * Adds plugin specific data to cache. Passes the ownership of the structure to
  * the @plugin.
  *
- * The cache is flushed every time the registry is rebuild.
+ * The cache is flushed every time the registry is rebuilt.
  *
  * Since: 0.10.24
  */
