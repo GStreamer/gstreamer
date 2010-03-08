@@ -164,7 +164,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
         "format = (fourcc) { I420, Y42B, Y444 }, "
-        "framerate = (fraction) [0/1, MAX], "
+        "framerate = (fraction) [1/MAX, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -487,7 +487,7 @@ theora_enc_sink_getcaps (GstPad * pad)
 
   caps_string = g_strdup_printf ("video/x-raw-yuv, "
       "format = (fourcc) { %s }, "
-      "framerate = (fraction) [0/1, MAX], "
+      "framerate = (fraction) [1/MAX, MAX], "
       "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
       supported_formats);
   caps = gst_caps_from_string (caps_string);
