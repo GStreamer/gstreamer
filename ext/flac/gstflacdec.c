@@ -578,7 +578,9 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
 
       GST_DEBUG_OBJECT (flacdec, "total samples = %" G_GINT64_FORMAT, samples);
 
-      if (samples > 0) {
+      /* in framed mode the demuxer/parser upstream has already pushed a
+       * newsegment event in TIME format which we've passed on */
+      if (samples > 0 && !flacdec->framed) {
         gint64 duration;
 
         gst_segment_set_duration (&flacdec->segment, GST_FORMAT_DEFAULT,
