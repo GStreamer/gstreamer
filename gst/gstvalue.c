@@ -3685,6 +3685,7 @@ static gboolean
 gst_value_deserialize_fraction (GValue * dest, const gchar * s)
 {
   gint num, den;
+  int num_chars;
 
   if (G_UNLIKELY (s == NULL))
     return FALSE;
@@ -3692,19 +3693,20 @@ gst_value_deserialize_fraction (GValue * dest, const gchar * s)
   if (G_UNLIKELY (dest == NULL || !GST_VALUE_HOLDS_FRACTION (dest)))
     return FALSE;
 
-  if (sscanf (s, "%d/%d", &num, &den) == 2) {
+  if (sscanf (s, "%d/%d%n", &num, &den, &num_chars) >= 2) {
+    if (s[num_chars] != 0)
+      return FALSE;
     gst_value_set_fraction (dest, num, den);
     return TRUE;
-  }
-  if (g_ascii_strcasecmp (s, "1/max") == 0) {
+  } else if (g_ascii_strcasecmp (s, "1/max") == 0) {
     gst_value_set_fraction (dest, 1, G_MAXINT);
     return TRUE;
-  }
-  if (sscanf (s, "%d", &num) == 1) {
+  } else if (sscanf (s, "%d%n", &num, &num_chars) >= 1) {
+    if (s[num_chars] != 0)
+      return FALSE;
     gst_value_set_fraction (dest, num, 1);
     return TRUE;
-  }
-  if (g_ascii_strcasecmp (s, "min") == 0) {
+  } else if (g_ascii_strcasecmp (s, "min") == 0) {
     gst_value_set_fraction (dest, -G_MAXINT, 1);
     return TRUE;
   } else if (g_ascii_strcasecmp (s, "max") == 0) {
