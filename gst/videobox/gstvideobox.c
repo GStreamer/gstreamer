@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2010> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -482,7 +483,7 @@ video_box_recalc_transform (GstVideoBox * video_box)
 
   /* if we have the same format in and out and we don't need to perform any
    * cropping at all, we can just operate in passthrough mode */
-  if (video_box->in_fourcc == video_box->out_fourcc &&
+  if (video_box->in_format == video_box->out_format &&
       video_box->box_left == 0 && video_box->box_right == 0 &&
       video_box->box_top == 0 && video_box->box_bottom == 0) {
 
@@ -501,18 +502,14 @@ static gboolean
 gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  GstStructure *structure;
   gboolean ret;
 
-  structure = gst_caps_get_structure (in, 0);
-  ret = gst_structure_get_int (structure, "width", &video_box->in_width);
-  ret &= gst_structure_get_int (structure, "height", &video_box->in_height);
-  ret &= gst_structure_get_fourcc (structure, "format", &video_box->in_fourcc);
-
-  structure = gst_caps_get_structure (out, 0);
-  ret &= gst_structure_get_int (structure, "width", &video_box->out_width);
-  ret &= gst_structure_get_int (structure, "height", &video_box->out_height);
-  ret &= gst_structure_get_fourcc (structure, "format", &video_box->out_fourcc);
+  ret =
+      gst_video_format_parse_caps (in, &video_box->in_format,
+      &video_box->in_width, &video_box->in_height);
+  ret &=
+      gst_video_format_parse_caps (out, &video_box->out_format,
+      &video_box->out_width, &video_box->out_height);
 
   /* something wrong getting the caps */
   if (!ret)
@@ -534,49 +531,30 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   /* ERRORS */
 no_caps:
   {
-    GST_DEBUG_OBJECT (video_box, "Could not get all caps fields");
+    GST_DEBUG_OBJECT (video_box,
+        "Invalid caps: %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, in, out);
     return FALSE;
   }
 }
-
-/* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
-
-#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
-#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 static gboolean
 gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  GstStructure *structure = NULL;
-  guint32 fourcc;
+  GstVideoFormat format;
   gint width, height;
+  gboolean ret;
 
   g_assert (size);
 
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_fourcc (structure, "format", &fourcc);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
-
-  switch (fourcc) {
-    case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-      *size = width * height * 4;
-      break;
-    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-      *size = GST_VIDEO_I420_SIZE (width, height);
-      break;
-    default:
-      return FALSE;
-      break;
+  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  if (!ret) {
+    GST_ERROR_OBJECT (video_box, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
   }
+
+  *size = gst_video_format_get_size (format, width, height);
 
   GST_LOG_OBJECT (video_box, "Returning from _unit_size %d", *size);
 
@@ -768,20 +746,35 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   empty_px_values[1] = yuv_colors_U[video_box->fill_type];
   empty_px_values[2] = yuv_colors_V[video_box->fill_type];
 
-  Ywidth = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->out_width);
-  Uwidth = GST_VIDEO_I420_U_ROWSTRIDE (video_box->out_width);
-  Vwidth = GST_VIDEO_I420_V_ROWSTRIDE (video_box->out_width);
+  Ywidth =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0,
+      video_box->out_width);
+  Uwidth =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1,
+      video_box->out_width);
+  Vwidth =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2,
+      video_box->out_width);
 
-  Ydest = dest + GST_VIDEO_I420_Y_OFFSET (video_box->out_width,
-      video_box->out_height);
-  Udest = Ydest + GST_VIDEO_I420_U_OFFSET (video_box->out_width,
-      video_box->out_height);
-  Vdest = Ydest + GST_VIDEO_I420_V_OFFSET (video_box->out_width,
-      video_box->out_height);
+  Ydest =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
+      video_box->out_width, video_box->out_height);
+  Udest =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      video_box->out_width, video_box->out_height);
+  Vdest =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      video_box->out_width, video_box->out_height);
 
-  Ysize = Ywidth * video_box->out_height;
-  Usize = Uwidth * UVceil (video_box->out_height);
-  Vsize = Vwidth * UVceil (video_box->out_height);
+  Ysize =
+      Ywidth * gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 0,
+      video_box->out_height);
+  Usize =
+      Ywidth * gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 1,
+      video_box->out_height);
+  Vsize =
+      Ywidth * gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 2,
+      video_box->out_height);
 
   br = video_box->box_right;
   bl = video_box->box_left;
@@ -1016,9 +1009,15 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   out_width = video_box->out_width;
   out_height = video_box->out_height;
 
-  src_stridey = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->in_width);
-  src_strideu = GST_VIDEO_I420_U_ROWSTRIDE (video_box->in_width);
-  src_stridev = GST_VIDEO_I420_V_ROWSTRIDE (video_box->in_width);
+  src_stridey =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0,
+      video_box->in_width);
+  src_strideu =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1,
+      video_box->in_width);
+  src_stridev =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2,
+      video_box->in_width);
 
   crop_width = video_box->in_width;
   crop_width -= (video_box->crop_left + video_box->crop_right);
@@ -1027,13 +1026,16 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   crop_height -= (video_box->crop_top + video_box->crop_bottom);
 
   srcY =
-      src + GST_VIDEO_I420_Y_OFFSET (video_box->in_width, video_box->in_height);
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
+      video_box->in_width, video_box->in_height);
   srcY += src_stridey * video_box->crop_top + video_box->crop_left;
   srcU =
-      src + GST_VIDEO_I420_U_OFFSET (video_box->in_width, video_box->in_height);
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      video_box->in_width, video_box->in_height);
   srcU += src_strideu * (video_box->crop_top / 2) + (video_box->crop_left / 2);
   srcV =
-      src + GST_VIDEO_I420_V_OFFSET (video_box->in_width, video_box->in_height);
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      video_box->in_width, video_box->in_height);
   srcV += src_stridev * (video_box->crop_top / 2) + (video_box->crop_left / 2);
 
   colorY = yuv_colors_Y[video_box->fill_type];
@@ -1123,12 +1125,18 @@ gst_video_box_i420_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   crop_height = src_height - (video_box->crop_top + video_box->crop_bottom);
 
   /* Y plane */
-  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE (src_width);
-  dest_stride = GST_VIDEO_I420_Y_ROWSTRIDE (out_width);
+  src_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, src_width);
+  dest_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, out_width);
 
-  destY = dest + GST_VIDEO_I420_Y_OFFSET (out_width, out_height);
+  destY =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
+      out_width, out_height);
 
-  srcY = src + GST_VIDEO_I420_Y_OFFSET (src_width, src_height);
+  srcY =
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
+      src_width, src_height);
   srcY += src_stride * video_box->crop_top + video_box->crop_left;
 
   gst_video_box_copy_plane_i420 (video_box, srcY, destY, br, bl, bt, bb,
@@ -1145,12 +1153,18 @@ gst_video_box_i420_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   crop_height = (crop_height + 1) / 2;
 
   /* U plane */
-  src_stride = GST_VIDEO_I420_U_ROWSTRIDE (src_width);
-  dest_stride = GST_VIDEO_I420_U_ROWSTRIDE (out_width);
+  src_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, src_width);
+  dest_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, out_width);
 
-  destU = dest + GST_VIDEO_I420_U_OFFSET (out_width, out_height);
+  destU =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      out_width, out_height);
 
-  srcU = src + GST_VIDEO_I420_U_OFFSET (src_width, src_height);
+  srcU =
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      src_width, src_height);
   srcU += src_stride * (video_box->crop_top / 2) + (video_box->crop_left / 2);
 
   gst_video_box_copy_plane_i420 (video_box, srcU, destU, br, bl, bt, bb,
@@ -1158,12 +1172,18 @@ gst_video_box_i420_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
       yuv_colors_U[video_box->fill_type]);
 
   /* V plane */
-  src_stride = GST_VIDEO_I420_V_ROWSTRIDE (src_width);
-  dest_stride = GST_VIDEO_I420_V_ROWSTRIDE (out_width);
+  src_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, src_width);
+  dest_stride =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, out_width);
 
-  destV = dest + GST_VIDEO_I420_V_OFFSET (out_width, out_height);
+  destV =
+      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      out_width, out_height);
 
-  srcV = src + GST_VIDEO_I420_V_OFFSET (src_width, src_height);
+  srcV =
+      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      src_width, src_height);
   srcV += src_stride * (video_box->crop_top / 2) + (video_box->crop_left / 2);
 
   gst_video_box_copy_plane_i420 (video_box, srcV, destV, br, bl, bt, bb,
@@ -1193,25 +1213,25 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
   outdata = GST_BUFFER_DATA (out);
 
   g_mutex_lock (video_box->mutex);
-  switch (video_box->in_fourcc) {
-    case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-      switch (video_box->out_fourcc) {
-        case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+  switch (video_box->in_format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      switch (video_box->out_format) {
+        case GST_VIDEO_FORMAT_AYUV:
           gst_video_box_ayuv_ayuv (video_box, indata, outdata);
           break;
-        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        case GST_VIDEO_FORMAT_I420:
           gst_video_box_ayuv_i420 (video_box, indata, outdata);
           break;
         default:
           goto invalid_format;
       }
       break;
-    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-      switch (video_box->out_fourcc) {
-        case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+    case GST_VIDEO_FORMAT_I420:
+      switch (video_box->out_format) {
+        case GST_VIDEO_FORMAT_AYUV:
           gst_video_box_i420_ayuv (video_box, indata, outdata);
           break;
-        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        case GST_VIDEO_FORMAT_I420:
           gst_video_box_i420_i420 (video_box, indata, outdata);
           break;
         default:

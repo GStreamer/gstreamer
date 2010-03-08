@@ -56,9 +56,9 @@ struct _GstVideoBox
   /* Guarding everything below */
   GMutex *mutex;
   /* caps */
-  guint32 in_fourcc;
+  GstVideoFormat in_format;
   gint in_width, in_height;
-  guint32 out_fourcc;
+  GstVideoFormat out_format;
   gint out_width, out_height;
 
   gint box_left, box_right, box_top, box_bottom;

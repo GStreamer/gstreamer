@@ -10,7 +10,8 @@ libgstvideobox_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			   $(GST_CONTROLLER_LIBS) \
 			   $(GST_BASE_LIBS) \
 			   $(GST_LIBS) \
-			   $(LIBOIL_LIBS)
+			   $(LIBOIL_LIBS) \
+			   -lgstvideo-@GST_MAJORMINOR@
 libgstvideobox_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideobox_la_LIBTOOLFLAGS = --tag=disable-static
 
