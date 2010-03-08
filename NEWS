@@ -1,4 +1,10 @@
-This is GStreamer 0.10.27 "You're Shocked, We Know"
+This is GStreamer 0.10.28 "Same Old, Same Old"
+
+Changes since 0.10.27:
+
+     * parse "1/MAX" fraction strings
+     * no material changes compared to 0.10.27, this release is mostly to
+       keep core/base version numbers in sync
 
 Changes since 0.10.26:
 

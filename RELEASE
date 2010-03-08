@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.27 "You're Shocked, We Know"
+Release notes for GStreamer 0.10.28 "Same old, same old"
         
 
 
@@ -37,36 +37,12 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * basesrc: protect segment values from concurrent access from different threads
-      * typefind: protect internal fields from concurrent changes from different threads
-      * typefind: fix pad activation corner-case with have-type already having been emitted
-      * typefind: reset the working mode when going to READY/NULL, fixes re-use from READY state as with decodebin2
-      * gstpoll: fix crash when logging is enabled for GST_POLL
-      * bytewriter: expose gst_byte_writer_put_{float32|float64}_*() properly in header
-      * basesink: fix emergency rendering timestamp tracking
-      * fdsink, fdsrc: fix compilation with MSVC
-      * memindex: avoid busy loop when doing EXACT lookup
+      * No material changes compared to 0.10.27, this release is mostly to
+        keep the version in sync with gst-plugins-base
+      * Parse "1/MAX" fraction strings
 
-Bugs fixed in this release
-     
-      * 610366 : [gstcollectpads][doc] Add a reminder for 'data' doc
-      * 605189 : gst_element_get_state has wrong introspection
-      * 607771 : [API] Add gst_byte_writer_fill
-      * 608036 : [typefind] deadlock when upstream puts caps on buffers on pull mode
-      * 608877 : [typefind] Access to internal fields not threadsafe
-      * 609941 : GStreamer-WARNING **: External plugin loader failed.
-      * 610210 : [PATCH] Fix compilation of fdsink and fdsrc with MSVC
-      * 610246 : [optimization] Speed up _get_range()
-      * 610367 : [memindex] might busy loop upon EXACT lookup
-      * 610444 : [controller] Interpolation control source passes NULL pointers to GSequence API
-      * 611087 : [basesink] emergency rendering of late buffers fails after resuming from PAUSE
-      * 611719 : GST_DEBUG_OBJECT macros not fed with GObject* in gstpoll.c
-
-API changed in this release
-     
-- API additions:
+There were no bugs fixed in this release
     
-* gst_byte_writer_fill()
 
 Download
 
@@ -91,23 +67,8 @@ subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
 
         
-Applications
-
-Applications ported to GStreamer 0.10 include Totem, RhythmBox, Sound-Juicer,
-Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa, and others.
-Let us know if you want to be added to this list.
-
-  
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Arun Raghavan
       * Benjamin Otte
-      * Edward Hervey
-      * Johan Bilien
-      * Mark Nauwelaerts
-      * Sebastian Dröge
-      * Stefan Kost
-      * Thiago Santos
-      * Tim-Philipp Müller
+      * Wim Taymans
  

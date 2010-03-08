@@ -1,9 +1,72 @@
-=== release 0.10.27 ===
+=== release 0.10.28 ===
 
-2010-03-05  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-03-08  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.27, "You're Shocked, We Know"
+	  releasing 0.10.28, "Same old, same old"
+
+2010-03-08 22:05:29 +0100  Benjamin Otte <otte@redhat.com>
+
+	* gst/gstvalue.c:
+	  caps: Allow 1/max as the minimal fraction value > 0
+	  This is useful for formats that require a valid framerate (like
+	  theoraenc).
+
+2010-03-04 15:21:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstelement.c:
+	  element: fix typo in comments
+
+=== release 0.10.27 ===
+
+2010-03-05 23:43:26 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 0.10.27
+
+2010-03-05 23:41:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2010-03-04 18:39:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
