@@ -62,6 +62,8 @@
 #include <liboil/liboil.h>
 #include <string.h>
 
+#include <gst/controller/gstcontroller.h>
+
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 
@@ -183,30 +185,35 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILL_TYPE,
       g_param_spec_enum ("fill", "Fill", "How to fill the borders",
           GST_TYPE_VIDEO_BOX_FILL, DEFAULT_FILL_TYPE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LEFT,
       g_param_spec_int ("left", "Left",
           "Pixels to box at left (<0  = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_LEFT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_LEFT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_RIGHT,
       g_param_spec_int ("right", "Right",
           "Pixels to box at right (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_RIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_RIGHT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TOP,
       g_param_spec_int ("top", "Top",
           "Pixels to box at top (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_TOP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_TOP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BOTTOM,
       g_param_spec_int ("bottom", "Bottom",
           "Pixels to box at bottom (<0 = add a border)", G_MININT, G_MAXINT,
-          DEFAULT_BOTTOM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_BOTTOM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha value picture", 0.0, 1.0,
-          DEFAULT_ALPHA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_ALPHA,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER_ALPHA,
       g_param_spec_double ("border-alpha", "Border Alpha",
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   /**
    * GstVideoBox:autocrop
    *
@@ -421,9 +428,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   if (video_box->autocrop) {
     gst_structure_remove_field (structure, "width");
     gst_structure_remove_field (structure, "height");
-  }
-
-  if (!video_box->autocrop) {
+  } else {
     /* calculate width and height */
     if (gst_structure_get_int (structure, "width", &width)) {
       if (direction == GST_PAD_SINK) {
@@ -1172,6 +1177,17 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   guint8 *indata, *outdata;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (video_box, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (video_box), stream_time);
 
   indata = GST_BUFFER_DATA (in);
   outdata = GST_BUFFER_DATA (out);
@@ -1221,6 +1237,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   oil_init ();
+
+  gst_controller_init (NULL, NULL);
 
   GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
       "Resizes a video by adding borders or cropping");
