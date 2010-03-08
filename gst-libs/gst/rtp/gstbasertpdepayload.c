@@ -534,9 +534,10 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
  * Push @out_buf to the peer of @filter. This function takes ownership of
  * @out_buf.
  *
- * Unlike gst_base_rtp_depayload_push(), this function will apply @timestamp
- * on the outgoing buffer, using the configured clock_rate to convert the
- * timestamp to a valid GStreamer clock time.
+ * Unlike gst_base_rtp_depayload_push(), this function will by default apply
+ * the last incomming timestamp on the outgoing buffer when it didn't have a
+ * timestamp already. The set_get_timestamp vmethod can be overwritten to change
+ * this behaviour (and take, for example, @timestamp into account).
  *
  * Returns: a #GstFlowReturn.
  */
@@ -556,7 +557,8 @@ gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
  * @out_buf.
  *
  * Unlike gst_base_rtp_depayload_push_ts(), this function will not apply
- * any timestamp on the outgoing buffer.
+ * any timestamp on the outgoing buffer. Subclasses should therefore timestamp
+ * outgoing buffers themselves.
  *
  * Returns: a #GstFlowReturn.
  */
