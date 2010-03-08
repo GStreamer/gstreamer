@@ -810,7 +810,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   }
   GST_ALSA_SRC_UNLOCK (asrc);
 
-  return length - cptr;
+  return length - (cptr * alsa->bytes_per_sample);
 
 read_error:
   {
