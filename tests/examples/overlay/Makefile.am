@@ -24,7 +24,7 @@ endif
 if HAVE_QT_GV
 EXAMPLES += qtgv-xoverlay
 
-qtgv_xoverlay_SOURCES = qtgv-xoverlay.cpp
+qtgv_xoverlay_SOURCES = qtgv-xoverlay.cpp qtgv-xoverlay.h
 qtgv_xoverlay_CXXFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CXXFLAGS) $(X_CFLAGS) $(QT_CFLAGS)
 qtgv_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(QT_LIBS) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
@@ -36,7 +36,7 @@ nodist_qtgv_xoverlay_SOURCES = moc_qtgv-xoverlay.cpp
 moc_%.cpp:%.h
 	moc $< -o $@
 
-EXTRA_DIST = $(nodist_qtgv_xoverlay_SOURCES:moc_%.cpp=%.h) qtgv-xoverlay.h
+EXTRA_DIST = $(nodist_qtgv_xoverlay_SOURCES:moc_%.cpp=%.h)
 CLEANFILES = $(nodist_qtgv_xoverlay_SOURCES)
 
 endif
