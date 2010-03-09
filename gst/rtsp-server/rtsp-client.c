@@ -721,8 +721,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
    * always /stream=%d so we need to strip that off 
    * parse the stream we need to configure, look for the stream in the abspath
    * first and then in the query. */
-  if (!(pos = strstr (uri->abspath, "/stream="))) {
-    if (!(pos = strstr (uri->query, "/stream=")))
+  if (uri->abspath == NULL || !(pos = strstr (uri->abspath, "/stream="))) {
+    if (uri->query == NULL || !(pos = strstr (uri->query, "/stream=")))
       goto bad_request;
   }
 
