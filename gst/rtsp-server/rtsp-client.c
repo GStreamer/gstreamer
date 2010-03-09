@@ -929,8 +929,8 @@ handle_describe_request (GstRTSPClient * client, GstRTSPUrl * uri,
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
   GstSDPMessage *sdp;
-  guint i;
-  gchar *str;
+  guint i, str_len;
+  gchar *str, *content_base;
   GstRTSPMedia *media;
 
   /* check what kind of format is accepted, we don't really do anything with it
@@ -964,9 +964,21 @@ handle_describe_request (GstRTSPClient * client, GstRTSPUrl * uri,
       "application/sdp");
 
   /* content base for some clients that might screw up creating the setup uri */
-  str = g_strdup_printf ("rtsp://%s:%u%s/", uri->host, uri->port, uri->abspath);
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE, str);
-  g_free (str);
+  str = gst_rtsp_url_get_request_uri (uri);
+  str_len = strlen (str);
+
+  /* check for trailing '/' and append one */
+  if (str[str_len - 1] != '/') {
+    content_base = g_malloc (str_len + 1);
+    memcpy (content_base, str, str_len);
+    content_base[str_len] = '/';
+    content_base[str_len+1] = '\0';
+    g_free (str);
+  } else {
+    content_base = str;
+  }
+  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE, content_base);
+  g_free (content_base);
 
   /* add SDP to the response body */
   str = gst_sdp_message_as_text (sdp);
