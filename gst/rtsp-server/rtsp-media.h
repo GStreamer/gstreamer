@@ -157,12 +157,18 @@ typedef enum {
 
 /**
  * GstRTSPMedia:
+ * @lock: for protecting the object
+ * @cond: for signaling the object
  * @shared: if this media can be shared between clients
  * @reusable: if this media can be reused after an unprepare
+ * @reused: if this media has been reused
  * @element: the data providing element
  * @streams: the different streams provided by @element
+ * @dynamic: list of dynamic elements managed by @element
  * @status: the status of the media pipeline
+ * @active: the number of active connections
  * @pipeline: the toplevel pipeline
+ * @fakesink: for making state changes async
  * @source: the bus watch for pipeline messages.
  * @id: the id of the watch
  * @is_live: if the pipeline is live
