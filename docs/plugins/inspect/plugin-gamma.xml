@@ -3,10 +3,10 @@
   <description>Changes gamma on video images</description>
   <filename>../../gst/videofilter/.libs/libgstgamma.so</filename>
   <basename>libgstgamma.so</basename>
-  <version>0.10.21</version>
+  <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
