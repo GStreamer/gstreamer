@@ -764,7 +764,7 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           /* FIXME This shouldn't happen */
           return GST_FLOW_ERROR;
         }
-
+#if SCHRO_CHECK_VERSION (1, 0, 9)
         {
           GstMessage *message;
           GstStructure *structure;
@@ -778,7 +778,7 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           message = gst_message_new_element (GST_OBJECT (schro_enc), structure);
           gst_element_post_message (GST_ELEMENT (schro_enc), message);
         }
-
+#endif
 
         if (voidptr == NULL) {
           GST_DEBUG ("got eos");
