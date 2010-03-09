@@ -4143,6 +4143,8 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   guint index;
   guint n, str_num;
   guint64 min_offset;
+  GstSegment seeksegment;
+  gboolean update;
 
   /* check we have the index */
   if (!avi->have_index) {
@@ -4171,13 +4173,24 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     format = fmt;
   }
 
+  /* let gst_segment handle any tricky stuff */
+  GST_DEBUG_OBJECT (avi, "configuring seek");
+  memcpy (&seeksegment, &avi->segment, sizeof (GstSegment));
+  gst_segment_set_seek (&seeksegment, rate, format, flags,
+      cur_type, cur, stop_type, stop, &update);
+
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  cur = seeksegment.last_stop;
 
   GST_DEBUG_OBJECT (avi,
       "Seek requested: ts %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
       ", kf %u, rate %lf", GST_TIME_ARGS (cur), GST_TIME_ARGS (stop), keyframe,
       rate);
-  /* FIXME: can we do anything with rate!=1.0 */
+
+  if (rate < 0) {
+    GST_DEBUG_OBJECT (avi, "negative rate seek not supported in push mode");
+    return FALSE;
+  }
 
   /* FIXME, this code assumes the main stream with keyframes is stream 0,
    * which is mostly correct... */
