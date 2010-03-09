@@ -693,11 +693,14 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
   for (i = 0; i < avi->num_streams; i++) {
     stream = &avi->stream[i];
 
+    /* compensate for chunk header */
+    offset += 8;
     entry =
         gst_util_array_binary_search (stream->index, stream->idx_n,
         sizeof (GstAviIndexEntry),
         (GCompareDataFunc) gst_avi_demux_index_entry_offset_search,
         before ? GST_SEARCH_MODE_BEFORE : GST_SEARCH_MODE_AFTER, &offset, NULL);
+    offset -= 8;
 
     if (entry)
       index = entry - stream->index;
@@ -720,13 +723,11 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
       continue;
     }
 
-    val = stream->index[index].offset;
+    val = stream->index[index].offset - 8;
     GST_DEBUG_OBJECT (avi, "stream %d, next entry at %" G_GUINT64_FORMAT, i,
         val);
 
-    gst_avi_demux_get_buffer_info (avi, stream, index, (GstClockTime *) & val,
-        NULL, NULL, NULL);
-    stream->current_total = val;
+    stream->current_total = stream->index[index].total;
     stream->current_entry = index;
   }
 
@@ -777,9 +778,11 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
 
       if (avi->have_index) {
         GstAviIndexEntry *entry;
-        guint i = 0, index;
+        guint i = 0, index = 0, k = 0;
         GstAviStream *stream;
 
+        /* compensate chunk header, stored index offset points after header */
+        start += 8;
         /* find which stream we're on */
         do {
           stream = &avi->stream[i];
@@ -788,17 +791,30 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
           entry = gst_util_array_binary_search (stream->index,
               stream->idx_n, sizeof (GstAviIndexEntry),
               (GCompareDataFunc) gst_avi_demux_index_entry_offset_search,
-              GST_SEARCH_MODE_BEFORE, &start, NULL);
+              GST_SEARCH_MODE_AFTER, &start, NULL);
 
-          if (entry == NULL) {
-            index = 0;
-          } else {
-            index = entry - stream->index;
+          if (entry == NULL)
+            continue;
+          index = entry - stream->index;
+
+          /* we are on the stream with a chunk start offset closest to start */
+          if (!offset || stream->index[index].offset < offset) {
+            offset = stream->index[index].offset;
+            k = i;
           }
-
+          /* exact match needs no further searching */
           if (stream->index[index].offset == start)
             break;
         } while (++i < avi->num_streams);
+        start -= 8;
+        offset -= 8;
+        stream = &avi->stream[k];
+
+        /* so we have no idea what is to come, or where we are */
+        if (!offset) {
+          GST_WARNING_OBJECT (avi, "insufficient index data, forcing EOS");
+          goto eos;
+        }
 
         /* get the ts corresponding to start offset bytes for the stream */
         gst_avi_demux_get_buffer_info (avi, stream, index,
@@ -818,13 +834,12 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
         }
 
         gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-        gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &start);
+        gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &offset);
       } else {
         GST_WARNING_OBJECT (avi, "no index data, forcing EOS");
         goto eos;
       }
 
-      offset = start;
       stop = GST_CLOCK_TIME_NONE;
 
       /* set up segment and send downstream */
@@ -841,15 +856,15 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (avi, "next chunk expected at %" G_GINT64_FORMAT, start);
 
       /* adjust state for streaming thread accordingly */
-      avi->offset = offset;
       if (avi->have_index)
         gst_avi_demux_seek_streams_index (avi, offset, FALSE);
       else
         gst_avi_demux_seek_streams (avi, offset, FALSE);
 
       /* set up streaming thread */
-      avi->offset = offset;
-      avi->todrop = start - offset;
+      g_assert (offset >= start);
+      avi->offset = start;
+      avi->todrop = offset - start;
 
     exit:
       gst_event_unref (event);
@@ -4190,7 +4205,8 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   /* re-use cur to be the timestamp of the seek as it _will_ be */
   cur = stream->current_timestamp;
 
-  min_offset = avi->seek_kf_offset = stream->index[index].offset;
+  min_offset = stream->index[index].offset;
+  avi->seek_kf_offset = min_offset - 8;
 
   GST_DEBUG_OBJECT (avi,
       "Seek to: ts %" GST_TIME_FORMAT " (on str %u, idx %u, offset %"
@@ -4241,8 +4257,12 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
       GST_TIME_ARGS (stream->current_ts_end), stream->current_offset,
       stream->current_offset_end);
 
-  if (!perform_seek_to_offset (avi,
-          min_offset - (avi->stream[0].indexes ? 8 : 0))) {
+  /* index data refers to data, not chunk header (for pull mode convenience) */
+  min_offset -= 8;
+  GST_DEBUG_OBJECT (avi, "seeking to chunk at offset %" G_GUINT64_FORMAT,
+      min_offset);
+
+  if (!perform_seek_to_offset (avi, min_offset)) {
     GST_DEBUG_OBJECT (avi, "seek event failed!");
     return FALSE;
   }
