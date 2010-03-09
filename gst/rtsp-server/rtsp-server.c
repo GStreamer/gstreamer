@@ -22,14 +22,18 @@
 #include "rtsp-server.h"
 #include "rtsp-client.h"
 
+#define DEFAULT_ADDRESS         "0.0.0.0"
+//#define DEFAULT_ADDRESS         "::1"
+#define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
-#define DEFAULT_PORT            8554
 
 enum
 {
   PROP_0,
+  PROP_ADDRESS,
+  PROP_SERVICE,
   PROP_BACKLOG,
-  PROP_PORT,
+
   PROP_SESSION_POOL,
   PROP_MEDIA_MAPPING,
   PROP_LAST
@@ -51,15 +55,33 @@ static GstRTSPClient * default_accept_client (GstRTSPServer *server,
 
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
-{ 
+{
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  
+
   gobject_class->get_property = gst_rtsp_server_get_property;
   gobject_class->set_property = gst_rtsp_server_set_property;
   gobject_class->finalize = gst_rtsp_server_finalize;
-  
+
+  /**
+   * GstRTSPServer::address
+   *
+   * The address of the server. This is the address where the server will
+   * listen on.
+   */
+  g_object_class_install_property (gobject_class, PROP_ADDRESS,
+      g_param_spec_string ("address", "Address", "The address the server uses to listen on",
+          DEFAULT_ADDRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRTSPServer::service
+   *
+   * The service of the server. This is either a string with the service name or
+   * a port number (as a string) the server will listen on.
+   */
+  g_object_class_install_property (gobject_class, PROP_SERVICE,
+      g_param_spec_string ("service", "Service", "The service or port number the server uses to listen on",
+          DEFAULT_SERVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRTSPServer::backlog
    *
@@ -71,17 +93,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_BACKLOG,
       g_param_spec_int ("backlog", "Backlog", "The maximum length to which the queue "
-	      "of pending connections may grow",
+              "of pending connections may grow",
           0, G_MAXINT, DEFAULT_BACKLOG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstRTSPServer::port
-   *
-   * The session port of the server. This is the port where the server will
-   * listen on.
-   */
-  g_object_class_install_property (gobject_class, PROP_PORT,
-      g_param_spec_int ("port", "Port", "The port the server uses to listen on",
-          1, 65535, DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRTSPServer::session-pool
    *
@@ -91,7 +104,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
-	  "The session pool to use for client session",
+          "The session pool to use for client session",
           GST_TYPE_RTSP_SESSION_POOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRTSPServer::media-mapping
@@ -101,7 +114,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_MEDIA_MAPPING,
       g_param_spec_object ("media-mapping", "Media Mapping",
-	  "The media mapping to use for client session",
+          "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->accept_client = default_accept_client;
@@ -112,7 +125,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
-  server->port = DEFAULT_PORT;
+  server->address = g_strdup (DEFAULT_ADDRESS);
+  server->service = g_strdup (DEFAULT_SERVICE);
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
   server->media_mapping = gst_rtsp_media_mapping_new ();
@@ -122,6 +136,9 @@ static void
 gst_rtsp_server_finalize (GObject *object)
 {
   GstRTSPServer *server = GST_RTSP_SERVER (object);
+
+  g_free (server->address);
+  g_free (server->service);
 
   g_object_unref (server->session_pool);
   g_object_unref (server->media_mapping);
@@ -143,38 +160,75 @@ gst_rtsp_server_new (void)
 }
 
 /**
- * gst_rtsp_server_set_port:
+ * gst_rtsp_server_set_address:
  * @server: a #GstRTSPServer
- * @port: the port
+ * @address: the address
  *
- * Configure @server to accept connections on the given port.
- * @port should be a port number between 1 and 65535.
+ * Configure @server to accept connections on the given address.
  *
  * This function must be called before the server is bound.
  */
 void
-gst_rtsp_server_set_port (GstRTSPServer *server, gint port)
+gst_rtsp_server_set_address (GstRTSPServer *server, const gchar *address)
 {
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
-  g_return_if_fail (port >= 1 && port <= 65535);
+  g_return_if_fail (address != NULL);
 
-  server->port = port;
+  g_free (server->address);
+  server->address = g_strdup (address);
 }
 
 /**
- * gst_rtsp_server_get_port:
+ * gst_rtsp_server_get_address:
  * @server: a #GstRTSPServer
  *
- * Get the port number on which the server will accept connections.
+ * Get the address on which the server will accept connections.
  *
- * Returns: the server port.
+ * Returns: the server address. g_free() after usage.
  */
-gint
-gst_rtsp_server_get_port (GstRTSPServer *server)
+gchar *
+gst_rtsp_server_get_address (GstRTSPServer *server)
 {
-  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  return server->port;
+  return g_strdup (server->address);
+}
+
+/**
+ * gst_rtsp_server_set_service:
+ * @server: a #GstRTSPServer
+ * @service: the service
+ *
+ * Configure @server to accept connections on the given service.
+ * @service should be a string containing the service name (see services(5)) or
+ * a string containing a port number between 1 and 65535.
+ *
+ * This function must be called before the server is bound.
+ */
+void
+gst_rtsp_server_set_service (GstRTSPServer *server, const gchar *service)
+{
+  g_return_if_fail (GST_IS_RTSP_SERVER (server));
+  g_return_if_fail (service != NULL);
+
+  g_free (server->service);
+  server->service = g_strdup (service);
+}
+
+/**
+ * gst_rtsp_server_get_service:
+ * @server: a #GstRTSPServer
+ *
+ * Get the service on which the server will accept connections.
+ *
+ * Returns: the service. use g_free() after usage.
+ */
+gchar *
+gst_rtsp_server_get_service (GstRTSPServer *server)
+{
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
+
+  return g_strdup (server->service);
 }
 
 /**
@@ -313,8 +367,11 @@ gst_rtsp_server_get_property (GObject *object, guint propid,
   GstRTSPServer *server = GST_RTSP_SERVER (object);
 
   switch (propid) {
-    case PROP_PORT:
-      g_value_set_int (value, gst_rtsp_server_get_port (server));
+    case PROP_ADDRESS:
+      g_value_take_string (value, gst_rtsp_server_get_address (server));
+      break;
+    case PROP_SERVICE:
+      g_value_take_string (value, gst_rtsp_server_get_service (server));
       break;
     case PROP_BACKLOG:
       g_value_set_int (value, gst_rtsp_server_get_backlog (server));
@@ -337,8 +394,11 @@ gst_rtsp_server_set_property (GObject *object, guint propid,
   GstRTSPServer *server = GST_RTSP_SERVER (object);
 
   switch (propid) {
-    case PROP_PORT:
-      gst_rtsp_server_set_port (server, g_value_get_int (value));
+    case PROP_ADDRESS:
+      gst_rtsp_server_set_address (server, g_value_get_string (value));
+      break;
+    case PROP_SERVICE:
+      gst_rtsp_server_set_service (server, g_value_get_string (value));
       break;
     case PROP_BACKLOG:
       gst_rtsp_server_set_backlog (server, g_value_get_int (value));
@@ -358,11 +418,46 @@ gst_rtsp_server_set_property (GObject *object, guint propid,
 static gboolean
 gst_rtsp_server_sink_init_send (GstRTSPServer * server)
 {
-  int ret;
+  int ret, sockfd;
+  struct addrinfo hints;
+  struct addrinfo *result, *rp;
 
-  /* create server socket */
-  if ((server->server_sock.fd = socket (AF_INET, SOCK_STREAM, 0)) == -1)
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
+  hints.ai_socktype = SOCK_STREAM; /* stream socket */
+  hints.ai_flags = AI_PASSIVE;     /* For wildcard IP address */
+  hints.ai_protocol = 0;           /* Any protocol */
+  hints.ai_canonname = NULL;
+  hints.ai_addr = NULL;
+  hints.ai_next = NULL;
+
+  GST_DEBUG_OBJECT (server, "getting address info of %s/%s", server->address, server->service);
+
+  /* resolve the server IP address */
+  if ((ret = getaddrinfo (server->address, server->service, &hints, &result)) != 0)
+    goto no_address;
+
+  /* create server socket, we loop through all the addresses until we manage to
+   * create a socket and bind. */
+  for (rp = result; rp; rp = rp->ai_next) {
+    sockfd = socket (rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (sockfd == -1) {
+      GST_DEBUG_OBJECT (server, "failed to make socket (%s), try next", g_strerror (errno));
+      continue;
+    }
+
+    if (bind (sockfd, rp->ai_addr, rp->ai_addrlen) == 0)
+      break;
+
+    GST_DEBUG_OBJECT (server, "failed to bind socket (%s), try next", g_strerror (errno));
+    close (sockfd);
+  }
+  freeaddrinfo (result);
+
+  if (rp == NULL)
     goto no_socket;
+
+  server->server_sock.fd = sockfd;
 
   GST_DEBUG_OBJECT (server, "opened sending server socket with fd %d",
       server->server_sock.fd);
@@ -379,19 +474,6 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
           (void *) &ret, sizeof (ret)) < 0)
     goto keepalive_failed;
 
-  /* name the socket */
-  memset (&server->server_sin, 0, sizeof (server->server_sin));
-  server->server_sin.sin_family = AF_INET;        /* network socket */
-  server->server_sin.sin_port = htons (server->port);        /* on port */
-  server->server_sin.sin_addr.s_addr = htonl (INADDR_ANY);        /* for hosts */
-
-  /* bind it */
-  GST_DEBUG_OBJECT (server, "binding server socket to address");
-  ret = bind (server->server_sock.fd, (struct sockaddr *) &server->server_sin,
-      sizeof (server->server_sin));
-  if (ret)
-    goto bind_failed;
-
   /* set the server socket to nonblocking */
   fcntl (server->server_sock.fd, F_SETFL, O_NONBLOCK);
 
@@ -404,11 +486,16 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
       "listened on server socket %d, returning from connection setup",
       server->server_sock.fd);
 
-  GST_INFO_OBJECT (server, "listening on port %d", server->port);
+  GST_INFO_OBJECT (server, "listening on service %s", server->service);
 
   return TRUE;
 
   /* ERRORS */
+no_address:
+  {
+    GST_ERROR_OBJECT (server, "failed to resolve address: %s", gai_strerror(ret));
+    return FALSE;
+  }
 no_socket:
   {
     GST_ERROR_OBJECT (server, "failed to create socket: %s", g_strerror (errno));
@@ -439,15 +526,6 @@ listen_failed:
       server->server_sock.fd = -1;
     }
     GST_ERROR_OBJECT (server, "failed to listen on socket: %s", g_strerror (errno));
-    return FALSE;
-  }
-bind_failed:
-  {
-    if (server->server_sock.fd >= 0) {
-      close (server->server_sock.fd);
-      server->server_sock.fd = -1;
-    }
-    GST_ERROR_OBJECT (server, "failed to bind on socket: %s", g_strerror (errno));
     return FALSE;
   }
 }
@@ -551,6 +629,7 @@ gst_rtsp_server_get_io_channel (GstRTSPServer *server)
 
 init_failed:
   {
+    GST_ERROR_OBJECT (server, "failed to initialize server");
     return NULL;
   }
 }
@@ -578,7 +657,7 @@ gst_rtsp_server_create_watch (GstRTSPServer *server)
      
     /* create a watch for reads (new connections) and possible errors */
     server->io_watch = g_io_create_watch (channel, G_IO_IN |
-		  G_IO_ERR | G_IO_HUP | G_IO_NVAL);
+                  G_IO_ERR | G_IO_HUP | G_IO_NVAL);
 
     /* configure the callback */
     g_source_set_callback (server->io_watch, (GSourceFunc) gst_rtsp_server_io_func, server, NULL);
@@ -587,6 +666,7 @@ gst_rtsp_server_create_watch (GstRTSPServer *server)
 
 no_channel:
   {
+    GST_ERROR_OBJECT (server, "failed to create IO channel");
     return NULL;
   }
 }
@@ -623,6 +703,7 @@ gst_rtsp_server_attach (GstRTSPServer *server, GMainContext *context)
   /* ERRORS */
 no_source:
   {
+    GST_ERROR_OBJECT (server, "failed to create watch");
     return 0;
   }
 }
