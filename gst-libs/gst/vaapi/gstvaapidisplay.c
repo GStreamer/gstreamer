@@ -56,8 +56,7 @@ gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display);
 static void
 gst_vaapi_display_finalize(GObject *object)
 {
-    GstVaapiDisplay        *display = GST_VAAPI_DISPLAY(object);
-    GstVaapiDisplayPrivate *priv    = display->priv;
+    GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
     gst_vaapi_display_set_display(display, NULL);
 
@@ -70,8 +69,7 @@ gst_vaapi_display_set_property(GObject      *object,
                                const GValue *value,
                                GParamSpec   *pspec)
 {
-    GstVaapiDisplay        *display = GST_VAAPI_DISPLAY(object);
-    GstVaapiDisplayPrivate *priv    = display->priv;
+    GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
     switch (prop_id) {
     case PROP_DISPLAY:
@@ -89,8 +87,7 @@ gst_vaapi_display_get_property(GObject    *object,
                                GValue     *value,
                                GParamSpec *pspec)
 {
-    GstVaapiDisplay        *display = GST_VAAPI_DISPLAY(object);
-    GstVaapiDisplayPrivate *priv    = display->priv;
+    GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
     switch (prop_id) {
     case PROP_DISPLAY:

@@ -51,9 +51,6 @@ gst_vaapi_display_x11_set_display(GstVaapiDisplayX11 *display,
 static void
 gst_vaapi_display_x11_finalize(GObject *object)
 {
-    GstVaapiDisplayX11        *display = GST_VAAPI_DISPLAY_X11(object);
-    GstVaapiDisplayX11Private *priv    = display->priv;
-
     G_OBJECT_CLASS(gst_vaapi_display_x11_parent_class)->finalize(object);
 }
 
@@ -63,8 +60,7 @@ gst_vaapi_display_x11_set_property(GObject      *object,
                                    const GValue *value,
                                    GParamSpec   *pspec)
 {
-    GstVaapiDisplayX11        *display = GST_VAAPI_DISPLAY_X11(object);
-    GstVaapiDisplayX11Private *priv    = display->priv;
+    GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
 
     switch (prop_id) {
     case PROP_X11_DISPLAY:
@@ -82,8 +78,7 @@ gst_vaapi_display_x11_get_property(GObject    *object,
                                    GValue     *value,
                                    GParamSpec *pspec)
 {
-    GstVaapiDisplayX11        *display = GST_VAAPI_DISPLAY_X11(object);
-    GstVaapiDisplayX11Private *priv    = display->priv;
+    GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
 
     switch (prop_id) {
     case PROP_X11_DISPLAY:

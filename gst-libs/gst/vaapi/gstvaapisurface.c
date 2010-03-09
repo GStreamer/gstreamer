@@ -134,8 +134,7 @@ gst_vaapi_surface_get_property(GObject    *object,
                                GValue     *value,
                                GParamSpec *pspec)
 {
-    GstVaapiSurface        * const surface = GST_VAAPI_SURFACE(object);
-    GstVaapiSurfacePrivate * const priv    = surface->priv;
+    GstVaapiSurface * const surface = GST_VAAPI_SURFACE(object);
 
     switch (prop_id) {
     case PROP_DISPLAY:
