@@ -765,6 +765,21 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           return GST_FLOW_ERROR;
         }
 
+        {
+          GstMessage *message;
+          GstStructure *structure;
+          GstBuffer *buf;
+
+          buf = gst_buffer_new_and_alloc (sizeof (double) * 21);
+          schro_encoder_get_frame_stats (schro_enc->encoder,
+              (double *) GST_BUFFER_DATA (buf), 21);
+          structure = gst_structure_new ("schroenc",
+              "frame-stats", GST_TYPE_BUFFER, buf, NULL);
+          message = gst_message_new_element (GST_OBJECT (schro_enc), structure);
+          gst_element_post_message (GST_ELEMENT (schro_enc), message);
+        }
+
+
         if (voidptr == NULL) {
           GST_DEBUG ("got eos");
           frame = schro_enc->eos_frame;
