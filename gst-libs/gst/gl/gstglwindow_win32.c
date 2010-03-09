@@ -473,7 +473,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             GetLastError ());
 
       if (priv->external_gl_context) {
-        if (!wglShareLists (priv->gl_context, priv->external_gl_context))
+        if (!wglShareLists (priv->external_gl_context, priv->gl_context))
           g_debug ("failed to share opengl context %lud with %lud\n",
               (gulong) priv->gl_context, (gulong) priv->external_gl_context);
         else
