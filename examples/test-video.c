@@ -60,7 +60,7 @@ main (int argc, char *argv[])
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, "( "
     "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
-    "ffenc_h263 ! rtph263pay name=pay0 pt=96 "
+    "x264enc ! rtph264pay name=pay0 pt=96 "
     "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
     "alawenc ! rtppcmapay name=pay1 pt=97 "
     ")");
@@ -72,7 +72,8 @@ main (int argc, char *argv[])
   g_object_unref (mapping);
 
   /* attach the server to the default maincontext */
-  gst_rtsp_server_attach (server, NULL);
+  if (gst_rtsp_server_attach (server, NULL) == 0)
+    goto failed;
 
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server); 
 
@@ -80,4 +81,11 @@ main (int argc, char *argv[])
   g_main_loop_run (loop);
 
   return 0;
+
+  /* ERRORS */
+failed:
+  {
+    g_print ("failed to attach the server\n");
+    return -1;
+  }
 }
