@@ -1354,10 +1354,10 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
     case GST_VIDEO_FORMAT_BGR:
       return GST_ROUND_UP_4 (width * 3) * height;
     case GST_VIDEO_FORMAT_Y41B:
-      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP8(w)/4)*h */
+      /* simplification of ROUNDUP4(w)*h + 2*((ROUNDUP16(w)/4)*h */
       return (GST_ROUND_UP_4 (width) + (GST_ROUND_UP_16 (width) / 2)) * height;
     case GST_VIDEO_FORMAT_Y42B:
-      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h: */
+      /* simplification of ROUNDUP4(w)*h + 2*(ROUNDUP8(w)/2)*h */
       return (GST_ROUND_UP_4 (width) + GST_ROUND_UP_8 (width)) * height;
     case GST_VIDEO_FORMAT_Y444:
       return GST_ROUND_UP_4 (width) * height * 3;
