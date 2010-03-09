@@ -51,6 +51,7 @@ struct _Field
   GstBuffer *buffer;
   int field_index;
   double prev;
+  double prev2;
 };
 
 struct _GstInvtelecine
@@ -294,6 +295,49 @@ gst_invtelecine_compare_fields (GstInvtelecine * invtelecine, int field1,
   return MIN (sum, MAX_FIELD_SCORE);
 }
 
+static double
+gst_invtelecine_compare_same_fields (GstInvtelecine * invtelecine, int field1,
+    int field2)
+{
+  int i;
+  int j;
+  guint8 *data1;
+  guint8 *data2;
+  int field_index;
+  int diff;
+  double sum;
+  double linesum;
+
+  if (field1 < 0 || field2 < 0)
+    return MAX_FIELD_SCORE;
+  if (invtelecine->fifo[field1].buffer == NULL ||
+      invtelecine->fifo[field2].buffer == NULL)
+    return MAX_FIELD_SCORE;
+  if (invtelecine->fifo[field1].buffer == invtelecine->fifo[field2].buffer &&
+      invtelecine->fifo[field1].field_index ==
+      invtelecine->fifo[field2].field_index) {
+    return 0;
+  }
+
+  sum = 0;
+  field_index = invtelecine->fifo[field1].field_index;
+  for (j = field_index; j < 480; j += 2) {
+    data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) + 720 * j;
+    data2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) + 720 * j;
+
+    linesum = 0;
+    for (i = 0; i < 720; i++) {
+      diff = (data1[i] - data2[i]);
+      linesum += diff * diff;
+    }
+    sum += linesum;
+  }
+
+  sum /= 720 * 240;
+
+  return MIN (sum, MAX_FIELD_SCORE);
+}
+
 static void
 gst_invtelecine_push_field (GstInvtelecine * invtelecine, GstBuffer * buffer,
     int field_index)
@@ -309,11 +353,105 @@ gst_invtelecine_push_field (GstInvtelecine * invtelecine, GstBuffer * buffer,
   invtelecine->fifo[i].field_index = field_index;
   invtelecine->fifo[i].prev =
       gst_invtelecine_compare_fields (invtelecine, i, i - 1);
-  //g_print("compare %f\n", invtelecine->fifo[i].prev);
+  invtelecine->fifo[i].prev2 =
+      gst_invtelecine_compare_same_fields (invtelecine, i, i - 2);
+  g_print ("compare %g %g\n", invtelecine->fifo[i].prev,
+      invtelecine->fifo[i].prev2);
 
 }
 
 int pulldown_2_3[] = { 2, 3 };
+
+typedef struct _PulldownFormat PulldownFormat;
+struct _PulldownFormat
+{
+  int cycle_length;
+  int n_fields[10];
+};
+
+static const PulldownFormat formats[] = {
+  /* interlaced */
+  {1, {1}},
+  /* 30p */
+  {2, {2}},
+  /* 24p */
+  {5, {2, 3,}},
+};
+
+static int
+get_score_2 (GstInvtelecine * invtelecine, int format_index, int phase)
+{
+  const PulldownFormat *format = formats + format_index;
+  int field_index;
+  int k;
+  int i;
+  int score;
+
+  GST_DEBUG ("score2 format_index %d phase %d", format_index, phase);
+
+  phase = (invtelecine->field + phase) % format->cycle_length;
+
+  field_index = 0;
+  k = 0;
+  while (phase > 0) {
+    field_index++;
+    if (field_index >= format->n_fields[k]) {
+      field_index = 0;
+      k++;
+      if (format->n_fields[k] == 0) {
+        k = 0;
+      }
+    }
+    phase--;
+  }
+
+  /* k is the frame index in the format */
+  /* field_index is the field index in the frame */
+
+  score = 0;
+  for (i = 0; i < 15; i++) {
+    if (field_index == 0) {
+      if (invtelecine->fifo[i].prev > 50) {
+        /* Strong picture change signal */
+        score++;
+      }
+    } else {
+      if (invtelecine->fifo[i].prev > 50) {
+        /* A secondary field with visible combing */
+        score -= 5;
+      } else if (field_index == 1) {
+        if (invtelecine->fifo[i].prev > 5) {
+          score--;
+        } else if (invtelecine->fifo[i].prev < 3) {
+          /* In the noise */
+          score++;
+        }
+      } else {
+        if (invtelecine->fifo[i].prev2 < 1) {
+          score += 2;
+        }
+        if (invtelecine->fifo[i].prev2 > 10) {
+          /* A tertiary field that doesn't match */
+          score -= 5;
+        }
+      }
+    }
+
+    GST_DEBUG ("i=%d phase=%d fi=%d prev=%g score=%d", i, phase, field_index,
+        invtelecine->fifo[i].prev, score);
+
+    field_index++;
+    if (field_index >= format->n_fields[k]) {
+      field_index = 0;
+      k++;
+      if (format->n_fields[k] == 0) {
+        k = 0;
+      }
+    }
+  }
+
+  return score;
+}
 
 static int
 get_score (GstInvtelecine * invtelecine, int phase)
@@ -370,9 +508,23 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
 {
   int score;
   int num_fields;
+  int scores[8];
 
   GST_DEBUG ("process %d", invtelecine->num_fields);
   while (invtelecine->num_fields > 15) {
+    scores[0] = get_score_2 (invtelecine, 0, 0);
+    scores[1] = get_score_2 (invtelecine, 1, 0);
+    scores[2] = get_score_2 (invtelecine, 1, 1);
+    scores[3] = get_score_2 (invtelecine, 2, 0);
+    scores[4] = get_score_2 (invtelecine, 2, 1);
+    scores[5] = get_score_2 (invtelecine, 2, 2);
+    scores[6] = get_score_2 (invtelecine, 2, 3);
+    scores[7] = get_score_2 (invtelecine, 2, 4);
+
+    g_print ("scores %d %d %d %d %d %d %d %d %d\n", invtelecine->field,
+        scores[0], scores[1], scores[2], scores[3],
+        scores[4], scores[5], scores[6], scores[7]);
+
     if (invtelecine->locked) {
       score = get_score (invtelecine, invtelecine->phase);
       if (score < 4) {
