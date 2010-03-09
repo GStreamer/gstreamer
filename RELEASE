@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.20 "Lemonade"
+Release notes for GStreamer Good Plug-ins 0.10.21 "Lemons"
         
 
 
@@ -52,20 +52,21 @@ contains a set of less supported plug-ins that haven't passed the
 
   
 
-Features of this release
+Features of this release (and 0.10.20)
     
       * Fixes for RTP h263 depayloader timestamping regressions that broke video calls
       * Fixes for FLAC decoder when FLAC is embedded in a container such as Ogg or Matroska
-      * y4menc now supports more YUV pixel layouts
       * rtpsource: bitrate estimation improvements
       * rtspsrc, udp: multicast fixes
+      * identical to 0.10.20 but with one commit that broke make check reverted
 
-Bugs fixed in this release
+Bugs fixed in this release (and 0.10.20)
      
       * 532117 : [matroskamux] Doesn't update the track duration
       * 610959 : [flacdec] certain flac-in-ogg file only plays after long delay
       * 611213 : [rtpsource] estimate bitrate on receiver side
       * 612154 : rtph263depay removes all timestamps from outgoing buffers
+
 
 Download
 
@@ -94,7 +95,6 @@ Applications
   
 Contributors to this release
     
-      * Benjamin M. Schwartz
       * Tim-Philipp Müller
       * Tristan Matthews
       * Wim Taymans

@@ -3,7 +3,7 @@
   <description>Changes hue, saturation, brightness etc. on video images</description>
   <filename>../../gst/videofilter/.libs/libgstvideobalance.so</filename>
   <basename>libgstvideobalance.so</basename>
-  <version>0.10.20</version>
+  <version>0.10.21</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

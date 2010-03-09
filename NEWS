@@ -1,4 +1,9 @@
-This is GStreamer Good Plug-ins 0.10.20, "Lemonade"
+This is GStreamer Good Plug-ins 0.10.21, "Lemons"
+
+Changes since 0.10.20:
+
+     * y4menc commit reverted, since it broke make check (new release since this was
+       only discovered after the 0.10.20 tarball had already been uploaded).
 
 Changes since 0.10.19:
 
