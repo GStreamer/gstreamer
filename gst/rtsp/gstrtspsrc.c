@@ -2279,17 +2279,24 @@ static gboolean
 gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     GstRTSPTransport * transport, GstPad ** outpad)
 {
-  gchar *uri;
+  gchar *uri, *destination;
+  gint min, max;
 
   GST_DEBUG_OBJECT (src, "creating UDP sources for multicast");
 
   /* we can remove the allocated UDP ports now */
   gst_rtspsrc_stream_free_udp (stream);
 
-  /* creating UDP source */
-  if (transport->port.min != -1) {
-    uri = g_strdup_printf ("udp://%s:%d", transport->destination,
-        transport->port.min);
+  /* we need a destination now */
+  if (!(destination = transport->destination))
+    goto no_destination;
+
+  min = transport->port.min;
+  max = transport->port.max;
+
+  /* creating UDP source for RTP */
+  if (min != -1) {
+    uri = g_strdup_printf ("udp://%s:%d", destination, min);
     stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
     g_free (uri);
     if (stream->udpsrc[0] == NULL)
@@ -2303,10 +2310,9 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
   }
 
-  /* creating another UDP source */
-  if (transport->port.max != -1) {
-    uri = g_strdup_printf ("udp://%s:%d", transport->destination,
-        transport->port.max);
+  /* creating another UDP source for RTCP */
+  if (max != -1) {
+    uri = g_strdup_printf ("udp://%s:%d", destination, max);
     stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
     g_free (uri);
     if (stream->udpsrc[1] == NULL)
@@ -2324,6 +2330,11 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 no_element:
   {
     GST_DEBUG_OBJECT (src, "no UDP source element found");
+    return FALSE;
+  }
+no_destination:
+  {
+    GST_DEBUG_OBJECT (src, "no destination found");
     return FALSE;
   }
 }
