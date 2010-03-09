@@ -17,8 +17,8 @@ plugin_LTLIBRARIES = libgstselector.la
 libgstselector_la_SOURCES = gstselector.c gstinputselector.c gstoutputselector.c
 nodist_libgstselector_la_SOURCES = $(built_sources)
 libgstselector_la_CFLAGS = $(GST_CFLAGS)
-libgstselector_la_LIBADD =
-libgstselector_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
+libgstselector_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
+libgstselector_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstselector_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstinputselector.h gstoutputselector.h 
