@@ -26,6 +26,26 @@
 GST_DEBUG_CATEGORY_EXTERN (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
+static void
+gst_flv_parse_add_index_entry (GstFLVDemux * demux, GstClockTime ts,
+    guint64 pos, gboolean keyframe)
+{
+  static GstIndexAssociation associations[2];
+
+  GST_LOG_OBJECT (demux,
+      "adding key=%d association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
+      keyframe, GST_TIME_ARGS (ts), pos);
+
+  associations[0].format = GST_FORMAT_TIME;
+  associations[0].value = ts;
+  associations[1].format = GST_FORMAT_BYTES;
+  associations[1].value = pos;
+
+  gst_index_add_associationv (demux->index, demux->index_id,
+      (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+      2, (const GstIndexAssociation *) &associations);
+}
+
 static gchar *
 FLV_GET_STRING (GstByteReader * reader)
 {
@@ -427,20 +447,11 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
       /* If an index was found and we're in push mode, insert associations */
       num = MIN (demux->times->len, demux->filepositions->len);
       for (i = 0; i < num; i++) {
-        GstIndexAssociation associations[2];
         guint64 time, fileposition;
 
         time = g_array_index (demux->times, gdouble, i) * GST_SECOND;
         fileposition = g_array_index (demux->filepositions, gdouble, i);
-        GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-            G_GUINT64_FORMAT, GST_TIME_ARGS (time), fileposition);
-        associations[0].format = GST_FORMAT_TIME;
-        associations[0].value = time;
-        associations[1].format = GST_FORMAT_BYTES;
-        associations[1].value = fileposition;
-
-        gst_index_add_associationv (demux->index, demux->index_id,
-            GST_ASSOCIATION_FLAG_KEY_UNIT, 2, associations);
+        gst_flv_parse_add_index_entry (demux, time, fileposition, TRUE);
       }
       demux->indexed = TRUE;
     }
@@ -760,13 +771,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
    * random access and if the index is not yet complete */
   if (!demux->has_video && demux->index && !demux->random_access
       && !demux->indexed) {
-    GST_LOG_OBJECT (demux,
-        "adding association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), demux->cur_tag_offset);
-    gst_index_add_association (demux->index, demux->index_id,
-        GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (outbuf), GST_FORMAT_BYTES, demux->cur_tag_offset,
-        NULL);
+    gst_flv_parse_add_index_entry (demux, GST_BUFFER_TIMESTAMP (outbuf),
+        demux->cur_tag_offset, TRUE);
   }
 
   if (G_UNLIKELY (demux->audio_need_discont)) {
@@ -1099,13 +1105,8 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (!demux->indexed && demux->index && !demux->random_access) {
-    GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-        G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-        demux->cur_tag_offset);
-    gst_index_add_association (demux->index, demux->index_id,
-        keyframe ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
-        GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
+    gst_flv_parse_add_index_entry (demux, GST_BUFFER_TIMESTAMP (outbuf),
+        demux->cur_tag_offset, keyframe);
   }
 
   if (G_UNLIKELY (demux->video_need_discont)) {
@@ -1236,23 +1237,11 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
   }
 
   ret = pts * GST_MSECOND;
+  GST_LOG_OBJECT (demux, "pts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ret));
 
   if (demux->index && !demux->indexed && (type == 9 || (type == 8
               && !demux->has_video))) {
-    GstIndexAssociation associations[2];
-
-    GST_LOG_OBJECT (demux,
-        "adding association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
-        GST_TIME_ARGS (ret), demux->offset);
-
-    associations[0].format = GST_FORMAT_TIME;
-    associations[0].value = ret;
-    associations[1].format = GST_FORMAT_BYTES;
-    associations[1].value = demux->offset;
-
-    gst_index_add_associationv (demux->index, demux->index_id,
-        (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
-        2, associations);
+    gst_flv_parse_add_index_entry (demux, ret, demux->offset, keyframe);
   }
 
   if (demux->duration == GST_CLOCK_TIME_NONE || demux->duration < ret)
