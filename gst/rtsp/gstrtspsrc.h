@@ -106,6 +106,7 @@ struct _GstRTSPStream {
   /* our udp sources */
   GstElement   *udpsrc[2];
   GstPad       *blockedpad;
+  gboolean      is_ipv6;
 
   /* our udp sinks back to the server */
   GstElement   *udpsink[2];
