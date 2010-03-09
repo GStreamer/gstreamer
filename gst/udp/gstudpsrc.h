@@ -53,9 +53,7 @@ struct _GstUDPSrc {
   GstPushSrc parent;
 
   /* properties */
-  gchar     *uri;
-  int        port;
-  gchar     *multi_group;
+  GstUDPUri  uri;
   gchar     *multi_iface;
   gint       ttl;
   GstCaps   *caps;
@@ -70,8 +68,11 @@ struct _GstUDPSrc {
   GstPollFD  sock;
   GstPoll   *fdset;
   gboolean   externalfd;
+  gboolean   is_ipv6;
 
   struct   sockaddr_storage myaddr;
+
+  gchar     *uristr;
 };
 
 struct _GstUDPSrcClass {

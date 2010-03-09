@@ -309,11 +309,11 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 {
   WSA_STARTUP (udpsrc);
 
-  udpsrc->port = UDP_DEFAULT_PORT;
+  gst_udp_uri_init (&udpsrc->uri, UDP_DEFAULT_MULTICAST_GROUP,
+      UDP_DEFAULT_PORT);
+
   udpsrc->sockfd = UDP_DEFAULT_SOCKFD;
-  udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->multi_iface = g_strdup (UDP_DEFAULT_MULTICAST_IFACE);
-  udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
   udpsrc->buffer_size = UDP_DEFAULT_BUFFER_SIZE;
   udpsrc->timeout = UDP_DEFAULT_TIMEOUT;
   udpsrc->skip_first_bytes = UDP_DEFAULT_SKIP_FIRST_BYTES;
@@ -340,9 +340,11 @@ gst_udpsrc_finalize (GObject * object)
 
   if (udpsrc->caps)
     gst_caps_unref (udpsrc->caps);
-  g_free (udpsrc->multi_group);
+
   g_free (udpsrc->multi_iface);
-  g_free (udpsrc->uri);
+
+  gst_udp_uri_free (&udpsrc->uri);
+  g_free (udpsrc->uristr);
 
   if (udpsrc->sockfd >= 0 && udpsrc->closefd)
     CLOSE_SOCKET (udpsrc->sockfd);
@@ -600,54 +602,22 @@ skip_error:
   }
 }
 
-/* Call this function when multicastgroup and/or port are updated */
-
-static void
-gst_udpsrc_update_uri (GstUDPSrc * src)
-{
-  g_free (src->uri);
-  src->uri = g_strdup_printf ("udp://%s:%d", src->multi_group, src->port);
-
-  GST_DEBUG_OBJECT (src, "updated uri to %s", src->uri);
-}
-
 static gboolean
 gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
 {
-  gchar *protocol;
-  gchar *location;
-  gchar *colptr;
+  if (gst_udp_parse_uri (uri, &src->uri) < 0)
+    goto wrong_uri;
 
-  protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "udp") != 0)
-    goto wrong_protocol;
-  g_free (protocol);
-
-  location = gst_uri_get_location (uri);
-  if (!location)
-    return FALSE;
-  colptr = strrchr (location, ':');
-  if (colptr != NULL) {
-    g_free (src->multi_group);
-    src->multi_group = g_strndup (location, colptr - location);
-    src->port = atoi (colptr + 1);
-  } else {
-    g_free (src->multi_group);
-    src->multi_group = g_strdup (location);
-    src->port = UDP_DEFAULT_PORT;
-  }
-  g_free (location);
-
-  gst_udpsrc_update_uri (src);
+  if (src->uri.port == -1)
+    src->uri.port = UDP_DEFAULT_PORT;
 
   return TRUE;
 
   /* ERRORS */
-wrong_protocol:
+wrong_uri:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
-    g_free (protocol);
+        ("error parsing uri %s", uri));
     return FALSE;
   }
 }
@@ -663,18 +633,18 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       udpsrc->buffer_size = g_value_get_int (value);
       break;
     case PROP_PORT:
-      udpsrc->port = g_value_get_int (value);
-      gst_udpsrc_update_uri (udpsrc);
+      gst_udp_uri_update (&udpsrc->uri, NULL, g_value_get_int (value));
       break;
     case PROP_MULTICAST_GROUP:
-      g_free (udpsrc->multi_group);
+    {
+      const gchar *group;
 
-      if (g_value_get_string (value) == NULL)
-        udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+      if ((group = g_value_get_string (value)))
+        gst_udp_uri_update (&udpsrc->uri, group, -1);
       else
-        udpsrc->multi_group = g_value_dup_string (value);
-      gst_udpsrc_update_uri (udpsrc);
+        gst_udp_uri_update (&udpsrc->uri, UDP_DEFAULT_MULTICAST_GROUP, -1);
       break;
+    }
     case PROP_MULTICAST_IFACE:
       g_free (udpsrc->multi_iface);
 
@@ -742,16 +712,16 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, udpsrc->buffer_size);
       break;
     case PROP_PORT:
-      g_value_set_int (value, udpsrc->port);
+      g_value_set_int (value, udpsrc->uri.port);
       break;
     case PROP_MULTICAST_GROUP:
-      g_value_set_string (value, udpsrc->multi_group);
+      g_value_set_string (value, udpsrc->uri.host);
       break;
     case PROP_MULTICAST_IFACE:
       g_value_set_string (value, udpsrc->multi_iface);
       break;
     case PROP_URI:
-      g_value_set_string (value, udpsrc->uri);
+      g_value_take_string (value, gst_udp_uri_string (&udpsrc->uri));
       break;
     case PROP_CAPS:
       gst_value_set_caps (value, udpsrc->caps);
@@ -800,10 +770,10 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   if (src->sockfd == -1) {
     /* need to allocate a socket */
-    GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->multi_group,
-        src->port);
+    GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->uri.host,
+        src->uri.port);
     if ((ret =
-            gst_udp_get_addr (src->multi_group, src->port, &src->myaddr)) < 0)
+            gst_udp_get_addr (src->uri.host, src->uri.port, &src->myaddr)) < 0)
       goto getaddrinfo_error;
 
     if ((ret = socket (src->myaddr.ss_family, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -820,7 +790,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
                 sizeof (reuse))) < 0)
       goto setsockopt_error;
 
-    GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
+    GST_DEBUG_OBJECT (src, "binding on port %d", src->uri.port);
 
     len = gst_udp_get_sockaddr_length (&src->myaddr);
     if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr, len)) < 0)
@@ -891,7 +861,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 #endif
 
   if (src->auto_multicast && gst_udp_is_multicast (&src->myaddr)) {
-    GST_DEBUG_OBJECT (src, "joining multicast group %s", src->multi_group);
+    GST_DEBUG_OBJECT (src, "joining multicast group %s", src->uri.host);
     ret = gst_udp_join_group (src->sock.fd, &src->myaddr, src->multi_iface);
     if (ret < 0)
       goto membership;
@@ -901,8 +871,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
    * follows ss_family on both */
   port = g_ntohs (((struct sockaddr_in *) &src->myaddr)->sin_port);
   GST_DEBUG_OBJECT (src, "bound, on port %d", port);
-  if (port != src->port) {
-    src->port = port;
+  if (port != src->uri.port) {
+    src->uri.port = port;
     GST_DEBUG_OBJECT (src, "notifying port %d", port);
     g_object_notify (G_OBJECT (src), "port");
   }
@@ -1003,7 +973,7 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
 
   if (src->sock.fd >= 0) {
     if (src->auto_multicast && gst_udp_is_multicast (&src->myaddr)) {
-      GST_DEBUG_OBJECT (src, "leaving multicast group %s", src->multi_group);
+      GST_DEBUG_OBJECT (src, "leaving multicast group %s", src->uri.host);
       gst_udp_leave_group (src->sock.fd, &src->myaddr);
     }
     CLOSE_IF_REQUESTED (src);
@@ -1038,7 +1008,10 @@ gst_udpsrc_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSrc *src = GST_UDPSRC (handler);
 
-  return src->uri;
+  g_free (src->uristr);
+  src->uristr = gst_udp_uri_string (&src->uri);
+
+  return src->uristr;
 }
 
 static gboolean

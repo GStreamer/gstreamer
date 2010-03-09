@@ -156,72 +156,40 @@ gst_udpsink_class_init (GstUDPSink * klass)
 static void
 gst_udpsink_init (GstUDPSink * udpsink)
 {
-  udpsink->host = g_strdup (UDP_DEFAULT_HOST);
-  udpsink->port = UDP_DEFAULT_PORT;
-  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->host,
-      udpsink->port);
+  gst_udp_uri_init (&udpsink->uri, UDP_DEFAULT_HOST, UDP_DEFAULT_PORT);
+
+  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->uri.host,
+      udpsink->uri.port);
 }
 
 static void
 gst_udpsink_finalize (GstUDPSink * udpsink)
 {
-  g_free (udpsink->host);
-  g_free (udpsink->uri);
+  gst_udp_uri_free (&udpsink->uri);
+  g_free (udpsink->uristr);
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) udpsink);
-}
-
-static void
-gst_udpsink_update_uri (GstUDPSink * sink)
-{
-  g_free (sink->uri);
-  sink->uri = g_strdup_printf ("udp://%s:%d", sink->host, sink->port);
-
-  GST_DEBUG_OBJECT (sink, "updated uri to %s", sink->uri);
 }
 
 static gboolean
 gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri)
 {
-  gchar *protocol;
-  gchar *location;
-  gchar *colptr;
+  gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->uri.host,
+      sink->uri.port);
 
-  protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "udp") != 0)
-    goto wrong_protocol;
-  g_free (protocol);
+  if (gst_udp_parse_uri (uri, &sink->uri) < 0)
+    goto wrong_uri;
 
-  location = gst_uri_get_location (uri);
-  if (!location)
-    return FALSE;
-  colptr = strstr (location, ":");
-
-  gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->host, sink->port);
-
-  if (colptr != NULL) {
-    g_free (sink->host);
-    sink->host = g_strndup (location, colptr - location);
-    sink->port = atoi (colptr + 1);
-  } else {
-    g_free (sink->host);
-    sink->host = g_strdup (location);
-    sink->port = UDP_DEFAULT_PORT;
-  }
-  g_free (location);
-
-  gst_multiudpsink_add (GST_MULTIUDPSINK (sink), sink->host, sink->port);
-
-  gst_udpsink_update_uri (sink);
+  gst_multiudpsink_add (GST_MULTIUDPSINK (sink), sink->uri.host,
+      sink->uri.port);
 
   return TRUE;
 
   /* ERRORS */
-wrong_protocol:
+wrong_uri:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
-        ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
-    g_free (protocol);
+        ("error parsing uri %s", uri));
     return FALSE;
   }
 }
@@ -236,15 +204,23 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
 
   /* remove old host */
   gst_multiudpsink_remove (GST_MULTIUDPSINK (udpsink),
-      udpsink->host, udpsink->port);
+      udpsink->uri.host, udpsink->uri.port);
 
   switch (prop_id) {
     case PROP_HOST:
-      g_free (udpsink->host);
-      udpsink->host = g_value_dup_string (value);
+    {
+      const gchar *host;
+
+      host = g_value_get_string (value);
+
+      if (host)
+        gst_udp_uri_update (&udpsink->uri, host, -1);
+      else
+        gst_udp_uri_update (&udpsink->uri, UDP_DEFAULT_HOST, -1);
       break;
+    }
     case PROP_PORT:
-      udpsink->port = g_value_get_int (value);
+      gst_udp_uri_update (&udpsink->uri, NULL, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -252,7 +228,7 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
   }
   /* add new host */
   gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink),
-      udpsink->host, udpsink->port);
+      udpsink->uri.host, udpsink->uri.port);
 }
 
 static void
@@ -265,10 +241,10 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_HOST:
-      g_value_set_string (value, udpsink->host);
+      g_value_set_string (value, udpsink->uri.host);
       break;
     case PROP_PORT:
-      g_value_set_int (value, udpsink->port);
+      g_value_set_int (value, udpsink->uri.port);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -297,7 +273,10 @@ gst_udpsink_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSink *sink = GST_UDPSINK (handler);
 
-  return g_strdup (sink->uri);
+  g_free (sink->uristr);
+  sink->uristr = gst_udp_uri_string (&sink->uri);
+
+  return sink->uristr;
 }
 
 static gboolean
