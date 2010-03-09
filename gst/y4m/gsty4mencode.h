@@ -53,7 +53,6 @@ struct _GstY4mEncode {
   gint par_num, par_den;
   gboolean interlaced;
   gboolean top_field_first;
-  const gchar *colorspace;
   /* state information */
   gboolean header;
 };
