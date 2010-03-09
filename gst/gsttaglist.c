@@ -282,6 +282,18 @@ _gst_tag_initialize (void)
       G_TYPE_DOUBLE, _("geo location elevation"),
       _("geo elevation of where the media has been recorded or produced in "
           "meters according to WGS84 (zero is average sea level)"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_COUNTRY, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("geo location country"),
+      _("country (english name) where the media has been recorded "
+          "or produced"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_CITY, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("geo location city"),
+      _("city (english name) where the media has been recorded "
+          "or produced"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_SUBLOCATION, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("geo location sublocation"),
+      _("a location whithin a city where the media has been produced "
+          "or created (e.g. the neighborhood)"), NULL);
   gst_tag_register (GST_TAG_SHOW_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
       /* TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here */
       _("show name"),

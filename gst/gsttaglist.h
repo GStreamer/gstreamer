@@ -791,6 +791,34 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GEO_LOCATION_ELEVATION               "geo-location-elevation"
 /**
+ * GST_TAG_GEO_LOCATION_COUNTRY:
+ *
+ * The country (english name) where the media has been produced (string).
+ *
+ * Since: 0.10.29
+ */
+#define GST_TAG_GEO_LOCATION_COUNTRY                 "geo-location-country"
+/**
+ * GST_TAG_GEO_LOCATION_CITY:
+ *
+ * The city (english name) where the media has been produced (string).
+ *
+ * Since: 0.10.29
+ */
+#define GST_TAG_GEO_LOCATION_CITY                    "geo-location-city"
+/**
+ * GST_TAG_GEO_LOCATION_SUBLOCATION:
+ *
+ * A location 'smaller' than GST_TAG_GEO_LOCATION_CITY that specifies better
+ * where the media has been produced. (e.g. the neighborhood) (string).
+ *
+ * This tag has been added as this is how it is handled/named in XMP's
+ * Iptc4xmpcore schema.
+ *
+ * Since: 0.10.29
+ */
+#define GST_TAG_GEO_LOCATION_SUBLOCATION             "geo-location-sublocation"
+/**
  * GST_TAG_SHOW_NAME
  *
  * Name of the show, used for displaying (string)
