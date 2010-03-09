@@ -75,17 +75,31 @@ gboolean gst_udp_net_utils_win32_wsa_startup (GstObject * obj);
 
 #endif
 
-int gst_udp_get_sockaddr_length(struct sockaddr_storage *addr);
+typedef struct {
+  gchar    *host;
+  gint      port;
+  gboolean  is_ipv6;
+} GstUDPUri;
 
-int gst_udp_get_addr      (const char *hostname, int port, struct sockaddr_storage *addr);
-int gst_udp_is_multicast  (struct sockaddr_storage *addr);
+int     gst_udp_get_sockaddr_length  (struct sockaddr_storage *addr);
 
-int gst_udp_set_loop      (int sockfd, gboolean loop);
-int gst_udp_set_ttl       (int sockfd, int ttl, gboolean is_multicast);
+int     gst_udp_get_addr             (const char *hostname, int port, struct sockaddr_storage *addr);
+int     gst_udp_is_multicast         (struct sockaddr_storage *addr);
 
-int gst_udp_join_group    (int sockfd, struct sockaddr_storage *addr,
-                           gchar *iface);
-int gst_udp_leave_group   (int sockfd, struct sockaddr_storage *addr);
+int     gst_udp_set_loop             (int sockfd, gboolean loop);
+int     gst_udp_set_ttl              (int sockfd, int ttl, gboolean is_multicast);
+
+/* multicast groups */
+int     gst_udp_join_group           (int sockfd, struct sockaddr_storage *addr,
+                                      gchar *iface);
+int     gst_udp_leave_group          (int sockfd, struct sockaddr_storage *addr);
+
+/* uri handling */
+void    gst_udp_uri_init             (GstUDPUri *uri, const gchar *host, gint port);
+int     gst_udp_uri_update           (GstUDPUri *uri, const gchar *host, gint port);
+int     gst_udp_parse_uri            (const gchar *uristr, GstUDPUri *uri);
+gchar * gst_udp_uri_string           (GstUDPUri *uri);
+void    gst_udp_uri_free             (GstUDPUri *uri);
 
 #endif /* __GST_UDP_NET_UTILS_H__*/
 

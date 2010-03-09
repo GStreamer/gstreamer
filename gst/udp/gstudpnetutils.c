@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <memory.h>
 
+#include <gst/gst.h>
+
 #include "gstudpnetutils.h"
 
 /* EAI_ADDRFAMILY was obsoleted in BSD at some point */
@@ -351,4 +353,115 @@ gst_udp_is_multicast (struct sockaddr_storage *addr)
   }
 
   return ret;
+}
+
+void
+gst_udp_uri_init (GstUDPUri * uri, const gchar * host, gint port)
+{
+  uri->host = NULL;
+  uri->port = -1;
+  gst_udp_uri_update (uri, host, port);
+}
+
+int
+gst_udp_uri_update (GstUDPUri * uri, const gchar * host, gint port)
+{
+  if (host) {
+    g_free (uri->host);
+    uri->host = g_strdup (host);
+    if (strchr (host, ':'))
+      uri->is_ipv6 = TRUE;
+    else
+      uri->is_ipv6 = FALSE;
+  }
+  if (port != -1)
+    uri->port = port;
+
+  return 0;
+}
+
+int
+gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
+{
+  gchar *protocol;
+  gchar *location, *location_end;
+  gchar *colptr;
+
+  protocol = gst_uri_get_protocol (uristr);
+  if (strcmp (protocol, "udp") != 0)
+    goto wrong_protocol;
+  g_free (protocol);
+
+  location = gst_uri_get_location (uristr);
+  if (!location)
+    return FALSE;
+
+  GST_DEBUG ("got location '%s'", location);
+
+  if (location[0] == '[') {
+    GST_DEBUG ("parse IPV6 address '%s'", location);
+    location_end = strchr (location, ']');
+    if (location_end == NULL)
+      goto wrong_address;
+
+    uri->is_ipv6 = TRUE;
+    g_free (uri->host);
+    uri->host = g_strndup (location + 1, location_end - location - 1);
+    colptr = strrchr (location_end, ':');
+  } else {
+    GST_DEBUG ("parse IPV4 address '%s'", location);
+    uri->is_ipv6 = FALSE;
+    colptr = strrchr (location, ':');
+
+    g_free (uri->host);
+    if (colptr != NULL) {
+      uri->host = g_strndup (location, colptr - location);
+    } else {
+      uri->host = g_strdup (location);
+    }
+  }
+  GST_DEBUG ("host set to '%s'", uri->host);
+
+  if (colptr != NULL) {
+    uri->port = atoi (colptr + 1);
+  }
+  g_free (location);
+
+  return 0;
+
+  /* ERRORS */
+wrong_protocol:
+  {
+    GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)", uristr,
+        protocol);
+    g_free (protocol);
+    return -1;
+  }
+wrong_address:
+  {
+    GST_ERROR ("error parsing uri %s", uristr);
+    g_free (location);
+    return -1;
+  }
+}
+
+gchar *
+gst_udp_uri_string (GstUDPUri * uri)
+{
+  gchar *result;
+
+  if (uri->is_ipv6) {
+    result = g_strdup_printf ("udp://[%s]:%d", uri->host, uri->port);
+  } else {
+    result = g_strdup_printf ("udp://%s:%d", uri->host, uri->port);
+  }
+  return result;
+}
+
+void
+gst_udp_uri_free (GstUDPUri * uri)
+{
+  g_free (uri->host);
+  uri->host = NULL;
+  uri->port = -1;
 }
