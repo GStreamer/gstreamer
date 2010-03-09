@@ -1050,7 +1050,6 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     if (gst_structure_has_name (structure, "video/x-theora")) {
       GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Theora");
       hbufs = g_list_prepend (hbufs, hbuf);
-      pad->always_flush_page = TRUE;
     } else if (gst_structure_has_name (structure, "video/x-dirac")) {
       GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Dirac");
       hbufs = g_list_prepend (hbufs, hbuf);
