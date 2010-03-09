@@ -41,6 +41,11 @@
 #include <png.h>
 #include "gstglbumper.h"
 
+#if PNG_LIBPNG_VER >= 10400
+#define int_p_NULL         NULL
+#define png_infopp_NULL    NULL
+#endif
+
 #define GST_CAT_DEFAULT gst_gl_bumper_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
