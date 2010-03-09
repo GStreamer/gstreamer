@@ -1410,16 +1410,17 @@ was_prepared:
     return TRUE;
   }
   /* ERRORS */
+is_reused:
+  {
+    GST_WARNING ("can not reuse media %p", media);
+    return FALSE;
+  }
 state_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     unlock_streams (media);
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
-    return FALSE;
-  }
-is_reused:
-  {
-    GST_WARNING ("can not reuse media %p", media);
+    gst_rtsp_media_unprepare (media);
     return FALSE;
   }
 }
