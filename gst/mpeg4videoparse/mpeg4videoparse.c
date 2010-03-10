@@ -686,8 +686,9 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
           /* Usually the codec data will be a visual object sequence, containing
              a visual object, with a video object/video object layer. */
           res = gst_mpeg4vparse_handle_vos (parse, data, GST_BUFFER_SIZE (buf));
-        } else if (data[3] >= VIDEO_OBJECT_STARTCODE_MIN &&
-            data[3] <= VIDEO_OBJECT_STARTCODE_MAX) {
+        } else if (data[3] <= VIDEO_OBJECT_STARTCODE_MAX) {
+          /* VIDEO_OBJECT_STARTCODE_MIN is zero, and data is unsigned, so we
+             don't need to check min (and in fact that causes a compile err */
           /* Sometimes, instead, it'll just have the video object/video object
              layer data. We can parse that too, though it'll give us slightly
              less information. */
