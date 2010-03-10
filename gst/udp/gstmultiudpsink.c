@@ -411,7 +411,12 @@ socket_last_error_message ()
   if (FAILED (result)) {
     return g_strdup ("failed to get error message from system");
   } else {
-    return g_convert ((gchar *) buf, -1, "UTF-16", "UTF-8", NULL, NULL, NULL);
+    gchar *res =
+        g_convert ((gchar *) buf, -1, "UTF-16", "UTF-8", NULL, NULL, NULL);
+    /* g_convert() internally calls windows functions which reset the
+       windows error code, so fix it up again like this */
+    WSASetLastError (errorcode);
+    return res;
   }
 #else
   return g_strdup (g_strerror (errno));
