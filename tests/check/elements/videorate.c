@@ -690,7 +690,7 @@ GST_START_TEST (test_upstream_caps_nego)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  videorate_pad = gst_element_get_pad (videorate, "sink");
+  videorate_pad = gst_element_get_static_pad (videorate, "sink");
   caps = gst_pad_get_caps (videorate_pad);
 
   /* assemble the expected caps */
@@ -741,7 +741,7 @@ GST_START_TEST (test_selected_caps)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
   fail_if (msg == NULL || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
 
-  videorate_pad = gst_element_get_pad (videorate, "sink");
+  videorate_pad = gst_element_get_static_pad (videorate, "sink");
   g_object_get (videorate_pad, "caps", &caps, NULL);
   expected_caps = gst_caps_from_string (VIDEO_CAPS_UNUSUAL_FRAMERATE);
 
