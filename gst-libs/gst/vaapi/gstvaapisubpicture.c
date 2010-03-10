@@ -122,7 +122,7 @@ gst_vaapi_subpicture_set_property(
 
     switch (prop_id) {
     case PROP_IMAGE:
-        subpicture->priv->image = g_object_ref(g_value_get_object(value));
+        gst_vaapi_subpicture_set_image(subpicture, g_value_get_object(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -153,32 +153,6 @@ gst_vaapi_subpicture_get_property(
     }
 }
 
-static GObject *
-gst_vaapi_subpicture_constructor(
-    GType                  type,
-    guint                  n_params,
-    GObjectConstructParam *params
-)
-{
-    GstVaapiSubpicture *subpicture;
-    GObjectClass *parent_class;
-    GObject *object;
-
-    D(bug("gst_vaapi_subpicture_constructor()\n"));
-
-    parent_class = G_OBJECT_CLASS(gst_vaapi_subpicture_parent_class);
-    object = parent_class->constructor (type, n_params, params);
-
-    if (object) {
-        subpicture = GST_VAAPI_SUBPICTURE(object);
-        if (!gst_vaapi_subpicture_create(subpicture)) {
-            gst_vaapi_subpicture_destroy(subpicture);
-            object = NULL;
-        }
-    }
-    return object;
-}
-
 static void
 gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
 {
@@ -189,7 +163,6 @@ gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
     object_class->finalize     = gst_vaapi_subpicture_finalize;
     object_class->set_property = gst_vaapi_subpicture_set_property;
     object_class->get_property = gst_vaapi_subpicture_get_property;
-    object_class->constructor  = gst_vaapi_subpicture_constructor;
 
     g_object_class_install_property
         (object_class,

@@ -173,30 +173,19 @@ gst_vaapi_image_get_property(
     }
 }
 
-static GObject *
-gst_vaapi_image_constructor(
-    GType                  type,
-    guint                  n_params,
-    GObjectConstructParam *params
-)
+static void
+gst_vaapi_image_constructed(GObject *object)
 {
-    GstVaapiImage *image;
+    GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
     GObjectClass *parent_class;
-    GObject *object;
 
-    D(bug("gst_vaapi_image_constructor()\n"));
+    D(bug("gst_vaapi_image_constructed()\n"));
+
+    gst_vaapi_image_create(image);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_image_parent_class);
-    object = parent_class->constructor (type, n_params, params);
-
-    if (object) {
-        image = GST_VAAPI_IMAGE(object);
-        if (!gst_vaapi_image_create(image)) {
-            gst_vaapi_image_destroy(image);
-            object = NULL;
-        }
-    }
-    return object;
+    if (parent_class->constructed)
+        parent_class->constructed(object);
 }
 
 static void
@@ -209,7 +198,7 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
     object_class->finalize     = gst_vaapi_image_finalize;
     object_class->set_property = gst_vaapi_image_set_property;
     object_class->get_property = gst_vaapi_image_get_property;
-    object_class->constructor  = gst_vaapi_image_constructor;
+    object_class->constructed  = gst_vaapi_image_constructed;
 
     g_object_class_install_property
         (object_class,
