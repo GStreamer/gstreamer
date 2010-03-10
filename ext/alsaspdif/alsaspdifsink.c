@@ -348,8 +348,8 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
 
   err = snd_pcm_open (&(sink->pcm), pcm_name, SND_PCM_STREAM_PLAYBACK, 0);
   if (err < 0) {
-    GST_DEBUG_OBJECT ("Open failed for %s - searching for IEC958 manually\n",
-        pcm_name);
+    GST_DEBUG_OBJECT (sink,
+        "Open failed for %s - searching for IEC958 manually\n", pcm_name);
 
     err = alsaspdifsink_find_pcm_device (sink);
     if (err == 0 && sink->pcm == NULL)
