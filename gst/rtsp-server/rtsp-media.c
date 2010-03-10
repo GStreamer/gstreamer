@@ -539,7 +539,7 @@ gst_rtsp_media_stream_rtcp (GstRTSPMediaStream * stream, GstBuffer * buffer)
 
 /* Allocate the udp ports and sockets */
 static gboolean
-alloc_udp_ports (GstRTSPMediaStream * stream)
+alloc_udp_ports (GstRTSPMediaStream * stream, gboolean is_ipv6)
 {
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
@@ -547,6 +547,7 @@ alloc_udp_ports (GstRTSPMediaStream * stream)
   gint tmp_rtp, tmp_rtcp;
   guint count;
   gint rtpport, rtcpport, sockfd;
+  const gchar *host;
 
   udpsrc0 = NULL;
   udpsrc1 = NULL;
@@ -557,10 +558,15 @@ alloc_udp_ports (GstRTSPMediaStream * stream)
   /* Start with random port */
   tmp_rtp = 0;
 
+  if (is_ipv6)
+    host = "udp://[::0]";
+  else
+    host = "udp://0.0.0.0";
+
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
+  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
   g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
@@ -596,7 +602,7 @@ again:
   }
 
   /* allocate port+1 for RTCP now */
-  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
+  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
   if (udpsrc1 == NULL)
     goto no_udp_rtcp_protocol;
 
@@ -916,7 +922,7 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   /* allocate udp ports, we will have 4 of them, 2 for receiving RTP/RTCP and 2
    * for sending RTP/RTCP. The sender and receiver ports are shared between the
    * elements */
-  if (!alloc_udp_ports (stream))
+  if (!alloc_udp_ports (stream, FALSE))
     return FALSE;
 
   /* add the ports to the pipeline */
