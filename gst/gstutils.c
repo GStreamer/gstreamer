@@ -211,7 +211,7 @@ static inline void
 gst_util_uint64_mul_uint64 (GstUInt64 * c1, GstUInt64 * c0, guint64 arg1,
     guint64 arg2)
 {
-  __asm__ __volatile__ ("mul %3":"=a" (c0->ll), "=d" (c1->ll)
+  __asm__ __volatile__ ("mulq %3":"=a" (c0->ll), "=d" (c1->ll)
       :"a" (arg1), "g" (arg2)
       );
 }
