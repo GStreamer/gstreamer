@@ -265,7 +265,7 @@ gst_qt_moov_recover_run (void *data)
 end:
   GST_LOG_OBJECT (qtmr, "Finalizing task");
   if (err) {
-    GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED, (err->message), NULL);
+    GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED, ("%s", err->message), NULL);
     g_error_free (err);
   }
 
