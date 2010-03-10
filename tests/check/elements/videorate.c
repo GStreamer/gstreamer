@@ -725,8 +725,8 @@ GST_START_TEST (test_selected_caps)
   GstCaps *caps = NULL;
   GstCaps *expected_caps = NULL;
 
-  pipeline = gst_parse_launch ("videotestsrc num-buffers=1 ! "
-      "! identity ! videorate name=videorate0 ! " VIDEO_CAPS_UNUSUAL_FRAMERATE
+  pipeline = gst_parse_launch ("videotestsrc num-buffers=1"
+      " ! identity ! videorate name=videorate0 ! " VIDEO_CAPS_UNUSUAL_FRAMERATE
       " ! fakesink", NULL);
   fail_if (pipeline == NULL);
   videorate = gst_bin_get_by_name (GST_BIN (pipeline), "videorate0");
