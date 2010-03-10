@@ -23,7 +23,7 @@
 #include "rtsp-client.h"
 
 #define DEFAULT_ADDRESS         "0.0.0.0"
-//#define DEFAULT_ADDRESS         "::1"
+/* #define DEFAULT_ADDRESS         "::0" */
 #define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
 
