@@ -63,8 +63,6 @@ struct _GstVorbisDec {
 
   /* list of buffers that need timestamps */
   GList            *queued;
-  /* list of raw output buffers */
-  GList            *output;
   /* gather/decode queues for reverse playback */
   GList            *gather;
   GList            *decode;
