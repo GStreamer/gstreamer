@@ -116,7 +116,7 @@ GST_START_TEST (test_stress)
 {
   GstElement *pipeline;
   GstElement *tee;
-  gchar *desc;
+  const gchar *desc;
   GstBus *bus;
   GstMessage *msg;
   gint i;

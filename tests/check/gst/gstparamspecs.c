@@ -32,6 +32,7 @@ typedef struct
 
 typedef GstElementClass GstDummyObjClass;
 
+GType gst_dummy_obj_get_type (void);
 GST_BOILERPLATE (GstDummyObj, gst_dummy_obj, GstElement, GST_TYPE_ELEMENT);
 
 static void

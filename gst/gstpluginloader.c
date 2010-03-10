@@ -348,7 +348,7 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 static gboolean
 gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
-  char *argv[] = { location, "-l", NULL };
+  char *argv[] = { location, (char *) "-l", NULL };
 
   GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s", location);
   if (!g_spawn_async_with_pipes (NULL, argv, NULL,
@@ -432,7 +432,7 @@ plugin_loader_cleanup_child (GstPluginLoader * l)
 }
 
 gboolean
-_gst_plugin_loader_client_run ()
+_gst_plugin_loader_client_run (void)
 {
   GstPluginLoader *l;
 

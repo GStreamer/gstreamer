@@ -69,8 +69,6 @@
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
 
-static void gst_element_factory_class_init (GstElementFactoryClass * klass);
-static void gst_element_factory_init (GstElementFactory * factory);
 static void gst_element_factory_finalize (GObject * object);
 void __gst_element_details_clear (GstElementDetails * dp);
 static void gst_element_factory_cleanup (GstElementFactory * factory);

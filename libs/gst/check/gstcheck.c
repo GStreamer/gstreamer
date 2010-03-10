@@ -182,7 +182,7 @@ gst_check_setup_src_pad (GstElement * element,
 
 GstPad *
 gst_check_setup_src_pad_by_name (GstElement * element,
-    GstStaticPadTemplate * template, gchar * name)
+    GstStaticPadTemplate * template, const gchar * name)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -207,7 +207,7 @@ gst_check_setup_src_pad_by_name (GstElement * element,
 }
 
 void
-gst_check_teardown_pad_by_name (GstElement * element, gchar * name)
+gst_check_teardown_pad_by_name (GstElement * element, const gchar * name)
 {
   GstPad *pad_peer, *pad_element;
 
@@ -261,7 +261,7 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
 
 GstPad *
 gst_check_setup_sink_pad_by_name (GstElement * element,
-    GstStaticPadTemplate * template, gchar * name)
+    GstStaticPadTemplate * template, const gchar * name)
 {
   GstPad *srcpad, *sinkpad;
 

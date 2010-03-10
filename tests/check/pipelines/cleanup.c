@@ -24,7 +24,7 @@
 
 
 static GstElement *
-setup_pipeline (gchar * pipe_descr)
+setup_pipeline (const gchar * pipe_descr)
 {
   GstElement *pipeline;
 
@@ -37,7 +37,7 @@ setup_pipeline (gchar * pipe_descr)
    the poll call will time out after half a second.
  */
 static void
-run_pipeline (GstElement * pipeline, gchar * descr,
+run_pipeline (GstElement * pipeline, const gchar * descr,
     GstMessageType events, GstMessageType tevent)
 {
   GstBus *bus;
@@ -78,7 +78,7 @@ run_pipeline (GstElement * pipeline, gchar * descr,
 
 GST_START_TEST (test_pipeline_unref)
 {
-  gchar *s;
+  const gchar *s;
   GstElement *pipeline, *src, *sink;
 
   s = "fakesrc name=src num-buffers=20 ! fakesink name=sink";

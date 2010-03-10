@@ -37,7 +37,6 @@ struct yy_buffer_state * _gst_parse_yy_scan_string (char* , yyscan_t);
 void _gst_parse_yypush_buffer_state (void * new_buffer ,yyscan_t yyscanner );
 void _gst_parse_yypop_buffer_state (yyscan_t yyscanner );
 
-
 #ifdef __GST_PARSE_TRACE
 static guint __strings;
 static guint __links;

@@ -425,7 +425,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_string)
 {
-  gchar *try[] = {
+  const gchar *try[] = {
     "Dude",
     "Hi, I'm a string",
     "tüüüt!",
@@ -460,8 +460,8 @@ GST_START_TEST (test_deserialize_string)
 {
   struct
   {
-    gchar *from;
-    gchar *to;
+    const gchar *from;
+    const gchar *to;
   } tests[] = {
     {
     "", ""},                    /* empty strings */

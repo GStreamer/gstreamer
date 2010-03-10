@@ -93,8 +93,6 @@ enum
 /* the one instance of the systemclock */
 static GstClock *_the_system_clock = NULL;
 
-static void gst_system_clock_class_init (GstSystemClockClass * klass);
-static void gst_system_clock_init (GstSystemClock * clock);
 static void gst_system_clock_dispose (GObject * object);
 static void gst_system_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

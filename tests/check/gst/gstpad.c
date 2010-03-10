@@ -400,7 +400,7 @@ GST_START_TEST (test_push_linked)
 GST_END_TEST;
 
 static GstBuffer *
-buffer_from_string (gchar * str)
+buffer_from_string (const gchar * str)
 {
   guint size;
   GstBuffer *buf;

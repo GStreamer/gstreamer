@@ -105,7 +105,6 @@ static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
     const GstPluginDesc * desc, gpointer user_data);
 static void gst_plugin_desc_copy (GstPluginDesc * dest,
     const GstPluginDesc * src);
-static void gst_plugin_desc_free (GstPluginDesc * desc);
 
 static void gst_plugin_ext_dep_free (GstPluginDep * dep);
 
@@ -133,7 +132,6 @@ gst_plugin_finalize (GObject * object)
   }
   g_free (plugin->filename);
   g_free (plugin->basename);
-  gst_plugin_desc_free (&plugin->desc);
 
   g_list_foreach (plugin->priv->deps, (GFunc) gst_plugin_ext_dep_free, NULL);
   g_list_free (plugin->priv->deps);
@@ -224,7 +222,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
  */
 gboolean
 gst_plugin_register_static (gint major_version, gint minor_version,
-    const gchar * name, gchar * description, GstPluginInitFunc init_func,
+    const gchar * name, const gchar * description, GstPluginInitFunc init_func,
     const gchar * version, const gchar * license, const gchar * source,
     const gchar * package, const gchar * origin)
 {
@@ -291,7 +289,7 @@ gst_plugin_register_static (gint major_version, gint minor_version,
  */
 gboolean
 gst_plugin_register_static_full (gint major_version, gint minor_version,
-    const gchar * name, gchar * description,
+    const gchar * name, const gchar * description,
     GstPluginInitFullFunc init_full_func, const gchar * version,
     const gchar * license, const gchar * source, const gchar * package,
     const gchar * origin, gpointer user_data)
@@ -513,8 +511,6 @@ _gst_plugin_fault_handler_setup (void)
 }
 #endif /* HAVE_SIGACTION */
 
-static void _gst_plugin_fault_handler_setup ();
-
 static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 
 #define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \
@@ -625,9 +621,6 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
-  } else {
-    /* this is overwritten by gst_plugin_register_func() */
-    g_free (plugin->desc.description);
   }
 
   GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
@@ -682,22 +675,13 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
   dest->major_version = src->major_version;
   dest->minor_version = src->minor_version;
   dest->name = g_intern_string (src->name);
-  /* maybe intern the description too, just for convenience? */
-  dest->description = g_strdup (src->description);
+  dest->description = g_intern_string (src->description);
   dest->plugin_init = src->plugin_init;
   dest->version = g_intern_string (src->version);
   dest->license = g_intern_string (src->license);
   dest->source = g_intern_string (src->source);
   dest->package = g_intern_string (src->package);
   dest->origin = g_intern_string (src->origin);
-}
-
-/* unused */
-static void
-gst_plugin_desc_free (GstPluginDesc * desc)
-{
-  g_free (desc->description);
-  memset (desc, 0, sizeof (GstPluginDesc));
 }
 
 /**

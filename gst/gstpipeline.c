@@ -125,8 +125,6 @@ struct _GstPipelinePrivate
 };
 
 
-static void gst_pipeline_base_init (gpointer g_class);
-
 static void gst_pipeline_dispose (GObject * object);
 static void gst_pipeline_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

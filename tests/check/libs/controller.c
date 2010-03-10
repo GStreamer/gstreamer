@@ -180,15 +180,12 @@ gst_test_mono_source_class_init (GstTestMonoSourceClass * klass)
 static void
 gst_test_mono_source_base_init (GstTestMonoSourceClass * klass)
 {
-  static const GstElementDetails details = {
-    "Monophonic source for unit tests",
-    "Source/Audio/MonoSource",
-    "Use in unit tests",
-    "Stefan Kost <ensonic@users.sf.net>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "Monophonic source for unit tests",
+      "Source/Audio/MonoSource",
+      "Use in unit tests", "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static GType
@@ -1079,7 +1076,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   fail_unless (res, NULL);
 
   /* now pull in values for some timestamps */
-  values.property_name = "ulong";
+  values.property_name = (char *) "ulong";
   values.nbsamples = 3;
   values.sample_interval = GST_SECOND;
   values.values = (gpointer) g_new (gulong, 3);
@@ -1987,7 +1984,7 @@ GST_START_TEST (controller_refcount_new_list)
 
   /* that property should exist and should be controllable */
   elem = gst_element_factory_make ("testmonosource", "test_source");
-  list = g_list_append (NULL, "ulong");
+  list = g_list_append (NULL, (char *) "ulong");
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -1998,8 +1995,8 @@ GST_START_TEST (controller_refcount_new_list)
 
   /* try the same property twice, make sure the refcount is still 1 */
   elem = gst_element_factory_make ("testmonosource", "test_source");
-  list = g_list_append (NULL, "ulong");
-  list = g_list_append (list, "ulong");
+  list = g_list_append (NULL, (char *) "ulong");
+  list = g_list_append (list, (char *) "ulong");
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -2010,8 +2007,8 @@ GST_START_TEST (controller_refcount_new_list)
 
   /* try two properties, make sure the refcount is still 1 */
   elem = gst_element_factory_make ("testmonosource", "test_source");
-  list = g_list_append (NULL, "ulong");
-  list = g_list_append (list, "boolean");
+  list = g_list_append (NULL, (char *) "ulong");
+  list = g_list_append (list, (char *) "boolean");
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -2025,7 +2022,7 @@ GST_START_TEST (controller_refcount_new_list)
   ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  list = g_list_append (NULL, "ulong");
+  list = g_list_append (NULL, (char *) "ulong");
   ctrl2 = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl == ctrl2, NULL);
@@ -2038,7 +2035,7 @@ GST_START_TEST (controller_refcount_new_list)
 
   /* try _new_list first and then _new */
   elem = gst_element_factory_make ("testmonosource", "test_source");
-  list = g_list_append (NULL, "ulong");
+  list = g_list_append (NULL, (char *) "ulong");
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);

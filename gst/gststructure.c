@@ -1488,7 +1488,7 @@ gst_structure_get_fraction (const GstStructure * structure,
 
 typedef struct _GstStructureAbbreviation
 {
-  gchar *type_name;
+  const gchar *type_name;
   GType type;
 }
 GstStructureAbbreviation;

@@ -93,8 +93,6 @@ static void gst_collect_pads_clear (GstCollectPads * pads,
 static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
 static void gst_collect_pads_finalize (GObject * object);
-static void gst_collect_pads_init (GstCollectPads * pads,
-    GstCollectPadsClass * g_class);
 static void ref_data (GstCollectData * data);
 static void unref_data (GstCollectData * data);
 static void gst_collect_pads_check_pads_unlocked (GstCollectPads * pads);

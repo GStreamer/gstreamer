@@ -136,12 +136,14 @@ debug_dump_get_element_params (GstElement * element)
 }
 
 static void
-debug_dump_pad (GstPad * pad, gchar * color_name, gchar * element_name,
-    GstDebugGraphDetails details, FILE * out, const gint indent)
+debug_dump_pad (GstPad * pad, const gchar * color_name,
+    const gchar * element_name, GstDebugGraphDetails details, FILE * out,
+    const gint indent)
 {
   GstPadTemplate *pad_templ;
   GstPadPresence presence;
-  gchar *pad_name, *style_name;
+  gchar *pad_name;
+  const gchar *style_name;
   const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
@@ -191,7 +193,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   GstPadDirection dir;
   gchar *element_name;
   gchar *target_element_name;
-  gchar *color_name;
+  const gchar *color_name;
 
   dir = gst_pad_get_direction (pad);
   element_name = debug_dump_make_object_name (GST_OBJECT (element));
@@ -206,14 +208,13 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
           target_element_name =
               debug_dump_make_object_name (GST_OBJECT (target_element));
         } else {
-          target_element_name = "";
+          target_element_name = g_strdup ("");
         }
         debug_dump_pad (target_pad, color_name, target_element_name, details,
             out, indent);
-        if (target_element) {
-          g_free (target_element_name);
+        g_free (target_element_name);
+        if (target_element)
           gst_object_unref (target_element);
-        }
         gst_object_unref (target_pad);
       }
       gst_object_unref (tmp_pad);
@@ -265,8 +266,7 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
 }
 
 static gchar *
-debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
-    gboolean * need_free)
+debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details)
 {
   gchar *media = NULL;
 
@@ -274,7 +274,6 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
 
     if (gst_caps_is_any (caps) || gst_caps_is_empty (caps)) {
       media = gst_caps_to_string (caps);
-      *need_free = TRUE;
 
     } else {
       GString *str = NULL;
@@ -297,16 +296,14 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
       }
 
       media = g_string_free (str, FALSE);
-      *need_free = TRUE;
     }
 
   } else {
     if (GST_CAPS_IS_SIMPLE (caps))
       media =
-          (gchar *) gst_structure_get_name (gst_caps_get_structure (caps, 0));
+          g_strdup (gst_structure_get_name (gst_caps_get_structure (caps, 0)));
     else
-      media = "*";
-    *need_free = FALSE;
+      media = g_strdup ("*");
   }
   return media;
 }
@@ -318,8 +315,6 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
   GstElement *peer_element, *target_element;
   GstPad *peer_pad, *target_pad, *tmp_pad;
   GstCaps *caps, *peer_caps;
-  gboolean free_caps, free_peer_caps;
-  gboolean free_media, free_media_src, free_media_sink;
   gchar *media = NULL;
   gchar *media_src = NULL, *media_sink = NULL;
   gchar *pad_name, *element_name;
@@ -328,69 +323,47 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
   const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   if ((peer_pad = gst_pad_get_peer (pad))) {
-    free_media = free_media_src = free_media_sink = FALSE;
     if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
         (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS)
         ) {
-      if ((caps = gst_pad_get_negotiated_caps (pad))) {
-        free_caps = TRUE;
-      } else {
-        free_caps = FALSE;
-        if (!(caps = (GstCaps *)
-                gst_pad_get_pad_template_caps (pad))) {
-          /* this should not happen */
-          media = "?";
-        }
-      }
-      if ((peer_caps = gst_pad_get_negotiated_caps (peer_pad))) {
-        free_peer_caps = TRUE;
-      } else {
-        free_peer_caps = FALSE;
-        peer_caps = (GstCaps *) gst_pad_get_pad_template_caps (peer_pad);
-      }
-      if (caps) {
-        media = debug_dump_describe_caps (caps, details, &free_media);
-        /* check if peer caps are different */
-        if (peer_caps && !gst_caps_is_equal (caps, peer_caps)) {
-          gchar *tmp;
-          gboolean free_tmp;
+      caps = gst_pad_get_negotiated_caps (pad);
+      if (!caps)
+        caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+      peer_caps = gst_pad_get_negotiated_caps (peer_pad);
+      if (!peer_caps)
+        peer_caps = gst_caps_copy (gst_pad_get_pad_template_caps (peer_pad));
 
-          tmp = debug_dump_describe_caps (peer_caps, details, &free_tmp);
-          if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
-            media_src = media;
-            free_media_src = free_media;
-            media_sink = tmp;
-            free_media_sink = free_tmp;
-          } else {
-            media_src = tmp;
-            free_media_src = free_tmp;
-            media_sink = media;
-            free_media_sink = free_media;
-          }
-          media = NULL;
-          free_media = FALSE;
+      media = debug_dump_describe_caps (caps, details);
+      /* check if peer caps are different */
+      if (peer_caps && !gst_caps_is_equal (caps, peer_caps)) {
+        gchar *tmp;
+
+        tmp = debug_dump_describe_caps (peer_caps, details);
+        if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
+          media_src = media;
+          media_sink = tmp;
+        } else {
+          media_src = tmp;
+          media_sink = media;
         }
-        if (free_caps) {
-          gst_caps_unref (caps);
-        }
+        media = NULL;
       }
-      if (free_peer_caps && peer_caps) {
-        gst_caps_unref (peer_caps);
-      }
+      gst_caps_unref (peer_caps);
+      gst_caps_unref (caps);
     }
 
     pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
     if (element) {
       element_name = debug_dump_make_object_name (GST_OBJECT (element));
     } else {
-      element_name = "";
+      element_name = g_strdup ("");
     }
     peer_pad_name = debug_dump_make_object_name (GST_OBJECT (peer_pad));
     if ((peer_element = gst_pad_get_parent_element (peer_pad))) {
       peer_element_name =
           debug_dump_make_object_name (GST_OBJECT (peer_element));
     } else {
-      peer_element_name = "";
+      peer_element_name = g_strdup ("");
     }
 
     if (GST_IS_GHOST_PAD (pad)) {
@@ -402,17 +375,16 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
             target_element_name =
                 debug_dump_make_object_name (GST_OBJECT (target_element));
           } else {
-            target_element_name = "";
+            target_element_name = g_strdup ("");
           }
           /* src ghostpad relationship */
           fprintf (out, "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n", spc,
               target_element_name, target_pad_name, element_name, pad_name);
 
           g_free (target_pad_name);
-          if (target_element) {
-            g_free (target_element_name);
+          g_free (target_element_name);
+          if (target_element)
             gst_object_unref (target_element);
-          }
           gst_object_unref (target_pad);
         }
         gst_object_unref (tmp_pad);
@@ -427,7 +399,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
             target_element_name =
                 debug_dump_make_object_name (GST_OBJECT (target_element));
           } else {
-            target_element_name = "";
+            target_element_name = g_strdup ("");
           }
           /* sink ghostpad relationship */
           fprintf (out, "%s%s_%s -> %s_%s [style=dashed, minlen=0]\n", spc,
@@ -442,10 +414,9 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
           debug_dump_element_pad_link (target_pad, target_element, details, out,
               indent);
           g_free (target_pad_name);
-          if (target_element) {
-            g_free (target_element_name);
+          g_free (target_element_name);
+          if (target_element)
             gst_object_unref (target_element);
-          }
           gst_object_unref (target_pad);
         }
         gst_object_unref (tmp_pad);
@@ -456,9 +427,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     if (media) {
       fprintf (out, "%s%s_%s -> %s_%s [label=\"%s\"]\n", spc,
           element_name, pad_name, peer_element_name, peer_pad_name, media);
-      if (free_media) {
-        g_free (media);
-      }
+      g_free (media);
     } else if (media_src && media_sink) {
       /* dot has some issues with placement of head and taillabels,
        * we need an empty label to make space */
@@ -467,24 +436,19 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
           "headlabel=\"%s\", taillabel=\"%s\"]\n",
           spc, element_name, pad_name, peer_element_name, peer_pad_name,
           media_src, media_sink);
-      if (free_media_src)
-        g_free (media_src);
-      if (free_media_sink)
-        g_free (media_sink);
+      g_free (media_src);
+      g_free (media_sink);
     } else {
       fprintf (out, "%s%s_%s -> %s_%s\n", spc,
           element_name, pad_name, peer_element_name, peer_pad_name);
     }
 
     g_free (pad_name);
-    if (element) {
-      g_free (element_name);
-    }
+    g_free (element_name);
     g_free (peer_pad_name);
-    if (peer_element) {
-      g_free (peer_element_name);
+    g_free (peer_element_name);
+    if (peer_element)
       gst_object_unref (peer_element);
-    }
     gst_object_unref (peer_pad);
   }
 }

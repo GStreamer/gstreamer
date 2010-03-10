@@ -257,7 +257,7 @@ struct _GstObject {
 struct _GstObjectClass {
   GObjectClass	parent_class;
 
-  gchar		*path_string_separator;
+  const gchar	*path_string_separator;
   GObject	*signal_object;
 
   /* FIXME-0.11: remove this, plus the above GST_CLASS_*_LOCK macros */

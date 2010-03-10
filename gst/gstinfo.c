@@ -866,7 +866,6 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gint pid;
   GstClockTime elapsed;
   gchar *obj = NULL;
-  gboolean free_obj = TRUE;
   gboolean is_colored;
 
   if (level > gst_debug_category_get_threshold (category))
@@ -881,15 +880,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   if (object) {
     obj = gst_debug_print_object (object);
   } else {
-    obj = "\0";
-    free_obj = FALSE;
+    obj = g_strdup ("");
   }
 
   if (is_colored) {
 #ifndef G_OS_WIN32
     /* colors, non-windows */
     gchar *color = NULL;
-    gchar *clear;
+    const gchar *clear;
     gchar pidcolor[10];
     const gchar *levelcolor;
 
@@ -947,8 +945,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #undef PRINT_FMT
   }
 
-  if (free_obj)
-    g_free (obj);
+  g_free (obj);
 }
 
 /**
@@ -1493,12 +1490,9 @@ _gst_debug_get_category (const gchar * name)
 static GHashTable *__gst_function_pointers;     /* NULL */
 static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
 
-const gchar *
-_gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
-    G_GNUC_NO_INSTRUMENT;
-
 /* This function MUST NOT return NULL */
-     const gchar *_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
+const gchar *
+_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
   gchar *ptrname;
 

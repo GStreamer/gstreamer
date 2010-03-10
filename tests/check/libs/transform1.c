@@ -195,11 +195,7 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
-#if OPTIMIZED
-  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
-#else
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
-#endif
 
   gst_buffer_unref (buffer);
 
@@ -235,11 +231,7 @@ GST_START_TEST (basetransform_chain_pt2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 10);
-#if OPTIMIZED
-  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
-#else
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
-#endif
 
   gst_buffer_unref (buffer);
 
@@ -462,11 +454,7 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
-#if OPTIMIZED
-  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
-#else
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
-#endif
   gst_buffer_unref (buffer);
 
   /* with caps buffer */
@@ -501,11 +489,7 @@ GST_START_TEST (basetransform_chain_ip2)
   buffer = gst_test_trans_pop (trans);
   fail_unless (buffer != NULL);
   fail_unless (GST_BUFFER_SIZE (buffer) == 20);
-#if OPTIMIZED
-  fail_unless (GST_BUFFER_CAPS (buffer) == caps);
-#else
   fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
-#endif
 
   /* output buffer has refcount 1 */
   fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (buffer) == 1);

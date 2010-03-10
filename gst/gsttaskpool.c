@@ -40,8 +40,6 @@
 GST_DEBUG_CATEGORY_STATIC (taskpool_debug);
 #define GST_CAT_DEFAULT (taskpool_debug)
 
-static void gst_task_pool_class_init (GstTaskPoolClass * klass);
-static void gst_task_pool_init (GstTaskPool * pool);
 static void gst_task_pool_finalize (GObject * object);
 
 #define _do_init \

@@ -76,9 +76,9 @@ gst_mini_object_get_type (void)
       gst_value_mini_object_free,
       gst_value_mini_object_copy,
       gst_value_mini_object_peek_pointer,
-      "p",
+      (char *) "p",
       gst_value_mini_object_collect,
-      "p",
+      (char *) "p",
       gst_value_mini_object_lcopy
     };
     GTypeInfo mini_object_info = {

@@ -42,7 +42,7 @@ static GstStaticCaps foobar_caps = GST_STATIC_CAPS ("foo/x-bar");
 /* make sure the entire data in the buffer is available for peeking */
 GST_START_TEST (test_buffer_range)
 {
-  static gchar *foobar_exts[] = { "foobar", NULL };
+  static const gchar *foobar_exts[] = { "foobar", NULL };
 
   GstStructure *s;
   GstBuffer *buf;

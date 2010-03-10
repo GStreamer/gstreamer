@@ -602,10 +602,6 @@ gst_lfo_waveform_get_type (void)
   return gtype;
 }
 
-static void gst_lfo_control_source_init (GstLFOControlSource * self);
-static void
-gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass);
-
 G_DEFINE_TYPE (GstLFOControlSource, gst_lfo_control_source,
     GST_TYPE_CONTROL_SOURCE);
 

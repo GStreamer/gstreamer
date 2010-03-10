@@ -92,8 +92,6 @@ struct _GstTaskPrivate
   GstTaskPool *pool_id;
 };
 
-static void gst_task_class_init (GstTaskClass * klass);
-static void gst_task_init (GstTask * task);
 static void gst_task_finalize (GObject * object);
 
 static void gst_task_func (GstTask * task);

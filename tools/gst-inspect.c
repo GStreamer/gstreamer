@@ -171,7 +171,7 @@ print_event_masks (const GstEventMask * masks)
 }
 #endif
 
-static char *
+static const char *
 get_rank_name (gint rank)
 {
   switch (rank) {
@@ -942,7 +942,7 @@ print_children_info (GstElement * element)
 }
 
 static void
-print_blacklist ()
+print_blacklist (void)
 {
   GList *plugins, *cur;
   gint count = 0;

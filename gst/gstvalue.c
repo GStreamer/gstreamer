@@ -3986,9 +3986,9 @@ static const GTypeValueTable _gst_fourcc_value_table = {
   NULL,
   gst_value_copy_fourcc,
   NULL,
-  "i",
+  (char *) "i",
   gst_value_collect_fourcc,
-  "p",
+  (char *) "p",
   gst_value_lcopy_fourcc
 };
 
@@ -3999,9 +3999,9 @@ static const GTypeValueTable _gst_int_range_value_table = {
   NULL,
   gst_value_copy_int_range,
   NULL,
-  "ii",
+  (char *) "ii",
   gst_value_collect_int_range,
-  "pp",
+  (char *) "pp",
   gst_value_lcopy_int_range
 };
 
@@ -4012,9 +4012,9 @@ static const GTypeValueTable _gst_double_range_value_table = {
   NULL,
   gst_value_copy_double_range,
   NULL,
-  "dd",
+  (char *) "dd",
   gst_value_collect_double_range,
-  "pp",
+  (char *) "pp",
   gst_value_lcopy_double_range
 };
 
@@ -4025,9 +4025,9 @@ static const GTypeValueTable _gst_fraction_range_value_table = {
   gst_value_free_fraction_range,
   gst_value_copy_fraction_range,
   NULL,
-  "iiii",
+  (char *) "iiii",
   gst_value_collect_fraction_range,
-  "pppp",
+  (char *) "pppp",
   gst_value_lcopy_fraction_range
 };
 
@@ -4038,9 +4038,9 @@ static const GTypeValueTable _gst_value_list_value_table = {
   gst_value_free_list_or_array,
   gst_value_copy_list_or_array,
   gst_value_list_or_array_peek_pointer,
-  "p",
+  (char *) "p",
   gst_value_collect_list_or_array,
-  "p",
+  (char *) "p",
   gst_value_lcopy_list_or_array
 };
 
@@ -4051,9 +4051,9 @@ static const GTypeValueTable _gst_value_array_value_table = {
   gst_value_free_list_or_array,
   gst_value_copy_list_or_array,
   gst_value_list_or_array_peek_pointer,
-  "p",
+  (char *) "p",
   gst_value_collect_list_or_array,
-  "p",
+  (char *) "p",
   gst_value_lcopy_list_or_array
 };
 
@@ -4064,9 +4064,9 @@ static const GTypeValueTable _gst_fraction_value_table = {
   NULL,
   gst_value_copy_fraction,
   NULL,
-  "ii",
+  (char *) "ii",
   gst_value_collect_fraction,
-  "pp",
+  (char *) "pp",
   gst_value_lcopy_fraction
 };
 

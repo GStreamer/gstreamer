@@ -104,8 +104,8 @@ typedef struct _GstQueryClass GstQueryClass;
 struct _GstQueryTypeDefinition
 {
   GstQueryType   value;
-  gchar          *nick;
-  gchar          *description;
+  const gchar   *nick;
+  const gchar   *description;
   GQuark         quark;
 };
 

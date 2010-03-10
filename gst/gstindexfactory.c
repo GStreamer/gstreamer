@@ -37,7 +37,6 @@
 #include "gstmarshal.h"
 #include "gstregistry.h"
 
-static void gst_index_factory_class_init (GstIndexFactoryClass * klass);
 static void gst_index_factory_finalize (GObject * object);
 
 static GstPluginFeatureClass *factory_parent_class = NULL;

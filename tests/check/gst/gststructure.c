@@ -424,7 +424,8 @@ GST_END_TEST;
 GST_START_TEST (test_structure_nested_from_and_to_string)
 {
   GstStructure *s;
-  gchar *str1, *str2, *end = NULL;
+  const gchar *str1;
+  gchar *str2, *end = NULL;
 
   str1 = "main"
       ", main-sub1=(structure)\"type-b\\,\\ machine-type\\=\\(int\\)0\\;\""

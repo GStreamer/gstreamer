@@ -132,7 +132,6 @@ run_test (void *threadid)
     }
   }
 
-  g_thread_exit (NULL);
   return NULL;
 }
 

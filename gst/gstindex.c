@@ -58,8 +58,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (index_debug);
 #define GST_CAT_DEFAULT index_debug
 
-static void gst_index_class_init (GstIndexClass * klass);
-static void gst_index_init (GstIndex * index);
 static void gst_index_finalize (GObject * object);
 
 static void gst_index_set_property (GObject * object, guint prop_id,

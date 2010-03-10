@@ -128,7 +128,7 @@
 #define GST_CAT_DEFAULT GST_CAT_BUFFER_LIST
 
 #define GROUP_START NULL
-static const gpointer STOLEN = "";
+static gconstpointer STOLEN = "";
 
 /**
  * GstBufferList:
@@ -736,7 +736,7 @@ gst_buffer_list_iterator_steal (GstBufferListIterator * it)
   g_assert (it->last_returned->data != GROUP_START);
 
   buffer = it->last_returned->data;
-  it->last_returned->data = STOLEN;
+  it->last_returned->data = (gpointer) STOLEN;
 
   return buffer;
 }

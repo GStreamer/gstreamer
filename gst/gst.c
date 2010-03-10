@@ -528,7 +528,7 @@ prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 
 #ifndef GST_DISABLE_OPTION_PARSING
 static void
-split_and_iterate (const gchar * stringlist, gchar * separator,
+split_and_iterate (const gchar * stringlist, const gchar * separator,
     GFunc iterator, gpointer user_data)
 {
   gchar **strings;
@@ -957,7 +957,7 @@ parse_goption_arg (const gchar * opt,
 {
   static const struct
   {
-    gchar *opt;
+    const gchar *opt;
     int val;
   } options[] = {
     {
@@ -1148,7 +1148,7 @@ gst_version (guint * major, guint * minor, guint * micro, guint * nano)
  */
 
 gchar *
-gst_version_string ()
+gst_version_string (void)
 {
   guint major, minor, micro, nano;
 

@@ -86,10 +86,10 @@ typedef struct _GstFormatDefinition GstFormatDefinition;
  */
 struct _GstFormatDefinition
 {
-  GstFormat  value;
-  gchar     *nick;
-  gchar     *description;
-  GQuark     quark;
+  GstFormat    value;
+  const gchar *nick;
+  const gchar *description;
+  GQuark       quark;
 };
 
 const gchar*    gst_format_get_name             (GstFormat format);
