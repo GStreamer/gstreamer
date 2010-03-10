@@ -3059,11 +3059,6 @@ gst_avi_demux_check_seekability (GstAviDemux * avi)
     seekable = FALSE;
   }
 
-  if (!avi->element_index) {
-    GST_DEBUG_OBJECT (avi, "no index");
-    seekable = FALSE;
-  }
-
 done:
   GST_INFO_OBJECT (avi, "seekable: %d (%" G_GUINT64_FORMAT " - %"
       G_GUINT64_FORMAT ")", seekable, start, stop);
