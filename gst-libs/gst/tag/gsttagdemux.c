@@ -756,8 +756,12 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
       ret = TRUE;
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_FLUSH_START:
+      ret = gst_pad_event_default (pad, event);
+      break;
     default:
-      if (demux->priv->need_newseg) {
+      if (demux->priv->need_newseg && GST_EVENT_IS_SERIALIZED (event)) {
         /* Cache all events if we have a pending segment, so they don't get
          * lost (esp. tag events) */
         GST_INFO_OBJECT (demux, "caching event: %" GST_PTR_FORMAT, event);
