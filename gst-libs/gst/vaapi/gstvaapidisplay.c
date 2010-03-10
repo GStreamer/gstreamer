@@ -54,11 +54,109 @@ static void
 gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display);
 
 static void
+gst_vaapi_display_destroy(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayPrivate * const priv = display->priv;
+
+    if (priv->profiles) {
+        g_free(priv->profiles);
+        priv->profiles = NULL;
+    }
+
+    if (priv->image_formats) {
+        g_free(priv->image_formats);
+        priv->image_formats = NULL;
+        priv->num_image_formats = 0;
+    }
+
+    if (priv->subpicture_formats) {
+        g_free(priv->subpicture_formats);
+        priv->subpicture_formats = NULL;
+        priv->num_subpicture_formats = 0;
+    }
+
+    if (priv->subpicture_flags) {
+        g_free(priv->subpicture_flags);
+        priv->subpicture_flags = NULL;
+    }
+
+    if (priv->display) {
+        vaTerminate(priv->display);
+        priv->display = NULL;
+    }
+}
+
+static gboolean
+gst_vaapi_display_create(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayPrivate * const priv = display->priv;
+    VAStatus status;
+    int major_version, minor_version;
+    unsigned int i;
+
+    status = vaInitialize(priv->display, &major_version, &minor_version);
+    if (!vaapi_check_status(status, "vaInitialize()"))
+        return FALSE;
+    D(bug("VA-API version %d.%d\n", major_version, minor_version));
+
+    /* VA profiles */
+    priv->num_profiles = vaMaxNumProfiles(priv->display);
+    priv->profiles = g_new(VAProfile, priv->num_profiles);
+    if (!priv->profiles)
+        return FALSE;
+    status = vaQueryConfigProfiles(priv->display,
+                                   priv->profiles,
+                                   &priv->num_profiles);
+    if (!vaapi_check_status(status, "vaQueryConfigProfiles()"))
+        return FALSE;
+
+    D(bug("%d profiles\n", priv->num_profiles));
+    for (i = 0; i < priv->num_profiles; i++)
+        D(bug("  %s\n", string_of_VAProfile(priv->profiles[i])));
+
+    /* VA image formats */
+    priv->num_image_formats = vaMaxNumImageFormats(priv->display);
+    priv->image_formats = g_new(VAImageFormat, priv->num_image_formats);
+    if (!priv->image_formats)
+        return FALSE;
+    status = vaQueryImageFormats(priv->display,
+                                 priv->image_formats,
+                                 &priv->num_image_formats);
+    if (!vaapi_check_status(status, "vaQueryImageFormats()"))
+        return FALSE;
+
+    D(bug("%d image formats\n", priv->num_image_formats));
+    for (i = 0; i < priv->num_image_formats; i++)
+        D(bug("  %s\n", string_of_FOURCC(priv->image_formats[i].fourcc)));
+
+    /* VA subpicture formats */
+    priv->num_subpicture_formats = vaMaxNumSubpictureFormats(priv->display);
+    priv->subpicture_formats = g_new(VAImageFormat, priv->num_subpicture_formats);
+    if (!priv->subpicture_formats)
+        return FALSE;
+    priv->subpicture_flags = g_new(unsigned int, priv->num_subpicture_formats);
+    if (!priv->subpicture_flags)
+        return FALSE;
+    status = vaQuerySubpictureFormats(priv->display,
+                                      priv->subpicture_formats,
+                                      priv->subpicture_flags,
+                                      &priv->num_subpicture_formats);
+    if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
+        return FALSE;
+
+    D(bug("%d subpicture formats\n", priv->num_subpicture_formats));
+    for (i = 0; i < priv->num_subpicture_formats; i++)
+        D(bug("  %s\n", string_of_FOURCC(priv->subpicture_formats[i].fourcc)));
+
+    return TRUE;
+}
+
+static void
 gst_vaapi_display_finalize(GObject *object)
 {
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
-    gst_vaapi_display_set_display(display, NULL);
+    gst_vaapi_display_destroy(display);
 
     G_OBJECT_CLASS(gst_vaapi_display_parent_class)->finalize(object);
 }
@@ -135,129 +233,37 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->num_subpicture_formats = 0;
 }
 
+GstVaapiDisplay *
+gst_vaapi_display_new_with_display(VADisplay va_display)
+{
+    return g_object_new(GST_VAAPI_TYPE_DISPLAY,
+                        "display", va_display,
+                        NULL);
+}
+
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display)
 {
-    GstVaapiDisplayPrivate *priv = display->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
-    return priv->display;
-}
-
-static void
-gst_vaapi_display_destroy_resources(GstVaapiDisplay *display)
-{
-    GstVaapiDisplayPrivate *priv = display->priv;
-
-    if (priv->profiles) {
-        g_free(priv->profiles);
-        priv->profiles = NULL;
-    }
-
-    if (priv->image_formats) {
-        g_free(priv->image_formats);
-        priv->image_formats = NULL;
-    }
-
-    if (priv->subpicture_formats) {
-        g_free(priv->subpicture_formats);
-        priv->subpicture_formats = NULL;
-    }
-
-    if (priv->subpicture_flags) {
-        g_free(priv->subpicture_flags);
-        priv->subpicture_flags = NULL;
-    }
-}
-
-static gboolean
-gst_vaapi_display_create_resources(GstVaapiDisplay *display)
-{
-    GstVaapiDisplayPrivate *priv = display->priv;
-    VAStatus status;
-    unsigned int i;
-
-    /* VA profiles */
-    priv->num_profiles = vaMaxNumProfiles(priv->display);
-    priv->profiles = g_new(VAProfile, priv->num_profiles);
-    if (!priv->profiles)
-        return FALSE;
-    status = vaQueryConfigProfiles(priv->display,
-                                   priv->profiles,
-                                   &priv->num_profiles);
-    if (!vaapi_check_status(status, "vaQueryConfigProfiles()"))
-        return FALSE;
-
-    D(bug("%d profiles\n", priv->num_profiles));
-    for (i = 0; i < priv->num_profiles; i++)
-        D(bug("  %s\n", string_of_VAProfile(priv->profiles[i])));
-
-    /* VA image formats */
-    priv->num_image_formats = vaMaxNumImageFormats(priv->display);
-    priv->image_formats = g_new(VAImageFormat, priv->num_image_formats);
-    if (!priv->image_formats)
-        return FALSE;
-    status = vaQueryImageFormats(priv->display,
-                                 priv->image_formats,
-                                 &priv->num_image_formats);
-    if (!vaapi_check_status(status, "vaQueryImageFormats()"))
-        return FALSE;
-
-    D(bug("%d image formats\n", priv->num_image_formats));
-    for (i = 0; i < priv->num_image_formats; i++)
-        D(bug("  %s\n", string_of_FOURCC(priv->image_formats[i].fourcc)));
-
-    /* VA subpicture formats */
-    priv->num_subpicture_formats = vaMaxNumSubpictureFormats(priv->display);
-    priv->subpicture_formats = g_new(VAImageFormat, priv->num_subpicture_formats);
-    if (!priv->subpicture_formats)
-        return FALSE;
-    priv->subpicture_flags = g_new(unsigned int, priv->num_subpicture_formats);
-    if (!priv->subpicture_flags)
-        return FALSE;
-    status = vaQuerySubpictureFormats(priv->display,
-                                      priv->subpicture_formats,
-                                      priv->subpicture_flags,
-                                      &priv->num_subpicture_formats);
-    if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
-        return FALSE;
-
-    D(bug("%d subpicture formats\n", priv->num_subpicture_formats));
-    for (i = 0; i < priv->num_subpicture_formats; i++)
-        D(bug("  %s\n", string_of_FOURCC(priv->subpicture_formats[i].fourcc)));
-
-    return TRUE;
+    return display->priv->display;
 }
 
 void
 gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display)
 {
-    GstVaapiDisplayPrivate *priv = display->priv;
-    VAStatus status;
-    int major_version, minor_version;
+    GstVaapiDisplayPrivate * const priv = display->priv;
 
     g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
 
-    if (priv->display) {
-        gst_vaapi_display_destroy_resources(display);
-
-        /* XXX: make sure this VADisplay is really the last occurrence */
-        status = vaTerminate(priv->display);
-        if (!vaapi_check_status(status, "vaTerminate()"))
-            return;
-        priv->display = NULL;
-    }
+    if (priv->display)
+        gst_vaapi_display_destroy(display);
 
     if (va_display) {
-        status = vaInitialize(va_display, &major_version, &minor_version);
-        if (!vaapi_check_status(status, "vaInitialize()"))
-            return;
         priv->display = va_display;
-        D(bug("VA-API version %d.%d\n", major_version, minor_version));
-
-        if (!gst_vaapi_display_create_resources(display)) {
-            gst_vaapi_display_destroy_resources(display);
+        if (!gst_vaapi_display_create(display)) {
+            printf("FAIL\n");
+            gst_vaapi_display_destroy(display);
             return;
         }
     }

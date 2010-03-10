@@ -45,10 +45,6 @@ enum {
 };
 
 static void
-gst_vaapi_display_x11_set_display(GstVaapiDisplayX11 *display,
-                                  Display            *x11_display);
-
-static void
 gst_vaapi_display_x11_finalize(GObject *object)
 {
     G_OBJECT_CLASS(gst_vaapi_display_x11_parent_class)->finalize(object);
@@ -64,7 +60,7 @@ gst_vaapi_display_x11_set_property(GObject      *object,
 
     switch (prop_id) {
     case PROP_X11_DISPLAY:
-        gst_vaapi_display_x11_set_display(display, g_value_get_pointer(value));
+        display->priv->display = g_value_get_pointer(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -122,36 +118,18 @@ gst_vaapi_display_x11_init(GstVaapiDisplayX11 *display)
 Display *
 gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
 {
-    GstVaapiDisplayX11Private *priv = display->priv;
-
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
 
-    return priv->display;
-}
-
-void
-gst_vaapi_display_x11_set_display(GstVaapiDisplayX11 *display,
-                                  Display            *x11_display)
-{
-    GstVaapiDisplayX11Private *priv = display->priv;
-
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY_X11(display));
-
-    if (x11_display) {
-        VADisplay va_display = vaGetDisplay(x11_display);
-        if (va_display)
-            g_object_set(GST_VAAPI_DISPLAY(display),
-                         "display", va_display,
-                         NULL);
-    }
-
-    priv->display = x11_display;
+    return display->priv->display;
 }
 
 GstVaapiDisplay *
 gst_vaapi_display_x11_new(Display *x11_display)
 {
+    g_return_val_if_fail(x11_display, NULL);
+
     return g_object_new(GST_VAAPI_TYPE_DISPLAY_X11,
                         "x11-display", x11_display,
+                        "display", vaGetDisplay(x11_display),
                         NULL);
 }

@@ -70,6 +70,9 @@ struct _GstVaapiDisplayClass {
 GType
 gst_vaapi_display_get_type(void);
 
+GstVaapiDisplay *
+gst_vaapi_display_new_with_display(VADisplay va_display);
+
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display);
 
