@@ -804,6 +804,49 @@ gst_rtspsrc_collect_bandwidth (GstRTSPSrc * src, const GstSDPMessage * sdp,
     stream->rs_bandwidth = -1;
 }
 
+static void
+gst_rtspsrc_do_stream_connection (GstRTSPSrc * src, GstRTSPStream * stream,
+    const GstSDPConnection * conn)
+{
+  if (strcmp (conn->nettype, "IN") != 0)
+    return;
+
+  /* check for IPV6 */
+  if (strcmp (conn->addrtype, "IP4") == 0)
+    stream->is_ipv6 = FALSE;
+  else if (strcmp (conn->addrtype, "IP6") == 0)
+    stream->is_ipv6 = TRUE;
+  else
+    return;
+
+  /* FIXME check for multicast */
+}
+
+/* Go over the connections for a stream.
+ * - If we are dealing with IPV6, we will setup IPV6 sockets for sending and
+ *   receiving.
+ * - If we are dealing with a localhost address, we disable multicast
+ */
+static void
+gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
+    const GstSDPMedia * media, GstRTSPStream * stream)
+{
+  const GstSDPConnection *conn;
+  guint i, len;
+
+  /* first look in the media specific section */
+  len = gst_sdp_media_connections_len (media);
+  for (i = 0; i < len; i++) {
+    conn = gst_sdp_media_get_connection (media, i);
+
+    gst_rtspsrc_do_stream_connection (src, stream, conn);
+  }
+  /* then look in the message specific section */
+  if ((conn = gst_sdp_message_get_connection (sdp))) {
+    gst_rtspsrc_do_stream_connection (src, stream, conn);
+  }
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
@@ -830,8 +873,12 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->seqbase = -1;
   stream->timebase = -1;
 
-  /* collect bandwidth information for this steam */
+  /* collect bandwidth information for this steam. FIXME, configure in the RTP
+   * session manager to scale RTCP. */
   gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
+
+  /* collect connection info */
+  gst_rtspsrc_collect_connections (src, sdp, media, stream);
 
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. The problem here is that we just want to
