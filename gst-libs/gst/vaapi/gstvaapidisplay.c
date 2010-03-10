@@ -278,13 +278,13 @@ gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile)
 
 static gboolean
 _gst_vaapi_display_has_format(
-    GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVaapiDisplay     *display,
+    GstVaapiImageFormat  format,
     const VAImageFormat *va_formats,
-    guint               num_va_formats
+    unsigned int         num_va_formats
 )
 {
-    guint i;
+    unsigned int i;
 
     g_return_val_if_fail(format != 0, FALSE);
 
@@ -292,6 +292,41 @@ _gst_vaapi_display_has_format(
         if (gst_vaapi_image_format(&va_formats[i]) == format)
             return TRUE;
     return FALSE;
+}
+
+static GstCaps *
+_gst_vaapi_display_get_caps(
+    GstVaapiDisplay     *display,
+    const VAImageFormat *va_formats,
+    unsigned int         num_va_formats
+)
+{
+    GstCaps *out_caps;
+    unsigned int i;
+
+    out_caps = gst_caps_new_empty();
+    if (!out_caps)
+        return NULL;
+
+    for (i = 0; i < num_va_formats; i++) {
+        GstVaapiImageFormat format = gst_vaapi_image_format(&va_formats[i]);
+        if (format) {
+            GstCaps * const caps = gst_vaapi_image_format_get_caps(format);
+            if (caps)
+                gst_caps_append(out_caps, caps);
+        }
+    }
+    return out_caps;
+}
+
+GstCaps *
+gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    return _gst_vaapi_display_get_caps(display,
+                                       display->priv->image_formats,
+                                       display->priv->num_image_formats);
 }
 
 gboolean
@@ -307,6 +342,16 @@ gst_vaapi_display_has_image_format(
                                          display->priv->num_image_formats);
 }
 
+GstCaps *
+gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    return _gst_vaapi_display_get_caps(display,
+                                       display->priv->subpicture_formats,
+                                       display->priv->num_subpicture_formats);
+}
+
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,
@@ -319,4 +364,3 @@ gst_vaapi_display_has_subpicture_format(
                                          display->priv->subpicture_formats,
                                          display->priv->num_subpicture_formats);
 }
-

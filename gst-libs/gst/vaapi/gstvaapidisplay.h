@@ -76,11 +76,17 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display);
 gboolean
 gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile);
 
+GstCaps *
+gst_vaapi_display_get_image_caps(GstVaapiDisplay *display);
+
 gboolean
 gst_vaapi_display_has_image_format(
     GstVaapiDisplay    *display,
     GstVaapiImageFormat format
 );
+
+GstCaps *
+gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display);
 
 gboolean
 gst_vaapi_display_has_subpicture_format(
