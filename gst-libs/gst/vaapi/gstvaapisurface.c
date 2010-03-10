@@ -159,28 +159,17 @@ gst_vaapi_surface_get_property(GObject    *object,
     }
 }
 
-static GObject *
-gst_vaapi_surface_constructor(GType                  type,
-                              guint                  n_params,
-                              GObjectConstructParam *params)
+static void
+gst_vaapi_surface_constructed(GObject *object)
 {
-    GstVaapiSurface *surface;
+    GstVaapiSurface * const surface = GST_VAAPI_SURFACE(object);
     GObjectClass *parent_class;
-    GObject *object;
 
-    D(bug("gst_vaapi_surface_constructor()\n"));
+    gst_vaapi_surface_create(surface);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_surface_parent_class);
-    object = parent_class->constructor (type, n_params, params);
-
-    if (object) {
-        surface = GST_VAAPI_SURFACE(object);
-        if (!gst_vaapi_surface_create(surface)) {
-            gst_vaapi_surface_destroy(surface);
-            object = NULL;
-        }
-    }
-    return object;
+    if (parent_class->constructed)
+        parent_class->constructed(object);
 }
 
 static void
@@ -193,7 +182,7 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
     object_class->finalize     = gst_vaapi_surface_finalize;
     object_class->set_property = gst_vaapi_surface_set_property;
     object_class->get_property = gst_vaapi_surface_get_property;
-    object_class->constructor  = gst_vaapi_surface_constructor;
+    object_class->constructed  = gst_vaapi_surface_constructed;
 
     g_object_class_install_property
         (object_class,
@@ -267,9 +256,9 @@ gst_vaapi_surface_new(GstVaapiDisplay *display,
 
     return g_object_new(GST_VAAPI_TYPE_SURFACE,
                         "display", display,
-                        "width", width,
-                        "height", height,
-                        "format", format,
+                        "width",   width,
+                        "height",  height,
+                        "format",  format,
                         NULL);
 }
 
