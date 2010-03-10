@@ -338,6 +338,11 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
       vidpad->vids_codec_data = NULL;
     }
 
+    if (vidpad->prepend_buffer) {
+      gst_buffer_unref (vidpad->prepend_buffer);
+      vidpad->prepend_buffer = NULL;
+    }
+
     memset (&(vidpad->vids), 0, sizeof (gst_riff_strf_vids));
     memset (&(vidpad->vprp), 0, sizeof (gst_riff_vprp));
   } else {
@@ -433,6 +438,7 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
   const GValue *codec_data;
   gint width, height;
   gint par_n, par_d;
+  gboolean codec_data_in_headers = TRUE;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
@@ -496,15 +502,6 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avipad->vprp.field_info[0].compressed_bm_width = width;
     avipad->vprp.field_info[0].valid_bm_height = height;
     avipad->vprp.field_info[0].valid_bm_width = width;
-  }
-
-  /* codec initialization data, if any */
-  codec_data = gst_structure_get_value (structure, "codec_data");
-  if (codec_data) {
-    avipad->vids_codec_data = gst_value_get_buffer (codec_data);
-    gst_buffer_ref (avipad->vids_codec_data);
-    /* keep global track of size */
-    avimux->codec_data_size += GST_BUFFER_SIZE (avipad->vids_codec_data);
   }
 
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
@@ -586,6 +583,11 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
         case 4:
           /* mplayer/ffmpeg might not work with DIVX, but with FMP4 */
           avipad->vids.compression = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
+
+          /* DIVX/XVID in AVI store the codec_data chunk as part of the
+             first data buffer. So for this case, we prepend the codec_data
+             blob (if any) to that first buffer */
+          codec_data_in_headers = FALSE;
           break;
         default:
           GST_INFO ("unhandled mpegversion : %d, fall back to fourcc=MPEG",
@@ -618,6 +620,20 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
     if (!avipad->vids.compression)
       goto refuse_caps;
+  }
+
+  /* codec initialization data, if any */
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data) {
+    if (codec_data_in_headers) {
+      avipad->vids_codec_data = gst_value_get_buffer (codec_data);
+      gst_buffer_ref (avipad->vids_codec_data);
+      /* keep global track of size */
+      avimux->codec_data_size += GST_BUFFER_SIZE (avipad->vids_codec_data);
+    } else {
+      avipad->prepend_buffer =
+          gst_buffer_ref (gst_value_get_buffer (codec_data));
+    }
   }
 
   avipad->parent.hdr.fcc_handler = avipad->vids.compression;
@@ -1939,6 +1955,21 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   guint flags;
 
   data = gst_collect_pads_pop (avimux->collect, avipad->collect);
+
+  /* Prepend a special buffer to the first one for some formats */
+  if (avipad->is_video) {
+    GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
+
+    if (vidpad->prepend_buffer) {
+      GstBuffer *newdata = gst_buffer_merge (vidpad->prepend_buffer, data);
+      gst_buffer_copy_metadata (newdata, data, GST_BUFFER_COPY_TIMESTAMPS);
+      gst_buffer_unref (data);
+      gst_buffer_unref (vidpad->prepend_buffer);
+
+      data = newdata;
+      vidpad->prepend_buffer = NULL;
+    }
+  }
 
   if (avimux->restart) {
     if ((res = gst_avi_mux_restart_file (avimux)) != GST_FLOW_OK)

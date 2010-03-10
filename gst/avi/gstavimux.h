@@ -105,6 +105,8 @@ typedef struct _GstAviVideoPad {
   /* ODML video properties */
   gst_riff_vprp vprp;
 
+  GstBuffer *prepend_buffer;
+
 } GstAviVideoPad;
 
 typedef struct _GstAviAudioPad {
