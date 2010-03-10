@@ -156,7 +156,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
 #endif
 
   if (bytes_read != readsize) {
-    GST_DEBUG_OBJECT (this, ("Error while reading data"));
+    GST_DEBUG_OBJECT (this, "Error while reading data");
     return GST_FLOW_ERROR;
   }
 
