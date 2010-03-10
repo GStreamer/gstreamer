@@ -613,7 +613,7 @@ AC_SUBST(DEPRECATED_CFLAGS)
 
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time via e.g.
 dnl make DEPRECATED_CFLAGS=''
-GST_OPTION_CFLAGS="\$(ERROR_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
+GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
 
 dnl GST_ALL_*
@@ -624,7 +624,7 @@ dnl - src and build dirs need to be added because every piece that gets built
 dnl   will need the GStreamer source and generated headers
 dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
 dnl       from LibXML except for in the core library
-GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS) -DG_THREADS_MANDATORY"
+GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS) \$(ERROR_CFLAGS) -DG_THREADS_MANDATORY"
 
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
