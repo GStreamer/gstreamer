@@ -36,7 +36,7 @@ noinst_HEADERS = gstrtpbin.h \
 		 gstrtpsession.h
 
 libgstrtpmanager_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	$(ERROR_CFLAGS)
+	$(WARNING_CFLAGS) $(ERROR_CFLAGS)
 libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS_LIBS)
