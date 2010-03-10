@@ -260,7 +260,8 @@ gst_video_format_parse_caps_interlaced (GstCaps * caps, gboolean * interlaced)
  *
  * Since: 0.10.29
  *
- * Returns: TRUE if @caps was parsed correctly.
+ * Returns: a color matrix string, or NULL if no color matrix could be
+ *     determined.
  */
 const char *
 gst_video_parse_caps_color_matrix (GstCaps * caps)
