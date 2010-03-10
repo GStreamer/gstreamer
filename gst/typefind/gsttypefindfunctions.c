@@ -650,6 +650,8 @@ static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
 static void
 aac_type_find (GstTypeFind * tf, gpointer unused)
 {
+  /* LUT to convert the AudioObjectType from the ADTS header to a string */
+  static const gchar profile_to_string[][5] = { "main", "lc", "ssr", "ltp" };
   DataScanCtx c = { 0, NULL, 0 };
 
   while (c.offset < AAC_AMOUNT) {
@@ -680,14 +682,17 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
       snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
-        gint mpegversion;
+        gint mpegversion, profile;
 
         mpegversion = (c.data[1] & 0x08) ? 2 : 4;
+        profile = c.data[2] >> 6;
         GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%"
             G_GINT64_MODIFIER "x, framelen %u", mpegversion, c.offset, len);
         gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
             "mpegversion", G_TYPE_INT, mpegversion,
+            "base-profile", G_TYPE_STRING, profile_to_string[profile],
+            "profile", G_TYPE_STRING, profile_to_string[profile],
             "stream-type", G_TYPE_STRING, "adts", NULL);
         break;
       }
