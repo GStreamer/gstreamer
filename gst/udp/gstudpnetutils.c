@@ -117,19 +117,12 @@ beach:
 }
 
 int
-gst_udp_set_loop (int sockfd, gboolean loop)
+gst_udp_set_loop (int sockfd, ADDRESS_FAMILY ss_family, gboolean loop)
 {
-  socklen_t socklen;
-  struct sockaddr_storage addr;
   int ret = -1;
   int l = (loop == FALSE) ? 0 : 1;
 
-  socklen = sizeof (addr);
-  if ((ret = getsockname (sockfd, (struct sockaddr *) &addr, &socklen)) < 0) {
-    return ret;
-  }
-
-  switch (addr.ss_family) {
+  switch (ss_family) {
     case AF_INET:
     {
       ret = setsockopt (sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &l, sizeof (l));
@@ -160,19 +153,12 @@ gst_udp_set_loop (int sockfd, gboolean loop)
 }
 
 int
-gst_udp_set_ttl (int sockfd, int ttl, gboolean is_multicast)
+gst_udp_set_ttl (int sockfd, ADDRESS_FAMILY ss_family, int ttl, gboolean is_multicast)
 {
-  socklen_t socklen;
-  struct sockaddr_storage addr;
   int optname = -1;
   int ret = -1;
 
-  socklen = sizeof (addr);
-  if ((ret = getsockname (sockfd, (struct sockaddr *) &addr, &socklen)) < 0) {
-    return ret;
-  }
-
-  switch (addr.ss_family) {
+  switch (ss_family) {
     case AF_INET:
     {
       optname = (is_multicast == TRUE) ? IP_MULTICAST_TTL : IP_TTL;

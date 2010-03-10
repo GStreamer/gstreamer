@@ -77,6 +77,7 @@ enum
 #define DEFAULT_CLOSEFD            TRUE
 #define DEFAULT_SOCK               -1
 #define DEFAULT_CLIENTS            NULL
+#define DEFAULT_FAMILY             0
 /* FIXME, this should be disabled by default, we don't need to join a multicast
  * group for sending, if this socket is also used for receiving, it should
  * be configured in the element that does the receive. */
@@ -356,6 +357,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->ttl_mc = DEFAULT_TTL_MC;
   sink->loop = DEFAULT_LOOP;
   sink->qos_dscp = DEFAULT_QOS_DSCP;
+  sink->ss_family = DEFAULT_FAMILY;
 }
 
 static void
@@ -774,14 +776,14 @@ gst_multiudpsink_configure_client (GstMultiUDPSink * sink,
         goto join_group_failed;
     }
     GST_DEBUG_OBJECT (sink, "setting loop to %d", sink->loop);
-    if (gst_udp_set_loop (sink->sock, sink->loop) != 0)
+    if (gst_udp_set_loop (sink->sock, sink->ss_family, sink->loop) != 0)
       goto loop_failed;
     GST_DEBUG_OBJECT (sink, "setting ttl to %d", sink->ttl_mc);
-    if (gst_udp_set_ttl (sink->sock, sink->ttl_mc, TRUE) != 0)
+    if (gst_udp_set_ttl (sink->sock, sink->ss_family, sink->ttl_mc, TRUE) != 0)
       goto ttl_failed;
   } else {
     GST_DEBUG_OBJECT (sink, "setting unicast ttl to %d", sink->ttl);
-    if (gst_udp_set_ttl (sink->sock, sink->ttl, FALSE) != 0)
+    if (gst_udp_set_ttl (sink->sock, sink->ss_family, sink->ttl, FALSE) != 0)
       goto ttl_failed;
   }
   return TRUE;
@@ -831,9 +833,12 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   if (sink->sockfd == -1) {
     GST_DEBUG_OBJECT (sink, "creating sockets");
     /* create sender socket try IP6, fall back to IP4 */
-    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1)
+    sink->ss_family = AF_INET6;
+    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1){
+      sink->ss_family = AF_INET;
       if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
         goto no_socket;
+    }
 
     GST_DEBUG_OBJECT (sink, "have socket");
     sink->externalfd = FALSE;
