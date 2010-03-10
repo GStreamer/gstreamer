@@ -235,8 +235,6 @@ gst_vaapi_surface_init(GstVaapiSurface *surface)
 {
     GstVaapiSurfacePrivate *priv = GST_VAAPI_SURFACE_GET_PRIVATE(surface);
 
-    D(bug("gst_vaapi_surface_init()\n"));
-
     surface->priv       = priv;
     priv->display       = NULL;
     priv->surface_id    = VA_INVALID_SURFACE;
@@ -251,8 +249,7 @@ gst_vaapi_surface_new(GstVaapiDisplay *display,
                       guint            height,
                       guint            format)
 {
-    D(bug("gst_vaapi_surface_new(): size %ux%u, format 0x%x\n",
-          width, height, format));
+    GST_DEBUG("size %ux%u, format 0x%x", width, height, format);
 
     return g_object_new(GST_VAAPI_TYPE_SURFACE,
                         "display", display,

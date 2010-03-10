@@ -30,4 +30,7 @@
 #endif
 #define bug vaapi_dprintf
 
+GST_DEBUG_CATEGORY_EXTERN(gst_debug_vaapi);
+#define GST_CAT_DEFAULT gst_debug_vaapi
+
 #endif /* VAAPI_DEBUG_H */

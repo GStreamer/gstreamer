@@ -26,6 +26,8 @@
 #define DEBUG 1
 #include "vaapi_debug.h"
 
+GST_DEBUG_CATEGORY(gst_debug_vaapi);
+
 G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
 
 #define GST_VAAPI_DISPLAY_GET_PRIVATE(obj)                      \
@@ -97,7 +99,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     status = vaInitialize(priv->display, &major_version, &minor_version);
     if (!vaapi_check_status(status, "vaInitialize()"))
         return FALSE;
-    D(bug("VA-API version %d.%d\n", major_version, minor_version));
+    GST_DEBUG("VA-API version %d.%d", major_version, minor_version);
 
     /* VA profiles */
     priv->num_profiles = vaMaxNumProfiles(priv->display);
@@ -110,9 +112,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!vaapi_check_status(status, "vaQueryConfigProfiles()"))
         return FALSE;
 
-    D(bug("%d profiles\n", priv->num_profiles));
+    GST_DEBUG("%d profiles", priv->num_profiles);
     for (i = 0; i < priv->num_profiles; i++)
-        D(bug("  %s\n", string_of_VAProfile(priv->profiles[i])));
+        GST_DEBUG("  %s", string_of_VAProfile(priv->profiles[i]));
 
     /* VA image formats */
     priv->num_image_formats = vaMaxNumImageFormats(priv->display);
@@ -125,9 +127,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!vaapi_check_status(status, "vaQueryImageFormats()"))
         return FALSE;
 
-    D(bug("%d image formats\n", priv->num_image_formats));
+    GST_DEBUG("%d image formats", priv->num_image_formats);
     for (i = 0; i < priv->num_image_formats; i++)
-        D(bug("  %s\n", string_of_FOURCC(priv->image_formats[i].fourcc)));
+        GST_DEBUG("  %s", string_of_FOURCC(priv->image_formats[i].fourcc));
 
     /* VA subpicture formats */
     priv->num_subpicture_formats = vaMaxNumSubpictureFormats(priv->display);
@@ -144,9 +146,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
         return FALSE;
 
-    D(bug("%d subpicture formats\n", priv->num_subpicture_formats));
+    GST_DEBUG("%d subpicture formats", priv->num_subpicture_formats);
     for (i = 0; i < priv->num_subpicture_formats; i++)
-        D(bug("  %s\n", string_of_FOURCC(priv->subpicture_formats[i].fourcc)));
+        GST_DEBUG("  %s", string_of_FOURCC(priv->subpicture_formats[i].fourcc));
 
     return TRUE;
 }
@@ -202,6 +204,8 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
 
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapi, "vaapi", 0, "VA-API helper");
+
     g_type_class_add_private(klass, sizeof(GstVaapiDisplayPrivate));
 
     object_class->finalize     = gst_vaapi_display_finalize;
@@ -254,15 +258,12 @@ gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display)
 {
     GstVaapiDisplayPrivate * const priv = display->priv;
 
-    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
-
     if (priv->display)
         gst_vaapi_display_destroy(display);
 
     if (va_display) {
         priv->display = va_display;
         if (!gst_vaapi_display_create(display)) {
-            printf("FAIL\n");
             gst_vaapi_display_destroy(display);
             return;
         }

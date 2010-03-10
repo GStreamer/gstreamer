@@ -179,8 +179,6 @@ gst_vaapi_image_constructed(GObject *object)
     GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
     GObjectClass *parent_class;
 
-    D(bug("gst_vaapi_image_constructed()\n"));
-
     gst_vaapi_image_create(image);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_image_parent_class);
@@ -251,8 +249,6 @@ gst_vaapi_image_init(GstVaapiImage *image)
 {
     GstVaapiImagePrivate *priv = GST_VAAPI_IMAGE_GET_PRIVATE(image);
 
-    D(bug("gst_vaapi_image_init()\n"));
-
     image->priv          = priv;
     priv->display        = NULL;
     priv->image_data     = NULL;
@@ -273,8 +269,11 @@ gst_vaapi_image_new(
     GstVaapiImageFormat format
 )
 {
-    D(bug("gst_vaapi_image_new(): size %ux%u, format 0x%x\n",
-          width, height, format));
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(height > 0, NULL);
+
+    GST_DEBUG("size %ux%u, format 0x%x", width, height, format);
 
     return g_object_new(GST_VAAPI_TYPE_IMAGE,
                         "display", display,

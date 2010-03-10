@@ -188,8 +188,6 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
 {
     GstVaapiSubpicturePrivate *priv = GST_VAAPI_SUBPICTURE_GET_PRIVATE(subpicture);
 
-    D(bug("gst_vaapi_subpicture_init()\n"));
-
     subpicture->priv    = priv;
     priv->subpicture_id = VA_INVALID_ID;
     priv->image         = NULL;
@@ -198,8 +196,9 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image)
 {
-    D(bug("gst_vaapi_subpicture_new(): image 0x%08x\n",
-          gst_vaapi_image_get_id(image)));
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+
+    GST_DEBUG("image 0x%08x", gst_vaapi_image_get_id(image));
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
                         "image", image,
