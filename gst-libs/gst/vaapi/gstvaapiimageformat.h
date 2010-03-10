@@ -60,6 +60,9 @@ gst_vaapi_image_format_from_fourcc(guint32 fourcc);
 const VAImageFormat *
 gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format);
 
+GstCaps *
+gst_vaapi_image_format_get_caps(GstVaapiImageFormat format);
+
 G_END_DECLS
 
 #endif /* GST_GST_VAAPI_IMAGE_H */

@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <glib.h>
+#include <gst/video/video.h>
 #include "gstvaapiimageformat.h"
 
 typedef enum _GstVaapiImageFormatType           GstVaapiImageFormatType;
@@ -34,20 +35,20 @@ enum _GstVaapiImageFormatType {
 struct _GstVaapiImageFormatMap {
     GstVaapiImageFormatType     type;
     GstVaapiImageFormat         format;
+    GstStaticCaps               caps;
     VAImageFormat               va_format;
 };
 
-#define DEF(TYPE, FORMAT) \
-    GST_VAAPI_IMAGE_FORMAT_TYPE_##TYPE, GST_VAAPI_IMAGE_##FORMAT
+#define DEF(TYPE, FORMAT, CAPS_STR)                                     \
+    GST_VAAPI_IMAGE_FORMAT_TYPE_##TYPE,                                 \
+    GST_VAAPI_IMAGE_##FORMAT,                                           \
+    GST_STATIC_CAPS(CAPS_STR)
 #define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP)                            \
-    { DEF(YCBCR, FORMAT),                                               \
+    { DEF(YCBCR, FORMAT, GST_VIDEO_CAPS_YUV(#FORMAT)),                  \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }, }
 #define DEF_RGB(FORMAT, FOURCC, ENDIAN, BPP, DEPTH, R,G,B,A)            \
-    { DEF(RGB, FORMAT),                                                 \
+    { DEF(RGB, FORMAT, GST_VIDEO_CAPS_##FORMAT),                        \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
-#define DEF_IDX(FORMAT, FOURCC, ENDIAN, BPP, NPE, EB, C0,C1,C2,C3)      \
-    { DEF(TYPE, FORMAT),                                                \
-        { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }
 
 static const GstVaapiImageFormatMap gst_vaapi_image_formats[] = {
     DEF_YUV(NV12, ('N','V','1','2'), LSB, 12),
@@ -67,7 +68,6 @@ static const GstVaapiImageFormatMap gst_vaapi_image_formats[] = {
     { 0, }
 };
 
-#undef DEF_IDX
 #undef DEF_RGB
 #undef DEF_YUV
 #undef DEF
@@ -150,4 +150,21 @@ gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
     g_return_val_if_fail(m, NULL);
 
     return &m->va_format;
+}
+
+GstCaps *
+gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
+{
+    GstCaps *caps;
+    const GstVaapiImageFormatMap *m;
+
+    m = get_map_from_gst_vaapi_image_format(format);
+
+    g_return_val_if_fail(m, NULL);
+
+    caps = gst_static_caps_get(&m->caps);
+    if (!caps)
+        return NULL;
+
+    return gst_caps_make_writable(caps);
 }
