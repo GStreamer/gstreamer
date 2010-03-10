@@ -1088,7 +1088,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   /* ERRORS */
 no_sinks:
   {
-    if (!elem) {
+    if (!elem && !playsink->video_sink) {
       post_missing_element_message (playsink, "autovideosink");
       if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
         post_missing_element_message (playsink, DEFAULT_VIDEOSINK);
@@ -1100,7 +1100,11 @@ no_sinks:
             (_("The autovideosink element is missing.")), (NULL));
       }
     } else {
-      if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
+      if (playsink->video_sink) {
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+            (_("Configured videosink %s is not working."),
+                GST_ELEMENT_NAME (playsink->video_sink)), (NULL));
+      } else if (strcmp (DEFAULT_VIDEOSINK, "autovideosink")) {
         GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
             (_("Both autovideosink and %s elements are not working."),
                 DEFAULT_VIDEOSINK), (NULL));
@@ -1563,7 +1567,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   /* ERRORS */
 no_sinks:
   {
-    if (!elem) {
+    if (!elem && !playsink->audio_sink) {
       post_missing_element_message (playsink, "autoaudiosink");
       if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
         post_missing_element_message (playsink, DEFAULT_AUDIOSINK);
@@ -1575,7 +1579,11 @@ no_sinks:
             (_("The autoaudiosink element is missing.")), (NULL));
       }
     } else {
-      if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
+      if (playsink->audio_sink) {
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+            (_("Configured audiosink %s is not working."),
+                GST_ELEMENT_NAME (playsink->audio_sink)), (NULL));
+      } else if (strcmp (DEFAULT_AUDIOSINK, "autoaudiosink")) {
         GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
             (_("Both autoaudiosink and %s elements are not working."),
                 DEFAULT_AUDIOSINK), (NULL));
