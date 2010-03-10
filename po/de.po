@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 20:33+0000\n"
+"POT-Creation-Date: 2010-03-10 00:25+0000\n"
 "PO-Revision-Date: 2009-09-19 11:59+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -215,7 +215,8 @@ msgstr "Beide Elemente »autoaudiosink« und »%s« funktionieren nicht."
 msgid "The autoaudiosink element is not working."
 msgstr "Das Element »autoaudiosink« funktioniert nicht."
 
-msgid "Can't play a text file without video."
+#, fuzzy
+msgid "Can't play a text file without video or visualizations."
 msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
 
 #, c-format
