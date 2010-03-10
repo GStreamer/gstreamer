@@ -57,6 +57,13 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_TITLE, "dc:title"},
   /* FIXME: we probably want GST_TAG_{,AUDIO_,VIDEO_}MIME_TYPE */
   {GST_TAG_VIDEO_CODEC, "dc:format"},
+
+  /* photoshop schema */
+  {GST_TAG_GEO_LOCATION_COUNTRY, "photoshop:Country"},
+  {GST_TAG_GEO_LOCATION_CITY, "photoshop:City"},
+
+  /* iptc4xmpcore schema */
+  {GST_TAG_GEO_LOCATION_SUBLOCATION, "Iptc4xmpCore:Location"},
   /* */
   {NULL, NULL}
 };
@@ -73,6 +80,8 @@ static const GstXmpNamespaceMatch ns_match[] = {
   {"exif", "http://ns.adobe.com/exif/1.0/"},
   {"tiff", "http://ns.adobe.com/tiff/1.0/"},
   {"xap", "http://ns.adobe.com/xap/1.0/"},
+  {"photoshop", "http://ns.adobe.com/photoshop/1.0/"},
+  {"Iptc4xmpCore", "http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/"},
   {NULL, NULL}
 };
 
@@ -87,6 +96,8 @@ static GstXmpNamespaceMap ns_map[] = {
   {"exif", NULL},
   {"tiff", NULL},
   {"xap", NULL},
+  {"photoshop", NULL},
+  {"Iptc4xmpCore", NULL},
   {NULL, NULL}
 };
 
