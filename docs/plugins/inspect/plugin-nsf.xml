@@ -1,5 +1,5 @@
 <plugin>
-  <name>nsfdec</name>
+  <name>nsf</name>
   <description>Uses nosefart to decode .nsf files</description>
   <filename>../../gst/nsf/.libs/libgstnsf.so</filename>
   <basename>libgstnsf.so</basename>

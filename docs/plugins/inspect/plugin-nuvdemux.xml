@@ -1,6 +1,6 @@
 <plugin>
   <name>nuvdemux</name>
-  <description>Demuxes and muxes audio and video</description>
+  <description>Demuxes MythTV NuppelVideo files</description>
   <filename>../../gst/nuvdemux/.libs/libgstnuvdemux.so</filename>
   <basename>libgstnuvdemux.so</basename>
   <version>0.10.18.1</version>
@@ -13,7 +13,7 @@
       <name>nuvdemux</name>
       <longname>Nuv demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>Demultiplex a mythtv .nuv file into audio and video</description>
+      <description>Demultiplex a MythTV NuppleVideo .nuv file into audio and video</description>
       <author>Renato Araujo Oliveira Filho &lt;renato.filho@indt.org.br&gt;,Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;</author>
       <pads>
         <caps>

@@ -19744,6 +19744,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDc1394::iso-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[100,3200]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)</NICK>
+<BLURB>The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200).</BLURB>
+<DEFAULT>400</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>ladspa-Exaggerate::amount</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[-1,10]</RANGE>

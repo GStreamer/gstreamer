@@ -1,5 +1,5 @@
 <plugin>
-  <name>apex</name>
+  <name>apexsink</name>
   <description>Apple AirPort Express Plugin</description>
   <filename>../../ext/apexsink/.libs/libgstapexsink.so</filename>
   <basename>libgstapexsink.so</basename>

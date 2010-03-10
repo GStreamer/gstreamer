@@ -1,6 +1,6 @@
 <plugin>
   <name>vmnc</name>
-  <description>VMnc video plugin library</description>
+  <description>VmWare Video Codec plugins</description>
   <filename>../../gst/vmnc/.libs/libgstvmnc.so</filename>
   <basename>libgstvmnc.so</basename>
   <version>0.10.18.1</version>
@@ -13,7 +13,7 @@
       <name>vmncdec</name>
       <longname>VMnc video decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>Decode VMnc to raw (RGB) video</description>
+      <description>Decode VmWare video to raw (RGB) video</description>
       <author>Michael Smith &lt;msmith@xiph.org&gt;</author>
       <pads>
         <caps>
