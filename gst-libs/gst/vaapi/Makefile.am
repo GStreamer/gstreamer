@@ -4,6 +4,7 @@ libgstvaapi_source_c =				\
 	gstvaapidisplay.c			\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
+	gstvaapisinkbase.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	vaapi_utils.c				\
@@ -13,6 +14,7 @@ libgstvaapi_source_h =				\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
+	gstvaapisinkbase.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	vaapi_debug.h				\
