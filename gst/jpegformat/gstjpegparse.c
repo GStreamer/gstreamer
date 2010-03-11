@@ -432,7 +432,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 static gboolean
 gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
 {
-  guint8 numcomps;              /* Number of components in image
+  guint8 numcomps = 0;          /* Number of components in image
                                    (1 for gray, 3 for YUV, etc.) */
   guint8 precision;             /* precision (in bits) for the samples */
   guint8 compId[3];             /* unique value identifying each component */
@@ -440,7 +440,7 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   guint8 blockWidth[3];         /* Array[numComponents] giving the number of
                                    blocks (horiz) in this component */
   guint8 blockHeight[3];        /* Same for the vertical part of this component */
-  guint8 i, value;
+  guint8 i, value = 0;
   gint temp;
 
   /* flush length field */
@@ -512,8 +512,8 @@ static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
-  guint8 marker;
-  guint16 size;
+  guint8 marker = 0;
+  guint16 size = 0;
   gboolean foundSOF = FALSE;
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
@@ -542,7 +542,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
       case COM:{               /* read comment and post as tag */
         GstTagList *tags;
-        const guint8 *comment;
+        const guint8 *comment = NULL;
 
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
           goto error;

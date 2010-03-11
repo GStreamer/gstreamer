@@ -254,9 +254,9 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
   GstJifMuxMarker *m;
-  guint8 marker;
-  guint16 size;
-  const guint8 *data;
+  guint8 marker = 0;
+  guint16 size = 0;
+  const guint8 *data = NULL;
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
     goto error;
