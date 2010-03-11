@@ -49,8 +49,8 @@ GST_START_TEST (test_buffer_range)
   GstCaps *caps;
 
   fail_unless (gst_type_find_register (NULL, "foo/x-bar",
-          GST_RANK_PRIMARY + 50, foobar_typefind, foobar_exts, FOOBAR_CAPS,
-          NULL, NULL));
+          GST_RANK_PRIMARY + 50, foobar_typefind, (gchar **) foobar_exts,
+          FOOBAR_CAPS, NULL, NULL));
 
   buf = gst_buffer_new ();
   fail_unless (buf != NULL);
