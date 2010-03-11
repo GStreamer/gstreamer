@@ -37,6 +37,7 @@ G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
 
 struct _GstVaapiDisplayPrivate {
     VADisplay           display;
+    gboolean            create_display;
     VAProfile          *profiles;
     unsigned int        num_profiles;
     VAImageFormat      *image_formats;
@@ -51,9 +52,6 @@ enum {
 
     PROP_DISPLAY
 };
-
-static void
-gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display);
 
 static void
 filter_formats(VAImageFormat *va_formats, unsigned int *pnum_va_formats)
@@ -146,6 +144,12 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
         vaTerminate(priv->display);
         priv->display = NULL;
     }
+
+    if (priv->create_display) {
+        GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+        if (klass->close_display)
+            klass->close_display(display);
+    }
 }
 
 static gboolean
@@ -155,6 +159,16 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     VAStatus status;
     int major_version, minor_version;
     unsigned int i;
+
+    if (!priv->display && priv->create_display) {
+        GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+        if (klass->open_display && !klass->open_display(display))
+            return FALSE;
+        if (klass->get_display)
+            priv->display = klass->get_display(display);
+    }
+    if (!priv->display)
+        return FALSE;
 
     status = vaInitialize(priv->display, &major_version, &minor_version);
     if (!vaapi_check_status(status, "vaInitialize()"))
@@ -244,16 +258,17 @@ gst_vaapi_display_finalize(GObject *object)
 }
 
 static void
-gst_vaapi_display_set_property(GObject      *object,
-                               guint         prop_id,
-                               const GValue *value,
-                               GParamSpec   *pspec)
+gst_vaapi_display_set_property(
+    GObject      *object,
+    guint         prop_id,
+    const GValue *value,
+    GParamSpec   *pspec)
 {
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        gst_vaapi_display_set_display(display, g_value_get_pointer(value));
+        display->priv->display = g_value_get_pointer(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -262,10 +277,12 @@ gst_vaapi_display_set_property(GObject      *object,
 }
 
 static void
-gst_vaapi_display_get_property(GObject    *object,
-                               guint       prop_id,
-                               GValue     *value,
-                               GParamSpec *pspec)
+gst_vaapi_display_get_property(
+    GObject    *object,
+    guint       prop_id,
+    GValue     *value,
+    GParamSpec *pspec
+)
 {
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
@@ -280,6 +297,20 @@ gst_vaapi_display_get_property(GObject    *object,
 }
 
 static void
+gst_vaapi_display_constructed(GObject *object)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
+    GObjectClass *parent_class;
+
+    display->priv->create_display = display->priv->display == NULL;
+    gst_vaapi_display_create(display);
+
+    parent_class = G_OBJECT_CLASS(gst_vaapi_display_parent_class);
+    if (parent_class->constructed)
+        parent_class->constructed(object);
+}
+
+static void
 gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
@@ -291,6 +322,7 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
     object_class->finalize     = gst_vaapi_display_finalize;
     object_class->set_property = gst_vaapi_display_set_property;
     object_class->get_property = gst_vaapi_display_get_property;
+    object_class->constructed  = gst_vaapi_display_constructed;
 
     g_object_class_install_property
         (object_class,
@@ -308,6 +340,7 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
 
     display->priv                = priv;
     priv->display                = NULL;
+    priv->create_display         = TRUE;
     priv->profiles               = 0;
     priv->num_profiles           = 0;
     priv->image_formats          = NULL;
@@ -331,23 +364,6 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display)
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
     return display->priv->display;
-}
-
-void
-gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display)
-{
-    GstVaapiDisplayPrivate * const priv = display->priv;
-
-    if (priv->display)
-        gst_vaapi_display_destroy(display);
-
-    if (va_display) {
-        priv->display = va_display;
-        if (!gst_vaapi_display_create(display)) {
-            gst_vaapi_display_destroy(display);
-            return;
-        }
-    }
 }
 
 gboolean

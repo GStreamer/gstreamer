@@ -49,7 +49,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_GET_CLASS(obj)                \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
                                GST_VAAPI_TYPE_DISPLAY,  \
-                               GstVaapiDisplay))
+                               GstVaapiDisplayClass))
 
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
@@ -65,6 +65,10 @@ struct _GstVaapiDisplay {
 struct _GstVaapiDisplayClass {
     /*< private >*/
     GObjectClass parent_class;
+
+    gboolean    (*open_display) (GstVaapiDisplay *display);
+    void        (*close_display)(GstVaapiDisplay *display);
+    VADisplay   (*get_display)  (GstVaapiDisplay *display);
 };
 
 GType

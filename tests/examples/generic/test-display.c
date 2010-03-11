@@ -71,17 +71,12 @@ print_caps(GstCaps *caps, const gchar *name)
 int
 main(int argc, char *argv[])
 {
-    Display *x11_display;
     GstVaapiDisplay *display;
     GstCaps *caps;
 
     gst_init(&argc, &argv);
 
-    x11_display = XOpenDisplay(NULL);
-    if (!x11_display)
-        g_error("could not create X11 display");
-
-    display = gst_vaapi_display_x11_new(x11_display);
+    display = gst_vaapi_display_x11_new(NULL);
     if (!display)
         g_error("could not create VA-API display");
 
@@ -99,8 +94,7 @@ main(int argc, char *argv[])
     print_caps(caps, "subpicture");
     gst_caps_unref(caps);
 
-    g_object_unref(G_OBJECT(display));
-    XCloseDisplay(x11_display);
+    g_object_unref(display);
     gst_deinit();
     return 0;
 }

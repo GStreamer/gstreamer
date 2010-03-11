@@ -70,7 +70,7 @@ GType
 gst_vaapi_display_x11_get_type(void);
 
 GstVaapiDisplay *
-gst_vaapi_display_x11_new(Display *x11_display);
+gst_vaapi_display_x11_new(const gchar *display_name);
 
 Display *
 gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display);
