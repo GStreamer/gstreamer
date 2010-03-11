@@ -4296,7 +4296,7 @@ gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
 {
   /* check for having parsed index already */
   if (!avi->have_index) {
-    guint64 offset;
+    guint64 offset = 0;
     gboolean building_index;
 
     GST_OBJECT_LOCK (avi);
