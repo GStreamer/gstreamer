@@ -55,6 +55,7 @@ gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject tags="comment=\"test
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/tag/tag.h>
 
 #include "gstjifmux.h"
 
@@ -335,14 +336,16 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   const GstTagList *tags;
   GstJifMuxMarker *m;
   GList *node, *file_hdr = NULL, *frame_hdr = NULL, *scan_hdr = NULL;
+  GList *app0_jfif = NULL, *app1_exif = NULL, *app1_xmp = NULL, *com = NULL;
+  GstBuffer *xmp_data;
+  gchar *str = NULL;
 
-  /* FIXME: implement me more
-   * - update the APP markers
-   *   - put any JFIF APP0 first
-   *   - the Exif APP1 next, 
-   *   - the XMP APP1 next, 
-   *   - the PSIR APP13 next,
-   *   - followed by all other marker segments
+  /* update the APP markers
+   * - put any JFIF APP0 first
+   * - the Exif APP1 next, 
+   * - the XMP APP1 next, 
+   * - the PSIR APP13 next,
+   * - followed by all other marker segments
    */
 
   /* find some reference points where we insert before/after */
@@ -351,6 +354,30 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     m = (GstJifMuxMarker *) node->data;
 
     switch (m->marker) {
+      case APP0:
+        if (m->size > 5 && !memcmp (m->data, "JFIF\0", 5)) {
+          GST_DEBUG_OBJECT (self, "found APP0 JFIF");
+          if (!app0_jfif)
+            app0_jfif = node;
+        }
+        break;
+      case APP1:
+        if (m->size > 6 && !memcmp (m->data, "EXIF\0\0", 6)) {
+          GST_DEBUG_OBJECT (self, "found APP1 EXIF");
+          if (!app1_exif)
+            app1_exif = node;
+        } else if (m->size > 29
+            && !memcmp (m->data, "http://ns.adobe.com/xap/1.0/\0", 29)) {
+          GST_INFO_OBJECT (self, "found APP1 XMP, will be replaced");
+          if (!app1_xmp)
+            app1_xmp = node;
+        }
+        break;
+      case COM:
+        GST_INFO_OBJECT (self, "found COM, will be replaced");
+        if (!com)
+          com = node;
+        break;
       case DQT:
       case SOF0:
       case SOF1:
@@ -380,36 +407,88 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
 
   /* if we want combined or JFIF */
   /* check if we don't have JFIF APP0 */
-  /* insert into self->markers list */
-  /* ensure its first */
+  if (!app0_jfif) {
+    /* build jfif header */
+    static const struct
+    {
+      gchar id[5];
+      guint8 ver[2];
+      guint8 du;
+      guint8 xd[2], yd[2];
+      guint8 tw, th;
+    } jfif_data = {
+      "JFIF", {
+      1, 2}, 0, {
+      0, 1},                    /* FIXME: check pixel-aspect from caps */
+      {
+    0, 1}, 0, 0};
+    m = gst_jif_mux_new_marker (APP0, sizeof (jfif_data),
+        (const guint8 *) &jfif_data, FALSE);
+    /* insert into self->markers list */
+    self->priv->markers = g_list_insert (self->priv->markers, m, 1);
+  }
   /* else */
   /* remove JFIF if exists */
 
   /* if we want combined or EXIF */
   /* check if we don't have EXIF APP1 */
-  /* insert into self->markers list */
+  if (!app1_exif) {
+    /* exif_data = gst_tag_list_to_exif_buffer (tags); */
+    /* insert into self->markers list */
+  }
   /* else */
   /* remove EXIF if exists */
 
-  /* add jpeg comment */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (self));
-  if (tags) {
-    gchar *str = NULL;
+  if (!tags) {
+    tags = gst_tag_list_new ();
+  }
+  /* FIXME: not happy with those
+   * - else where we would use VIDEO_CODEC = "Jpeg"
+   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+   GST_TAG_VIDEO_CODEC, "image/jpeg", NULL);
+   */
 
-    (void) (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &str) ||
-        gst_tag_list_get_string (tags, GST_TAG_DESCRIPTION, &str) ||
-        gst_tag_list_get_string (tags, GST_TAG_TITLE, &str));
+  /* add xmp */
+  xmp_data = gst_tag_list_to_xmp_buffer (tags, FALSE);
+  if (xmp_data) {
+    guint8 *data, *xmp = GST_BUFFER_DATA (xmp_data);
+    guint size = GST_BUFFER_SIZE (xmp_data);
+    GList *pos;
 
-    if (str) {
-      /* insert new marker into self->markers list */
-      m = gst_jif_mux_new_marker (COM, strlen (str) + 1, (const guint8 *) str,
-          TRUE);
-      /* this should go before SOS, maybe at the end of file-header */
-      self->priv->markers = g_list_insert_before (self->priv->markers,
-          frame_hdr, m);
+    data = g_malloc (size + 29);
+    memcpy (data, "http://ns.adobe.com/xap/1.0/\0", 29);
+    memcpy (&data[29], xmp, size);
+    m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
 
-      modified = TRUE;
-    }
+    pos = file_hdr;
+    if (app1_exif)
+      pos = app1_exif;
+    else if (app0_jfif)
+      pos = app0_jfif;
+    pos = g_list_next (pos);
+
+    self->priv->markers = g_list_insert_before (self->priv->markers, pos, m);
+
+    gst_buffer_unref (xmp_data);
+    modified = TRUE;
+  }
+
+  /* add jpeg comment */
+  (void) (gst_tag_list_get_string (tags, GST_TAG_COMMENT, &str) ||
+      gst_tag_list_get_string (tags, GST_TAG_DESCRIPTION, &str) ||
+      gst_tag_list_get_string (tags, GST_TAG_TITLE, &str));
+
+  if (str) {
+    /* insert new marker into self->markers list */
+    m = gst_jif_mux_new_marker (COM, strlen (str) + 1, (const guint8 *) str,
+        TRUE);
+    /* FIXME: if we have one already, replace */
+    /* this should go before SOS, maybe at the end of file-header */
+    self->priv->markers = g_list_insert_before (self->priv->markers,
+        frame_hdr, m);
+
+    modified = TRUE;
   }
   return modified;
 }

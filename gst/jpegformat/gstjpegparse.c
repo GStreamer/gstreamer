@@ -45,6 +45,7 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/tag/tag.h>
 
 #include "gstjpegparse.h"
 
@@ -557,8 +558,44 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         break;
       }
 
+      case APP1:{
+        const gchar *id_str;
+        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+          goto error;
+        if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+          goto error;
+
+        if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
+          const guint8 *xmp_data;
+          guint xmp_size = size - 2 - 29;
+          GstTagList *tags;
+          GstBuffer *buf;
+
+          /* handle xmp metadata */
+          if (!gst_byte_reader_get_data (&reader, xmp_size, &xmp_data))
+            goto error;
+
+          buf = gst_buffer_new ();
+          GST_BUFFER_DATA (buf) = (guint8 *) xmp_data;
+          GST_BUFFER_SIZE (buf) = xmp_size;
+          tags = gst_tag_list_from_xmp_buffer (buf);
+          gst_buffer_unref (buf);
+          if (tags) {
+            GST_INFO_OBJECT (parse, "post xmp metadata");
+            gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
+                parse->priv->srcpad, tags);
+          }
+          GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
+              marker, id_str, size - 2);
+        } else {
+          if (!gst_byte_reader_skip (&reader, size - 3 - strlen (id_str)))
+            goto error;
+          GST_LOG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
+              marker, id_str, size - 2);
+        }
+        break;
+      }
       case APP0:
-      case APP1:
       case APP2:
       case APP13:
       case APP14:
