@@ -36,7 +36,7 @@ main (gint argc, gchar ** argv)
   GstEvent *pos_seek, *rate_seek;
   GstQuery *pos;
   /* options */
-  gboolean use_adder;
+  gboolean use_adder = FALSE;
 
   gst_init (&argc, &argv);
   gst_controller_init (&argc, &argv);
