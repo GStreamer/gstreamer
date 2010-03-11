@@ -25,7 +25,7 @@ gint
 main (gint argc, gchar ** argv)
 {
   gint res = 1;
-  GstElement *src, *mix, *sink;
+  GstElement *src, *mix = NULL, *sink;
   GstElement *bin;
   GstController *ctrl;
   GstInterpolationControlSource *csource1, *csource2;
