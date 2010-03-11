@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <stdlib.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY (gst_invtelecine_debug);
