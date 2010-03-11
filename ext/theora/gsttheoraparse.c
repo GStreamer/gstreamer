@@ -101,7 +101,6 @@ static void theora_parse_get_property (GObject * object, guint prop_id,
 static void theora_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static gboolean theora_parse_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn theora_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);

@@ -25,9 +25,6 @@
 #include <gst/gst.h>
 #include "audioconvert.h"
 
-GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
-#define GST_CAT_DEFAULT (audio_convert_debug)
-
 /*
  * Delete channel mixer matrix.
  */

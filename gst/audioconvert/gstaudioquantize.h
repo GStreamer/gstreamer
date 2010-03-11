@@ -23,9 +23,6 @@
 #include <gst/gst.h>
 #include "audioconvert.h"
 
-GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
-#define GST_CAT_DEFAULT (audio_convert_debug)
-
 #ifndef __GST_AUDIO_QUANTIZE_H__
 #define __GST_AUDIO_QUANTIZE_H__
 

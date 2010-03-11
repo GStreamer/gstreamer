@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 
+GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
+#define GST_CAT_DEFAULT (audio_convert_debug)
+
 /**
  * GstAudioConvertDithering:
  * @DITHER_NONE: No dithering

@@ -60,10 +60,6 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
 #define GST_CAT_DEFAULT vorbisparse_debug
 
-static void gst_vorbis_tag_base_init (gpointer g_class);
-static void gst_vorbis_tag_class_init (GstVorbisTagClass * klass);
-static void gst_vorbis_tag_init (GstVorbisTag * tagger,
-    GstVorbisTagClass * g_class);
 static GstFlowReturn gst_vorbis_tag_parse_packet (GstVorbisParse * parse,
     GstBuffer * buffer);
 

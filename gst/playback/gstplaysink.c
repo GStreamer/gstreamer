@@ -204,8 +204,6 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_play_sink_class_init (GstPlaySinkClass * klass);
-static void gst_play_sink_init (GstPlaySink * playsink);
 static void gst_play_sink_dispose (GObject * object);
 static void gst_play_sink_finalize (GObject * object);
 static void gst_play_sink_set_property (GObject * object, guint prop_id,
@@ -2072,7 +2070,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->textchain) {
       GST_DEBUG_OBJECT (playsink, "adding text chain");
       if (playsink->textchain->overlay)
-        g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", FALSE, NULL);
+        g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", FALSE,
+            NULL);
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
 
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),

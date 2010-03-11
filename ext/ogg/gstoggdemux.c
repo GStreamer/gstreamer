@@ -116,8 +116,6 @@ static gboolean gst_ogg_demux_perform_seek (GstOggDemux * ogg,
 static gboolean gst_ogg_demux_receive_event (GstElement * element,
     GstEvent * event);
 
-static void gst_ogg_pad_class_init (GstOggPadClass * klass);
-static void gst_ogg_pad_init (GstOggPad * pad);
 static void gst_ogg_pad_dispose (GObject * object);
 static void gst_ogg_pad_finalize (GObject * object);
 
