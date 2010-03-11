@@ -510,6 +510,20 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
 {
   GstFlowReturn flow;
 
+  if (size == 0) {
+    GstFlowReturn ret;
+    GstBuffer *tmp = NULL;
+
+    ret = gst_qtdemux_pull_atom (qtdemux, offset, sizeof (guint32), &tmp);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    size = QT_UINT32 (GST_BUFFER_DATA (tmp));
+    GST_DEBUG ("size 0x%08" G_GINT64_MODIFIER "x", size);
+
+    gst_buffer_unref (tmp);
+  }
+
   /* Sanity check: catch bogus sizes (fuzzed/broken files) */
   if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
