@@ -75,7 +75,8 @@ handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event,
 {
   GtkAllocation allocation;
 
-  gtk_widget_get_allocation (widget, &allocation);
+  allocation = widget->allocation;
+
   if (verbose) {
     g_print ("resize(%p): %dx%d\n", widget, allocation.width,
         allocation.height);
