@@ -117,7 +117,7 @@ beach:
 }
 
 int
-gst_udp_set_loop (int sockfd, ADDRESS_FAMILY ss_family, gboolean loop)
+gst_udp_set_loop (int sockfd, guint16 ss_family, gboolean loop)
 {
   int ret = -1;
   int l = (loop == FALSE) ? 0 : 1;
@@ -153,7 +153,7 @@ gst_udp_set_loop (int sockfd, ADDRESS_FAMILY ss_family, gboolean loop)
 }
 
 int
-gst_udp_set_ttl (int sockfd, ADDRESS_FAMILY ss_family, int ttl, gboolean is_multicast)
+gst_udp_set_ttl (int sockfd, guint16 ss_family, int ttl, gboolean is_multicast)
 {
   int optname = -1;
   int ret = -1;

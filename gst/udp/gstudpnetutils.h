@@ -86,8 +86,8 @@ int     gst_udp_get_sockaddr_length  (struct sockaddr_storage *addr);
 int     gst_udp_get_addr             (const char *hostname, int port, struct sockaddr_storage *addr);
 int     gst_udp_is_multicast         (struct sockaddr_storage *addr);
 
-int     gst_udp_set_loop             (int sockfd, ADDRESS_FAMILY ss_family, gboolean loop);
-int     gst_udp_set_ttl              (int sockfd, ADDRESS_FAMILY ss_family, int ttl, gboolean is_multicast);
+int     gst_udp_set_loop             (int sockfd, guint16 ss_family, gboolean loop);
+int     gst_udp_set_ttl              (int sockfd, guint16 ss_family, int ttl, gboolean is_multicast);
 
 /* multicast groups */
 int     gst_udp_join_group           (int sockfd, struct sockaddr_storage *addr,
