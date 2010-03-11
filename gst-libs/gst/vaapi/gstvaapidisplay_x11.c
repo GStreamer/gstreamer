@@ -121,6 +121,10 @@ gst_vaapi_display_x11_constructed(GObject *object)
 
     display->priv->create_display = display->priv->x11_display == NULL;
 
+    /* Reset display-name if the user provided his own X11 display */
+    if (!display->priv->create_display)
+        set_display_name(display, XDisplayString(display->priv->x11_display));
+
     parent_class = G_OBJECT_CLASS(gst_vaapi_display_x11_parent_class);
     if (parent_class->constructed)
         parent_class->constructed(object);
