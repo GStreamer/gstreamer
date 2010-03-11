@@ -36,6 +36,7 @@
 
 #define _(String) String
 #define N_(String) String
+#define ngettext(Singular,Plural,Count) ((Count>1)?Plural:Singular)
 
 #endif
 
