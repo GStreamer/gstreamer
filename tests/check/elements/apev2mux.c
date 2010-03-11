@@ -175,18 +175,18 @@ static void
 fill_mp3_buffer (GstElement * fakesrc, GstBuffer * buf, GstPad * pad,
     guint64 * p_offset)
 {
-  GstCaps *caps;
-
   fail_unless (GST_BUFFER_SIZE (buf) == MP3_FRAME_SIZE);
 
   GST_LOG ("filling buffer with fake mp3 data, offset = %" G_GUINT64_FORMAT,
       *p_offset);
 
   memcpy (GST_BUFFER_DATA (buf), mp3_dummyhdr, sizeof (mp3_dummyhdr));
-  caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
-      "layer", G_TYPE_INT, 3, NULL);
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
+
+  /* can't use gst_buffer_set_caps() here because the metadata isn't writable
+   * because of the extra refcounts taken by the signal emission mechanism;
+   * we know it's fine to use GST_BUFFER_CAPS() here though */
+  GST_BUFFER_CAPS (buf) = gst_caps_new_simple ("audio/mpeg", "mpegversion",
+      G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
 
   GST_BUFFER_OFFSET (buf) = *p_offset;
   *p_offset += GST_BUFFER_SIZE (buf);
@@ -223,6 +223,7 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
     memcpy (GST_BUFFER_DATA (*p_buf) + off, GST_BUFFER_DATA (buf), size);
   }
 }
+
 static void
 demux_pad_added (GstElement * apedemux, GstPad * srcpad, GstBuffer ** p_outbuf)
 {
