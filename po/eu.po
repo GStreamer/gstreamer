@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-10 00:25+0000\n"
+"POT-Creation-Date: 2010-03-11 11:57+0100\n"
 "PO-Revision-Date: 2009-08-29 12:55+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -189,6 +189,10 @@ msgid "The autovideosink element is missing."
 msgstr "Autovideosink elementua falta da."
 
 #, fuzzy, c-format
+msgid "Configured videosink %s is not working."
+msgstr "Autovideosink elementua ez da lanean ari."
+
+#, fuzzy, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Autovideosink eta %s elementuak, biak, ez dira lanean ari."
 
@@ -207,6 +211,10 @@ msgstr "Autoaudiosink eta %s elementuak, biak, falta dira."
 
 msgid "The autoaudiosink element is missing."
 msgstr "Autoaudiosink falta da."
+
+#, fuzzy, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "Autoaudiosink elementua ez da lanean ari."
 
 #, fuzzy, c-format
 msgid "Both autoaudiosink and %s elements are not working."
