@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2010-01-28 10:04-0500\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -86,18 +86,6 @@ msgstr "Tampilkan Opsi GStreamer"
 
 msgid "Unknown option"
 msgstr "Opsi tak diketahui"
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "GALAT: dari elemen %s: %s\n"
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr ""
-"Info awakutu tambahan:\n"
-"%s\n"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer menghadapi galat umum pustaka inti."
@@ -676,6 +664,18 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "GALAT: dari elemen %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Info awakutu tambahan:\n"
+"%s\n"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"

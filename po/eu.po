@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2009-08-29 12:04+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -91,18 +91,6 @@ msgstr "Erakutsi GStreamer-en aukerak"
 
 msgid "Unknown option"
 msgstr "Aukera ezezaguna"
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "ERROREA: %s elementuarena: %s\n"
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr ""
-"Arazketa-informazio gehigarria:\n"
-"%s\n"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "Nukleo-liburutegiaren errore orokorra topatu du GStreamer-ek"
@@ -686,6 +674,18 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "ERROREA: %s elementuarena: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Arazketa-informazio gehigarria:\n"
+"%s\n"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"

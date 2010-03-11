@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -132,16 +132,6 @@ msgstr "i Verisiyo"
 
 msgid "Unknown option"
 msgstr ""
-
-#, fuzzy, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "Bivuye Ikigize:"
-
-#, fuzzy, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr "Kosora amakosa Ibisobanuro"
 
 #, fuzzy
 msgid "GStreamer encountered a general core library error."
@@ -839,6 +829,16 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, fuzzy, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "Bivuye Ikigize:"
+
+#, fuzzy, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr "Kosora amakosa Ibisobanuro"
 
 #, fuzzy, c-format
 msgid "specified empty bin \"%s\", not allowed"

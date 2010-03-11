@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -82,18 +82,6 @@ msgstr "显示 GStreamer 选项"
 
 msgid "Unknown option"
 msgstr "未知选项"
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "错误：来自组件 %s：%s\n"
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr ""
-"额外的调试信息：\n"
-"%s\n"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer 遇到了常规核心库错误。"
@@ -653,6 +641,18 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "错误：来自组件 %s：%s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"额外的调试信息：\n"
+"%s\n"
 
 #, fuzzy, c-format
 msgid "specified empty bin \"%s\", not allowed"

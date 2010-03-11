@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -89,18 +89,6 @@ msgstr "Показать параметры GStreamer"
 
 msgid "Unknown option"
 msgstr "Неизвестный параметр"
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "ОШИБКА: из элемента %s: %s\n"
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr ""
-"Дополнительная отладочная информация:\n"
-"%s\n"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "Обнаружена ошибка в библиотеке ядра GStreamer."
@@ -685,6 +673,18 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "ОШИБКА: из элемента %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Дополнительная отладочная информация:\n"
+"%s\n"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"

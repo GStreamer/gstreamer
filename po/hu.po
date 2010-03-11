@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2010-02-01 15:04+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -87,18 +87,6 @@ msgstr "A GStreamer beállításainak megjelenítése"
 
 msgid "Unknown option"
 msgstr "Ismeretlen beállítás"
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr "HIBA: a következő elemtől: %s: %s\n"
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
-msgstr ""
-"További hibakeresési információk:\n"
-"%s\n"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "A GStreamer általános magkönyvtárhibát tapasztalt."
@@ -675,6 +663,18 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "HIBA: a következő elemtől: %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"További hibakeresési információk:\n"
+"%s\n"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"

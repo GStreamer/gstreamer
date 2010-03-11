@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-08 17:49+0000\n"
+"POT-Creation-Date: 2010-03-11 11:31+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -80,16 +80,6 @@ msgid "Show GStreamer Options"
 msgstr "GStreamer buraxılışını göstər"
 
 msgid "Unknown option"
-msgstr ""
-
-#, c-format
-msgid "ERROR: from element %s: %s\n"
-msgstr ""
-
-#, c-format
-msgid ""
-"Additional debug info:\n"
-"%s\n"
 msgstr ""
 
 msgid "GStreamer encountered a general core library error."
@@ -649,6 +639,16 @@ msgstr ""
 
 msgid ", "
 msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
