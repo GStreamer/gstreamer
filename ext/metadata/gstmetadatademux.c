@@ -174,10 +174,6 @@ static void
 gst_metadata_demux_init (GstMetadataDemux * filter,
     GstMetadataDemuxClass * gclass);
 
-static void gst_metadata_demux_dispose (GObject * object);
-
-static void gst_metadata_demux_finalize (GObject * object);
-
 static void gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
@@ -282,9 +278,6 @@ gst_metadata_demux_class_init (GstMetadataDemuxClass * klass)
 
   metadata_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_demux_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_demux_finalize);
-
   gobject_class->set_property = gst_metadata_demux_set_property;
   gobject_class->get_property = gst_metadata_demux_get_property;
 
@@ -348,21 +341,6 @@ gst_metadata_demux_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-
-
-static void
-gst_metadata_demux_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
-}
-
-static void
-gst_metadata_demux_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
-}
-
 
 /*
  * GstBaseMetadata virtual functions implementation

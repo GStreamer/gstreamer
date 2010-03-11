@@ -154,10 +154,6 @@ static void gst_metadata_mux_class_init (GstMetadataMuxClass * klass);
 static void
 gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass);
 
-static void gst_metadata_mux_dispose (GObject * object);
-
-static void gst_metadata_mux_finalize (GObject * object);
-
 static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
@@ -273,9 +269,6 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
 
   metadata_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_mux_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_mux_finalize);
-
   gobject_class->set_property = gst_metadata_mux_set_property;
   gobject_class->get_property = gst_metadata_mux_get_property;
 
@@ -378,20 +371,6 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
-
-static void
-gst_metadata_mux_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
-}
-
-static void
-gst_metadata_mux_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
-}
-
 
 /*
  * GstBaseMetadata virtual functions implementation
