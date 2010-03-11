@@ -340,38 +340,3 @@ gst_gio_base_sink_query (GstPad * pad, GstQuery * query)
       return gst_pad_query_default (pad, query);
   }
 }
-
-void
-gst_gio_base_sink_set_stream (GstGioBaseSink * sink, GOutputStream * stream)
-{
-  g_return_if_fail (G_IS_OUTPUT_STREAM (stream));
-  g_return_if_fail ((GST_STATE (sink) != GST_STATE_PLAYING &&
-          GST_STATE (sink) != GST_STATE_PAUSED));
-
-  if (G_IS_OUTPUT_STREAM (sink->stream)) {
-    gboolean success;
-    GError *err = NULL;
-
-    GST_DEBUG_OBJECT (sink, "closing old stream");
-
-    /* FIXME: can block but unfortunately we can't use async operations
-     * here because they require a running main loop */
-    success = g_output_stream_close (sink->stream, sink->cancel, &err);
-
-    if (!success && !gst_gio_error (sink, "g_output_stream_close", &err, NULL)) {
-      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
-          ("g_output_stream_close failed: %s", err->message));
-      g_clear_error (&err);
-    } else if (!success) {
-      GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
-          ("g_output_stream_close failed"));
-    } else {
-      GST_DEBUG_OBJECT (sink, "g_output_stream_close succeeded");
-    }
-
-    g_object_unref (sink->stream);
-    sink->stream = NULL;
-  }
-
-  sink->stream = stream;
-}
