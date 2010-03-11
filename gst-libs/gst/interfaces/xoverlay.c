@@ -475,7 +475,7 @@ gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
  *
  * Return: %FALSE if not supported by the sink.
  *
- * Since: 0.10.27
+ * Since: 0.10.29
  */
 gboolean
 gst_x_overlay_set_render_rectangle (GstXOverlay * overlay,
