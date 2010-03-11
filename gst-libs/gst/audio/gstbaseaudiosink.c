@@ -56,6 +56,7 @@ struct _GstBaseAudioSinkPrivate
   gboolean sync_latency;
 
   GstClockTime eos_time;
+  gint eos_rendering;
 
   gboolean do_time_offset;
   /* number of microseconds we alow timestamps or clock slaving to drift
@@ -788,6 +789,10 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
   if (!sink->ringbuffer->spec.rate)
     return TRUE;
 
+  /* if PLAYING is interrupted,
+   * arrange to have clock running when going to PLAYING again */
+  g_atomic_int_set (&sink->priv->eos_rendering, 1);
+
   /* need to start playback before we can drain, but only when
    * we have successfully negotiated a format and thus acquired the
    * ringbuffer. */
@@ -805,6 +810,7 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 
     GST_DEBUG_OBJECT (sink, "drained audio");
   }
+  g_atomic_int_set (&sink->priv->eos_rendering, 0);
   return TRUE;
 }
 
@@ -1825,6 +1831,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->next_sample = -1;
       sink->priv->last_align = -1;
       sink->priv->eos_time = -1;
+      sink->priv->eos_rendering = 0;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;
@@ -1835,8 +1842,10 @@ gst_base_audio_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (sink);
 
       gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
-      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL) {
+      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL ||
+          g_atomic_int_get (&sink->priv->eos_rendering)) {
         /* we always start the ringbuffer in pull mode immediatly */
+        /* sync rendering on eos needs running clock */
         gst_ring_buffer_start (sink->ringbuffer);
       }
       break;
