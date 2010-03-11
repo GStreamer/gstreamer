@@ -180,9 +180,6 @@ gst_multifdsink_create_streamheader (const gchar * data1,
   *hbuf2 = gst_buffer_new_and_alloc (size2);
   GST_BUFFER_FLAG_SET (*hbuf2, GST_BUFFER_FLAG_IN_CAPS);
   memcpy (GST_BUFFER_DATA (*hbuf2), data2, size2);
-  /* we want to keep them around for the tests */
-  gst_buffer_ref (*hbuf1);
-  gst_buffer_ref (*hbuf2);
 
   g_value_init (&array, GST_TYPE_ARRAY);
 
@@ -214,6 +211,10 @@ gst_multifdsink_create_streamheader (const gchar * data1,
   gst_buffer_set_caps (*hbuf1, *caps);
   gst_buffer_set_caps (*hbuf2, *caps);
   ASSERT_CAPS_REFCOUNT (*caps, "streamheader caps", 3);
+
+  /* we want to keep them around for the tests */
+  gst_buffer_ref (*hbuf1);
+  gst_buffer_ref (*hbuf2);
 
   GST_DEBUG ("created streamheader caps %p %" GST_PTR_FORMAT, *caps, *caps);
 }
