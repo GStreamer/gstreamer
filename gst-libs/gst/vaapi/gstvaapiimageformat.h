@@ -63,6 +63,9 @@ gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format);
 GstCaps *
 gst_vaapi_image_format_get_caps(GstVaapiImageFormat format);
 
+guint
+gst_vaapi_image_format_get_score(GstVaapiImageFormat format);
+
 G_END_DECLS
 
 #endif /* GST_GST_VAAPI_IMAGE_H */

@@ -50,6 +50,7 @@ struct _GstVaapiImageFormatMap {
     { DEF(RGB, FORMAT, GST_VIDEO_CAPS_##FORMAT),                        \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
 
+/* Image formats, listed in HW order preference */
 static const GstVaapiImageFormatMap gst_vaapi_image_formats[] = {
     DEF_YUV(NV12, ('N','V','1','2'), LSB, 12),
     DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12),
@@ -167,4 +168,16 @@ gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
         return NULL;
 
     return gst_caps_make_writable(caps);
+}
+
+guint
+gst_vaapi_image_format_get_score(GstVaapiImageFormat format)
+{
+    const GstVaapiImageFormatMap *m;
+
+    m = get_map_from_gst_vaapi_image_format(format);
+
+    g_return_val_if_fail(m, G_MAXUINT);
+
+    return m - &gst_vaapi_image_formats[0];
 }

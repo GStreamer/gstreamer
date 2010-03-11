@@ -56,6 +56,66 @@ static void
 gst_vaapi_display_set_display(GstVaapiDisplay *display, VADisplay va_display);
 
 static void
+filter_formats(VAImageFormat *va_formats, unsigned int *pnum_va_formats)
+{
+    unsigned int i = 0;
+
+    while (i < *pnum_va_formats) {
+        VAImageFormat * const va_format = &va_formats[i];
+        const GstVaapiImageFormat format = gst_vaapi_image_format(va_format);
+        if (format)
+            ++i;
+        else {
+            /* Remove any format that is not supported by libgstvaapi */
+            GST_DEBUG("unsupported format %c%c%c%c",
+                      va_format->fourcc & 0xff,
+                      (va_format->fourcc >> 8) & 0xff,
+                      (va_format->fourcc >> 16) & 0xff,
+                      (va_format->fourcc >> 24) & 0xff);
+            *va_format = va_formats[--(*pnum_va_formats)];
+        }
+    }
+}
+
+/* Sort image formats. Prefer YUV formats first */
+static int
+compare_yuv_formats(const void *a, const void *b)
+{
+    const GstVaapiImageFormat fmt1 = gst_vaapi_image_format((VAImageFormat *)a);
+    const GstVaapiImageFormat fmt2 = gst_vaapi_image_format((VAImageFormat *)b);
+
+    g_assert(fmt1 && fmt2);
+
+    const gboolean is_fmt1_yuv = gst_vaapi_image_format_is_yuv(fmt1);
+    const gboolean is_fmt2_yuv = gst_vaapi_image_format_is_yuv(fmt2);
+
+    if (is_fmt1_yuv != is_fmt2_yuv)
+        return is_fmt1_yuv ? -1 : 1;
+
+    return ((int)gst_vaapi_image_format_get_score(fmt1) -
+            (int)gst_vaapi_image_format_get_score(fmt2));
+}
+
+/* Sort subpicture formats. Prefer RGB formats first */
+static int
+compare_rgb_formats(const void *a, const void *b)
+{
+    const GstVaapiImageFormat fmt1 = gst_vaapi_image_format((VAImageFormat *)a);
+    const GstVaapiImageFormat fmt2 = gst_vaapi_image_format((VAImageFormat *)b);
+
+    g_assert(fmt1 && fmt2);
+
+    const gboolean is_fmt1_rgb = gst_vaapi_image_format_is_rgb(fmt1);
+    const gboolean is_fmt2_rgb = gst_vaapi_image_format_is_rgb(fmt2);
+
+    if (is_fmt1_rgb != is_fmt2_rgb)
+        return is_fmt1_rgb ? -1 : 1;
+
+    return ((int)gst_vaapi_image_format_get_score(fmt1) -
+            (int)gst_vaapi_image_format_get_score(fmt2));
+}
+
+static void
 gst_vaapi_display_destroy(GstVaapiDisplay *display)
 {
     GstVaapiDisplayPrivate * const priv = display->priv;
@@ -121,15 +181,25 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     priv->image_formats = g_new(VAImageFormat, priv->num_image_formats);
     if (!priv->image_formats)
         return FALSE;
-    status = vaQueryImageFormats(priv->display,
-                                 priv->image_formats,
-                                 &priv->num_image_formats);
+    status = vaQueryImageFormats(
+        priv->display,
+        priv->image_formats,
+        &priv->num_image_formats
+    );
     if (!vaapi_check_status(status, "vaQueryImageFormats()"))
         return FALSE;
 
     GST_DEBUG("%d image formats", priv->num_image_formats);
     for (i = 0; i < priv->num_image_formats; i++)
         GST_DEBUG("  %s", string_of_FOURCC(priv->image_formats[i].fourcc));
+
+    filter_formats(priv->image_formats, &priv->num_image_formats);
+    qsort(
+        priv->image_formats,
+        priv->num_image_formats,
+        sizeof(priv->image_formats[0]),
+        compare_yuv_formats
+    );
 
     /* VA subpicture formats */
     priv->num_subpicture_formats = vaMaxNumSubpictureFormats(priv->display);
@@ -139,12 +209,22 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     priv->subpicture_flags = g_new(unsigned int, priv->num_subpicture_formats);
     if (!priv->subpicture_flags)
         return FALSE;
-    status = vaQuerySubpictureFormats(priv->display,
-                                      priv->subpicture_formats,
-                                      priv->subpicture_flags,
-                                      &priv->num_subpicture_formats);
+    status = vaQuerySubpictureFormats(
+        priv->display,
+        priv->subpicture_formats,
+        priv->subpicture_flags,
+        &priv->num_subpicture_formats
+    );
     if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
         return FALSE;
+
+    filter_formats(priv->subpicture_formats, &priv->num_subpicture_formats);
+    qsort(
+        priv->subpicture_formats,
+        priv->num_subpicture_formats,
+        sizeof(priv->subpicture_formats[0]),
+        compare_rgb_formats
+    );
 
     GST_DEBUG("%d subpicture formats", priv->num_subpicture_formats);
     for (i = 0; i < priv->num_subpicture_formats; i++)
