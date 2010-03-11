@@ -1,7 +1,6 @@
 lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la
 libgstinterfacesincludedir = \
-        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces \
-        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
+        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces
 
 headers_interfaces = 		\
 	colorbalance.h		\
