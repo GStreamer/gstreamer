@@ -36,6 +36,7 @@
 #include <ogg/ogg.h>
 #include <string.h>
 
+#include "gstogg.h"
 #include "gstoggstream.h"
 
 static const GstElementDetails gst_ogg_parse_details =

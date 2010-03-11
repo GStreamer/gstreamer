@@ -45,6 +45,8 @@ struct TestElementClass
   GstElementClass parent_class;
 };
 
+GType test_element_get_type (void);
+
 static void init_interface (GType type);
 static void gst_implements_interface_init (GstImplementsInterfaceClass * klass);
 

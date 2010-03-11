@@ -229,6 +229,7 @@
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
+#include "gstplayback.h"
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
 #include "gstinputselector.h"

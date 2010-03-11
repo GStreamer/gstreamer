@@ -11,7 +11,8 @@ libgstogg_la_SOURCES = \
 	gstoggstream.h \
 	dirac_parse.c \
 	dirac_parse.h \
-	vorbis_parse.c
+	vorbis_parse.c \
+	vorbis_parse.h
 
 noinst_HEADERS = \
 	gstoggdemux.h gstoggmux.h

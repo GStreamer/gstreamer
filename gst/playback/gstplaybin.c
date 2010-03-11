@@ -230,6 +230,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplaybasebin.h"
+#include "gstplayback.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_CAT_DEFAULT gst_play_bin_debug

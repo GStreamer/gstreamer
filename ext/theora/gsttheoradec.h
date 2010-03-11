@@ -105,6 +105,8 @@ struct _GstTheoraDecClass
   GstElementClass parent_class;
 };
 
+GType gst_theora_dec_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_THEORADEC_H__ */

@@ -44,9 +44,11 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include <gst/gst.h>
+
 #include <string.h>
 #include <stdlib.h>
 
+#include "tag.h"
 #include "lang-tables.dat"
 
 /* FIXME: remove once we depend on GLib >= 2.22 */

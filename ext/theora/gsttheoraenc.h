@@ -110,6 +110,8 @@ struct _GstTheoraEncClass
   GstElementClass parent_class;
 };
 
+GType gst_theora_enc_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_THEORAENC_H__ */

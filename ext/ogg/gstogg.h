@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
+ *
+ * gstoggdemux.c: ogg stream demuxer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,32 +19,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* First, include the header file for the plugin, to bring in the
- * object definition and other useful things.
- */
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_OGG_H__
+#define __GST_OGG_H__
 
 #include <gst/gst.h>
 
-#include "avcodec.h"
+gboolean gst_ogm_parse_plugin_init (GstPlugin * plugin);
+gboolean gst_ogg_parse_plugin_init (GstPlugin * plugin);
+gboolean gst_ogg_avi_parse_plugin_init (GstPlugin * plugin);
 
-extern gboolean gst_ffmpegcolorspace_register (GstPlugin * plugin);
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  avcodec_init ();
-  gst_ffmpegcolorspace_register (plugin);
-
-  /* Now we can return the pointer to the newly created Plugin object. */
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "ffmpegcolorspace",
-    "colorspace conversion copied from FFMpeg " FFMPEG_VERSION,
-    plugin_init, VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+#endif /* __GST_OGG_H__ */

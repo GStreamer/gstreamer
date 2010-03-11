@@ -30,6 +30,8 @@
 #include <gst/riff/riff-media.h>
 #include <gst/riff/riff-read.h>
 
+#include "gstogg.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_CAT_DEFAULT gst_ogm_parse_debug
 

@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include "gstoggstream.h"
+#include "vorbis_parse.h"
 
 /*
  * Vorbis packets can be short or long, and each packet overlaps the previous

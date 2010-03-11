@@ -75,6 +75,8 @@ struct _GstGDPDepayClass
 
 gboolean gst_gdp_depay_plugin_init (GstPlugin * plugin);
 
+GType gst_gdp_depay_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_GDP_DEPAY_H__ */

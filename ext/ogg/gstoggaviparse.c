@@ -37,6 +37,8 @@
 #include <ogg/ogg.h>
 #include <string.h>
 
+#include "gstogg.h"
+
 static const GstElementDetails gst_ogg_avi_parse_details =
 GST_ELEMENT_DETAILS ("Ogg AVI parser",
     "Codec/Parser",

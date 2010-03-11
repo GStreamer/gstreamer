@@ -182,6 +182,7 @@ struct _GstCdFooSrcClass
   GstCddaBaseSrcClass parent_class;
 };
 
+GType gst_cd_foo_src_get_type (void);
 GST_BOILERPLATE (GstCdFooSrc, gst_cd_foo_src, GstCddaBaseSrc,
     GST_TYPE_CDDA_BASE_SRC);
 

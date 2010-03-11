@@ -3505,6 +3505,11 @@ gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,
  * Since: 0.10.24
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+guint
+gst_rtsp_watch_queue_data (GstRTSPWatch * watch, const guint8 * data,
+    guint size);
+#endif
 guint
 gst_rtsp_watch_queue_data (GstRTSPWatch * watch, const guint8 * data,
     guint size)
@@ -3560,6 +3565,10 @@ gst_rtsp_watch_queue_data (GstRTSPWatch * watch, const guint8 * data,
  * Since: 0.10.23
  */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+guint
+gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message);
+#endif
 guint
 gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
 {

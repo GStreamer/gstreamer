@@ -27,13 +27,11 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
+#include "gstplayback.h"
+#include "gstplaysink.h"
 #include "gststreamselector.h"
 #include "gststreaminfo.h"
-#include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
-
-gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
-gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
 
 static gboolean
 plugin_init (GstPlugin * plugin)

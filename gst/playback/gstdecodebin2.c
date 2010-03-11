@@ -89,6 +89,7 @@
 
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
+#include "gstplayback.h"
 #include "gstfactorylists.h"
 #include "gstrawcaps.h"
 
@@ -465,6 +466,7 @@ struct _GstDecodePad
   gboolean drained;             /* an EOS has been seen on the pad */
 };
 
+GType gst_decode_pad_get_type (void);
 G_DEFINE_TYPE (GstDecodePad, gst_decode_pad, GST_TYPE_GHOST_PAD);
 #define GST_TYPE_DECODE_PAD (gst_decode_pad_get_type ())
 #define GST_DECODE_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECODE_PAD,GstDecodePad))

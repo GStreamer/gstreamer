@@ -46,6 +46,9 @@
  */
 /* This isn't efficient, but it doesn't need to be */
 #ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gchar *gst_rtsp_base64_encode (const gchar * data, gsize len);
+#endif
 gchar *
 gst_rtsp_base64_encode (const gchar * data, gsize len)
 {

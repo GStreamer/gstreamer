@@ -1,7 +1,6 @@
 plugin_LTLIBRARIES = libgstffmpegcolorspace.la
 
 libgstffmpegcolorspace_la_SOURCES = \
-	gstffmpeg.c \
 	gstffmpegcolorspace.c \
 	gstffmpegcodecmap.c \
 	dsputil.c \

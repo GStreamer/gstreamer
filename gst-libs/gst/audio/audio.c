@@ -237,6 +237,8 @@ typedef enum
   GST_AUDIO_FIELD_DEPTH = (1 << 4),
   GST_AUDIO_FIELD_SIGNED = (1 << 5),
 } GstAudioFieldFlag;
+void
+gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag);
 #endif /* GST_DISABLE_DEPRECATED */
 
 void

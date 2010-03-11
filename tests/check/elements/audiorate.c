@@ -30,6 +30,7 @@ static gdouble injector_inject_probability = 0.0;
 typedef GstElement TestInjector;
 typedef GstElementClass TestInjectorClass;
 
+GType test_injector_get_type (void);
 GST_BOILERPLATE (TestInjector, test_injector, GstElement, GST_TYPE_ELEMENT);
 
 #define INJECTOR_CAPS \

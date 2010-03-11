@@ -761,7 +761,7 @@ typedef struct
   guint64 in_buffer_count, out_buffer_count;
 } TimestampDriftCtx;
 
-void
+static void
 fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
@@ -816,7 +816,7 @@ fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
   ctx->next_out_off = GST_BUFFER_OFFSET_END (buffer);
 }
 
-void
+static void
 identity_handoff_cb (GstElement * object, GstBuffer * buffer,
     gpointer user_data)
 {

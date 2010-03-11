@@ -24,6 +24,7 @@
 #include <ogg/ogg.h>
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 
@@ -82,7 +83,7 @@ typedef struct
 
   gboolean always_flush_page;
 }
-GstOggPad;
+GstOggPadData;
 
 /**
  * GstOggMux:
@@ -103,7 +104,7 @@ struct _GstOggMux
   gint active_pads;
 
   /* the pad we are currently using to fill a page */
-  GstOggPad *pulling;
+  GstOggPadData *pulling;
 
   /* next timestamp for the page */
   GstClockTime next_ts;
@@ -120,7 +121,7 @@ struct _GstOggMux
   guint64 max_delay;
   guint64 max_page_delay;
 
-  GstOggPad *delta_pad;         /* when a delta frame is detected on a stream, we mark
+  GstOggPadData *delta_pad;     /* when a delta frame is detected on a stream, we mark
                                    pages as delta frames up to the page that has the
                                    keyframe */
 
@@ -132,6 +133,8 @@ struct _GstOggMuxClass
 };
 
 GType gst_ogg_mux_get_type (void);
+
+gboolean gst_ogg_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

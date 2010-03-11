@@ -45,7 +45,7 @@ mount_cb (GObject * obj, GAsyncResult * res, gpointer user_data)
   }
 }
 
-gboolean
+static gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer user_data)
 {
 

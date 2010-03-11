@@ -56,16 +56,10 @@ cleanup_appsink (GstElement * appsink)
  * The exact operation performed doesn't matter. Currently it multiplies with
  * two, but it could do anything. The idea is to use the function to verify
  * that the code calling it gets run. */
-gint
+static gint
 operate_on_data (gint indata)
 {
   return indata * 2;
-}
-
-void
-notify_test_function (gpointer userdata)
-{
-  global_testdata = operate_on_data (GPOINTER_TO_INT (userdata));
 }
 
 static GstFlowReturn
@@ -76,7 +70,7 @@ callback_function (GstAppSink * appsink, gpointer callback_data)
   return GST_FLOW_OK;
 }
 
-void
+static void
 notify_function (gpointer callback_data)
 {
   global_testdata = operate_on_data (*((gint *) callback_data));

@@ -179,6 +179,7 @@ enum
 
 static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
+GType gst_uri_decode_bin_get_type (void);
 GST_BOILERPLATE (GstURIDecodeBin, gst_uri_decode_bin, GstBin, GST_TYPE_BIN);
 
 static void remove_decoders (GstURIDecodeBin * bin, gboolean force);

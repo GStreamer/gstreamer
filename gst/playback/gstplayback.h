@@ -1,7 +1,5 @@
-/* GStreamer RIFF I/O
- * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *
- * riff.c: library initialisation
+/* GStreamer
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,31 +16,16 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/**
- * SECTION:gstriff
- * @short_description: Riff fileformat utillity functions.
- *
- * A collection of functions to handle riff base files, such as avi, wav and
- * asf.
- */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_PLAY_BACK_H__
+#define __GST_PLAY_BACK_H__
+
 
 #include <gst/gst.h>
 
-#include "riff-read.h"
+gboolean gst_decode_bin_plugin_init (GstPlugin * plugin);
+gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
+gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
 
-GST_DEBUG_CATEGORY (riff_debug);
 
-/**
- * gst_riff_init:
- *
- * Initialize riff library.
- */
-void
-gst_riff_init (void)
-{
-  GST_DEBUG_CATEGORY_INIT (riff_debug, "riff", 0, "RIFF I/O");
-}
+#endif /* __GST_PLAY_SINK_H__ */

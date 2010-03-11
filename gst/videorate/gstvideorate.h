@@ -74,6 +74,8 @@ struct _GstVideoRateClass
   GstElementClass parent_class;
 };
 
+GType gst_video_rate_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_RATE_H__ */

@@ -1,7 +1,7 @@
-/* GStreamer RIFF I/O
- * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
+ * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
  *
- * riff.c: library initialisation
+ * gstoggdemux.c: ogg stream demuxer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,31 +18,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/**
- * SECTION:gstriff
- * @short_description: Riff fileformat utillity functions.
- *
- * A collection of functions to handle riff base files, such as avi, wav and
- * asf.
- */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_VORBIS_PARSE_H__
+#define __GST_VORBIS_PARSE_H__
 
 #include <gst/gst.h>
 
-#include "riff-read.h"
+void parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet);
+void parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op);
 
-GST_DEBUG_CATEGORY (riff_debug);
-
-/**
- * gst_riff_init:
- *
- * Initialize riff library.
- */
-void
-gst_riff_init (void)
-{
-  GST_DEBUG_CATEGORY_INIT (riff_debug, "riff", 0, "RIFF I/O");
-}
+#endif /* __GST_VORBIS_PARSE_H__ */

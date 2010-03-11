@@ -24,9 +24,11 @@
 
 #include "gstoggstream.h"
 #include "dirac_parse.h"
+#include "vorbis_parse.h"
 
 #include <gst/riff/riff-media.h>
 
+#include <stdlib.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_ogg_demux_debug);
@@ -165,6 +167,7 @@ gst_ogg_stream_granule_to_granulepos (GstOggStream * pad, gint64 granule,
       keyframe_granule);
 }
 
+#if 0
 gboolean
 gst_ogg_stream_packet_granulepos_is_key_frame (GstOggStream * pad,
     gint64 granulepos)
@@ -180,6 +183,7 @@ gst_ogg_stream_packet_granulepos_is_key_frame (GstOggStream * pad,
 
   return mappers[pad->map].is_key_frame_func (pad, granulepos);
 }
+#endif
 
 gboolean
 gst_ogg_stream_packet_is_header (GstOggStream * pad, ogg_packet * packet)
@@ -459,10 +463,6 @@ granule_to_granulepos_dirac (GstOggStream * pad, gint64 granule,
 
 /* vorbis */
 
-void parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * op);
-void parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op);
-
-
 static gboolean
 setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
 {
@@ -704,49 +704,6 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
       GST_TIME_ARGS (basetime));
 
   pad->is_skeleton = TRUE;
-
-  return TRUE;
-}
-
-gboolean
-gst_ogg_map_add_fisbone (GstOggStream * pad,
-    const guint8 * data, guint size, GstClockTime * p_start_time,
-    guint32 * p_preroll)
-{
-  GstClockTime start_time;
-  gint64 start_granule;
-  guint32 preroll;
-
-  if (size < SKELETON_FISBONE_MIN_SIZE || memcmp (data, "fisbone\0", 8) != 0) {
-    GST_WARNING ("invalid fisbone packet, ignoring");
-    return FALSE;
-  }
-
-  if (pad->have_fisbone) {
-    GST_DEBUG ("already have fisbone, ignoring second one");
-    return FALSE;
-  }
-
-  /* skip "fisbone\0" + headers offset + serialno + num headers */
-  data += 8 + 4 + 4 + 4;
-
-  pad->have_fisbone = TRUE;
-
-  /* we just overwrite whatever was set before by the format-specific setup */
-  pad->granulerate_n = GST_READ_UINT64_LE (data);
-  pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
-
-  start_granule = GST_READ_UINT64_LE (data + 16);
-  preroll = GST_READ_UINT32_LE (data + 24);
-  pad->granuleshift = GST_READ_UINT8 (data + 28);
-
-  start_time = granulepos_to_granule_default (pad, start_granule);
-
-  if (p_start_time)
-    *p_start_time = start_time;
-
-  if (p_preroll)
-    *p_preroll = preroll;
 
   return TRUE;
 }
