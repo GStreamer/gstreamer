@@ -4939,7 +4939,7 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
   GST_DEBUG_OBJECT (qtdemux, "Trying to obtain rtsp URI for stream trak");
 
   if (dinf) {
-    guint32 dref_num_entries;
+    guint32 dref_num_entries = 0;
     if (qtdemux_tree_get_child_by_type_full (dinf, FOURCC_dref, &dref) &&
         gst_byte_reader_skip (&dref, 4) &&
         gst_byte_reader_get_uint32_be (&dref, &dref_num_entries)) {
@@ -4948,8 +4948,8 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
 
       /* search dref entries for hndl atom */
       for (i = 0; i < dref_num_entries; i++) {
-        guint32 size, type;
-        guint8 string_len;
+        guint32 size = 0, type;
+        guint8 string_len = 0;
         if (gst_byte_reader_get_uint32_be (&dref, &size) &&
             qt_atom_parser_get_fourcc (&dref, &type)) {
           if (type == FOURCC_hndl) {
