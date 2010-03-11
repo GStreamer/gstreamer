@@ -655,7 +655,7 @@ gst_flv_demux_get_metadata (GstFLVDemux * demux)
     goto exit;
 
   tag_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
-  GST_DEBUG_OBJECT (demux, "last tag size: %d", tag_size);
+  GST_DEBUG_OBJECT (demux, "last tag size: %" G_GSIZE_FORMAT, tag_size);
   gst_buffer_unref (buffer);
   buffer = NULL;
 
@@ -667,8 +667,9 @@ gst_flv_demux_get_metadata (GstFLVDemux * demux)
   /* a consistency check */
   size = GST_READ_UINT24_BE (GST_BUFFER_DATA (buffer) + 1);
   if (size != tag_size - 11) {
-    GST_DEBUG_OBJECT (demux, "tag size %d, expected %d, ",
-        "corrupt or truncated file", size, tag_size - 11);
+    GST_DEBUG_OBJECT (demux,
+        "tag size %" G_GSIZE_FORMAT ", expected %" G_GSIZE_FORMAT
+        ", corrupt or truncated file", size, tag_size - 11);
     goto exit;
   }
 
