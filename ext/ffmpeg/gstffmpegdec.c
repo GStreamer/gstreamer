@@ -2255,6 +2255,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       ffmpegdec->discont = FALSE;
     }
     /* set caps */
+    outbuf = gst_buffer_make_metadata_writable (outbuf);
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
 
     if (ffmpegdec->segment.rate > 0.0) {
