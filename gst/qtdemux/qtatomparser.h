@@ -92,6 +92,28 @@ qt_atom_parser_get_offset_unchecked (GstByteReader * parser, guint off_size)
   }
 }
 
+/* size must be from 1 to 4 */
+static inline guint32
+qt_atom_parser_get_uint_with_size_unchecked (GstByteReader * parser,
+    guint size)
+{
+  switch (size) {
+  case 1:
+    return gst_byte_reader_get_uint8_unchecked (parser);
+  case 2:
+    return gst_byte_reader_get_uint16_be_unchecked (parser);
+  case 3:
+    return gst_byte_reader_get_uint24_be_unchecked (parser);
+  case 4:
+    return gst_byte_reader_get_uint32_be_unchecked (parser);
+  default:
+    g_assert_not_reached ();
+    gst_byte_reader_skip_unchecked (parser, size);
+    break;
+  }
+  return 0;
+}
+
 static inline gboolean
 qt_atom_parser_get_fourcc (GstByteReader * parser, guint32 * fourcc)
 {

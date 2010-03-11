@@ -510,6 +510,243 @@ qtdemux_dump_cmvd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_mfro (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  if (!qt_atom_parser_has_remaining (data, 4))
+    return FALSE;
+
+  GST_LOG ("%*s  size: %d", depth, "", GET_UINT32 (data));
+  return TRUE;
+}
+
+gboolean
+qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint64 time = 0, moof_offset = 0;
+  guint32 len = 0, num_entries = 0, ver_flags, track_id, i;
+  guint value_size, traf_size, trun_size, sample_size;
+
+  if (!gst_byte_reader_get_uint32_be (data, &ver_flags))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", ver_flags);
+
+  if (!gst_byte_reader_get_uint32_be (data, &track_id) ||
+      gst_byte_reader_get_uint32_be (data, &len) ||
+      gst_byte_reader_get_uint32_be (data, &num_entries))
+    return FALSE;
+
+  GST_LOG ("%*s  track ID:      %u", depth, "", track_id);
+  GST_LOG ("%*s  length:        0x%x", depth, "", len);
+  GST_LOG ("%*s  n entries:     %u", depth, "", num_entries);
+
+  value_size = ((ver_flags >> 24) == 1) ? sizeof (guint64) : sizeof (guint32);
+  sample_size = (len & 3) + 1;
+  trun_size = ((len & 12) >> 2) + 1;
+  traf_size = ((len & 48) >> 4) + 1;
+
+  if (!qt_atom_parser_has_chunks (data, num_entries,
+          value_size + value_size + traf_size + trun_size + sample_size))
+    return FALSE;
+
+  for (i = 0; i < num_entries; i++) {
+    qt_atom_parser_get_offset (data, value_size, &time);
+    qt_atom_parser_get_offset (data, value_size, &moof_offset);
+    GST_LOG ("%*s    time:          %" G_GUINT64_FORMAT, depth, "", time);
+    GST_LOG ("%*s    moof_offset:   %" G_GUINT64_FORMAT,
+        depth, "", moof_offset);
+    GST_LOG ("%*s    traf_number:   %u", depth, "",
+        qt_atom_parser_get_uint_with_size_unchecked (data, traf_size));
+    GST_LOG ("%*s    trun_number:   %u", depth, "",
+        qt_atom_parser_get_uint_with_size_unchecked (data, trun_size));
+    GST_LOG ("%*s    sample_number: %u", depth, "",
+        qt_atom_parser_get_uint_with_size_unchecked (data, sample_size));
+  }
+
+  return TRUE;
+}
+
+gboolean
+qtdemux_dump_tfhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 flags, n, track_id;
+  guint64 base_data_offset;
+
+  if (!gst_byte_reader_skip (data, 1) ||
+      !gst_byte_reader_get_uint24_be (data, &flags))
+    return FALSE;
+  GST_LOG ("%*s  flags: %08x", depth, "", flags);
+
+  if (!gst_byte_reader_get_uint32_be (data, &track_id))
+    return FALSE;
+  GST_LOG ("%*s  track_id: %u", depth, "", track_id);
+
+  if (flags & TF_BASE_DATA_OFFSET) {
+    if (!gst_byte_reader_get_uint64_be (data, &base_data_offset))
+      return FALSE;
+    GST_LOG ("%*s    base-data-offset: %" G_GUINT64_FORMAT,
+        depth, "", base_data_offset);
+  }
+
+  if (flags & TF_SAMPLE_DESCRIPTION_INDEX) {
+    if (!gst_byte_reader_get_uint32_be (data, &n))
+      return FALSE;
+    GST_LOG ("%*s    sample-description-index: %u", depth, "", n);
+  }
+
+  if (flags & TF_DEFAULT_SAMPLE_DURATION) {
+    if (!gst_byte_reader_get_uint32_be (data, &n))
+      return FALSE;
+    GST_LOG ("%*s    default-sample-duration:  %u", depth, "", n);
+  }
+
+  if (flags & TF_DEFAULT_SAMPLE_SIZE) {
+    if (!gst_byte_reader_get_uint32_be (data, &n))
+      return FALSE;
+    GST_LOG ("%*s    default-sample-size:  %u", depth, "", n);
+  }
+
+  if (flags & TF_DEFAULT_SAMPLE_FLAGS) {
+    if (!gst_byte_reader_get_uint32_be (data, &n))
+      return FALSE;
+    GST_LOG ("%*s    default-sample-flags:  %u", depth, "", n);
+  }
+
+  GST_LOG ("%*s    duration-is-empty:     %s", depth, "",
+      flags & TF_DURATION_IS_EMPTY ? "yes" : "no");
+
+  return TRUE;
+}
+
+gboolean
+qtdemux_dump_trun (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 flags, samples_count, data_offset, first_sample_flags;
+  guint32 sample_duration, sample_size, sample_flags, composition_time_offsets;
+  int i = 0;
+
+  if (!gst_byte_reader_skip (data, 1) ||
+      !gst_byte_reader_get_uint24_be (data, &flags))
+    return FALSE;
+
+  GST_LOG ("%*s  flags: %08x", depth, "", flags);
+
+  if (!gst_byte_reader_get_uint32_be (data, &samples_count))
+    return FALSE;
+  GST_LOG ("%*s  samples_count: %u", depth, "", samples_count);
+
+  if (flags & TR_DATA_OFFSET) {
+    if (!gst_byte_reader_get_uint32_be (data, &data_offset))
+      return FALSE;
+    GST_LOG ("%*s    data-offset: %u", depth, "", data_offset);
+  }
+
+  if (flags & TR_FIRST_SAMPLE_FLAGS) {
+    if (!gst_byte_reader_get_uint32_be (data, &first_sample_flags))
+      return FALSE;
+    GST_LOG ("%*s    first-sample-flags: %u", depth, "", first_sample_flags);
+  }
+
+  for (i = 0; i < samples_count; i++) {
+    if (flags & TR_SAMPLE_DURATION) {
+      if (!gst_byte_reader_get_uint32_be (data, &sample_duration))
+        return FALSE;
+      GST_LOG ("%*s    sample-duration:  %u", depth, "", sample_duration);
+    }
+
+    if (flags & TR_SAMPLE_SIZE) {
+      if (!gst_byte_reader_get_uint32_be (data, &sample_size))
+        return FALSE;
+      GST_LOG ("%*s    sample-size:  %u", depth, "", sample_size);
+    }
+
+    if (flags & TR_SAMPLE_FLAGS) {
+      if (!gst_byte_reader_get_uint32_be (data, &sample_flags))
+        return FALSE;
+      GST_LOG ("%*s    sample-flags:  %u", depth, "", sample_flags);
+    }
+
+    if (flags & TR_COMPOSITION_TIME_OFFSETS) {
+      if (!gst_byte_reader_get_uint32_be (data, &composition_time_offsets))
+        return FALSE;
+      GST_LOG ("%*s    composition_time_offsets:  %u", depth, "",
+          composition_time_offsets);
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean
+qtdemux_dump_trex (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  if (!qt_atom_parser_has_remaining (data, 4 + 4 + 4 + 4 + 4 + 4))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", GET_UINT32 (data));
+  GST_LOG ("%*s  track ID:      %08x", depth, "", GET_UINT32 (data));
+  GST_LOG ("%*s  default sample desc. index: %08x", depth, "",
+      GET_UINT32 (data));
+  GST_LOG ("%*s  default sample duration:    %08x", depth, "",
+      GET_UINT32 (data));
+  GST_LOG ("%*s  default sample size:        %08x", depth, "",
+      GET_UINT32 (data));
+  GST_LOG ("%*s  default sample flags:       %08x", depth, "",
+      GET_UINT32 (data));
+
+  return TRUE;
+}
+
+gboolean
+qtdemux_dump_mehd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 version;
+  guint64 fragment_duration;
+  guint value_size;
+
+  if (!gst_byte_reader_get_uint32_be (data, &version))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  value_size = ((version >> 24) == 1) ? sizeof (guint64) : sizeof (guint32);
+  if (qt_atom_parser_get_offset (data, value_size, &fragment_duration)) {
+    GST_LOG ("%*s  fragment duration: %" G_GUINT64_FORMAT,
+        depth, "", fragment_duration);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
+qtdemux_dump_sdtp (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 version;
+  guint8 val;
+  guint i = 1;
+
+  version = GET_UINT32 (data);
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  /* the sample_count is specified in the stsz or stz2 box.
+   * the information for a sample is stored in a single byte,
+   * so we read until there are no remaining bytes */
+  while (qt_atom_parser_has_remaining (data, 1)) {
+    val = GET_UINT8 (data);
+    GST_LOG ("%*s     sample number: %d", depth, "", i);
+    GST_LOG ("%*s     sample_depends_on: %d", depth, "",
+        ((guint16) (val)) & 0x3);
+    GST_LOG ("%*s     sample_is_depended_on: %d", depth, "",
+        ((guint16) (val >> 2)) & 0x3);
+    GST_LOG ("%*s     sample_has_redundancy: %d", depth, "",
+        ((guint16) (val >> 4)) & 0x3);
+    ++i;
+  }
+  return TRUE;
+}
+
+gboolean
 qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   int len;

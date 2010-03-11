@@ -209,6 +209,20 @@ G_BEGIN_DECLS
 #define FOURCC_XMP_     GST_MAKE_FOURCC('X','M','P','_')
 #define FOURCC_uuid     GST_MAKE_FOURCC('u','u','i','d')
 
+/* Fragmented MP4 */
+#define FOURCC_mehd     GST_MAKE_FOURCC('m','e','h','d')
+#define FOURCC_mfhd     GST_MAKE_FOURCC('m','f','h','d')
+#define FOURCC_mfra     GST_MAKE_FOURCC('m','f','r','a')
+#define FOURCC_mfro     GST_MAKE_FOURCC('m','f','r','o')
+#define FOURCC_moof     GST_MAKE_FOURCC('m','o','o','f')
+#define FOURCC_mvex     GST_MAKE_FOURCC('m','v','e','x')
+#define FOURCC_sdtp     GST_MAKE_FOURCC('s','d','t','p')
+#define FOURCC_tfhd     GST_MAKE_FOURCC('t','f','h','d')
+#define FOURCC_tfra     GST_MAKE_FOURCC('t','f','r','a')
+#define FOURCC_traf     GST_MAKE_FOURCC('t','r','a','f')
+#define FOURCC_trex     GST_MAKE_FOURCC('t','r','e','x')
+#define FOURCC_trun     GST_MAKE_FOURCC('t','r','u','n')
+
 G_END_DECLS
 
 #endif /* __GST_QTDEMUX_FOURCC_H__ */

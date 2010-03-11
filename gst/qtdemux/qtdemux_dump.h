@@ -61,6 +61,20 @@ gboolean qtdemux_dump_cmvd (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
 gboolean qtdemux_dump_ctts (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
+gboolean qtdemux_dump_mfro (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_tfra (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_tfhd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_trun (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_trex (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_mehd (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
+gboolean qtdemux_dump_sdtp (GstQTDemux * qtdemux, GstByteReader * data,
+    int depth);
 gboolean qtdemux_dump_unknown (GstQTDemux * qtdemux, GstByteReader * data,
     int depth);
 

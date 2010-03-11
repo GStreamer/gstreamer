@@ -45,7 +45,7 @@ typedef struct _QtNodeType QtNodeType;
 
 typedef enum {
   QT_FLAG_NONE      = (0),
-  QT_FLAG_CONTAINER = (1 << 0) 
+  QT_FLAG_CONTAINER = (1 << 0)
 } QtFlags;
 
 struct _QtNodeType {
@@ -53,6 +53,26 @@ struct _QtNodeType {
   const gchar *name;
   QtFlags      flags;
   QtDumpFunc   dump;
+};
+
+enum TfFlags
+{
+  TF_BASE_DATA_OFFSET         = 0x000001,   /* base-data-offset-present */
+  TF_SAMPLE_DESCRIPTION_INDEX = 0x000002,   /* sample-description-index-present */
+  TF_DEFAULT_SAMPLE_DURATION  = 0x000008,   /* default-sample-duration-present */
+  TF_DEFAULT_SAMPLE_SIZE      = 0x000010,   /* default-sample-size-present */
+  TF_DEFAULT_SAMPLE_FLAGS     = 0x000020,   /* default-sample-flags-present */
+  TF_DURATION_IS_EMPTY        = 0x100000    /* sample-composition-time-offsets-presents */
+};
+
+enum TrFlags
+{
+  TR_DATA_OFFSET              = 0x000001,   /* data-offset-present */
+  TR_FIRST_SAMPLE_FLAGS       = 0x000004,   /* first-sample-flags-present */
+  TR_SAMPLE_DURATION          = 0x000100,   /* sample-duration-present */
+  TR_SAMPLE_SIZE              = 0x000200,   /* sample-size-present */
+  TR_SAMPLE_FLAGS             = 0x000400,   /* sample-flags-present */
+  TR_COMPOSITION_TIME_OFFSETS = 0x000800    /* sample-composition-time-offsets-presents */
 };
 
 const QtNodeType *qtdemux_type_get (guint32 fourcc);
