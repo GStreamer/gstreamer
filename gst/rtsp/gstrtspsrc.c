@@ -808,7 +808,10 @@ static void
 gst_rtspsrc_do_stream_connection (GstRTSPSrc * src, GstRTSPStream * stream,
     const GstSDPConnection * conn)
 {
-  if (strcmp (conn->nettype, "IN") != 0)
+  if (conn->nettype == NULL || strcmp (conn->nettype, "IN") != 0)
+    return;
+
+  if (conn->addrtype == NULL)
     return;
 
   /* check for IPV6 */
