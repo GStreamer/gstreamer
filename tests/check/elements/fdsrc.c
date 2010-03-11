@@ -76,7 +76,11 @@ GST_START_TEST (test_num_buffers)
   gint pipe_fd[2];
   gchar data[4096];
 
+#ifndef G_OS_WIN32
   fail_if (pipe (pipe_fd) < 0);
+#else
+  fail_if (_pipe (pipe_fd, 2048, _O_BINARY) < 0);
+#endif
 
   src = setup_fdsrc ();
   g_object_set (G_OBJECT (src), "num-buffers", 3, NULL);
@@ -113,7 +117,11 @@ GST_START_TEST (test_nonseeking)
   gchar data[4096];
   gboolean seekable;
 
+#ifndef G_OS_WIN32
   fail_if (pipe (pipe_fd) < 0);
+#else
+  fail_if (_pipe (pipe_fd, 2048, _O_BINARY) < 0);
+#endif
 
   src = setup_fdsrc ();
   g_object_set (G_OBJECT (src), "num-buffers", 3, NULL);

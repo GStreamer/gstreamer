@@ -25,6 +25,7 @@
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
+#include <fcntl.h>
 #define EINPROGRESS WSAEINPROGRESS
 #else
 #include <sys/socket.h>

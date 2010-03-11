@@ -75,7 +75,11 @@ GST_START_TEST (test_functioning)
   memset (&servaddr, 0, sizeof (servaddr));
   servaddr.sin_family = AF_INET;
   servaddr.sin_port = htons (port);
+#ifndef G_OS_WIN32
   inet_aton ("127.0.0.1", &servaddr.sin_addr);
+#else
+  servaddr.sin_addr.s_addr = inet_addr ("127.0.0.1");
+#endif
 
   packet = gst_net_time_packet_new (NULL);
   fail_unless (packet != NULL, "failed to create packet");
