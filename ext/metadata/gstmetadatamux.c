@@ -394,12 +394,12 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
   GstMetadataMux *filter = GST_METADATA_MUX (base);
   GstTagSetter *setter = GST_TAG_SETTER (filter);
   const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
-  guint8 *buf = NULL;
-  guint32 size = 0;
 
   GST_DEBUG_OBJECT (base, "Creating chunks from tags..");
 
   if (taglist) {
+    guint8 *buf = NULL;
+    guint32 size = 0;
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF) {
       GST_DEBUG_OBJECT (base, "Using EXIF");
@@ -407,6 +407,9 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
           &filter->exif_options);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_EXIF);
+      g_free (buf);
+      buf = NULL;
+      size = 0;
     }
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_IPTC) {
@@ -414,6 +417,9 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
       metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_IPTC);
+      g_free (buf);
+      buf = NULL;
+      size = 0;
     }
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_XMP) {
@@ -421,16 +427,11 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
       metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_XMP);
+      g_free (buf);
     }
 
-  }
-
-  else {
+  } else {
     GST_DEBUG_OBJECT (base, "Empty taglist");
-  }
-
-  if (buf) {
-    g_free (buf);
   }
 
 }

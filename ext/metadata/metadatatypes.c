@@ -99,10 +99,8 @@ metadata_chunk_array_free (MetadataChunkArray * array)
 {
   metadata_chunk_array_clear (array);
   array->allocated_len = 0;
-  if (array->chunk) {
-    g_free (array->chunk);
-    array->chunk = NULL;
-  }
+  g_free (array->chunk);
+  array->chunk = NULL;
 }
 
 /*
@@ -121,9 +119,7 @@ metadata_chunk_array_clear (MetadataChunkArray * array)
 {
   while (array->len) {
     array->len--;
-    if (array->chunk[array->len].data) {
-      g_free (array->chunk[array->len].data);
-    }
+    g_free (array->chunk[array->len].data);
   }
 }
 
@@ -239,8 +235,7 @@ metadata_chunk_array_remove_by_index (MetadataChunkArray * array, guint32 i)
 {
 
   if (i < array->len) {
-    if (array->chunk[i].data)
-      g_free (array->chunk[i].data);
+    g_free (array->chunk[i].data);
     if (i < --array->len) {
       memmove (&array->chunk[i], &array->chunk[i + 1],
           sizeof (MetadataChunk) * (array->len - i));

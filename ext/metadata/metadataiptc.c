@@ -252,10 +252,9 @@ metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 
   if (!(buf && size))
     goto done;
-  if (*buf) {
-    g_free (*buf);
-    *buf = NULL;
-  }
+
+  g_free (*buf);
+  *buf = NULL;
   *size = 0;
 
   val = gst_tag_list_get_value_index (taglist, GST_TAG_IPTC, 0);
