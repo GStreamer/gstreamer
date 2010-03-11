@@ -635,7 +635,7 @@ exit:
 static gint64
 gst_flv_demux_get_metadata (GstFLVDemux * demux)
 {
-  gint64 ret, offset;
+  gint64 ret = 0, offset;
   GstFormat fmt = GST_FORMAT_BYTES;
   size_t tag_size, size;
   GstBuffer *buffer = NULL;
@@ -969,7 +969,7 @@ static gboolean
 gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
 {
   if (!demux->indexed) {
-    guint64 seek_offset;
+    guint64 seek_offset = 0;
     gboolean building_index;
     GstFormat fmt;
 
@@ -1032,7 +1032,7 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event,
   GstSeekType start_type, stop_type;
   gint64 start, stop;
   gdouble rate;
-  gboolean update, flush, keyframe, ret;
+  gboolean update, flush, keyframe, ret = FALSE;
   GstSegment seeksegment;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
@@ -1199,7 +1199,7 @@ wrong_format:
   {
     GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
     gst_event_unref (event);
-    return FALSE;
+    return ret;
   }
 }
 
