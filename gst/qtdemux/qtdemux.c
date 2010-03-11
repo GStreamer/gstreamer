@@ -205,6 +205,9 @@ struct _QtDemuxStream
   /* if the stream has a redirect URI in its headers, we store it here */
   gchar *redirect_uri;
 
+  /* track id */
+  guint track_id;
+
   /* duration/scale */
   guint64 duration;             /* in timescale */
   guint32 timescale;
@@ -5173,7 +5176,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 tkhd_flags = 0;
   guint8 tkhd_version = 0;
   guint32 fourcc;
-  guint len;
+  guint value_size, len;
 
   stream = g_new0 (QtDemuxStream, 1);
   /* new streams always need a discont */
@@ -5191,8 +5194,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || !gst_byte_reader_get_uint24_be (&tkhd, &tkhd_flags))
     goto corrupt_file;
 
-  GST_LOG_OBJECT (qtdemux, "track[tkhd] version/flags: 0x%02x/%06x",
-      tkhd_version, tkhd_flags);
+  /* pick between 64 or 32 bits */
+  value_size = tkhd_version == 1 ? 8 : 4;
+  if (!gst_byte_reader_skip (&tkhd, value_size * 2) ||
+      !gst_byte_reader_get_uint32_be (&tkhd, &stream->track_id))
+    goto corrupt_file;
+
+  GST_LOG_OBJECT (qtdemux, "track[tkhd] version/flags/id: 0x%02x/%06x/%u",
+      tkhd_version, tkhd_flags, stream->track_id);
 
   if (!(mdia = qtdemux_tree_get_child_by_type (trak, FOURCC_mdia)))
     goto corrupt_file;
@@ -5311,7 +5320,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->sampled = TRUE;
 
     /* version 1 uses some 64-bit ints */
-    if (!gst_byte_reader_skip (&tkhd, (tkhd_version == 1) ? 84 : 72)
+    if (!gst_byte_reader_skip (&tkhd, 56 + value_size)
         || !gst_byte_reader_get_uint32_be (&tkhd, &w)
         || !gst_byte_reader_get_uint32_be (&tkhd, &h))
       goto corrupt_file;
