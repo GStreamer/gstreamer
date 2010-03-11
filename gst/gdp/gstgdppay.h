@@ -74,6 +74,8 @@ struct _GstGDPPayClass
 
 gboolean gst_gdp_pay_plugin_init (GstPlugin * plugin);
 
+GType gst_gdp_pay_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_GDP_PAY_H__ */
