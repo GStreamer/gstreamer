@@ -48,7 +48,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_X11_GET_CLASS(obj)                    \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
                                GST_VAAPI_TYPE_DISPLAY_X11,      \
-                               GstVaapiDisplayX11))
+                               GstVaapiDisplayX11Class))
 
 typedef struct _GstVaapiDisplayX11              GstVaapiDisplayX11;
 typedef struct _GstVaapiDisplayX11Private       GstVaapiDisplayX11Private;

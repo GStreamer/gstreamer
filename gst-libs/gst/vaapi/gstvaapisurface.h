@@ -55,7 +55,7 @@ enum _GstVaapiChromaType {
 #define GST_VAAPI_SURFACE_GET_CLASS(obj)                \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
                                GST_VAAPI_TYPE_SURFACE,  \
-                               GstVaapiSurface))
+                               GstVaapiSurfaceClass))
 
 typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfacePrivate          GstVaapiSurfacePrivate;

@@ -48,7 +48,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_SUBPICTURE_GET_CLASS(obj)                     \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
                                GST_VAAPI_TYPE_SUBPICTURE,       \
-                               GstVaapiSubpicture))
+                               GstVaapiSubpictureClass))
 
 typedef struct _GstVaapiSubpicture              GstVaapiSubpicture;
 typedef struct _GstVaapiSubpicturePrivate       GstVaapiSubpicturePrivate;
