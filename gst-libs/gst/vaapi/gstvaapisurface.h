@@ -25,6 +25,14 @@
 
 G_BEGIN_DECLS
 
+typedef enum _GstVaapiChromaType                GstVaapiChromaType;
+
+enum _GstVaapiChromaType {
+    GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
+    GST_VAAPI_CHROMA_TYPE_YUV422,
+    GST_VAAPI_CHROMA_TYPE_YUV444
+};
+
 #define GST_VAAPI_TYPE_SURFACE \
     (gst_vaapi_surface_get_type())
 
@@ -69,10 +77,12 @@ GType
 gst_vaapi_surface_get_type(void);
 
 GstVaapiSurface *
-gst_vaapi_surface_new(GstVaapiDisplay *display,
-                      guint            width,
-                      guint            height,
-                      guint            format);
+gst_vaapi_surface_new(
+    GstVaapiDisplay    *display,
+    GstVaapiChromaType  chroma_type,
+    guint               width,
+    guint               height
+);
 
 VASurfaceID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface);
@@ -80,14 +90,14 @@ gst_vaapi_surface_get_id(GstVaapiSurface *surface);
 GstVaapiDisplay *
 gst_vaapi_surface_get_display(GstVaapiSurface *surface);
 
+GstVaapiChromaType
+gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface);
+
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface);
 
 guint
 gst_vaapi_surface_get_height(GstVaapiSurface *surface);
-
-guint
-gst_vaapi_surface_get_format(GstVaapiSurface *surface);
 
 G_END_DECLS
 

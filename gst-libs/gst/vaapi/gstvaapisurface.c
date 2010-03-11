@@ -38,7 +38,7 @@ struct _GstVaapiSurfacePrivate {
     VASurfaceID         surface_id;
     guint               width;
     guint               height;
-    guint               format;
+    GstVaapiChromaType  chroma_type;
 };
 
 enum {
@@ -48,7 +48,7 @@ enum {
     PROP_SURFACE_ID,
     PROP_WIDTH,
     PROP_HEIGHT,
-    PROP_FORMAT
+    PROP_CHROMA_TYPE
 };
 
 static void
@@ -77,12 +77,28 @@ gst_vaapi_surface_create(GstVaapiSurface *surface)
     GstVaapiSurfacePrivate * const priv = surface->priv;
     VASurfaceID surface_id;
     VAStatus status;
+    guint format;
+
+    switch (priv->chroma_type) {
+    case GST_VAAPI_CHROMA_TYPE_YUV420:
+        format = VA_RT_FORMAT_YUV420;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_YUV422:
+        format = VA_RT_FORMAT_YUV422;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_YUV444:
+        format = VA_RT_FORMAT_YUV444;
+        break;
+    default:
+        GST_DEBUG("unsupported chroma-type %u\n", priv->chroma_type);
+        return FALSE;
+    }
 
     status = vaCreateSurfaces(
         gst_vaapi_display_get_display(priv->display),
         priv->width,
         priv->height,
-        priv->format,
+        format,
         1, &surface_id
     );
     if (!vaapi_check_status(status, "vaCreateSurfaces()"))
@@ -101,10 +117,12 @@ gst_vaapi_surface_finalize(GObject *object)
 }
 
 static void
-gst_vaapi_surface_set_property(GObject      *object,
-                               guint         prop_id,
-                               const GValue *value,
-                               GParamSpec   *pspec)
+gst_vaapi_surface_set_property(
+    GObject      *object,
+    guint         prop_id,
+    const GValue *value,
+    GParamSpec   *pspec
+)
 {
     GstVaapiSurface        * const surface = GST_VAAPI_SURFACE(object);
     GstVaapiSurfacePrivate * const priv    = surface->priv;
@@ -119,8 +137,8 @@ gst_vaapi_surface_set_property(GObject      *object,
     case PROP_HEIGHT:
         priv->height = g_value_get_uint(value);
         break;
-    case PROP_FORMAT:
-        priv->format = g_value_get_uint(value);
+    case PROP_CHROMA_TYPE:
+        priv->chroma_type = g_value_get_uint(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -129,10 +147,12 @@ gst_vaapi_surface_set_property(GObject      *object,
 }
 
 static void
-gst_vaapi_surface_get_property(GObject    *object,
-                               guint       prop_id,
-                               GValue     *value,
-                               GParamSpec *pspec)
+gst_vaapi_surface_get_property(
+    GObject    *object,
+    guint       prop_id,
+    GValue     *value,
+    GParamSpec *pspec
+)
 {
     GstVaapiSurface * const surface = GST_VAAPI_SURFACE(object);
 
@@ -149,8 +169,8 @@ gst_vaapi_surface_get_property(GObject    *object,
     case PROP_HEIGHT:
         g_value_set_uint(value, gst_vaapi_surface_get_height(surface));
         break;
-    case PROP_FORMAT:
-        g_value_set_uint(value, gst_vaapi_surface_get_format(surface));
+    case PROP_CHROMA_TYPE:
+        g_value_set_uint(value, gst_vaapi_surface_get_chroma_type(surface));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -221,10 +241,10 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
 
     g_object_class_install_property
         (object_class,
-         PROP_FORMAT,
-         g_param_spec_uint("format",
-                           "format",
-                           "VA surface format",
+         PROP_CHROMA_TYPE,
+         g_param_spec_uint("chroma-type",
+                           "chroma-type",
+                           "VA surface chroma type",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
@@ -239,22 +259,24 @@ gst_vaapi_surface_init(GstVaapiSurface *surface)
     priv->surface_id    = VA_INVALID_SURFACE;
     priv->width         = 0;
     priv->height        = 0;
-    priv->format        = 0;
+    priv->chroma_type        = 0;
 }
 
 GstVaapiSurface *
-gst_vaapi_surface_new(GstVaapiDisplay *display,
-                      guint            width,
-                      guint            height,
-                      guint            format)
+gst_vaapi_surface_new(
+    GstVaapiDisplay    *display,
+    GstVaapiChromaType  chroma_type,
+    guint               width,
+    guint               height
+)
 {
-    GST_DEBUG("size %ux%u, format 0x%x", width, height, format);
+    GST_DEBUG("size %ux%u, chroma type 0x%x", width, height, chroma_type);
 
     return g_object_new(GST_VAAPI_TYPE_SURFACE,
-                        "display", display,
-                        "width",   width,
-                        "height",  height,
-                        "format",  format,
+                        "display",      display,
+                        "width",        width,
+                        "height",       height,
+                        "chroma-type",  chroma_type,
                         NULL);
 }
 
@@ -274,6 +296,14 @@ gst_vaapi_surface_get_display(GstVaapiSurface *surface)
     return surface->priv->display;
 }
 
+GstVaapiChromaType
+gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
+
+    return surface->priv->chroma_type;
+}
+
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
@@ -288,12 +318,4 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
 
     return surface->priv->height;
-}
-
-guint
-gst_vaapi_surface_get_format(GstVaapiSurface *surface)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), 0);
-
-    return surface->priv->format;
 }
