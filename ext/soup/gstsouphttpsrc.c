@@ -1004,13 +1004,15 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
 
   /* Extract the GstBuffer from the SoupBuffer and set its fields. */
   *src->outbuf = GST_BUFFER_CAST (soup_buffer_get_owner (chunk));
-  gst_buffer_ref (*src->outbuf);
+
   GST_BUFFER_SIZE (*src->outbuf) = chunk->length;
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
 
   gst_buffer_set_caps (*src->outbuf,
       (src->src_caps) ? src->src_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
+
+  gst_buffer_ref (*src->outbuf);
 
   new_position = src->read_position + chunk->length;
   if (G_LIKELY (src->request_position == src->read_position))
