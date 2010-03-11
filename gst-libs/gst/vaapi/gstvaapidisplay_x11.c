@@ -35,6 +35,7 @@ G_DEFINE_TYPE(GstVaapiDisplayX11,
                                  GstVaapiDisplayX11Private))
 
 struct _GstVaapiDisplayX11Private {
+    gboolean    create_display;
     gchar      *display_name;
     Display    *x11_display;
     VADisplay  *va_display;
@@ -80,6 +81,9 @@ gst_vaapi_display_x11_set_property(
     case PROP_DISPLAY_NAME:
         set_display_name(display, g_value_get_string(value));
         break;
+    case PROP_X11_DISPLAY:
+        display->priv->x11_display = g_value_get_pointer(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -109,6 +113,19 @@ gst_vaapi_display_x11_get_property(
     }
 }
 
+static void
+gst_vaapi_display_x11_constructed(GObject *object)
+{
+    GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
+    GObjectClass *parent_class;
+
+    display->priv->create_display = display->priv->x11_display == NULL;
+
+    parent_class = G_OBJECT_CLASS(gst_vaapi_display_x11_parent_class);
+    if (parent_class->constructed)
+        parent_class->constructed(object);
+}
+
 static gboolean
 gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
 {
@@ -116,7 +133,8 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
     /* XXX: maintain an X11 display cache */
-    priv->x11_display = XOpenDisplay(priv->display_name);
+    if (!priv->x11_display && priv->create_display)
+        priv->x11_display = XOpenDisplay(priv->display_name);
     if (!priv->x11_display)
         return FALSE;
 
@@ -131,7 +149,8 @@ gst_vaapi_display_x11_close_display(GstVaapiDisplay *display)
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
     if (priv->x11_display) {
-        XCloseDisplay(priv->x11_display);
+        if (priv->create_display)
+            XCloseDisplay(priv->x11_display);
         priv->x11_display = NULL;
     }
 
@@ -160,6 +179,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     object_class->finalize      = gst_vaapi_display_x11_finalize;
     object_class->set_property  = gst_vaapi_display_x11_set_property;
     object_class->get_property  = gst_vaapi_display_x11_get_property;
+    object_class->constructed   = gst_vaapi_display_x11_constructed;
 
     dpy_class->open_display     = gst_vaapi_display_x11_open_display;
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
@@ -171,7 +191,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
          g_param_spec_pointer("x11-display",
                               "X11 display",
                               "X11 display",
-                              G_PARAM_READABLE));
+                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property
         (object_class,
@@ -188,9 +208,10 @@ gst_vaapi_display_x11_init(GstVaapiDisplayX11 *display)
 {
     GstVaapiDisplayX11Private *priv = GST_VAAPI_DISPLAY_X11_GET_PRIVATE(display);
 
-    display->priv       = priv;
-    priv->x11_display   = NULL;
-    priv->display_name  = NULL;
+    display->priv        = priv;
+    priv->create_display = TRUE;
+    priv->x11_display    = NULL;
+    priv->display_name   = NULL;
 }
 
 GstVaapiDisplay *
@@ -198,6 +219,14 @@ gst_vaapi_display_x11_new(const gchar *display_name)
 {
     return g_object_new(GST_VAAPI_TYPE_DISPLAY_X11,
                         "display-name", display_name,
+                        NULL);
+}
+
+GstVaapiDisplay *
+gst_vaapi_display_x11_new_with_display(Display *x11_display)
+{
+    return g_object_new(GST_VAAPI_TYPE_DISPLAY_X11,
+                        "x11-display", x11_display,
                         NULL);
 }
 

@@ -68,17 +68,10 @@ print_caps(GstCaps *caps, const gchar *name)
     }
 }
 
-int
-main(int argc, char *argv[])
+static void
+dump_caps(GstVaapiDisplay *display)
 {
-    GstVaapiDisplay *display;
     GstCaps *caps;
-
-    gst_init(&argc, &argv);
-
-    display = gst_vaapi_display_x11_new(NULL);
-    if (!display)
-        g_error("could not create VA-API display");
 
     caps = gst_vaapi_display_get_image_caps(display);
     if (!caps)
@@ -93,8 +86,70 @@ main(int argc, char *argv[])
 
     print_caps(caps, "subpicture");
     gst_caps_unref(caps);
+}
 
-    g_object_unref(display);
+int
+main(int argc, char *argv[])
+{
+    Display *x11_display;
+    VADisplay va_display;
+    GstVaapiDisplay *display;
+
+    gst_init(&argc, &argv);
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_x11_new()\n");
+    g_print("#\n");
+    {
+        display = gst_vaapi_display_x11_new(NULL);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_x11_new_with_display()\n");
+    g_print("#\n");
+    {
+        x11_display = XOpenDisplay(NULL);
+        if (!x11_display)
+            g_error("could not create X11 display");
+
+        display = gst_vaapi_display_x11_new_with_display(x11_display);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        XCloseDisplay(x11_display);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_new_with_display()\n");
+    g_print("#\n");
+    {
+        x11_display = XOpenDisplay(NULL);
+        if (!x11_display)
+            g_error("could not create X11 display");
+
+        va_display = vaGetDisplay(x11_display);
+        if (!va_display)
+            g_error("could not create VA display");
+
+        display = gst_vaapi_display_new_with_display(va_display);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        XCloseDisplay(x11_display);
+    }
+    g_print("\n");
+
     gst_deinit();
     return 0;
 }
