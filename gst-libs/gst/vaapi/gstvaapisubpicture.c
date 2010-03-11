@@ -60,7 +60,6 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
                 gst_vaapi_display_get_display(display),
                 priv->subpicture_id
             );
-            g_object_unref(display);
             if (!vaapi_check_status(status, "vaDestroySubpicture()"))
                 g_warning("failed to destroy subpicture 0x%08x\n",
                           priv->subpicture_id);
@@ -94,7 +93,6 @@ gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
         gst_vaapi_image_get_id(priv->image),
         &subpicture_id
     );
-    g_object_unref(display);
     if (!vaapi_check_status(status, "vaCreateSubpicture()"))
         return FALSE;
 
@@ -218,7 +216,7 @@ gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), NULL);
 
-    return g_object_ref(subpicture->priv->image);
+    return subpicture->priv->image;
 }
 
 void

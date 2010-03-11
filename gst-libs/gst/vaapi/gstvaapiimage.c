@@ -123,7 +123,7 @@ gst_vaapi_image_set_property(
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        priv->display = g_object_ref(g_value_get_pointer(value));
+        priv->display = g_object_ref(g_value_get_object(value));
         break;
     case PROP_WIDTH:
         priv->width = g_value_get_uint(value);
@@ -148,12 +148,11 @@ gst_vaapi_image_get_property(
     GParamSpec *pspec
 )
 {
-    GstVaapiImage        * const image = GST_VAAPI_IMAGE(object);
-    GstVaapiImagePrivate * const priv  = image->priv;
+    GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_pointer(value, g_object_ref(priv->display));
+        g_value_set_pointer(value, gst_vaapi_image_get_display(image));
         break;
     case PROP_IMAGE_ID:
         g_value_set_uint(value, gst_vaapi_image_get_id(image));
@@ -296,7 +295,7 @@ gst_vaapi_image_get_display(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
-    return g_object_ref(image->priv->display);
+    return image->priv->display;
 }
 
 guint
