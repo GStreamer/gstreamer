@@ -25,6 +25,7 @@ log
 /config.sub
 /configure
 /depcomp
+/gst-editing-services.spec
 /install-sh
 /libtool
 /ltmain.sh
@@ -33,5 +34,7 @@ log
 /stamp-h1
 
 /ges/gesmarshal.h
+
+/docs/version.entities
 
 /m4
