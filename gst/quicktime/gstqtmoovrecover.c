@@ -188,19 +188,19 @@ gst_qt_moov_recover_run (void *data)
   if (qtmr->broken_input == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, SETTINGS,
-        ("Please set broken-input property"), NULL);
+        ("Please set broken-input property"), (NULL));
     goto end;
   }
   if (qtmr->recovery_input == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, SETTINGS,
-        ("Please set recovery-input property"), NULL);
+        ("Please set recovery-input property"), (NULL));
     goto end;
   }
   if (qtmr->fixed_output == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, SETTINGS,
-        ("Please set fixed-output property"), NULL);
+        ("Please set fixed-output property"), (NULL));
     goto end;
   }
 
@@ -210,7 +210,7 @@ gst_qt_moov_recover_run (void *data)
   if (moovrec == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, OPEN_READ,
-        ("Failed to open recovery-input file"), NULL);
+        ("Failed to open recovery-input file"), (NULL));
     goto end;
   }
 
@@ -218,14 +218,14 @@ gst_qt_moov_recover_run (void *data)
   if (mdatinput == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, OPEN_READ,
-        ("Failed to open broken-input file"), NULL);
+        ("Failed to open broken-input file"), (NULL));
     goto end;
   }
   output = g_fopen (qtmr->fixed_output, "wb+");
   if (output == NULL) {
     GST_OBJECT_UNLOCK (qtmr);
     GST_ELEMENT_ERROR (qtmr, RESOURCE, OPEN_READ_WRITE,
-        ("Failed to open fixed-output file"), NULL);
+        ("Failed to open fixed-output file"), (NULL));
     goto end;
   }
   GST_OBJECT_UNLOCK (qtmr);
@@ -236,14 +236,14 @@ gst_qt_moov_recover_run (void *data)
   mdatinput = NULL;
   if (mdat_recov == NULL) {
     GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED,
-        ("Broken file could not be parsed correctly"), NULL);
+        ("Broken file could not be parsed correctly"), (NULL));
     goto end;
   }
   moov_recov = moov_recov_file_create (moovrec, &err);
   moovrec = NULL;
   if (moov_recov == NULL) {
     GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED,
-        ("Recovery file could not be parsed correctly"), NULL);
+        ("Recovery file could not be parsed correctly"), (NULL));
     goto end;
   }
 
@@ -265,7 +265,7 @@ gst_qt_moov_recover_run (void *data)
 end:
   GST_LOG_OBJECT (qtmr, "Finalizing task");
   if (err) {
-    GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED, ("%s", err->message), NULL);
+    GST_ELEMENT_ERROR (qtmr, RESOURCE, FAILED, ("%s", err->message), (NULL));
     g_error_free (err);
   }
 
