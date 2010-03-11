@@ -72,6 +72,10 @@ struct _GstQTDemux {
   guint32 timescale;
   guint64 duration;
 
+  gboolean fragmented;
+  /* offset of the mfra atom */
+  guint64 mfra_offset;
+
   gint state;
 
   gboolean pullbased;

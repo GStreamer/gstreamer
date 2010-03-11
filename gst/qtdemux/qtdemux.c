@@ -391,8 +391,8 @@ static void gst_qtdemux_loop (GstPad * pad);
 static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf);
 static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
-static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux, const guint8 * buffer,
-    guint length);
+static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux,
+    const guint8 * buffer, guint length);
 static gboolean qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node,
     const guint8 * buffer, guint length);
 static gboolean qtdemux_parse_tree (GstQTDemux * qtdemux);
@@ -1852,6 +1852,421 @@ extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
     *pfourcc = fourcc;
 }
 
+static gboolean
+qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
+    QtDemuxStream * stream, guint32 mdat_offset, guint64 start_time,
+    guint32 d_sample_duration, guint32 d_sample_size, guint32 * samples_count)
+{
+  guint64 timestamp;
+  guint32 flags, data_offset;
+  guint32 *samples_size, *samples_duration;
+  gint i;
+
+  if (!gst_byte_reader_skip (trun, 1) ||
+      !gst_byte_reader_get_uint24_be (trun, &flags))
+    return FALSE;
+
+  if (!gst_byte_reader_get_uint32_be (trun, &(*samples_count)))
+    return FALSE;
+  else {
+    samples_size = (guint32 *) malloc (*samples_count * sizeof (guint32));
+    samples_duration = (guint32 *) malloc (*samples_count * sizeof (guint32));
+  }
+  /*FIXME: handle this flag properly */
+  if (flags & TR_DATA_OFFSET) {
+    if (!gst_byte_reader_get_uint32_be (trun, &data_offset))
+      return FALSE;
+  }
+
+  if (flags & TR_FIRST_SAMPLE_FLAGS)
+    gst_byte_reader_skip (trun, 4);
+
+  for (i = 0; i < *samples_count; i++) {
+    /* get the sample duration if present or use the default one */
+    if (flags & TR_SAMPLE_DURATION) {
+      if (!gst_byte_reader_get_uint32_be (trun, &(samples_duration[i])))
+        return FALSE;
+    } else
+      samples_duration[i] = d_sample_duration;
+
+    if (flags & TR_SAMPLE_SIZE) {
+      if (!gst_byte_reader_get_uint32_be (trun, &(samples_size[i])))
+        return FALSE;
+    } else
+      samples_size[i] = d_sample_size;
+
+    /* FIXME: Handle these flags properly */
+    if (flags & TR_SAMPLE_FLAGS)
+      gst_byte_reader_skip (trun, 4);
+
+    if (flags & TR_COMPOSITION_TIME_OFFSETS)
+      gst_byte_reader_skip (trun, 4);
+  }
+
+  data_offset = mdat_offset + 8;
+
+  if (stream->n_samples >=
+      QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
+    goto index_too_big;
+
+  for (i = 0; i < *samples_count; i++) {
+    if (i == 0) {
+      GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)",
+          stream->n_samples,
+          (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
+      /* create a new array of samples if it's the first sample parsed */
+      if (stream->n_samples == 0)
+        stream->samples = g_try_new0 (QtDemuxSample, *samples_count);
+      /* or try to reallocate it with space enough to insert the new samples */
+      else
+        stream->samples = g_try_renew (QtDemuxSample, stream->samples,
+            stream->n_samples + *samples_count);
+      if (stream->samples == NULL)
+        goto out_of_memory;
+      /* the timestamp of the first sample is provided by the tfra entry */
+      timestamp = start_time;
+    } else {
+      /* a track run documents a contiguous set of samples */
+      timestamp =
+          stream->samples[i + stream->n_samples - 1].timestamp +
+          stream->samples[i + stream->n_samples - 1].duration;
+    }
+    /* fill the sample information */
+    stream->samples[i + stream->n_samples].offset = data_offset;
+    stream->samples[i + stream->n_samples].pts_offset = 0;
+    stream->samples[i + stream->n_samples].size = samples_size[i];
+    stream->samples[i + stream->n_samples].timestamp = timestamp;
+    stream->samples[i + stream->n_samples].duration = samples_duration[i];
+    stream->samples[i + stream->n_samples].keyframe = (i == 0);
+    data_offset += samples_size[i];
+
+    /* Get the duration of the first frame used later to get the media fps */
+    if (G_UNLIKELY (stream->min_duration == 0)) {
+      stream->min_duration = samples_duration[i];
+    }
+  }
+
+  stream->n_samples += *samples_count;
+  free (samples_size);
+  free (samples_duration);
+  return TRUE;
+
+out_of_memory:
+  {
+    GST_WARNING_OBJECT (qtdemux, "failed to allocate %d samples",
+        stream->n_samples);
+    free (samples_size);
+    free (samples_duration);
+    return FALSE;
+  }
+
+index_too_big:
+  {
+    GST_WARNING_OBJECT (qtdemux, "not allocating index of %d samples, would "
+        "be larger than %uMB (broken file?)", stream->n_samples,
+        QTDEMUX_MAX_SAMPLE_INDEX_SIZE >> 20);
+    free (samples_size);
+    free (samples_duration);
+    return FALSE;
+  }
+}
+
+static gboolean
+qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
+    guint32 * track_id, guint32 * default_sample_duration,
+    guint32 * default_sample_size)
+{
+  guint32 flags;
+
+  if (!gst_byte_reader_skip (tfhd, 1) ||
+      !gst_byte_reader_get_uint24_be (tfhd, &flags))
+    goto invalid_track;
+
+  if (!gst_byte_reader_get_uint32_be (tfhd, &(*track_id)))
+    goto invalid_track;
+
+  /* FIXME: Handle TF_BASE_DATA_OFFSET properly */
+  if (flags & TF_BASE_DATA_OFFSET)
+    gst_byte_reader_skip (tfhd, 4);
+
+  /* FIXME: Handle TF_SAMPLE_DESCRIPTION_INDEX properly */
+  if (flags & TF_SAMPLE_DESCRIPTION_INDEX)
+    gst_byte_reader_skip (tfhd, 4);
+
+  if (flags & TF_DEFAULT_SAMPLE_DURATION)
+    gst_byte_reader_get_uint32_be (tfhd, &(*default_sample_duration));
+
+  if (flags & TF_DEFAULT_SAMPLE_SIZE)
+    gst_byte_reader_get_uint32_be (tfhd, &(*default_sample_size));
+
+  return TRUE;
+
+invalid_track:
+  {
+    GST_WARNING_OBJECT (qtdemux, "invalid track header, skipping", *track_id);
+    return FALSE;
+  }
+}
+
+static gboolean
+qtdemux_parse_sdtp (GstQTDemux * qtdemux, GstByteReader * sdtp,
+    guint32 samples_count)
+{
+  guint8 sample_data;
+  gint i = 0;
+
+  for (i = 0; i < samples_count; i++) {
+    gst_byte_reader_get_uint8 (sdtp, &sample_data);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
+    guint32 moof_offset, QtDemuxStream * stream, guint64 start_time)
+{
+  GNode *moof_node, *traf_node, *tfhd_node, *trun_node, *sdtp_node;
+  GstByteReader trun_data, tfhd_data, sdtp_data;
+  guint32 id = 0, default_sample_size = 0, default_sample_duration = 0;
+  guint32 samples_count = 0;
+  guint64 mdat_offset;
+
+  mdat_offset = moof_offset + length;
+
+  moof_node = g_node_new ((guint8 *) buffer);
+  qtdemux_parse_node (qtdemux, moof_node, buffer, length);
+  qtdemux_node_dump (qtdemux, moof_node);
+
+  traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
+  while (traf_node) {
+    /* Fragment Header node */
+    tfhd_node =
+        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_tfhd,
+        &tfhd_data);
+    if (!tfhd_node)
+      goto missing_tfhd;
+    qtdemux_parse_tfhd (qtdemux, &tfhd_data, &id, &default_sample_duration,
+        &default_sample_size);
+    /* skip trun atoms that don't match the track ID */
+    if (id != stream->track_id)
+      continue;
+    /* Track Run node */
+    trun_node =
+        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
+        &trun_data);
+    while (trun_node) {
+      qtdemux_parse_trun (qtdemux, &trun_data, stream, mdat_offset, start_time,
+          default_sample_duration, default_sample_size, &samples_count);
+      /* iterate all siblings */
+      trun_node = qtdemux_tree_get_sibling_by_type (trun_node, FOURCC_trun);
+    }
+    sdtp_node =
+        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_sdtp,
+        &sdtp_data);
+    if (sdtp_node) {
+      qtdemux_parse_sdtp (qtdemux, &sdtp_data, samples_count);
+    }
+
+    /* iterate all siblings */
+    traf_node = qtdemux_tree_get_sibling_by_type (traf_node, FOURCC_traf);
+  }
+  g_node_destroy (moof_node);
+  return FALSE;
+
+missing_tfhd:
+  {
+    g_node_destroy (moof_node);
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+        (_("This file is corrupt and cannot be played.")),
+        ("missing tfhd box"));
+    return FALSE;
+  }
+}
+
+static gboolean
+qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node,
+    QtDemuxStream * stream)
+{
+  guint64 time = 0, moof_offset = 0;
+  guint32 ver_flags, track_id, len, num_entries, i;
+  guint value_size, traf_size, trun_size, sample_size;
+  GstBuffer *buf = NULL;
+  GstFlowReturn ret;
+  GstByteReader tfra;
+
+  gst_byte_reader_init (&tfra, (guint8 *) tfra_node->data + (4 + 4),
+      QT_UINT32 ((guint8 *) tfra_node->data) - (4 + 4));
+
+  if (!gst_byte_reader_get_uint32_be (&tfra, &ver_flags))
+    return FALSE;
+
+  if (!(gst_byte_reader_get_uint32_be (&tfra, &track_id) &&
+          gst_byte_reader_get_uint32_be (&tfra, &len) &&
+          gst_byte_reader_get_uint32_be (&tfra, &num_entries)))
+    return FALSE;
+
+  if (track_id != stream->track_id)
+    return FALSE;
+
+  value_size = ((ver_flags >> 24) == 1) ? sizeof (guint64) : sizeof (guint32);
+  sample_size = (len & 3) + 1;
+  trun_size = ((len & 12) >> 2) + 1;
+  traf_size = ((len & 48) >> 4) + 1;
+
+  if (num_entries == 0)
+    goto no_samples;
+
+  if (!qt_atom_parser_has_chunks (&tfra, num_entries,
+          value_size + value_size + traf_size + trun_size + sample_size))
+    goto corrupt_file;
+
+  for (i = 0; i < num_entries; i++) {
+    qt_atom_parser_get_offset (&tfra, value_size, &time);
+    qt_atom_parser_get_offset (&tfra, value_size, &moof_offset);
+    qt_atom_parser_get_uint_with_size_unchecked (&tfra, traf_size);
+    qt_atom_parser_get_uint_with_size_unchecked (&tfra, trun_size);
+    qt_atom_parser_get_uint_with_size_unchecked (&tfra, sample_size);
+
+    GST_LOG_OBJECT (qtdemux,
+        "fragment time: %" GST_TIME_FORMAT " moof_offset: %u",
+        GST_TIME_ARGS (gst_util_uint64_scale (time, GST_SECOND,
+                stream->timescale)), moof_offset);
+
+    ret = gst_qtdemux_pull_atom (qtdemux, moof_offset, 0, &buf);
+    if (ret != GST_FLOW_OK)
+      goto corrupt_file;
+    qtdemux_parse_moof (qtdemux, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
+        moof_offset, stream, time);
+    gst_buffer_unref (buf);
+  }
+
+  return TRUE;
+
+/* ERRORS */
+corrupt_file:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
+  }
+no_samples:
+  {
+    GST_WARNING_OBJECT (qtdemux, "stream has no samples");
+    return FALSE;
+  }
+}
+
+static gboolean
+qtdemux_parse_mfra (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  GstFlowReturn ret;
+  GNode *mfra_node, *tfra_node;
+  GstBuffer *buffer;
+
+  if (!qtdemux->mfra_offset)
+    return FALSE;
+
+  ret = gst_qtdemux_pull_atom (qtdemux, qtdemux->mfra_offset, 0, &buffer);
+  if (ret != GST_FLOW_OK)
+    goto corrupt_file;
+
+  mfra_node = g_node_new ((guint8 *) GST_BUFFER_DATA (buffer));
+  qtdemux_parse_node (qtdemux, mfra_node, GST_BUFFER_DATA (buffer),
+      GST_BUFFER_SIZE (buffer));
+
+  tfra_node = qtdemux_tree_get_child_by_type (mfra_node, FOURCC_tfra);
+
+  while (tfra_node) {
+    qtdemux_parse_tfra (qtdemux, tfra_node, stream);
+    /* iterate all siblings */
+    tfra_node = qtdemux_tree_get_sibling_by_type (tfra_node, FOURCC_tfra);
+  }
+  g_node_destroy (mfra_node);
+  gst_buffer_unref (buffer);
+
+  return TRUE;
+
+corrupt_file:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return FALSE;
+  }
+}
+
+static GstFlowReturn
+qtdemux_parse_mfro (GstQTDemux * qtdemux, gint32 length,
+    guint64 * mfra_offset, guint32 * mfro_size)
+{
+  GstFlowReturn ret;
+  GstBuffer *mfro;
+  GNode *mfro_node;
+  GstQuery *query;
+  GstPad *sinkpad_peer_pad;
+  GstElement *sinkpad_peer;
+  guint32 fourcc;
+  gint64 len;
+  gboolean r;
+
+  sinkpad_peer_pad = gst_pad_get_peer (qtdemux->sinkpad);
+  sinkpad_peer = gst_pad_get_parent_element (sinkpad_peer_pad);
+  gst_object_unref (sinkpad_peer_pad);
+
+  query = gst_query_new_duration (GST_FORMAT_BYTES);
+  r = gst_element_query (sinkpad_peer, query);
+  gst_object_unref (sinkpad_peer);
+  if (!r) {
+    GST_WARNING_OBJECT (qtdemux, "Cannot query duration to locate mfro");
+    return GST_FLOW_ERROR;
+  }
+  gst_query_parse_duration (query, NULL, &len);
+  gst_query_unref (query);
+
+  ret = gst_qtdemux_pull_atom (qtdemux, len - 16, 16, &mfro);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  fourcc = QT_FOURCC (GST_BUFFER_DATA (mfro) + 4);
+  if (fourcc == FOURCC_mfro)
+    GST_INFO_OBJECT (qtdemux, "Found mfro atom: fragmented mp4 container");
+  else
+    return GST_FLOW_OK;
+  mfro_node = g_node_new ((guint8 *) GST_BUFFER_DATA (mfro));
+  GST_DEBUG_OBJECT (qtdemux, "parsing 'mfro' atom");
+  qtdemux_parse_node (qtdemux, mfro_node, GST_BUFFER_DATA (mfro), length);
+  *mfro_size = QT_UINT32 ((guint8 *) mfro_node->data + 12);
+  *mfra_offset = len - *mfro_size;
+  if (*mfro_size + 16 >= len) {
+    GST_WARNING_OBJECT (qtdemux, "mfro.size is invalid");
+    return GST_FLOW_ERROR;
+  }
+  g_node_destroy (mfro_node);
+  gst_buffer_unref (mfro);
+  return GST_FLOW_OK;
+}
+
+static gboolean
+qtdemux_parse_fragmented (GstQTDemux * qtdemux, guint32 length)
+{
+  GstFlowReturn ret;
+  guint32 mfra_size = 0;
+  guint64 mfra_offset = 0;
+
+  /* We check here if it is a fragmented mp4 container */
+  ret = qtdemux_parse_mfro (qtdemux, length, &mfra_offset, &mfra_size);
+  if (ret != GST_FLOW_OK) {
+    qtdemux->fragmented = FALSE;
+    return FALSE;
+  }
+  if (mfra_size != 0 && mfra_offset != 0) {
+    qtdemux->fragmented = TRUE;
+    qtdemux->mfra_offset = mfra_offset;
+  }
+  return TRUE;
+}
+
+
 static GstFlowReturn
 gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 {
@@ -1883,6 +2298,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     case FOURCC_wide:
     case FOURCC_PICT:
     case FOURCC_pnot:
+    case FOURCC_moof:
     {
       GST_LOG_OBJECT (qtdemux,
           "skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
@@ -1942,6 +2358,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       }
       qtdemux->offset += length;
 
+      qtdemux_parse_fragmented (qtdemux, length);
       qtdemux_parse_moov (qtdemux, GST_BUFFER_DATA (moov), length);
       qtdemux_node_dump (qtdemux, qtdemux->moov_node);
 
@@ -1950,6 +2367,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       gst_buffer_unref (moov);
       qtdemux->moov_node = NULL;
       qtdemux->got_moov = TRUE;
+
       break;
     }
     case FOURCC_ftyp:
@@ -6160,8 +6578,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   /* collect sample information */
-  if (!qtdemux_stbl_init (qtdemux, stream, stbl)
-      || !qtdemux_parse_samples (qtdemux, stream, 0))
+  if (qtdemux->fragmented) {
+    if (!qtdemux_parse_mfra (qtdemux, stream))
+      goto samples_failed;
+  } else {
+    if (!qtdemux_stbl_init (qtdemux, stream, stbl))
+      goto samples_failed;
+  }
+  if (!qtdemux_parse_samples (qtdemux, stream, 0))
     goto samples_failed;
 
   /* parse number of initial sample to set frame rate cap */
@@ -7262,6 +7686,8 @@ qtdemux_add_container_format (GstQTDemux * qtdemux, GstTagList * tags)
     fmt = "3GP";
   else if (qtdemux->major_brand == FOURCC_qt__)
     fmt = "Quicktime";
+  else if (qtdemux->fragmented)
+    fmt = "ISO fMP4";
   else
     fmt = "ISO MP4/M4A";
 
