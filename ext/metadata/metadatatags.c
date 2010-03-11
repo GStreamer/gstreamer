@@ -446,17 +446,5 @@ metadata_tags_iptc_register (void)
 static void
 metadata_tags_xmp_register (void)
 {
-  gst_tag_register (GST_TAG_XMP_GEO_LOCATION_COUNTRY, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_XMP_GEO_LOCATION_COUNTRY,
-      "human readable english country name of where the media has been recorded or produced",
-      NULL);
-  gst_tag_register (GST_TAG_XMP_GEO_LOCATION_CITY, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_XMP_GEO_LOCATION_CITY,
-      "human readable english city name of where the media has been recorded or produced",
-      NULL);
-  gst_tag_register (GST_TAG_XMP_GEO_LOCATION_SUBLOCATION, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_XMP_GEO_LOCATION_SUBLOCATION,
-      "human readable location detail of where the media has been recorded or produced",
-      NULL);
 
 }

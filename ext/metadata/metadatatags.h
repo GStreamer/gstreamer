@@ -126,10 +126,6 @@ typedef enum {
 #define GST_TAG_GPS_SPEED                  "" 
 #define GST_TAG_GPS_TRACK                  ""
 
-#define GST_TAG_XMP_GEO_LOCATION_COUNTRY   "geo-location-country"
-#define GST_TAG_XMP_GEO_LOCATION_CITY      "geo-location-city"
-#define GST_TAG_XMP_GEO_LOCATION_SUBLOCATION  "geo-location-sublocation"
-
 /* *INDENT-ON* */
 
 /*
