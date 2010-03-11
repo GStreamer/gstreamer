@@ -107,8 +107,8 @@ gst_vaapi_image_format_is_rgb(GstVaapiImageFormat format)
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
-
-    g_return_val_if_fail(m, FALSE);
+    if (!m)
+        return FALSE;
 
     return m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB;
 }
@@ -119,8 +119,8 @@ gst_vaapi_image_format_is_yuv(GstVaapiImageFormat format)
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
-
-    g_return_val_if_fail(m, FALSE);
+    if (!m)
+        return FALSE;
 
     return m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR;
 }
@@ -130,7 +130,8 @@ gst_vaapi_image_format(const VAImageFormat *va_format)
 {
     const GstVaapiImageFormatMap * const m = get_map(va_format);
 
-    g_return_val_if_fail(m, 0);
+    if (!m)
+        return 0;
 
     return m->format;
 }
@@ -147,8 +148,8 @@ gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
-
-    g_return_val_if_fail(m, NULL);
+    if (!m)
+        return NULL;
 
     return &m->va_format;
 }
@@ -160,8 +161,8 @@ gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
-
-    g_return_val_if_fail(m, NULL);
+    if (!m)
+        return NULL;
 
     caps = gst_static_caps_get(&m->caps);
     if (!caps)
@@ -176,8 +177,8 @@ gst_vaapi_image_format_get_score(GstVaapiImageFormat format)
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
-
-    g_return_val_if_fail(m, G_MAXUINT);
+    if (!m)
+        return G_MAXUINT;
 
     return m - &gst_vaapi_image_formats[0];
 }
