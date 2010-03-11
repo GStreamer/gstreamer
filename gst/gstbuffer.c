@@ -283,8 +283,7 @@ _gst_buffer_copy (GstBuffer * buffer)
     if (G_LIKELY (buffer->size)) {
       if (G_UNLIKELY (!aligned_malloc (&memptr, buffer->size))) {
         /* terminate on error like g_memdup() would */
-        g_error ("%s: failed to allocate %" G_GSIZE_FORMAT " bytes",
-            G_STRLOC, buffer->size);
+        g_error ("%s: failed to allocate %u bytes", G_STRLOC, buffer->size);
       } else {
         memcpy (memptr, buffer->data, buffer->size);
       }
@@ -369,8 +368,7 @@ gst_buffer_new_and_alloc (guint size)
     if (G_LIKELY (size)) {
       if (G_UNLIKELY (!aligned_malloc (&memptr, size))) {
         /* terminate on error like g_memdup() would */
-        g_error ("%s: failed to allocate %" G_GSIZE_FORMAT " bytes",
-            G_STRLOC, size);
+        g_error ("%s: failed to allocate %u bytes", G_STRLOC, size);
       }
     }
     newbuf->malloc_data = (guint8 *) memptr;
