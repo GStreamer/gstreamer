@@ -4352,8 +4352,8 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
       /* different sizes for each sample */
       for (cur = first; cur <= last; cur++) {
         cur->size = gst_byte_reader_get_uint32_be_unchecked (&stream->stsz);
-        GST_LOG_OBJECT (qtdemux, "sample %lu has size %u", cur - samples,
-            cur->size);
+        GST_LOG_OBJECT (qtdemux, "sample %d has size %u",
+            (guint) (cur - samples), cur->size);
       }
     } else {
       /* samples have the same size */
@@ -4437,8 +4437,8 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         chunk_offset = stream->chunk_offset;
 
         for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
-          GST_LOG_OBJECT (qtdemux, "Creating entry %lu with offset %"
-              G_GUINT64_FORMAT, cur - samples, stream->chunk_offset);
+          GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %"
+              G_GUINT64_FORMAT, (guint) (cur - samples), stream->chunk_offset);
 
           cur->offset = chunk_offset;
           chunk_offset += cur->size;
@@ -4519,8 +4519,8 @@ done2:
         stream->stts_duration =
             gst_byte_reader_get_uint32_be_unchecked (&stream->stts);
 
-        GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %"
-            G_GUINT64_FORMAT, i, stream->stts_samples, stream->stts_duration);
+        GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u",
+            i, stream->stts_samples, stream->stts_duration);
 
         /* take first duration for fps */
         if (G_UNLIKELY (stream->min_duration == 0))
@@ -4535,9 +4535,10 @@ done2:
 
       for (j = stream->stts_sample_index; j < stts_samples; j++) {
         GST_DEBUG_OBJECT (qtdemux,
-            "sample %lu: index %d, timestamp %" GST_TIME_FORMAT,
-            cur - samples, j, GST_TIME_ARGS (gst_util_uint64_scale (stts_time,
-                    GST_SECOND, stream->timescale)));
+            "sample %d: index %d, timestamp %" GST_TIME_FORMAT,
+            (guint) (cur - samples), j,
+            GST_TIME_ARGS (gst_util_uint64_scale (stts_time, GST_SECOND,
+                    stream->timescale)));
 
         cur->timestamp = stts_time;
         cur->duration = stts_duration;
@@ -4562,7 +4563,8 @@ done2:
      * need something in here. */
     for (; cur < last; cur++) {
       GST_DEBUG_OBJECT (qtdemux,
-          "fill sample %lu: timestamp %" GST_TIME_FORMAT, cur - samples,
+          "fill sample %d: timestamp %" GST_TIME_FORMAT,
+          (guint) (cur - samples),
           GST_TIME_ARGS (gst_util_uint64_scale (stream->stts_time, GST_SECOND,
                   stream->timescale)));
       cur->timestamp = stream->stts_time;
