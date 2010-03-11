@@ -537,22 +537,27 @@ gst_audio_panorama_transform_m2s_int_simple (GstAudioPanorama * filter,
     gint16 * idata, gint16 * odata, guint num_samples)
 {
   guint i;
-  gdouble val;
+  gdouble pan;
   glong lval, rval;
 
-  for (i = 0; i < num_samples; i++) {
-    val = (gdouble) * idata++;
+  if (filter->panorama > 0.0) {
+    pan = 1.0 - filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      rval = *idata++;
+      lval = (glong) ((gdouble) rval * pan);
 
-    if (filter->panorama > 0.0) {
-      lval = (glong) (val * (1.0 - filter->panorama));
-      rval = (glong) val;
-    } else {
-      lval = (glong) val;
-      rval = (glong) (val * (1.0 + filter->panorama));
+      *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
+      *odata++ = (gint16) rval;
     }
+  } else {
+    pan = 1.0 + filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      lval = *idata++;
+      rval = (glong) ((gdouble) lval * pan);
 
-    *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
-    *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+      *odata++ = (gint16) lval;
+      *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+    }
   }
 }
 
@@ -562,22 +567,32 @@ gst_audio_panorama_transform_s2s_int_simple (GstAudioPanorama * filter,
 {
   guint i;
   glong lval, rval;
-  gdouble lival, rival;
+  gdouble lival, rival, pan;
 
-  for (i = 0; i < num_samples; i++) {
-    lival = (gdouble) * idata++;
-    rival = (gdouble) * idata++;
+  if (filter->panorama > 0.0) {
+    pan = 1.0 - filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      lival = (gdouble) * idata++;
+      rival = (gdouble) * idata++;
 
-    if (filter->panorama > 0.0) {
-      lval = (glong) (lival * (1.0 - filter->panorama));
+      lval = (glong) (lival * pan);
       rval = (glong) rival;
-    } else {
-      lval = (glong) lival;
-      rval = (glong) (rival * (1.0 + filter->panorama));
-    }
 
-    *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
-    *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+      *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
+      *odata++ = (gint16) rval;
+    }
+  } else {
+    pan = 1.0 + filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      lival = (gdouble) * idata++;
+      rival = (gdouble) * idata++;
+
+      lval = (glong) lival;
+      rval = (glong) (rival * pan);
+
+      *odata++ = (gint16) lval;
+      *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+    }
   }
 }
 
@@ -586,18 +601,23 @@ gst_audio_panorama_transform_m2s_float_simple (GstAudioPanorama * filter,
     gfloat * idata, gfloat * odata, guint num_samples)
 {
   guint i;
-  gfloat val;
+  gfloat val, pan;
 
+  if (filter->panorama > 0.0) {
+    pan = 1.0 - filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      val = *idata++;
 
-  for (i = 0; i < num_samples; i++) {
-    val = *idata++;
-
-    if (filter->panorama > 0.0) {
-      *odata++ = val * (1.0 - filter->panorama);
+      *odata++ = val * pan;
       *odata++ = val;
-    } else {
+    }
+  } else {
+    pan = 1.0 + filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      val = *idata++;
+
       *odata++ = val;
-      *odata++ = val * (1.0 + filter->panorama);
+      *odata++ = val * pan;
     }
   }
 }
@@ -607,18 +627,25 @@ gst_audio_panorama_transform_s2s_float_simple (GstAudioPanorama * filter,
     gfloat * idata, gfloat * odata, guint num_samples)
 {
   guint i;
-  gfloat lival, rival;
+  gfloat lival, rival, pan;
 
-  for (i = 0; i < num_samples; i++) {
-    lival = *idata++;
-    rival = *idata++;
+  if (filter->panorama > 0.0) {
+    pan = 1.0 - filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      lival = *idata++;
+      rival = *idata++;
 
-    if (filter->panorama > 0.0) {
-      *odata++ = lival * (1.0 - filter->panorama);
+      *odata++ = lival * pan;
       *odata++ = rival;
-    } else {
+    }
+  } else {
+    pan = 1.0 + filter->panorama;
+    for (i = 0; i < num_samples; i++) {
+      lival = *idata++;
+      rival = *idata++;
+
       *odata++ = lival;
-      *odata++ = rival * (1.0 + filter->panorama);
+      *odata++ = rival * pan;
     }
   }
 }
