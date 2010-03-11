@@ -401,15 +401,14 @@ src_handoff_float32_8ch (GstElement * src, GstBuffer * buf, GstPad * pad,
   GST_BUFFER_OFFSET (buf) = 0;
   GST_BUFFER_TIMESTAMP (buf) = 0;
 
+  GST_BUFFER_CAPS (buf) = caps;
+
   for (i = 0; i < SAMPLES_PER_BUFFER; ++i) {
     for (c = 0; c < NUM_CHANNELS; ++c) {
       *data = (gfloat) ((i * NUM_CHANNELS) + c);
       ++data;
     }
   }
-
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
 }
 
 static gboolean

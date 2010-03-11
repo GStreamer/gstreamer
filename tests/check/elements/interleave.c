@@ -377,11 +377,8 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   gint n = GPOINTER_TO_INT (user_data);
-
   GstCaps *caps;
-
   gfloat *data;
-
   gint i;
 
   if (GST_PAD_CAPS (pad))
@@ -414,8 +411,7 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_DURATION (buffer) = GST_SECOND;
 
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  GST_BUFFER_CAPS (buffer) = caps;
 
   for (i = 0; i < 48000; i++)
     data[i] = (n % 2 == 0) ? -1.0 : 1.0;
@@ -426,11 +422,8 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   gint i;
-
   gfloat *data;
-
   GstCaps *caps;
-
   gint n = GPOINTER_TO_INT (user_data);
 
   fail_unless (GST_IS_BUFFER (buffer));
