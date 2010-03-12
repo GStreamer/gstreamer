@@ -70,28 +70,31 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
   return TRUE;
 }
 
+/*
+ * Creates a pipeline in the form:
+ * fakesrc num-buffers=1 ! caps ! muxer ! filesink location=file
+ *
+ * And sets the tags in tag_str into the muxer via tagsetter.
+ */
 static void
-test_mux_tags (const gchar * tag_str, const gchar * muxer, const gchar * file)
+test_mux_tags (const gchar * tag_str, const gchar * caps,
+    const gchar * muxer, const gchar * file)
 {
   GstElement *pipeline;
   GstBus *bus;
   GMainLoop *loop;
   GstTagList *sent_tags;
-  GstElement *videotestsrc, *mux;
+  GstElement *mux;
   GstTagSetter *setter;
   gchar *launch_str;
 
   GST_DEBUG ("testing xmp muxing on : %s", muxer);
 
-  launch_str = g_strdup_printf ("videotestsrc name=src ! %s name=mux ! "
-      "filesink location=%s name=sink", muxer, file);
+  launch_str = g_strdup_printf ("fakesrc num-buffers=1 ! %s ! %s name=mux ! "
+      "filesink location=%s name=sink", caps, muxer, file);
   pipeline = gst_parse_launch (launch_str, NULL);
   g_free (launch_str);
   fail_unless (pipeline != NULL);
-
-  videotestsrc = gst_bin_get_by_name (GST_BIN (pipeline), "src");
-  fail_unless (videotestsrc != NULL);
-  g_object_set (G_OBJECT (videotestsrc), "num-buffers", 1, NULL);
 
   mux = gst_bin_get_by_name (GST_BIN (pipeline), "mux");
   fail_unless (mux != NULL);
@@ -119,10 +122,16 @@ test_mux_tags (const gchar * tag_str, const gchar * muxer, const gchar * file)
 
   g_main_loop_unref (loop);
   g_object_unref (mux);
-  g_object_unref (videotestsrc);
   g_object_unref (pipeline);
 }
 
+/*
+ * Makes a pipeline in the form:
+ * filesrc location=file ! demuxer ! fakesink
+ *
+ * And gets the tags that are posted on the bus to compare
+ * with the tags in 'tag_str'
+ */
 static void
 test_demux_tags (const gchar * tag_str, const gchar * demuxer,
     const gchar * file)
@@ -216,8 +225,16 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   g_object_unref (pipeline);
 }
 
+/*
+ * Tests if the muxer/demuxer pair can serialize the tags in 'tag_str'
+ * to a file and recover them correctly.
+ *
+ * 'caps' are used to assure the muxer accepts the fake buffer fakesrc
+ * will send to it.
+ */
 static void
-test_tags (const gchar * tag_str, const gchar * muxer, const gchar * demuxer)
+test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
+    const gchar * demuxer)
 {
   gchar *tmpfile;
   gchar *tmp;
@@ -227,13 +244,33 @@ test_tags (const gchar * tag_str, const gchar * muxer, const gchar * demuxer)
   g_free (tmp);
 
   GST_DEBUG ("testing tags : %s", tag_str);
-  test_mux_tags (tag_str, muxer, tmpfile);
+  test_mux_tags (tag_str, caps, muxer, tmpfile);
   test_demux_tags (tag_str, demuxer, tmpfile);
 }
 
+#define H264_CAPS "video/x-h264, width=(int)320, height=(int)240," \
+                  " framerate=(fraction)30/1, codec_data=(buffer)" \
+                  "01401592ffe10017674d401592540a0fd8088000000300" \
+                  "8000001e478b175001000468ee3c80, stream-format=(string)avc"
+
 GST_START_TEST (test_common_tags)
 {
-  test_tags ("taglist,title=(string)test_title", "qtmux", "qtdemux");
+  test_tags ("taglist,title=(string)test_title", H264_CAPS, "qtmux", "qtdemux");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_geo_location_tags)
+{
+  test_tags ("taglist,geo-location-country=Brazil,"
+      "geo-location-city=\"Campina Grande\","
+      "geo-location-sublocation=Bodocongo", H264_CAPS, "qtmux", "qtdemux");
+  test_tags ("taglist,geo-location-country=Brazil,"
+      "geo-location-city=\"Campina Grande\","
+      "geo-location-sublocation=Bodocongo", H264_CAPS, "mp4mux", "qtdemux");
+  test_tags ("taglist,geo-location-country=Brazil,"
+      "geo-location-city=\"Campina Grande\","
+      "geo-location-sublocation=Bodocongo", H264_CAPS, "gppmux", "qtdemux");
 }
 
 GST_END_TEST;
@@ -241,7 +278,7 @@ GST_END_TEST;
 Suite *
 metadata_suite (void)
 {
-  Suite *s = suite_create ("XMP");
+  Suite *s = suite_create ("tagschecking");
 
   TCase *tc_chain = tcase_create ("general");
 
@@ -250,6 +287,7 @@ metadata_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_common_tags);
+  tcase_add_test (tc_chain, test_geo_location_tags);
 
   return s;
 }
