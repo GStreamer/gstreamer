@@ -224,8 +224,7 @@ user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 
   if (pngenc->written + length >= GST_BUFFER_SIZE (pngenc->buffer_out)) {
     GST_ERROR_OBJECT (pngenc, "output buffer bigger than the input buffer!?");
-    /* yuck */
-    longjmp (pngenc->png_struct_ptr->jmpbuf, 1);
+    png_error (png_ptr, "output buffer bigger than the input buffer!?");
 
     /* never reached */
     return;
