@@ -4,10 +4,12 @@ libgstvaapi_source_c =				\
 	gstvaapidisplay.c			\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
+	gstvaapiimagepool.c			\
 	gstvaapisinkbase.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
+	gstvaapivideopool.c			\
 	vaapi_utils.c				\
 	$(NULL)
 
@@ -15,10 +17,12 @@ libgstvaapi_source_h =				\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
+	gstvaapiimagepool.h			\
 	gstvaapisinkbase.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\
+	gstvaapivideopool.h			\
 	vaapi_debug.h				\
 	vaapi_utils.h				\
 	$(NULL)

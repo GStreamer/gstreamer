@@ -21,9 +21,8 @@
 #ifndef GST_VAAPI_SURFACE_POOL_H
 #define GST_VAAPI_SURFACE_POOL_H
 
-#include <gst/gstcaps.h>
-#include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapivideopool.h>
 
 G_BEGIN_DECLS
 
@@ -51,42 +50,27 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_SURFACE_POOL,     \
                                GstVaapiSurfacePoolClass))
 
-typedef struct _GstVaapiSurfacePool           GstVaapiSurfacePool;
-typedef struct _GstVaapiSurfacePoolPrivate    GstVaapiSurfacePoolPrivate;
-typedef struct _GstVaapiSurfacePoolClass      GstVaapiSurfacePoolClass;
+typedef struct _GstVaapiSurfacePool             GstVaapiSurfacePool;
+typedef struct _GstVaapiSurfacePoolPrivate      GstVaapiSurfacePoolPrivate;
+typedef struct _GstVaapiSurfacePoolClass        GstVaapiSurfacePoolClass;
 
 struct _GstVaapiSurfacePool {
     /*< private >*/
-    GObject parent_instance;
+    GstVaapiVideoPool parent_instance;
 
     GstVaapiSurfacePoolPrivate *priv;
 };
 
 struct _GstVaapiSurfacePoolClass {
     /*< private >*/
-    GObjectClass parent_class;
+    GstVaapiVideoPoolClass parent_class;
 };
 
 GType
 gst_vaapi_surface_pool_get_type(void);
 
-GstVaapiSurfacePool *
+GstVaapiVideoPool *
 gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps);
-
-GstCaps *
-gst_vaapi_surface_pool_get_caps(GstVaapiSurfacePool *pool);
-
-void
-gst_vaapi_surface_pool_set_caps(GstVaapiSurfacePool *pool, GstCaps *caps);
-
-GstVaapiSurface *
-gst_vaapi_surface_pool_new_surface(GstVaapiSurfacePool *pool);
-
-void
-gst_vaapi_surface_pool_free_surface(
-    GstVaapiSurfacePool *pool,
-    GstVaapiSurface     *surface
-);
 
 G_END_DECLS
 
