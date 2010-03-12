@@ -162,10 +162,14 @@ interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, 
   for(i = 0; i < value_array->nbsamples; i++) { \
     if (!ret_val || ts >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
-      if (!iter1) \
-        iter2 = g_sequence_get_begin_iter (self->priv->values); \
-      else \
+      if (!iter1) { \
+        if (G_LIKELY (self->priv->values)) \
+	  iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	else \
+	  iter2 = NULL; \
+      } else { \
         iter2 = g_sequence_iter_next (iter1); \
+      } \
       \
       if (iter2 && !g_sequence_iter_is_end (iter2)) { \
         GstControlPoint *cp; \
@@ -318,10 +322,14 @@ interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *sel
   for(i = 0; i < value_array->nbsamples; i++) { \
     if (!ret_val || ts >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
-      if (!iter1) \
-        iter2 = g_sequence_get_begin_iter (self->priv->values); \
-      else \
+      if (!iter1) { \
+        if (G_LIKELY (self->priv->values)) \
+          iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	else \
+	  iter2 = NULL; \
+      } else { \
         iter2 = g_sequence_iter_next (iter1); \
+      } \
       \
       if (iter2 && !g_sequence_iter_is_end (iter2)) { \
         GstControlPoint *cp; \
@@ -484,7 +492,10 @@ interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *sel
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
         cp1 = &cp; \
-        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	if (G_LIKELY (self->priv->values)) \
+	  iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	else \
+	  iter2 = NULL; \
       } else { \
         cp1 = g_sequence_get (iter1); \
         iter2 = g_sequence_iter_next (iter1); \
@@ -739,7 +750,10 @@ interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
         cp1 = &cp; \
-        iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	if (G_LIKELY (self->priv->values)) \
+	  iter2 = g_sequence_get_begin_iter (self->priv->values); \
+	else \
+	  iter2 = NULL; \
       } else { \
         cp1 = g_sequence_get (iter1); \
         iter2 = g_sequence_iter_next (iter1); \
