@@ -48,6 +48,7 @@ GST_START_TEST (test_ges_scenario)
   GESTimelineLayer *layer;
   GESTrack *track;
   GESCustomTimelineSource *source;
+  GESTrackObject *trackobject;
 
   ges_init ();
   /* This is the simplest scenario ever */
@@ -92,6 +93,10 @@ GST_START_TEST (test_ges_scenario)
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
   /* Make sure the associated TrackObject is in the Track */
   fail_unless (GES_TIMELINE_OBJECT (source)->trackobjects != NULL);
+
+  trackobject =
+      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (source)->trackobjects)->data);
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
 
   GST_DEBUG ("Remove the TimelineObject from the layer");
   /* Now remove the timelineobject */
