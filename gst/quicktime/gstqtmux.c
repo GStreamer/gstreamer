@@ -882,8 +882,11 @@ gst_qt_mux_add_xmp_tags (GstQTMux * qtmux, const GstTagList * list)
 {
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 
-  if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
-    return;                     /* adobe spec only specs for qt */
+  /* adobe specs only say 'quicktime', but I guess we can extrapolate to
+   * mp4 and gpp. Keep mj2 out for now as we don't add any tags for it yet.
+   * If you have further info about xmp on these formats, please share */
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_MJ2)
+    return;
 
   GST_DEBUG_OBJECT (qtmux, "Adding xmp tags");
 
