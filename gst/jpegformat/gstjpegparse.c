@@ -566,7 +566,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           goto error;
 
         if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
-          const guint8 *xmp_data;
+          const guint8 *xmp_data = NULL;
           guint xmp_size = size - 2 - 29;
           GstTagList *tags;
           GstBuffer *buf;
