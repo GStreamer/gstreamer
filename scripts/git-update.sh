@@ -26,6 +26,7 @@ tmp=$tmp/git-update.$(date +%Y%m%d-%H%M-).$RANDOM.$RANDOM.$RANDOM.$$
 
 ERROR_LOG="$tmp/failures.log"
 touch $ERROR_LOG
+ERROR_RETURN=255
 
 for m in $CORE $MODULES; do
   if test -d $m; then
@@ -70,7 +71,7 @@ build()
       then
         echo "$1: autoregen.sh [$tmp/$1-regen.log]" >> $ERROR_LOG
         cd ..
-        return -1
+        return $ERROR_RETURN
       fi
       echo "+ $1: autoregen.sh done"
     fi
@@ -81,7 +82,7 @@ build()
     then
       echo "$1: make [$tmp/$1-make.log]" >> $ERROR_LOG
       cd ..
-      return -1
+      return $ERROR_RETURN
     fi
     echo "+ $1: make done"
 
@@ -109,13 +110,14 @@ if test -e $ERROR_LOG;  then
 else
   rm -rf "$tmp"
 fi
+exit
 }
 
 # build core and base plugins sequentially
 # exit if build fails (excluding checks)
 for m in $CORE; do
   build $m
-  if [ $? == -1 ]; then
+  if [ $? -eq $ERROR_RETURN ]; then
   beach
   fi
 done
