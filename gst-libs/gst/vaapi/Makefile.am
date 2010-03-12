@@ -9,6 +9,7 @@ libgstvaapi_source_c =				\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
+	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
 	vaapi_utils.c				\
 	$(NULL)
@@ -22,6 +23,7 @@ libgstvaapi_source_h =				\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\
+	gstvaapivideobuffer.h			\
 	gstvaapivideopool.h			\
 	vaapi_debug.h				\
 	vaapi_utils.h				\
