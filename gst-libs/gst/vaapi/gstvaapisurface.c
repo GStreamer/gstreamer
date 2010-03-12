@@ -319,3 +319,20 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 
     return surface->priv->height;
 }
+
+void
+gst_vaapi_surface_get_size(
+    GstVaapiSurface *surface,
+    guint           *pwidth,
+    guint           *pheight
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+
+    if (pwidth)
+        *pwidth = gst_vaapi_surface_get_width(surface);
+
+    if (pheight)
+        *pheight = gst_vaapi_surface_get_height(surface);
+}
+
