@@ -412,18 +412,22 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
 
   gst_plugin_desc_copy (&plugin->desc, desc);
 
+  /* make resident so we're really sure it never gets unloaded again.
+   * Theoretically this is not needed, but practically it doesn't hurt.
+   * And we're rather safe than sorry. */
+  if (plugin->module)
+    g_module_make_resident (plugin->module);
+
   if (user_data) {
     if (!(((GstPluginInitFullFunc) (desc->plugin_init)) (plugin, user_data))) {
       if (GST_CAT_DEFAULT)
         GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
-      plugin->module = NULL;
       return NULL;
     }
   } else {
     if (!((desc->plugin_init) (plugin))) {
       if (GST_CAT_DEFAULT)
         GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
-      plugin->module = NULL;
       return NULL;
     }
   }
@@ -646,7 +650,6 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR_MODULE,
         "File \"%s\" appears to be a GStreamer plugin, but it failed to initialize",
         filename);
-    g_module_close (module);
     goto return_error;
   }
 
