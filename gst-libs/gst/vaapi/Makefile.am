@@ -7,6 +7,7 @@ libgstvaapi_source_c =				\
 	gstvaapisinkbase.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
+	gstvaapisurfacepool.c			\
 	vaapi_utils.c				\
 	$(NULL)
 
@@ -17,6 +18,7 @@ libgstvaapi_source_h =				\
 	gstvaapisinkbase.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
+	gstvaapisurfacepool.h			\
 	vaapi_debug.h				\
 	vaapi_utils.h				\
 	$(NULL)
