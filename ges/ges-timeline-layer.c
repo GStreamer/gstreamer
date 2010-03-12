@@ -34,6 +34,12 @@ G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
 
 enum
 {
+  PROP_0,
+  PROP_PRIORITY,
+};
+
+enum
+{
   OBJECT_ADDED,
   OBJECT_REMOVED,
   LAST_SIGNAL
@@ -45,7 +51,12 @@ static void
 ges_timeline_layer_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
+
   switch (property_id) {
+    case PROP_PRIORITY:
+      g_value_set_uint (value, layer->priority);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -55,7 +66,12 @@ static void
 ges_timeline_layer_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
+
   switch (property_id) {
+    case PROP_PRIORITY:
+      ges_timeline_layer_set_priority (layer, g_value_get_uint (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -91,6 +107,16 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   object_class->finalize = ges_timeline_layer_finalize;
 
   /**
+   * GESTimelineLayer:priority
+   *
+   * The priority of the layer in the #GESTimeline. 0 is the highest
+   * priority.
+   */
+  g_object_class_install_property (object_class, PROP_PRIORITY,
+      g_param_spec_uint ("priority", "Priority",
+          "The priority of the layer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
+  /**
    * GESTimelineLayer::object-added
    * @layer: the #GESTimelineLayer
    * @object: the #GESTimelineObject that was added.
@@ -121,6 +147,10 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 static void
 ges_timeline_layer_init (GESTimelineLayer * self)
 {
+  /* TODO : Keep those 3 values in sync */
+  self->priority = 0;
+  self->min_gnl_priority = 0;
+  self->max_gnl_priority = 9;
 }
 
 /**
@@ -193,6 +223,9 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   /* Inform the object it's now in this layer */
   ges_timeline_object_set_layer (object, layer);
 
+  /* Set the priority. */
+  ges_timeline_object_set_priority (object, layer->min_gnl_priority);
+
   /* emit 'object-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
 
@@ -235,4 +268,45 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
   g_object_unref (object);
 
   return TRUE;
+}
+
+/**
+ * ges_timeline_layer_resync_priorities:
+ * @layer: a #GESTimelineLayer
+ *
+ * Resyncs the priorities of the objects controlled by @layer.
+ * This method */
+gboolean
+ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
+{
+  GSList *tmp;
+
+  /* TODO : Inhibit composition updates while doing this.
+   * Ideally we want to do it from an even higher level, but here will
+   * do in the meantime. */
+
+  /* TODO : This is the dumb version where we put everything linearly,
+   * will need to be adjusted for more complex usages (like with
+   * transitions).  */
+  for (tmp = layer->objects_start; tmp; tmp = tmp->next) {
+    ges_timeline_object_set_priority ((GESTimelineObject *) tmp->data,
+        layer->min_gnl_priority);
+  }
+
+  return TRUE;
+}
+
+void
+ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
+{
+  GST_DEBUG ("layer:%p, priority:%d", layer, priority);
+
+  if (priority != layer->priority) {
+    layer->priority = priority;
+    layer->min_gnl_priority = (priority * 10);
+    layer->max_gnl_priority = ((priority + 1) * 10) - 1;
+
+    /* FIXME : Update controlled object's gnl priority accordingly */
+    ges_timeline_layer_resync_priorities (layer);
+  }
 }

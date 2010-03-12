@@ -46,9 +46,17 @@ G_BEGIN_DECLS
 struct _GESTimelineLayer {
   GObject parent;
 
-  GESTimeline *timeline;	/* The timeline where this layer is being used */
+  GESTimeline *timeline;	/* The timeline where this layer is being used
+				 */
 
-  GSList * objects_start;	/* The TimelineObjects sorted by start and priority */
+  GSList * objects_start;	/* The TimelineObjects sorted by start and
+				 * priority */
+
+  guint32 priority;		/* The priority of the layer within the 
+				 * containing timeline */
+
+  /*< private >*/
+  guint32 min_gnl_priority, max_gnl_priority;
 };
 
 struct _GESTimelineLayerClass {
@@ -66,6 +74,8 @@ GESTimelineLayer* ges_timeline_layer_new (void);
 void ges_timeline_layer_set_timeline (GESTimelineLayer * layer, GESTimeline * timeline);
 gboolean ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObject * object);
 gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESTimelineObject * object);
+
+void ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority);
 
 G_END_DECLS
 

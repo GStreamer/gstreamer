@@ -123,6 +123,7 @@ GESTimelineLayerClass
 ges_timeline_layer_add_object
 ges_timeline_layer_new
 ges_timeline_layer_remove_object
+ges_timeline_layer_set_priority
 <SUBSECTION Standard>
 ges_timeline_layer_set_timeline
 ges_timeline_layer_get_type
