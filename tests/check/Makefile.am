@@ -17,6 +17,7 @@ clean-local: clean-local-check
 check_PROGRAMS = \
 	ges/basic	\
 	ges/filesource	\
+	ges/layer	\
 	ges/simplelayer	\
 	ges/timelineobject
 
