@@ -1,5 +1,6 @@
 noinst_PROGRAMS = 	\
 	test-display	\
+	test-surfaces	\
 	$(NULL)
 
 TEST_CFLAGS = \
@@ -14,6 +15,10 @@ TEST_LIBS = \
 test_display_SOURCES	= test-display.c
 test_display_CFLAGS	= $(TEST_CFLAGS)
 test_display_LDADD	= $(TEST_LIBS)
+
+test_surfaces_SOURCES	= test-surfaces.c
+test_surfaces_CFLAGS	= $(TEST_CFLAGS)
+test_surfaces_LDADD	= $(TEST_LIBS)
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
