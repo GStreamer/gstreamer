@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:31+0100\n"
+"POT-Creation-Date: 2010-03-12 17:17+0000\n"
 "PO-Revision-Date: 2010-01-27 17:50+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -615,6 +615,35 @@ msgid ""
 msgstr ""
 "maantietellinen korkeustaso, jossa media on nauhoitettu tai tuotettu "
 "metreinä WGS84-koordinaateista (nolla on keskimääräinen merenpinta)"
+
+#, fuzzy
+msgid "geo location country"
+msgstr "maantieteellisen sijainnin pituuspiiri"
+
+#, fuzzy
+msgid "country (english name) where the media has been recorded or produced"
+msgstr ""
+"ihmisluettava kuvaus sijainnista tai paikasta, jossa media on nauhoitettu "
+"tai tuotettu"
+
+#, fuzzy
+msgid "geo location city"
+msgstr "maantieteellisen sijainnin leveyspiiri"
+
+#, fuzzy
+msgid "city (english name) where the media has been recorded or produced"
+msgstr ""
+"ihmisluettava kuvaus sijainnista tai paikasta, jossa media on nauhoitettu "
+"tai tuotettu"
+
+#, fuzzy
+msgid "geo location sublocation"
+msgstr "maantieteellisen sijainnin korkeustaso"
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"

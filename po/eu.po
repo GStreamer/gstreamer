@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:31+0100\n"
+"POT-Creation-Date: 2010-03-12 17:17+0000\n"
 "PO-Revision-Date: 2009-08-29 12:04+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -618,6 +618,33 @@ msgid ""
 msgstr ""
 "multimedia grabatu edo ekoiztu den lekuaren geolokalizazioaren altitudea "
 "metrotan WGS84 estandarraren arabera (zero batez besteko itsasoaren maila da)"
+
+#, fuzzy
+msgid "geo location country"
+msgstr "geolokalizazioaren longitudea"
+
+#, fuzzy
+msgid "country (english name) where the media has been recorded or produced"
+msgstr ""
+"muldimedia grabatu edo ekoiztu den kokalekuaren azalpena gizakiok irakurtzeko"
+
+#, fuzzy
+msgid "geo location city"
+msgstr "geolokalizazioaren latitudea"
+
+#, fuzzy
+msgid "city (english name) where the media has been recorded or produced"
+msgstr ""
+"muldimedia grabatu edo ekoiztu den kokalekuaren azalpena gizakiok irakurtzeko"
+
+#, fuzzy
+msgid "geo location sublocation"
+msgstr "geolokalizazioaren altitudea"
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"

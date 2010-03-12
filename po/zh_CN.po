@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:31+0100\n"
+"POT-Creation-Date: 2010-03-12 17:17+0000\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -589,6 +589,31 @@ msgid ""
 msgstr ""
 "根据 WGS84（平均海平面为 0 米）标准确定的地理海拔高度（有关此媒体在哪里录制或"
 "产生的）"
+
+#, fuzzy
+msgid "geo location country"
+msgstr "地理经度"
+
+#, fuzzy
+msgid "country (english name) where the media has been recorded or produced"
+msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+
+#, fuzzy
+msgid "geo location city"
+msgstr "地理纬度"
+
+#, fuzzy
+msgid "city (english name) where the media has been recorded or produced"
+msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+
+#, fuzzy
+msgid "geo location sublocation"
+msgstr "地理海拔"
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
