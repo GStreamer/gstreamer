@@ -55,6 +55,9 @@ GstVaapiImageFormat
 gst_vaapi_image_format(const VAImageFormat *va_format);
 
 GstVaapiImageFormat
+gst_vaapi_image_format_from_caps(GstCaps *caps);
+
+GstVaapiImageFormat
 gst_vaapi_image_format_from_fourcc(guint32 fourcc);
 
 const VAImageFormat *

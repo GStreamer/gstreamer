@@ -73,6 +73,16 @@ static const GstVaapiImageFormatMap gst_vaapi_image_formats[] = {
 #undef DEF_YUV
 #undef DEF
 
+static inline gboolean
+match_va_format_rgb(const VAImageFormat *fmt1, const VAImageFormat *fmt2)
+{
+    return (fmt1->byte_order == fmt2->byte_order &&
+            fmt1->red_mask   == fmt2->red_mask   &&
+            fmt1->green_mask == fmt2->green_mask &&
+            fmt1->blue_mask  == fmt2->blue_mask  &&
+            fmt1->alpha_mask == fmt2->alpha_mask);
+}
+
 static const GstVaapiImageFormatMap *get_map(const VAImageFormat *va_format)
 {
     const GstVaapiImageFormatMap *m;
@@ -80,11 +90,7 @@ static const GstVaapiImageFormatMap *get_map(const VAImageFormat *va_format)
     for (m = gst_vaapi_image_formats; m->format; m++)
         if (m->va_format.fourcc == va_format->fourcc &&
             (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB ?
-             (m->va_format.byte_order == va_format->byte_order &&
-              m->va_format.red_mask   == va_format->red_mask   &&
-              m->va_format.green_mask == va_format->green_mask &&
-              m->va_format.blue_mask  == va_format->blue_mask  &&
-              m->va_format.alpha_mask == va_format->alpha_mask) :
+             match_va_format_rgb(&m->va_format, va_format) :
              TRUE))
             return m;
     return NULL;
@@ -134,6 +140,55 @@ gst_vaapi_image_format(const VAImageFormat *va_format)
         return 0;
 
     return m->format;
+}
+
+GstVaapiImageFormat
+gst_vaapi_image_format_from_caps(GstCaps *caps)
+{
+    const GstVaapiImageFormatMap *m;
+    GstStructure *structure;
+    VAImageFormat *va_format, va_formats[2];
+    gint endian, rmask, gmask, bmask, amask = 0;
+    guint32 fourcc;
+
+    if (!caps)
+        return 0;
+
+    structure = gst_caps_get_structure(caps, 0);
+    if (!structure)
+        return 0;
+
+    /* Check for YUV format */
+    if (gst_structure_get_fourcc(structure, "format", &fourcc))
+        return gst_vaapi_image_format_from_fourcc(fourcc);
+
+    /* Check for RGB format */
+    gst_structure_get_int(structure, "endianness", &endian);
+    gst_structure_get_int(structure, "red_mask",   &rmask);
+    gst_structure_get_int(structure, "green_mask", &gmask);
+    gst_structure_get_int(structure, "blue_mask",  &bmask);
+    gst_structure_get_int(structure, "alpha_mask", &amask);
+
+    va_format = &va_formats[0];
+    va_format->byte_order = endian == G_BIG_ENDIAN ? VA_MSB_FIRST : VA_LSB_FIRST;
+    va_format->red_mask   = rmask;
+    va_format->green_mask = gmask;
+    va_format->blue_mask  = bmask;
+    va_format->alpha_mask = amask;
+
+    va_format = &va_formats[1];
+    va_format->byte_order = endian == G_BIG_ENDIAN ? VA_LSB_FIRST : VA_MSB_FIRST;
+    va_format->red_mask   = GUINT32_SWAP_LE_BE(rmask);
+    va_format->green_mask = GUINT32_SWAP_LE_BE(gmask);
+    va_format->blue_mask  = GUINT32_SWAP_LE_BE(bmask);
+    va_format->alpha_mask = GUINT32_SWAP_LE_BE(amask);
+
+    for (m = gst_vaapi_image_formats; m->format; m++)
+        if (match_va_format_rgb(&m->va_format, &va_formats[0]) ||
+            match_va_format_rgb(&m->va_format, &va_formats[1]))
+            return m->format;
+
+    return 0;
 }
 
 GstVaapiImageFormat
