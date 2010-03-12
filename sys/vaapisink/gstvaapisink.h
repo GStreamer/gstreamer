@@ -22,6 +22,8 @@
 #define GST_VAAPISINK_H
 
 #include <gst/video/gstvideosink.h>
+#include <gst/vaapi/gstvaapidisplay.h>
+#include <X11/Xlib.h>
 
 G_BEGIN_DECLS
 
@@ -47,17 +49,17 @@ G_BEGIN_DECLS
 #define GST_VAAPISINK_GET_CLASS(obj)                    \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
                                GST_TYPE_VAAPISINK,      \
-                               GstVaapiSink))
+                               GstVaapiSinkClass))
 
 typedef struct _GstVaapiSink                    GstVaapiSink;
-typedef struct _GstVaapiSinkPrivate             GstVaapiSinkPrivate;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
 
 struct _GstVaapiSink {
     /*< private >*/
     GstVideoSink parent_instance;
 
-    GstVaapiSinkPrivate *priv;
+    gchar              *display_name;
+    GstVaapiDisplay    *display;
 };
 
 struct _GstVaapiSinkClass {
@@ -67,6 +69,9 @@ struct _GstVaapiSinkClass {
 
 GType
 gst_vaapisink_get_type(void);
+
+GstVaapiDisplay *
+gst_vaapisink_get_display(GstVaapiSink *sink);
 
 G_END_DECLS
 

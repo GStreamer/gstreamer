@@ -19,7 +19,16 @@
  */
 
 #include "config.h"
+#include <gst/gst.h>
+#include <gst/vaapi/gstvaapisinkbase.h>
+#include <gst/vaapi/gstvaapidisplay_x11.h>
 #include "gstvaapisink.h"
+
+#define GST_PLUGIN_NAME "vaapisink"
+#define GST_PLUGIN_DESC "A VA-API based videosink"
+
+GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
+#define GST_CAT_DEFAULT gst_debug_vaapisink
 
 /* ElementFactory information */
 static const GstElementDetails gst_vaapisink_details =
@@ -40,7 +49,106 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
             "width = (int) [ 1, MAX ], "
             "height = (int) [ 1, MAX ]; "));
 
-GST_BOILERPLATE(GstVaapiSink, gst_vaapisink, GstVideoSink, GST_TYPE_VIDEO_SINK);
+static void gst_vaapisink_iface_init(GType type);
+
+GST_BOILERPLATE_FULL(
+    GstVaapiSink,
+    gst_vaapisink,
+    GstVideoSink,
+    GST_TYPE_VIDEO_SINK,
+    gst_vaapisink_iface_init);
+
+enum {
+    PROP_0,
+
+    PROP_DISPLAY,
+    PROP_DISPLAY_NAME,
+};
+
+static GstVaapiDisplay *
+gst_vaapisink_base_do_get_display(GstVaapiSinkBase *sink)
+{
+    return gst_vaapisink_get_display(GST_VAAPISINK(sink));
+}
+
+static void gst_vaapisink_base_iface_init(GstVaapiSinkBaseInterface *iface)
+{
+    iface->get_display = gst_vaapisink_base_do_get_display;
+}
+
+static void gst_vaapisink_iface_init(GType type)
+{
+    const GType g_define_type_id = type;
+
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VAAPISINK_BASE,
+                          gst_vaapisink_base_iface_init);
+}
+
+static void
+gst_vaapisink_destroy(GstVaapiSink *sink)
+{
+    if (sink->display) {
+        g_object_unref(sink->display);
+        sink->display = NULL;
+    }
+
+    if (sink->display_name) {
+        g_free(sink->display_name);
+        sink->display_name = NULL;
+    }
+}
+
+static void
+gst_vaapisink_finalize(GObject *object)
+{
+    gst_vaapisink_destroy(GST_VAAPISINK(object));
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void
+gst_vaapisink_set_property(
+    GObject      *object,
+    guint         prop_id,
+    const GValue *value,
+    GParamSpec   *pspec
+)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(object);
+
+    switch (prop_id) {
+    case PROP_DISPLAY_NAME:
+        g_free(sink->display_name);
+        sink->display_name = g_strdup(g_value_get_string(value));
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gst_vaapisink_get_property(
+    GObject    *object,
+    guint       prop_id,
+    GValue     *value,
+    GParamSpec *pspec
+)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(object);
+
+    switch (prop_id) {
+    case PROP_DISPLAY:
+        g_value_set_object(value, sink->display);
+        break;
+    case PROP_DISPLAY_NAME:
+        g_value_set_string(value, sink->display_name);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
 
 static void gst_vaapisink_base_init(gpointer klass)
 {
@@ -60,24 +168,59 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     GstElementClass * const   element_class   = GST_ELEMENT_CLASS(klass);
     GstBaseSinkClass * const  basesink_class  = GST_BASE_SINK_CLASS(klass);
     GstVideoSinkClass * const videosink_class = GST_VIDEO_SINK_CLASS(klass);
+
+    object_class->finalize      = gst_vaapisink_finalize;
+    object_class->set_property  = gst_vaapisink_set_property;
+    object_class->get_property  = gst_vaapisink_get_property;
+
+    g_object_class_install_property
+        (object_class,
+         PROP_DISPLAY,
+         g_param_spec_object("display",
+                             "display",
+                             "display",
+                             GST_VAAPI_TYPE_DISPLAY,
+                             G_PARAM_READABLE));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_DISPLAY_NAME,
+         g_param_spec_string("display-name",
+                             "X11 display name",
+                             "X11 display name",
+                             "",
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
+    sink->display_name  = NULL;
+    sink->display       = NULL;
+}
+
+GstVaapiDisplay *
+gst_vaapisink_get_display(GstVaapiSink *sink)
+{
+    if (!sink->display)
+        sink->display = gst_vaapi_display_x11_new(sink->display_name);
+    return sink->display;
 }
 
 static gboolean plugin_init(GstPlugin *plugin)
 {
+    GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
+                            GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
     return gst_element_register(plugin,
-                                "vaapisink",
+                                GST_PLUGIN_NAME,
                                 GST_RANK_PRIMARY,
                                 GST_TYPE_VAAPISINK);
 }
 
 GST_PLUGIN_DEFINE(
     GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "vaapisink",
-    "A VA-API based videosink",
+    GST_PLUGIN_NAME,
+    GST_PLUGIN_DESC,
     plugin_init,
     PACKAGE_VERSION,
     "GPL",
