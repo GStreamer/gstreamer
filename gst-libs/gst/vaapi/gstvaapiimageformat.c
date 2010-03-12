@@ -83,21 +83,8 @@ match_va_format_rgb(const VAImageFormat *fmt1, const VAImageFormat *fmt2)
             fmt1->alpha_mask == fmt2->alpha_mask);
 }
 
-static const GstVaapiImageFormatMap *get_map(const VAImageFormat *va_format)
-{
-    const GstVaapiImageFormatMap *m;
-
-    for (m = gst_vaapi_image_formats; m->format; m++)
-        if (m->va_format.fourcc == va_format->fourcc &&
-            (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB ?
-             match_va_format_rgb(&m->va_format, va_format) :
-             TRUE))
-            return m;
-    return NULL;
-}
-
 static const GstVaapiImageFormatMap *
-get_map_from_gst_vaapi_image_format(GstVaapiImageFormat format)
+get_map(GstVaapiImageFormat format)
 {
     const GstVaapiImageFormatMap *m;
 
@@ -110,36 +97,32 @@ get_map_from_gst_vaapi_image_format(GstVaapiImageFormat format)
 gboolean
 gst_vaapi_image_format_is_rgb(GstVaapiImageFormat format)
 {
-    const GstVaapiImageFormatMap *m;
+    const GstVaapiImageFormatMap * const m = get_map(format);
 
-    m = get_map_from_gst_vaapi_image_format(format);
-    if (!m)
-        return FALSE;
-
-    return m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB;
+    return m ? (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB) : FALSE;
 }
 
 gboolean
 gst_vaapi_image_format_is_yuv(GstVaapiImageFormat format)
 {
-    const GstVaapiImageFormatMap *m;
+    const GstVaapiImageFormatMap * const m = get_map(format);
 
-    m = get_map_from_gst_vaapi_image_format(format);
-    if (!m)
-        return FALSE;
-
-    return m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR;
+    return m ? (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR) : FALSE;
 }
 
 GstVaapiImageFormat
 gst_vaapi_image_format(const VAImageFormat *va_format)
 {
-    const GstVaapiImageFormatMap * const m = get_map(va_format);
+    const GstVaapiImageFormatMap *m;
 
-    if (!m)
-        return 0;
+    for (m = gst_vaapi_image_formats; m->format; m++)
+        if (m->va_format.fourcc == va_format->fourcc &&
+            (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB ?
+             match_va_format_rgb(&m->va_format, va_format) :
+             TRUE))
+            return m->format;
 
-    return m->format;
+    return 0;
 }
 
 GstVaapiImageFormat
@@ -200,35 +183,23 @@ gst_vaapi_image_format_from_fourcc(guint32 fourcc)
 const VAImageFormat *
 gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
 {
-    const GstVaapiImageFormatMap *m;
+    const GstVaapiImageFormatMap * const m = get_map(format);
 
-    m = get_map_from_gst_vaapi_image_format(format);
-    if (!m)
-        return NULL;
-
-    return &m->va_format;
+    return m ? &m->va_format : NULL;
 }
 
 GstCaps *
 gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
 {
-    const GstVaapiImageFormatMap *m;
+    const GstVaapiImageFormatMap * const m = get_map(format);
 
-    m = get_map_from_gst_vaapi_image_format(format);
-    if (!m)
-        return NULL;
-
-    return gst_caps_from_string(m->caps_str);
+    return m ? gst_caps_from_string(m->caps_str) : NULL;
 }
 
 guint
 gst_vaapi_image_format_get_score(GstVaapiImageFormat format)
 {
-    const GstVaapiImageFormatMap *m;
+    const GstVaapiImageFormatMap * const m = get_map(format);
 
-    m = get_map_from_gst_vaapi_image_format(format);
-    if (!m)
-        return G_MAXUINT;
-
-    return m - &gst_vaapi_image_formats[0];
+    return m ? (m - &gst_vaapi_image_formats[0]) : G_MAXUINT;
 }
