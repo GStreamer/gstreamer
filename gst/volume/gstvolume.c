@@ -921,7 +921,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
     ts = gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, ts);
 
-    if (self->mutes_count < nsamples) {
+    if (self->mutes_count < nsamples && mute_csource) {
       self->mutes = g_realloc (self->mutes, sizeof (gboolean) * nsamples);
       self->mutes_count = nsamples;
     }
