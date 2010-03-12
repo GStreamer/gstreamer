@@ -218,7 +218,7 @@ static int _gst_info_printf_extension_ptr (FILE * stream,
     const struct printf_info *info, const void *const *args);
 static int _gst_info_printf_extension_segment (FILE * stream,
     const struct printf_info *info, const void *const *args);
-#if HAVE_REGISTER_PRINTF_SPECIFIER
+#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
 static int _gst_info_printf_extension_arginfo (const struct printf_info *info,
     size_t n, int *argtypes, int *size);
 #else
@@ -315,7 +315,7 @@ _gst_debug_init (void)
   _priv_gst_info_start_time = gst_util_get_timestamp ();
 
 #ifdef HAVE_PRINTF_EXTENSION
-#if HAVE_REGISTER_PRINTF_SPECIFIER
+#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
   register_printf_specifier (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
       _gst_info_printf_extension_arginfo);
   register_printf_specifier (GST_SEGMENT_FORMAT[0],
@@ -1586,7 +1586,7 @@ _gst_info_printf_extension_segment (FILE * stream,
   return len;
 }
 
-#if HAVE_REGISTER_PRINTF_SPECIFIER
+#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
 static int
 _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
     int *argtypes, int *size)
@@ -1598,7 +1598,7 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 {
   if (n > 0) {
     argtypes[0] = PA_POINTER;
-#if HAVE_REGISTER_PRINTF_SPECIFIER
+#ifdef HAVE_REGISTER_PRINTF_SPECIFIER
     *size = sizeof (gpointer);
 #endif
   }
