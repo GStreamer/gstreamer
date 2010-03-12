@@ -161,6 +161,10 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
 				       GESTrackObject * trackobj,
 				       GstElement * gnlobj);
 
+GESTrackObject *
+ges_timeline_object_find_track_object (GESTimelineObject * object,
+				       GESTrack * track);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OBJECT */

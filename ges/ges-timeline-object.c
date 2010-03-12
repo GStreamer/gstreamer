@@ -359,3 +359,36 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
   object->priority = priority;
 
 }
+
+/**
+ * ges_timeline_object_find_track_object:
+ * @object: a #GESTimelineObject
+ * @track: a #GESTrack
+ *
+ * Finds the #GESTrackObject controlled by @object that is used in @track.
+ *
+ * Note: The reference count of the returned #GESTrackObject will be increased,
+ * unref when done with it.
+ *
+ * Returns: The #GESTrackObject used by @track, else #NULL.
+ */
+
+GESTrackObject *
+ges_timeline_object_find_track_object (GESTimelineObject * object,
+    GESTrack * track)
+{
+  GESTrackObject *ret = NULL;
+
+  if (G_LIKELY (object->trackobjects)) {
+    GList *tmp;
+
+    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+      if (GES_TRACK_OBJECT (tmp->data)->track == track) {
+        ret = GES_TRACK_OBJECT (tmp->data);
+        g_object_ref (ret);
+        break;
+      }
+  }
+
+  return ret;
+}
