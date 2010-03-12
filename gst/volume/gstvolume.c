@@ -610,7 +610,7 @@ volume_process_controlled_int32_clamp (GstVolume * self, gpointer bytes,
   for (i = 0; i < num_samples; i++) {
     vol = *volume++;
     for (j = 0; j < channels; j++) {
-      val = *data * vol + 0.5;
+      val = *data * vol;
       *data++ = (gint32) CLAMP (val, VOLUME_MIN_INT32, VOLUME_MAX_INT32);
     }
   }
@@ -694,7 +694,7 @@ volume_process_controlled_int24_clamp (GstVolume * self, gpointer bytes,
   for (i = 0; i < num_samples; i++) {
     vol = *volume++;
     for (j = 0; j < channels; j++) {
-      val = get_unaligned_i24 (data) * vol + 0.5;
+      val = get_unaligned_i24 (data) * vol;
       val = CLAMP (val, VOLUME_MIN_INT24, VOLUME_MAX_INT24);
       write_unaligned_u24 (data, (gint32) val);
     }
@@ -753,7 +753,7 @@ volume_process_controlled_int16_clamp (GstVolume * self, gpointer bytes,
   for (i = 0; i < num_samples; i++) {
     vol = *volume++;
     for (j = 0; j < channels; j++) {
-      val = *data * vol + 0.5;
+      val = *data * vol;
       *data++ = (gint16) CLAMP (val, VOLUME_MIN_INT16, VOLUME_MAX_INT16);
     }
   }
@@ -806,7 +806,7 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
   for (i = 0; i < num_samples; i++) {
     vol = *volume++;
     for (j = 0; j < channels; j++) {
-      val = *data * vol + 0.5;
+      val = *data * vol;
       *data++ = (gint8) CLAMP (val, VOLUME_MIN_INT8, VOLUME_MAX_INT8);
     }
   }
