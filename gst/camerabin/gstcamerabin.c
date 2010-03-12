@@ -1536,6 +1536,8 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
     camera->capturing = TRUE;
     g_mutex_unlock (camera->capture_mutex);
     gst_element_set_locked_state (camera->vidbin, FALSE);
+    /* ensure elements activated before feeding data into it */
+    state_ret = gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PAUSED);
     g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
         "active-pad", camera->pad_src_vid, NULL);
 
