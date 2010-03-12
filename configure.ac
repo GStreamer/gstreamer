@@ -1641,11 +1641,8 @@ gst/frei0r/Makefile
 gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/id3tag/Makefile
-<<<<<<< HEAD
 gst/invtelecine/Makefile
-=======
 gst/imagefreeze/Makefile
->>>>>>> imagefreeze: Add still frame stream generator element
 gst/jpegformat/Makefile
 gst/legacyresample/Makefile
 gst/librfb/Makefile
