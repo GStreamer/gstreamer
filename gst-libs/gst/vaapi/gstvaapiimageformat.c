@@ -35,14 +35,14 @@ enum _GstVaapiImageFormatType {
 struct _GstVaapiImageFormatMap {
     GstVaapiImageFormatType     type;
     GstVaapiImageFormat         format;
-    GstStaticCaps               caps;
+    const char                 *caps_str;
     VAImageFormat               va_format;
 };
 
 #define DEF(TYPE, FORMAT, CAPS_STR)                                     \
     GST_VAAPI_IMAGE_FORMAT_TYPE_##TYPE,                                 \
     GST_VAAPI_IMAGE_##FORMAT,                                           \
-    GST_STATIC_CAPS(CAPS_STR)
+    CAPS_STR
 #define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP)                            \
     { DEF(YCBCR, FORMAT, GST_VIDEO_CAPS_YUV(#FORMAT)),                  \
         { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }, }
@@ -157,18 +157,13 @@ gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
 GstCaps *
 gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
 {
-    GstCaps *caps;
     const GstVaapiImageFormatMap *m;
 
     m = get_map_from_gst_vaapi_image_format(format);
     if (!m)
         return NULL;
 
-    caps = gst_static_caps_get(&m->caps);
-    if (!caps)
-        return NULL;
-
-    return gst_caps_make_writable(caps);
+    return gst_caps_from_string(m->caps_str);
 }
 
 guint
