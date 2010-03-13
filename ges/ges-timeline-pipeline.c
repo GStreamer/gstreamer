@@ -209,6 +209,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
           gst_caps_unref (sinkcaps);
         }
       }
+        break;
       case GST_ITERATOR_DONE:
       case GST_ITERATOR_ERROR:
         done = TRUE;
