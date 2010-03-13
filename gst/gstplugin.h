@@ -116,6 +116,7 @@ typedef enum {
  *
  * Returns: %TRUE if plugin initialised successfully
  */
+/* FIXME 0.11: Make return void */
 typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 
 /**
@@ -134,6 +135,7 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
  * Since: 0.10.24
  *
  */
+/* FIXME 0.11: Merge with GstPluginInitFunc */
 typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data);
 
 /**
