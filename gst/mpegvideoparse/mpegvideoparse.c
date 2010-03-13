@@ -432,25 +432,21 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
         cur->length, picture_start_code_name (cur->first_pack_type),
         cur->flags);
 
-    /* Don't start pushing out buffers until we've seen a sequence header */
-    if (mpegvideoparse->seq_hdr.mpeg_version == 0) {
-      if (cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) {
-        /* Found a sequence header */
-        if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf)) {
-          GST_DEBUG_OBJECT (mpegvideoparse,
-              "Invalid sequence header. Dropping buffer.");
-          gst_buffer_unref (buf);
-          buf = NULL;
-        }
-      } else {
-        if (buf) {
-          GST_DEBUG_OBJECT (mpegvideoparse,
-              "No sequence header yet. Dropping buffer of %u bytes",
-              GST_BUFFER_SIZE (buf));
-          gst_buffer_unref (buf);
-          buf = NULL;
-        }
+    if (cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) {
+      /* Found a sequence header */
+      if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf)) {
+        GST_DEBUG_OBJECT (mpegvideoparse,
+            "Invalid sequence header. Dropping buffer.");
+        gst_buffer_unref (buf);
+        buf = NULL;
       }
+    } else if (mpegvideoparse->seq_hdr.mpeg_version == 0 && buf) {
+      /* Don't start pushing out buffers until we've seen a sequence header */
+      GST_DEBUG_OBJECT (mpegvideoparse,
+          "No sequence header yet. Dropping buffer of %u bytes",
+          GST_BUFFER_SIZE (buf));
+      gst_buffer_unref (buf);
+      buf = NULL;
     }
 
     if (buf != NULL) {
