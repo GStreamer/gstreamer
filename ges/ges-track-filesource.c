@@ -68,6 +68,11 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 static void
 ges_track_filesource_dispose (GObject * object)
 {
+  GESTrackFileSource *tfs = GES_TRACK_FILESOURCE (object);
+
+  if (tfs->uri)
+    g_free (tfs->uri);
+
   G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
 }
 
