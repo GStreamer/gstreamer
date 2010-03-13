@@ -269,7 +269,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* non-0 return is from a longjmp inside of libpng */
-  if (setjmp (pngenc->png_struct_ptr->jmpbuf) != 0) {
+  if (setjmp (png_jmpbuf (pngenc->png_struct_ptr)) != 0) {
     gst_buffer_unref (buf);
     png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
     GST_ELEMENT_ERROR (pngenc, LIBRARY, FAILED, (NULL),
