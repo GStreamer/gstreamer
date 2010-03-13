@@ -306,8 +306,8 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
           DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
-          "If this stream should be threated as a live, meaning that it "
-          "doesn't need indexes nor late update of headers.",
+          "Whether this stream should be treated as a live stream, meaning "
+          "that it doesn't need an index or header updates when done.",
           DEFAULT_IS_LIVE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->request_new_pad =
