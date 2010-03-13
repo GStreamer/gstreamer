@@ -193,8 +193,8 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
     ges_track_object_set_timeline_object (res, object);
 
     GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
-    object->trackobjects =
-        g_list_append (object->trackobjects, g_object_ref (res));
+    /* We steal the initial reference */
+    object->trackobjects = g_list_append (object->trackobjects, res);
 
     GST_DEBUG ("Setting properties on newly created TrackObject");
 

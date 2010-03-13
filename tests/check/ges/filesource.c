@@ -49,12 +49,10 @@ GST_START_TEST (test_filesource_basic)
   fail_unless (trackobject != NULL);
 
   /* The track holds a reference to the object */
-  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 2);
+  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 1);
 
   fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
           (source), trackobject) == TRUE);
-
-  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 1);
 
   g_object_unref (source);
   g_object_unref (track);
