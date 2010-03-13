@@ -91,7 +91,7 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  * GES_TIMELINE_OBJECT_PRIORITY:
  * @obj: a #GESTimelineObject
  *
- * The priority of the object (in nanoseconds).
+ * The priority of the object.
  */
 #define GES_TIMELINE_OBJECT_PRIORITY(obj) (((GESTimelineObject*)obj)->priority)
 
