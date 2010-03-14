@@ -609,9 +609,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     }
   }
 
-  /* check for invalid buffer sizes */
-  if (G_UNLIKELY (offset + trim >= packet->bytes))
-    goto empty_packet;
+  if (pad->map.is_ogm_text) {
+    /* check for invalid buffer sizes */
+    if (G_UNLIKELY (offset + trim >= packet->bytes))
+      goto empty_packet;
+  }
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
