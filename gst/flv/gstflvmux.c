@@ -50,6 +50,7 @@ enum
 };
 
 #define DEFAULT_IS_LIVE FALSE
+#define MAX_INDEX_ENTRIES 128
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -566,6 +567,36 @@ gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
   return gst_pad_push (mux->srcpad, buffer);
 }
 
+static GstBuffer *
+gst_flv_mux_preallocate_index (GstFlvMux * mux)
+{
+  GstBuffer *tmp;
+  guint8 *data;
+  gint preallocate_size;
+
+  /* preallocate index of size:
+   *  - 'keyframes' ECMA array key: 2 + 9 = 11 bytes
+   *  - nested ECMA array header, length and end marker: 8 bytes
+   *  - 'times' and 'filepositions' keys: 22 bytes
+   *  - two strict arrays headers and lengths: 10 bytes
+   *  - each index entry: 18 bytes
+   */
+  preallocate_size = 11 + 8 + 22 + 10 + MAX_INDEX_ENTRIES * 18;
+  GST_DEBUG_OBJECT (mux, "preallocating %d bytes for the index",
+      preallocate_size);
+
+  tmp = gst_buffer_new_and_alloc (preallocate_size);
+  data = GST_BUFFER_DATA (tmp);
+
+  /* prefill the space with a gstfiller: <spaces> script tag variable */
+  GST_WRITE_UINT16_BE (data, 9);        /* 9 characters */
+  memcpy (data + 2, "gstfiller", 9);
+  GST_WRITE_UINT8 (data + 11, 2);       /* a string value */
+  GST_WRITE_UINT16_BE (data + 12, preallocate_size - 14);
+  memset (data + 14, ' ', preallocate_size - 14);       /* the rest is spaces */
+  return tmp;
+}
+
 static GstFlowReturn
 gst_flv_mux_write_metadata (GstFlvMux * mux)
 {
@@ -611,6 +642,13 @@ gst_flv_mux_write_metadata (GstFlvMux * mux)
   data[0] = 8;                  /* ECMA array */
   GST_WRITE_UINT32_BE (data + 1, n_tags);
   script_tag = gst_buffer_join (script_tag, tmp);
+
+  if (!mux->is_live) {
+    tmp = gst_flv_mux_preallocate_index (mux);
+    script_tag = gst_buffer_join (script_tag, tmp);
+  } else {
+    GST_DEBUG_OBJECT (mux, "not preallocating index, stream is live");
+  }
 
   for (i = 0; tags && i < n_tags; i++) {
     const gchar *tag_name =
@@ -1010,113 +1048,110 @@ static GstFlowReturn
 gst_flv_mux_write_index (GstFlvMux * mux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *script_tag, *tmp;
+  GstBuffer *index;
+  GstEvent *event;
   guint8 *data;
   GList *l;
-  guint32 index_len;
+  guint32 index_len, allocate_size;
   guint32 i, index_skip;
 
   if (!mux->index)
     return GST_FLOW_OK;
 
-  script_tag = gst_buffer_new_and_alloc (11);
-  data = GST_BUFFER_DATA (script_tag);
+  if (mux->is_live)
+    return GST_FLOW_OK;
 
-  data[0] = 18;
-
-  /* Data size, unknown for now */
-  data[1] = 0;
-  data[2] = 0;
-  data[3] = 0;
-
-  /* Timestamp */
-  data[4] = data[5] = data[6] = data[7] = 0;
-
-  /* Stream ID */
-  data[8] = data[9] = data[10] = 0;
-
-  tmp = gst_buffer_new_and_alloc (13);
-  data = GST_BUFFER_DATA (tmp);
-  data[0] = 2;                  /* string */
-  data[1] = 0;
-  data[2] = 0x0a;               /* length 10 */
-  memcpy (&data[3], "onMetaData", 10);
-
-  script_tag = gst_buffer_join (script_tag, tmp);
-
-  tmp = gst_buffer_new_and_alloc (5);
-  data = GST_BUFFER_DATA (tmp);
-  data[0] = 8;                  /* ECMA array */
-  GST_WRITE_UINT32_BE (data + 1, 2);
-  script_tag = gst_buffer_join (script_tag, tmp);
+  /* seek back to the preallocated index space */
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
+      42, GST_CLOCK_TIME_NONE, 42);
+  if (!gst_pad_push_event (mux->srcpad, event)) {
+    GST_WARNING_OBJECT (mux, "Seek to rewrite index failed");
+    return GST_FLOW_OK;
+  }
 
   mux->index = g_list_reverse (mux->index);
   index_len = g_list_length (mux->index);
 
-  /* We write at most 128 elements */
-  index_skip = (index_len > 128) ? 1 + index_len / 128 : 1;
-  index_len =
-      (index_len <=
-      128) ? index_len : (index_len + index_skip - 1) / index_skip;
+  /* We write at most MAX_INDEX_ENTRIES elements */
+  if (index_len > MAX_INDEX_ENTRIES) {
+    index_skip = 1 + index_len / MAX_INDEX_ENTRIES;
+    index_len = (index_len + index_skip - 1) / index_skip;
+  } else {
+    index_skip = 1;
+  }
 
-  tmp = gst_buffer_new_and_alloc (2 + 5 + 1 + 4 + index_len * (1 + 8));
-  data = GST_BUFFER_DATA (tmp);
-  data[0] = 0;                  /* 5 bytes name */
-  data[1] = 5;
-  memcpy (&data[2], "times", 5);
-  data[7] = 10;                 /* array */
-  GST_WRITE_UINT32_BE (&data[8], index_len);
-  data += 12;
+  GST_DEBUG_OBJECT (mux, "Index length is %d", index_len);
+  /* see size calculation in gst_flv_mux_preallocate_index */
+  allocate_size = 11 + 8 + 22 + 10 + index_len * 18;
+  GST_DEBUG_OBJECT (mux, "Allocating %d bytes for index", allocate_size);
+  index = gst_buffer_new_and_alloc (allocate_size);
+  data = GST_BUFFER_DATA (index);
 
+  GST_WRITE_UINT16_BE (data, 9);        /* the 'keyframes' key */
+  memcpy (data + 2, "keyframes", 9);
+  GST_WRITE_UINT8 (data + 11, 8);       /* nested ECMA array */
+  GST_WRITE_UINT32_BE (data + 12, 2);   /* two elements */
+  GST_WRITE_UINT16_BE (data + 16, 5);   /* first string key: 'times' */
+  memcpy (data + 18, "times", 5);
+  GST_WRITE_UINT8 (data + 23, 10);      /* strict array */
+  GST_WRITE_UINT32_BE (data + 24, index_len);
+  data += 28;
+
+  /* the keyframes' times */
   for (i = 0, l = mux->index; l; l = l->next, i++) {
     GstFlvMuxIndexEntry *entry = l->data;
 
     if (i % index_skip != 0)
       continue;
-
-    data[0] = 0;
-    GST_WRITE_DOUBLE_BE (&data[1], entry->time);
+    GST_WRITE_UINT8 (data, 0);  /* numeric (aka double) */
+    GST_WRITE_DOUBLE_BE (data + 1, entry->time);
     data += 9;
   }
-  script_tag = gst_buffer_join (script_tag, tmp);
 
-  tmp = gst_buffer_new_and_alloc (2 + 13 + 1 + 4 + index_len * (1 + 8));
-  data = GST_BUFFER_DATA (tmp);
-  data[0] = 0;                  /* 13 bytes name */
-  data[1] = 13;
-  memcpy (&data[2], "filepositions", 13);
-  data[15] = 10;                /* array */
-  GST_WRITE_UINT32_BE (&data[16], index_len);
+  GST_WRITE_UINT16_BE (data, 13);       /* second string key: 'filepositions' */
+  memcpy (data + 2, "filepositions", 13);
+  GST_WRITE_UINT8 (data + 15, 10);      /* strict array */
+  GST_WRITE_UINT32_BE (data + 16, index_len);
   data += 20;
 
+  /* the keyframes' file positions */
   for (i = 0, l = mux->index; l; l = l->next, i++) {
     GstFlvMuxIndexEntry *entry = l->data;
 
     if (i % index_skip != 0)
       continue;
-    data[0] = 0;
-    GST_WRITE_DOUBLE_BE (&data[1], entry->position);
+    GST_WRITE_UINT8 (data, 0);
+    GST_WRITE_DOUBLE_BE (data + 1, entry->position);
     data += 9;
   }
-  script_tag = gst_buffer_join (script_tag, tmp);
 
-  tmp = gst_buffer_new_and_alloc (3);
-  data = GST_BUFFER_DATA (tmp);
   GST_WRITE_UINT24_BE (data, 9);        /* finish the ECMA array */
-  script_tag = gst_buffer_join (script_tag, tmp);
 
-  tmp = gst_buffer_new_and_alloc (4);
-  data = GST_BUFFER_DATA (tmp);
-  GST_WRITE_UINT32_BE (data, GST_BUFFER_SIZE (script_tag));
-  script_tag = gst_buffer_join (script_tag, tmp);
+  /* If there is space left in the prefilled area, reinsert the filler.
+     There is at least 18  bytes free, so it will always fit. */
+  if (index_len < MAX_INDEX_ENTRIES) {
+    GstBuffer *tmp;
+    guint8 *data;
+    guint32 remaining_filler_size;
 
-  data = GST_BUFFER_DATA (script_tag);
-  data[1] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 16) & 0xff;
-  data[2] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 8) & 0xff;
-  data[3] = ((GST_BUFFER_SIZE (script_tag) - 11 - 4) >> 0) & 0xff;
+    tmp = gst_buffer_new_and_alloc (14);
+    data = GST_BUFFER_DATA (tmp);
+    GST_WRITE_UINT16_BE (data, 9);
+    memcpy (data + 2, "gstfiller", 9);
+    GST_WRITE_UINT8 (data + 11, 2);     /* string */
 
-  gst_buffer_set_caps (script_tag, GST_PAD_CAPS (mux->srcpad));
-  ret = gst_flv_mux_push (mux, script_tag);
+    /* There is 18 bytes per remaining index entry minus what is used for
+     * the'gstfiller' key. The rest is already filled with spaces, so just need
+     * to update length. */
+    remaining_filler_size = (MAX_INDEX_ENTRIES - index_len) * 18 - 14;
+    GST_DEBUG_OBJECT (mux, "Remaining filler size is %d bytes",
+        remaining_filler_size);
+    GST_WRITE_UINT16_BE (data + 12, remaining_filler_size);
+    index = gst_buffer_join (index, tmp);
+  }
+
+  gst_buffer_set_caps (index, GST_PAD_CAPS (mux->srcpad));
+  ret = gst_flv_mux_push (mux, index);
 
   return ret;
 }
