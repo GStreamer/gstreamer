@@ -43,6 +43,14 @@
 GST_DEBUG_CATEGORY_STATIC (flvmux_debug);
 #define GST_CAT_DEFAULT flvmux_debug
 
+enum
+{
+  ARG_0,
+  ARG_IS_LIVE
+};
+
+#define DEFAULT_IS_LIVE FALSE
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -95,6 +103,11 @@ static GstPad *gst_flv_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_flv_mux_release_pad (GstElement * element, GstPad * pad);
 
+static void gst_flv_mux_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_flv_mux_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+
 static GstStateChangeReturn
 gst_flv_mux_change_state (GstElement * element, GstStateChange transition);
 
@@ -142,7 +155,14 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->get_property = gst_flv_mux_get_property;
+  gobject_class->set_property = gst_flv_mux_set_property;
   gobject_class->finalize = gst_flv_mux_finalize;
+
+  g_object_class_install_property (gobject_class, ARG_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is Live",
+          "The stream is live and does not need an index", DEFAULT_IS_LIVE,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_flv_mux_change_state);
   gstelement_class->request_new_pad =
@@ -156,6 +176,9 @@ gst_flv_mux_init (GstFlvMux * mux, GstFlvMuxClass * g_class)
   mux->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (mux->srcpad, gst_flv_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
+
+  /* property */
+  mux->is_live = DEFAULT_IS_LIVE;
 
   mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (mux->collect,
@@ -970,7 +993,8 @@ next:
   GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
       GST_BUFFER_OFFSET_NONE;
 
-  gst_flv_mux_update_index (mux, buffer, cpad);
+  if (!mux->is_live)
+    gst_flv_mux_update_index (mux, buffer, cpad);
 
   gst_buffer_unref (buffer);
 
@@ -1171,6 +1195,42 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
     return GST_FLOW_UNEXPECTED;
   } else {
     return GST_FLOW_OK;
+  }
+}
+
+static void
+gst_flv_mux_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstFlvMux *mux;
+
+  mux = GST_FLV_MUX (object);
+
+  switch (prop_id) {
+    case ARG_IS_LIVE:
+      g_value_set_boolean (value, mux->is_live);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_flv_mux_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstFlvMux *mux;
+
+  mux = GST_FLV_MUX (object);
+
+  switch (prop_id) {
+    case ARG_IS_LIVE:
+      mux->is_live = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
