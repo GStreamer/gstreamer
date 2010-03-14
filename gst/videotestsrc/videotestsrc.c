@@ -672,8 +672,24 @@ paint_get_structure (struct fourcc_list_struct * format)
             NULL);
       break;
     case VTS_YUV:
+    {
+      GValue value_list = { 0 };
+      GValue value = { 0 };
+
       structure = gst_structure_new ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, fourcc, NULL);
+
+      g_value_init (&value_list, GST_TYPE_LIST);
+
+      g_value_init (&value, G_TYPE_STRING);
+      g_value_set_string (&value, "sdtv");
+      gst_value_list_append_value (&value_list, &value);
+
+      g_value_set_string (&value, "hdtv");
+      gst_value_list_append_value (&value_list, &value);
+
+      gst_structure_set_value (structure, "color-matrix", &value_list);
+    }
       break;
     case VTS_BAYER:
       structure = gst_structure_new ("video/x-raw-bayer", NULL);
