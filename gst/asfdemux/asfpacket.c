@@ -31,11 +31,11 @@
 
 /* we are unlikely to deal with lengths > 2GB here any time soon, so just
  * return a signed int and use that for error reporting */
-static gint
+static inline gint
 asf_packet_read_varlen_int (guint lentype_flags, guint lentype_bit_offset,
     const guint8 ** p_data, guint * p_size)
 {
-  const guint lens[4] = { 0, 1, 2, 4 };
+  static const guint lens[4] = { 0, 1, 2, 4 };
   guint len, val;
 
   len = lens[(lentype_flags >> lentype_bit_offset) & 0x03];
