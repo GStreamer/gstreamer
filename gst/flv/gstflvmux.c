@@ -538,8 +538,6 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 static GstFlowReturn
 gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 {
-  mux->byte_count += GST_BUFFER_SIZE (buffer);
-
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
     GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
     entry->position = mux->byte_count;
@@ -547,6 +545,8 @@ gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
         gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_SECOND;
     mux->index = g_list_prepend (mux->index, entry);
   }
+
+  mux->byte_count += GST_BUFFER_SIZE (buffer);
 
   return gst_pad_push (mux->srcpad, buffer);
 }
