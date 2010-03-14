@@ -929,6 +929,7 @@ gst_type_find_element_activate (GstPad * pad)
       if (!gst_pad_query_duration (peer, &format, &size)) {
         GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
         gst_object_unref (peer);
+        gst_pad_activate_pull (pad, FALSE);
         return FALSE;
       }
 
@@ -938,6 +939,7 @@ gst_type_find_element_activate (GstPad * pad)
         GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
             (_("Stream contains no data.")), ("Can't typefind empty stream"));
         gst_object_unref (peer);
+        gst_pad_activate_pull (pad, FALSE);
         return FALSE;
       }
       ext = gst_type_find_get_extension (typefind, pad);
@@ -960,6 +962,7 @@ gst_type_find_element_activate (GstPad * pad)
    */
   if (typefind->mode == MODE_NORMAL) {
     /* this means we already emitted typefound */
+    GST_DEBUG ("Already managed to typefind !");
     goto really_done;
   }
 
