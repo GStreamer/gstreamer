@@ -538,14 +538,6 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 static GstFlowReturn
 gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 {
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
-    entry->position = mux->byte_count;
-    entry->time =
-        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_SECOND;
-    mux->index = g_list_prepend (mux->index, entry);
-  }
-
   mux->byte_count += GST_BUFFER_SIZE (buffer);
 
   return gst_pad_push (mux->srcpad, buffer);
@@ -829,6 +821,28 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   return gst_flv_mux_write_metadata (mux);
 }
 
+static void
+gst_flv_mux_update_index (GstFlvMux * mux, GstBuffer * buffer, GstFlvPad * cpad)
+{
+  /*
+   * Add the tag byte offset and to the index if it's a valid seek point, which
+   * means it's either a video keyframe or if there is no video pad (in that
+   * case every FLV tag is a valid seek point)
+   */
+  if (mux->have_video &&
+      (!cpad->video ||
+          GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)))
+    return;
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
+    entry->position = mux->byte_count;
+    entry->time =
+        gst_guint64_to_gdouble (GST_BUFFER_TIMESTAMP (buffer)) / GST_SECOND;
+    mux->index = g_list_prepend (mux->index, entry);
+  }
+}
+
 static GstFlowReturn
 gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
 {
@@ -955,6 +969,8 @@ next:
   gst_buffer_copy_metadata (tag, buffer, GST_BUFFER_COPY_TIMESTAMPS);
   GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
       GST_BUFFER_OFFSET_NONE;
+
+  gst_flv_mux_update_index (mux, buffer, cpad);
 
   gst_buffer_unref (buffer);
 
