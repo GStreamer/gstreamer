@@ -92,6 +92,7 @@ find_video_sink (void)
 int
 main (int argc, char **argv)
 {
+  GdkWindow *video_window_xwindow;
   GtkWidget *window, *video_window;
   GstElement *pipeline, *src, *sink;
   gulong embed_xid;
@@ -131,7 +132,8 @@ main (int argc, char **argv)
   gtk_widget_show_all (window);
   gtk_widget_realize (window);
 
-  embed_xid = GDK_WINDOW_XID (video_window->window);
+  video_window_xwindow = gtk_widget_get_window (video_window);
+  embed_xid = GDK_WINDOW_XID (video_window_xwindow);
   gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), embed_xid);
 
   /* run the pipeline */

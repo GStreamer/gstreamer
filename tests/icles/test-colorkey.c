@@ -34,6 +34,14 @@
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/propertyprobe.h>
 
+#if !GTK_CHECK_VERSION (2, 17, 7)
+static void
+gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
+{
+  *a = w->allocation;
+}
+#endif
+
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
 static gulong embed_xid = 0;
@@ -42,20 +50,24 @@ static GdkGC *trans_gc = NULL;
 static void
 redraw_overlay (GtkWidget * widget)
 {
-  gdk_draw_rectangle (widget->window, widget->style->white_gc, TRUE,
-      0, 0, widget->allocation.width, widget->allocation.height);
+  GtkAllocation allocation;
+  GdkWindow *window = gtk_widget_get_window (widget);
+  GtkStyle *style = gtk_widget_get_style (widget);
+
+  gtk_widget_get_allocation (widget, &allocation);
+  gdk_draw_rectangle (window, style->white_gc, TRUE, 0, 0,
+      allocation.width, allocation.height);
 
   if (trans_gc) {
     guint x, y;
-    guint h = widget->allocation.height * 0.75;
+    guint h = allocation.height * 0.75;
 
-    gdk_draw_rectangle (widget->window, trans_gc, TRUE,
-        0, 0, widget->allocation.width, h);
+    gdk_draw_rectangle (window, trans_gc, TRUE, 0, 0, allocation.width, h);
 
-    for (y = h; y < widget->allocation.height; y++) {
-      for (x = 0; x < widget->allocation.width; x++) {
+    for (y = h; y < allocation.height; y++) {
+      for (x = 0; x < allocation.width; x++) {
         if (((x & 1) || (y & 1)) && (x & 1) != (y & 1)) {
-          gdk_draw_point (widget->window, trans_gc, x, y);
+          gdk_draw_point (window, trans_gc, x, y);
         }
       }
     }
@@ -80,14 +92,22 @@ static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
 #if GTK_CHECK_VERSION(2,18,0)
-  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
-   * as well */
-  if (!gdk_window_ensure_native (widget->window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+  {
+    GdkWindow *window = gtk_widget_get_window (widget);
+
+    /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+     * as well */
+    if (!gdk_window_ensure_native (window))
+      g_error ("Couldn't create native window needed for GstXOverlay!");
+  }
 #endif
 
-  embed_xid = GDK_WINDOW_XID (video_window->window);
-  g_print ("Window realize: got XID %lu\n", embed_xid);
+  {
+    GdkWindow *window = gtk_widget_get_window (video_window);
+
+    embed_xid = GDK_WINDOW_XID (window);
+    g_print ("Window realize: video window XID = %lu\n", embed_xid);
+  }
 }
 
 static void
@@ -106,7 +126,9 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
     /* When state of the pipeline changes to paused or playing we start updating scale */
     switch (GST_STATE_TRANSITION (old, new)) {
-      case GST_STATE_CHANGE_READY_TO_PAUSED:
+      case GST_STATE_CHANGE_READY_TO_PAUSED:{
+        GdkWindow *window = gtk_widget_get_window (video_window);
+
         g_object_get (G_OBJECT (sink), "colorkey", &color, NULL);
         if (color != -1) {
           GdkColor trans_color = { 0,
@@ -115,11 +137,12 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
             (color & 0xff) << 8
           };
 
-          trans_gc = gdk_gc_new (video_window->window);
+          trans_gc = gdk_gc_new (window);
           gdk_gc_set_rgb_fg_color (trans_gc, &trans_color);
         }
         handle_resize_cb (video_window, NULL, NULL);
         break;
+      }
       default:
         break;
     }

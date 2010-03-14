@@ -40,6 +40,14 @@
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
+#if !GTK_CHECK_VERSION (2, 17, 7)
+static void
+gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
+{
+  *a = w->allocation;
+}
+#endif
+
 /* configuration */
 
 //#define SOURCE "filesrc"
@@ -2429,8 +2437,13 @@ static gboolean
 handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 {
   if (state < GST_STATE_PAUSED) {
-    gdk_draw_rectangle (widget->window, widget->style->black_gc, TRUE,
-        0, 0, widget->allocation.width, widget->allocation.height);
+    GtkAllocation allocation;
+    GdkWindow *window = gtk_widget_get_window (widget);
+    GtkStyle *style = gtk_widget_get_style (widget);
+
+    gtk_widget_get_allocation (widget, &allocation);
+    gdk_draw_rectangle (window, style->black_gc, TRUE, 0, 0,
+        allocation.width, allocation.height);
   }
   return FALSE;
 }
@@ -2439,15 +2452,23 @@ static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
 #if GTK_CHECK_VERSION(2,18,0)
-  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
-   * as well */
-  if (!gdk_window_ensure_native (widget->window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+  {
+    GdkWindow *window = gtk_widget_get_window (widget);
+
+    /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+     * as well */
+    if (!gdk_window_ensure_native (window))
+      g_error ("Couldn't create native window needed for GstXOverlay!");
+  }
 #endif
 
 #ifdef HAVE_X
-  embed_xid = GDK_WINDOW_XID (video_window->window);
-  g_print ("Window realize: video window XID = %lu\n", embed_xid);
+  {
+    GdkWindow *window = gtk_widget_get_window (video_window);
+
+    embed_xid = GDK_WINDOW_XID (window);
+    g_print ("Window realize: video window XID = %lu\n", embed_xid);
+  }
 #endif
 }
 

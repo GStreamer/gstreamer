@@ -35,6 +35,14 @@
 #include <gst/interfaces/xoverlay.h>
 #include <gst/video/gstvideosink.h>
 
+#if !GTK_CHECK_VERSION (2, 17, 7)
+static void
+gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
+{
+  *a = w->allocation;
+}
+#endif
+
 static struct
 {
   gint w, h;
@@ -44,7 +52,8 @@ static struct
   GstVideoRectangle rect;
   gboolean running;
 } anim_state;
-gboolean verbose = FALSE;
+
+static gboolean verbose = FALSE;
 
 static gboolean
 animate_render_rect (gpointer user_data)
@@ -75,7 +84,7 @@ handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event,
 {
   GtkAllocation allocation;
 
-  allocation = widget->allocation;
+  gtk_widget_get_allocation (widget, &allocation);
 
   if (verbose) {
     g_print ("resize(%p): %dx%d\n", widget, allocation.width,
@@ -93,6 +102,13 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event,
     gpointer user_data)
 {
   GstVideoRectangle *r = &anim_state.rect;
+  GtkAllocation allocation;
+  GdkWindow *window;
+  GtkStyle *style;
+
+  style = gtk_widget_get_style (widget);
+  window = gtk_widget_get_window (widget);
+  gtk_widget_get_allocation (widget, &allocation);
 
   /* we should only redraw outside of the video rect! */
   /*
@@ -101,17 +117,17 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event,
      gdk_draw_rectangle (widget->window, widget->style->bg_gc[0], TRUE,
      event->area.x, event->area.y, event->area.width, event->area.height);
    */
-  gdk_draw_rectangle (widget->window, widget->style->bg_gc[0], TRUE,
+  gdk_draw_rectangle (window, style->bg_gc[0], TRUE,
       0, event->area.y, r->x, event->area.height);
-  gdk_draw_rectangle (widget->window, widget->style->bg_gc[0], TRUE,
+  gdk_draw_rectangle (window, style->bg_gc[0], TRUE,
       r->x + r->w, event->area.y,
-      widget->allocation.width - (r->x + r->w), event->area.height);
+      allocation.width - (r->x + r->w), event->area.height);
 
-  gdk_draw_rectangle (widget->window, widget->style->bg_gc[0], TRUE,
+  gdk_draw_rectangle (window, style->bg_gc[0], TRUE,
       event->area.x, 0, event->area.width, r->y);
-  gdk_draw_rectangle (widget->window, widget->style->bg_gc[0], TRUE,
+  gdk_draw_rectangle (window, style->bg_gc[0], TRUE,
       event->area.x, r->y + r->h,
-      event->area.width, widget->allocation.height - (r->y + r->h));
+      event->area.width, allocation.height - (r->y + r->h));
   if (verbose) {
     g_print ("expose(%p)\n", widget);
   }
@@ -136,6 +152,7 @@ window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
 gint
 main (gint argc, gchar ** argv)
 {
+  GdkWindow *video_window_xwindow;
   GtkWidget *window, *video_window;
   GstElement *pipeline, *src, *sink;
   GstStateChangeReturn sret;
@@ -190,7 +207,8 @@ main (gint argc, gchar ** argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-  embed_xid = GDK_WINDOW_XID (video_window->window);
+  video_window_xwindow = gtk_widget_get_window (video_window);
+  embed_xid = GDK_WINDOW_XID (video_window_xwindow);
   if (verbose) {
     g_print ("Window realize: got XID %lu\n", embed_xid);
   }
