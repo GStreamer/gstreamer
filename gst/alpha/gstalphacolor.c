@@ -182,45 +182,50 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return TRUE;
 }
 
-static void
-transform_argb_ayuv (guint8 * data, gint size)
-{
-  guint8 y, u, v;
-
-  while (size > 0) {
-    y = data[0] * 0.299 + data[1] * 0.587 + data[2] * 0.114 + 0;
-    u = data[0] * -0.169 + data[1] * -0.332 + data[2] * 0.500 + 128;
-    v = data[0] * 0.500 + data[1] * -0.419 + data[2] * -0.0813 + 128;
-
-    data[0] = data[3];
-    data[1] = y;
-    data[2] = u;
-    data[3] = v;
-
-    data += 4;
-    size -= 4;
-  }
+#define DEFINE_ARGB_AYUV_FUNCTIONS(name, A, R, G, B) \
+static void \
+transform_##name##_ayuv (guint8 * data, gint size) \
+{ \
+  guint8 y, u, v; \
+  \
+  while (size > 0) { \
+    y = data[R] * 0.299 + data[G] * 0.587 + data[B] * 0.114 + 0; \
+    u = data[R] * -0.169 + data[G] * -0.332 + data[B] * 0.500 + 128; \
+    v = data[R] * 0.500 + data[R] * -0.419 + data[B] * -0.0813 + 128; \
+    \
+    data[0] = data[A]; \
+    data[1] = y; \
+    data[2] = u; \
+    data[3] = v; \
+    \
+    data += 4; \
+    size -= 4; \
+  } \
+} \
+\
+static void \
+transform_ayuv_##name (guint8 * data, gint size) \
+{ \
+  guint8 r, g, b; \
+  \
+  while (size > 0) { \
+    r = data[1] + (0.419 / 0.299) * (data[3] - 128); \
+    g = data[1] + (-0.114 / 0.331) * (data[2] - 128) + \
+        (-0.299 / 0.419) * (data[3] - 128); \
+    b = data[1] + (0.587 / 0.331) * (data[2] - 128); \
+    \
+    data[A] = data[0]; \
+    data[R] = r; \
+    data[G] = g; \
+    data[B] = b; \
+    \
+    data += 4; \
+    size -= 4; \
+  } \
 }
 
-static void
-transform_bgra_ayuv (guint8 * data, gint size)
-{
-  guint8 y, u, v;
-
-  while (size > 0) {
-    y = data[2] * 0.299 + data[1] * 0.587 + data[0] * 0.114 + 0;
-    u = data[2] * -0.169 + data[1] * -0.332 + data[0] * 0.500 + 128;
-    v = data[2] * 0.500 + data[1] * -0.419 + data[0] * -0.0813 + 128;
-
-    data[0] = data[3];
-    data[1] = y;
-    data[2] = u;
-    data[3] = v;
-
-    data += 4;
-    size -= 4;
-  }
-}
+DEFINE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
+DEFINE_ARGB_AYUV_FUNCTIONS (bgra, 3, 2, 1, 0);
 
 static void
 transform_argb_bgra (guint8 * data, gint size)
@@ -236,48 +241,6 @@ transform_argb_bgra (guint8 * data, gint size)
     data[1] = g;
     data[2] = r;
     data[3] = a;
-
-    data += 4;
-    size -= 4;
-  }
-}
-
-static void
-transform_ayuv_argb (guint8 * data, gint size)
-{
-  guint8 r, g, b;
-
-  while (size > 0) {
-    r = data[1] + (0.419 / 0.299) * (data[3] - 128);
-    g = data[1] + (-0.114 / 0.331) * (data[2] - 128) +
-        (-0.299 / 0.419) * (data[3] - 128);
-    b = data[1] + (0.587 / 0.331) * (data[2] - 128);
-
-    data[0] = data[0];
-    data[1] = r;
-    data[2] = g;
-    data[3] = b;
-
-    data += 4;
-    size -= 4;
-  }
-}
-
-static void
-transform_ayuv_bgra (guint8 * data, gint size)
-{
-  guint8 r, g, b;
-
-  while (size > 0) {
-    r = data[1] + (0.419 / 0.299) * (data[3] - 128);
-    g = data[1] + (-0.114 / 0.331) * (data[2] - 128) +
-        (-0.299 / 0.419) * (data[3] - 128);
-    b = data[1] + (0.587 / 0.331) * (data[2] - 128);
-
-    data[3] = data[0];
-    data[2] = r;
-    data[1] = g;
-    data[0] = b;
 
     data += 4;
     size -= 4;
