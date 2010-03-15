@@ -51,6 +51,10 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_IMAGE,    \
                                GstVaapiImageClass))
 
+#define GST_VAAPI_IMAGE_FORMAT(img)     gst_vaapi_image_get_format(img)
+#define GST_VAAPI_IMAGE_WIDTH(img)      gst_vaapi_image_get_width(img)
+#define GST_VAAPI_IMAGE_HEIGHT(img)     gst_vaapi_image_get_height(img)
+
 typedef struct _GstVaapiImage                   GstVaapiImage;
 typedef struct _GstVaapiImagePrivate            GstVaapiImagePrivate;
 typedef struct _GstVaapiImageClass              GstVaapiImageClass;
@@ -84,6 +88,9 @@ gst_vaapi_image_get_id(GstVaapiImage *image);
 GstVaapiDisplay *
 gst_vaapi_image_get_display(GstVaapiImage *image);
 
+GstVaapiImageFormat
+gst_vaapi_image_get_format(GstVaapiImage *image);
+
 guint
 gst_vaapi_image_get_width(GstVaapiImage *image);
 
@@ -92,9 +99,6 @@ gst_vaapi_image_get_height(GstVaapiImage *image);
 
 void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight);
-
-guint
-gst_vaapi_image_get_format(GstVaapiImage *image);
 
 gboolean
 gst_vaapi_image_is_mapped(GstVaapiImage *image);

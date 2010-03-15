@@ -273,7 +273,8 @@ gst_vaapi_image_new(
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
 
-    GST_DEBUG("size %ux%u, format 0x%x", width, height, format);
+    GST_DEBUG("size %ux%u, format %" GST_FOURCC_FORMAT,
+              width, height, GST_FOURCC_ARGS(format));
 
     return g_object_new(GST_VAAPI_TYPE_IMAGE,
                         "display", display,
@@ -299,6 +300,15 @@ gst_vaapi_image_get_display(GstVaapiImage *image)
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->display;
+}
+
+GstVaapiImageFormat
+gst_vaapi_image_get_format(GstVaapiImage *image)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    return image->priv->format;
 }
 
 guint
@@ -330,15 +340,6 @@ gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 
     if (pheight)
         *pheight = image->priv->height;
-}
-
-guint
-gst_vaapi_image_get_format(GstVaapiImage *image)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
-
-    return image->priv->format;
 }
 
 static inline gboolean

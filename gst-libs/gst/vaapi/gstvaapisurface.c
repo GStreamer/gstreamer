@@ -55,7 +55,7 @@ static void
 gst_vaapi_surface_destroy(GstVaapiSurface *surface)
 {
     GstVaapiSurfacePrivate * const priv = surface->priv;
-    VADisplay dpy = gst_vaapi_display_get_display(priv->display);
+    VADisplay dpy = GST_VAAPI_DISPLAY_VADISPLAY(priv->display);
     VAStatus status;
 
     if (priv->surface_id != VA_INVALID_SURFACE) {
@@ -95,7 +95,7 @@ gst_vaapi_surface_create(GstVaapiSurface *surface)
     }
 
     status = vaCreateSurfaces(
-        gst_vaapi_display_get_display(priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
         priv->width,
         priv->height,
         format,
@@ -355,7 +355,7 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
         return FALSE;
 
     status = vaGetImage(
-        gst_vaapi_display_get_display(surface->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
         surface->priv->surface_id,
         0, 0, width, height,
         image_id
@@ -385,7 +385,7 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
         return FALSE;
 
     status = vaPutImage(
-        gst_vaapi_display_get_display(surface->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
         surface->priv->surface_id,
         image_id,
         0, 0, width, height,
