@@ -2756,10 +2756,10 @@ typedef struct
 {
   GstPad *orig;
   GstCaps *caps;
-} LinkData;
+} SetCapsFoldData;
 
 static gboolean
-setcaps_fold_func (GstPad * pad, GValue * ret, LinkData * data)
+setcaps_fold_func (GstPad * pad, GValue * ret, SetCapsFoldData * data)
 {
   gboolean success = TRUE;
 
@@ -2790,7 +2790,7 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   GstIterator *iter;
   GstIteratorResult res;
   GValue ret = { 0, };
-  LinkData data;
+  SetCapsFoldData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
@@ -2813,12 +2813,27 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   data.orig = pad;
   data.caps = caps;
 
-  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) setcaps_fold_func,
-      &ret, &data);
-  gst_iterator_free (iter);
+  while (1) {
+    res = gst_iterator_fold (iter, (GstIteratorFoldFunction) setcaps_fold_func,
+        &ret, &data);
 
-  if (res != GST_ITERATOR_DONE)
-    goto pads_changed;
+    switch (res) {
+      case GST_ITERATOR_RESYNC:
+        /* reset return value */
+        g_value_set_boolean (&ret, TRUE);
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_DONE:
+        /* all pads iterated, return collected value */
+        goto done;
+      default:
+        /* iterator returned _ERROR or premature end with _OK,
+         * mark an error and exit */
+        goto error;
+    }
+  }
+done:
+  gst_iterator_free (iter);
 
   gst_object_unref (element);
 
@@ -2826,10 +2841,11 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   return g_value_get_boolean (&ret);
 
   /* ERRORS */
-pads_changed:
+error:
   {
-    g_warning ("Pad list changed during proxy_pad_link for element %s",
+    g_warning ("Pad list return error on element %s",
         GST_ELEMENT_NAME (element));
+    gst_iterator_free (iter);
     gst_object_unref (element);
     return FALSE;
   }
