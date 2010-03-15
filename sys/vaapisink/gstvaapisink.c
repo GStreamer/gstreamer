@@ -20,8 +20,10 @@
 
 #include "config.h"
 #include <gst/gst.h>
+#include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapisinkbase.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
+#include <gst/vaapi/gstvaapiwindow_x11.h>
 #include "gstvaapisink.h"
 
 #define GST_PLUGIN_NAME "vaapisink"
@@ -98,6 +100,67 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     }
 }
 
+static inline gboolean
+gst_vaapisink_ensure_display(GstVaapiSink *sink)
+{
+    if (!sink->display)
+        sink->display = gst_vaapi_display_x11_new(sink->display_name);
+    return sink->display != NULL;
+}
+
+static gboolean
+gst_vaapisink_start(GstBaseSink *base_sink)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
+gst_vaapisink_stop(GstBaseSink *base_sink)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+
+    if (sink->window) {
+        g_object_unref(sink->window);
+        sink->window = NULL;
+    }
+
+    if (sink->display) {
+        g_object_unref(sink->display);
+        sink->display = NULL;
+    }
+    return TRUE;
+}
+
+static GstFlowReturn
+gst_vaapisink_show_frame(GstVideoSink *video_sink, GstBuffer *buffer)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(video_sink);
+    GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+    GstVaapiSurface *surface;
+    guint width, height, flags;
+
+    surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+    if (!surface)
+        return GST_FLOW_UNEXPECTED;
+
+    gst_vaapi_surface_get_size(surface, &width, &height);
+    if (!sink->window) {
+        sink->window = gst_vaapi_window_x11_new(sink->display, width, height);
+        if (!sink->window)
+            return GST_FLOW_UNEXPECTED;
+    }
+
+    flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+    if (!gst_vaapi_window_put_surface(sink->window, surface, flags))
+        return GST_FLOW_UNEXPECTED;
+
+    return GST_FLOW_OK;
+}
+
 static void
 gst_vaapisink_finalize(GObject *object)
 {
@@ -165,13 +228,17 @@ static void gst_vaapisink_base_init(gpointer klass)
 static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
     GObjectClass * const      object_class    = G_OBJECT_CLASS(klass);
-    GstElementClass * const   element_class   = GST_ELEMENT_CLASS(klass);
     GstBaseSinkClass * const  basesink_class  = GST_BASE_SINK_CLASS(klass);
     GstVideoSinkClass * const videosink_class = GST_VIDEO_SINK_CLASS(klass);
 
     object_class->finalize      = gst_vaapisink_finalize;
     object_class->set_property  = gst_vaapisink_set_property;
     object_class->get_property  = gst_vaapisink_get_property;
+
+    basesink_class->start       = gst_vaapisink_start;
+    basesink_class->stop        = gst_vaapisink_stop;
+
+    videosink_class->show_frame = gst_vaapisink_show_frame;
 
     g_object_class_install_property
         (object_class,
@@ -201,8 +268,8 @@ static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 GstVaapiDisplay *
 gst_vaapisink_get_display(GstVaapiSink *sink)
 {
-    if (!sink->display)
-        sink->display = gst_vaapi_display_x11_new(sink->display_name);
+    if (!gst_vaapisink_ensure_display(sink))
+        return NULL;
     return sink->display;
 }
 

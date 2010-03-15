@@ -23,6 +23,7 @@
 
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiwindow.h>
 #include <X11/Xlib.h>
 
 G_BEGIN_DECLS
@@ -60,6 +61,7 @@ struct _GstVaapiSink {
 
     gchar              *display_name;
     GstVaapiDisplay    *display;
+    GstVaapiWindow     *window;
 };
 
 struct _GstVaapiSinkClass {
