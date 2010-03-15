@@ -292,6 +292,7 @@ gboolean gst_video_parse_caps_framerate (GstCaps *caps,
 gboolean gst_video_parse_caps_pixel_aspect_ratio (GstCaps *caps,
     int *par_n, int *par_d);
 const char *gst_video_parse_caps_color_matrix (GstCaps * caps);
+const char *gst_video_parse_caps_chroma_site (GstCaps * caps);
 GstCaps * gst_video_format_new_caps (GstVideoFormat format,
     int width, int height, int framerate_n, int framerate_d,
     int par_n, int par_d);

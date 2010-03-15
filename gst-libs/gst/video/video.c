@@ -286,6 +286,46 @@ gst_video_parse_caps_color_matrix (GstCaps * caps)
 }
 
 /**
+ * gst_video_parse_caps_chroma_site:
+ * @caps: the fixed #GstCaps to parse
+ *
+ * Extracts the chroma site used by the caps.  Possible values are
+ * "mpeg2" for MPEG-2 style chroma siting (co-sited horizontally,
+ * halfway-sited vertically), "jpeg" for JPEG and Theora style
+ * chroma siting (halfway-sited both horizontally and vertically).
+ * Other chroma site values are possible, but uncommon.
+ * 
+ * When no chroma site is specified in the caps, it should be assumed
+ * to be "mpeg2".
+ *
+ * Since: 0.10.29
+ *
+ * Returns: a chroma site string, or NULL if no chroma site could be
+ *     determined.
+ */
+const char *
+gst_video_parse_caps_chroma_site (GstCaps * caps)
+{
+  GstStructure *structure;
+  const char *s;
+
+  if (!gst_caps_is_fixed (caps))
+    return NULL;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  s = gst_structure_get_string (structure, "chroma-site");
+  if (s)
+    return s;
+
+  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
+    return "mpeg2";
+  }
+
+  return NULL;
+}
+
+/**
  * gst_video_format_parse_caps:
  * @caps: the #GstCaps to parse
  * @format: the #GstVideoFormat of the video represented by @caps (output)
