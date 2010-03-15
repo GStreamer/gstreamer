@@ -16,4 +16,4 @@ libgstalphacolor_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINO
 libgstalphacolor_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstalphacolor_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstalphacolor.h
+noinst_HEADERS = gstalpha.h gstalphacolor.h

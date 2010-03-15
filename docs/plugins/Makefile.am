@@ -114,6 +114,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
+	$(top_srcdir)/gst/alpha/gstalpha.h \
 	$(top_srcdir)/gst/alpha/gstalphacolor.h \
 	$(top_srcdir)/gst/apetag/gstapedemux.h \
 	$(top_srcdir)/gst/audiofx/audioamplify.h \

@@ -23,10 +23,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideofilter.h>
-#include <gst/controller/gstcontroller.h>
+
+#include "gstalpha.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -35,79 +33,6 @@
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
-
-#define GST_TYPE_ALPHA \
-  (gst_alpha_get_type())
-#define GST_ALPHA(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALPHA,GstAlpha))
-#define GST_ALPHA_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALPHA,GstAlphaClass))
-#define GST_IS_ALPHA(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALPHA))
-#define GST_IS_ALPHA_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALPHA))
-
-typedef struct _GstAlpha GstAlpha;
-typedef struct _GstAlphaClass GstAlphaClass;
-
-typedef enum
-{
-  ALPHA_METHOD_SET,
-  ALPHA_METHOD_GREEN,
-  ALPHA_METHOD_BLUE,
-  ALPHA_METHOD_CUSTOM,
-}
-GstAlphaMethod;
-
-GST_DEBUG_CATEGORY_STATIC (gst_alpha_debug);
-#define GST_CAT_DEFAULT gst_alpha_debug
-
-struct _GstAlpha
-{
-  GstVideoFilter parent;
-
-  /* caps */
-  GstVideoFormat format;
-  gint width, height;
-  gboolean ayuv;
-
-  gdouble alpha;
-
-  guint target_r;
-  guint target_g;
-  guint target_b;
-
-  GstAlphaMethod method;
-
-  gfloat angle;
-  gfloat noise_level;
-  guint black_sensitivity;
-  guint white_sensitivity;
-
-  gfloat y;                     /* chroma color */
-  gint8 cb, cr;
-  gint8 kg;
-  gfloat accept_angle_cos;
-  gfloat accept_angle_sin;
-  guint8 accept_angle_tg;
-  guint8 accept_angle_ctg;
-  guint8 one_over_kc;
-  guint8 kfgy_scale;
-};
-
-struct _GstAlphaClass
-{
-  GstVideoFilterClass parent_class;
-};
-
-/* elementfactory information */
-static const GstElementDetails gst_alpha_details =
-GST_ELEMENT_DETAILS ("Alpha filter",
-    "Filter/Effect/Video",
-    "Adds an alpha channel to video - uniform or via chroma-keying",
-    "Wim Taymans <wim@fluendo.com>\n"
-    "Edward Hervey <edward.hervey@collabora.co.uk>\n"
-    "Jan Schmidt <thaytan@noraisin.net>");
 
 /* Alpha signals and args */
 enum
@@ -199,7 +124,12 @@ gst_alpha_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_alpha_details);
+  gst_element_class_set_details_simple (element_class, "Alpha filter",
+      "Filter/Effect/Video",
+      "Adds an alpha channel to video - uniform or via chroma-keying",
+      "Wim Taymans <wim@fluendo.com>\n"
+      "Edward Hervey <edward.hervey@collabora.co.uk>\n"
+      "Jan Schmidt <thaytan@noraisin.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_alpha_sink_template));
@@ -213,11 +143,8 @@ gst_alpha_base_init (gpointer g_class)
 static void
 gst_alpha_class_init (GstAlphaClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *btrans_class;
-
-  gobject_class = (GObjectClass *) klass;
-  btrans_class = (GstBaseTransformClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
@@ -225,41 +152,41 @@ gst_alpha_class_init (GstAlphaClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_METHOD,
       g_param_spec_enum ("method", "Method",
           "How the alpha channels should be created", GST_TYPE_ALPHA_METHOD,
-          DEFAULT_METHOD, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "The value for the alpha channel",
           0.0, 1.0, DEFAULT_ALPHA,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_R,
-      g_param_spec_uint ("target_r", "Target Red", "The Red target", 0, 255,
+      g_param_spec_uint ("target-r", "Target Red", "The Red target", 0, 255,
           DEFAULT_TARGET_R,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_G,
-      g_param_spec_uint ("target_g", "Target Green", "The Green target", 0, 255,
+      g_param_spec_uint ("target-g", "Target Green", "The Green target", 0, 255,
           DEFAULT_TARGET_G,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TARGET_B,
-      g_param_spec_uint ("target_b", "Target Blue", "The Blue target", 0, 255,
+      g_param_spec_uint ("target-b", "Target Blue", "The Blue target", 0, 255,
           DEFAULT_TARGET_B,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ANGLE,
       g_param_spec_float ("angle", "Angle", "Size of the colorcube to change",
           0.0, 90.0, DEFAULT_ANGLE,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NOISE_LEVEL,
-      g_param_spec_float ("noise_level", "Noise Level", "Size of noise radius",
+      g_param_spec_float ("noise-level", "Noise Level", "Size of noise radius",
           0.0, 64.0, DEFAULT_NOISE_LEVEL,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_BLACK_SENSITIVITY, g_param_spec_uint ("black-sensitivity",
           "Black Sensitivity", "Sensitivity to dark colors", 0, 128,
           DEFAULT_BLACK_SENSITIVITY,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_WHITE_SENSITIVITY, g_param_spec_uint ("white-sensitivity",
           "Sensitivity", "Sensitivity to bright colors", 0, 128,
           DEFAULT_WHITE_SENSITIVITY,
-          (GParamFlags) G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
 
   btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
@@ -288,11 +215,7 @@ static void
 gst_alpha_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAlpha *alpha;
-
-  g_return_if_fail (GST_IS_ALPHA (object));
-
-  alpha = GST_ALPHA (object);
+  GstAlpha *alpha = GST_ALPHA (object);
 
   switch (prop_id) {
     case PROP_METHOD:
@@ -352,11 +275,7 @@ static void
 gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstAlpha *alpha;
-
-  g_return_if_fail (GST_IS_ALPHA (object));
-
-  alpha = GST_ALPHA (object);
+  GstAlpha *alpha = GST_ALPHA (object);
 
   switch (prop_id) {
     case PROP_METHOD:
