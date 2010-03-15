@@ -1,0 +1,84 @@
+/*
+ *  gstvaapiwindow_x11.h - VA/X11 window abstraction
+ *
+ *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+ */
+
+#ifndef GST_VAAPI_WINDOW_X11_H
+#define GST_VAAPI_WINDOW_X11_H
+
+#include <X11/Xlib.h>
+#include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiwindow.h>
+
+G_BEGIN_DECLS
+
+#define GST_VAAPI_TYPE_WINDOW_X11 \
+    (gst_vaapi_window_x11_get_type())
+
+#define GST_VAAPI_WINDOW_X11(obj)                               \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
+                                GST_VAAPI_TYPE_WINDOW_X11,      \
+                                GstVaapiWindowX11))
+
+#define GST_VAAPI_WINDOW_X11_CLASS(klass)                       \
+    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
+                             GST_VAAPI_TYPE_WINDOW_X11,         \
+                             GstVaapiWindowX11Class))
+
+#define GST_VAAPI_IS_WINDOW_X11(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_WINDOW_X11))
+
+#define GST_VAAPI_IS_WINDOW_X11_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_WINDOW_X11))
+
+#define GST_VAAPI_WINDOW_X11_GET_CLASS(obj)                     \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
+                               GST_VAAPI_TYPE_WINDOW_X11,       \
+                               GstVaapiWindowX11Class))
+
+typedef struct _GstVaapiWindowX11               GstVaapiWindowX11;
+typedef struct _GstVaapiWindowX11Private        GstVaapiWindowX11Private;
+typedef struct _GstVaapiWindowX11Class          GstVaapiWindowX11Class;
+
+struct _GstVaapiWindowX11 {
+    /*< private >*/
+    GstVaapiWindow parent_instance;
+
+    GstVaapiWindowX11Private *priv;
+};
+
+struct _GstVaapiWindowX11Class {
+    /*< private >*/
+    GstVaapiWindowClass parent_class;
+};
+
+GType
+gst_vaapi_window_x11_get_type(void);
+
+GstVaapiWindow *
+gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height);
+
+GstVaapiWindow *
+gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid);
+
+Window
+gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window);
+
+G_END_DECLS
+
+#endif /* GST_VAAPI_WINDOW_X11_H */

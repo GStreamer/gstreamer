@@ -11,6 +11,7 @@ libgstvaapi_source_c =				\
 	gstvaapisurfacepool.c			\
 	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
+	gstvaapiwindow.c			\
 	vaapi_utils.c				\
 	$(NULL)
 
@@ -25,6 +26,7 @@ libgstvaapi_source_h =				\
 	gstvaapisurfacepool.h			\
 	gstvaapivideobuffer.h			\
 	gstvaapivideopool.h			\
+	gstvaapiwindow.h			\
 	vaapi_debug.h				\
 	vaapi_utils.h				\
 	$(NULL)
@@ -55,10 +57,12 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES +=	\
 	gstvaapidisplay_x11.c			\
+	gstvaapiwindow_x11.c			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@include_HEADERS +=	\
 	gstvaapidisplay_x11.h			\
+	gstvaapiwindow_x11.h			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS +=	\
