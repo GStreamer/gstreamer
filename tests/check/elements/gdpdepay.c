@@ -94,7 +94,7 @@ cleanup_gdpdepay (GstElement * gdpdepay)
 }
 
 static void
-gdpdepay_push_per_byte (gchar * reason, guint8 * bytes, guint length)
+gdpdepay_push_per_byte (const gchar * reason, guint8 * bytes, guint length)
 {
   int i;
   GstBuffer *inbuffer;
