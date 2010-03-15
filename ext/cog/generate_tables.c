@@ -180,6 +180,60 @@ main (int argc, char *argv[])
     }
   }
 
+  {
+    int cm, bits;
+
+    for (cm = 0; cm < 2; cm++) {
+      for (bits = 8; bits <= 8; bits += 1) {
+
+        ColorMatrix matrix;
+
+        color_matrix_set_identity (&matrix);
+
+        /* offset required to get input video black to (0.,0.,0.) */
+        /* we don't do this because the code does it for us */
+        color_matrix_offset_components (&matrix, -16, -128, -128);
+
+        color_matrix_scale_components (&matrix, (1 / 219.0), (1 / 224.0),
+            (1 / 224.0));
+
+        /* colour matrix, RGB -> YCbCr */
+        if (cm) {
+          color_matrix_YCbCr_to_RGB (&matrix, 0.2126, 0.0722);  /* HD */
+          color_matrix_RGB_to_YCbCr (&matrix, 0.2990, 0.1140);  /* SD */
+        } else {
+          color_matrix_YCbCr_to_RGB (&matrix, 0.2990, 0.1140);  /* SD */
+          color_matrix_RGB_to_YCbCr (&matrix, 0.2126, 0.0722);  /* HD */
+        }
+
+        /*
+         * We are now in YCbCr space
+         */
+
+        color_matrix_scale_components (&matrix, 219.0, 224.0, 224.0);
+
+        color_matrix_offset_components (&matrix, 16, 128, 128);
+
+        /* because we're doing 8-bit matrix coefficients */
+        color_matrix_scale_components (&matrix, 1 << bits, 1 << bits,
+            1 << bits);
+
+        g_print
+            ("static const int cog_ycbcr_%s_to_ycbcr_%s_matrix_%dbit[] = {\n",
+            cm ? "hdtv" : "sdtv", cm ? "sdtv" : "hdtv", bits);
+        g_print ("  %d, %d, %d, %d,\n", (int) rint (matrix.m[0][0]),
+            (int) rint (matrix.m[0][1]), (int) rint (matrix.m[0][2]),
+            (int) rint (matrix.m[0][3]));
+        g_print ("  %d, %d, %d, %d,\n", (int) rint (matrix.m[1][0]),
+            (int) rint (matrix.m[1][1]), (int) rint (matrix.m[1][2]),
+            (int) rint (matrix.m[1][3]));
+        g_print ("  %d, %d, %d, %d,\n", (int) rint (matrix.m[2][0]),
+            (int) rint (matrix.m[2][1]), (int) rint (matrix.m[2][2]),
+            (int) rint (matrix.m[2][3]));
+        g_print ("};\n");
+      }
+    }
+  }
 
   return 0;
 }

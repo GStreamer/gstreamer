@@ -139,9 +139,11 @@ cog_virt_frame_get_line (CogFrame * frame, int component, int i)
   }
 
   if (i < frame->cache_offset[component]) {
-    g_warning ("cache failure: %d outside [%d,%d]", i,
-        frame->cache_offset[component],
-        frame->cache_offset[component] + COG_FRAME_CACHE_SIZE - 1);
+    if (i != 0) {
+      g_warning ("cache failure: %d outside [%d,%d]", i,
+          frame->cache_offset[component],
+          frame->cache_offset[component] + COG_FRAME_CACHE_SIZE - 1);
+    }
 
     frame->cache_offset[component] = i;
     for (j = 0; j < COG_FRAME_CACHE_SIZE; j++) {
@@ -1469,6 +1471,72 @@ cog_virt_frame_new_color_matrix_RGB_to_YCbCr (CogFrame * vf,
 
   return virt_frame;
 }
+
+static const int cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit[] = {
+  256, -30, -53, 10600,
+  0, 261, 29, -4367,
+  0, 19, 262, -3289,
+};
+
+static const int cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit[] = {
+  256, 25, 49, -9536,
+  0, 253, -28, 3958,
+  0, -19, 252, 2918,
+};
+
+
+static void
+color_matrix_YCbCr_to_YCbCr (CogFrame * frame, void *_dest, int component,
+    int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src1;
+  uint8_t *src2;
+  uint8_t *src3;
+  int *matrix = frame->virt_priv2;
+
+  src1 = cog_virt_frame_get_line (frame->virt_frame1, 0, i);
+  src2 = cog_virt_frame_get_line (frame->virt_frame1, 1, i);
+  src3 = cog_virt_frame_get_line (frame->virt_frame1, 2, i);
+
+  switch (component) {
+    case 0:
+      orc_matrix3_100_offset_u8 (dest, src1, src2, src3,
+          matrix[0] - 256, matrix[1], matrix[2], matrix[3], 8, frame->width);
+      break;
+    case 1:
+      orc_matrix3_000_u8 (dest, src1, src2, src3,
+          matrix[4], matrix[5], matrix[6], matrix[7], 8, frame->width);
+      break;
+    case 2:
+      orc_matrix3_000_u8 (dest, src1, src2, src3,
+          matrix[8], matrix[9], matrix[10], matrix[11], 8, frame->width);
+      break;
+    default:
+      break;
+  }
+
+}
+
+CogFrame *
+cog_virt_frame_new_color_matrix_YCbCr_to_YCbCr (CogFrame * vf,
+    CogColorMatrix in_color_matrix, CogColorMatrix out_color_matrix, int bits)
+{
+  CogFrame *virt_frame;
+
+  virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
+      vf->width, vf->height);
+  virt_frame->virt_frame1 = vf;
+  virt_frame->render_line = color_matrix_YCbCr_to_YCbCr;
+  if (in_color_matrix == COG_COLOR_MATRIX_HDTV) {
+    virt_frame->virt_priv2 = (void *) cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit;
+  } else {
+    virt_frame->virt_priv2 = (void *) cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+  }
+
+  return virt_frame;
+}
+
 
 static void
 convert_444_422 (CogFrame * frame, void *_dest, int component, int i)

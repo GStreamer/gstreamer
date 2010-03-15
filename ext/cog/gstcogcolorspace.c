@@ -57,7 +57,6 @@ struct _GstCogcolorspace
   GstBaseTransform base_transform;
 
   int quality;
-  CogColorMatrix color_matrix;
 };
 
 struct _GstCogcolorspaceClass
@@ -76,13 +75,11 @@ enum
 };
 
 #define DEFAULT_QUALITY 5
-#define DEFAULT_COLOR_MATRIX COG_COLOR_MATRIX_UNKNOWN
 
 enum
 {
   PROP_0,
-  PROP_QUALITY,
-  PROP_COLOR_MATRIX
+  PROP_QUALITY
 };
 
 static void gst_cogcolorspace_set_property (GObject * object, guint prop_id,
@@ -122,27 +119,6 @@ static GstStaticPadTemplate gst_cogcolorspace_src_template =
 GST_BOILERPLATE (GstCogcolorspace, gst_cogcolorspace, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
-GType
-gst_cog_color_matrix_get_type (void)
-{
-  static gsize id = 0;
-  static const GEnumValue values[] = {
-    {COG_COLOR_MATRIX_UNKNOWN, "unknown",
-        "Unknown color matrix (works like sdtv)"},
-    {COG_COLOR_MATRIX_HDTV, "hdtv", "High Definition TV color matrix (BT.709)"},
-    {COG_COLOR_MATRIX_SDTV, "sdtv",
-        "Standard Definition TV color matrix (BT.470)"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("CogColorMatrix", values);
-    g_once_init_leave (&id, tmp);
-  }
-
-  return (GType) id;
-}
-
 static void
 gst_cogcolorspace_base_init (gpointer g_class)
 {
@@ -177,11 +153,6 @@ gst_cogcolorspace_class_init (GstCogcolorspaceClass * colorspace_class)
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality",
           0, 10, DEFAULT_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_COLOR_MATRIX,
-      g_param_spec_enum ("color-matrix", "Color Matrix",
-          "Color matrix for YCbCr <-> RGB conversion",
-          gst_cog_color_matrix_get_type (),
-          DEFAULT_COLOR_MATRIX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   base_transform_class->transform = gst_cogcolorspace_transform;
   base_transform_class->transform_caps = gst_cogcolorspace_transform_caps;
@@ -197,7 +168,6 @@ gst_cogcolorspace_init (GstCogcolorspace * colorspace,
   GST_DEBUG ("gst_cogcolorspace_init");
 
   colorspace->quality = DEFAULT_QUALITY;
-  colorspace->color_matrix = DEFAULT_COLOR_MATRIX;
 }
 
 static void
@@ -214,11 +184,6 @@ gst_cogcolorspace_set_property (GObject * object, guint prop_id,
     case PROP_QUALITY:
       GST_OBJECT_LOCK (colorspace);
       colorspace->quality = g_value_get_int (value);
-      GST_OBJECT_UNLOCK (colorspace);
-      break;
-    case PROP_COLOR_MATRIX:
-      GST_OBJECT_LOCK (colorspace);
-      colorspace->color_matrix = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (colorspace);
       break;
     default:
@@ -239,11 +204,6 @@ gst_cogcolorspace_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_QUALITY:
       GST_OBJECT_LOCK (colorspace);
       g_value_set_int (value, colorspace->quality);
-      GST_OBJECT_UNLOCK (colorspace);
-      break;
-    case PROP_COLOR_MATRIX:
-      GST_OBJECT_LOCK (colorspace);
-      g_value_set_enum (value, colorspace->color_matrix);
       GST_OBJECT_UNLOCK (colorspace);
       break;
     default:
@@ -314,6 +274,7 @@ gst_cogcolorspace_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "blue_mask");
     gst_structure_remove_field (structure, "alpha_mask");
     gst_structure_remove_field (structure, "palette_data");
+    gst_structure_remove_field (structure, "color-matrix");
   }
 
   gst_caps_do_simplify (caps);
@@ -385,6 +346,25 @@ gst_cogcolorspace_get_unit_size (GstBaseTransform * base_transform,
   return TRUE;
 }
 
+static CogColorMatrix
+gst_cogcolorspace_caps_get_color_matrix (GstCaps * caps)
+{
+  const char *s;
+
+  s = gst_video_parse_caps_color_matrix (caps);
+
+  if (s == NULL)
+    return COG_COLOR_MATRIX_SDTV;
+
+  if (strcmp (s, "sdtv") == 0) {
+    return COG_COLOR_MATRIX_SDTV;
+  } else if (strcmp (s, "hdtv") == 0) {
+    return COG_COLOR_MATRIX_HDTV;
+  }
+
+  return COG_COLOR_MATRIX_SDTV;
+}
+
 static GstFlowReturn
 gst_cogcolorspace_transform (GstBaseTransform * base_transform,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -397,16 +377,21 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   uint32_t out_format;
   CogFrameFormat new_subsample;
   gboolean ret;
+  CogColorMatrix in_color_matrix;
+  CogColorMatrix out_color_matrix;
 
   g_return_val_if_fail (GST_IS_COGCOLORSPACE (base_transform), GST_FLOW_ERROR);
   compress = GST_COGCOLORSPACE (base_transform);
 
   ret = gst_video_format_parse_caps (inbuf->caps, &in_format, &width, &height);
-  ret |=
+  ret &=
       gst_video_format_parse_caps (outbuf->caps, &out_format, &width, &height);
   if (!ret) {
     return GST_FLOW_ERROR;
   }
+
+  in_color_matrix = gst_cogcolorspace_caps_get_color_matrix (inbuf->caps);
+  out_color_matrix = gst_cogcolorspace_caps_get_color_matrix (outbuf->caps);
 
   frame = gst_cog_buffer_wrap (gst_buffer_ref (inbuf),
       in_format, width, height);
@@ -445,7 +430,16 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   if (gst_video_format_is_yuv (out_format) &&
       gst_video_format_is_rgb (in_format)) {
     frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame,
-        compress->color_matrix, 8);
+        out_color_matrix, 8);
+  }
+
+  if (gst_video_format_is_yuv (out_format) &&
+      gst_video_format_is_yuv (in_format) &&
+      in_color_matrix != out_color_matrix) {
+    frame = cog_virt_frame_new_subsample (frame, COG_FRAME_FORMAT_U8_444,
+        (compress->quality >= 5) ? 8 : 6);
+    frame = cog_virt_frame_new_color_matrix_YCbCr_to_YCbCr (frame,
+        in_color_matrix, out_color_matrix, 8);
   }
 
   frame = cog_virt_frame_new_subsample (frame, new_subsample,
@@ -454,7 +448,7 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
     frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame,
-        compress->color_matrix, (compress->quality >= 5) ? 8 : 6);
+        in_color_matrix, (compress->quality >= 5) ? 8 : 6);
   }
 
   switch (out_format) {
