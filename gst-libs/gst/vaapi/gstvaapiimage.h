@@ -21,6 +21,7 @@
 #ifndef GST_VAAPI_IMAGE_H
 #define GST_VAAPI_IMAGE_H
 
+#include <gst/gstbuffer.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimageformat.h>
 
@@ -72,9 +73,9 @@ gst_vaapi_image_get_type(void);
 GstVaapiImage *
 gst_vaapi_image_new(
     GstVaapiDisplay    *display,
+    GstVaapiImageFormat format,
     guint               width,
-    guint               height,
-    GstVaapiImageFormat format
+    guint               height
 );
 
 VAImageID
@@ -109,6 +110,9 @@ gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane);
 
 guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane);
+
+gboolean
+gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer);
 
 G_END_DECLS
 

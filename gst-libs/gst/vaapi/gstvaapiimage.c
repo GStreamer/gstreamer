@@ -36,11 +36,12 @@ G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, G_TYPE_OBJECT);
 
 struct _GstVaapiImagePrivate {
     GstVaapiDisplay    *display;
+    gboolean            is_constructed;
     VAImage             image;
     guchar             *image_data;
+    GstVaapiImageFormat format;
     guint               width;
     guint               height;
-    GstVaapiImageFormat format;
 };
 
 enum {
@@ -48,9 +49,9 @@ enum {
 
     PROP_DISPLAY,
     PROP_IMAGE_ID,
+    PROP_FORMAT,
     PROP_WIDTH,
-    PROP_HEIGHT,
-    PROP_FORMAT
+    PROP_HEIGHT
 };
 
 static void
@@ -125,14 +126,14 @@ gst_vaapi_image_set_property(
     case PROP_DISPLAY:
         priv->display = g_object_ref(g_value_get_object(value));
         break;
+    case PROP_FORMAT:
+        priv->format = g_value_get_uint(value);
+        break;
     case PROP_WIDTH:
         priv->width = g_value_get_uint(value);
         break;
     case PROP_HEIGHT:
         priv->height = g_value_get_uint(value);
-        break;
-    case PROP_FORMAT:
-        priv->format = g_value_get_uint(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -157,14 +158,14 @@ gst_vaapi_image_get_property(
     case PROP_IMAGE_ID:
         g_value_set_uint(value, gst_vaapi_image_get_id(image));
         break;
+    case PROP_FORMAT:
+        g_value_set_uint(value, gst_vaapi_image_get_format(image));
+        break;
     case PROP_WIDTH:
         g_value_set_uint(value, gst_vaapi_image_get_width(image));
         break;
     case PROP_HEIGHT:
         g_value_set_uint(value, gst_vaapi_image_get_height(image));
-        break;
-    case PROP_FORMAT:
-        g_value_set_uint(value, gst_vaapi_image_get_format(image));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -178,7 +179,7 @@ gst_vaapi_image_constructed(GObject *object)
     GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
     GObjectClass *parent_class;
 
-    gst_vaapi_image_create(image);
+    image->priv->is_constructed = gst_vaapi_image_create(image);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_image_parent_class);
     if (parent_class->constructed)
@@ -263,9 +264,9 @@ gst_vaapi_image_init(GstVaapiImage *image)
 GstVaapiImage *
 gst_vaapi_image_new(
     GstVaapiDisplay    *display,
+    GstVaapiImageFormat format,
     guint               width,
-    guint               height,
-    GstVaapiImageFormat format
+    guint               height
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
@@ -276,9 +277,9 @@ gst_vaapi_image_new(
 
     return g_object_new(GST_VAAPI_TYPE_IMAGE,
                         "display", display,
+                        "format",  format,
                         "width",   width,
                         "height",  height,
-                        "format",  format,
                         NULL);
 }
 
@@ -286,6 +287,7 @@ VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->image.image_id;
 }
@@ -294,6 +296,7 @@ GstVaapiDisplay *
 gst_vaapi_image_get_display(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->display;
 }
@@ -302,6 +305,7 @@ guint
 gst_vaapi_image_get_width(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->width;
 }
@@ -310,6 +314,7 @@ guint
 gst_vaapi_image_get_height(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->height;
 }
@@ -318,6 +323,7 @@ guint
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return image->priv->format;
 }
@@ -332,6 +338,7 @@ gboolean
 gst_vaapi_image_is_mapped(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     return _gst_vaapi_image_is_mapped(image);
 }
@@ -343,6 +350,7 @@ gst_vaapi_image_map(GstVaapiImage *image)
     VAStatus status;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     if (_gst_vaapi_image_is_mapped(image))
         return TRUE;
@@ -365,6 +373,7 @@ gst_vaapi_image_unmap(GstVaapiImage *image)
     VAStatus status;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
     if (!_gst_vaapi_image_is_mapped(image))
         return FALSE;
@@ -384,6 +393,7 @@ guint
 gst_vaapi_image_get_plane_count(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
 
     return image->priv->image.num_planes;
@@ -393,6 +403,7 @@ guchar *
 gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), NULL);
     g_return_val_if_fail(plane < image->priv->image.num_planes, NULL);
 
@@ -403,8 +414,116 @@ guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(_gst_vaapi_image_is_mapped(image), 0);
     g_return_val_if_fail(plane < image->priv->image.num_planes, 0);
 
     return image->priv->image.pitches[plane];
+}
+
+gboolean
+gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
+{
+    GstVaapiImagePrivate *priv;
+    GstStructure *structure;
+    GstCaps *caps;
+    GstVaapiImageFormat format;
+    gint width, height;
+    guint offsets[3], pitches[3], widths[3], heights[3];
+    guint i, j;
+    guchar *data;
+    guint32 data_size;
+
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
+
+    priv      = image->priv;
+    data      = GST_BUFFER_DATA(buffer);
+    data_size = GST_BUFFER_SIZE(buffer);
+    caps      = GST_BUFFER_CAPS(buffer);
+
+    if (!caps)
+        return FALSE;
+
+    format = gst_vaapi_image_format_from_caps(caps);
+    if (format != priv->format)
+        return FALSE;
+
+    structure = gst_caps_get_structure(caps, 0);
+    gst_structure_get_int(structure, "width",  &width);
+    gst_structure_get_int(structure, "height", &height);
+    if (width != priv->width || height != priv->height)
+        return FALSE;
+
+    if (!gst_vaapi_image_map(image))
+        return FALSE;
+
+    if (data_size == priv->image.data_size)
+        memcpy(priv->image_data, data, data_size);
+    else {
+        /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
+        const guint width2  = (width  + 1) / 2;
+        const guint height2 = (height + 1) / 2;
+        guint size2;
+        switch (format) {
+        case GST_VAAPI_IMAGE_NV12:
+            offsets[0] = 0;
+            pitches[0] = GST_ROUND_UP_4(width);
+            widths [0] = width;
+            heights[0] = height;
+            offsets[1] = offsets[0] + height * pitches[0];
+            pitches[1] = pitches[0];
+            widths [1] = width2 * 2;
+            heights[1] = height2;
+            size2      = offsets[1] + height2 * pitches[1];
+            break;
+        case GST_VAAPI_IMAGE_YV12:
+        case GST_VAAPI_IMAGE_I420:
+            offsets[0] = 0;
+            pitches[0] = GST_ROUND_UP_4(width);
+            widths [0] = width;
+            heights[0] = height;
+            offsets[1] = offsets[0] + height * pitches[0];
+            pitches[1] = GST_ROUND_UP_4(GST_ROUND_UP_2(width) / 2);
+            widths [1] = width2;
+            heights[1] = height2;
+            offsets[2] = offsets[1] + height2 * pitches[1];
+            pitches[2] = pitches[1];
+            widths [2] = width2;
+            heights[2] = height2;
+            size2      = offsets[2] + height2 * pitches[2];
+            break;
+        case GST_VAAPI_IMAGE_ARGB:
+        case GST_VAAPI_IMAGE_RGBA:
+        case GST_VAAPI_IMAGE_ABGR:
+        case GST_VAAPI_IMAGE_BGRA:
+            offsets[0] = 0;
+            pitches[0] = width * 4;
+            widths [0] = width * 4;
+            heights[0] = height;
+            size2      = offsets[0] + height * pitches[0];
+            break;
+        default:
+            g_error("could not compute row-stride for %" GST_FOURCC_FORMAT,
+                    GST_FOURCC_ARGS(format));
+            break;
+        }
+        if (size2 != data_size)
+            g_error("data_size mismatch %d / %u", size2, data_size);
+        for (i = 0; i < priv->image.num_planes; i++) {
+            guchar *src = data + offsets[i];
+            guchar *dst = priv->image_data + priv->image.offsets[i];
+            for (j = 0; j < heights[i]; j++) {
+                memcpy(dst, src, widths[i]);
+                src += pitches[i];
+                dst += priv->image.pitches[i];
+            }
+        }
+    }
+
+    if (!gst_vaapi_image_unmap(image))
+        return FALSE;
+
+    return TRUE;
 }
