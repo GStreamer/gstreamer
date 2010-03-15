@@ -25,6 +25,8 @@
  *
  * <refsect2>
  * <para>
+ *  This interface is implemented e.g. by the Windows Media Streaming RTSP
+ *  exentension (rtspwms) and the RealMedia RTSP extension (rtspreal).
  * </para>
  * </refsect2>
  *

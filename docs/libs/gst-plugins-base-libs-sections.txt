@@ -1453,6 +1453,14 @@ gst_rtsp_watch_queue_message
 </SECTION>
 
 <SECTION>
+<FILE>gstrtspextension</FILE>
+<INCLUDE>gst/rtsp/gstrtspextension.h</INCLUDE>
+GstRTSPExtensionInterface
+<SUBSECTION Standard>
+gst_rtsp_extension_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstrtspmessage</FILE>
 <INCLUDE>gst/rtsp/gstrtspmessage.h</INCLUDE>
 GstRTSPMsgType

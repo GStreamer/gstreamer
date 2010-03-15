@@ -160,6 +160,7 @@
       <xi:include href="xml/gstrtspbase64.xml" />
       <xi:include href="xml/gstrtspconnection.xml" />
       <xi:include href="xml/gstrtspdefs.xml" />
+      <xi:include href="xml/gstrtspextension.xml" />
       <xi:include href="xml/gstrtspmessage.xml" />
       <xi:include href="xml/gstrtsprange.xml" />
       <xi:include href="xml/gstrtsptransport.xml" />
