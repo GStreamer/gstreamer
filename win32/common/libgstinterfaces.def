@@ -116,4 +116,5 @@ EXPORTS
 	gst_x_overlay_got_xwindow_id
 	gst_x_overlay_handle_events
 	gst_x_overlay_prepare_xwindow_id
+	gst_x_overlay_set_render_rectangle
 	gst_x_overlay_set_xwindow_id
