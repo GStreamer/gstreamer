@@ -336,3 +336,63 @@ gst_vaapi_surface_get_size(
         *pheight = gst_vaapi_surface_get_height(surface);
 }
 
+gboolean
+gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
+{
+    VAImageID image_id;
+    VAStatus status;
+    guint width, height;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+
+    gst_vaapi_image_get_size(image, &width, &height);
+    if (width != surface->priv->width || height != surface->priv->height)
+        return FALSE;
+
+    image_id = gst_vaapi_image_get_id(image);
+    if (image_id == VA_INVALID_ID)
+        return FALSE;
+
+    status = vaGetImage(
+        gst_vaapi_display_get_display(surface->priv->display),
+        surface->priv->surface_id,
+        0, 0, width, height,
+        image_id
+    );
+    if (!vaapi_check_status(status, "vaGetImage()"))
+        return FALSE;
+
+    return TRUE;
+}
+
+gboolean
+gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
+{
+    VAImageID image_id;
+    VAStatus status;
+    guint width, height;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+
+    gst_vaapi_image_get_size(image, &width, &height);
+    if (width != surface->priv->width || height != surface->priv->height)
+        return FALSE;
+
+    image_id = gst_vaapi_image_get_id(image);
+    if (image_id == VA_INVALID_ID)
+        return FALSE;
+
+    status = vaPutImage(
+        gst_vaapi_display_get_display(surface->priv->display),
+        surface->priv->surface_id,
+        image_id,
+        0, 0, width, height,
+        0, 0, width, height
+    );
+    if (!vaapi_check_status(status, "vaPutImage()"))
+        return FALSE;
+
+    return TRUE;
+}

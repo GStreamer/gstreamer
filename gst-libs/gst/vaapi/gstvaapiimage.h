@@ -90,6 +90,9 @@ gst_vaapi_image_get_width(GstVaapiImage *image);
 guint
 gst_vaapi_image_get_height(GstVaapiImage *image);
 
+void
+gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight);
+
 guint
 gst_vaapi_image_get_format(GstVaapiImage *image);
 

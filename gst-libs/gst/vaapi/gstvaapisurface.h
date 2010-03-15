@@ -21,6 +21,7 @@
 #ifndef GST_VAAPI_SURFACE_H
 #define GST_VAAPI_SURFACE_H
 
+#include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
 G_BEGIN_DECLS
@@ -105,6 +106,12 @@ gst_vaapi_surface_get_size(
     guint           *pwidth,
     guint           *pheight
 );
+
+gboolean
+gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image);
+
+gboolean
+gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image);
 
 G_END_DECLS
 

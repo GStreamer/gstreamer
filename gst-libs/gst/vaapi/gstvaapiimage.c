@@ -319,6 +319,19 @@ gst_vaapi_image_get_height(GstVaapiImage *image)
     return image->priv->height;
 }
 
+void
+gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    if (pwidth)
+        *pwidth = image->priv->width;
+
+    if (pheight)
+        *pheight = image->priv->height;
+}
+
 guint
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
