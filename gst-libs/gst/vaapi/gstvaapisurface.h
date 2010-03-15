@@ -113,6 +113,9 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image);
 gboolean
 gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image);
 
+gboolean
+gst_vaapi_surface_sync(GstVaapiSurface *surface);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_SURFACE_H */

@@ -396,3 +396,20 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
 
     return TRUE;
 }
+
+gboolean
+gst_vaapi_surface_sync(GstVaapiSurface *surface)
+{
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+
+    status = vaSyncSurface(
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
+        surface->priv->surface_id
+    );
+    if (!vaapi_check_status(status, "vaSyncSurface()"))
+        return FALSE;
+
+    return TRUE;
+}
