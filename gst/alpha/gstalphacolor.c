@@ -39,17 +39,18 @@ GST_DEBUG_CATEGORY_STATIC (alpha_color_debug);
 #define GST_CAT_DEFAULT alpha_color_debug
 
 /* elementfactory information */
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
 GST_BOILERPLATE (GstAlphaColor, gst_alpha_color, GstVideoFilter,
@@ -69,7 +70,7 @@ gst_alpha_color_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (element_class, "Alpha color filter",
       "Filter/Effect/Video",
-      "RGBA to AYUV colorspace conversion preserving the alpha channel",
+      "ARGB from/to AYUV colorspace conversion preserving the alpha channel",
       "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
@@ -92,7 +93,7 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_ip);
 
   GST_DEBUG_CATEGORY_INIT (alpha_color_debug, "alphacolor", 0,
-      "RGB->YUV colorspace conversion preserving the alpha channels");
+      "ARGB<->AYUV colorspace conversion preserving the alpha channels");
 }
 
 static void
@@ -111,17 +112,12 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
   GstCaps *result = NULL, *local_caps = NULL;
   guint i;
 
-  local_caps = gst_caps_copy (caps);
+  local_caps = gst_caps_new_empty ();
 
-  for (i = 0; i < gst_caps_get_size (local_caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (local_caps, i);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure =
+        gst_structure_copy (gst_caps_get_structure (caps, i));
 
-    /* Throw away the structure name and set it to transformed format */
-    if (direction == GST_PAD_SINK) {
-      gst_structure_set_name (structure, "video/x-raw-yuv");
-    } else if (direction == GST_PAD_SRC) {
-      gst_structure_set_name (structure, "video/x-raw-rgb");
-    }
     /* Remove any specific parameter from the structure */
     gst_structure_remove_field (structure, "format");
     gst_structure_remove_field (structure, "endianness");
@@ -131,6 +127,11 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     gst_structure_remove_field (structure, "green_mask");
     gst_structure_remove_field (structure, "blue_mask");
     gst_structure_remove_field (structure, "alpha_mask");
+
+    gst_structure_set_name (structure, "video/x-raw-yuv");
+    gst_caps_append_structure (local_caps, gst_structure_copy (structure));
+    gst_structure_set_name (structure, "video/x-raw-rgb");
+    gst_caps_append_structure (local_caps, structure);
   }
 
   /* Get the appropriate template */
@@ -159,25 +160,30 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
   gboolean ret;
   gint w, h;
-  GstVideoFormat format;
+  gint w2, h2;
+  GstVideoFormat in_format, out_format;
 
-  ret = gst_video_format_parse_caps (outcaps, &format, &w, &h);
+  ret = gst_video_format_parse_caps (incaps, &in_format, &w, &h);
+  ret &= gst_video_format_parse_caps (outcaps, &out_format, &w2, &h2);
 
-  if (!ret || (format != GST_VIDEO_FORMAT_ARGB
-          && format != GST_VIDEO_FORMAT_BGRA)) {
-    GST_DEBUG_OBJECT (alpha, "incomplete or non-RGBA input caps!");
+  if (!ret || w != w2 || h != h2) {
+    GST_DEBUG_OBJECT (alpha, "incomplete or invalid caps!");
     return FALSE;
   }
 
-  alpha->format = format;
+  alpha->in_format = in_format;
+  alpha->out_format = out_format;
   alpha->width = w;
   alpha->height = h;
+
+  if (in_format == out_format)
+    gst_base_transform_set_passthrough (btrans, TRUE);
 
   return TRUE;
 }
 
 static void
-transform_rgb (guint8 * data, gint size)
+transform_argb_ayuv (guint8 * data, gint size)
 {
   guint8 y, u, v;
 
@@ -197,7 +203,7 @@ transform_rgb (guint8 * data, gint size)
 }
 
 static void
-transform_bgr (guint8 * data, gint size)
+transform_bgra_ayuv (guint8 * data, gint size)
 {
   guint8 y, u, v;
 
@@ -216,17 +222,137 @@ transform_bgr (guint8 * data, gint size)
   }
 }
 
+static void
+transform_argb_bgra (guint8 * data, gint size)
+{
+  guint8 a, r, g;
+
+  while (size > 0) {
+    a = data[0];
+    r = data[1];
+    g = data[2];
+
+    data[0] = data[3];
+    data[1] = g;
+    data[2] = r;
+    data[3] = a;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+static void
+transform_ayuv_argb (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[1] + (0.419 / 0.299) * (data[3] - 128);
+    g = data[1] + (-0.114 / 0.331) * (data[2] - 128) +
+        (-0.299 / 0.419) * (data[3] - 128);
+    b = data[1] + (0.587 / 0.331) * (data[2] - 128);
+
+    data[0] = data[0];
+    data[1] = r;
+    data[2] = g;
+    data[3] = b;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+static void
+transform_ayuv_bgra (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[1] + (0.419 / 0.299) * (data[3] - 128);
+    g = data[1] + (-0.114 / 0.331) * (data[2] - 128) +
+        (-0.299 / 0.419) * (data[3] - 128);
+    b = data[1] + (0.587 / 0.331) * (data[2] - 128);
+
+    data[3] = data[0];
+    data[2] = r;
+    data[1] = g;
+    data[0] = b;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
 static GstFlowReturn
 gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
 
+  if (G_UNLIKELY (GST_BUFFER_SIZE (inbuf) != 4 * alpha->width * alpha->height)) {
+    GST_ERROR_OBJECT (alpha, "Invalid buffer size (was %u, expected %u)",
+        GST_BUFFER_SIZE (inbuf), alpha->width * alpha->height);
+    return GST_FLOW_ERROR;
+  }
+
   /* Transform in place */
-  if (alpha->format == GST_VIDEO_FORMAT_ARGB)
-    transform_rgb (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
-  else
-    transform_bgr (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
+  switch (alpha->in_format) {
+    case GST_VIDEO_FORMAT_ARGB:
+      switch (alpha->out_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          transform_argb_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_AYUV:
+          transform_argb_ayuv (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      switch (alpha->out_format) {
+        case GST_VIDEO_FORMAT_BGRA:
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          transform_argb_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_AYUV:
+          transform_bgra_ayuv (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      switch (alpha->out_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          transform_ayuv_argb (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          transform_ayuv_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   return ret;
 }
@@ -241,5 +367,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "alphacolor",
-    "RGBA to AYUV colorspace conversion preserving the alpha channel",
+    "RGBA from/to AYUV colorspace conversion preserving the alpha channel",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -43,7 +43,7 @@ struct _GstAlphaColor
 
   /*< private >*/
   /* caps */
-  GstVideoFormat format;
+  GstVideoFormat in_format, out_format;
   gint width, height;
 };
 
