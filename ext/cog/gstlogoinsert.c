@@ -69,7 +69,6 @@ struct _GstLogoinsertClass
 
 };
 
-
 /* GstLogoinsert signals and args */
 enum
 {
