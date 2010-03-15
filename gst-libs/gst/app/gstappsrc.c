@@ -1639,7 +1639,7 @@ gst_app_src_uri_get_type (void)
 static gchar **
 gst_app_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "appsrc", NULL };
+  static gchar *protocols[] = { (char *) "appsrc", NULL };
 
   return protocols;
 }

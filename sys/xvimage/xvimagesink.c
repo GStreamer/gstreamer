@@ -1766,7 +1766,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   gint nb_formats = 0, i, j, N_attr;
   XvAttribute *xv_attr;
   Atom prop_atom;
-  char *channels[4] = { "XV_HUE", "XV_SATURATION",
+  const char *channels[4] = { "XV_HUE", "XV_SATURATION",
     "XV_BRIGHTNESS", "XV_CONTRAST"
   };
 

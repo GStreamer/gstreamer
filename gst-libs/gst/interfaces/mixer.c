@@ -514,7 +514,7 @@ gst_mixer_volume_changed (GstMixer * mixer,
  */
 void
 gst_mixer_option_changed (GstMixer * mixer,
-    GstMixerOptions * opts, gchar * value)
+    GstMixerOptions * opts, const gchar * value)
 {
   GstStructure *s;
   GstMessage *m;

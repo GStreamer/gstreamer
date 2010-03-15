@@ -166,7 +166,7 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
          * sami files.
          * It will fix hex color value that start without '#'
          */
-        gchar *sharp = "";
+        const gchar *sharp = "";
         int len = xmlStrlen (value);
 
         if (!(*value == '#' && len == 7)) {

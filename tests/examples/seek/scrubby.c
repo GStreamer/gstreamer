@@ -50,7 +50,7 @@ typedef struct
 dyn_link;
 
 static GstElement *
-gst_element_factory_make_or_warn (gchar * type, gchar * name)
+gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
 {
   GstElement *element = gst_element_factory_make (type, name);
 
@@ -423,7 +423,7 @@ bus_message (GstBus * bus, GstMessage * message, gpointer data)
 
 typedef struct
 {
-  gchar *name;
+  const gchar *name;
   GstElement *(*func) (const gchar * location);
 }
 Pipeline;

@@ -179,7 +179,7 @@ static gboolean
 gst_v4l_class_probe_devices (GstV4lElementClass * klass, gboolean check)
 {
   if (!check) {
-    gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
+    const gchar *dev_base[] = { "/dev/video", "/dev/v4l/video", NULL };
     gint base, n, fd;
 
     while (devices) {

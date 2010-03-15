@@ -528,7 +528,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
       }
     }
   } else if (strcmp (media_type, "video/x-raw-yuv") == 0) {
-    char *s;
+    const char *s;
     int fourcc;
     guint32 format;
 
@@ -600,7 +600,7 @@ paintrect_find_fourcc (int find_fourcc)
   int i;
 
   for (i = 0; i < n_fourccs; i++) {
-    char *s;
+    const char *s;
     int fourcc;
 
     s = fourcc_list[i].fourcc;

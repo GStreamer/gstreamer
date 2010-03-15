@@ -475,7 +475,7 @@ gst_red_video_src_uri_get_type (void)
 static gchar **
 gst_red_video_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "redvideo", NULL };
+  static gchar *protocols[] = { (char *) "redvideo", NULL };
 
   return protocols;
 }
@@ -584,7 +584,7 @@ gst_codec_src_uri_get_type (void)
 static gchar **
 gst_codec_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "codec", NULL };
+  static gchar *protocols[] = { (char *) "codec", NULL };
 
   return protocols;
 }

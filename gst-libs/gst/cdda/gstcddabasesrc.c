@@ -922,7 +922,7 @@ gst_cdda_base_src_uri_get_type (void)
 static gchar **
 gst_cdda_base_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "cdda", NULL };
+  static gchar *protocols[] = { (char *) "cdda", NULL };
 
   return protocols;
 }

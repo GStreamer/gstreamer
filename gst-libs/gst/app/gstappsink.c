@@ -1345,7 +1345,7 @@ gst_app_sink_uri_get_type (void)
 static gchar **
 gst_app_sink_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "appsink", NULL };
+  static gchar *protocols[] = { (char *) "appsink", NULL };
 
   return protocols;
 }

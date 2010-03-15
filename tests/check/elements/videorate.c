@@ -79,7 +79,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void
-assert_videorate_stats (GstElement * videorate, gchar * reason,
+assert_videorate_stats (GstElement * videorate, const gchar * reason,
     guint64 xin, guint64 xout, guint64 xdropped, guint64 xduplicated)
 {
   guint64 in, out, dropped, duplicated;

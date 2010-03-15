@@ -52,8 +52,8 @@ struct paintinfo_struct
 
 struct fourcc_list_struct
 {
-  char *fourcc;
-  char *name;
+  const char *fourcc;
+  const char *name;
   int bitspp;
   void (*paint_setup) (paintinfo * p, unsigned char *dest);
 };

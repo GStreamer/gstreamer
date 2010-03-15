@@ -291,7 +291,7 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
 
   /* check for and use byte-order-mark for UTF-16/32 cases */
   if (size >= 2) {
-    gchar *c = NULL;
+    const gchar *c = NULL;
     gint prefix, ssize;
 
     if (size >= 4) {

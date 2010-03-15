@@ -549,8 +549,9 @@ GST_START_TEST (test_pb_utils_install_plugins)
 {
   GstInstallPluginsContext *ctx;
   GstInstallPluginsReturn ret;
-  gchar *details[] = { "detail1", "detail2", NULL };
-  gchar *details_multi[] = { "detail1", "detail1", "detail2", NULL };
+  gchar *details[] = { (char *) "detail1", (char *) "detail2", NULL };
+  gchar *details_multi[] =
+      { (char *) "detail1", (char *) "detail1", (char *) "detail2", NULL };
 
   ctx = gst_install_plugins_context_new ();
 

@@ -433,7 +433,7 @@ theora_enc_get_supported_formats (void)
   struct
   {
     th_pixel_fmt pixelformat;
-    char *fourcc;
+    const char *fourcc;
   } formats[] = {
     {
     TH_PF_420, "I420"}, {

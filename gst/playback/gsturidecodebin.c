@@ -1382,7 +1382,7 @@ make_decoder (GstURIDecodeBin * decoder)
     }
   }
 
-  g_object_set_data (G_OBJECT (decodebin), "pending", "1");
+  g_object_set_data (G_OBJECT (decodebin), "pending", GINT_TO_POINTER (1));
   g_object_set (decodebin, "subtitle-encoding", decoder->encoding, NULL);
   decoder->pending++;
   GST_LOG_OBJECT (decoder, "have %d pending dynamic objects", decoder->pending);
@@ -1702,7 +1702,8 @@ setup_source (GstURIDecodeBin * decoder)
     decoder->src_nmp_sig_id =
         g_signal_connect (decoder->source, "no-more-pads",
         G_CALLBACK (source_no_more_pads), decoder);
-    g_object_set_data (G_OBJECT (decoder->source), "pending", "1");
+    g_object_set_data (G_OBJECT (decoder->source), "pending",
+        GINT_TO_POINTER (1));
     decoder->pending++;
   } else {
     if (decoder->is_stream) {

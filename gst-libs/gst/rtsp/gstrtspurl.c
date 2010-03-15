@@ -329,10 +329,10 @@ gchar *
 gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
 {
   gchar *uri;
-  gchar *pre_host;
-  gchar *post_host;
-  gchar *pre_query;
-  gchar *query;
+  const gchar *pre_host;
+  const gchar *post_host;
+  const gchar *pre_query;
+  const gchar *query;
 
   g_return_val_if_fail (url != NULL, NULL);
 

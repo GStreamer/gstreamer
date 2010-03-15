@@ -208,7 +208,7 @@ static struct rtsp_header rtsp_headers[] = {
 };
 
 #define DEF_STATUS(c, t) \
-  g_hash_table_insert (statuses, GUINT_TO_POINTER(c), t)
+  g_hash_table_insert (statuses, GUINT_TO_POINTER(c), (gpointer) t)
 
 static GHashTable *
 rtsp_init_status (void)

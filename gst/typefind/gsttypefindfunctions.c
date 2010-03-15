@@ -3504,7 +3504,7 @@ G_BEGIN_DECLS{                                                          \
   sw_data->probability = _probability;                                  \
   sw_data->caps = gst_caps_new_simple (name, NULL);                     \
   if (!gst_type_find_register (plugin, name, rank, start_with_type_find,\
-                      ext, sw_data->caps, sw_data,                      \
+                      (char **) ext, sw_data->caps, sw_data,            \
                      (GDestroyNotify) (sw_data_destroy))) {             \
     gst_caps_unref (sw_data->caps);                                     \
     g_free (sw_data);                                                   \
@@ -3534,7 +3534,7 @@ G_BEGIN_DECLS{                                                          \
   sw_data->probability = GST_TYPE_FIND_MAXIMUM;                         \
   sw_data->caps = gst_caps_new_simple (name, NULL);                     \
   if (!gst_type_find_register (plugin, name, rank, riff_type_find,      \
-                      ext, sw_data->caps, sw_data,                      \
+                      (char **) ext, sw_data->caps, sw_data,            \
                       (GDestroyNotify) (sw_data_destroy))) {            \
     gst_caps_unref (sw_data->caps);                                     \
     g_free (sw_data);                                                   \
@@ -3546,7 +3546,7 @@ G_BEGIN_DECLS{                                                          \
 
 #define TYPE_FIND_REGISTER(plugin,name,rank,func,ext,caps,priv,notify) \
 G_BEGIN_DECLS{\
-  if (!gst_type_find_register (plugin, name, rank, func, ext, caps, priv, notify))\
+  if (!gst_type_find_register (plugin, name, rank, func, (char **) ext, caps, priv, notify))\
     return FALSE; \
 }G_END_DECLS
 
@@ -3561,107 +3561,107 @@ plugin_init (GstPlugin * plugin)
      this requires gstreamer/gst/gsttypefind::gst_type_find_register()
      to have define the parameter as const
    */
-  static gchar *asf_exts[] = { "asf", "wm", "wma", "wmv", NULL };
-  static gchar *au_exts[] = { "au", "snd", NULL };
-  static gchar *avi_exts[] = { "avi", NULL };
-  static gchar *qcp_exts[] = { "qcp", NULL };
-  static gchar *cdxa_exts[] = { "dat", NULL };
-  static gchar *flac_exts[] = { "flac", NULL };
-  static gchar *flx_exts[] = { "flc", "fli", NULL };
-  static gchar *id3_exts[] =
+  static const gchar *asf_exts[] = { "asf", "wm", "wma", "wmv", NULL };
+  static const gchar *au_exts[] = { "au", "snd", NULL };
+  static const gchar *avi_exts[] = { "avi", NULL };
+  static const gchar *qcp_exts[] = { "qcp", NULL };
+  static const gchar *cdxa_exts[] = { "dat", NULL };
+  static const gchar *flac_exts[] = { "flac", NULL };
+  static const gchar *flx_exts[] = { "flc", "fli", NULL };
+  static const gchar *id3_exts[] =
       { "mp3", "mp2", "mp1", "mpga", "ogg", "flac", "tta", NULL };
-  static gchar *apetag_exts[] = { "ape", "mpc", "wv", NULL };   /* and mp3 and wav? */
-  static gchar *tta_exts[] = { "tta", NULL };
-  static gchar *mod_exts[] = { "669", "amf", "dsm", "gdm", "far", "imf",
+  static const gchar *apetag_exts[] = { "ape", "mpc", "wv", NULL };     /* and mp3 and wav? */
+  static const gchar *tta_exts[] = { "tta", NULL };
+  static const gchar *mod_exts[] = { "669", "amf", "dsm", "gdm", "far", "imf",
     "it", "med", "mod", "mtm", "okt", "sam",
     "s3m", "stm", "stx", "ult", "xm", NULL
   };
-  static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
-  static gchar *ac3_exts[] = { "ac3", NULL };
-  static gchar *gsm_exts[] = { "gsm", NULL };
-  static gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
-  static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
-  static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
-  static gchar *mpeg_ts_exts[] = { "ts", NULL };
-  static gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
-  static gchar *qt_exts[] = { "mov", NULL };
-  static gchar *qtif_exts[] = { "qif", "qtif", "qti", NULL };
-  static gchar *mj2_exts[] = { "mj2", NULL };
-  static gchar *jp2_exts[] = { "jp2", NULL };
-  static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
-  static gchar *swf_exts[] = { "swf", "swfl", NULL };
-  static gchar *utf8_exts[] = { "txt", NULL };
-  static gchar *wav_exts[] = { "wav", NULL };
-  static gchar *aiff_exts[] = { "aiff", "aif", "aifc", NULL };
-  static gchar *svx_exts[] = { "iff", "svx", NULL };
-  static gchar *paris_exts[] = { "paf", NULL };
-  static gchar *nist_exts[] = { "nist", NULL };
-  static gchar *voc_exts[] = { "voc", NULL };
-  static gchar *sds_exts[] = { "sds", NULL };
-  static gchar *ircam_exts[] = { "sf", NULL };
-  static gchar *w64_exts[] = { "w64", NULL };
-  static gchar *shn_exts[] = { "shn", NULL };
-  static gchar *ape_exts[] = { "ape", NULL };
-  static gchar *uri_exts[] = { "ram", NULL };
-  static gchar *sdp_exts[] = { "sdp", NULL };
-  static gchar *smil_exts[] = { "smil", NULL };
-  static gchar *html_exts[] = { "htm", "html", NULL };
-  static gchar *xml_exts[] = { "xml", NULL };
-  static gchar *jpeg_exts[] = { "jpg", "jpe", "jpeg", NULL };
-  static gchar *gif_exts[] = { "gif", NULL };
-  static gchar *png_exts[] = { "png", NULL };
-  static gchar *bmp_exts[] = { "bmp", NULL };
-  static gchar *tiff_exts[] = { "tif", "tiff", NULL };
-  static gchar *matroska_exts[] = { "mkv", "mka", NULL };
-  static gchar *mve_exts[] = { "mve", NULL };
-  static gchar *dv_exts[] = { "dv", "dif", NULL };
-  static gchar *amr_exts[] = { "amr", NULL };
-  static gchar *ilbc_exts[] = { "ilbc", NULL };
-  static gchar *sid_exts[] = { "sid", NULL };
-  static gchar *xcf_exts[] = { "xcf", NULL };
-  static gchar *mng_exts[] = { "mng", NULL };
-  static gchar *jng_exts[] = { "jng", NULL };
-  static gchar *xpm_exts[] = { "xpm", NULL };
-  static gchar *pnm_exts[] = { "pnm", "ppm", "pgm", "pbm", NULL };
-  static gchar *ras_exts[] = { "ras", NULL };
-  static gchar *bz2_exts[] = { "bz2", NULL };
-  static gchar *gz_exts[] = { "gz", NULL };
-  static gchar *zip_exts[] = { "zip", NULL };
-  static gchar *compress_exts[] = { "Z", NULL };
-  static gchar *m4a_exts[] = { "m4a", NULL };
-  static gchar *q3gp_exts[] = { "3gp", NULL };
-  static gchar *aac_exts[] = { "aac", NULL };
-  static gchar *spc_exts[] = { "spc", NULL };
-  static gchar *wavpack_exts[] = { "wv", "wvp", NULL };
-  static gchar *wavpack_correction_exts[] = { "wvc", NULL };
-  static gchar *rar_exts[] = { "rar", NULL };
-  static gchar *tar_exts[] = { "tar", NULL };
-  static gchar *ar_exts[] = { "a", NULL };
-  static gchar *msdos_exts[] = { "dll", "exe", "ocx", "sys", "scr",
+  static const gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
+  static const gchar *ac3_exts[] = { "ac3", NULL };
+  static const gchar *gsm_exts[] = { "gsm", NULL };
+  static const gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
+  static const gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
+  static const gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
+  static const gchar *mpeg_ts_exts[] = { "ts", NULL };
+  static const gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
+  static const gchar *qt_exts[] = { "mov", NULL };
+  static const gchar *qtif_exts[] = { "qif", "qtif", "qti", NULL };
+  static const gchar *mj2_exts[] = { "mj2", NULL };
+  static const gchar *jp2_exts[] = { "jp2", NULL };
+  static const gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
+  static const gchar *swf_exts[] = { "swf", "swfl", NULL };
+  static const gchar *utf8_exts[] = { "txt", NULL };
+  static const gchar *wav_exts[] = { "wav", NULL };
+  static const gchar *aiff_exts[] = { "aiff", "aif", "aifc", NULL };
+  static const gchar *svx_exts[] = { "iff", "svx", NULL };
+  static const gchar *paris_exts[] = { "paf", NULL };
+  static const gchar *nist_exts[] = { "nist", NULL };
+  static const gchar *voc_exts[] = { "voc", NULL };
+  static const gchar *sds_exts[] = { "sds", NULL };
+  static const gchar *ircam_exts[] = { "sf", NULL };
+  static const gchar *w64_exts[] = { "w64", NULL };
+  static const gchar *shn_exts[] = { "shn", NULL };
+  static const gchar *ape_exts[] = { "ape", NULL };
+  static const gchar *uri_exts[] = { "ram", NULL };
+  static const gchar *sdp_exts[] = { "sdp", NULL };
+  static const gchar *smil_exts[] = { "smil", NULL };
+  static const gchar *html_exts[] = { "htm", "html", NULL };
+  static const gchar *xml_exts[] = { "xml", NULL };
+  static const gchar *jpeg_exts[] = { "jpg", "jpe", "jpeg", NULL };
+  static const gchar *gif_exts[] = { "gif", NULL };
+  static const gchar *png_exts[] = { "png", NULL };
+  static const gchar *bmp_exts[] = { "bmp", NULL };
+  static const gchar *tiff_exts[] = { "tif", "tiff", NULL };
+  static const gchar *matroska_exts[] = { "mkv", "mka", NULL };
+  static const gchar *mve_exts[] = { "mve", NULL };
+  static const gchar *dv_exts[] = { "dv", "dif", NULL };
+  static const gchar *amr_exts[] = { "amr", NULL };
+  static const gchar *ilbc_exts[] = { "ilbc", NULL };
+  static const gchar *sid_exts[] = { "sid", NULL };
+  static const gchar *xcf_exts[] = { "xcf", NULL };
+  static const gchar *mng_exts[] = { "mng", NULL };
+  static const gchar *jng_exts[] = { "jng", NULL };
+  static const gchar *xpm_exts[] = { "xpm", NULL };
+  static const gchar *pnm_exts[] = { "pnm", "ppm", "pgm", "pbm", NULL };
+  static const gchar *ras_exts[] = { "ras", NULL };
+  static const gchar *bz2_exts[] = { "bz2", NULL };
+  static const gchar *gz_exts[] = { "gz", NULL };
+  static const gchar *zip_exts[] = { "zip", NULL };
+  static const gchar *compress_exts[] = { "Z", NULL };
+  static const gchar *m4a_exts[] = { "m4a", NULL };
+  static const gchar *q3gp_exts[] = { "3gp", NULL };
+  static const gchar *aac_exts[] = { "aac", NULL };
+  static const gchar *spc_exts[] = { "spc", NULL };
+  static const gchar *wavpack_exts[] = { "wv", "wvp", NULL };
+  static const gchar *wavpack_correction_exts[] = { "wvc", NULL };
+  static const gchar *rar_exts[] = { "rar", NULL };
+  static const gchar *tar_exts[] = { "tar", NULL };
+  static const gchar *ar_exts[] = { "a", NULL };
+  static const gchar *msdos_exts[] = { "dll", "exe", "ocx", "sys", "scr",
     "msstyles", "cpl", NULL
   };
-  static gchar *flv_exts[] = { "flv", NULL };
-  static gchar *m4v_exts[] = { "m4v", NULL };
-  static gchar *h264_exts[] = { "h264", "x264", "264", NULL };
-  static gchar *nuv_exts[] = { "nuv", NULL };
-  static gchar *vivo_exts[] = { "viv", NULL };
-  static gchar *nsf_exts[] = { "nsf", NULL };
-  static gchar *gym_exts[] = { "gym", NULL };
-  static gchar *ay_exts[] = { "ay", NULL };
-  static gchar *gbs_exts[] = { "gbs", NULL };
-  static gchar *kss_exts[] = { "kss", NULL };
-  static gchar *sap_exts[] = { "sap", NULL };
-  static gchar *vgm_exts[] = { "vgm", NULL };
-  static gchar *mid_exts[] = { "mid", "midi", NULL };
-  static gchar *mxmf_exts[] = { "mxmf", NULL };
-  static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
-  static gchar *pdf_exts[] = { "pdf", NULL };
-  static gchar *ps_exts[] = { "ps", NULL };
-  static gchar *svg_exts[] = { "svg", NULL };
-  static gchar *mxf_exts[] = { "mxf", NULL };
-  static gchar *msword_exts[] = { "doc", NULL };
-  static gchar *dsstore_exts[] = { "DS_Store", NULL };
-  static gchar *psd_exts[] = { "psd", NULL };
+  static const gchar *flv_exts[] = { "flv", NULL };
+  static const gchar *m4v_exts[] = { "m4v", NULL };
+  static const gchar *h264_exts[] = { "h264", "x264", "264", NULL };
+  static const gchar *nuv_exts[] = { "nuv", NULL };
+  static const gchar *vivo_exts[] = { "viv", NULL };
+  static const gchar *nsf_exts[] = { "nsf", NULL };
+  static const gchar *gym_exts[] = { "gym", NULL };
+  static const gchar *ay_exts[] = { "ay", NULL };
+  static const gchar *gbs_exts[] = { "gbs", NULL };
+  static const gchar *kss_exts[] = { "kss", NULL };
+  static const gchar *sap_exts[] = { "sap", NULL };
+  static const gchar *vgm_exts[] = { "vgm", NULL };
+  static const gchar *mid_exts[] = { "mid", "midi", NULL };
+  static const gchar *mxmf_exts[] = { "mxmf", NULL };
+  static const gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
+  static const gchar *pdf_exts[] = { "pdf", NULL };
+  static const gchar *ps_exts[] = { "ps", NULL };
+  static const gchar *svg_exts[] = { "svg", NULL };
+  static const gchar *mxf_exts[] = { "mxf", NULL };
+  static const gchar *msword_exts[] = { "doc", NULL };
+  static const gchar *dsstore_exts[] = { "DS_Store", NULL };
+  static const gchar *psd_exts[] = { "psd", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");

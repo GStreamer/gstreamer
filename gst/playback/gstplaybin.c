@@ -837,7 +837,7 @@ gen_video_element (GstPlayBin * play_bin)
       goto no_sinks;
   }
   gst_object_ref (sink);
-  g_hash_table_insert (play_bin->cache, "video_sink", sink);
+  g_hash_table_insert (play_bin->cache, (gpointer) "video_sink", sink);
 
   /* create a bin to hold objects, as we create them we add them to this bin so
    * that when something goes wrong we only need to unref the bin */
@@ -875,7 +875,7 @@ gen_video_element (GstPlayBin * play_bin)
   /* since we're gonna add it to a bin but don't want to lose it,
    * we keep a reference. */
   gst_object_ref (element);
-  g_hash_table_insert (play_bin->cache, "vbin", element);
+  g_hash_table_insert (play_bin->cache, (gpointer) "vbin", element);
 
   return element;
 
@@ -1106,7 +1106,7 @@ gen_audio_element (GstPlayBin * play_bin)
   }
 
   gst_object_ref (sink);
-  g_hash_table_insert (play_bin->cache, "audio_sink", sink);
+  g_hash_table_insert (play_bin->cache, (gpointer) "audio_sink", sink);
 
   element = gst_bin_new ("abin");
   gst_bin_add (GST_BIN_CAST (element), sink);
@@ -1143,7 +1143,7 @@ gen_audio_element (GstPlayBin * play_bin)
   /* since we're gonna add it to a bin but don't want to lose it,
    * we keep a reference. */
   gst_object_ref (element);
-  g_hash_table_insert (play_bin->cache, "abin", element);
+  g_hash_table_insert (play_bin->cache, (gpointer) "abin", element);
 
   return element;
 

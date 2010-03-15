@@ -119,7 +119,7 @@ cleanup_audioconvert (GstElement * audioconvert)
 
 /* returns a newly allocated caps */
 static GstCaps *
-get_int_caps (guint channels, gchar * endianness, guint width,
+get_int_caps (guint channels, const gchar * endianness, guint width,
     guint depth, gboolean signedness)
 {
   GstCaps *caps;
@@ -143,7 +143,7 @@ get_int_caps (guint channels, gchar * endianness, guint width,
 
 /* returns a newly allocated caps */
 static GstCaps *
-get_float_caps (guint channels, gchar * endianness, guint width)
+get_float_caps (guint channels, const gchar * endianness, guint width)
 {
   GstCaps *caps;
   gchar *string;
@@ -395,7 +395,7 @@ set_channel_positions (GstCaps * caps, int channels,
  * ones. Only implemented for channels between 1 and 6.
  */
 static GstCaps *
-get_float_mc_caps (guint channels, gchar * endianness, guint width,
+get_float_mc_caps (guint channels, const gchar * endianness, guint width,
     gboolean mixed_up_layout)
 {
   GstCaps *caps = get_float_caps (channels, endianness, width);
@@ -411,7 +411,7 @@ get_float_mc_caps (guint channels, gchar * endianness, guint width,
 }
 
 static GstCaps *
-get_int_mc_caps (guint channels, gchar * endianness, guint width,
+get_int_mc_caps (guint channels, const gchar * endianness, guint width,
     guint depth, gboolean signedness, gboolean mixed_up_layout)
 {
   GstCaps *caps = get_int_caps (channels, endianness, width, depth, signedness);

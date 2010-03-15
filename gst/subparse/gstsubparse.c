@@ -410,7 +410,7 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (subparse);
 }
 
-static gchar *
+static const gchar *
 gst_sub_parse_get_format_description (GstSubParseFormat format)
 {
   switch (format) {
@@ -446,9 +446,10 @@ gst_convert_to_utf8 (const gchar * str, gsize len, const gchar * encoding,
   gchar *ret = NULL;
 
   *consumed = 0;
+  /* The char cast is necessary in glib < 2.24 */
   ret =
-      g_convert_with_fallback (str, len, "UTF-8", encoding, "*", consumed, NULL,
-      err);
+      g_convert_with_fallback (str, len, "UTF-8", encoding, (char *) "*",
+      consumed, NULL, err);
   if (ret == NULL)
     return ret;
 
@@ -1858,14 +1859,13 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", "smi", "txt",
-    "dks", NULL
-  };
+  static const gchar *sub_exts[] =
+      { "srt", "sub", "mpsub", "mdvd", "smi", "txt", "dks", NULL };
 
   GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
 
   if (!gst_type_find_register (plugin, "subparse_typefind", GST_RANK_MARGINAL,
-          gst_subparse_type_find, sub_exts, SUB_CAPS, NULL, NULL))
+          gst_subparse_type_find, (gchar **) sub_exts, SUB_CAPS, NULL, NULL))
     return FALSE;
 
   if (!gst_element_register (plugin, "subparse",

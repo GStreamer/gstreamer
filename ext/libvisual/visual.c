@@ -683,10 +683,11 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
       visual_audio_samplepool_input_channel (visual->audio->samplepool,
           lbuf,
-          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16, VISUAL_AUDIO_CHANNEL_LEFT);
-      visual_audio_samplepool_input_channel (visual->audio->samplepool,
-          rbuf,
-          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16, VISUAL_AUDIO_CHANNEL_RIGHT);
+          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+          (char *) VISUAL_AUDIO_CHANNEL_LEFT);
+      visual_audio_samplepool_input_channel (visual->audio->samplepool, rbuf,
+          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16,
+          (char *) VISUAL_AUDIO_CHANNEL_RIGHT);
 
       visual_object_unref (VISUAL_OBJECT (lbuf));
       visual_object_unref (VISUAL_OBJECT (rbuf));

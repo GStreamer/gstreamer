@@ -113,7 +113,7 @@ main (int argc, char **argv)
   g_option_context_free (ctx);
 
   if (!bin)
-    bin = "playbin";
+    bin = g_strdup ("playbin");
 
   if (strcmp (bin, "playbin") && strcmp (bin, "playbin2")) {
     g_print ("Please provide a valid playbin argument; playbin | playbin2");
@@ -150,6 +150,7 @@ main (int argc, char **argv)
   }
 
   g_strfreev (args);
+  g_free (bin);
   g_timer_destroy (timer);
 
   return 0;

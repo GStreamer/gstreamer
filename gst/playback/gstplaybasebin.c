@@ -537,7 +537,7 @@ check_queue_event (GstPad * pad, GstEvent * event, gpointer user_data)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       GST_DEBUG ("EOS event, mark EOS");
-      g_object_set_data (G_OBJECT (queue), "eos", "1");
+      g_object_set_data (G_OBJECT (queue), "eos", GINT_TO_POINTER (1));
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG ("FLUSH_STOP event, remove EOS");
@@ -656,7 +656,6 @@ static void
 queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 {
   GstPlayBaseGroup *group;
-  gpointer data;
   gint n;
 
   GST_DEBUG_OBJECT (play_base_bin, "running signal received from queue %s",
@@ -666,8 +665,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
   g_signal_handlers_disconnect_by_func (queue,
       (gpointer) queue_threshold_reached, play_base_bin);
 
-  data = g_object_get_data (G_OBJECT (queue), "eos");
-  if (data) {
+  if (g_object_get_data (G_OBJECT (queue), "eos")) {
     GST_DEBUG_OBJECT (play_base_bin, "disable min threshold time, we are EOS");
     g_object_set (queue, "min-threshold-time", (guint64) 0, NULL);
   } else {
@@ -2008,7 +2006,7 @@ make_decoder (GstPlayBaseBin * play_base_bin)
       G_CALLBACK (no_more_pads), play_base_bin);
   g_signal_connect (G_OBJECT (decoder),
       "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
-  g_object_set_data (G_OBJECT (decoder), "pending", "1");
+  g_object_set_data (G_OBJECT (decoder), "pending", GINT_TO_POINTER (1));
   play_base_bin->pending++;
 
   GST_DEBUG_OBJECT (play_base_bin, "created decodebin, %d pending",
@@ -2119,7 +2117,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (sub_no_more_pads), play_base_bin);
     g_signal_connect (G_OBJECT (db), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
-    g_object_set_data (G_OBJECT (db), "pending", "1");
+    g_object_set_data (G_OBJECT (db), "pending", GINT_TO_POINTER (1));
     play_base_bin->pending++;
 
     GST_DEBUG_OBJECT (play_base_bin, "we have subtitles, %d pending",
@@ -2209,7 +2207,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
     play_base_bin->src_nmp_sig_id =
         g_signal_connect (G_OBJECT (play_base_bin->source), "no-more-pads",
         G_CALLBACK (source_no_more_pads), play_base_bin);
-    g_object_set_data (G_OBJECT (play_base_bin->source), "pending", "1");
+    g_object_set_data (G_OBJECT (play_base_bin->source), "pending",
+        GINT_TO_POINTER (1));
     play_base_bin->pending++;
     GST_DEBUG_OBJECT (play_base_bin,
         "Source has dynamic output pads, %d pending", play_base_bin->pending);

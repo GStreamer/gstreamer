@@ -106,7 +106,7 @@ done:
 
 GST_START_TEST (test_element_negotiation)
 {
-  gchar *s;
+  const gchar *s;
 
   /* Ensures that filtering buffers with unknown caps down to fixed-caps 
    * will apply those caps to the buffers.

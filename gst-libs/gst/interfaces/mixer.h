@@ -197,7 +197,7 @@ void            gst_mixer_volume_changed (GstMixer      *mixer,
                                           gint          *volumes);
 void            gst_mixer_option_changed (GstMixer      *mixer,
                                           GstMixerOptions *opts,
-                                          gchar         *value);
+                                          const gchar   *value);
 
 void            gst_mixer_mixer_changed   (GstMixer        *mixer);
 

@@ -2221,7 +2221,7 @@ static void
 selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
     GstPlayBin * playbin)
 {
-  gchar *property;
+  const gchar *property;
   GstSourceGroup *group;
   GstSourceSelect *select = NULL;
   int i;
