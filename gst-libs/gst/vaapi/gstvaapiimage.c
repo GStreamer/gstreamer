@@ -322,8 +322,8 @@ gst_vaapi_image_get_height(GstVaapiImage *image)
 void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
+    g_return_if_fail(image->priv->is_constructed);
 
     if (pwidth)
         *pwidth = image->priv->width;
