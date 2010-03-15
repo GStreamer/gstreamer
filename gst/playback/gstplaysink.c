@@ -2105,8 +2105,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       } else {
         /* we have a chain and a textpad, turn the subtitles off */
         GST_DEBUG_OBJECT (playsink, "turning off the text");
-        g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", TRUE,
-            NULL);
+        if (playsink->textchain->overlay)
+          g_object_set (G_OBJECT (playsink->textchain->overlay), "silent", TRUE,
+              NULL);
       }
     }
     if (!need_video && playsink->video_pad)
