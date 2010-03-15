@@ -301,14 +301,8 @@ gst_flv_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   if (ret && gst_structure_has_field (s, "codec_data")) {
     const GValue *val = gst_structure_get_value (s, "codec_data");
 
-    if (val) {
+    if (val)
       cpad->video_codec_data = gst_buffer_ref (gst_value_get_buffer (val));
-      cpad->sent_codec_data = FALSE;
-    } else {
-      cpad->sent_codec_data = TRUE;
-    }
-  } else {
-    cpad->sent_codec_data = TRUE;
   }
 
   gst_object_unref (mux);
@@ -455,14 +449,8 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   if (ret && gst_structure_has_field (s, "codec_data")) {
     const GValue *val = gst_structure_get_value (s, "codec_data");
 
-    if (val) {
+    if (val)
       cpad->audio_codec_data = gst_buffer_ref (gst_value_get_buffer (val));
-      cpad->sent_codec_data = FALSE;
-    } else {
-      cpad->sent_codec_data = TRUE;
-    }
-  } else {
-    cpad->sent_codec_data = TRUE;
   }
 
   gst_object_unref (mux);
@@ -524,8 +512,6 @@ gst_flv_mux_request_new_pad (GstElement * element,
 
   cpad->video_codec = G_MAXUINT;
   cpad->video_codec_data = NULL;
-
-  cpad->sent_codec_data = FALSE;
 
   cpad->last_timestamp = 0;
 

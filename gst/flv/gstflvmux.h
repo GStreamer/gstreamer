@@ -52,7 +52,6 @@ typedef struct
   guint video_codec;
   GstBuffer *video_codec_data;
 
-  gboolean sent_codec_data;
   GstClockTime last_timestamp;
 } GstFlvPad;
 
