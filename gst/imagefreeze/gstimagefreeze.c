@@ -540,6 +540,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
       GstSeekType start_type, stop_type;
       gint64 start, stop;
       gint64 last_stop;
+      gboolean start_task;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
@@ -601,6 +602,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
       self->need_segment = TRUE;
       last_stop = self->segment.last_stop;
 
+      start_task = self->buffer != NULL;
       GST_OBJECT_UNLOCK (self);
 
       if ((flags & GST_SEEK_FLAG_FLUSH)) {
@@ -622,8 +624,9 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (pad, "Seek successful");
 
-      gst_pad_start_task (self->srcpad,
-          (GstTaskFunction) gst_image_freeze_src_loop, self->srcpad);
+      if (start_task)
+        gst_pad_start_task (self->srcpad,
+            (GstTaskFunction) gst_image_freeze_src_loop, self->srcpad);
       ret = TRUE;
       break;
     }
