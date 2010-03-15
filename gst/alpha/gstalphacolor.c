@@ -43,6 +43,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
         GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
@@ -50,6 +51,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
         GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
@@ -224,28 +226,142 @@ transform_ayuv_##name (guint8 * data, gint size) \
   } \
 }
 
-DEFINE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
+DEFINE_ARGB_AYUV_FUNCTIONS (rgba, 1, 2, 3, 0);
 DEFINE_ARGB_AYUV_FUNCTIONS (bgra, 3, 2, 1, 0);
+DEFINE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
+DEFINE_ARGB_AYUV_FUNCTIONS (abgr, 0, 3, 2, 1);
 
 static void
 transform_argb_bgra (guint8 * data, gint size)
 {
-  guint8 a, r, g;
+  guint8 r, g, b;
 
   while (size > 0) {
-    a = data[0];
     r = data[1];
     g = data[2];
+    b = data[3];
 
-    data[0] = data[3];
+    data[3] = data[0];
+    data[0] = b;
     data[1] = g;
     data[2] = r;
-    data[3] = a;
 
     data += 4;
     size -= 4;
   }
 }
+
+#define transform_abgr_rgba transform_argb_bgra
+
+static void
+transform_argb_abgr (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[1];
+    g = data[2];
+    b = data[3];
+
+    /* data[0] = data[0]; */
+    data[1] = b;
+    data[2] = g;
+    data[3] = r;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+#define transform_abgr_argb transform_argb_abgr
+
+static void
+transform_rgba_bgra (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[0];
+    g = data[1];
+    b = data[2];
+
+    /* data[3] = data[3] */ ;
+    data[0] = b;
+    data[1] = g;
+    data[2] = r;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+#define transform_bgra_rgba transform_rgba_bgra
+
+static void
+transform_argb_rgba (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[1];
+    g = data[2];
+    b = data[3];
+
+    data[3] = data[0];
+    data[0] = r;
+    data[1] = g;
+    data[2] = b;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+#define transform_abgr_bgra transform_argb_rgba
+
+static void
+transform_bgra_argb (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[2];
+    g = data[1];
+    b = data[0];
+
+    data[0] = data[3];
+    data[1] = r;
+    data[2] = g;
+    data[3] = b;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+#define transform_rgba_abgr transform_bgra_argb
+
+static void
+transform_rgba_argb (guint8 * data, gint size)
+{
+  guint8 r, g, b;
+
+  while (size > 0) {
+    r = data[0];
+    g = data[1];
+    b = data[2];
+
+    data[0] = data[3];
+    data[1] = r;
+    data[2] = g;
+    data[3] = b;
+
+    data += 4;
+    size -= 4;
+  }
+}
+
+#define transform_bgra_abgr transform_rgba_argb
 
 static GstFlowReturn
 gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
@@ -269,6 +385,14 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
           transform_argb_bgra (GST_BUFFER_DATA (inbuf),
               GST_BUFFER_SIZE (inbuf));
           break;
+        case GST_VIDEO_FORMAT_ABGR:
+          transform_argb_abgr (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          transform_argb_rgba (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
         case GST_VIDEO_FORMAT_AYUV:
           transform_argb_ayuv (GST_BUFFER_DATA (inbuf),
               GST_BUFFER_SIZE (inbuf));
@@ -283,11 +407,69 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
         case GST_VIDEO_FORMAT_BGRA:
           break;
         case GST_VIDEO_FORMAT_ARGB:
-          transform_argb_bgra (GST_BUFFER_DATA (inbuf),
+          transform_bgra_argb (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          transform_bgra_abgr (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          transform_bgra_rgba (GST_BUFFER_DATA (inbuf),
               GST_BUFFER_SIZE (inbuf));
           break;
         case GST_VIDEO_FORMAT_AYUV:
           transform_bgra_ayuv (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      switch (alpha->out_format) {
+        case GST_VIDEO_FORMAT_ABGR:
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          transform_abgr_rgba (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          transform_abgr_argb (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          transform_abgr_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_AYUV:
+          transform_abgr_ayuv (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      switch (alpha->out_format) {
+        case GST_VIDEO_FORMAT_RGBA:
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          transform_rgba_argb (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          transform_rgba_abgr (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          transform_rgba_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_AYUV:
+          transform_rgba_ayuv (GST_BUFFER_DATA (inbuf),
               GST_BUFFER_SIZE (inbuf));
           break;
         default:
@@ -305,6 +487,14 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
           break;
         case GST_VIDEO_FORMAT_BGRA:
           transform_ayuv_bgra (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          transform_ayuv_abgr (GST_BUFFER_DATA (inbuf),
+              GST_BUFFER_SIZE (inbuf));
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          transform_ayuv_rgba (GST_BUFFER_DATA (inbuf),
               GST_BUFFER_SIZE (inbuf));
           break;
         default:
