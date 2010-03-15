@@ -473,7 +473,7 @@ gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
  * This method is needed for non fullscreen video overlay in UI toolkits that do
  * not support subwindows.
  *
- * Return: %FALSE if not supported by the sink.
+ * Returns: %FALSE if not supported by the sink.
  *
  * Since: 0.10.29
  */

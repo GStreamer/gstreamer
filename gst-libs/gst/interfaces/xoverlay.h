@@ -56,6 +56,7 @@ typedef struct _GstXOverlayClass GstXOverlayClass;
  * @set_xwindow_id: virtual method to configure the XWindow id
  * @expose: virtual method to handle expose events
  * @handle_events: virtual method to handle events
+ * @set_render_rectangle: virtual method to set the render rectange (since 0.10.29)
  *
  * #GstXOverlay interface
  */

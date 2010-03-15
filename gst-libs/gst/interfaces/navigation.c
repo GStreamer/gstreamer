@@ -752,6 +752,9 @@ gst_navigation_event_parse_key_event (GstEvent * event, const gchar ** key)
  * a mouse button release event. Determine which type the event is using
  * gst_navigation_event_get_type() to retrieve the #GstNavigationEventType.
  *
+ * Returns: TRUE if the button number and both coordinates could be extracted,
+ *     otherwise FALSE.
+ *
  * Since: 0.10.23
  */
 gboolean
@@ -788,6 +791,8 @@ gst_navigation_event_parse_mouse_button_event (GstEvent * event, gint * button,
  * Inspect a #GstNavigation mouse movement event and extract the coordinates
  * of the event.
  *
+ * Returns: TRUE if both coordinates could be extracted, otherwise FALSE.
+ *
  * Since: 0.10.23
  */
 gboolean
@@ -819,6 +824,8 @@ gst_navigation_event_parse_mouse_move_event (GstEvent * event, gdouble * x,
  *
  * Inspect a #GstNavigation command event and retrieve the enum value of the
  * associated command.
+ *
+ * Returns: TRUE if the navigation command could be extracted, otherwise FALSE.
  *
  * Since: 0.10.23
  */
