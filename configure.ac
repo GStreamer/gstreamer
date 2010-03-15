@@ -281,6 +281,10 @@ dnl check for pthreads
 AC_CHECK_HEADERS([pthread.h], HAVE_PTHREAD_H=yes)
 AM_CONDITIONAL(HAVE_PTHREAD_H, test "x$HAVE_PTHREAD_H" = "xyes")
 
+dnl check for sys/prctl
+AC_CHECK_HEADERS([sys/prctl.h], HAVE_SYS_PRCTL_H=yes)
+AM_CONDITIONAL(HAVE_SYS_PRTCL_H, test "x$HAVE_SYS_PRCTL_H" = "xyes")
+
 dnl Check for valgrind.h
 dnl separate from HAVE_VALGRIND because you can have the program, but not
 dnl the dev package
