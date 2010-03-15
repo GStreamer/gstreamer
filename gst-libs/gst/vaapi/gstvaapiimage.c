@@ -447,6 +447,7 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     guint i, j;
     guchar *data;
     guint32 data_size;
+    gboolean swap_YUV;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
@@ -461,7 +462,11 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
         return FALSE;
 
     format = gst_vaapi_image_format_from_caps(caps);
-    if (format != priv->format)
+    swap_YUV = ((format == GST_VAAPI_IMAGE_I420 &&
+                 priv->format == GST_VAAPI_IMAGE_YV12) ||
+                (format == GST_VAAPI_IMAGE_YV12 &&
+                 priv->format == GST_VAAPI_IMAGE_I420));
+    if (format != priv->format && !swap_YUV)
         return FALSE;
 
     structure = gst_caps_get_structure(caps, 0);
@@ -473,7 +478,7 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     if (!gst_vaapi_image_map(image))
         return FALSE;
 
-    if (data_size == priv->image.data_size)
+    if (format == priv->format && data_size == priv->image.data_size)
         memcpy(priv->image_data, data, data_size);
     else {
         /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
@@ -525,6 +530,20 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
         }
         if (size2 != data_size)
             g_error("data_size mismatch %d / %u", size2, data_size);
+        if (swap_YUV) {
+            guint offset = offsets[1];
+            guint stride = pitches[1];
+            guint width  = widths [1];
+            guint height = heights[1];
+            offsets[1]   = offsets[2];
+            pitches[1]   = pitches[2];
+            widths [1]   = widths [2];
+            heights[1]   = heights[2];
+            offsets[2]   = offset;
+            pitches[2]   = stride;
+            widths [2]   = width;
+            heights[2]   = height;
+        }
         for (i = 0; i < priv->image.num_planes; i++) {
             guchar *src = data + offsets[i];
             guchar *dst = priv->image_data + priv->image.offsets[i];
