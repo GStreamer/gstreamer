@@ -755,7 +755,7 @@ AG_GST_CHECK_FEATURE(LIBDV, [libdv DV demuxer/decoder], dv, [
 dnl *** libpng ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
 AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
-  AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng12)
+  AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng >= 1.2)
 ])
 
 dnl *** pulseaudio ***
