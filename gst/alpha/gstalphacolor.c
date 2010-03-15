@@ -157,39 +157,21 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
-  GstStructure *structure;
   gboolean ret;
-  const GValue *fps;
-  gint red_mask, alpha_mask;
-  gint w, h, depth, bpp;
+  gint w, h;
+  GstVideoFormat format;
 
-  structure = gst_caps_get_structure (incaps, 0);
+  ret = gst_video_format_parse_caps (outcaps, &format, &w, &h);
 
-  ret = gst_structure_get_int (structure, "width", &w);
-  ret &= gst_structure_get_int (structure, "height", &h);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
-  ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
-
-  /* make sure these are really full RGBA caps */
-  ret &= gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
-  ret &= gst_structure_get_int (structure, "depth", &depth);
-  ret &= gst_structure_get_int (structure, "bpp", &bpp);
-
-  if (!ret || alpha_mask == 0 || red_mask == 0 || depth != 32 || bpp != 32) {
+  if (!ret || (format != GST_VIDEO_FORMAT_ARGB
+          && format != GST_VIDEO_FORMAT_BGRA)) {
     GST_DEBUG_OBJECT (alpha, "incomplete or non-RGBA input caps!");
     return FALSE;
   }
 
-  alpha->in_width = w;
-  alpha->in_height = h;
-  alpha->in_rgba = TRUE;
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-  if (red_mask != 0x000000ff)
-#else
-  if (red_mask != 0xff000000)
-#endif
-    alpha->in_rgba = FALSE;
+  alpha->format = format;
+  alpha->width = w;
+  alpha->height = h;
 
   return TRUE;
 }
@@ -241,7 +223,7 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
 
   /* Transform in place */
-  if (alpha->in_rgba)
+  if (alpha->format == GST_VIDEO_FORMAT_ARGB)
     transform_rgb (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
   else
     transform_bgr (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));

@@ -43,9 +43,8 @@ struct _GstAlphaColor
 
   /*< private >*/
   /* caps */
-  gint in_width, in_height;
-  gboolean in_rgba;
-  gint out_width, out_height;
+  GstVideoFormat format;
+  gint width, height;
 };
 
 struct _GstAlphaColorClass
