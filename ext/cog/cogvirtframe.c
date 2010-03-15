@@ -1617,10 +1617,27 @@ convert_444_420_mpeg2 (CogFrame * frame, void *_dest, int component, int i)
     src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
         CLAMP (i * 2 + 1, 0, n_src - 1));
 
+#if 0
     cogorc_downsample_420_mpeg2 (dest + 1,
         (uint16_t *) src1, (uint16_t *) (src1 + 2),
         (uint16_t *) src2, (uint16_t *) (src2 + 2),
         frame->components[component].width - 1);
+#else
+    {
+      int j;
+      int x;
+
+      for (j = 1; j < frame->components[component].width - 1; j++) {
+        x = 1 * src1[j * 2 - 1];
+        x += 2 * src1[j * 2 + 0];
+        x += 1 * src1[j * 2 + 1];
+        x += 1 * src2[j * 2 - 1];
+        x += 2 * src2[j * 2 + 0];
+        x += 1 * src2[j * 2 + 1];
+        dest[j] = CLAMP ((x + 4) >> 3, 0, 255);
+      }
+    }
+#endif
     {
       int j;
       int x;
