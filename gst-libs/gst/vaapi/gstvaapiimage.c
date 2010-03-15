@@ -273,8 +273,8 @@ gst_vaapi_image_new(
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
 
-    GST_DEBUG("size %ux%u, format %" GST_FOURCC_FORMAT,
-              width, height, GST_FOURCC_ARGS(format));
+    GST_DEBUG("format %" GST_FOURCC_FORMAT ", size %ux%u",
+              GST_FOURCC_ARGS(format), width, height);
 
     return g_object_new(GST_VAAPI_TYPE_IMAGE,
                         "display", display,
