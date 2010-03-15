@@ -25,6 +25,24 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstAudioChannelPosition:
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_MONO: front mono
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT: front left
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT: front right
+ * @GST_AUDIO_CHANNEL_POSITION_REAR_CENTER: rear center
+ * @GST_AUDIO_CHANNEL_POSITION_REAR_LEFT: rear left
+ * @GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT: rear right
+ * @GST_AUDIO_CHANNEL_POSITION_LFE: subwoofer
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER: front center
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER: front left of center
+ * @GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER: front right of center
+ * @GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT: side left
+ * @GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT: side right
+ * @GST_AUDIO_CHANNEL_POSITION_NONE: used for position-less channels, e.g.
+ *     from a sound card that records 1024 channels; mutually exclusive with
+ *     any other channel position
+ */
 typedef enum {
   GST_AUDIO_CHANNEL_POSITION_INVALID = -1,
 

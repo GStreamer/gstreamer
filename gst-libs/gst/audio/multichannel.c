@@ -44,7 +44,7 @@
  *   </para></listitem>
  *   <listitem><para>Either all or none of the channel positions are %GST_AUDIO_CHANNEL_POSITION_NONE.
  *   </para></listitem>
- *   <listitem><para>%GST_AUDIO_CHANNEL_POSITION_FRONT_MONO and %GST_AUDIO_CHANNEL_POSITION_LEFT or %GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT don't appear together in the given positions.
+ *   <listitem><para>%GST_AUDIO_CHANNEL_POSITION_FRONT_MONO and %GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT or %GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT don't appear together in the given positions.
  *   </para></listitem>
  * </itemizedlist>
  *

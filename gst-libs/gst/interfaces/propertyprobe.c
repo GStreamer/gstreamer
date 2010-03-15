@@ -165,7 +165,7 @@ gst_property_probe_get_property (GstPropertyProbe * probe, const gchar * name)
  * @probe: the #GstPropertyProbe to check.
  * @pspec: #GParamSpec of the property.
  *
- * Runs a probe on the property specified by %pspec
+ * Runs a probe on the property specified by @pspec
  */
 void
 gst_property_probe_probe_property (GstPropertyProbe * probe,
@@ -188,7 +188,7 @@ gst_property_probe_probe_property (GstPropertyProbe * probe,
  * @probe: the #GstPropertyProbe to check.
  * @name: name of the property.
  *
- * Runs a probe on the property specified by %name.
+ * Runs a probe on the property specified by @name.
  */
 void
 gst_property_probe_probe_property_name (GstPropertyProbe * probe,

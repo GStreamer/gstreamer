@@ -178,8 +178,8 @@ gst_rtp_buffer_new_copy_data (gpointer data, guint len)
  * @pad_len: the amount of padding
  * @csrc_count: the number of CSRC entries
  *
- * Allocate a new #Gstbuffer with enough data to hold an RTP packet with @csrc_count CSRCs,
- * a payload length of @payload_len and padding of @pad_len.
+ * Allocate a new #GstBuffer with enough data to hold an RTP packet with
+ * @csrc_count CSRCs, a payload length of @payload_len and padding of @pad_len.
  * All other RTP header fields will be set to 0/FALSE.
  *
  * Returns: A newly allocated buffer that can hold an RTP packet with given

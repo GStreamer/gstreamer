@@ -152,6 +152,12 @@ gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
 /* functions useful for _getcaps functions */
 /**
  * GstAudioFieldFlag:
+ * @GST_AUDIO_FIELD_RATE: add rate field to caps
+ * @GST_AUDIO_FIELD_CHANNELS: add channels field to caps
+ * @GST_AUDIO_FIELD_ENDIANNESS: add endianness field to caps
+ * @GST_AUDIO_FIELD_WIDTH: add width field to caps
+ * @GST_AUDIO_FIELD_DEPTH: add depth field to caps
+ * @GST_AUDIO_FIELD_SIGNED: add signed field to caps
  *
  * Do not use anymore.
  *

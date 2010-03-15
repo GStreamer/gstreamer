@@ -1362,6 +1362,7 @@ gst_rtp_buffer_list_set_timestamp
 <FILE>gstrtspdefs</FILE>
 <INCLUDE>gst/rtsp/gstrtspdefs.h</INCLUDE>
 GST_RTSP_CHECK
+GstRTSPEvent
 GstRTSPResult
 GstRTSPFamily
 GstRTSPState
@@ -1386,6 +1387,7 @@ gst_rtsp_find_method
 <INCLUDE>gst/rtsp/gstrtsptransport.h</INCLUDE>
 GstRTSPTransMode
 GstRTSPProfile
+GstRTSPRange
 GstRTSPLowerTrans
 GstRTSPTransport
 gst_rtsp_transport_new

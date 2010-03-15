@@ -94,7 +94,7 @@ typedef enum {
 } GstRTSPLowerTrans;
 
 /**
- * RTSPRange:
+ * GstRTSPRange:
  * @min: minimum value of the range
  * @max: maximum value of the range
  *

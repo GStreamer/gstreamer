@@ -338,7 +338,7 @@ gst_tuner_get_norm (GstTuner * tuner)
 
 /**
  * gst_tuner_set_frequency:
- * @tuner: The #Gsttuner (a #GstElement) that owns the given channel.
+ * @tuner: The #GstTuner (a #GstElement) that owns the given channel.
  * @channel: The #GstTunerChannel to set the frequency on.
  * @frequency: The frequency to tune in to.
  *

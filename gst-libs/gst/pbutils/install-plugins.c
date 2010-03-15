@@ -88,7 +88,7 @@
  * </para>
  * <para>
  * The application will then call gst_install_plugins_async(), passing a
- * #NULL-terminated array of installer detail strings, and a function that
+ * NULL-terminated array of installer detail strings, and a function that
  * should be called when the installation of the plugins has finished
  * (successfully or not). Optionally, a #GstInstallPluginsContext created
  * with gst_install_plugins_context_new() may be passed as well. This way
