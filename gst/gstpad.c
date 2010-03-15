@@ -5144,6 +5144,20 @@ do_stream_status (GstPad * pad, GstStreamStatusType type,
       GstMessage *message;
       GValue value = { 0 };
 
+      if (type == GST_STREAM_STATUS_TYPE_ENTER) {
+        gchar *tname, *ename, *pname;
+
+        /* create a good task name */
+        ename = gst_element_get_name (parent);
+        pname = gst_pad_get_name (pad);
+        tname = g_strdup_printf ("%s:%s", ename, pname);
+        g_free (ename);
+        g_free (pname);
+
+        gst_object_set_name (GST_OBJECT_CAST (task), tname);
+        g_free (tname);
+      }
+
       message = gst_message_new_stream_status (GST_OBJECT_CAST (pad),
           type, parent);
 
