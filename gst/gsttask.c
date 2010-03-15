@@ -60,7 +60,12 @@
  * application. The application can receive messages from the #GstBus in its
  * mainloop.
  *
- * Last reviewed on 2006-02-13 (0.10.4)
+ * For debugging perposes, the task will configure its object name as the thread
+ * name on Linux. Please note that the object name should be configured before the
+ * task is started; changing the object name after the task has been started, has
+ * no effect on the thread name.
+ *
+ * Last reviewed on 2010-03-15 (0.10.29)
  */
 
 #include "gst_private.h"
