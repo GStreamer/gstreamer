@@ -682,19 +682,19 @@ paint_get_structure (struct fourcc_list_struct * format)
       g_value_init (&value_list, GST_TYPE_LIST);
 
       g_value_init (&value, G_TYPE_STRING);
-      g_value_set_string (&value, "sdtv");
+      g_value_set_static_string (&value, "sdtv");
       gst_value_list_append_value (&value_list, &value);
 
-      g_value_set_string (&value, "hdtv");
+      g_value_set_static_string (&value, "hdtv");
       gst_value_list_append_value (&value_list, &value);
 
       gst_structure_set_value (structure, "color-matrix", &value_list);
       g_value_reset (&value_list);
 
-      g_value_set_string (&value, "mpeg2");
+      g_value_set_static_string (&value, "mpeg2");
       gst_value_list_append_value (&value_list, &value);
 
-      g_value_set_string (&value, "jpeg");
+      g_value_set_static_string (&value, "jpeg");
       gst_value_list_append_value (&value_list, &value);
 
       gst_structure_set_value (structure, "chroma-site", &value_list);
