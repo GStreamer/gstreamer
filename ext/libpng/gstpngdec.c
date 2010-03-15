@@ -189,7 +189,7 @@ user_info_callback (png_structp png_ptr, png_infop info)
   size_t buffer_size;
   GstBuffer *buffer = NULL;
 
-  pngdec = GST_PNGDEC (png_ptr->io_ptr);
+  pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
 
   GST_LOG ("info ready");
 
@@ -228,7 +228,7 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
 {
   GstPngDec *pngdec = NULL;
 
-  pngdec = GST_PNGDEC (png_ptr->io_ptr);
+  pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
 
   /* FIXME: implement interlaced pictures */
 
@@ -275,7 +275,7 @@ user_end_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
 
-  pngdec = GST_PNGDEC (png_ptr->io_ptr);
+  pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
 
   GST_LOG_OBJECT (pngdec, "and we are done reading this image");
 
@@ -310,7 +310,7 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   GstFlowReturn ret = GST_FLOW_OK;
   guint size;
 
-  pngdec = GST_PNGDEC (png_ptr->io_ptr);
+  pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
 
   GST_LOG ("reading %" G_GSIZE_FORMAT " bytes of data at offset %d", length,
       pngdec->offset);
