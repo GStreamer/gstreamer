@@ -613,7 +613,7 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
   GstPlugin *newplugin;
   GList *chunks = NULL;
 
-  GST_DEBUG ("Plugin scanner loading file %s. tag %u\n", filename, tag);
+  GST_DEBUG ("Plugin scanner loading file %s. tag %u", filename, tag);
 
 #if 0                           /* Test code - crash based on filename */
   if (strstr (filename, "coreelements") == NULL) {
