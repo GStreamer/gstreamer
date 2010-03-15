@@ -633,9 +633,9 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_POLARITY:
       if (object->pol == DVB_POL_H)
-        g_value_set_string (value, "H");
+        g_value_set_static_string (value, "H");
       else
-        g_value_set_string (value, "V");
+        g_value_set_static_string (value, "V");
       break;
     case ARG_DVBSRC_SYM_RATE:
       g_value_set_int (value, object->sym_rate);
