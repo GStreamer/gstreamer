@@ -2477,8 +2477,8 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
   }
   /* STM */
   if ((data = gst_type_find_peek (tf, 20, 8)) != NULL) {
-    if (strncasecmp ((gchar *) data, "!Scream!", 8) == 0 ||
-        strncasecmp ((gchar *) data, "BMOD2STM", 8) == 0) {
+    if (g_ascii_strncasecmp ((gchar *) data, "!Scream!", 8) == 0 ||
+        g_ascii_strncasecmp ((gchar *) data, "BMOD2STM", 8) == 0) {
       guint8 *id, *stmtype;
 
       if ((id = gst_type_find_peek (tf, 28, 1)) == NULL)
