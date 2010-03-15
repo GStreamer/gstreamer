@@ -867,8 +867,8 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 }
 
 static GstBuffer *
-gst_flv_mux_buffer_to_tag_internal (GstBuffer * buffer, GstFlvPad * cpad,
-    gboolean is_codec_data)
+gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
+    GstFlvPad * cpad, gboolean is_codec_data)
 {
   GstBuffer *tag;
   guint8 *data;
@@ -951,6 +951,12 @@ gst_flv_mux_buffer_to_tag_internal (GstBuffer * buffer, GstFlvPad * cpad,
   GST_WRITE_UINT32_BE (data + size - 4, size - 4);
 
   gst_buffer_copy_metadata (tag, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  /* mark the buffer if it's an audio buffer and there's also video being muxed
+   * or it's a video interframe */
+  if ((mux->have_video && !cpad->video) ||
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+    GST_BUFFER_FLAG_SET (tag, GST_BUFFER_FLAG_DELTA_UNIT);
+
   GST_BUFFER_OFFSET (tag) = GST_BUFFER_OFFSET_END (tag) =
       GST_BUFFER_OFFSET_NONE;
 
@@ -958,15 +964,17 @@ gst_flv_mux_buffer_to_tag_internal (GstBuffer * buffer, GstFlvPad * cpad,
 }
 
 static inline GstBuffer *
-gst_flv_mux_buffer_to_tag (GstBuffer * buffer, GstFlvPad * cpad)
+gst_flv_mux_buffer_to_tag (GstFlvMux * mux, GstBuffer * buffer,
+    GstFlvPad * cpad)
 {
-  return gst_flv_mux_buffer_to_tag_internal (buffer, cpad, FALSE);
+  return gst_flv_mux_buffer_to_tag_internal (mux, buffer, cpad, FALSE);
 }
 
 static inline GstBuffer *
-gst_flv_mux_codec_data_buffer_to_tag (GstBuffer * buffer, GstFlvPad * cpad)
+gst_flv_mux_codec_data_buffer_to_tag (GstFlvMux * mux, GstBuffer * buffer,
+    GstFlvPad * cpad)
 {
-  return gst_flv_mux_buffer_to_tag_internal (buffer, cpad, TRUE);
+  return gst_flv_mux_buffer_to_tag_internal (mux, buffer, cpad, TRUE);
 }
 
 static void
@@ -1010,24 +1018,31 @@ gst_flv_mux_write_header (GstFlvMux * mux)
             "output might not be playable");
       else
         video_codec_data =
-            gst_flv_mux_codec_data_buffer_to_tag (cpad->video_codec_data, cpad);
+            gst_flv_mux_codec_data_buffer_to_tag (mux, cpad->video_codec_data,
+            cpad);
     } else if (cpad && !cpad->video && cpad->audio_codec == 10) {
       if (cpad->audio_codec_data == NULL)
         GST_WARNING_OBJECT (mux, "Codec data for audio stream not found, "
             "output might not be playable");
       else
         audio_codec_data =
-            gst_flv_mux_codec_data_buffer_to_tag (cpad->audio_codec_data, cpad);
+            gst_flv_mux_codec_data_buffer_to_tag (mux, cpad->audio_codec_data,
+            cpad);
     }
   }
 
   /* mark buffers that will go in the streamheader */
   GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_IN_CAPS);
   GST_BUFFER_FLAG_SET (metadata, GST_BUFFER_FLAG_IN_CAPS);
-  if (video_codec_data != NULL)
+  if (video_codec_data != NULL) {
     GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_IN_CAPS);
-  if (audio_codec_data != NULL)
+    /* mark as a delta unit, so downstream will not try to synchronize on that
+     * buffer - to actually start playback you need a real video keyframe */
+    GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+  if (audio_codec_data != NULL) {
     GST_BUFFER_FLAG_SET (audio_codec_data, GST_BUFFER_FLAG_IN_CAPS);
+  }
 
   /* put buffers in streamheader */
   g_value_init (&streamheader, GST_TYPE_ARRAY);
@@ -1103,7 +1118,7 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
   if (!mux->is_live)
     gst_flv_mux_update_index (mux, buffer, cpad);
 
-  tag = gst_flv_mux_buffer_to_tag (buffer, cpad);
+  tag = gst_flv_mux_buffer_to_tag (mux, buffer, cpad);
 
   gst_buffer_unref (buffer);
 
