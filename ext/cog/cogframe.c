@@ -864,7 +864,8 @@ cog_frame_convert (CogFrame * dest, CogFrame * src)
   }
 
   if ((dest_format & 3) != (frame->format & 3)) {
-    frame = cog_virt_frame_new_subsample (frame, dest_format, 2);
+    frame = cog_virt_frame_new_subsample (frame, dest_format,
+        COG_CHROMA_SITE_MPEG2, 2);
     GST_DEBUG ("subsample %p", frame);
   }
 

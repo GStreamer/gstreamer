@@ -32,6 +32,69 @@ shrsw t4, t4, 2
 convsuswb d1, t4
 
 
+.function cogorc_downsample_420_jpeg
+.dest 1 d1
+.source 2 s1
+.source 2 s2
+.temp 2 t1
+.temp 1 t2
+.temp 1 t3
+.temp 1 t4
+.temp 1 t5
+
+copyw t1, s1
+select0wb t2, t1
+select1wb t3, t1
+avgub t2, t2, t3
+copyw t1, s2
+select0wb t4, t1
+select1wb t5, t1
+avgub t4, t4, t5
+avgub d1, t2, t4
+
+
+.function cogorc_downsample_420_mpeg2
+.dest 1 d1
+.source 2 s1
+.source 2 s2
+.source 2 s3
+.source 2 s4
+.temp 1 t1
+.temp 1 t2
+.temp 1 t3
+.temp 2 t4
+.temp 2 t5
+.temp 2 t6
+.temp 2 t7
+
+copyw t4, s1
+select0wb t1, t4
+select1wb t2, t4
+select0wb t3, s2
+convubw t4, t1
+convubw t5, t2
+convubw t6, t3
+mullw t5, t5, 2
+addw t4, t4, t6
+addw t7, t4, t5
+copyw t4, s3
+
+select0wb t1, t4
+select1wb t2, t4
+select0wb t3, s4
+convubw t4, t1
+convubw t5, t2
+convubw t6, t3
+mullw t5, t5, 2
+addw t4, t4, t6
+addw t4, t4, t5
+
+addw t7, t7, t4
+addw t7, t7, 4
+shrsw t7, t7, 3
+convsuswb d1, t7
+
+
 .function cogorc_downsample_vert_halfsite_2tap
 .dest 1 d1
 .source 1 s1

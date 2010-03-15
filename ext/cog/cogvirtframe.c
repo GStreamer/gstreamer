@@ -1524,6 +1524,9 @@ cog_virt_frame_new_color_matrix_YCbCr_to_YCbCr (CogFrame * vf,
 {
   CogFrame *virt_frame;
 
+  if (in_color_matrix == out_color_matrix)
+    return vf;
+
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
@@ -1593,7 +1596,131 @@ convert_422_420 (CogFrame * frame, void *_dest, int component, int i)
   }
 }
 
+static void
+convert_444_420_mpeg2 (CogFrame * frame, void *_dest, int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src;
+
+  if (component == 0) {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
+    orc_memcpy (dest, src, frame->components[component].width);
+  } else {
+    uint8_t *dest = _dest;
+    uint8_t *src1;
+    uint8_t *src2;
+    int n_src;
+
+    n_src = frame->virt_frame1->components[component].height;
+    src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (i * 2 + 0, 0, n_src - 1));
+    src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (i * 2 + 1, 0, n_src - 1));
+
+    cogorc_downsample_420_mpeg2 (dest + 1,
+        (uint16_t *) src1, (uint16_t *) (src1 + 2),
+        (uint16_t *) src2, (uint16_t *) (src2 + 2),
+        frame->components[component].width - 1);
+    {
+      int j;
+      int x;
+
+      j = 0;
+      x = 1 * src1[CLAMP (j * 2 - 1, 0, n_src - 1)];
+      x += 2 * src1[CLAMP (j * 2 + 0, 0, n_src - 1)];
+      x += 1 * src1[CLAMP (j * 2 + 1, 0, n_src - 1)];
+      x += 1 * src2[CLAMP (j * 2 - 1, 0, n_src - 1)];
+      x += 2 * src2[CLAMP (j * 2 + 0, 0, n_src - 1)];
+      x += 1 * src2[CLAMP (j * 2 + 1, 0, n_src - 1)];
+      dest[j] = CLAMP ((x + 4) >> 3, 0, 255);
+    }
+  }
+}
+
+static void
+convert_444_420_jpeg (CogFrame * frame, void *_dest, int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src;
+
+  if (component == 0) {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
+    orc_memcpy (dest, src, frame->components[component].width);
+  } else {
+    uint8_t *dest = _dest;
+    uint8_t *src1;
+    uint8_t *src2;
+    int n_src;
+
+    n_src = frame->virt_frame1->components[component].height;
+    src1 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (i * 2 + 0, 0, n_src - 1));
+    src2 = cog_virt_frame_get_line (frame->virt_frame1, component,
+        CLAMP (i * 2 + 1, 0, n_src - 1));
+
+    cogorc_downsample_420_jpeg (dest,
+        (uint16_t *) src1, (uint16_t *) src2,
+        frame->components[component].width);
+  }
+}
+
 /* up */
+
+static void
+convert_420_444_mpeg2 (CogFrame * frame, void *_dest, int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src;
+  int n_taps = frame->param1;
+
+  if (component == 0) {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
+
+    orc_memcpy (dest, src, frame->width);
+  } else {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i / 2);
+
+    switch (n_taps) {
+      default:
+      case 2:
+        cogorc_upsample_horiz_cosite (dest, src, src + 1,
+            frame->components[component].width / 2 - 1);
+        break;
+    }
+    dest[frame->components[component].width - 2] =
+        src[frame->components[component].width / 2 - 1];
+    dest[frame->components[component].width - 1] =
+        src[frame->components[component].width / 2 - 1];
+  }
+}
+
+static void
+convert_420_444_jpeg (CogFrame * frame, void *_dest, int component, int i)
+{
+  uint8_t *dest = _dest;
+  uint8_t *src;
+  int n_taps = frame->param1;
+
+  if (component == 0) {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
+
+    orc_memcpy (dest, src, frame->width);
+  } else {
+    src = cog_virt_frame_get_line (frame->virt_frame1, component, i / 2);
+
+    switch (n_taps) {
+      default:
+      case 1:
+        cogorc_upsample_horiz_cosite_1tap (dest, src,
+            frame->components[component].width / 2 - 1);
+        break;
+    }
+    dest[frame->components[component].width - 2] =
+        src[frame->components[component].width / 2 - 1];
+    dest[frame->components[component].width - 1] =
+        src[frame->components[component].width / 2 - 1];
+  }
+}
 
 static void
 convert_422_444 (CogFrame * frame, void *_dest, int component, int i)
@@ -1609,10 +1736,6 @@ convert_422_444 (CogFrame * frame, void *_dest, int component, int i)
   } else {
     switch (n_taps) {
       default:
-      case 1:
-        cogorc_upsample_horiz_cosite_1tap (dest, src,
-            frame->components[component].width / 2 - 1);
-        break;
       case 2:
         cogorc_upsample_horiz_cosite (dest, src, src + 1,
             frame->components[component].width / 2 - 1);
@@ -1661,7 +1784,8 @@ convert_420_422 (CogFrame * frame, void *_dest, int component, int i)
 }
 
 CogFrame *
-cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format, int n_taps)
+cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format,
+    CogChromaSite chroma_site, int n_taps)
 {
   CogFrame *virt_frame;
   CogFrameRenderFunc render_line;
@@ -1674,14 +1798,11 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format, int n_taps)
     render_line = convert_422_420;
   } else if (vf->format == COG_FRAME_FORMAT_U8_444 &&
       format == COG_FRAME_FORMAT_U8_420) {
-    virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_422,
-        vf->width, vf->height);
-    virt_frame->virt_frame1 = vf;
-    virt_frame->render_line = convert_444_422;
-    virt_frame->param1 = n_taps;
-    vf = virt_frame;
-
-    render_line = convert_422_420;
+    if (chroma_site == COG_CHROMA_SITE_MPEG2) {
+      render_line = convert_444_420_mpeg2;
+    } else {
+      render_line = convert_444_420_jpeg;
+    }
   } else if (vf->format == COG_FRAME_FORMAT_U8_444 &&
       format == COG_FRAME_FORMAT_U8_422) {
     render_line = convert_444_422;
@@ -1690,14 +1811,11 @@ cog_virt_frame_new_subsample (CogFrame * vf, CogFrameFormat format, int n_taps)
     render_line = convert_420_422;
   } else if (vf->format == COG_FRAME_FORMAT_U8_420 &&
       format == COG_FRAME_FORMAT_U8_444) {
-    virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_422,
-        vf->width, vf->height);
-    virt_frame->virt_frame1 = vf;
-    virt_frame->render_line = convert_420_422;
-    virt_frame->param1 = n_taps;
-    vf = virt_frame;
-
-    render_line = convert_422_444;
+    if (chroma_site == COG_CHROMA_SITE_MPEG2) {
+      render_line = convert_420_444_mpeg2;
+    } else {
+      render_line = convert_420_444_jpeg;
+    }
   } else if (vf->format == COG_FRAME_FORMAT_U8_422 &&
       format == COG_FRAME_FORMAT_U8_444) {
     render_line = convert_422_444;

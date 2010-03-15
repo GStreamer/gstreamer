@@ -275,6 +275,7 @@ gst_cogcolorspace_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "alpha_mask");
     gst_structure_remove_field (structure, "palette_data");
     gst_structure_remove_field (structure, "color-matrix");
+    gst_structure_remove_field (structure, "chroma-site");
   }
 
   gst_caps_do_simplify (caps);
@@ -365,6 +366,25 @@ gst_cogcolorspace_caps_get_color_matrix (GstCaps * caps)
   return COG_COLOR_MATRIX_SDTV;
 }
 
+static CogChromaSite
+gst_cogcolorspace_caps_get_chroma_site (GstCaps * caps)
+{
+  const char *s;
+
+  s = gst_video_parse_caps_chroma_site (caps);
+
+  if (s == NULL)
+    return COG_COLOR_MATRIX_SDTV;
+
+  if (strcmp (s, "jpeg") == 0) {
+    return COG_CHROMA_SITE_JPEG;
+  } else if (strcmp (s, "mpeg2") == 0) {
+    return COG_CHROMA_SITE_MPEG2;
+  }
+
+  return COG_CHROMA_SITE_MPEG2;
+}
+
 static GstFlowReturn
 gst_cogcolorspace_transform (GstBaseTransform * base_transform,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -379,6 +399,8 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
   gboolean ret;
   CogColorMatrix in_color_matrix;
   CogColorMatrix out_color_matrix;
+  CogChromaSite in_chroma_site;
+  CogChromaSite out_chroma_site;
 
   g_return_val_if_fail (GST_IS_COGCOLORSPACE (base_transform), GST_FLOW_ERROR);
   compress = GST_COGCOLORSPACE (base_transform);
@@ -392,6 +414,9 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
 
   in_color_matrix = gst_cogcolorspace_caps_get_color_matrix (inbuf->caps);
   out_color_matrix = gst_cogcolorspace_caps_get_color_matrix (outbuf->caps);
+
+  in_chroma_site = gst_cogcolorspace_caps_get_chroma_site (inbuf->caps);
+  out_chroma_site = gst_cogcolorspace_caps_get_chroma_site (outbuf->caps);
 
   frame = gst_cog_buffer_wrap (gst_buffer_ref (inbuf),
       in_format, width, height);
@@ -431,22 +456,24 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
       gst_video_format_is_rgb (in_format)) {
     frame = cog_virt_frame_new_color_matrix_RGB_to_YCbCr (frame,
         out_color_matrix, 8);
+    frame = cog_virt_frame_new_subsample (frame, new_subsample,
+        out_chroma_site, (compress->quality >= 3) ? 2 : 1);
   }
 
   if (gst_video_format_is_yuv (out_format) &&
       gst_video_format_is_yuv (in_format) &&
-      in_color_matrix != out_color_matrix) {
+      (in_color_matrix != out_color_matrix ||
+          in_chroma_site != out_chroma_site)) {
     frame = cog_virt_frame_new_subsample (frame, COG_FRAME_FORMAT_U8_444,
-        (compress->quality >= 5) ? 8 : 6);
+        in_chroma_site, (compress->quality >= 5) ? 8 : 6);
     frame = cog_virt_frame_new_color_matrix_YCbCr_to_YCbCr (frame,
         in_color_matrix, out_color_matrix, 8);
   }
 
-  frame = cog_virt_frame_new_subsample (frame, new_subsample,
-      (compress->quality >= 3) ? 2 : 1);
-
   if (gst_video_format_is_rgb (out_format) &&
       gst_video_format_is_yuv (in_format)) {
+    frame = cog_virt_frame_new_subsample (frame, new_subsample,
+        in_chroma_site, (compress->quality >= 3) ? 2 : 1);
     frame = cog_virt_frame_new_color_matrix_YCbCr_to_RGB (frame,
         in_color_matrix, (compress->quality >= 5) ? 8 : 6);
   }

@@ -238,18 +238,22 @@ gst_colorconvert_transform_ip (GstBaseTransform * base_transform,
       li->format, li->width, li->height);
 
   vf = cog_virt_frame_new_unpack (cog_frame_ref (frame));
-  vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_444, 2);
+  vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_444,
+      COG_CHROMA_SITE_MPEG2, 2);
   vf = cog_virt_frame_new_color_transform (vf);
   if (frame->format == COG_FRAME_FORMAT_YUYV) {
-    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_422, 2);
+    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_422,
+        COG_CHROMA_SITE_MPEG2, 2);
     vf = cog_virt_frame_new_pack_YUY2 (vf);
   } else if (frame->format == COG_FRAME_FORMAT_UYVY) {
-    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_422, 2);
+    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_422,
+        COG_CHROMA_SITE_MPEG2, 2);
     vf = cog_virt_frame_new_pack_UYVY (vf);
   } else if (frame->format == COG_FRAME_FORMAT_AYUV) {
     vf = cog_virt_frame_new_pack_AYUV (vf);
   } else if (frame->format == COG_FRAME_FORMAT_U8_420) {
-    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_420, 2);
+    vf = cog_virt_frame_new_subsample (vf, COG_FRAME_FORMAT_U8_420,
+        COG_CHROMA_SITE_MPEG2, 2);
   } else {
     g_assert_not_reached ();
   }

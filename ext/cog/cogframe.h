@@ -19,6 +19,12 @@ typedef enum _CogColorMatrix {
   COG_COLOR_MATRIX_SDTV
 } CogColorMatrix;
 
+typedef enum _CogChromaSite {
+  COG_CHROMA_SITE_UNKNOWN = 0,
+  COG_CHROMA_SITE_MPEG2 = 1,
+  COG_CHROMA_SITE_JPEG
+} CogChromaSite;
+
 /* bit pattern:
  *  0x100 - 0: normal, 1: indirect (packed)
  *  0x001 - horizontal chroma subsampling: 0: 1, 1: 2
