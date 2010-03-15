@@ -29,6 +29,145 @@ static inline void pause(void)
     getchar();
 }
 
+typedef void (*DrawRectFunc)(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+);
+
+static void draw_rect_NV12( // Y, UV planes
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    const guchar Y  = color >> 16;
+    const guchar Cb = color >> 8;
+    const guchar Cr = color;
+    guchar *dst;
+    guint i, j;
+
+    dst = pixels[0] + y * stride[0] + x;
+    for (j = 0; j < height; j++, dst += stride[0])
+        for (i = 0; i < width; i++)
+            dst[i] = Y;
+
+    x      /= 2;
+    y      /= 2;
+    width  /= 2;
+    height /= 2;
+
+    dst = pixels[1] + y * stride[1] + x * 2;
+    for (j = 0; j < height; j++, dst += stride[1])
+        for (i = 0; i < width; i++) {
+            dst[2*i + 0] = Cb;
+            dst[2*i + 1] = Cr;
+        }
+}
+
+static void draw_rect_YV12( // Y, U, V planes
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    const guchar Y  = color >> 16;
+    const guchar Cb = color >> 8;
+    const guchar Cr = color;
+    guchar *pY, *pU, *pV;
+    guint i, j;
+
+    pY = pixels[0] + y * stride[0] + x;
+    for (j = 0; j < height; j++, pY += stride[0])
+        for (i = 0; i < width; i++)
+            pY[i] = Y;
+
+    x      /= 2;
+    y      /= 2;
+    width  /= 2;
+    height /= 2;
+
+    pU = pixels[1] + y * stride[1] + x;
+    pV = pixels[2] + y * stride[2] + x;
+    for (j = 0; j < height; j++, pU += stride[1], pV += stride[2])
+        for (i = 0; i < width; i++) {
+            pU[i] = Cb;
+            pV[i] = Cr;
+        }
+}
+
+static gboolean draw_rgb_rects(GstVaapiImage *image)
+{
+    GstVaapiImageFormat format = GST_VAAPI_IMAGE_FORMAT(image);
+    guint               w      = GST_VAAPI_IMAGE_WIDTH(image);
+    guint               h      = GST_VAAPI_IMAGE_HEIGHT(image);
+    guchar             *pixels[3];
+    guint               stride[3];
+    guint32             red_color, green_color, blue_color, black_color;
+    DrawRectFunc        draw_rect;
+
+    if (!gst_vaapi_image_map(image))
+        return FALSE;
+
+    switch (format) {
+    case GST_VAAPI_IMAGE_NV12:
+        draw_rect   = draw_rect_NV12;
+        pixels[0]   = gst_vaapi_image_get_plane(image, 0);
+        stride[0]   = gst_vaapi_image_get_pitch(image, 0);
+        pixels[1]   = gst_vaapi_image_get_plane(image, 1);
+        stride[1]   = gst_vaapi_image_get_pitch(image, 1);
+        goto YUV_colors;
+    case GST_VAAPI_IMAGE_YV12:
+        draw_rect   = draw_rect_YV12;
+        pixels[0]   = gst_vaapi_image_get_plane(image, 0);
+        stride[0]   = gst_vaapi_image_get_pitch(image, 0);
+        pixels[1]   = gst_vaapi_image_get_plane(image, 2);
+        stride[1]   = gst_vaapi_image_get_pitch(image, 2);
+        pixels[2]   = gst_vaapi_image_get_plane(image, 1);
+        stride[2]   = gst_vaapi_image_get_pitch(image, 1);
+        goto YUV_colors;
+    case GST_VAAPI_IMAGE_I420:
+        draw_rect   = draw_rect_YV12;
+        pixels[0]   = gst_vaapi_image_get_plane(image, 0);
+        stride[0]   = gst_vaapi_image_get_pitch(image, 0);
+        pixels[1]   = gst_vaapi_image_get_plane(image, 1);
+        stride[1]   = gst_vaapi_image_get_pitch(image, 1);
+        pixels[2]   = gst_vaapi_image_get_plane(image, 2);
+        stride[2]   = gst_vaapi_image_get_pitch(image, 2);
+    YUV_colors:
+        red_color   = 0x515af0;
+        green_color = 0x913622;
+        blue_color  = 0x29f06e;
+        black_color = 0x108080;
+        break;
+    default:
+        gst_vaapi_image_unmap(image);
+        return FALSE;
+    }
+
+    draw_rect(pixels, stride, 0,   0,   w/2, h/2, red_color);
+    draw_rect(pixels, stride, w/2, 0,   w/2, h/2, green_color);
+    draw_rect(pixels, stride, 0,   h/2, w/2, h/2, blue_color);
+    draw_rect(pixels, stride, w/2, h/2, w/2, h/2, black_color);
+
+    if (!gst_vaapi_image_unmap(image))
+        return FALSE;
+
+    return TRUE;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -57,6 +196,13 @@ main(int argc, char *argv[])
     image = gst_vaapi_image_new(display, GST_VAAPI_IMAGE_NV12, width, height);
     if (!image)
         g_error("could not create Gst/VA image");
+    if (!draw_rgb_rects(image))
+        g_error("could not draw RGB rectangels");
+
+    if (!gst_vaapi_surface_put_image(surface, image))
+        g_error("could not upload image");
+    if (!gst_vaapi_surface_sync(surface))
+        g_error("could not complete image upload");
 
     g_print("#\n");
     g_print("# Create window with gst_vaapi_window_x11_new()\n");
@@ -86,7 +232,8 @@ main(int argc, char *argv[])
         rootwin     = RootWindow(dpy, screen);
         white_pixel = WhitePixel(dpy, screen);
         black_pixel = BlackPixel(dpy, screen);
-        win     = XCreateSimpleWindow(
+
+        win = XCreateSimpleWindow(
             dpy,
             rootwin,
             0, 0, win_width, win_height,
