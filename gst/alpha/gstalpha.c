@@ -24,8 +24,8 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 #include <gst/controller/gstcontroller.h>
 
 #include <stdlib.h>
@@ -64,7 +64,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_alpha_debug);
 
 struct _GstAlpha
 {
-  GstBaseTransform parent;
+  GstVideoFilter parent;
 
   /* caps */
   GstVideoFormat format;
@@ -97,7 +97,7 @@ struct _GstAlpha
 
 struct _GstAlphaClass
 {
-  GstBaseTransformClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 /* elementfactory information */
@@ -173,8 +173,7 @@ static void gst_alpha_set_property (GObject * object, guint prop_id,
 static void gst_alpha_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstAlpha, gst_alpha, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+GST_BOILERPLATE (GstAlpha, gst_alpha, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 #define GST_TYPE_ALPHA_METHOD (gst_alpha_method_get_type())
 static GType
