@@ -58,7 +58,7 @@ struct paintinfo_struct
   const struct vts_color_struct_rgb *rgb_color;
   const struct vts_color_struct_yuv *yuv_color;
   const struct vts_color_struct_gray *gray_color;
-  //const struct vts_color_struct *color;
+  /*  const struct vts_color_struct *color; */
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
 };
 

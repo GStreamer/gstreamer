@@ -1278,15 +1278,15 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   for (j = 0, y = yreset; j < h; j++, y++) {
     for (i = 0, x = xreset; i < w; i++, x++) {
 
-      //zero order
+      /* zero order */
       int phase = v->k0;
 
-      //first order
+      /* first order */
       phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t);
 
-      //cross term
-      //phase = phase + (v->kxt * i * t) + (v->kyt * j * t);
-      //phase = phase + (v->kxy * x * y) / (w/2);
+      /* cross term */
+      /* phase = phase + (v->kxt * i * t) + (v->kyt * j * t); */
+      /* phase = phase + (v->kxy * x * y) / (w/2); */
 
       /*second order */
       /*normalise x/y terms to rate of change of phase at the picture edge */
@@ -1319,27 +1319,27 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
     ky2 = (v->ky2 * y * y) / h;
     for (i = 0, x = xreset; i < w; i++, x++) {
 
-      //zero order
+      /* zero order */
       int phase = v->k0;
 
-      //first order
+      /* first order */
       accum_kx += v->kx;
-      //phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t);
+      /* phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t); */
       phase = phase + accum_kx + accum_ky + kt;
 
-      //cross term
+      /* cross term */
       accum_kxt += delta_kxt;
       accum_kxy += delta_kxy;
-      //phase = phase + (v->kxt * i * t) + (v->kyt * j * t);
+      /* phase = phase + (v->kxt * i * t) + (v->kyt * j * t); */
       phase = phase + accum_kxt + accum_kyt;
 
-      //phase = phase + (v->kxy * x * y) / (w/2);
-      //phase = phase + accum_kxy / (w/2) ;
+      /* phase = phase + (v->kxy * x * y) / (w/2); */
+      /* phase = phase + accum_kxy / (w/2); */
       phase = phase + (accum_kxy >> 16);
 
       /*second order */
       /*normalise x/y terms to rate of change of phase at the picture edge */
-      //phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1);
+      /*phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1); */
       phase = phase + ((v->kx2 * x * x * scale_kx2) >> 16) + ky2 + (kt2 >> 1);
 
       yuv_color.Y = sine_array[phase & 0xff];
@@ -1447,27 +1447,27 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
     ky2 = (v->ky2 * y * y) / h;
     for (i = 0, x = xreset; i < w; i++, x++) {
 
-      //zero order
+      /* zero order */
       int phase = v->k0;
 
-      //first order
+      /* first order */
       accum_kx += v->kx;
-      //phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t);
+      /* phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t); */
       phase = phase + accum_kx + accum_ky + kt;
 
-      //cross term
+      /* cross term */
       accum_kxt += delta_kxt;
       accum_kxy += delta_kxy;
-      //phase = phase + (v->kxt * i * t) + (v->kyt * j * t);
+      /* phase = phase + (v->kxt * i * t) + (v->kyt * j * t); */
       phase = phase + accum_kxt + accum_kyt;
 
-      //phase = phase + (v->kxy * x * y) / (w/2);
-      //phase = phase + accum_kxy / (w/2) ;
+      /* phase = phase + (v->kxy * x * y) / (w/2); */
+      /* phase = phase + accum_kxy / (w/2); */
       phase = phase + (accum_kxy >> 16);
 
       /*second order */
       /*normalise x/y terms to rate of change of phase at the picture edge */
-      //phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1);
+      /*phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1); */
       phase = phase + ((v->kx2 * x * x * scale_kx2) >> 16) + ky2 + (kt2 >> 1);
 
       yuv_color.Y = 128;
