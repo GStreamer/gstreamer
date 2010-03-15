@@ -1356,6 +1356,137 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   t++;
 }
 
+void
+gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
+    int w, int h)
+{
+  int i;
+  int j;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+  struct vts_color_struct_rgb rgb_color;
+  struct vts_color_struct_yuv yuv_color;
+  struct vts_color_struct_gray gray_color;
+  static uint8_t sine_array[256];
+  static int sine_array_inited = FALSE;
+
+  static int t = 0;             /* time - increment phase vs time by 1 for each generated frame */
+  /* this may not fit with the correct gstreamer notion of time, so maybe FIXME? */
+
+  int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
+  int yreset = -(h / 2) - v->yoffset;
+
+  int x, y;
+  int accum_kx;
+  int accum_kxt;
+  int accum_ky;
+  int accum_kyt;
+  int accum_kxy;
+  int kt;
+  int kt2;
+  int ky2;
+  int delta_kxt = v->kxt * t;
+  int delta_kxy;
+  int scale_kxy = 0xffff / (w / 2);
+  int scale_kx2 = 0xffff / w;
+
+  if (!sine_array_inited) {
+    int black = 16;
+    int white = 235;
+    int range = white - black;
+    for (i = 0; i < 256; i++) {
+      sine_array[i] =
+          floor (range * (0.5 + 0.5 * sin (i * 2 * M_PI / 256)) + 0.5 + black);
+    }
+    sine_array_inited = TRUE;
+  }
+
+  p->rgb_colors = vts_colors_rgb;
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->yuv_colors = vts_colors_bt601_ycbcr_100;
+  } else {
+    p->yuv_colors = vts_colors_bt709_ycbcr_100;
+  }
+  p->gray_colors = vts_colors_gray_100;
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  rgb_color = p->rgb_colors[COLOR_BLACK];
+  yuv_color = p->yuv_colors[COLOR_BLACK];
+  gray_color = p->gray_colors[COLOR_BLACK];
+  p->rgb_color = &rgb_color;
+  p->yuv_color = &yuv_color;
+  p->gray_color = &gray_color;
+
+  /* Zoneplate equation:
+   *
+   * phase = k0 + kx*x + ky*y + kt*t
+   *       + kxt*x*t + kyt*y*t + kxy*x*y
+   *       + kx2*x*x + ky2*y*y + Kt2*t*t
+   */
+
+  /* optimised version, with original code shown in comments */
+  accum_ky = 0;
+  accum_kyt = 0;
+  kt = v->kt * t;
+  kt2 = v->kt2 * t * t;
+  for (j = 0, y = yreset; j < h; j++, y++) {
+    accum_kx = 0;
+    accum_kxt = 0;
+    accum_ky += v->ky;
+    accum_kyt += v->kyt * t;
+    delta_kxy = v->kxy * y * scale_kxy;
+    accum_kxy = delta_kxy * xreset;
+    ky2 = (v->ky2 * y * y) / h;
+    for (i = 0, x = xreset; i < w; i++, x++) {
+
+      //zero order
+      int phase = v->k0;
+
+      //first order
+      accum_kx += v->kx;
+      //phase = phase + (v->kx * i) + (v->ky * j) + (v->kt * t);
+      phase = phase + accum_kx + accum_ky + kt;
+
+      //cross term
+      accum_kxt += delta_kxt;
+      accum_kxy += delta_kxy;
+      //phase = phase + (v->kxt * i * t) + (v->kyt * j * t);
+      phase = phase + accum_kxt + accum_kyt;
+
+      //phase = phase + (v->kxy * x * y) / (w/2);
+      //phase = phase + accum_kxy / (w/2) ;
+      phase = phase + (accum_kxy >> 16);
+
+      /*second order */
+      /*normalise x/y terms to rate of change of phase at the picture edge */
+      //phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1);
+      phase = phase + ((v->kx2 * x * x * scale_kx2) >> 16) + ky2 + (kt2 >> 1);
+
+      yuv_color.Y = 128;
+      yuv_color.U = sine_array[phase & 0xff];
+      yuv_color.V = sine_array[phase & 0xff];
+
+      rgb_color.R = 128;
+      rgb_color.G = 128;
+      rgb_color.B = yuv_color.V;
+
+      gray_color.G = yuv_color.Y << 8;
+      p->paint_hline (p, i, j, 1);
+    }
+  }
+
+  t++;
+}
+
+#undef SCALE_AMPLITUDE
 #undef SCALE_AMPLITUDE
 void
 gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,

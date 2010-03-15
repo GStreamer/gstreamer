@@ -55,6 +55,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_SMPTE75: SMPTE test pattern (75% color bars)
  * @GST_VIDEO_TEST_SRC_ZONE_PLATE: Zone plate
  * @GST_VIDEO_TEST_SRC_GAMUT: Gamut checking pattern
+ * @GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE: Chroma zone plate
  *
  * The test pattern to produce.
  *
@@ -66,6 +67,14 @@ G_BEGIN_DECLS
  * pattern is still visible after conversion, this indicates a faulty
  * conversion.  Image manipulation, such as adjusting contrast or
  * brightness, can also cause the pattern to be visible.
+ *
+ * The Zone Plate pattern is based on BBC R&D Report 1978/23, and can
+ * be used to test spatial frequency response of a system.  This
+ * pattern generator is controlled by the xoffset and yoffset parameters
+ * and also by all the parameters starting with 'k'.  The default
+ * parameters produce a grey pattern.  Try 'videotestsrc
+ * pattern=zone-plate kx2=20 ky2=20 kt=1' to produce something
+ * interesting.
  */
 typedef enum {
   GST_VIDEO_TEST_SRC_SMPTE,
@@ -83,7 +92,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_BLINK,
   GST_VIDEO_TEST_SRC_SMPTE75,
   GST_VIDEO_TEST_SRC_ZONE_PLATE,
-  GST_VIDEO_TEST_SRC_GAMUT
+  GST_VIDEO_TEST_SRC_GAMUT,
+  GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE
 } GstVideoTestSrcPattern;
 
 /**
