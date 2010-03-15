@@ -1256,7 +1256,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       }
       break;
     case GST_SUB_PARSE_REGEX_DKS:
-      result = (gpointer) g_regex_new ("^\[[0-9]+:[0-9]+:[0-9]+].*",
+      result = (gpointer) g_regex_new ("^\\[[0-9]+:[0-9]+:[0-9]+\\].*",
           0, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of dks regex failed: %s", gerr->message);
