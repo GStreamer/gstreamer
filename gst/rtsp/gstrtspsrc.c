@@ -3014,8 +3014,17 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     /* get the next timeout interval */
     gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
-    GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
-        (gint) tv_timeout.tv_sec);
+    /* see if the timeout period expired */
+    if ((tv_timeout.tv_sec | tv_timeout.tv_usec) == 0) {
+      GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
+      /* send keep-alive, ignore the result, a warning will be posted. */
+      gst_rtspsrc_send_keep_alive (src);
+      /* get new timeout */
+      gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
+    }
+
+    GST_DEBUG_OBJECT (src, "doing receive with timeout %ld seconds, %ld usec",
+        tv_timeout.tv_sec, tv_timeout.tv_usec);
 
     /* protect the connection with the connection lock so that we can see when
      * we are finished doing server communication */
