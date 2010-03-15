@@ -52,8 +52,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV"))
     );
 
-GST_BOILERPLATE (GstAlphaColor, gst_alpha_color, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+GST_BOILERPLATE (GstAlphaColor, gst_alpha_color, GstVideoFilter,
+    GST_TYPE_VIDEO_FILTER);
 
 static GstCaps *gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps);
