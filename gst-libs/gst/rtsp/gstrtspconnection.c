@@ -2462,7 +2462,7 @@ stopped:
  * @timeout: a timeout
  *
  * Calculate the next timeout for @conn, storing the result in @timeout.
- * 
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
@@ -2481,6 +2481,10 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
     usec = 0;
   } else {
     sec = conn->timeout - elapsed;
+    if (usec <= G_USEC_PER_SEC)
+      usec = G_USEC_PER_SEC - usec;
+    else
+      usec = 0;
   }
 
   timeout->tv_sec = sec;
@@ -2494,7 +2498,7 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
  * @conn: a #GstRTSPConnection
  *
  * Reset the timeout of @conn.
- * 
+ *
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
