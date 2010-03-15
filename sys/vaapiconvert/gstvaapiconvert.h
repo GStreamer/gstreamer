@@ -22,6 +22,11 @@
 #define GST_VAAPICONVERT_H
 
 #include <gst/base/gstbasetransform.h>
+#include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapiimagepool.h>
+#include <gst/vaapi/gstvaapisurfacepool.h>
+#include <gst/vaapi/gstvaapivideobuffer.h>
 
 G_BEGIN_DECLS
 
@@ -47,17 +52,25 @@ G_BEGIN_DECLS
 #define GST_VAAPICONVERT_GET_CLASS(obj)                 \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
                                GST_TYPE_VAAPICONVERT,   \
-                               GstVaapiConvert))
+                               GstVaapiConvertClass))
 
 typedef struct _GstVaapiConvert                 GstVaapiConvert;
-typedef struct _GstVaapiConvertPrivate          GstVaapiConvertPrivate;
 typedef struct _GstVaapiConvertClass            GstVaapiConvertClass;
+
+/* Max output surfaces */
+#define GST_VAAPICONVERT_MAX_SURFACES 2
 
 struct _GstVaapiConvert {
     /*< private >*/
-    GstBaseTransform parent_instance;
+    GstBaseTransform    parent_instance;
 
-    GstVaapiConvertPrivate *priv;
+    GstVaapiDisplay    *display;
+    GstVaapiVideoPool  *images;
+    guint               image_width;
+    guint               image_height;
+    GstVaapiVideoPool  *surfaces;
+    guint               surface_width;
+    guint               surface_height;
 };
 
 struct _GstVaapiConvertClass {
