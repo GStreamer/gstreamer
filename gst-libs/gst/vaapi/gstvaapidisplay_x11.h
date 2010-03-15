@@ -50,6 +50,9 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY_X11,      \
                                GstVaapiDisplayX11Class))
 
+#define GST_VAAPI_DISPLAY_XDISPLAY(display) \
+    gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display))
+
 typedef struct _GstVaapiDisplayX11              GstVaapiDisplayX11;
 typedef struct _GstVaapiDisplayX11Private       GstVaapiDisplayX11Private;
 typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;

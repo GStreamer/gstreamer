@@ -51,6 +51,9 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY,  \
                                GstVaapiDisplayClass))
 
+#define GST_VAAPI_DISPLAY_VADISPLAY(display) \
+    gst_vaapi_display_get_display(display)
+
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
