@@ -151,6 +151,12 @@ gst_speex_dec_reset (GstSpeexDec * dec)
   free (dec->header);
   dec->header = NULL;
   speex_bits_destroy (&dec->bits);
+
+  if (dec->stereo) {
+    speex_stereo_state_destroy (dec->stereo);
+    dec->stereo = NULL;
+  }
+
   if (dec->state) {
     speex_decoder_destroy (dec->state);
     dec->state = NULL;
@@ -532,10 +538,10 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   speex_decoder_ctl (dec->state, SPEEX_GET_FRAME_SIZE, &dec->frame_size);
 
   if (dec->header->nb_channels != 1) {
+    dec->stereo = speex_stereo_state_init ();
     dec->callback.callback_id = SPEEX_INBAND_STEREO;
     dec->callback.func = speex_std_stereo_request_handler;
-    dec->callback.data = &dec->stereo;
-    dec->stereo = (SpeexStereoState) SPEEX_STEREO_STATE_INIT;
+    dec->callback.data = dec->stereo;
     speex_decoder_ctl (dec->state, SPEEX_SET_HANDLER, &dec->callback);
   }
 
@@ -713,7 +719,7 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf,
       break;
     }
     if (dec->header->nb_channels == 2)
-      speex_decode_stereo_int (out_data, dec->frame_size, &dec->stereo);
+      speex_decode_stereo_int (out_data, dec->frame_size, dec->stereo);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = dec->frame_duration;

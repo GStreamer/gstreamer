@@ -53,7 +53,7 @@ struct _GstSpeexDec {
   GstPad                *srcpad;
 
   void                  *state;
-  SpeexStereoState      stereo;
+  SpeexStereoState      *stereo;
 #ifdef SPEEX_1_0
   SpeexMode             *mode;
 #else
