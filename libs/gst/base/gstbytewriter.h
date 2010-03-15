@@ -92,7 +92,7 @@ GstBuffer *gst_byte_writer_reset_and_get_buffer (GstByteWriter *writer);
  *
  * Since: 0.10.26
  */
-#ifdef _FOOL_GTK_DOC
+#ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC guint gst_byte_writer_get_pos (const GstByteWriter *writer);
 G_INLINE_FUNC gboolean gst_byte_writer_set_pos (const GstByteWriter *writer, guint pos);
 G_INLINE_FUNC guint gst_byte_writer_get_size (const GstByteWriter *writer);
