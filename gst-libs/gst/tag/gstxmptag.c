@@ -156,7 +156,7 @@ read_one_tag (GstTagList * list, const gchar * tag, const gchar * v)
 
 /**
  * gst_tag_list_from_xmp_buffer:
- * @list: buffer
+ * @buffer: buffer
  *
  * Parse a xmp packet into a taglist.
  *
