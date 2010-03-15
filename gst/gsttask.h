@@ -38,13 +38,13 @@ G_BEGIN_DECLS
 typedef void         (*GstTaskFunction)          (void *data);
 
 /* --- standard type macros --- */
-#define GST_TYPE_TASK                 	(gst_task_get_type ())
-#define GST_TASK(task)                	(G_TYPE_CHECK_INSTANCE_CAST ((task), GST_TYPE_TASK, GstTask))
-#define GST_IS_TASK(task)             	(G_TYPE_CHECK_INSTANCE_TYPE ((task), GST_TYPE_TASK))
-#define GST_TASK_CLASS(tclass)         	(G_TYPE_CHECK_CLASS_CAST ((tclass), GST_TYPE_TASK, GstTaskClass))
-#define GST_IS_TASK_CLASS(tclass)      	(G_TYPE_CHECK_CLASS_TYPE ((tclass), GST_TYPE_TASK))
-#define GST_TASK_GET_CLASS(task)      	(G_TYPE_INSTANCE_GET_CLASS ((task), GST_TYPE_TASK, GstTaskClass))
-#define GST_TASK_CAST(task)            	((GstTask*)(task))
+#define GST_TYPE_TASK                   (gst_task_get_type ())
+#define GST_TASK(task)                  (G_TYPE_CHECK_INSTANCE_CAST ((task), GST_TYPE_TASK, GstTask))
+#define GST_IS_TASK(task)               (G_TYPE_CHECK_INSTANCE_TYPE ((task), GST_TYPE_TASK))
+#define GST_TASK_CLASS(tclass)          (G_TYPE_CHECK_CLASS_CAST ((tclass), GST_TYPE_TASK, GstTaskClass))
+#define GST_IS_TASK_CLASS(tclass)       (G_TYPE_CHECK_CLASS_TYPE ((tclass), GST_TYPE_TASK))
+#define GST_TASK_GET_CLASS(task)        (G_TYPE_INSTANCE_GET_CLASS ((task), GST_TYPE_TASK, GstTaskClass))
+#define GST_TASK_CAST(task)             ((GstTask*)(task))
 
 typedef struct _GstTask GstTask;
 typedef struct _GstTaskClass GstTaskClass;
@@ -70,7 +70,7 @@ typedef enum {
  *
  * Get access to the state of the task.
  */
-#define GST_TASK_STATE(task)		(GST_TASK_CAST(task)->state)
+#define GST_TASK_STATE(task)            (GST_TASK_CAST(task)->state)
 
 /**
  * GST_TASK_GET_COND:
@@ -78,28 +78,28 @@ typedef enum {
  *
  * Get access to the cond of the task.
  */
-#define GST_TASK_GET_COND(task)		(GST_TASK_CAST(task)->cond)
+#define GST_TASK_GET_COND(task)         (GST_TASK_CAST(task)->cond)
 /**
  * GST_TASK_WAIT:
  * @task: Task to wait for
  *
  * Wait for the task cond to be signalled
  */
-#define GST_TASK_WAIT(task)		g_cond_wait(GST_TASK_GET_COND (task), GST_OBJECT_GET_LOCK (task))
+#define GST_TASK_WAIT(task)             g_cond_wait(GST_TASK_GET_COND (task), GST_OBJECT_GET_LOCK (task))
 /**
  * GST_TASK_SIGNAL:
  * @task: Task to signal
  *
  * Signal the task cond
  */
-#define GST_TASK_SIGNAL(task)		g_cond_signal(GST_TASK_GET_COND (task))
+#define GST_TASK_SIGNAL(task)           g_cond_signal(GST_TASK_GET_COND (task))
 /**
  * GST_TASK_BROADCAST:
  * @task: Task to broadcast
  *
  * Send a broadcast signal to all waiting task conds
  */
-#define GST_TASK_BROADCAST(task)	g_cond_breadcast(GST_TASK_GET_COND (task))
+#define GST_TASK_BROADCAST(task)        g_cond_breadcast(GST_TASK_GET_COND (task))
 
 /**
  * GST_TASK_GET_LOCK:
@@ -107,7 +107,7 @@ typedef enum {
  *
  * Get access to the task lock.
  */
-#define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
+#define GST_TASK_GET_LOCK(task)         (GST_TASK_CAST(task)->lock)
 
 /**
  * GstTaskThreadCallbacks:
@@ -144,14 +144,14 @@ struct _GstTask {
 
   /*< public >*/ /* with LOCK */
   GstTaskState     state;
-  GCond 	  *cond;
+  GCond           *cond;
 
   GStaticRecMutex *lock;
 
   GstTaskFunction  func;
-  gpointer 	   data;
+  gpointer         data;
 
-  gboolean	   running;
+  gboolean         running;
 
   /*< private >*/
   union {
@@ -175,30 +175,30 @@ struct _GstTaskClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void		gst_task_cleanup_all	(void);
+void            gst_task_cleanup_all    (void);
 
 GType           gst_task_get_type       (void);
 
-GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
-void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
-void		gst_task_set_priority	(GstTask *task, GThreadPriority priority);
+GstTask*        gst_task_create         (GstTaskFunction func, gpointer data);
+void            gst_task_set_lock       (GstTask *task, GStaticRecMutex *mutex);
+void            gst_task_set_priority   (GstTask *task, GThreadPriority priority);
 
 GstTaskPool *   gst_task_get_pool       (GstTask *task);
 void            gst_task_set_pool       (GstTask *task, GstTaskPool *pool);
 
 void            gst_task_set_thread_callbacks  (GstTask *task,
                                                 GstTaskThreadCallbacks *callbacks,
-						gpointer user_data,
-						GDestroyNotify notify);
+                                                gpointer user_data,
+                                                GDestroyNotify notify);
 
-GstTaskState	gst_task_get_state	(GstTask *task);
+GstTaskState    gst_task_get_state      (GstTask *task);
 gboolean        gst_task_set_state      (GstTask *task, GstTaskState state);
 
-gboolean	gst_task_start		(GstTask *task);
-gboolean	gst_task_stop		(GstTask *task);
-gboolean	gst_task_pause		(GstTask *task);
+gboolean        gst_task_start          (GstTask *task);
+gboolean        gst_task_stop           (GstTask *task);
+gboolean        gst_task_pause          (GstTask *task);
 
-gboolean	gst_task_join		(GstTask *task);
+gboolean        gst_task_join           (GstTask *task);
 
 G_END_DECLS
 
