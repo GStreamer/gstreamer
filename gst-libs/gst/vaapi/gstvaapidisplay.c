@@ -262,7 +262,8 @@ gst_vaapi_display_set_property(
     GObject      *object,
     guint         prop_id,
     const GValue *value,
-    GParamSpec   *pspec)
+    GParamSpec   *pspec
+)
 {
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
