@@ -1841,6 +1841,8 @@ gst_video_format_parse_caps
 gst_video_format_parse_caps_interlaced
 gst_video_parse_caps_framerate
 gst_video_parse_caps_pixel_aspect_ratio
+gst_video_parse_caps_color_matrix
+gst_video_parse_caps_chroma_site
 </SECTION>
 
 <SECTION>
