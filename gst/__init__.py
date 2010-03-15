@@ -166,7 +166,7 @@ except ImportError:
     RTLD_LAZY = -1
     import os
     osname = os.uname()[0]
-    if osname == 'Linux' or osname == 'SunOS' or osname == 'FreeBSD' or osname == 'GNU/kFreeBSD':
+    if osname == 'Linux' or osname == 'SunOS' or osname == 'FreeBSD' or osname == 'GNU/kFreeBSD' or osname == 'GNU':
         machinename = os.uname()[4]
         if machinename == 'mips' or machinename == 'mips64':
             RTLD_GLOBAL = 0x4
