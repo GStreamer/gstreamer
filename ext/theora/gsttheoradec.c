@@ -833,7 +833,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       "framerate", GST_TYPE_FRACTION,
       dec->info.fps_numerator, dec->info.fps_denominator,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
-      "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT, dec->height, NULL);
+      "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT, dec->height,
+      "color-matrix", G_TYPE_STRING, "sdtv", NULL);
   gst_pad_set_caps (dec->srcpad, caps);
   gst_caps_unref (caps);
 
