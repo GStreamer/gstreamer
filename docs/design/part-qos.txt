@@ -244,6 +244,68 @@ real time performance.
    - assign more CPU(s) to critical pipeline parts
 
 
+QoS Messages
+------------
+
+A QOS message is posted on the bus whenever an element decides to:
+
+ - drop a buffer because of QoS reasons
+ - change its processing strategy because of QoS reasons (quality)
+
+It should be expected that creating and posting the QoS message is reasonably
+fast and does not significantly contribute to the QoS problems. Options to
+disable this feature could also be presented on elements.
+
+The GST_MESSAGE_QOS contains at least the following info:
+
+ - running-time, G_TYPE_UINT64:
+      The running_time of the buffer that generated the QoS message.
+
+ - stream-time, G_TYPE_UINT64:
+      The stream_time of the buffer that generated the QoS message.
+
+ - timestamp, G_TYPE_UINT64:
+      The timestamp of the buffer that generated the QoS message.
+
+ - duration, G_TYPE_UINT64:
+      The duration of the buffer that generated the QoS message.
+
+
+ - jitter, G_TYPE_INT64:
+      The difference of the running-time against the deadline.  Negative
+      values mean the timestamp was on time. Positive values indicate the
+      timestamp was late (and dropped) by that amount. The deadline can be
+      a realtime running_time or an estimated running_time.
+
+ - proportion, G_TYPE_DOUBLE:
+      Long term prediction of the ideal rate relative to normal rate to get
+      optimal quality.
+
+ - quality, G_TYPE_INT:
+      An element dependent integer value that specifies the current quality
+      level of the element. The default maximum quality is 1000000. 
+
+
+ - format, GST_TYPE_FORMAT
+      Units of the 'processed' and 'dropped' fields. Video sinks and video
+      filters will use GST_FORMAT_BUFFERS (frames). Audio sinks and audio filters
+      will likely use GST_FORMAT_DEFAULT (samples).
+
+ - processed: G_TYPE_UINT64:
+      Total number of units correctly precessed since the last state change to
+      READY or a flushing operation.
+
+ - dropped: G_TYPE_UINT64:
+      Total number of units dropped since the last state change to READY or a
+      flushing operation.
+
+The 'running-time' and 'processed' fields can be used to estimate the average
+processing rate (framerate for video).
+
+Elements might add additional fields in the message which are documents in the
+relevant elements or baseclasses.
+
+
 QoS implementations
 -------------------
 
@@ -282,6 +344,8 @@ Normally there is a threshold for when buffers get dropped in a video sink. Fram
 that arrive 20 milliseconds late are still rendered as it is not noticable for
 the human eye.
 
+A QoS message is posted whenever a (part of a) buffer is dropped.
+
 
 GstBaseTransform
 ----------------
@@ -298,6 +362,10 @@ some transforms can reduce the complexity of their algorithms. Depending on the
 algorithm, the changes in quality may have disturbing visual or audible effect 
 that should be avoided.
 
+A quality message should be posted when a frame is dropped or when the quality
+of the filter is reduced. The quality member in the QOS message should reflect
+the quality setting of the filter.
+
 
 Video Decoders
 --------------
@@ -309,6 +377,17 @@ the CPU usage and framerate.
 If each frame is independantly decodable, any arbitrary frame can be skipped based
 on the timestamp and jitter values of the latest QoS message. In addition can the
 proportion member be used to permanently skip frames.
+
+It is suggested to adjust the quality field of the QoS message with the expected
+amount of dropped frames (skipping B and/or P frames). This depends on the
+particulat spacing of B and P frames in the stream. If the quality control would
+result in half of the frames to be dropped (typical B frame skipping), the
+quality field would be set to 1000000/2 = 500000. If a typical I frame spacing
+of 18 frames is used, skipping B and P frames would result in 17 dropped frames,
+and the quality member should be set to 1000000/17 = 58824.
+
+ - skipping B frames: quality = 500000
+ - skipping P/B frames: quality = 58824 (for I-frame spacing of 18 frames)
 
 
 Demuxers
@@ -336,4 +415,6 @@ to a lower or higher quality stream or additional enhancement layers could be us
 or ignored.
 
 Live sources will automatically drop data when it takes too long to process the data 
-that the element pushes out.
+that the element pushes out. 
+
+Live sources should post a QoS message when data is dropped.
