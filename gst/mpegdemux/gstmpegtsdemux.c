@@ -3224,15 +3224,15 @@ gst_mpegts_demux_get_property (GObject * object, guint prop_id,
       if (demux->nb_elementary_pids == 0) {
         g_value_set_static_string (value, "");
       } else {
-        gchar **ts_pids;
+        GString *ts_pids;
 
-        ts_pids = g_new0 (gchar *, demux->nb_elementary_pids + 1);
-        for (i = 0; i < demux->nb_elementary_pids; i++) {
-          ts_pids[i] = g_strdup_printf ("%d", demux->elementary_pids[i]);
+        ts_pids = g_string_sized_new (32);
+        /* FIXME: align with property description which uses hex numbers? */
+        g_string_append_printf (ts_pids, "%d", demux->elementary_pids[0]);
+        for (i = 1; i < demux->nb_elementary_pids; i++) {
+          g_string_append_printf (ts_pids, ":%d", demux->elementary_pids[i]);
         }
-
-        g_value_set_string (value, g_strjoinv (":", ts_pids));
-        g_strfreev (ts_pids);
+        g_value_take_string (value, g_string_free (ts_pids, FALSE));
       }
       break;
     case PROP_CHECK_CRC:
