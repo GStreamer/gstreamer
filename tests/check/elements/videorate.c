@@ -58,7 +58,8 @@ static GstPad *mysrcpad, *mysinkpad;
     "width = (int) 240, "               \
     "height = (int) 120, "              \
     "framerate = (fraction) 999/7 , "	\
-    "format = (fourcc) I420"
+    "format = (fourcc) I420, "          \
+    "color-matrix=(string)sdtv"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -744,6 +745,9 @@ GST_START_TEST (test_selected_caps)
   videorate_pad = gst_element_get_static_pad (videorate, "sink");
   g_object_get (videorate_pad, "caps", &caps, NULL);
   expected_caps = gst_caps_from_string (VIDEO_CAPS_UNUSUAL_FRAMERATE);
+
+  GST_DEBUG ("negotiated caps: %" GST_PTR_FORMAT, caps);
+  GST_DEBUG ("expected caps: %" GST_PTR_FORMAT, expected_caps);
 
   fail_unless (gst_caps_is_equal (expected_caps, caps));
 
