@@ -45,8 +45,8 @@ GST_DEBUG_CATEGORY_STATIC (flvmux_debug);
 
 enum
 {
-  ARG_0,
-  ARG_IS_LIVE
+  PROP_0,
+  PROP_IS_LIVE
 };
 
 #define DEFAULT_IS_LIVE FALSE
@@ -159,10 +159,10 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   gobject_class->set_property = gst_flv_mux_set_property;
   gobject_class->finalize = gst_flv_mux_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_IS_LIVE,
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
           "The stream is live and does not need an index", DEFAULT_IS_LIVE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_flv_mux_change_state);
   gstelement_class->request_new_pad =
@@ -1202,12 +1202,10 @@ static void
 gst_flv_mux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstFlvMux *mux;
-
-  mux = GST_FLV_MUX (object);
+  GstFlvMux *mux = GST_FLV_MUX (object);
 
   switch (prop_id) {
-    case ARG_IS_LIVE:
+    case PROP_IS_LIVE:
       g_value_set_boolean (value, mux->is_live);
       break;
     default:
@@ -1220,12 +1218,10 @@ static void
 gst_flv_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstFlvMux *mux;
-
-  mux = GST_FLV_MUX (object);
+  GstFlvMux *mux = GST_FLV_MUX (object);
 
   switch (prop_id) {
-    case ARG_IS_LIVE:
+    case PROP_IS_LIVE:
       mux->is_live = g_value_get_boolean (value);
       break;
     default:
