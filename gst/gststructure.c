@@ -1081,7 +1081,7 @@ gst_structure_has_field (const GstStructure * structure,
  *
  * Returns: TRUE if the structure contains a field with the given name and type
  *
- * Since: 0.10.16
+ * Since: 0.10.26
  */
 gboolean
 gst_structure_id_has_field_typed (const GstStructure * structure,
