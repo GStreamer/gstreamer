@@ -22,7 +22,7 @@
 #include "gstvaapivideopool.h"
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiVideoPool, gst_vaapi_video_pool, G_TYPE_OBJECT);
 

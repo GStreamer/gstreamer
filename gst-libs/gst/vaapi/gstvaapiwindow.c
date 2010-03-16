@@ -22,7 +22,7 @@
 #include "gstvaapiwindow.h"
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
 

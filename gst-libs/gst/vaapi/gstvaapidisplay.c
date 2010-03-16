@@ -24,7 +24,7 @@
 #include <va/va_backend.h>
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 GST_DEBUG_CATEGORY(gst_debug_vaapi);
 

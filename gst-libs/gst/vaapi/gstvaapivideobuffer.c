@@ -22,7 +22,7 @@
 #include "gstvaapivideobuffer.h"
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiVideoBuffer, gst_vaapi_video_buffer, GST_TYPE_BUFFER);
 

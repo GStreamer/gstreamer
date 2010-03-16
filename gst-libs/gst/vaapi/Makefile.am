@@ -16,6 +16,7 @@ libgstvaapi_source_c =				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
+	gstvaapidebug.h				\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
@@ -28,7 +29,6 @@ libgstvaapi_source_h =				\
 	gstvaapivideopool.h			\
 	gstvaapivideosink.h			\
 	gstvaapiwindow.h			\
-	vaapi_debug.h				\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\

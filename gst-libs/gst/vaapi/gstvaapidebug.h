@@ -1,5 +1,5 @@
 /*
- *  vaapi_debug.h - VA-API debugging utilities
+ *  gstvaapidebug.h - VA-API debugging utilities
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *

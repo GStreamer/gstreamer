@@ -22,7 +22,7 @@
 #include "gstvaapiimagepool.h"
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(
     GstVaapiImagePool,

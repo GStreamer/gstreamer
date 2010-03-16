@@ -25,7 +25,7 @@
 #include <va/va_backend.h>
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, G_TYPE_OBJECT);
 

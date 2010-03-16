@@ -24,7 +24,7 @@
 #include <va/va_backend.h>
 
 #define DEBUG 1
-#include "vaapi_debug.h"
+#include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiSurface, gst_vaapi_surface, G_TYPE_OBJECT);
 
