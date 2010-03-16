@@ -178,10 +178,14 @@ AC_OUTPUT([
     debian/Makefile
     debian/changelog
     debian/control
-    debian/gstreamer$GST_MAJORMINOR-vaapi.install:debian/gstreamer-vaapi.install.in
-    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:debian/libgstvaapi.install.in
-    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:debian/libgstvaapi-dev.install.in
-    debian/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:debian/libgstvaapi-x11.install.in
+    debian/gstreamer$GST_MAJORMINOR-vaapi.install:\
+debian/gstreamer-vaapi.install.in
+    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
+debian/libgstvaapi.install.in
+    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:\
+debian/libgstvaapi-dev.install.in
+    debian/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
+debian/libgstvaapi-x11.install.in
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
