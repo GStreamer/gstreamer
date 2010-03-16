@@ -1,6 +1,6 @@
 
-  gst-vaapi
-  VA API support to GStreamer
+  gstreamer-vaapi
+  VA-API support to GStreamer
 
   Copyright (C) 2010 Splitted-Desktop Systems
 
@@ -8,19 +8,26 @@
 License
 -------
 
-gst-vaapi is available under the terms of the GNU General Public
+gstreamer-vaapi is available under the terms of the GNU General Public
 License.
 
 
 Overview
 --------
 
-gst-vaapi consists in a VA API based videosink for GStreamer and
-helper libraries.
+gstreamer-vaapi consists in a collection of VA-API based plugins for
+GStreamer and helper libraries.
+
+  * `vaapiconvert' is used to convert from video/x-raw-yuv pixels to
+    video/x-vaapi-surface surfaces
+
+  * `vaapisink' is used to display video/x-vaapi-surface surfaces to
+    screen.
 
 
 Requirements
 ------------
 
-gstreamer-0.10 >= 0.10.0
-gstreamer-plugins-base-0.10 >= 0.10.0
+libgstreamer0.10-dev >= 0.10.0
+libgstreamer-plugins-base0.10-dev >= 0.10.0
+libva-dev >= 0.31.0-1+sds9
