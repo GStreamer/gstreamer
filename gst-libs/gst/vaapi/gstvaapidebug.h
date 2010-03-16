@@ -18,8 +18,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef VAAPI_DEBUG_H
-#define VAAPI_DEBUG_H
+#ifndef GST_VAAPI_DEBUG_H
+#define GST_VAAPI_DEBUG_H
 
 #include "gstvaapiutils.h"
 
@@ -33,4 +33,4 @@
 GST_DEBUG_CATEGORY_EXTERN(gst_debug_vaapi);
 #define GST_CAT_DEFAULT gst_debug_vaapi
 
-#endif /* VAAPI_DEBUG_H */
+#endif /* GST_VAAPI_DEBUG_H */

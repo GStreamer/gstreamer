@@ -18,8 +18,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef VAAPI_UTILS_H
-#define VAAPI_UTILS_H
+#ifndef GST_VAAPI_UTILS_H
+#define GST_VAAPI_UTILS_H
 
 #include "config.h"
 #include <va/va.h>
@@ -45,4 +45,4 @@ const char *string_of_VAProfile(VAProfile profile)
 const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
     attribute_hidden;
 
-#endif /* VAAPI_UTILS_H */
+#endif /* GST_VAAPI_UTILS_H */
