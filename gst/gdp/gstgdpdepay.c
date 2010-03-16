@@ -42,13 +42,6 @@
 
 #include "gstgdpdepay.h"
 
-/* elementfactory information */
-static const GstElementDetails gdp_depay_details =
-GST_ELEMENT_DETAILS ("GDP Depayloader",
-    "GDP/Depayloader",
-    "Depayloads GStreamer Data Protocol buffers",
-    "Thomas Vander Stichele <thomas at apestaart dot org>");
-
 enum
 {
   PROP_0,
@@ -91,7 +84,10 @@ gst_gdp_depay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gdp_depay_details);
+  gst_element_class_set_details_simple (element_class,
+      "GDP Depayloader", "GDP/Depayloader",
+      "Depayloads GStreamer Data Protocol buffers",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gdp_depay_sink_template));
