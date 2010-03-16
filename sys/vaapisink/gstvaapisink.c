@@ -21,7 +21,7 @@
 #include "config.h"
 #include <gst/gst.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
-#include <gst/vaapi/gstvaapisinkbase.h>
+#include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include "gstvaapisink.h"
@@ -68,22 +68,22 @@ enum {
 };
 
 static GstVaapiDisplay *
-gst_vaapisink_base_do_get_display(GstVaapiSinkBase *sink)
+gst_vaapi_video_sink_do_get_display(GstVaapiVideoSink *sink)
 {
     return gst_vaapisink_get_display(GST_VAAPISINK(sink));
 }
 
-static void gst_vaapisink_base_iface_init(GstVaapiSinkBaseInterface *iface)
+static void gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
 {
-    iface->get_display = gst_vaapisink_base_do_get_display;
+    iface->get_display = gst_vaapi_video_sink_do_get_display;
 }
 
 static void gst_vaapisink_iface_init(GType type)
 {
     const GType g_define_type_id = type;
 
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VAAPISINK_BASE,
-                          gst_vaapisink_base_iface_init);
+    G_IMPLEMENT_INTERFACE(GST_VAAPI_TYPE_VIDEO_SINK,
+                          gst_vaapi_video_sink_iface_init);
 }
 
 static void

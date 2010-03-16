@@ -21,7 +21,7 @@
 #include "config.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/vaapi/gstvaapisinkbase.h>
+#include <gst/vaapi/gstvaapivideosink.h>
 #include "gstvaapiconvert.h"
 
 #define GST_PLUGIN_NAME "vaapiconvert"
@@ -206,15 +206,15 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
 static gboolean gst_vaapiconvert_start(GstBaseTransform *trans)
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
-    GstVaapiSinkBase *sink;
+    GstVaapiVideoSink *sink;
     GstVaapiDisplay *display;
 
     /* Look for a downstream vaapisink */
-    sink = gst_vaapisink_base_lookup(GST_ELEMENT(trans));
+    sink = gst_vaapi_video_sink_lookup(GST_ELEMENT(trans));
     if (!sink)
         return FALSE;
 
-    display = gst_vaapisink_base_get_display(sink);
+    display = gst_vaapi_video_sink_get_display(sink);
     if (!display)
         return FALSE;
 

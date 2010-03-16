@@ -1,5 +1,5 @@
 /*
- *  gstvaapisinkbase.c - VA sink interface
+ *  gstvaapivideosink.c - VA sink interface
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *
@@ -19,10 +19,10 @@
  */
 
 #include "config.h"
-#include "gstvaapisinkbase.h"
+#include "gstvaapivideosink.h"
 
 static void
-gst_vaapisink_base_base_init(gpointer g_class)
+gst_vaapi_video_sink_base_init(gpointer g_class)
 {
     static gboolean is_initialized = FALSE;
 
@@ -32,20 +32,20 @@ gst_vaapisink_base_base_init(gpointer g_class)
 }
 
 GType
-gst_vaapisink_base_get_type(void)
+gst_vaapi_video_sink_get_type(void)
 {
     static GType iface_type = 0;
 
     if (G_UNLIKELY(!iface_type)) {
         static const GTypeInfo info = {
-            sizeof(GstVaapiSinkBaseInterface),
-            gst_vaapisink_base_base_init,       /* base_init */
+            sizeof(GstVaapiVideoSinkInterface),
+            gst_vaapi_video_sink_base_init,     /* base_init */
             NULL,                               /* base_finalize */
         };
 
         iface_type = g_type_register_static(
             G_TYPE_INTERFACE,
-            "GstVaapiSinkBase",
+            "GstVaapiVideoSink",
             &info,
             0
         );
@@ -54,17 +54,17 @@ gst_vaapisink_base_get_type(void)
 }
 
 GstVaapiDisplay *
-gst_vaapisink_base_get_display(GstVaapiSinkBase *sink)
+gst_vaapi_video_sink_get_display(GstVaapiVideoSink *sink)
 {
-    g_return_val_if_fail(GST_IS_VAAPISINK_BASE(sink), NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_SINK(sink), NULL);
 
-    return GST_VAAPISINK_BASE_GET_INTERFACE(sink)->get_display(sink);
+    return GST_VAAPI_VIDEO_SINK_GET_INTERFACE(sink)->get_display(sink);
 }
 
-GstVaapiSinkBase *
-gst_vaapisink_base_lookup(GstElement *element)
+GstVaapiVideoSink *
+gst_vaapi_video_sink_lookup(GstElement *element)
 {
-    GstVaapiSinkBase *sink = NULL;
+    GstVaapiVideoSink *sink = NULL;
     GstPad *pad, *peer;
 
     g_return_val_if_fail(GST_IS_ELEMENT(element), NULL);
@@ -81,8 +81,8 @@ gst_vaapisink_base_lookup(GstElement *element)
 
         element = gst_pad_get_parent_element(peer);
         if (element) {
-            if (GST_IS_VAAPISINK_BASE(element))
-                sink = GST_VAAPISINK_BASE(element);
+            if (GST_VAAPI_IS_VIDEO_SINK(element))
+                sink = GST_VAAPI_VIDEO_SINK(element);
             g_object_unref(element);
         }
         g_object_unref(peer);
