@@ -387,7 +387,7 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, str);
         ne_free (str);
       } else {
-        g_value_set_string (value, "");
+        g_value_set_static_string (value, "");
       }
       break;
     }
@@ -402,7 +402,7 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, str);
         ne_free (str);
       } else {
-        g_value_set_string (value, "");
+        g_value_set_static_string (value, "");
       }
       break;
     }
