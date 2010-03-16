@@ -135,13 +135,6 @@ static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink,
     GstXWindow * xwindow);
 static void gst_ximagesink_expose (GstXOverlay * overlay);
 
-/* ElementFactory information */
-static const GstElementDetails gst_ximagesink_details =
-GST_ELEMENT_DETAILS ("Video sink",
-    "Sink/Video",
-    "A standard X based videosink",
-    "Julien Moutte <julien@moutte.net>");
-
 static GstStaticPadTemplate gst_ximagesink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -2321,7 +2314,9 @@ gst_ximagesink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_ximagesink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Video sink", "Sink/Video",
+      "A standard X based videosink", "Julien Moutte <julien@moutte.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_ximagesink_sink_template_factory));

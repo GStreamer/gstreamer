@@ -64,12 +64,6 @@
 #include <string.h>
 #include <errno.h>
 
-static const GstElementDetails gst_gnome_vfs_sink_details =
-GST_ELEMENT_DETAILS ("GnomeVFS Sink",
-    "Sink/File",
-    "Write a stream to a GnomeVFS URI",
-    "Bastien Nocera <hadess@hadess.net>");
-
 enum
 {
   SIGNAL_ERASE_ASK,
@@ -140,7 +134,9 @@ gst_gnome_vfs_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_gnome_vfs_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "GnomeVFS Sink", "Sink/File",
+      "Write a stream to a GnomeVFS URI", "Bastien Nocera <hadess@hadess.net>");
 }
 
 static gboolean

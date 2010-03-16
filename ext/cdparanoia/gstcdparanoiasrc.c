@@ -70,12 +70,6 @@ static gboolean gst_cd_paranoia_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cd_paranoia_src_close (GstCddaBaseSrc * src);
 
-static const GstElementDetails cdparanoia_details =
-GST_ELEMENT_DETAILS ("CD Audio (cdda) Source, Paranoia IV",
-    "Source/File",
-    "Read audio from CD in paranoid mode",
-    "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-
 /* We use these to serialize calls to paranoia_read() among several
  * cdparanoiasrc instances. We do this because it's the only reasonably
  * easy way to find out the calling object from within the paranoia
@@ -113,7 +107,10 @@ gst_cd_paranoia_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &cdparanoia_details);
+  gst_element_class_set_details_simple (element_class,
+      "CD Audio (cdda) Source, Paranoia IV", "Source/File",
+      "Read audio from CD in paranoid mode",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 }
 
 static void

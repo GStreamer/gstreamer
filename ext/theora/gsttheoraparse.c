@@ -65,13 +65,6 @@
 #define GST_CAT_DEFAULT theoraparse_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static GstElementDetails theora_parse_details = {
-  "Theora video parser",
-  "Codec/Parser/Video",
-  "parse raw theora streams",
-  "Andy Wingo <wingo@pobox.com>"
-};
-
 static GstStaticPadTemplate theora_parse_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -116,7 +109,9 @@ gst_theora_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&theora_parse_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&theora_parse_sink_factory));
-  gst_element_class_set_details (element_class, &theora_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "Theora video parser", "Codec/Parser/Video",
+      "parse raw theora streams", "Andy Wingo <wingo@pobox.com>");
 }
 
 static void

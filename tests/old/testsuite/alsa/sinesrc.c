@@ -69,6 +69,7 @@ sinesrc_get_type (void)
   }
   return sinesrc_type;
 }
+
 static void
 sinesrc_class_init (SineSrcClass * klass)
 {
@@ -147,6 +148,7 @@ UIDENTITY (guint8 x)
 {
   return x;
 };
+
 static gint8
 IDENTITY (gint8 x)
 {

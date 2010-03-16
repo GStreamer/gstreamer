@@ -51,13 +51,6 @@
 
 #define TCP_BACKLOG             5
 
-/* elementfactory information */
-static const GstElementDetails gst_tcp_server_sink_details =
-GST_ELEMENT_DETAILS ("TCP server sink",
-    "Sink/Network",
-    "Send data as a server over the network via TCP",
-    "Thomas Vander Stichele <thomas at apestaart dot org>");
-
 GST_DEBUG_CATEGORY_STATIC (tcpserversink_debug);
 #define GST_CAT_DEFAULT (tcpserversink_debug)
 
@@ -91,7 +84,10 @@ gst_tcp_server_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_tcp_server_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "TCP server sink", "Sink/Network",
+      "Send data as a server over the network via TCP",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void

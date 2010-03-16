@@ -34,11 +34,7 @@
 typedef float                          vorbis_sample_t;
 typedef ogg_packet                     ogg_packet_wrapper;
 
-#define GST_VORBIS_DEC_ELEMENT_DETAILS \
-GST_ELEMENT_DETAILS ("Vorbis audio decoder",       \
-    "Codec/Decoder/Audio",                         \
-    "decode raw vorbis streams to float audio",    \
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>")
+#define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to float audio"
 
 #define GST_VORBIS_DEC_SRC_CAPS \
     GST_STATIC_CAPS ("audio/x-raw-float, " "rate = (int) [ 1, MAX ], " \
@@ -87,12 +83,7 @@ struct _ogg_packet_wrapper {
   ogg_buffer          buf;
 };
 
-#define GST_VORBIS_DEC_ELEMENT_DETAILS \
-GST_ELEMENT_DETAILS ("Vorbis audio decoder",           \
-    "Codec/Decoder/Audio",                             \
-    "decode raw vorbis streams to integer audio",      \
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>\n"  \
-    "Chris Lord <chris@openedhand.com>")
+#define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
 
 #define GST_VORBIS_DEC_SRC_CAPS \
     GST_STATIC_CAPS ("audio/x-raw-int, "   \

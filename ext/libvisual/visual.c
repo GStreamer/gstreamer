@@ -180,14 +180,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
   if (class_data == NULL) {
     parent_class = g_type_class_peek_parent (g_class);
   } else {
-    GstElementDetails details = {
-      NULL,
-      "Visualization",
-      klass->plugin->info->about,
-      "Benjamin Otte <otte@gnome.org>"
-    };
-
-    details.longname = g_strdup_printf ("libvisual %s plugin v.%s",
+    char *longname = g_strdup_printf ("libvisual %s plugin v.%s",
         klass->plugin->info->name, klass->plugin->info->version);
 
     /* FIXME: improve to only register what plugin supports? */
@@ -195,8 +188,11 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
         gst_static_pad_template_get (&src_template));
     gst_element_class_add_pad_template (element,
         gst_static_pad_template_get (&sink_template));
-    gst_element_class_set_details (element, &details);
-    g_free (details.longname);
+    gst_element_class_set_details_simple (element,
+        longname, "Visualization",
+        klass->plugin->info->about, "Benjamin Otte <otte@gnome.org>");
+
+    g_free (longname);
   }
 
   object->dispose = gst_visual_dispose;
@@ -761,8 +757,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
-          plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
+          info->plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */

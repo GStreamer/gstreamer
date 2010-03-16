@@ -39,12 +39,6 @@
 
 #include "gstogg.h"
 
-static const GstElementDetails gst_ogg_avi_parse_details =
-GST_ELEMENT_DETAILS ("Ogg AVI parser",
-    "Codec/Parser",
-    "parse an ogg avi stream into pages (info about ogg: http://xiph.org)",
-    "Wim Taymans <wim@fluendo.com>");
-
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_avi_parse_debug);
 #define GST_CAT_DEFAULT gst_ogg_avi_parse_debug
 
@@ -139,7 +133,10 @@ gst_ogg_avi_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_ogg_avi_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "Ogg AVI parser", "Codec/Parser",
+      "parse an ogg avi stream into pages (info about ogg: http://xiph.org)",
+      "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&ogg_avi_parse_sink_template_factory));

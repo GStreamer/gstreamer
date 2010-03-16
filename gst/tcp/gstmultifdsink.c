@@ -124,14 +124,6 @@
 
 #define NOT_IMPLEMENTED 0
 
-/* elementfactory information */
-static const GstElementDetails gst_multi_fd_sink_details =
-GST_ELEMENT_DETAILS ("Multi filedescriptor sink",
-    "Sink/Network",
-    "Send data to multiple filedescriptors",
-    "Thomas Vander Stichele <thomas at apestaart dot org>, "
-    "Wim Taymans <wim@fluendo.com>");
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -366,7 +358,11 @@ gst_multi_fd_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_multi_fd_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Multi filedescriptor sink", "Sink/Network",
+      "Send data to multiple filedescriptors",
+      "Thomas Vander Stichele <thomas at apestaart dot org>, "
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

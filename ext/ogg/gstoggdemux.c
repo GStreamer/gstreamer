@@ -45,12 +45,6 @@
 
 #include "gstoggdemux.h"
 
-static const GstElementDetails gst_ogg_demux_details =
-GST_ELEMENT_DETAILS ("Ogg demuxer",
-    "Codec/Demuxer",
-    "demux ogg streams (info about ogg: http://xiph.org)",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 #define SKELETON_FISHEAD_SIZE 64
 #define SKELETON_FISBONE_MIN_SIZE 52
@@ -1202,7 +1196,10 @@ gst_ogg_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_ogg_demux_details);
+  gst_element_class_set_details_simple (element_class,
+      "Ogg demuxer", "Codec/Demuxer",
+      "demux ogg streams (info about ogg: http://xiph.org)",
+      "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&ogg_demux_sink_template_factory));

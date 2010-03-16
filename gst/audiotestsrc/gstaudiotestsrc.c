@@ -61,12 +61,6 @@
 GST_DEBUG_CATEGORY_STATIC (audio_test_src_debug);
 #define GST_CAT_DEFAULT audio_test_src_debug
 
-static const GstElementDetails gst_audio_test_src_details =
-GST_ELEMENT_DETAILS ("Audio test source",
-    "Source/Audio",
-    "Creates audio test signals of given frequency and volume",
-    "Stefan Kost <ensonic@users.sf.net>");
-
 #define DEFAULT_SAMPLES_PER_BUFFER   1024
 #define DEFAULT_WAVE                 GST_AUDIO_TEST_SRC_WAVE_SINE
 #define DEFAULT_FREQ                 440.0
@@ -179,7 +173,10 @@ gst_audio_test_src_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_test_src_src_template));
-  gst_element_class_set_details (element_class, &gst_audio_test_src_details);
+  gst_element_class_set_details_simple (element_class,
+      "Audio test source", "Source/Audio",
+      "Creates audio test signals of given frequency and volume",
+      "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void

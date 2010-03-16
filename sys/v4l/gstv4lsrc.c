@@ -30,13 +30,6 @@
 #include <sys/ioctl.h>
 
 
-static const GstElementDetails gst_v4lsrc_details =
-GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
-    "Source/Video",
-    "Reads raw frames from a video4linux device",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-
 GST_DEBUG_CATEGORY_STATIC (v4lsrc_debug);
 #define GST_CAT_DEFAULT v4lsrc_debug
 
@@ -79,7 +72,10 @@ gst_v4lsrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (gstelement_class, &gst_v4lsrc_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video (video4linux/raw) Source", "Source/Video",
+      "Reads raw frames from a video4linux device",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&v4l_src_template));

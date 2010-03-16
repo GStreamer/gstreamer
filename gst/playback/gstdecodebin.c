@@ -187,12 +187,6 @@ static gboolean is_demuxer_element (GstElement * srcelement);
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
-static const GstElementDetails gst_decode_bin_details =
-GST_ELEMENT_DETAILS ("Decoder Bin",
-    "Generic/Bin/Decoder",
-    "Autoplug and decode to raw media",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 
 static GType
 gst_decode_bin_get_type (void)
@@ -290,7 +284,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_src_template));
 
-  gst_element_class_set_details (gstelement_klass, &gst_decode_bin_details);
+  gst_element_class_set_details_simple (gstelement_klass,
+      "Decoder Bin", "Generic/Bin/Decoder",
+      "Autoplug and decode to raw media",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);

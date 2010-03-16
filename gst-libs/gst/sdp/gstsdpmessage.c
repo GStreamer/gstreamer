@@ -341,12 +341,12 @@ is_multicast_address (const gchar * host_name, guint * family)
   for (ai = res; !ret && ai; ai = ai->ai_next) {
     if (ai->ai_family == AF_INET)
       ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
-              s_addr));
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
+              sin_addr.s_addr));
     else
       ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
-          sin6_addr);
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
+              ai_addr)->sin6_addr);
     if (ret && family)
       *family = ai->ai_family;
   }

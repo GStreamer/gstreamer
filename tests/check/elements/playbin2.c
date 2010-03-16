@@ -522,8 +522,6 @@ GST_BOILERPLATE_FULL (GstRedVideoSrc, gst_red_video_src, GstPushSrc,
 static void
 gst_red_video_src_base_init (gpointer klass)
 {
-  static const GstElementDetails details =
-      GST_ELEMENT_DETAILS ("Red Video Src", "Source/Video", "yep", "me");
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("video/x-raw-yuv, format=(fourcc)I420")
@@ -532,7 +530,8 @@ gst_red_video_src_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "Red Video Src", "Source/Video", "yep", "me");
 }
 
 static GstFlowReturn
@@ -635,8 +634,6 @@ GST_BOILERPLATE_FULL (GstCodecSrc, gst_codec_src, GstPushSrc,
 static void
 gst_codec_src_base_init (gpointer klass)
 {
-  static const GstElementDetails details =
-      GST_ELEMENT_DETAILS ("Codec Src", "Source/Video", "yep", "me");
   static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC, GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("application/x-codec")
@@ -645,7 +642,8 @@ gst_codec_src_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "Codec Src", "Source/Video", "yep", "me");
 }
 
 static GstFlowReturn

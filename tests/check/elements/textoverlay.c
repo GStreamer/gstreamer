@@ -569,8 +569,8 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless_equals_int (g_list_length (buffers), 3);
 
   /* ... and there should not be any text rendered on it */
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->next->next->
-              data)));
+  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->next->
+              next->data)));
 
   /* a fourth video buffer */
   inbuffer = gst_buffer_make_metadata_writable (inbuffer);

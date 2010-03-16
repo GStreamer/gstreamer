@@ -29,13 +29,6 @@
 #include "gstv4ljpegsrc.h"
 #include "v4lsrc_calls.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_v4ljpegsrc_details =
-GST_ELEMENT_DETAILS ("Video (video4linux/raw) Jpeg Source",
-    "Source/Video",
-    "Reads jpeg frames from a video4linux (eg ov519) device",
-    "Jan Schmidt <thaytan@mad.scientist.com>");
-
 GST_DEBUG_CATEGORY_STATIC (v4ljpegsrc_debug);
 #define GST_CAT_DEFAULT v4ljpegsrc_debug
 
@@ -85,7 +78,10 @@ gst_v4ljpegsrc_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (gstelement_class, &gst_v4ljpegsrc_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video (video4linux/raw) Jpeg Source", "Source/Video",
+      "Reads jpeg frames from a video4linux (eg ov519) device",
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void

@@ -559,12 +559,6 @@ static GstElementClass *parent_class;
 
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
-static const GstElementDetails gst_play_bin_details =
-GST_ELEMENT_DETAILS ("Player Bin 2",
-    "Generic/Bin/Player",
-    "Autoplug and play media from an uri",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 #define REMOVE_SIGNAL(obj,id)            \
 if (id) {                                \
   g_signal_handler_disconnect (obj, id); \
@@ -1053,7 +1047,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   klass->get_audio_pad = gst_play_bin_get_audio_pad;
   klass->get_text_pad = gst_play_bin_get_text_pad;
 
-  gst_element_class_set_details (gstelement_klass, &gst_play_bin_details);
+  gst_element_class_set_details_simple (gstelement_klass,
+      "Player Bin 2", "Generic/Bin/Player",
+      "Autoplug and play media from an uri",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
@@ -2432,8 +2429,8 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
 
     if (format != GST_FORMAT_TIME)
       data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
-            group_start_accum))
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
+                type].group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);

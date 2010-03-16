@@ -55,13 +55,6 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-static const GstElementDetails sub_parse_details =
-GST_ELEMENT_DETAILS ("Subtitle parser",
-    "Codec/Parser/Subtitle",
-    "Parses subtitle (.sub) files into text streams",
-    "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
 #ifndef GST_DISABLE_XML
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -135,7 +128,11 @@ gst_sub_parse_base_init (GstSubParseClass * klass)
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details (element_class, &sub_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "Subtitle parser", "Codec/Parser/Subtitle",
+      "Parses subtitle (.sub) files into text streams",
+      "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>, "
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void

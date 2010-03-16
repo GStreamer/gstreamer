@@ -95,13 +95,6 @@
 GST_DEBUG_CATEGORY_STATIC (gnomevfssrc_debug);
 #define GST_CAT_DEFAULT gnomevfssrc_debug
 
-static const GstElementDetails gst_gnome_vfs_src_details =
-GST_ELEMENT_DETAILS ("GnomeVFS Source",
-    "Source/File",
-    "Read from any GnomeVFS-supported file",
-    "Bastien Nocera <hadess@hadess.net>\n"
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
 static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
 static gint ref_count = 0;
 static gboolean vfs_owner = FALSE;
@@ -185,7 +178,11 @@ gst_gnome_vfs_src_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details (element_class, &gst_gnome_vfs_src_details);
+  gst_element_class_set_details_simple (element_class,
+      "GnomeVFS Source", "Source/File",
+      "Read from any GnomeVFS-supported file",
+      "Bastien Nocera <hadess@hadess.net>, "
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
       "Gnome-VFS Source");

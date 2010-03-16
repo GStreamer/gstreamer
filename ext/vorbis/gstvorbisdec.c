@@ -51,9 +51,6 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
 
-static const GstElementDetails vorbis_dec_details =
-    GST_VORBIS_DEC_ELEMENT_DETAILS;
-
 static GstStaticPadTemplate vorbis_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -98,7 +95,10 @@ gst_vorbis_dec_base_init (gpointer g_class)
   sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
   gst_element_class_add_pad_template (element_class, sink_template);
 
-  gst_element_class_set_details (element_class, &vorbis_dec_details);
+  gst_element_class_set_details_simple (element_class,
+      "Vorbis audio decoder", "Codec/Decoder/Audio",
+      GST_VORBIS_DEC_DESCRIPTION,
+      "Benjamin Otte <otte@gnome.org>, Chris Lord <chris@openedhand.com>");
 }
 
 static void

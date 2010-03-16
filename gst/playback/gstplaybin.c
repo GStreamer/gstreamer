@@ -333,12 +333,6 @@ static GstElementClass *parent_class;
 
 //static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
-static const GstElementDetails gst_play_bin_details =
-GST_ELEMENT_DETAILS ("Player Bin",
-    "Generic/Bin/Player",
-    "Autoplug and play media from an uri",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GType
 gst_play_bin_get_type (void)
 {
@@ -417,7 +411,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
 
   gobject_klass->dispose = gst_play_bin_dispose;
 
-  gst_element_class_set_details (gstelement_klass, &gst_play_bin_details);
+  gst_element_class_set_details_simple (gstelement_klass,
+      "Player Bin", "Generic/Bin/Player",
+      "Autoplug and play media from an uri",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);

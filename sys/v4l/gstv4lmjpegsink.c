@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (v4lmjpegsink_debug);
 #define GST_CAT_DEFAULT v4lmjpegsink_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_v4lmjpegsink_details =
-GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) sink",
-    "Sink/Video",
-    "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
 /* v4lmjpegsink signals and args */
 enum
 {
@@ -117,7 +110,10 @@ gst_v4lmjpegsink_base_init (gpointer g_class)
       );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (gstelement_class, &gst_v4lmjpegsink_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video (video4linux/MJPEG) sink", "Sink/Video",
+      "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));

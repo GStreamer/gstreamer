@@ -741,8 +741,8 @@ gst_alsa_mixer_set_mute (GstAlsaMixer * mixer, GstMixerTrack * track,
 
     for (i = 0; i < ((GstMixerTrack *) ctrl_track)->num_channels; i++) {
       long vol =
-          mute ? ((GstMixerTrack *) ctrl_track)->min_volume : ctrl_track->
-          volumes[i];
+          mute ? ((GstMixerTrack *) ctrl_track)->
+          min_volume : ctrl_track->volumes[i];
       snd_mixer_selem_set_playback_volume (ctrl_track->element, i, vol);
     }
   }

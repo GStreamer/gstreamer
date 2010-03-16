@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY (v4lmjpegsrc_debug);
 #define GST_CAT_DEFAULT v4lmjpegsrc_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_v4lmjpegsrc_details =
-GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) Source",
-    "Source/Video",
-    "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
 /* V4lMjpegSrc signals and args */
 enum
 {
@@ -146,7 +139,10 @@ gst_v4lmjpegsrc_base_init (gpointer g_class)
       );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (gstelement_class, &gst_v4lmjpegsrc_details);
+  gst_element_class_set_details_sinmple (gstelement_class,
+      "Video (video4linux/MJPEG) Source", "Source/Video",
+      "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));

@@ -76,14 +76,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
 
-
-/* elementfactory information */
-static const GstElementDetails vorbisenc_details =
-GST_ELEMENT_DETAILS ("Vorbis audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes audio in Vorbis format",
-    "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
-
 enum
 {
   ARG_0,
@@ -166,7 +158,10 @@ gst_vorbis_enc_base_init (gpointer g_class)
 
   sink_template = gst_static_pad_template_get (&vorbis_enc_sink_factory);
   gst_element_class_add_pad_template (element_class, sink_template);
-  gst_element_class_set_details (element_class, &vorbisenc_details);
+  gst_element_class_set_details_simple (element_class,
+      "Vorbis audio encoder", "Codec/Encoder/Audio",
+      "Encodes audio in Vorbis format",
+      "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

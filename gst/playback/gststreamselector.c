@@ -31,14 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (stream_selector_debug);
 #define GST_CAT_DEFAULT stream_selector_debug
 
-static const GstElementDetails gst_stream_selector_details =
-GST_ELEMENT_DETAILS ("StreamSelector",
-    "Generic",
-    "N-to-1 input stream_selectoring",
-    "Julien Moutte <julien@moutte.net>\n"
-    "Jan Schmidt <thaytan@mad.scientist.com>\n"
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_stream_selector_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -468,7 +460,12 @@ gst_stream_selector_base_init (GstStreamSelectorClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &gst_stream_selector_details);
+  gst_element_class_set_details_simple (element_class,
+      "StreamSelector", "Generic",
+      "N-to-1 input stream_selectoring",
+      "Julien Moutte <julien@moutte.net>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_stream_selector_sink_factory));
   gst_element_class_add_pad_template (element_class,

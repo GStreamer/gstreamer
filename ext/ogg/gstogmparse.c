@@ -59,24 +59,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_OGM_PARSE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OGM_PARSE, GstOgmParseClass))
 
-static const GstElementDetails gst_ogm_audio_parse_details =
-GST_ELEMENT_DETAILS ("OGM audio stream parser",
-    "Codec/Decoder/Audio",
-    "parse an OGM audio header and stream",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-static const GstElementDetails gst_ogm_video_parse_details =
-GST_ELEMENT_DETAILS ("OGM video stream parser",
-    "Codec/Decoder/Video",
-    "parse an OGM video header and stream",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-static const GstElementDetails gst_ogm_text_parse_details =
-GST_ELEMENT_DETAILS ("OGM text stream parser",
-    "Codec/Decoder/Subtitle",
-    "parse an OGM text header and stream",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
 typedef struct _stream_header_video
 {
   gint32 width;
@@ -292,7 +274,10 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps = gst_riff_create_audio_template_caps ();
 
-  gst_element_class_set_details (element_class, &gst_ogm_audio_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "OGM audio stream parser", "Codec/Decoder/Audio",
+      "parse an OGM audio header and stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_audio));
@@ -307,7 +292,10 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps = gst_riff_create_video_template_caps ();
 
-  gst_element_class_set_details (element_class, &gst_ogm_video_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "OGM video stream parser", "Codec/Decoder/Video",
+      "parse an OGM video header and stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_video));
@@ -322,7 +310,10 @@ gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps = gst_caps_new_simple ("text/plain", NULL, NULL);
 
-  gst_element_class_set_details (element_class, &gst_ogm_text_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "OGM text stream parser", "Codec/Decoder/Subtitle",
+      "parse an OGM text header and stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory_text));

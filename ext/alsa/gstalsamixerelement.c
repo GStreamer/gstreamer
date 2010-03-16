@@ -35,12 +35,6 @@ enum
   PROP_DEVICE_NAME
 };
 
-static const GstElementDetails gst_alsa_mixer_element_details =
-GST_ELEMENT_DETAILS ("Alsa mixer",
-    "Generic/Audio",
-    "Control sound input and output levels with ALSA",
-    "Leif Johnson <leif@ambient.2y.net>");
-
 static void gst_alsa_mixer_element_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstAlsaMixerElement, gst_alsa_mixer_element,
@@ -99,8 +93,10 @@ gst_alsa_mixer_element_init_interfaces (GType type)
 static void
 gst_alsa_mixer_element_base_init (gpointer klass)
 {
-  gst_element_class_set_details (GST_ELEMENT_CLASS (klass),
-      &gst_alsa_mixer_element_details);
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+      "Alsa mixer", "Generic/Audio",
+      "Control sound input and output levels with ALSA",
+      "Leif Johnson <leif@ambient.2y.net>");
 }
 
 static void

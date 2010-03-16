@@ -69,13 +69,6 @@
 #define GST_CAT_DEFAULT audio_rate_debug
 GST_DEBUG_CATEGORY_STATIC (audio_rate_debug);
 
-/* elementfactory information */
-static const GstElementDetails audio_rate_details =
-GST_ELEMENT_DETAILS ("Audio rate adjuster",
-    "Filter/Effect/Audio",
-    "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* GstAudioRate signals and args */
 enum
 {
@@ -163,7 +156,10 @@ gst_audio_rate_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &audio_rate_details);
+  gst_element_class_set_details_simple (element_class,
+      "Audio rate adjuster", "Filter/Effect/Audio",
+      "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
+      "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_rate_sink_template));

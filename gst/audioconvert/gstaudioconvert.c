@@ -71,12 +71,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 /*** DEFINITIONS **************************************************************/
 
-static const GstElementDetails audio_convert_details =
-GST_ELEMENT_DETAILS ("Audio converter",
-    "Filter/Converter/Audio",
-    "Convert audio to different formats",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-
 /* type functions */
 static void gst_audio_convert_dispose (GObject * obj);
 
@@ -231,7 +225,9 @@ gst_audio_convert_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_audio_convert_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_convert_sink_template));
-  gst_element_class_set_details (element_class, &audio_convert_details);
+  gst_element_class_set_details_simple (element_class,
+      "Audio converter", "Filter/Converter/Audio",
+      "Convert audio to different formats", "Benjamin Otte <otte@gnome.org>");
 }
 
 static void

@@ -1082,6 +1082,7 @@ static GstAudioChannelPosition n8chan_pos_remap_in[8] = {
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
 };
+
 static GstAudioChannelPosition n8chan_pos_remap_out[8] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,

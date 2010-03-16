@@ -53,13 +53,6 @@
 
 #include <gst/gst-i18n-plugin.h>
 
-/* elementfactory information */
-static const GstElementDetails gst_alsasink_details =
-GST_ELEMENT_DETAILS ("Audio sink (ALSA)",
-    "Sink/Audio",
-    "Output to a sound card via ALSA",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define DEFAULT_DEVICE		"default"
 #define DEFAULT_DEVICE_NAME	""
 #define SPDIF_PERIOD_SIZE 1536
@@ -172,7 +165,9 @@ gst_alsasink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_alsasink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Audio sink (ALSA)", "Sink/Audio",
+      "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&alsasink_sink_factory));

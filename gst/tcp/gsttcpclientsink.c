@@ -42,13 +42,6 @@
 #include "gsttcpclientsink.h"
 #include <string.h>             /* memset */
 
-/* elementfactory information */
-static const GstElementDetails gst_tcp_client_sink_details =
-GST_ELEMENT_DETAILS ("TCP client sink",
-    "Sink/Network",
-    "Send data as a client over the network via TCP",
-    "Thomas Vander Stichele <thomas at apestaart dot org>");
-
 /* TCPClientSink signals and args */
 enum
 {
@@ -131,7 +124,10 @@ gst_tcp_client_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_tcp_client_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "TCP client sink", "Sink/Network",
+      "Send data as a client over the network via TCP",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void

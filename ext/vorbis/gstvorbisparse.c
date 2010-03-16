@@ -58,13 +58,6 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
 #define GST_CAT_DEFAULT vorbisparse_debug
 
-static const GstElementDetails vorbis_parse_details = {
-  "VorbisParse",
-  "Codec/Parser/Audio",
-  "parse raw vorbis streams",
-  "Thomas Vander Stichele <thomas at apestaart dot org>"
-};
-
 static GstStaticPadTemplate vorbis_parse_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -102,7 +95,10 @@ gst_vorbis_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&vorbis_parse_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&vorbis_parse_sink_factory));
-  gst_element_class_set_details (element_class, &vorbis_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "VorbisParse", "Codec/Parser/Audio",
+      "parse raw vorbis streams",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void

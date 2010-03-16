@@ -42,6 +42,7 @@ pre_get_func (SineSrc * src)
 {
   counter++;
 };
+
 static void
 create_pipeline (void)
 {

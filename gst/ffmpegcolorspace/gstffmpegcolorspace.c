@@ -43,14 +43,6 @@ GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 GST_DEBUG_CATEGORY (ffmpegcolorspace_performance);
 
-/* elementfactory information */
-static const GstElementDetails ffmpegcsp_details =
-GST_ELEMENT_DETAILS ("FFMPEG Colorspace converter",
-    "Filter/Converter/Video",
-    "Converts video from one colorspace to another",
-    "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-
 /* Stereo signals and args */
 enum
 {
@@ -384,7 +376,10 @@ gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass)
 
   gst_element_class_add_pad_template (element_class, srctempl);
   gst_element_class_add_pad_template (element_class, sinktempl);
-  gst_element_class_set_details (element_class, &ffmpegcsp_details);
+  gst_element_class_set_details_simple (element_class,
+      "FFMPEG Colorspace converter", "Filter/Converter/Video",
+      "Converts video from one colorspace to another",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void

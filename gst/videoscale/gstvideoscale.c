@@ -65,13 +65,6 @@
 /* debug variable definition */
 GST_DEBUG_CATEGORY (video_scale_debug);
 
-/* elementfactory information */
-static const GstElementDetails video_scale_details =
-GST_ELEMENT_DETAILS ("Video scaler",
-    "Filter/Effect/Video",
-    "Resizes video",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 #define DEFAULT_PROP_METHOD	GST_VIDEO_SCALE_BILINEAR
 
 enum
@@ -258,7 +251,9 @@ gst_video_scale_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &video_scale_details);
+  gst_element_class_set_details_simple (element_class,
+      "Video scaler", "Filter/Effect/Video",
+      "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
 
   gst_element_class_add_pad_template (element_class,
       gst_video_scale_sink_template_factory ());

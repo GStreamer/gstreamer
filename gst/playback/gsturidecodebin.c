@@ -134,12 +134,6 @@ static GstStaticCaps default_raw_caps = GST_STATIC_CAPS (DEFAULT_RAW_CAPS);
 GST_DEBUG_CATEGORY_STATIC (gst_uri_decode_bin_debug);
 #define GST_CAT_DEFAULT gst_uri_decode_bin_debug
 
-static const GstElementDetails gst_uri_decode_bin_details =
-GST_ELEMENT_DETAILS ("URI Decoder",
-    "Generic/Bin/Decoder",
-    "Autoplug and decode an URI to raw media",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* signals */
 enum
 {
@@ -203,7 +197,10 @@ gst_uri_decode_bin_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details (gstelement_class, &gst_uri_decode_bin_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "URI Decoder", "Generic/Bin/Decoder",
+      "Autoplug and decode an URI to raw media",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static gboolean

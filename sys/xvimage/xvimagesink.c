@@ -153,13 +153,6 @@ static gint gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
     GstCaps * caps);
 static void gst_xvimagesink_expose (GstXOverlay * overlay);
 
-/* ElementFactory information */
-static const GstElementDetails gst_xvimagesink_details =
-GST_ELEMENT_DETAILS ("Video sink",
-    "Sink/Video",
-    "A Xv based videosink",
-    "Julien Moutte <julien@moutte.net>");
-
 /* Default template - initiated with class struct to allow gst-register to work
    without X running */
 static GstStaticPadTemplate gst_xvimagesink_sink_template_factory =
@@ -3432,7 +3425,9 @@ gst_xvimagesink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_xvimagesink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Video sink", "Sink/Video",
+      "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory));

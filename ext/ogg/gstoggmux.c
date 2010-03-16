@@ -71,13 +71,6 @@ typedef enum
 }
 GstOggFlag;
 
-/* elementfactory information */
-static const GstElementDetails gst_ogg_mux_details =
-GST_ELEMENT_DETAILS ("Ogg muxer",
-    "Codec/Muxer",
-    "mux ogg streams (info about ogg: http://xiph.org)",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* OggMux signals and args */
 enum
 {
@@ -176,7 +169,10 @@ gst_ogg_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_ogg_mux_details);
+  gst_element_class_set_details_simple (element_class,
+      "Ogg muxer", "Codec/Muxer",
+      "mux ogg streams (info about ogg: http://xiph.org)",
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
