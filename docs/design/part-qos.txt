@@ -53,40 +53,72 @@ operations.
 QoS message
 -----------
 
-Whenever QoS discards a piece of data or affects the quality of the stream, a
-message must be posted by the element that performed the QoS.  We assume that
-the time gained by dropping the data outweighs the time spend in creating and
-posting the QoS message so that posting the message should not cause more
-performance problems.
+A QOS message is posted on the bus whenever an element decides to:
+
+ - drop a buffer because of QoS reasons
+ - change its processing strategy because of QoS reasons (quality)
+
+It should be expected that creating and posting the QoS message is reasonably
+fast and does not significantly contribute to the QoS problems. Options to
+disable this feature could also be presented on elements.
 
 This message can be posted by a sink/src that performs synchronisation against the
-clock or it could be dropped by an upstream element that performs QoS because of
-QOS events received from a downstream element.
+clock (live) or it could be dropped by an upstream element that performs QoS
+because of QOS events received from a downstream element (!live).
+
+The GST_MESSAGE_QOS contains at least the following info:
 
  - live: G_TYPE_BOOLEAN:
       If the QoS message was dropped by a live element such as a sink or a live
       source. If the live property is FALSE, the QoS message was generated as a
       response to a QoS event in a non-live element.
 
+ - running-time, G_TYPE_UINT64:
+      The running_time of the buffer that generated the QoS message.
+
+ - stream-time, G_TYPE_UINT64:
+      The stream_time of the buffer that generated the QoS message.
+
  - timestamp, G_TYPE_UINT64:
-      Running_time of the data that is dropped.
+      The timestamp of the buffer that generated the QoS message.
+
+ - duration, G_TYPE_UINT64:
+      The duration of the buffer that generated the QoS message.
+
 
  - jitter, G_TYPE_INT64:
-      The lateness of the buffer. 
+      The difference of the running-time against the deadline.  Negative
+      values mean the timestamp was on time. Positive values indicate the
+      timestamp was late (and dropped) by that amount. The deadline can be
+      a realtime running_time or an estimated running_time.
 
  - proportion, G_TYPE_DOUBLE:
-      Long term prediction of the ideal rate. 
+      Long term prediction of the ideal rate relative to normal rate to get
+      optimal quality.
 
-Optional stats:
+ - quality, G_TYPE_INT:
+      An element dependent integer value that specifies the current quality
+      level of the element. The default maximum quality is 1000000. 
 
- - dropped, G_TYPE_INT64:
-      The total number of dropped buffers since the element went to READY
-      last. -1 if unknown.
 
- - handled, G_TYPE_INT64:
-      The total number of processed buffers since the element went to READY
-      last. -1 if unknown.
+ - format, GST_TYPE_FORMAT
+      Units of the 'processed' and 'dropped' fields. Video sinks and video
+      filters will use GST_FORMAT_BUFFERS (frames). Audio sinks and audio filters
+      will likely use GST_FORMAT_DEFAULT (samples).
 
+ - processed: G_TYPE_UINT64:
+      Total number of units correctly precessed since the last state change to
+      READY or a flushing operation.
+
+ - dropped: G_TYPE_UINT64:
+      Total number of units dropped since the last state change to READY or a
+      flushing operation.
+
+The 'running-time' and 'processed' fields can be used to estimate the average
+processing rate (framerate for video).
+
+Elements might add additional fields in the message which are documents in the
+relevant elements or baseclasses.
 
 
 Collecting statistics
@@ -242,68 +274,6 @@ real time performance.
    - switch to real-time scheduling
    - assign more CPU cycles to critial pipeline parts
    - assign more CPU(s) to critical pipeline parts
-
-
-QoS Messages
-------------
-
-A QOS message is posted on the bus whenever an element decides to:
-
- - drop a buffer because of QoS reasons
- - change its processing strategy because of QoS reasons (quality)
-
-It should be expected that creating and posting the QoS message is reasonably
-fast and does not significantly contribute to the QoS problems. Options to
-disable this feature could also be presented on elements.
-
-The GST_MESSAGE_QOS contains at least the following info:
-
- - running-time, G_TYPE_UINT64:
-      The running_time of the buffer that generated the QoS message.
-
- - stream-time, G_TYPE_UINT64:
-      The stream_time of the buffer that generated the QoS message.
-
- - timestamp, G_TYPE_UINT64:
-      The timestamp of the buffer that generated the QoS message.
-
- - duration, G_TYPE_UINT64:
-      The duration of the buffer that generated the QoS message.
-
-
- - jitter, G_TYPE_INT64:
-      The difference of the running-time against the deadline.  Negative
-      values mean the timestamp was on time. Positive values indicate the
-      timestamp was late (and dropped) by that amount. The deadline can be
-      a realtime running_time or an estimated running_time.
-
- - proportion, G_TYPE_DOUBLE:
-      Long term prediction of the ideal rate relative to normal rate to get
-      optimal quality.
-
- - quality, G_TYPE_INT:
-      An element dependent integer value that specifies the current quality
-      level of the element. The default maximum quality is 1000000. 
-
-
- - format, GST_TYPE_FORMAT
-      Units of the 'processed' and 'dropped' fields. Video sinks and video
-      filters will use GST_FORMAT_BUFFERS (frames). Audio sinks and audio filters
-      will likely use GST_FORMAT_DEFAULT (samples).
-
- - processed: G_TYPE_UINT64:
-      Total number of units correctly precessed since the last state change to
-      READY or a flushing operation.
-
- - dropped: G_TYPE_UINT64:
-      Total number of units dropped since the last state change to READY or a
-      flushing operation.
-
-The 'running-time' and 'processed' fields can be used to estimate the average
-processing rate (framerate for video).
-
-Elements might add additional fields in the message which are documents in the
-relevant elements or baseclasses.
 
 
 QoS implementations
