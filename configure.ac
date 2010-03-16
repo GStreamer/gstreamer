@@ -21,6 +21,18 @@ m4_define([gst_vaapi_micro_version], [0])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 
+# libva package version number
+m4_define([libva_sds_version_0_29], [8])
+m4_define([libva_sds_package_version_0_29], [0.29-2+sds11])
+m4_define([libva_sds_version_0_30], [1])
+m4_define([libva_sds_package_version_0_30], [0.30-1+sds1])
+m4_define([libva_glx_sds_version_0_30], [5])
+m4_define([libva_glx_sds_package_version_0_30], [0.30.4-1+sds6])
+m4_define([libva_glx_sds_version_0_31], [1])
+m4_define([libva_glx_sds_package_version_0_31], [0.31.0-1+sds1])
+m4_define([libva_sds_version], [libva_glx_sds_version_0_31])
+m4_define([libva_sds_package_version], [libva_glx_sds_package_version_0_31])
+
 AC_PREREQ([2.57])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
     [gbeauchesne@splitted-desktop.com],
@@ -29,6 +41,15 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER([config.h])
+
+TODAY="`LC_ALL=C date +'%a, %d %b %Y %X %z'`"
+AC_SUBST(TODAY)
+
+GST_VAAPI_MAJOR_VERSION=gst_vaapi_major_version
+AC_SUBST(GST_VAAPI_MAJOR_VERSION)
+
+LIBVA_SDS_PACKAGE_VERSION=libva_sds_package_version
+AC_SUBST(LIBVA_SDS_PACKAGE_VERSION)
 
 dnl Check for __attribute__((visibility()))
 AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
@@ -154,6 +175,13 @@ AC_SUBST(pkgconfigdir)
 
 AC_OUTPUT([
     Makefile
+    debian/Makefile
+    debian/changelog
+    debian/control
+    debian/gstreamer$GST_MAJORMINOR-vaapi.install:debian/gstreamer-vaapi.install.in
+    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:debian/libgstvaapi.install.in
+    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:debian/libgstvaapi-dev.install.in
+    debian/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:debian/libgstvaapi-x11.install.in
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
