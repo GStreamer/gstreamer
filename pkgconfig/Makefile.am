@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = -Wno-portability
+
 pcfiles  = gstreamer-vaapi-@GST_MAJORMINOR@.pc
 pcfiles += gstreamer-vaapi-x11-@GST_MAJORMINOR@.pc
 
@@ -11,6 +13,7 @@ EXTRA_DIST = 				\
 
 CLEANFILES = $(pcfiles)
 
+# XXX: this is a GNU make extension
 %-@GST_MAJORMINOR@.pc: %.pc
 	cp $< $@
 
