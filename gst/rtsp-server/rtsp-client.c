@@ -98,7 +98,7 @@ gst_rtsp_client_finalize (GObject * obj)
   for (walk = client->sessions; walk; walk = g_list_next (walk)) {
     GstRTSPSession *msession = (GstRTSPSession *) walk->data;
     g_object_weak_unref (G_OBJECT (msession),
-	(GWeakNotify) client_session_finalized, client);
+        (GWeakNotify) client_session_finalized, client);
   }
 
   unlink_streams (client);
@@ -115,6 +115,8 @@ gst_rtsp_client_finalize (GObject * obj)
     gst_rtsp_url_free (client->uri);
   if (client->media)
     g_object_unref (client->media);
+
+  g_free (client->server_ip);
 
   G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
@@ -256,6 +258,9 @@ find_media (GstRTSPClient * client, GstRTSPUrl * uri, GstRTSPMessage * request)
     /* prepare the media and add it to the pipeline */
     if (!(media = gst_rtsp_media_factory_construct (factory, uri)))
       goto no_media;
+
+    /* set ipv6 on the media before preparing */
+    media->is_ipv6 = client->is_ipv6;
 
     /* prepare the media */
     if (!(gst_rtsp_media_prepare (media)))
@@ -749,7 +754,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   /* our supported transports */
   supported = GST_RTSP_LOWER_TRANS_UDP |
-    GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
+      GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
 
   /* loop through the transports, try to parse */
   for (i = 0; transports[i]; i++) {
@@ -761,8 +766,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
     }
 
     /* we have a transport, see if it's RTP/AVP */
-    if (ct->trans != GST_RTSP_TRANS_RTP ||
-      ct->profile != GST_RTSP_PROFILE_AVP) {
+    if (ct->trans != GST_RTSP_TRANS_RTP || ct->profile != GST_RTSP_PROFILE_AVP) {
       GST_WARNING ("invalid transport %s", transports[i]);
       goto next;
     }
@@ -777,7 +781,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
     have_transport = TRUE;
     break;
 
-next:
+  next:
     gst_rtsp_transport_init (ct);
   }
   g_strfreev (transports);
@@ -848,7 +852,7 @@ next:
 
   /* configure keepalive for this transport */
   gst_rtsp_session_stream_set_keepalive (stream,
-        (GstRTSPKeepAliveFunc) do_keepalive, session, NULL);
+      (GstRTSPKeepAliveFunc) do_keepalive, session, NULL);
 
   /* serialize the server transport */
   trans_str = gst_rtsp_transport_as_text (st);
@@ -921,6 +925,50 @@ service_unavailable:
   }
 }
 
+static GstSDPMessage *
+create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
+{
+  GstSDPMessage *sdp;
+  GstSDPInfo info;
+  const gchar *proto;
+
+  gst_sdp_message_new (&sdp);
+
+  /* some standard things first */
+  gst_sdp_message_set_version (sdp, "0");
+
+  if (client->is_ipv6)
+    proto = "IP6";
+  else
+    proto = "IP4";
+
+  gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", proto,
+      client->server_ip);
+
+  gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
+  gst_sdp_message_set_information (sdp, "rtsp-server");
+  gst_sdp_message_add_time (sdp, "0", "0", NULL);
+  gst_sdp_message_add_attribute (sdp, "tool", "GStreamer");
+  gst_sdp_message_add_attribute (sdp, "type", "broadcast");
+  gst_sdp_message_add_attribute (sdp, "control", "*");
+
+  info.server_proto = proto;
+  info.server_ip = client->server_ip;
+
+  /* create an SDP for the media object */
+  if (!gst_rtsp_sdp_from_media (sdp, &info, media))
+    goto no_sdp;
+
+  return sdp;
+
+  /* ERRORS */
+no_sdp:
+  {
+    gst_sdp_message_free (sdp);
+    return NULL;
+  }
+}
+
 /* for the describe we must generate an SDP */
 static gboolean
 handle_describe_request (GstRTSPClient * client, GstRTSPUrl * uri,
@@ -951,8 +999,8 @@ handle_describe_request (GstRTSPClient * client, GstRTSPUrl * uri,
   if (!(media = find_media (client, uri, request)))
     goto no_media;
 
-  /* create an SDP for the media object */
-  if (!(sdp = gst_rtsp_sdp_from_media (media)))
+  /* create an SDP for the media object on this client */
+  if (!(sdp = create_sdp (client, media)))
     goto no_sdp;
 
   g_object_unref (media);
@@ -969,15 +1017,19 @@ handle_describe_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   /* check for trailing '/' and append one */
   if (str[str_len - 1] != '/') {
-    content_base = g_malloc (str_len + 1);
+    content_base = g_malloc (str_len + 2);
     memcpy (content_base, str, str_len);
     content_base[str_len] = '/';
-    content_base[str_len+1] = '\0';
+    content_base[str_len + 1] = '\0';
     g_free (str);
   } else {
     content_base = str;
   }
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE, content_base);
+
+  GST_INFO ("adding content-base: %s", content_base);
+
+  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE,
+      content_base);
   g_free (content_base);
 
   /* add SDP to the response body */
@@ -1363,7 +1415,7 @@ static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
   GstRTSPClient *client;
-  
+
   client = GST_RTSP_CLIENT (user_data);
 
   /* GST_INFO ("client %p: sent a message with cseq %d", client, cseq); */
@@ -1405,14 +1457,15 @@ error (GstRTSPWatch * watch, GstRTSPResult result, gpointer user_data)
 }
 
 static GstRTSPResult
-error_full (GstRTSPWatch *watch, GstRTSPResult result,
-    GstRTSPMessage *message, guint id, gpointer user_data)
+error_full (GstRTSPWatch * watch, GstRTSPResult result,
+    GstRTSPMessage * message, guint id, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   gchar *str;
 
   str = gst_rtsp_strresult (result);
-  GST_INFO ("client %p: received an error %s when handling message %p with id %d",
+  GST_INFO
+      ("client %p: received an error %s when handling message %p with id %d",
       client, str, message, id);
   g_free (str);
 
@@ -1536,17 +1589,40 @@ static GstRTSPWatchFuncs watch_funcs = {
 gboolean
 gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
 {
-  int sock;
+  int sock, fd;
   GstRTSPConnection *conn;
   GstRTSPResult res;
   GSource *source;
   GMainContext *context;
   GstRTSPUrl *url;
+  struct sockaddr_storage addr;
+  socklen_t addrlen;
+  gchar ip[INET6_ADDRSTRLEN];
 
   /* a new client connected. */
   sock = g_io_channel_unix_get_fd (channel);
 
   GST_RTSP_CHECK (gst_rtsp_connection_accept (sock, &conn), accept_failed);
+
+  fd = gst_rtsp_connection_get_readfd (conn);
+
+  addrlen = sizeof (addr);
+  if (getsockname (fd, (struct sockaddr *) &addr, &addrlen) < 0)
+    goto getpeername_failed;
+
+  client->is_ipv6 = addr.ss_family == AF_INET6;
+
+  addrlen = sizeof (addr);
+  if (getnameinfo ((struct sockaddr *) &addr, addrlen, ip, sizeof (ip), NULL, 0,
+          NI_NUMERICHOST) != 0)
+    goto getnameinfo_failed;
+
+  /* keep the original ip that the client connected to */
+  g_free (client->server_ip);
+  client->server_ip = g_strndup (ip, sizeof (ip));
+
+  GST_INFO ("client %p connected to server ip %s, ipv6 = %d", client,
+      client->server_ip, client->is_ipv6);
 
   url = gst_rtsp_connection_get_url (conn);
   GST_INFO ("added new client %p ip %s:%d", client, url->host, url->port);
@@ -1577,6 +1653,16 @@ accept_failed:
 
     GST_ERROR ("Could not accept client on server socket %d: %s", sock, str);
     g_free (str);
+    return FALSE;
+  }
+getpeername_failed:
+  {
+    GST_ERROR ("getpeername failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+getnameinfo_failed:
+  {
+    GST_ERROR ("getnameinfo failed: %s", g_strerror (errno));
     return FALSE;
   }
 }
