@@ -226,7 +226,7 @@ transform_ayuv_##name (guint8 * data, gint size) \
   } \
 }
 
-DEFINE_ARGB_AYUV_FUNCTIONS (rgba, 1, 2, 3, 0);
+DEFINE_ARGB_AYUV_FUNCTIONS (rgba, 3, 0, 1, 2);
 DEFINE_ARGB_AYUV_FUNCTIONS (bgra, 3, 2, 1, 0);
 DEFINE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
 DEFINE_ARGB_AYUV_FUNCTIONS (abgr, 0, 3, 2, 1);
