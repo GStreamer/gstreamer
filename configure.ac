@@ -64,6 +64,7 @@ AC_SUBST(GST_MAJORMINOR)
 
 dnl Check for tools
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
 dnl Check for GLib
