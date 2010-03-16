@@ -83,8 +83,32 @@ gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
 GstVaapiImage *
 gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer);
 
+void
+gst_vaapi_video_buffer_set_image(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiImage       *image
+);
+
+gboolean
+gst_vaapi_video_buffer_set_image_from_pool(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiVideoPool   *pool
+);
+
 GstVaapiSurface *
 gst_vaapi_video_buffer_get_surface(GstVaapiVideoBuffer *buffer);
+
+void
+gst_vaapi_video_buffer_set_surface(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiSurface     *surface
+);
+
+gboolean
+gst_vaapi_video_buffer_set_surface_from_pool(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiVideoPool   *pool
+);
 
 G_END_DECLS
 

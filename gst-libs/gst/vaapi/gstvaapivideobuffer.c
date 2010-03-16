@@ -20,6 +20,8 @@
 
 #include "config.h"
 #include "gstvaapivideobuffer.h"
+#include <gst/vaapi/gstvaapiimagepool.h>
+#include <gst/vaapi/gstvaapisurfacepool.h>
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -32,45 +34,59 @@ G_DEFINE_TYPE(GstVaapiVideoBuffer, gst_vaapi_video_buffer, GST_TYPE_BUFFER);
                                  GstVaapiVideoBufferPrivate))
 
 struct _GstVaapiVideoBufferPrivate {
-    GstVaapiVideoPool  *pool;
-    guint               pool_type;
+    GstVaapiVideoPool  *image_pool;
     GstVaapiImage      *image;
+    GstVaapiVideoPool  *surface_pool;
     GstVaapiSurface    *surface;
     guint               flags;
 };
 
-enum {
-    POOL_TYPE_NONE,
-    POOL_TYPE_IMAGE,
-    POOL_TYPE_SURFACE
-};
-
 static void
-gst_vaapi_video_buffer_finalize(GstMiniObject *object)
+gst_vaapi_video_buffer_destroy_image(GstVaapiVideoBuffer *buffer)
 {
-    GstVaapiVideoBufferPrivate *priv = GST_VAAPI_VIDEO_BUFFER(object)->priv;
-    GstMiniObjectClass *parent_class;
+    GstVaapiVideoBufferPrivate * const priv = buffer->priv;
 
     if (priv->image) {
-        if (priv->pool_type == POOL_TYPE_IMAGE)
-            gst_vaapi_video_pool_put_object(priv->pool, priv->image);
+        if (priv->image_pool)
+            gst_vaapi_video_pool_put_object(priv->image_pool, priv->image);
         else
             g_object_unref(priv->image);
         priv->image = NULL;
     }
 
+    if (priv->image_pool) {
+        g_object_unref(priv->image_pool);
+        priv->image_pool = NULL;
+    }
+}
+
+static void
+gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
+{
+    GstVaapiVideoBufferPrivate * const priv = buffer->priv;
+
     if (priv->surface) {
-        if (priv->pool_type == POOL_TYPE_SURFACE)
-            gst_vaapi_video_pool_put_object(priv->pool, priv->surface);
+        if (priv->surface_pool)
+            gst_vaapi_video_pool_put_object(priv->surface_pool, priv->surface);
         else
             g_object_unref(priv->surface);
         priv->surface = NULL;
     }
 
-    if (priv->pool) {
-        g_object_unref(priv->pool);
-        priv->pool = NULL;
+    if (priv->surface_pool) {
+        g_object_unref(priv->surface_pool);
+        priv->surface_pool = NULL;
     }
+}
+
+static void
+gst_vaapi_video_buffer_finalize(GstMiniObject *object)
+{
+    GstVaapiVideoBuffer * const buffer = GST_VAAPI_VIDEO_BUFFER(object);
+    GstMiniObjectClass *parent_class;
+
+    gst_vaapi_video_buffer_destroy_image(buffer);
+    gst_vaapi_video_buffer_destroy_surface(buffer);
 
     parent_class = GST_MINI_OBJECT_CLASS(gst_vaapi_video_buffer_parent_class);
     if (parent_class->finalize)
@@ -94,81 +110,73 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 
     priv                = GST_VAAPI_VIDEO_BUFFER_GET_PRIVATE(buffer);
     buffer->priv        = priv;
-    priv->pool          = NULL;
+    priv->image_pool    = NULL;
     priv->image         = NULL;
+    priv->surface_pool  = NULL;
     priv->surface       = NULL;
 }
 
-static GstBuffer *
-gst_vaapi_video_buffer_new(
-    GstVaapiVideoPool  *pool,
-    GstVaapiImage      *image,
-    GstVaapiSurface    *surface
-)
+static inline GstVaapiVideoBuffer *gst_vaapi_video_buffer_new(void)
 {
-    gpointer vobject = NULL;
     GstMiniObject *object;
-    GstVaapiVideoBuffer *buffer;
-    GstVaapiVideoBufferPrivate *priv;
 
     object = gst_mini_object_new(GST_VAAPI_TYPE_VIDEO_BUFFER);
     if (!object)
         return NULL;
 
-    buffer              = GST_VAAPI_VIDEO_BUFFER(object);
-    priv                = buffer->priv;
-    priv->pool          = pool;
-    priv->pool_type     = POOL_TYPE_NONE;
-    priv->image         = image;
-    priv->surface       = surface;
-
-    if (pool) {
-        vobject = gst_vaapi_video_pool_get_object(pool);
-        if (!vobject)
-            goto error;
-
-        if (GST_VAAPI_IS_IMAGE(vobject)) {
-            priv->pool_type = POOL_TYPE_IMAGE;
-            priv->image     = vobject;
-        }
-        else if (GST_VAAPI_IS_SURFACE(vobject)) {
-            priv->pool_type = POOL_TYPE_SURFACE;
-            priv->surface   = vobject;
-        }
-        else
-            goto error;
-    }
-    return GST_BUFFER(buffer);
-
-error:
-    if (vobject)
-        gst_vaapi_video_pool_put_object(pool, vobject);
-    gst_mini_object_unref(object);
-    return NULL;
+    return GST_VAAPI_VIDEO_BUFFER(object);
 }
 
 GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
 {
+    GstVaapiVideoBuffer *buffer;
+    gboolean is_image_pool, is_surface_pool;
+
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
 
-    return gst_vaapi_video_buffer_new(g_object_ref(pool), NULL, NULL);
+    is_image_pool   = GST_VAAPI_IS_IMAGE_POOL(pool);
+    is_surface_pool = GST_VAAPI_IS_SURFACE_POOL(pool);
+
+    if (!is_image_pool && !is_surface_pool)
+        return NULL;
+
+    buffer = gst_vaapi_video_buffer_new();
+    if (buffer &&
+        ((is_image_pool &&
+          gst_vaapi_video_buffer_set_image_from_pool(buffer, pool)) ||
+         (is_surface_pool &&
+          gst_vaapi_video_buffer_set_surface_from_pool(buffer, pool))))
+        return GST_BUFFER(buffer);
+
+    gst_mini_object_unref(GST_MINI_OBJECT(buffer));
+    return NULL;
 }
 
 GstBuffer *
 gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
 {
+    GstVaapiVideoBuffer *buffer;
+
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
-    return gst_vaapi_video_buffer_new(NULL, g_object_ref(image), NULL);
+    buffer = gst_vaapi_video_buffer_new();
+    if (buffer)
+        gst_vaapi_video_buffer_set_image(buffer, image);
+    return GST_BUFFER(buffer);
 }
 
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
 {
+    GstVaapiVideoBuffer *buffer;
+
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    return gst_vaapi_video_buffer_new(NULL, NULL, g_object_ref(surface));
+    buffer = gst_vaapi_video_buffer_new();
+    if (buffer)
+        gst_vaapi_video_buffer_set_surface(buffer, surface);
+    return GST_BUFFER(buffer);
 }
 
 GstVaapiImage *
@@ -179,10 +187,80 @@ gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer)
     return buffer->priv->image;
 }
 
+void
+gst_vaapi_video_buffer_set_image(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiImage       *image
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
+    g_return_if_fail(GST_VAAPI_IS_IMAGE(image));
+
+    gst_vaapi_video_buffer_destroy_image(buffer);
+
+    if (image)
+        buffer->priv->image = g_object_ref(image);
+}
+
+gboolean
+gst_vaapi_video_buffer_set_image_from_pool(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiVideoPool   *pool
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE_POOL(pool), FALSE);
+
+    gst_vaapi_video_buffer_destroy_image(buffer);
+
+    if (pool) {
+        buffer->priv->image = gst_vaapi_video_pool_get_object(pool);
+        if (!buffer->priv->image)
+            return FALSE;
+        buffer->priv->image_pool = g_object_ref(pool);
+    }
+    return TRUE;
+}
+
 GstVaapiSurface *
 gst_vaapi_video_buffer_get_surface(GstVaapiVideoBuffer *buffer)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), NULL);
 
     return buffer->priv->surface;
+}
+
+void
+gst_vaapi_video_buffer_set_surface(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiSurface     *surface
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
+    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+
+    gst_vaapi_video_buffer_destroy_surface(buffer);
+
+    if (surface)
+        buffer->priv->surface = g_object_ref(surface);
+}
+
+gboolean
+gst_vaapi_video_buffer_set_surface_from_pool(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiVideoPool   *pool
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_POOL(pool), FALSE);
+
+    gst_vaapi_video_buffer_destroy_surface(buffer);
+
+    if (pool) {
+        buffer->priv->surface = gst_vaapi_video_pool_get_object(pool);
+        if (!buffer->priv->surface)
+            return FALSE;
+        buffer->priv->surface_pool = g_object_ref(pool);
+    }
+    return TRUE;
 }
