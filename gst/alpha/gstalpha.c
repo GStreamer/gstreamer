@@ -217,6 +217,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
 {
   GstAlpha *alpha = GST_ALPHA (object);
 
+  GST_OBJECT_LOCK (alpha);
   switch (prop_id) {
     case PROP_METHOD:
       alpha->method = g_value_get_enum (value);
@@ -269,6 +270,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (alpha);
 }
 
 static void
@@ -798,6 +800,7 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (alpha), timestamp);
 
+  GST_OBJECT_LOCK (alpha);
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
       if (alpha->ayuv) {
@@ -822,6 +825,7 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
     default:
       break;
   }
+  GST_OBJECT_UNLOCK (alpha);
 
   return GST_FLOW_OK;
 }
