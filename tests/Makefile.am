@@ -10,7 +10,7 @@ TEST_CFLAGS = \
 	$(X11_CFLAGS)
 
 TEST_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-@GST_MAJORMINOR@.la \
 	$(X11_LIBS)
 
 test_display_SOURCES	= test-display.c

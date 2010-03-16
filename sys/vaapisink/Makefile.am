@@ -4,7 +4,7 @@ libgstvaapi_CFLAGS = \
 	-I$(top_srcdir)/gst-libs
 
 libgstvaapi_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la
 
 libgstvaapisink_la_SOURCES =	\
 	gstvaapisink.c		\

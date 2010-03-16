@@ -1,4 +1,10 @@
-lib_LTLIBRARIES = libgstvaapi-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = 				\
+	libgstvaapi-@GST_MAJORMINOR@.la		\
+	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
+	$(NULL)
+
+libgstvaapi_includedir =			\
+	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vaapi
 
 libgstvaapi_source_c =				\
 	gstvaapidisplay.c			\
@@ -34,6 +40,23 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiutils.h				\
 	$(NULL)
 
+libgstvaapi_x11_source_c =			\
+	gstvaapidisplay_x11.c			\
+	gstvaapiutils.c				\
+	gstvaapiutils_x11.c			\
+	gstvaapiwindow_x11.c			\
+	$(NULL)
+
+libgstvaapi_x11_source_h =			\
+	gstvaapidisplay_x11.h			\
+	gstvaapiwindow_x11.h			\
+	$(NULL)
+
+libgstvaapi_x11_source_priv_h =			\
+	gstvaapiutils.h				\
+	gstvaapiutils_x11.h			\
+	$(NULL)
+
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\
@@ -44,7 +67,7 @@ libgstvaapi_@GST_MAJORMINOR@include_HEADERS =	\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@includedir =	\
-	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vaapi
+	$(libgstvaapi_includedir)
 
 libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
@@ -59,24 +82,29 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 
-libgstvaapi_@GST_MAJORMINOR@_la_SOURCES +=	\
-	gstvaapidisplay_x11.c			\
-	gstvaapiutils_x11.c			\
-	gstvaapiwindow_x11.c			\
+libgstvaapi_x11_@GST_MAJORMINOR@_la_SOURCES =	\
+	$(libgstvaapi_x11_source_c)		\
+	$(libgstvaapi_x11_source_priv_h)	\
 	$(NULL)
 
-libgstvaapi_@GST_MAJORMINOR@include_HEADERS +=	\
-	gstvaapidisplay_x11.h			\
-	gstvaapiutils_x11.h			\
-	gstvaapiwindow_x11.h			\
+libgstvaapi_x11_@GST_MAJORMINOR@include_HEADERS = \
+	$(libgstvaapi_x11_source_h)		\
 	$(NULL)
 
-libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS +=	\
+libgstvaapi_x11_@GST_MAJORMINOR@includedir =	\
+	$(libgstvaapi_includedir)
+
+libgstvaapi_x11_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-I$(top_srcdir)/gst-libs		\
+	$(GLIB_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
-libgstvaapi_@GST_MAJORMINOR@_la_LIBADD +=	\
+libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
+	$(GLIB_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
+	libgstvaapi-@GST_MAJORMINOR@.la		\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*

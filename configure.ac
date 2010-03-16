@@ -66,6 +66,11 @@ dnl Check for tools
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
+dnl Check for GLib
+PKG_CHECK_MODULES([GLIB], [glib-2.0])
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
 dnl Check for GStreamer
 PKG_CHECK_MODULES([GST],
     [gstreamer-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
