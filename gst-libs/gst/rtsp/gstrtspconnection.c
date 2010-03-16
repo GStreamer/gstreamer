@@ -461,11 +461,20 @@ static gchar *
 do_resolve (const gchar * host)
 {
   static gchar ip[INET6_ADDRSTRLEN];
-  struct addrinfo *aires;
+  struct addrinfo *aires, hints;
   struct addrinfo *ai;
   gint aierr;
 
-  aierr = getaddrinfo (host, NULL, NULL, &aires);
+  memset (&hints, 0, sizeof (struct addrinfo));
+  hints.ai_family = AF_UNSPEC;  /* Allow IPv4 or IPv6 */
+  hints.ai_socktype = SOCK_DGRAM;       /* Datagram socket */
+  hints.ai_flags = AI_PASSIVE;  /* For wildcard IP address */
+  hints.ai_protocol = 0;        /* Any protocol */
+  hints.ai_canonname = NULL;
+  hints.ai_addr = NULL;
+  hints.ai_next = NULL;
+
+  aierr = getaddrinfo (host, NULL, &hints, &aires);
   if (aierr != 0)
     goto no_addrinfo;
 
