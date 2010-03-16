@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/rules/utils.mk
+
+# Allow SMP build
+ifeq ($(DEBIAN_BUILD_NCPUS),)
+	DEBIAN_BUILD_NCPUS = $(shell /usr/bin/getconf _NPROCESSORS_ONLN)
+endif
+ifneq ($(DEBIAN_BUILD_NCPUS),)
+	EXTRA_MAKE_FLAGS += -j$(DEBIAN_BUILD_NCPUS)
+endif
+MAKE += $(EXTRA_MAKE_FLAGS)
