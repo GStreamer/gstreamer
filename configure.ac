@@ -148,11 +148,17 @@ else
     AC_MSG_ERROR([Your VA-API SDK does not include SDS extensions])
 fi
 
+pkgconfigdir=${libdir}/pkgconfig
+AC_SUBST(pkgconfigdir)
+
 AC_OUTPUT([
     Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
+    pkgconfig/Makefile
+    pkgconfig/gstreamer-vaapi.pc
+    pkgconfig/gstreamer-vaapi-x11.pc
     sys/Makefile
     sys/vaapiconvert/Makefile
     sys/vaapisink/Makefile

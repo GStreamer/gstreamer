@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = gst-libs sys tests
+SUBDIRS = gst-libs pkgconfig sys tests
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \

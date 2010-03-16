@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+pluginsdir=@libdir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer VA-API (x11) Plugins Libraries
+Description: Streaming media framework, VA-API (x11) plugins libraries
+Requires: gstreamer-vaapi-@GST_MAJORMINOR@ libva-x11
+Version: @VERSION@
+Libs: -L${libdir} -lgstvaapi-x11-@GST_MAJORMINOR@
+Cflags: -I${includedir}
