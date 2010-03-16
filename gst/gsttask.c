@@ -73,6 +73,8 @@
 #include "gstinfo.h"
 #include "gsttask.h"
 
+#include <stdio.h>
+
 #ifdef HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
