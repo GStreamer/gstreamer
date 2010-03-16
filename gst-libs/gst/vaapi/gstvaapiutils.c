@@ -18,7 +18,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#include "vaapi_utils.h"
+#include "gstvaapiutils.h"
 #include <stdio.h>
 #include <stdarg.h>
 

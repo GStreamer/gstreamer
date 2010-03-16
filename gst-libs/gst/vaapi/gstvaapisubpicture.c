@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <string.h>
-#include "vaapi_utils.h"
+#include "gstvaapiutils.h"
 #include "gstvaapisubpicture.h"
 #include <va/va_backend.h>
 

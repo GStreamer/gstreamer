@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include "vaapi_utils.h"
+#include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
 #include <va/va_backend.h>
 

@@ -19,7 +19,7 @@
  */
 
 #include "config.h"
-#include "vaapi_utils.h"
+#include "gstvaapiutils.h"
 #include "gstvaapidisplay_x11.h"
 
 #define DEBUG 1

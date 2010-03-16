@@ -21,7 +21,7 @@
 #ifndef VAAPI_DEBUG_H
 #define VAAPI_DEBUG_H
 
-#include "vaapi_utils.h"
+#include "gstvaapiutils.h"
 
 #if DEBUG
 # define D(x) x

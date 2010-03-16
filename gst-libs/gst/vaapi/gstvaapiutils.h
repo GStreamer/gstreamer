@@ -1,5 +1,5 @@
 /*
- *  vaapi_utils.h - VA-API utilities
+ *  gstvaapiutils.h - VA-API utilities
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *

@@ -8,11 +8,11 @@ libgstvaapi_source_c =				\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
+	gstvaapiutils.c				\
 	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
 	gstvaapivideosink.c			\
 	gstvaapiwindow.c			\
-	vaapi_utils.c				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
@@ -23,12 +23,12 @@ libgstvaapi_source_h =				\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\
+	gstvaapiutils.h				\
 	gstvaapivideobuffer.h			\
 	gstvaapivideopool.h			\
 	gstvaapivideosink.h			\
 	gstvaapiwindow.h			\
 	vaapi_debug.h				\
-	vaapi_utils.h				\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
