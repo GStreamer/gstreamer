@@ -809,7 +809,9 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
   outcaps = gst_caps_new_simple ("video/x-h264",
       "width", G_TYPE_INT, encoder->width,
       "height", G_TYPE_INT, encoder->height,
-      "framerate", GST_TYPE_FRACTION, encoder->fps_num, encoder->fps_den, NULL);
+      "framerate", GST_TYPE_FRACTION, encoder->fps_num, encoder->fps_den,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, encoder->par_num,
+      encoder->par_den, NULL);
 
   structure = gst_caps_get_structure (outcaps, 0);
 
