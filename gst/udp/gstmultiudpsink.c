@@ -834,7 +834,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
     GST_DEBUG_OBJECT (sink, "creating sockets");
     /* create sender socket try IP6, fall back to IP4 */
     sink->ss_family = AF_INET6;
-    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1){
+    if ((sink->sock = socket (AF_INET6, SOCK_DGRAM, 0)) == -1) {
       sink->ss_family = AF_INET;
       if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
         goto no_socket;
@@ -843,7 +843,20 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
     GST_DEBUG_OBJECT (sink, "have socket");
     sink->externalfd = FALSE;
   } else {
+    struct sockaddr_storage myaddr;
+#ifdef G_OS_WIN32
+    gint len;
+#else
+    guint len;
+#endif
+
     GST_DEBUG_OBJECT (sink, "using configured socket");
+    /* we use the configured socket, try to get some info about it */
+    len = sizeof (myaddr);
+    if (getsockname (sink->sockfd, (struct sockaddr *) &myaddr, &len) < 0)
+      goto getsockname_error;
+
+    sink->ss_family = myaddr.ss_family;
     /* we use the configured socket */
     sink->sock = sink->sockfd;
     sink->externalfd = TRUE;
@@ -876,6 +889,15 @@ no_socket:
     int errorcode = socket_last_error_code ();
     GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
         ("Could not create socket (%d): %s", errorcode, errormessage));
+    g_free (errormessage);
+    return FALSE;
+  }
+getsockname_error:
+  {
+    gchar *errormessage = socket_last_error_message ();
+    int errorcode = socket_last_error_code ();
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
+        ("Could not getsockname (%d): %s", errorcode, errormessage));
     g_free (errormessage);
     return FALSE;
   }
