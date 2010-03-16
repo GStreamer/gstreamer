@@ -380,11 +380,6 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
           &alpha->width, &alpha->height))
     return FALSE;
 
-  if (alpha->format == GST_VIDEO_FORMAT_AYUV)
-    alpha->ayuv = TRUE;
-  else
-    alpha->ayuv = FALSE;
-
   return TRUE;
 }
 
@@ -803,7 +798,7 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
   GST_OBJECT_LOCK (alpha);
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
-      if (alpha->ayuv) {
+      if (alpha->format == GST_VIDEO_FORMAT_AYUV) {
         gst_alpha_set_ayuv (GST_BUFFER_DATA (in),
             GST_BUFFER_DATA (out), width, height, alpha->alpha);
       } else {
@@ -814,7 +809,7 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
     case ALPHA_METHOD_GREEN:
     case ALPHA_METHOD_BLUE:
     case ALPHA_METHOD_CUSTOM:
-      if (alpha->ayuv) {
+      if (alpha->format == GST_VIDEO_FORMAT_AYUV) {
         gst_alpha_chroma_key_ayuv (GST_BUFFER_DATA (in),
             GST_BUFFER_DATA (out), width, height, alpha);
       } else {

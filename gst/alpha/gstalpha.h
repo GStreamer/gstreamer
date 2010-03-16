@@ -63,7 +63,6 @@ struct _GstAlpha
   /* caps */
   GstVideoFormat format;
   gint width, height;
-  gboolean ayuv;
 
   gdouble alpha;
 
