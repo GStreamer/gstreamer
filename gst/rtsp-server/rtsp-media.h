@@ -191,6 +191,7 @@ struct _GstRTSPMedia {
   gboolean           shared;
   gboolean           reusable;
   gboolean           reused;
+  gboolean           is_ipv6;
 
   GstElement        *element;
   GArray            *streams;

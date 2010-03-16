@@ -22,16 +22,18 @@
 
 /**
  * gst_rtsp_sdp_from_media:
+ * @sdp: a #GstSDPessage
+ * @info: info
  * @media: a #GstRTSPMedia
  *
- * Create a new sdp message for @media.
+ * Add @media specific info to @sdp. @info is used to configure the connection
+ * information in the SDP.
  *
- * Returns: a new sdp message for @media. gst_sdp_message_free() after usage.
+ * Returns: TRUE on success.
  */
-GstSDPMessage *
-gst_rtsp_sdp_from_media (GstRTSPMedia * media)
+gboolean
+gst_rtsp_sdp_from_media (GstSDPMessage *sdp, GstSDPInfo *info, GstRTSPMedia * media)
 {
-  GstSDPMessage *sdp;
   guint i, n_streams;
   gchar *rangestr;
 
@@ -40,19 +42,6 @@ gst_rtsp_sdp_from_media (GstRTSPMedia * media)
 
   n_streams = gst_rtsp_media_n_streams (media);
 
-  gst_sdp_message_new (&sdp);
-
-  /* some standard things first */
-  gst_sdp_message_set_version (sdp, "0");
-
-  gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", "IP4",
-      "127.0.0.1");
-  gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
-  gst_sdp_message_set_information (sdp, "rtsp-server");
-  gst_sdp_message_add_time (sdp, "0", "0", NULL);
-  gst_sdp_message_add_attribute (sdp, "tool", "GStreamer");
-  gst_sdp_message_add_attribute (sdp, "type", "broadcast");
-  gst_sdp_message_add_attribute (sdp, "control", "*");
   rangestr = gst_rtsp_range_to_string (&media->range);
   gst_sdp_message_add_attribute (sdp, "range", rangestr);
   g_free (rangestr);
@@ -96,7 +85,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia * media)
     gst_sdp_media_set_proto (smedia, "RTP/AVP");
 
     /* for the c= line */
-    gst_sdp_media_add_connection (smedia, "IN", "IP4", "127.0.0.1", 0, 0);
+    gst_sdp_media_add_connection (smedia, "IN", info->server_proto, info->server_ip, 0, 0);
 
     /* get clock-rate, media type and params for the rtpmap attribute */
     gst_structure_get_int (s, "clock-rate", &caps_rate);
@@ -163,12 +152,12 @@ gst_rtsp_sdp_from_media (GstRTSPMedia * media)
     gst_sdp_media_free (smedia);
   }
 
-  return sdp;
+  return TRUE;
 
   /* ERRORS */
 not_prepared:
   {
     GST_ERROR ("media %p is not prepared", media);
-    return NULL;
+    return FALSE;
   }
 }

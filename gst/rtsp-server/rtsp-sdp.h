@@ -27,8 +27,13 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+  const gchar *server_proto;
+  const gchar *server_ip;
+} GstSDPInfo;
+
 /* creating SDP */
-GstSDPMessage *     gst_rtsp_sdp_from_media      (GstRTSPMedia *media);
+gboolean            gst_rtsp_sdp_from_media      (GstSDPMessage *sdp, GstSDPInfo *info, GstRTSPMedia * media);
 
 G_END_DECLS
 

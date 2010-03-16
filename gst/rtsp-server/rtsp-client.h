@@ -61,6 +61,7 @@ typedef struct _GstRTSPClientClass GstRTSPClientClass;
  * @connection: the connection object handling the client request.
  * @watch: watch for the connection
  * @watchid: id of the watch
+ * @ip: ip address used by the client to connect to us
  * @session_pool: handle to the session pool used by the client.
  * @media_mapping: handle to the media mapping used by the client.
  * @uri: cached uri
@@ -76,6 +77,8 @@ struct _GstRTSPClient {
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
   guint              watchid;
+  gchar             *server_ip;
+  gboolean           is_ipv6;
 
   GstRTSPSessionPool   *session_pool;
   GstRTSPMediaMapping  *media_mapping;

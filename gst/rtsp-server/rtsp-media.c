@@ -539,7 +539,7 @@ gst_rtsp_media_stream_rtcp (GstRTSPMediaStream * stream, GstBuffer * buffer)
 
 /* Allocate the udp ports and sockets */
 static gboolean
-alloc_udp_ports (GstRTSPMediaStream * stream, gboolean is_ipv6)
+alloc_udp_ports (GstRTSPMedia * media, GstRTSPMediaStream * stream)
 {
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
@@ -558,7 +558,7 @@ alloc_udp_ports (GstRTSPMediaStream * stream, gboolean is_ipv6)
   /* Start with random port */
   tmp_rtp = 0;
 
-  if (is_ipv6)
+  if (media->is_ipv6)
     host = "udp://[::0]";
   else
     host = "udp://0.0.0.0";
@@ -922,7 +922,7 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   /* allocate udp ports, we will have 4 of them, 2 for receiving RTP/RTCP and 2
    * for sending RTP/RTCP. The sender and receiver ports are shared between the
    * elements */
-  if (!alloc_udp_ports (stream, FALSE))
+  if (!alloc_udp_ports (media, stream))
     return FALSE;
 
   /* add the ports to the pipeline */

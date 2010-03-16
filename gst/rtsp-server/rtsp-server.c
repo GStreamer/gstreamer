@@ -425,7 +425,7 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
   hints.ai_socktype = SOCK_STREAM; /* stream socket */
-  hints.ai_flags = AI_PASSIVE;     /* For wildcard IP address */
+  hints.ai_flags = AI_PASSIVE | AI_CANONNAME;     /* For wildcard IP address */
   hints.ai_protocol = 0;           /* Any protocol */
   hints.ai_canonname = NULL;
   hints.ai_addr = NULL;
@@ -446,8 +446,10 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
       continue;
     }
 
-    if (bind (sockfd, rp->ai_addr, rp->ai_addrlen) == 0)
+    if (bind (sockfd, rp->ai_addr, rp->ai_addrlen) == 0) {
+      GST_DEBUG_OBJECT (server, "bind on %s", rp->ai_canonname);
       break;
+    }
 
     GST_DEBUG_OBJECT (server, "failed to bind socket (%s), try next", g_strerror (errno));
     close (sockfd);
@@ -654,7 +656,7 @@ gst_rtsp_server_create_watch (GstRTSPServer *server)
     channel = gst_rtsp_server_get_io_channel (server);
     if (channel == NULL)
       goto no_channel;
-     
+
     /* create a watch for reads (new connections) and possible errors */
     server->io_watch = g_io_create_watch (channel, G_IO_IN |
                   G_IO_ERR | G_IO_HUP | G_IO_NVAL);
@@ -682,7 +684,7 @@ no_channel:
  * This function should be called when the server properties and urls are fully
  * configured and the server is ready to start.
  *
- * Returns: the ID (greater than 0) for the source within the GMainContext. 
+ * Returns: the ID (greater than 0) for the source within the GMainContext.
  */
 guint
 gst_rtsp_server_attach (GstRTSPServer *server, GMainContext *context)
