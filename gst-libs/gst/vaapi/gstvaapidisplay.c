@@ -54,15 +54,53 @@ enum {
 };
 
 static void
-filter_formats(VAImageFormat *va_formats, unsigned int *pnum_va_formats)
+append_format(
+    VAImageFormat     **pva_formats,
+    unsigned int       *pnum_va_formats,
+    GstVaapiImageFormat format
+)
+{
+    const VAImageFormat *va_format;
+    VAImageFormat *new_va_formats;
+
+    va_format = gst_vaapi_image_format_get_va_format(format);
+    if (!va_format)
+        return;
+
+    new_va_formats = realloc(
+        *pva_formats,
+        sizeof(new_va_formats[0]) * (1 + *pnum_va_formats)
+    );
+    if (!new_va_formats)
+        return;
+
+    new_va_formats[(*pnum_va_formats)++] = *va_format;
+    *pva_formats = new_va_formats;
+}
+
+static void
+filter_formats(VAImageFormat **pva_formats, unsigned int *pnum_va_formats)
 {
     unsigned int i = 0;
+    gboolean has_YV12 = FALSE;
+    gboolean has_I420 = FALSE;
 
     while (i < *pnum_va_formats) {
-        VAImageFormat * const va_format = &va_formats[i];
+        VAImageFormat * const va_format = &(*pva_formats)[i];
         const GstVaapiImageFormat format = gst_vaapi_image_format(va_format);
-        if (format)
+        if (format) {
             ++i;
+            switch (format) {
+            case GST_VAAPI_IMAGE_YV12:
+                has_YV12 = TRUE;
+                break;
+            case GST_VAAPI_IMAGE_I420:
+                has_I420 = TRUE;
+                break;
+            default:
+                break;
+            }
+        }
         else {
             /* Remove any format that is not supported by libgstvaapi */
             GST_DEBUG("unsupported format %c%c%c%c",
@@ -70,9 +108,16 @@ filter_formats(VAImageFormat *va_formats, unsigned int *pnum_va_formats)
                       (va_format->fourcc >> 8) & 0xff,
                       (va_format->fourcc >> 16) & 0xff,
                       (va_format->fourcc >> 24) & 0xff);
-            *va_format = va_formats[--(*pnum_va_formats)];
+            *va_format = (*pva_formats)[--(*pnum_va_formats)];
         }
     }
+
+    /* Append I420 (resp. YV12) format if YV12 (resp. I420) is not
+       supported by the underlying driver */
+    if (has_YV12 && !has_I420)
+        append_format(pva_formats, pnum_va_formats, GST_VAAPI_IMAGE_I420);
+    else if (has_I420 && !has_YV12)
+        append_format(pva_formats, pnum_va_formats, GST_VAAPI_IMAGE_YV12);
 }
 
 /* Sort image formats. Prefer YUV formats first */
@@ -207,7 +252,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     for (i = 0; i < priv->num_image_formats; i++)
         GST_DEBUG("  %s", string_of_FOURCC(priv->image_formats[i].fourcc));
 
-    filter_formats(priv->image_formats, &priv->num_image_formats);
+    filter_formats(&priv->image_formats, &priv->num_image_formats);
     qsort(
         priv->image_formats,
         priv->num_image_formats,
@@ -232,7 +277,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
         return FALSE;
 
-    filter_formats(priv->subpicture_formats, &priv->num_subpicture_formats);
+    filter_formats(&priv->subpicture_formats, &priv->num_subpicture_formats);
     qsort(
         priv->subpicture_formats,
         priv->num_subpicture_formats,

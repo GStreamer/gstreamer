@@ -39,6 +39,7 @@ struct _GstVaapiImagePrivate {
     gboolean            is_constructed;
     VAImage             image;
     guchar             *image_data;
+    GstVaapiImageFormat internal_format;
     GstVaapiImageFormat format;
     guint               width;
     guint               height;
@@ -77,29 +78,57 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
 }
 
 static gboolean
-gst_vaapi_image_create(GstVaapiImage *image)
+_gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 {
     GstVaapiImagePrivate * const priv = image->priv;
-    const VAImageFormat *format;
+    const VAImageFormat *va_format;
     VAStatus status;
 
-    if (!gst_vaapi_display_has_image_format(priv->display, priv->format))
+    if (!gst_vaapi_display_has_image_format(priv->display, format))
         return FALSE;
 
-    format = gst_vaapi_image_format_get_va_format(priv->format);
-
-    g_return_val_if_fail(format, FALSE);
+    va_format = gst_vaapi_image_format_get_va_format(format);
+    if (!va_format)
+        return FALSE;
 
     status = vaCreateImage(
         gst_vaapi_display_get_display(priv->display),
-        (VAImageFormat *)format,
+        (VAImageFormat *)va_format,
         priv->width,
         priv->height,
         &priv->image
     );
-    if (!vaapi_check_status(status, "vaCreateImage()"))
+    return (status == VA_STATUS_SUCCESS &&
+            priv->image.format.fourcc == va_format->fourcc);
+}
+
+static gboolean
+gst_vaapi_image_create(GstVaapiImage *image)
+{
+    GstVaapiImagePrivate * const priv = image->priv;
+
+    if (_gst_vaapi_image_create(image, priv->format)) {
+        priv->internal_format = priv->format;
+        return TRUE;
+    }
+
+    switch (priv->format) {
+    case GST_VAAPI_IMAGE_I420:
+        priv->internal_format = GST_VAAPI_IMAGE_YV12;
+        break;
+    case GST_VAAPI_IMAGE_YV12:
+        priv->internal_format = GST_VAAPI_IMAGE_I420;
+        break;
+    default:
+        priv->internal_format = 0;
+        break;
+    }
+    if (!priv->internal_format)
+        return FALSE;
+    if (!_gst_vaapi_image_create(image, priv->internal_format))
         return FALSE;
 
+    GST_DEBUG("image 0x%08x", priv->image.image_id);
     return TRUE;
 }
 
@@ -462,12 +491,14 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
         return FALSE;
 
     format = gst_vaapi_image_format_from_caps(caps);
-    swap_YUV = ((format == GST_VAAPI_IMAGE_I420 &&
-                 priv->format == GST_VAAPI_IMAGE_YV12) ||
-                (format == GST_VAAPI_IMAGE_YV12 &&
-                 priv->format == GST_VAAPI_IMAGE_I420));
-    if (format != priv->format && !swap_YUV)
+    if (format != priv->format)
         return FALSE;
+
+    swap_YUV = (priv->format != priv->internal_format &&
+                ((priv->format == GST_VAAPI_IMAGE_I420 &&
+                  priv->internal_format == GST_VAAPI_IMAGE_YV12) ||
+                 (priv->format == GST_VAAPI_IMAGE_YV12 &&
+                  priv->internal_format == GST_VAAPI_IMAGE_I420)));
 
     structure = gst_caps_get_structure(caps, 0);
     gst_structure_get_int(structure, "width",  &width);
@@ -478,7 +509,7 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     if (!gst_vaapi_image_map(image))
         return FALSE;
 
-    if (format == priv->format && data_size == priv->image.data_size)
+    if (format == priv->internal_format && data_size == priv->image.data_size)
         memcpy(priv->image_data, data, data_size);
     else {
         /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */

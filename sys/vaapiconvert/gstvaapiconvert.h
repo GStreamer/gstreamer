@@ -65,17 +65,12 @@ struct _GstVaapiConvert {
     GstBaseTransform    parent_instance;
 
     GstVaapiDisplay    *display;
-    GstVaapiImageFormat image_format;
     GstVaapiVideoPool  *images;
     guint               image_width;
     guint               image_height;
     GstVaapiVideoPool  *surfaces;
     guint               surface_width;
     guint               surface_height;
-
-    /* XXX: implement YV12 or I420 formats ourselves */
-    guint               has_YV12 : 1;
-    guint               has_I420 : 1;
 };
 
 struct _GstVaapiConvertClass {

@@ -292,41 +292,14 @@ gst_vaapiconvert_transform_caps(
             return NULL;
         out_caps = gst_caps_from_string(gst_vaapiconvert_yuv_caps_str);
         if (convert->display) {
-            GstVaapiImageFormat fixup_format;
-            GstCaps *allowed_caps, *new_caps;
-
+            GstCaps *allowed_caps, *inter_caps;
             allowed_caps = gst_vaapi_display_get_image_caps(convert->display);
             if (!allowed_caps)
                 return NULL;
-
-            new_caps = gst_caps_intersect(out_caps, allowed_caps);
+            inter_caps = gst_caps_intersect(out_caps, allowed_caps);
             gst_caps_unref(allowed_caps);
             gst_caps_unref(out_caps);
-            out_caps = new_caps;
-
-            convert->has_YV12 = gst_vaapi_display_has_image_format(
-                convert->display,
-                GST_VAAPI_IMAGE_YV12
-            );
-            convert->has_I420 = gst_vaapi_display_has_image_format(
-                convert->display,
-                GST_VAAPI_IMAGE_I420
-            );
-            if (convert->has_YV12 && !convert->has_I420)
-                fixup_format = GST_VAAPI_IMAGE_I420;
-            else if (convert->has_I420 && !convert->has_YV12)
-                fixup_format = GST_VAAPI_IMAGE_YV12;
-            else
-                fixup_format = 0;
-            if (fixup_format) {
-                allowed_caps = gst_vaapi_image_format_get_caps(fixup_format);
-                if (allowed_caps) {
-                    new_caps = gst_caps_union(out_caps, allowed_caps);
-                    gst_caps_unref(allowed_caps);
-                    gst_caps_unref(out_caps);
-                    out_caps = new_caps;
-                }
-            }
+            out_caps = inter_caps;
         }
     }
 
@@ -348,33 +321,12 @@ gst_vaapiconvert_set_caps(
 )
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
-    GstCaps *fixed_incaps = NULL;
     GstStructure *structure;
     gint width, height;
-    guint32 format;
 
     structure = gst_caps_get_structure(incaps, 0);
     gst_structure_get_int(structure, "width",  &width);
     gst_structure_get_int(structure, "height", &height);
-
-#define GST_FORMAT_YV12 GST_MAKE_FOURCC ('Y', 'V', '1', '2')
-#define GST_FORMAT_I420 GST_MAKE_FOURCC ('I', '4', '2', '0')
-
-    /* Fix I420 and YV12 formats */
-    if (gst_structure_get_fourcc(structure, "format", &format)) {
-        if (format == GST_FORMAT_I420 && !convert->has_I420)
-            format = GST_FORMAT_YV12;
-        else if (format == GST_FORMAT_YV12 && !convert->has_YV12)
-            format = GST_FORMAT_I420;
-        else
-            format = 0;
-        if (format) {
-            fixed_incaps = gst_caps_copy(incaps);
-            structure = gst_caps_get_structure(fixed_incaps, 0);
-            gst_structure_set(structure, "format", GST_TYPE_FOURCC, format, NULL);
-            incaps = fixed_incaps;
-        }
-    }
 
     if (width != convert->image_width || height != convert->image_height) {
         if (convert->images)
@@ -395,9 +347,6 @@ gst_vaapiconvert_set_caps(
         if (!convert->surfaces)
             return FALSE;
     }
-
-    if (fixed_incaps)
-        gst_caps_unref(fixed_incaps);
     return TRUE;
 }
 
