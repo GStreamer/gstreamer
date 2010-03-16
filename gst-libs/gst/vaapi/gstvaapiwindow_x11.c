@@ -21,6 +21,7 @@
 #include "config.h"
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapidisplay_x11.h"
+#include "gstvaapiutils_x11.h"
 
 #define DEBUG 1
 #include "vaapi_debug.h"
@@ -44,121 +45,6 @@ enum {
     PROP_DISPLAY,
     PROP_XID,
 };
-
-// X error trap
-static int x11_error_code = 0;
-static int (*old_error_handler)(Display *, XErrorEvent *);
-
-static int error_handler(Display *dpy, XErrorEvent *error)
-{
-    x11_error_code = error->error_code;
-    return 0;
-}
-
-static void x11_trap_errors(void)
-{
-    x11_error_code    = 0;
-    old_error_handler = XSetErrorHandler(error_handler);
-}
-
-static int x11_untrap_errors(void)
-{
-    XSetErrorHandler(old_error_handler);
-    return x11_error_code;
-}
-
-// X window management
-static const int x11_event_mask = (KeyPressMask |
-                                   KeyReleaseMask |
-                                   ButtonPressMask |
-                                   ButtonReleaseMask |
-                                   PointerMotionMask |
-                                   EnterWindowMask |
-                                   ExposureMask |
-                                   StructureNotifyMask);
-
-static Window
-x11_create_window(Display *display, unsigned int width, unsigned int height)
-{
-    Window root_window, window;
-    int screen, depth;
-    Visual *vis;
-    XSetWindowAttributes xswa;
-    unsigned long xswa_mask;
-    XWindowAttributes wattr;
-    unsigned long black_pixel, white_pixel;
-
-    screen      = DefaultScreen(display);
-    vis         = DefaultVisual(display, screen);
-    root_window = RootWindow(display, screen);
-    black_pixel = BlackPixel(display, screen);
-    white_pixel = WhitePixel(display, screen);
-
-    XGetWindowAttributes(display, root_window, &wattr);
-    depth = wattr.depth;
-    if (depth != 15 && depth != 16 && depth != 24 && depth != 32)
-        depth = 24;
-
-    xswa_mask             = CWBorderPixel | CWBackPixel;
-    xswa.border_pixel     = black_pixel;
-    xswa.background_pixel = white_pixel;
-
-    window = XCreateWindow(
-        display,
-        root_window,
-        0, 0, width, height,
-        0,
-        depth,
-        InputOutput,
-        vis,
-        xswa_mask, &xswa
-    );
-    if (!window)
-        return None;
-
-    XSelectInput(display, window, x11_event_mask);
-    return window;
-}
-
-static gboolean
-x11_get_geometry(
-    Display    *dpy,
-    Drawable    drawable,
-    gint       *px,
-    gint       *py,
-    guint      *pwidth,
-    guint      *pheight
-)
-{
-    Window rootwin;
-    int x, y;
-    unsigned int width, height, border_width, depth;
-
-    x11_trap_errors();
-    XGetGeometry(
-        dpy,
-        drawable,
-        &rootwin,
-        &x, &y, &width, &height,
-        &border_width,
-        &depth
-    );
-    if (x11_untrap_errors())
-        return FALSE;
-
-    if (px)      *px      = x;
-    if (py)      *py      = y;
-    if (pwidth)  *pwidth  = width;
-    if (pheight) *pheight = height;
-    return TRUE;
-}
-
-static void x11_wait_event(Display *dpy, Window w, int type)
-{
-    XEvent e;
-    while (!XCheckTypedWindowEvent(dpy, w, type, &e))
-        g_usleep(10);
-}
 
 static gboolean
 gst_vaapi_window_x11_show(GstVaapiWindow *window)

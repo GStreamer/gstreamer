@@ -57,11 +57,13 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES +=	\
 	gstvaapidisplay_x11.c			\
+	gstvaapiutils_x11.c			\
 	gstvaapiwindow_x11.c			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@include_HEADERS +=	\
 	gstvaapidisplay_x11.h			\
+	gstvaapiutils_x11.h			\
 	gstvaapiwindow_x11.h			\
 	$(NULL)
 
