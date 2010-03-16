@@ -85,6 +85,9 @@ gst_vaapi_image_new(
 VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image);
 
+gboolean
+gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image);
+
 GstVaapiDisplay *
 gst_vaapi_image_get_display(GstVaapiImage *image);
 
@@ -99,6 +102,9 @@ gst_vaapi_image_get_height(GstVaapiImage *image);
 
 void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight);
+
+gboolean
+gst_vaapi_image_is_linear(GstVaapiImage *image);
 
 gboolean
 gst_vaapi_image_is_mapped(GstVaapiImage *image);
@@ -117,6 +123,9 @@ gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane);
 
 guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane);
+
+guint
+gst_vaapi_image_get_data_size(GstVaapiImage *image);
 
 gboolean
 gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer);

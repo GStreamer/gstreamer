@@ -55,6 +55,12 @@ enum {
     PROP_HEIGHT
 };
 
+#define SWAP_UINT(a, b) do { \
+        unsigned int v = a;  \
+        a = b;               \
+        b = v;               \
+    } while (0)
+
 static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
@@ -317,9 +323,32 @@ VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, VA_INVALID_ID);
 
     return image->priv->image.image_id;
+}
+
+gboolean
+gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    if (!va_image)
+        return TRUE;
+
+    *va_image = image->priv->image;
+
+    if (image->priv->format != image->priv->internal_format) {
+        if (!(image->priv->format == GST_VAAPI_IMAGE_I420 &&
+              image->priv->internal_format == GST_VAAPI_IMAGE_YV12) &&
+            !(image->priv->format == GST_VAAPI_IMAGE_YV12 &&
+              image->priv->internal_format == GST_VAAPI_IMAGE_I420))
+            return FALSE;
+        SWAP_UINT(va_image->offsets[1], va_image->offsets[2]);
+        SWAP_UINT(va_image->pitches[1], va_image->pitches[2]);
+    }
+    return TRUE;
 }
 
 GstVaapiDisplay *
@@ -369,6 +398,46 @@ gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 
     if (pheight)
         *pheight = image->priv->height;
+}
+
+gboolean
+gst_vaapi_image_is_linear(GstVaapiImage *image)
+{
+    VAImage va_image;
+    guint i, width, height, width2, height2, data_size;
+
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    if (!gst_vaapi_image_get_image(image, &va_image))
+        return FALSE;
+
+    for (i = 1; i < va_image.num_planes; i++)
+        if (va_image.offsets[i] < va_image.offsets[i - 1])
+            return FALSE;
+
+    width   = image->priv->width;
+    height  = image->priv->height;
+    width2  = (width  + 1) / 2;
+    height2 = (height + 1) / 2;
+
+    switch (image->priv->internal_format) {
+    case GST_VAAPI_IMAGE_NV12:
+    case GST_VAAPI_IMAGE_YV12:
+    case GST_VAAPI_IMAGE_I420:
+        data_size = width * height + 2 * width2 * height2;
+        break;
+    case GST_VAAPI_IMAGE_ARGB:
+    case GST_VAAPI_IMAGE_RGBA:
+    case GST_VAAPI_IMAGE_ABGR:
+    case GST_VAAPI_IMAGE_BGRA:
+        data_size = 4 * width * height;
+        break;
+    default:
+        g_error("FIXME: incomplete formats");
+        break;
+    }
+    return va_image.data_size == data_size;
 }
 
 static inline gboolean
@@ -462,6 +531,15 @@ gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
     g_return_val_if_fail(plane < image->priv->image.num_planes, 0);
 
     return image->priv->image.pitches[plane];
+}
+
+guint
+gst_vaapi_image_get_data_size(GstVaapiImage *image)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    return image->priv->image.data_size;
 }
 
 gboolean
