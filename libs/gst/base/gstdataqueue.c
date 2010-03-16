@@ -195,6 +195,8 @@ gst_data_queue_init (GstDataQueue * queue)
  * or @emptycallback.
  *
  * Returns: a new #GstDataQueue.
+ *
+ * Since: 0.10.26
  */
 
 GstDataQueue *
