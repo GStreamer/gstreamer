@@ -896,6 +896,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
   data[2] = ((size - 11 - 4) >> 8) & 0xff;
   data[3] = ((size - 11 - 4) >> 0) & 0xff;
 
+  /* wrap the timestamp every G_MAXINT32 miliseconds */
+  timestamp &= 0x7fffffff;
   data[4] = (timestamp >> 16) & 0xff;
   data[5] = (timestamp >> 8) & 0xff;
   data[6] = (timestamp >> 0) & 0xff;
@@ -1345,8 +1347,11 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
     }
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (best_time)
-      && best_time / GST_MSECOND > G_MAXUINT32) {
+  /* The FLV timestamp is an int32 field. For non-live streams error out if a
+     bigger timestamp is seen, for live the timestamp will get wrapped in
+     gst_flv_mux_buffer_to_tag */
+  if (!mux->is_live && GST_CLOCK_TIME_IS_VALID (best_time)
+      && best_time / GST_MSECOND > G_MAXINT32) {
     GST_WARNING_OBJECT (mux, "Timestamp larger than FLV supports - EOS");
     eos = TRUE;
   }
