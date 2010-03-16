@@ -1550,8 +1550,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
     /* if we have a suggestion, pretend we got these as input */
     GST_OBJECT_LOCK (pad);
-    if ((priv->size_suggest && priv->sink_suggest
-            && !gst_caps_is_equal (caps, priv->sink_suggest))) {
+    if ((priv->sink_suggest && !gst_caps_is_equal (caps, priv->sink_suggest))) {
       sink_suggest = gst_caps_ref (priv->sink_suggest);
       size_suggest = priv->size_suggest;
       GST_DEBUG_OBJECT (trans, "have suggestion %p %" GST_PTR_FORMAT " size %u",
@@ -1571,10 +1570,48 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
     /* check if we actually handle this format on the sinkpad */
     if (sink_suggest) {
-      const GstCaps *templ = gst_pad_get_pad_template_caps (pad);
+      const GstCaps *templ;
 
-      if (!gst_caps_can_intersect (sink_suggest, templ))
-        goto not_supported;
+      if (!gst_caps_is_fixed (sink_suggest)) {
+        GstCaps *peercaps;
+
+        GST_DEBUG_OBJECT (trans, "Suggested caps is not fixed: %"
+            GST_PTR_FORMAT, sink_suggest);
+
+        peercaps =
+            gst_pad_peer_get_caps_reffed (GST_BASE_TRANSFORM_SINK_PAD (trans));
+        /* try fixating by intersecting with peer caps */
+        if (peercaps) {
+          GstCaps *intersect;
+
+          intersect = gst_caps_intersect (peercaps, sink_suggest);
+          gst_caps_unref (peercaps);
+          gst_caps_unref (sink_suggest);
+          sink_suggest = intersect;
+        }
+
+        if (gst_caps_is_empty (sink_suggest))
+          goto not_supported;
+
+        /* be safe and call default fixate */
+        sink_suggest = gst_caps_make_writable (sink_suggest);
+        gst_pad_fixate_caps (GST_BASE_TRANSFORM_SINK_PAD (trans), sink_suggest);
+
+        if (!gst_caps_is_fixed (sink_suggest)) {
+          gst_caps_unref (sink_suggest);
+          sink_suggest = NULL;
+        }
+
+        GST_DEBUG_OBJECT (trans, "Caps fixated to now: %" GST_PTR_FORMAT,
+            sink_suggest);
+      }
+
+      if (sink_suggest) {
+        templ = gst_pad_get_pad_template_caps (pad);
+
+        if (!gst_caps_can_intersect (sink_suggest, templ))
+          goto not_supported;
+      }
     }
 
     /* find the best format for the other side here we decide if we will proxy
