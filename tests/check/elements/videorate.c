@@ -722,10 +722,6 @@ GST_START_TEST (test_selected_caps)
   GstBus *bus;
   GstMessage *msg;
 
-  GstPad *videorate_pad;
-  GstCaps *caps = NULL;
-  GstCaps *expected_caps = NULL;
-
   pipeline = gst_parse_launch ("videotestsrc num-buffers=1"
       " ! identity ! videorate name=videorate0 ! " VIDEO_CAPS_UNUSUAL_FRAMERATE
       " ! fakesink", NULL);
@@ -742,23 +738,37 @@ GST_START_TEST (test_selected_caps)
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
   fail_if (msg == NULL || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
 
-  videorate_pad = gst_element_get_static_pad (videorate, "sink");
-  g_object_get (videorate_pad, "caps", &caps, NULL);
-  expected_caps = gst_caps_from_string (VIDEO_CAPS_UNUSUAL_FRAMERATE);
+  /* make sure upstream nego works right and videotestsrc has selected the
+   * caps we want downstream of videorate */
+  {
+    GstStructure *s;
+    const GValue *val;
+    GstCaps *caps = NULL;
+    GstPad *videorate_pad;
 
-  GST_DEBUG ("negotiated caps: %" GST_PTR_FORMAT, caps);
-  GST_DEBUG ("expected caps: %" GST_PTR_FORMAT, expected_caps);
+    videorate_pad = gst_element_get_static_pad (videorate, "sink");
+    g_object_get (videorate_pad, "caps", &caps, NULL);
+    fail_unless (caps != NULL);
 
-  fail_unless (gst_caps_is_equal (expected_caps, caps));
+    GST_DEBUG ("negotiated caps: %" GST_PTR_FORMAT, caps);
+
+    s = gst_caps_get_structure (caps, 0);
+    val = gst_structure_get_value (s, "framerate");
+    fail_unless (val != NULL, "no framerate field in negotiated caps");
+    fail_unless (GST_VALUE_HOLDS_FRACTION (val));
+    fail_unless_equals_int (gst_value_get_fraction_numerator (val), 999);
+    fail_unless_equals_int (gst_value_get_fraction_denominator (val), 7);
+
+    gst_caps_unref (caps);
+    gst_object_unref (videorate_pad);
+  }
 
   /* cleanup */
   gst_object_unref (bus);
   gst_message_unref (msg);
-  gst_caps_unref (caps);
-  gst_caps_unref (expected_caps);
-  gst_object_unref (videorate_pad);
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (videorate);
   gst_object_unref (pipeline);
 }
 
