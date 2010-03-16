@@ -216,6 +216,7 @@ gst_flv_mux_reset (GstElement * element)
   mux->byte_count = 0;
 
   mux->have_audio = mux->have_video = FALSE;
+  mux->duration = GST_CLOCK_TIME_NONE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
 
@@ -612,7 +613,6 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   GstBuffer *script_tag, *tmp;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
-  GstClockTime duration = GST_CLOCK_TIME_NONE;
 
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
@@ -650,6 +650,18 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   GST_WRITE_UINT32_BE (data + 1, n_tags);
   script_tag = gst_buffer_join (script_tag, tmp);
 
+  /* Some players expect the 'duration' to be always set. Fill it out later,
+     after querying the pads or after getting EOS */
+  tmp = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
+  data = GST_BUFFER_DATA (tmp);
+  data[0] = 0;                  /* 8 bytes name */
+  data[1] = 8;
+  memcpy (&data[2], "duration", 8);
+  data[10] = 0;                 /* double */
+  GST_WRITE_DOUBLE_BE (data + 11, (gdouble) 0.0);
+  script_tag = gst_buffer_join (script_tag, tmp);
+  tags_written++;
+
   if (!mux->is_live) {
     tmp = gst_flv_mux_preallocate_index (mux);
     script_tag = gst_buffer_join (script_tag, tmp);
@@ -665,7 +677,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
       if (!gst_tag_list_get_uint64 (tags, GST_TAG_DURATION, &dur))
         continue;
-      duration = dur;
+      mux->duration = dur;
     } else if (!strcmp (tag_name, GST_TAG_ARTIST) ||
         !strcmp (tag_name, GST_TAG_TITLE)) {
       gchar *s;
@@ -695,7 +707,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     }
   }
 
-  if (duration == GST_CLOCK_TIME_NONE) {
+  if (mux->duration == GST_CLOCK_TIME_NONE) {
     GSList *l;
 
     GstFormat fmt = GST_FORMAT_TIME;
@@ -708,28 +720,22 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
       if (gst_pad_query_peer_duration (cdata->pad, &fmt, (gint64 *) & dur) &&
           fmt == GST_FORMAT_TIME && dur != GST_CLOCK_TIME_NONE) {
-        if (duration == GST_CLOCK_TIME_NONE)
-          duration = dur;
+        if (mux->duration == GST_CLOCK_TIME_NONE)
+          mux->duration = dur;
         else
-          duration = MAX (dur, duration);
+          mux->duration = MAX (dur, mux->duration);
       }
     }
   }
 
-  if (duration != GST_CLOCK_TIME_NONE) {
+  if (mux->duration != GST_CLOCK_TIME_NONE) {
     gdouble d;
-    d = gst_guint64_to_gdouble (duration);
+    d = gst_guint64_to_gdouble (mux->duration);
     d /= (gdouble) GST_SECOND;
 
-    tmp = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
-    data = GST_BUFFER_DATA (tmp);
-    data[0] = 0;                /* 8 bytes name */
-    data[1] = 8;
-    memcpy (&data[2], "duration", 8);
-    data[10] = 0;               /* double */
-    GST_WRITE_DOUBLE_BE (data + 11, d);
-    script_tag = gst_buffer_join (script_tag, tmp);
-    tags_written++;
+    GST_DEBUG_OBJECT (mux, "determined the duration to be %f", d);
+    data = GST_BUFFER_DATA (script_tag);
+    GST_WRITE_DOUBLE_BE (data + 42 + 2 + 8, d);
   }
 
   if (mux->have_video) {
@@ -1116,13 +1122,43 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
   return ret;
 }
 
+static guint64
+gst_flv_mux_determine_duration (GstFlvMux * mux)
+{
+  GSList *l;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
+
+  GST_DEBUG_OBJECT (mux, "trying to determine the duration "
+      "from pad timestamps");
+
+  for (l = mux->collect->data; l != NULL; l = l->next) {
+    GstFlvPad *cpad = l->data;
+
+    if (cpad && (cpad->last_timestamp != GST_CLOCK_TIME_NONE)) {
+      if (duration == GST_CLOCK_TIME_NONE)
+        duration = cpad->last_timestamp;
+      else
+        duration = MAX (duration, cpad->last_timestamp);
+    }
+  }
+
+  if (duration == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (mux, "not able to determine duration "
+        "from pad timestamps, assuming 0");
+    return 0;
+  }
+
+  return duration;
+}
+
 static GstFlowReturn
-gst_flv_mux_write_index (GstFlvMux * mux)
+gst_flv_mux_rewrite_header (GstFlvMux * mux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *index;
+  GstBuffer *rewrite, *index;
   GstEvent *event;
   guint8 *data;
+  gdouble d;
   GList *l;
   guint32 index_len, allocate_size;
   guint32 i, index_skip;
@@ -1137,10 +1173,29 @@ gst_flv_mux_write_index (GstFlvMux * mux)
   event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
       42, GST_CLOCK_TIME_NONE, 42);
   if (!gst_pad_push_event (mux->srcpad, event)) {
-    GST_WARNING_OBJECT (mux, "Seek to rewrite index failed");
+    GST_WARNING_OBJECT (mux, "Seek to rewrite header failed");
     return GST_FLOW_OK;
   }
 
+  /* if we were not able to determine the duration before, set it now */
+  if (mux->duration == GST_CLOCK_TIME_NONE)
+    mux->duration = gst_flv_mux_determine_duration (mux);
+
+  /* rewrite the duration tag */
+  d = gst_guint64_to_gdouble (mux->duration);
+  d /= (gdouble) GST_SECOND;
+
+  GST_DEBUG_OBJECT (mux, "determined the final duration to be %f", d);
+
+  rewrite = gst_buffer_new_and_alloc (2 + 8 + 1 + 8);
+  data = GST_BUFFER_DATA (rewrite);
+  data[0] = 0;                  /* 8 bytes name */
+  data[1] = 8;
+  memcpy (&data[2], "duration", 8);
+  data[10] = 0;                 /* double */
+  GST_WRITE_DOUBLE_BE (data + 11, d);
+
+  /* rewrite the index */
   mux->index = g_list_reverse (mux->index);
   index_len = g_list_length (mux->index);
 
@@ -1222,8 +1277,10 @@ gst_flv_mux_write_index (GstFlvMux * mux)
     index = gst_buffer_join (index, tmp);
   }
 
-  gst_buffer_set_caps (index, GST_PAD_CAPS (mux->srcpad));
-  ret = gst_flv_mux_push (mux, index);
+  rewrite = gst_buffer_join (rewrite, index);
+
+  gst_buffer_set_caps (rewrite, GST_PAD_CAPS (mux->srcpad));
+  ret = gst_flv_mux_push (mux, rewrite);
 
   return ret;
 }
@@ -1297,7 +1354,7 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
   if (!eos && best) {
     return gst_flv_mux_write_buffer (mux, best);
   } else if (eos) {
-    gst_flv_mux_write_index (mux);
+    gst_flv_mux_rewrite_header (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
   } else {
