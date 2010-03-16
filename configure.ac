@@ -1,3 +1,10 @@
+# gstreamer-vaapi package version number
+m4_define([gst_vaapi_major_version], [0])
+m4_define([gst_vaapi_minor_version], [1])
+m4_define([gst_vaapi_micro_version], [1])
+m4_define([gst_vaapi_version],
+          [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
+
 # gst version number
 m4_define([gst_major_version], [0])
 m4_define([gst_minor_version], [10])
@@ -13,13 +20,6 @@ m4_define([gst_plugins_base_minor_version], [10])
 m4_define([gst_plugins_base_micro_version], [0])
 m4_define([gst_plugins_base_version],
           [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
-
-# gst_vaapi package version number
-m4_define([gst_vaapi_major_version], [0])
-m4_define([gst_vaapi_minor_version], [1])
-m4_define([gst_vaapi_micro_version], [1])
-m4_define([gst_vaapi_version],
-          [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 
 # libva package version number
 m4_define([libva_sds_version_0_29], [8])
