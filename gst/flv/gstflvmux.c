@@ -752,12 +752,43 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
     if (video_pad && GST_PAD_CAPS (video_pad)) {
       GstStructure *s = gst_caps_get_structure (GST_PAD_CAPS (video_pad), 0);
+      gint size;
       gint par_x, par_y;
+
+      if (gst_structure_get_int (s, "width", &size)) {
+        GST_DEBUG_OBJECT (mux, "putting width %d in the metadata", size);
+
+        tmp = gst_buffer_new_and_alloc (2 + 5 + 1 + 8);
+        data = GST_BUFFER_DATA (tmp);
+        data[0] = 0;
+        data[1] = 5;            /* 5 bytes name */
+        memcpy (&data[2], "width", 5);
+        data[7] = 0;            /* double */
+        GST_WRITE_DOUBLE_BE (data + 8, size);
+        script_tag = gst_buffer_join (script_tag, tmp);
+        tags_written++;
+      }
+
+      if (gst_structure_get_int (s, "height", &size)) {
+        GST_DEBUG_OBJECT (mux, "putting height %d in the metadata", size);
+
+        tmp = gst_buffer_new_and_alloc (2 + 6 + 1 + 8);
+        data = GST_BUFFER_DATA (tmp);
+        data[0] = 0;
+        data[1] = 6;            /* 6 bytes name */
+        memcpy (&data[2], "height", 6);
+        data[8] = 0;            /* double */
+        GST_WRITE_DOUBLE_BE (data + 9, size);
+        script_tag = gst_buffer_join (script_tag, tmp);
+        tags_written++;
+      }
 
       if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_x, &par_y)) {
         gdouble d;
 
         d = par_x;
+        GST_DEBUG_OBJECT (mux, "putting AspectRatioX %f in the metadata", d);
+
         tmp = gst_buffer_new_and_alloc (2 + 12 + 1 + 8);
         data = GST_BUFFER_DATA (tmp);
         data[0] = 0;            /* 12 bytes name */
@@ -769,6 +800,8 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
         tags_written++;
 
         d = par_y;
+        GST_DEBUG_OBJECT (mux, "putting AspectRatioY %f in the metadata", d);
+
         tmp = gst_buffer_new_and_alloc (2 + 12 + 1 + 8);
         data = GST_BUFFER_DATA (tmp);
         data[0] = 0;            /* 12 bytes name */
