@@ -329,6 +329,8 @@ gst_vaapiconvert_set_caps(
     gst_structure_get_int(structure, "height", &height);
 
     if (width != convert->image_width || height != convert->image_height) {
+        convert->image_width  = width;
+        convert->image_height = height;
         if (convert->images)
             g_object_unref(convert->images);
         convert->images = gst_vaapi_image_pool_new(convert->display, incaps);
@@ -341,6 +343,8 @@ gst_vaapiconvert_set_caps(
     gst_structure_get_int(structure, "height", &height);
 
     if (width != convert->surface_width || height != convert->surface_height) {
+        convert->surface_width  = width;
+        convert->surface_height = height;
         if (convert->surfaces)
             g_object_unref(convert->surfaces);
         convert->surfaces = gst_vaapi_surface_pool_new(convert->display, outcaps);
