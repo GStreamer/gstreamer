@@ -497,7 +497,7 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROXY:
       if (src->proxy == NULL)
-        g_value_set_string (value, "");
+        g_value_set_static_string (value, "");
       else {
         char *proxy = soup_uri_to_string (src->proxy, FALSE);
 
