@@ -152,6 +152,4 @@ AC_OUTPUT([
     sys/vaapiconvert/Makefile
     sys/vaapisink/Makefile
     tests/Makefile
-    tests/examples/Makefile
-    tests/examples/generic/Makefile
 ])
