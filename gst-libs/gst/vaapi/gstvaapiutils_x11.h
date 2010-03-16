@@ -31,7 +31,6 @@ void x11_trap_errors(void)
 int x11_untrap_errors(void)
     attribute_hidden;
 
-
 Window
 x11_create_window(Display *display, unsigned int width, unsigned int height)
     attribute_hidden;
