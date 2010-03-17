@@ -56,9 +56,9 @@ mpl2_parse_line (ParserState * state, const gchar * line, guint line_num)
   markup = g_string_new (NULL);
 
   while (1) {
-    const gchar *format_string;
     const gchar *sep;
     gchar *line_chunk_escaped;
+    gboolean italics;
 
     /* skip leading white spaces */
     while (*line == ' ' || *line == '\t')
@@ -66,10 +66,11 @@ mpl2_parse_line (ParserState * state, const gchar * line, guint line_num)
 
     /* a '/' at the beginning indicates italics */
     if (*line == '/') {
-      format_string = "<i>%s</i>";
+      italics = TRUE;
+      g_string_append (markup, "<i>");
       ++line;
     } else {
-      format_string = "%s";
+      italics = FALSE;
     }
 
     if ((sep = strchr (line, '|')))
@@ -78,10 +79,12 @@ mpl2_parse_line (ParserState * state, const gchar * line, guint line_num)
       line_chunk_escaped = g_markup_escape_text (line, -1);
 
     GST_LOG ("escaped line: %s", line_chunk_escaped);
-    g_string_append_printf (markup, format_string, line_chunk_escaped);
+    g_string_append (markup, line_chunk_escaped);
 
     g_free (line_chunk_escaped);
 
+    if (italics)
+      g_string_append (markup, "</i>");
     if (sep == NULL)
       break;
 

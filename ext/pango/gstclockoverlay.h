@@ -56,6 +56,24 @@ struct _GstClockOverlayClass {
 
 GType gst_clock_overlay_get_type (void);
 
+
+/* This is a hack hat allows us to use nonliterals for strftime without
+ * triggering a warning from -Wformat-nonliteral. We need to allow this
+ * because we export the format string as a property of the element.
+ * For the inspiration of this and a discussion of why this is necessary,
+ * see http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
+ */
+#ifdef __GNUC__
+#pragma GCC system_header
+static size_t my_strftime(char *s, size_t max, const char *format,
+                          const struct tm *tm)
+{
+  return strftime (s, max, format, tm);
+}
+#define strftime my_strftime
+#endif
+
+
 G_END_DECLS
 
 #endif /* __GST_CLOCK_OVERLAY_H__ */
