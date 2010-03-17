@@ -74,6 +74,8 @@ struct _GstMonoscopeClass
   GstElementClass parent_class;
 };
 
+GType gst_monoscope_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_MONOSCOPE__ */
