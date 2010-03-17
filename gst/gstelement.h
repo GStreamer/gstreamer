@@ -40,7 +40,7 @@ typedef struct _GstElementClass GstElementClass;
  * @GST_STATE_PLAYING     : the element is PLAYING, the #GstClock is running and
  *                          the data is flowing.
  *
- * The posible states an element can be in. States can be chaged using
+ * The possible states an element can be in. States can be changed using
  * gst_element_set_state() and checked using gst_element_get_state().
  */
 typedef enum {
