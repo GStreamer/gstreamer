@@ -70,7 +70,7 @@ struct _GstTimedValue
  */
 struct _GstValueArray
 {
-  gchar *property_name;
+  const gchar *property_name;
   gint nbsamples;
   GstClockTime sample_interval;
   gpointer *values;
