@@ -150,7 +150,7 @@ main (gint argc, gchar * argv[])
   {
     GstClockTime sample_duration =
         gst_util_uint64_scale_int (1, GST_SECOND, 44100);
-    GstValueArray va = { (char *) "freq",
+    GstValueArray va = { "freq",
       BLOCK_SIZE * NUM_CP,
       sample_duration,
       NULL
