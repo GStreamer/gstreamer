@@ -122,7 +122,8 @@ check_PROGRAMS = \
 	libs/video \
 	pipelines/simple-launch-lines \
 	pipelines/streamheader \
-	pipelines/basetime
+	pipelines/basetime \
+	pipelines/capsfilter-renegotiation
 
 # TORTURE_TO_FIX = \
 #       elements/adder
