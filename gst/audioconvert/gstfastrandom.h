@@ -31,7 +31,7 @@
  * and returning a pseudo random number between 0 and 2^32 - 1.
  */
 static inline guint32
-gst_fast_random_uint32 ()
+gst_fast_random_uint32 (void)
 {
   static guint32 state = 0xdeadbeef;
 
