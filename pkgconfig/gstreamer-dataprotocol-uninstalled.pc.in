@@ -10,4 +10,4 @@ Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
 Libs: ${libdir}/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la
-Cflags: -I${includedir} -I@srcdir@/.. -I${includedir}/libs  -I@srcdir@/../libs
+Cflags: -I${includedir} -I${includedir}/libs

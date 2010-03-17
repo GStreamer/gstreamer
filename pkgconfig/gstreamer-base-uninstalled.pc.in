@@ -10,4 +10,4 @@ Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
 Libs: ${libdir}/libgstbase-@GST_MAJORMINOR@.la
-Cflags: -I${includedir} -I@srcdir@/..
+Cflags: -I${includedir}

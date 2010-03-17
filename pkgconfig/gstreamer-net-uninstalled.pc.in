@@ -11,4 +11,4 @@ Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
 Libs: ${libdir}/libgstnet-@GST_MAJORMINOR@.la
-Cflags: -I${includedir} -I@srcdir@/..
+Cflags: -I${includedir}
