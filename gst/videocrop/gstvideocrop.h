@@ -84,6 +84,8 @@ struct _GstVideoCropClass
   GstBaseTransformClass basetransform_class;
 };
 
+GType gst_video_crop_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_CROP_H__ */

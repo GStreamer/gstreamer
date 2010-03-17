@@ -46,7 +46,7 @@
   GST_VIDEO_CAPS_RGB_16 ";"                      \
   GST_VIDEO_CAPS_RGB_15
 
-GstBuffer *
+static GstBuffer *
 make_buffer_with_caps (const gchar * caps_string, int buffer_size)
 {
   GstCaps *caps;
@@ -62,7 +62,7 @@ make_buffer_with_caps (const gchar * caps_string, int buffer_size)
   return temp;
 }
 
-void
+static void
 check_aspectratiocrop (const gchar * in_string, const gchar * out_string,
     gint in_size, gint out_size, gint ar_n, gint ar_d)
 {

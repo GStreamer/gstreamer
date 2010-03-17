@@ -745,7 +745,7 @@ find_stream_by_setup (GstRTSPStream * stream, gconstpointer a)
   return -1;
 }
 
-GstRTSPStream *
+static GstRTSPStream *
 find_stream (GstRTSPSrc * src, gconstpointer data, gconstpointer func)
 {
   GList *lstream;
@@ -3512,7 +3512,7 @@ pause:
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
-const gchar *
+static const gchar *
 gst_rtsp_auth_method_to_string (GstRTSPAuthMethod method)
 {
   gint index = 0;

@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_RTP_ILBC_PAY \
-  (gst_rtpilbcpay_get_type())
+  (gst_rtp_ilbc_pay_get_type())
 #define GST_RTP_ILBC_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_ILBC_PAY,GstRTPILBCPay))
 #define GST_RTP_ILBC_PAY_CLASS(klass) \
@@ -50,6 +50,8 @@ struct _GstRTPILBCPayClass
 {
   GstBaseRTPAudioPayloadClass parent_class;
 };
+
+GType gst_rtp_ilbc_pay_get_type (void);
 
 gboolean gst_rtp_ilbc_pay_plugin_init (GstPlugin * plugin);
 

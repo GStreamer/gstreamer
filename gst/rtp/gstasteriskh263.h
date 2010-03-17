@@ -56,6 +56,8 @@ struct _GstAsteriskh263Class
   GstElementClass parent_class;
 };
 
+GType gst_asteriskh263_get_type (void);
+
 gboolean gst_asteriskh263_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

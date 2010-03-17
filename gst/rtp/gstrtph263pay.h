@@ -405,6 +405,8 @@ struct _GstRtpH263PayPackage
 #define GST_RTP_H263_PAY_END(start, len) (((guint8 *)start) + ((guint)len))
 #define GST_RTP_H263_PAY_GOBN(gob) (((((guint8 *) gob)[2] >> 2) & 0x1f)
 
+GType gst_rtp_h263_pay_get_type (void);
+
 gboolean gst_rtp_h263_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

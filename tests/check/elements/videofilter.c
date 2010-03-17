@@ -53,7 +53,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
+static GstElement *
 setup_filter (const gchar * name, const gchar * prop, va_list var_args)
 {
   GstElement *element;
@@ -69,7 +69,7 @@ setup_filter (const gchar * name, const gchar * prop, va_list var_args)
   return element;
 }
 
-void
+static void
 cleanup_filter (GstElement * filter)
 {
   GST_DEBUG ("cleanup_element");
@@ -163,7 +163,7 @@ GST_START_TEST (test_gamma)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 videobalance_suite ()
 {
   Suite *s = suite_create ("videobalance");
@@ -175,7 +175,7 @@ videobalance_suite ()
   return s;
 }
 
-Suite *
+static Suite *
 videoflip_suite ()
 {
   Suite *s = suite_create ("videoflip");
@@ -187,7 +187,7 @@ videoflip_suite ()
   return s;
 }
 
-Suite *
+static Suite *
 gamma_suite ()
 {
   Suite *s = suite_create ("gamma");

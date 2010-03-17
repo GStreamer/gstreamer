@@ -114,6 +114,7 @@ enum
   PROP_PAD_ALPHA
 };
 
+GType gst_videomixer_pad_get_type (void);
 G_DEFINE_TYPE (GstVideoMixerPad, gst_videomixer_pad, GST_TYPE_PAD);
 
 static void

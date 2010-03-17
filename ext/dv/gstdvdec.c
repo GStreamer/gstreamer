@@ -132,7 +132,7 @@ static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())
-GType
+static GType
 gst_dvdec_quality_get_type (void)
 {
   static GType qtype = 0;

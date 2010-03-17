@@ -105,6 +105,7 @@ GstStaticPadTemplate bmd_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
   GST_DEBUG_CATEGORY_INIT (gst_break_my_data_debug, "breakmydata", 0, \
       "debugging category for breakmydata element");
 
+GType gst_break_my_data_get_type (void);
 GST_BOILERPLATE_FULL (GstBreakMyData, gst_break_my_data, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 

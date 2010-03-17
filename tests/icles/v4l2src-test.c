@@ -32,7 +32,7 @@ GstElement *pipeline, *source, *sink;
 GMainLoop *loop;
 volatile int exit_read = 0;
 
-void
+static void
 print_options ()
 {
   printf ("\nf - to change the fequency\n");
@@ -43,7 +43,7 @@ print_options ()
   printf ("e - to exit\n");
 }
 
-void
+static void
 run_options (char opt)
 {
   int res;
@@ -289,7 +289,7 @@ done:
 
 }
 
-gpointer
+static gpointer
 read_user (gpointer data)
 {
 

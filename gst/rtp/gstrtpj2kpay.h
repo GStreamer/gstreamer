@@ -52,6 +52,8 @@ struct _GstRtpJ2KPayClass
   GstBaseRTPPayloadClass parent_class;
 };
 
+GType gst_rtp_j2k_pay_get_type (void);
+
 gboolean gst_rtp_j2k_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

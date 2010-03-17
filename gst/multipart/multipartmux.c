@@ -231,11 +231,11 @@ gst_multipart_mux_request_new_pad (GstElement * element,
   /* construct our own wrapper data structure for the pad to
    * keep track of its status */
   {
-    GstMultipartPad *multipartpad;
+    GstMultipartPadData *multipartpad;
 
-    multipartpad = (GstMultipartPad *)
+    multipartpad = (GstMultipartPadData *)
         gst_collect_pads_add_pad (multipart_mux->collect, newpad,
-        sizeof (GstMultipartPad));
+        sizeof (GstMultipartPadData));
 
     /* save a pointer to our data in the pad */
     gst_pad_set_element_private (newpad, multipartpad);
@@ -338,7 +338,7 @@ gst_multipart_mux_get_mime (GstMultipartMux * mux, GstStructure * s)
  */
 static gint
 gst_multipart_mux_compare_pads (GstMultipartMux * multipart_mux,
-    GstMultipartPad * old, GstMultipartPad * new)
+    GstMultipartPadData * old, GstMultipartPadData * new)
 {
   guint64 oldtime, newtime;
 
@@ -372,11 +372,11 @@ gst_multipart_mux_compare_pads (GstMultipartMux * multipart_mux,
 
 /* make sure a buffer is queued on all pads, returns a pointer to an multipartpad
  * that holds the best buffer or NULL when no pad was usable */
-static GstMultipartPad *
+static GstMultipartPadData *
 gst_multipart_mux_queue_pads (GstMultipartMux * mux)
 {
   GSList *walk = NULL;
-  GstMultipartPad *bestpad = NULL;
+  GstMultipartPadData *bestpad = NULL;
 
   g_return_val_if_fail (GST_IS_MULTIPART_MUX (mux), NULL);
 
@@ -384,7 +384,7 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
   walk = mux->collect->data;
   while (walk) {
     GstCollectData *data = (GstCollectData *) walk->data;
-    GstMultipartPad *pad = (GstMultipartPad *) data;
+    GstMultipartPadData *pad = (GstMultipartPadData *) data;
 
     walk = g_slist_next (walk);
 
@@ -428,7 +428,7 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
 static GstFlowReturn
 gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
 {
-  GstMultipartPad *best;
+  GstMultipartPadData *best;
   GstFlowReturn ret = GST_FLOW_OK;
   gchar *header = NULL;
   size_t headerlen;

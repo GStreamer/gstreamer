@@ -17,26 +17,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include <gst/gst.h>
+#ifndef __GST_JPEG_H__
+#define __GST_JPEG_H__
 
-#include "multipartdemux.h"
-#include "multipartmux.h"
+#include <glib-object.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gst_multipart_demux_plugin_init (plugin);
-  gst_multipart_mux_plugin_init (plugin);
+G_BEGIN_DECLS
 
-  return TRUE;
-}
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "multipart",
-    "multipart stream manipulation",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+GType gst_idct_method_get_type (void);
+
+
+G_END_DECLS
+
+#endif /* __GST_JPEG_H__ */

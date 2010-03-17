@@ -28,7 +28,7 @@ static guint spect_bands = 20;
 #define AUDIOFREQ 32000
 
 /* receive spectral data from element message */
-gboolean
+static gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer data)
 {
   if (message->type == GST_MESSAGE_ELEMENT) {

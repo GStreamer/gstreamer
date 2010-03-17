@@ -23,6 +23,8 @@
 
 #include <glib.h>
 
+#include "fnv1hash.h"
+
 /* This file implements FNV-1 hashing used in the Ogg payload encoders
  * to generate the 24-bit ident value based on the header pages.
  * See http://isthe.com/chongo/tech/comp/fnv/

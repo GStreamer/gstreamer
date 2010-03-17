@@ -65,6 +65,7 @@ static void gst_navseek_set_property (GObject * object, guint prop_id,
 static void gst_navseek_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+GType gst_navseek_get_type (void);
 GST_BOILERPLATE (GstNavSeek, gst_navseek, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 

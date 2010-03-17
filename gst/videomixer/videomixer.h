@@ -125,5 +125,7 @@ struct _GstVideoMixerClass
   GstElementClass parent_class;
 };
 
+GType gst_video_mixer_get_type (void);
+
 G_END_DECLS
 #endif /* __GST_VIDEO_MIXER_H__ */

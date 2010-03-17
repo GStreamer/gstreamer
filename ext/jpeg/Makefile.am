@@ -14,6 +14,7 @@ libgstjpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstjpeg_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
+	gstjpeg.h \
 	gstjpegdec.h gstjpegenc.h \
 	gstsmokeenc.h gstsmokedec.h \
 	smokecodec.h smokeformat.h

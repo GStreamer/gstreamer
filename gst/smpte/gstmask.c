@@ -24,8 +24,6 @@
 #include "gstmask.h"
 #include "paint.h"
 
-extern void _gst_barboxwipes_register (void);
-
 static GList *masks = NULL;
 
 void

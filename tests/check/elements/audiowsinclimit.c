@@ -62,8 +62,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 
-GstElement *
-setup_audiowsinclimit ()
+static GstElement *
+setup_audiowsinclimit (void)
 {
   GstElement *audiowsinclimit;
 
@@ -77,7 +77,7 @@ setup_audiowsinclimit ()
   return audiowsinclimit;
 }
 
-void
+static void
 cleanup_audiowsinclimit (GstElement * audiowsinclimit)
 {
   GST_DEBUG ("cleanup_audiowsinclimit");
@@ -665,7 +665,7 @@ GST_START_TEST (test_64_small_buffer)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 audiowsinclimit_suite (void)
 {
   Suite *s = suite_create ("audiowsinclimit");

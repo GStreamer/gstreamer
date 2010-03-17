@@ -89,8 +89,8 @@ static GstStaticPadTemplate ssrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-GstElement *
-setup_panorama_m ()
+static GstElement *
+setup_panorama_m (void)
 {
   GstElement *panorama;
 
@@ -104,8 +104,8 @@ setup_panorama_m ()
   return panorama;
 }
 
-GstElement *
-setup_panorama_s ()
+static GstElement *
+setup_panorama_s (void)
 {
   GstElement *panorama;
 
@@ -119,7 +119,7 @@ setup_panorama_s ()
   return panorama;
 }
 
-void
+static void
 cleanup_panorama (GstElement * panorama)
 {
   GST_DEBUG ("cleanup_panorama");
@@ -665,7 +665,7 @@ GST_START_TEST (test_wrong_caps)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 panorama_suite (void)
 {
   Suite *s = suite_create ("panorama");

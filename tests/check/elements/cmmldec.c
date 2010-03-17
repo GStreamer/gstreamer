@@ -580,7 +580,7 @@ GST_START_TEST (test_sink_query_convert)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 cmmldec_suite ()
 {
   Suite *s = suite_create ("cmmldec");

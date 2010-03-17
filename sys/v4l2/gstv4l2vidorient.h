@@ -100,7 +100,7 @@ gboolean gst_v4l2_video_orientation_set_vcenter (GstV4l2Object *v4l2object, gint
     return gst_v4l2_video_orientation_set_vcenter (this->v4l2object, center);		          \
   }                                                                                               \
                                                                                                   \
-  void                                                                                            \
+  static void                                                                                     \
   interface_as_function ## _video_orientation_interface_init (GstVideoOrientationInterface * klass)          \
   {                                                                                               \
     /* default virtual functions */                                                               \

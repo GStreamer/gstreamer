@@ -58,6 +58,8 @@ struct _GstRtpSV3VDepayClass
   GstBaseRTPDepayloadClass parent_class;
 };
 
+GType gst_rtp_sv3v_depay_get_type (void);
+
 gboolean gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

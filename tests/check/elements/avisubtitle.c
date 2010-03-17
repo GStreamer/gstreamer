@@ -66,8 +66,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-subtitle-avi")
     );
 
-GstElement *
-setup_avisubtitle ()
+static GstElement *
+setup_avisubtitle (void)
 {
   GstElement *avisubtitle;
   GstCaps *caps;
@@ -85,7 +85,7 @@ setup_avisubtitle ()
   return avisubtitle;
 }
 
-void
+static void
 cleanup_avisubtitle (GstElement * avisubtitle)
 {
   gst_pad_set_active (mysinkpad, FALSE);
@@ -95,7 +95,7 @@ cleanup_avisubtitle (GstElement * avisubtitle)
   gst_check_teardown_element (avisubtitle);
 }
 
-void
+static void
 check_wrong_buffer (guint8 * data, guint length)
 {
   GstBuffer *buffer = gst_buffer_new ();
@@ -118,7 +118,7 @@ check_wrong_buffer (guint8 * data, guint length)
   cleanup_avisubtitle (avisubtitle);
 }
 
-void
+static void
 check_correct_buffer (guint8 * src_data, guint src_size, guint8 * dst_data,
     guint dst_size)
 {
@@ -248,7 +248,7 @@ GST_START_TEST (test_avisubtitle_positive)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 avisubtitle_suite (void)
 {
   Suite *s = suite_create ("avisubtitle");

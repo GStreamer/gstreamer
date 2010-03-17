@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include <gst/tag/tag.h>
+#include "gstannodex.h"
 #include "gstcmmlparser.h"
 #include "gstcmmlenc.h"
 #include "gstcmmldec.h"

@@ -159,7 +159,7 @@ gst_video_balance_update_properties (GstVideoBalance * videobalance)
 }
 
 #ifndef HAVE_LIBOIL
-void
+static void
 oil_tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
     guint8 * table, int tstr, int n)
 {

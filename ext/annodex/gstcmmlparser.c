@@ -121,7 +121,7 @@ gst_cmml_parser_parse_chunk (GstCmmlParser * parser,
 
 /* convert an xmlNodePtr to a string
  */
-guchar *
+static guchar *
 gst_cmml_parser_node_to_string (GstCmmlParser * parser, xmlNodePtr node)
 {
   xmlBufferPtr xml_buffer;

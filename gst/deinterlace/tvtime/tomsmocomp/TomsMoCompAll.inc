@@ -61,7 +61,7 @@
 #define SEFUNC(x) Search_Effort_C_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #endif
 
-void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace* object, GstBuffer *outbuf)
+static void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace* object, GstBuffer *outbuf)
 {
   GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
   long SearchEffort = self->search_effort;

@@ -173,7 +173,7 @@ interface_as_function ## _tuner_signal_strength (GstTuner * mixer,              
   return gst_v4l2_tuner_signal_strength (this->v4l2object, channel);                  \
 }                                                                                     \
                                                                                       \
-void                                                                                  \
+static void                                                                           \
 interface_as_function ## _tuner_interface_init (GstTunerClass * klass)                \
 {                                                                                     \
   /* default virtual functions */                                                     \

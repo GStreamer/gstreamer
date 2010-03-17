@@ -62,8 +62,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 }")
     );
 
-GstElement *
-setup_audiocheblimit ()
+static GstElement *
+setup_audiocheblimit (void)
 {
   GstElement *audiocheblimit;
 
@@ -77,7 +77,7 @@ setup_audiocheblimit ()
   return audiocheblimit;
 }
 
-void
+static void
 cleanup_audiocheblimit (GstElement * audiocheblimit)
 {
   GST_DEBUG ("cleanup_audiocheblimit");
@@ -958,7 +958,7 @@ GST_START_TEST (test_type2_64_hp_22050hz)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 audiocheblimit_suite (void)
 {
   Suite *s = suite_create ("audiocheblimit");

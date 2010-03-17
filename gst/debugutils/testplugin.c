@@ -90,6 +90,7 @@ static const GstElementDetails details = GST_ELEMENT_DETAILS ("Test plugin",
   GST_DEBUG_CATEGORY_INIT (gst_test_debug, "testsink", 0, \
       "debugging category for testsink element");
 
+GType gst_test_get_type (void);
 GST_BOILERPLATE_FULL (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK,
     DEBUG_INIT);
 

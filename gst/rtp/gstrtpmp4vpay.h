@@ -64,6 +64,8 @@ struct _GstRtpMP4VPayClass
   GstBaseRTPPayloadClass parent_class;
 };
 
+GType gst_rtp_mp4v_pay_get_type (void);
+
 gboolean gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

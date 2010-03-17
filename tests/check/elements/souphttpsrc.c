@@ -83,7 +83,7 @@ digest_auth_cb (SoupAuthDomain * domain, SoupMessage * msg,
   return NULL;
 }
 
-int
+static int
 run_test (const char *format, ...)
 {
   GstStateChangeReturn ret;

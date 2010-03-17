@@ -204,7 +204,7 @@ GST_START_TEST (test_state_changes_down_seq)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 states_suite (void)
 {
   Suite *s = suite_create ("states");

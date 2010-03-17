@@ -119,7 +119,7 @@ gst_v4l2sink_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_v4l2sink_iface_supported;
 }
 
-void
+static void
 gst_v4l2sink_init_interfaces (GType type)
 {
   static const GInterfaceInfo v4l2iface_info = {

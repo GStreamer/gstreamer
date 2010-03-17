@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "gstjpegdec.h"
+#include "gstjpeg.h"
 #include <gst/video/video.h>
 #include "gst/gst-i18n-plugin.h"
 #include <jerror.h>

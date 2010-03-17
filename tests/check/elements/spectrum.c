@@ -99,8 +99,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
-setup_spectrum ()
+static GstElement *
+setup_spectrum (void)
 {
   GstElement *spectrum;
 
@@ -114,7 +114,7 @@ setup_spectrum ()
   return spectrum;
 }
 
-void
+static void
 cleanup_spectrum (GstElement * spectrum)
 {
   GST_DEBUG ("cleanup_spectrum");
@@ -538,7 +538,7 @@ GST_START_TEST (test_float64)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 spectrum_suite (void)
 {
   Suite *s = suite_create ("spectrum");

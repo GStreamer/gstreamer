@@ -85,8 +85,8 @@ wavpackparse_found_pad (GstElement * src, GstPad * pad, gpointer data)
   gst_object_unref (srcpad);
 }
 
-void
-setup_wavpackparse ()
+static void
+setup_wavpackparse (void)
 {
   GstPad *sinkpad;
 
@@ -115,8 +115,8 @@ setup_wavpackparse ()
       "could not set to playing");
 }
 
-void
-cleanup_wavpackparse ()
+static void
+cleanup_wavpackparse (void)
 {
   GstPad *sinkpad, *srcpad;
 
@@ -262,7 +262,7 @@ GST_START_TEST (test_parsing_invalid_first_header)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 wavpackparse_suite (void)
 {
   Suite *s = suite_create ("wavpackparse");

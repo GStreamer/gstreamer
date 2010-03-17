@@ -49,6 +49,8 @@ struct _GstRtpG726DepayClass
   GstBaseRTPDepayloadClass parent_class;
 };
 
+GType gst_rtp_g726_depay_get_type (void);
+
 gboolean gst_rtp_g726_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

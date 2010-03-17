@@ -62,8 +62,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 44100, "
         "endianness = (int) BYTE_ORDER, " "signed = (boolean) true"));
 
-GstElement *
-setup_wavpackenc ()
+static GstElement *
+setup_wavpackenc (void)
 {
   GstElement *wavpackenc;
 
@@ -82,7 +82,7 @@ setup_wavpackenc ()
   return wavpackenc;
 }
 
-void
+static void
 cleanup_wavpackenc (GstElement * wavpackenc)
 {
   GST_DEBUG ("cleanup_wavpackenc");
@@ -162,7 +162,7 @@ GST_START_TEST (test_encode_silence)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 wavpackenc_suite (void)
 {
   Suite *s = suite_create ("wavpackenc");

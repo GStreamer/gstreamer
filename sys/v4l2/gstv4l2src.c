@@ -128,7 +128,7 @@ gst_v4l2src_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_v4l2src_iface_supported;
 }
 
-void
+static void
 gst_v4l2src_init_interfaces (GType type)
 {
   static const GInterfaceInfo urihandler_info = {

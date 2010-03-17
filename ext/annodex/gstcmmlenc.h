@@ -72,6 +72,8 @@ struct _GstCmmlEncClass
   GstElementClass parent_class;
 };
 
+GType gst_cmml_enc_get_type (void);
+
 gboolean gst_cmml_enc_plugin_init (GstPlugin * plugin);
 
 #endif /* __GST_CMML_ENC_H__ */

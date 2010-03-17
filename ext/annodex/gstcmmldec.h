@@ -91,6 +91,8 @@ struct _GstCmmlDecClass
   GstElementClass parent_class;
 };
 
+GType gst_cmml_dec_get_type (void);
+
 gboolean gst_cmml_dec_plugin_init (GstPlugin * plugin);
 
 #endif /* __GST_CMML_DEC_H__ */

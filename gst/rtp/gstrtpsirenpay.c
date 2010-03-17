@@ -27,7 +27,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 /* elementfactory information */
-static GstElementDetails gst_rtpsirenpay_details = {
+static GstElementDetails gst_rtp_siren_pay_details = {
   "RTP Payloader for Siren Audio",
   "Codec/Payloader/Network",
   "Packetize Siren audio streams into RTP packets",
@@ -37,14 +37,14 @@ static GstElementDetails gst_rtpsirenpay_details = {
 GST_DEBUG_CATEGORY_STATIC (rtpsirenpay_debug);
 #define GST_CAT_DEFAULT (rtpsirenpay_debug)
 
-static GstStaticPadTemplate gst_rtpsirenpay_sink_template =
+static GstStaticPadTemplate gst_rtp_siren_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-siren, " "dct-length = (int) 320")
     );
 
-static GstStaticPadTemplate gst_rtpsirenpay_src_template =
+static GstStaticPadTemplate gst_rtp_siren_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -56,39 +56,40 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "bitrate = (string) \"16000\", " "dct-length = (int) 320")
     );
 
-static gboolean gst_rtpsirenpay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_siren_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPSirenPay, gst_rtpsirenpay, GstBaseRTPAudioPayload,
+GST_BOILERPLATE (GstRTPSirenPay, gst_rtp_siren_pay, GstBaseRTPAudioPayload,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
-gst_rtpsirenpay_base_init (gpointer klass)
+gst_rtp_siren_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpsirenpay_sink_template));
+      gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpsirenpay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpsirenpay_details);
+      gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtp_siren_pay_details);
 }
 
 static void
-gst_rtpsirenpay_class_init (GstRTPSirenPayClass * klass)
+gst_rtp_siren_pay_class_init (GstRTPSirenPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  gstbasertppayload_class->set_caps = gst_rtpsirenpay_setcaps;
+  gstbasertppayload_class->set_caps = gst_rtp_siren_pay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpsirenpay_debug, "rtpsirenpay", 0,
       "siren audio RTP payloader");
 }
 
 static void
-gst_rtpsirenpay_init (GstRTPSirenPay * rtpsirenpay, GstRTPSirenPayClass * klass)
+gst_rtp_siren_pay_init (GstRTPSirenPay * rtpsirenpay,
+    GstRTPSirenPayClass * klass)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPAudioPayload *basertpaudiopayload;
@@ -105,7 +106,7 @@ gst_rtpsirenpay_init (GstRTPSirenPay * rtpsirenpay, GstRTPSirenPayClass * klass)
 }
 
 static gboolean
-gst_rtpsirenpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
+gst_rtp_siren_pay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
 {
   GstRTPSirenPay *rtpsirenpay;
   GstBaseRTPAudioPayload *basertpaudiopayload;

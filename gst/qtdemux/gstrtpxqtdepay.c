@@ -695,10 +695,3 @@ gst_rtp_xqt_depay_change_state (GstElement * element, GstStateChange transition)
   }
   return ret;
 }
-
-gboolean
-gst_rtp_xqt_depay_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rtpxqtdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_XQT_DEPAY);
-}

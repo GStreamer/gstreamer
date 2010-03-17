@@ -199,6 +199,7 @@ G_LOCK_DEFINE_STATIC (used_uids);
 
 static void gst_matroska_mux_add_interfaces (GType type);
 
+GType gst_matroska_mux_get_type (void);
 GST_BOILERPLATE_FULL (GstMatroskaMux, gst_matroska_mux, GstElement,
     GST_TYPE_ELEMENT, gst_matroska_mux_add_interfaces);
 
@@ -2343,7 +2344,7 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
  * 
  * Returns: New buffer.
  */
-GstBuffer *
+static GstBuffer *
 gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
     gint16 relative_timestamp, int flags)
 {

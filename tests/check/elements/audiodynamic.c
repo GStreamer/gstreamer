@@ -64,8 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-GstElement *
-setup_dynamic ()
+static GstElement *
+setup_dynamic (void)
 {
   GstElement *dynamic;
 
@@ -79,7 +79,7 @@ setup_dynamic ()
   return dynamic;
 }
 
-void
+static void
 cleanup_dynamic (GstElement * dynamic)
 {
   GST_DEBUG ("cleanup_dynamic");
@@ -424,7 +424,7 @@ GST_START_TEST (test_expand_hard_0_200)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 dynamic_suite (void)
 {
   Suite *s = suite_create ("dynamic");

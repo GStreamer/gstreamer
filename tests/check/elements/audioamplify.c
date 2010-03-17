@@ -64,8 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-GstElement *
-setup_amplify ()
+static GstElement *
+setup_amplify (void)
 {
   GstElement *amplify;
 
@@ -79,7 +79,7 @@ setup_amplify ()
   return amplify;
 }
 
-void
+static void
 cleanup_amplify (GstElement * amplify)
 {
   GST_DEBUG ("cleanup_amplify");
@@ -433,7 +433,7 @@ GST_START_TEST (test_200_wrap_positive)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 amplify_suite (void)
 {
   Suite *s = suite_create ("amplify");

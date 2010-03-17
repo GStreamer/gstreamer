@@ -66,8 +66,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) 1, " "rate = (int) 44100, " "framed = (boolean) true")
     );
 
-GstElement *
-setup_wavpackdec ()
+static GstElement *
+setup_wavpackdec (dec)
 {
   GstElement *wavpackdec;
 
@@ -81,7 +81,7 @@ setup_wavpackdec ()
   return wavpackdec;
 }
 
-void
+static void
 cleanup_wavpackdec (GstElement * wavpackdec)
 {
   GST_DEBUG ("cleanup_wavpackdec");
@@ -225,7 +225,7 @@ GST_START_TEST (test_decode_frame_with_incomplete_frame)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 wavpackdec_suite (void)
 {
   Suite *s = suite_create ("wavpackdec");

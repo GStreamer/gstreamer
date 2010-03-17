@@ -93,6 +93,10 @@ struct _GstMultipartDemuxClass
   GHashTable *gstnames;
 };
 
+GType gst_multipart_demux_get_type (void);
+
+gboolean gst_multipart_demux_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_MULTIPART_DEMUX__ */

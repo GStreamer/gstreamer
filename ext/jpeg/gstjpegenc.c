@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "gstjpegenc.h"
+#include "gstjpeg.h"
 #include <gst/video/video.h>
 
 /* experimental */

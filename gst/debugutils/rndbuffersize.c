@@ -96,6 +96,7 @@ static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
   GST_DEBUG_CATEGORY_INIT (gst_rnd_buffer_size_debug, "rndbuffersize", 0, \
       "rndbuffersize element");
 
+GType gst_rnd_buffer_size_get_type (void);
 GST_BOILERPLATE_FULL (GstRndBufferSize, gst_rnd_buffer_size, GstElement,
     GST_TYPE_ELEMENT, DEBUG_INIT);
 

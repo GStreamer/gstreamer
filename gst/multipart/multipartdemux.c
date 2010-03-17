@@ -200,7 +200,7 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   multipart->autoscan = DEFAULT_AUTOSCAN;
 }
 
-void
+static void
 gst_multipart_pad_free (GstMultipartPad * mppad)
 {
   g_free (mppad->mime);

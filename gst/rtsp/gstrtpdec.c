@@ -224,7 +224,7 @@ gst_rtp_dec_base_init (gpointer klass)
 /* BOXED:UINT,UINT */
 #define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
 
-void
+static void
 gst_rtp_dec_marshal_BOXED__UINT_UINT (GClosure * closure,
     GValue * return_value,
     guint n_param_values,
@@ -259,7 +259,7 @@ gst_rtp_dec_marshal_BOXED__UINT_UINT (GClosure * closure,
   g_value_take_boxed (return_value, v_return);
 }
 
-void
+static void
 gst_rtp_dec_marshal_VOID__UINT_UINT (GClosure * closure,
     GValue * return_value,
     guint n_param_values,

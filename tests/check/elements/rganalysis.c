@@ -149,8 +149,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (RG_ANALYSIS_CAPS_TEMPLATE_STRING)
     );
 
-GstElement *
-setup_rganalysis ()
+static GstElement *
+setup_rganalysis (void)
 {
   GstElement *analysis;
   GstBus *bus;
@@ -170,7 +170,7 @@ setup_rganalysis ()
   return analysis;
 }
 
-void
+static void
 cleanup_rganalysis (GstElement * element)
 {
   GST_DEBUG ("cleanup_rganalysis");
@@ -1764,7 +1764,7 @@ MAKE_GAIN_TEST_INT16_STEREO (32000, 8);
 MAKE_GAIN_TEST_INT16_STEREO (44100, 8);
 MAKE_GAIN_TEST_INT16_STEREO (48000, 8);
 
-Suite *
+static Suite *
 rganalysis_suite (void)
 {
   Suite *s = suite_create ("rganalysis");

@@ -90,7 +90,7 @@ interface_as_function ## _color_balance_get_value (GstColorBalance * balance,   
   return gst_v4l2_color_balance_get_value(this->v4l2object, channel);                 \
 }                                                                                     \
                                                                                       \
-void                                                                                  \
+static void                                                                           \
 interface_as_function ## _color_balance_interface_init (GstColorBalanceClass * klass) \
 {                                                                                     \
   GST_COLOR_BALANCE_TYPE (klass) = GST_COLOR_BALANCE_HARDWARE;                        \

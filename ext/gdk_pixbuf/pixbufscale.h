@@ -75,7 +75,9 @@ struct _GstPixbufScaleClass {
   GstBaseTransformClass parent_class;
 };
 
-static GType gst_pixbufscale_get_type(void);
+GType gst_pixbufscale_get_type(void);
+
+gboolean pixbufscale_init (GstPlugin * plugin);
 
 G_END_DECLS
 

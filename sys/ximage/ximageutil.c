@@ -316,8 +316,8 @@ gst_ximagesrc_buffer_finalize (GstXImageSrcBuffer * ximage)
 
 beach:
 
-  GST_MINI_OBJECT_CLASS (ximagesrc_buffer_parent_class)->
-      finalize (GST_MINI_OBJECT (ximage));
+  GST_MINI_OBJECT_CLASS (ximagesrc_buffer_parent_class)->finalize
+      (GST_MINI_OBJECT (ximage));
 
   return;
 }
@@ -351,7 +351,7 @@ gst_ximagesrc_buffer_class_init (gpointer g_class, gpointer class_data)
       gst_ximagesrc_buffer_finalize;
 }
 
-GType
+static GType
 gst_ximagesrc_buffer_get_type (void)
 {
   static GType _gst_ximagesrc_buffer_type;

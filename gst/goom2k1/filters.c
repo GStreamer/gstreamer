@@ -64,7 +64,7 @@ static int firstTime = 1;
 static int sintable[0xffff];
 
 ZoomFilterData *
-zoomFilterNew ()
+zoomFilterNew (void)
 {
   ZoomFilterData *zf = malloc (sizeof (ZoomFilterData));
 
@@ -106,7 +106,7 @@ ShiftRight (int x, const unsigned char s)
   px et py indique la nouvelle position (en sqrtperte ieme de pixel)
   (valeur * 16)
 */
-void
+static void
 calculatePXandPY (GoomData * gd, int x, int y, int *px, int *py)
 {
   ZoomFilterData *zf = gd->zfd;

@@ -54,7 +54,7 @@ static GstStaticPadTemplate srcac3template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (AC3_CAPS_STRING));
 
 
-GstPad *
+static GstPad *
 setup_src_pad (GstElement * element,
     GstStaticPadTemplate * template, GstCaps * caps)
 {
@@ -85,7 +85,7 @@ setup_src_pad (GstElement * element,
   return srcpad;
 }
 
-void
+static void
 teardown_src_pad (GstElement * element)
 {
   GstPad *srcpad, *sinkpad;
@@ -110,7 +110,7 @@ teardown_src_pad (GstElement * element)
   gst_object_unref (srcpad);
 }
 
-GstPad *
+static GstPad *
 setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
     GstCaps * caps)
 {
@@ -138,7 +138,7 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   return sinkpad;
 }
 
-void
+static void
 teardown_sink_pad (GstElement * element)
 {
   GstPad *srcpad, *sinkpad;
@@ -160,7 +160,7 @@ teardown_sink_pad (GstElement * element)
 }
 
 
-GstElement *
+static GstElement *
 setup_matroskamux (GstStaticPadTemplate * srctemplate)
 {
   GstElement *matroskamux;
@@ -173,7 +173,7 @@ setup_matroskamux (GstStaticPadTemplate * srctemplate)
   return matroskamux;
 }
 
-void
+static void
 cleanup_matroskamux (GstElement * matroskamux)
 {
   GST_DEBUG ("cleanup_matroskamux");
@@ -184,7 +184,7 @@ cleanup_matroskamux (GstElement * matroskamux)
   gst_check_teardown_element (matroskamux);
 }
 
-void
+static void
 check_buffer_data (GstBuffer * buffer, void *data, size_t data_size)
 {
   fail_unless (GST_BUFFER_SIZE (buffer) == data_size);
@@ -404,7 +404,7 @@ GST_START_TEST (test_block_group)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 matroskamux_suite (void)
 {
   Suite *s = suite_create ("matroskamux");

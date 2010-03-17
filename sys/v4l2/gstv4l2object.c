@@ -282,7 +282,7 @@ gst_v4l2_probe_get_values (GstPropertyProbe * probe,
 }
 
 #define GST_TYPE_V4L2_DEVICE_FLAGS (gst_v4l2_device_get_type ())
-GType
+static GType
 gst_v4l2_device_get_type (void)
 {
   static GType v4l2_device_type = 0;

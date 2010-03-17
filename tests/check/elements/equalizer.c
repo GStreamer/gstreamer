@@ -55,8 +55,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) 64 ")
     );
 
-GstElement *
-setup_equalizer ()
+static GstElement *
+setup_equalizer (void)
 {
   GstElement *equalizer;
 
@@ -70,7 +70,7 @@ setup_equalizer ()
   return equalizer;
 }
 
-void
+static void
 cleanup_equalizer (GstElement * equalizer)
 {
   GST_DEBUG ("cleanup_equalizer");
@@ -294,7 +294,7 @@ GST_START_TEST (test_equalizer_band_number_changing)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 equalizer_suite (void)
 {
   Suite *s = suite_create ("equalizer");

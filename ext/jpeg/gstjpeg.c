@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 
+#include "gstjpeg.h"
 #include "gstjpegdec.h"
 #include "gstjpegenc.h"
 #include "gstsmokeenc.h"

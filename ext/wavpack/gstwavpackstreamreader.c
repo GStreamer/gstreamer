@@ -107,7 +107,7 @@ gst_wavpack_stream_reader_write_bytes (void *id, void *data, int32_t bcount)
 }
 
 WavpackStreamReader *
-gst_wavpack_stream_reader_new ()
+gst_wavpack_stream_reader_new (void)
 {
   WavpackStreamReader *stream_reader =
       (WavpackStreamReader *) g_malloc0 (sizeof (WavpackStreamReader));

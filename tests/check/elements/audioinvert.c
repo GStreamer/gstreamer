@@ -64,8 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (bool) TRUE")
     );
 
-GstElement *
-setup_invert ()
+static GstElement *
+setup_invert (void)
 {
   GstElement *invert;
 
@@ -79,7 +79,7 @@ setup_invert ()
   return invert;
 }
 
-void
+static void
 cleanup_invert (GstElement * invert)
 {
   GST_DEBUG ("cleanup_invert");
@@ -253,7 +253,7 @@ GST_START_TEST (test_25_inverse)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 invert_suite (void)
 {
   Suite *s = suite_create ("invert");

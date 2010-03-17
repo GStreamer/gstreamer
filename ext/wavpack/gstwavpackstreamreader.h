@@ -31,6 +31,6 @@ typedef struct
   uint32_t position;
 } read_id;
 
-WavpackStreamReader *gst_wavpack_stream_reader_new ();
+WavpackStreamReader *gst_wavpack_stream_reader_new (void);
 
 #endif

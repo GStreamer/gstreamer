@@ -188,7 +188,7 @@ GST_START_TEST (test_encode_decode)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 wavpack_suite (void)
 {
   Suite *s = suite_create ("Wavpack");

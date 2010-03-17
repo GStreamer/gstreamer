@@ -79,4 +79,6 @@ struct _GstVideoBoxClass
   GstBaseTransformClass parent_class;
 };
 
+GType gst_video_box_get_type (void);
+
 #endif /* __GST_VIDEO_BOX_H__ */

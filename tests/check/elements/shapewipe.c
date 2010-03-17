@@ -291,7 +291,7 @@ GST_START_TEST (test_general)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 shapewipe_suite (void)
 {
   Suite *s = suite_create ("shapewipe");

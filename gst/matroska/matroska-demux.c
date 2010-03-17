@@ -175,6 +175,7 @@ static GstCaps
 /* stream methods */
 static void gst_matroska_demux_reset (GstElement * element);
 
+GType gst_matroska_demux_get_type (void);
 GST_BOILERPLATE (GstMatroskaDemux, gst_matroska_demux, GstEbmlRead,
     GST_TYPE_EBML_READ);
 

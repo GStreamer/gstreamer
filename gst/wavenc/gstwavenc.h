@@ -61,6 +61,8 @@ struct _GstWavEncClass {
   GstElementClass parent_class;
 };
 
+GType gst_wavenc_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_WAV_ENC_H__ */

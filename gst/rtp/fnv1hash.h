@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-guint32 fnv1_hash_32_new ();
+guint32 fnv1_hash_32_new (void);
 guint32 fnv1_hash_32_update (guint32 hash, const guchar *data, guint length);
 guint32 fnv1_hash_32_to_24 (guint32 hash);
 

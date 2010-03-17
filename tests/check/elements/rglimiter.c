@@ -49,8 +49,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (RG_LIMITER_CAPS_TEMPLATE_STRING)
     );
 
-GstElement *
-setup_rglimiter ()
+static GstElement *
+setup_rglimiter (void)
 {
   GstElement *element;
 
@@ -64,7 +64,7 @@ setup_rglimiter ()
   return element;
 }
 
-void
+static void
 cleanup_rglimiter (GstElement * element)
 {
   GST_DEBUG ("cleanup_rglimiter");
@@ -89,6 +89,7 @@ set_playing_state (GstElement * element)
 static const gfloat test_input[] = {
   -2.0, -1.0, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0, 2.0
 };
+
 static const gfloat test_output[] = {
   -0.99752737684336523,         /* -2.0  */
   -0.88079707797788243,         /* -1.0  */
@@ -236,7 +237,7 @@ GST_START_TEST (test_gap)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 rglimiter_suite (void)
 {
   Suite *s = suite_create ("rglimiter");

@@ -26,7 +26,7 @@
 #include "gstrtpilbcpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpilbcpay_details = {
+static GstElementDetails gst_rtp_ilbc_pay_details = {
   "RTP iLBC Payloader",
   "Codec/Payloader/Network",
   "Packetize iLBC audio streams into RTP packets",
@@ -36,14 +36,14 @@ static GstElementDetails gst_rtpilbcpay_details = {
 GST_DEBUG_CATEGORY_STATIC (rtpilbcpay_debug);
 #define GST_CAT_DEFAULT (rtpilbcpay_debug)
 
-static GstStaticPadTemplate gst_rtpilbcpay_sink_template =
+static GstStaticPadTemplate gst_rtp_ilbc_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-iLBC, " "mode = (int) {20, 30}")
     );
 
-static GstStaticPadTemplate gst_rtpilbcpay_src_template =
+static GstStaticPadTemplate gst_rtp_ilbc_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -56,42 +56,42 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static GstCaps *gst_rtpilbcpay_sink_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * payload,
     GstPad * pad);
-static gboolean gst_rtpilbcpay_sink_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPILBCPay, gst_rtpilbcpay, GstBaseRTPAudioPayload,
+GST_BOILERPLATE (GstRTPILBCPay, gst_rtp_ilbc_pay, GstBaseRTPAudioPayload,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
-gst_rtpilbcpay_base_init (gpointer klass)
+gst_rtp_ilbc_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpilbcpay_sink_template));
+      gst_static_pad_template_get (&gst_rtp_ilbc_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpilbcpay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpilbcpay_details);
+      gst_static_pad_template_get (&gst_rtp_ilbc_pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtp_ilbc_pay_details);
 }
 
 static void
-gst_rtpilbcpay_class_init (GstRTPILBCPayClass * klass)
+gst_rtp_ilbc_pay_class_init (GstRTPILBCPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  gstbasertppayload_class->set_caps = gst_rtpilbcpay_sink_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtpilbcpay_sink_getcaps;
+  gstbasertppayload_class->set_caps = gst_rtp_ilbc_pay_sink_setcaps;
+  gstbasertppayload_class->get_caps = gst_rtp_ilbc_pay_sink_getcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpilbcpay_debug, "rtpilbcpay", 0,
       "iLBC audio RTP payloader");
 }
 
 static void
-gst_rtpilbcpay_init (GstRTPILBCPay * rtpilbcpay, GstRTPILBCPayClass * klass)
+gst_rtp_ilbc_pay_init (GstRTPILBCPay * rtpilbcpay, GstRTPILBCPayClass * klass)
 {
   GstBaseRTPPayload *basertppayload;
   GstBaseRTPAudioPayload *basertpaudiopayload;
@@ -110,7 +110,8 @@ gst_rtpilbcpay_init (GstRTPILBCPay * rtpilbcpay, GstRTPILBCPayClass * klass)
 }
 
 static gboolean
-gst_rtpilbcpay_sink_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
+gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * basertppayload,
+    GstCaps * caps)
 {
   GstRTPILBCPay *rtpilbcpay;
   GstBaseRTPAudioPayload *basertpaudiopayload;
@@ -181,7 +182,7 @@ mode_changed:
 /* we return the padtemplate caps with the mode field fixated to a value if we
  * can */
 static GstCaps *
-gst_rtpilbcpay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
+gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
 {
   GstCaps *otherpadcaps;
   GstCaps *caps;

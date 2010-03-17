@@ -55,6 +55,8 @@ struct _GstRTPMP2TPayClass
   GstBaseRTPPayloadClass parent_class;
 };
 
+GType gst_rtp_mp2t_pay_get_type (void);
+
 gboolean gst_rtp_mp2t_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

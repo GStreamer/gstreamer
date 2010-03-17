@@ -94,7 +94,7 @@ draw_spectrum (gfloat * data)
 }
 
 /* receive spectral data from element message */
-gboolean
+static gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer data)
 {
   if (message->type == GST_MESSAGE_ELEMENT) {

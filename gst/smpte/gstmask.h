@@ -59,4 +59,6 @@ const GList*            gst_mask_get_definitions        (void);
 GstMask*                gst_mask_factory_new            (gint type, gint bpp, gint width, gint height);
 void                    gst_mask_destroy                (GstMask *mask);
 
+void _gst_barboxwipes_register (void);
+
 #endif /* __GST_MASK_H__ */

@@ -62,8 +62,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 }")
     );
 
-GstElement *
-setup_audiochebband ()
+static GstElement *
+setup_audiochebband (void)
 {
   GstElement *audiochebband;
 
@@ -77,7 +77,7 @@ setup_audiochebband ()
   return audiochebband;
 }
 
-void
+static void
 cleanup_audiochebband (GstElement * audiochebband)
 {
   GST_DEBUG ("cleanup_audiochebband");
@@ -1485,7 +1485,7 @@ GST_START_TEST (test_type2_64_br_22050hz)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 audiochebband_suite (void)
 {
   Suite *s = suite_create ("audiochebband");

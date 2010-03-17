@@ -29,7 +29,7 @@
 
 #include "x86-64_macros.inc"
 
-void
+static void
 FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
     uint8_t * Dest, int size)
 {

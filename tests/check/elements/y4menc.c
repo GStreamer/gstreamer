@@ -49,8 +49,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (VIDEO_CAPS_STRING));
 
 
-GstElement *
-setup_y4menc ()
+static GstElement *
+setup_y4menc (void)
 {
   GstElement *y4menc;
 
@@ -64,7 +64,7 @@ setup_y4menc ()
   return y4menc;
 }
 
-void
+static void
 cleanup_y4menc (GstElement * y4menc)
 {
   GST_DEBUG ("cleanup_y4menc");
@@ -134,7 +134,7 @@ GST_START_TEST (test_y4m)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 y4menc_suite (void)
 {
   Suite *s = suite_create ("y4menc");

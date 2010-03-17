@@ -51,8 +51,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 }")
     );
 
-GstElement *
-setup_echo ()
+static GstElement *
+setup_echo (void)
 {
   GstElement *echo;
 
@@ -66,7 +66,7 @@ setup_echo ()
   return echo;
 }
 
-void
+static void
 cleanup_echo (GstElement * echo)
 {
   GST_DEBUG ("cleanup_echo");

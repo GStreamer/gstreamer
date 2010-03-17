@@ -62,8 +62,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 
-GstElement *
-setup_audiowsincband ()
+static GstElement *
+setup_audiowsincband (void)
 {
   GstElement *audiowsincband;
 
@@ -77,7 +77,7 @@ setup_audiowsincband ()
   return audiowsincband;
 }
 
-void
+static void
 cleanup_audiowsincband (GstElement * audiowsincband)
 {
   GST_DEBUG ("cleanup_audiowsincband");
@@ -967,7 +967,7 @@ GST_START_TEST (test_64_small_buffer)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 audiowsincband_suite (void)
 {
   Suite *s = suite_create ("audiowsincband");

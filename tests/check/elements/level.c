@@ -64,8 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* takes over reference for outcaps */
-GstElement *
-setup_level ()
+static GstElement *
+setup_level (void)
 {
   GstElement *level;
 
@@ -79,7 +79,7 @@ setup_level ()
   return level;
 }
 
-void
+static void
 cleanup_level (GstElement * level)
 {
   GST_DEBUG ("cleanup_level");
@@ -296,7 +296,7 @@ GST_START_TEST (test_int16_panned)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 level_suite (void)
 {
   Suite *s = suite_create ("level");

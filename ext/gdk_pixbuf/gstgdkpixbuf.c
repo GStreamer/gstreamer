@@ -28,6 +28,7 @@
 
 #include "gstgdkpixbuf.h"
 #include "gstgdkpixbufsink.h"
+#include "pixbufscale.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 #define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
@@ -74,8 +75,6 @@ static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGBA)
     );
-
-gboolean pixbufscale_init (GstPlugin * plugin);
 
 static void gst_gdk_pixbuf_base_init (gpointer g_class);
 static void gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass);

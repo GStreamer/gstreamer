@@ -40,7 +40,7 @@ run_pipeline (GstElement * pipeline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
-gchar *
+static gchar *
 g_mkdtemp (const gchar * template)
 {
   gchar *s;

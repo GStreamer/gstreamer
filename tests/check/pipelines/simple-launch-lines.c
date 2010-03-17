@@ -249,7 +249,8 @@ GST_START_TEST (test_video_encoders_decoders)
 
 GST_END_TEST
 #endif /* #ifndef GST_DISABLE_PARSE */
-    Suite * simple_launch_lines_suite (void)
+static Suite *
+simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
