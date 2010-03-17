@@ -86,7 +86,6 @@ static gboolean gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event);
 static void gst_wavpack_dec_finalize (GObject * object);
 static GstStateChangeReturn gst_wavpack_dec_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event);
 static void gst_wavpack_dec_post_tags (GstWavpackDec * dec);
 
 GST_BOILERPLATE (GstWavpackDec, gst_wavpack_dec, GstElement, GST_TYPE_ELEMENT);

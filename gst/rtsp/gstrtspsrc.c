@@ -211,7 +211,6 @@ gst_rtsp_nat_method_get_type (void)
   return rtsp_nat_method_type;
 }
 
-static void gst_rtspsrc_base_init (gpointer g_class);
 static void gst_rtspsrc_finalize (GObject * object);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,

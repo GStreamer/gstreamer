@@ -1262,7 +1262,6 @@ static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
 static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
-static void gst_rtp_bin_clear_pt_map (GstRtpBin * bin);
 
 GST_BOILERPLATE (GstRtpBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
 

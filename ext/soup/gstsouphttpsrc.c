@@ -126,8 +126,6 @@ enum
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
-static void gst_soup_http_src_init (GstSoupHTTPSrc * src,
-    GstSoupHTTPSrcClass * g_class);
 static void gst_soup_http_src_finalize (GObject * gobject);
 
 static void gst_soup_http_src_set_property (GObject * object, guint prop_id,

@@ -122,9 +122,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_BOILERPLATE (GstRgVolume, gst_rg_volume, GstBin, GST_TYPE_BIN);
 
-static void gst_rg_volume_class_init (GstRgVolumeClass * klass);
-static void gst_rg_volume_init (GstRgVolume * self, GstRgVolumeClass * gclass);
-
 static void gst_rg_volume_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rg_volume_get_property (GObject * object, guint prop_id,

@@ -62,9 +62,6 @@ enum
   PROP_IDCT_METHOD
 };
 
-extern GType gst_idct_method_get_type (void);
-#define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
-
 static GstStaticPadTemplate gst_jpeg_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

@@ -88,9 +88,6 @@ GST_DEBUG_CATEGORY (gst_videomixer_debug);
 
 static GType gst_videomixer_get_type (void);
 
-static void gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass);
-static void gst_videomixer_pad_init (GstVideoMixerPad * mixerpad);
-
 static void gst_videomixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_videomixer_pad_set_property (GObject * object, guint prop_id,

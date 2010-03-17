@@ -47,7 +47,6 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 

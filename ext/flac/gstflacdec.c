@@ -120,7 +120,6 @@ static GstFlowReturn gst_flac_dec_chain (GstPad * pad, GstBuffer * buf);
 
 static void gst_flac_dec_reset_decoders (GstFlacDec * flacdec);
 static void gst_flac_dec_setup_decoder (GstFlacDec * flacdec);
-static void gst_flac_dec_setup_decoder (GstFlacDec * flacdec);
 
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,

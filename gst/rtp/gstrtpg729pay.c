@@ -78,9 +78,6 @@ static GstStaticPadTemplate gst_rtp_g729_pay_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"G729\"")
     );
 
-static void
-gst_rtp_g729_pay_init (GstRTPG729Pay * pay, GstRTPG729PayClass * klass);
-
 GST_BOILERPLATE (GstRTPG729Pay, gst_rtp_g729_pay, GstBaseRTPAudioPayload,
     GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 

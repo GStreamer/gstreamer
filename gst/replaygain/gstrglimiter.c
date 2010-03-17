@@ -70,10 +70,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstRgLimiter, gst_rg_limiter, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
-static void gst_rg_limiter_class_init (GstRgLimiterClass * klass);
-static void gst_rg_limiter_init (GstRgLimiter * filter,
-    GstRgLimiterClass * gclass);
-
 static void gst_rg_limiter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rg_limiter_get_property (GObject * object, guint prop_id,

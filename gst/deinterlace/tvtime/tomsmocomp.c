@@ -43,8 +43,6 @@
 #define GST_DEINTERLACE_METHOD_TOMSMOCOMP_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD_TOMSMOCOMP, GstDeinterlaceMethodTomsMoCompClass))
 #define GST_DEINTERLACE_METHOD_TOMSMOCOMP_CAST(obj)	((GstDeinterlaceMethodTomsMoComp*)(obj))
 
-GType gst_deinterlace_method_tomsmocomp_get_type (void);
-
 typedef struct
 {
   GstDeinterlaceMethod parent;

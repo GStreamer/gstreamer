@@ -89,9 +89,6 @@ enum
   PROP_IDCT_METHOD
 };
 
-extern GType gst_idct_method_get_type (void);
-#define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
-
 static void gst_jpegenc_base_init (gpointer g_class);
 static void gst_jpegenc_class_init (GstJpegEnc * klass);
 static void gst_jpegenc_init (GstJpegEnc * jpegenc);

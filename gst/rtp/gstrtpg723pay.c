@@ -68,8 +68,6 @@ static GstStaticPadTemplate gst_rtp_g723_pay_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"G723\"")
     );
 
-static void gst_rtp_g723_pay_init (GstRTPG723Pay * pay,
-    GstRTPG723PayClass * klass);
 static void gst_rtp_g723_pay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_g723_pay_change_state (GstElement * element,

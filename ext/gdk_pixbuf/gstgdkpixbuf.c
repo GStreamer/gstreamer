@@ -76,11 +76,6 @@ static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGBA)
     );
 
-static void gst_gdk_pixbuf_base_init (gpointer g_class);
-static void gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass);
-static void gst_gdk_pixbuf_init (GstGdkPixbuf * filter,
-    GstGdkPixbufClass * klass);
-
 static void gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,

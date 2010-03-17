@@ -26,6 +26,7 @@
 G_BEGIN_DECLS
 
 
+#define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
 GType gst_idct_method_get_type (void);
 
 

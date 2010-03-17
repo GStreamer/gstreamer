@@ -135,10 +135,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstRgAnalysis, gst_rg_analysis, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
-static void gst_rg_analysis_class_init (GstRgAnalysisClass * klass);
-static void gst_rg_analysis_init (GstRgAnalysis * filter,
-    GstRgAnalysisClass * gclass);
-
 static void gst_rg_analysis_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rg_analysis_get_property (GObject * object, guint prop_id,
