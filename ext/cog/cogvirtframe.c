@@ -1627,7 +1627,7 @@ convert_444_420_mpeg2 (CogFrame * frame, void *_dest, int component, int i)
       int j;
       int x;
 
-      for (j = 1; j < frame->components[component].width - 1; j++) {
+      for (j = 1; j < frame->components[component].width; j++) {
         x = 1 * src1[j * 2 - 1];
         x += 2 * src1[j * 2 + 0];
         x += 1 * src1[j * 2 + 1];
