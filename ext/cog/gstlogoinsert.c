@@ -353,7 +353,7 @@ struct png_data_struct
 static void
 read_data (png_structp png_ptr, png_bytep data, png_size_t length)
 {
-  struct png_data_struct *s = png_ptr->io_ptr;
+  struct png_data_struct *s = png_get_io_ptr (png_ptr);
 
   memcpy (data, s->data + s->offset, length);
   s->offset += length;
