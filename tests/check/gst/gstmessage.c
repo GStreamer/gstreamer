@@ -259,6 +259,69 @@ GST_START_TEST (test_parsing)
 
     gst_message_unref (message);
   }
+  /* GST_MESSAGE_QOS   */
+  {
+    gboolean live;
+    GstClockTime running_time;
+    GstClockTime stream_time;
+    GstClockTime timestamp, duration;
+    gint64 jitter;
+    gdouble proportion;
+    gint quality;
+    GstFormat format;
+    guint64 processed;
+    guint64 dropped;
+
+    running_time = 1 * GST_SECOND;
+    stream_time = 2 * GST_SECOND;
+    timestamp = 3 * GST_SECOND;
+    duration = 4 * GST_SECOND;
+
+    message =
+        gst_message_new_qos (NULL, TRUE, running_time, stream_time, timestamp,
+        duration);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_QOS);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* check defaults */
+    gst_message_parse_qos_values (message, &jitter, &proportion, &quality);
+    fail_unless (jitter == 0);
+    fail_unless (proportion == 1.0);
+    fail_unless (quality == 1000000);
+
+    gst_message_parse_qos_stats (message, &format, &processed, &dropped);
+    fail_unless (format == GST_FORMAT_UNDEFINED);
+    fail_unless (processed == -1);
+    fail_unless (dropped == -1);
+
+    /* set some wrong values to check if the parse method overwrites them
+     * with the good values */
+    running_time = stream_time = timestamp = duration = 5 * GST_SECOND;
+    live = FALSE;
+    gst_message_parse_qos (message, &live, &running_time, &stream_time,
+        &timestamp, &duration);
+    fail_unless (live == TRUE);
+    fail_unless (running_time == 1 * GST_SECOND);
+    fail_unless (stream_time == 2 * GST_SECOND);
+    fail_unless (timestamp == 3 * GST_SECOND);
+    fail_unless (duration == 4 * GST_SECOND);
+
+    /* change some values */
+    gst_message_set_qos_values (message, -10, 2.0, 5000);
+    gst_message_parse_qos_values (message, &jitter, &proportion, &quality);
+    fail_unless (jitter == -10);
+    fail_unless (proportion == 2.0);
+    fail_unless (quality == 5000);
+
+    gst_message_set_qos_stats (message, GST_FORMAT_DEFAULT, 1030, 65);
+    gst_message_parse_qos_stats (message, &format, &processed, &dropped);
+    fail_unless (format == GST_FORMAT_DEFAULT);
+    fail_unless (processed == 1030);
+    fail_unless (dropped == 65);
+
+    gst_message_unref (message);
+  }
 }
 
 GST_END_TEST;

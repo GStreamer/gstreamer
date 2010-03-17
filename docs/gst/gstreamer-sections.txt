@@ -1167,6 +1167,12 @@ gst_message_parse_async_start
 gst_message_new_async_done
 gst_message_new_step_start
 gst_message_parse_step_start
+gst_message_new_qos
+gst_message_set_qos_values
+gst_message_set_qos_stats
+gst_message_parse_qos
+gst_message_parse_qos_values
+gst_message_parse_qos_stats
 
 GstStructureChangeType
 gst_message_new_structure_change

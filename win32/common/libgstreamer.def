@@ -496,6 +496,7 @@ EXPORTS
 	gst_message_new_info
 	gst_message_new_latency
 	gst_message_new_new_clock
+	gst_message_new_qos
 	gst_message_new_request_state
 	gst_message_new_segment_done
 	gst_message_new_segment_start
@@ -517,6 +518,9 @@ EXPORTS
 	gst_message_parse_error
 	gst_message_parse_info
 	gst_message_parse_new_clock
+	gst_message_parse_qos
+	gst_message_parse_qos_stats
+	gst_message_parse_qos_values
 	gst_message_parse_request_state
 	gst_message_parse_segment_done
 	gst_message_parse_segment_start
@@ -529,6 +533,8 @@ EXPORTS
 	gst_message_parse_tag_full
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
+	gst_message_set_qos_stats
+	gst_message_set_qos_values
 	gst_message_set_seqnum
 	gst_message_set_stream_status_object
 	gst_message_type_get_name

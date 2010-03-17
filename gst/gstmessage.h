@@ -86,6 +86,8 @@ typedef struct _GstMessageClass GstMessageClass;
  * change state. This message is a suggestion to the application which can
  * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
  * @GST_MESSAGE_STEP_START: A stepping operation was started.
+ * @GST_MESSAGE_QOS: A buffer was dropped or an element changed its processing
+ * strategy for Quality of Service reasons.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -120,6 +122,7 @@ typedef enum
   GST_MESSAGE_ASYNC_DONE        = (1 << 21),
   GST_MESSAGE_REQUEST_STATE     = (1 << 22),
   GST_MESSAGE_STEP_START        = (1 << 23),
+  GST_MESSAGE_QOS               = (1 << 24),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -473,6 +476,20 @@ GstMessage *    gst_message_new_step_start      (GstObject * src, gboolean activ
 void            gst_message_parse_step_start    (GstMessage * message, gboolean *active, GstFormat *format,
                                                  guint64 *amount, gdouble *rate, gboolean *flush,
                                                  gboolean *intermediate);
+
+/* QOS */
+GstMessage *    gst_message_new_qos             (GstObject * src, gboolean live, guint64 running_time,
+                                                 guint64 stream_time, guint64 timestamp, guint64 duration);
+void            gst_message_set_qos_values      (GstMessage * message, gint64 jitter, gdouble proportion,
+                                                 gint quality);
+void            gst_message_set_qos_stats       (GstMessage * message, GstFormat format, guint64 processed,
+                                                 guint64 dropped);
+void            gst_message_parse_qos           (GstMessage * message, gboolean * live, guint64 * running_time,
+                                                 guint64 * stream_time, guint64 * timestamp, guint64 * duration);
+void            gst_message_parse_qos_values    (GstMessage * message, gint64 * jitter, gdouble * proportion,
+                                                 gint * quality);
+void            gst_message_parse_qos_stats     (GstMessage * message, GstFormat * format, guint64 * processed,
+                                                 guint64 * dropped);
 
 /* custom messages */
 GstMessage *    gst_message_new_custom          (GstMessageType type,
