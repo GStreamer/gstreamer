@@ -1864,6 +1864,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
           desired_caps);
       /* we alloc a buffer with the original incomming caps already in the
        * width and height variables */
+      gst_caps_unref (desired_caps);
     }
   }
 
