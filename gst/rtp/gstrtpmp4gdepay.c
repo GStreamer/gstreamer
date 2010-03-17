@@ -441,6 +441,8 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
 
+    GST_DEBUG_OBJECT (rtpmp4gdepay, "received payload of %d", payload_len);
+
     rtptime = gst_rtp_buffer_get_timestamp (buf);
     M = gst_rtp_buffer_get_marker (buf);
 
@@ -526,8 +528,11 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         if (i == 0) {
           AU_index = gst_bs_parse_read (&bs, rtpmp4gdepay->indexlength);
 
+          GST_DEBUG_OBJECT (rtpmp4gdepay, "AU index %u", AU_index);
+
           if (AU_index == 0 && rtpmp4gdepay->prev_AU_index == 0) {
             gint diff;
+            gint cd;
 
             /* if we see two consecutive packets with AU_index of 0, we can
              * assume we have constantDuration packets. Since we don't have
@@ -540,15 +545,17 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
               diff = -(rtpmp4gdepay->prev_rtptime - rtptime);
 
             /* if no constantDuration was given, make one */
-            if (rtpmp4gdepay->constantDuration == 0) {
-              rtpmp4gdepay->constantDuration = diff / num_AU_headers;
-              GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d",
-                  rtpmp4gdepay->constantDuration);
+            if (rtpmp4gdepay->constantDuration != 0) {
+              cd = rtpmp4gdepay->constantDuration;
+              GST_DEBUG_OBJECT (depayload, "using constantDuration %d", cd);
+            } else {
+              cd = diff / num_AU_headers;
+              GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d", cd);
             }
 
-            if (rtpmp4gdepay->constantDuration > 0) {
+            if (cd > 0) {
               /* get the number of packets by dividing with the duration */
-              diff /= rtpmp4gdepay->constantDuration;
+              diff /= cd;
             } else {
               diff = 0;
             }
@@ -558,6 +565,8 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
             AU_index = rtpmp4gdepay->last_AU_index;
 
+            GST_DEBUG_OBJECT (rtpmp4gdepay, "diff %d, AU index %u", diff,
+                AU_index);
           } else {
             rtpmp4gdepay->prev_AU_index = AU_index;
             rtpmp4gdepay->last_AU_index = AU_index;
