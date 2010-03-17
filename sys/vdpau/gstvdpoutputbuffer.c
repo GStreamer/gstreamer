@@ -28,7 +28,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdp_output_buffer_debug);
 #define GST_CAT_DEFAULT gst_vdp_output_buffer_debug
 
 #define DEBUG_INIT(bla) \
-GST_DEBUG_CATEGORY_INIT (gst_vdp_output_buffer_debug, "vdpauoutputbuffer", 0, "VDPAU output buffer");
+GST_DEBUG_CATEGORY_INIT (gst_vdp_output_buffer_debug, "vdpoutputbuffer", 0, "VDPAU output buffer");
 
 GstVdpOutputBuffer *
 gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format,
@@ -46,6 +46,7 @@ gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format,
         device->vdp_get_error_string (status));
     return NULL;
   }
+
 
   buffer =
       (GstVdpOutputBuffer *) gst_mini_object_new (GST_TYPE_VDP_OUTPUT_BUFFER);
@@ -339,6 +340,7 @@ gst_vdp_output_buffer_calculate_size (GstVdpOutputBuffer * output_buf,
     }
 
     default:
+      g_assert_not_reached ();
       return FALSE;
   }
 
@@ -347,7 +349,7 @@ gst_vdp_output_buffer_calculate_size (GstVdpOutputBuffer * output_buf,
 
 gboolean
 gst_vdp_output_buffer_download (GstVdpOutputBuffer * output_buf,
-    GstBuffer * outbuf)
+    GstBuffer * outbuf, GError ** error)
 {
   guint8 *data[1];
   guint32 stride[1];
@@ -387,9 +389,10 @@ gst_vdp_output_buffer_download (GstVdpOutputBuffer * output_buf,
       stride);
   GST_LOG_OBJECT (output_buf,
       "Got status %d from vdp_output_get_bits_native", status);
+
   if (G_UNLIKELY (status != VDP_STATUS_OK)) {
-    GST_ERROR_OBJECT (output_buf,
-        "Couldn't get data from vdpau, Error returned from vdpau was: %s",
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+        "Couldn't get data from vdpau, error returned from vdpau was: %s",
         device->vdp_get_error_string (status));
     return FALSE;
   }

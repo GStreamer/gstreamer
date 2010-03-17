@@ -352,16 +352,30 @@ gst_vdp_vpp_add_buffer (GstVdpVideoPostProcess * vpp, GstVdpVideoBuffer * buf)
   }
 }
 
+static void
+gst_vdp_vpp_post_error (GstVdpVideoPostProcess * vpp, GError * error)
+{
+  GstMessage *message;
+
+  message = gst_message_new_error (GST_OBJECT (vpp), error, NULL);
+  gst_element_post_message (GST_ELEMENT (vpp), message);
+}
+
 static GstFlowReturn
 gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
 {
   GstFlowReturn ret;
+  GError *err = NULL;
 
   GST_DEBUG ("open_device");
 
   ret =
       gst_vdp_output_src_pad_get_device (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
-      &vpp->device);
+      &vpp->device, &err);
+  if (ret == GST_FLOW_ERROR) {
+    gst_vdp_vpp_post_error (vpp, err);
+    g_error_free (err);
+  }
 
   return ret;
 }
@@ -477,11 +491,33 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstVdpVideoPostProcess *vpp =
       GST_VDP_VIDEO_POST_PROCESS (gst_pad_get_parent (pad));
   GstStructure *structure;
-  GstCaps *output_caps, *allowed_caps, *src_caps;
+  GstCaps *video_caps = NULL;
   gboolean res = FALSE;
 
-  /* extract interlaced flag */
+  /* check if the input is non native */
   structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
+    if (!gst_structure_get_fourcc (structure, "format", &vpp->fourcc))
+      goto done;
+    vpp->native_input = FALSE;
+    video_caps = gst_vdp_video_buffer_parse_yuv_caps (caps);
+    if (!video_caps)
+      goto done;
+  } else {
+    vpp->native_input = TRUE;
+    video_caps = gst_caps_copy (caps);
+  }
+
+
+  structure = gst_caps_get_structure (video_caps, 0);
+  if (!gst_structure_get_int (structure, "width", &vpp->width) ||
+      !gst_structure_get_int (structure, "height", &vpp->height) ||
+      !gst_structure_get_int (structure, "chroma-type",
+          (gint *) & vpp->chroma_type))
+    goto done;
+
+
+  /* get interlaced flag */
   gst_structure_get_boolean (structure, "interlaced", &vpp->interlaced);
 
   /* extract par */
@@ -493,53 +529,8 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   } else
     vpp->got_par = FALSE;
 
-  if (gst_structure_has_name (structure, "video/x-vdpau-video")) {
-
-    if (!gst_structure_get_int (structure, "width", &vpp->width) ||
-        !gst_structure_get_int (structure, "height", &vpp->height) ||
-        !gst_structure_get_int (structure, "chroma-type",
-            (gint *) & vpp->chroma_type))
-      goto done;
-
-    output_caps = gst_vdp_video_to_output_caps (caps);
-    vpp->native_input = TRUE;
-  } else {
-    vpp->native_input = FALSE;
-    if (!gst_vdp_video_buffer_parse_yuv_caps (caps, &vpp->chroma_type,
-            &vpp->width, &vpp->height))
-      goto done;
-    if (!gst_structure_get_fourcc (structure, "format", &vpp->fourcc))
-      goto done;
-
-    output_caps = gst_vdp_yuv_to_output_caps (caps);
-  }
-  GST_DEBUG ("output_caps: %" GST_PTR_FORMAT, output_caps);
-
-  allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
-  GST_DEBUG ("allowed_caps: %" GST_PTR_FORMAT, allowed_caps);
-  if (G_UNLIKELY (!allowed_caps))
-    goto allowed_caps_error;
-  if (G_UNLIKELY (gst_caps_is_empty (allowed_caps))) {
-    gst_caps_unref (allowed_caps);
-    goto allowed_caps_error;
-  }
-
-  src_caps = gst_caps_intersect (output_caps, allowed_caps);
-  gst_caps_unref (output_caps);
-  gst_caps_unref (allowed_caps);
-
-  if (gst_caps_is_empty (src_caps)) {
-    gst_caps_unref (src_caps);
-    goto not_negotiated;
-  }
-  gst_pad_fixate_caps (vpp->srcpad, src_caps);
-
-  GST_DEBUG ("src_caps: %" GST_PTR_FORMAT, src_caps);
-
   if (gst_vdp_vpp_is_interlaced (vpp)) {
     gint fps_n, fps_d;
-
-    structure = gst_caps_get_structure (src_caps, 0);
 
     if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
       gst_fraction_double (&fps_n, &fps_d);
@@ -551,21 +542,16 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_remove_field (structure, "interlaced");
   }
 
-  res = gst_vdp_output_src_pad_set_caps (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
-      src_caps);
+  res =
+      gst_vdp_output_src_pad_negotiate_output (GST_VDP_OUTPUT_SRC_PAD
+      (vpp->srcpad), video_caps);
 
 done:
   gst_object_unref (vpp);
+  if (video_caps)
+    gst_caps_unref (video_caps);
+
   return res;
-
-allowed_caps_error:
-  gst_caps_unref (output_caps);
-  goto done;
-
-not_negotiated:
-  GST_DEBUG_OBJECT (vpp, "Couldn't find suitable output format");
-  res = FALSE;
-  goto done;
 }
 
 static void
@@ -632,6 +618,7 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
           &current_pic,
           &video_surfaces_past_count, video_surfaces_past,
           &video_surfaces_future_count, video_surfaces_future)) {
+    GError *err;
     GstVdpOutputBuffer *outbuf;
 
     GstStructure *structure;
@@ -643,14 +630,12 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     GstVdpDevice *device;
     VdpStatus status;
 
+    err = NULL;
     ret =
         gst_vdp_output_src_pad_alloc_buffer ((GstVdpOutputSrcPad *) vpp->srcpad,
-        &outbuf);
+        &outbuf, &err);
     if (ret != GST_FLOW_OK)
-      break;
-
-    gst_vdp_output_src_pad_set_caps ((GstVdpOutputSrcPad *) vpp->srcpad,
-        GST_BUFFER_CAPS (outbuf));
+      goto output_pad_error;
 
     src_r.w = vpp->width;
     src_r.h = vpp->height;
@@ -664,10 +649,8 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
 
     structure = gst_caps_get_structure (GST_BUFFER_CAPS (outbuf), 0);
     if (!gst_structure_get_int (structure, "width", &dest_r.w) ||
-        !gst_structure_get_int (structure, "height", &dest_r.h)) {
-      gst_buffer_unref (GST_BUFFER (outbuf));
+        !gst_structure_get_int (structure, "height", &dest_r.h))
       goto invalid_caps;
-    }
 
     if (vpp->force_aspect_ratio) {
       GstVideoRectangle res_r;
@@ -690,14 +673,8 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
         current_pic.structure, video_surfaces_past_count, video_surfaces_past,
         current_pic.buf->surface, video_surfaces_future_count,
         video_surfaces_future, NULL, outbuf->surface, NULL, &rect, 0, NULL);
-    if (status != VDP_STATUS_OK) {
-      gst_buffer_unref (GST_BUFFER (outbuf));
-      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
-          ("Could not postprocess frame"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-      return GST_FLOW_ERROR;
-    }
+    if (status != VDP_STATUS_OK)
+      goto render_error;
 
     GST_BUFFER_TIMESTAMP (outbuf) = current_pic.timestamp;
     if (gst_vdp_vpp_is_interlaced (vpp))
@@ -714,21 +691,38 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     if (GST_BUFFER_FLAG_IS_SET (current_pic.buf, GST_BUFFER_FLAG_GAP))
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
 
+    err = NULL;
     ret =
         gst_vdp_output_src_pad_push ((GstVdpOutputSrcPad *) vpp->srcpad,
-        outbuf);
+        outbuf, &err);
     if (ret != GST_FLOW_OK)
-      break;
+      goto output_pad_error;
 
     continue;
+
+  render_error:
+    gst_buffer_unref (GST_BUFFER (outbuf));
+    GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
+        ("Could not postprocess frame"),
+        ("Error returned from vdpau was: %s",
+            device->vdp_get_error_string (status)));
+    ret = GST_FLOW_ERROR;
+
+  invalid_caps:
+    gst_buffer_unref (GST_BUFFER (outbuf));
+    GST_ELEMENT_ERROR (vpp, STREAM, FAILED, ("Invalid output caps"), (NULL));
+    ret = GST_FLOW_ERROR;
+    break;
+
+  output_pad_error:
+    if (ret == GST_FLOW_ERROR && err != NULL) {
+      gst_vdp_vpp_post_error (vpp, err);
+      g_error_free (err);
+    }
+    break;
   }
 
   return ret;
-
-invalid_caps:
-  GST_ELEMENT_ERROR (vpp, STREAM, FAILED, ("Invalid output caps"), (NULL));
-  return GST_FLOW_ERROR;
-
 }
 
 static GstFlowReturn

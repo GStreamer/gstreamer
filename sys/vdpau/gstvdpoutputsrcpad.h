@@ -38,12 +38,12 @@ G_BEGIN_DECLS
 typedef struct _GstVdpOutputSrcPad GstVdpOutputSrcPad;
 typedef struct _GstVdpOutputSrcPadClass GstVdpOutputSrcPadClass;
 
-GstFlowReturn gst_vdp_output_src_pad_push (GstVdpOutputSrcPad *vdp_pad, GstVdpOutputBuffer *output_buf);
-GstFlowReturn gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad *vdp_pad, GstVdpOutputBuffer **output_buf);
+GstFlowReturn gst_vdp_output_src_pad_push (GstVdpOutputSrcPad *vdp_pad, GstVdpOutputBuffer *output_buf, GError **error);
+GstFlowReturn gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad *vdp_pad, GstVdpOutputBuffer **output_buf, GError **error);
 
-GstFlowReturn gst_vdp_output_src_pad_get_device (GstVdpOutputSrcPad *vdp_pad, GstVdpDevice **device);
+GstFlowReturn gst_vdp_output_src_pad_get_device (GstVdpOutputSrcPad *vdp_pad, GstVdpDevice **device, GError **error);
 
-gboolean gst_vdp_output_src_pad_set_caps (GstVdpOutputSrcPad *vdp_pad, GstCaps *caps);
+gboolean gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad *vdp_pad, GstCaps *video_caps);
 
 GstVdpOutputSrcPad *gst_vdp_output_src_pad_new (GstCaps * templ_caps);
 GType gst_vdp_output_src_pad_get_type (void) G_GNUC_CONST;

@@ -50,7 +50,7 @@ GstCaps *gst_vdp_output_buffer_get_allowed_caps (GstVdpDevice *device);
 gboolean gst_vdp_caps_to_rgba_format (GstCaps *caps, VdpRGBAFormat *rgba_format);
 
 gboolean gst_vdp_output_buffer_calculate_size (GstVdpOutputBuffer *output_buf, guint *size);
-gboolean gst_vdp_output_buffer_download (GstVdpOutputBuffer *output_buf, GstBuffer *outbuf);
+gboolean gst_vdp_output_buffer_download (GstVdpOutputBuffer *output_buf, GstBuffer *outbuf, GError **error);
 
 #define GST_VDP_OUTPUT_CAPS \
   "video/x-vdpau-output, " \
