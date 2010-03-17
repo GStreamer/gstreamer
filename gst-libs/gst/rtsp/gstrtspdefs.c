@@ -70,29 +70,6 @@ struct rtsp_header
   gboolean multiple;
 };
 
-static const gchar *rtsp_results[] = {
-  "OK",
-  /* errors */
-  "Generic error",
-  "Invalid parameter specified",
-  "Operation interrupted",
-  "Out of memory",
-  "Cannot resolve host",
-  "Function not implemented",
-  "System error: %s",
-  "Parse error",
-  "Error on WSAStartup",
-  "Windows sockets are not version 0x202",
-  "Received end-of-file",
-  "Network error: %s",
-  "Host is not a valid IP address",
-  "Timeout while waiting for server response",
-  "Tunnel GET request received",
-  "Tunnel POST request received",
-  "Unknown error (%d)",
-  NULL
-};
-
 static const gchar *rtsp_methods[] = {
   "DESCRIBE",
   "ANNOUNCE",
@@ -283,37 +260,64 @@ gchar *
 gst_rtsp_strresult (GstRTSPResult result)
 {
   gint idx;
-  gchar *res;
 
   idx = ABS (result);
   idx = CLAMP (idx, 0, -GST_RTSP_ELAST);
 
   switch (idx) {
+    case GST_RTSP_OK:
+      return g_strdup ("OK");
 #ifdef G_OS_WIN32
     case -GST_RTSP_ESYS:
     case -GST_RTSP_ENET:
     {
-      gchar *msg = g_win32_error_message (WSAGetLastError ());
-      res = g_strdup_printf (rtsp_results[idx], msg);
+      gchar *res, *msg;
+      msg = g_win32_error_message (WSAGetLastError ());
+      if (idx == -GST_RTSP_ESYS)
+        res = g_strdup_printf ("System error: %s", msg);
+      else
+        res = g_strdup_printf ("Network error: %s", msg);
       g_free (msg);
-      break;
+      return res;
     }
 #else
     case -GST_RTSP_ESYS:
-      res = g_strdup_printf (rtsp_results[idx], g_strerror (errno));
-      break;
+      return g_strdup_printf ("System error: %s", g_strerror (errno));
     case -GST_RTSP_ENET:
-      res = g_strdup_printf (rtsp_results[idx], hstrerror (h_errno));
+      return g_strdup_printf ("Network error: %s", hstrerror (h_errno));
 #endif
-      break;
+    case -GST_RTSP_ERROR:
+      return g_strdup ("Generic error");
+    case -GST_RTSP_EINVAL:
+      return g_strdup ("Invalid parameter specified");
+    case -GST_RTSP_EINTR:
+      return g_strdup ("Operation interrupted");
+    case -GST_RTSP_ENOMEM:
+      return g_strdup ("Out of memory");
+    case -GST_RTSP_ERESOLV:
+      return g_strdup ("Cannot resolve host");
+    case -GST_RTSP_ENOTIMPL:
+      return g_strdup ("Function not implemented");
+    case -GST_RTSP_EPARSE:
+      return g_strdup ("Parse error");
+    case -GST_RTSP_EWSASTART:
+      return g_strdup ("Error on WSAStartup");
+    case -GST_RTSP_EWSAVERSION:
+      return g_strdup ("Windows sockets are not version 0x202");
+    case -GST_RTSP_EEOF:
+      return g_strdup ("Received end-of-file");
+    case -GST_RTSP_ENOTIP:
+      return g_strdup ("Host is not a valid IP address");
+    case -GST_RTSP_ETIMEOUT:
+      return g_strdup ("Timeout while waiting for server response");
+    case -GST_RTSP_ETGET:
+      return g_strdup ("Tunnel GET request received");
+    case -GST_RTSP_ETPOST:
+      return g_strdup ("Tunnel POST request received");
     case -GST_RTSP_ELAST:
-      res = g_strdup_printf (rtsp_results[idx], result);
-      break;
     default:
-      res = g_strdup (rtsp_results[idx]);
-      break;
+      return g_strdup_printf ("Unknown error (%d)", result);
   }
-  return res;
 }
 
 /**
