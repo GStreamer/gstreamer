@@ -40,32 +40,6 @@ gst_vdp_video_remove_pixel_aspect_ratio (GstStructure * structure)
 }
 
 GstCaps *
-gst_vdp_yuv_to_output_caps (GstCaps * caps)
-{
-  GstCaps *result;
-  gint i;
-
-  result = gst_caps_copy (caps);
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure, *rgb_structure;
-
-    structure = gst_caps_get_structure (result, i);
-    rgb_structure = gst_structure_copy (structure);
-
-    gst_structure_set_name (structure, "video/x-vdpau-output");
-    gst_structure_remove_field (structure, "format");
-    gst_vdp_video_remove_pixel_aspect_ratio (structure);
-
-    gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
-    gst_structure_remove_field (rgb_structure, "format");
-    gst_vdp_video_remove_pixel_aspect_ratio (rgb_structure);
-    gst_caps_append_structure (result, rgb_structure);
-  }
-
-  return result;
-}
-
-GstCaps *
 gst_vdp_video_to_output_caps (GstCaps * caps)
 {
   GstCaps *result;

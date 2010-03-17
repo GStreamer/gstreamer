@@ -25,7 +25,7 @@
 #include <vdpau/vdpau.h>
 #include <vdpau/vdpau_x11.h>
 
-#include <glib-object.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -83,7 +83,9 @@ struct _GstVdpDevice
   VdpOutputSurfaceQueryCapabilities               *vdp_output_surface_query_capabilities;
   VdpOutputSurfaceGetBitsNative                   *vdp_output_surface_get_bits_native;
 
-  VdpPresentationQueueTargetCreateX11             *vdp_presentation_queue_target_create_x11;  
+  VdpPresentationQueueTargetCreateX11             *vdp_presentation_queue_target_create_x11;
+  VdpPresentationQueueTargetDestroy               *vdp_presentation_queue_target_destroy;
+  
   VdpPresentationQueueCreate                      *vdp_presentation_queue_create;
   VdpPresentationQueueDestroy                     *vdp_presentation_queue_destroy;
   VdpPresentationQueueDisplay                     *vdp_presentation_queue_display;
@@ -92,7 +94,7 @@ struct _GstVdpDevice
   VdpPresentationQueueQuerySurfaceStatus          *vdp_presentation_queue_query_surface_status;
 };
 
-GType gst_vdp_device_get_type (void) G_GNUC_CONST;
+GType gst_vdp_device_get_type (void);
 
 GstVdpDevice *gst_vdp_get_device (const gchar *display_name);
 

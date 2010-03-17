@@ -49,7 +49,7 @@ GstCaps *gst_vdp_video_src_pad_get_template_caps ();
 
 GstVdpVideoSrcPad * gst_vdp_video_src_pad_new (GstPadTemplate * templ, const gchar * name);
 
-GType gst_vdp_video_src_pad_get_type (void) G_GNUC_CONST;
+GType gst_vdp_video_src_pad_get_type (void);
 
 G_END_DECLS
 

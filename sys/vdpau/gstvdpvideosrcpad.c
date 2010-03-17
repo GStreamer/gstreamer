@@ -113,9 +113,13 @@ gst_vdp_video_src_pad_push (GstVdpVideoSrcPad * vdp_pad,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     gst_buffer_unref (GST_BUFFER_CAST (video_buf));
   } else
-    out_buf = GST_BUFFER (video_buf);
+    out_buf = GST_BUFFER_CAST (video_buf);
 
-  gst_buffer_set_caps (out_buf, GST_PAD_CAPS (vdp_pad));
+  /* FIXME: can't use gst_buffer_set_caps since we may have additional
+   * references to the bufffer. We can't either use
+   * gst_buffer_make_metadata_writable since that creates a regular buffer and
+   * not a GstVdpVideoBuffer */
+  gst_caps_replace (&(GST_BUFFER_CAPS (out_buf)), GST_PAD_CAPS (vdp_pad));
 
   return gst_pad_push (pad, out_buf);
 }

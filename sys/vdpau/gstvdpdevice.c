@@ -18,12 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <gst/gst.h>
-
 #include "gstvdpdevice.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_device_debug);
 #define GST_CAT_DEFAULT gst_vdp_device_debug
+
+#define DEBUG_INIT(bla) \
+GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpdevice", 0, "VDPAU device object");
 
 enum
 {
@@ -33,7 +34,8 @@ enum
 
 
 
-G_DEFINE_TYPE (GstVdpDevice, gst_vdp_device, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (GstVdpDevice, gst_vdp_device, G_TYPE_OBJECT,
+    DEBUG_INIT ());
 
 static void
 gst_vdp_device_init (GstVdpDevice * device)
@@ -116,6 +118,8 @@ gst_vdp_device_constructed (GObject * object)
         &device->vdp_output_surface_get_bits_native},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
         &device->vdp_presentation_queue_target_create_x11},
+    {VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_DESTROY,
+        &device->vdp_presentation_queue_target_destroy},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_CREATE,
         &device->vdp_presentation_queue_create},
     {VDP_FUNC_ID_PRESENTATION_QUEUE_DESTROY,
@@ -290,8 +294,6 @@ gst_vdp_get_device (const gchar * display_name)
   GstVdpDevice *device;
 
   if (g_once_init_enter (&once)) {
-    GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpaudevice",
-        0, "vdpaudevice");
     device_cache.hash_table =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
     device_cache.mutex = g_mutex_new ();

@@ -1,31 +1,44 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
+/* 
+ * GStreamer
+ * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 
 #include <gst/gst.h>
 
-#include "gstvdpmpegdec.h"
-#include "gstvdpvideopostprocess.h"
-#include "gstvdpsink.h"
+#include "gstvdpdevice.h"
+#include "gstvdpvideobuffer.h"
+#include "gstvdpvideosrcpad.h"
+#include "gstvdpoutputbuffer.h"
+#include "gstvdpoutputsrcpad.h"
 
-static gboolean
-vdpau_init (GstPlugin * vdpau_plugin)
+#include "gstvdp.h"
+
+GST_DEBUG_CATEGORY (gst_vdp_debug);
+
+void
+gst_vdp_init ()
 {
-  /* Before giving these elements a rank again, make sure they pass at
-   * least the generic/states test when there's no device available */
-  gst_element_register (vdpau_plugin, "vdpaumpegdec",
-      GST_RANK_NONE, GST_TYPE_VDP_MPEG_DEC);
-  gst_element_register (vdpau_plugin, "vdpauvideopostprocess",
-      GST_RANK_NONE, GST_TYPE_VDP_VIDEO_POST_PROCESS);
-  gst_element_register (vdpau_plugin, "vdpausink",
-      GST_RANK_NONE, GST_TYPE_VDP_SINK);
+  /* do this so debug categories get created */
+  gst_vdp_device_get_type ();
+  gst_vdp_output_buffer_get_type ();
+  gst_vdp_video_buffer_get_type ();
+  gst_vdp_video_src_pad_get_type ();
+  gst_vdp_output_src_pad_get_type ();
 
-  return TRUE;
+  GST_DEBUG_CATEGORY_INIT (gst_vdp_debug, "vdp", 0, "GstVdp debug category");
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "vdpau",
-    "Various elements utilizing VDPAU",
-    vdpau_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

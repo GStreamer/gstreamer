@@ -99,7 +99,7 @@ GstCaps *gst_vdp_video_buffer_get_caps (gboolean filter, VdpChromaType chroma_ty
 GstCaps *gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device);
 GstCaps *gst_vdp_video_buffer_get_allowed_video_caps (GstVdpDevice * device);
 
-gboolean gst_vdp_video_buffer_parse_yuv_caps (GstCaps *yuv_caps, VdpChromaType *chroma_type, gint *width, gint *height);
+GstCaps *gst_vdp_video_buffer_parse_yuv_caps (GstCaps *yuv_caps);
 
 gboolean gst_vdp_video_buffer_calculate_size (guint32 fourcc, gint width, gint height, guint *size);
 gboolean gst_vdp_video_buffer_download (GstVdpVideoBuffer *inbuf, GstBuffer *outbuf, guint32 fourcc, gint width, gint height);

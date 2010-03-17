@@ -24,6 +24,12 @@
 
 #include "gstvdpvideobuffer.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_video_buffer_debug);
+#define GST_CAT_DEFAULT gst_vdp_video_buffer_debug
+
+#define DEBUG_INIT(bla) \
+GST_DEBUG_CATEGORY_INIT (gst_vdp_video_buffer_debug, "vdpvideobuffer", 0, "VDPAU video buffer");
+
 GstVdpVideoBuffer *
 gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
     gint width, gint height)
@@ -293,41 +299,63 @@ gst_vdp_video_buffer_calculate_size (guint32 fourcc, gint width, gint height,
   return TRUE;
 }
 
-gboolean
-gst_vdp_video_buffer_parse_yuv_caps (GstCaps * yuv_caps,
-    VdpChromaType * chroma_type, gint * width, gint * height)
+GstCaps *
+gst_vdp_video_buffer_parse_yuv_caps (GstCaps * yuv_caps)
 {
-  GstStructure *structure;
-  guint32 fourcc;
+
+  GstCaps *video_caps;
   gint i;
 
-  g_return_val_if_fail (GST_IS_CAPS (yuv_caps), FALSE);
-  g_return_val_if_fail (!gst_caps_is_empty (yuv_caps), FALSE);
-  g_return_val_if_fail (chroma_type, FALSE);
-  g_return_val_if_fail (width, FALSE);
-  g_return_val_if_fail (height, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (yuv_caps), NULL);
 
-  structure = gst_caps_get_structure (yuv_caps, 0);
-  if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
-    return FALSE;
+  video_caps = gst_caps_copy (yuv_caps);
+  for (i = 0; i < gst_caps_get_size (video_caps); i++) {
+    GstStructure *structure;
+    guint32 fourcc;
+    VdpChromaType chroma_type;
 
-  if (!gst_structure_get_fourcc (structure, "format", &fourcc) ||
-      !gst_structure_get_int (structure, "width", width) ||
-      !gst_structure_get_int (structure, "height", height))
-    return FALSE;
+    structure = gst_caps_get_structure (video_caps, i);
+    if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
+      goto not_yuv_error;
 
-  *chroma_type = -1;
-  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-    if (formats[i].fourcc == fourcc) {
-      *chroma_type = formats[i].chroma_type;
-      break;
+    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
+      goto no_format_error;
+
+    chroma_type = -1;
+    for (i = 0; i < G_N_ELEMENTS (formats); i++) {
+      if (formats[i].fourcc == fourcc) {
+        chroma_type = formats[i].chroma_type;
+        break;
+      }
     }
+
+    if (chroma_type == -1)
+      goto no_chroma_error;
+
+    /* now we transform the caps */
+    gst_structure_set_name (structure, "video/x-vdpau-video");
+    gst_structure_remove_field (structure, "format");
+    gst_structure_set (structure, "chroma-type", G_TYPE_INT, chroma_type, NULL);
   }
 
-  if (*chroma_type == -1)
-    return FALSE;
+  return video_caps;
 
-  return TRUE;
+error:
+  gst_caps_unref (video_caps);
+  return NULL;
+
+not_yuv_error:
+  GST_WARNING ("The caps weren't of type \"video/x-raw-yuv\"");
+  goto error;
+
+no_format_error:
+  GST_WARNING ("The caps didn't have a \"fourcc\" field");
+  goto error;
+
+no_chroma_error:
+  GST_WARNING ("The caps had an invalid \"fourcc\" field");
+  goto error;
+
 }
 
 gboolean
