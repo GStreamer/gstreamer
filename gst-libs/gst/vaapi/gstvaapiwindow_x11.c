@@ -52,15 +52,19 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    gboolean has_errors;
 
     if (priv->is_visible)
         return TRUE;
 
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XMapWindow(dpy, priv->xid);
     if (priv->create_window)
         x11_wait_event(dpy, priv->xid, MapNotify);
-    if (x11_untrap_errors() != 0)
+    has_errors = x11_untrap_errors() != 0;
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+    if (has_errors)
         return FALSE;
 
     priv->is_visible = TRUE;
@@ -72,15 +76,19 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    gboolean has_errors;
 
     if (!priv->is_visible)
         return TRUE;
 
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XUnmapWindow(dpy, priv->xid);
     if (priv->create_window)
         x11_wait_event(dpy, priv->xid, UnmapNotify);
-    if (x11_untrap_errors() != 0)
+    has_errors = x11_untrap_errors() != 0;
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+    if (has_errors)
         return FALSE;
 
     priv->is_visible = FALSE;
@@ -96,14 +104,14 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint width, guint height)
     if (!priv->create_window && priv->xid)
         return TRUE;
 
-    dpy       = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
     priv->xid = x11_create_window(dpy, width, height);
-
-    if (!priv->xid)
-        return FALSE;
-
-    XRaiseWindow(dpy, priv->xid);
-    return TRUE;
+    if (priv->xid)
+        XRaiseWindow(dpy, priv->xid);
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+    return priv->xid != None;
 }
 
 static void
@@ -113,8 +121,11 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
 
     if (priv->xid) {
-        if (priv->create_window)
+        if (priv->create_window) {
+            GST_VAAPI_DISPLAY_LOCK(priv->display);
             XDestroyWindow(dpy, priv->xid);
+            GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        }
         priv->xid = None;
     }
 
@@ -128,10 +139,12 @@ static gboolean
 gst_vaapi_window_x11_resize(GstVaapiWindow *window, guint width, guint height)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
+    gboolean has_errors;
 
     if (!priv->xid)
         return FALSE;
 
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XResizeWindow(
         GST_VAAPI_DISPLAY_XDISPLAY(priv->display),
@@ -139,9 +152,9 @@ gst_vaapi_window_x11_resize(GstVaapiWindow *window, guint width, guint height)
         width,
         height
     );
-    if (x11_untrap_errors() != 0)
-        return FALSE;
-    return TRUE;
+    has_errors = x11_untrap_errors() != 0;
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+    return !has_errors;
 }
 
 static gboolean
@@ -153,9 +166,14 @@ gst_vaapi_window_x11_render(
     guint                    flags
 )
 {
+    GstVaapiDisplay *display;
     VASurfaceID surface_id;
     VAStatus status;
     unsigned int va_flags = 0;
+
+    display = gst_vaapi_surface_get_display(surface);
+    if (!display)
+        return FALSE;
 
     surface_id = gst_vaapi_surface_get_id(surface);
     if (surface_id == VA_INVALID_ID)
@@ -173,8 +191,9 @@ gst_vaapi_window_x11_render(
     else if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
         va_flags |= VA_SRC_BT601;
 
+    GST_VAAPI_DISPLAY_LOCK(display);
     status = vaPutSurface(
-        GST_VAAPI_DISPLAY_VADISPLAY(gst_vaapi_surface_get_display(surface)),
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
         surface_id,
         GST_VAAPI_WINDOW_X11(window)->priv->xid,
         src_rect->x,
@@ -188,6 +207,7 @@ gst_vaapi_window_x11_render(
         NULL, 0,
         va_flags
     );
+    GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaPutSurface()"))
         return FALSE;
 

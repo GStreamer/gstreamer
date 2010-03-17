@@ -65,13 +65,17 @@ static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
     GstVaapiImagePrivate * const priv = image->priv;
-    VADisplay dpy = gst_vaapi_display_get_display(priv->display);
     VAStatus status;
 
     gst_vaapi_image_unmap(image);
 
     if (priv->image.image_id != VA_INVALID_ID) {
-        status = vaDestroyImage(dpy, priv->image.image_id);
+        GST_VAAPI_DISPLAY_LOCK(priv->display);
+        status = vaDestroyImage(
+            GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
+            priv->image.image_id
+        );
+        GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         if (!vaapi_check_status(status, "vaDestroyImage()"))
             g_warning("failed to destroy image 0x%08x\n", priv->image.image_id);
         priv->image.image_id = VA_INVALID_ID;
@@ -97,13 +101,15 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
     if (!va_format)
         return FALSE;
 
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
     status = vaCreateImage(
-        gst_vaapi_display_get_display(priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
         (VAImageFormat *)va_format,
         priv->width,
         priv->height,
         &priv->image
     );
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
     return (status == VA_STATUS_SUCCESS &&
             priv->image.format.fourcc == va_format->fourcc);
 }
@@ -467,11 +473,13 @@ gst_vaapi_image_map(GstVaapiImage *image)
     if (_gst_vaapi_image_is_mapped(image))
         return TRUE;
 
+    GST_VAAPI_DISPLAY_LOCK(image->priv->display);
     status = vaMapBuffer(
-        gst_vaapi_display_get_display(image->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(image->priv->display),
         image->priv->image.buf,
         &image_data
     );
+    GST_VAAPI_DISPLAY_UNLOCK(image->priv->display);
     if (!vaapi_check_status(status, "vaMapBuffer()"))
         return FALSE;
 
@@ -490,10 +498,12 @@ gst_vaapi_image_unmap(GstVaapiImage *image)
     if (!_gst_vaapi_image_is_mapped(image))
         return FALSE;
 
+    GST_VAAPI_DISPLAY_LOCK(image->priv->display);
     status = vaUnmapBuffer(
-        gst_vaapi_display_get_display(image->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(image->priv->display),
         image->priv->image.buf
     );
+    GST_VAAPI_DISPLAY_UNLOCK(image->priv->display);
     if (!vaapi_check_status(status, "vaUnmapBuffer()"))
         return FALSE;
 

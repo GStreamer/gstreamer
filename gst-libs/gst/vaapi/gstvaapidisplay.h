@@ -54,6 +54,12 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DISPLAY_VADISPLAY(display) \
     gst_vaapi_display_get_display(display)
 
+#define GST_VAAPI_DISPLAY_LOCK(display) \
+    gst_vaapi_display_lock(display)
+
+#define GST_VAAPI_DISPLAY_UNLOCK(display) \
+    gst_vaapi_display_unlock(display)
+
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
@@ -69,9 +75,11 @@ struct _GstVaapiDisplayClass {
     /*< private >*/
     GObjectClass parent_class;
 
-    gboolean    (*open_display) (GstVaapiDisplay *display);
-    void        (*close_display)(GstVaapiDisplay *display);
-    VADisplay   (*get_display)  (GstVaapiDisplay *display);
+    gboolean   (*open_display)  (GstVaapiDisplay *display);
+    void       (*close_display) (GstVaapiDisplay *display);
+    void       (*lock_display)  (GstVaapiDisplay *display);
+    void       (*unlock_display)(GstVaapiDisplay *display);
+    VADisplay  (*get_display)   (GstVaapiDisplay *display);
 };
 
 GType
@@ -79,6 +87,12 @@ gst_vaapi_display_get_type(void);
 
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display(VADisplay va_display);
+
+void
+gst_vaapi_display_lock(GstVaapiDisplay *display);
+
+void
+gst_vaapi_display_unlock(GstVaapiDisplay *display);
 
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display);

@@ -36,6 +36,7 @@ G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
                                  GstVaapiDisplayPrivate))
 
 struct _GstVaapiDisplayPrivate {
+    GStaticMutex        mutex;
     VADisplay           display;
     gboolean            create_display;
     VAProfile          *profiles;
@@ -293,6 +294,18 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
 }
 
 static void
+gst_vaapi_display_lock_default(GstVaapiDisplay *display)
+{
+    g_static_mutex_lock(&display->priv->mutex);
+}
+
+static void
+gst_vaapi_display_unlock_default(GstVaapiDisplay *display)
+{
+    g_static_mutex_unlock(&display->priv->mutex);
+}
+
+static void
 gst_vaapi_display_finalize(GObject *object)
 {
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
@@ -360,15 +373,19 @@ static void
 gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiDisplayClass * const dpy_class = GST_VAAPI_DISPLAY_CLASS(klass);
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapi, "vaapi", 0, "VA-API helper");
 
     g_type_class_add_private(klass, sizeof(GstVaapiDisplayPrivate));
 
-    object_class->finalize     = gst_vaapi_display_finalize;
-    object_class->set_property = gst_vaapi_display_set_property;
-    object_class->get_property = gst_vaapi_display_get_property;
-    object_class->constructed  = gst_vaapi_display_constructed;
+    object_class->finalize      = gst_vaapi_display_finalize;
+    object_class->set_property  = gst_vaapi_display_set_property;
+    object_class->get_property  = gst_vaapi_display_get_property;
+    object_class->constructed   = gst_vaapi_display_constructed;
+
+    dpy_class->lock_display     = gst_vaapi_display_lock_default;
+    dpy_class->unlock_display   = gst_vaapi_display_unlock_default;
 
     g_object_class_install_property
         (object_class,
@@ -394,6 +411,8 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->subpicture_formats     = NULL;
     priv->subpicture_flags       = NULL;
     priv->num_subpicture_formats = 0;
+
+    g_static_mutex_init(&priv->mutex);
 }
 
 GstVaapiDisplay *
@@ -402,6 +421,30 @@ gst_vaapi_display_new_with_display(VADisplay va_display)
     return g_object_new(GST_VAAPI_TYPE_DISPLAY,
                         "display", va_display,
                         NULL);
+}
+
+void
+gst_vaapi_display_lock(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
+    klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+    if (klass->lock_display)
+        klass->lock_display(display);
+}
+
+void
+gst_vaapi_display_unlock(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
+    klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+    if (klass->unlock_display)
+        klass->unlock_display(display);
 }
 
 VADisplay

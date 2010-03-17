@@ -56,10 +56,12 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
     if (priv->subpicture_id != VA_INVALID_ID) {
         display = gst_vaapi_image_get_display(priv->image);
         if (display) {
+            GST_VAAPI_DISPLAY_LOCK(display);
             status = vaDestroySubpicture(
-                gst_vaapi_display_get_display(display),
+                GST_VAAPI_DISPLAY_VADISPLAY(display),
                 priv->subpicture_id
             );
+            GST_VAAPI_DISPLAY_UNLOCK(display);
             if (!vaapi_check_status(status, "vaDestroySubpicture()"))
                 g_warning("failed to destroy subpicture 0x%08x\n",
                           priv->subpicture_id);
@@ -88,11 +90,13 @@ gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
     if (!display)
         return FALSE;
 
+    GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateSubpicture(
-        gst_vaapi_display_get_display(display),
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
         gst_vaapi_image_get_id(priv->image),
         &subpicture_id
     );
+    GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaCreateSubpicture()"))
         return FALSE;
 
