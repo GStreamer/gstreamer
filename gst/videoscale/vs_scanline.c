@@ -377,11 +377,11 @@ vs_scanline_resample_nearest_YUYV (uint8_t * dest, uint8_t * src, int src_width,
     j = acc >> 17;
     x = acc & 0x1ffff;
     dest[i * 4 + 1] = (x < 65536
-        || 2 * (j + 2) >= src_width) ? src[j * 4 + 1] : src[j * 4 + 5];
+        || 2 * j + 2 >= src_width) ? src[j * 4 + 1] : src[j * 4 + 5];
 
-    if (2 * i + 1 < n && 2 * (j + 1) < src_width)
+    if (2 * i + 1 < n && 2 * j + 1 < src_width)
       dest[i * 4 + 3] = (x < 65536
-          || 2 * (j + 3) >= src_width) ? src[j * 4 + 3] : src[j * 4 + 7];
+          || 2 * j + 3 >= src_width) ? src[j * 4 + 3] : src[j * 4 + 7];
 
     acc += increment;
 
@@ -421,14 +421,14 @@ vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int src_width,
     j = acc >> 17;
     x = acc & 0x1ffff;
 
-    if (2 * (j + 2) < src_width)
+    if (2 * j + 2 < src_width)
       dest[i * 4 + 1] =
           (src[j * 4 + 1] * (131072 - x) + src[j * 4 + 5] * x) >> 17;
     else
       dest[i * 4 + 1] = src[j * 4 + 1];
 
-    if (2 * i + 1 < n && 2 * (j + 1) < src_width) {
-      if (2 * (j + 3) < src_width)
+    if (2 * i + 1 < n && 2 * j + 1 < src_width) {
+      if (2 * j + 3 < src_width)
         dest[i * 4 + 3] =
             (src[j * 4 + 3] * (131072 - x) + src[j * 4 + 7] * x) >> 17;
       else
@@ -516,11 +516,11 @@ vs_scanline_resample_nearest_UYVY (uint8_t * dest, uint8_t * src, int src_width,
     x = acc & 0x1ffff;
 
     dest[i * 4 + 0] = (x < 65536
-        || 2 * (j + 2) >= src_width) ? src[j * 4 + 0] : src[j * 4 + 4];
+        || 2 * j + 2 >= src_width) ? src[j * 4 + 0] : src[j * 4 + 4];
 
-    if (2 * i + 1 < n && 2 * (j + 1) < src_width)
+    if (2 * i + 1 < n && 2 * j + 1 < src_width)
       dest[i * 4 + 2] = (x < 65536
-          || 2 * (j + 3) >= src_width) ? src[j * 4 + 2] : src[j * 4 + 6];
+          || 2 * j + 3 >= src_width) ? src[j * 4 + 2] : src[j * 4 + 6];
 
     acc += increment;
 
@@ -559,14 +559,14 @@ vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int src_width,
 
     j = acc >> 17;
     x = acc & 0x1ffff;
-    if (2 * (j + 2) < src_width)
+    if (2 * j + 2 < src_width)
       dest[i * 4 + 0] =
           (src[j * 4 + 0] * (131072 - x) + src[j * 4 + 4] * x) >> 17;
     else
       dest[i * 4 + 0] = src[j * 4 + 0];
 
-    if (i * 2 + 1 < n && 2 * (j + 1) < src_width) {
-      if (2 * (j + 3) < src_width)
+    if (i * 2 + 1 < n && 2 * j + 1 < src_width) {
+      if (2 * j + 3 < src_width)
         dest[i * 4 + 2] =
             (src[j * 4 + 2] * (131072 - x) + src[j * 4 + 6] * x) >> 17;
       else
