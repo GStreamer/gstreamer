@@ -741,7 +741,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  *
  * Returns: %TRUE if the value could be written
  *
- * Since: 0.10.26
+ * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float64_be:
@@ -752,7 +752,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  *
  * Returns: %TRUE if the value could be written
  *
- * Since: 0.10.26
+ * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float32_le:
@@ -763,7 +763,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  *
  * Returns: %TRUE if the value could be written
  *
- * Since: 0.10.26
+ * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float64_le:
@@ -774,7 +774,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  *
  * Returns: %TRUE if the value could be written
  *
- * Since: 0.10.26
+ * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_string_utf8:
@@ -831,5 +831,5 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  *
  * Returns: %TRUE if the value could be written
  *
- * Since: 0.10.26
+ * Since: 0.10.27
  */
