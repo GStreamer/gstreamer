@@ -408,7 +408,7 @@ cog_frame_new_from_png (void *data, int size)
   png_read_image (png_ptr, rows);
   g_free (rows);
 
-  png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
+  png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp) NULL);
 
   return frame;
 }
