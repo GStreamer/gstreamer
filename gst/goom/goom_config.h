@@ -18,7 +18,7 @@
  */
 #include <glib.h>
 
-#if WORDS_BIGENDIAN
+#if G_BYTE_ORDER == G_BIG_ENDIAN
 #define COLOR_ARGB
 #else
 #define COLOR_BGRA

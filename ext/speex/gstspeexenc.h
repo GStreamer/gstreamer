@@ -67,7 +67,7 @@ struct _GstSpeexEnc {
 
   SpeexBits             bits;
   SpeexHeader           header;
-#if SPEEX_1_0
+#ifdef SPEEX_1_0
   SpeexMode             *speex_mode;
 #else
   const SpeexMode       *speex_mode;

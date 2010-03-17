@@ -258,7 +258,7 @@ GST_START_TEST (test_int16_panned)
     GST_DEBUG ("%s[0] is %lf", fields[j], dB);
 #ifdef HAVE_ISINF
     fail_unless (isinf (dB));
-#elif HAVE_FPCLASS
+#elif defined (HAVE_FPCLASS)
     fail_unless (fpclass (dB) == FP_NINF);
 #endif
   }

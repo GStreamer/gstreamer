@@ -187,7 +187,7 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
           0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
 
-#if ENABLE_SMOOTHING
+#ifdef ENABLE_SMOOTHING
   /* disabled, since it doesn't seem to work */
   g_object_class_install_property (gobject_class, PROP_SMOOTHING,
       g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
@@ -416,7 +416,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 
   GST_DEBUG_OBJECT (jpegenc, "width %d, height %d", width, height);
 
-#if ENABLE_COLORSPACE_RGB
+#ifdef ENABLE_COLORSPACE_RGB
   switch (jpegenc->format) {
     case GST_COLORSPACE_RGB24:
       jpegenc->bufsize = jpegenc->width * jpegenc->height * 3;
@@ -450,7 +450,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       }
 
       GST_DEBUG_OBJECT (jpegenc, "setting format done");
-#if ENABLE_COLORSPACE_RGB
+#ifdef ENABLE_COLORSPACE_RGB
       break;
     default:
       printf ("gst_jpegenc_resync: unsupported colorspace, using RGB\n");
@@ -581,7 +581,7 @@ gst_jpegenc_set_property (GObject * object, guint prop_id,
     case PROP_QUALITY:
       jpegenc->quality = g_value_get_int (value);
       break;
-#if ENABLE_SMOOTHING
+#ifdef ENABLE_SMOOTHING
     case PROP_SMOOTHING:
       jpegenc->smoothing = g_value_get_int (value);
       break;
@@ -609,7 +609,7 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_QUALITY:
       g_value_set_int (value, jpegenc->quality);
       break;
-#if ENABLE_SMOOTHING
+#ifdef ENABLE_SMOOTHING
     case PROP_SMOOTHING:
       g_value_set_int (value, jpegenc->smoothing);
       break;
