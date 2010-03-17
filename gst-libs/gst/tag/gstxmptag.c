@@ -382,12 +382,49 @@ broken_xml:
 /* formatting */
 
 static void
+string_open_tag (GString * string, const char *tag)
+{
+  g_string_append_c (string, '<');
+  g_string_append (string, tag);
+  g_string_append_c (string, '>');
+}
+
+static void
+string_close_tag (GString * string, const char *tag)
+{
+  g_string_append (string, "</");
+  g_string_append (string, tag);
+  g_string_append (string, ">\n");
+}
+
+static char *
+gst_value_serialize_xmp (const GValue * value)
+{
+  switch (G_VALUE_TYPE (value)) {
+    case G_TYPE_STRING:
+      return g_markup_escape_text (g_value_get_string (value), -1);
+    default:
+      break;
+  }
+  /* put non-switchable types here */
+  if (G_VALUE_TYPE (value) == GST_TYPE_DATE) {
+    const GDate *date = gst_value_get_date (value);
+
+    return g_strdup_printf ("%04d-%02d-%02d",
+        (gint) g_date_get_year (date), (gint) g_date_get_month (date),
+        (gint) g_date_get_day (date));
+  } else {
+    return NULL;
+  }
+}
+
+static void
 write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
   guint i = 0, ct = gst_tag_list_get_tag_size (list, tag);
-  GType tag_type = gst_tag_get_type (tag);
   GString *data = user_data;
-  const gchar *xmp_tag = NULL, *fmt;
+  const gchar *xmp_tag = NULL;
+  char *s;
 
   /* map gst-tag to xmp tag */
   while (tag_matches[i].gstreamer_tag != NULL) {
@@ -403,51 +440,35 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     return;
   }
 
-  /* write single or multi valued field */
-  if (ct > 1) {
-    g_string_append_printf (data, "<%s><rdf:Bag>", xmp_tag);
-    fmt = "<rdf:li>%s</rdf:li>";
-  } else {
-    g_string_append_printf (data, "<%s>", xmp_tag);
-    fmt = "%s";
-  }
-  for (i = 0; i < ct; i++) {
-    GST_DEBUG ("mapping %s[%u/%u] to xmp", tag, i, ct);
-    switch (tag_type) {
-      case G_TYPE_STRING:{
-        gchar *str;
+  string_open_tag (data, xmp_tag);
 
-        if (!gst_tag_list_get_string_index (list, tag, i, &str))
-          g_return_if_reached ();
-        g_string_append_printf (data, fmt, str);
-        g_free (str);
-        break;
-      }
-      default:
-        if (tag_type == GST_TYPE_DATE) {
-          GDate *date;
-          gchar *str;
-
-          if (!gst_tag_list_get_date_index (list, tag, i, &date))
-            g_return_if_reached ();
-
-          str = g_strdup_printf ("%04d-%02d-%02d",
-              (gint) g_date_get_year (date), (gint) g_date_get_month (date),
-              (gint) g_date_get_day (date));
-          g_string_append_printf (data, fmt, str);
-          g_free (str);
-          g_date_free (date);
-        } else {
-          GST_WARNING ("unhandled type for %s to xmp", tag);
-        }
-        break;
+  /* fast path for single valued tag */
+  if (ct == 1) {
+    s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag, 0));
+    if (s) {
+      g_string_append (data, s);
+      g_free (s);
+    } else {
+      GST_WARNING ("unhandled type for %s to xmp", tag);
     }
-  }
-  if (ct > 1) {
-    g_string_append_printf (data, "</rdf:Bag></%s>\n", xmp_tag);
   } else {
-    g_string_append_printf (data, "</%s>\n", xmp_tag);
+    string_open_tag (data, "rdf:Bag");
+    for (i = 0; i < ct; i++) {
+      GST_DEBUG ("mapping %s[%u/%u] to xmp", tag, i, ct);
+      s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag, i));
+      if (s) {
+        string_open_tag (data, "rdf:li");
+        g_string_append (data, s);
+        string_close_tag (data, "rdf:li");
+        g_free (s);
+      } else {
+        GST_WARNING ("unhandled type for %s to xmp", tag);
+      }
+    }
+    string_close_tag (data, "rdf:Bag");
   }
+
+  string_close_tag (data, xmp_tag);
 }
 
 /**
