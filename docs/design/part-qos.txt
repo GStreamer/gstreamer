@@ -196,7 +196,7 @@ for upstream elements. Indeed, given arrival time T1 as given in (1)
 we can be certain that buffers with a timestamp B2 < T1 will be too late
 in the sink.
 
-In case of a positive jitter we can therefore send a QoS message with
+In case of a positive jitter we can therefore send a QoS event with
 a timestamp B1, jitter J1 and proportion given by (4).
 
 This allows an upstream element to not generate any data with timestamps
@@ -208,7 +208,7 @@ The element can even do a better estimation of the next valid timestamp it
 should output.
 
 Indeed, given the element generated a buffer with timestamp B0 that arrived
-in time in the sink but then received a QoS message stating B1 arrived J1
+in time in the sink but then received a QoS event stating B1 arrived J1
 too late. This means generating B1 took (B1 + J1) - B0 = T1 - T0 = PT1, as 
 given in (3). Given the buffer B1 had a duration D1 and assuming that
 generating a new buffer B2 will take the same amount of processing time,
@@ -252,9 +252,9 @@ This average is less susceptible to sudden changes that would only influence
 the datarate for a very short period.
 
 A running average is calculated over the observations given in (4) and is
-used as the proportion member in the QoS message that is sent upstream.
+used as the proportion member in the QoS event that is sent upstream.
 
-Receivers of the QoS message should permanently reduce their datarate 
+Receivers of the QoS event should permanently reduce their datarate 
 as given by the proportion member. Failure to do so will certainly lead to
 more dropped frames and a generally worse QoS.
 
@@ -303,7 +303,7 @@ is used to decide flood or starvation.
 
 The number of rendered and dropped buffers is used to query stats on the sink.
 
-A QoS message with the most current values is sent upstream for each buffer 
+A QoS event with the most current values is sent upstream for each buffer 
 that was received by the sink.
 
 Normally QoS is only enabled for video pipelines. The reason being that drops
@@ -321,7 +321,7 @@ GstBaseTransform
 ----------------
 
 Transform elements can entirely skip the transform based on the timestamp and
-jitter values of recent QoS messages since these buffers will certainly arrive
+jitter values of recent QoS event since these buffers will certainly arrive
 too late.
 
 With any intermediate element, the element should measure its performance to
@@ -332,7 +332,7 @@ some transforms can reduce the complexity of their algorithms. Depending on the
 algorithm, the changes in quality may have disturbing visual or audible effect 
 that should be avoided.
 
-A quality message should be posted when a frame is dropped or when the quality
+A QoS message should be posted when a frame is dropped or when the quality
 of the filter is reduced. The quality member in the QOS message should reflect
 the quality setting of the filter.
 
@@ -345,7 +345,7 @@ frames. A typical codec can for example skip the decoding of B-frames to reduce
 the CPU usage and framerate.
 
 If each frame is independantly decodable, any arbitrary frame can be skipped based
-on the timestamp and jitter values of the latest QoS message. In addition can the
+on the timestamp and jitter values of the latest QoS event. In addition can the
 proportion member be used to permanently skip frames.
 
 It is suggested to adjust the quality field of the QoS message with the expected
@@ -364,22 +364,22 @@ Demuxers
 --------
 
 Demuxers usually cannot do a lot regarding QoS except for skipping frames to the next
-keyframe when a lateness QoS message arrives on a source pad.
+keyframe when a lateness QoS event arrives on a source pad.
 
 A demuxer can however measure if the performance problems are upstream or downstream
-and forward an updated QoS message upstream.
+and forward an updated QoS event upstream.
 
-Most demuxers that have multiple output pads might need to combine the QoS messages on
-all the pads and derive an aggregated QoS message for the upstream element.
+Most demuxers that have multiple output pads might need to combine the QoS
+events on all the pads and derive an aggregated QoS event for the upstream element.
 
 
 Sources
 -------
 
-The QoS messages only apply to push based sources since pull based sources are entirely
+The QoS events only apply to push based sources since pull based sources are entirely
 controlled by another downstream element.
 
-Sources can receive a flood or starvation message that can be used to switch to
+Sources can receive a flood or starvation event that can be used to switch to
 less demanding source material. In case of a network stream, a switch could be done
 to a lower or higher quality stream or additional enhancement layers could be used
 or ignored.
