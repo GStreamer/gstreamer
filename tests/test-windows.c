@@ -212,6 +212,8 @@ main(int argc, char *argv[])
         if (!window)
             g_error("could not create window");
 
+        gst_vaapi_window_show(window);
+
         if (!gst_vaapi_window_put_surface(window, surface, flags))
             g_error("could not render surface");
 
@@ -243,12 +245,11 @@ main(int argc, char *argv[])
         if (!win)
             g_error("could not create X window");
 
-        XMapRaised(dpy, win);
-        XSync(dpy, False);
-
         window = gst_vaapi_window_x11_new_with_xid(display, win);
         if (!window)
             g_error("could not create window");
+
+        gst_vaapi_window_show(window);
 
         if (!gst_vaapi_window_put_surface(window, surface, flags))
             g_error("could not render surface");

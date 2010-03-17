@@ -34,9 +34,10 @@ G_DEFINE_TYPE(GstVaapiWindowX11, gst_vaapi_window_x11, GST_VAAPI_TYPE_WINDOW);
                                  GstVaapiWindowX11Private))
 
 struct _GstVaapiWindowX11Private {
-    gboolean            create_window;
     GstVaapiDisplay    *display;
     Window              xid;
+    unsigned int        create_window   : 1;
+    unsigned int        is_visible      : 1;
 };
 
 enum {
@@ -52,10 +53,18 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
 
+    if (priv->is_visible)
+        return TRUE;
+
     x11_trap_errors();
     XMapWindow(dpy, priv->xid);
-    x11_wait_event(dpy, priv->xid, MapNotify);
-    return x11_untrap_errors() == 0;
+    if (priv->create_window)
+        x11_wait_event(dpy, priv->xid, MapNotify);
+    if (x11_untrap_errors() != 0)
+        return FALSE;
+
+    priv->is_visible = TRUE;
+    return TRUE;
 }
 
 static gboolean
@@ -64,10 +73,18 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
 
+    if (!priv->is_visible)
+        return TRUE;
+
     x11_trap_errors();
     XUnmapWindow(dpy, priv->xid);
-    x11_wait_event(dpy, priv->xid, UnmapNotify);
-    return x11_untrap_errors() == 0;
+    if (priv->create_window)
+        x11_wait_event(dpy, priv->xid, UnmapNotify);
+    if (x11_untrap_errors() != 0)
+        return FALSE;
+
+    priv->is_visible = FALSE;
+    return TRUE;
 }
 
 static gboolean
@@ -82,13 +99,11 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint width, guint height)
     dpy       = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
     priv->xid = x11_create_window(dpy, width, height);
 
-    if (!gst_vaapi_window_x11_show(window))
+    if (!priv->xid)
         return FALSE;
 
-    x11_trap_errors();
     XRaiseWindow(dpy, priv->xid);
-    XSync(dpy, False);
-    return x11_untrap_errors() == 0;
+    return TRUE;
 }
 
 static void
@@ -98,10 +113,8 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
 
     if (priv->xid) {
-        if (priv->create_window) {
-            gst_vaapi_window_x11_hide(window);
+        if (priv->create_window)
             XDestroyWindow(dpy, priv->xid);
-        }
         priv->xid = None;
     }
 
@@ -291,9 +304,10 @@ gst_vaapi_window_x11_init(GstVaapiWindowX11 *window)
     GstVaapiWindowX11Private *priv = GST_VAAPI_WINDOW_X11_GET_PRIVATE(window);
 
     window->priv        = priv;
-    priv->create_window = TRUE;
     priv->display       = NULL;
     priv->xid           = None;
+    priv->create_window = TRUE;
+    priv->is_visible    = FALSE;
 }
 
 GstVaapiWindow *
