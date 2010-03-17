@@ -317,10 +317,10 @@ AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
-    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
+    -Wmissing-declarations -Wredundant-decls -Wundef
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wcast-align
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
-    -Wno-multichar -Wnested-externs ])
+    -Wno-multichar])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
@@ -370,6 +370,7 @@ AG_GST_CHECK_PLUGIN(videoscale)
 AG_GST_CHECK_PLUGIN(volume)
 
 dnl check for gstreamer core features (subsystems)
+dnl FIXME: this assumes srcdir == builddir for uninstalled setups
 GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-0.10`"/gst/gstconfig.h"
 AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
 AM_CONDITIONAL(USE_XML, test $GST_DISABLE_XML != "1")
