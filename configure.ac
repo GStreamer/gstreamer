@@ -275,7 +275,7 @@ dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls])
+AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [-Wmissing-declarations -Wredundant-decls])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
