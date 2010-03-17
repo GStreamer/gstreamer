@@ -97,14 +97,18 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
 
-    if (priv->create_window && priv->xid) {
-        gst_vaapi_window_x11_hide(window);
-        XDestroyWindow(dpy, priv->xid);
+    if (priv->xid) {
+        if (priv->create_window) {
+            gst_vaapi_window_x11_hide(window);
+            XDestroyWindow(dpy, priv->xid);
+        }
         priv->xid = None;
     }
 
-    g_object_unref(priv->display);
-    priv->display = NULL;
+    if (priv->display) {
+        g_object_unref(priv->display);
+        priv->display = NULL;
+    }
 }
 
 static gboolean
