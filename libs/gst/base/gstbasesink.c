@@ -2840,6 +2840,33 @@ dropped:
   {
     priv->dropped++;
     GST_DEBUG_OBJECT (basesink, "buffer late, dropping");
+
+    if (g_atomic_int_get (&priv->qos_enabled)) {
+      GstMessage *qos_msg;
+      GstClockTime timestamp, duration;
+
+      timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (sync_obj));
+      duration = GST_BUFFER_DURATION (GST_BUFFER_CAST (sync_obj));
+
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+          "qos: dropped buffer rt %" GST_TIME_FORMAT ", st %" GST_TIME_FORMAT
+          ", ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->current_rstart),
+          GST_TIME_ARGS (priv->current_sstart), GST_TIME_ARGS (timestamp),
+          GST_TIME_ARGS (duration));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+          "qos: rendered %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT,
+          priv->rendered, priv->dropped);
+
+      qos_msg =
+          gst_message_new_qos (GST_OBJECT_CAST (basesink), basesink->sync,
+          priv->current_rstart, priv->current_sstart, timestamp, duration);
+      gst_message_set_qos_values (qos_msg, priv->current_jitter, priv->avg_rate,
+          1000000);
+      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS, priv->rendered,
+          priv->dropped);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), qos_msg);
+    }
     goto done;
   }
 flushing:
