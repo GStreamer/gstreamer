@@ -36,13 +36,15 @@ G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, G_TYPE_OBJECT);
 
 struct _GstVaapiImagePrivate {
     GstVaapiDisplay    *display;
-    gboolean            is_constructed;
+    VAImage             internal_image;
     VAImage             image;
     guchar             *image_data;
     GstVaapiImageFormat internal_format;
     GstVaapiImageFormat format;
     guint               width;
     guint               height;
+    guint               is_constructed  : 1;
+    guint               is_linear       : 1;
 };
 
 enum {
@@ -69,16 +71,17 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
 
     gst_vaapi_image_unmap(image);
 
-    if (priv->image.image_id != VA_INVALID_ID) {
+    if (priv->internal_image.image_id != VA_INVALID_ID) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
         status = vaDestroyImage(
             GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
-            priv->image.image_id
+            priv->internal_image.image_id
         );
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         if (!vaapi_check_status(status, "vaDestroyImage()"))
-            g_warning("failed to destroy image 0x%08x\n", priv->image.image_id);
-        priv->image.image_id = VA_INVALID_ID;
+            g_warning("failed to destroy image 0x%08x\n",
+                      priv->internal_image.image_id);
+        priv->internal_image.image_id = VA_INVALID_ID;
     }
 
     if (priv->display) {
@@ -107,40 +110,93 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
         (VAImageFormat *)va_format,
         priv->width,
         priv->height,
-        &priv->image
+        &priv->internal_image
     );
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    return (status == VA_STATUS_SUCCESS &&
-            priv->image.format.fourcc == va_format->fourcc);
+    if (status != VA_STATUS_SUCCESS ||
+        priv->internal_image.format.fourcc != va_format->fourcc)
+        return FALSE;
+
+    priv->internal_format = format;
+    return TRUE;
+}
+
+static gboolean
+_gst_vaapi_image_is_linear(GstVaapiImage *image)
+{
+    GstVaapiImagePrivate * const priv = image->priv;
+    guint i, width, height, width2, height2, data_size;
+
+    for (i = 1; i < priv->image.num_planes; i++)
+        if (priv->image.offsets[i] < priv->image.offsets[i - 1])
+            return FALSE;
+
+    width   = priv->width;
+    height  = priv->height;
+    width2  = (width  + 1) / 2;
+    height2 = (height + 1) / 2;
+
+    switch (priv->internal_format) {
+    case GST_VAAPI_IMAGE_NV12:
+    case GST_VAAPI_IMAGE_YV12:
+    case GST_VAAPI_IMAGE_I420:
+        data_size = width * height + 2 * width2 * height2;
+        break;
+    case GST_VAAPI_IMAGE_ARGB:
+    case GST_VAAPI_IMAGE_RGBA:
+    case GST_VAAPI_IMAGE_ABGR:
+    case GST_VAAPI_IMAGE_BGRA:
+        data_size = 4 * width * height;
+        break;
+    default:
+        g_error("FIXME: incomplete formats");
+        break;
+    }
+    return priv->image.data_size == data_size;
 }
 
 static gboolean
 gst_vaapi_image_create(GstVaapiImage *image)
 {
     GstVaapiImagePrivate * const priv = image->priv;
+    GstVaapiImageFormat format = priv->format;
+    const VAImageFormat *va_format;
 
-    if (_gst_vaapi_image_create(image, priv->format)) {
-        priv->internal_format = priv->format;
-        return TRUE;
+    if (!_gst_vaapi_image_create(image, format)) {
+        switch (format) {
+        case GST_VAAPI_IMAGE_I420:
+            format = GST_VAAPI_IMAGE_YV12;
+            break;
+        case GST_VAAPI_IMAGE_YV12:
+            format = GST_VAAPI_IMAGE_I420;
+            break;
+        default:
+            format = 0;
+            break;
+        }
+        if (!format || !_gst_vaapi_image_create(image, format))
+            return FALSE;
     }
+    priv->image = priv->internal_image;
 
-    switch (priv->format) {
-    case GST_VAAPI_IMAGE_I420:
-        priv->internal_format = GST_VAAPI_IMAGE_YV12;
-        break;
-    case GST_VAAPI_IMAGE_YV12:
-        priv->internal_format = GST_VAAPI_IMAGE_I420;
-        break;
-    default:
-        priv->internal_format = 0;
-        break;
+    if (priv->format != priv->internal_format) {
+        switch (priv->format) {
+        case GST_VAAPI_IMAGE_YV12:
+        case GST_VAAPI_IMAGE_I420:
+            va_format = gst_vaapi_image_format_get_va_format(priv->format);
+            if (!va_format)
+                return FALSE;
+            priv->image.format = *va_format;
+            SWAP_UINT(priv->image.offsets[1], priv->image.offsets[2]);
+            SWAP_UINT(priv->image.pitches[1], priv->image.pitches[2]);
+            break;
+        default:
+            break;
+        }
     }
-    if (!priv->internal_format)
-        return FALSE;
-    if (!_gst_vaapi_image_create(image, priv->internal_format))
-        return FALSE;
 
     GST_DEBUG("image 0x%08x", priv->image.image_id);
+    priv->is_linear = _gst_vaapi_image_is_linear(image);
     return TRUE;
 }
 
@@ -290,16 +346,23 @@ gst_vaapi_image_init(GstVaapiImage *image)
 {
     GstVaapiImagePrivate *priv = GST_VAAPI_IMAGE_GET_PRIVATE(image);
 
-    image->priv          = priv;
-    priv->display        = NULL;
-    priv->image_data     = NULL;
-    priv->width          = 0;
-    priv->height         = 0;
-    priv->format         = 0;
+    image->priv                   = priv;
+    priv->display                 = NULL;
+    priv->image_data              = NULL;
+    priv->width                   = 0;
+    priv->height                  = 0;
+    priv->internal_format         = 0;
+    priv->format                  = 0;
+    priv->is_constructed          = FALSE;
+    priv->is_linear               = FALSE;
+
+    memset(&priv->internal_image, 0, sizeof(priv->internal_image));
+    priv->internal_image.image_id = VA_INVALID_ID;
+    priv->internal_image.buf      = VA_INVALID_ID;
 
     memset(&priv->image, 0, sizeof(priv->image));
-    priv->image.image_id = VA_INVALID_ID;
-    priv->image.buf      = VA_INVALID_ID;
+    priv->image.image_id          = VA_INVALID_ID;
+    priv->image.buf               = VA_INVALID_ID;
 }
 
 GstVaapiImage *
@@ -340,20 +403,9 @@ gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
-    if (!va_image)
-        return TRUE;
+    if (va_image)
+        *va_image = image->priv->image;
 
-    *va_image = image->priv->image;
-
-    if (image->priv->format != image->priv->internal_format) {
-        if (!(image->priv->format == GST_VAAPI_IMAGE_I420 &&
-              image->priv->internal_format == GST_VAAPI_IMAGE_YV12) &&
-            !(image->priv->format == GST_VAAPI_IMAGE_YV12 &&
-              image->priv->internal_format == GST_VAAPI_IMAGE_I420))
-            return FALSE;
-        SWAP_UINT(va_image->offsets[1], va_image->offsets[2]);
-        SWAP_UINT(va_image->pitches[1], va_image->pitches[2]);
-    }
     return TRUE;
 }
 
@@ -409,41 +461,10 @@ gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 gboolean
 gst_vaapi_image_is_linear(GstVaapiImage *image)
 {
-    VAImage va_image;
-    guint i, width, height, width2, height2, data_size;
-
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
 
-    if (!gst_vaapi_image_get_image(image, &va_image))
-        return FALSE;
-
-    for (i = 1; i < va_image.num_planes; i++)
-        if (va_image.offsets[i] < va_image.offsets[i - 1])
-            return FALSE;
-
-    width   = image->priv->width;
-    height  = image->priv->height;
-    width2  = (width  + 1) / 2;
-    height2 = (height + 1) / 2;
-
-    switch (image->priv->internal_format) {
-    case GST_VAAPI_IMAGE_NV12:
-    case GST_VAAPI_IMAGE_YV12:
-    case GST_VAAPI_IMAGE_I420:
-        data_size = width * height + 2 * width2 * height2;
-        break;
-    case GST_VAAPI_IMAGE_ARGB:
-    case GST_VAAPI_IMAGE_RGBA:
-    case GST_VAAPI_IMAGE_ABGR:
-    case GST_VAAPI_IMAGE_BGRA:
-        data_size = 4 * width * height;
-        break;
-    default:
-        g_error("FIXME: incomplete formats");
-        break;
-    }
-    return va_image.data_size == data_size;
+    return image->priv->is_linear;
 }
 
 static inline gboolean
@@ -564,7 +585,6 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     guint i, j;
     guchar *data;
     guint32 data_size;
-    gboolean swap_YUV;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
@@ -582,12 +602,6 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     if (format != priv->format)
         return FALSE;
 
-    swap_YUV = (priv->format != priv->internal_format &&
-                ((priv->format == GST_VAAPI_IMAGE_I420 &&
-                  priv->internal_format == GST_VAAPI_IMAGE_YV12) ||
-                 (priv->format == GST_VAAPI_IMAGE_YV12 &&
-                  priv->internal_format == GST_VAAPI_IMAGE_I420)));
-
     structure = gst_caps_get_structure(caps, 0);
     gst_structure_get_int(structure, "width",  &width);
     gst_structure_get_int(structure, "height", &height);
@@ -597,7 +611,7 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
     if (!gst_vaapi_image_map(image))
         return FALSE;
 
-    if (format == priv->internal_format && data_size == priv->image.data_size)
+    if (priv->is_linear && data_size == priv->image.data_size)
         memcpy(priv->image_data, data, data_size);
     else {
         /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
@@ -649,20 +663,6 @@ gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
         }
         if (size2 != data_size)
             g_error("data_size mismatch %d / %u", size2, data_size);
-        if (swap_YUV) {
-            guint offset = offsets[1];
-            guint stride = pitches[1];
-            guint width  = widths [1];
-            guint height = heights[1];
-            offsets[1]   = offsets[2];
-            pitches[1]   = pitches[2];
-            widths [1]   = widths [2];
-            heights[1]   = heights[2];
-            offsets[2]   = offset;
-            pitches[2]   = stride;
-            widths [2]   = width;
-            heights[2]   = height;
-        }
         for (i = 0; i < priv->image.num_planes; i++) {
             guchar *src = data + offsets[i];
             guchar *dst = priv->image_data + priv->image.offsets[i];
