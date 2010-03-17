@@ -135,24 +135,45 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     return TRUE;
 }
 
-static GstFlowReturn
-gst_vaapisink_show_frame(GstVideoSink *video_sink, GstBuffer *buffer)
+static gboolean
+gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
-    GstVaapiSink * const sink = GST_VAAPISINK(video_sink);
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstStructure * const structure = gst_caps_get_structure(caps, 0);
+    gint width, height;
+
+    if (!structure)
+        return FALSE;
+    if (!gst_structure_get_int(structure, "width",  &width))
+        return FALSE;
+    if (!gst_structure_get_int(structure, "height", &height))
+        return FALSE;
+
+    if (sink->window)
+        gst_vaapi_window_set_size(sink->window, width, height);
+    else {
+        sink->window = gst_vaapi_window_x11_new(sink->display, width, height);
+        if (!sink->window)
+            return FALSE;
+        gst_vaapi_window_show(sink->window);
+    }
+    return TRUE;
+}
+
+static GstFlowReturn
+gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
     GstVaapiSurface *surface;
-    guint width, height, flags;
+    guint flags;
+
+    if (!sink->window)
+        return GST_FLOW_UNEXPECTED;
 
     surface = gst_vaapi_video_buffer_get_surface(vbuffer);
     if (!surface)
         return GST_FLOW_UNEXPECTED;
-
-    gst_vaapi_surface_get_size(surface, &width, &height);
-    if (!sink->window) {
-        sink->window = gst_vaapi_window_x11_new(sink->display, width, height);
-        if (!sink->window)
-            return GST_FLOW_UNEXPECTED;
-    }
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     if (!gst_vaapi_window_put_surface(sink->window, surface, flags))
@@ -229,7 +250,6 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
     GObjectClass * const      object_class    = G_OBJECT_CLASS(klass);
     GstBaseSinkClass * const  basesink_class  = GST_BASE_SINK_CLASS(klass);
-    GstVideoSinkClass * const videosink_class = GST_VIDEO_SINK_CLASS(klass);
 
     object_class->finalize      = gst_vaapisink_finalize;
     object_class->set_property  = gst_vaapisink_set_property;
@@ -237,8 +257,9 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 
     basesink_class->start       = gst_vaapisink_start;
     basesink_class->stop        = gst_vaapisink_stop;
-
-    videosink_class->show_frame = gst_vaapisink_show_frame;
+    basesink_class->set_caps    = gst_vaapisink_set_caps;
+    basesink_class->preroll     = gst_vaapisink_show_frame;
+    basesink_class->render      = gst_vaapisink_show_frame;
 
     g_object_class_install_property
         (object_class,
