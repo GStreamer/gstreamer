@@ -4539,6 +4539,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         goto flushed;
       }
       break;
+    case GST_EVENT_RENEGOTIATE:
+      if (GST_PAD_IS_SINK (pad) && GST_PAD_GETCAPSFUNC (pad) == NULL)
+        goto drop_renegotiate;
     default:
       while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         /* block the event as long as the pad is blocked */
@@ -4919,6 +4922,14 @@ concurrent_stop:
   {
     GST_OBJECT_UNLOCK (pad);
     return TRUE;
+  }
+drop_renegotiate:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
+        "No getcaps function on sink pad, dropping renegotiate event");
+    gst_event_unref (event);
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
   }
 }
 
