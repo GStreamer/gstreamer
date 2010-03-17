@@ -932,8 +932,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     }
 
     if (mute_csource) {
-      GstValueArray va =
-          { (char *) "mute", nsamples, interval, (gpointer) self->mutes };
+      GstValueArray va = { "mute", nsamples, interval, (gpointer) self->mutes };
 
       if (!gst_control_source_get_value_array (mute_csource, ts, &va))
         goto controller_failure;
@@ -948,7 +947,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
     if (volume_csource) {
       GstValueArray va =
-          { (char *) "volume", nsamples, interval, (gpointer) self->volumes };
+          { "volume", nsamples, interval, (gpointer) self->volumes };
 
       if (!gst_control_source_get_value_array (volume_csource, ts, &va))
         goto controller_failure;
