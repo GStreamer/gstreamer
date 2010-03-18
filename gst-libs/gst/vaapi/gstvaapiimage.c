@@ -174,10 +174,6 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
     const VAImageFormat *va_format;
     VAStatus status;
 
-    if (!priv->create_image)
-        return (priv->image.image_id != VA_INVALID_ID &&
-                priv->image.buf      != VA_INVALID_ID);
-
     if (!gst_vaapi_display_has_image_format(priv->display, format))
         return FALSE;
 
@@ -208,6 +204,10 @@ gst_vaapi_image_create(GstVaapiImage *image)
     GstVaapiImagePrivate * const priv = image->priv;
     GstVaapiImageFormat format = priv->format;
     const VAImageFormat *va_format;
+
+    if (!priv->create_image)
+        return (priv->image.image_id != VA_INVALID_ID &&
+                priv->image.buf      != VA_INVALID_ID);
 
     if (!_gst_vaapi_image_create(image, format)) {
         switch (format) {
