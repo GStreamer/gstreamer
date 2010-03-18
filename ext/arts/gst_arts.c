@@ -42,14 +42,6 @@
 #include "gst_arts.h"
 #include "gst_artsio_impl.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_arts_details =
-GST_ELEMENT_DETAILS ("aRts plugin",
-    "Filter/Audio",
-    "aRts wrapper filter",
-    "Erik Walthinsen <omega@temple-baptist.com,\n"
-    "Stefan Westerfeld <stefan@space.twc.de>");
-
 
 static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -123,7 +115,10 @@ gst_arts_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_temp));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_temp));
-  gst_element_class_set_details (element_class, &gst_arts_details);
+  gst_element_class_set_details_simple (element_class, "aRts plugin",
+      "Filter/Audio", "aRts wrapper filter",
+      "Erik Walthinsen <omega@temple-baptist.com, "
+      "Stefan Westerfeld <stefan@space.twc.de>");
 }
 
 static void

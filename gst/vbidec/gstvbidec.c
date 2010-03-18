@@ -63,13 +63,6 @@ struct _GstVBIDecClass
 
 GType gst_vbidec_get_type (void);
 
-/* elementfactory information */
-static const GstElementDetails gst_vbidec_details =
-GST_ELEMENT_DETAILS ("VBI decoder",
-    "Codec/Decoder/Video",
-    "Decodes closed captions and XDS data from VBI data",
-    "David I. Lehn <dlehn@users.sourceforge.net>");
-
 /* VBIDec signals and args */
 enum
 {
@@ -168,13 +161,17 @@ gst_vbidec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_vbidec_details);
+  gst_element_class_set_details_simple (element_class, "VBI decoder",
+      "Codec/Decoder/Video",
+      "Decodes closed captions and XDS data from VBI data",
+      "David I. Lehn <dlehn@users.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vbidec_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vbidec_sink_template));
 }
+
 static void
 gst_vbidec_class_init (GstVBIDecClass * klass)
 {

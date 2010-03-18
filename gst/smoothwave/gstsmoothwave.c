@@ -29,13 +29,6 @@
 
 #include "gstsmoothwave.h"
 
-static const GstElementDetails gst_smoothwave_details =
-GST_ELEMENT_DETAILS ("Smooth waveform",
-    "Visualization",
-    "Fading grayscale waveform display",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
-
 /* SmoothWave signals and args */
 enum
 {
@@ -127,7 +120,10 @@ gst_smoothwave_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_smoothwave_details);
+  gst_element_class_set_details_simple (element_class, "Smooth waveform",
+      "Visualization",
+      "Fading grayscale waveform display",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 }
 
 static void

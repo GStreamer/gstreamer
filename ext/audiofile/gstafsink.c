@@ -33,14 +33,6 @@
 
 #include "gstafsink.h"
 
-/* elementfactory information */
-static const GstElementDetails afsink_details =
-GST_ELEMENT_DETAILS ("Audiofile sink",
-    "Sink/Audio",
-    "Write audio streams to disk using libaudiofile",
-    "Thomas Vander Stichele <thomas@apestaart.org>");
-
-
 /* AFSink signals and args */
 enum
 {
@@ -148,7 +140,10 @@ gst_afsink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&afsink_sink_factory));
-  gst_element_class_set_details (element_class, &afsink_details);
+  gst_element_class_set_details_simple (element_class, "Audiofile sink",
+      "Sink/Audio",
+      "Write audio streams to disk using libaudiofile",
+      "Thomas Vander Stichele <thomas@apestaart.org>");
 }
 
 static void

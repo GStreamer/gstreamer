@@ -26,13 +26,6 @@
 #include "gstartsdsink.h"
 #include <gst/audio/audio.h>
 
-/* elementfactory information */
-static const GstElementDetails artsdsink_details =
-GST_ELEMENT_DETAILS ("aRtsd audio sink",
-    "Sink/Audio",
-    "Plays audio to an aRts server",
-    "Richard Boulton <richard-gst@tartarus.org>",);
-
 /* Signals and args */
 enum
 {
@@ -106,7 +99,10 @@ gst_artsdsink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &artsdsink_details);
+  gst_element_class_set_details_simple (element_class, "aRtsd audio sink",
+      "Sink/Audio",
+      "Plays audio to an aRts server",
+      "Richard Boulton <richard-gst@tartarus.org>");
 }
 
 static void

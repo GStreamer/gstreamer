@@ -104,12 +104,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (video_analyse_debug);
 #define GST_CAT_DEFAULT video_analyse_debug
 
-static const GstElementDetails video_analyse_details =
-GST_ELEMENT_DETAILS ("Video analyser",
-    "Filter/Effect/Video",
-    "Analyse video signal",
-    "Wim Taymans <wim@fluendo.com>");
-
 static GstStaticPadTemplate gst_video_analyse_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -281,7 +275,9 @@ gst_video_analyse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &video_analyse_details);
+  gst_element_class_set_details_simple (element_class, "Video analyser",
+      "Filter/Effect/Video",
+      "Analyse video signal", "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_analyse_sink_template));

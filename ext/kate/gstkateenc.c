@@ -150,18 +150,17 @@ GST_BOILERPLATE_FULL (GstKateEnc, gst_kate_enc, GstElement,
 static void
 gst_kate_enc_base_init (gpointer gclass)
 {
-  static const GstElementDetails element_details =
-      GST_ELEMENT_DETAILS ("Kate stream encoder",
-      "Codec/Encoder/Subtitle",
-      "Encodes Kate streams from text or subpictures",
-      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Kate stream encoder",
+      "Codec/Encoder/Subtitle",
+      "Encodes Kate streams from text or subpictures",
+      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }
 
 /* initialize the plugin's class */

@@ -465,11 +465,11 @@ acmenc_class_init (ACMEncClass * klass)
 acmenc_base_init (ACMEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details;
   ACMEncParams *params;
   ACMDRIVERDETAILS driverdetails;
-  gchar *shortname, *longname;
+  gchar *shortname, *longname, *detail, *description;
   MMRESULT res;
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&acmenc_sink_template));
   gst_element_class_add_pad_template (element_class,
@@ -490,17 +490,17 @@ acmenc_base_init (ACMEncClass * klass)
   longname =
       g_utf16_to_utf8 ((gunichar2 *) driverdetails.szLongName, -1, NULL, NULL,
       NULL);
-  details.longname = g_strdup_printf ("ACM Encoder: %s", (shortname
+  detail = g_strdup_printf ("ACM Encoder: %s", (shortname
           && *shortname) ? shortname : params->name);
-  details.klass = "Codec/Encoder/Audio";
-  details.description = g_strdup_printf ("ACM Encoder: %s", (longname
+  description = g_strdup_printf ("ACM Encoder: %s", (longname
           && *longname) ? longname : params->name);
-  details.author = "Pioneers of the Inevitable <songbird@songbirdnest.com>";
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class, detail,
+      "Codec/Encoder/Audio", description,
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
   g_free (shortname);
   g_free (longname);
-  g_free (details.longname);
-  g_free (details.description);
+  g_free (description);
+  g_free (detail);
   klass->driverId = params->driverId;
 }
 

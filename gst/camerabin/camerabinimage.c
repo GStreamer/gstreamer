@@ -85,13 +85,6 @@ static void gst_camerabin_image_get_property (GObject * object, guint prop_id,
 
 GST_BOILERPLATE (GstCameraBinImage, gst_camerabin_image, GstBin, GST_TYPE_BIN);
 
-static const GstElementDetails gst_camerabin_image_details =
-GST_ELEMENT_DETAILS ("Image capture bin for camerabin",
-    "Bin/Image",
-    "Process and store image data",
-    "Edgard Lima <edgard.lima@indt.org.br>\n"
-    "Nokia Corporation <multimedia@maemo.org>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -111,7 +104,11 @@ gst_camerabin_image_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (eklass, &gst_camerabin_image_details);
+  gst_element_class_set_details_simple (eklass,
+      "Image capture bin for camerabin", "Bin/Image",
+      "Process and store image data",
+      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Nokia Corporation <multimedia@maemo.org>");
 }
 
 static void

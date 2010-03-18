@@ -58,14 +58,6 @@ struct _GstColorspaceClass
   GstElementClass parent_class;
 };
 
-/* elementfactory information */
-static const GstElementDetails colorspace_details =
-GST_ELEMENT_DETAILS ("Colorspace converter",
-    "Filter/Effect",
-    "Converts video from one colorspace to another",
-    "Wim Taymans <wim.taymans@chello.be>");
-
-
 /* Stereo signals and args */
 enum
 {
@@ -346,7 +338,10 @@ gst_colorspace_base_init (GstColorspaceClass * klass)
       gst_static_pad_template_get (&gst_colorspace_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_colorspace_sink_template));
-  gst_element_class_set_details (element_class, &colorspace_details);
+  gst_element_class_set_details_simple (element_class, "Colorspace converter",
+      "Filter/Effect",
+      "Converts video from one colorspace to another",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

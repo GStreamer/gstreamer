@@ -82,13 +82,6 @@ static GQuark QUARK_PCR_PID;
 static GQuark QUARK_STREAMS;
 static GQuark QUARK_STREAM_TYPE;
 
-static GstElementDetails mpegts_parse_details =
-GST_ELEMENT_DETAILS ("MPEG transport stream parser",
-    "Codec/Parser",
-    "Parses MPEG2 transport streams",
-    "Alessandro Decina <alessandro@nnva.org>\n"
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -228,7 +221,11 @@ mpegts_parse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&program_template));
 
-  gst_element_class_set_details (element_class, &mpegts_parse_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG transport stream parser", "Codec/Parser",
+      "Parses MPEG2 transport streams",
+      "Alessandro Decina <alessandro@nnva.org>, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 static void

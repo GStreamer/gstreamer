@@ -64,16 +64,13 @@ static void
 gst_wasapi_sink_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  static GstElementDetails element_details = {
-    "WasapiSrc",
-    "Sink/Audio",
-    "Stream audio to an audio capture device through WASAPI",
-    "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>"
-  };
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "WasapiSrc",
+      "Sink/Audio",
+      "Stream audio to an audio capture device through WASAPI",
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
 }
 
 static void

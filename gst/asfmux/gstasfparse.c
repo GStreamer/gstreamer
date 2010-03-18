@@ -35,12 +35,6 @@ enum
   PROP_0,
 };
 
-static const GstElementDetails gst_asf_parse_details =
-GST_ELEMENT_DETAILS ("ASF parser",
-    "Parser",
-    "Parses ASF",
-    "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -490,7 +484,8 @@ gst_asf_parse_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_asf_parse_details);
+  gst_element_class_set_details_simple (element_class, "ASF parser",
+      "Parser", "Parses ASF", "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
 
   GST_DEBUG_CATEGORY_INIT (asfparse_debug, "asfparse", 0,
       "Parser for ASF streams");

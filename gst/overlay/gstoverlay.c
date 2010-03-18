@@ -24,13 +24,6 @@
 #include "gstoverlay.h"
 #include <gst/video/video.h>
 
-/* elementfactory information */
-static const GstElementDetails overlay_details =
-GST_ELEMENT_DETAILS ("Video overlay",
-    "Filter/Editor/Video",
-    "Overlay multiple video streams",
-    "David Schleef <ds@schleef.org>");
-
 static GstStaticPadTemplate overlay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -125,7 +118,9 @@ gst_overlay_base_init (GstOverlayClass * klass)
       gst_static_pad_template_get (&overlay_sink3_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&overlay_src_factory));
-  gst_element_class_set_details (element_class, &overlay_details);
+  gst_element_class_set_details_simple (element_class, "Video overlay",
+      "Filter/Editor/Video",
+      "Overlay multiple video streams", "David Schleef <ds@schleef.org>");
 }
 
 static void

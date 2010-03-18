@@ -45,16 +45,6 @@
    the original AC3 stream.  The result is expressed as MPEG2. */
 #define TIME_FOR_BYTES(bytes) (((bytes) * 90) / 48)
 
-
-/* ElementFactory information. */
-static GstElementDetails dxr3audiosink_details = {
-  "dxr3/Hollywood+ mpeg decoder board audio plugin",
-  "Audio/Sink",
-  "Feeds audio to Sigma Designs em8300 based boards",
-  "Martin Soto <martinsoto@users.sourceforge.net>"
-};
-
-
 /* Dxr3AudioSink signals and args */
 enum
 {
@@ -162,7 +152,10 @@ dxr3audiosink_base_init (Dxr3AudioSinkClass * klass)
       gst_static_pad_template_get (&dxr3audiosink_pcm_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&dxr3audiosink_ac3_sink_factory));
-  gst_element_class_set_details (element_class, &dxr3audiosink_details);
+  gst_element_class_set_details_simple (element_class,
+      "dxr3/Hollywood+ mpeg decoder board audio plugin", "Audio/Sink",
+      "Feeds audio to Sigma Designs em8300 based boards",
+      "Martin Soto <martinsoto@users.sourceforge.net>");
 }
 
 static void

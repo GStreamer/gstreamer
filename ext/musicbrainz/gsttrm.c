@@ -65,12 +65,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (trm_debug);
 #define GST_CAT_DEFAULT trm_debug
 
-static const GstElementDetails gst_trm_details =
-GST_ELEMENT_DETAILS ("MusicBrainz TRM generator",
-    "Filter/Analyzer/Audio",
-    "Compute MusicBrainz TRM Id using libmusicbrainz",
-    "Jeremy Simon <jsimon13@yahoo.fr>");
-
 GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -123,7 +117,10 @@ gst_trm_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_trm_details);
+  gst_element_class_set_details_simple (element_class,
+      "MusicBrainz TRM generator", "Filter/Analyzer/Audio",
+      "Compute MusicBrainz TRM Id using libmusicbrainz",
+      "Jeremy Simon <jsimon13@yahoo.fr>");
 }
 
 static void

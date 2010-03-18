@@ -178,14 +178,14 @@ gst_lv2_base_init (gpointer g_class)
   GstLV2Class *klass = (GstLV2Class *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
-  GstElementDetails *details;
   SLV2Plugin lv2plugin;
   SLV2Value val;
   SLV2Values values, sub_values;
   GstLV2Group *group = NULL;
   GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_INVALID;
   guint j, in_pad_index = 0, out_pad_index = 0;
-  gchar *klass_tags;
+  const gchar *klass_tags;
+  gchar *longname, *author;
 
   lv2plugin = (SLV2Plugin) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       descriptor_quark);
@@ -341,22 +341,19 @@ gst_lv2_base_init (gpointer g_class)
         j, 1);
   }
 
-  /* construct the element details struct */
-  details = g_new0 (GstElementDetails, 1);
   val = slv2_plugin_get_name (lv2plugin);
   if (val) {
-    details->longname = g_strdup (slv2_value_as_string (val));
+    longname = g_strdup (slv2_value_as_string (val));
     slv2_value_free (val);
   } else {
-    details->longname = g_strdup ("no description available");
+    longname = g_strdup ("no description available");
   }
-  details->description = details->longname;
   val = slv2_plugin_get_author_name (lv2plugin);
   if (val) {
-    details->author = g_strdup (slv2_value_as_string (val));
+    author = g_strdup (slv2_value_as_string (val));
     slv2_value_free (val);
   } else {
-    details->author = g_strdup ("no author available");
+    author = g_strdup ("no author available");
   }
 
   if (gsp_class->num_audio_in == 0)
@@ -369,12 +366,11 @@ gst_lv2_base_init (gpointer g_class)
   } else
     klass_tags = "Filter/Effect/Audio/LV2";
 
-  details->klass = klass_tags;
-  GST_INFO ("tags : %s", details->klass);
-  gst_element_class_set_details (element_class, details);
-  g_free (details->longname);
-  g_free (details->author);
-  g_free (details);
+  GST_INFO ("tags : %s", klass_tags);
+  gst_element_class_set_details_simple (element_class, longname,
+      klass_tags, longname, author);
+  g_free (longname);
+  g_free (author);
 
   if (!slv2_plugin_has_feature (lv2plugin, in_place_broken_pred))
     GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);

@@ -51,12 +51,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_timidity_debug);
 #define GST_CAT_DEFAULT gst_timidity_debug
 
-static const GstElementDetails gst_timidity_details =
-GST_ELEMENT_DETAILS ("Timidity",
-    "Codec/Decoder/Audio",
-    "Midi Synthesizer Element",
-    "Wouter Paesen <wouter@blue-gate.be>");
-
 enum
 {
   /* FILL ME */
@@ -108,7 +102,9 @@ gst_timidity_base_init (gpointer gclass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &gst_timidity_details);
+  gst_element_class_set_details_simple (element_class, "Timidity",
+      "Codec/Decoder/Audio",
+      "Midi Synthesizer Element", "Wouter Paesen <wouter@blue-gate.be>");
 }
 
 /* initialize the plugin's class */

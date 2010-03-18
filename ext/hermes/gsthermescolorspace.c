@@ -100,13 +100,6 @@ static GstHermesColorspaceFormat gst_hermes_colorspace_formats[] = {
   {GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16)},
 };
 
-static const GstElementDetails colorspace_details =
-GST_ELEMENT_DETAILS ("Colorspace converter",
-    "Filter/Converter/Video",
-    "Converts video from one colorspace to another using libhermes",
-    "Wim Taymans <wim.taymans@chello.be>");
-
-
 /* Stereo signals and args */
 enum
 {
@@ -387,8 +380,8 @@ gst_hermes_colorspace_link (GstPad * pad, const GstCaps * caps)
     GstCaps *fcaps;
 
     fcaps =
-        gst_caps_copy (gst_static_caps_get (&gst_hermes_colorspace_formats[i].
-            caps));
+        gst_caps_copy (gst_static_caps_get (&gst_hermes_colorspace_formats
+            [i].caps));
 
     icaps = gst_caps_intersect (caps, fcaps);
     if (!gst_caps_is_empty (icaps)) {
@@ -513,7 +506,10 @@ gst_hermes_colorspace_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_hermes_colorspace_sink_pad_template));
 
-  gst_element_class_set_details (element_class, &colorspace_details);
+  gst_element_class_set_details_simple (element_class, "Colorspace converter",
+      "Filter/Converter/Video",
+      "Converts video from one colorspace to another using libhermes",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

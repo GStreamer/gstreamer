@@ -41,12 +41,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (mmssrc_debug);
 #define GST_CAT_DEFAULT mmssrc_debug
 
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("MMS streaming source",
-    "Source/Network",
-    "Receive data streamed via MSFT Multi Media Server protocol",
-    "Maciej Katafiasz <mathrick@users.sourceforge.net>");
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -96,7 +90,10 @@ gst_mms_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "MMS streaming source",
+      "Source/Network",
+      "Receive data streamed via MSFT Multi Media Server protocol",
+      "Maciej Katafiasz <mathrick@users.sourceforge.net>");
 
   GST_DEBUG_CATEGORY_INIT (mmssrc_debug, "mmssrc", 0, "MMS Source Element");
 }

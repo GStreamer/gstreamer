@@ -84,13 +84,6 @@
 GST_DEBUG_CATEGORY_STATIC (sdpdemux_debug);
 #define GST_CAT_DEFAULT (sdpdemux_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_sdp_demux_details =
-GST_ELEMENT_DETAILS ("SDP session setup",
-    "Codec/Demuxer/Network/RTP",
-    "Receive data over the network via SDP",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -162,7 +155,10 @@ gst_sdp_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&rtptemplate));
 
-  gst_element_class_set_details (element_class, &gst_sdp_demux_details);
+  gst_element_class_set_details_simple (element_class, "SDP session setup",
+      "Codec/Demuxer/Network/RTP",
+      "Receive data over the network via SDP",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void
@@ -387,12 +383,12 @@ is_multicast_address (const gchar * host_name)
   for (ai = res; !ret && ai; ai = ai->ai_next) {
     if (ai->ai_family == AF_INET)
       ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
-              sin_addr.s_addr));
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
+              s_addr));
     else
       ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
-              ai_addr)->sin6_addr);
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
+          sin6_addr);
   }
 
   freeaddrinfo (res);

@@ -85,13 +85,6 @@ typedef struct dts_state_s dca_state_t;
 #include <liboil/liboilcpu.h>
 #include <liboil/liboilfunction.h>
 
-static const GstElementDetails gst_dtsdec_details =
-GST_ELEMENT_DETAILS ("DTS audio decoder",
-    "Codec/Decoder/Audio",
-    "Decodes DTS audio streams",
-    "Jan Schmidt <thaytan@noraisin.net>\n"
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 #if defined(LIBDTS_FIXED) || defined(LIBDCA_FIXED)
 #define SAMPLE_WIDTH 16
 #elif defined (LIBDTS_DOUBLE) || defined(LIBDCA_DOUBLE)
@@ -158,7 +151,11 @@ gst_dtsdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &gst_dtsdec_details);
+  gst_element_class_set_details_simple (element_class, "DTS audio decoder",
+      "Codec/Decoder/Audio",
+      "Decodes DTS audio streams",
+      "Jan Schmidt <thaytan@noraisin.net>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   GST_DEBUG_CATEGORY_INIT (dtsdec_debug, "dtsdec", 0, "DTS/DCA audio decoder");
 }

@@ -133,11 +133,7 @@ GST_BOILERPLATE (GstSchroParse, gst_schro_parse, GstBaseVideoParse,
 static void
 gst_schro_parse_base_init (gpointer g_class)
 {
-  static GstElementDetails compress_details =
-      GST_ELEMENT_DETAILS ("Dirac Parser",
-      "Codec/Parser/Video",
-      "Parse Dirac streams",
-      "David Schleef <ds@schleef.org>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -145,7 +141,9 @@ gst_schro_parse_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_schro_parse_sink_template));
 
-  gst_element_class_set_details (element_class, &compress_details);
+  gst_element_class_set_details_simple (element_class, "Dirac Parser",
+      "Codec/Parser/Video",
+      "Parse Dirac streams", "David Schleef <ds@schleef.org>");
 }
 
 static void

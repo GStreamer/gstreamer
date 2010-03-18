@@ -40,14 +40,6 @@
 #define GST_POD_BUFPOOL_SIZE 4096
 #define GST_POD_BUFPOOL_NUM  6
 
-
-static const GstElementDetails play_on_demand_details =
-GST_ELEMENT_DETAILS ("Play On Demand",
-    "Filter/Editor/Audio",
-    "Schedule a stream to play at specific times, or when a signal is received",
-    "Leif Morgan Johnson <leif@ambient.2y.net>");
-
-
 static GstStaticPadTemplate play_on_demand_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -152,7 +144,10 @@ play_on_demand_base_init (GstPlayOnDemandClass * klass)
       gst_static_pad_template_get (&play_on_demand_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&play_on_demand_sink_template));
-  gst_element_class_set_details (element_class, &play_on_demand_details);
+  gst_element_class_set_details_simple (element_class, "Play On Demand",
+      "Filter/Editor/Audio",
+      "Schedule a stream to play at specific times, or when a signal is received",
+      "Leif Morgan Johnson <leif@ambient.2y.net>");
 }
 
 static void

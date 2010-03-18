@@ -934,10 +934,10 @@ qtwrapper_audio_decoder_sink_event (GstPad * pad, GstEvent * event)
 static void
 qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
 {
-  GstElementDetails details;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gchar *name = NULL;
   gchar *info = NULL;
+  char *longname, *description;
   ComponentDescription desc;
   QTWrapperAudioDecoderParams *params;
 
@@ -949,19 +949,19 @@ qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
   get_name_info_from_component (params->component, &desc, &name, &info);
 
   /* Fill in details */
-  details.longname = g_strdup_printf ("QTWrapper SCAudio Audio Decoder : %s",
+  longname =
+      g_strdup_printf ("QTWrapper SCAudio Audio Decoder : %s",
       GST_STR_NULL (name));
-  details.klass = "Codec/Decoder/Audio";
-  details.description =
+  description =
       g_strdup_printf ("QTWrapper SCAudio wrapper for decoder: %s",
       GST_STR_NULL (info));
-  details.author =
+  gst_element_class_set_details_simple (element_class,
+      longname "Codec/Decoder/Audio", description,
       "Fluendo <gstreamer@fluendo.com>, "
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>";
-  gst_element_class_set_details (element_class, &details);
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 
-  g_free (details.longname);
-  g_free (details.description);
+  g_free (longname);
+  g_free (description);
   g_free (name);
   g_free (info);
 

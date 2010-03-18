@@ -50,15 +50,6 @@ GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
 
 #define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
-/* elementfactory information */
-static const GstElementDetails gst_sdlvideosink_details =
-GST_ELEMENT_DETAILS ("SDL video sink",
-    "Sink/Video",
-    "An SDL-based videosink",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
-    "Edgard Lima <edgard.lima@indt.org.br>\n"
-    "Jan Schmidt <thaytan@mad.scientist.com>");
-
 
 enum
 {
@@ -162,8 +153,11 @@ gst_sdlvideosink_base_init (gpointer g_class)
       GST_PAD_SINK, GST_PAD_ALWAYS, capslist);
 
   gst_element_class_add_pad_template (element_class, sink_template);
-  gst_element_class_set_details (element_class, &gst_sdlvideosink_details);
-
+  gst_element_class_set_details_simple (element_class, "SDL video sink",
+      "Sink/Video", "An SDL-based videosink",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
+      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void

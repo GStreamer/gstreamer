@@ -127,12 +127,6 @@ typedef GstAsfExtContDescData GstAsfMetadataObjData;
 #define DEFAULT_PADDING 0
 #define DEFAULT_IS_LIVE FALSE
 
-static const GstElementDetails gst_asf_mux_details =
-GST_ELEMENT_DETAILS ("ASF muxer",
-    "Codec/Muxer",
-    "Muxes audio and video into an ASF stream",
-    "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -249,7 +243,10 @@ gst_asf_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_asf_mux_details);
+  gst_element_class_set_details_simple (element_class, "ASF muxer",
+      "Codec/Muxer",
+      "Muxes audio and video into an ASF stream",
+      "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
 
   GST_DEBUG_CATEGORY_INIT (asfmux_debug, "asfmux", 0, "Muxer for ASF streams");
 }

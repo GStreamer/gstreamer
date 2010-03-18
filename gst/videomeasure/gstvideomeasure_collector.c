@@ -54,12 +54,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (measure_collector_debug);
 #define GST_CAT_DEFAULT measure_collector_debug
 
-static const GstElementDetails measure_collector_details =
-GST_ELEMENT_DETAILS ("Video measure collector",
-    "Filter/Effect/Video",
-    "Collect measurements from a measuring element",
-    "Руслан Ижбулатов <lrn _at_ gmail _dot_ com>");
-
 static GstStaticPadTemplate gst_measure_collector_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -327,7 +321,10 @@ gst_measure_collector_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &measure_collector_details);
+  gst_element_class_set_details_simple (element_class,
+      "Video measure collector", "Filter/Effect/Video",
+      "Collect measurements from a measuring element",
+      "Руслан Ижбулатов <lrn _at_ gmail _dot_ com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_measure_collector_sink_template));

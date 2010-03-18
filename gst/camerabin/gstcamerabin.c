@@ -2346,16 +2346,13 @@ gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
 static void
 gst_camerabin_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "Camera Bin",
-    "Generic/Bin/Camera",
-    "Handle lot of features present in DSC",
-    "Nokia Corporation <multimedia@maemo.org>\n"
-        "Edgard Lima <edgard.lima@indt.org.br>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Camera Bin",
+      "Generic/Bin/Camera",
+      "Handle lot of features present in DSC",
+      "Nokia Corporation <multimedia@maemo.org>, "
+      "Edgard Lima <edgard.lima@indt.org.br>");
 }
 
 static void

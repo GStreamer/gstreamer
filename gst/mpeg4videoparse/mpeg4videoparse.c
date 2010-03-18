@@ -29,13 +29,6 @@
 GST_DEBUG_CATEGORY_STATIC (mpeg4v_parse_debug);
 #define GST_CAT_DEFAULT mpeg4v_parse_debug
 
-/* elementfactory information */
-static GstElementDetails mpeg4vparse_details =
-GST_ELEMENT_DETAILS ("MPEG 4 video elementary stream parser",
-    "Codec/Parser/Video",
-    "Parses MPEG-4 Part 2 elementary video streams",
-    "Julien Moutte <julien@fluendo.com>");
-
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -859,7 +852,10 @@ gst_mpeg4vparse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &mpeg4vparse_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG 4 video elementary stream parser", "Codec/Parser/Video",
+      "Parses MPEG-4 Part 2 elementary video streams",
+      "Julien Moutte <julien@fluendo.com>");
 }
 
 static void

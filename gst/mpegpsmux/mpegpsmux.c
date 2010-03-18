@@ -107,12 +107,7 @@ GST_BOILERPLATE (MpegPsMux, mpegpsmux, GstElement, GST_TYPE_ELEMENT);
 static void
 mpegpsmux_base_init (gpointer g_class)
 {
-  const GstElementDetails mpegpsmux_details = {
-    "MPEG Program Stream Muxer",
-    "Codec/Muxer",
-    "Multiplexes media streams into an MPEG Program Stream",
-    "Lin YANG <oxcsnicho@gmail.com>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -120,7 +115,10 @@ mpegpsmux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mpegpsmux_src_factory));
 
-  gst_element_class_set_details (element_class, &mpegpsmux_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG Program Stream Muxer", "Codec/Muxer",
+      "Multiplexes media streams into an MPEG Program Stream",
+      "Lin YANG <oxcsnicho@gmail.com>");
 }
 
 static void

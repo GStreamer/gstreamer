@@ -75,12 +75,6 @@
 GST_DEBUG_CATEGORY (app_sink_debug);
 #define GST_CAT_DEFAULT app_sink_debug
 
-static const GstElementDetails app_sink_details =
-GST_ELEMENT_DETAILS ("AppSink",
-    "Generic/Sink",
-    "Allow the application to get access to raw buffer",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
-
 enum
 {
   /* signals */
@@ -179,7 +173,10 @@ gst_app_sink_base_init (gpointer g_class)
 
   GST_DEBUG_CATEGORY_INIT (app_sink_debug, "appsink", 0, "appsink element");
 
-  gst_element_class_set_details (element_class, &app_sink_details);
+  gst_element_class_set_details_simple (element_class, "AppSink",
+      "Generic/Sink",
+      "Allow the application to get access to raw buffer",
+      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_app_sink_template));

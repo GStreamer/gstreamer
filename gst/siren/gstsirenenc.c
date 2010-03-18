@@ -42,14 +42,6 @@ GST_DEBUG_CATEGORY (sirenenc_debug);
 
 #define FRAME_DURATION  (20 * GST_MSECOND)
 
-/* elementfactory information */
-static const GstElementDetails gst_siren_enc_details =
-GST_ELEMENT_DETAILS ("Siren Encoder element",
-    "Codec/Encoder/Audio ",
-    "Encode 16bit PCM streams into the Siren7 codec",
-    "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
-
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -108,7 +100,10 @@ gst_siren_enc_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_siren_enc_details);
+  gst_element_class_set_details_simple (element_class, "Siren Encoder element",
+      "Codec/Encoder/Audio ",
+      "Encode 16bit PCM streams into the Siren7 codec",
+      "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 }
 
 static void

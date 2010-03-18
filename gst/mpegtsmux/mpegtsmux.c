@@ -155,12 +155,7 @@ GST_BOILERPLATE (MpegTsMux, mpegtsmux, GstElement, GST_TYPE_ELEMENT);
 static void
 mpegtsmux_base_init (gpointer g_class)
 {
-  const GstElementDetails mpegtsmux_details = {
-    "MPEG Transport Stream Muxer",
-    "Codec/Muxer",
-    "Multiplexes media streams into an MPEG Transport Stream",
-    "Fluendo <contact@fluendo.com>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -168,7 +163,10 @@ mpegtsmux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mpegtsmux_src_factory));
 
-  gst_element_class_set_details (element_class, &mpegtsmux_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG Transport Stream Muxer", "Codec/Muxer",
+      "Multiplexes media streams into an MPEG Transport Stream",
+      "Fluendo <contact@fluendo.com>");
 }
 
 static void

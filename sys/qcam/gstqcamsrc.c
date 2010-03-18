@@ -33,13 +33,6 @@
 
 #include "qcamip.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_qcamsrc_details =
-GST_ELEMENT_DETAILS ("QCam Source",
-    "Source/Video",
-    "Read from a QuickCam device",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 #define AE_NONE                 3
 
 #define DEF_WIDTH               320
@@ -149,6 +142,7 @@ gst_qcamsrc_get_type (void)
   }
   return qcamsrc_type;
 }
+
 static void
 gst_qcamsrc_base_init (gpointer g_class)
 {
@@ -156,8 +150,11 @@ gst_qcamsrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_qcamsrc_src_factory));
-  gst_element_class_set_details (element_class, &gst_qcamsrc_details);
+  gst_element_class_set_details_simple (element_class, "QCam Source",
+      "Source/Video",
+      "Read from a QuickCam device", "Wim Taymans <wim.taymans@chello.be>");
 }
+
 static void
 gst_qcamsrc_class_init (GstQCamSrcClass * klass)
 {

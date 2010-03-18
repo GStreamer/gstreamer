@@ -72,12 +72,6 @@ GType gst_flite_test_src_get_type (void);
 GST_DEBUG_CATEGORY_STATIC (flite_test_src_debug);
 #define GST_CAT_DEFAULT flite_test_src_debug
 
-static const GstElementDetails gst_flite_test_src_details =
-GST_ELEMENT_DETAILS ("Flite speech test source",
-    "Source/Audio",
-    "Creates audio test signals identifying channels",
-    "David Schleef <ds@schleef.org>");
-
 #define DEFAULT_SAMPLES_PER_BUFFER 1024
 
 enum
@@ -126,7 +120,10 @@ gst_flite_test_src_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_flite_test_src_src_template));
-  gst_element_class_set_details (element_class, &gst_flite_test_src_details);
+  gst_element_class_set_details_simple (element_class,
+      "Flite speech test source", "Source/Audio",
+      "Creates audio test signals identifying channels",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void

@@ -25,12 +25,6 @@
 
 #include "gstdshowaudiosrc.h"
 
-static const GstElementDetails gst_dshowaudiosrc_details =
-GST_ELEMENT_DETAILS ("Directshow audio capture source",
-    "Source/Audio",
-    "Receive data from a directshow audio capture graph",
-    "Sebastien Moutte <sebastien@moutte.net>");
-
 GST_DEBUG_CATEGORY_STATIC (dshowaudiosrc_debug);
 #define GST_CAT_DEFAULT dshowaudiosrc_debug
 
@@ -127,7 +121,10 @@ gst_dshowaudiosrc_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_dshowaudiosrc_details);
+  gst_element_class_set_details_simple (element_class,
+      "Directshow audio capture source", "Source/Audio",
+      "Receive data from a directshow audio capture graph",
+      "Sebastien Moutte <sebastien@moutte.net>");
 }
 
 static void

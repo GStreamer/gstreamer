@@ -101,12 +101,7 @@ GST_BOILERPLATE (GstMimEnc, gst_mimenc, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_mimenc_base_init (gpointer klass)
 {
-  static GstElementDetails plugin_details = {
-    "MimEnc",
-    "Codec/Encoder/Video",
-    "Mimic encoder",
-    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
@@ -123,7 +118,9 @@ gst_mimenc_base_init (gpointer klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "MimEnc",
+      "Codec/Encoder/Video",
+      "Mimic encoder", "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>");
 }
 
 static void

@@ -36,9 +36,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/*GstElementDetails gst_afparse_details;*/
-
-
 #define GST_TYPE_AFPARSE \
   (gst_afparse_get_type())
 #define GST_AFPARSE(obj) \

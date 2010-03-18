@@ -40,12 +40,6 @@
 #define GST_CAT_DEFAULT acmmp3dec_debug
 GST_DEBUG_CATEGORY_STATIC (acmmp3dec_debug);
 
-static const GstElementDetails acmmp3dec_details =
-GST_ELEMENT_DETAILS ("ACM MP3 decoder",
-    "Codec/Decoder/Audio",
-    "Decode MP3 using ACM decoder",
-    "Pioneers of the Inevitable <songbird@songbirdnest.com");
-
 static GstStaticPadTemplate acmmp3dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -413,7 +407,10 @@ acmmp3dec_base_init (gpointer klass)
       gst_static_pad_template_get (&acmmp3dec_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&acmmp3dec_src_template));
-  gst_element_class_set_details (element_class, &acmmp3dec_details);
+  gst_element_class_set_details_simple (element_class, "ACM MP3 decoder",
+      "Codec/Decoder/Audio",
+      "Decode MP3 using ACM decoder",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com");
 }
 
 static gboolean

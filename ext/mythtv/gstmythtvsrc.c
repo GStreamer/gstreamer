@@ -86,14 +86,6 @@ GST_DEBUG_CATEGORY_STATIC (mythtvsrc_debug);
 #define READ_SIZE_LIVETV                    (80*1024)
 #define GST_FLOW_ERROR_NO_DATA              (-101)
 
-static const GstElementDetails gst_mythtv_src_details =
-GST_ELEMENT_DETAILS ("MythTV client source",
-    "Source/Network",
-    "Control and receive data as a client over the network "
-    "via raw socket connections using the MythTV protocol",
-    "Rosfran Borges <rosfran.borges@indt.org.br>,"
-    "Renato Filho <renato.filho@indt.org.br>");
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -167,7 +159,12 @@ GST_BOILERPLATE_FULL (GstMythtvSrc, gst_mythtv_src, GstPushSrc,
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details (element_class, &gst_mythtv_src_details);
+  gst_element_class_set_details_simple (element_class, "MythTV client source",
+      "Source/Network",
+      "Control and receive data as a client over the network "
+      "via raw socket connections using the MythTV protocol",
+      "Rosfran Borges <rosfran.borges@indt.org.br>, "
+      "Renato Filho <renato.filho@indt.org.br>");
 
   element_class->change_state = gst_mythtv_src_change_state;
 

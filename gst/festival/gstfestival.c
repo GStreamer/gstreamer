@@ -122,13 +122,6 @@ static FT_Info *festival_default_info (void);
 static char *socket_receive_file_to_buff (int fd, int *size);
 static char *client_accept_s_expr (int fd);
 
-/* elementfactory information */
-static const GstElementDetails gst_festival_details =
-GST_ELEMENT_DETAILS ("Festival Text-to-Speech synthesizer",
-    "Filter/Effect/Audio",
-    "Synthesizes plain text into audio",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -196,7 +189,10 @@ gst_festival_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template_factory));
 
-  gst_element_class_set_details (element_class, &gst_festival_details);
+  gst_element_class_set_details_simple (element_class,
+      "Festival Text-to-Speech synthesizer", "Filter/Effect/Audio",
+      "Synthesizes plain text into audio",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

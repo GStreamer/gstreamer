@@ -169,11 +169,7 @@ static gboolean gst_kate_tiger_source_event (GstPad * pad, GstEvent * event);
 static void
 gst_kate_tiger_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details =
-      GST_ELEMENT_DETAILS ("Kate stream renderer",
-      "Mixer/Video/Overlay/Subtitle",
-      "Decodes and renders Kate streams on top of a video",
-      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
@@ -182,7 +178,10 @@ gst_kate_tiger_base_init (gpointer gclass)
       gst_static_pad_template_get (&kate_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Kate stream renderer",
+      "Mixer/Video/Overlay/Subtitle",
+      "Decodes and renders Kate streams on top of a video",
+      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }
 
 /* initialize the plugin's class */

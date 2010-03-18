@@ -47,13 +47,6 @@
 GST_DEBUG_CATEGORY_STATIC (theoradecexp_debug);
 #define GST_CAT_DEFAULT theoradecexp_debug
 
-static const GstElementDetails theora_dec_details =
-GST_ELEMENT_DETAILS ("Theora video decoder",
-    "Codec/Decoder/Video",
-    "decode raw theora streams to raw YUV video using libtheoradec",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
-    "Wim Taymans <wim@fluendo.com>, " "Michael Smith <msmith@fluendo,com>");
-
 static GstStaticPadTemplate theora_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -98,7 +91,11 @@ gst_theoradec_base_init (gpointer g_class)
       gst_static_pad_template_get (&theora_dec_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&theora_dec_sink_factory));
-  gst_element_class_set_details (element_class, &theora_dec_details);
+  gst_element_class_set_details_simple (element_class, "Theora video decoder",
+      "Codec/Decoder/Video",
+      "decode raw theora streams to raw YUV video using libtheoradec",
+      "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
+      "Wim Taymans <wim@fluendo.com>, " "Michael Smith <msmith@fluendo,com>");
 }
 
 static void

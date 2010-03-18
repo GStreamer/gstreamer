@@ -128,17 +128,15 @@ static void
 gst_aacparse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details = GST_ELEMENT_DETAILS ("AAC audio stream parser",
-      "Codec/Parser/Audio",
-      "Advanced Audio Coding parser",
-      "Stefan Kost <stefan.kost@nokia.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "AAC audio stream parser", "Codec/Parser/Audio",
+      "Advanced Audio Coding parser", "Stefan Kost <stefan.kost@nokia.com>");
 }
 
 

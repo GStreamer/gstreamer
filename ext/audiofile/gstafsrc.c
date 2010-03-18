@@ -33,14 +33,6 @@
 
 #include "gstafsrc.h"
 
-/* elementfactory information */
-static const GstElementDetails afsrc_details =
-GST_ELEMENT_DETAILS ("Audiofile source",
-    "Source/Audio",
-    "Read audio files from disk using libaudiofile",
-    "Thomas <thomas@apestaart.org>");
-
-
 /* AFSrc signals and args */
 enum
 {
@@ -145,7 +137,10 @@ gst_afsrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&afsrc_src_factory));
-  gst_element_class_set_details (element_class, &afsrc_details);
+  gst_element_class_set_details_simple (element_class, "Audiofile source",
+      "Source/Audio",
+      "Read audio files from disk using libaudiofile",
+      "Thomas <thomas@apestaart.org>");
 }
 
 static void

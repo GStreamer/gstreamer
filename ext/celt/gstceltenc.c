@@ -72,12 +72,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) [ 1, 2 ], " "frame-size = (int) [ 64, 512 ]")
     );
 
-static const GstElementDetails celtenc_details =
-GST_ELEMENT_DETAILS ("Celt audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes audio in Celt format",
-    "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
 #define DEFAULT_BITRATE         64
 #define DEFAULT_FRAMESIZE       480
 #define DEFAULT_CBR             TRUE

@@ -28,13 +28,6 @@
 
 #define MAX_HEIGHT      2048
 
-/* elementfactory information */
-static const GstElementDetails snapshot_details =
-GST_ELEMENT_DETAILS ("Snapshot",
-    "Filter/Editor/Video",
-    "Dump a frame to a png file",
-    "Jeremy SIMON <jsimon13@yahoo.fr>");
-
 static GstStaticPadTemplate snapshot_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -128,7 +121,9 @@ gst_snapshot_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&snapshot_src_factory));
 
-  gst_element_class_set_details (element_class, &snapshot_details);
+  gst_element_class_set_details_simple (element_class, "Snapshot",
+      "Filter/Editor/Video",
+      "Dump a frame to a png file", "Jeremy SIMON <jsimon13@yahoo.fr>");
 }
 
 static void

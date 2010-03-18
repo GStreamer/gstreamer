@@ -207,11 +207,6 @@ GST_BOILERPLATE_FULL (GstDiracEnc, gst_dirac_enc, GstBaseVideoEncoder,
 static void
 gst_dirac_enc_base_init (gpointer g_class)
 {
-  static GstElementDetails dirac_enc_details =
-      GST_ELEMENT_DETAILS ((gchar *) "Dirac Encoder",
-      (gchar *) "Codec/Encoder/Video",
-      (gchar *) "Encode raw YUV video into Dirac stream",
-      (gchar *) "David Schleef <ds@schleef.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -219,7 +214,10 @@ gst_dirac_enc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dirac_enc_sink_template));
 
-  gst_element_class_set_details (element_class, &dirac_enc_details);
+  gst_element_class_set_details_simple (element_class, "Dirac Encoder",
+      "Codec/Encoder/Video",
+      "Encode raw YUV video into Dirac stream",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void

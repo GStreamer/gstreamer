@@ -76,13 +76,6 @@ GST_DEBUG_CATEGORY_STATIC (gstmpegtsdemux_debug);
 #define FORCE_INLINE
 #endif
 
-static GstElementDetails mpegts_demux_details = {
-  "The Fluendo MPEG Transport stream demuxer",
-  "Codec/Demuxer",
-  "Demultiplexes MPEG2 Transport Streams",
-  "Wim Taymans <wim@fluendo.com>"
-};
-
 /* MPEG2Demux signals and args */
 enum
 {
@@ -257,7 +250,9 @@ gst_mpegts_demux_base_init (GstMpegTSDemuxClass * klass)
   gst_element_class_add_pad_template (element_class, klass->private_template);
   gst_element_class_add_pad_template (element_class, klass->sink_template);
 
-  gst_element_class_set_details (element_class, &mpegts_demux_details);
+  gst_element_class_set_details_simple (element_class,
+      "The Fluendo MPEG Transport stream demuxer", "Codec/Demuxer",
+      "Demultiplexes MPEG2 Transport Streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
@@ -1046,8 +1041,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-          discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+              PCR_PID]->discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1069,8 +1064,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
-            last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
+                PCR_PID]->last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);

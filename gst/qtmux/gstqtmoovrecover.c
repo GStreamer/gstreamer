@@ -71,11 +71,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qt_moov_recover_debug);
 #define GST_CAT_DEFAULT gst_qt_moov_recover_debug
 
-static GstElementDetails gst_qt_moov_recover_details =
-GST_ELEMENT_DETAILS ("QT Moov Recover",
-    "Util", "Recovers unfinished qtmux files",
-    "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
-
 /* QTMoovRecover signals and args */
 enum
 {
@@ -113,7 +108,9 @@ gst_qt_moov_recover_base_init (gpointer g_class)
 #if 0
   GstQTMoovRecoverClass *klass = (GstQTMoovRecoverClass *) g_class;
 #endif
-  gst_element_class_set_details (element_class, &gst_qt_moov_recover_details);
+  gst_element_class_set_details_simple (element_class, "QT Moov Recover",
+      "Util", "Recovers unfinished qtmux files",
+      "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
 }
 
 static void

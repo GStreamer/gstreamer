@@ -1353,11 +1353,6 @@ gst_mve_mux_release_pad (GstElement * element, GstPad * pad)
 static void
 gst_mve_mux_base_init (GstMveMuxClass * klass)
 {
-  static const GstElementDetails gst_mve_mux_details =
-      GST_ELEMENT_DETAILS ("MVE Multiplexer",
-      "Codec/Muxer",
-      "Muxes audio and video into an MVE stream",
-      "Jens Granseuer <jensgr@gmx.net>");
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -1368,7 +1363,10 @@ gst_mve_mux_base_init (GstMveMuxClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_mve_mux_details);
+  gst_element_class_set_details_simple (element_class, "MVE Multiplexer",
+      "Codec/Muxer",
+      "Muxes audio and video into an MVE stream",
+      "Jens Granseuer <jensgr@gmx.net>");
 }
 
 static void

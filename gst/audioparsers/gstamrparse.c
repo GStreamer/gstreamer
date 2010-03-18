@@ -105,17 +105,16 @@ static void
 gst_amrparse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR audio stream parser",
-      "Codec/Parser/Audio",
-      "Adaptive Multi-Rate audio parser",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class,
+      "AMR audio stream parser", "Codec/Parser/Audio",
+      "Adaptive Multi-Rate audio parser",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 

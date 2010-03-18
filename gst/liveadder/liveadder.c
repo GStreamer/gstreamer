@@ -53,14 +53,6 @@
 GST_DEBUG_CATEGORY_STATIC (live_adder_debug);
 #define GST_CAT_DEFAULT (live_adder_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_live_adder_details =
-GST_ELEMENT_DETAILS ("Live Adder element",
-    "Generic/Audio",
-    "Mixes live/discontinuous audio streams",
-    "Olivier Crete <olivier.crete@collabora.co.uk>");
-
-
 static GstStaticPadTemplate gst_live_adder_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_SINK,
@@ -181,7 +173,10 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
       gst_static_pad_template_get (&gst_live_adder_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_live_adder_sink_template));
-  gst_element_class_set_details (gstelement_class, &gst_live_adder_details);
+  gst_element_class_set_details_simple (gstelement_class, "Live Adder element",
+      "Generic/Audio",
+      "Mixes live/discontinuous audio streams",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 
   parent_class = g_type_class_peek_parent (klass);
 

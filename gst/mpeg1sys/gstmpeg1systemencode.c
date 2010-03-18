@@ -28,15 +28,6 @@
 #include "gstmpeg1systemencode.h"
 #include "main.h"
 
-/*#define GST_DEBUG (b...) g_print (##b) */
-
-/* elementfactory information */
-static const GstElementDetails system_encode_details =
-GST_ELEMENT_DETAILS ("MPEG-1 muxer",
-    "Codec/Muxer",
-    "Multiplexes MPEG-1 Streams",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 /* GstMPEG1SystemEncode signals and args */
 enum
 {
@@ -125,7 +116,9 @@ gst_system_encode_base_init (GstMPEG1SystemEncodeClass * klass)
       gst_static_pad_template_get (&audio_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_set_details (element_class, &system_encode_details);
+  gst_element_class_set_details_simple (element_class, "MPEG-1 muxer",
+      "Codec/Muxer",
+      "Multiplexes MPEG-1 Streams", "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

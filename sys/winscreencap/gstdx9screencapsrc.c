@@ -48,13 +48,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (dx9screencapsrc_debug);
 
-static const GstElementDetails gst_dx9screencapsrc_details = {
-  "DirectX 9 screen capture source",
-  "Source/Video",
-  "Captures screen",
-  "Haakon Sporsheim <hakon.sporsheim@tandberg.com>"
-};
-
 #define GST_VIDEO_ALPHA_MASK_15_INT  0x8000
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -111,7 +104,9 @@ gst_dx9screencapsrc_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_dx9screencapsrc_details);
+  gst_element_class_set_details_simple (element_class,
+      "DirectX 9 screen capture source", "Source/Video", "Captures screen",
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>");
 }
 
 static void
@@ -461,9 +456,10 @@ gst_dx9screencapsrc_start (GstBaseSrc * bsrc)
   if (FAILED (res))
     return FALSE;
 
-  return SUCCEEDED (IDirect3DDevice9_CreateOffscreenPlainSurface (src->
-          d3d9_device, src->disp_mode.Width, src->disp_mode.Height,
-          D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &src->surface, NULL));
+  return
+      SUCCEEDED (IDirect3DDevice9_CreateOffscreenPlainSurface (src->d3d9_device,
+          src->disp_mode.Width, src->disp_mode.Height, D3DFMT_A8R8G8B8,
+          D3DPOOL_SYSTEMMEM, &src->surface, NULL));
 }
 
 static gboolean

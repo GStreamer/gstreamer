@@ -144,14 +144,13 @@ gst_invtelecine_get_type (void)
 static void
 gst_invtelecine_base_init (gpointer g_class)
 {
-  static const GstElementDetails invtelecine_details =
-      GST_ELEMENT_DETAILS ("H.264 Decoder",
+
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details_simple (element_class, "H.264 Decoder",
       "Codec/Decoder/Video",
       "Decode H.264/MPEG-4 AVC video streams",
       "Entropy Wave <ds@entropywave.com>");
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details (element_class, &invtelecine_details);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_invtelecine_sink_template));

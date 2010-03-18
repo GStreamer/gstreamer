@@ -51,13 +51,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (gdiscreencapsrc_debug);
 
-static const GstElementDetails gst_gdiscreencapsrc_details = {
-  "GDI screen capture source",
-  "Source/Video",
-  "Captures screen",
-  "Haakon Sporsheim <hakon.sporsheim@tandberg.com>"
-};
-
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR));
@@ -106,7 +99,9 @@ gst_gdiscreencapsrc_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (element_class, &gst_gdiscreencapsrc_details);
+  gst_element_class_set_details_simple (element_class,
+      "GDI screen capture source", "Source/Video", "Captures screen",
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>");
 }
 
 static void

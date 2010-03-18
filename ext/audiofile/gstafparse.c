@@ -29,14 +29,6 @@
 #include <string.h>
 #include "gstafparse.h"
 
-/* elementfactory information */
-static const GstElementDetails afparse_details =
-GST_ELEMENT_DETAILS ("Audiofile demuxer",
-    "Codec/Demuxer/Audio",
-    "Audiofile parser for audio/raw",
-    "Steve Baker <stevebaker_org@yahoo.co.uk>");
-
-
 /* AFParse signals and args */
 enum
 {
@@ -127,7 +119,10 @@ gst_afparse_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&afparse_sink_factory));
 
-  gst_element_class_set_details (element_class, &afparse_details);
+  gst_element_class_set_details_simple (element_class, "Audiofile demuxer",
+      "Codec/Demuxer/Audio",
+      "Audiofile parser for audio/raw",
+      "Steve Baker <stevebaker_org@yahoo.co.uk>");
 }
 
 static void

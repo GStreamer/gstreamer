@@ -29,12 +29,6 @@
 #define GST_CAT_DEFAULT nsfdec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails gst_nsfdec_details =
-GST_ELEMENT_DETAILS ("Nsf decoder",
-    "Codec/Decoder/Audio",
-    "Using nosefart to decode NSF audio tunes",
-    "Johan Dahlin <johan@gnome.org>");
-
 /* Nsfdec signals and args */
 enum
 {
@@ -142,7 +136,10 @@ gst_nsfdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_nsfdec_details);
+  gst_element_class_set_details_simple (element_class, "Nsf decoder",
+      "Codec/Decoder/Audio",
+      "Using nosefart to decode NSF audio tunes",
+      "Johan Dahlin <johan@gnome.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));

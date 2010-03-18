@@ -29,13 +29,6 @@
 
 #define FAMEENC_BUFFER_SIZE (300 * 1024)
 
-/* elementfactory information */
-static const GstElementDetails gst_fameenc_details =
-GST_ELEMENT_DETAILS ("MPEG-1 and MPEG-4 video encoder",
-    "Codec/Encoder/Video",
-    "Uses fameenc to encode MPEG video streams",
-    "Thomas Vander Stichele <thomas@apestaart.org>");
-
 static GQuark fame_object_name;
 
 
@@ -184,7 +177,10 @@ gst_fameenc_base_init (GstFameEncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_fameenc_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG-1 and MPEG-4 video encoder", "Codec/Encoder/Video",
+      "Uses fameenc to encode MPEG video streams",
+      "Thomas Vander Stichele <thomas@apestaart.org>");
 }
 
 static void

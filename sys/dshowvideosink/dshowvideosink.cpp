@@ -28,13 +28,7 @@
 
 #include "windows.h"
 
-#define WM_GRAPH_NOTIFY WM_APP + 1 /* Private message */
-
-static const GstElementDetails gst_dshowvideosink_details =
-GST_ELEMENT_DETAILS ("DirectShow video sink",
-    "Sink/Video",
-    "Display data using a DirectShow video renderer",
-    "Pioneers of the Inevitable <songbird@songbirdnest.com>");
+#define WM_GRAPH_NOTIFY WM_APP + 1
 
 GST_DEBUG_CATEGORY (dshowvideosink_debug);
 #define GST_CAT_DEFAULT dshowvideosink_debug
@@ -145,7 +139,10 @@ gst_dshowvideosink_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_dshowvideosink_details);
+  gst_element_class_set_details_simple (element_class, "DirectShow video sink",
+      "Sink/Video",
+      "Display data using a DirectShow video renderer",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 }
 
 static void

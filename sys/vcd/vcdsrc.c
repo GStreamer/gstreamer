@@ -36,12 +36,6 @@
 
 #include "vcdsrc.h"
 
-static const GstElementDetails gst_vcdsrc_details =
-GST_ELEMENT_DETAILS ("VCD Source",
-    "Source/File",
-    "Asynchronous read from VCD disk",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 /* VCDSrc signals and args */
 enum
 {
@@ -99,7 +93,9 @@ gst_vcdsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_vcdsrc_details);
+  gst_element_class_set_details_simple (element_class, "VCD Source",
+      "Source/File",
+      "Asynchronous read from VCD disk", "Erik Walthinsen <omega@cse.ogi.edu>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));

@@ -89,12 +89,6 @@ extern gint8 faacDecInit2 (faacDecHandle, guint8 *, guint32,
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
 
-static const GstElementDetails faad_details =
-GST_ELEMENT_DETAILS ("AAC audio decoder",
-    "Codec/Decoder/Audio",
-    "Free MPEG-2/4 AAC decoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -203,7 +197,10 @@ gst_faad_base_init (GstFaadClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &faad_details);
+  gst_element_class_set_details_simple (element_class, "AAC audio decoder",
+      "Codec/Decoder/Audio",
+      "Free MPEG-2/4 AAC decoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
 }

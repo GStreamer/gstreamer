@@ -76,15 +76,7 @@ GST_BOILERPLATE (GstMimDec, gst_mimdec, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_mimdec_base_init (gpointer klass)
 {
-  static GstElementDetails plugin_details = {
-    "MimDec",
-    "Codec/Decoder/Video",
-    "Mimic decoder",
-    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
-        "Rob Taylor <robtaylor@fastmail.fm>, "
-        "Philippe Khalaf <burger@speedy.org>, "
-        "Ole André Vadla Ravnås <oleavr@gmail.com>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -92,7 +84,13 @@ gst_mimdec_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "MimDec",
+      "Codec/Decoder/Video",
+      "Mimic decoder",
+      "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
+      "Rob Taylor <robtaylor@fastmail.fm>, "
+      "Philippe Khalaf <burger@speedy.org>, "
+      "Ole André Vadla Ravnås <oleavr@gmail.com>");
 }
 
 static void

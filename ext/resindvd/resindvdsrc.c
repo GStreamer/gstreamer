@@ -189,17 +189,13 @@ rsn_dvdsrc_register_extra (GType rsn_dvdsrc_type)
 static void
 rsn_dvdsrc_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "Resin DVD Src",
-    "Source/DVD",
-    "DVD source element",
-    "Jan Schmidt <thaytan@noraisin.net>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Resin DVD Src",
+      "Source/DVD", "DVD source element", "Jan Schmidt <thaytan@noraisin.net>");
 }
 
 static void

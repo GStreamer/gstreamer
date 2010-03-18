@@ -44,12 +44,6 @@ static GstColorspaceConverter gst_colorspace_converters[] = {
   {GST_COLORSPACE_YV12, GST_COLORSPACE_RGB16, gst_colorspace_YV12_to_rgb16},
 };
 
-static const GstElementDetails colorspace_details =
-GST_ELEMENT_DETAILS ("Colorspace converter",
-    "Filter/Converter/Video",
-    "Converts video from YUV to RGB",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 static GstStaticPadTemplate gst_colorspace_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -490,7 +484,9 @@ gst_colorspace_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_colorspace_sink_template));
 
-  gst_element_class_set_details (element_class, &colorspace_details);
+  gst_element_class_set_details_simple (element_class, "Colorspace converter",
+      "Filter/Converter/Video",
+      "Converts video from YUV to RGB", "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

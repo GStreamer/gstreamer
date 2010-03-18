@@ -84,14 +84,6 @@
 GST_DEBUG_CATEGORY (dtmf_detect_debug);
 #define GST_CAT_DEFAULT (dtmf_detect_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_dtmf_detect_details =
-GST_ELEMENT_DETAILS ("DTMF detector element",
-    "Detect",
-    "This element detects DTMF tones",
-    "Olivier Crete <olivier.crete@collabora.co.uk>");
-
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -148,7 +140,10 @@ gst_dtmf_detect_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_dtmf_detect_details);
+  gst_element_class_set_details_simple (element_class, "DTMF detector element",
+      "Detect",
+      "This element detects DTMF tones",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
 static void

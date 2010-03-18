@@ -47,14 +47,6 @@ GST_DEBUG_CATEGORY_STATIC (gstflupsdemux_debug);
 
 GST_DEBUG_CATEGORY_EXTERN (gstflupesfilter_debug);
 
-/* elementfactory information */
-static GstElementDetails flups_demux_details = {
-  "MPEG Program Demuxer",
-  "Codec/Demuxer",
-  "Demultiplexes MPEG Program Streams",
-  "Wim Taymans <wim@fluendo.com>"
-};
-
 /* MPEG2Demux signals and args */
 enum
 {
@@ -172,7 +164,9 @@ gst_flups_demux_base_init (GstFluPSDemuxClass * klass)
       klass->subpicture_template);
   gst_element_class_add_pad_template (element_class, klass->sink_template);
 
-  gst_element_class_set_details (element_class, &flups_demux_details);
+  gst_element_class_set_details_simple (element_class, "MPEG Program Demuxer",
+      "Codec/Demuxer",
+      "Demultiplexes MPEG Program Streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

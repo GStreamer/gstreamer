@@ -52,14 +52,6 @@
 GST_DEBUG_CATEGORY_STATIC (speed_debug);
 #define GST_CAT_DEFAULT speed_debug
 
-/* elementfactory information */
-static const GstElementDetails speed_details = GST_ELEMENT_DETAILS ("Speed",
-    "Filter/Effect/Audio",
-    "Set speed/pitch on audio/raw streams (resampler)",
-    "Andy Wingo <apwingo@eos.ncsu.edu>, "
-    "Tim-Philipp Müller <tim@centricular.net>");
-
-
 enum
 {
   ARG_0,
@@ -463,13 +455,18 @@ speed_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &speed_details);
+  gst_element_class_set_details_simple (element_class, "Speed",
+      "Filter/Effect/Audio",
+      "Set speed/pitch on audio/raw streams (resampler)",
+      "Andy Wingo <apwingo@eos.ncsu.edu>, "
+      "Tim-Philipp Müller <tim@centricular.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_speed_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_speed_sink_template));
 }
+
 static void
 speed_class_init (GstSpeedClass * klass)
 {

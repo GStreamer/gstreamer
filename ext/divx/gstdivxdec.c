@@ -25,13 +25,6 @@
 #include "gstdivxdec.h"
 #include <gst/video/video.h>
 
-/* elementfactory information */
-static const GstElementDetails gst_divxdec_details =
-GST_ELEMENT_DETAILS ("Divx4linux video decoder",
-    "Codec/Decoder/Video",
-    "Divx decoder based on divxdecore",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -142,7 +135,10 @@ gst_divxdec_base_init (GstDivxDecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_divxdec_details);
+  gst_element_class_set_details_simple (element_class,
+      "Divx4linux video decoder", "Codec/Decoder/Video",
+      "Divx decoder based on divxdecore",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 

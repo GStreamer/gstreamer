@@ -102,13 +102,6 @@ static void gst_camerabin_video_destroy_elements (GstCameraBinVideo * vid);
 
 GST_BOILERPLATE (GstCameraBinVideo, gst_camerabin_video, GstBin, GST_TYPE_BIN);
 
-static const GstElementDetails gst_camerabin_video_details =
-GST_ELEMENT_DETAILS ("Video capture bin for camerabin",
-    "Bin/Video",
-    "Process and store video data",
-    "Edgard Lima <edgard.lima@indt.org.br>\n"
-    "Nokia Corporation <multimedia@maemo.org>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -131,7 +124,11 @@ gst_camerabin_video_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (eklass, &gst_camerabin_video_details);
+  gst_element_class_set_details_simple (eklass,
+      "Video capture bin for camerabin", "Bin/Video",
+      "Process and store video data",
+      "Edgard Lima <edgard.lima@indt.org.br>, "
+      "Nokia Corporation <multimedia@maemo.org>");
 }
 
 static void

@@ -83,12 +83,6 @@ enum
 #define DEFAULT_JOIN              TRUE
 #define DEFAULT_REPLACE           FALSE
 
-static GstElementDetails caps_setter_details =
-GST_ELEMENT_DETAILS ("CapsSetter",
-    "Generic",
-    "Set/merge caps on stream",
-    "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
-
 static GstStaticPadTemplate gst_caps_setter_src_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_TRANSFORM_SRC_NAME,
     GST_PAD_SRC,
@@ -125,7 +119,10 @@ gst_caps_setter_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &caps_setter_details);
+  gst_element_class_set_details_simple (element_class, "CapsSetter",
+      "Generic",
+      "Set/merge caps on stream",
+      "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_caps_setter_sink_template));

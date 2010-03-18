@@ -51,13 +51,6 @@
 GST_DEBUG_CATEGORY_STATIC (legacyresample_debug);
 #define GST_CAT_DEFAULT legacyresample_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_legacyresample_details =
-GST_ELEMENT_DETAILS ("Audio scaler",
-    "Filter/Converter/Audio",
-    "Resample audio",
-    "David Schleef <ds@schleef.org>");
-
 #define DEFAULT_FILTERLEN       16
 
 enum
@@ -147,7 +140,9 @@ gst_legacyresample_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_legacyresample_sink_template));
 
-  gst_element_class_set_details (gstelement_class, &gst_legacyresample_details);
+  gst_element_class_set_details_simple (gstelement_class, "Audio scaler",
+      "Filter/Converter/Audio",
+      "Resample audio", "David Schleef <ds@schleef.org>");
 }
 
 static void

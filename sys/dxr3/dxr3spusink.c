@@ -38,16 +38,6 @@
 
 #include "dxr3common.h"
 
-
-/* ElementFactory information. */
-static GstElementDetails dxr3spusink_details = {
-  "dxr3/Hollywood+ mpeg decoder board subpicture element",
-  "Sink/Video",
-  "Feeds subpicture information to Sigma Designs em8300 based boards",
-  "Martin Soto <martinsoto@users.sourceforge.net>"
-};
-
-
 /* Dxr3SpuSink signals and args */
 enum
 {
@@ -138,7 +128,10 @@ dxr3spusink_base_init (Dxr3SpuSinkClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&dxr3spusink_sink_factory));
-  gst_element_class_set_details (element_class, &dxr3spusink_details);
+  gst_element_class_set_details_simple (element_class,
+      "dxr3/Hollywood+ mpeg decoder board subpicture element", "Sink/Video",
+      "Feeds subpicture information to Sigma Designs em8300 based boards",
+      "Martin Soto <martinsoto@users.sourceforge.net>");
 }
 
 static void

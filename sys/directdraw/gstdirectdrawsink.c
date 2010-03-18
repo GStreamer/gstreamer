@@ -48,13 +48,6 @@
 GST_DEBUG_CATEGORY_STATIC (directdrawsink_debug);
 #define GST_CAT_DEFAULT directdrawsink_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_directdraw_sink_details =
-GST_ELEMENT_DETAILS ("Direct Draw Video Sink",
-    "Sink/Video",
-    "Output to a video card via Direct Draw",
-    "Sebastien Moutte <sebastien@moutte.net>");
-
 static void gst_directdraw_sink_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstDirectDrawSink, gst_directdraw_sink, GstVideoSink,
@@ -387,7 +380,10 @@ gst_directdraw_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_directdraw_sink_details);
+  gst_element_class_set_details_simple (element_class, "Direct Draw Video Sink",
+      "Sink/Video",
+      "Output to a video card via Direct Draw",
+      "Sebastien Moutte <sebastien@moutte.net>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&directdrawsink_sink_factory));
 }
@@ -1730,9 +1726,9 @@ gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
   gint order = 0, binary;
 
   binary =
-      lpddpfPixelFormat->dwRBitMask | lpddpfPixelFormat->
-      dwGBitMask | lpddpfPixelFormat->dwBBitMask | lpddpfPixelFormat->
-      dwRGBAlphaBitMask;
+      lpddpfPixelFormat->
+      dwRBitMask | lpddpfPixelFormat->dwGBitMask | lpddpfPixelFormat->
+      dwBBitMask | lpddpfPixelFormat->dwRGBAlphaBitMask;
   while (binary != 0) {
     if ((binary % 2) == 1)
       order++;

@@ -34,9 +34,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/*GstElementDetails gst_afsink_details;*/
-
-
 #define GST_TYPE_AFSINK \
   (gst_afsink_get_type())
 #define GST_AFSINK(obj) \

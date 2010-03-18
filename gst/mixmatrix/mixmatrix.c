@@ -67,13 +67,6 @@ struct _GstMixMatrixClass
   void (*resize) (GstMixMatrix * mix);
 };
 
-/* elementfactory information */
-static const GstElementDetails mixmatrix_details =
-GST_ELEMENT_DETAILS ("Mixing Matrix",
-    "Filter/Editor/Audio",
-    "Mix N audio channels together into M channels",
-    "Erik Walthinsen <omega@temple-baptist.com>");
-
 enum
 {
   /* FILL ME */
@@ -122,6 +115,7 @@ static GstPadLinkReturn gst_mixmatrix_connect (GstPad * pad,
 static void gst_mixmatrix_loop (GstElement * element);
 
 static guint gst_mixmatrix_signals[LAST_SIGNAL] = { 0 };
+
 static GstElementClass *parent_class = NULL;
 
 GType
@@ -158,7 +152,10 @@ gst_mixmatrix_base_init (GstMixMatrixClass * klass)
       gst_static_pad_template_get (&mixmatrix_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mixmatrix_src_template));
-  gst_element_class_set_details (element_class, &mixmatrix_details);
+  gst_element_class_set_details_simple (element_class, "Mixing Matrix",
+      "Filter/Editor/Audio",
+      "Mix N audio channels together into M channels",
+      "Erik Walthinsen <omega@temple-baptist.com>");
 }
 
 static void

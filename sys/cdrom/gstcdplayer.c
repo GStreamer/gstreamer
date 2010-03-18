@@ -58,14 +58,6 @@ static GstStateChangeReturn cdplayer_change_state (GstElement * element,
 static GstElementClass *parent_class;
 static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 
-static const GstElementDetails cdplayer_details =
-GST_ELEMENT_DETAILS ("CD Player",
-    "Generic/Bin",
-    "Play CD audio through the CD Drive",
-    "Charles Schmidt <cbschmid@uiuc.edu>, "
-    "Wim Taymans <wim.taymans@chello.be>");
-
-
 GType
 cdplayer_get_type (void)
 {
@@ -97,8 +89,13 @@ cdplayer_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &cdplayer_details);
+  gst_element_class_set_details_simple (element_class, "CD Player",
+      "Generic/Bin",
+      "Play CD audio through the CD Drive",
+      "Charles Schmidt <cbschmid@uiuc.edu>, "
+      "Wim Taymans <wim.taymans@chello.be>");
 }
+
 static void
 cdplayer_class_init (CDPlayerClass * klass)
 {

@@ -634,13 +634,6 @@ gst_osx_video_src_init_interfaces (GType type)
 static void
 gst_osx_video_src_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "Video Source (OSX)",
-    "Source/Video",
-    "Reads raw frames from a capture device on OS X",
-    "Ole Andre Vadla Ravnaas <ole.andre.ravnas@tandberg.com>, "
-        "Ali Sabil <ali.sabil@tandberg.com>"
-  };
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -649,7 +642,11 @@ gst_osx_video_src_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Video Source (OSX)",
+      "Source/Video",
+      "Reads raw frames from a capture device on OS X",
+      "Ole Andre Vadla Ravnaas <ole.andre.ravnas@tandberg.com>, "
+      "Ali Sabil <ali.sabil@tandberg.com>");
 }
 
 static void

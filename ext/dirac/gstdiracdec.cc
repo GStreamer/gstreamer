@@ -29,15 +29,6 @@
 
 #include "gstdiracdec.h"
 
-/* elementfactory information */
-static GstElementDetails gst_diracdec_details = {
-  "Dirac stream decoder",
-  "Codec/Decoder/Video",
-  "Decode DIRAC streams",
-  "David Schleef <ds@schleef.org>\n"
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-};
-
 GST_DEBUG_CATEGORY (diracdec_debug);
 #define GST_CAT_DEFAULT diracdec_debug
 
@@ -116,7 +107,10 @@ gst_diracdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_diracdec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_diracdec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_diracdec_details);
+  gst_element_class_set_details_simple (element_class, "Dirac stream decoder",
+      "Codec/Decoder/Video", "Decode DIRAC streams",
+      "David Schleef <ds@schleef.org>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 static void
@@ -264,15 +258,16 @@ gst_diracdec_chain (GstPad * pad, GstData * _data)
                 diracdec->decoder->seq_params.width,
                 diracdec->decoder->seq_params.height,
                 (gdouble) fps_num / (gdouble) fps_denom,
-                gst_diracdec_chroma_to_fourcc (diracdec->decoder->seq_params.
-                    chroma))) {
+                gst_diracdec_chroma_to_fourcc (diracdec->decoder->
+                    seq_params.chroma))) {
           GST_ELEMENT_ERROR (diracdec, CORE, NEGOTIATION, (NULL),
               ("Failed to set caps to %dx%d @ %d fps (format=" GST_FOURCC_FORMAT
                   "/%d)", diracdec->decoder->seq_params.width,
                   diracdec->decoder->seq_params.height,
                   diracdec->decoder->seq_params.frame_rate,
-                  gst_diracdec_chroma_to_fourcc (diracdec->decoder->seq_params.
-                      chroma), diracdec->decoder->seq_params.chroma));
+                  gst_diracdec_chroma_to_fourcc (diracdec->decoder->
+                      seq_params.chroma),
+                  diracdec->decoder->seq_params.chroma));
           c = FALSE;
           break;
         }

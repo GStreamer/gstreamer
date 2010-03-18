@@ -91,12 +91,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (SINK_CAPS));
 
-static const GstElementDetails gst_faac_details =
-GST_ELEMENT_DETAILS ("AAC audio encoder",
-    "Codec/Encoder/Audio",
-    "Free MPEG-2/4 AAC encoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 enum
 {
   ARG_0,
@@ -184,7 +178,10 @@ gst_faac_base_init (GstFaacClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_faac_details);
+  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
+      "Codec/Encoder/Audio",
+      "Free MPEG-2/4 AAC encoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
 }

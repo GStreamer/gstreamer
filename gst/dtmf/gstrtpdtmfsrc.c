@@ -144,13 +144,6 @@
 #define MIN_PACKET_REDUNDANCY 1
 #define MAX_PACKET_REDUNDANCY 5
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_dtmf_src_details =
-GST_ELEMENT_DETAILS ("RTP DTMF packet generator",
-    "Source/Network",
-    "Generates RTP DTMF packets",
-    "Zeeshan Ali <zeeshan.ali@nokia.com>");
-
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_src_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_src_debug
 
@@ -228,7 +221,9 @@ gst_rtp_dtmf_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_dtmf_src_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP DTMF packet generator", "Source/Network",
+      "Generates RTP DTMF packets", "Zeeshan Ali <zeeshan.ali@nokia.com>");
 }
 
 static void

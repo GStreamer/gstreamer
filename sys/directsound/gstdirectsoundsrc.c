@@ -63,12 +63,6 @@
 GST_DEBUG_CATEGORY_STATIC (directsoundsrc_debug);
 #define GST_CAT_DEFAULT directsoundsrc_debug
 
-static GstElementDetails gst_directsound_src_details =
-GST_ELEMENT_DETAILS ("Direct Sound Audio Src",
-    "Source/Audio",
-    "Capture from a soundcard via DIRECTSOUND",
-    "Joni Valtanen <joni.valtanen@movial.fi>");
-
 /* defaults here */
 #define DEFAULT_DEVICE 0
 
@@ -157,7 +151,10 @@ gst_directsound_src_base_init (gpointer g_class)
 
   GST_DEBUG ("initializing directsoundsrc base\n");
 
-  gst_element_class_set_details (element_class, &gst_directsound_src_details);
+  gst_element_class_set_details_simple (element_class, "Direct Sound Audio Src",
+      "Source/Audio",
+      "Capture from a soundcard via DIRECTSOUND",
+      "Joni Valtanen <joni.valtanen@movial.fi>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&directsound_src_src_factory));

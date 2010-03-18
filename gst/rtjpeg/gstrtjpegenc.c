@@ -23,13 +23,6 @@
 #endif
 #include "gstrtjpegenc.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtjpegenc_details =
-GST_ELEMENT_DETAILS ("RTjpeg video encoder",
-    "Codec/Encoder/Video",
-    "Encodes video in RTjpeg format",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 /* GstRTJpegEnc signals and args */
 enum
 {
@@ -84,7 +77,9 @@ gst_rtjpegenc_base_init (GstRTJpegEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &gst_rtjpegenc_details);
+  gst_element_class_set_details_simple (element_class, "RTjpeg video encoder",
+      "Codec/Encoder/Video",
+      "Encodes video in RTjpeg format", "Erik Walthinsen <omega@cse.ogi.edu>");
 }
 
 static void

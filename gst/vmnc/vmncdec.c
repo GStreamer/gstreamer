@@ -134,12 +134,6 @@ typedef struct
   GstElementClass parent_class;
 } GstVMncDecClass;
 
-static const GstElementDetails vmnc_dec_details =
-GST_ELEMENT_DETAILS ("VMnc video decoder",
-    "Codec/Decoder/Video",
-    "Decode VmWare video to raw (RGB) video",
-    "Michael Smith <msmith@xiph.org>");
-
 static GstStaticPadTemplate vmnc_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -177,7 +171,10 @@ gst_vmnc_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&vmnc_dec_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&vmnc_dec_sink_factory));
-  gst_element_class_set_details (element_class, &vmnc_dec_details);
+  gst_element_class_set_details_simple (element_class, "VMnc video decoder",
+      "Codec/Decoder/Video",
+      "Decode VmWare video to raw (RGB) video",
+      "Michael Smith <msmith@xiph.org>");
 }
 
 static void

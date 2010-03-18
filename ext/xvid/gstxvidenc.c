@@ -36,13 +36,6 @@
 #include <gst/video/video.h>
 #include "gstxvidenc.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_xvidenc_details =
-GST_ELEMENT_DETAILS ("XviD video encoder",
-    "Codec/Encoder/Video",
-    "XviD encoder based on xvidcore",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -228,7 +221,10 @@ gst_xvidenc_base_init (GstXvidEncClass * klass)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (element_class, &gst_xvidenc_details);
+  gst_element_class_set_details_simple (element_class, "XviD video encoder",
+      "Codec/Encoder/Video",
+      "XviD encoder based on xvidcore",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 /* add property pspec to klass using the counter count,

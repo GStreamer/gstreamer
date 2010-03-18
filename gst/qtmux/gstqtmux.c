@@ -155,8 +155,8 @@ gst_qt_mux_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstQTMuxClass *klass = (GstQTMuxClass *) g_class;
   GstQTMuxClassParams *params;
-  GstElementDetails details;
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
+  gchar *longname, *description;
 
   params =
       (GstQTMuxClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (g_class),
@@ -164,16 +164,14 @@ gst_qt_mux_base_init (gpointer g_class)
   g_assert (params != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("%s Muxer", params->prop->long_name);
-  details.klass = g_strdup ("Codec/Muxer");
-  details.description =
-      g_strdup_printf ("Multiplex audio and video into a %s file",
+  longname = g_strdup_printf ("%s Muxer", params->prop->long_name);
+  description = g_strdup_printf ("Multiplex audio and video into a %s file",
       params->prop->long_name);
-  details.author = "Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  gst_element_class_set_details_simple (element_class, longname,
+      "Codec/Muxer", description,
+      "Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>");
+  g_free (longname);
+  g_free (description);
 
   /* pad templates */
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,

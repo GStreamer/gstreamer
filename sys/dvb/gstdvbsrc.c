@@ -68,15 +68,6 @@ GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define LOF1 (9750*1000UL)
 #define LOF2 (10600*1000UL)
 
-
-static GstElementDetails dvbsrc_details = {
-  "DVB Source",
-  "Source/Video",
-  "Digital Video Broadcast Source",
-  "P2P-VCR, C-Lab, University of Paderborn\n"
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
-};
-
 /* Arguments */
 enum
 {
@@ -305,7 +296,11 @@ gst_dvbsrc_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&ts_src_factory));
 
-  gst_element_class_set_details (element_class, &dvbsrc_details);
+  gst_element_class_set_details_simple (element_class, "DVB Source",
+      "Source/Video",
+      "Digital Video Broadcast Source",
+      "P2P-VCR, C-Lab, University of Paderborn,"
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 

@@ -69,12 +69,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_kateparse_debug);
 #define GST_CAT_DEFAULT gst_kateparse_debug
 
-static const GstElementDetails gst_kate_parse_details =
-GST_ELEMENT_DETAILS ("Kate stream parser",
-    "Codec/Parser/Subtitle",
-    "parse raw kate streams",
-    "Vincent Penquerc'h <ogg.k.ogg.k at googlemail dot com>");
-
 static GstStaticPadTemplate gst_kate_parse_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -113,7 +107,10 @@ gst_kate_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_kate_parse_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_kate_parse_sink_factory));
-  gst_element_class_set_details (element_class, &gst_kate_parse_details);
+  gst_element_class_set_details_simple (element_class, "Kate stream parser",
+      "Codec/Parser/Subtitle",
+      "parse raw kate streams",
+      "Vincent Penquerc'h <ogg.k.ogg.k at googlemail dot com>");
 }
 
 static void

@@ -65,13 +65,11 @@ static void
 gst_cdxa_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static const GstElementDetails gst_cdxa_parse_details =
-      GST_ELEMENT_DETAILS ("(S)VCD parser",
+
+  gst_element_class_set_details_simple (element_class, "(S)VCD parser",
       "Codec/Parser",
       "Parse a .dat file from (S)VCD into raw MPEG-1",
       "Wim Taymans <wim.taymans@tvd.be>");
-
-  gst_element_class_set_details (element_class, &gst_cdxa_parse_details);
 
   /* register src pads */
   gst_element_class_add_pad_template (element_class,

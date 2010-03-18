@@ -60,13 +60,6 @@ GST_DEBUG_CATEGORY_STATIC (nuvdemux_debug);
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
 
-static const GstElementDetails gst_nuv_demux_details =
-GST_ELEMENT_DETAILS ("Nuv demuxer",
-    "Codec/Demuxer",
-    "Demultiplex a MythTV NuppleVideo .nuv file into audio and video",
-    "Renato Araujo Oliveira Filho <renato.filho@indt.org.br>,"
-    "Rosfran Borges <rosfran.borges@indt.org.br>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -139,7 +132,11 @@ gst_nuv_demux_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &gst_nuv_demux_details);
+  gst_element_class_set_details_simple (element_class, "Nuv demuxer",
+      "Codec/Demuxer",
+      "Demultiplex a MythTV NuppleVideo .nuv file into audio and video",
+      "Renato Araujo Oliveira Filho <renato.filho@indt.org.br>,"
+      "Rosfran Borges <rosfran.borges@indt.org.br>");
 }
 
 static void

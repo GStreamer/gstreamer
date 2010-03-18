@@ -31,11 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (realvideode_debug);
 #define GST_CAT_DEFAULT realvideode_debug
 
-static GstElementDetails realvideode_details =
-GST_ELEMENT_DETAILS ("RealVideo decoder",
-    "Codec/Decoder/Video", "Decoder for RealVideo streams",
-    "Lutz Mueller <lutz@topfrose.de>");
-
 static GstStaticPadTemplate snk_t =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-pn-realvideo, " "rmversion = (int) [ 2, 4 ]"));
@@ -635,7 +630,9 @@ gst_real_video_dec_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&snk_t));
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&src_t));
-  gst_element_class_set_details (ec, &realvideode_details);
+  gst_element_class_set_details_simple (ec, "RealVideo decoder",
+      "Codec/Decoder/Video", "Decoder for RealVideo streams",
+      "Lutz Mueller <lutz@topfrose.de>");
 }
 
 static void

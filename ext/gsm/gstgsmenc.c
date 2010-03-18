@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (gsmenc_debug);
 #define GST_CAT_DEFAULT (gsmenc_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_gsmenc_details =
-GST_ELEMENT_DETAILS ("GSM audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes GSM audio",
-    "Philippe Khalaf <burger@speedy.org>");
-
 /* GSMEnc signals and args */
 enum
 {
@@ -111,7 +104,9 @@ gst_gsmenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gsmenc_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gsmenc_src_template));
-  gst_element_class_set_details (element_class, &gst_gsmenc_details);
+  gst_element_class_set_details_simple (element_class, "GSM audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes GSM audio", "Philippe Khalaf <burger@speedy.org>");
 }
 
 static void

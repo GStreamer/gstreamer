@@ -80,13 +80,14 @@ gst_ladspa_base_init (gpointer g_class)
   GstLADSPAClass *klass = (GstLADSPAClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
-  GstElementDetails *details;
   LADSPA_Descriptor *desc;
   guint j, audio_in_count, audio_out_count, control_in_count, control_out_count;
-  gchar *klass_tags;
+  const gchar *klass_tags;
+  gchar *longname, *author;
 #if HAVE_LRDF
-  gchar *uri, *extra_klass_tags = NULL;
+  gchar *uri;
 #endif
+  gchar *extra_klass_tags = NULL;
 
   GST_DEBUG ("base_init %p", g_class);
 
@@ -138,15 +139,12 @@ gst_ladspa_base_init (gpointer g_class)
     }
   }
 
-  /* construct the element details struct */
-  details = g_new0 (GstElementDetails, 1);
-  details->longname = g_locale_to_utf8 (desc->Name, -1, NULL, NULL, NULL);
-  if (!details->longname)
-    details->longname = g_strdup ("no description available");
-  details->description = details->longname;
-  details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
-  if (!details->author)
-    details->author = g_strdup ("no author available");
+  longname = g_locale_to_utf8 (desc->Name, -1, NULL, NULL, NULL);
+  if (!longname)
+    longname = g_strdup ("no description available");
+  author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
+  if (!author)
+    author = g_strdup ("no author available");
 
 #if HAVE_LRDF
   /* libldrf support, we want to get extra class information here */
@@ -236,18 +234,17 @@ gst_ladspa_base_init (gpointer g_class)
 
 #if HAVE_LRDF
   if (extra_klass_tags) {
-    details->klass = g_strconcat (klass_tags, extra_klass_tags, NULL);
+    char *s = g_strconcat (klass_tags, extra_klass_tags, NULL);
     g_free (extra_klass_tags);
-  } else
-#endif
-  {
-    details->klass = klass_tags;
+    extra_klass_tags = s;
   }
-  GST_INFO ("tags : %s", details->klass);
-  gst_element_class_set_details (element_class, details);
-  g_free (details->longname);
-  g_free (details->author);
-  g_free (details);
+#endif
+  GST_INFO ("tags : %s", klass_tags);
+  gst_element_class_set_details_simple (element_class, longname,
+      extra_klass_tags ? extra_klass_tags : klass_tags, longname, author);
+  g_free (longname);
+  g_free (author);
+  g_free (extra_klass_tags);
 
   klass->audio_in_portnums = g_new0 (gint, gsp_class->num_audio_in);
   klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);

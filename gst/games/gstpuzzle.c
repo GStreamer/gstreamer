@@ -120,17 +120,16 @@ gst_puzzle_get_type (void)
 static void
 gst_puzzle_base_init (gpointer g_class)
 {
-  static const GstElementDetails puzzle_details =
-      GST_ELEMENT_DETAILS ("A simple puzzle",
-      "Filter/Effect/Video/Games",
-      "A simple puzzle, use arrow keys and space to restart/solve",
-      "Benjamin Otte <otte@gnome.org>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
   GstVideofilterFormat *f;
 
-  gst_element_class_set_details (element_class, &puzzle_details);
+  gst_element_class_set_details_simple (element_class, "A simple puzzle",
+      "Filter/Effect/Video/Games",
+      "A simple puzzle, use arrow keys and space to restart/solve",
+      "Benjamin Otte <otte@gnome.org>");
 
   for (i = 0; i < gst_video_format_count; i++) {
     f = g_new0 (GstVideofilterFormat, 1);

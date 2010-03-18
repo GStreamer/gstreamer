@@ -239,13 +239,7 @@ done:
 static void
 gst_metadata_mux_base_init (gpointer gclass)
 {
-/* *INDENT-OFF* */
-  static GstElementDetails element_details = {
-    "Metadata muxer",
-    "Muxer/Formatter/Metadata",
-    "Write metadata (EXIF, IPTC and XMP) into a image stream",
-    "Edgard Lima <edgard.lima@indt.org.br>"
-  };
+
 /* *INDENT-ON* */
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -253,7 +247,10 @@ gst_metadata_mux_base_init (gpointer gclass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Metadata muxer",
+      "Muxer/Formatter/Metadata",
+      "Write metadata (EXIF, IPTC and XMP) into a image stream",
+      "Edgard Lima <edgard.lima@indt.org.br>");
 }
 
 static void

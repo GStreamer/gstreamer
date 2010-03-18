@@ -164,13 +164,6 @@ enum
   DTMF_KEY_EVENT_D = 15,
 };
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_dtmfdepay_details =
-GST_ELEMENT_DETAILS ("RTP DTMF packet depayloader",
-    "Codec/Depayloader/Network",
-    "Generates DTMF Sound from telephone-event RTP packets",
-    "Youness Alaoui <youness.alaoui@collabora.co.uk>");
-
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_depay_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_depay_debug
 
@@ -242,7 +235,10 @@ gst_rtp_dtmf_depay_base_init (gpointer klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_depay_debug,
       "rtpdtmfdepay", 0, "rtpdtmfdepay element");
-  gst_element_class_set_details (element_class, &gst_rtp_dtmfdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP DTMF packet depayloader", "Codec/Depayloader/Network",
+      "Generates DTMF Sound from telephone-event RTP packets",
+      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 }
 
 static void

@@ -115,19 +115,14 @@ static void gst_kate_tag_dispose (GObject * object);
 GST_BOILERPLATE_FULL (GstKateTag, gst_kate_tag, GstKateParse,
     GST_TYPE_KATE_PARSE, _do_init);
 
-static GstElementDetails kate_tag_details =
-GST_ELEMENT_DETAILS ("Kate stream tagger",
-    "Formatter/Metadata",
-    "Retags kate streams",
-    "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
-
-
 static void
 gst_kate_tag_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &kate_tag_details);
+  gst_element_class_set_details_simple (element_class, "Kate stream tagger",
+      "Formatter/Metadata",
+      "Retags kate streams", "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }
 
 static void

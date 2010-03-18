@@ -46,13 +46,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (h264_parse_debug);
 #define GST_CAT_DEFAULT h264_parse_debug
 
-static const GstElementDetails gst_h264_parse_details =
-GST_ELEMENT_DETAILS ("H264Parse",
-    "Codec/Parser/Video",
-    "Parses raw h264 stream",
-    "Michal Benes <michal.benes@itonis.tv>,"
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 #define DEFAULT_SPLIT_PACKETIZED     FALSE
 #define DEFAULT_ACCESS_UNIT          FALSE
 #define DEFAULT_OUTPUT_FORMAT        GST_H264_PARSE_FORMAT_INPUT
@@ -896,7 +889,11 @@ gst_h264_parse_base_init (gpointer g_class)
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_h264_parse_details);
+  gst_element_class_set_details_simple (gstelement_class, "H264Parse",
+      "Codec/Parser/Video",
+      "Parses raw h264 stream",
+      "Michal Benes <michal.benes@itonis.tv>,"
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (h264_parse_debug, "h264parse", 0, "h264 parser");
 }

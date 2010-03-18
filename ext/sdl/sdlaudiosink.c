@@ -26,13 +26,6 @@
 GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
 #define GST_CAT_DEFAULT sdl_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_sdlaudio_sink_details =
-GST_ELEMENT_DETAILS ("SDL audio sink",
-    "Sink/Audio",
-    "Output to a sound card via SDLAUDIO",
-    "Edgard Lima <edgard.lima@indt.org.br>");
-
 static void gst_sdlaudio_sink_dispose (GObject * object);
 
 static GstCaps *gst_sdlaudio_sink_getcaps (GstBaseSink * bsink);
@@ -151,11 +144,15 @@ gst_sdlaudio_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_sdlaudio_sink_details);
+  gst_element_class_set_details_simple (element_class, "SDL audio sink",
+      "Sink/Audio",
+      "Output to a sound card via SDLAUDIO",
+      "Edgard Lima <edgard.lima@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sdlaudiosink_sink_factory));
 }
+
 static void
 gst_sdlaudio_sink_class_init (GstSDLAudioSinkClass * klass)
 {

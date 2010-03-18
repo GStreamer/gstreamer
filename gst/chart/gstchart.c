@@ -62,14 +62,6 @@ struct _GstChartClass
 
 GType gst_chart_get_type (void);
 
-
-/* elementfactory information */
-static const GstElementDetails gst_chart_details =
-GST_ELEMENT_DETAILS ("Chart drawer",
-    "Visualization",
-    "Takes frames of data and outputs video frames of a chart of data",
-    "Richard Boulton <richard@tartarus.org>");
-
 /* signals and args */
 enum
 {
@@ -150,7 +142,10 @@ gst_chart_base_init (gpointer g_class)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &gst_chart_details);
+  gst_element_class_set_details_simple (element_class, "Chart drawer",
+      "Visualization",
+      "Takes frames of data and outputs video frames of a chart of data",
+      "Richard Boulton <richard@tartarus.org>");
 }
 
 static void

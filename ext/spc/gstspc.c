@@ -28,12 +28,6 @@
 #include <glib/gprintf.h>
 #include <glib.h>
 
-static const GstElementDetails gst_spc_dec_details =
-GST_ELEMENT_DETAILS ("OpenSPC SPC decoder",
-    "Codec/Audio/Decoder",
-    "Uses OpenSPC to emulate an SPC processor",
-    "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>");
-
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-spc"));
@@ -109,7 +103,10 @@ gst_spc_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_spc_dec_details);
+  gst_element_class_set_details_simple (element_class, "OpenSPC SPC decoder",
+      "Codec/Audio/Decoder",
+      "Uses OpenSPC to emulate an SPC processor",
+      "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));

@@ -39,12 +39,6 @@
 
 #include <gst/audio/gstringbuffer.h>
 
-static const GstElementDetails gst_audio_ringbuffer_details =
-GST_ELEMENT_DETAILS ("AudioRingbuffer",
-    "Generic",
-    "Asynchronous Audio ringbuffer",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -331,8 +325,9 @@ gst_audio_ringbuffer_class_init (GstAudioRingbufferClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (gstelement_class,
-      &gst_audio_ringbuffer_details);
+  gst_element_class_set_details_simple (gstelement_class, "AudioRingbuffer",
+      "Generic",
+      "Asynchronous Audio ringbuffer", "Wim Taymans <wim.taymans@gmail.com>");
 
   /* set several parent class virtual functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_audio_ringbuffer_finalize);

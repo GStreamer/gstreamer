@@ -34,9 +34,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-/*GstElementDetails gst_afsrc_details;*/
-
-
 #define GST_TYPE_AFSRC \
   (gst_afsrc_get_type())
 #define GST_AFSRC(obj) \

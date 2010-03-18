@@ -28,13 +28,6 @@
 
 static GstPadTemplate *enc_src_template, *enc_sink_template;
 
-/* elementfactory information */
-static const GstElementDetails tarkinenc_details =
-GST_ELEMENT_DETAILS ("Tarkin video encoder",
-    "Codec/Encoder/Video",
-    "Encodes video in OGG Tarkin format",
-    "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>");
-
 /* TarkinEnc signals and args */
 enum
 {
@@ -131,7 +124,10 @@ gst_tarkinenc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, enc_sink_template);
   gst_element_class_add_pad_template (element_class, enc_src_template);
 
-  gst_element_class_set_details (element_class, &tarkinenc_details);
+  gst_element_class_set_details_simple (element_class, "Tarkin video encoder",
+      "Codec/Encoder/Video",
+      "Encodes video in OGG Tarkin format",
+      "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

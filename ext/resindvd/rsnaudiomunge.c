@@ -80,12 +80,6 @@ rsn_audiomunge_class_init (RsnAudioMungeClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) (klass);
   GstElementClass *element_class = (GstElementClass *) (klass);
-  static GstElementDetails element_details = {
-    "RsnAudioMunge",
-    "Audio/Filter",
-    "Resin DVD audio stream regulator",
-    "Jan Schmidt <thaytan@noraisin.net>"
-  };
 
   GST_DEBUG_CATEGORY_INIT (rsn_audiomunge_debug, "rsnaudiomunge",
       0, "ResinDVD audio stream regulator");
@@ -95,7 +89,9 @@ rsn_audiomunge_class_init (RsnAudioMungeClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "RsnAudioMunge",
+      "Audio/Filter",
+      "Resin DVD audio stream regulator", "Jan Schmidt <thaytan@noraisin.net>");
 
   gobject_class->set_property = rsn_audiomunge_set_property;
   gobject_class->get_property = rsn_audiomunge_get_property;

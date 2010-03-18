@@ -33,13 +33,6 @@
 GST_DEBUG_CATEGORY_STATIC (audioresample_debug);
 #define GST_CAT_DEFAULT audioresample_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_audioresample_details =
-GST_ELEMENT_DETAILS ("Audio scaler",
-    "Filter/Converter/Audio",
-    "Resample audio",
-    "David Schleef <ds@schleef.org>");
-
 /* Audioresample signals and args */
 enum
 {
@@ -127,7 +120,9 @@ static void gst_audioresample_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_audioresample_sink_template));
 
-  gst_element_class_set_details (gstelement_class, &gst_audioresample_details);
+  gst_element_class_set_details_simple (gstelement_class, "Audio scaler",
+      "Filter/Converter/Audio",
+      "Resample audio", "David Schleef <ds@schleef.org>");
 }
 
 static void gst_audioresample_class_init (AudioresampleClass * klass)

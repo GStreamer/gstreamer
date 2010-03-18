@@ -76,12 +76,6 @@ static gboolean gst_dccp_server_src_stop (GstBaseSrc * bsrc);
 
 GST_DEBUG_CATEGORY_STATIC (dccpserversrc_debug);
 
-static const GstElementDetails gst_dccp_server_src_details =
-GST_ELEMENT_DETAILS ("DCCP server source",
-    "Source/Network",
-    "Receive data as a server over the network via DCCP",
-    "E-Phone Team at Federal University of Campina Grande <leandroal@gmail.com>");
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -271,7 +265,10 @@ gst_dccp_server_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details (element_class, &gst_dccp_server_src_details);
+  gst_element_class_set_details_simple (element_class, "DCCP server source",
+      "Source/Network",
+      "Receive data as a server over the network via DCCP",
+      "E-Phone Team at Federal University of Campina Grande <leandroal@gmail.com>");
 }
 
 

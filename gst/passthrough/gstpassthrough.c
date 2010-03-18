@@ -29,13 +29,6 @@
 #define PASSTHRU_BUF_SIZE 4096
 #define PASSTHRU_NUM_BUFS 4
 
-/* elementfactory information */
-static const GstElementDetails passthrough_details =
-GST_ELEMENT_DETAILS ("Passthrough",
-    "Filter/Effect/Audio",
-    "Transparent filter for audio/raw (boilerplate for effects)",
-    "Thomas <thomas@apestaart.org>, " "Andy Wingo <apwingo@eos.ncsu.edu>");
-
 enum
 {
   /* FILL ME */
@@ -169,7 +162,10 @@ passthrough_base_init (GstPassthroughClass * klass)
       gst_static_pad_template_get (&passthrough_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&passthrough_sink_template));
-  gst_element_class_set_details (element_class, &passthrough_details);
+  gst_element_class_set_details_simple (element_class, "Passthrough",
+      "Filter/Effect/Audio",
+      "Transparent filter for audio/raw (boilerplate for effects)",
+      "Thomas <thomas@apestaart.org>, " "Andy Wingo <apwingo@eos.ncsu.edu>");
 }
 
 static void

@@ -34,13 +34,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpasfpay_debug);
 #define GST_CAT_DEFAULT (rtpasfpay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_asf_pay_details =
-GST_ELEMENT_DETAILS ("RTP ASF payloader",
-    "Codec/Payloader/Network",
-    "Payload-encodes ASF into RTP packets (MS_RTSP)",
-    "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
-
 static GstStaticPadTemplate gst_rtp_asf_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -96,7 +89,10 @@ gst_rtp_asf_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_asf_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_asf_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_asf_pay_details);
+  gst_element_class_set_details_simple (element_class, "RTP ASF payloader",
+      "Codec/Payloader/Network",
+      "Payload-encodes ASF into RTP packets (MS_RTSP)",
+      "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
 }
 
 static void

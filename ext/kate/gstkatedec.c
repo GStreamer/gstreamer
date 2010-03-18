@@ -132,18 +132,17 @@ static gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query);
 static void
 gst_kate_dec_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details =
-      GST_ELEMENT_DETAILS ("Kate stream text decoder",
-      "Codec/Decoder/Subtitle",
-      "Decodes Kate text streams",
-      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "Kate stream text decoder", "Codec/Decoder/Subtitle",
+      "Decodes Kate text streams",
+      "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }
 
 /* initialize the plugin's class */

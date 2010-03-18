@@ -88,13 +88,6 @@ static AuBool NAS_EventHandler (AuServer * aud, AuEvent * ev,
 static AuDeviceID NAS_getDevice (AuServer * aud, int numTracks);
 static int NAS_createFlow (GstNasSink * sink, GstRingBufferSpec * spec);
 
-static const GstElementDetails nas_sink_details =
-GST_ELEMENT_DETAILS ("NAS audio sink",
-    "Sink/Audio",
-    "Plays audio to a Network Audio Server",
-    "Laurent Vivier <Laurent.Vivier@bull.net>, "
-    "Arwed v. Merkatz <v.merkatz@gmx.net>");
-
 GST_BOILERPLATE (GstNasSink, gst_nas_sink, GstAudioSink, GST_TYPE_AUDIO_SINK);
 
 static void
@@ -104,7 +97,11 @@ gst_nas_sink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &nas_sink_details);
+  gst_element_class_set_details_simple (element_class, "NAS audio sink",
+      "Sink/Audio",
+      "Plays audio to a Network Audio Server",
+      "Laurent Vivier <Laurent.Vivier@bull.net>, "
+      "Arwed v. Merkatz <v.merkatz@gmx.net>");
 }
 
 static void

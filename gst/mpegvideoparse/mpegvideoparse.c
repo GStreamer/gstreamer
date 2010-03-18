@@ -44,14 +44,6 @@
 GST_DEBUG_CATEGORY_STATIC (mpv_parse_debug);
 #define GST_CAT_DEFAULT mpv_parse_debug
 
-/* elementfactory information */
-static GstElementDetails mpegvideoparse_details =
-GST_ELEMENT_DETAILS ("MPEG video elementary stream parser",
-    "Codec/Parser/Video",
-    "Parses and frames MPEG-1 and MPEG-2 elementary video streams",
-    "Wim Taymans <wim.taymans@chello.be>\n"
-    "Jan Schmidt <thaytan@mad.scientist.com>");
-
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -140,7 +132,12 @@ gst_mpegvideoparse_base_init (MpegVideoParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &mpegvideoparse_details);
+  gst_element_class_set_details_simple (element_class,
+      "MPEG video elementary stream parser",
+      "Codec/Parser/Video",
+      "Parses and frames MPEG-1 and MPEG-2 elementary video streams",
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void

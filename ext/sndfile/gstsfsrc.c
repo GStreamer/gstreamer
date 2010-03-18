@@ -29,13 +29,6 @@
 
 #include "gstsfsrc.h"
 
-
-static const GstElementDetails sf_src_details =
-GST_ELEMENT_DETAILS ("Sndfile source",
-    "Source/Audio",
-    "Read audio streams from disk using libsndfile",
-    "Andy Wingo <wingo at pobox dot com>");
-
 enum
 {
   PROP_0,
@@ -93,7 +86,10 @@ gst_sf_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sf_src_factory));
 
-  gst_element_class_set_details (gstelement_class, &sf_src_details);
+  gst_element_class_set_details_simple (gstelement_class, "Sndfile source",
+      "Source/Audio",
+      "Read audio streams from disk using libsndfile",
+      "Andy Wingo <wingo at pobox dot com>");
   GST_DEBUG_CATEGORY_INIT (gst_sf_src_debug, "sfsrc", 0, "sfsrc element");
 }
 

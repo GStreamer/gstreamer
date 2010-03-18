@@ -29,13 +29,6 @@
 #include <gst/video/video.h>
 #include "gstxviddec.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_xviddec_details =
-GST_ELEMENT_DETAILS ("XviD video decoder",
-    "Codec/Decoder/Video",
-    "XviD decoder based on xvidcore",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -107,7 +100,10 @@ gst_xviddec_base_init (GstXvidDecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_xviddec_details);
+  gst_element_class_set_details_simple (element_class, "XviD video decoder",
+      "Codec/Decoder/Video",
+      "XviD decoder based on xvidcore",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 }
 
 static void

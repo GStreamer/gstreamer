@@ -138,10 +138,10 @@ static void decompressCb (void *decompressionTrackingRefCon,
 static void
 qtwrapper_video_decoder_base_init (QTWrapperVideoDecoderClass * klass)
 {
-  GstElementDetails details;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gchar *name = NULL;
   gchar *info = NULL;
+  char *longname, *description;
   ComponentDescription desc;
   QTWrapperVideoDecoderParams *params;
 
@@ -153,19 +153,17 @@ qtwrapper_video_decoder_base_init (QTWrapperVideoDecoderClass * klass)
   get_name_info_from_component (params->component, &desc, &name, &info);
 
   /* Fill in details */
-  details.longname =
+  longname =
       g_strdup_printf ("QTWrapper Video Decoder : %s", GST_STR_NULL (name));
-  details.klass = "Codec/Decoder/Video";
-  details.description =
+  description =
       g_strdup_printf ("QTWrapper SCAudio wrapper for decoder: %s",
       GST_STR_NULL (info));
-  details.author =
+  gst_element_class_set_details_simple (element_class, longname,
+      "Codec/Decoder/Video", description,
       "Fluendo <gstreamer@fluendo.com>, "
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>";
-  gst_element_class_set_details (element_class, &details);
-
-  g_free (details.longname);
-  g_free (details.description);
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
+  g_free (longname);
+  g_free (description);
   g_free (name);
   g_free (info);
 

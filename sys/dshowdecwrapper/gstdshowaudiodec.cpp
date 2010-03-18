@@ -310,23 +310,19 @@ HRESULT AudioFakeSink::CheckMediaType(const CMediaType *pmt)
 static void
 gst_dshowaudiodec_base_init (gpointer klass)
 {
-  GstDshowAudioDecClass *audiodec_class = (GstDshowAudioDecClass *)klass;
+  GstDshowAudioDecClass *audiodec_class = (GstDshowAudioDecClass *) klass;
   GstPadTemplate *src, *sink;
   GstCaps *srccaps, *sinkcaps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details;
+  char *description;
 
   audiodec_class->entry = tmp;
-  details.longname = g_strdup_printf ("DirectShow %s Decoder Wrapper",
-      tmp->element_longname);
-  details.klass = g_strdup ("Codec/Decoder/Audio");
-  details.description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
-      tmp->element_longname);
-  details.author = "Sebastien Moutte <sebastien@moutte.net>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+      tmp->element_description);
+  gst_element_class_set_details_simple (element_class, description,
+      "Codec/Decoder/Audio", description,
+      "Sebastien Moutte <sebastien@moutte.net>");
+  g_free (description);
 
   sinkcaps = gst_caps_from_string (tmp->sinkcaps);
 

@@ -85,18 +85,16 @@ gst_tta_parse_get_type (void)
 static void
 gst_tta_parse_base_init (GstTtaParseClass * klass)
 {
-  static const GstElementDetails plugin_details =
-      GST_ELEMENT_DETAILS ("TTA file parser",
-      "Codec/Demuxer/Audio",
-      "Parses TTA files",
-      "Arwed v. Merkatz <v.merkatz@gmx.net>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "TTA file parser",
+      "Codec/Demuxer/Audio",
+      "Parses TTA files", "Arwed v. Merkatz <v.merkatz@gmx.net>");
 }
 
 static void

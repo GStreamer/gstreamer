@@ -178,17 +178,16 @@ static void
 gst_amrwbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-WB audio encoder",
-      "Codec/Encoder/Audio",
-      "Adaptive Multi-Rate Wideband audio encoder",
-      "Renato Araujo <renato.filho@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &details);
+  gst_element_class_set_details_simple (element_class, "AMR-WB audio encoder",
+      "Codec/Encoder/Audio",
+      "Adaptive Multi-Rate Wideband audio encoder",
+      "Renato Araujo <renato.filho@indt.org.br>");
 }
 
 static void

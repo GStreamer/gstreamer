@@ -113,19 +113,16 @@ static GstCaps *gst_hdvparse_transform_caps (GstBaseTransform * trans,
 static void
 gst_hdvparse_base_init (gpointer klass)
 {
-  static GstElementDetails element_details = {
-    "HDVParser",
-    "Data/Parser",
-    "HDV private stream Parser",
-    "Edward Hervey <bilboed@bilboed.com>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "HDVParser",
+      "Data/Parser",
+      "HDV private stream Parser", "Edward Hervey <bilboed@bilboed.com>");
 }
 
 /* initialize the HDVParse's class */

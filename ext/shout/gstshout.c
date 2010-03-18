@@ -22,13 +22,6 @@
 #endif
 #include "gstshout.h"
 
-/* elementfactory information */
-static const GstElementDetails icecastsend_details =
-GST_ELEMENT_DETAILS ("Icecast network sink",
-    "Sink/Network",
-    "Sends data to an icecast server using libshout",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 static char *SHOUT_ERRORS[] = {
   "ok",
   "insane",
@@ -119,7 +112,10 @@ gst_icecastsend_base_init (GstIcecastSendClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_set_details (element_class, &icecastsend_details);
+  gst_element_class_set_details_simple (element_class, "Icecast network sink",
+      "Sink/Network",
+      "Sends data to an icecast server using libshout",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

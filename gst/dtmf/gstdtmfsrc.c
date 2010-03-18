@@ -194,13 +194,6 @@ enum
   DTMF_KEY_EVENT_D = 15,
 };
 
-/* elementfactory information */
-static const GstElementDetails gst_dtmf_src_details =
-GST_ELEMENT_DETAILS ("DTMF tone generator",
-    "Source/Audio",
-    "Generates DTMF tones",
-    "Youness Alaoui <youness.alaoui@collabora.co.uk>");
-
 GST_DEBUG_CATEGORY_STATIC (gst_dtmf_src_debug);
 #define GST_CAT_DEFAULT gst_dtmf_src_debug
 
@@ -253,7 +246,10 @@ gst_dtmf_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dtmf_src_template));
 
-  gst_element_class_set_details (element_class, &gst_dtmf_src_details);
+  gst_element_class_set_details_simple (element_class, "DTMF tone generator",
+      "Source/Audio",
+      "Generates DTMF tones",
+      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 }
 
 static void

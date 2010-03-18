@@ -678,17 +678,14 @@ static GstRingBuffer *gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc *
 static void
 gst_jack_audio_src_base_init (gpointer gclass)
 {
-  static GstElementDetails gst_jack_audio_src_details = {
-    "Audio Source (Jack)",
-    "Source/Audio",
-    "Input from Jack",
-    "Tristan Matthews <tristan@sat.qc.ca>"
-  };
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &gst_jack_audio_src_details);
+  gst_element_class_set_details_simple (element_class, "Audio Source (Jack)",
+      "Source/Audio",
+      "Input from Jack", "Tristan Matthews <tristan@sat.qc.ca>");
 }
 
 /* initialize the jack_audio_src's class */

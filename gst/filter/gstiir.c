@@ -35,14 +35,6 @@
 #define GST_CAT_DEFAULT gst_iir_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails iir_details =
-GST_ELEMENT_DETAILS ("Infinite Impulse Response (IIR) filter",
-    "Filter/Effect/Audio",
-    "IIR filter based on vorbis code",
-    "Monty <monty@xiph.org>, "
-    "Thomas Vander Stichele <thomas at apestaart dot org>, "
-    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
-
 /* Filter signals and args */
 enum
 {
@@ -110,7 +102,12 @@ gst_iir_base_init (gpointer g_class)
       gst_static_pad_template_get (&iir_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&iir_sink_template));
-  gst_element_class_set_details (element_class, &iir_details);
+  gst_element_class_set_details_simple (element_class,
+      "Infinite Impulse Response (IIR) filter", "Filter/Effect/Audio",
+      "IIR filter based on vorbis code",
+      "Monty <monty@xiph.org>, "
+      "Thomas Vander Stichele <thomas at apestaart dot org>, "
+      "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
 }
 
 static void

@@ -365,24 +365,20 @@ HRESULT VideoFakeSink::CheckMediaType(const CMediaType *pmt)
 static void
 gst_dshowvideodec_base_init (gpointer klass)
 {
-  GstDshowVideoDecClass *videodec_class = (GstDshowVideoDecClass *)klass;
+  GstDshowVideoDecClass *videodec_class = (GstDshowVideoDecClass *) klass;
   GstPadTemplate *src, *sink;
   GstCaps *srccaps, *sinkcaps;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details;
+  char *description;
 
   videodec_class->entry = tmp;
 
-  details.longname = g_strdup_printf ("DirectShow %s Decoder Wrapper",
+  description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
       tmp->element_longname);
-  details.klass = g_strdup ("Codec/Decoder/Video");
-  details.description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
-      tmp->element_longname);
-  details.author = "Sebastien Moutte <sebastien@moutte.net>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  gst_element_class_set_details_simple (element_class, description,
+      "Codec/Decoder/Video", description,
+      "Sebastien Moutte <sebastien@moutte.net>");
+  g_free (description);
 
   sinkcaps = gst_caps_from_string (tmp->sinkcaps);
   gst_caps_set_simple (sinkcaps,
