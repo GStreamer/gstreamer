@@ -43,13 +43,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_mux_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mux_details =
-GST_ELEMENT_DETAILS ("RTP muxer",
-    "Codec/Muxer",
-    "multiplex N rtp streams into one",
-    "Zeeshan Ali <first.last@nokia.com>");
-
 enum
 {
   ARG_0,
@@ -111,7 +104,9 @@ gst_rtp_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mux_details);
+  gst_element_class_set_details_simple (element_class, "RTP muxer",
+      "Codec/Muxer",
+      "multiplex N rtp streams into one", "Zeeshan Ali <first.last@nokia.com>");
 }
 
 static void

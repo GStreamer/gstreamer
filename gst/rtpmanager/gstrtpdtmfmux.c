@@ -71,13 +71,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_mux_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_dtmf_mux_details =
-GST_ELEMENT_DETAILS ("RTP muxer",
-    "Codec/Muxer",
-    "mixes RTP DTMF streams into other RTP streams",
-    "Zeeshan Ali <first.last@nokia.com>");
-
 enum
 {
   SIGNAL_LOCKING_STREAM,
@@ -106,7 +99,10 @@ gst_rtp_dtmf_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_rtp_dtmf_mux_details);
+  gst_element_class_set_details_simple (element_class, "RTP muxer",
+      "Codec/Muxer",
+      "mixes RTP DTMF streams into other RTP streams",
+      "Zeeshan Ali <first.last@nokia.com>");
 }
 
 static void
