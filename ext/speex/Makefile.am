@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstspeex.la
 libgstspeex_la_SOURCES = gstspeex.c gstspeexdec.c gstspeexenc.c
 libgstspeex_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(SPEEX_CFLAGS)
 libgstspeex_la_LIBADD = \

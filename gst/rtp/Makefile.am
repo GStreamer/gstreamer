@@ -74,12 +74,13 @@ else
 WINSOCK2_LIBS =
 endif
 
-libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 		-lgstaudio-@GST_MAJORMINOR@ \
                 -lgsttag-@GST_MAJORMINOR@ \
-                -lgstrtp-@GST_MAJORMINOR@ $(WINSOCK2_LIBS) \
-		$(LIBM)
+                -lgstrtp-@GST_MAJORMINOR@ \
+		$(GST_BASE_LIBS) $(GST_LIBS) \
+		$(WINSOCK2_LIBS) $(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 libgstrtp_la_LIBTOOLFLAGS = --tag=disable-static
 

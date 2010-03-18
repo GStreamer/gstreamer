@@ -12,8 +12,7 @@ noinst_HEADERS = \
 	gstavidemux.h \
 	gstavisubtitle.h
 
-libgstavi_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs
+libgstavi_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstavi_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \

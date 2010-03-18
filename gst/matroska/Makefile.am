@@ -21,8 +21,7 @@ noinst_HEADERS = \
 libgstmatroska_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs
+	$(GST_CFLAGS)
 libgstmatroska_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstriff-@GST_MAJORMINOR@ \
