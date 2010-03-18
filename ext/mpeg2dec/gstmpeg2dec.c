@@ -45,13 +45,6 @@ typedef gint mpeg2_state_t;
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_mpeg2dec_details =
-GST_ELEMENT_DETAILS ("mpeg1 and mpeg2 video decoder",
-    "Codec/Decoder/Video",
-    "Uses libmpeg2 to decode MPEG video streams",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 /* Send a warning message about decoding errors after receiving this many
  * STATE_INVALID return values from mpeg2_parse. -1 means never.
  */
@@ -174,7 +167,10 @@ gst_mpeg2dec_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&user_data_template_factory));
 #endif
-  gst_element_class_set_details (element_class, &gst_mpeg2dec_details);
+  gst_element_class_set_details_simple (element_class,
+      "mpeg1 and mpeg2 video decoder", "Codec/Decoder/Video",
+      "Uses libmpeg2 to decode MPEG video streams",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

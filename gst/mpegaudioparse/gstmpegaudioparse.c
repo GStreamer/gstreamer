@@ -64,15 +64,6 @@ mpeg_audio_seek_entry_free (MPEGAudioSeekEntry * entry)
   g_slice_free (MPEGAudioSeekEntry, entry);
 }
 
-/* elementfactory information */
-static GstElementDetails mp3parse_details = {
-  "MPEG1 Audio Parser",
-  "Codec/Parser/Audio",
-  "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
-  "Jan Schmidt <thaytan@mad.scientist.com>\n"
-      "Erik Walthinsen <omega@cse.ogi.edu>"
-};
-
 static GstStaticPadTemplate mp3_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -297,7 +288,11 @@ gst_mp3parse_base_init (gpointer klass)
 
   GST_DEBUG_CATEGORY_INIT (mp3parse_debug, "mp3parse", 0, "MPEG Audio Parser");
 
-  gst_element_class_set_details (element_class, &mp3parse_details);
+  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
+      "Codec/Parser/Audio",
+      "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",
+      "Jan Schmidt <thaytan@mad.scientist.com>,"
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 }
 
 static void

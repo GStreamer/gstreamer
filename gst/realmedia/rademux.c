@@ -47,13 +47,6 @@
 
 #include <string.h>
 
-static GstElementDetails real_audio_demux_details = {
-  "RealAudio Demuxer",
-  "Codec/Demuxer",
-  "Demultiplex a RealAudio file",
-  "Tim-Philipp Müller <tim centricular net>"
-};
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -93,7 +86,10 @@ gst_real_audio_demux_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (element_class, &real_audio_demux_details);
+  gst_element_class_set_details_simple (element_class, "RealAudio Demuxer",
+      "Codec/Demuxer",
+      "Demultiplex a RealAudio file",
+      "Tim-Philipp Müller <tim centricular net>");
 
   GST_DEBUG_CATEGORY_INIT (real_audio_demux_debug, "rademux",
       0, "Demuxer for RealAudio streams");

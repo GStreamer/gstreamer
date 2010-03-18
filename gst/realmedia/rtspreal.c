@@ -44,13 +44,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtspreal_debug);
 #define GST_CAT_DEFAULT (rtspreal_debug)
 
-/* elementfactory information */
-static const GstElementDetails rtspreal_details =
-GST_ELEMENT_DETAILS ("RealMedia RTSP Extension",
-    "Network/Extension/Protocol",
-    "Extends RTSP so that it can handle RealMedia setup",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 #define SERVER_PREFIX "RealServer"
 #define DEFAULT_BANDWIDTH	"10485800"
 
@@ -693,7 +686,10 @@ gst_rtsp_real_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &rtspreal_details);
+  gst_element_class_set_details_simple (element_class,
+      "RealMedia RTSP Extension", "Network/Extension/Protocol",
+      "Extends RTSP so that it can handle RealMedia setup",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

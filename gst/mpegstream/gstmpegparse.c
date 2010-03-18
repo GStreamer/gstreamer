@@ -41,14 +41,6 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_SEEK);
  */
 #define MP_SCR_RATE_HYST 0.08
 
-/* elementfactory information */
-static GstElementDetails mpeg_parse_details = {
-  "MPEG System Parser",
-  "Codec/Parser",
-  "Parses MPEG1 and MPEG2 System Streams",
-  "Erik Walthinsen <omega@cse.ogi.edu>\n" "Wim Taymans <wim.taymans@chello.be>"
-};
-
 #define CLASS(o)        GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
 
 #define DEFAULT_MAX_SCR_GAP     120000
@@ -128,7 +120,10 @@ gst_mpeg_parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &mpeg_parse_details);
+  gst_element_class_set_details_simple (element_class, "MPEG System Parser",
+      "Codec/Parser",
+      "Parses MPEG1 and MPEG2 System Streams",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

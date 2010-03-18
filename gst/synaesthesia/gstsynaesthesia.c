@@ -38,13 +38,6 @@
 
 #include "gstsynaesthesia.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_synaesthesia_details =
-GST_ELEMENT_DETAILS ("Synaesthesia",
-    "Visualization",
-    "Creates video visualizations of audio input, using stereo and pitch information",
-    "Richard Boulton <richard@tartarus.org>");
-
 /* signals and args */
 enum
 {
@@ -113,7 +106,10 @@ gst_synaesthesia_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_synaesthesia_details);
+  gst_element_class_set_details_simple (element_class, "Synaesthesia",
+      "Visualization",
+      "Creates video visualizations of audio input, using stereo and pitch information",
+      "Richard Boulton <richard@tartarus.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_synaesthesia_src_template));

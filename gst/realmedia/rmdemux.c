@@ -101,13 +101,6 @@ struct _GstRMDemuxIndex
   GstClockTime timestamp;
 };
 
-static GstElementDetails gst_rmdemux_details = {
-  "RealMedia Demuxer",
-  "Codec/Demuxer",
-  "Demultiplex a RealMedia file into audio and video streams",
-  "David Schleef <ds@schleef.org>"
-};
-
 static GstStaticPadTemplate gst_rmdemux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -206,7 +199,10 @@ gst_rmdemux_base_init (GstRMDemuxClass * klass)
       gst_static_pad_template_get (&gst_rmdemux_videosrc_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rmdemux_audiosrc_template));
-  gst_element_class_set_details (element_class, &gst_rmdemux_details);
+  gst_element_class_set_details_simple (element_class, "RealMedia Demuxer",
+      "Codec/Demuxer",
+      "Demultiplex a RealMedia file into audio and video streams",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void

@@ -92,14 +92,6 @@
 GST_DEBUG_CATEGORY_STATIC (debug);
 #define GST_CAT_DEFAULT debug
 
-/* elementfactory information */
-static GstElementDetails gst_lame_details = {
-  "L.A.M.E. mp3 encoder",
-  "Codec/Encoder/Audio",
-  "High-quality free MP3 encoder (deprecated)",
-  "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>",
-};
-
 /* LAME can do MPEG-1, MPEG-2, and MPEG-2.5, so it has 9 possible
  * sample rates it supports */
 static GstStaticPadTemplate gst_lame_sink_template =
@@ -394,7 +386,10 @@ gst_lame_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_lame_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_lame_sink_template));
-  gst_element_class_set_details (element_class, &gst_lame_details);
+  gst_element_class_set_details_simple (element_class, "L.A.M.E. mp3 encoder",
+      "Codec/Encoder/Audio",
+      "High-quality free MP3 encoder (deprecated)",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

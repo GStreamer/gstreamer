@@ -94,12 +94,6 @@ enum
   PROP_READ_SPEED
 };
 
-static const GstElementDetails gst_cdio_cdda_src_details =
-GST_ELEMENT_DETAILS ("CD audio source (CDDA)",
-    "Source/File",
-    "Read audio from CD using libcdio",
-    "Tim-Philipp Müller <tim centricular net>");
-
 GST_BOILERPLATE (GstCdioCddaSrc, gst_cdio_cdda_src, GstCddaBaseSrc,
     GST_TYPE_CDDA_BASE_SRC);
 
@@ -121,7 +115,10 @@ gst_cdio_cdda_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_cdio_cdda_src_details);
+  gst_element_class_set_details_simple (element_class, "CD audio source (CDDA)",
+      "Source/File",
+      "Read audio from CD using libcdio",
+      "Tim-Philipp Müller <tim centricular net>");
 }
 
 static gchar *

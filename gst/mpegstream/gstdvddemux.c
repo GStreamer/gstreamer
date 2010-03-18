@@ -41,15 +41,6 @@ GST_DEBUG_CATEGORY_STATIC (gstdvddemux_debug);
 #define DEMUX_CLASS(o)  GST_MPEG_DEMUX_CLASS (G_OBJECT_GET_CLASS (o))
 #define CLASS(o)  GST_DVD_DEMUX_CLASS (G_OBJECT_GET_CLASS (o))
 
-
-/* Element factory information */
-static GstElementDetails dvd_demux_details = {
-  "DVD Demuxer",
-  "Codec/Demuxer",
-  "Demultiplexes DVD (VOB) MPEG2 streams",
-  "Martin Soto <martinsoto@users.sourceforge.net>"
-};
-
 /* DVDDemux signals and args */
 enum
 {
@@ -227,7 +218,10 @@ gst_dvd_demux_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       dvd_demux_class->cur_subpicture_template);
 
-  gst_element_class_set_details (element_class, &dvd_demux_details);
+  gst_element_class_set_details_simple (element_class, "DVD Demuxer",
+      "Codec/Demuxer",
+      "Demultiplexes DVD (VOB) MPEG2 streams",
+      "Martin Soto <martinsoto@users.sourceforge.net>");
 }
 
 

@@ -53,14 +53,6 @@
 #include <liboil/liboilcpu.h>
 #include <liboil/liboilfunction.h>
 
-/* elementfactory information */
-static GstElementDetails gst_a52dec_details = {
-  "ATSC A/52 audio decoder",
-  "Codec/Decoder/Audio",
-  "Decodes ATSC A/52 encoded audio streams",
-  "David I. Lehn <dlehn@users.sourceforge.net>"
-};
-
 #ifdef LIBA52_DOUBLE
 #define SAMPLE_WIDTH 64
 #else
@@ -140,7 +132,10 @@ gst_a52dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &gst_a52dec_details);
+  gst_element_class_set_details_simple (element_class,
+      "ATSC A/52 audio decoder", "Codec/Decoder/Audio",
+      "Decodes ATSC A/52 encoded audio streams",
+      "David I. Lehn <dlehn@users.sourceforge.net>");
 
   GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
       "AC3/A52 software decoder");

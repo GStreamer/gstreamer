@@ -35,13 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtspwms_debug);
 #define GST_CAT_DEFAULT (rtspwms_debug)
 
-/* elementfactory information */
-static const GstElementDetails rtspwms_details =
-GST_ELEMENT_DETAILS ("WMS RTSP Extension",
-    "Network/Extension/Protocol",
-    "Extends RTSP so that it can handle WMS setup",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 #define SERVER_PREFIX "WMServer/"
 #define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
 #define EXTENSION_CMD "application/x-wms-extension-cmd"
@@ -231,7 +224,10 @@ gst_rtsp_wms_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &rtspwms_details);
+  gst_element_class_set_details_simple (element_class, "WMS RTSP Extension",
+      "Network/Extension/Protocol",
+      "Extends RTSP so that it can handle WMS setup",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

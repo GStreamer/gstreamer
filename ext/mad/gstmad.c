@@ -40,15 +40,6 @@
 #include "gstmad.h"
 #include <gst/audio/audio.h>
 
-
-/* elementfactory information */
-static const GstElementDetails gst_mad_details =
-GST_ELEMENT_DETAILS ("mad mp3 decoder",
-    "Codec/Decoder/Audio",
-    "Uses mad code to decode mp3 streams",
-    "Wim Taymans <wim@fluendo.com>");
-
-
 enum
 {
   ARG_0,
@@ -189,7 +180,9 @@ gst_mad_base_init (gpointer g_class)
       gst_static_pad_template_get (&mad_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mad_src_template_factory));
-  gst_element_class_set_details (element_class, &gst_mad_details);
+  gst_element_class_set_details_simple (element_class, "mad mp3 decoder",
+      "Codec/Decoder/Audio",
+      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

@@ -31,13 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpasfdepayload_debug);
 #define GST_CAT_DEFAULT rtpasfdepayload_debug
 
-static const GstElementDetails rtp_asf_depay_details =
-GST_ELEMENT_DETAILS ("RTP ASF packet depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts ASF streams from RTP",
-    "Tim-Philipp Müller <tim centricular net>, "
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -80,7 +73,11 @@ gst_rtp_asf_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &rtp_asf_depay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP ASF packet depayloader", "Codec/Depayloader/Network",
+      "Extracts ASF streams from RTP",
+      "Tim-Philipp Müller <tim centricular net>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

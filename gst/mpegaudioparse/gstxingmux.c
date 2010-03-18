@@ -390,12 +390,6 @@ gst_xing_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  static const GstElementDetails gst_xing_mux_details =
-      GST_ELEMENT_DETAILS ("MP3 Xing muxer",
-      "Formatter/Metadata",
-      "Adds a Xing header to the beginning of a VBR MP3 file",
-      "Christophe Fergeau <teuf@gnome.org>");
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_xing_mux_src_template));
   gst_element_class_add_pad_template (element_class,
@@ -403,7 +397,10 @@ gst_xing_mux_base_init (gpointer g_class)
 
   GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
 
-  gst_element_class_set_details (element_class, &gst_xing_mux_details);
+  gst_element_class_set_details_simple (element_class, "MP3 Xing muxer",
+      "Formatter/Metadata",
+      "Adds a Xing header to the beginning of a VBR MP3 file",
+      "Christophe Fergeau <teuf@gnome.org>");
 }
 
 static void

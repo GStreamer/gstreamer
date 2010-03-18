@@ -31,13 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (dvdlpcm_debug);
 #define GST_CAT_DEFAULT dvdlpcm_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_dvdlpcmdec_details =
-GST_ELEMENT_DETAILS ("DVD LPCM Audio decoder",
-    "Codec/Decoder/Audio",
-    "Decode DVD LPCM frames into standard PCM audio",
-    "Jan Schmidt <jan@noraisin.net>\n" "Michael Smith <msmith@fluendo.com>");
-
 static GstStaticPadTemplate gst_dvdlpcmdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -127,7 +120,10 @@ gst_dvdlpcmdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_dvdlpcmdec_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dvdlpcmdec_src_template));
-  gst_element_class_set_details (element_class, &gst_dvdlpcmdec_details);
+  gst_element_class_set_details_simple (element_class, "DVD LPCM Audio decoder",
+      "Codec/Decoder/Audio",
+      "Decode DVD LPCM frames into standard PCM audio",
+      "Jan Schmidt <jan@noraisin.net>, Michael Smith <msmith@fluendo.com>");
 }
 
 static void

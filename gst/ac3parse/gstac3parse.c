@@ -75,13 +75,6 @@ static struct frmsize_s frmsizecod_tbl[] = {
   {640, {1280, 1394, 1920}}
 };
 
-/* elementfactory information */
-static const GstElementDetails ac3parse_details =
-GST_ELEMENT_DETAILS ("AC3 Parser",
-    "Codec/Parser/Audio",
-    "Parses and frames AC3 audio streams, provides seek",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 /* GstAc3Parse signals and args */
 enum
 {
@@ -167,7 +160,10 @@ gst_ac3parse_class_init (gpointer g_class)
       gst_static_pad_template_get (&gst_ac3parse_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ac3parse_sink_template));
-  gst_element_class_set_details (gstelement_class, &ac3parse_details);
+  gst_element_class_set_details_simple (gstelement_class, "AC3 Parser",
+      "Codec/Parser/Audio",
+      "Parses and frames AC3 audio streams, provides seek",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 

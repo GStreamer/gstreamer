@@ -24,14 +24,6 @@
 #endif
 #include "gstrfc2250enc.h"
 
-/* elementfactory information */
-static GstElementDetails rfc2250_enc_details = {
-  "RFC 2250 packet encoder",
-  "Codec/Parser",
-  "transforms MPEG1/2 video to an RFC 2250 compliant format",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
-
 #define CLASS(o)        GST_RFC2250_ENC_CLASS (G_OBJECT_GET_CLASS (o))
 
 /* GstRFC2250Enc signals and args */
@@ -112,7 +104,10 @@ gst_rfc2250_enc_base_init (GstRFC2250EncClass * klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &rfc2250_enc_details);
+  gst_element_class_set_details_simple (element_class,
+      "RFC 2250 packet encoder", "Codec/Parser",
+      "transforms MPEG1/2 video to an RFC 2250 compliant format",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

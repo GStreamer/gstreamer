@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (rdtdepay_debug);
 #define GST_CAT_DEFAULT rdtdepay_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_rdtdepay_details =
-GST_ELEMENT_DETAILS ("RDT packet parser",
-    "Codec/Depayloader/Network",
-    "Extracts RealMedia from RDT packets",
-    "Lutz Mueller <lutz at topfrose dot de>, " "Wim Taymans <wim@fluendo.com>");
-
 /* RDTDepay signals and args */
 enum
 {
@@ -92,7 +85,11 @@ gst_rdt_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rdt_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rdtdepay_details);
+  gst_element_class_set_details_simple (element_class, "RDT packet parser",
+      "Codec/Depayloader/Network",
+      "Extracts RealMedia from RDT packets",
+      "Lutz Mueller <lutz at topfrose dot de>, "
+      "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (rdtdepay_debug, "rdtdepay",
       0, "Depayloader for RDT RealMedia packets");

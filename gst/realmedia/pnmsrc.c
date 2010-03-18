@@ -28,13 +28,6 @@
 GST_DEBUG_CATEGORY_STATIC (pnmsrc_debug);
 #define GST_CAT_DEFAULT pnmsrc_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_pnm_src_details =
-GST_ELEMENT_DETAILS ("PNM packet receiver",
-    "Source/Network",
-    "Receive data over the network via PNM",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* PNMSrc signals and args */
 enum
 {
@@ -95,7 +88,10 @@ gst_pnm_src_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pnm_src_template));
 
-  gst_element_class_set_details (element_class, &gst_pnm_src_details);
+  gst_element_class_set_details_simple (element_class, "PNM packet receiver",
+      "Source/Network",
+      "Receive data over the network via PNM",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (pnmsrc_debug, "pnmsrc",
       0, "Source for the pnm:// uri");

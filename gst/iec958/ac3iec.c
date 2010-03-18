@@ -38,16 +38,6 @@ GST_DEBUG_CATEGORY_STATIC (ac3iec_debug);
 /* The duration of a single IEC958 frame. */
 #define IEC958_FRAME_DURATION (32 * GST_MSECOND)
 
-
-/* ElementFactory information. */
-static GstElementDetails ac3iec_details = {
-  "AC3 to IEC958 filter",
-  "Codec/Muxer/Audio",
-  "Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface",
-  "Martin Soto <martinsoto@users.sourceforge.net>"
-};
-
-
 /* AC3IEC signals and args */
 enum
 {
@@ -141,7 +131,10 @@ ac3iec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &ac3iec_details);
+  gst_element_class_set_details_simple (element_class, "AC3 to IEC958 filter",
+      "Codec/Muxer/Audio",
+      "Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface",
+      "Martin Soto <martinsoto@users.sourceforge.net>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&ac3iec_sink_template));
   gst_element_class_add_pad_template (element_class,
