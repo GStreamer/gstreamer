@@ -45,14 +45,6 @@
 GST_DEBUG_CATEGORY (valve_debug);
 #define GST_CAT_DEFAULT (valve_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_valve_details =
-GST_ELEMENT_DETAILS ("Valve element",
-    "Filter",
-    "This element drops all packets when drop is TRUE",
-    "Olivier Crete <olivier.crete@collabora.co.uk>");
-
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -109,7 +101,10 @@ gst_valve_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_valve_details);
+  gst_element_class_set_details_simple (element_class, "Valve element",
+      "Filter",
+      "This element drops all packets when drop is TRUE",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
 static void
