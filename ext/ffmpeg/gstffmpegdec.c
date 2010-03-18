@@ -102,6 +102,7 @@ struct _GstFFMpegDec
     {
       gint width, height;
       gint clip_width, clip_height;
+      gint par_n, par_d;
       gint fps_n, fps_d;
       gint old_fps_n, old_fps_d;
       gboolean interlaced;
@@ -437,6 +438,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 
   gst_ts_handler_init (ffmpegdec);
 
+  ffmpegdec->format.video.par_n = -1;
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
@@ -600,6 +602,7 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
     ffmpegdec->pctx = NULL;
   }
 
+  ffmpegdec->format.video.par_n = -1;
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
   ffmpegdec->format.video.interlaced = FALSE;
@@ -1189,19 +1192,30 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
           && ffmpegdec->format.video.height == ffmpegdec->context->height
           && ffmpegdec->format.video.fps_n == ffmpegdec->format.video.old_fps_n
           && ffmpegdec->format.video.fps_d == ffmpegdec->format.video.old_fps_d
-          && ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
+          && ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt
+          && ffmpegdec->format.video.par_n ==
+          ffmpegdec->context->sample_aspect_ratio.num
+          && ffmpegdec->format.video.par_d ==
+          ffmpegdec->context->sample_aspect_ratio.den)
         return TRUE;
       GST_DEBUG_OBJECT (ffmpegdec,
-          "Renegotiating video from %dx%d@ %d/%d fps to %dx%d@ %d/%d fps",
+          "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps",
           ffmpegdec->format.video.width, ffmpegdec->format.video.height,
+          ffmpegdec->format.video.par_n, ffmpegdec->format.video.par_d,
           ffmpegdec->format.video.old_fps_n, ffmpegdec->format.video.old_fps_n,
           ffmpegdec->context->width, ffmpegdec->context->height,
+          ffmpegdec->context->sample_aspect_ratio.num,
+          ffmpegdec->context->sample_aspect_ratio.den,
           ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
       ffmpegdec->format.video.width = ffmpegdec->context->width;
       ffmpegdec->format.video.height = ffmpegdec->context->height;
       ffmpegdec->format.video.old_fps_n = ffmpegdec->format.video.fps_n;
       ffmpegdec->format.video.old_fps_d = ffmpegdec->format.video.fps_d;
       ffmpegdec->format.video.pix_fmt = ffmpegdec->context->pix_fmt;
+      ffmpegdec->format.video.par_n =
+          ffmpegdec->context->sample_aspect_ratio.num;
+      ffmpegdec->format.video.par_d =
+          ffmpegdec->context->sample_aspect_ratio.den;
       break;
     case CODEC_TYPE_AUDIO:
     {
