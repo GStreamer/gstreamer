@@ -74,6 +74,7 @@ struct _GstAlpha
 
   gfloat angle;
   gfloat noise_level;
+  guint noise_level2;
   guint black_sensitivity;
   guint white_sensitivity;
 

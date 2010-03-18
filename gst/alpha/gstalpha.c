@@ -462,7 +462,7 @@ static inline gint
 chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
     gint * v, gint cr, gint cb, gint smin, gint smax, guint8 accept_angle_tg,
     guint8 accept_angle_ctg, guint8 one_over_kc, guint8 kfgy_scale, gint8 kg,
-    gfloat noise_level)
+    guint noise_level2)
 {
   gint tmp, tmp1;
   gint x1, y1;
@@ -530,7 +530,7 @@ chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
   tmp = z * z + (x - kg) * (x - kg);
   tmp = MIN (tmp, 0xffff);
 
-  if (tmp < noise_level * noise_level)
+  if (tmp < noise_level2)
     b_alpha = 0;
 
   return b_alpha;
@@ -545,6 +545,7 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
   gint i, j;
   gint a, y, u, v;
   gint smin, smax;
+  gint pa = alpha->alpha * 255;
 
   smin = 128 - alpha->black_sensitivity;
   smax = 128 + alpha->white_sensitivity;
@@ -554,14 +555,15 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      a = *src1++ * (alpha->alpha);
+      a = (*src1++ * pa) >> 8;
       y = *src1++;
       u = *src1++ - 128;
       v = *src1++ - 128;
 
       a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
           smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level);
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
 
       u += 128;
       v += 128;
@@ -596,7 +598,7 @@ gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
 
     a2 = chroma_keying_yuv (a, y, 4, &u, &v, alpha->cr, alpha->cb, smin,
         smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-        alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level);
+        alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level2);
 
     u += 128;
     v += 128;
@@ -699,6 +701,8 @@ gst_alpha_init_params (GstAlpha * alpha)
   tmp = MIN (tmp, 255);
   alpha->kfgy_scale = tmp;
   alpha->kg = MIN (kgl, 127);
+
+  alpha->noise_level2 = alpha->noise_level * alpha->noise_level;
 }
 
 static gboolean
