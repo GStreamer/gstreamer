@@ -197,7 +197,7 @@ main(int argc, char *argv[])
     if (!image)
         g_error("could not create Gst/VA image");
     if (!draw_rgb_rects(image))
-        g_error("could not draw RGB rectangels");
+        g_error("could not draw RGB rectangles");
 
     if (!gst_vaapi_surface_put_image(surface, image))
         g_error("could not upload image");
