@@ -47,13 +47,6 @@
 GST_DEBUG_CATEGORY_STATIC (monoscope_debug);
 #define GST_CAT_DEFAULT monoscope_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_monoscope_details =
-GST_ELEMENT_DETAILS ("Monoscope",
-    "Visualization",
-    "Displays a highly stabilised waveform of audio input",
-    "Richard Boulton <richard@tartarus.org>");
-
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -112,7 +105,10 @@ gst_monoscope_base_init (gpointer klass)
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &gst_monoscope_details);
+  gst_element_class_set_details_simple (element_class, "Monoscope",
+      "Visualization",
+      "Displays a highly stabilised waveform of audio input",
+      "Richard Boulton <richard@tartarus.org>");
 }
 
 static void

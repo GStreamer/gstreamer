@@ -43,14 +43,6 @@
 /* setting smoothig seems to have no effect in libjepeg
 #define ENABLE_SMOOTHING 1
 */
-/*#define ENABLE_COLORSPACE_RGB 1 */
-
-/* elementfactory information */
-static const GstElementDetails gst_jpegenc_details =
-GST_ELEMENT_DETAILS ("JPEG image encoder",
-    "Codec/Encoder/Image",
-    "Encode images in JPEG format",
-    "Wim Taymans <wim.taymans@tvd.be>");
 
 GST_DEBUG_CATEGORY_STATIC (jpegenc_debug);
 #define GST_CAT_DEFAULT jpegenc_debug
@@ -160,7 +152,9 @@ gst_jpegenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_jpegenc_sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_jpegenc_src_pad_template));
-  gst_element_class_set_details (element_class, &gst_jpegenc_details);
+  gst_element_class_set_details_simple (element_class, "JPEG image encoder",
+      "Codec/Encoder/Image",
+      "Encode images in JPEG format", "Wim Taymans <wim.taymans@tvd.be>");
 }
 
 static void

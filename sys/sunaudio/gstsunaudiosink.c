@@ -50,14 +50,6 @@
 GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
 #define GST_CAT_DEFAULT sunaudio_debug
 
-/* elementfactory information */
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("Sun Audio Sink",
-    "Sink/Audio",
-    "Audio sink for Sun Audio devices",
-    "David A. Schleef <ds@schleef.org>, "
-    "Brian Cameron <brian.cameron@sun.com>");
-
 static void gst_sunaudiosink_base_init (gpointer g_class);
 static void gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass);
 static void gst_sunaudiosink_init (GstSunAudioSink * filter);
@@ -156,7 +148,11 @@ gst_sunaudiosink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_sunaudiosink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "Sun Audio Sink",
+      "Sink/Audio",
+      "Audio sink for Sun Audio devices",
+      "David A. Schleef <ds@schleef.org>, "
+      "Brian Cameron <brian.cameron@sun.com>");
 }
 
 static void

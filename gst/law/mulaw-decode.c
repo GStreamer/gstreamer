@@ -178,17 +178,15 @@ static void
 gst_mulawdec_base_init (GstMuLawDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  const GstElementDetails mulawdec_details =
-      GST_ELEMENT_DETAILS ("Mu Law audio decoder",
-      "Codec/Decoder/Audio",
-      "Convert 8bit mu law to 16bit PCM",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mulaw_dec_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mulaw_dec_sink_factory));
-  gst_element_class_set_details (element_class, &mulawdec_details);
+  gst_element_class_set_details_simple (element_class, "Mu Law audio decoder",
+      "Codec/Decoder/Audio",
+      "Convert 8bit mu law to 16bit PCM",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 static void

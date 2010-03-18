@@ -118,16 +118,14 @@ static GstVideofilterFormat gst_videotemplate_formats[] = {
 static void
 gst_videotemplate_base_init (gpointer g_class)
 {
-  static const GstElementDetails videotemplate_details =
-      GST_ELEMENT_DETAILS ("Video filter template",
-      "Filter/Effect/Video",
-      "Template for a video filter",
-      "David Schleef <ds@schleef.org>");
+
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
   int i;
 
-  gst_element_class_set_details (element_class, &videotemplate_details);
+  gst_element_class_set_details_simple (element_class, "Video filter template",
+      "Filter/Effect/Video",
+      "Template for a video filter", "David Schleef <ds@schleef.org>");
 
   for (i = 0; i < G_N_ELEMENTS (gst_videotemplate_formats); i++) {
     gst_videofilter_class_add_format (videofilter_class,

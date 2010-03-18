@@ -37,13 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (rtptheorapay_debug);
  * http://svn.xiph.org/trunk/theora/doc/draft-ietf-avt-rtp-theora-01.txt
  */
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_theorapay_details =
-GST_ELEMENT_DETAILS ("RTP Theora payloader",
-    "Codec/Payloader/Network",
-    "Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_theora_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -95,7 +88,10 @@ gst_rtp_theora_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_theora_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_theorapay_details);
+  gst_element_class_set_details_simple (element_class, "RTP Theora payloader",
+      "Codec/Payloader/Network",
+      "Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

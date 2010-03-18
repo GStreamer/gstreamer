@@ -68,11 +68,6 @@
 GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
 #define GST_CAT_DEFAULT videocrop_debug
 
-static const GstElementDetails video_crop_details = GST_ELEMENT_DETAILS ("Crop",
-    "Filter/Effect/Video",
-    "Crops video into a user-defined region",
-    "Tim-Philipp Müller <tim centricular net>");
-
 enum
 {
   ARG_0,
@@ -147,7 +142,10 @@ gst_video_crop_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &video_crop_details);
+  gst_element_class_set_details_simple (element_class, "Crop",
+      "Filter/Effect/Video",
+      "Crops video into a user-defined region",
+      "Tim-Philipp Müller <tim centricular net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -642,8 +640,8 @@ gst_video_crop_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
       GST_PTR_FORMAT, incaps, outcaps);
 
-  if ((crop->crop_left | crop->crop_right | crop->
-          crop_top | crop->crop_bottom) == 0) {
+  if ((crop->crop_left | crop->crop_right | crop->crop_top | crop->
+          crop_bottom) == 0) {
     GST_LOG_OBJECT (crop, "we are using passthrough");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), TRUE);
   } else {

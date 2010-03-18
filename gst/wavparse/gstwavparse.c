@@ -81,12 +81,6 @@ static gboolean gst_wavparse_sink_event (GstPad * pad, GstEvent * event);
 static void gst_wavparse_loop (GstPad * pad);
 static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event);
 
-static const GstElementDetails gst_wavparse_details =
-GST_ELEMENT_DETAILS ("WAV audio demuxer",
-    "Codec/Demuxer/Audio",
-    "Parse a .wav file into raw audio",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
     GST_PAD_SINK,
@@ -115,7 +109,10 @@ gst_wavparse_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, src_template);
   gst_object_unref (src_template);
 
-  gst_element_class_set_details (element_class, &gst_wavparse_details);
+  gst_element_class_set_details_simple (element_class, "WAV audio demuxer",
+      "Codec/Demuxer/Audio",
+      "Parse a .wav file into raw audio",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
 }
 
 static void

@@ -33,13 +33,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpL16depay_debug);
 #define GST_CAT_DEFAULT (rtpL16depay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_L16_depay_details =
-GST_ELEMENT_DETAILS ("RTP audio depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts raw audio from RTP packets",
-    "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_L16_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -92,7 +85,10 @@ gst_rtp_L16_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_L16_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_L16_depay_details);
+  gst_element_class_set_details_simple (element_class, "RTP audio depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts raw audio from RTP packets",
+      "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

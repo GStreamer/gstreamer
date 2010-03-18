@@ -29,13 +29,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpj2kdepay_debug);
 #define GST_CAT_DEFAULT (rtpj2kdepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_j2kdepay_details =
-GST_ELEMENT_DETAILS ("RTP JPEG 2000 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_j2k_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -77,7 +70,10 @@ gst_rtp_j2k_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_j2k_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_j2kdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP JPEG 2000 depayloader", "Codec/Depayloader/Network",
+      "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

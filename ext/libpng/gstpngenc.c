@@ -32,13 +32,6 @@
 
 #define MAX_HEIGHT              4096
 
-
-static const GstElementDetails gst_pngenc_details =
-GST_ELEMENT_DETAILS ("PNG image encoder",
-    "Codec/Encoder/Image",
-    "Encode a video frame to a .png image",
-    "Jeremy SIMON <jsimon13@yahoo.fr>");
-
 GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
 #define GST_CAT_DEFAULT pngenc_debug
 
@@ -109,7 +102,10 @@ gst_pngenc_base_init (gpointer g_class)
       (element_class, gst_static_pad_template_get (&pngenc_sink_template));
   gst_element_class_add_pad_template
       (element_class, gst_static_pad_template_get (&pngenc_src_template));
-  gst_element_class_set_details (element_class, &gst_pngenc_details);
+  gst_element_class_set_details_simple (element_class, "PNG image encoder",
+      "Codec/Encoder/Image",
+      "Encode a video frame to a .png image",
+      "Jeremy SIMON <jsimon13@yahoo.fr>");
 }
 
 static void

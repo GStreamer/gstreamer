@@ -127,12 +127,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 #define GST_CAT_DEFAULT gst_rtp_bin_debug
 
-/* elementfactory information */
-static const GstElementDetails rtpbin_details = GST_ELEMENT_DETAILS ("RTP Bin",
-    "Filter/Network/RTP",
-    "Real-Time Transport Protocol bin",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* sink pads */
 static GstStaticPadTemplate rtpbin_recv_rtp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%d",
@@ -1286,7 +1280,10 @@ gst_rtp_bin_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&rtpbin_send_rtp_src_template));
 
-  gst_element_class_set_details (element_class, &rtpbin_details);
+  gst_element_class_set_details_simple (element_class, "RTP Bin",
+      "Filter/Network/RTP",
+      "Real-Time Transport Protocol bin",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

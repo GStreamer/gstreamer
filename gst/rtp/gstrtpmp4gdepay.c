@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpmp4gdepay_debug);
 #define GST_CAT_DEFAULT (rtpmp4gdepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mp4gdepay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG4 ES depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts MPEG4 elementary streams from RTP packets (RFC 3640)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_mp4g_depay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -157,7 +150,10 @@ gst_rtp_mp4g_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mp4g_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp4gdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG4 ES depayloader", "Codec/Depayloader/Network",
+      "Extracts MPEG4 elementary streams from RTP packets (RFC 3640)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

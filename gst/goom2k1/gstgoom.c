@@ -47,13 +47,6 @@
 GST_DEBUG_CATEGORY_STATIC (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_goom_details =
-GST_ELEMENT_DETAILS ("GOOM: what a GOOM! 2k1 edition",
-    "Visualization",
-    "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* signals and args */
 enum
 {
@@ -130,7 +123,10 @@ gst_goom_base_init (GstGoomClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &gst_goom_details);
+  gst_element_class_set_details_simple (element_class,
+      "GOOM: what a GOOM! 2k1 edition", "Visualization",
+      "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
+      "Wim Taymans <wim@fluendo.com>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,

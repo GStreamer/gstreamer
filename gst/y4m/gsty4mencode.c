@@ -47,13 +47,6 @@
 #include <gst/video/video.h>
 #include "gsty4mencode.h"
 
-static const GstElementDetails y4mencode_details =
-GST_ELEMENT_DETAILS ("YUV4MPEG video encoder",
-    "Codec/Encoder/Video",
-    "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
-
 /* Filter signals and args */
 enum
 {
@@ -105,7 +98,10 @@ gst_y4m_encode_base_init (gpointer g_class)
       gst_static_pad_template_get (&y4mencode_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&y4mencode_sink_factory));
-  gst_element_class_set_details (element_class, &y4mencode_details);
+  gst_element_class_set_details_simple (element_class, "YUV4MPEG video encoder",
+      "Codec/Encoder/Video",
+      "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

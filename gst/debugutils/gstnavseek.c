@@ -47,12 +47,6 @@ GstStaticPadTemplate navseek_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static const GstElementDetails navseek_details =
-GST_ELEMENT_DETAILS ("Seek based on left-right arrows",
-    "Filter/Video",
-    "Seek based on navigation keys left-right",
-    "Jan Schmidt <thaytan@mad.scientist.com>");
-
 static gboolean gst_navseek_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_navseek_transform_ip (GstBaseTransform * basetrans,
     GstBuffer * buf);
@@ -79,7 +73,10 @@ gst_navseek_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&navseek_src_template));
 
-  gst_element_class_set_details (element_class, &navseek_details);
+  gst_element_class_set_details_simple (element_class,
+      "Seek based on left-right arrows", "Filter/Video",
+      "Seek based on navigation keys left-right",
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void

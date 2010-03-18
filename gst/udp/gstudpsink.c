@@ -46,13 +46,6 @@
 #define UDP_DEFAULT_HOST        "localhost"
 #define UDP_DEFAULT_PORT        4951
 
-/* elementfactory information */
-static const GstElementDetails gst_udpsink_details =
-GST_ELEMENT_DETAILS ("UDP packet sender",
-    "Sink/Network",
-    "Send data over the network via UDP",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* UDPSink signals and args */
 enum
 {
@@ -126,7 +119,9 @@ gst_udpsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_udpsink_details);
+  gst_element_class_set_details_simple (element_class, "UDP packet sender",
+      "Sink/Network",
+      "Send data over the network via UDP", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

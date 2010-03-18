@@ -47,14 +47,6 @@
 #include <esd.h>
 #include <unistd.h>
 
-
-/* elementfactory information */
-static const GstElementDetails esdmon_details =
-GST_ELEMENT_DETAILS ("Esound audio monitor",
-    "Source/Audio",
-    "Monitors audio from an esound server",
-    "Richard Boulton <richard-gst@tartarus.org>");
-
 /* Signals and args */
 enum
 {
@@ -178,7 +170,10 @@ gst_esdmon_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details (element_class, &esdmon_details);
+  gst_element_class_set_details_simple (element_class, "Esound audio monitor",
+      "Source/Audio",
+      "Monitors audio from an esound server",
+      "Richard Boulton <richard-gst@tartarus.org>");
 }
 
 static void

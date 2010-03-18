@@ -65,12 +65,6 @@ GST_DEBUG_CATEGORY_STATIC (cutter_debug);
 #define CUTTER_DEFAULT_THRESHOLD_LENGTH  (500 * GST_MSECOND)
 #define CUTTER_DEFAULT_PRE_LENGTH        (200 * GST_MSECOND)
 
-static const GstElementDetails cutter_details =
-GST_ELEMENT_DETAILS ("Audio cutter",
-    "Filter/Editor/Audio",
-    "Audio Cutter to split audio into non-silent bits",
-    "Thomas Vander Stichele <thomas at apestaart dot org>");
-
 static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -124,7 +118,10 @@ gst_cutter_base_init (gpointer g_class)
       gst_static_pad_template_get (&cutter_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&cutter_sink_factory));
-  gst_element_class_set_details (element_class, &cutter_details);
+  gst_element_class_set_details_simple (element_class, "Audio cutter",
+      "Filter/Editor/Audio",
+      "Audio Cutter to split audio into non-silent bits",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void

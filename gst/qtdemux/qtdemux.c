@@ -337,12 +337,6 @@ static GNode *qtdemux_tree_get_child_by_type_full (GNode * node,
     guint32 fourcc, GstByteReader * parser);
 static GNode *qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc);
 
-static const GstElementDetails gst_qtdemux_details =
-GST_ELEMENT_DETAILS ("QuickTime demuxer",
-    "Codec/Demuxer",
-    "Demultiplex a QuickTime file into audio and video streams",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim@fluendo.com>");
-
 static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -442,7 +436,10 @@ gst_qtdemux_base_init (GstQTDemuxClass * klass)
       gst_static_pad_template_get (&gst_qtdemux_audiosrc_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_qtdemux_subsrc_template));
-  gst_element_class_set_details (element_class, &gst_qtdemux_details);
+  gst_element_class_set_details_simple (element_class, "QuickTime demuxer",
+      "Codec/Demuxer",
+      "Demultiplex a QuickTime file into audio and video streams",
+      "David Schleef <ds@schleef.org>, Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
 }

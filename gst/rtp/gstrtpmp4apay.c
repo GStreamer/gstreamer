@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpmp4apay_debug);
 #define GST_CAT_DEFAULT (rtpmp4apay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mp4apay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG4 audio payloader",
-    "Codec/Payloader/Network",
-    "Payload MPEG4 audio as RTP packets (RFC 3016)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* FIXME: add framed=(boolean)true once our encoders have this field set
  * on their output caps */
 static GstStaticPadTemplate gst_rtp_mp4a_pay_sink_template =
@@ -83,7 +76,10 @@ GST_BOILERPLATE (GstRtpMP4APay, gst_rtp_mp4a_pay, GstBaseRTPPayload,
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mp4a_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp4apay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG4 audio payloader", "Codec/Payloader/Network",
+      "Payload MPEG4 audio as RTP packets (RFC 3016)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

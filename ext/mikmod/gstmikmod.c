@@ -24,14 +24,6 @@
 
 #include <stdlib.h>
 
-/* elementfactory information */
-static const GstElementDetails mikmod_details =
-GST_ELEMENT_DETAILS ("MikMod audio decoder",
-    "Codec/Decoder/Audio",
-    "Module decoder based on libmikmod",
-    "Jeremy SIMON <jsimon13@yahoo.fr>");
-
-
 /* Filter signals and args */
 enum
 {
@@ -140,7 +132,9 @@ gst_mikmod_base_init (gpointer g_class)
       gst_static_pad_template_get (&mikmod_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mikmod_sink_factory));
-  gst_element_class_set_details (element_class, &mikmod_details);
+  gst_element_class_set_details_simple (element_class, "MikMod audio decoder",
+      "Codec/Decoder/Audio",
+      "Module decoder based on libmikmod", "Jeremy SIMON <jsimon13@yahoo.fr>");
 }
 
 static void

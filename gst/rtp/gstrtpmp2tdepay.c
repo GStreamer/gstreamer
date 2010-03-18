@@ -26,14 +26,6 @@
 #include <string.h>
 #include "gstrtpmp2tdepay.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mp2tdepay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG Transport Stream depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts MPEG2 TS from RTP packets (RFC 2250)",
-    "Wim Taymans <wim.taymans@gmail.com>\n"
-    "Thijs Vermeir <thijs.vermeir@barco.com>");
-
 /* RtpMP2TDepay signals and args */
 enum
 {
@@ -99,7 +91,11 @@ gst_rtp_mp2t_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mp2t_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp2tdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG Transport Stream depayloader", "Codec/Depayloader/Network",
+      "Extracts MPEG2 TS from RTP packets (RFC 2250)",
+      "Wim Taymans <wim.taymans@gmail.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>");
 }
 
 static void

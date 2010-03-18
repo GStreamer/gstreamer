@@ -29,13 +29,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpmpadepay_debug);
 #define GST_CAT_DEFAULT (rtpmpadepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mpadepay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG audio depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts MPEG audio from RTP packets (RFC 2038)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_mpa_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -75,7 +68,10 @@ gst_rtp_mpa_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mpa_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mpadepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG audio depayloader", "Codec/Depayloader/Network",
+      "Extracts MPEG audio from RTP packets (RFC 2038)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

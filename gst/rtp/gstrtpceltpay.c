@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpceltpay_debug);
 #define GST_CAT_DEFAULT (rtpceltpay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_celt_pay_details =
-GST_ELEMENT_DETAILS ("RTP CELT payloader",
-    "Codec/Payloader/Network",
-    "Payload-encodes CELT audio into a RTP packet",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_celt_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -81,7 +74,10 @@ gst_rtp_celt_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_celt_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_celt_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_celt_pay_details);
+  gst_element_class_set_details_simple (element_class, "RTP CELT payloader",
+      "Codec/Payloader/Network",
+      "Payload-encodes CELT audio into a RTP packet",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpceltpay_debug, "rtpceltpay", 0,
       "CELT RTP Payloader");

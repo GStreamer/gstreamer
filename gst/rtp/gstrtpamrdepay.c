@@ -37,13 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (rtpamrdepay_debug);
  * Wideband (AMR-WB) Audio Codecs.
  */
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_amrdepay_details =
-GST_ELEMENT_DETAILS ("RTP AMR depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* RtpAMRDepay signals and args */
 enum
 {
@@ -131,7 +124,10 @@ gst_rtp_amr_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_amr_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_amrdepay_details);
+  gst_element_class_set_details_simple (element_class, "RTP AMR depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

@@ -49,13 +49,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (waveformsink_debug);
 
-/* elementfactory information */
-static const GstElementDetails gst_waveform_sink_details =
-GST_ELEMENT_DETAILS ("WaveForm Audio Sink",
-    "Sink/Audio",
-    "Output to a sound card via WaveForm API",
-    "Sebastien Moutte <sebastien@moutte.net>");
-
 static void gst_waveform_sink_base_init (gpointer g_class);
 static void gst_waveform_sink_class_init (GstWaveFormSinkClass * klass);
 static void gst_waveform_sink_init (GstWaveFormSink * wfsink,
@@ -113,7 +106,10 @@ gst_waveform_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_waveform_sink_details);
+  gst_element_class_set_details_simple (element_class, "WaveForm Audio Sink",
+      "Sink/Audio",
+      "Output to a sound card via WaveForm API",
+      "Sebastien Moutte <sebastien@moutte.net>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&waveformsink_sink_factory));
 }

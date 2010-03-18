@@ -134,13 +134,6 @@ static GstRtpPtDemuxPad *find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt);
 
 static guint gst_rtp_pt_demux_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails gst_rtp_pt_demux_details = {
-  "RTP Demux",
-  "Demux/Network/RTP",
-  "Parses codec streams transmitted in the same RTP session",
-  "Kai Vehmanen <kai.vehmanen@nokia.com>"
-};
-
 static void
 gst_rtp_pt_demux_base_init (gpointer g_class)
 {
@@ -151,7 +144,10 @@ gst_rtp_pt_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&rtp_pt_demux_src_template));
 
-  gst_element_class_set_details (gstelement_klass, &gst_rtp_pt_demux_details);
+  gst_element_class_set_details_simple (gstelement_klass, "RTP Demux",
+      "Demux/Network/RTP",
+      "Parses codec streams transmitted in the same RTP session",
+      "Kai Vehmanen <kai.vehmanen@nokia.com>");
 }
 
 static void

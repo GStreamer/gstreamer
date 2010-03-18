@@ -33,12 +33,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 #define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
 
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("GdkPixbuf image decoder",
-    "Codec/Decoder/Image",
-    "Decodes images in a video stream using GdkPixbuf",
-    "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
-
 enum
 {
   ARG_0,
@@ -165,7 +159,10 @@ gst_gdk_pixbuf_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_gdk_pixbuf_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gdk_pixbuf_sink_template));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class,
+      "GdkPixbuf image decoder", "Codec/Decoder/Image",
+      "Decodes images in a video stream using GdkPixbuf",
+      "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
 }
 
 /* initialize the plugin's class */

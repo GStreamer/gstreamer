@@ -57,12 +57,6 @@
 #include "gstid3demux.h"
 #include "id3tags.h"
 
-static const GstElementDetails gst_id3demux_details =
-GST_ELEMENT_DETAILS ("ID3 tag demuxer",
-    "Codec/Demuxer/Metadata",
-    "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
-    "Jan Schmidt <thaytan@mad.scientist.com>");
-
 enum
 {
   ARG_0,
@@ -103,7 +97,10 @@ gst_id3demux_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_id3demux_details);
+  gst_element_class_set_details_simple (element_class, "ID3 tag demuxer",
+      "Codec/Demuxer/Metadata",
+      "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void

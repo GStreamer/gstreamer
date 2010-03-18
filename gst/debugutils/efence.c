@@ -42,16 +42,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_efence_debug);
 #define GST_CAT_DEFAULT  gst_efence_debug
 
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("Electric Fence",
-    "Testing",
-    "This element converts a stream of normal GStreamer buffers into a "
-    "stream of buffers that are allocated in such a way that out-of-bounds "
-    "access to data in the buffer is more likely to cause segmentation "
-    "faults.  This allocation method is very similar to the debugging tool "
-    "\"Electric Fence\".",
-    "David A. Schleef <ds@schleef.org>");
-
 /* Filter signals and args */
 enum
 {
@@ -148,7 +138,13 @@ gst_efence_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_efence_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_efence_src_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "Electric Fence",
+      "Testing",
+      "This element converts a stream of normal GStreamer buffers into a "
+      "stream of buffers that are allocated in such a way that out-of-bounds "
+      "access to data in the buffer is more likely to cause segmentation "
+      "faults.  This allocation method is very similar to the debugging tool "
+      "\"Electric Fence\".", "David A. Schleef <ds@schleef.org>");
 }
 
 /* initialize the plugin's class */

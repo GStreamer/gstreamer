@@ -46,12 +46,6 @@
 GST_DEBUG_CATEGORY_STATIC (aspect_ratio_crop_debug);
 #define GST_CAT_DEFAULT aspect_ratio_crop_debug
 
-static const GstElementDetails aspect_ratio_crop_details =
-GST_ELEMENT_DETAILS ("aspectratiocrop",
-    "Filter/Effect/Video",
-    "Crops video into a user-defined aspect-ratio",
-    "Thijs Vermeir <thijsvermeir@gmail.com>");
-
 enum
 {
   ARG_0,
@@ -170,7 +164,10 @@ gst_aspect_ratio_crop_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &aspect_ratio_crop_details);
+  gst_element_class_set_details_simple (element_class, "aspectratiocrop",
+      "Filter/Effect/Video",
+      "Crops video into a user-defined aspect-ratio",
+      "Thijs Vermeir <thijsvermeir@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));

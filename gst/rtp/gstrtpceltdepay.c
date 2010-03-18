@@ -30,13 +30,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpceltdepay_debug);
 #define GST_CAT_DEFAULT (rtpceltdepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_celtdepay_details =
-GST_ELEMENT_DETAILS ("RTP CELT depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts CELT audio from RTP packets",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* RtpCELTDepay signals and args */
 
 #define DEFAULT_FRAMESIZE       480
@@ -89,7 +82,10 @@ gst_rtp_celt_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_celt_depay_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_celt_depay_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_celtdepay_details);
+  gst_element_class_set_details_simple (element_class, "RTP CELT depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts CELT audio from RTP packets",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (rtpceltdepay_debug, "rtpceltdepay", 0,
       "CELT RTP Depayloader");

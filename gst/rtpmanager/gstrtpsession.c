@@ -121,13 +121,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
 #define GST_CAT_DEFAULT gst_rtp_session_debug
 
-/* elementfactory information */
-static const GstElementDetails rtpsession_details =
-GST_ELEMENT_DETAILS ("RTP Session",
-    "Filter/Network/RTP",
-    "Implement an RTP session",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* sink pads */
 static GstStaticPadTemplate rtpsession_recv_rtp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink",
@@ -382,7 +375,9 @@ gst_rtp_session_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&rtpsession_send_rtcp_src_template));
 
-  gst_element_class_set_details (element_class, &rtpsession_details);
+  gst_element_class_set_details_simple (element_class, "RTP Session",
+      "Filter/Network/RTP",
+      "Implement an RTP session", "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

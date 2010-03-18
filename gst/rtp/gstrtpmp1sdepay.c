@@ -26,13 +26,6 @@
 #include <string.h>
 #include "gstrtpmp1sdepay.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mp1sdepay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG1 System Stream depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts MPEG1 System Streams from RTP packets (RFC 3555)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* RtpMP1SDepay signals and args */
 enum
 {
@@ -87,7 +80,10 @@ gst_rtp_mp1s_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mp1s_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp1sdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG1 System Stream depayloader", "Codec/Depayloader/Network",
+      "Extracts MPEG1 System Streams from RTP packets (RFC 3555)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

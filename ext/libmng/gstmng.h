@@ -16,7 +16,6 @@
 #include <gst/gst.h>
 
 GType gst_mngenc_get_type (void);
-extern GstElementDetails gst_mngenc_details;
 
 extern GstPadTemplate *gst_mng_sink_factory ();
 extern GstPadTemplate *gst_mng_src_factory ();

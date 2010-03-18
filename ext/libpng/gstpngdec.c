@@ -30,12 +30,6 @@
 #include <gst/video/video.h>
 #include <gst/gst-i18n-plugin.h>
 
-static const GstElementDetails gst_pngdec_details =
-GST_ELEMENT_DETAILS ("PNG image decoder",
-    "Codec/Decoder/Image",
-    "Decode a png video frame to a raw image",
-    "Wim Taymans <wim@fluendo.com>");
-
 GST_DEBUG_CATEGORY_STATIC (pngdec_debug);
 #define GST_CAT_DEFAULT pngdec_debug
 
@@ -111,7 +105,10 @@ gst_pngdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_pngdec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pngdec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_pngdec_details);
+  gst_element_class_set_details_simple (element_class, "PNG image decoder",
+      "Codec/Decoder/Image",
+      "Decode a png video frame to a raw image",
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

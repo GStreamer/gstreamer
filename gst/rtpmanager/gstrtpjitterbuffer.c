@@ -70,14 +70,6 @@
 GST_DEBUG_CATEGORY (rtpjitterbuffer_debug);
 #define GST_CAT_DEFAULT (rtpjitterbuffer_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_jitter_buffer_details =
-GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
-    "Filter/Network/RTP",
-    "A buffer that deals with network jitter and other transmission faults",
-    "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* RTPJitterBuffer signals and args */
 enum
 {
@@ -286,7 +278,11 @@ gst_rtp_jitter_buffer_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_rtcp_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_jitter_buffer_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP packet jitter-buffer", "Filter/Network/RTP",
+      "A buffer that deals with network jitter and other transmission faults",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

@@ -35,13 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtspgoogle_debug);
 #define GST_CAT_DEFAULT (rtspgoogle_debug)
 
-/* elementfactory information */
-static const GstElementDetails rtspgoogle_details =
-GST_ELEMENT_DETAILS ("Google RTSP Extension",
-    "Network/Extension/Protocol",
-    "Extends RTSP so that it can handle Google setup",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 #define SERVER_PREFIX "Google RTSP"
 
 static GstRTSPResult
@@ -149,7 +142,10 @@ gst_rtsp_google_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &rtspgoogle_details);
+  gst_element_class_set_details_simple (element_class, "Google RTSP Extension",
+      "Network/Extension/Protocol",
+      "Extends RTSP so that it can handle Google setup",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

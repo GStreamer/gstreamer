@@ -27,12 +27,6 @@
 
 #include "gstrtpmpvpay.h"
 
-static const GstElementDetails gst_rtp_mpv_pay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG2 ES video payloader",
-    "Codec/Payloader/Network",
-    "Payload-encodes MPEG2 ES into RTP packets (RFC 2250)",
-    "Thijs Vermeir <thijsvermeir@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_mpv_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -70,7 +64,10 @@ gst_rtp_mpv_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_mpv_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mpv_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_mpv_pay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG2 ES video payloader", "Codec/Payloader/Network",
+      "Payload-encodes MPEG2 ES into RTP packets (RFC 2250)",
+      "Thijs Vermeir <thijsvermeir@gmail.com>");
 }
 
 static void

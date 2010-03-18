@@ -42,13 +42,6 @@ GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
  * RFC 3984
  */
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_h264pay_details =
-GST_ELEMENT_DETAILS ("RTP H264 payloader",
-    "Codec/Payloader/Network",
-    "Payload-encode H264 video into RTP packets (RFC 3984)",
-    "Laurent Glayal <spglegle@yahoo.fr>");
-
 static GstStaticPadTemplate gst_rtp_h264_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -133,7 +126,10 @@ gst_rtp_h264_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_h264_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h264pay_details);
+  gst_element_class_set_details_simple (element_class, "RTP H264 payloader",
+      "Codec/Payloader/Network",
+      "Payload-encode H264 video into RTP packets (RFC 3984)",
+      "Laurent Glayal <spglegle@yahoo.fr>");
 }
 
 static void

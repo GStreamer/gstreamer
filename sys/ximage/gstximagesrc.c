@@ -52,15 +52,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_debug_ximage_src);
 #define GST_CAT_DEFAULT gst_debug_ximage_src
 
-/* elementfactory information */
-static const GstElementDetails ximagesrc_details =
-GST_ELEMENT_DETAILS ("Ximage video source",
-    "Source/Video",
-    "Creates a screenshot video stream",
-    "Lutz Mueller <lutz@users.sourceforge.net>, "
-    "Jan Schmidt <thaytan@mad.scientist.com>, "
-    "Zaheer Merali <zaheerabbas at merali dot org>");
-
 static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
@@ -898,7 +889,12 @@ gst_ximage_src_base_init (gpointer g_class)
 {
   GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (ec, &ximagesrc_details);
+  gst_element_class_set_details_simple (ec, "Ximage video source",
+      "Source/Video",
+      "Creates a screenshot video stream",
+      "Lutz Mueller <lutz@users.sourceforge.net>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Zaheer Merali <zaheerabbas at merali dot org>");
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t));
 }
 

@@ -106,12 +106,6 @@
 GST_DEBUG_CATEGORY_STATIC (dvdemux_debug);
 #define GST_CAT_DEFAULT dvdemux_debug
 
-static const GstElementDetails dvdemux_details =
-GST_ELEMENT_DETAILS ("DV system stream demuxer",
-    "Codec/Demuxer",
-    "Uses libdv to separate DV audio from DV video (libdv.sourceforge.net)",
-    "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
-
 static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -186,7 +180,10 @@ gst_dvdemux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&audio_src_temp));
 
-  gst_element_class_set_details (element_class, &dvdemux_details);
+  gst_element_class_set_details_simple (element_class,
+      "DV system stream demuxer", "Codec/Demuxer",
+      "Uses libdv to separate DV audio from DV video (libdv.sourceforge.net)",
+      "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (dvdemux_debug, "dvdemux", 0, "DV demuxer element");
 }

@@ -73,14 +73,6 @@
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_oss_sink_details =
-GST_ELEMENT_DETAILS ("Audio Sink (OSS)",
-    "Sink/Audio",
-    "Output to a sound card via OSS",
-    "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Wim Taymans <wim.taymans@chello.be>");
-
 static void gst_oss_sink_base_init (gpointer g_class);
 static void gst_oss_sink_class_init (GstOssSinkClass * klass);
 static void gst_oss_sink_init (GstOssSink * osssink);
@@ -183,7 +175,11 @@ gst_oss_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_oss_sink_details);
+  gst_element_class_set_details_simple (element_class, "Audio Sink (OSS)",
+      "Sink/Audio",
+      "Output to a sound card via OSS",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim.taymans@chello.be>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssink_sink_factory));

@@ -105,15 +105,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtspsrc_details =
-GST_ELEMENT_DETAILS ("RTSP packet receiver",
-    "Source/Network",
-    "Receive data over the network via RTSP (RFC 2326)",
-    "Wim Taymans <wim@fluendo.com>\n"
-    "Thijs Vermeir <thijs.vermeir@barco.com>\n"
-    "Lutz Mueller <lutz@topfrose.de>");
-
 static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -285,7 +276,12 @@ gst_rtspsrc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&rtptemplate));
 
-  gst_element_class_set_details (element_class, &gst_rtspsrc_details);
+  gst_element_class_set_details_simple (element_class, "RTSP packet receiver",
+      "Source/Network",
+      "Receive data over the network via RTSP (RFC 2326)",
+      "Wim Taymans <wim@fluendo.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>, "
+      "Lutz Mueller <lutz@topfrose.de>");
 }
 
 static void

@@ -68,12 +68,11 @@ static void
 gst_gconf_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  static const GstElementDetails gst_gconf_audio_sink_details =
-      GST_ELEMENT_DETAILS ("GConf audio sink",
+
+  gst_element_class_set_details_simple (eklass, "GConf audio sink",
       "Sink/Audio",
       "Audio sink embedding the GConf-settings for audio output",
       "Jan Schmidt <thaytan@mad.scientist.com>");
-  gst_element_class_set_details (eklass, &gst_gconf_audio_sink_details);
 }
 
 #define GST_TYPE_GCONF_PROFILE (gst_gconf_profile_get_type())

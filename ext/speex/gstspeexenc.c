@@ -69,12 +69,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 6000, 48000 ], " "channels = (int) [ 1, 2]")
     );
 
-static const GstElementDetails speexenc_details =
-GST_ELEMENT_DETAILS ("Speex audio encoder",
-    "Codec/Encoder/Audio",
-    "Encodes audio in Speex format",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define DEFAULT_QUALITY         8.0
 #define DEFAULT_BITRATE         0
 #define DEFAULT_MODE            GST_SPEEX_ENC_MODE_AUTO
@@ -184,7 +178,9 @@ gst_speex_enc_base_init (gpointer g_class)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &speexenc_details);
+  gst_element_class_set_details_simple (element_class, "Speex audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes audio in Speex format", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

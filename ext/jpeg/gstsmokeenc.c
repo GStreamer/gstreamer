@@ -30,13 +30,6 @@
 #include "gstsmokeenc.h"
 #include <gst/video/video.h>
 
-/* elementfactory information */
-static const GstElementDetails gst_smokeenc_details =
-GST_ELEMENT_DETAILS ("Smoke video encoder",
-    "Codec/Encoder/Video",
-    "Encode images into the Smoke format",
-    "Wim Taymans <wim@fluendo.com>");
-
 GST_DEBUG_CATEGORY_STATIC (smokeenc_debug);
 #define GST_CAT_DEFAULT smokeenc_debug
 
@@ -134,7 +127,9 @@ gst_smokeenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_smokeenc_sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_smokeenc_src_pad_template));
-  gst_element_class_set_details (element_class, &gst_smokeenc_details);
+  gst_element_class_set_details_simple (element_class, "Smoke video encoder",
+      "Codec/Encoder/Video",
+      "Encode images into the Smoke format", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

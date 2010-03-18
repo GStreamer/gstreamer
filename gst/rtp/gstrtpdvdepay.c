@@ -85,12 +85,6 @@ GST_BOILERPLATE (GstRTPDVDepay, gst_rtp_dv_depay, GstBaseRTPDepayload,
 
      static void gst_rtp_dv_depay_base_init (gpointer g_class)
 {
-  static GstElementDetails plugin_details = {
-    "RTP DV Depayloader",
-    "Codec/Depayloader/Network",
-    "Depayloads DV from RTP packets (RFC 3189)",
-    "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -98,7 +92,10 @@ GST_BOILERPLATE (GstRTPDVDepay, gst_rtp_dv_depay, GstBaseRTPDepayload,
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "RTP DV Depayloader",
+      "Codec/Depayloader/Network",
+      "Depayloads DV from RTP packets (RFC 3189)",
+      "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
 }
 
 /* initialize the plugin's class */

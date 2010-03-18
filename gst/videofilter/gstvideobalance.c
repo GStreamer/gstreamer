@@ -61,12 +61,6 @@
 #define rint(x) (floor((x)+0.5))
 #endif
 
-static const GstElementDetails video_balance_details =
-GST_ELEMENT_DETAILS ("Video balance",
-    "Filter/Effect/Video",
-    "Adjusts brightness, contrast, hue, saturation on a video stream",
-    "David Schleef <ds@schleef.org>");
-
 /* GstVideoBalance signals and args */
 #define DEFAULT_PROP_CONTRAST		1.0
 #define DEFAULT_PROP_BRIGHTNESS		0.0
@@ -304,7 +298,10 @@ gst_video_balance_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &video_balance_details);
+  gst_element_class_set_details_simple (element_class, "Video balance",
+      "Filter/Effect/Video",
+      "Adjusts brightness, contrast, hue, saturation on a video stream",
+      "David Schleef <ds@schleef.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_balance_sink_template));

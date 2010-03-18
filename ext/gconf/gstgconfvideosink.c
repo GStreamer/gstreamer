@@ -53,11 +53,7 @@ static void
 gst_gconf_video_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  static const GstElementDetails gst_gconf_video_sink_details =
-      GST_ELEMENT_DETAILS ("GConf video sink",
-      "Sink/Video",
-      "Video sink embedding the GConf-settings for video output",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
   static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
@@ -65,7 +61,10 @@ gst_gconf_video_sink_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (eklass, &gst_gconf_video_sink_details);
+  gst_element_class_set_details_simple (eklass, "GConf video sink",
+      "Sink/Video",
+      "Video sink embedding the GConf-settings for video output",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void

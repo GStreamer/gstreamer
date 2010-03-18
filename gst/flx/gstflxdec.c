@@ -40,13 +40,6 @@
 GST_DEBUG_CATEGORY_STATIC (flxdec_debug);
 #define GST_CAT_DEFAULT flxdec_debug
 
-/* flx element information */
-static const GstElementDetails flxdec_details =
-GST_ELEMENT_DETAILS ("FLX video decoder",
-    "Codec/Decoder/Video",
-    "FLC/FLI/FLX video decoder",
-    "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
-
 /* input */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -114,7 +107,10 @@ gst_flxdec_base_init (GstFlxDecClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (gstelement_class, &flxdec_details);
+  gst_element_class_set_details_simple (gstelement_class, "FLX video decoder",
+      "Codec/Decoder/Video",
+      "FLC/FLI/FLX video decoder",
+      "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (gstelement_class,

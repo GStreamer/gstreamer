@@ -73,12 +73,6 @@ enum
 
 #define DEFAULT_PROP_GAMMA  1
 
-static const GstElementDetails gamma_details =
-GST_ELEMENT_DETAILS ("Video gamma correction",
-    "Filter/Effect/Video",
-    "Adjusts gamma on a video stream",
-    "Arwed v. Merkatz <v.merkatz@gmx.net");
-
 static GstStaticPadTemplate gst_gamma_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -114,7 +108,9 @@ gst_gamma_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gamma_details);
+  gst_element_class_set_details_simple (element_class, "Video gamma correction",
+      "Filter/Effect/Video",
+      "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gamma_sink_template));

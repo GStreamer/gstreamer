@@ -24,13 +24,6 @@
 #include "gstmedian.h"
 #include <gst/video/video.h>
 
-/* elementfactory information */
-static const GstElementDetails median_details =
-GST_ELEMENT_DETAILS ("Median effect",
-    "Filter/Effect/Video",
-    "Apply a median filter to an image",
-    "Wim Taymans <wim.taymans@chello.be>");
-
 static GstStaticPadTemplate median_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -113,7 +106,10 @@ gst_median_base_init (GstMedianClass * klass)
       gst_static_pad_template_get (&median_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&median_src_factory));
-  gst_element_class_set_details (element_class, &median_details);
+  gst_element_class_set_details_simple (element_class, "Median effect",
+      "Filter/Effect/Video",
+      "Apply a median filter to an image",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void

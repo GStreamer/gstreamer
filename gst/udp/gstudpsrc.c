@@ -133,13 +133,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static const GstElementDetails gst_udpsrc_details =
-GST_ELEMENT_DETAILS ("UDP packet receiver",
-    "Source/Network",
-    "Receive data over the network via UDP",
-    "Wim Taymans <wim@fluendo.com>\n"
-    "Thijs Vermeir <thijs.vermeir@barco.com>");
-
 #define UDP_DEFAULT_PORT                4951
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
 #define UDP_DEFAULT_MULTICAST_IFACE     NULL
@@ -229,7 +222,11 @@ gst_udpsrc_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_udpsrc_details);
+  gst_element_class_set_details_simple (element_class, "UDP packet receiver",
+      "Source/Network",
+      "Receive data over the network via UDP",
+      "Wim Taymans <wim@fluendo.com>, "
+      "Thijs Vermeir <thijs.vermeir@barco.com>");
 }
 
 static void

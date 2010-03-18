@@ -55,11 +55,7 @@ static void
 gst_gconf_video_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  static const GstElementDetails gst_gconf_video_src_details =
-      GST_ELEMENT_DETAILS ("GConf video source",
-      "Source/Video",
-      "Video source embedding the GConf-settings for video input",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
   static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
@@ -67,7 +63,10 @@ gst_gconf_video_src_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (eklass, &gst_gconf_video_src_details);
+  gst_element_class_set_details_simple (eklass, "GConf video source",
+      "Source/Video",
+      "Video source embedding the GConf-settings for video input",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void

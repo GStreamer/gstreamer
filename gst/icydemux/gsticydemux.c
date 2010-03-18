@@ -49,13 +49,6 @@
 
 #include <string.h>
 
-static const GstElementDetails gst_icydemux_details =
-GST_ELEMENT_DETAILS ("ICY tag demuxer",
-    "Codec/Demuxer/Metadata",
-    "Read and output ICY tags while demuxing the contents",
-    "Jan Schmidt <thaytan@mad.scientist.com>\n"
-    "Michael Smith <msmith@fluendo.com>");
-
 #define ICY_TYPE_FIND_MAX_SIZE (40*1024)
 
 GST_DEBUG_CATEGORY_STATIC (icydemux_debug);
@@ -126,7 +119,11 @@ gst_icydemux_base_init (GstICYDemuxClass * klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &gst_icydemux_details);
+  gst_element_class_set_details_simple (element_class, "ICY tag demuxer",
+      "Codec/Demuxer/Metadata",
+      "Read and output ICY tags while demuxing the contents",
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Michael Smith <msmith@fluendo.com>");
 }
 
 static void

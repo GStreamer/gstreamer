@@ -145,13 +145,6 @@ gst_avi_demux_get_type (void)
 static void
 gst_avi_demux_base_init (GstAviDemuxClass * klass)
 {
-  static const GstElementDetails gst_avi_demux_details =
-      GST_ELEMENT_DETAILS ("Avi demuxer",
-      "Codec/Demuxer",
-      "Demultiplex an avi file into audio and video",
-      "Erik Walthinsen <omega@cse.ogi.edu>\n"
-      "Wim Taymans <wim.taymans@chello.be>\n"
-      "Thijs Vermeir <thijsvermeir@gmail.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;
   GstCaps *audcaps, *vidcaps, *subcaps;
@@ -175,7 +168,12 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
   gst_element_class_add_pad_template (element_class, subsrctempl);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_templ));
-  gst_element_class_set_details (element_class, &gst_avi_demux_details);
+  gst_element_class_set_details_simple (element_class, "Avi demuxer",
+      "Codec/Demuxer",
+      "Demultiplex an avi file into audio and video",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Thijs Vermeir <thijsvermeir@gmail.com>");
 }
 
 static void

@@ -32,13 +32,6 @@
 #include "gstsmokedec.h"
 #include <gst/video/video.h>
 
-/* elementfactory information */
-static const GstElementDetails gst_smokedec_details =
-GST_ELEMENT_DETAILS ("Smoke video decoder",
-    "Codec/Decoder/Video",
-    "Decode video from Smoke format",
-    "Wim Taymans <wim@fluendo.com>");
-
 GST_DEBUG_CATEGORY_STATIC (smokedec_debug);
 #define GST_CAT_DEFAULT smokedec_debug
 
@@ -117,7 +110,9 @@ gst_smokedec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_smokedec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_smokedec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_smokedec_details);
+  gst_element_class_set_details_simple (element_class, "Smoke video decoder",
+      "Codec/Decoder/Video",
+      "Decode video from Smoke format", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

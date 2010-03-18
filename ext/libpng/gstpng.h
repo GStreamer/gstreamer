@@ -20,7 +20,6 @@
 #include <png.h>
 
 GType gst_pngenc_get_type (void);
-extern GstElementDetails gst_pngenc_details;
 
 extern GstPadTemplate *gst_png_sink_factory ();
 extern GstPadTemplate *gst_png_src_factory ();

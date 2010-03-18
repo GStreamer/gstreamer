@@ -345,14 +345,6 @@ enum
   PROP_MODE_A_ONLY
 };
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_h263pay_details =
-GST_ELEMENT_DETAILS ("RTP H263 packet payloader",
-    "Codec/Payloader/Network",
-    "Payload-encodes H263 video in RTP packets (RFC 2190)",
-    "Neil Stratford <neils@vipadia.com>"
-    "Dejan Sakelsak <dejan.sakelsak@marand.si>");
-
 static GstStaticPadTemplate gst_rtp_h263_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -415,7 +407,11 @@ GST_BOILERPLATE (GstRtpH263Pay, gst_rtp_h263_pay, GstBaseRTPPayload,
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h263pay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP H263 packet payloader", "Codec/Payloader/Network",
+      "Payload-encodes H263 video in RTP packets (RFC 2190)",
+      "Neil Stratford <neils@vipadia.com>"
+      "Dejan Sakelsak <dejan.sakelsak@marand.si>");
 }
 
 static void
@@ -894,8 +890,9 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     } else {
       if (n > rest_bits) {
         context->window =
-            (context->window << rest_bits) | (*context->
-            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
+            (context->
+            window << rest_bits) | (*context->win_end & (((guint) pow (2.0,
+                        (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
@@ -1656,8 +1653,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
-            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
+            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {

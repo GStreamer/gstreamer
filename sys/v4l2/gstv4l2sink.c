@@ -53,13 +53,6 @@
 
 #include <string.h>
 
-
-static const GstElementDetails gst_v4l2sink_details =
-GST_ELEMENT_DETAILS ("Video (video4linux2) Sink",
-    "Sink/Video",
-    "Displays frames on a video4linux2 device",
-    "Rob Clark <rob@ti.com>,");
-
 GST_DEBUG_CATEGORY (v4l2sink_debug);
 #define GST_CAT_DEFAULT v4l2sink_debug
 
@@ -201,7 +194,9 @@ gst_v4l2sink_base_init (gpointer g_class)
 
   GST_DEBUG_CATEGORY_INIT (v4l2sink_debug, "v4l2sink", 0, "V4L2 sink element");
 
-  gst_element_class_set_details (gstelement_class, &gst_v4l2sink_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video (video4linux2) Sink", "Sink/Video",
+      "Displays frames on a video4linux2 device", "Rob Clark <rob@ti.com>,");
 
   gst_element_class_add_pad_template
       (gstelement_class,

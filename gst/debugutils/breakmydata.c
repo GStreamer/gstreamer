@@ -85,11 +85,6 @@ static GstFlowReturn gst_break_my_data_transform_ip (GstBaseTransform * trans,
 static gboolean gst_break_my_data_stop (GstBaseTransform * trans);
 static gboolean gst_break_my_data_start (GstBaseTransform * trans);
 
-static const GstElementDetails details = GST_ELEMENT_DETAILS ("Break my data",
-    "Testing",
-    "randomly change data in the stream",
-    "Benjamin Otte <otte@gnome>");
-
 GstStaticPadTemplate bmd_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -120,7 +115,9 @@ gst_break_my_data_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&bmd_src_template));
 
-  gst_element_class_set_details (gstelement_class, &details);
+  gst_element_class_set_details_simple (gstelement_class, "Break my data",
+      "Testing",
+      "randomly change data in the stream", "Benjamin Otte <otte@gnome>");
 }
 
 static void

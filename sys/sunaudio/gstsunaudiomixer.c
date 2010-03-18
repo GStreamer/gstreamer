@@ -32,12 +32,6 @@
 
 #include "gstsunaudiomixer.h"
 
-static const GstElementDetails gst_sunaudiomixer_details =
-GST_ELEMENT_DETAILS ("Sun Audio Mixer",
-    "Generic/Audio",
-    "Control sound input and output levels with Sun Audio",
-    "Brian Cameron <brian.cameron@sun.com>");
-
 GST_BOILERPLATE_WITH_INTERFACE (GstSunAudioMixer, gst_sunaudiomixer,
     GstElement, GST_TYPE_ELEMENT, GstMixer, GST_TYPE_MIXER, gst_sunaudiomixer);
 
@@ -49,8 +43,10 @@ static GstStateChangeReturn gst_sunaudiomixer_change_state (GstElement *
 static void
 gst_sunaudiomixer_base_init (gpointer klass)
 {
-  gst_element_class_set_details (GST_ELEMENT_CLASS (klass),
-      &gst_sunaudiomixer_details);
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+      "Sun Audio Mixer", "Generic/Audio",
+      "Control sound input and output levels with Sun Audio",
+      "Brian Cameron <brian.cameron@sun.com>");
 }
 
 static void

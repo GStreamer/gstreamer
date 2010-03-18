@@ -113,14 +113,6 @@ enum
   PROP_DEVICE_NAME
 };
 
-static const GstElementDetails gst_dv1394src_details =
-GST_ELEMENT_DETAILS ("Firewire (1394) DV video source",
-    "Source/Video",
-    "Source for DV video data from firewire port",
-    "Erik Walthinsen <omega@temple-baptist.com>\n"
-    "Daniel Fischer <dan@f3c.com>\n" "Wim Taymans <wim@fluendo.com>\n"
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -179,7 +171,12 @@ gst_dv1394src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
 
-  gst_element_class_set_details (element_class, &gst_dv1394src_details);
+  gst_element_class_set_details_simple (element_class,
+      "Firewire (1394) DV video source", "Source/Video",
+      "Source for DV video data from firewire port",
+      "Erik Walthinsen <omega@temple-baptist.com>, "
+      "Daniel Fischer <dan@f3c.com>, " "Wim Taymans <wim@fluendo.com>, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 static void

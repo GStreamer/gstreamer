@@ -49,12 +49,6 @@
 #define GST_CAT_DEFAULT gst_audio_panorama_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("Stereo positioning",
-    "Filter/Effect/Audio",
-    "Positions audio streams in the stereo panorama",
-    "Stefan Kost <ensonic@users.sf.net>");
-
 /* Filter signals and args */
 enum
 {
@@ -194,7 +188,10 @@ gst_audio_panorama_base_init (gpointer klass)
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Stereo positioning",
+      "Filter/Effect/Audio",
+      "Positions audio streams in the stereo panorama",
+      "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void

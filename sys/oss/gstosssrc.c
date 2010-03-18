@@ -67,12 +67,6 @@
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
-static const GstElementDetails gst_oss_src_details =
-GST_ELEMENT_DETAILS ("Audio Source (OSS)",
-    "Source/Audio",
-    "Capture from a sound card via OSS",
-    "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
-
 #define DEFAULT_DEVICE          "/dev/dsp"
 #define DEFAULT_DEVICE_NAME     ""
 
@@ -137,7 +131,10 @@ gst_oss_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_oss_src_details);
+  gst_element_class_set_details_simple (element_class, "Audio Source (OSS)",
+      "Source/Audio",
+      "Capture from a sound card via OSS",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssrc_src_factory));

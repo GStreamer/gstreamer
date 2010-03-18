@@ -59,12 +59,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (video_flip_debug);
 #define GST_CAT_DEFAULT video_flip_debug
 
-static const GstElementDetails video_flip_details =
-GST_ELEMENT_DETAILS ("Video flipper",
-    "Filter/Effect/Video",
-    "Flips and rotates video",
-    "David Schleef <ds@schleef.org>");
-
 static GstStaticPadTemplate gst_video_flip_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -615,7 +609,9 @@ gst_video_flip_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &video_flip_details);
+  gst_element_class_set_details_simple (element_class, "Video flipper",
+      "Filter/Effect/Video",
+      "Flips and rotates video", "David Schleef <ds@schleef.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_video_flip_sink_template));

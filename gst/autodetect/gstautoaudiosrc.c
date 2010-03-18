@@ -64,13 +64,6 @@ static void gst_auto_audio_src_get_property (GObject * object, guint prop_id,
 
 GST_BOILERPLATE (GstAutoAudioSrc, gst_auto_audio_src, GstBin, GST_TYPE_BIN);
 
-static const GstElementDetails gst_auto_audio_src_details =
-GST_ELEMENT_DETAILS ("Auto audio source",
-    "Source/Audio",
-    "Wrapper audio source for automatically detected audio source",
-    "Jan Schmidt <thaytan@noraisin.net>\n"
-    "Stefan Kost <ensonic@users.sf.net>");
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -84,7 +77,11 @@ gst_auto_audio_src_base_init (gpointer klass)
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (eklass, &gst_auto_audio_src_details);
+  gst_element_class_set_details_simple (eklass, "Auto audio source",
+      "Source/Audio",
+      "Wrapper audio source for automatically detected audio source",
+      "Jan Schmidt <thaytan@noraisin.net>, "
+      "Stefan Kost <ensonic@users.sf.net>");
 }
 
 static void

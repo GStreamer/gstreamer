@@ -39,15 +39,6 @@
 GST_DEBUG_CATEGORY_STATIC (pixbufscale_debug);
 #define GST_CAT_DEFAULT pixbufscale_debug
 
-/* elementfactory information */
-static const GstElementDetails pixbufscale_details =
-GST_ELEMENT_DETAILS ("GdkPixbuf image scaler",
-    "Filter/Effect/Video",
-    "Resizes video",
-    "Jan Schmidt <thaytan@mad.scientist.com>\n"
-    "Wim Taymans <wim.taymans@chello.be>\n"
-    "Renato Filho <renato.filho@indt.org.br>");
-
 /* GstPixbufScale signals and args */
 enum
 {
@@ -125,7 +116,11 @@ gst_pixbufscale_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &pixbufscale_details);
+  gst_element_class_set_details_simple (element_class, "GdkPixbuf image scaler",
+      "Filter/Effect/Video", "Resizes video",
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Renato Filho <renato.filho@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pixbufscale_src_template));

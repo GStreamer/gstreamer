@@ -31,14 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (shout2_debug);
 #define GST_CAT_DEFAULT shout2_debug
 
-static const GstElementDetails shout2send_details =
-GST_ELEMENT_DETAILS ("Icecast network sink",
-    "Sink/Network",
-    "Sends data to an icecast server",
-    "Wim Taymans <wim.taymans@chello.be>\n"
-    "Pedro Corte-Real <typo@netcabo.pt>\n"
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
 
 enum
 {
@@ -170,7 +162,11 @@ gst_shout2send_base_init (GstShout2sendClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &shout2send_details);
+  gst_element_class_set_details_simple (element_class, "Icecast network sink",
+      "Sink/Network", "Sends data to an icecast server",
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Pedro Corte-Real <typo@netcabo.pt>, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 }

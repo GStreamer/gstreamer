@@ -29,13 +29,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpmpvdepay_debug);
 #define GST_CAT_DEFAULT (rtpmpvdepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_mpvdepay_details =
-GST_ELEMENT_DETAILS ("RTP MPEG video depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts MPEG video from RTP packets (RFC 2250)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 /* FIXME, we set the mpeg version to 2, we should ideally be looking at contents
  * of the stream to figure out the version */
 static GstStaticPadTemplate gst_rtp_mpv_depay_src_template =
@@ -78,7 +71,10 @@ gst_rtp_mpv_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_mpv_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mpvdepay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP MPEG video depayloader", "Codec/Depayloader/Network",
+      "Extracts MPEG video from RTP packets (RFC 2250)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

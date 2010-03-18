@@ -43,12 +43,6 @@
 #include "gst/gst-i18n-plugin.h"
 #include <jerror.h>
 
-static const GstElementDetails gst_jpeg_dec_details =
-GST_ELEMENT_DETAILS ("JPEG image decoder",
-    "Codec/Decoder/Image",
-    "Decode images from JPEG format",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define MIN_WIDTH  16
 #define MAX_WIDTH  65535
 #define MIN_HEIGHT 8
@@ -164,7 +158,9 @@ gst_jpeg_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_jpeg_dec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_jpeg_dec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_jpeg_dec_details);
+  gst_element_class_set_details_simple (element_class, "JPEG image decoder",
+      "Codec/Decoder/Image",
+      "Decode images from JPEG format", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

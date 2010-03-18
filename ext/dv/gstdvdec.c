@@ -47,13 +47,6 @@
 
 #include "gstdvdec.h"
 
-
-static const GstElementDetails dvdec_details =
-GST_ELEMENT_DETAILS ("DV video decoder",
-    "Codec/Decoder/Video",
-    "Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)",
-    "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
-
 /* sizes of one input buffer */
 #define NTSC_HEIGHT 480
 #define NTSC_BUFFER 120000
@@ -178,7 +171,10 @@ gst_dvdec_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_temp));
 
-  gst_element_class_set_details (element_class, &dvdec_details);
+  gst_element_class_set_details_simple (element_class, "DV video decoder",
+      "Codec/Decoder/Video",
+      "Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)",
+      "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (dvdec_debug, "dvdec", 0, "DV decoding element");
 }

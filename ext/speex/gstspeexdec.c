@@ -50,12 +50,6 @@
 GST_DEBUG_CATEGORY_STATIC (speexdec_debug);
 #define GST_CAT_DEFAULT speexdec_debug
 
-static const GstElementDetails speex_dec_details =
-GST_ELEMENT_DETAILS ("Speex audio decoder",
-    "Codec/Decoder/Audio",
-    "decode speex streams to audio",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define DEFAULT_ENH   TRUE
 
 enum
@@ -115,7 +109,9 @@ gst_speex_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&speex_dec_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&speex_dec_sink_factory));
-  gst_element_class_set_details (element_class, &speex_dec_details);
+  gst_element_class_set_details_simple (element_class, "Speex audio decoder",
+      "Codec/Decoder/Audio",
+      "decode speex streams to audio", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

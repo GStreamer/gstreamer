@@ -26,13 +26,6 @@
 
 #define MAX_HEIGHT              4096
 
-static const GstElementDetails gst_mng_enc_details =
-GST_ELEMENT_DETAILS ("MNG video encoder",
-    "Codec/Encoder/Video",
-    "Encode a video frame to an .mng video",
-    "Wim Taymans <wim@fluendo.com>");
-
-
 /* Filter signals and args */
 enum
 {
@@ -91,7 +84,9 @@ gst_mng_enc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class, mngenc_sink_template);
   gst_element_class_add_pad_template (element_class, mngenc_src_template);
-  gst_element_class_set_details (element_class, &gst_mng_enc_details);
+  gst_element_class_set_details_simple (element_class, "MNG video encoder",
+      "Codec/Encoder/Video",
+      "Encode a video frame to an .mng video", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

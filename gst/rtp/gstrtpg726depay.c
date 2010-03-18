@@ -38,13 +38,6 @@ GST_DEBUG_CATEGORY_STATIC (rtpg726depay_debug);
 #define SAMPLE_RATE 8000
 #define LAYOUT_G726 "g726"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_g726depay_details =
-GST_ELEMENT_DETAILS ("RTP G.726 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts G.726 audio from RTP packets",
-    "Axis Communications <dev-gstreamer@axis.com>");
-
 /* RtpG726Depay signals and args */
 enum
 {
@@ -106,7 +99,10 @@ gst_rtp_g726_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_g726_depay_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_g726_depay_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_g726depay_details);
+  gst_element_class_set_details_simple (element_class, "RTP G.726 depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts G.726 audio from RTP packets",
+      "Axis Communications <dev-gstreamer@axis.com>");
 }
 
 static void

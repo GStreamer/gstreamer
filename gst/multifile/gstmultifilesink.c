@@ -121,12 +121,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_multi_file_sink_debug);
 #define GST_CAT_DEFAULT gst_multi_file_sink_debug
 
-static const GstElementDetails gst_multi_file_sink_details =
-GST_ELEMENT_DETAILS ("Multi-File Sink",
-    "Sink/File",
-    "Write buffers to a sequentially named set of files",
-    "David Schleef <ds@schleef.org>");
-
 #define DEFAULT_LOCATION "%05d"
 #define DEFAULT_INDEX 0
 #define DEFAULT_POST_MESSAGES FALSE
@@ -188,8 +182,10 @@ gst_multi_file_sink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class,
-      &gst_multi_file_sink_details);
+  gst_element_class_set_details_simple (gstelement_class, "Multi-File Sink",
+      "Sink/File",
+      "Write buffers to a sequentially named set of files",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void

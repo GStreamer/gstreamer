@@ -67,12 +67,6 @@ struct wave_header
   struct chunk_struct data;
 };
 
-static const GstElementDetails gst_wavenc_details =
-GST_ELEMENT_DETAILS ("WAV audio muxer",
-    "Codec/Muxer/Audio",
-    "Encode raw audio into WAV",
-    "Iain Holmes <iain@prettypeople.org>");
-
 /* FIXME: mono doesn't produce correct files it seems, at least mplayer xruns */
 /* Max. of two channels, more channels need WAVFORMATEX with
  * channel layout, which we do not support yet */
@@ -152,7 +146,9 @@ gst_wavenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_wavenc_details);
+  gst_element_class_set_details_simple (element_class, "WAV audio muxer",
+      "Codec/Muxer/Audio",
+      "Encode raw audio into WAV", "Iain Holmes <iain@prettypeople.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));

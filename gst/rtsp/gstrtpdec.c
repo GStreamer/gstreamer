@@ -63,13 +63,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpdec_debug);
 #define GST_CAT_DEFAULT (rtpdec_debug)
 
-/* elementfactory information */
-static const GstElementDetails rtpdec_details =
-GST_ELEMENT_DETAILS ("RTP Decoder",
-    "Codec/Parser/Network",
-    "Accepts raw RTP and RTCP packets and sends them forward",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* GstRTPDec signals and args */
 enum
 {
@@ -218,7 +211,10 @@ gst_rtp_dec_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_dec_rtcp_src_template));
 
-  gst_element_class_set_details (element_class, &rtpdec_details);
+  gst_element_class_set_details_simple (element_class, "RTP Decoder",
+      "Codec/Parser/Network",
+      "Accepts raw RTP and RTCP packets and sends them forward",
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 /* BOXED:UINT,UINT */

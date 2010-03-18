@@ -68,11 +68,7 @@ static void
 gst_hal_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  static const GstElementDetails gst_hal_audio_sink_details =
-      GST_ELEMENT_DETAILS ("HAL audio sink",
-      "Sink/Audio",
-      "Audio sink for sound device access via HAL",
-      "Jürg Billeter <j@bitron.ch>");
+
   static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
@@ -80,7 +76,10 @@ gst_hal_audio_sink_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (eklass, &gst_hal_audio_sink_details);
+  gst_element_class_set_details_simple (eklass, "HAL audio sink",
+      "Sink/Audio",
+      "Audio sink for sound device access via HAL",
+      "Jürg Billeter <j@bitron.ch>");
 }
 
 static void

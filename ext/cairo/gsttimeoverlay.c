@@ -49,12 +49,6 @@
 #define rint(x) ((double) floor((x)+(((x) < 0)? -0.5 : 0.5)))
 #endif
 
-static const GstElementDetails cairo_time_overlay_details =
-GST_ELEMENT_DETAILS ("Time overlay",
-    "Filter/Editor/Video",
-    "Overlays the time on a video stream",
-    "David Schleef <ds@schleef.org>");
-
 static GstStaticPadTemplate gst_cairo_time_overlay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -270,7 +264,9 @@ gst_cairo_time_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &cairo_time_overlay_details);
+  gst_element_class_set_details_simple (element_class, "Time overlay",
+      "Filter/Editor/Video",
+      "Overlays the time on a video stream", "David Schleef <ds@schleef.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cairo_time_overlay_sink_template));

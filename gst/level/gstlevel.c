@@ -115,11 +115,6 @@
 GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define GST_CAT_DEFAULT level_debug
 
-static const GstElementDetails level_details = GST_ELEMENT_DETAILS ("Level",
-    "Filter/Analyzer/Audio",
-    "RMS/Peak/Decaying Peak Level messager for audio/raw",
-    "Thomas Vander Stichele <thomas at apestaart dot org>");
-
 static GstStaticPadTemplate sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -188,7 +183,10 @@ gst_level_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_set_details (element_class, &level_details);
+  gst_element_class_set_details_simple (element_class, "Level",
+      "Filter/Analyzer/Audio",
+      "RMS/Peak/Decaying Peak Level messager for audio/raw",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 }
 
 static void

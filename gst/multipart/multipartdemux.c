@@ -55,14 +55,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 #define GST_CAT_DEFAULT gst_multipart_demux_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_multipart_demux_details =
-GST_ELEMENT_DETAILS ("Multipart demuxer",
-    "Codec/Demuxer",
-    "demux multipart streams",
-    "Wim Taymans <wim.taymans@gmail.com>, Sjoerd Simons <sjoerd@luon.net>");
-
-
 /* signals and args */
 enum
 {
@@ -144,7 +136,10 @@ gst_multipart_demux_base_init (gpointer g_class)
       gst_static_pad_template_get (&multipart_demux_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&multipart_demux_src_template_factory));
-  gst_element_class_set_details (element_class, &gst_multipart_demux_details);
+  gst_element_class_set_details_simple (element_class, "Multipart demuxer",
+      "Codec/Demuxer",
+      "demux multipart streams",
+      "Wim Taymans <wim.taymans@gmail.com>, Sjoerd Simons <sjoerd@luon.net>");
 }
 
 static void

@@ -27,14 +27,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpbvpay.h"
 
-/* elementfactory information */
-static GstElementDetails gst_rtp_bv_pay_details = {
-  "RTP BV Payloader",
-  "Codec/Payloader/Network",
-  "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
-  "Wim Taymans <wim.taymans@collabora.co.uk>"
-};
-
 GST_DEBUG_CATEGORY_STATIC (rtpbvpay_debug);
 #define GST_CAT_DEFAULT (rtpbvpay_debug)
 
@@ -78,7 +70,10 @@ gst_rtp_bv_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_bv_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_bv_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_bv_pay_details);
+  gst_element_class_set_details_simple (element_class, "RTP BV Payloader",
+      "Codec/Payloader/Network",
+      "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
+      "Wim Taymans <wim.taymans@collabora.co.uk>");
 }
 
 static void

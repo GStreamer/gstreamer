@@ -37,13 +37,6 @@
 
 #include "gstrtpj2kpay.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_j2k_pay_details =
-GST_ELEMENT_DETAILS ("RTP JPEG 2000 payloader",
-    "Codec/Payloader/Network",
-    "Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_rtp_j2k_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -147,7 +140,10 @@ gst_rtp_j2k_pay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_j2k_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_j2k_pay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP JPEG 2000 payloader", "Codec/Payloader/Network",
+      "Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

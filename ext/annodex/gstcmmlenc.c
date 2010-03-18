@@ -65,12 +65,6 @@ enum
   LAST_SIGNAL
 };
 
-static const GstElementDetails gst_cmml_enc_details =
-GST_ELEMENT_DETAILS ("CMML streams encoder",
-    "Codec/Encoder",
-    "Encodes CMML streams",
-    "Alessandro Decina <alessandro@nnva.org>");
-
 static GstStaticPadTemplate gst_cmml_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -118,7 +112,9 @@ gst_cmml_enc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_cmml_enc_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cmml_enc_src_factory));
-  gst_element_class_set_details (element_class, &gst_cmml_enc_details);
+  gst_element_class_set_details_simple (element_class, "CMML streams encoder",
+      "Codec/Encoder",
+      "Encodes CMML streams", "Alessandro Decina <alessandro@nnva.org>");
 }
 
 static void

@@ -25,14 +25,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpilbcpay.h"
 
-/* elementfactory information */
-static GstElementDetails gst_rtp_ilbc_pay_details = {
-  "RTP iLBC Payloader",
-  "Codec/Payloader/Network",
-  "Packetize iLBC audio streams into RTP packets",
-  "Philippe Kalaf <philippe.kalaf@collabora.co.uk>"
-};
-
 GST_DEBUG_CATEGORY_STATIC (rtpilbcpay_debug);
 #define GST_CAT_DEFAULT (rtpilbcpay_debug)
 
@@ -73,7 +65,10 @@ gst_rtp_ilbc_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_ilbc_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_ilbc_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_ilbc_pay_details);
+  gst_element_class_set_details_simple (element_class, "RTP iLBC Payloader",
+      "Codec/Payloader/Network",
+      "Packetize iLBC audio streams into RTP packets",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
 }
 
 static void

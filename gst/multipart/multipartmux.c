@@ -42,13 +42,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_mux_debug);
 #define GST_CAT_DEFAULT gst_multipart_mux_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_multipart_mux_details =
-GST_ELEMENT_DETAILS ("Multipart muxer",
-    "Codec/Muxer",
-    "mux multipart streams",
-    "Wim Taymans <wim@fluendo.com>");
-
 #define DEFAULT_BOUNDARY        "ThisRandomString"
 
 enum
@@ -140,7 +133,8 @@ gst_multipart_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &gst_multipart_mux_details);
+  gst_element_class_set_details_simple (element_class, "Multipart muxer",
+      "Codec/Muxer", "mux multipart streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

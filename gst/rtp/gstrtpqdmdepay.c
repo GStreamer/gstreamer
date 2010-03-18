@@ -29,13 +29,6 @@
 GST_DEBUG_CATEGORY (rtpqdm2depay_debug);
 #define GST_CAT_DEFAULT rtpqdm2depay_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_qdm2depay_details =
-GST_ELEMENT_DETAILS ("RTP QDM2 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts QDM2 audio from RTP packets (no RFC)",
-    "Edward Hervey <bilboed@bilboed.com>");
-
 static GstStaticPadTemplate gst_rtp_qdm2_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -83,7 +76,10 @@ gst_rtp_qdm2_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_qdm2_depay_sink_template));
 
 
-  gst_element_class_set_details (element_class, &gst_rtp_qdm2depay_details);
+  gst_element_class_set_details_simple (element_class, "RTP QDM2 depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts QDM2 audio from RTP packets (no RFC)",
+      "Edward Hervey <bilboed@bilboed.com>");
 }
 
 static void

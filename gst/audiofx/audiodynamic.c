@@ -53,12 +53,6 @@
 #define GST_CAT_DEFAULT gst_audio_dynamic_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("Dynamic range controller",
-    "Filter/Effect/Audio",
-    "Compressor and Expander",
-    "Sebastian Dröge <slomo@circular-chaos.org>");
-
 /* Filter signals and args */
 enum
 {
@@ -224,7 +218,9 @@ gst_audio_dynamic_base_init (gpointer klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "Dynamic range controller", "Filter/Effect/Audio",
+      "Compressor and Expander", "Sebastian Dröge <slomo@circular-chaos.org>");
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),

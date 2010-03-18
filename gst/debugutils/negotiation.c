@@ -59,14 +59,6 @@ struct _GstNegotiationClass
 
 GType gst_gst_negotiation_get_type (void);
 
-
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("Negotiation",
-    "Testing",
-    "This element acts like identity, except that one can control how "
-    "negotiation works",
-    "David A. Schleef <ds@schleef.org>");
-
 /* Filter signals and args */
 enum
 {
@@ -143,7 +135,10 @@ gst_negotiation_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_negotiation_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_negotiation_src_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "Negotiation",
+      "Testing",
+      "This element acts like identity, except that one can control how "
+      "negotiation works", "David A. Schleef <ds@schleef.org>");
 }
 
 static void

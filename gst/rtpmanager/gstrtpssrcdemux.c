@@ -83,13 +83,6 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-static GstElementDetails gst_rtp_ssrc_demux_details = {
-  "RTP SSRC Demux",
-  "Demux/Network/RTP",
-  "Splits RTP streams based on the SSRC",
-  "Wim Taymans <wim.taymans@gmail.com>"
-};
-
 #define GST_PAD_LOCK(obj)   (g_mutex_lock ((obj)->padlock))
 #define GST_PAD_UNLOCK(obj) (g_mutex_unlock ((obj)->padlock))
 
@@ -242,7 +235,10 @@ gst_rtp_ssrc_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_src_template));
 
-  gst_element_class_set_details (gstelement_klass, &gst_rtp_ssrc_demux_details);
+  gst_element_class_set_details_simple (gstelement_klass, "RTP SSRC Demux",
+      "Demux/Network/RTP",
+      "Splits RTP streams based on the SSRC",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

@@ -68,12 +68,6 @@
 GST_DEBUG_CATEGORY_STATIC (osx_audiosrc_debug);
 #define GST_CAT_DEFAULT osx_audiosrc_debug
 
-static GstElementDetails gst_osx_audio_src_details =
-GST_ELEMENT_DETAILS ("Audio Source (OSX)",
-    "Source/Audio",
-    "Input from a sound card in OS X",
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
 /* Filter signals and args */
 enum
 {
@@ -142,7 +136,10 @@ gst_osx_audio_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
 
-  gst_element_class_set_details (element_class, &gst_osx_audio_src_details);
+  gst_element_class_set_details_simple (element_class, "Audio Source (OSX)",
+      "Source/Audio",
+      "Input from a sound card in OS X",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 }
 
 static void
@@ -249,8 +246,7 @@ gst_osx_audio_src_get_caps (GstBaseSrc * src)
   if (min == max) {
     gst_caps_set_simple (caps, "channels", G_TYPE_INT, max, NULL);
   } else {
-    gst_caps_set_simple (caps, "channels", GST_TYPE_INT_RANGE, min, max,
-        NULL);
+    gst_caps_set_simple (caps, "channels", GST_TYPE_INT_RANGE, min, max, NULL);
   }
 
   return caps;

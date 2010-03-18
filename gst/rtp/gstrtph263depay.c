@@ -35,14 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtph263depay_debug);
 #define GST_CAT_DEFAULT (rtph263depay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_h263depay_details =
-GST_ELEMENT_DETAILS ("RTP H263 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts H263 video from RTP packets (RFC 2190)",
-    "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
-    "Edward Hervey <bilboed@bilboed.com>");
-
 #define GST_RFC2190A_HEADER_LEN 4
 #define GST_RFC2190B_HEADER_LEN 8
 #define GST_RFC2190C_HEADER_LEN 12
@@ -92,7 +84,11 @@ gst_rtp_h263_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_h263_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h263depay_details);
+  gst_element_class_set_details_simple (element_class, "RTP H263 depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts H263 video from RTP packets (RFC 2190)",
+      "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+      "Edward Hervey <bilboed@bilboed.com>");
 }
 
 static void

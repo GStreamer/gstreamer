@@ -62,13 +62,6 @@
 GST_DEBUG_CATEGORY_EXTERN (esd_debug);
 #define GST_CAT_DEFAULT esd_debug
 
-/* elementfactory information */
-static const GstElementDetails esdsink_details =
-GST_ELEMENT_DETAILS ("Esound audio sink",
-    "Sink/Audio",
-    "Plays audio to an esound server",
-    "Arwed von Merkatz <v.merkatz@gmx.net>");
-
 enum
 {
   PROP_0,
@@ -120,7 +113,10 @@ gst_esdsink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &esdsink_details);
+  gst_element_class_set_details_simple (element_class, "Esound audio sink",
+      "Sink/Audio",
+      "Plays audio to an esound server",
+      "Arwed von Merkatz <v.merkatz@gmx.net>");
 }
 
 static void

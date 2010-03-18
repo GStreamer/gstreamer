@@ -63,13 +63,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpxqtdepay_debug);
 #define GST_CAT_DEFAULT (rtpxqtdepay_debug)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_xqtdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts Quicktime audio/video from RTP packets",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* RtpXQTDepay signals and args */
 enum
 {
@@ -121,7 +114,10 @@ gst_rtp_xqt_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_xqt_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_xqtdepay_details);
+  gst_element_class_set_details_simple (element_class, "RTP packet depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts Quicktime audio/video from RTP packets",
+      "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

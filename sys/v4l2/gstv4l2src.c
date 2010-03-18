@@ -58,13 +58,6 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-static const GstElementDetails gst_v4l2src_details =
-GST_ELEMENT_DETAILS ("Video (video4linux2) Source",
-    "Source/Video",
-    "Reads frames from a video4linux2 (BT8x8) device",
-    "Edgard Lima <edgard.lima@indt.org.br>,"
-    " Stefan Kost <ensonic@users.sf.net>");
-
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
@@ -228,7 +221,11 @@ gst_v4l2src_base_init (gpointer g_class)
 
   GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
 
-  gst_element_class_set_details (gstelement_class, &gst_v4l2src_details);
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video (video4linux2) Source", "Source/Video",
+      "Reads frames from a video4linux2 (BT8x8) device",
+      "Edgard Lima <edgard.lima@indt.org.br>,"
+      " Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_add_pad_template
       (gstelement_class,

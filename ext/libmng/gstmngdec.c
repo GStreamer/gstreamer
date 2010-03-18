@@ -21,12 +21,6 @@
 #include "gstmngdec.h"
 #include <gst/video/video.h>
 
-static const GstElementDetails gst_mng_dec_details =
-GST_ELEMENT_DETAILS ("MNG video decoder",
-    "Codec/Decoder/Video",
-    "Decode a mng video to raw images",
-    "Wim Taymans <wim@fluendo.com>");
-
 /* Filter signals and args */
 enum
 {
@@ -76,7 +70,9 @@ gst_mng_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_mng_dec_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_mng_dec_sink_pad_template));
-  gst_element_class_set_details (element_class, &gst_mng_dec_details);
+  gst_element_class_set_details_simple (element_class, "MNG video decoder",
+      "Codec/Decoder/Video",
+      "Decode a mng video to raw images", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void

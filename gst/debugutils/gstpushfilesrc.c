@@ -48,12 +48,6 @@
 GST_DEBUG_CATEGORY_STATIC (pushfilesrc_debug);
 #define GST_CAT_DEFAULT pushfilesrc_debug
 
-static const GstElementDetails pushfilesrc_details =
-GST_ELEMENT_DETAILS ("Push File Source",
-    "Testing",
-    "Implements pushfile:// URI-handler for push-based file access",
-    "Tim-Philipp Müller <tim centricular net>");
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -88,7 +82,10 @@ gst_push_file_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details (element_class, &pushfilesrc_details);
+  gst_element_class_set_details_simple (element_class, "Push File Source",
+      "Testing",
+      "Implements pushfile:// URI-handler for push-based file access",
+      "Tim-Philipp Müller <tim centricular net>");
 }
 
 static void

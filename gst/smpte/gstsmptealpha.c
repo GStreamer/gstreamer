@@ -61,13 +61,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_smpte_alpha_debug);
 #define GST_CAT_DEFAULT gst_smpte_alpha_debug
 
-/* elementfactory information */
-static const GstElementDetails smpte_details =
-GST_ELEMENT_DETAILS ("SMPTE transitions",
-    "Filter/Editor/Video",
-    "Apply the standard SMPTE transitions as alpha on video images",
-    "Wim Taymans <wim.taymans@gmail.com>");
-
 static GstStaticPadTemplate gst_smpte_alpha_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -199,7 +192,10 @@ gst_smpte_alpha_base_init (GstSMPTEAlphaClass * klass)
       gst_static_pad_template_get (&gst_smpte_alpha_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_smpte_alpha_src_template));
-  gst_element_class_set_details (element_class, &smpte_details);
+  gst_element_class_set_details_simple (element_class, "SMPTE transitions",
+      "Filter/Editor/Video",
+      "Apply the standard SMPTE transitions as alpha on video images",
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void

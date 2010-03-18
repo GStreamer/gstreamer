@@ -80,12 +80,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-
-static const GstElementDetails details = GST_ELEMENT_DETAILS ("Test plugin",
-    "Testing",
-    "perform a number of tests",
-    "Benjamin Otte <otte@gnome>");
-
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_test_debug, "testsink", 0, \
       "debugging category for testsink element");
@@ -103,7 +97,8 @@ gst_test_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (gstelement_class, &details);
+  gst_element_class_set_details_simple (gstelement_class, "Test plugin",
+      "Testing", "perform a number of tests", "Benjamin Otte <otte@gnome>");
 }
 
 static void

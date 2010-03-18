@@ -35,12 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (navigationtest_debug);
 #define GST_CAT_DEFAULT navigationtest_debug
 
-static const GstElementDetails navigationtest_details =
-GST_ELEMENT_DETAILS ("Video navigation test",
-    "Filter/Effect/Video",
-    "Handle navigation events showing a black square following mouse pointer",
-    "David Schleef <ds@schleef.org>");
-
 static GstStaticPadTemplate gst_navigationtest_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -272,7 +266,10 @@ gst_navigationtest_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &navigationtest_details);
+  gst_element_class_set_details_simple (element_class, "Video navigation test",
+      "Filter/Effect/Video",
+      "Handle navigation events showing a black square following mouse pointer",
+      "David Schleef <ds@schleef.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_navigationtest_sink_template));

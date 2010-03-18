@@ -143,18 +143,14 @@ gst_rg_volume_base_init (gpointer g_class)
 {
   GstElementClass *element_class = g_class;
 
-  static const GstElementDetails element_details = {
-    "ReplayGain volume",
-    "Filter/Effect/Audio",
-    "Apply ReplayGain volume adjustment",
-    "Ren\xc3\xa9 Stadler <mail@renestadler.de>"
-  };
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "ReplayGain volume",
+      "Filter/Effect/Audio",
+      "Apply ReplayGain volume adjustment",
+      "Ren\xc3\xa9 Stadler <mail@renestadler.de>");
 
   GST_DEBUG_CATEGORY_INIT (gst_rg_volume_debug, "rgvolume", 0,
       "ReplayGain volume element");

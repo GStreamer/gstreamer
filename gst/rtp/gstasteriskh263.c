@@ -47,13 +47,6 @@ typedef struct _GstAsteriskH263Header
 #define GST_ASTERISKH263_HEADER_TIMESTAMP(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->timestamp)
 #define GST_ASTERISKH263_HEADER_LENGTH(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->length)
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_h263p_depaydetails =
-GST_ELEMENT_DETAILS ("RTP Asterisk H263 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts H263 video from RTP and encodes in Asterisk H263 format",
-    "Neil Stratford <neils@vipadia.com>");
-
 static GstStaticPadTemplate gst_asteriskh263_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -91,7 +84,10 @@ gst_asteriskh263_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_asteriskh263_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h263p_depaydetails);
+  gst_element_class_set_details_simple (element_class,
+      "RTP Asterisk H263 depayloader", "Codec/Depayloader/Network",
+      "Extracts H263 video from RTP and encodes in Asterisk H263 format",
+      "Neil Stratford <neils@vipadia.com>");
 }
 
 static void

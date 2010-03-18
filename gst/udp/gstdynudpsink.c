@@ -46,13 +46,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* elementfactory information */
-static const GstElementDetails gst_dynudpsink_details =
-GST_ELEMENT_DETAILS ("UDP packet sender",
-    "Sink/Network",
-    "Send data over the network via UDP",
-    "Philippe Khalaf <burger@speedy.org>");
-
 /* DynUDPSink signals and args */
 enum
 {
@@ -139,7 +132,10 @@ gst_dynudpsink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_dynudpsink_details);
+  gst_element_class_set_details_simple (element_class, "UDP packet sender",
+      "Sink/Network",
+      "Send data over the network via UDP",
+      "Philippe Khalaf <burger@speedy.org>");
 }
 
 static void

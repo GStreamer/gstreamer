@@ -35,13 +35,6 @@ GST_DEBUG_CATEGORY_STATIC (rtpg729depay_debug);
  * RFC 3551 (4.5.6)
  */
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_g729depay_details =
-GST_ELEMENT_DETAILS ("RTP G.729 depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts G.729 audio from RTP packets (RFC 3551)",
-    "Laurent Glayal <spglegle@yahoo.fr>");
-
 enum
 {
   /* FILL ME */
@@ -96,7 +89,10 @@ gst_rtp_g729_depay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_g729_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_g729depay_details);
+  gst_element_class_set_details_simple (element_class, "RTP G.729 depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts G.729 audio from RTP packets (RFC 3551)",
+      "Laurent Glayal <spglegle@yahoo.fr>");
 
   GST_DEBUG_CATEGORY_INIT (rtpg729depay_debug, "rtpg729depay", 0,
       "G.729 RTP Depayloader");

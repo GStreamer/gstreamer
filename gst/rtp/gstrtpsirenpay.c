@@ -26,14 +26,6 @@
 #include "gstrtpsirenpay.h"
 #include <gst/rtp/gstrtpbuffer.h>
 
-/* elementfactory information */
-static GstElementDetails gst_rtp_siren_pay_details = {
-  "RTP Payloader for Siren Audio",
-  "Codec/Payloader/Network",
-  "Packetize Siren audio streams into RTP packets",
-  "Youness Alaoui <kakaroto@kakaroto.homelinux.net>"
-};
-
 GST_DEBUG_CATEGORY_STATIC (rtpsirenpay_debug);
 #define GST_CAT_DEFAULT (rtpsirenpay_debug)
 
@@ -71,7 +63,10 @@ gst_rtp_siren_pay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
-  gst_element_class_set_details (element_class, &gst_rtp_siren_pay_details);
+  gst_element_class_set_details_simple (element_class,
+      "RTP Payloader for Siren Audio", "Codec/Payloader/Network",
+      "Packetize Siren audio streams into RTP packets",
+      "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 }
 
 static void

@@ -27,13 +27,6 @@
 
 #include "gstrtpspeexdepay.h"
 
-/* elementfactory information */
-static const GstElementDetails gst_rtp_speexdepay_details =
-GST_ELEMENT_DETAILS ("RTP Speex depayloader",
-    "Codec/Depayloader/Network",
-    "Extracts Speex audio from RTP packets",
-    "Edgard Lima <edgard.lima@indt.org.br>");
-
 /* RtpSPEEXDepay signals and args */
 enum
 {
@@ -82,7 +75,10 @@ gst_rtp_speex_depay_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_speex_depay_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_speex_depay_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_speexdepay_details);
+  gst_element_class_set_details_simple (element_class, "RTP Speex depayloader",
+      "Codec/Depayloader/Network",
+      "Extracts Speex audio from RTP packets",
+      "Edgard Lima <edgard.lima@indt.org.br>");
 }
 
 static void

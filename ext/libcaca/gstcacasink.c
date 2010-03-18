@@ -54,13 +54,6 @@
 //#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_REVERSE_INT
 //#define GST_CACA_DEFAULT_BLUE_MASK B_MASK_32_REVERSE_INT
 
-/* elementfactory information */
-static const GstElementDetails gst_cacasink_details =
-GST_ELEMENT_DETAILS ("A colored ASCII art video sink",
-    "Sink/Video",
-    "A colored ASCII art videosink",
-    "Zeeshan Ali <zak147@yahoo.com>");
-
 /* cacasink signals and args */
 enum
 {
@@ -155,7 +148,9 @@ gst_cacasink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_cacasink_details);
+  gst_element_class_set_details_simple (element_class,
+      "A colored ASCII art video sink", "Sink/Video",
+      "A colored ASCII art videosink", "Zeeshan Ali <zak147@yahoo.com>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 }
