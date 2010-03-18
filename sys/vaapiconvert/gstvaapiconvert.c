@@ -527,14 +527,13 @@ gst_vaapiconvert_prepare_output_buffer(
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
     GstBuffer *buffer;
 
-    if (convert->use_inout_buffers) {
-        if (!GST_VAAPI_IS_VIDEO_BUFFER(inbuf)) {
-            GST_DEBUG("GstVaapiVideoBuffer was expected");
-            return GST_FLOW_UNEXPECTED;
-        }
+    if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf))
         buffer = gst_buffer_ref(inbuf);
-    }
     else {
+        if (convert->use_inout_buffers) {
+            GST_DEBUG("upstream element destroyed our inout buffer");
+            convert->use_inout_buffers = FALSE;
+        }
         buffer = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
         if (!buffer)
             return GST_FLOW_UNEXPECTED;
