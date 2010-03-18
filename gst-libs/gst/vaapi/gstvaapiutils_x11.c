@@ -56,7 +56,7 @@ static const int x11_event_mask = (KeyPressMask |
                                    StructureNotifyMask);
 
 Window
-x11_create_window(Display *display, unsigned int width, unsigned int height)
+x11_create_window(Display *display, guint width, guint height)
 {
     Window root_window, window;
     int screen, depth;
@@ -110,7 +110,7 @@ x11_get_geometry(
 {
     Window rootwin;
     int x, y;
-    unsigned int width, height, border_width, depth;
+    guint width, height, border_width, depth;
 
     x11_trap_errors();
     XGetGeometry(

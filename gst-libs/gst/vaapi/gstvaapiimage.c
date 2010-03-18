@@ -58,7 +58,7 @@ enum {
 };
 
 #define SWAP_UINT(a, b) do { \
-        unsigned int v = a;  \
+        guint v = a;         \
         a = b;               \
         b = v;               \
     } while (0)

@@ -36,8 +36,8 @@ G_DEFINE_TYPE(GstVaapiWindowX11, gst_vaapi_window_x11, GST_VAAPI_TYPE_WINDOW);
 struct _GstVaapiWindowX11Private {
     GstVaapiDisplay    *display;
     Window              xid;
-    unsigned int        create_window   : 1;
-    unsigned int        is_visible      : 1;
+    guint               create_window   : 1;
+    guint               is_visible      : 1;
 };
 
 enum {
@@ -169,7 +169,7 @@ gst_vaapi_window_x11_render(
     GstVaapiDisplay *display;
     VASurfaceID surface_id;
     VAStatus status;
-    unsigned int va_flags = 0;
+    guint va_flags = 0;
 
     display = gst_vaapi_surface_get_display(surface);
     if (!display)

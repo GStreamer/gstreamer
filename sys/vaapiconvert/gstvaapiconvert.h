@@ -71,7 +71,7 @@ struct _GstVaapiConvert {
     GstVaapiVideoPool  *surfaces;
     guint               surface_width;
     guint               surface_height;
-    unsigned int        use_inout_buffers : 1;
+    guint               use_inout_buffers : 1;
 };
 
 struct _GstVaapiConvertClass {

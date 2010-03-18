@@ -40,12 +40,12 @@ struct _GstVaapiDisplayPrivate {
     VADisplay           display;
     gboolean            create_display;
     VAProfile          *profiles;
-    unsigned int        num_profiles;
+    guint               num_profiles;
     VAImageFormat      *image_formats;
-    unsigned int        num_image_formats;
+    guint               num_image_formats;
     VAImageFormat      *subpicture_formats;
-    unsigned int       *subpicture_flags;
-    unsigned int        num_subpicture_formats;
+    guint              *subpicture_flags;
+    guint               num_subpicture_formats;
 };
 
 enum {
@@ -57,7 +57,7 @@ enum {
 static void
 append_format(
     VAImageFormat     **pva_formats,
-    unsigned int       *pnum_va_formats,
+    guint              *pnum_va_formats,
     GstVaapiImageFormat format
 )
 {
@@ -80,9 +80,9 @@ append_format(
 }
 
 static void
-filter_formats(VAImageFormat **pva_formats, unsigned int *pnum_va_formats)
+filter_formats(VAImageFormat **pva_formats, guint *pnum_va_formats)
 {
-    unsigned int i = 0;
+    guint i = 0;
     gboolean has_YV12 = FALSE;
     gboolean has_I420 = FALSE;
 
@@ -204,7 +204,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     GstVaapiDisplayPrivate * const priv = display->priv;
     VAStatus status;
     int major_version, minor_version;
-    unsigned int i;
+    guint i;
 
     if (!priv->display && priv->create_display) {
         GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
@@ -266,7 +266,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     priv->subpicture_formats = g_new(VAImageFormat, priv->num_subpicture_formats);
     if (!priv->subpicture_formats)
         return FALSE;
-    priv->subpicture_flags = g_new(unsigned int, priv->num_subpicture_formats);
+    priv->subpicture_flags = g_new(guint, priv->num_subpicture_formats);
     if (!priv->subpicture_flags)
         return FALSE;
     status = vaQuerySubpictureFormats(
@@ -473,10 +473,10 @@ _gst_vaapi_display_has_format(
     GstVaapiDisplay     *display,
     GstVaapiImageFormat  format,
     const VAImageFormat *va_formats,
-    unsigned int         num_va_formats
+    guint                num_va_formats
 )
 {
-    unsigned int i;
+    guint i;
 
     g_return_val_if_fail(format != 0, FALSE);
 
@@ -490,11 +490,11 @@ static GstCaps *
 _gst_vaapi_display_get_caps(
     GstVaapiDisplay     *display,
     const VAImageFormat *va_formats,
-    unsigned int         num_va_formats
+    guint                num_va_formats
 )
 {
     GstCaps *out_caps;
-    unsigned int i;
+    guint i;
 
     out_caps = gst_caps_new_empty();
     if (!out_caps)
