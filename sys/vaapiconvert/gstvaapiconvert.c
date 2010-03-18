@@ -195,6 +195,8 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
     convert->surface_height             = 0;
     convert->can_use_inout_buffers      = FALSE;
     convert->use_inout_buffers          = FALSE;
+    convert->can_use_derive_image       = FALSE;
+    convert->use_derive_image           = FALSE;
 
     /* Override buffer allocator on sink pad */
     sinkpad = gst_element_get_static_pad(GST_ELEMENT(convert), "sink");
@@ -267,7 +269,8 @@ gst_vaapiconvert_transform(
         if (!gst_vaapi_image_unmap(image))
             return GST_FLOW_UNEXPECTED;
 
-        gst_vaapi_surface_put_image(surface, image);
+        if (!convert->use_derive_image)
+            gst_vaapi_surface_put_image(surface, image);
         return GST_FLOW_OK;
     }
 
@@ -374,6 +377,8 @@ static gboolean
 gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
 {
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
+    GstVaapiSurface *surface;
+    GstVaapiImage *image;
     gint width, height;
 
     gst_structure_get_int(structure, "width",  &width);
@@ -387,6 +392,20 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
         convert->surfaces = gst_vaapi_surface_pool_new(convert->display, caps);
         if (!convert->surfaces)
             return FALSE;
+
+        /* Check if we can access to the surface pixels directly */
+        surface = gst_vaapi_video_pool_get_object(convert->surfaces);
+        if (surface) {
+            image = gst_vaapi_surface_derive_image(surface);
+            if (image) {
+                if (gst_vaapi_image_map(image)) {
+                    convert->can_use_derive_image = TRUE;
+                    gst_vaapi_image_unmap(image);
+                }
+                g_object_unref(image);
+            }
+            gst_vaapi_video_pool_put_object(convert->surfaces, surface);
+        }
     }
     return TRUE;
 }
@@ -408,6 +427,12 @@ gst_vaapiconvert_negotiate_buffers(
     GST_DEBUG("use-inout-buffers: %spossible, %s",
               convert->can_use_inout_buffers ? "" : "not ",
               convert->use_inout_buffers ? "enabled" : "disabled");
+
+    convert->use_derive_image =
+        convert->use_inout_buffers && convert->can_use_derive_image;
+    GST_DEBUG("use-derive-image: %spossible, %s",
+              convert->can_use_derive_image ? "" : "not ",
+              convert->use_derive_image ? "enabled" : "disabled");
     return TRUE;
 }
 
@@ -457,7 +482,7 @@ gst_vaapiconvert_buffer_alloc(
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
     GstBuffer *buffer = NULL;
-    GstVaapiImage *image;
+    GstVaapiImage *image = NULL;
 
     /* Check if we can use the inout-buffers optimization */
     if (!gst_vaapiconvert_negotiate_buffers(convert, caps, caps))
@@ -470,10 +495,19 @@ gst_vaapiconvert_buffer_alloc(
         goto error;
 
     GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
-    if (!gst_vaapi_video_buffer_set_image_from_pool(vbuffer, convert->images))
-        goto error;
-
-    image = gst_vaapi_video_buffer_get_image(vbuffer);
+    if (convert->use_derive_image) {
+        GstVaapiSurface *surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+        image = gst_vaapi_surface_derive_image(surface);
+        if (image)
+            gst_vaapi_video_buffer_set_image(vbuffer, image);
+        else /* We can't use the derive-image optimization. Disable it. */
+            convert->use_derive_image = FALSE;
+    }
+    if (!image) {
+        if (!gst_vaapi_video_buffer_set_image_from_pool(vbuffer, convert->images))
+            goto error;
+        image = gst_vaapi_video_buffer_get_image(vbuffer);
+    }
     g_assert(image);
 
     if (!gst_vaapi_image_map(image))

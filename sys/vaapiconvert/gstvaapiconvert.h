@@ -73,6 +73,8 @@ struct _GstVaapiConvert {
     guint               surface_height;
     guint               can_use_inout_buffers   : 1;
     guint               use_inout_buffers       : 1;
+    guint               can_use_derive_image    : 1;
+    guint               use_derive_image        : 1;
 };
 
 struct _GstVaapiConvertClass {
