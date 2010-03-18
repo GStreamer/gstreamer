@@ -78,7 +78,7 @@ struct _GstVaapiWindowClass {
     /*< private >*/
     GObjectClass parent_class;
 
-    gboolean    (*create) (GstVaapiWindow *window, guint width, guint height);
+    gboolean    (*create) (GstVaapiWindow *window, guint *width, guint *height);
     void        (*destroy)(GstVaapiWindow *window);
     gboolean    (*show)   (GstVaapiWindow *window);
     gboolean    (*hide)   (GstVaapiWindow *window);

@@ -51,12 +51,23 @@ gst_vaapi_window_destroy(GstVaapiWindow *window)
 }
 
 static gboolean
-gst_vaapi_window_create(GstVaapiWindow *window, guint width, guint height)
+gst_vaapi_window_create(GstVaapiWindow *window)
 {
-    if (width == 0 || height == 0)
+    GstVaapiWindowPrivate * const priv = window->priv;
+    guint width, height;
+
+    width  = priv->width;
+    height = priv->height;
+
+    if (!GST_VAAPI_WINDOW_GET_CLASS(window)->create(window, &width, &height))
         return FALSE;
 
-    return GST_VAAPI_WINDOW_GET_CLASS(window)->create(window, width, height);
+    if (width != priv->width || height != priv->height) {
+        GST_DEBUG("backend resized window to %ux%u", width, height);
+        priv->width  = width;
+        priv->height = height;
+    }
+    return TRUE;
 }
 
 static void
@@ -119,11 +130,7 @@ gst_vaapi_window_constructed(GObject *object)
     GstVaapiWindow * const window = GST_VAAPI_WINDOW(object);
     GObjectClass *parent_class;
 
-    window->priv->is_constructed = gst_vaapi_window_create(
-        window,
-        window->priv->width,
-        window->priv->height
-    );
+    window->priv->is_constructed = gst_vaapi_window_create(window);
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_window_parent_class);
     if (parent_class->constructed)

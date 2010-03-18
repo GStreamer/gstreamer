@@ -96,18 +96,21 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
 }
 
 static gboolean
-gst_vaapi_window_x11_create(GstVaapiWindow *window, guint width, guint height)
+gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
-    Display *dpy;
+    Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    gboolean ok;
 
-    if (!priv->create_window && priv->xid)
-        return TRUE;
-
-    dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    if (!priv->create_window && priv->xid) {
+        GST_VAAPI_DISPLAY_LOCK(priv->display);
+        ok = x11_get_geometry(dpy, priv->xid, NULL, NULL, width, height);
+        GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        return ok;
+    }
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
-    priv->xid = x11_create_window(dpy, width, height);
+    priv->xid = x11_create_window(dpy, *width, *height);
     if (priv->xid)
         XRaiseWindow(dpy, priv->xid);
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
@@ -349,22 +352,14 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
 GstVaapiWindow *
 gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 {
-    Display *dpy;
-    guint width, height;
-
     GST_DEBUG("new window from xid 0x%08x", xid);
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-
-    dpy = GST_VAAPI_DISPLAY_XDISPLAY(display);
-    if (!dpy || !x11_get_geometry(dpy, xid, NULL, NULL, &width, &height))
-        return NULL;
+    g_return_val_if_fail(xid != None, NULL);
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
                         "display", display,
                         "xid",     xid,
-                        "width",   width,
-                        "height",  height,
                         NULL);
 }
 
