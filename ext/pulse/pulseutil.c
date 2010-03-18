@@ -91,7 +91,7 @@ gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
     ss->format = PA_SAMPLE_S32LE;
   else if (spec->format == GST_S32_BE && spec->width == 32)
     ss->format = PA_SAMPLE_S32BE;
-#if HAVE_PULSE_0_9_15
+#ifdef HAVE_PULSE_0_9_15
   else if (spec->format == GST_S24_3LE && spec->width == 24)
     ss->format = PA_SAMPLE_S24LE;
   else if (spec->format == GST_S24_3BE && spec->width == 24)

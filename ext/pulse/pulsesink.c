@@ -212,7 +212,7 @@ gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf,
   pbuf->context = NULL;
   pbuf->stream = NULL;
 
-#if HAVE_PULSE_0_9_13
+#ifdef HAVE_PULSE_0_9_13
   pa_sample_spec_init (&pbuf->sample_spec);
 #else
   pbuf->sample_spec.format = PA_SAMPLE_INVALID;
@@ -255,7 +255,7 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 
     /* Make sure we don't get any further callbacks */
     pa_context_set_state_callback (pbuf->context, NULL, NULL);
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
     pa_context_set_subscribe_callback (pbuf->context, NULL, NULL);
 #endif
 
@@ -327,7 +327,7 @@ gst_pulsering_context_state_cb (pa_context * c, void *userdata)
   }
 }
 
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
 static void
 gst_pulsering_context_subscribe_cb (pa_context * c,
     pa_subscription_event_type_t t, uint32_t idx, void *userdata)
@@ -389,7 +389,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   /* register some essential callbacks */
   pa_context_set_state_callback (pbuf->context,
       gst_pulsering_context_state_cb, pbuf);
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
   pa_context_set_subscribe_callback (pbuf->context,
       gst_pulsering_context_subscribe_cb, pbuf);
 #endif
@@ -557,7 +557,7 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
     GST_LOG_OBJECT (psink, "latency update (information unknown)");
     return;
   }
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
   sink_usec = info->configured_sink_usec;
 #else
   sink_usec = 0;
@@ -586,7 +586,7 @@ gst_pulsering_stream_suspended_cb (pa_stream * p, void *userdata)
     GST_DEBUG_OBJECT (psink, "stream resumed");
 }
 
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
 static void
 gst_pulsering_stream_started_cb (pa_stream * p, void *userdata)
 {
@@ -600,7 +600,7 @@ gst_pulsering_stream_started_cb (pa_stream * p, void *userdata)
 }
 #endif
 
-#if HAVE_PULSE_0_9_15
+#ifdef HAVE_PULSE_0_9_15
 static void
 gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
     pa_proplist * pl, void *userdata)
@@ -640,7 +640,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   const pa_buffer_attr *actual;
   pa_channel_map channel_map;
   pa_operation *o = NULL;
-#if HAVE_PULSE_0_9_20
+#ifdef HAVE_PULSE_0_9_20
   pa_cvolume v;
 #endif
   pa_cvolume *pv = NULL;
@@ -698,11 +698,11 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_latency_cb, pbuf);
   pa_stream_set_suspended_callback (pbuf->stream,
       gst_pulsering_stream_suspended_cb, pbuf);
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
   pa_stream_set_started_callback (pbuf->stream,
       gst_pulsering_stream_started_cb, pbuf);
 #endif
-#if HAVE_PULSE_0_9_15
+#ifdef HAVE_PULSE_0_9_15
   pa_stream_set_event_callback (pbuf->stream,
       gst_pulsering_stream_event_cb, pbuf);
 #endif
@@ -720,7 +720,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (psink, "prebuf:    %d", wanted.prebuf);
   GST_INFO_OBJECT (psink, "minreq:    %d", wanted.minreq);
 
-#if HAVE_PULSE_0_9_20
+#ifdef HAVE_PULSE_0_9_20
   /* configure volume when we changed it, else we leave the default */
   if (psink->volume_set) {
     GST_LOG_OBJECT (psink, "have volume of %f", psink->volume);
@@ -734,12 +734,12 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* construct the flags */
   flags = PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
       PA_STREAM_ADJUST_LATENCY |
 #endif
       PA_STREAM_START_CORKED;
 
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
   if (psink->mute_set && psink->mute)
     flags |= PA_STREAM_START_MUTED;
 #endif
@@ -1448,7 +1448,7 @@ gst_pulsesink_init_interfaces (GType type)
     NULL,
     NULL,
   };
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
   static const GInterfaceInfo svol_iface_info = {
     NULL, NULL, NULL
   };
@@ -1486,7 +1486,7 @@ gst_pulsesink_base_init (gpointer g_class)
           "width = (int) 32, "
           "depth = (int) 32, "
           "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 32 ];"
-#if HAVE_PULSE_0_9_15
+#ifdef HAVE_PULSE_0_9_15
           "audio/x-raw-int, "
           "endianness = (int) { " ENDIANNESS " }, "
           "signed = (boolean) TRUE, "
@@ -1574,7 +1574,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
@@ -1692,7 +1692,7 @@ gst_pulsesink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
 static void
 gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 {
@@ -2042,7 +2042,7 @@ gst_pulsesink_set_property (GObject * object,
       g_free (pulsesink->device);
       pulsesink->device = g_value_dup_string (value);
       break;
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
       break;
@@ -2073,7 +2073,7 @@ gst_pulsesink_get_property (GObject * object,
     case PROP_DEVICE_NAME:
       g_value_take_string (value, gst_pulsesink_device_description (pulsesink));
       break;
-#if HAVE_PULSE_0_9_12
+#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
       break;
@@ -2129,7 +2129,7 @@ name_failed:
   }
 }
 
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
 static void
 gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
 {
@@ -2250,7 +2250,7 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
       g_free (description);
       g_free (buf);
 
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
       gst_pulsesink_change_props (pulsesink, l);
 #endif
 

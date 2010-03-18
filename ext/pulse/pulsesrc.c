@@ -262,7 +262,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
   pulsesrc->read_buffer = NULL;
   pulsesrc->read_buffer_length = 0;
 
-#if HAVE_PULSE_0_9_13
+#ifdef HAVE_PULSE_0_9_13
   pa_sample_spec_init (&pulsesrc->sample_spec);
 #else
   pulsesrc->sample_spec.format = PA_SAMPLE_INVALID;
@@ -533,7 +533,7 @@ gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
         "latency update (information unknown)");
     return;
   }
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
   source_usec = info->configured_source_usec;
 #else
   source_usec = 0;
@@ -971,7 +971,7 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
           PA_STREAM_INTERPOLATE_TIMING |
           PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_NOT_MONOTONOUS |
-#if HAVE_PULSE_0_9_11
+#ifdef HAVE_PULSE_0_9_11
           PA_STREAM_ADJUST_LATENCY |
 #endif
           PA_STREAM_START_CORKED) < 0) {
