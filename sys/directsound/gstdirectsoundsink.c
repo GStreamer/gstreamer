@@ -59,10 +59,6 @@
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 #define GST_CAT_DEFAULT directsoundsink_debug
 
-static void gst_directsound_sink_base_init (gpointer g_class);
-static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
-static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
-    GstDirectSoundSinkClass * g_class);
 static void gst_directsound_sink_finalise (GObject * object);
 
 static void gst_directsound_sink_set_property (GObject * object, guint prop_id,
