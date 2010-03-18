@@ -373,6 +373,8 @@ gst_vaapi_image_new(
     guint               height
 )
 {
+    GstVaapiImage *image;
+
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
@@ -380,12 +382,22 @@ gst_vaapi_image_new(
     GST_DEBUG("format %" GST_FOURCC_FORMAT ", size %ux%u",
               GST_FOURCC_ARGS(format), width, height);
 
-    return g_object_new(GST_VAAPI_TYPE_IMAGE,
-                        "display", display,
-                        "format",  format,
-                        "width",   width,
-                        "height",  height,
-                        NULL);
+    image = g_object_new(
+        GST_VAAPI_TYPE_IMAGE,
+        "display", display,
+        "format",  format,
+        "width",   width,
+        "height",  height,
+        NULL
+    );
+    if (!image)
+        return NULL;
+
+    if (!image->priv->is_constructed) {
+        g_object_unref(image);
+        return NULL;
+    }
+    return image;
 }
 
 VAImageID
