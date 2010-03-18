@@ -63,13 +63,19 @@ enum {
         b = v;               \
     } while (0)
 
+static gboolean
+_gst_vaapi_image_map(GstVaapiImage *image);
+
+static gboolean
+_gst_vaapi_image_unmap(GstVaapiImage *image);
+
 static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
     GstVaapiImagePrivate * const priv = image->priv;
     VAStatus status;
 
-    gst_vaapi_image_unmap(image);
+    _gst_vaapi_image_unmap(image);
 
     if (priv->internal_image.image_id != VA_INVALID_ID) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
@@ -497,11 +503,17 @@ gst_vaapi_image_is_mapped(GstVaapiImage *image)
 gboolean
 gst_vaapi_image_map(GstVaapiImage *image)
 {
-    void *image_data;
-    VAStatus status;
-
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    return _gst_vaapi_image_map(image);
+}
+
+gboolean
+_gst_vaapi_image_map(GstVaapiImage *image)
+{
+    void *image_data;
+    VAStatus status;
 
     if (_gst_vaapi_image_is_mapped(image))
         return TRUE;
@@ -523,10 +535,16 @@ gst_vaapi_image_map(GstVaapiImage *image)
 gboolean
 gst_vaapi_image_unmap(GstVaapiImage *image)
 {
-    VAStatus status;
-
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    return _gst_vaapi_image_unmap(image);
+}
+
+gboolean
+_gst_vaapi_image_unmap(GstVaapiImage *image)
+{
+    VAStatus status;
 
     if (!_gst_vaapi_image_is_mapped(image))
         return FALSE;
