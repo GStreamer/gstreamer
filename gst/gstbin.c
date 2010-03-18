@@ -1097,6 +1097,7 @@ no_state_recalc:
   g_free (elem_name);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_ADDED], 0, element);
+  gst_child_proxy_child_added ((GstObject *) bin, (GstObject *) element);
 
   return TRUE;
 
@@ -1386,6 +1387,7 @@ no_state_recalc:
   GST_OBJECT_UNLOCK (element);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
+  gst_child_proxy_child_removed ((GstObject *) bin, (GstObject *) element);
 
   /* element is really out of our control now */
   gst_object_unref (element);

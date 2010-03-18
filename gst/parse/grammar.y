@@ -107,7 +107,6 @@ typedef struct {
 } DelayedLink;
 
 typedef struct {
-  GstElement *parent;
   gchar *name;
   gchar *value_str;
   gulong signal_id;
@@ -268,6 +267,54 @@ G_STMT_START { \
   MAKE_LINK (link, NULL, _src, pads, NULL, NULL, NULL); \
 } G_STMT_END
 
+static void
+gst_parse_free_delayed_set (DelayedSet *set)
+{
+  g_free(set->name);
+  g_free(set->value_str);
+  g_slice_free(DelayedSet, set);
+}
+
+static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
+                                gpointer data);
+
+static void
+gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
+{
+  DelayedSet *data = g_slice_new0 (DelayedSet);
+  
+  GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "delaying property set %s to %s",
+    name, value_str);
+  
+  data->name = g_strdup(name);
+  data->value_str = g_strdup(value_str);
+  data->signal_id = g_signal_connect_data(element, "child-added",
+      G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
+      gst_parse_free_delayed_set, (GConnectFlags) 0);
+      
+  /* FIXME: we would need to listen on all intermediate bins too */
+  if (GST_IS_BIN (element)) {
+    gchar **names, **current;
+    GstElement *parent, *child;
+    
+    current = names = g_strsplit (name, "::", -1);
+    parent = gst_bin_get_by_name (GST_BIN_CAST (element), current[0]);
+    current++;
+    while (parent && current[0]) {
+      child = gst_bin_get_by_name (GST_BIN (parent), current[0]);
+      if (!child && current[1]) {
+        char *sub_name = g_strjoinv ("::", &current[0]);
+        
+        gst_parse_add_delayed_set(parent, sub_name, value_str);
+        g_free (sub_name);
+      }
+      parent = child;
+      current++;
+    }
+    g_strfreev (names);
+  }
+}
+
 static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
                                 gpointer data)
 {
@@ -276,14 +323,17 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   GValue v = { 0, }; 
   GstObject *target = NULL;
   GType value_type;
+  
+  GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
+      GST_OBJECT_NAME(object), set->name);
 
-  if (gst_child_proxy_lookup (GST_OBJECT (set->parent), set->name, &target, &pspec)) { 
+  if (gst_child_proxy_lookup (GST_OBJECT (child_proxy), set->name, &target, &pspec)) { 
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
 
-    GST_CAT_LOG (GST_CAT_PIPELINE, "parsing delayed property %s as a %s from %s", pspec->name,
-      g_type_name (value_type), set->value_str);
+    GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "parsing delayed property %s as a %s from %s",
+      pspec->name, g_type_name (value_type), set->value_str);
     g_value_init (&v, value_type);
     if (gst_value_deserialize (&v, set->value_str))
       got_value = TRUE;
@@ -300,6 +350,14 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     if (!got_value)
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
+  } else {
+    const gchar *obj_name = GST_OBJECT_NAME(object);
+    gint len = strlen (obj_name);
+
+    /* do a delayed set */
+    if ((strlen (set->name) > (len + 2)) && !strncmp (set->name, obj_name, len) && !strncmp (&set->name[len], "::", 2)) {
+      gst_parse_add_delayed_set (GST_ELEMENT(child_proxy), set->name, set->value_str);
+    }
   }
 
 out:
@@ -313,13 +371,6 @@ error:
   GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in element \"%s\"",
 	 pspec->name, GST_ELEMENT_NAME (target));
   goto out;
-}
-
-static void
-gst_parse_free_delayed_set (DelayedSet *set) {
-  g_free(set->name);
-  g_free(set->value_str);
-  g_slice_free(DelayedSet, set);
 }
 
 static void
@@ -358,7 +409,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 
     value_type = pspec->value_type;
 
-    GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s", pspec->name,
+    GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "parsing property %s as a %s", pspec->name,
       g_type_name (value_type));
     g_value_init (&v, value_type);
     if (gst_value_deserialize (&v, pos))
@@ -378,14 +429,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   } else { 
     /* do a delayed set */
     if (GST_IS_CHILD_PROXY (element)) {
-      DelayedSet *data = g_slice_new0 (DelayedSet);
-      
-      data->parent = element;
-      data->name = g_strdup(value);
-      data->value_str = g_strdup(pos);
-      data->signal_id = g_signal_connect_data(element, "child-added",
-          G_CALLBACK (gst_parse_new_child), data, (GClosureNotify)
-          gst_parse_free_delayed_set, (GConnectFlags) 0);
+      gst_parse_add_delayed_set (element, value, pos);
     }
     else {
       SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
@@ -408,6 +452,7 @@ error:
 	 value, GST_ELEMENT_NAME (element), pos); 
   goto out;
 }
+
 static inline void
 gst_parse_free_link (link_t *link)
 {
@@ -449,6 +494,7 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
     g_signal_handler_disconnect (src, link->signal_id);
   }
 }
+
 /* both padnames and the caps may be NULL */
 static gboolean
 gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
@@ -487,6 +533,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
   }
   return FALSE;
 }
+
 /*
  * performs a link and frees the struct. src and sink elements must be given
  * return values   0 - link performed
