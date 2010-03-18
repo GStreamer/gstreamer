@@ -417,22 +417,27 @@ gst_vaapiconvert_negotiate_buffers(
     GstCaps          *outcaps
 )
 {
+    gboolean enable;
+
     if (!gst_vaapiconvert_ensure_image_pool(convert, incaps))
         return FALSE;
 
     if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
         return FALSE;
 
-    convert->use_inout_buffers = convert->can_use_inout_buffers;
-    GST_DEBUG("use-inout-buffers: %spossible, %s",
-              convert->can_use_inout_buffers ? "" : "not ",
-              convert->use_inout_buffers ? "enabled" : "disabled");
+    enable = convert->can_use_inout_buffers;
+    if (convert->use_inout_buffers != enable) {
+        convert->use_inout_buffers = enable;
+        GST_DEBUG("use-inout-buffers: %s",
+                  convert->use_inout_buffers ? "enabled" : "disabled");
+    }
 
-    convert->use_derive_image =
-        convert->use_inout_buffers && convert->can_use_derive_image;
-    GST_DEBUG("use-derive-image: %spossible, %s",
-              convert->can_use_derive_image ? "" : "not ",
-              convert->use_derive_image ? "enabled" : "disabled");
+    enable = convert->use_inout_buffers && convert->can_use_derive_image;
+    if (convert->use_derive_image != enable) {
+        convert->use_derive_image = enable;
+        GST_DEBUG("use-derive-image: %s",
+                  convert->use_derive_image ? "enabled" : "disabled");
+    }
     return TRUE;
 }
 
