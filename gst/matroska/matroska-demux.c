@@ -2133,6 +2133,28 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
+/* determine track to seek in */
+static GstMatroskaTrackContext *
+gst_matroska_demux_get_seek_track (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * track)
+{
+  gint i;
+
+  if (track && track->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
+    return track;
+
+  /*  FIXME thread safety */
+  for (i = 0; i < demux->src->len; i++) {
+    GstMatroskaTrackContext *stream;
+
+    stream = g_ptr_array_index (demux->src, i);
+    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO && stream->index_table)
+      track = stream;
+  }
+
+  return track;
+}
+
 static gboolean
 gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GstPad * pad, GstEvent * event)
@@ -2151,6 +2173,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   if (pad)
     track = gst_pad_get_element_private (pad);
+
+  track = gst_matroska_demux_get_seek_track (demux, track);
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
