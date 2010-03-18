@@ -82,6 +82,9 @@ gst_vaapi_image_new(
     guint               height
 );
 
+GstVaapiImage *
+gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image);
+
 VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image);
 

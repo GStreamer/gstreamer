@@ -21,6 +21,7 @@
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
+#include "gstvaapiimage.h"
 #include <va/va_backend.h>
 
 #define DEBUG 1
@@ -340,6 +341,32 @@ gst_vaapi_surface_get_size(
 
     if (pheight)
         *pheight = gst_vaapi_surface_get_height(surface);
+}
+
+GstVaapiImage *
+gst_vaapi_surface_derive_image(GstVaapiSurface *surface)
+{
+    VAImage va_image;
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+
+    va_image.image_id = VA_INVALID_ID;
+    va_image.buf      = VA_INVALID_ID;
+
+    GST_VAAPI_DISPLAY_LOCK(surface->priv->display);
+    status = vaDeriveImage(
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
+        surface->priv->surface_id,
+        &va_image
+    );
+    GST_VAAPI_DISPLAY_UNLOCK(surface->priv->display);
+    if (!vaapi_check_status(status, "vaDeriveImage()"))
+        return NULL;
+    if (va_image.image_id == VA_INVALID_ID || va_image.buf == VA_INVALID_ID)
+        return NULL;
+
+    return gst_vaapi_image_new_with_image(surface->priv->display, &va_image);
 }
 
 gboolean

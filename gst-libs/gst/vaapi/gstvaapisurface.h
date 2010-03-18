@@ -107,6 +107,9 @@ gst_vaapi_surface_get_size(
     guint           *pheight
 );
 
+GstVaapiImage *
+gst_vaapi_surface_derive_image(GstVaapiSurface *surface);
+
 gboolean
 gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image);
 

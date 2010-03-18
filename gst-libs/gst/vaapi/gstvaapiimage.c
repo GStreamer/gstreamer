@@ -43,6 +43,7 @@ struct _GstVaapiImagePrivate {
     GstVaapiImageFormat format;
     guint               width;
     guint               height;
+    guint               create_image    : 1;
     guint               is_constructed  : 1;
     guint               is_linear       : 1;
 };
@@ -51,6 +52,7 @@ enum {
     PROP_0,
 
     PROP_DISPLAY,
+    PROP_IMAGE,
     PROP_IMAGE_ID,
     PROP_FORMAT,
     PROP_WIDTH,
@@ -68,6 +70,75 @@ _gst_vaapi_image_map(GstVaapiImage *image);
 
 static gboolean
 _gst_vaapi_image_unmap(GstVaapiImage *image);
+
+static gboolean
+_gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image);
+
+/*
+ * VAImage wrapper
+ */
+
+#define VAAPI_TYPE_IMAGE vaapi_image_get_type()
+
+static gpointer
+vaapi_image_copy(gpointer va_image)
+{
+    return g_slice_dup(VAImage, va_image);
+}
+
+static void
+vaapi_image_free(gpointer va_image)
+{
+    if (G_LIKELY(va_image))
+        g_slice_free(VAImage, va_image);
+}
+
+static GType
+vaapi_image_get_type(void)
+{
+    static GType type = 0;
+
+    if (G_UNLIKELY(type == 0))
+        type = g_boxed_type_register_static(
+            "VAImage",
+            vaapi_image_copy,
+            vaapi_image_free
+        );
+    return type;
+}
+
+static gboolean
+vaapi_image_is_linear(const VAImage *va_image)
+{
+    guint i, width, height, width2, height2, data_size;
+
+    for (i = 1; i < va_image->num_planes; i++)
+        if (va_image->offsets[i] < va_image->offsets[i - 1])
+            return FALSE;
+
+    width   = va_image->width;
+    height  = va_image->height;
+    width2  = (width  + 1) / 2;
+    height2 = (height + 1) / 2;
+
+    switch (va_image->format.fourcc) {
+    case VA_FOURCC('N','V','1','2'):
+    case VA_FOURCC('Y','V','1','2'):
+    case VA_FOURCC('I','4','2','0'):
+        data_size = width * height + 2 * width2 * height2;
+        break;
+    case VA_FOURCC('A','R','G','B'):
+    case VA_FOURCC('R','G','B','A'):
+    case VA_FOURCC('A','B','G','R'):
+    case VA_FOURCC('B','G','R','A'):
+        data_size = 4 * width * height;
+        break;
+    default:
+        g_error("FIXME: incomplete formats");
+        break;
+    }
+    return va_image->data_size == data_size;
+}
 
 static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
@@ -103,6 +174,10 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
     const VAImageFormat *va_format;
     VAStatus status;
 
+    if (!priv->create_image)
+        return (priv->image.image_id != VA_INVALID_ID &&
+                priv->image.buf      != VA_INVALID_ID);
+
     if (!gst_vaapi_display_has_image_format(priv->display, format))
         return FALSE;
 
@@ -125,40 +200,6 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 
     priv->internal_format = format;
     return TRUE;
-}
-
-static gboolean
-_gst_vaapi_image_is_linear(GstVaapiImage *image)
-{
-    GstVaapiImagePrivate * const priv = image->priv;
-    guint i, width, height, width2, height2, data_size;
-
-    for (i = 1; i < priv->image.num_planes; i++)
-        if (priv->image.offsets[i] < priv->image.offsets[i - 1])
-            return FALSE;
-
-    width   = priv->width;
-    height  = priv->height;
-    width2  = (width  + 1) / 2;
-    height2 = (height + 1) / 2;
-
-    switch (priv->internal_format) {
-    case GST_VAAPI_IMAGE_NV12:
-    case GST_VAAPI_IMAGE_YV12:
-    case GST_VAAPI_IMAGE_I420:
-        data_size = width * height + 2 * width2 * height2;
-        break;
-    case GST_VAAPI_IMAGE_ARGB:
-    case GST_VAAPI_IMAGE_RGBA:
-    case GST_VAAPI_IMAGE_ABGR:
-    case GST_VAAPI_IMAGE_BGRA:
-        data_size = 4 * width * height;
-        break;
-    default:
-        g_error("FIXME: incomplete formats");
-        break;
-    }
-    return priv->image.data_size == data_size;
 }
 
 static gboolean
@@ -202,7 +243,7 @@ gst_vaapi_image_create(GstVaapiImage *image)
     }
 
     GST_DEBUG("image 0x%08x", priv->image.image_id);
-    priv->is_linear = _gst_vaapi_image_is_linear(image);
+    priv->is_linear = vaapi_image_is_linear(&priv->image);
     return TRUE;
 }
 
@@ -229,6 +270,12 @@ gst_vaapi_image_set_property(
     case PROP_DISPLAY:
         priv->display = g_object_ref(g_value_get_object(value));
         break;
+    case PROP_IMAGE: {
+        const VAImage * const va_image = g_value_get_boxed(value);
+        if (va_image)
+            _gst_vaapi_image_set_image(image, va_image);
+        break;
+    }
     case PROP_FORMAT:
         priv->format = g_value_get_uint(value);
         break;
@@ -257,6 +304,9 @@ gst_vaapi_image_get_property(
     switch (prop_id) {
     case PROP_DISPLAY:
         g_value_set_pointer(value, gst_vaapi_image_get_display(image));
+        break;
+    case PROP_IMAGE:
+        g_value_set_boxed(value, &image->priv->image);
         break;
     case PROP_IMAGE_ID:
         g_value_set_uint(value, gst_vaapi_image_get_id(image));
@@ -312,6 +362,15 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
 
     g_object_class_install_property
         (object_class,
+         PROP_IMAGE,
+         g_param_spec_boxed("image",
+                            "Image",
+                            "The VA image",
+                            VAAPI_TYPE_IMAGE,
+                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
          PROP_IMAGE_ID,
          g_param_spec_uint("id",
                            "VA image id",
@@ -359,6 +418,7 @@ gst_vaapi_image_init(GstVaapiImage *image)
     priv->height                  = 0;
     priv->internal_format         = 0;
     priv->format                  = 0;
+    priv->create_image            = TRUE;
     priv->is_constructed          = FALSE;
     priv->is_linear               = FALSE;
 
@@ -406,6 +466,37 @@ gst_vaapi_image_new(
     return image;
 }
 
+GstVaapiImage *
+gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
+{
+    GstVaapiImage *image;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(va_image, NULL);
+    g_return_val_if_fail(va_image->image_id != VA_INVALID_ID, NULL);
+    g_return_val_if_fail(va_image->buf != VA_INVALID_ID, NULL);
+
+    GST_DEBUG("VA image 0x%08x, format %" GST_FOURCC_FORMAT ", size %ux%u",
+              va_image->image_id,
+              GST_FOURCC_ARGS(va_image->format.fourcc),
+              va_image->width, va_image->height);
+
+    image = g_object_new(
+        GST_VAAPI_TYPE_IMAGE,
+        "display", display,
+        "image",   va_image,
+        NULL
+    );
+    if (!image)
+        return NULL;
+
+    if (!image->priv->is_constructed) {
+        g_object_unref(image);
+        return NULL;
+    }
+    return image;
+}
+
 VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
@@ -424,6 +515,61 @@ gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
     if (va_image)
         *va_image = image->priv->image;
 
+    return TRUE;
+}
+
+gboolean
+_gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
+{
+    GstVaapiImagePrivate * const priv = image->priv;
+    GstVaapiImageFormat format;
+    VAImage alt_va_image;
+    const VAImageFormat *alt_va_format;
+
+    if (!va_image)
+        return FALSE;
+
+    format = gst_vaapi_image_format(&va_image->format);
+    if (!format)
+        return FALSE;
+
+    priv->create_image    = FALSE;
+    priv->internal_image  = *va_image;
+    priv->internal_format = format;
+    priv->is_linear       = vaapi_image_is_linear(va_image);
+    priv->image           = *va_image;
+    priv->format          = format;
+    priv->width           = va_image->width;
+    priv->height          = va_image->height;
+
+    /* Try to linearize image */
+    if (!priv->is_linear) {
+        switch (format) {
+        case GST_VAAPI_IMAGE_I420:
+            format = GST_VAAPI_IMAGE_YV12;
+            break;
+        case GST_VAAPI_IMAGE_YV12:
+            format = GST_VAAPI_IMAGE_I420;
+            break;
+        default:
+            format = 0;
+            break;
+        }
+        if (format &&
+            (alt_va_format = gst_vaapi_image_format_get_va_format(format))) {
+            alt_va_image = *va_image;
+            alt_va_image.format = *alt_va_format;
+            SWAP_UINT(alt_va_image.offsets[1], alt_va_image.offsets[2]);
+            SWAP_UINT(alt_va_image.pitches[1], alt_va_image.pitches[2]);
+            if (vaapi_image_is_linear(&alt_va_image)) {
+                priv->image     = alt_va_image;
+                priv->format    = format;
+                priv->is_linear = TRUE;
+                GST_DEBUG("linearized image to %" GST_FOURCC_FORMAT " format",
+                          GST_FOURCC_ARGS(format));
+            }
+        }
+    }
     return TRUE;
 }
 
