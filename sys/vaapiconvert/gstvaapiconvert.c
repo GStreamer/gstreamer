@@ -69,6 +69,13 @@ GST_BOILERPLATE(
     GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
+enum {
+    PROP_0,
+
+    PROP_USE_INOUT_BUFFERS,
+    PROP_USE_DERIVE_IMAGE
+};
+
 static gboolean gst_vaapiconvert_start(GstBaseTransform *trans);
 static gboolean gst_vaapiconvert_stop(GstBaseTransform *trans);
 
@@ -164,6 +171,53 @@ gst_vaapiconvert_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
+
+static void
+gst_vaapiconvert_set_property(
+    GObject      *object,
+    guint         prop_id,
+    const GValue *value,
+    GParamSpec   *pspec
+)
+{
+    GstVaapiConvert * const convert = GST_VAAPICONVERT(object);
+
+    switch (prop_id) {
+    case PROP_USE_INOUT_BUFFERS:
+        convert->allow_use_inout_buffers = g_value_get_boolean(value);
+        break;
+    case PROP_USE_DERIVE_IMAGE:
+        convert->allow_use_derive_image = g_value_get_boolean(value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+gst_vaapiconvert_get_property(
+    GObject    *object,
+    guint       prop_id,
+    GValue     *value,
+    GParamSpec *pspec
+)
+{
+    GstVaapiConvert * const convert = GST_VAAPICONVERT(object);
+
+    switch (prop_id) {
+    case PROP_USE_INOUT_BUFFERS:
+        g_value_set_boolean(value, convert->allow_use_inout_buffers);
+        break;
+    case PROP_USE_DERIVE_IMAGE:
+        g_value_set_boolean(value, convert->allow_use_derive_image);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+        break;
+    }
+}
+
 static void
 gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
 {
@@ -171,6 +225,8 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
     GstBaseTransformClass * const trans_class = GST_BASE_TRANSFORM_CLASS(klass);
 
     object_class->finalize      = gst_vaapiconvert_finalize;
+    object_class->set_property  = gst_vaapiconvert_set_property;
+    object_class->get_property  = gst_vaapiconvert_get_property;
 
     trans_class->start          = gst_vaapiconvert_start;
     trans_class->stop           = gst_vaapiconvert_stop;
@@ -179,6 +235,24 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
     trans_class->set_caps       = gst_vaapiconvert_set_caps;
     trans_class->get_unit_size  = gst_vaapiconvert_get_unit_size;
     trans_class->prepare_output_buffer = gst_vaapiconvert_prepare_output_buffer;
+
+    g_object_class_install_property
+        (object_class,
+         PROP_USE_INOUT_BUFFERS,
+         g_param_spec_boolean("use-inout-buffers",
+                              "Use in/out buffers",
+                              "Allow use of in/out buffers whenever possible",
+                              TRUE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_USE_DERIVE_IMAGE,
+         g_param_spec_boolean("use-derive-image",
+                              "Use vaDeriveImage()",
+                              "Allow use of vaDeriveImage() whenever possible",
+                              TRUE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -193,8 +267,10 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
     convert->surfaces                   = NULL;
     convert->surface_width              = 0;
     convert->surface_height             = 0;
+    convert->allow_use_inout_buffers    = TRUE;
     convert->can_use_inout_buffers      = FALSE;
     convert->use_inout_buffers          = FALSE;
+    convert->allow_use_derive_image     = TRUE;
     convert->can_use_derive_image       = FALSE;
     convert->use_derive_image           = FALSE;
 
@@ -425,18 +501,22 @@ gst_vaapiconvert_negotiate_buffers(
     if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
         return FALSE;
 
-    enable = convert->can_use_inout_buffers;
-    if (convert->use_inout_buffers != enable) {
-        convert->use_inout_buffers = enable;
-        GST_DEBUG("use-inout-buffers: %s",
-                  convert->use_inout_buffers ? "enabled" : "disabled");
+    if (convert->allow_use_inout_buffers) {
+        enable = convert->can_use_inout_buffers;
+        if (convert->use_inout_buffers != enable) {
+            convert->use_inout_buffers = enable;
+            GST_DEBUG("use-inout-buffers: %s",
+                      convert->use_inout_buffers ? "enabled" : "disabled");
+        }
     }
 
-    enable = convert->use_inout_buffers && convert->can_use_derive_image;
-    if (convert->use_derive_image != enable) {
-        convert->use_derive_image = enable;
-        GST_DEBUG("use-derive-image: %s",
-                  convert->use_derive_image ? "enabled" : "disabled");
+    if (convert->allow_use_derive_image) {
+        enable = convert->use_inout_buffers && convert->can_use_derive_image;
+        if (convert->use_derive_image != enable) {
+            convert->use_derive_image = enable;
+            GST_DEBUG("use-derive-image: %s",
+                      convert->use_derive_image ? "enabled" : "disabled");
+        }
     }
     return TRUE;
 }
