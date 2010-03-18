@@ -35,12 +35,6 @@
 GST_DEBUG_CATEGORY_STATIC (output_selector_debug);
 #define GST_CAT_DEFAULT output_selector_debug
 
-static const GstElementDetails gst_output_selector_details =
-GST_ELEMENT_DETAILS ("Output selector",
-    "Generic",
-    "1-to-N output stream selectoring",
-    "Stefan Kost <stefan.kost@nokia.com>");
-
 static GstStaticPadTemplate gst_output_selector_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -86,7 +80,10 @@ gst_output_selector_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_output_selector_details);
+  gst_element_class_set_details_simple (element_class, "Output selector",
+      "Generic",
+      "1-to-N output stream selectoring",
+      "Stefan Kost <stefan.kost@nokia.com>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_output_selector_sink_factory));
   gst_element_class_add_pad_template (element_class,
