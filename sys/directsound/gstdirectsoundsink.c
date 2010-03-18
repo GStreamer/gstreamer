@@ -59,13 +59,6 @@
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 #define GST_CAT_DEFAULT directsoundsink_debug
 
-/* elementfactory information */
-static const GstElementDetails gst_directsound_sink_details =
-GST_ELEMENT_DETAILS ("Direct Sound Audio Sink",
-    "Sink/Audio",
-    "Output to a sound card via Direct Sound",
-    "Sebastien Moutte <sebastien@moutte.net>");
-
 static void gst_directsound_sink_base_init (gpointer g_class);
 static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
 static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
@@ -260,7 +253,10 @@ gst_directsound_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_directsound_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Direct Sound Audio Sink", "Sink/Audio",
+      "Output to a sound card via Direct Sound",
+      "Sebastien Moutte <sebastien@moutte.net>");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&directsoundsink_sink_factory));
 }
