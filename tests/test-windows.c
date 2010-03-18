@@ -174,8 +174,17 @@ main(int argc, char *argv[])
     GstVaapiDisplay *display;
     GstVaapiWindow  *window;
     GstVaapiSurface *surface;
-    GstVaapiImage   *image;
+    GstVaapiImage   *image = NULL;
+    GstVaapiImageFormat format;
     guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+    guint i;
+
+    static const GstVaapiImageFormat image_formats[] = {
+        GST_VAAPI_IMAGE_NV12,
+        GST_VAAPI_IMAGE_YV12,
+        GST_VAAPI_IMAGE_I420,
+        0
+    };
 
     static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     static const guint              width       = 320;
@@ -193,14 +202,22 @@ main(int argc, char *argv[])
     if (!surface)
         g_error("could not create Gst/VA surface");
 
-    image = gst_vaapi_image_new(display, GST_VAAPI_IMAGE_NV12, width, height);
+    for (i = 0; image_formats[i]; i++) {
+        image = gst_vaapi_image_new(display, image_formats[i], width, height);
+        if (image) {
+            format = image_formats[i];
+            break;
+        }
+    }
     if (!image)
         g_error("could not create Gst/VA image");
+
     if (!draw_rgb_rects(image))
         g_error("could not draw RGB rectangles");
 
     if (!gst_vaapi_surface_put_image(surface, image))
         g_error("could not upload image");
+
     if (!gst_vaapi_surface_sync(surface))
         g_error("could not complete image upload");
 
