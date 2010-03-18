@@ -165,6 +165,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/gst_private.h>
+
 #include "gstbasesrc.h"
 #include "gsttypefindhelper.h"
 #include <gst/gstmarshal.h>
@@ -237,6 +239,11 @@ struct _GstBaseSrcPrivate
 
   /* pending tags to be pushed in the data stream */
   GList *pending_tags;
+
+  /* QoS *//* with LOCK */
+  gboolean qos_enabled;
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1659,6 +1666,21 @@ gst_base_src_seekable (GstBaseSrc * src)
     return FALSE;
 }
 
+static void
+gst_base_src_update_qos (GstBaseSrc * src,
+    gdouble proportion, GstClockTimeDiff diff, GstClockTime timestamp)
+{
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, src,
+      "qos: proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, proportion, diff, GST_TIME_ARGS (timestamp));
+
+  GST_OBJECT_LOCK (src);
+  src->priv->proportion = proportion;
+  src->priv->earliest_time = timestamp + diff;
+  GST_OBJECT_UNLOCK (src);
+}
+
+
 static gboolean
 gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
 {
@@ -1680,6 +1702,17 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       result = gst_base_src_set_flushing (src, FALSE, TRUE, TRUE, NULL);
       break;
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_base_src_update_qos (src, proportion, diff, timestamp);
+      result = TRUE;
+      break;
+    }
     default:
       result = TRUE;
       break;
