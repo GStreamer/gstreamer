@@ -94,7 +94,6 @@ typedef struct _GstMatroskaDemux {
   GstSegment               segment;
   gboolean                 segment_running;
   GstClockTime             last_stop_end;
-  gint64                   duration;
 
   GstEvent                *close_segment;
   GstEvent                *new_segment;

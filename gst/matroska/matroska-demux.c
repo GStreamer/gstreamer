@@ -401,7 +401,6 @@ gst_matroska_demux_reset (GstElement * element)
   demux->tags_parsed = NULL;
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-  demux->duration = -1;
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
   demux->seek_block = 0;
 
@@ -1946,13 +1945,14 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
 
       if (format == GST_FORMAT_TIME) {
         GST_OBJECT_LOCK (demux);
-        gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
+        gst_query_set_duration (query, GST_FORMAT_TIME,
+            demux->segment.duration);
         GST_OBJECT_UNLOCK (demux);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
         GST_OBJECT_LOCK (demux);
         gst_query_set_duration (query, GST_FORMAT_DEFAULT,
-            demux->duration / context->default_duration);
+            demux->segment.duration / context->default_duration);
         GST_OBJECT_UNLOCK (demux);
       } else {
         GST_DEBUG_OBJECT (demux,
@@ -1973,7 +1973,7 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
       } else {
         gst_query_set_seeking (query, GST_FORMAT_TIME, TRUE, 0,
-            demux->duration);
+            demux->segment.duration);
       }
 
       break;
@@ -2868,7 +2868,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         dur = gst_gdouble_to_guint64 (num *
             gst_guint64_to_gdouble (demux->time_scale));
         if (GST_CLOCK_TIME_IS_VALID (dur) && dur <= G_MAXINT64)
-          demux->duration = dur;
+          gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME, dur);
         break;
       }
 
@@ -4470,8 +4470,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             demux->last_stop_end < last_stop_end)
           demux->last_stop_end = last_stop_end;
 
-        if (demux->duration == -1 || demux->duration < lace_time) {
-          demux->duration = last_stop_end;
+        if (demux->segment.duration == -1 ||
+            demux->segment.duration < lace_time) {
+          gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME,
+              last_stop_end);
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_duration (GST_OBJECT_CAST (demux),
                   GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
