@@ -186,14 +186,15 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
 {
     GstPad *sinkpad;
 
-    convert->display            = NULL;
-    convert->images             = NULL;
-    convert->image_width        = 0;
-    convert->image_height       = 0;
-    convert->surfaces           = NULL;
-    convert->surface_width      = 0;
-    convert->surface_height     = 0;
-    convert->use_inout_buffers  = 0;
+    convert->display                    = NULL;
+    convert->images                     = NULL;
+    convert->image_width                = 0;
+    convert->image_height               = 0;
+    convert->surfaces                   = NULL;
+    convert->surface_width              = 0;
+    convert->surface_height             = 0;
+    convert->can_use_inout_buffers      = FALSE;
+    convert->use_inout_buffers          = FALSE;
 
     /* Override buffer allocator on sink pad */
     sinkpad = gst_element_get_static_pad(GST_ELEMENT(convert), "sink");
@@ -358,7 +359,7 @@ gst_vaapiconvert_ensure_image_pool(GstVaapiConvert *convert, GstCaps *caps)
         if (gst_video_format_parse_caps(caps, &vformat, NULL, NULL)) {
             image = gst_vaapi_video_pool_get_object(convert->images);
             if (image) {
-                convert->use_inout_buffers =
+                convert->can_use_inout_buffers =
                     (gst_vaapi_image_is_linear(image) &&
                      (gst_vaapi_image_get_data_size(image) ==
                       gst_video_format_get_size(vformat, width, height)));
@@ -391,6 +392,26 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
 }
 
 static gboolean
+gst_vaapiconvert_negotiate_buffers(
+    GstVaapiConvert  *convert,
+    GstCaps          *incaps,
+    GstCaps          *outcaps
+)
+{
+    if (!gst_vaapiconvert_ensure_image_pool(convert, incaps))
+        return FALSE;
+
+    if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
+        return FALSE;
+
+    convert->use_inout_buffers = convert->can_use_inout_buffers;
+    GST_DEBUG("use-inout-buffers: %spossible, %s",
+              convert->can_use_inout_buffers ? "" : "not ",
+              convert->use_inout_buffers ? "enabled" : "disabled");
+    return TRUE;
+}
+
+static gboolean
 gst_vaapiconvert_set_caps(
     GstBaseTransform *trans,
     GstCaps          *incaps,
@@ -399,10 +420,7 @@ gst_vaapiconvert_set_caps(
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
 
-    if (!gst_vaapiconvert_ensure_image_pool(convert, incaps))
-        return FALSE;
-
-    if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
+    if (!gst_vaapiconvert_negotiate_buffers(convert, incaps, outcaps))
         return FALSE;
 
     return TRUE;
@@ -442,9 +460,7 @@ gst_vaapiconvert_buffer_alloc(
     GstVaapiImage *image;
 
     /* Check if we can use the inout-buffers optimization */
-    if (!gst_vaapiconvert_ensure_surface_pool(convert, caps))
-        goto error;
-    if (!gst_vaapiconvert_ensure_image_pool(convert, caps))
+    if (!gst_vaapiconvert_negotiate_buffers(convert, caps, caps))
         goto error;
     if (!convert->use_inout_buffers)
         return GST_FLOW_OK;
