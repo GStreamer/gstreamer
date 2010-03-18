@@ -254,6 +254,10 @@ struct _GstBaseTransformPrivate
   gboolean suggest_pending;
 
   gboolean reconfigure;
+
+  /* QoS stats */
+  guint64 processed;
+  guint64 dropped;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -433,6 +437,9 @@ gst_base_transform_init (GstBaseTransform * trans,
       trans->passthrough = TRUE;
     }
   }
+
+  trans->priv->processed = 0;
+  trans->priv->dropped = 0;
 }
 
 /* given @caps on the src or sink pad (given by @direction)
@@ -1765,6 +1772,8 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       trans->priv->proportion = 1.0;
       trans->priv->earliest_time = -1;
       trans->priv->discont = FALSE;
+      trans->priv->processed = 0;
+      trans->priv->dropped = 0;
       GST_OBJECT_UNLOCK (trans);
       /* we need new segment info after the flush. */
       trans->have_newsegment = FALSE;
@@ -1872,7 +1881,8 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean want_in_place, reconfigure;
-  GstClockTime qostime;
+  GstClockTime running_time;
+  GstClockTime timestamp;
   GstCaps *incaps;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1919,27 +1929,52 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     goto no_qos;
 
   /* QOS is done on the running time of the buffer, get it now */
-  qostime = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (inbuf));
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
+      timestamp);
 
-  if (qostime != -1) {
+  if (running_time != -1) {
     gboolean need_skip;
     GstClockTime earliest_time;
+    gdouble proportion;
 
     /* lock for getting the QoS parameters that are set (in a different thread)
      * with the QOS events */
     GST_OBJECT_LOCK (trans);
     earliest_time = trans->priv->earliest_time;
+    proportion = trans->priv->proportion;
     /* check for QoS, don't perform conversion for buffers
      * that are known to be late. */
     need_skip = trans->priv->qos_enabled &&
-        earliest_time != -1 && qostime != -1 && qostime <= earliest_time;
+        earliest_time != -1 && running_time <= earliest_time;
     GST_OBJECT_UNLOCK (trans);
 
     if (need_skip) {
+      GstMessage *qos_msg;
+      GstClockTime duration;
+      guint64 stream_time;
+      gint64 jitter;
+
       GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "skipping transform: qostime %"
           GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+          GST_TIME_ARGS (running_time), GST_TIME_ARGS (earliest_time));
+
+      trans->priv->dropped++;
+
+      duration = GST_BUFFER_DURATION (inbuf);
+      stream_time =
+          gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+          timestamp);
+      jitter = GST_CLOCK_DIFF (running_time, earliest_time);
+
+      qos_msg =
+          gst_message_new_qos (GST_OBJECT_CAST (trans), FALSE, running_time,
+          stream_time, timestamp, duration);
+      gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+          trans->priv->processed, trans->priv->dropped);
+      gst_element_post_message (GST_ELEMENT_CAST (trans), qos_msg);
+
       /* mark discont for next buffer */
       trans->priv->discont = TRUE;
       goto skip;
@@ -2077,16 +2112,20 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseTransformClass *klass;
   GstFlowReturn ret;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
+  GstClockTime timestamp, duration;
   GstBuffer *outbuf = NULL;
 
   trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+
   /* calculate end position of the incoming buffer */
-  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
-    if (GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE)
-      last_stop = GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+  if (timestamp != GST_CLOCK_TIME_NONE) {
+    if (duration != GST_CLOCK_TIME_NONE)
+      last_stop = timestamp + duration;
     else
-      last_stop = GST_BUFFER_TIMESTAMP (buffer);
+      last_stop = timestamp;
   }
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -2115,9 +2154,11 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
         }
         trans->priv->discont = FALSE;
       }
+      trans->priv->processed++;
       ret = gst_pad_push (trans->srcpad, outbuf);
-    } else
+    } else {
       gst_buffer_unref (outbuf);
+    }
   }
 
   /* convert internal flow to OK and mark discont for the next buffer. */
@@ -2194,6 +2235,8 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     trans->priv->earliest_time = -1;
     trans->priv->discont = FALSE;
     gst_caps_replace (&trans->priv->sink_suggest, NULL);
+    trans->priv->processed = 0;
+    trans->priv->dropped = 0;
 
     GST_OBJECT_UNLOCK (trans);
   } else {
