@@ -563,7 +563,8 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             outbuf = gst_rtp_h264_depay_push_nal (rtph264depay, outbuf, ts);
             if (outbuf) {
               gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-              gst_base_rtp_depayload_push_ts (depayload, ts, outbuf);
+              /* already timestamped this buffer, baseclass need not bother */
+              gst_base_rtp_depayload_push (depayload, outbuf);
             }
           }
 
