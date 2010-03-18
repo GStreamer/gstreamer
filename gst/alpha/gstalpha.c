@@ -456,17 +456,94 @@ gst_alpha_set_i420 (guint8 * src, guint8 * dest, gint width, gint height,
   }
 }
 
+/* based on http://www.cs.utah.edu/~michael/chroma/
+ */
+static inline gint
+chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
+    gint * v, gint cr, gint cb, gint smin, gint smax, guint8 accept_angle_tg,
+    guint8 accept_angle_ctg, guint8 one_over_kc, guint8 kfgy_scale, gint8 kg,
+    gfloat noise_level)
+{
+  gint tmp, tmp1;
+  gint x1, y1;
+  gint x, z;
+  gint b_alpha;
+
+  for (tmp = 0; tmp < ny; tmp++) {
+    /* too dark or too bright, keep alpha */
+    if (y[tmp] < smin || y[tmp] > smax)
+      return a;
+  }
+
+  /* Convert foreground to XZ coords where X direction is defined by
+     the key color */
+  tmp = ((*u) * cb + (*v) * cr) >> 7;
+  x = CLAMP (tmp, -128, 127);
+  tmp = ((*v) * cb - (*u) * cr) >> 7;
+  z = CLAMP (tmp, -128, 127);
+
+  /* WARNING: accept angle should never be set greater than "somewhat less
+     than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
+     80 degrees should be enough if foreground is reasonable. If this seems
+     to be a problem, go to alternative ways of checking point position
+     (scalar product or line equations). This angle should not be too small
+     either to avoid infinite ctg (used to suppress foreground without use of
+     division) */
+
+  tmp = (x * accept_angle_tg) >> 4;
+  tmp = MIN (tmp, 127);
+
+  if (abs (z) > tmp) {
+    /* keep foreground Kfg = 0 */
+    return a;
+  }
+  /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
+     according to Kfg */
+  tmp = (z * accept_angle_ctg) >> 4;
+  tmp = CLAMP (tmp, -128, 127);
+  x1 = abs (tmp);
+  y1 = z;
+
+  tmp1 = x - x1;
+  tmp1 = MAX (tmp1, 0);
+  b_alpha = (tmp1 * one_over_kc) / 2;
+  b_alpha = 255 - CLAMP (b_alpha, 0, 255);
+  b_alpha = (a * b_alpha) >> 8;
+
+  tmp = (tmp1 * kfgy_scale) >> 4;
+  tmp1 = MIN (tmp, 255);
+
+  for (tmp = 0; tmp < ny; tmp++)
+    y[tmp] = (y[tmp] < tmp1) ? 0 : y[tmp] - tmp1;
+
+  /* Convert suppressed foreground back to CbCr */
+  tmp = (x1 * cb - y1 * cr) >> 7;
+  *u = CLAMP (tmp, -128, 127);
+
+  tmp = (x1 * cr + y1 * cb) >> 7;
+  *v = CLAMP (tmp, -128, 127);
+
+  /* Deal with noise. For now, a circle around the key color with
+     radius of noise_level treated as exact key color. Introduces
+     sharp transitions.
+   */
+  tmp = z * z + (x - kg) * (x - kg);
+  tmp = MIN (tmp, 0xffff);
+
+  if (tmp < noise_level * noise_level)
+    b_alpha = 0;
+
+  return b_alpha;
+}
+
 static void
 gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
     GstAlpha * alpha)
 {
-  gint b_alpha;
   guint8 *src1;
   guint8 *dest1;
   gint i, j;
-  gint x, z, u, v, y, a;
-  gint tmp, tmp1;
-  gint x1, y1;
+  gint a, y, u, v;
   gint smin, smax;
 
   smin = 128 - alpha->black_sensitivity;
@@ -482,78 +559,14 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
       u = *src1++ - 128;
       v = *src1++ - 128;
 
-      if (y < smin || y > smax) {
-        /* too dark or too bright, keep alpha */
-        b_alpha = a;
-      } else {
-        /* Convert foreground to XZ coords where X direction is defined by
-           the key color */
-        tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
-        x = CLAMP (tmp, -128, 127);
-        tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
-        z = CLAMP (tmp, -128, 127);
-
-        /* WARNING: accept angle should never be set greater than "somewhat less
-           than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
-           80 degrees should be enough if foreground is reasonable. If this seems
-           to be a problem, go to alternative ways of checking point position
-           (scalar product or line equations). This angle should not be too small
-           either to avoid infinite ctg (used to suppress foreground without use of
-           division) */
-
-        tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
-        tmp = MIN (tmp, 127);
-
-        if (abs (z) > tmp) {
-          /* keep foreground Kfg = 0 */
-          b_alpha = a;
-        } else {
-          /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
-             according to Kfg */
-          tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
-          tmp = CLAMP (tmp, -128, 127);
-          x1 = abs (tmp);
-          y1 = z;
-
-          tmp1 = x - x1;
-          tmp1 = MAX (tmp1, 0);
-          b_alpha = (((unsigned char) (tmp1) *
-                  (unsigned short) (alpha->one_over_kc)) / 2);
-          b_alpha = 255 - CLAMP (b_alpha, 0, 255);
-          b_alpha = (a * b_alpha) >> 8;
-
-          tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
-          tmp1 = MIN (tmp, 255);
-
-          tmp = y - tmp1;
-          y = MAX (tmp, 0);
-
-          /* Convert suppressed foreground back to CbCr */
-          tmp = ((char) (x1) * (short) (alpha->cb) -
-              (char) (y1) * (short) (alpha->cr)) >> 7;
-          u = CLAMP (tmp, -128, 127);
-
-          tmp = ((char) (x1) * (short) (alpha->cr) +
-              (char) (y1) * (short) (alpha->cb)) >> 7;
-          v = CLAMP (tmp, -128, 127);
-
-          /* Deal with noise. For now, a circle around the key color with
-             radius of noise_level treated as exact key color. Introduces
-             sharp transitions.
-           */
-          tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
-          tmp = MIN (tmp, 0xffff);
-
-          if (tmp < alpha->noise_level * alpha->noise_level) {
-            b_alpha = 0;
-          }
-        }
-      }
+      a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
+          smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level);
 
       u += 128;
       v += 128;
 
-      *dest1++ = b_alpha;
+      *dest1++ = a;
       *dest1++ = y;
       *dest1++ = u;
       *dest1++ = v;
@@ -561,15 +574,12 @@ gst_alpha_chroma_key_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
   }
 }
 
-static void
+static inline void
 gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
     guint8 * srcY1, guint8 * srcY2, guint8 * srcU, guint8 * srcV, gint width)
 {
   gint xpos;
-  gint b_alpha;
-  gint x, z, u, v, y11, y12, y21, y22, a;
-  gint tmp, tmp1;
-  gint x1, y1;
+  gint a, a2, y[4], u, v;
   gint smin, smax;
 
   a = 255 * alpha->alpha;
@@ -577,115 +587,40 @@ gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
   smax = 128 + alpha->white_sensitivity;
 
   for (xpos = 0; xpos < width / 2; xpos++) {
-    y11 = *srcY1++;
-    y12 = *srcY1++;
-    y21 = *srcY2++;
-    y22 = *srcY2++;
+    y[0] = *srcY1++;
+    y[1] = *srcY1++;
+    y[2] = *srcY2++;
+    y[3] = *srcY2++;
     u = *srcU++ - 128;
     v = *srcV++ - 128;
 
-    if (y11 < smin || y11 > smax ||
-        y12 < smin || y12 > smax ||
-        y21 < smin || y21 > smax || y22 < smin || y22 > smax) {
-      /* too dark or too bright, make opaque */
-      b_alpha = 255;
-    } else {
-      /* Convert foreground to XZ coords where X direction is defined by
-         the key color */
-      tmp = ((short) u * alpha->cb + (short) v * alpha->cr) >> 7;
-      x = CLAMP (tmp, -128, 127);
-      tmp = ((short) v * alpha->cb - (short) u * alpha->cr) >> 7;
-      z = CLAMP (tmp, -128, 127);
-
-      /* WARNING: accept angle should never be set greater than "somewhat less
-         than 90 degrees" to avoid dealing with negative/infinite tg. In reality,
-         80 degrees should be enough if foreground is reasonable. If this seems
-         to be a problem, go to alternative ways of checking point position
-         (scalar product or line equations). This angle should not be too small
-         either to avoid infinite ctg (used to suppress foreground without use of
-         division) */
-
-      tmp = ((short) (x) * alpha->accept_angle_tg) >> 4;
-      tmp = MIN (tmp, 127);
-
-      if (abs (z) > tmp) {
-        /* keep foreground Kfg = 0 */
-        b_alpha = 255;
-      } else {
-        /* Compute Kfg (implicitly) and Kbg, suppress foreground in XZ coord
-           according to Kfg */
-        tmp = ((short) (z) * alpha->accept_angle_ctg) >> 4;
-        tmp = CLAMP (tmp, -128, 127);
-        x1 = abs (tmp);
-        y1 = z;
-
-        tmp1 = x - x1;
-        tmp1 = MAX (tmp1, 0);
-        b_alpha = (((unsigned char) (tmp1) *
-                (unsigned short) (alpha->one_over_kc)) / 2);
-        b_alpha = 255 - CLAMP (b_alpha, 0, 255);
-        b_alpha = (a * b_alpha) >> 8;
-
-        tmp = ((unsigned short) (tmp1) * alpha->kfgy_scale) >> 4;
-        tmp1 = MIN (tmp, 255);
-
-        tmp = y11 - tmp1;
-        y11 = MAX (tmp, 0);
-        tmp = y12 - tmp1;
-        y12 = MAX (tmp, 0);
-        tmp = y21 - tmp1;
-        y21 = MAX (tmp, 0);
-        tmp = y22 - tmp1;
-        y22 = MAX (tmp, 0);
-
-        /* Convert suppressed foreground back to CbCr */
-        tmp = ((char) (x1) * (short) (alpha->cb) -
-            (char) (y1) * (short) (alpha->cr)) >> 7;
-        u = CLAMP (tmp, -128, 127);
-
-        tmp = ((char) (x1) * (short) (alpha->cr) +
-            (char) (y1) * (short) (alpha->cb)) >> 7;
-        v = CLAMP (tmp, -128, 127);
-
-        /* Deal with noise. For now, a circle around the key color with
-           radius of noise_level treated as exact key color. Introduces
-           sharp transitions.
-         */
-        tmp = z * (short) (z) + (x - alpha->kg) * (short) (x - alpha->kg);
-        tmp = MIN (tmp, 0xffff);
-
-        if (tmp < alpha->noise_level * alpha->noise_level) {
-          /* Uncomment this if you want total suppression within the noise circle */
-          b_alpha = 0;
-        }
-      }
-    }
+    a2 = chroma_keying_yuv (a, y, 4, &u, &v, alpha->cr, alpha->cb, smin,
+        smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+        alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level);
 
     u += 128;
     v += 128;
 
-    *dest1++ = b_alpha;
-    *dest1++ = y11;
+    *dest1++ = a2;
+    *dest1++ = y[0];
     *dest1++ = u;
     *dest1++ = v;
-    *dest1++ = b_alpha;
-    *dest1++ = y12;
+    *dest1++ = a2;
+    *dest1++ = y[1];
     *dest1++ = u;
     *dest1++ = v;
 
-    *dest2++ = b_alpha;
-    *dest2++ = y21;
+    *dest2++ = a2;
+    *dest2++ = y[2];
     *dest2++ = u;
     *dest2++ = v;
-    *dest2++ = b_alpha;
-    *dest2++ = y22;
+    *dest2++ = a2;
+    *dest2++ = y[3];
     *dest2++ = u;
     *dest2++ = v;
   }
 }
 
-/* based on http://www.cs.utah.edu/~michael/chroma/
- */
 static void
 gst_alpha_chroma_key_i420 (guint8 * src, guint8 * dest, gint width, gint height,
     GstAlpha * alpha)
@@ -718,7 +653,6 @@ gst_alpha_chroma_key_i420 (guint8 * src, guint8 * dest, gint width, gint height,
   src_y_stride *= 2;
 
   for (ypos = 0; ypos < height / 2; ypos++) {
-
     gst_alpha_chromakey_row_i420 (alpha, dest1, dest2,
         srcY1, srcY2, srcU, srcV, width);
 
