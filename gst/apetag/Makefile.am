@@ -2,7 +2,6 @@ plugin_LTLIBRARIES = libgstapetag.la
 
 libgstapetag_la_SOURCES = gstapedemux.c
 libgstapetag_la_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
