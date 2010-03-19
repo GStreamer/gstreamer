@@ -679,26 +679,33 @@ paint_get_structure (struct fourcc_list_struct * format)
       structure = gst_structure_new ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, fourcc, NULL);
 
-      g_value_init (&value_list, GST_TYPE_LIST);
+      if (fourcc != GST_STR_FOURCC ("Y800")) {
+        g_value_init (&value_list, GST_TYPE_LIST);
 
-      g_value_init (&value, G_TYPE_STRING);
-      g_value_set_static_string (&value, "sdtv");
-      gst_value_list_append_value (&value_list, &value);
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_static_string (&value, "sdtv");
+        gst_value_list_append_value (&value_list, &value);
 
-      g_value_set_static_string (&value, "hdtv");
-      gst_value_list_append_value (&value_list, &value);
+        g_value_set_static_string (&value, "hdtv");
+        gst_value_list_append_value (&value_list, &value);
 
-      gst_structure_set_value (structure, "color-matrix", &value_list);
-      g_value_reset (&value_list);
+        gst_structure_set_value (structure, "color-matrix", &value_list);
+        g_value_reset (&value_list);
 
-      g_value_set_static_string (&value, "mpeg2");
-      gst_value_list_append_value (&value_list, &value);
+        if (fourcc != GST_STR_FOURCC ("AYUV") &&
+            fourcc != GST_STR_FOURCC ("v308") &&
+            fourcc != GST_STR_FOURCC ("v410") &&
+            fourcc != GST_STR_FOURCC ("Y444")) {
+          g_value_set_static_string (&value, "mpeg2");
+          gst_value_list_append_value (&value_list, &value);
 
-      g_value_set_static_string (&value, "jpeg");
-      gst_value_list_append_value (&value_list, &value);
+          g_value_set_static_string (&value, "jpeg");
+          gst_value_list_append_value (&value_list, &value);
 
-      gst_structure_set_value (structure, "chroma-site", &value_list);
-      g_value_unset (&value_list);
+          gst_structure_set_value (structure, "chroma-site", &value_list);
+        }
+        g_value_unset (&value_list);
+      }
     }
       break;
     case VTS_BAYER:
