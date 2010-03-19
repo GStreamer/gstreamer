@@ -323,6 +323,10 @@ _gst_tag_initialize (void)
       _("Groups related media that spans multiple tracks, like the different "
           "pieces of a concerto. It is a higher level than a track, "
           "but lower than an album"), NULL);
+  gst_tag_register (GST_TAG_USER_RATING, GST_TAG_FLAG_META, G_TYPE_UINT,
+      _("user rating"),
+      _("Rating attributed by a user. The higher the rank, "
+          "the more the user likes this media"), NULL);
 }
 
 /**

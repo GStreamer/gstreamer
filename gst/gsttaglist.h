@@ -879,6 +879,16 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * Since: 0.10.26
  */
 #define GST_TAG_GROUPING                          "grouping"
+/**
+ * GST_TAG_USER_RATING
+ *
+ * Rating attributed by a person (likely the application user).
+ * The higher the value, the more the user likes this media
+ * (unsigned int from 0 to 100)
+ *
+ * Since: 0.10.29
+ */
+#define GST_TAG_USER_RATING                       "user-rating"
 
 G_END_DECLS
 
