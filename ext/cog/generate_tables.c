@@ -112,17 +112,16 @@ main (int argc, char *argv[])
         g_print ("static const int cog_ycbcr_to_rgb_matrix_%dbit_%s[] = {\n",
             bits, cm ? "hdtv" : "sdtv");
         g_print ("  %d, %d, %d, %d,\n",
-            (int) rint (matrix.m[0][0] - ((bits == 8) ? 256 : 0)),
+            (int) rint (matrix.m[0][0]),
             (int) rint (matrix.m[0][1]),
-            (int) rint (matrix.m[0][2] - ((bits == 8) ? 256 : 0)),
-            (int) rint (matrix.m[0][3]));
+            (int) rint (matrix.m[0][2]), (int) rint (matrix.m[0][3]));
         g_print ("  %d, %d, %d, %d,\n",
-            (int) rint (matrix.m[1][0] - ((bits == 8) ? 256 : 0)),
+            (int) rint (matrix.m[1][0]),
             (int) rint (matrix.m[1][1]),
             (int) rint (matrix.m[1][2]), (int) rint (matrix.m[1][3]));
         g_print ("  %d, %d, %d, %d,\n",
-            (int) rint (matrix.m[2][0] - ((bits == 8) ? 256 : 0)),
-            (int) rint (matrix.m[2][1] - ((bits == 8) ? 512 : 0)),
+            (int) rint (matrix.m[2][0]),
+            (int) rint (matrix.m[2][1]),
             (int) rint (matrix.m[2][2]), (int) rint (matrix.m[2][3]));
         g_print ("};\n");
       }
