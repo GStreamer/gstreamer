@@ -88,6 +88,10 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
+dnl Check for Gtk doc
+GTK_DOC_CHECK([1.9])
+AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes"])
+
 dnl Check for GLib
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
 AC_SUBST(GLIB_CFLAGS)
@@ -186,6 +190,10 @@ debian/libgstvaapi.install.in
 debian/libgstvaapi-dev.install.in
     debian/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
 debian/libgstvaapi-x11.install.in
+    docs/Makefile
+    docs/reference/Makefile
+    docs/reference/libs/Makefile
+    docs/reference/libs/libs-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
