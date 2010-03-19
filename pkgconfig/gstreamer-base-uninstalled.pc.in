@@ -1,13 +1,13 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../libs/gst/base
-includedir=${pcfiledir}/..
+libdir=
+includedir=
 
 Name: GStreamer base classes, uninstalled
 Description: Base classes for GStreamer elements, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
-Libs: ${libdir}/libgstbase-@GST_MAJORMINOR@.la
-Cflags: -I${includedir}
+Libs: @abs_top_builddir@/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la
+Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs

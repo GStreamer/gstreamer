@@ -1,13 +1,13 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../libs
-includedir=${pcfiledir}/..
+libdir=
+includedir=
 
 Name: GStreamer data protocol library, uninstalled
 Description: Data protocol for plug-ins, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
-Libs: ${libdir}/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la
-Cflags: -I${includedir} -I${includedir}/libs
+Libs: @abs_top_builddir@/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la
+Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs

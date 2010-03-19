@@ -1,14 +1,13 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../libs/gst/net
-
-includedir=${pcfiledir}/..
+libdir=
+includedir=
 
 Name: GStreamer networking library, uninstalled
 Description: Network-enabled GStreamer plug-ins and clocking, uninstalled
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
-Libs: ${libdir}/libgstnet-@GST_MAJORMINOR@.la
-Cflags: -I${includedir}
+Libs: @abs_top_builddir@/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
+Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs
