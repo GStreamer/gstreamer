@@ -640,18 +640,24 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
   /* check if we need to emit an SPS/PPS now */
   if (nalType == IDR_TYPE_ID && rtph264pay->spspps_interval > 0) {
     if (rtph264pay->last_spspps != -1) {
-      guint diff;
+      guint64 diff;
+
+      GST_LOG_OBJECT (rtph264pay,
+          "now %" GST_TIME_FORMAT ", last SPS/PPS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtph264pay->last_spspps));
 
       /* calculate diff between last SPS/PPS in milliseconds */
       if (timestamp > rtph264pay->last_spspps)
-        diff = GST_TIME_AS_MSECONDS (timestamp - rtph264pay->last_spspps);
+        diff = timestamp - rtph264pay->last_spspps;
       else
         diff = 0;
 
-      GST_DEBUG_OBJECT (rtph264pay, "interval since last SPS/PPS %ums", diff);
+      GST_DEBUG_OBJECT (rtph264pay,
+          "interval since last SPS/PPS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (diff));
 
       /* bigger than interval, queue SPS/PPS */
-      if (diff >= (rtph264pay->spspps_interval * GST_MSECOND)) {
+      if (GST_TIME_AS_SECONDS (diff) >= rtph264pay->spspps_interval) {
         GST_DEBUG_OBJECT (rtph264pay, "time to send SPS/PPS");
         send_spspps = TRUE;
       }
