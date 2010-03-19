@@ -37,8 +37,8 @@ AC_SUBST(GST_MAJORMINOR)
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.25
-GSTPB_REQ=0.10.25
+GST_REQ=0.10.28.1
+GSTPB_REQ=0.10.28.1
 
 dnl export for .pc files
 AC_SUBST([GST_REQ])

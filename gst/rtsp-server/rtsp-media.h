@@ -161,7 +161,9 @@ typedef enum {
  * @cond: for signaling the object
  * @shared: if this media can be shared between clients
  * @reusable: if this media can be reused after an unprepare
+ * @protocols: the allowed lower transport for this stream
  * @reused: if this media has been reused
+ * @is_ipv6: if this media is using ipv6
  * @element: the data providing element
  * @streams: the different streams provided by @element
  * @dynamic: list of dynamic elements managed by @element
@@ -190,6 +192,7 @@ struct _GstRTSPMedia {
 
   gboolean           shared;
   gboolean           reusable;
+  GstRTSPLowerTrans  protocols;
   gboolean           reused;
   gboolean           is_ipv6;
 
@@ -253,6 +256,9 @@ gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_reusable     (GstRTSPMedia *media, gboolean reusable);
 gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_protocols    (GstRTSPMedia *media, GstRTSPLowerTrans protocols);
+GstRTSPLowerTrans     gst_rtsp_media_get_protocols    (GstRTSPMedia *media);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);

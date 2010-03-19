@@ -26,6 +26,7 @@
 
 #define DEFAULT_SHARED         FALSE
 #define DEFAULT_REUSABLE       FALSE
+#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -35,6 +36,7 @@ enum
   PROP_0,
   PROP_SHARED,
   PROP_REUSABLE,
+  PROP_PROTOCOLS,
   PROP_LAST
 };
 
@@ -87,6 +89,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "If this media pipeline can be reused after an unprepare",
           DEFAULT_REUSABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
+      g_param_spec_flags ("protocols", "Protocols",
+          "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
+          DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_UNPREPARED] =
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
@@ -111,6 +118,10 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
   media->lock = g_mutex_new ();
   media->cond = g_cond_new ();
+
+  media->shared = DEFAULT_SHARED;
+  media->reusable = DEFAULT_REUSABLE;
+  media->protocols = DEFAULT_PROTOCOLS;
 }
 
 static void
@@ -189,6 +200,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_REUSABLE:
       g_value_set_boolean (value, gst_rtsp_media_is_reusable (media));
       break;
+    case PROP_PROTOCOLS:
+      g_value_set_flags (value, gst_rtsp_media_get_protocols (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -206,6 +220,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_REUSABLE:
       gst_rtsp_media_set_reusable (media, g_value_get_boolean (value));
+      break;
+    case PROP_PROTOCOLS:
+      gst_rtsp_media_set_protocols (media, g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -352,6 +369,37 @@ gst_rtsp_media_is_reusable (GstRTSPMedia * media)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
   return media->reusable;
+}
+
+/**
+ * gst_rtsp_media_set_protocols:
+ * @media: a #GstRTSPMedia
+ * @protocols: the new flags
+ *
+ * Configure the allowed lower transport for @media.
+ */
+void
+gst_rtsp_media_set_protocols (GstRTSPMedia * media, GstRTSPLowerTrans protocols)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->protocols = protocols;
+}
+
+/**
+ * gst_rtsp_media_get_protocols:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the allowed protocols of @media.
+ *
+ * Returns: a #GstRTSPLowerTrans
+ */
+GstRTSPLowerTrans
+gst_rtsp_media_get_protocols (GstRTSPMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_RTSP_LOWER_TRANS_UNKNOWN);
+
+  return media->protocols;
 }
 
 /**
