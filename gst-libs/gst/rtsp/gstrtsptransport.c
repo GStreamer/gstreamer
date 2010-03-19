@@ -117,6 +117,26 @@ static const RTSPLTransMap ltrans[] = {
   {NULL, GST_RTSP_LOWER_TRANS_UNKNOWN}
 };
 
+
+GType
+gst_rtsp_lower_trans_get_type (void)
+{
+  static GType rtsp_lower_trans_type = 0;
+  static const GFlagsValue rtsp_lower_trans[] = {
+    {GST_RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
+    {GST_RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
+    {GST_RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
+    {GST_RTSP_LOWER_TRANS_HTTP, "HTTP tunneled mode", "http"},
+    {0, NULL, NULL},
+  };
+
+  if (!rtsp_lower_trans_type) {
+    rtsp_lower_trans_type =
+        g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
+  }
+  return rtsp_lower_trans_type;
+}
+
 #define RTSP_TRANSPORT_PARAMETER_IS_UNIQUE(param) \
 G_STMT_START {                                    \
   if ((transport_params & (param)) != 0)          \
