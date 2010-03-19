@@ -139,12 +139,13 @@ struct _GstBaseRTPPayloadClass
 GType           gst_basertppayload_get_type             (void);
 
 void            gst_basertppayload_set_options          (GstBaseRTPPayload *payload,
-                                                         gchar *media, gboolean dynamic,
-                                                         gchar *encoding_name,
+                                                         const gchar *media,
+                                                         gboolean dynamic,
+                                                         const gchar *encoding_name,
                                                          guint32 clock_rate);
 
 gboolean        gst_basertppayload_set_outcaps          (GstBaseRTPPayload *payload,
-                                                         gchar *fieldname, ...);
+                                                         const gchar *fieldname, ...);
 
 gboolean        gst_basertppayload_is_filled            (GstBaseRTPPayload *payload,
                                                          guint size, GstClockTime duration);

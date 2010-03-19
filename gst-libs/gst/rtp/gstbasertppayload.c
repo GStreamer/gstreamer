@@ -453,7 +453,8 @@ no_function:
  */
 void
 gst_basertppayload_set_options (GstBaseRTPPayload * payload,
-    gchar * media, gboolean dynamic, gchar * encoding_name, guint32 clock_rate)
+    const gchar * media, gboolean dynamic, const gchar * encoding_name,
+    guint32 clock_rate)
 {
   g_return_if_fail (payload != NULL);
   g_return_if_fail (clock_rate != 0);
@@ -504,8 +505,8 @@ update_max_ptime (GstBaseRTPPayload * basertppayload)
  * Returns: %TRUE if the caps could be set.
  */
 gboolean
-gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
-    ...)
+gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
+    const gchar * fieldname, ...)
 {
   GstCaps *srccaps, *peercaps;
   gboolean res;
