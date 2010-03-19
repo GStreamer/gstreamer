@@ -60,11 +60,14 @@ struct _GstAlpha
 {
   GstVideoFilter parent;
 
+  /* <private> */
+
   /* caps */
   GstVideoFormat in_format, out_format;
   gint width, height;
   gboolean in_sdtv, out_sdtv;
 
+  /* properties */
   gdouble alpha;
 
   guint target_r;
@@ -75,21 +78,20 @@ struct _GstAlpha
 
   gfloat angle;
   gfloat noise_level;
-  guint noise_level2;
   guint black_sensitivity;
   guint white_sensitivity;
 
-  gfloat y;                     /* chroma color */
+  /* processing function */
+  void (*process) (const guint8 *src, guint8 *dest, gint width, gint height, GstAlpha *alpha);
+
+  /* precalculated values for chroma keying */
   gint8 cb, cr;
   gint8 kg;
-  gfloat accept_angle_cos;
-  gfloat accept_angle_sin;
   guint8 accept_angle_tg;
   guint8 accept_angle_ctg;
   guint8 one_over_kc;
   guint8 kfgy_scale;
-
-  void (*process) (const guint8 *src, guint8 *dest, gint width, gint height, GstAlpha *alpha);
+  guint noise_level2;
 };
 
 struct _GstAlphaClass

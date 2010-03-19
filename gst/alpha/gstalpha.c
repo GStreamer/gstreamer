@@ -737,17 +737,17 @@ gst_alpha_chroma_key_i420 (const guint8 * src, guint8 * dest, gint width,
 static void
 gst_alpha_init_params (GstAlpha * alpha)
 {
-  float kgl;
-  float tmp;
-  float tmp1, tmp2;
+  gfloat kgl;
+  gfloat tmp;
+  gfloat tmp1, tmp2;
+  gfloat y;
   const gint *matrix;
 
   matrix =
       (alpha->out_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
       cog_rgb_to_ycbcr_matrix_8bit_hdtv;
 
-  alpha->y =
-      (matrix[0] * ((gint) alpha->target_r) +
+  y = (matrix[0] * ((gint) alpha->target_r) +
       matrix[1] * ((gint) alpha->target_g) +
       matrix[2] * ((gint) alpha->target_b) + matrix[3]) >> 8;
   /* Cb,Cr without offset here because the chroma keying
@@ -766,8 +766,6 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->cb = 127 * (tmp1 / kgl);
   alpha->cr = 127 * (tmp2 / kgl);
 
-  alpha->accept_angle_cos = cos (M_PI * alpha->angle / 180);
-  alpha->accept_angle_sin = sin (M_PI * alpha->angle / 180);
   tmp = 15 * tan (M_PI * alpha->angle / 180);
   tmp = MIN (tmp, 255);
   alpha->accept_angle_tg = tmp;
@@ -776,7 +774,7 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->accept_angle_ctg = tmp;
   tmp = 1 / (kgl);
   alpha->one_over_kc = 255 * 2 * tmp - 255;
-  tmp = 15 * (float) (alpha->y) / kgl;
+  tmp = 15 * y / kgl;
   tmp = MIN (tmp, 255);
   alpha->kfgy_scale = tmp;
   alpha->kg = MIN (kgl, 127);
