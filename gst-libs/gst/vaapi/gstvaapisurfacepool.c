@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-surface-pool
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapisurfacepool.h"
 
@@ -101,6 +106,16 @@ gst_vaapi_surface_pool_init(GstVaapiSurfacePool *pool)
     priv->height        = 0;
 }
 
+/**
+ * gst_vaapi_surface_pool_new:
+ * @display: a #GstVaapiDisplay
+ * @caps: a #GstCaps
+ *
+ * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the
+ * specified dimensions in @caps.
+ *
+ * Return value: the newly allocated #GstVaapiVideoPool
+ */
 GstVaapiVideoPool *
 gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps)
 {

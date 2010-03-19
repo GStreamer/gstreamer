@@ -54,13 +54,24 @@ typedef struct _GstVaapiImagePool               GstVaapiImagePool;
 typedef struct _GstVaapiImagePoolPrivate        GstVaapiImagePoolPrivate;
 typedef struct _GstVaapiImagePoolClass          GstVaapiImagePoolClass;
 
+/**
+ * GstVaapiImagePool:
+ *
+ * A pool of lazily allocated #GstVaapiImage objects.
+ */
 struct _GstVaapiImagePool {
     /*< private >*/
     GstVaapiVideoPool parent_instance;
 
+    /*< private >*/
     GstVaapiImagePoolPrivate *priv;
 };
 
+/**
+ * GstVaapiImagePoolClass:
+ *
+ * A pool of lazily allocated #GstVaapiImage objects.
+ */
 struct _GstVaapiImagePoolClass {
     /*< private >*/
     GstVaapiVideoPoolClass parent_class;

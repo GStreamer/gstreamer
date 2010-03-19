@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-video-pool
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapivideopool.h"
 
@@ -149,21 +154,32 @@ gst_vaapi_video_pool_class_init(GstVaapiVideoPoolClass *klass)
     object_class->set_property  = gst_vaapi_video_pool_set_property;
     object_class->get_property  = gst_vaapi_video_pool_get_property;
 
+    /**
+     * GstVaapiVideoPool:display:
+     *
+     * The #GstVaapiDisplay this pool is bound to.
+     */
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
          g_param_spec_object("display",
-                             "display",
-                             "Gstreamer/VA display",
+                             "Display",
+                             "The GstVaapiDisplay this pool is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiVidePool:caps:
+     *
+     * The video object capabilities represented as a #GstCaps. This
+     * shall hold at least the "width" and "height" properties.
+     */
     g_object_class_install_property
         (object_class,
          PROP_CAPS,
          g_param_spec_pointer("caps",
                               "caps",
-                              "Caps",
+                              "The video object capabilities",
                               G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
@@ -180,15 +196,15 @@ gst_vaapi_video_pool_init(GstVaapiVideoPool *pool)
     g_queue_init(&priv->free_objects);
 }
 
-GstVaapiVideoPool *
-gst_vaapi_video_pool_new(GstVaapiDisplay *display, GstCaps *caps)
-{
-    return g_object_new(GST_VAAPI_TYPE_VIDEO_POOL,
-                        "display", display,
-                        "caps",    caps,
-                        NULL);
-}
-
+/**
+ * gst_vaapi_video_pool_get_caps:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Retrieves the #GstCaps the @pool was created with. The @pool owns
+ * the returned object and it shall not be unref'ed.
+ *
+ * Return value: the #GstCaps the @pool was created with
+ */
 GstCaps *
 gst_vaapi_video_pool_get_caps(GstVaapiVideoPool *pool)
 {
@@ -197,6 +213,13 @@ gst_vaapi_video_pool_get_caps(GstVaapiVideoPool *pool)
     return pool->priv->caps;
 }
 
+/*
+ * gst_vaapi_video_pool_set_caps:
+ * @pool: a #GstVaapiVideoPool
+ * @caps: a #GstCaps
+ *
+ * Binds new @caps to the @pool and notify the sub-classes.
+ */
 void
 gst_vaapi_video_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
 {
@@ -208,6 +231,17 @@ gst_vaapi_video_pool_set_caps(GstVaapiVideoPool *pool, GstCaps *caps)
         klass->set_caps(pool, caps);
 }
 
+/**
+ * gst_vaapi_video_pool_get_object:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Retrieves a new object from the @pool, or allocates a new one if
+ * none was found. The @pool holds a reference on the returned object
+ * and thus shall be released through gst_vaapi_video_pool_put_object()
+ * when it's no longer needed.
+ *
+ * Return value: a possibly newly allocated object, or %NULL on error
+ */
 gpointer
 gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool)
 {
@@ -229,6 +263,15 @@ gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool)
     return g_object_ref(object);
 }
 
+/**
+ * gst_vaapi_video_pool_put_object:
+ * @pool: a #GstVaapiVideoPool
+ * @object: the object to add to the pool
+ *
+ * Pushes the @object back into the pool. The @object shall be
+ * previously allocated from the @pool. Calling this function with an
+ * arbitrary object yields undefined behaviour.
+ */
 void
 gst_vaapi_video_pool_put_object(GstVaapiVideoPool *pool, gpointer object)
 {

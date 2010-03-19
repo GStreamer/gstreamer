@@ -54,13 +54,24 @@ typedef struct _GstVaapiSurfacePool             GstVaapiSurfacePool;
 typedef struct _GstVaapiSurfacePoolPrivate      GstVaapiSurfacePoolPrivate;
 typedef struct _GstVaapiSurfacePoolClass        GstVaapiSurfacePoolClass;
 
+/**
+ * GstVaapiSurfacePool:
+ *
+ * A pool of lazily allocated #GstVaapiSurface objects.
+ */
 struct _GstVaapiSurfacePool {
     /*< private >*/
     GstVaapiVideoPool parent_instance;
 
+    /*< private >*/
     GstVaapiSurfacePoolPrivate *priv;
 };
 
+/**
+ * GstVaapiSurfacePoolClass:
+ *
+ * A pool of lazily allocated #GstVaapiSurface objects.
+ */
 struct _GstVaapiSurfacePoolClass {
     /*< private >*/
     GstVaapiVideoPoolClass parent_class;

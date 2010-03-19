@@ -54,13 +54,27 @@ typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
 typedef struct _GstVaapiVideoPoolPrivate        GstVaapiVideoPoolPrivate;
 typedef struct _GstVaapiVideoPoolClass          GstVaapiVideoPoolClass;
 
+/**
+ * GstVaapiVideoPool:
+ *
+ * A pool of lazily allocated video objects. e.g. surfaces, images.
+ */
 struct _GstVaapiVideoPool {
     /*< private >*/
     GObject parent_instance;
 
+    /*< private >*/
     GstVaapiVideoPoolPrivate *priv;
 };
 
+/**
+ * GstVaapiVideoPoolClass:
+ * @set_caps: virtual function for notifying the subclass of the
+ *   negotiated caps
+ * @alloc_object: virtual function for allocating a video pool object
+ *
+ * A pool base class used to hold video objects. e.g. surfaces, images.
+ */
 struct _GstVaapiVideoPoolClass {
     /*< private >*/
     GObjectClass parent_class;
