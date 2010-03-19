@@ -2,7 +2,8 @@ if USE_X
 X_TESTS = stress-xoverlay
 
 stress_xoverlay_SOURCES = stress-xoverlay.c
-stress_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)
+stress_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)
 stress_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
 
@@ -10,12 +11,14 @@ if HAVE_GTK_X11
 X_TESTS += test-colorkey test-xoverlay
 
 test_colorkey_SOURCES = test-colorkey.c
-test_colorkey_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
+test_colorkey_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
 test_colorkey_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
 
 test_xoverlay_SOURCES = test-xoverlay.c
-test_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
+test_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
 test_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
 endif
@@ -36,8 +39,8 @@ PANGO_TESTS =
 endif
 
 audio_trickplay_SOURCES = audio-trickplay.c
-audio_trickplay_CFLAGS  = $(GST_CFLAGS)
-audio_trickplay_LDADD = $(GST_LIBS) -lgstcontroller-$(GST_MAJORMINOR) $(LIBM)
+audio_trickplay_CFLAGS  = $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS)
+audio_trickplay_LDADD = $(GST_CONTROLLER_LIBS) $(GST_LIBS) $(LIBM)
 
 playbin_text_SOURCES = playbin-text.c
 playbin_text_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)

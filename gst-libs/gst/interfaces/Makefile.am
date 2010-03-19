@@ -56,7 +56,8 @@ nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
 	$(built_sources)				\
 	interfaces-marshal.h
 
-libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+# only need base cflags here, xoverlay includes videosink.h for a struct */
+libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(LIBM) 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

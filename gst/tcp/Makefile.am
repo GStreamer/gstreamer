@@ -24,7 +24,7 @@ nodist_libgsttcp_la_SOURCES = \
 	$(built_sources)
 
 # remove ENABLE_NEW when dataprotocol is stable
-libgsttcp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -DGST_ENABLE_NEW
+libgsttcp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_GDP_CFLAGS) $(GST_CFLAGS) -DGST_ENABLE_NEW
 libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsttcp_la_LIBADD = $(GST_BASE_LIBS) $(GST_GDP_LIBS) $(GST_LIBS)
 libgsttcp_la_LIBTOOLFLAGS = --tag=disable-static
