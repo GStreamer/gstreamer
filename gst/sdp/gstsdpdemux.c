@@ -1049,6 +1049,8 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   if (!stream->multicast)
     g_signal_emit_by_name (stream->udpsink, "clear");
 
+  g_object_set (G_OBJECT (stream->udpsink), "auto-multicast", FALSE, NULL);
+  g_object_set (G_OBJECT (stream->udpsink), "loop", FALSE, NULL);
   /* no sync needed */
   g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
   /* no async state changes needed */
