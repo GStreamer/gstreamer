@@ -56,13 +56,24 @@ typedef struct _GstVaapiVideoBuffer             GstVaapiVideoBuffer;
 typedef struct _GstVaapiVideoBufferPrivate      GstVaapiVideoBufferPrivate;
 typedef struct _GstVaapiVideoBufferClass        GstVaapiVideoBufferClass;
 
+/**
+ * GstVaapiVideoBuffer:
+ *
+ * A #GstBuffer holding video objects (#GstVaapiSurface and #GstVaapiImage).
+ */
 struct _GstVaapiVideoBuffer {
     /*< private >*/
     GstBuffer parent_instance;
 
+    /*< private >*/
     GstVaapiVideoBufferPrivate *priv;
 };
 
+/**
+ * GstVaapiVideoBufferClass:
+ *
+ * A #GstBuffer holding video objects
+ */
 struct _GstVaapiVideoBufferClass {
     /*< private >*/
     GstBufferClass parent_class;

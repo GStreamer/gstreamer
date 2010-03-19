@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-video-buffer
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapivideobuffer.h"
 #include <gst/vaapi/gstvaapiimagepool.h>
@@ -116,7 +121,8 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
     priv->surface       = NULL;
 }
 
-static inline GstVaapiVideoBuffer *gst_vaapi_video_buffer_new(void)
+static inline GstVaapiVideoBuffer *
+gst_vaapi_video_buffer_new(void)
 {
     GstMiniObject *object;
 
@@ -127,6 +133,18 @@ static inline GstVaapiVideoBuffer *gst_vaapi_video_buffer_new(void)
     return GST_VAAPI_VIDEO_BUFFER(object);
 }
 
+/**
+ * gst_vaapi_video_buffer_new_from_pool:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Creates a #GstBuffer with a video object allocated from a @pool.
+ * Only #GstVaapiSurfacePool and #GstVaapiImagePool pools are supported.
+ *
+ * The buffer is destroyed through the last call to gst_buffer_unref()
+ * and the video objects are pushed back to their respective pools.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
+ */
 GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
 {
@@ -153,6 +171,15 @@ gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
     return NULL;
 }
 
+/**
+ * gst_vaapi_video_buffer_new_with_image:
+ * @image: a #GstVaapiImage
+ *
+ * Creates a #GstBuffer with the specified @image. The resulting
+ * buffer holds an additional reference to the @image.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
+ */
 GstBuffer *
 gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
 {
@@ -166,6 +193,15 @@ gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
     return GST_BUFFER(buffer);
 }
 
+/**
+ * gst_vaapi_video_buffer_new_with_surface:
+ * @surface: a #GstVaapiSurface
+ *
+ * Creates a #GstBuffer with the specified @surface. The resulting
+ * buffer holds an additional reference to the @surface.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
+ */
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
 {
@@ -179,6 +215,17 @@ gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
     return GST_BUFFER(buffer);
 }
 
+/**
+ * gst_vaapi_video_buffer_get_image:
+ * @buffer: a #GstVaapiVideoBuffer
+ *
+ * Retrieves the #GstVaapiImage bound to the @buffer. The @buffer owns
+ * the #GstVaapiImage so the caller is responsible for calling
+ * g_object_ref() when needed.
+ *
+ * Return value: the #GstVaapiImage bound to the @buffer, or %NULL if
+ *   there is none
+ */
 GstVaapiImage *
 gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer)
 {
@@ -187,6 +234,15 @@ gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer)
     return buffer->priv->image;
 }
 
+/**
+ * gst_vaapi_video_buffer_set_image:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @image: a #GstVaapiImage
+ *
+ * Binds @image to the @buffer. If the @buffer contains another image
+ * previously allocated from a pool, it's pushed back to its parent
+ * pool and the pool is also released.
+ */
 void
 gst_vaapi_video_buffer_set_image(
     GstVaapiVideoBuffer *buffer,
@@ -202,6 +258,17 @@ gst_vaapi_video_buffer_set_image(
         buffer->priv->image = g_object_ref(image);
 }
 
+/**
+ * gst_vaapi_video_buffer_set_image_from_pool
+ * @buffer: a #GstVaapiVideoBuffer
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Binds a newly allocated video object from the @pool. The @pool
+ * shall be of type #GstVaapiImagePool. Previously allocated objects
+ * are released and returned to their parent pools, if any.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_video_buffer_set_image_from_pool(
     GstVaapiVideoBuffer *buffer,
@@ -222,6 +289,17 @@ gst_vaapi_video_buffer_set_image_from_pool(
     return TRUE;
 }
 
+/**
+ * gst_vaapi_video_buffer_get_surface:
+ * @buffer: a #GstVaapiVideoBuffer
+ *
+ * Retrieves the #GstVaapiSurface bound to the @buffer. The @buffer
+ * owns the #GstVaapiSurface so the caller is responsible for calling
+ * g_object_ref() when needed.
+ *
+ * Return value: the #GstVaapiSurface bound to the @buffer, or %NULL if
+ *   there is none
+ */
 GstVaapiSurface *
 gst_vaapi_video_buffer_get_surface(GstVaapiVideoBuffer *buffer)
 {
@@ -230,6 +308,15 @@ gst_vaapi_video_buffer_get_surface(GstVaapiVideoBuffer *buffer)
     return buffer->priv->surface;
 }
 
+/**
+ * gst_vaapi_video_buffer_set_surface:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @surface: a #GstVaapiSurface
+ *
+ * Binds @surface to the @buffer. If the @buffer contains another
+ * surface previously allocated from a pool, it's pushed back to its
+ * parent pool and the pool is also released.
+ */
 void
 gst_vaapi_video_buffer_set_surface(
     GstVaapiVideoBuffer *buffer,
@@ -245,6 +332,17 @@ gst_vaapi_video_buffer_set_surface(
         buffer->priv->surface = g_object_ref(surface);
 }
 
+/**
+ * gst_vaapi_video_buffer_set_surface_from_pool
+ * @buffer: a #GstVaapiVideoBuffer
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Binds a newly allocated video object from the @pool. The @pool
+ * shall be of type #GstVaapiSurfacePool. Previously allocated objects
+ * are released and returned to their parent pools, if any.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_video_buffer_set_surface_from_pool(
     GstVaapiVideoBuffer *buffer,
