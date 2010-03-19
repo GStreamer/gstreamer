@@ -449,79 +449,6 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
   return TRUE;
 }
 
-static void
-gst_alpha_set_ayuv (const guint8 * src, guint8 * dest, gint width, gint height,
-    GstAlpha * alpha)
-{
-  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
-  gint y, x;
-
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      *dest++ = (*src++ * s_alpha) >> 8;
-      *dest++ = *src++;
-      *dest++ = *src++;
-      *dest++ = *src++;
-    }
-  }
-}
-
-static void
-gst_alpha_set_i420 (const guint8 * src, guint8 * dest, gint width, gint height,
-    GstAlpha * alpha)
-{
-  gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
-  const guint8 *srcY;
-  const guint8 *srcU;
-  const guint8 *srcV;
-  gint i, j;
-  gint src_wrap, src_uv_wrap;
-  gint y_stride, uv_stride;
-  gboolean odd_width;
-
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
-
-  src_wrap = y_stride - width;
-  src_uv_wrap = uv_stride - (width / 2);
-
-  srcY = src;
-  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
-      1, width, height);
-  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
-      2, width, height);
-
-  odd_width = (width % 2 != 0);
-
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width / 2; j++) {
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU;
-      *dest++ = *srcV;
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU++;
-      *dest++ = *srcV++;
-    }
-    /* Might have one odd column left to do */
-    if (odd_width) {
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU;
-      *dest++ = *srcV;
-    }
-    if (i % 2 == 0) {
-      srcU -= width / 2;
-      srcV -= width / 2;
-    } else {
-      srcU += src_uv_wrap;
-      srcV += src_uv_wrap;
-    }
-    srcY += src_wrap;
-  }
-}
-
 /* based on http://www.cs.utah.edu/~michael/chroma/
  */
 static inline gint
@@ -603,7 +530,80 @@ chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
 }
 
 static void
-gst_alpha_chroma_key_ayuv (const guint8 * src, guint8 * dest, gint width,
+gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
+    gint height, GstAlpha * alpha)
+{
+  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
+  gint y, x;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      *dest++ = (*src++ * s_alpha) >> 8;
+      *dest++ = *src++;
+      *dest++ = *src++;
+      *dest++ = *src++;
+    }
+  }
+}
+
+static void
+gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
+    gint height, GstAlpha * alpha)
+{
+  gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
+  const guint8 *srcY;
+  const guint8 *srcU;
+  const guint8 *srcV;
+  gint i, j;
+  gint src_wrap, src_uv_wrap;
+  gint y_stride, uv_stride;
+  gboolean odd_width;
+
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
+  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+
+  src_wrap = y_stride - width;
+  src_uv_wrap = uv_stride - (width / 2);
+
+  srcY = src;
+  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      1, width, height);
+  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+      2, width, height);
+
+  odd_width = (width % 2 != 0);
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width / 2; j++) {
+      *dest++ = b_alpha;
+      *dest++ = *srcY++;
+      *dest++ = *srcU;
+      *dest++ = *srcV;
+      *dest++ = b_alpha;
+      *dest++ = *srcY++;
+      *dest++ = *srcU++;
+      *dest++ = *srcV++;
+    }
+    /* Might have one odd column left to do */
+    if (odd_width) {
+      *dest++ = b_alpha;
+      *dest++ = *srcY++;
+      *dest++ = *srcU;
+      *dest++ = *srcV;
+    }
+    if (i % 2 == 0) {
+      srcU -= width / 2;
+      srcV -= width / 2;
+    } else {
+      srcU += src_uv_wrap;
+      srcV += src_uv_wrap;
+    }
+    srcY += src_wrap;
+  }
+}
+
+static void
+gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
     gint height, GstAlpha * alpha)
 {
   const guint8 *src1;
@@ -643,9 +643,9 @@ gst_alpha_chroma_key_ayuv (const guint8 * src, guint8 * dest, gint width,
 }
 
 static inline void
-gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
-    const guint8 * srcY1, const guint8 * srcY2, const guint8 * srcU,
-    const guint8 * srcV, gint width)
+gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
+    guint8 * dest2, const guint8 * srcY1, const guint8 * srcY2,
+    const guint8 * srcU, const guint8 * srcV, gint width)
 {
   gint xpos;
   gint a, a2, y[4], u, v;
@@ -691,7 +691,7 @@ gst_alpha_chromakey_row_i420 (GstAlpha * alpha, guint8 * dest1, guint8 * dest2,
 }
 
 static void
-gst_alpha_chroma_key_i420 (const guint8 * src, guint8 * dest, gint width,
+gst_alpha_chroma_key_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
     gint height, GstAlpha * alpha)
 {
   const guint8 *srcY1, *srcY2, *srcU, *srcV;
@@ -722,7 +722,7 @@ gst_alpha_chroma_key_i420 (const guint8 * src, guint8 * dest, gint width,
   src_y_stride *= 2;
 
   for (ypos = 0; ypos < height / 2; ypos++) {
-    gst_alpha_chromakey_row_i420 (alpha, dest1, dest2,
+    gst_alpha_chromakey_row_i420_ayuv (alpha, dest1, dest2,
         srcY1, srcY2, srcU, srcV, width);
 
     dest1 += dest_stride;
@@ -792,10 +792,10 @@ gst_alpha_set_process_function (GstAlpha * alpha)
         case GST_VIDEO_FORMAT_AYUV:
           switch (alpha->in_format) {
             case GST_VIDEO_FORMAT_AYUV:
-              alpha->process = gst_alpha_set_ayuv;
+              alpha->process = gst_alpha_set_ayuv_ayuv;
               break;
             case GST_VIDEO_FORMAT_I420:
-              alpha->process = gst_alpha_set_i420;
+              alpha->process = gst_alpha_set_i420_ayuv;
               break;
             default:
               break;
@@ -811,10 +811,10 @@ gst_alpha_set_process_function (GstAlpha * alpha)
         case GST_VIDEO_FORMAT_AYUV:
           switch (alpha->in_format) {
             case GST_VIDEO_FORMAT_AYUV:
-              alpha->process = gst_alpha_chroma_key_ayuv;
+              alpha->process = gst_alpha_chroma_key_ayuv_ayuv;
               break;
             case GST_VIDEO_FORMAT_I420:
-              alpha->process = gst_alpha_chroma_key_i420;
+              alpha->process = gst_alpha_chroma_key_i420_ayuv;
               break;
             default:
               break;
