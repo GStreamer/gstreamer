@@ -1278,10 +1278,10 @@ speex_streamheader_to_codecdata (const GValue * streamheader,
   return TRUE;
 }
 
-static gchar *
+static const gchar *
 aac_codec_data_to_codec_id (const GstBuffer * buf)
 {
-  gchar *result;
+  const gchar *result;
   gint profile;
 
   /* default to MAIN */
@@ -2080,8 +2080,8 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
   /* TODO: more sensible tag mappings */
   struct
   {
-    gchar *matroska_tagname;
-    gchar *gstreamer_tagname;
+    const gchar *matroska_tagname;
+    const gchar *gstreamer_tagname;
   }
   tag_conv[] = {
     {

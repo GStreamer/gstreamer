@@ -152,7 +152,7 @@ gst_alaw_dec_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *othercaps, *result;
   const GstCaps *templ;
-  gchar *name;
+  const gchar *name;
   gint i;
 
   alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));

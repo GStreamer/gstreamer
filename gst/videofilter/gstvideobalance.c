@@ -394,7 +394,7 @@ static void
 gst_video_balance_init (GTypeInstance * instance, gpointer g_class)
 {
   GstVideoBalance *videobalance = GST_VIDEO_BALANCE (instance);
-  char *channels[4] = { "HUE", "SATURATION",
+  const char *channels[4] = { "HUE", "SATURATION",
     "BRIGHTNESS", "CONTRAST"
   };
   gint i;

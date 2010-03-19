@@ -303,7 +303,7 @@ gst_alaw_enc_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *othercaps, *result;
   const GstCaps *templ;
-  gchar *name;
+  const gchar *name;
   gint i;
 
   alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));

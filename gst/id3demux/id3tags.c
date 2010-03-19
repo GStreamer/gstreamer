@@ -239,8 +239,8 @@ static const gchar *obsolete_frame_ids[] = {
 
 const struct ID3v2FrameIDConvert
 {
-  gchar *orig;
-  gchar *new;
+  const gchar *orig;
+  const gchar *new;
 } frame_id_conversions[] = {
   /* 2.3.x frames */
   {

@@ -331,7 +331,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstRtpMP4GPay *rtpmp4gpay;
   GstStructure *structure;
   const GValue *codec_data;
-  gchar *media_type = NULL;
+  const gchar *media_type = NULL;
   gboolean res;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (payload);

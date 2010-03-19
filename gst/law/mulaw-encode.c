@@ -61,7 +61,7 @@ mulawenc_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *othercaps, *result;
   const GstCaps *templ;
-  gchar *name;
+  const gchar *name;
   gint i;
 
   mulawenc = GST_MULAWENC (GST_PAD_PARENT (pad));

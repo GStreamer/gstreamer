@@ -83,7 +83,7 @@ static void
 fill_labels (void)
 {
   gint i, pos;
-  gchar *origs[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
+  const gchar *origs[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
   const struct
   {
     const gchar *given;

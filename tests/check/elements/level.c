@@ -153,7 +153,7 @@ GST_START_TEST (test_int16)
 
   /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
   for (i = 0; i < 2; ++i) {
-    gchar *fields[3] = { "rms", "peak", "decay" };
+    const gchar *fields[3] = { "rms", "peak", "decay" };
     for (j = 0; j < 3; ++j) {
       list = gst_structure_get_value (structure, fields[j]);
       value = gst_value_list_get_value (list, i);
@@ -201,7 +201,7 @@ GST_START_TEST (test_int16_panned)
   const GValue *list, *value;
   GstClockTime endtime;
   gdouble dB;
-  gchar *fields[3] = { "rms", "peak", "decay" };
+  const gchar *fields[3] = { "rms", "peak", "decay" };
 
   level = setup_level ();
   g_object_set (level, "message", TRUE, "interval", GST_SECOND / 10, NULL);

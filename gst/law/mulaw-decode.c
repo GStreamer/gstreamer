@@ -95,7 +95,7 @@ mulawdec_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *othercaps, *result;
   const GstCaps *templ;
-  gchar *name;
+  const gchar *name;
   gint i;
 
   mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));

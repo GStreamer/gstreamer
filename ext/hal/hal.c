@@ -55,7 +55,8 @@ static gchar *
 gst_hal_get_alsa_element (LibHalContext * ctx, const gchar * udi,
     GstHalDeviceType device_type)
 {
-  char *type, *element = NULL, *string = NULL;
+  char *type, *string = NULL;
+  const char *element = NULL;
   DBusError error;
 
   dbus_error_init (&error);
@@ -145,7 +146,8 @@ static gchar *
 gst_hal_get_oss_element (LibHalContext * ctx, const gchar * udi,
     GstHalDeviceType device_type)
 {
-  char *type, *element = NULL, *string = NULL;
+  char *type, *string = NULL;
+  const char *element = NULL;
   DBusError error;
 
   dbus_error_init (&error);

@@ -1093,7 +1093,7 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
   const struct
   {
     guint32 fcc;
-    gchar *tag;
+    const gchar *tag;
   } rifftags[] = {
     {
     GST_RIFF_INFO_IARL, GST_TAG_LOCATION}, {

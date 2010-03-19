@@ -507,7 +507,7 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
     guint32 rate, guint32 channels, guint32 width)
 {
   GstCaps *caps = NULL;
-  gchar *codec_name = NULL;
+  const gchar *codec_name = NULL;
   gboolean ret = FALSE;
 
   switch (codec_tag) {
@@ -890,7 +890,7 @@ gst_flv_parse_video_negotiate (GstFLVDemux * demux, guint32 codec_tag)
 {
   gboolean ret = FALSE;
   GstCaps *caps = NULL;
-  gchar *codec_name = NULL;
+  const gchar *codec_name = NULL;
 
   /* Generate caps for that pad */
   switch (codec_tag) {

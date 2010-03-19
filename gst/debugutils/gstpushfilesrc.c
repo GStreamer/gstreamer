@@ -152,7 +152,7 @@ gst_push_file_src_uri_get_type (void)
 static gchar **
 gst_push_file_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "pushfile", NULL };
+  static gchar *protocols[] = { (char *) "pushfile", NULL };
 
   return protocols;
 }

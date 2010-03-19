@@ -185,7 +185,7 @@ gst_rtp_dv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 static gboolean
 gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, guint size)
 {
-  gchar *encode, *media;
+  const gchar *encode, *media;
   gboolean audio_bundled, res;
 
   if ((data[3] & 0x80) == 0) {  /* DSF flag */

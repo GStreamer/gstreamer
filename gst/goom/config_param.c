@@ -28,7 +28,7 @@ empty_fct (PluginParam * dummy)
 }
 
 PluginParam
-goom_secure_param ()
+goom_secure_param (void)
 {
   PluginParam p;
 
@@ -41,7 +41,7 @@ goom_secure_param ()
 }
 
 PluginParam
-goom_secure_f_param (char *name)
+goom_secure_f_param (const char *name)
 {
   PluginParam p = secure_param ();
 
@@ -55,7 +55,7 @@ goom_secure_f_param (char *name)
 }
 
 PluginParam
-goom_secure_f_feedback (char *name)
+goom_secure_f_feedback (const char *name)
 {
   PluginParam p = secure_f_param (name);
 
@@ -64,7 +64,7 @@ goom_secure_f_feedback (char *name)
 }
 
 PluginParam
-goom_secure_s_param (char *name)
+goom_secure_s_param (const char *name)
 {
   PluginParam p = secure_param ();
 
@@ -75,7 +75,7 @@ goom_secure_s_param (char *name)
 }
 
 PluginParam
-goom_secure_b_param (char *name, int value)
+goom_secure_b_param (const char *name, int value)
 {
   PluginParam p = secure_param ();
 
@@ -86,7 +86,7 @@ goom_secure_b_param (char *name, int value)
 }
 
 PluginParam
-goom_secure_i_param (char *name)
+goom_secure_i_param (const char *name)
 {
   PluginParam p = secure_param ();
 
@@ -100,7 +100,7 @@ goom_secure_i_param (char *name)
 }
 
 PluginParam
-goom_secure_i_feedback (char *name)
+goom_secure_i_feedback (const char *name)
 {
   PluginParam p = secure_i_param (name);
 

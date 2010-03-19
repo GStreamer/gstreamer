@@ -112,7 +112,7 @@ void    gst_ebml_write_binary        (GstEbmlWrite *ebml,
                                       guchar       *binary,
                                       guint64       length);
 void    gst_ebml_write_header        (GstEbmlWrite *ebml,
-                                      gchar        *doctype,
+                                      const gchar  *doctype,
                                       guint         version);
 
 /*

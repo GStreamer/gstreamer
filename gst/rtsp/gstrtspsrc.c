@@ -1245,7 +1245,7 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
       pairs = g_strsplit (p, ";", 0);
       for (i = 0; pairs[i]; i++) {
         gchar *valpos;
-        gchar *val, *key;
+        const gchar *val, *key;
 
         /* the key may not have a '=', the value can have other '='s */
         valpos = strstr (pairs[i], "=");
@@ -5564,9 +5564,9 @@ gst_rtspsrc_uri_get_type (void)
 static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "rtsp", "rtspu", "rtspt", "rtsph", NULL };
+  static const gchar *protocols[] = { "rtsp", "rtspu", "rtspt", "rtsph", NULL };
 
-  return protocols;
+  return (gchar **) protocols;
 }
 
 static const gchar *

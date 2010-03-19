@@ -1046,7 +1046,7 @@ gst_dv1394src_uri_get_type (void)
 static gchar **
 gst_dv1394src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "dv", NULL };
+  static gchar *protocols[] = { (char *) "dv", NULL };
 
   return protocols;
 }

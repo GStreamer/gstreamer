@@ -55,7 +55,7 @@ static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, gchar * sinkname)
+    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -84,7 +84,7 @@ setup_src_pad (GstElement * element,
 }
 
 static void
-teardown_src_pad (GstElement * element, gchar * sinkname)
+teardown_src_pad (GstElement * element, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
   gchar *padname;
@@ -116,7 +116,7 @@ teardown_src_pad (GstElement * element, gchar * sinkname)
 }
 
 static GstElement *
-setup_avimux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
+setup_avimux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
 {
   GstElement *avimux;
 
@@ -131,7 +131,7 @@ setup_avimux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
 }
 
 static void
-cleanup_avimux (GstElement * avimux, gchar * sinkname)
+cleanup_avimux (GstElement * avimux, const gchar * sinkname)
 {
   GST_DEBUG ("cleanup_avimux");
   gst_element_set_state (avimux, GST_STATE_NULL);
@@ -144,8 +144,9 @@ cleanup_avimux (GstElement * avimux, gchar * sinkname)
 }
 
 static void
-check_avimux_pad (GstStaticPadTemplate * srctemplate, gchar * src_caps_string,
-    gchar * chunk_id, gchar * sinkname)
+check_avimux_pad (GstStaticPadTemplate * srctemplate,
+    const gchar * src_caps_string, const gchar * chunk_id,
+    const gchar * sinkname)
 {
   GstElement *avimux;
   GstBuffer *inbuffer, *outbuffer;

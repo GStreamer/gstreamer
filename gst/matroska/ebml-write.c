@@ -749,7 +749,8 @@ gst_ebml_replace_uint (GstEbmlWrite * ebml, guint64 pos, guint64 num)
  * Write EBML header.
  */
 void
-gst_ebml_write_header (GstEbmlWrite * ebml, gchar * doctype, guint version)
+gst_ebml_write_header (GstEbmlWrite * ebml, const gchar * doctype,
+    guint version)
 {
   guint64 pos;
 

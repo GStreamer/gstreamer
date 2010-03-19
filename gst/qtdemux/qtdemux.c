@@ -6582,7 +6582,8 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   gint len;
   guint8 *data;
   GstBuffer *buf;
-  gchar *media_type, *style;
+  gchar *media_type;
+  const gchar *style;
   GstCaps *caps;
   guint i;
   guint8 ndata[4];
@@ -6998,7 +6999,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint8 *data_ptr = NULL;
   int data_len = 0;
   guint8 object_type_id = 0;
-  char *codec_name = NULL;
+  const char *codec_name = NULL;
   GstCaps *caps = NULL;
 
   GST_MEMDUMP_OBJECT (qtdemux, "esds", ptr, len);

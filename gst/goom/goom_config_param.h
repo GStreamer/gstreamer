@@ -62,8 +62,8 @@ struct BoolVal {
 
 
 typedef struct _PARAM {
-  char *name;
-  char *desc;
+  const char *name;
+  const char *desc;
   char rw;
   ParamType type;
   union {
@@ -99,20 +99,20 @@ typedef struct _PARAM {
 
 PluginParam goom_secure_param(void);
 
-PluginParam goom_secure_f_param(char *name);
-PluginParam goom_secure_i_param(char *name);
-PluginParam goom_secure_b_param(char *name, int value);
-PluginParam goom_secure_s_param(char *name);
+PluginParam goom_secure_f_param(const char *name);
+PluginParam goom_secure_i_param(const char *name);
+PluginParam goom_secure_b_param(const char *name, int value);
+PluginParam goom_secure_s_param(const char *name);
 
-PluginParam goom_secure_f_feedback(char *name);
-PluginParam goom_secure_i_feedback(char *name);
+PluginParam goom_secure_f_feedback(const char *name);
+PluginParam goom_secure_i_feedback(const char *name);
 
 void goom_set_str_param_value(PluginParam *p, const char *str);
 void goom_set_list_param_value(PluginParam *p, const char *str);
     
 typedef struct _PARAMETERS {
-  char *name;
-  char *desc;
+  const char *name;
+  const char *desc;
   int nbParams;
   PluginParam **params;
 } PluginParameters;

@@ -136,8 +136,8 @@ GType gst_v4l2_object_get_type (void);
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
-                            enum v4l2_buf_type  type,
-                            char *default_device,
+                                                  enum v4l2_buf_type  type,
+                                                  const char *default_device,
                    				  GstV4l2GetInOutFunction get_in_out_func,
                    				  GstV4l2SetInOutFunction set_in_out_func,
 		   				  GstV4l2UpdateFpsFunction   update_fps_func);

@@ -793,7 +793,7 @@ gst_hdv1394src_uri_get_type (void)
 static gchar **
 gst_hdv1394src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "hdv", NULL };
+  static gchar *protocols[] = { (char *) "hdv", NULL };
 
   return protocols;
 }

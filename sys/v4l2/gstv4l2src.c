@@ -969,7 +969,7 @@ gst_v4l2src_uri_get_type (void)
 static gchar **
 gst_v4l2src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "v4l2", NULL };
+  static gchar *protocols[] = { (char *) "v4l2", NULL };
 
   return protocols;
 }

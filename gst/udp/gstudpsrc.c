@@ -995,7 +995,7 @@ gst_udpsrc_uri_get_type (void)
 static gchar **
 gst_udpsrc_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "udp", NULL };
+  static gchar *protocols[] = { (char *) "udp", NULL };
 
   return protocols;
 }

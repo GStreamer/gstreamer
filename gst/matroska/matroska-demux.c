@@ -2934,8 +2934,8 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
   /* FIXME: check if there are more useful mappings */
   struct
   {
-    gchar *matroska_tagname;
-    gchar *gstreamer_tagname;
+    const gchar *matroska_tagname;
+    const gchar *gstreamer_tagname;
   }
   tag_conv[] = {
     {
@@ -4025,7 +4025,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     }
   }
 
-  utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, "*",
+  utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, (char *) "*",
       NULL, NULL, &err);
 
   if (err) {
@@ -4036,7 +4036,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
     /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
     encoding = "ISO-8859-15";
-    utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, "*",
+    utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, (char *) "*",
         NULL, NULL, NULL);
   }
 
@@ -5387,7 +5387,7 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
   guint needed = 0;
   guint32 id;
   guint64 length;
-  gchar *name;
+  const gchar *name;
 
   gst_adapter_push (demux->adapter, buffer);
   buffer = NULL;
