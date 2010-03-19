@@ -426,7 +426,7 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
 
   if (!gst_video_format_parse_caps (incaps, &alpha->in_format,
           &alpha->width, &alpha->height) ||
-      !gst_video_format_parse_caps (incaps, &alpha->out_format,
+      !gst_video_format_parse_caps (outcaps, &alpha->out_format,
           &alpha->width, &alpha->height)) {
     GST_OBJECT_UNLOCK (alpha);
     return FALSE;
@@ -529,6 +529,8 @@ chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
   return b_alpha;
 }
 
+#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
+
 static void
 gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
     gint height, GstAlpha * alpha)
@@ -536,12 +538,33 @@ gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
   gint y, x;
 
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      *dest++ = (*src++ * s_alpha) >> 8;
-      *dest++ = *src++;
-      *dest++ = *src++;
-      *dest++ = *src++;
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        dest[0] = (src[0] * s_alpha) >> 8;
+        dest[1] = src[1];
+        dest[2] = src[2];
+        dest[3] = src[3];
+
+        dest += 4;
+        src += 4;
+      }
+    }
+  } else {
+    const gint *matrix =
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        dest[0] = (src[0] * s_alpha) >> 8;
+        dest[1] = APPLY_MATRIX (matrix, 0, src[1], src[2], src[3]);
+        dest[2] = APPLY_MATRIX (matrix, 1, src[1], src[2], src[3]);
+        dest[3] = APPLY_MATRIX (matrix, 2, src[1], src[2], src[3]);
+
+        dest += 4;
+        src += 4;
+      }
     }
   }
 }
@@ -573,32 +596,82 @@ gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
 
   odd_width = (width % 2 != 0);
 
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width / 2; j++) {
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU;
-      *dest++ = *srcV;
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU++;
-      *dest++ = *srcV++;
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width / 2; j++) {
+        dest[0] = b_alpha;
+        dest[1] = srcY[0];
+        dest[2] = srcU[0];
+        dest[3] = srcV[0];
+        dest[4] = b_alpha;
+        dest[5] = srcY[1];
+        dest[6] = srcU[0];
+        dest[7] = srcV[0];
+
+        dest += 8;
+        srcY += 2;
+        srcU++;
+        srcV++;
+      }
+      /* Might have one odd column left to do */
+      if (odd_width) {
+        dest[0] = b_alpha;
+        dest[1] = srcY[0];
+        dest[2] = srcU[0];
+        dest[3] = srcV[0];
+
+        dest += 4;
+        srcY++;
+      }
+      if (i % 2 == 0) {
+        srcU -= width / 2;
+        srcV -= width / 2;
+      } else {
+        srcU += src_uv_wrap;
+        srcV += src_uv_wrap;
+      }
+      srcY += src_wrap;
     }
-    /* Might have one odd column left to do */
-    if (odd_width) {
-      *dest++ = b_alpha;
-      *dest++ = *srcY++;
-      *dest++ = *srcU;
-      *dest++ = *srcV;
+  } else {
+    const gint *matrix =
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width / 2; j++) {
+        dest[0] = b_alpha;
+        dest[1] = APPLY_MATRIX (matrix, 0, srcY[0], srcU[0], srcV[0]);
+        dest[2] = APPLY_MATRIX (matrix, 1, srcY[0], srcU[0], srcV[0]);
+        dest[3] = APPLY_MATRIX (matrix, 2, srcY[0], srcU[0], srcV[0]);
+        dest[4] = b_alpha;
+        dest[5] = APPLY_MATRIX (matrix, 0, srcY[1], srcU[0], srcV[0]);
+        dest[6] = APPLY_MATRIX (matrix, 1, srcY[1], srcU[0], srcV[0]);
+        dest[7] = APPLY_MATRIX (matrix, 2, srcY[1], srcU[0], srcV[0]);
+
+        dest += 8;
+        srcY += 2;
+        srcU++;
+        srcV++;
+      }
+      /* Might have one odd column left to do */
+      if (odd_width) {
+        dest[0] = b_alpha;
+        dest[1] = APPLY_MATRIX (matrix, 0, srcY[0], srcU[0], srcV[0]);
+        dest[2] = APPLY_MATRIX (matrix, 1, srcY[0], srcU[0], srcV[0]);
+        dest[3] = APPLY_MATRIX (matrix, 2, srcY[0], srcU[0], srcV[0]);
+
+        dest += 4;
+        srcY++;
+      }
+      if (i % 2 == 0) {
+        srcU -= width / 2;
+        srcV -= width / 2;
+      } else {
+        srcU += src_uv_wrap;
+        srcV += src_uv_wrap;
+      }
+      srcY += src_wrap;
     }
-    if (i % 2 == 0) {
-      srcU -= width / 2;
-      srcV -= width / 2;
-    } else {
-      srcU += src_uv_wrap;
-      srcV += src_uv_wrap;
-    }
-    srcY += src_wrap;
   }
 }
 
@@ -619,25 +692,59 @@ gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
   src1 = src;
   dest1 = dest;
 
-  for (i = 0; i < height; i++) {
-    for (j = 0; j < width; j++) {
-      a = (*src1++ * pa) >> 8;
-      y = *src1++;
-      u = *src1++ - 128;
-      v = *src1++ - 128;
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        a = (src1[0] * pa) >> 8;
+        y = src1[1];
+        u = src1[2] - 128;
+        v = src1[3] - 128;
 
-      a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
-          smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
+            smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+            alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+            alpha->noise_level2);
 
-      u += 128;
-      v += 128;
+        u += 128;
+        v += 128;
 
-      *dest1++ = a;
-      *dest1++ = y;
-      *dest1++ = u;
-      *dest1++ = v;
+        dest1[0] = a;
+        dest1[1] = y;
+        dest1[2] = u;
+        dest1[3] = v;
+
+        src1 += 4;
+        dest1 += 4;
+      }
+    }
+  } else {
+    const gint *matrix =
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        a = (src1[0] * pa) >> 8;
+        y = APPLY_MATRIX (matrix, 0, src1[1], src1[2], src1[3]);
+        u = APPLY_MATRIX (matrix, 1, src1[1], src1[2], src1[3]) - 128;
+        v = APPLY_MATRIX (matrix, 2, src1[1], src1[2], src1[3]) - 128;
+
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
+            smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+            alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+            alpha->noise_level2);
+
+        u += 128;
+        v += 128;
+
+        dest1[0] = a;
+        dest1[1] = y;
+        dest1[2] = u;
+        dest1[3] = v;
+
+        src1 += 4;
+        dest1 += 4;
+      }
     }
   }
 }
@@ -648,45 +755,139 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
     const guint8 * srcU, const guint8 * srcV, gint width)
 {
   gint xpos;
-  gint a, a2, y[4], u, v;
+  gint a, a2, u, v;
   gint smin, smax;
 
   a = 255 * alpha->alpha;
   smin = 128 - alpha->black_sensitivity;
   smax = 128 + alpha->white_sensitivity;
 
-  for (xpos = 0; xpos < width / 2; xpos++) {
-    y[0] = *srcY1++;
-    y[1] = *srcY1++;
-    y[2] = *srcY2++;
-    y[3] = *srcY2++;
-    u = *srcU++ - 128;
-    v = *srcV++ - 128;
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    gint y[4];
 
-    a2 = chroma_keying_yuv (a, y, 4, &u, &v, alpha->cr, alpha->cb, smin,
-        smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-        alpha->one_over_kc, alpha->kfgy_scale, alpha->kg, alpha->noise_level2);
+    for (xpos = 0; xpos < width / 2; xpos++) {
+      y[0] = srcY1[0];
+      y[1] = srcY1[1];
+      y[2] = srcY2[0];
+      y[3] = srcY2[1];
+      u = srcU[0] - 128;
+      v = srcV[0] - 128;
 
-    u += 128;
-    v += 128;
+      a2 = chroma_keying_yuv (a, y, 4, &u, &v, alpha->cr, alpha->cb, smin,
+          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
 
-    *dest1++ = a2;
-    *dest1++ = y[0];
-    *dest1++ = u;
-    *dest1++ = v;
-    *dest1++ = a2;
-    *dest1++ = y[1];
-    *dest1++ = u;
-    *dest1++ = v;
+      u += 128;
+      v += 128;
 
-    *dest2++ = a2;
-    *dest2++ = y[2];
-    *dest2++ = u;
-    *dest2++ = v;
-    *dest2++ = a2;
-    *dest2++ = y[3];
-    *dest2++ = u;
-    *dest2++ = v;
+      dest1[0] = a2;
+      dest1[1] = y[0];
+      dest1[2] = u;
+      dest1[3] = v;
+      dest1[4] = a2;
+      dest1[5] = y[1];
+      dest1[6] = u;
+      dest1[7] = v;
+
+      dest2[0] = a2;
+      dest2[1] = y[2];
+      dest2[2] = u;
+      dest2[3] = v;
+      dest2[4] = a2;
+      dest2[5] = y[3];
+      dest2[6] = u;
+      dest2[7] = v;
+
+      srcY1 += 2;
+      srcY2 += 2;
+      srcU++;
+      srcV++;
+      dest1 += 8;
+      dest2 += 8;
+    }
+  } else {
+    const gint *matrix =
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+    gint y;
+
+    for (xpos = 0; xpos < width / 2; xpos++) {
+      y = APPLY_MATRIX (matrix, 0, srcY1[0], srcU[0], srcV[0]);
+      u = APPLY_MATRIX (matrix, 1, srcY1[0], srcU[0], srcV[0]) - 128;
+      v = APPLY_MATRIX (matrix, 2, srcY1[0], srcU[0], srcV[0]) - 128;
+
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
+          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
+
+      u += 128;
+      v += 128;
+
+      dest1[0] = a2;
+      dest1[1] = y;
+      dest1[2] = u;
+      dest1[3] = v;
+
+      y = APPLY_MATRIX (matrix, 0, srcY1[1], srcU[0], srcV[0]);
+      u = APPLY_MATRIX (matrix, 1, srcY1[1], srcU[0], srcV[0]) - 128;
+      v = APPLY_MATRIX (matrix, 2, srcY1[1], srcU[0], srcV[0]) - 128;
+
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
+          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
+
+      u += 128;
+      v += 128;
+
+      dest1[4] = a2;
+      dest1[5] = y;
+      dest1[6] = u;
+      dest1[7] = v;
+
+      y = APPLY_MATRIX (matrix, 0, srcY2[0], srcU[0], srcV[0]);
+      u = APPLY_MATRIX (matrix, 1, srcY2[0], srcU[0], srcV[0]) - 128;
+      v = APPLY_MATRIX (matrix, 2, srcY2[0], srcU[0], srcV[0]) - 128;
+
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
+          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
+
+      u += 128;
+      v += 128;
+
+      dest2[0] = a2;
+      dest2[1] = y;
+      dest2[2] = u;
+      dest2[3] = v;
+
+      y = APPLY_MATRIX (matrix, 0, srcY2[1], srcU[0], srcV[0]);
+      u = APPLY_MATRIX (matrix, 1, srcY2[1], srcU[0], srcV[0]) - 128;
+      v = APPLY_MATRIX (matrix, 2, srcY2[1], srcU[0], srcV[0]) - 128;
+
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
+          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
+          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
+          alpha->noise_level2);
+
+      u += 128;
+      v += 128;
+
+      dest2[4] = a2;
+      dest2[5] = y;
+      dest2[6] = u;
+      dest2[7] = v;
+
+      srcY1 += 2;
+      srcY2 += 2;
+      srcU++;
+      srcV++;
+      dest1 += 8;
+      dest2 += 8;
+    }
   }
 }
 
