@@ -61,8 +61,9 @@ struct _GstAlpha
   GstVideoFilter parent;
 
   /* caps */
-  GstVideoFormat format;
+  GstVideoFormat in_format, out_format;
   gint width, height;
+  gboolean in_sdtv, out_sdtv;
 
   gdouble alpha;
 
@@ -87,6 +88,8 @@ struct _GstAlpha
   guint8 accept_angle_ctg;
   guint8 one_over_kc;
   guint8 kfgy_scale;
+
+  void (*process) (const guint8 *src, guint8 *dest, gint width, gint height, GstAlpha *alpha);
 };
 
 struct _GstAlphaClass
