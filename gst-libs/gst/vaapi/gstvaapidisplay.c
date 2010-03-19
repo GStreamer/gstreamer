@@ -50,8 +50,16 @@ enum {
     PROP_DISPLAY
 };
 
+/* Append GstVaapiImageFormat to formats array */
+static inline void
+append_format(GArray *formats, GstVaapiImageFormat format)
+{
+    g_array_append_val(formats, format);
+}
+
+/* Append VAImageFormats to formats array */
 static void
-append_formats(GArray *array, const VAImageFormat *va_formats, guint n)
+append_formats(GArray *formats, const VAImageFormat *va_formats, guint n)
 {
     GstVaapiImageFormat format;
     gboolean has_YV12 = FALSE;
@@ -78,19 +86,15 @@ append_formats(GArray *array, const VAImageFormat *va_formats, guint n)
         default:
             break;
         }
-        g_array_append_val(array, format);
+        append_format(formats, format);
     }
 
     /* Append I420 (resp. YV12) format if YV12 (resp. I420) is not
        supported by the underlying driver */
-    if (has_YV12 && !has_I420) {
-        format = GST_VAAPI_IMAGE_I420;
-        g_array_append_val(array, format);
-    }
-    else if (has_I420 && !has_YV12) {
-        format = GST_VAAPI_IMAGE_YV12;
-        g_array_append_val(array, format);
-    }
+    if (has_YV12 && !has_I420)
+        append_format(formats, GST_VAAPI_IMAGE_I420);
+    else if (has_I420 && !has_YV12)
+        append_format(formats, GST_VAAPI_IMAGE_YV12);
 }
 
 /* Sort image formats. Prefer YUV formats first */
