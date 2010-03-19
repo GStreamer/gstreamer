@@ -663,7 +663,9 @@ struct _GstElementClass
 void                    gst_element_class_add_pad_template      (GstElementClass *klass, GstPadTemplate *templ);
 GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
+#ifndef GST_DISABLE_DEPRECATED
 void                    gst_element_class_set_details           (GstElementClass *klass, const GstElementDetails *details);
+#endif
 void                    gst_element_class_set_details_simple    (GstElementClass *klass,
                                                                  const gchar     *longname,
                                                                  const gchar     *classification,

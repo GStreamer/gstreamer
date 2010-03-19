@@ -1207,7 +1207,15 @@ gst_element_class_add_pad_template (GstElementClass * klass,
  * <note>This function is for use in _base_init functions only.</note>
  *
  * The @details are copied.
+ *
+ * Deprecated: Use gst_element_class_set_details_simple() instead.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void
+gst_element_class_set_details (GstElementClass * klass,
+    const GstElementDetails * details);
+#endif
 void
 gst_element_class_set_details (GstElementClass * klass,
     const GstElementDetails * details)
@@ -1217,6 +1225,7 @@ gst_element_class_set_details (GstElementClass * klass,
 
   __gst_element_details_copy (&klass->details, details);
 }
+#endif
 
 /**
  * gst_element_class_set_details_simple:
