@@ -167,6 +167,8 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   dec->discont = TRUE;
   dec->frame_nr = -1;
   dec->seqnum = gst_util_seqnum_next ();
+  dec->dropped = 0;
+  dec->processed = 0;
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_LOCK (dec);
@@ -1065,20 +1067,47 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   if (outtime != -1) {
     gboolean need_skip;
-    GstClockTime qostime;
+    GstClockTime running_time;
+    GstClockTime earliest_time;
+    gdouble proportion;
 
     /* qos needs to be done on running time */
-    qostime = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
+    running_time = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
         outtime);
 
     GST_OBJECT_LOCK (dec);
+    proportion = dec->proportion;
+    earliest_time = dec->earliest_time;
     /* check for QoS, don't perform the last steps of getting and
      * pushing the buffers that are known to be late. */
-    need_skip = dec->earliest_time != -1 && qostime <= dec->earliest_time;
+    need_skip = earliest_time != -1 && running_time <= earliest_time;
     GST_OBJECT_UNLOCK (dec);
 
-    if (need_skip)
+    if (need_skip) {
+      GstMessage *qos_msg;
+      guint64 stream_time;
+      gint64 jitter;
+
+      GST_DEBUG_OBJECT (dec, "skipping decoding: qostime %"
+          GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (running_time), GST_TIME_ARGS (earliest_time));
+
+      dec->dropped++;
+
+      stream_time =
+          gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, outtime);
+      jitter = GST_CLOCK_DIFF (running_time, earliest_time);
+
+      qos_msg =
+          gst_message_new_qos (GST_OBJECT_CAST (dec), FALSE, running_time,
+          stream_time, outtime, outdur);
+      gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+          dec->processed, dec->dropped);
+      gst_element_post_message (GST_ELEMENT_CAST (dec), qos_msg);
+
       goto dropping_qos;
+    }
   }
 
   /* this does postprocessing and set up the decoded frame
@@ -1101,6 +1130,8 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   GST_BUFFER_TIMESTAMP (out) = outtime;
   GST_BUFFER_DURATION (out) = outdur;
+
+  dec->processed++;
 
   if (dec->segment.rate >= 0.0)
     result = theora_dec_push_forward (dec, out);

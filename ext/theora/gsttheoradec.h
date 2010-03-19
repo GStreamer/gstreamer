@@ -67,7 +67,7 @@ struct _GstTheoraDec
   gboolean have_header;
 
   GstClockTime last_timestamp;
-  guint64 frame_nr; /* unused */
+  guint64 frame_nr;
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
@@ -94,6 +94,8 @@ struct _GstTheoraDec
   /* QoS stuff */ /* with LOCK*/
   gdouble proportion;
   GstClockTime earliest_time;
+  guint64 processed;
+  guint64 dropped;
 
   gboolean have_par;
   gint par_num;
