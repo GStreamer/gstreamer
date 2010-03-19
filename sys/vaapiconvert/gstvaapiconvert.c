@@ -69,11 +69,12 @@ GST_BOILERPLATE(
     GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
 
+#define DIRECT_RENDERING_DEFAULT 2
+
 enum {
     PROP_0,
 
-    PROP_USE_INOUT_BUFFERS,
-    PROP_USE_DERIVE_IMAGE
+    PROP_DIRECT_RENDERING,
 };
 
 static gboolean gst_vaapiconvert_start(GstBaseTransform *trans);
@@ -183,11 +184,8 @@ gst_vaapiconvert_set_property(
     GstVaapiConvert * const convert = GST_VAAPICONVERT(object);
 
     switch (prop_id) {
-    case PROP_USE_INOUT_BUFFERS:
-        convert->allow_use_inout_buffers = g_value_get_boolean(value);
-        break;
-    case PROP_USE_DERIVE_IMAGE:
-        convert->allow_use_derive_image = g_value_get_boolean(value);
+    case PROP_DIRECT_RENDERING:
+        convert->direct_rendering = g_value_get_uint(value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -206,11 +204,8 @@ gst_vaapiconvert_get_property(
     GstVaapiConvert * const convert = GST_VAAPICONVERT(object);
 
     switch (prop_id) {
-    case PROP_USE_INOUT_BUFFERS:
-        g_value_set_boolean(value, convert->allow_use_inout_buffers);
-        break;
-    case PROP_USE_DERIVE_IMAGE:
-        g_value_set_boolean(value, convert->allow_use_derive_image);
+    case PROP_DIRECT_RENDERING:
+        g_value_set_uint(value, convert->direct_rendering);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -238,21 +233,13 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
 
     g_object_class_install_property
         (object_class,
-         PROP_USE_INOUT_BUFFERS,
-         g_param_spec_boolean("use-inout-buffers",
-                              "Use in/out buffers",
-                              "Allow use of in/out buffers whenever possible",
-                              TRUE,
-                              G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_USE_DERIVE_IMAGE,
-         g_param_spec_boolean("use-derive-image",
-                              "Use vaDeriveImage()",
-                              "Allow use of vaDeriveImage() whenever possible",
-                              TRUE,
-                              G_PARAM_READWRITE));
+         PROP_DIRECT_RENDERING,
+         g_param_spec_uint("direct-rendering",
+                           "Direct rendering",
+                           "Direct rendering level",
+                           0, 2,
+                           DIRECT_RENDERING_DEFAULT,
+                           G_PARAM_READWRITE));
 }
 
 static void
@@ -267,12 +254,8 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
     convert->surfaces                   = NULL;
     convert->surface_width              = 0;
     convert->surface_height             = 0;
-    convert->allow_use_inout_buffers    = TRUE;
-    convert->can_use_inout_buffers      = FALSE;
-    convert->use_inout_buffers          = FALSE;
-    convert->allow_use_derive_image     = TRUE;
-    convert->can_use_derive_image       = FALSE;
-    convert->use_derive_image           = FALSE;
+    convert->direct_rendering_caps      = 0;
+    convert->direct_rendering           = G_MAXUINT32;
 
     /* Override buffer allocator on sink pad */
     sinkpad = gst_element_get_static_pad(GST_ELEMENT(convert), "sink");
@@ -329,7 +312,7 @@ gst_vaapiconvert_transform(
     if (!surface)
         return GST_FLOW_UNEXPECTED;
 
-    if (convert->use_inout_buffers) {
+    if (convert->direct_rendering) {
         if (!GST_VAAPI_IS_VIDEO_BUFFER(inbuf)) {
             GST_DEBUG("GstVaapiVideoBuffer was expected");
             return GST_FLOW_UNEXPECTED;
@@ -345,7 +328,7 @@ gst_vaapiconvert_transform(
         if (!gst_vaapi_image_unmap(image))
             return GST_FLOW_UNEXPECTED;
 
-        if (!convert->use_derive_image)
+        if (convert->direct_rendering < 2)
             gst_vaapi_surface_put_image(surface, image);
         return GST_FLOW_OK;
     }
@@ -438,10 +421,11 @@ gst_vaapiconvert_ensure_image_pool(GstVaapiConvert *convert, GstCaps *caps)
         if (gst_video_format_parse_caps(caps, &vformat, NULL, NULL)) {
             image = gst_vaapi_video_pool_get_object(convert->images);
             if (image) {
-                convert->can_use_inout_buffers =
+                if (convert->direct_rendering_caps == 0 &&
                     (gst_vaapi_image_is_linear(image) &&
                      (gst_vaapi_image_get_data_size(image) ==
-                      gst_video_format_get_size(vformat, width, height)));
+                      gst_video_format_get_size(vformat, width, height))))
+                    convert->direct_rendering_caps = 1;
                 gst_vaapi_video_pool_put_object(convert->images, image);
             }
         }
@@ -475,7 +459,8 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
             image = gst_vaapi_surface_derive_image(surface);
             if (image) {
                 if (gst_vaapi_image_map(image)) {
-                    convert->can_use_derive_image = TRUE;
+                    if (convert->direct_rendering_caps == 1)
+                        convert->direct_rendering_caps = 2;
                     gst_vaapi_image_unmap(image);
                 }
                 g_object_unref(image);
@@ -493,7 +478,7 @@ gst_vaapiconvert_negotiate_buffers(
     GstCaps          *outcaps
 )
 {
-    gboolean enable;
+    guint dr;
 
     if (!gst_vaapiconvert_ensure_image_pool(convert, incaps))
         return FALSE;
@@ -501,22 +486,10 @@ gst_vaapiconvert_negotiate_buffers(
     if (!gst_vaapiconvert_ensure_surface_pool(convert, outcaps))
         return FALSE;
 
-    if (convert->allow_use_inout_buffers) {
-        enable = convert->can_use_inout_buffers;
-        if (convert->use_inout_buffers != enable) {
-            convert->use_inout_buffers = enable;
-            GST_DEBUG("use-inout-buffers: %s",
-                      convert->use_inout_buffers ? "enabled" : "disabled");
-        }
-    }
-
-    if (convert->allow_use_derive_image) {
-        enable = convert->use_inout_buffers && convert->can_use_derive_image;
-        if (convert->use_derive_image != enable) {
-            convert->use_derive_image = enable;
-            GST_DEBUG("use-derive-image: %s",
-                      convert->use_derive_image ? "enabled" : "disabled");
-        }
+    dr = MIN(convert->direct_rendering, convert->direct_rendering_caps);
+    if (convert->direct_rendering != dr) {
+        convert->direct_rendering = dr;
+        GST_DEBUG("direct-rendering level: %d", dr);
     }
     return TRUE;
 }
@@ -569,10 +542,10 @@ gst_vaapiconvert_buffer_alloc(
     GstBuffer *buffer = NULL;
     GstVaapiImage *image = NULL;
 
-    /* Check if we can use the inout-buffers optimization */
+    /* Check if we can use direct-rendering */
     if (!gst_vaapiconvert_negotiate_buffers(convert, caps, caps))
         goto error;
-    if (!convert->use_inout_buffers)
+    if (!convert->direct_rendering)
         return GST_FLOW_OK;
 
     buffer = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
@@ -580,18 +553,22 @@ gst_vaapiconvert_buffer_alloc(
         goto error;
 
     GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
-    if (convert->use_derive_image) {
-        GstVaapiSurface *surface = gst_vaapi_video_buffer_get_surface(vbuffer);
-        image = gst_vaapi_surface_derive_image(surface);
-        if (image)
+    GstVaapiSurface *surface;
+    switch (convert->direct_rendering) {
+    case 2:
+        surface = gst_vaapi_video_buffer_get_surface(vbuffer);
+        image   = gst_vaapi_surface_derive_image(surface);
+        if (image) {
             gst_vaapi_video_buffer_set_image(vbuffer, image);
-        else /* We can't use the derive-image optimization. Disable it. */
-            convert->use_derive_image = FALSE;
-    }
-    if (!image) {
+            break;
+        }
+        /* We can't use the derive-image optimization. Disable it. */
+        convert->direct_rendering = 1;
+    case 1:
         if (!gst_vaapi_video_buffer_set_image_from_pool(vbuffer, convert->images))
             goto error;
         image = gst_vaapi_video_buffer_get_image(vbuffer);
+        break;
     }
     g_assert(image);
 
@@ -609,7 +586,7 @@ error:
     /* We can't use the inout-buffers optimization. Disable it. */
     if (buffer)
         gst_buffer_unref(buffer);
-    convert->use_inout_buffers = FALSE;
+    convert->direct_rendering = 0;
     return GST_FLOW_OK;
 }
 
@@ -649,9 +626,9 @@ gst_vaapiconvert_prepare_output_buffer(
     if (GST_VAAPI_IS_VIDEO_BUFFER(inbuf))
         buffer = gst_buffer_ref(inbuf);
     else {
-        if (convert->use_inout_buffers) {
+        if (convert->direct_rendering) {
             GST_DEBUG("upstream element destroyed our inout buffer");
-            convert->use_inout_buffers = FALSE;
+            convert->direct_rendering = 0;
         }
         buffer = gst_vaapi_video_buffer_new_from_pool(convert->surfaces);
         if (!buffer)
