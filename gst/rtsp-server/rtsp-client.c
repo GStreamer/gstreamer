@@ -23,6 +23,9 @@
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
 
+/* temporary multicast address until it's configurable somewhere */
+#define MCAST_ADDRESS "224.2.0.1"
+
 static GMutex *tunnels_lock;
 static GHashTable *tunnels;
 
@@ -796,7 +799,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPUrl * uri,
   /* we have a valid transport now, set the destination of the client. */
   g_free (ct->destination);
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    ct->destination = g_strdup ("224.2.0.1");
+    ct->destination = g_strdup (MCAST_ADDRESS);
   } else {
     url = gst_rtsp_connection_get_url (client->connection);
     ct->destination = g_strdup (url->host);
@@ -953,7 +956,10 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   gst_sdp_message_add_attribute (sdp, "control", "*");
 
   info.server_proto = proto;
-  info.server_ip = client->server_ip;
+  if (media->protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+    info.server_ip = MCAST_ADDRESS;
+  else
+    info.server_ip = client->server_ip;
 
   /* create an SDP for the media object */
   if (!gst_rtsp_sdp_from_media (sdp, &info, media))

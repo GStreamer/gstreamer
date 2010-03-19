@@ -85,7 +85,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage *sdp, GstSDPInfo *info, GstRTSPMedia * me
     gst_sdp_media_set_proto (smedia, "RTP/AVP");
 
     /* for the c= line */
-    gst_sdp_media_add_connection (smedia, "IN", info->server_proto, info->server_ip, 0, 0);
+    gst_sdp_media_add_connection (smedia, "IN", info->server_proto, info->server_ip, 16, 0);
 
     /* get clock-rate, media type and params for the rtpmap attribute */
     gst_structure_get_int (s, "clock-rate", &caps_rate);

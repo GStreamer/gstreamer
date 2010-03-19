@@ -27,6 +27,7 @@
 #define DEFAULT_SHARED         FALSE
 #define DEFAULT_REUSABLE       FALSE
 #define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
+//#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
