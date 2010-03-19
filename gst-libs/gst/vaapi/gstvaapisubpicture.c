@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-subpicture
+ * @short_description:
+ */
+
 #include "config.h"
 #include <string.h>
 #include "gstvaapiutils.h"
@@ -166,21 +171,31 @@ gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
     object_class->set_property = gst_vaapi_subpicture_set_property;
     object_class->get_property = gst_vaapi_subpicture_get_property;
 
+    /**
+     * GstVaapiSubpicture:id:
+     *
+     * The underlying #VASubpictureID of the subpicture.
+     */
     g_object_class_install_property
         (object_class,
          PROP_SUBPICTURE_ID,
          g_param_spec_uint("id",
                            "VA subpicture id",
-                           "VA subpicture id",
+                           "The underlying VA subpicture id",
                            0, G_MAXUINT32, VA_INVALID_ID,
                            G_PARAM_READABLE));
 
+    /**
+     * GstVaapiSubpicture:image:
+     *
+     * The #GstVaapiImage this subpicture is bound to.
+     */
     g_object_class_install_property
         (object_class,
          PROP_IMAGE,
          g_param_spec_object("image",
-                             "image",
-                             "GStreamer VA image",
+                             "Image",
+                             "The GstVaapiImage this subpicture is bound to",
                              GST_VAAPI_TYPE_IMAGE,
                              G_PARAM_READWRITE));
 }
@@ -195,6 +210,15 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
     priv->image         = NULL;
 }
 
+/**
+ * gst_vaapi_subpicture_new:
+ * @image: a #GstVaapiImage
+ *
+ * Creates a new #GstVaapiSubpicture with @image as source pixels. The
+ * newly created object holds a reference on @image.
+ *
+ * Return value: the newly allocated #GstVaapiSubpicture object
+ */
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image)
 {
@@ -207,6 +231,14 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
                         NULL);
 }
 
+/**
+ * gst_vaapi_subpicture_get_id:
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Returns the underlying VASubpictureID of the @subpicture.
+ *
+ * Return value: the underlying VA subpicture id
+ */
 VASubpictureID
 gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
 {
@@ -215,6 +247,14 @@ gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
     return subpicture->priv->subpicture_id;
 }
 
+/**
+ * gst_vaapi_subpicture_get_image:
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Returns the #GstVaapiImage this @subpicture is bound to.
+ *
+ * Return value: the #GstVaapiImage this @subpicture is bound to
+ */
 GstVaapiImage *
 gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
 {
@@ -223,6 +263,14 @@ gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
     return subpicture->priv->image;
 }
 
+/**
+ * gst_vaapi_subpicture_set_image:
+ * @subpicture: a #GstVaapiSubpicture
+ * @image: a #GstVaapiImage
+ *
+ * Binds a new #GstVaapiImage to the @subpicture. The reference to the
+ * previous image is released a new one acquired on @image.
+ */
 void
 gst_vaapi_subpicture_set_image(
     GstVaapiSubpicture *subpicture,

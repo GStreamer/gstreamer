@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-video-sink:
+ * @short_description: An interface for implementing VA-API sink elements
+ */
+
 #include "config.h"
 #include "gstvaapivideosink.h"
 
@@ -53,6 +58,14 @@ gst_vaapi_video_sink_get_type(void)
     return iface_type;
 }
 
+/**
+ * gst_vaapi_video_sink_get_display:
+ * @sink: a #GstElement
+ *
+ * Returns the #GstVaapiDisplay created by the VA-API @sink element.
+ *
+ * Return value: the #GstVaapiDisplay created by the @sink element
+ */
 GstVaapiDisplay *
 gst_vaapi_video_sink_get_display(GstVaapiVideoSink *sink)
 {
@@ -61,6 +74,18 @@ gst_vaapi_video_sink_get_display(GstVaapiVideoSink *sink)
     return GST_VAAPI_VIDEO_SINK_GET_INTERFACE(sink)->get_display(sink);
 }
 
+/**
+ * gst_vaapi_video_sink_lookup:
+ * @element: a #GstElement
+ *
+ * Traverses the whole downstream elements chain and finds a suitable
+ * #GstVaapiDisplay. This is a helper function for intermediate VA-API
+ * elements that don't create a #GstVaapiDisplay but require one.
+ * e.g. the `vaapiconvert' element.
+ *
+ * Return value: the #GstVaapiDisplay created by a downstream sink
+ * element, or %NULL if none was found
+ */
 GstVaapiVideoSink *
 gst_vaapi_video_sink_lookup(GstElement *element)
 {

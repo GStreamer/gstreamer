@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-display-x11
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay_x11.h"
@@ -189,6 +194,12 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
     dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
 
+    /**
+     * GstVaapiDisplayX11:x11-display:
+     *
+     * The X11 #Display that was created by gst_vaapi_display_x11_new()
+     * or that was bound from gst_vaapi_display_x11_new_with_display().
+     */
     g_object_class_install_property
         (object_class,
          PROP_X11_DISPLAY,
@@ -197,6 +208,11 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
                               "X11 display",
                               G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiDisplayX11:display-name:
+     *
+     * The X11 display name.
+     */
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY_NAME,
@@ -218,6 +234,16 @@ gst_vaapi_display_x11_init(GstVaapiDisplayX11 *display)
     priv->display_name   = NULL;
 }
 
+/**
+ * gst_vaapi_display_x11_new:
+ * @display_name: the X11 display name
+ *
+ * Opens an X11 #Display using @display_name and returns a newly
+ * allocated #GstVaapiDisplay object. The X11 display will be cloed
+ * when the reference count of the object reaches zero.
+ *
+ * Return value: a newly allocated #GstVaapiDisplay object
+ */
 GstVaapiDisplay *
 gst_vaapi_display_x11_new(const gchar *display_name)
 {
@@ -226,6 +252,17 @@ gst_vaapi_display_x11_new(const gchar *display_name)
                         NULL);
 }
 
+/**
+ * gst_vaapi_display_x11_new_with_display:
+ * @x11_display: an X11 #Display
+ *
+ * Creates a #GstVaapiDisplay based on the X11 @x11_display
+ * display. The caller still owns the display and must call
+ * XCloseDisplay() when all #GstVaapiDisplay references are
+ * released. Doing so too early can yield undefined behaviour.
+ *
+ * Return value: a newly allocated #GstVaapiDisplay object
+ */
 GstVaapiDisplay *
 gst_vaapi_display_x11_new_with_display(Display *x11_display)
 {
@@ -234,6 +271,16 @@ gst_vaapi_display_x11_new_with_display(Display *x11_display)
                         NULL);
 }
 
+/**
+ * gst_vaapi_display_x11_get_display:
+ * @display: a #GstVaapiDisplayX11
+ *
+ * Returns the underlying X11 #Display that was created by
+ * gst_vaapi_display_x11_new() or that was bound from
+ * gst_vaapi_display_x11_new_with_display().
+ *
+ * Return value: the X11 #Display attached to @display
+ */
 Display *
 gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
 {

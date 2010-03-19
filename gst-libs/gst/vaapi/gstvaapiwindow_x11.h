@@ -55,13 +55,24 @@ typedef struct _GstVaapiWindowX11               GstVaapiWindowX11;
 typedef struct _GstVaapiWindowX11Private        GstVaapiWindowX11Private;
 typedef struct _GstVaapiWindowX11Class          GstVaapiWindowX11Class;
 
+/**
+ * GstVaapiWindowX11:
+ *
+ * An X11 #Window wrapper.
+ */
 struct _GstVaapiWindowX11 {
     /*< private >*/
     GstVaapiWindow parent_instance;
 
+    /*< private >*/
     GstVaapiWindowX11Private *priv;
 };
 
+/**
+ * GstVaapiWindowX11Class:
+ *
+ * An X11 #Window wrapper class.
+ */
 struct _GstVaapiWindowX11Class {
     /*< private >*/
     GstVaapiWindowClass parent_class;

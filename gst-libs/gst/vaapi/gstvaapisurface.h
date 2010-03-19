@@ -28,6 +28,14 @@ G_BEGIN_DECLS
 
 typedef enum _GstVaapiChromaType                GstVaapiChromaType;
 
+/**
+ * GstVaapiChromaType:
+ * @GST_VAAPI_CHROMA_TYPE_YUV420: 4:2:0 chroma format
+ * @GST_VAAPI_CHROMA_TYPE_YUV422: 4:2:2 chroma format
+ * @GST_VAAPI_CHROMA_TYPE_YUV444: 4:4:4 chroma format
+ *
+ * The set of all chroma types for #GstVaapiSurface.
+ */
 enum _GstVaapiChromaType {
     GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
     GST_VAAPI_CHROMA_TYPE_YUV422,
@@ -62,13 +70,24 @@ typedef struct _GstVaapiSurface                 GstVaapiSurface;
 typedef struct _GstVaapiSurfacePrivate          GstVaapiSurfacePrivate;
 typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
 
+/**
+ * GstVaapiSurface:
+ *
+ * A VA surface wrapper.
+ */
 struct _GstVaapiSurface {
     /*< private >*/
     GObject parent_instance;
 
+    /*< private >*/
     GstVaapiSurfacePrivate *priv;
 };
 
+/**
+ * GstVaapiSurfaceClass:
+ *
+ * A VA surface wrapper class.
+ */
 struct _GstVaapiSurfaceClass {
     /*< private >*/
     GObjectClass parent_class;

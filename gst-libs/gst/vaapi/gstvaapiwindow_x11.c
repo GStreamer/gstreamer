@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-window-x11
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapidisplay_x11.h"
@@ -302,21 +307,31 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     window_class->resize        = gst_vaapi_window_x11_resize;
     window_class->render        = gst_vaapi_window_x11_render;
 
+    /**
+     * GstVaapiWindowX11:display:
+     *
+     * The #GstVaapiDisplay this window is bound to
+     */
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
          g_param_spec_object("display",
-                             "display",
                              "Display",
+                             "The GstVaapiDisplay this window is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiWindowX11:xid:
+     *
+     * The underlying X11 #Window XID.
+     */
     g_object_class_install_property
         (object_class,
          PROP_XID,
          g_param_spec_uint("xid",
                            "X window id",
-                           "X window ID",
+                           "The underlying X11 window id",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
@@ -333,6 +348,18 @@ gst_vaapi_window_x11_init(GstVaapiWindowX11 *window)
     priv->is_visible    = FALSE;
 }
 
+/**
+ * gst_vaapi_window_x11_new:
+ * @display: a #GstVaapiDisplay
+ * @width: the requested window width, in pixels
+ * @height: the requested windo height, in pixels
+ *
+ * Creates a window with the specified @width and @height. The window
+ * will be attached to the @display and remains invisible to the user
+ * until gst_vaapi_window_show() is called.
+ *
+ * Return value: the newly allocated #GstVaapiWindow object
+ */
 GstVaapiWindow *
 gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
 {
@@ -349,6 +376,18 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
                         NULL);
 }
 
+/**
+ * gst_vaapi_window_x11_new_with_xid:
+ * @display: a #GstVaapiDisplay
+ * @xid: an X11 #Window id
+ *
+ * Creates a #GstVaapiWindow using the X11 #Window @xid. The caller
+ * still owns the window and must call XDestroyWindow() when all
+ * #GstVaapiWindow references are released. Doing so too early can
+ * yield undefined behaviour.
+ *
+ * Return value: the newly allocated #GstVaapiWindow object
+ */
 GstVaapiWindow *
 gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 {
@@ -363,6 +402,16 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
                         NULL);
 }
 
+/**
+ * gst_vaapi_window_x11_get_xid:
+ * @window: a #GstVaapiWindowX11
+ *
+ * Returns the underlying X11 #Window that was created by
+ * gst_vaapi_window_x11_new() or that was bound with
+ * gst_vaapi_window_x11_new_with_xid().
+ *
+ * Return value: the underlying X11 #Window bound to @window.
+ */
 Window
 gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 {

@@ -50,6 +50,12 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY_X11,      \
                                GstVaapiDisplayX11Class))
 
+/**
+ * GST_VAAPI_DISPLAY_XDISPLAY:
+ * @display: a #GstVaapiDisplay
+ *
+ * Macro that evaluates to the underlying X11 #Display of @display
+ */
 #define GST_VAAPI_DISPLAY_XDISPLAY(display) \
     gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display))
 
@@ -57,13 +63,25 @@ typedef struct _GstVaapiDisplayX11              GstVaapiDisplayX11;
 typedef struct _GstVaapiDisplayX11Private       GstVaapiDisplayX11Private;
 typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;
 
+/**
+ * GstVaapiDisplayX11:
+ *
+ * VA/X11 display wrapper.
+ */
 struct _GstVaapiDisplayX11 {
     /*< private >*/
     GstVaapiDisplay parent_instance;
 
+    /*< private >*/
     GstVaapiDisplayX11Private *priv;
 };
 
+
+/**
+ * GstVaapiDisplayX11Class:
+ *
+ * VA/X11 display wrapper clas.
+ */
 struct _GstVaapiDisplayX11Class {
     /*< private >*/
     GstVaapiDisplayClass parent_class;

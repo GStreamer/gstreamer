@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-surface
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
@@ -210,21 +215,31 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
     object_class->get_property = gst_vaapi_surface_get_property;
     object_class->constructed  = gst_vaapi_surface_constructed;
 
+    /**
+     * GstVaapiSurface:display:
+     *
+     * The #GstVaapiDisplay this surface is bound to.
+     */
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
          g_param_spec_object("display",
-                             "display",
-                             "GStreamer Va display",
+                             "Display",
+                             "The GstVaapiDisplay this surface is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiSurface:id:
+     *
+     * The underlying #VASurfaceID of the surface.
+     */
     g_object_class_install_property
         (object_class,
          PROP_SURFACE_ID,
          g_param_spec_uint("id",
                            "VA surface id",
-                           "VA surface id",
+                           "The underlying VA surface id",
                            0, G_MAXUINT32, VA_INVALID_SURFACE,
                            G_PARAM_READABLE));
 
@@ -232,8 +247,8 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
         (object_class,
          PROP_WIDTH,
          g_param_spec_uint("width",
-                           "width",
-                           "VA surface width",
+                           "Width",
+                           "The width of the surface",
                            0, G_MAXINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
@@ -241,8 +256,8 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
         (object_class,
          PROP_HEIGHT,
          g_param_spec_uint("height",
-                           "height",
-                           "VA surface height",
+                           "Height",
+                           "The height of the surface",
                            0, G_MAXINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
@@ -250,8 +265,8 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
         (object_class,
          PROP_CHROMA_TYPE,
          g_param_spec_uint("chroma-type",
-                           "chroma-type",
-                           "VA surface chroma type",
+                           "Chroma type",
+                           "The chroma type of the surface",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
@@ -269,6 +284,18 @@ gst_vaapi_surface_init(GstVaapiSurface *surface)
     priv->chroma_type   = 0;
 }
 
+/**
+ * gst_vaapi_surface_new:
+ * @display: a #GstVaapiDisplay
+ * @chroma_type: the surface chroma format
+ * @width: the requested surface width
+ * @height: the requested surface height
+ *
+ * Creates a new #GstVaapiSurface with the specified chroma format and
+ * dimensions.
+ *
+ * Return value: the newly allocated #GstVaapiSurface object
+ */
 GstVaapiSurface *
 gst_vaapi_surface_new(
     GstVaapiDisplay    *display,
@@ -287,6 +314,14 @@ gst_vaapi_surface_new(
                         NULL);
 }
 
+/**
+ * gst_vaapi_surface_get_id:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the underlying VASurfaceID of the @surface.
+ *
+ * Return value: the underlying VA surface id
+ */
 VASurfaceID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface)
 {
@@ -295,6 +330,14 @@ gst_vaapi_surface_get_id(GstVaapiSurface *surface)
     return surface->priv->surface_id;
 }
 
+/**
+ * gst_vaapi_surface_get_display:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the #GstVaapiDisplay this @surface is bound to.
+ *
+ * Return value: the parent #GstVaapiDisplay object
+ */
 GstVaapiDisplay *
 gst_vaapi_surface_get_display(GstVaapiSurface *surface)
 {
@@ -303,6 +346,14 @@ gst_vaapi_surface_get_display(GstVaapiSurface *surface)
     return surface->priv->display;
 }
 
+/**
+ * gst_vaapi_surface_get_chroma_type:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the #GstVaapiChromaType the @surface was created with.
+ *
+ * Return value: the #GstVaapiChromaType
+ */
 GstVaapiChromaType
 gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
 {
@@ -311,6 +362,14 @@ gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
     return surface->priv->chroma_type;
 }
 
+/**
+ * gst_vaapi_surface_get_width:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the @surface width.
+ *
+ * Return value: the surface width, in pixels
+ */
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
@@ -319,6 +378,14 @@ gst_vaapi_surface_get_width(GstVaapiSurface *surface)
     return surface->priv->width;
 }
 
+/**
+ * gst_vaapi_surface_get_height:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the @surface height.
+ *
+ * Return value: the surface height, in pixels.
+ */
 guint
 gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 {
@@ -327,6 +394,14 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
     return surface->priv->height;
 }
 
+/**
+ * gst_vaapi_surface_get_size:
+ * @surface: a #GstVaapiSurface
+ * @pwidth: (out) (allow-none): return location for the width, or %NULL
+ * @pheight: (out) (allow-none): return location for the height, or %NULL
+ *
+ * Retrieves the dimensions of a #GstVaapiSurface.
+ */
 void
 gst_vaapi_surface_get_size(
     GstVaapiSurface *surface,
@@ -343,6 +418,30 @@ gst_vaapi_surface_get_size(
         *pheight = gst_vaapi_surface_get_height(surface);
 }
 
+/**
+ * gst_vaapi_surface_derive_image:
+ * @surface: a #GstVaapiSurface
+ *
+ * Derives a #GstVaapiImage from the @surface. This image buffer can
+ * then be mapped/unmapped for direct CPU access. This operation is
+ * only possible if the underlying implementation supports direct
+ * rendering capabilities and internal surface formats that can be
+ * represented with a #GstVaapiImage.
+ *
+ * When the operation is not possible, the function returns %NULL and
+ * the user should then fallback to using gst_vaapi_surface_get_image()
+ * or gst_vaapi_surface_put_image() to accomplish the same task in an
+ * indirect manner (additional copy).
+ *
+ * An image created with gst_vaapi_surface_derive_image() should be
+ * unreferenced when it's no longer needed. The image and image buffer
+ * data structures will be destroyed. However, the surface contents
+ * will remain unchanged until destroyed through the last call to
+ * g_object_unref().
+ *
+ * Return value: the newly allocated #GstVaapiImage object, or %NULL
+ *   on failure
+ */
 GstVaapiImage *
 gst_vaapi_surface_derive_image(GstVaapiSurface *surface)
 {
@@ -369,6 +468,16 @@ gst_vaapi_surface_derive_image(GstVaapiSurface *surface)
     return gst_vaapi_image_new_with_image(surface->priv->display, &va_image);
 }
 
+/**
+ * gst_vaapi_surface_get_image
+ * @surface: a #GstVaapiSurface
+ * @image: a #GstVaapiImage
+ *
+ * Retrieves surface data into a #GstVaapiImage. The @image must have
+ * a format supported by the @surface.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
 {
@@ -401,6 +510,16 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
     return TRUE;
 }
 
+/**
+ * gst_vaapi_surface_put_image:
+ * @surface: a #GstVaapiSurface
+ * @image: a #GstVaapiImage
+ *
+ * Copies data from a #GstVaapiImage into a @surface. The @image must
+ * have a format supported by the @surface.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
 {
@@ -434,6 +553,15 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
     return TRUE;
 }
 
+/**
+ * gst_vaapi_surface_sync:
+ * @surface: a #GstVaapiSurface
+ *
+ * Blocks until all pending operations on the @surface have been
+ * completed.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_surface_sync(GstVaapiSurface *surface)
 {

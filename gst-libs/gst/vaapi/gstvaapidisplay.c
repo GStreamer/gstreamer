@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-display
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"
@@ -417,6 +422,15 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     g_static_mutex_init(&priv->mutex);
 }
 
+/**
+ * gst_vaapi_display_new_with_display:
+ * @va_display: a #VADisplay
+ *
+ * Creates a new #GstVaapiDisplay, using @va_display as the VA
+ * display.
+ *
+ * Return value: the newly created #GstVaapiDisplay object
+ */
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display(VADisplay va_display)
 {
@@ -425,6 +439,14 @@ gst_vaapi_display_new_with_display(VADisplay va_display)
                         NULL);
 }
 
+/**
+ * gst_vaapi_display_lock:
+ * @display: a #GstVaapiDisplay
+ *
+ * Locks @display. If @display is already locked by another thread,
+ * the current thread will block until @display is unlocked by the
+ * other thread.
+ */
 void
 gst_vaapi_display_lock(GstVaapiDisplay *display)
 {
@@ -437,6 +459,14 @@ gst_vaapi_display_lock(GstVaapiDisplay *display)
         klass->lock_display(display);
 }
 
+/**
+ * gst_vaapi_display_unlock:
+ * @display: a #GstVaapiDisplay
+ *
+ * Unlocks @display. If another thread is blocked in a
+ * gst_vaapi_display_lock() call for @display, it will be woken and
+ * can lock @display itself.
+ */
 void
 gst_vaapi_display_unlock(GstVaapiDisplay *display)
 {
@@ -449,6 +479,14 @@ gst_vaapi_display_unlock(GstVaapiDisplay *display)
         klass->unlock_display(display);
 }
 
+/**
+ * gst_vaapi_display_get_display:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the #VADisplay bound to @display.
+ *
+ * Return value: the #VADisplay
+ */
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display)
 {
@@ -457,6 +495,15 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display)
     return display->priv->display;
 }
 
+/**
+ * gst_vaapi_display_has_profile:
+ * @display: a #GstVaapiDisplay
+ * @profile: a #VAProfile
+ *
+ * Returns whether VA @display supports @profile.
+ *
+ * Return value: %TRUE if VA @display supports @profile
+ */
 gboolean
 gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile)
 {
@@ -465,6 +512,22 @@ gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile)
     return find_profile(display->priv->profiles, profile);
 }
 
+/**
+ * gst_vaapi_display_get_image_caps:
+ * @display: a #GstVaapiDisplay
+ *
+ * Gets the supported image formats for gst_vaapi_surface_get_image()
+ * or gst_vaapi_surface_put_image() as #GstCaps capabilities.
+ *
+ * Note that this method does not necessarily map image formats
+ * returned by vaQueryImageFormats(). The set of capabilities can be
+ * stripped down, if gstreamer-vaapi does not support the format, or
+ * expanded to cover compatible formats not exposed by the underlying
+ * driver. e.g. I420 can be supported even if the driver only exposes
+ * YV12.
+ *
+ * Return value: a newly allocated #GstCaps object, possibly empty
+ */
 GstCaps *
 gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
 {
@@ -473,6 +536,15 @@ gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
     return get_caps(display->priv->image_formats);
 }
 
+/**
+ * gst_vaapi_display_has_image_format:
+ * @display: a #GstVaapiDisplay
+ * @format: a #GstVaapiFormat
+ *
+ * Returns whether VA @display supports @format image format.
+ *
+ * Return value: %TRUE if VA @display supports @format image format
+ */
 gboolean
 gst_vaapi_display_has_image_format(
     GstVaapiDisplay    *display,
@@ -485,6 +557,19 @@ gst_vaapi_display_has_image_format(
     return find_format(display->priv->image_formats, format);
 }
 
+/**
+ * gst_vaapi_display_get_subpicture_caps:
+ * @display: a #GstVaapiDisplay
+ *
+ * Gets the supported subpicture formats as #GstCaps capabilities.
+ *
+ * Note that this method does not necessarily map subpicture formats
+ * returned by vaQuerySubpictureFormats(). The set of capabilities can
+ * be stripped down if gstreamer-vaapi does not support the
+ * format. e.g. this is the case for paletted formats like IA44.
+ *
+ * Return value: a newly allocated #GstCaps object, possibly empty
+ */
 GstCaps *
 gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
 {
@@ -493,6 +578,15 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
     return get_caps(display->priv->subpicture_formats);
 }
 
+/**
+ * gst_vaapi_display_has_subpicture_format:
+ * @display: a #GstVaapiDisplay
+ * @format: a #GstVaapiFormat
+ *
+ * Returns whether VA @display supports @format subpicture format.
+ *
+ * Return value: %TRUE if VA @display supports @format subpicture format
+ */
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,

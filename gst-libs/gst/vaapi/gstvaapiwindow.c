@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-window
+ * @short_description:
+ */
+
 #include "config.h"
 #include "gstvaapiwindow.h"
 
@@ -153,8 +158,8 @@ gst_vaapi_window_class_init(GstVaapiWindowClass *klass)
         (object_class,
          PROP_WIDTH,
          g_param_spec_uint("width",
-                           "width",
                            "Width",
+                           "The window width",
                            1, G_MAXUINT32, 1,
                            G_PARAM_READWRITE));
 
@@ -163,7 +168,7 @@ gst_vaapi_window_class_init(GstVaapiWindowClass *klass)
          PROP_HEIGHT,
          g_param_spec_uint("height",
                            "height",
-                           "Height",
+                           "The window height",
                            1, G_MAXUINT32, 1,
                            G_PARAM_READWRITE));
 }
@@ -179,6 +184,13 @@ gst_vaapi_window_init(GstVaapiWindow *window)
     priv->height                = 1;
 }
 
+/**
+ * gst_vaapi_window_show:
+ * @window: a #GstVaapiWindow
+ *
+ * Flags a window to be displayed. Any window that is not shown will
+ * not appear on the screen.
+ */
 void
 gst_vaapi_window_show(GstVaapiWindow *window)
 {
@@ -188,6 +200,13 @@ gst_vaapi_window_show(GstVaapiWindow *window)
     GST_VAAPI_WINDOW_GET_CLASS(window)->show(window);
 }
 
+/**
+ * gst_vaapi_window_hide:
+ * @window: a #GstVaapiWindow
+ *
+ * Reverses the effects of gst_vaapi_window_show(), causing the window
+ * to be hidden (invisible to the user).
+ */
 void
 gst_vaapi_window_hide(GstVaapiWindow *window)
 {
@@ -197,6 +216,14 @@ gst_vaapi_window_hide(GstVaapiWindow *window)
     GST_VAAPI_WINDOW_GET_CLASS(window)->hide(window);
 }
 
+/**
+ * gst_vaapi_window_get_width:
+ * @window: a #GstVaapiWindow
+ *
+ * Retrieves the width of a #GstVaapiWindow.
+ *
+ * Return value: the width of the @window, in pixels
+ */
 guint
 gst_vaapi_window_get_width(GstVaapiWindow *window)
 {
@@ -206,6 +233,14 @@ gst_vaapi_window_get_width(GstVaapiWindow *window)
     return window->priv->width;
 }
 
+/**
+ * gst_vaapi_window_get_height:
+ * @window: a #GstVaapiWindow
+ *
+ * Retrieves the height of a #GstVaapiWindow
+ *
+ * Return value: the height of the @window, in pixels
+ */
 guint
 gst_vaapi_window_get_height(GstVaapiWindow *window)
 {
@@ -215,6 +250,14 @@ gst_vaapi_window_get_height(GstVaapiWindow *window)
     return window->priv->height;
 }
 
+/**
+ * gst_vaapi_window_get_size:
+ * @window: a #GstVaapiWindow
+ * @pwidth: (out) (allow-none): return location for the width, or %NULL
+ * @pheight: (out) (allow-none): return location for the height, or %NULL
+ *
+ * Retrieves the dimensions of a #GstVaapiWindow.
+ */
 void
 gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight)
 {
@@ -228,6 +271,13 @@ gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight)
         *pheight = window->priv->height;
 }
 
+/**
+ * gst_vaapi_window_set_width:
+ * @window: a #GstVaapiWindow
+ * @width: requested new width for the window, in pixels
+ *
+ * Resizes the @window to match the specified @width.
+ */
 void
 gst_vaapi_window_set_width(GstVaapiWindow *window, guint width)
 {
@@ -236,6 +286,13 @@ gst_vaapi_window_set_width(GstVaapiWindow *window, guint width)
     gst_vaapi_window_set_size(window, width, window->priv->height);
 }
 
+/**
+ * gst_vaapi_window_set_height:
+ * @window: a #GstVaapiWindow
+ * @height: requested new height for the window, in pixels
+ *
+ * Resizes the @window to match the specified @height.
+ */
 void
 gst_vaapi_window_set_height(GstVaapiWindow *window, guint height)
 {
@@ -244,6 +301,14 @@ gst_vaapi_window_set_height(GstVaapiWindow *window, guint height)
     gst_vaapi_window_set_size(window, window->priv->width, height);
 }
 
+/**
+ * gst_vaapi_window_set_size:
+ * @window: a #GstVaapiWindow
+ * @width: requested new width for the window, in pixels
+ * @height: requested new height for the window, in pixels
+ *
+ * Resizes the @window to match the specified @width and @height.
+ */
 void
 gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
 {
@@ -283,6 +348,17 @@ get_window_rect(GstVaapiWindow *window, GstVideoRectangle *rect)
     rect->h = height;
 }
 
+/**
+ * gst_vaapi_window_put_surface:
+ * @window: a #GstVaapiWindow
+ * @surface: a #GstVaapiSurface
+ * @flags: postprocessing flags
+ *
+ * Renders the whole @surface into the @window. The surface will be
+ * scale to fit the window, while not preserving aspect ratio.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_window_put_surface(
     GstVaapiWindow          *window,
@@ -306,6 +382,24 @@ gst_vaapi_window_put_surface(
                                                       flags);
 }
 
+/**
+ * gst_vaapi_window_put_surface_full:
+ * @window: a #GstVaapiWindow
+ * @surface: a #GstVaapiSurface
+ * @src_rect: (allow-none): the sub-rectangle of the source surface to
+ *   extract and process. If %NULL, the entire surface will be used.
+ * @dst_rect: (allow-none): the sub-rectangle of the destination
+ *   window into which the surface is rendered. If %NULL, the entire
+ *   window will be used.
+ * @flags: postprocessing flags. See #GstVaapiSurfaceRenderFlags
+ *
+ * Renders the @surface region specified by @src_rect into the @window
+ * region specified by @dst_rect. The @flags specify how de-interlacing
+ * (if needed), color space conversion, scaling and other postprocessing
+ * transformations are performed.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_window_put_surface_full(
     GstVaapiWindow          *window,

@@ -45,10 +45,17 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiVideoSink               GstVaapiVideoSink; /* dummy */
 typedef struct _GstVaapiVideoSinkInterface      GstVaapiVideoSinkInterface;
 
+/**
+ * GstVaapiVideoSinkInterface:
+ * @get_display: virtual function for retrieving the #GstVaapiDisplay created
+ *   by the downstream sink element. The implementation of that virtual
+ *   function is required for all Gstreamer/VAAPI sink elements.
+ */
 struct _GstVaapiVideoSinkInterface {
     /*< private >*/
     GTypeInterface g_iface;
 
+    /*< public >*/
     GstVaapiDisplay *(*get_display)(GstVaapiVideoSink *sink);
 };
 

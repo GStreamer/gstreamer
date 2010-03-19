@@ -28,20 +28,32 @@ G_BEGIN_DECLS
 
 typedef enum _GstVaapiImageFormat               GstVaapiImageFormat;
 
+/**
+ * GstVaapiImageFormat:
+ * @GST_VAAPI_IMAGE_NV12:
+ *   planar YUV 4:2:0, 12-bit, 1 plane for Y and 1 plane for UV
+ * @GST_VAAPI_IMAGE_YV12:
+ *   planar YUV 4:2:0, 12-bit, 3 planes for Y V U
+ * @GST_VAAPI_IMAGE_I420:
+ *   planar YUV 4:2:0, 12-bit, 3 planes for Y U V
+ * @GST_VAAPI_IMAGE_ARGB:
+ *   packed RGB 8:8:8, 32-bit, A R G B
+ * @GST_VAAPI_IMAGE_RGBA:
+ *   packed RGB 8:8:8, 32-bit, R G B A
+ * @GST_VAAPI_IMAGE_ABGR:
+ *   packed RGB 8:8:8, 32-bit, A B G R
+ * @GST_VAAPI_IMAGE_BGRA:
+ *   packed RGB 8:8:8, 32-bit, B G R A
+ *
+ * The set of all image formats for #GstVaapiImage.
+ */
 enum _GstVaapiImageFormat {
-    /** Planar YUV 4:2:0, 12-bit, 1 plane for Y and 1 plane for UV */
     GST_VAAPI_IMAGE_NV12 = VA_FOURCC('N','V','1','2'),
-    /** Planar YUV 4:2:0, 12-bit, 3 planes for Y V U */
     GST_VAAPI_IMAGE_YV12 = VA_FOURCC('Y','V','1','2'),
-    /** Planar YUV 4:2:0, 12-bit, 3 planes for Y U V */
     GST_VAAPI_IMAGE_I420 = VA_FOURCC('I','4','2','0'),
-    /** Packed RGB 8:8:8, 32-bit, A R G B */
     GST_VAAPI_IMAGE_ARGB = VA_FOURCC('A','R','G','B'),
-    /** Packed RGB 8:8:8, 32-bit, R G B A */
     GST_VAAPI_IMAGE_RGBA = VA_FOURCC('R','G','B','A'),
-    /** Packed RGB 8:8:8, 32-bit, A R G B */
     GST_VAAPI_IMAGE_ABGR = VA_FOURCC('A','B','G','R'),
-    /** Packed RGB 8:8:8, 32-bit, R G B A */
     GST_VAAPI_IMAGE_BGRA = VA_FOURCC('B','G','R','A'),
 };
 

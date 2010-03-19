@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-image
+ * @short_description:
+ */
+
 #include "config.h"
 #include <string.h>
 #include "gstvaapiutils.h"
@@ -351,12 +356,17 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
     object_class->get_property = gst_vaapi_image_get_property;
     object_class->constructed  = gst_vaapi_image_constructed;
 
+    /**
+     * GstVaapiImage:display:
+     *
+     * The #GstVaapiDisplay this image is bound to.
+     */
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
          g_param_spec_object("display",
-                             "display",
-                             "GStreamer Va display",
+                             "Display",
+                             "The GstVaapiDisplay this image is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
@@ -365,16 +375,21 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
          PROP_IMAGE,
          g_param_spec_boxed("image",
                             "Image",
-                            "The VA image",
+                            "The underlying VA image",
                             VAAPI_TYPE_IMAGE,
                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiImage:id:
+     *
+     * The underlying #VAImageID of the image.
+     */
     g_object_class_install_property
         (object_class,
          PROP_IMAGE_ID,
          g_param_spec_uint("id",
                            "VA image id",
-                           "VA image id",
+                           "The underlying VA image id",
                            0, G_MAXUINT32, VA_INVALID_ID,
                            G_PARAM_READABLE));
 
@@ -383,7 +398,7 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
          PROP_WIDTH,
          g_param_spec_uint("width",
                            "width",
-                           "Image width",
+                           "The image width",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
@@ -391,17 +406,22 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
         (object_class,
          PROP_HEIGHT,
          g_param_spec_uint("height",
-                           "height",
-                           "Image height",
+                           "heighr",
+                           "The image height",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
+    /**
+     * GstVaapiImage:format:
+     *
+     * The #GstVaapiImageFormat of the image
+     */
     g_object_class_install_property
         (object_class,
          PROP_FORMAT,
          g_param_spec_uint("format",
-                           "format",
-                           "Image format",
+                           "Format",
+                           "The underlying image format",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
@@ -431,6 +451,18 @@ gst_vaapi_image_init(GstVaapiImage *image)
     priv->image.buf               = VA_INVALID_ID;
 }
 
+/**
+ * gst_vaapi_image_new:
+ * @display: a #GstVaapiDisplay
+ * @format: a #GstVaapiImageFormat
+ * @width: the requested image width
+ * @height: the requested image height
+ *
+ * Creates a new #GstVaapiImage with the specified format and
+ * dimensions.
+ *
+ * Return value: the newly allocated #GstVaapiImage object
+ */
 GstVaapiImage *
 gst_vaapi_image_new(
     GstVaapiDisplay    *display,
@@ -466,6 +498,18 @@ gst_vaapi_image_new(
     return image;
 }
 
+/**
+ * gst_vaapi_image_new_with_image:
+ * @display: a #GstVaapiDisplay
+ * @va_image: a VA image
+ *
+ * Creates a new #GstVaapiImage from a foreign VA image. The image
+ * format and dimensions will be extracted from @va_image. This
+ * function is mainly used by gst_vaapi_surface_derive_image() to bind
+ * a VA image to a #GstVaapiImage object.
+ *
+ * Return value: the newly allocated #GstVaapiImage object
+ */
 GstVaapiImage *
 gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
 {
@@ -497,6 +541,14 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
     return image;
 }
 
+/**
+ * gst_vaapi_image_get_id:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the underlying VAImageID of the @image.
+ *
+ * Return value: the underlying VA image id
+ */
 VAImageID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
@@ -506,6 +558,15 @@ gst_vaapi_image_get_id(GstVaapiImage *image)
     return image->priv->image.image_id;
 }
 
+/**
+ * gst_vaapi_image_get_image:
+ * @image: a #GstVaapiImage
+ * @va_image: (output): a VA image
+ *
+ * Fills @va_image with the VA image used internally.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
 {
@@ -518,6 +579,20 @@ gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
     return TRUE;
 }
 
+/*
+ * _gst_vaapi_image_set_image:
+ * @image: a #GstVaapiImage
+ * @va_image: a VA image
+ *
+ * Initializes #GstVaapiImage with a foreign VA image. This function
+ * will try to "linearize" the VA image. i.e. making sure that the VA
+ * image offsets into the data buffer are in increasing order with the
+ * number of planes available in the image.
+ *
+ * This is an internal function used by gst_vaapi_image_new_with_image().
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
 {
@@ -573,6 +648,14 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
     return TRUE;
 }
 
+/**
+ * gst_vaapi_image_get_display:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the #GstVaapiDisplay this @image is bound to.
+ *
+ * Return value: the parent #GstVaapiDisplay object
+ */
 GstVaapiDisplay *
 gst_vaapi_image_get_display(GstVaapiImage *image)
 {
@@ -582,6 +665,14 @@ gst_vaapi_image_get_display(GstVaapiImage *image)
     return image->priv->display;
 }
 
+/**
+ * gst_vaapi_image_get_format:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the #GstVaapiImageFormat the @image was created with.
+ *
+ * Return value: the #GstVaapiImageFormat
+ */
 GstVaapiImageFormat
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
@@ -591,6 +682,14 @@ gst_vaapi_image_get_format(GstVaapiImage *image)
     return image->priv->format;
 }
 
+/**
+ * gst_vaapi_image_get_width:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the @image width.
+ *
+ * Return value: the image width, in pixels
+ */
 guint
 gst_vaapi_image_get_width(GstVaapiImage *image)
 {
@@ -600,6 +699,14 @@ gst_vaapi_image_get_width(GstVaapiImage *image)
     return image->priv->width;
 }
 
+/**
+ * gst_vaapi_image_get_height:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the @image height.
+ *
+ * Return value: the image height, in pixels.
+ */
 guint
 gst_vaapi_image_get_height(GstVaapiImage *image)
 {
@@ -609,6 +716,14 @@ gst_vaapi_image_get_height(GstVaapiImage *image)
     return image->priv->height;
 }
 
+/**
+ * gst_vaapi_image_get_size:
+ * @image: a #GstVaapiImage
+ * @pwidth: (out) (allow-none): return location for the width, or %NULL
+ * @pheight: (out) (allow-none): return location for the height, or %NULL
+ *
+ * Retrieves the dimensions of a #GstVaapiImage.
+ */
 void
 gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
 {
@@ -622,6 +737,16 @@ gst_vaapi_image_get_size(GstVaapiImage *image, guint *pwidth, guint *pheight)
         *pheight = image->priv->height;
 }
 
+/**
+ * gst_vaapi_image_is_linear:
+ * @image: a #GstVaapiImage
+ *
+ * Checks whether the @image has data planes allocated from a single
+ * buffer and offsets into that buffer are in increasing order with
+ * the number of planes.
+ *
+ * Return value: %TRUE if image data planes are allocated from a single buffer
+ */
 gboolean
 gst_vaapi_image_is_linear(GstVaapiImage *image)
 {
@@ -631,6 +756,14 @@ gst_vaapi_image_is_linear(GstVaapiImage *image)
     return image->priv->is_linear;
 }
 
+/**
+ * gst_vaapi_image_is_mapped:
+ * @image: a #GstVaapiImage
+ *
+ * Checks whether the @image is currently mapped or not.
+ *
+ * Return value: %TRUE if the @image is mapped
+ */
 static inline gboolean
 _gst_vaapi_image_is_mapped(GstVaapiImage *image)
 {
@@ -646,6 +779,15 @@ gst_vaapi_image_is_mapped(GstVaapiImage *image)
     return _gst_vaapi_image_is_mapped(image);
 }
 
+/**
+ * gst_vaapi_image_map:
+ * @image: a #GstVaapiImage
+ *
+ * Maps the image data buffer. The actual pixels are returned by the
+ * gst_vaapi_image_get_plane() function.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_image_map(GstVaapiImage *image)
 {
@@ -678,6 +820,15 @@ _gst_vaapi_image_map(GstVaapiImage *image)
     return TRUE;
 }
 
+/**
+ * gst_vaapi_image_unmap:
+ * @image: a #GstVaapiImage
+ *
+ * Unmaps the image data buffer. Pointers to pixels returned by
+ * gst_vaapi_image_get_plane() are then no longer valid.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_image_unmap(GstVaapiImage *image)
 {
@@ -708,6 +859,15 @@ _gst_vaapi_image_unmap(GstVaapiImage *image)
     return TRUE;
 }
 
+/**
+ * gst_vaapi_image_get_plane_count:
+ * @image: a #GstVaapiImage
+ *
+ * Retrieves the number of planes available in the @image. The @image
+ * must be mapped for this function to work properly.
+ *
+ * Return value: the number of planes available in the @image
+ */
 guint
 gst_vaapi_image_get_plane_count(GstVaapiImage *image)
 {
@@ -718,6 +878,16 @@ gst_vaapi_image_get_plane_count(GstVaapiImage *image)
     return image->priv->image.num_planes;
 }
 
+/**
+ * gst_vaapi_image_get_plane:
+ * @image: a #GstVaapiImage
+ * @plane: the requested plane number
+ *
+ * Retrieves the pixels data to the specified @plane. The @image must
+ * be mapped for this function to work properly.
+ *
+ * Return value: the pixels data of the specified @plane
+ */
 guchar *
 gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
 {
@@ -729,6 +899,16 @@ gst_vaapi_image_get_plane(GstVaapiImage *image, guint plane)
     return image->priv->image_data + image->priv->image.offsets[plane];
 }
 
+/**
+ * gst_vaapi_image_get_pitch:
+ * @image: a #GstVaapiImage
+ * @plane: the requested plane number
+ *
+ * Retrieves the line size (stride) of the specified @plane. The
+ * @image must be mapped for this function to work properly.
+ *
+ * Return value: the line size (stride) of the specified plane
+ */
 guint
 gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
 {
@@ -740,6 +920,16 @@ gst_vaapi_image_get_pitch(GstVaapiImage *image, guint plane)
     return image->priv->image.pitches[plane];
 }
 
+/**
+ * gst_vaapi_image_get_data_size:
+ * @image: a #GstVaapiImage
+ *
+ * Retrieves the underlying image data size. This function could be
+ * used to determine whether the image has a compatible layout with
+ * another image structure.
+ *
+ * Return value: the whole image data size of the @image
+ */
 guint
 gst_vaapi_image_get_data_size(GstVaapiImage *image)
 {
@@ -749,6 +939,16 @@ gst_vaapi_image_get_data_size(GstVaapiImage *image)
     return image->priv->image.data_size;
 }
 
+/**
+ * gst_vaapi_image_update_from_buffer:
+ * @image: a #GstVaapiImage
+ * @buffer: a #GstBuffer
+ *
+ * Transfers pixels data contained in the #GstBuffer into the
+ * @image. Both image structures shall have the same format.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer)
 {

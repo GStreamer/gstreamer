@@ -51,21 +51,52 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_IMAGE,    \
                                GstVaapiImageClass))
 
-#define GST_VAAPI_IMAGE_FORMAT(img)     gst_vaapi_image_get_format(img)
-#define GST_VAAPI_IMAGE_WIDTH(img)      gst_vaapi_image_get_width(img)
-#define GST_VAAPI_IMAGE_HEIGHT(img)     gst_vaapi_image_get_height(img)
+/**
+ * GST_VAAPI_IMAGE_FORMAT:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the #GstVaapiImageFormat of @image.
+ */
+#define GST_VAAPI_IMAGE_FORMAT(image)   gst_vaapi_image_get_format(image)
+
+/**
+ * GST_VAAPI_IMAGE_WIDTH:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the width of @image.
+ */
+#define GST_VAAPI_IMAGE_WIDTH(image)    gst_vaapi_image_get_width(image)
+
+/**
+ * GST_VAAPI_IMAGE_HEIGHT:
+ * @image: a #GstVaapiImage
+ *
+ * Macro that evaluates to the height of @image.
+ */
+#define GST_VAAPI_IMAGE_HEIGHT(image)   gst_vaapi_image_get_height(image)
 
 typedef struct _GstVaapiImage                   GstVaapiImage;
 typedef struct _GstVaapiImagePrivate            GstVaapiImagePrivate;
 typedef struct _GstVaapiImageClass              GstVaapiImageClass;
 
+/**
+ * GstVaapiImage:
+ *
+ * A VA image wrapper
+ */
 struct _GstVaapiImage {
     /*< private >*/
     GObject parent_instance;
 
+    /*< private >*/
     GstVaapiImagePrivate *priv;
 };
 
+/**
+ * GstVaapiImageClass:
+ *
+ * A VA image wrapper class
+ */
 struct _GstVaapiImageClass {
     /*< private >*/
     GObjectClass parent_class;

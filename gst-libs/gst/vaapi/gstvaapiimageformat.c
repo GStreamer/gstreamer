@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gst-vaapi-image-format
+ * @short_description:
+ */
+
 #include "config.h"
 #include <glib.h>
 #include <gst/video/video.h>
@@ -27,9 +32,9 @@ typedef enum _GstVaapiImageFormatType           GstVaapiImageFormatType;
 typedef struct _GstVaapiImageFormatMap          GstVaapiImageFormatMap;
 
 enum _GstVaapiImageFormatType {
-    GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR = 1,
-    GST_VAAPI_IMAGE_FORMAT_TYPE_RGB,
-    GST_VAAPI_IMAGE_FORMAT_TYPE_INDEXED
+    GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR = 1,      /* YUV */
+    GST_VAAPI_IMAGE_FORMAT_TYPE_RGB,            /* RGB */
+    GST_VAAPI_IMAGE_FORMAT_TYPE_INDEXED         /* paletted */
 };
 
 struct _GstVaapiImageFormatMap {
@@ -94,6 +99,14 @@ get_map(GstVaapiImageFormat format)
     return NULL;
 }
 
+/**
+ * gst_vaapi_image_format_is_rgb:
+ * @format: a #GstVaapiImageFormat
+ *
+ * Checks whether the format is an RGB format.
+ *
+ * Return value: %TRUE if @format is RGB format
+ */
 gboolean
 gst_vaapi_image_format_is_rgb(GstVaapiImageFormat format)
 {
@@ -102,6 +115,14 @@ gst_vaapi_image_format_is_rgb(GstVaapiImageFormat format)
     return m ? (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_RGB) : FALSE;
 }
 
+/**
+ * gst_vaapi_image_format_is_yuv:
+ * @format: a #GstVaapiImageFormat
+ *
+ * Checks whether the format is an YUV format.
+ *
+ * Return value: %TRUE if @format is YUV format
+ */
 gboolean
 gst_vaapi_image_format_is_yuv(GstVaapiImageFormat format)
 {
@@ -110,6 +131,16 @@ gst_vaapi_image_format_is_yuv(GstVaapiImageFormat format)
     return m ? (m->type == GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR) : FALSE;
 }
 
+/**
+ * gst_vaapi_image_format:
+ * @va_format: a #VAImageFormat
+ *
+ * Converts a VA image format into the corresponding #GstVaapiImageFormat.
+ * If the image format cannot be represented by #GstVaapiImageFormat,
+ * then zero is returned.
+ *
+ * Return value: the #GstVaapiImageFormat describing the @va_format
+ */
 GstVaapiImageFormat
 gst_vaapi_image_format(const VAImageFormat *va_format)
 {
@@ -125,6 +156,16 @@ gst_vaapi_image_format(const VAImageFormat *va_format)
     return 0;
 }
 
+/**
+ * gst_vaapi_image_format_from_caps:
+ * @caps: a #GstCaps
+ *
+ * Converts @caps into the corresponding #GstVaapiImageFormat. If the
+ * image format cannot be represented by #GstVaapiImageFormat, then
+ * zero is returned.
+ *
+ * Return value: the #GstVaapiImageFormat describing the @caps
+ */
 GstVaapiImageFormat
 gst_vaapi_image_format_from_caps(GstCaps *caps)
 {
@@ -174,12 +215,32 @@ gst_vaapi_image_format_from_caps(GstCaps *caps)
     return 0;
 }
 
+/**
+ * gst_vaapi_image_format_from_fourcc:
+ * @fourcc: a FOURCC value
+ *
+ * Converts a FOURCC value into the corresponding #GstVaapiImageFormat.
+ * If the image format cannot be represented by #GstVaapiImageFormat,
+ * then zero is returned.
+ *
+ * Return value: the #GstVaapiImageFormat describing the FOURCC value
+ */
 GstVaapiImageFormat
 gst_vaapi_image_format_from_fourcc(guint32 fourcc)
 {
     return (GstVaapiImageFormat)fourcc;
 }
 
+/**
+ * gst_vaapi_image_format_get_va_format:
+ * @format: a #GstVaapiImageFormat
+ *
+ * Converts a #GstVaapiImageFormat into the corresponding VA image
+ * format. If no matching VA image format was found, %NULL is returned
+ * and this error must be reported to be fixed.
+ *
+ * Return value: the VA image format, or %NULL if none was found
+ */
 const VAImageFormat *
 gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
 {
@@ -188,6 +249,15 @@ gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format)
     return m ? &m->va_format : NULL;
 }
 
+/**
+ * gst_vaapi_image_format_get_caps:
+ * @format: a #GstVaapiImageFormat
+ *
+ * Converts a #GstVaapiImageFormat into the corresponding #GstCaps. If
+ * no matching caps were found, %NULL is returned.
+ *
+ * Return value: the newly allocated #GstCaps, or %NULL if none was found
+ */
 GstCaps *
 gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
 {
@@ -196,6 +266,15 @@ gst_vaapi_image_format_get_caps(GstVaapiImageFormat format)
     return m ? gst_caps_from_string(m->caps_str) : NULL;
 }
 
+/**
+ * gst_vaapi_image_format_get_score:
+ * @format: a #GstVaapiImageFormat
+ *
+ * Determines how "native" is this @format. The lower is the returned
+ * score, the best format this is for the underlying hardware.
+ *
+ * Return value: the @format score, or %G_MAXUINT if none was found
+ */
 guint
 gst_vaapi_image_format_get_score(GstVaapiImageFormat format)
 {

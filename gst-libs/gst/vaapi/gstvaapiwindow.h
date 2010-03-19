@@ -67,13 +67,30 @@ typedef struct _GstVaapiWindow                  GstVaapiWindow;
 typedef struct _GstVaapiWindowPrivate           GstVaapiWindowPrivate;
 typedef struct _GstVaapiWindowClass             GstVaapiWindowClass;
 
+/**
+ * GstVaapiWindow:
+ *
+ * Base class for system-dependent windows.
+ */
 struct _GstVaapiWindow {
     /*< private >*/
     GObject parent_instance;
 
+    /*< private >*/
     GstVaapiWindowPrivate *priv;
 };
 
+/**
+ * GstVaapiWindowClass:
+ * @create: virtual function to create a window with width and height
+ * @destroy: virtual function to destroy a window
+ * @show: virtual function to show (map) a window
+ * @hide: virtual function to hide (unmap) a window
+ * @resize: virtual function to resize a window
+ * @render: virtual function to render a #GstVaapiSurface into a window
+ *
+ * Base class for system-dependent windows.
+ */
 struct _GstVaapiWindowClass {
     /*< private >*/
     GObjectClass parent_class;

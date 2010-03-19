@@ -54,13 +54,24 @@ typedef struct _GstVaapiSubpicture              GstVaapiSubpicture;
 typedef struct _GstVaapiSubpicturePrivate       GstVaapiSubpicturePrivate;
 typedef struct _GstVaapiSubpictureClass         GstVaapiSubpictureClass;
 
+/**
+ * GstVaapiSubpicture:
+ *
+ * A VA subpicture wrapper
+ */
 struct _GstVaapiSubpicture {
     /*< private >*/
     GObject parent_instance;
 
+    /*< private >*/
     GstVaapiSubpicturePrivate *priv;
 };
 
+/**
+ * GstVaapiSubpictureClass:
+ *
+ * A VA subpicture wrapper class
+ */
 struct _GstVaapiSubpictureClass {
     /*< private >*/
     GObjectClass parent_class;
