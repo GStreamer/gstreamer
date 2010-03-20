@@ -117,7 +117,8 @@ static GstStaticPadTemplate gst_alpha_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_YUV ("I420")
-    )
+        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
+        ";" GST_VIDEO_CAPS_RGBA)
     );
 
 static gboolean gst_alpha_start (GstBaseTransform * trans);
@@ -435,6 +436,10 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 
       gst_structure_set (structure, "format",
           GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
+      gst_caps_append_structure (ret, gst_structure_copy (structure));
+
+      gst_structure_set_name (structure, "video/x-raw-rgb");
+      gst_structure_remove_field (structure, "format");
       gst_caps_append_structure (ret, structure);
     }
   }
@@ -560,45 +565,199 @@ chroma_keying_yuv (gint a, gint * y, guint ny, gint * u,
 
 #define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
-static void
-gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
-    gint height, GstAlpha * alpha)
-{
-  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
-  gint y, x;
-
-  if (alpha->in_sdtv == alpha->out_sdtv) {
-    for (y = 0; y < height; y++) {
-      for (x = 0; x < width; x++) {
-        dest[0] = (src[0] * s_alpha) >> 8;
-        dest[1] = src[1];
-        dest[2] = src[2];
-        dest[3] = src[3];
-
-        dest += 4;
-        src += 4;
-      }
-    }
-  } else {
-    gint matrix[12];
-
-    memcpy (matrix,
-        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
-
-    for (y = 0; y < height; y++) {
-      for (x = 0; x < width; x++) {
-        dest[0] = (src[0] * s_alpha) >> 8;
-        dest[1] = APPLY_MATRIX (matrix, 0, src[1], src[2], src[3]);
-        dest[2] = APPLY_MATRIX (matrix, 1, src[1], src[2], src[3]);
-        dest[3] = APPLY_MATRIX (matrix, 2, src[1], src[2], src[3]);
-
-        dest += 4;
-        src += 4;
-      }
-    }
-  }
+#define CREATE_ARGB_AYUV_FUNCTIONS(name, A, R, G, B) \
+static void \
+gst_alpha_set_##name##_ayuv (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint i, j; \
+  gint matrix[12]; \
+  gint y, u, v; \
+  \
+  memcpy (matrix, \
+      alpha->out_sdtv ? cog_rgb_to_ycbcr_matrix_8bit_sdtv : \
+      cog_rgb_to_ycbcr_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      dest[0] = (src[A] * s_alpha) >> 8; \
+      \
+      y = APPLY_MATRIX (matrix, 0, src[R], src[G], src[B]); \
+      u = APPLY_MATRIX (matrix, 1, src[R], src[G], src[B]); \
+      v = APPLY_MATRIX (matrix, 2, src[R], src[G], src[B]); \
+      \
+      dest[1] = y; \
+      dest[2] = u; \
+      dest[3] = v; \
+      \
+      dest += 4; \
+      src += 4; \
+    } \
+  } \
+} \
+\
+static void \
+gst_alpha_chroma_key_##name##_ayuv (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint i, j; \
+  gint a, y, u, v; \
+  gint r, g, b; \
+  gint smin, smax; \
+  gint pa = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint8 cb = alpha->cb, cr = alpha->cr; \
+  gint8 kg = alpha->kg; \
+  guint8 accept_angle_tg = alpha->accept_angle_tg; \
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg; \
+  guint8 one_over_kc = alpha->one_over_kc; \
+  guint8 kfgy_scale = alpha->kfgy_scale; \
+  guint noise_level2 = alpha->noise_level2; \
+  gint matrix[12]; \
+  \
+  smin = 128 - alpha->black_sensitivity; \
+  smax = 128 + alpha->white_sensitivity; \
+  \
+  memcpy (matrix, \
+      alpha->out_sdtv ? cog_rgb_to_ycbcr_matrix_8bit_sdtv : \
+      cog_rgb_to_ycbcr_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      a = (src[A] * pa) >> 8; \
+      r = src[R]; \
+      g = src[G]; \
+      b = src[B]; \
+      \
+      y = APPLY_MATRIX (matrix, 0, r, g, b); \
+      u = APPLY_MATRIX (matrix, 1, r, g, b) - 128; \
+      v = APPLY_MATRIX (matrix, 2, r, g, b) - 128; \
+      \
+      a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, \
+          smin, smax, accept_angle_tg, accept_angle_ctg, \
+          one_over_kc, kfgy_scale, kg, noise_level2); \
+      \
+      u += 128; \
+      v += 128; \
+      \
+      dest[0] = a; \
+      dest[1] = y; \
+      dest[2] = u; \
+      dest[3] = v; \
+      \
+      src += 4; \
+      dest += 4; \
+    } \
+  } \
 }
+
+CREATE_ARGB_AYUV_FUNCTIONS (argb, 0, 1, 2, 3);
+CREATE_ARGB_AYUV_FUNCTIONS (abgr, 0, 3, 2, 1);
+CREATE_ARGB_AYUV_FUNCTIONS (rgba, 3, 0, 1, 2);
+CREATE_ARGB_AYUV_FUNCTIONS (bgra, 3, 2, 1, 0);
+
+#define CREATE_ARGB_ARGB_FUNCTIONS(name, name2, A, R, G, B, A2, R2, G2, B2) \
+static void \
+gst_alpha_set_##name##_##name2 (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint i, j; \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      dest[A2] = (src[A] * s_alpha) >> 8; \
+      \
+      dest[R2] = src[R]; \
+      dest[G2] = src[G]; \
+      dest[B2] = src[B]; \
+      \
+      dest += 4; \
+      src += 4; \
+    } \
+  } \
+} \
+\
+static void \
+gst_alpha_chroma_key_##name##_##name2 (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint i, j; \
+  gint a, y, u, v; \
+  gint r, g, b; \
+  gint smin, smax; \
+  gint pa = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint8 cb = alpha->cb, cr = alpha->cr; \
+  gint8 kg = alpha->kg; \
+  guint8 accept_angle_tg = alpha->accept_angle_tg; \
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg; \
+  guint8 one_over_kc = alpha->one_over_kc; \
+  guint8 kfgy_scale = alpha->kfgy_scale; \
+  guint noise_level2 = alpha->noise_level2; \
+  gint matrix[12], matrix2[12]; \
+  \
+  smin = 128 - alpha->black_sensitivity; \
+  smax = 128 + alpha->white_sensitivity; \
+  \
+  memcpy (matrix, \
+      cog_rgb_to_ycbcr_matrix_8bit_sdtv, \
+      12 * sizeof (gint)); \
+  memcpy (matrix2, \
+      cog_ycbcr_to_rgb_matrix_8bit_sdtv, \
+      12 * sizeof (gint)); \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      a = (src[A] * pa) >> 8; \
+      r = src[R]; \
+      g = src[G]; \
+      b = src[B]; \
+      \
+      y = APPLY_MATRIX (matrix, 0, r, g, b); \
+      u = APPLY_MATRIX (matrix, 1, r, g, b) - 128; \
+      v = APPLY_MATRIX (matrix, 2, r, g, b) - 128; \
+      \
+      a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, \
+          smin, smax, accept_angle_tg, accept_angle_ctg, \
+          one_over_kc, kfgy_scale, kg, noise_level2); \
+      \
+      u += 128; \
+      v += 128; \
+      \
+      r = APPLY_MATRIX (matrix2, 0, y, u, v); \
+      g = APPLY_MATRIX (matrix2, 1, y, u, v); \
+      b = APPLY_MATRIX (matrix2, 2, y, u, v); \
+      \
+      dest[A2] = a; \
+      dest[R2] = CLAMP (r, 0, 255); \
+      dest[G2] = CLAMP (g, 0, 255); \
+      dest[B2] = CLAMP (b, 0, 255); \
+      \
+      src += 4; \
+      dest += 4; \
+    } \
+  } \
+}
+
+CREATE_ARGB_ARGB_FUNCTIONS (argb, argb, 0, 1, 2, 3, 0, 1, 2, 3);
+CREATE_ARGB_ARGB_FUNCTIONS (argb, abgr, 0, 1, 2, 3, 0, 3, 2, 1);
+CREATE_ARGB_ARGB_FUNCTIONS (argb, rgba, 0, 1, 2, 3, 3, 0, 1, 2);
+CREATE_ARGB_ARGB_FUNCTIONS (argb, bgra, 0, 1, 2, 3, 3, 2, 1, 0);
+
+CREATE_ARGB_ARGB_FUNCTIONS (abgr, argb, 0, 3, 2, 1, 0, 1, 2, 3);
+CREATE_ARGB_ARGB_FUNCTIONS (abgr, abgr, 0, 3, 2, 1, 0, 3, 2, 1);
+CREATE_ARGB_ARGB_FUNCTIONS (abgr, rgba, 0, 3, 2, 1, 3, 0, 1, 2);
+CREATE_ARGB_ARGB_FUNCTIONS (abgr, bgra, 0, 3, 2, 1, 3, 2, 1, 0);
+
+CREATE_ARGB_ARGB_FUNCTIONS (rgba, argb, 3, 0, 1, 2, 0, 1, 2, 3);
+CREATE_ARGB_ARGB_FUNCTIONS (rgba, abgr, 3, 0, 1, 2, 0, 3, 2, 1);
+CREATE_ARGB_ARGB_FUNCTIONS (rgba, rgba, 3, 0, 1, 2, 3, 0, 1, 2);
+CREATE_ARGB_ARGB_FUNCTIONS (rgba, bgra, 3, 0, 1, 2, 3, 2, 1, 0);
+
+CREATE_ARGB_ARGB_FUNCTIONS (bgra, argb, 3, 2, 1, 0, 0, 1, 2, 3);
+CREATE_ARGB_ARGB_FUNCTIONS (bgra, abgr, 3, 2, 1, 0, 0, 3, 2, 1);
+CREATE_ARGB_ARGB_FUNCTIONS (bgra, rgba, 3, 2, 1, 0, 3, 0, 1, 2);
+CREATE_ARGB_ARGB_FUNCTIONS (bgra, bgra, 3, 2, 1, 0, 3, 2, 1, 0);
 
 #define CREATE_AYUV_ARGB_FUNCTIONS(name, A, R, G, B) \
 static void \
@@ -690,6 +849,46 @@ CREATE_AYUV_ARGB_FUNCTIONS (argb, 0, 1, 2, 3);
 CREATE_AYUV_ARGB_FUNCTIONS (abgr, 0, 3, 2, 1);
 CREATE_AYUV_ARGB_FUNCTIONS (rgba, 3, 0, 1, 2);
 CREATE_AYUV_ARGB_FUNCTIONS (bgra, 3, 2, 1, 0);
+
+static void
+gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
+    gint height, GstAlpha * alpha)
+{
+  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
+  gint y, x;
+
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        dest[0] = (src[0] * s_alpha) >> 8;
+        dest[1] = src[1];
+        dest[2] = src[2];
+        dest[3] = src[3];
+
+        dest += 4;
+        src += 4;
+      }
+    }
+  } else {
+    gint matrix[12];
+
+    memcpy (matrix,
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        dest[0] = (src[0] * s_alpha) >> 8;
+        dest[1] = APPLY_MATRIX (matrix, 0, src[1], src[2], src[3]);
+        dest[2] = APPLY_MATRIX (matrix, 1, src[1], src[2], src[3]);
+        dest[3] = APPLY_MATRIX (matrix, 2, src[1], src[2], src[3]);
+
+        dest += 4;
+        src += 4;
+      }
+    }
+  }
+}
 
 static void
 gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest,
@@ -1393,6 +1592,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_set_i420_ayuv;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_set_argb_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_set_abgr_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_set_rgba_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_set_bgra_ayuv;
+              break;
             default:
               break;
           }
@@ -1404,6 +1615,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               break;
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_set_i420_argb;
+              break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_set_argb_argb;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_set_abgr_argb;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_set_rgba_argb;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_set_bgra_argb;
               break;
             default:
               break;
@@ -1417,6 +1640,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_set_i420_abgr;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_set_argb_abgr;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_set_abgr_abgr;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_set_rgba_abgr;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_set_bgra_abgr;
+              break;
             default:
               break;
           }
@@ -1429,6 +1664,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_set_i420_rgba;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_set_argb_rgba;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_set_abgr_rgba;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_set_rgba_rgba;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_set_bgra_rgba;
+              break;
             default:
               break;
           }
@@ -1440,6 +1687,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               break;
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_set_i420_bgra;
+              break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_set_argb_bgra;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_set_abgr_bgra;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_set_rgba_bgra;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_set_bgra_bgra;
               break;
             default:
               break;
@@ -1461,6 +1720,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_chroma_key_i420_ayuv;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_chroma_key_argb_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_chroma_key_abgr_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_chroma_key_rgba_ayuv;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_chroma_key_bgra_ayuv;
+              break;
             default:
               break;
           }
@@ -1472,6 +1743,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               break;
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_chroma_key_i420_argb;
+              break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_chroma_key_argb_argb;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_chroma_key_abgr_argb;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_chroma_key_rgba_argb;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_chroma_key_bgra_argb;
               break;
             default:
               break;
@@ -1485,6 +1768,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_chroma_key_i420_abgr;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_chroma_key_argb_abgr;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_chroma_key_abgr_abgr;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_chroma_key_rgba_abgr;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_chroma_key_bgra_abgr;
+              break;
             default:
               break;
           }
@@ -1497,6 +1792,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_chroma_key_i420_rgba;
               break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_chroma_key_argb_rgba;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_chroma_key_abgr_rgba;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_chroma_key_rgba_rgba;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_chroma_key_bgra_rgba;
+              break;
             default:
               break;
           }
@@ -1508,6 +1815,18 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               break;
             case GST_VIDEO_FORMAT_I420:
               alpha->process = gst_alpha_chroma_key_i420_bgra;
+              break;
+            case GST_VIDEO_FORMAT_ARGB:
+              alpha->process = gst_alpha_chroma_key_argb_bgra;
+              break;
+            case GST_VIDEO_FORMAT_ABGR:
+              alpha->process = gst_alpha_chroma_key_abgr_bgra;
+              break;
+            case GST_VIDEO_FORMAT_RGBA:
+              alpha->process = gst_alpha_chroma_key_rgba_bgra;
+              break;
+            case GST_VIDEO_FORMAT_BGRA:
+              alpha->process = gst_alpha_chroma_key_bgra_bgra;
               break;
             default:
               break;
