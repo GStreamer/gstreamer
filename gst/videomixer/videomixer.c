@@ -470,20 +470,20 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_YUV ("I420")
-        ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR
-        ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR
-        ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_ABGR ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_YUV ("I420")
-        ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR
-        ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR
-        ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_ABGR ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
 
 static void gst_videomixer_finalize (GObject * object);
@@ -961,6 +961,18 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
       mixer->blend = gst_video_mixer_blend_bgra;
       mixer->fill_checker = gst_video_mixer_fill_checker_bgra;
       mixer->fill_color = gst_video_mixer_fill_color_bgra;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      mixer->blend = gst_video_mixer_blend_abgr;
+      mixer->fill_checker = gst_video_mixer_fill_checker_abgr;
+      mixer->fill_color = gst_video_mixer_fill_color_abgr;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      mixer->blend = gst_video_mixer_blend_rgba;
+      mixer->fill_checker = gst_video_mixer_fill_checker_rgba;
+      mixer->fill_color = gst_video_mixer_fill_color_rgba;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_I420:

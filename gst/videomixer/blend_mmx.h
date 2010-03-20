@@ -119,46 +119,6 @@ NAME_BLEND (guint8 * dest, const guint8 * src, gint src_height, gint src_width,
   }
   __asm__ __volatile__ ("emms");
 }
-
-static inline void
-NAME_FILL_COLOR (guint8 * dest, gint height, gint width, gint c1, gint c2,
-    gint c3)
-{
-  guint64 val;
-  guint nvals = width * height;
-
-  val = (((guint64) 0xff << A_OFF)) | (((guint64) c1) << C1_OFF) |
-      (((guint64) c2) << C2_OFF) | (((guint64) c3) << C3_OFF);
-  val = (val << 32) | val;
-
-  /* *INDENT-OFF* */
-  __asm__ __volatile__ (
-    "movq     %4 , %%mm0  \n\t"
-    "test     $1 ,    %0  \n\t"
-    "je       1f          \n\t"
-    "movd  %%mm0 ,  (%1)  \n\t"
-    "add      $4 ,    %1  \n\t"
-    "dec      %0          \n\t"
-    "1:                   \n\t"
-    "sar      $1 ,    %0  \n\t"
-    "cmp      $0 ,    %0  \n\t"
-    "je       3f          \n\t"
-    "2:                   \n\t"
-    "movq  %%mm0 ,  (%1)  \n\t"
-    "add      $8 ,    %1  \n\t"
-    "dec      %0          \n\t"
-    "jne      2b          \n\t"
-    "3:                   \n\t"
-    "emms                 \n\t"
-    : "=r" (nvals), "=r" (dest)
-    : "0" (nvals), "1" (dest), "m" (val)
-    : "memory"
-#ifdef __MMX__
-      , "mm0"
-#endif
-  );
-  /* *INDENT-ON* */
-}
 #endif
 
 #ifdef GENERIC

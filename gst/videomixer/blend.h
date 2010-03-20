@@ -29,6 +29,8 @@ typedef void (*FillColorFunction) (guint8 * dest, gint width, gint height, gint 
 extern BlendFunction gst_video_mixer_blend_argb;
 extern BlendFunction gst_video_mixer_blend_bgra;
 #define gst_video_mixer_blend_ayuv gst_video_mixer_blend_argb
+#define gst_video_mixer_blend_abgr gst_video_mixer_blend_argb
+#define gst_video_mixer_blend_rgba gst_video_mixer_blend_bgra
 extern BlendFunction gst_video_mixer_blend_i420;
 extern BlendFunction gst_video_mixer_blend_rgb;
 #define gst_video_mixer_blend_bgr gst_video_mixer_blend_rgb
@@ -38,7 +40,9 @@ extern BlendFunction gst_video_mixer_blend_rgbx;
 #define gst_video_mixer_blend_xbgr gst_video_mixer_blend_rgbx
 
 extern FillCheckerFunction gst_video_mixer_fill_checker_argb;
+#define gst_video_mixer_fill_checker_abgr gst_video_mixer_fill_checker_argb
 extern FillCheckerFunction gst_video_mixer_fill_checker_bgra;
+#define gst_video_mixer_fill_checker_rgba gst_video_mixer_fill_checker_bgra
 extern FillCheckerFunction gst_video_mixer_fill_checker_ayuv;
 extern FillCheckerFunction gst_video_mixer_fill_checker_i420;
 extern FillCheckerFunction gst_video_mixer_fill_checker_rgb;
@@ -49,7 +53,9 @@ extern FillCheckerFunction gst_video_mixer_fill_checker_rgbx;
 #define gst_video_mixer_fill_checker_xbgr gst_video_mixer_fill_checker_rgbx
 
 extern FillColorFunction gst_video_mixer_fill_color_argb;
+extern FillColorFunction gst_video_mixer_fill_color_abgr;
 extern FillColorFunction gst_video_mixer_fill_color_bgra;
+extern FillColorFunction gst_video_mixer_fill_color_rgba;
 extern FillColorFunction gst_video_mixer_fill_color_ayuv;
 extern FillColorFunction gst_video_mixer_fill_color_i420;
 extern FillColorFunction gst_video_mixer_fill_color_rgb;

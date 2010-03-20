@@ -214,8 +214,12 @@ _fill_color_loop_##name##_c (guint8 *dest, gint height, gint width, gint c1, gin
 
 A32_COLOR_LOOP_C (ac1c2c3, 0, 1, 2, 3);
 A32_COLOR_LOOP_C (c3c2c1a, 3, 2, 1, 0);
+A32_COLOR_LOOP_C (ac3c2c1, 0, 3, 2, 1);
+A32_COLOR_LOOP_C (c1c2c3a, 1, 2, 3, 0);
 A32_COLOR (argb_c, TRUE, _fill_color_loop_ac1c2c3_c);
 A32_COLOR (bgra_c, TRUE, _fill_color_loop_c3c2c1a_c);
+A32_COLOR (abgr_c, TRUE, _fill_color_loop_ac3c2c1_c);
+A32_COLOR (rgba_c, TRUE, _fill_color_loop_c1c2c3a_c);
 A32_COLOR (ayuv_c, FALSE, _fill_color_loop_ac1c2c3_c);
 
 /* I420 */
@@ -517,39 +521,38 @@ _memset_##name##_mmx (guint8* dest, gint red, gint green, gint blue, gint width)
 
 #define A32
 #define NAME_BLEND _blend_loop_argb_mmx
-#define NAME_FILL_COLOR _fill_color_loop_argb_mmx
 #define A_OFF 0
-#define C1_OFF 8
-#define C2_OFF 16
-#define C3_OFF 24
 #include "blend_mmx.h"
 #undef NAME_BLEND
-#undef NAME_FILL_COLOR
 #undef A_OFF
-#undef C1_OFF
-#undef C2_OFF
-#undef C3_OFF
 
 #define NAME_BLEND _blend_loop_bgra_mmx
-#define NAME_FILL_COLOR _fill_color_loop_bgra_mmx
 #define A_OFF 24
-#define C1_OFF 16
-#define C2_OFF 8
-#define C3_OFF 0
 #include "blend_mmx.h"
 #undef NAME_BLEND
-#undef NAME_FILL_COLOR
 #undef A_OFF
-#undef C1_OFF
-#undef C2_OFF
-#undef C3_OFF
 #undef A32
 
 BLEND_A32 (argb_mmx, _blend_loop_argb_mmx);
 BLEND_A32 (bgra_mmx, _blend_loop_bgra_mmx);
 
+#define A32_COLOR_LOOP_MMX(name, A, C1, C2, C3) \
+static inline void \
+_fill_color_loop_##name##_mmx (guint8 *dest, gint height, gint width, gint c1, gint c2, gint c3) { \
+  guint32 val = (0xff << A) | (c1 << C1) | (c2 << C2) | (c3 << C3); \
+  \
+  _memset_u32_mmx ((guint32 *) dest, val, height*width); \
+}
+
+A32_COLOR_LOOP_MMX (argb, 24, 16, 8, 0);
+A32_COLOR_LOOP_MMX (abgr, 24, 0, 8, 16);
+A32_COLOR_LOOP_MMX (rgba, 0, 24, 16, 8);
+A32_COLOR_LOOP_MMX (bgra, 0, 8, 16, 24);
+
 A32_COLOR (argb_mmx, TRUE, _fill_color_loop_argb_mmx);
 A32_COLOR (bgra_mmx, TRUE, _fill_color_loop_bgra_mmx);
+A32_COLOR (abgr_mmx, TRUE, _fill_color_loop_abgr_mmx);
+A32_COLOR (rgba_mmx, TRUE, _fill_color_loop_rgba_mmx);
 A32_COLOR (ayuv_mmx, FALSE, _fill_color_loop_argb_mmx);
 
 I420_BLEND (mmx, _memcpy_u8_mmx, _blend_u8_mmx);
@@ -575,7 +578,7 @@ RGB_FILL_COLOR (bgrx_mmx, 4, _memset_bgrx_mmx);
 /* Init function */
 BlendFunction gst_video_mixer_blend_argb;
 BlendFunction gst_video_mixer_blend_bgra;
-/* AYUV is equal to ARGB */
+/* AYUV/ABGR is equal to ARGB, RGBA is equal to BGRA */
 BlendFunction gst_video_mixer_blend_i420;
 BlendFunction gst_video_mixer_blend_rgb;
 /* BGR is equal to RGB */
@@ -584,6 +587,7 @@ BlendFunction gst_video_mixer_blend_rgbx;
 
 FillCheckerFunction gst_video_mixer_fill_checker_argb;
 FillCheckerFunction gst_video_mixer_fill_checker_bgra;
+/* ABGR is equal to ARGB, RGBA is equal to BGRA */
 FillCheckerFunction gst_video_mixer_fill_checker_ayuv;
 FillCheckerFunction gst_video_mixer_fill_checker_i420;
 FillCheckerFunction gst_video_mixer_fill_checker_rgb;
@@ -593,6 +597,8 @@ FillCheckerFunction gst_video_mixer_fill_checker_xrgb;
 
 FillColorFunction gst_video_mixer_fill_color_argb;
 FillColorFunction gst_video_mixer_fill_color_bgra;
+FillColorFunction gst_video_mixer_fill_color_abgr;
+FillColorFunction gst_video_mixer_fill_color_rgba;
 FillColorFunction gst_video_mixer_fill_color_ayuv;
 FillColorFunction gst_video_mixer_fill_color_i420;
 FillColorFunction gst_video_mixer_fill_color_rgb;
@@ -625,6 +631,8 @@ gst_video_mixer_init_blend (void)
 
   gst_video_mixer_fill_color_argb = fill_color_argb_c;
   gst_video_mixer_fill_color_bgra = fill_color_bgra_c;
+  gst_video_mixer_fill_color_abgr = fill_color_abgr_c;
+  gst_video_mixer_fill_color_rgba = fill_color_rgba_c;
   gst_video_mixer_fill_color_ayuv = fill_color_ayuv_c;
   gst_video_mixer_fill_color_i420 = fill_color_i420_c;
   gst_video_mixer_fill_color_rgb = fill_color_rgb_c;
@@ -646,6 +654,8 @@ gst_video_mixer_init_blend (void)
 
     gst_video_mixer_fill_color_argb = fill_color_argb_mmx;
     gst_video_mixer_fill_color_bgra = fill_color_bgra_mmx;
+    gst_video_mixer_fill_color_abgr = fill_color_abgr_mmx;
+    gst_video_mixer_fill_color_rgba = fill_color_rgba_mmx;
     gst_video_mixer_fill_color_ayuv = fill_color_ayuv_mmx;
     gst_video_mixer_fill_color_i420 = fill_color_i420_mmx;
     gst_video_mixer_fill_color_xrgb = fill_color_xrgb_mmx;
