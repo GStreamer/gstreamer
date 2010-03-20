@@ -41,32 +41,158 @@
 #include <string.h>
 #include <time.h>
 
+typedef gchar *(*XmpSerializationFunc) (const GValue * value);
+typedef void (*XmpDeserializationFunc) (GstTagList * taglist,
+    const gchar * gst_tag, const gchar * str);
+
+struct _XmpTag
+{
+  const gchar *tag_name;
+  XmpSerializationFunc serialize;
+  XmpDeserializationFunc deserialize;
+};
+typedef struct _XmpTag XmpTag;
+
+/*
+ * Mappings from gstreamer tags to xmp tags
+ *
+ * The mapping here are from a gstreamer tag (as a GQuark)
+ * into a GSList of GArray of XmpTag.
+ *
+ * There might be multiple xmp tags that a single gstreamer tag can be
+ * mapped to. For example, GST_TAG_DATE might be mapped into dc:date
+ * or exif:DateTimeOriginal, hence the first list, to be able to store
+ * alternative mappings of the same gstreamer tag.
+ *
+ * Some other tags, like GST_TAG_GEO_LOCATION_ELEVATION needs to be
+ * mapped into 2 complementary tags in the exif's schema. One of them
+ * stores the absolute elevation, and the other one stores if it is
+ * above of below sea level. That's why we need a GArray as the item
+ * of each GSList in the mapping.
+ */
+static GHashTable *__xmp_tag_map;
+static GMutex *__xmp_tag_map_mutex;
+
+#define XMP_TAG_MAP_LOCK g_mutex_lock (__xmp_tag_map_mutex)
+#define XMP_TAG_MAP_UNLOCK g_mutex_unlock (__xmp_tag_map_mutex)
+
+static void
+_xmp_tag_add_simple_mapping (const gchar * gst_tag, const gchar * xmp_tag,
+    XmpSerializationFunc serialization_func,
+    XmpDeserializationFunc deserialization_func)
+{
+  GQuark key;
+  GSList *list = NULL;
+  XmpTag *xmpinfo;
+  GPtrArray *array;
+
+  key = g_quark_from_string (gst_tag);
+
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = xmp_tag;
+  xmpinfo->serialize = serialization_func;
+  xmpinfo->deserialize = deserialization_func;
+
+  array = g_ptr_array_sized_new (1);
+  g_ptr_array_add (array, xmpinfo);
+
+  XMP_TAG_MAP_LOCK;
+  list = g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
+  list = g_slist_append (list, (gpointer) array);
+  g_hash_table_insert (__xmp_tag_map, GUINT_TO_POINTER (key), list);
+  XMP_TAG_MAP_UNLOCK;
+}
+
+/*
+ * We do not return a copy here because elements are
+ * appended, and the API is not public, so we shouldn't
+ * have our lists modified during usage
+ */
+static GSList *
+_xmp_tag_get_mapping (const gchar * gst_tag)
+{
+  GSList *ret = NULL;
+  GQuark key = g_quark_from_string (gst_tag);
+
+  XMP_TAG_MAP_LOCK;
+  ret = (GSList *) g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
+  XMP_TAG_MAP_UNLOCK;
+
+  return ret;
+}
+
+/* finds the gst tag that maps to this xmp tag */
+static const gchar *
+_xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+  const gchar *ret = NULL;
+  GSList *walk;
+
+  XMP_TAG_MAP_LOCK;
+  g_hash_table_iter_init (&iter, __xmp_tag_map);
+  while (!ret && g_hash_table_iter_next (&iter, &key, &value)) {
+    GSList *list = (GSList *) value;
+
+    for (walk = list; walk; walk = g_slist_next (walk)) {
+      GPtrArray *array = (GPtrArray *) walk->data;
+      XmpTag *xmpinfo = (XmpTag *) g_ptr_array_index (array, 0);
+      if (strcmp (xmpinfo->tag_name, xmp_tag) == 0) {
+        *_xmp_tag = xmpinfo;
+        ret = g_quark_to_string (GPOINTER_TO_UINT (key));
+        break;
+      }
+    }
+  }
+  XMP_TAG_MAP_UNLOCK;
+  return ret;
+}
+
 /* look at this page for addtional schemas
  * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/XMP.html
  */
-static const GstTagEntryMatch tag_matches[] = {
+static gpointer
+_init_xmp_tag_map ()
+{
+  __xmp_tag_map_mutex = g_mutex_new ();
+  __xmp_tag_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  /* add the maps */
   /* dublic code metadata
    * http://dublincore.org/documents/dces/
    */
-  {GST_TAG_ARTIST, "dc:creator"},
-  {GST_TAG_COPYRIGHT, "dc:rights"},
-  {GST_TAG_DATE, "dc:date"},
-  {GST_TAG_DATE, "exif:DateTimeOriginal"},
-  {GST_TAG_DESCRIPTION, "dc:description"},
-  {GST_TAG_KEYWORDS, "dc:subject"},
-  {GST_TAG_TITLE, "dc:title"},
+  _xmp_tag_add_simple_mapping (GST_TAG_ARTIST, "dc:creator", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_COPYRIGHT, "dc:rights", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_DATE, "dc:date", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_DATE, "exif:DateTimeOriginal", NULL,
+      NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_DESCRIPTION, "dc:description", NULL,
+      NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_KEYWORDS, "dc:subject", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_TITLE, "dc:title", NULL, NULL);
   /* FIXME: we probably want GST_TAG_{,AUDIO_,VIDEO_}MIME_TYPE */
-  {GST_TAG_VIDEO_CODEC, "dc:format"},
+  _xmp_tag_add_simple_mapping (GST_TAG_VIDEO_CODEC, "dc:format", NULL, NULL);
 
   /* photoshop schema */
-  {GST_TAG_GEO_LOCATION_COUNTRY, "photoshop:Country"},
-  {GST_TAG_GEO_LOCATION_CITY, "photoshop:City"},
+  _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_COUNTRY,
+      "photoshop:Country", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_CITY, "photoshop:City",
+      NULL, NULL);
 
   /* iptc4xmpcore schema */
-  {GST_TAG_GEO_LOCATION_SUBLOCATION, "Iptc4xmpCore:Location"},
-  /* */
-  {NULL, NULL}
-};
+  _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_SUBLOCATION,
+      "Iptc4xmpCore:Location", NULL, NULL);
+
+  return NULL;
+}
+
+static void
+xmp_tags_initialize ()
+{
+  static GOnce my_once = G_ONCE_INIT;
+  g_once (&my_once, _init_xmp_tag_map, NULL);
+}
 
 typedef struct _GstXmpNamespaceMatch GstXmpNamespaceMatch;
 struct _GstXmpNamespaceMatch
@@ -104,9 +230,17 @@ static GstXmpNamespaceMap ns_map[] = {
 /* parsing */
 
 static void
-read_one_tag (GstTagList * list, const gchar * tag, const gchar * v)
+read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
+    const gchar * v)
 {
-  GType tag_type = gst_tag_get_type (tag);
+  GType tag_type;
+
+  if (xmptag && xmptag->deserialize) {
+    xmptag->deserialize (list, tag, v);
+    return;
+  }
+
+  tag_type = gst_tag_get_type (tag);
 
   /* add gstreamer tag depending on type */
   switch (tag_type) {
@@ -174,6 +308,9 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   gchar *part, *pp;
   guint i;
   const gchar *last_tag = NULL;
+  XmpTag *last_xmp_tag = NULL;
+
+  xmp_tags_initialize ();
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (GST_BUFFER_SIZE (buffer) > 0, NULL);
@@ -277,19 +414,16 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
                   }
                 }
               } else {
+                const gchar *gst_tag;
+                XmpTag *xmp_tag = NULL;
                 /* FIXME: eventualy rewrite ns
                  * find ':'
                  * check if ns before ':' is in ns_map and ns_map[i].gstreamer_ns!=NULL
                  * do 2 stage filter in tag_matches
                  */
-                i = 0;
-                while (tag_matches[i].gstreamer_tag) {
-                  if (!strcmp (tag_matches[i].original_tag, as))
-                    break;
-                  i++;
-                }
-                if (tag_matches[i].gstreamer_tag) {
-                  read_one_tag (list, tag_matches[i].gstreamer_tag, v);
+                gst_tag = _xmp_tag_get_mapping_reverse (as, &xmp_tag);
+                if (gst_tag) {
+                  read_one_tag (list, gst_tag, xmp_tag, v);
                 }
               }
               /* restore chars overwritten by '\0' */
@@ -312,14 +446,11 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
 
           /* skip rdf tags for now */
           if (strncmp (part, "rdf:", 4)) {
-            i = 0;
-            while (tag_matches[i].gstreamer_tag) {
-              if (!strcmp (tag_matches[i].original_tag, part))
-                break;
-              i++;
-            }
-            if (tag_matches[i].gstreamer_tag) {
-              last_tag = tag_matches[i].gstreamer_tag;
+            const gchar *parttag;
+
+            parttag = _xmp_tag_get_mapping_reverse (part, &last_xmp_tag);
+            if (parttag) {
+              last_tag = parttag;
             }
           }
         }
@@ -344,7 +475,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
         /* only log non-newline nodes, we still have to parse them */
         GST_INFO ("txt: %s", part);
         if (last_tag) {
-          read_one_tag (list, last_tag, part);
+          read_one_tag (list, last_tag, last_xmp_tag, part);
         }
       }
       /* next cycle */
@@ -421,54 +552,68 @@ gst_value_serialize_xmp (const GValue * value)
 static void
 write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
-  guint i = 0, ct = gst_tag_list_get_tag_size (list, tag);
+  guint i = 0, ct = gst_tag_list_get_tag_size (list, tag), tag_index;
   GString *data = user_data;
-  const gchar *xmp_tag = NULL;
+  GPtrArray *xmp_tag_array = NULL;
   char *s;
+  GSList *xmptaglist;
 
   /* map gst-tag to xmp tag */
-  while (tag_matches[i].gstreamer_tag != NULL) {
-    if (strcmp (tag, tag_matches[i].gstreamer_tag) == 0) {
-      xmp_tag = tag_matches[i].original_tag;
-      break;
-    }
-    i++;
+  xmptaglist = _xmp_tag_get_mapping (tag);
+  if (xmptaglist) {
+    /* FIXME - we are always chosing the first tag mapped on the list */
+    xmp_tag_array = (GPtrArray *) xmptaglist->data;
   }
 
-  if (!xmp_tag) {
+  if (!xmp_tag_array) {
     GST_WARNING ("no mapping for %s to xmp", tag);
     return;
   }
 
-  string_open_tag (data, xmp_tag);
+  for (tag_index = 0; tag_index < xmp_tag_array->len; tag_index++) {
+    XmpTag *xmp_tag;
 
-  /* fast path for single valued tag */
-  if (ct == 1) {
-    s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag, 0));
-    if (s) {
-      g_string_append (data, s);
-      g_free (s);
-    } else {
-      GST_WARNING ("unhandled type for %s to xmp", tag);
-    }
-  } else {
-    string_open_tag (data, "rdf:Bag");
-    for (i = 0; i < ct; i++) {
-      GST_DEBUG ("mapping %s[%u/%u] to xmp", tag, i, ct);
-      s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag, i));
+    xmp_tag = g_ptr_array_index (xmp_tag_array, tag_index);
+    string_open_tag (data, xmp_tag->tag_name);
+
+    /* fast path for single valued tag */
+    if (ct == 1) {
+      if (xmp_tag->serialize) {
+        s = xmp_tag->serialize (gst_tag_list_get_value_index (list, tag, 0));
+      } else {
+        s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag,
+                0));
+      }
       if (s) {
-        string_open_tag (data, "rdf:li");
         g_string_append (data, s);
-        string_close_tag (data, "rdf:li");
         g_free (s);
       } else {
         GST_WARNING ("unhandled type for %s to xmp", tag);
       }
+    } else {
+      string_open_tag (data, "rdf:Bag");
+      for (i = 0; i < ct; i++) {
+        GST_DEBUG ("mapping %s[%u/%u] to xmp", tag, i, ct);
+        if (xmp_tag->serialize) {
+          s = xmp_tag->serialize (gst_tag_list_get_value_index (list, tag, i));
+        } else {
+          s = gst_value_serialize_xmp (gst_tag_list_get_value_index (list, tag,
+                  i));
+        }
+        if (s) {
+          string_open_tag (data, "rdf:li");
+          g_string_append (data, s);
+          string_close_tag (data, "rdf:li");
+          g_free (s);
+        } else {
+          GST_WARNING ("unhandled type for %s to xmp", tag);
+        }
+      }
+      string_close_tag (data, "rdf:Bag");
     }
-    string_close_tag (data, "rdf:Bag");
-  }
 
-  string_close_tag (data, xmp_tag);
+    string_close_tag (data, xmp_tag->tag_name);
+  }
 }
 
 /**
@@ -488,6 +633,8 @@ gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
   GstBuffer *buffer = NULL;
   GString *data = g_string_sized_new (4096);
   guint i;
+
+  xmp_tags_initialize ();
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
 
