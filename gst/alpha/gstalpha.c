@@ -689,6 +689,13 @@ gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
   gint a, y, u, v;
   gint smin, smax;
   gint pa = alpha->alpha * 255;
+  gint8 cb = alpha->cb, cr = alpha->cr;
+  gint8 kg = alpha->kg;
+  guint8 accept_angle_tg = alpha->accept_angle_tg;
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg;
+  guint8 one_over_kc = alpha->one_over_kc;
+  guint8 kfgy_scale = alpha->kfgy_scale;
+  guint noise_level2 = alpha->noise_level2;
 
   smin = 128 - alpha->black_sensitivity;
   smax = 128 + alpha->white_sensitivity;
@@ -704,10 +711,9 @@ gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
         u = src1[2] - 128;
         v = src1[3] - 128;
 
-        a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
-            smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-            alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-            alpha->noise_level2);
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
+            smin, smax, accept_angle_tg, accept_angle_ctg,
+            one_over_kc, kfgy_scale, kg, noise_level2);
 
         u += 128;
         v += 128;
@@ -735,10 +741,9 @@ gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
         u = APPLY_MATRIX (matrix, 1, src1[1], src1[2], src1[3]) - 128;
         v = APPLY_MATRIX (matrix, 2, src1[1], src1[2], src1[3]) - 128;
 
-        a = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb,
-            smin, smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-            alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-            alpha->noise_level2);
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
+            smin, smax, accept_angle_tg, accept_angle_ctg,
+            one_over_kc, kfgy_scale, kg, noise_level2);
 
         u += 128;
         v += 128;
@@ -763,6 +768,13 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
   gint xpos;
   gint a, a2, u, v;
   gint smin, smax;
+  gint8 cb = alpha->cb, cr = alpha->cr;
+  gint8 kg = alpha->kg;
+  guint8 accept_angle_tg = alpha->accept_angle_tg;
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg;
+  guint8 one_over_kc = alpha->one_over_kc;
+  guint8 kfgy_scale = alpha->kfgy_scale;
+  guint noise_level2 = alpha->noise_level2;
 
   a = 255 * alpha->alpha;
   smin = 128 - alpha->black_sensitivity;
@@ -779,10 +791,9 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       u = srcU[0] - 128;
       v = srcV[0] - 128;
 
-      a2 = chroma_keying_yuv (a, y, 4, &u, &v, alpha->cr, alpha->cb, smin,
-          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+      a2 = chroma_keying_yuv (a, y, 4, &u, &v, cr, cb, smin,
+          smax, accept_angle_tg, accept_angle_ctg,
+          one_over_kc, kfgy_scale, kg, noise_level2);
 
       u += 128;
       v += 128;
@@ -824,10 +835,9 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       u = APPLY_MATRIX (matrix, 1, srcY1[0], srcU[0], srcV[0]) - 128;
       v = APPLY_MATRIX (matrix, 2, srcY1[0], srcU[0], srcV[0]) - 128;
 
-      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
-          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin,
+          smax, accept_angle_tg, accept_angle_ctg,
+          one_over_kc, kfgy_scale, kg, noise_level2);
 
       u += 128;
       v += 128;
@@ -841,10 +851,9 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       u = APPLY_MATRIX (matrix, 1, srcY1[1], srcU[0], srcV[0]) - 128;
       v = APPLY_MATRIX (matrix, 2, srcY1[1], srcU[0], srcV[0]) - 128;
 
-      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
-          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin,
+          smax, accept_angle_tg, accept_angle_ctg,
+          one_over_kc, kfgy_scale, kg, noise_level2);
 
       u += 128;
       v += 128;
@@ -858,10 +867,9 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       u = APPLY_MATRIX (matrix, 1, srcY2[0], srcU[0], srcV[0]) - 128;
       v = APPLY_MATRIX (matrix, 2, srcY2[0], srcU[0], srcV[0]) - 128;
 
-      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
-          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin,
+          smax, accept_angle_tg, accept_angle_ctg,
+          one_over_kc, kfgy_scale, kg, noise_level2);
 
       u += 128;
       v += 128;
@@ -875,10 +883,9 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       u = APPLY_MATRIX (matrix, 1, srcY2[1], srcU[0], srcV[0]) - 128;
       v = APPLY_MATRIX (matrix, 2, srcY2[1], srcU[0], srcV[0]) - 128;
 
-      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, alpha->cr, alpha->cb, smin,
-          smax, alpha->accept_angle_tg, alpha->accept_angle_ctg,
-          alpha->one_over_kc, alpha->kfgy_scale, alpha->kg,
-          alpha->noise_level2);
+      a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin,
+          smax, accept_angle_tg, accept_angle_ctg,
+          one_over_kc, kfgy_scale, kg, noise_level2);
 
       u += 128;
       v += 128;
