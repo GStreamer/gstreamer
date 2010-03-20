@@ -189,8 +189,9 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
     GFileInfo *info;
     GError *err = NULL;
 
+    /* FIXME: remove (char *) cast once we depend on GLib >= 2.20 */
     info = g_file_input_stream_query_info (G_FILE_INPUT_STREAM (src->stream),
-        G_FILE_ATTRIBUTE_STANDARD_SIZE, src->cancel, &err);
+        (char *) G_FILE_ATTRIBUTE_STANDARD_SIZE, src->cancel, &err);
 
     if (info != NULL) {
       *size = g_file_info_get_size (info);
