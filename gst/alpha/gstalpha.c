@@ -104,10 +104,12 @@ enum
 };
 
 static GstStaticPadTemplate gst_alpha_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA)
     );
 
 static GstStaticPadTemplate gst_alpha_sink_template =
@@ -381,14 +383,30 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
   ret = gst_caps_new_empty ();
 
   /* When going from the SINK pad to the src, we just need to make sure the
-   * format is AYUV */
+   * format is AYUV or one of the ARGB variants */
   if (direction == GST_PAD_SINK) {
     for (i = 0; i < gst_caps_get_size (caps); i++) {
       structure = gst_structure_copy (gst_caps_get_structure (caps, i));
+
+      gst_structure_remove_field (structure, "format");
+      gst_structure_remove_field (structure, "endianness");
+      gst_structure_remove_field (structure, "depth");
+      gst_structure_remove_field (structure, "bpp");
+      gst_structure_remove_field (structure, "red_mask");
+      gst_structure_remove_field (structure, "green_mask");
+      gst_structure_remove_field (structure, "blue_mask");
+      gst_structure_remove_field (structure, "alpha_mask");
+      gst_structure_remove_field (structure, "color-matrix");
+      gst_structure_remove_field (structure, "chroma-site");
+
+      gst_structure_set_name (structure, "video/x-raw-yuv");
       gst_structure_set (structure, "format",
           GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
-      gst_structure_remove_field (structure, "chroma-site");
-      gst_structure_remove_field (structure, "color-matrix");
+
+      gst_caps_append_structure (ret, gst_structure_copy (structure));
+
+      gst_structure_remove_field (structure, "format");
+      gst_structure_set_name (structure, "video/x-raw-rgb");
       gst_caps_append_structure (ret, structure);
     }
   } else {
@@ -397,7 +415,19 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 
     for (i = 0; i < gst_caps_get_size (caps); i++) {
       structure = gst_structure_copy (gst_caps_get_structure (caps, i));
+
+      gst_structure_set_name (structure, "video/x-raw-yuv");
+
+      gst_structure_remove_field (structure, "format");
+      gst_structure_remove_field (structure, "endianness");
+      gst_structure_remove_field (structure, "depth");
+      gst_structure_remove_field (structure, "bpp");
+      gst_structure_remove_field (structure, "red_mask");
+      gst_structure_remove_field (structure, "green_mask");
+      gst_structure_remove_field (structure, "blue_mask");
+      gst_structure_remove_field (structure, "alpha_mask");
       gst_structure_remove_field (structure, "color-matrix");
+      gst_structure_remove_field (structure, "chroma-site");
 
       gst_structure_set (structure, "format",
           GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'), NULL);
@@ -405,7 +435,6 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 
       gst_structure_set (structure, "format",
           GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
-      gst_structure_remove_field (structure, "chroma-site");
       gst_caps_append_structure (ret, structure);
     }
   }
@@ -571,6 +600,419 @@ gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
   }
 }
 
+#define CREATE_AYUV_ARGB_FUNCTIONS(name, A, R, G, B) \
+static void \
+gst_alpha_set_ayuv_##name (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint y, x; \
+  gint matrix[12]; \
+  gint r, g, b; \
+  \
+  memcpy (matrix, \
+      alpha->in_sdtv ? cog_ycbcr_to_rgb_matrix_8bit_sdtv : \
+      cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (y = 0; y < height; y++) { \
+    for (x = 0; x < width; x++) { \
+      dest[A] = (src[0] * s_alpha) >> 8; \
+      \
+      r = APPLY_MATRIX (matrix, 0, src[1], src[2], src[3]); \
+      g = APPLY_MATRIX (matrix, 1, src[1], src[2], src[3]); \
+      b = APPLY_MATRIX (matrix, 2, src[1], src[2], src[3]); \
+      \
+      dest[R] = CLAMP (r, 0, 255); \
+      dest[G] = CLAMP (g, 0, 255); \
+      dest[B] = CLAMP (b, 0, 255); \
+      \
+      dest += 4; \
+      src += 4; \
+    } \
+  } \
+} \
+\
+static void \
+gst_alpha_chroma_key_ayuv_##name (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint i, j; \
+  gint a, y, u, v; \
+  gint r, g, b; \
+  gint smin, smax; \
+  gint pa = CLAMP ((gint) (alpha->alpha * 256), 0, 256); \
+  gint8 cb = alpha->cb, cr = alpha->cr; \
+  gint8 kg = alpha->kg; \
+  guint8 accept_angle_tg = alpha->accept_angle_tg; \
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg; \
+  guint8 one_over_kc = alpha->one_over_kc; \
+  guint8 kfgy_scale = alpha->kfgy_scale; \
+  guint noise_level2 = alpha->noise_level2; \
+  gint matrix[12]; \
+  \
+  smin = 128 - alpha->black_sensitivity; \
+  smax = 128 + alpha->white_sensitivity; \
+  \
+  memcpy (matrix, \
+      alpha->in_sdtv ? cog_ycbcr_to_rgb_matrix_8bit_sdtv : \
+      cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      a = (src[0] * pa) >> 8; \
+      y = src[1]; \
+      u = src[2] - 128; \
+      v = src[3] - 128; \
+      \
+      a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, \
+          smin, smax, accept_angle_tg, accept_angle_ctg, \
+          one_over_kc, kfgy_scale, kg, noise_level2); \
+      \
+      u += 128; \
+      v += 128; \
+      \
+      r = APPLY_MATRIX (matrix, 0, y, u, v); \
+      g = APPLY_MATRIX (matrix, 1, y, u, v); \
+      b = APPLY_MATRIX (matrix, 2, y, u, v); \
+      \
+      dest[A] = a; \
+      dest[R] = CLAMP (r, 0, 255); \
+      dest[G] = CLAMP (g, 0, 255); \
+      dest[B] = CLAMP (b, 0, 255); \
+      \
+      src += 4; \
+      dest += 4; \
+    } \
+  } \
+}
+
+CREATE_AYUV_ARGB_FUNCTIONS (argb, 0, 1, 2, 3);
+CREATE_AYUV_ARGB_FUNCTIONS (abgr, 0, 3, 2, 1);
+CREATE_AYUV_ARGB_FUNCTIONS (rgba, 3, 0, 1, 2);
+CREATE_AYUV_ARGB_FUNCTIONS (bgra, 3, 2, 1, 0);
+
+static void
+gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest,
+    gint width, gint height, GstAlpha * alpha)
+{
+  gint i, j;
+  gint a, y, u, v;
+  gint smin, smax;
+  gint pa = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
+  gint8 cb = alpha->cb, cr = alpha->cr;
+  gint8 kg = alpha->kg;
+  guint8 accept_angle_tg = alpha->accept_angle_tg;
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg;
+  guint8 one_over_kc = alpha->one_over_kc;
+  guint8 kfgy_scale = alpha->kfgy_scale;
+  guint noise_level2 = alpha->noise_level2;
+
+  smin = 128 - alpha->black_sensitivity;
+  smax = 128 + alpha->white_sensitivity;
+
+  if (alpha->in_sdtv == alpha->out_sdtv) {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        a = (src[0] * pa) >> 8;
+        y = src[1];
+        u = src[2] - 128;
+        v = src[3] - 128;
+
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
+            smin, smax, accept_angle_tg, accept_angle_ctg,
+            one_over_kc, kfgy_scale, kg, noise_level2);
+
+        u += 128;
+        v += 128;
+
+        dest[0] = a;
+        dest[1] = y;
+        dest[2] = u;
+        dest[3] = v;
+
+        src += 4;
+        dest += 4;
+      }
+    }
+  } else {
+    gint matrix[12];
+
+    memcpy (matrix,
+        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j++) {
+        a = (src[0] * pa) >> 8;
+        y = APPLY_MATRIX (matrix, 0, src[1], src[2], src[3]);
+        u = APPLY_MATRIX (matrix, 1, src[1], src[2], src[3]) - 128;
+        v = APPLY_MATRIX (matrix, 2, src[1], src[2], src[3]) - 128;
+
+        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
+            smin, smax, accept_angle_tg, accept_angle_ctg,
+            one_over_kc, kfgy_scale, kg, noise_level2);
+
+        u += 128;
+        v += 128;
+
+        dest[0] = a;
+        dest[1] = y;
+        dest[2] = u;
+        dest[3] = v;
+
+        src += 4;
+        dest += 4;
+      }
+    }
+  }
+}
+
+#define CREATE_I420_ARGB_FUNCTIONS(name, A, R, G, B) \
+static void \
+gst_alpha_set_i420_##name (const guint8 * src, guint8 * dest, gint width, \
+    gint height, GstAlpha * alpha) \
+{ \
+  gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255); \
+  const guint8 *srcY; \
+  const guint8 *srcU; \
+  const guint8 *srcV; \
+  gint i, j; \
+  gint src_wrap, src_uv_wrap; \
+  gint y_stride, uv_stride; \
+  gboolean odd_width; \
+  gint matrix[12]; \
+  gint r, g, b; \
+  \
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width); \
+  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width); \
+  \
+  src_wrap = y_stride - width; \
+  src_uv_wrap = uv_stride - (width / 2); \
+  \
+  srcY = src; \
+  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+      1, width, height); \
+  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+      2, width, height); \
+  \
+  odd_width = (width % 2 != 0); \
+  \
+  memcpy (matrix, \
+      alpha->in_sdtv ? cog_ycbcr_to_rgb_matrix_8bit_sdtv : \
+      cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width / 2; j++) { \
+      dest[A] = b_alpha; \
+      r = APPLY_MATRIX (matrix, 0, srcY[0], srcU[0], srcV[0]); \
+      g = APPLY_MATRIX (matrix, 1, srcY[0], srcU[0], srcV[0]); \
+      b = APPLY_MATRIX (matrix, 2, srcY[0], srcU[0], srcV[0]); \
+      dest[R] = CLAMP (r, 0, 255); \
+      dest[G] = CLAMP (g, 0, 255); \
+      dest[B] = CLAMP (b, 0, 255); \
+      \
+      dest[4 + A] = b_alpha; \
+      r = APPLY_MATRIX (matrix, 0, srcY[1], srcU[0], srcV[0]); \
+      g = APPLY_MATRIX (matrix, 1, srcY[1], srcU[0], srcV[0]); \
+      b = APPLY_MATRIX (matrix, 2, srcY[1], srcU[0], srcV[0]); \
+      dest[4 + R] = CLAMP (r, 0, 255); \
+      dest[4 + G] = CLAMP (g, 0, 255); \
+      dest[4 + B] = CLAMP (b, 0, 255); \
+      \
+      dest += 8; \
+      srcY += 2; \
+      srcU++; \
+      srcV++; \
+    } \
+    /* Might have one odd column left to do */ \
+    if (odd_width) { \
+      dest[A] = b_alpha; \
+      r = APPLY_MATRIX (matrix, 0, srcY[0], srcU[0], srcV[0]); \
+      g = APPLY_MATRIX (matrix, 1, srcY[0], srcU[0], srcV[0]); \
+      b = APPLY_MATRIX (matrix, 2, srcY[0], srcU[0], srcV[0]); \
+      dest[R] = CLAMP (r, 0, 255); \
+      dest[G] = CLAMP (g, 0, 255); \
+      dest[B] = CLAMP (b, 0, 255); \
+      \
+      dest += 4; \
+      srcY++; \
+    } \
+    if (i % 2 == 0) { \
+      srcU -= width / 2; \
+      srcV -= width / 2; \
+    } else { \
+      srcU += src_uv_wrap; \
+      srcV += src_uv_wrap; \
+    } \
+    srcY += src_wrap; \
+  } \
+} \
+\
+static inline void \
+gst_alpha_chromakey_row_i420_##name (GstAlpha * alpha, guint8 * dest1, \
+    guint8 * dest2, const guint8 * srcY1, const guint8 * srcY2, \
+    const guint8 * srcU, const guint8 * srcV, gint width) \
+{ \
+  gint xpos; \
+  gint a, a2, u, v; \
+  gint r, g, b; \
+  gint smin, smax; \
+  gint8 cb = alpha->cb, cr = alpha->cr; \
+  gint8 kg = alpha->kg; \
+  guint8 accept_angle_tg = alpha->accept_angle_tg; \
+  guint8 accept_angle_ctg = alpha->accept_angle_ctg; \
+  guint8 one_over_kc = alpha->one_over_kc; \
+  guint8 kfgy_scale = alpha->kfgy_scale; \
+  guint noise_level2 = alpha->noise_level2; \
+  gint matrix[12], y; \
+  \
+  a = CLAMP ((gint) (alpha->alpha * 255), 0, 255); \
+  smin = 128 - alpha->black_sensitivity; \
+  smax = 128 + alpha->white_sensitivity; \
+  \
+  memcpy (matrix, \
+      alpha->in_sdtv ? cog_ycbcr_to_rgb_matrix_8bit_sdtv : \
+      cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint)); \
+  \
+  for (xpos = 0; xpos < width / 2; xpos++) { \
+    y = srcY1[0]; \
+    u = srcU[0] - 128; \
+    v = srcV[0] - 128; \
+    \
+    a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin, \
+        smax, accept_angle_tg, accept_angle_ctg, \
+        one_over_kc, kfgy_scale, kg, noise_level2); \
+    \
+    u += 128; \
+    v += 128; \
+    \
+    r = APPLY_MATRIX (matrix, 0, y, u, v); \
+    g = APPLY_MATRIX (matrix, 1, y, u, v); \
+    b = APPLY_MATRIX (matrix, 2, y, u, v); \
+    \
+    dest1[A] = a2; \
+    dest1[R] = CLAMP (r, 0, 255); \
+    dest1[G] = CLAMP (g, 0, 255); \
+    dest1[B] = CLAMP (b, 0, 255); \
+    \
+    y = srcY1[1]; \
+    u = srcU[0] - 128; \
+    v = srcV[0] - 128; \
+    \
+    a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin, \
+        smax, accept_angle_tg, accept_angle_ctg, \
+        one_over_kc, kfgy_scale, kg, noise_level2); \
+    \
+    u += 128; \
+    v += 128; \
+    \
+    r = APPLY_MATRIX (matrix, 0, y, u, v); \
+    g = APPLY_MATRIX (matrix, 1, y, u, v); \
+    b = APPLY_MATRIX (matrix, 2, y, u, v); \
+    \
+    dest1[4 + A] = a2; \
+    dest1[4 + R] = CLAMP (r, 0, 255); \
+    dest1[4 + G] = CLAMP (g, 0, 255); \
+    dest1[4 + B] = CLAMP (b, 0, 255); \
+    \
+    y = srcY2[0]; \
+    u = srcU[0] - 128; \
+    v = srcV[0] - 128; \
+    \
+    a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin, \
+        smax, accept_angle_tg, accept_angle_ctg, \
+        one_over_kc, kfgy_scale, kg, noise_level2); \
+    \
+    u += 128; \
+    v += 128; \
+    \
+    r = APPLY_MATRIX (matrix, 0, y, u, v); \
+    g = APPLY_MATRIX (matrix, 1, y, u, v); \
+    b = APPLY_MATRIX (matrix, 2, y, u, v); \
+    \
+    dest2[A] = a2; \
+    dest2[R] = CLAMP (r, 0, 255); \
+    dest2[G] = CLAMP (g, 0, 255); \
+    dest2[B] = CLAMP (b, 0, 255); \
+    \
+    y = srcY2[1]; \
+    u = srcU[0] - 128; \
+    v = srcV[0] - 128; \
+    \
+    a2 = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb, smin, \
+        smax, accept_angle_tg, accept_angle_ctg, \
+        one_over_kc, kfgy_scale, kg, noise_level2); \
+    \
+    u += 128; \
+    v += 128; \
+    \
+    r = APPLY_MATRIX (matrix, 0, y, u, v); \
+    g = APPLY_MATRIX (matrix, 1, y, u, v); \
+    b = APPLY_MATRIX (matrix, 2, y, u, v); \
+    \
+    dest2[4 + A] = a2; \
+    dest2[4 + R] = CLAMP (r, 0, 255); \
+    dest2[4 + G] = CLAMP (g, 0, 255); \
+    dest2[4 + B] = CLAMP (b, 0, 255); \
+    \
+    srcY1 += 2; \
+    srcY2 += 2; \
+    srcU++; \
+    srcV++; \
+    dest1 += 8; \
+    dest2 += 8; \
+  } \
+} \
+\
+static void \
+gst_alpha_chroma_key_i420_##name (const guint8 * src, guint8 * dest, \
+    gint width, gint height, GstAlpha * alpha) \
+{ \
+  const guint8 *srcY1, *srcY2, *srcU, *srcV; \
+  guint8 *dest1, *dest2; \
+  gint ypos; \
+  gint dest_stride, src_y_stride, src_uv_stride; \
+  \
+  dest_stride = \
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width); \
+  src_y_stride = \
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width); \
+  src_uv_stride = \
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width); \
+  \
+  srcY1 = src; \
+  srcY2 = src + src_y_stride; \
+  \
+  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+      1, width, height); \
+  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+      2, width, height); \
+  \
+  dest1 = dest; \
+  dest2 = dest + dest_stride; \
+  \
+  /* Redefine Y strides to skip 2 lines at a time ... */ \
+  dest_stride *= 2; \
+  src_y_stride *= 2; \
+  \
+  for (ypos = 0; ypos < height / 2; ypos++) { \
+    gst_alpha_chromakey_row_i420_##name (alpha, dest1, dest2, \
+        srcY1, srcY2, srcU, srcV, width); \
+    \
+    dest1 += dest_stride; \
+    dest2 += dest_stride; \
+    srcY1 += src_y_stride; \
+    srcY2 += src_y_stride; \
+    srcU += src_uv_stride; \
+    srcV += src_uv_stride; \
+  } \
+}
+
+CREATE_I420_ARGB_FUNCTIONS (argb, 0, 1, 2, 3);
+CREATE_I420_ARGB_FUNCTIONS (abgr, 0, 3, 2, 1);
+CREATE_I420_ARGB_FUNCTIONS (rgba, 3, 0, 1, 2);
+CREATE_I420_ARGB_FUNCTIONS (bgra, 3, 2, 1, 0);
+
 static void
 gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
     gint height, GstAlpha * alpha)
@@ -679,87 +1121,6 @@ gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
   }
 }
 
-static void
-gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
-    gint height, GstAlpha * alpha)
-{
-  const guint8 *src1;
-  guint8 *dest1;
-  gint i, j;
-  gint a, y, u, v;
-  gint smin, smax;
-  gint pa = alpha->alpha * 255;
-  gint8 cb = alpha->cb, cr = alpha->cr;
-  gint8 kg = alpha->kg;
-  guint8 accept_angle_tg = alpha->accept_angle_tg;
-  guint8 accept_angle_ctg = alpha->accept_angle_ctg;
-  guint8 one_over_kc = alpha->one_over_kc;
-  guint8 kfgy_scale = alpha->kfgy_scale;
-  guint noise_level2 = alpha->noise_level2;
-
-  smin = 128 - alpha->black_sensitivity;
-  smax = 128 + alpha->white_sensitivity;
-
-  src1 = src;
-  dest1 = dest;
-
-  if (alpha->in_sdtv == alpha->out_sdtv) {
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j++) {
-        a = (src1[0] * pa) >> 8;
-        y = src1[1];
-        u = src1[2] - 128;
-        v = src1[3] - 128;
-
-        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
-            smin, smax, accept_angle_tg, accept_angle_ctg,
-            one_over_kc, kfgy_scale, kg, noise_level2);
-
-        u += 128;
-        v += 128;
-
-        dest1[0] = a;
-        dest1[1] = y;
-        dest1[2] = u;
-        dest1[3] = v;
-
-        src1 += 4;
-        dest1 += 4;
-      }
-    }
-  } else {
-    gint matrix[12];
-
-    memcpy (matrix,
-        alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
-
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j++) {
-        a = (src1[0] * pa) >> 8;
-        y = APPLY_MATRIX (matrix, 0, src1[1], src1[2], src1[3]);
-        u = APPLY_MATRIX (matrix, 1, src1[1], src1[2], src1[3]) - 128;
-        v = APPLY_MATRIX (matrix, 2, src1[1], src1[2], src1[3]) - 128;
-
-        a = chroma_keying_yuv (a, &y, 1, &u, &v, cr, cb,
-            smin, smax, accept_angle_tg, accept_angle_ctg,
-            one_over_kc, kfgy_scale, kg, noise_level2);
-
-        u += 128;
-        v += 128;
-
-        dest1[0] = a;
-        dest1[1] = y;
-        dest1[2] = u;
-        dest1[3] = v;
-
-        src1 += 4;
-        dest1 += 4;
-      }
-    }
-  }
-}
-
 static inline void
 gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
     guint8 * dest2, const guint8 * srcY1, const guint8 * srcY2,
@@ -776,7 +1137,7 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
   guint8 kfgy_scale = alpha->kfgy_scale;
   guint noise_level2 = alpha->noise_level2;
 
-  a = 255 * alpha->alpha;
+  a = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   smin = 128 - alpha->black_sensitivity;
   smax = 128 + alpha->white_sensitivity;
 
@@ -906,8 +1267,8 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
 }
 
 static void
-gst_alpha_chroma_key_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
-    gint height, GstAlpha * alpha)
+gst_alpha_chroma_key_i420_ayuv (const guint8 * src, guint8 * dest,
+    gint width, gint height, GstAlpha * alpha)
 {
   const guint8 *srcY1, *srcY2, *srcU, *srcV;
   guint8 *dest1, *dest2;
@@ -1020,6 +1381,7 @@ static gboolean
 gst_alpha_set_process_function (GstAlpha * alpha)
 {
   alpha->process = NULL;
+
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
       switch (alpha->out_format) {
@@ -1034,6 +1396,55 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             default:
               break;
           }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_set_ayuv_argb;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_set_i420_argb;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_set_ayuv_abgr;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_set_i420_abgr;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_set_ayuv_rgba;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_set_i420_rgba;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_set_ayuv_bgra;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_set_i420_bgra;
+              break;
+            default:
+              break;
+          }
+          break;
         default:
           break;
       }
@@ -1053,6 +1464,55 @@ gst_alpha_set_process_function (GstAlpha * alpha)
             default:
               break;
           }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_chroma_key_ayuv_argb;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_chroma_key_i420_argb;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_chroma_key_ayuv_abgr;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_chroma_key_i420_abgr;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_chroma_key_ayuv_rgba;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_chroma_key_i420_rgba;
+              break;
+            default:
+              break;
+          }
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          switch (alpha->in_format) {
+            case GST_VIDEO_FORMAT_AYUV:
+              alpha->process = gst_alpha_chroma_key_ayuv_bgra;
+              break;
+            case GST_VIDEO_FORMAT_I420:
+              alpha->process = gst_alpha_chroma_key_i420_bgra;
+              break;
+            default:
+              break;
+          }
+          break;
         default:
           break;
       }
