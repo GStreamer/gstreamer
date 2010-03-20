@@ -441,6 +441,8 @@ gst_x_overlay_expose (GstXOverlay * overlay)
  * events are not propagated in the window hierarchy if a client is listening
  * for them. This method allows you to disable events handling completely
  * from the XOverlay.
+ *
+ * Since: 0.10.12
  */
 void
 gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
