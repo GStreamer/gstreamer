@@ -551,9 +551,11 @@ gst_alpha_set_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
       }
     }
   } else {
-    const gint *matrix =
+    gint matrix[12];
+
+    memcpy (matrix,
         alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
 
     for (y = 0; y < height; y++) {
       for (x = 0; x < width; x++) {
@@ -633,9 +635,11 @@ gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
       srcY += src_wrap;
     }
   } else {
-    const gint *matrix =
+    gint matrix[12];
+
+    memcpy (matrix,
         alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
 
     for (i = 0; i < height; i++) {
       for (j = 0; j < width / 2; j++) {
@@ -718,9 +722,11 @@ gst_alpha_chroma_key_ayuv_ayuv (const guint8 * src, guint8 * dest, gint width,
       }
     }
   } else {
-    const gint *matrix =
+    gint matrix[12];
+
+    memcpy (matrix,
         alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
 
     for (i = 0; i < height; i++) {
       for (j = 0; j < width; j++) {
@@ -807,10 +813,11 @@ gst_alpha_chromakey_row_i420_ayuv (GstAlpha * alpha, guint8 * dest1,
       dest2 += 8;
     }
   } else {
-    const gint *matrix =
+    gint matrix[12], y;
+
+    memcpy (matrix,
         alpha->out_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
-        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit;
-    gint y;
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
 
     for (xpos = 0; xpos < width / 2; xpos++) {
       y = APPLY_MATRIX (matrix, 0, srcY1[0], srcU[0], srcV[0]);
