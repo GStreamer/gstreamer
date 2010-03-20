@@ -944,9 +944,28 @@ gst_alpha_init_params (GstAlpha * alpha)
   gfloat y;
   const gint *matrix;
 
-  matrix =
-      (alpha->out_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
-      cog_rgb_to_ycbcr_matrix_8bit_hdtv;
+  /* RGB->RGB: convert to SDTV YUV, chroma keying, convert back
+   * YUV->RGB: chroma keying, convert to RGB
+   * RGB->YUV: convert to YUV, chroma keying
+   * YUV->YUV: convert matrix, chroma keying
+   */
+  if (gst_video_format_is_rgb (alpha->in_format)
+      && gst_video_format_is_rgb (alpha->out_format))
+    matrix = cog_rgb_to_ycbcr_matrix_8bit_sdtv;
+  else if (gst_video_format_is_yuv (alpha->in_format)
+      && gst_video_format_is_rgb (alpha->out_format))
+    matrix =
+        (alpha->in_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
+        cog_rgb_to_ycbcr_matrix_8bit_hdtv;
+  else if (gst_video_format_is_rgb (alpha->in_format)
+      && gst_video_format_is_yuv (alpha->out_format))
+    matrix =
+        (alpha->out_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
+        cog_rgb_to_ycbcr_matrix_8bit_hdtv;
+  else                          /* yuv -> yuv */
+    matrix =
+        (alpha->out_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
+        cog_rgb_to_ycbcr_matrix_8bit_hdtv;
 
   y = (matrix[0] * ((gint) alpha->target_r) +
       matrix[1] * ((gint) alpha->target_g) +
