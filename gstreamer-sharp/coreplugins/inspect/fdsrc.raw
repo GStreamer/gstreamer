@@ -58,7 +58,7 @@
    <blurb>An open file descriptor to read from</blurb>
    <flags>RW</flags>
    <range min="0" max="2147483647"/>
-   <default>0</default>
+   <default>-1</default>
   </element-property>
   <element-property>
    <name>timeout</name>

@@ -34,7 +34,7 @@
  <element-flags>
  </element-flags>
  <element-implementation>
-  <state-change function="0x2afa77bcd4c0"/>
+  <state-change function="0x2ba35b0445d0"/>
   <save function="gst_element_save_thyself"/>
   <load function="gst_element_restore_thyself"/>
  </element-implementation>
