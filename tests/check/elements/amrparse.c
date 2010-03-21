@@ -90,7 +90,7 @@ typedef struct
 /*
  * Create a GstBuffer of the given data and set the caps, if not NULL.
  */
-GstBuffer *
+static GstBuffer *
 buffer_new (const unsigned char *buffer_data, guint size,
     const gchar * caps_str)
 {
@@ -174,7 +174,7 @@ buffer_verify_wb (void *buffer, void *user_data)
 /*
  * Create a parser and pads according to given templates.
  */
-GstElement *
+static GstElement *
 setup_amrparse (GstStaticPadTemplate * srctemplate,
     GstStaticPadTemplate * sinktemplate)
 {
