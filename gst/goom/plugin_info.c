@@ -120,27 +120,27 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   p.sound.timeSinceLastBigGoom = 1;
   p.sound.cycle = 0;
 
-  p.sound.volume_p = secure_f_feedback ("Sound Volume");
-  p.sound.accel_p = secure_f_feedback ("Sound Acceleration");
-  p.sound.speed_p = secure_f_feedback ("Sound Speed");
-  p.sound.goom_limit_p = secure_f_feedback ("Goom Limit");
-  p.sound.last_goom_p = secure_f_feedback ("Goom Detection");
-  p.sound.last_biggoom_p = secure_f_feedback ("Big Goom Detection");
-  p.sound.goom_power_p = secure_f_feedback ("Goom Power");
+  secure_f_feedback (&p.sound.volume_p, "Sound Volume");
+  secure_f_feedback (&p.sound.accel_p, "Sound Acceleration");
+  secure_f_feedback (&p.sound.speed_p, "Sound Speed");
+  secure_f_feedback (&p.sound.goom_limit_p, "Goom Limit");
+  secure_f_feedback (&p.sound.last_goom_p, "Goom Detection");
+  secure_f_feedback (&p.sound.last_biggoom_p, "Big Goom Detection");
+  secure_f_feedback (&p.sound.goom_power_p, "Goom Power");
 
-  p.sound.biggoom_speed_limit_p = secure_i_param ("Big Goom Speed Limit");
+  secure_i_param (&p.sound.biggoom_speed_limit_p, "Big Goom Speed Limit");
   IVAL (p.sound.biggoom_speed_limit_p) = 10;
   IMIN (p.sound.biggoom_speed_limit_p) = 0;
   IMAX (p.sound.biggoom_speed_limit_p) = 100;
   ISTEP (p.sound.biggoom_speed_limit_p) = 1;
 
-  p.sound.biggoom_factor_p = secure_i_param ("Big Goom Factor");
+  secure_i_param (&p.sound.biggoom_factor_p, "Big Goom Factor");
   IVAL (p.sound.biggoom_factor_p) = 10;
   IMIN (p.sound.biggoom_factor_p) = 0;
   IMAX (p.sound.biggoom_factor_p) = 100;
   ISTEP (p.sound.biggoom_factor_p) = 1;
 
-  p.sound.params = plugin_parameters ("Sound", 11);
+  plugin_parameters (&p.sound.params, "Sound", 11);
 
   p.nbParams = 0;
   p.params = NULL;

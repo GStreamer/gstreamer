@@ -21,6 +21,6 @@
 
 #include "goom_visual_fx.h"
 
-VisualFX tentacle_fx_create(void);
+void tentacle_fx_create(VisualFX *fx);
 
 #endif

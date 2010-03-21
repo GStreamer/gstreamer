@@ -762,15 +762,13 @@ ifs_vfx_free (VisualFX * _this)
   free (data);
 }
 
-VisualFX
-ifs_visualfx_create (void)
+void
+ifs_visualfx_create (VisualFX * vfx)
 {
-  VisualFX vfx;
 
-  vfx.init = ifs_vfx_init;
-  vfx.free = ifs_vfx_free;
-  vfx.apply = ifs_vfx_apply;
-  vfx.fx_data = NULL;
-  vfx.params = NULL;
-  return vfx;
+  vfx->init = ifs_vfx_init;
+  vfx->free = ifs_vfx_free;
+  vfx->apply = ifs_vfx_apply;
+  vfx->fx_data = NULL;
+  vfx->params = NULL;
 }

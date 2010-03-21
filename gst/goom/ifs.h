@@ -37,7 +37,7 @@
 #include "goom_plugin_info.h"
 #include "goom_visual_fx.h"
 
-VisualFX ifs_visualfx_create(void);
+void ifs_visualfx_create(VisualFX *vfx);
 
 /* init ifs for a (width)x(height) output. * /
 void init_ifs (PluginInfo *goomInfo, int width, int height);

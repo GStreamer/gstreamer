@@ -91,16 +91,16 @@ goom_init (guint32 resx, guint32 resy)
 
   goomInfo->cycle = 0;
 
-  goomInfo->star_fx = flying_star_create ();
+  flying_star_create (&goomInfo->star_fx);
   goomInfo->star_fx.init (&goomInfo->star_fx, goomInfo);
 
-  goomInfo->zoomFilter_fx = zoomFilterVisualFXWrapper_create ();
+  zoomFilterVisualFXWrapper_create (&goomInfo->zoomFilter_fx);
   goomInfo->zoomFilter_fx.init (&goomInfo->zoomFilter_fx, goomInfo);
 
-  goomInfo->tentacles_fx = tentacle_fx_create ();
+  tentacle_fx_create (&goomInfo->tentacles_fx);
   goomInfo->tentacles_fx.init (&goomInfo->tentacles_fx, goomInfo);
 
-  goomInfo->convolve_fx = convolve_create ();
+  convolve_create (&goomInfo->convolve_fx);
   goomInfo->convolve_fx.init (&goomInfo->convolve_fx, goomInfo);
 
   plugin_info_add_visual (goomInfo, 0, &goomInfo->zoomFilter_fx);
@@ -108,7 +108,7 @@ goom_init (guint32 resx, guint32 resy)
   plugin_info_add_visual (goomInfo, 2, &goomInfo->star_fx);
   plugin_info_add_visual (goomInfo, 3, &goomInfo->convolve_fx);
 
-  goomInfo->ifs_fx = ifs_visualfx_create ();
+  ifs_visualfx_create (&goomInfo->ifs_fx);
   goomInfo->ifs_fx.init (&goomInfo->ifs_fx, goomInfo);
 
   goomInfo->gmline1 = goom_lines_init (goomInfo, resx, goomInfo->screen.height,

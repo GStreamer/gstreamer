@@ -112,33 +112,33 @@ fs_init (VisualFX * _this, PluginInfo * info)
   data->stars = (Star *) malloc (data->maxStars * sizeof (Star));
   data->nbStars = 0;
 
-  data->max_age_p = secure_i_param ("Fireworks Smallest Bombs");
+  secure_i_param (&data->max_age_p, "Fireworks Smallest Bombs");
   IVAL (data->max_age_p) = 80;
   IMIN (data->max_age_p) = 0;
   IMAX (data->max_age_p) = 100;
   ISTEP (data->max_age_p) = 1;
 
-  data->min_age_p = secure_i_param ("Fireworks Largest Bombs");
+  secure_i_param (&data->min_age_p, "Fireworks Largest Bombs");
   IVAL (data->min_age_p) = 99;
   IMIN (data->min_age_p) = 0;
   IMAX (data->min_age_p) = 100;
   ISTEP (data->min_age_p) = 1;
 
-  data->nbStars_limit_p = secure_i_param ("Max Number of Particules");
+  secure_i_param (&data->nbStars_limit_p, "Max Number of Particules");
   IVAL (data->nbStars_limit_p) = 512;
   IMIN (data->nbStars_limit_p) = 0;
   IMAX (data->nbStars_limit_p) = data->maxStars;
   ISTEP (data->nbStars_limit_p) = 64;
 
-  data->fx_mode_p = secure_i_param ("FX Mode");
+  secure_i_param (&data->fx_mode_p, "FX Mode");
   IVAL (data->fx_mode_p) = data->fx_mode;
   IMIN (data->fx_mode_p) = 1;
   IMAX (data->fx_mode_p) = 3;
   ISTEP (data->fx_mode_p) = 1;
 
-  data->nbStars_p = secure_f_feedback ("Number of Particules (% of Max)");
+  secure_f_feedback (&data->nbStars_p, "Number of Particules (% of Max)");
 
-  data->params = plugin_parameters ("Particule System", 7);
+  plugin_parameters (&data->params, "Particule System", 7);
   data->params.params[0] = &data->fx_mode_p;
   data->params.params[1] = &data->nbStars_limit_p;
   data->params.params[2] = 0;
@@ -350,14 +350,12 @@ fs_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
   }
 }
 
-VisualFX
-flying_star_create (void)
+void
+flying_star_create (VisualFX * vfx)
 {
-  VisualFX vfx = {
-    fs_init,
-    fs_free,
-    fs_apply,
-    NULL
-  };
-  return vfx;
+  vfx->init = fs_init;
+  vfx->free = fs_free;
+  vfx->apply = fs_apply;
+  vfx->fx_data = NULL;
+  vfx->params = NULL;
 }

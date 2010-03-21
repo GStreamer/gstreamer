@@ -102,19 +102,19 @@ convolve_init (VisualFX * _this, PluginInfo * info)
   data = (ConvData *) malloc (sizeof (ConvData));
   _this->fx_data = (void *) data;
 
-  data->light = secure_f_param ("Screen Brightness");
+  secure_f_param (&data->light, "Screen Brightness");
   data->light.param.fval.max = 300.0f;
   data->light.param.fval.step = 1.0f;
   data->light.param.fval.value = 100.0f;
 
-  data->factor_adj_p = secure_f_param ("Flash Intensity");
+  secure_f_param (&data->factor_adj_p, "Flash Intensity");
   data->factor_adj_p.param.fval.max = 200.0f;
   data->factor_adj_p.param.fval.step = 1.0f;
   data->factor_adj_p.param.fval.value = 70.0f;
 
-  data->factor_p = secure_f_feedback ("Factor");
+  secure_f_feedback (&data->factor_p, "Factor");
 
-  data->params = plugin_parameters ("Bright Flash", 5);
+  plugin_parameters (&data->params, "Bright Flash", 5);
   data->params.params[0] = &data->light;
   data->params.params[1] = &data->factor_adj_p;
   data->params.params[2] = 0;
@@ -233,9 +233,8 @@ create_output_with_brightness (VisualFX * _this, Pixel * src, Pixel * dest,
       ytex -= s;
 
       iff2 =
-          ifftab[(int) data->
-          conv_motif[(ytex >> 16) & CONV_MOTIF_WMASK][(xtex >> 16) &
-              CONV_MOTIF_WMASK]];
+          ifftab[(int) data->conv_motif[(ytex >> 16) & CONV_MOTIF_WMASK][(xtex
+                  >> 16) & CONV_MOTIF_WMASK]];
 
 #define sat(a) ((a)>0xFF?0xFF:(a))
       f0 = src[i].val;
@@ -358,14 +357,12 @@ convolve_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
 */
 }
 
-VisualFX
-convolve_create (void)
+void
+convolve_create (VisualFX * vfx)
 {
-  VisualFX vfx = {
-    convolve_init,
-    convolve_free,
-    convolve_apply,
-    NULL
-  };
-  return vfx;
+  vfx->init = convolve_init;
+  vfx->free = convolve_free;
+  vfx->apply = convolve_apply;
+  vfx->fx_data = NULL;
+  vfx->params = NULL;
 }
