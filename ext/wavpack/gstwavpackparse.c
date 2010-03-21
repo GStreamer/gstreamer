@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
 #define GST_CAT_DEFAULT gst_wavpack_parse_debug
 
 static inline GstWavpackParseIndexEntry *
-gst_wavpack_parse_index_entry_new ()
+gst_wavpack_parse_index_entry_new (void)
 {
   return g_slice_new (GstWavpackParseIndexEntry);
 }

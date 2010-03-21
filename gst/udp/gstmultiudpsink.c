@@ -377,7 +377,7 @@ gst_multiudpsink_finalize (GObject * object)
 }
 
 static gboolean
-socket_error_is_ignorable ()
+socket_error_is_ignorable (void)
 {
 #ifdef G_OS_WIN32
   /* Windows doesn't seem to have an EAGAIN for sockets */
@@ -388,7 +388,7 @@ socket_error_is_ignorable ()
 }
 
 static int
-socket_last_error_code ()
+socket_last_error_code (void)
 {
 #ifdef G_OS_WIN32
   return WSAGetLastError ();
@@ -398,7 +398,7 @@ socket_last_error_code ()
 }
 
 static gchar *
-socket_last_error_message ()
+socket_last_error_message (void)
 {
 #ifdef G_OS_WIN32
   int errorcode = WSAGetLastError ();

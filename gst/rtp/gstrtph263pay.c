@@ -531,7 +531,7 @@ gst_rtp_h263_pay_get_property (GObject * object, guint prop_id,
 }
 
 static GstRtpH263PayPackage *
-gst_rtp_h263_pay_package_new_empty ()
+gst_rtp_h263_pay_package_new_empty (void)
 {
   return (GstRtpH263PayPackage *) g_malloc0 (sizeof (GstRtpH263PayPackage));
 }

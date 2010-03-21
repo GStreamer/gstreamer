@@ -164,7 +164,7 @@ GST_END_TEST;
 
 
 static Suite *
-videobalance_suite ()
+videobalance_suite (void)
 {
   Suite *s = suite_create ("videobalance");
   TCase *tc_chain = tcase_create ("general");
@@ -176,7 +176,7 @@ videobalance_suite ()
 }
 
 static Suite *
-videoflip_suite ()
+videoflip_suite (void)
 {
   Suite *s = suite_create ("videoflip");
   TCase *tc_chain = tcase_create ("general");
@@ -188,7 +188,7 @@ videoflip_suite ()
 }
 
 static Suite *
-gamma_suite ()
+gamma_suite (void)
 {
   Suite *s = suite_create ("gamma");
   TCase *tc_chain = tcase_create ("general");

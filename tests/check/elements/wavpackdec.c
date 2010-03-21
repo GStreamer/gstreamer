@@ -67,7 +67,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstElement *
-setup_wavpackdec (dec)
+setup_wavpackdec (void)
 {
   GstElement *wavpackdec;
 

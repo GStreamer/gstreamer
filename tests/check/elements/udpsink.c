@@ -189,7 +189,7 @@ GST_END_TEST;
  * Returns: pointer to the test suite.
  */
 static Suite *
-udpsink_suite ()
+udpsink_suite (void)
 {
   Suite *s = suite_create ("udpsink_test");
 

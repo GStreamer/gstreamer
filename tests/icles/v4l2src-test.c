@@ -33,7 +33,7 @@ GMainLoop *loop;
 volatile int exit_read = 0;
 
 static void
-print_options ()
+print_options (void)
 {
   printf ("\nf - to change the fequency\n");
   printf ("i - to change the input\n");

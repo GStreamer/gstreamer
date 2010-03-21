@@ -79,7 +79,7 @@ static GstElement *pipeline;
 
 /* sets up deinterlace and shortcut pointers to its pads */
 static void
-setup_deinterlace ()
+setup_deinterlace (void)
 {
   deinterlace = gst_element_factory_make ("deinterlace", NULL);
   fail_unless (deinterlace != NULL);

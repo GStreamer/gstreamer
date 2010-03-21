@@ -31,7 +31,7 @@
 static GList *elements = NULL;
 
 static void
-setup ()
+setup (void)
 {
   GList *features, *f;
   GList *plugins, *p;
@@ -88,7 +88,7 @@ setup ()
 }
 
 static void
-teardown ()
+teardown (void)
 {
   GList *e;
 

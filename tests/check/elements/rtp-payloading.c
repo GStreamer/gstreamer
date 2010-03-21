@@ -774,7 +774,7 @@ GST_END_TEST;
  * Returns: pointer to the test suite.
  */
 static Suite *
-rtp_payloading_suite ()
+rtp_payloading_suite (void)
 {
   Suite *s = suite_create ("rtp_data_test");
 

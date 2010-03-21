@@ -228,7 +228,7 @@ overflow:
 
 /* track list */
 GHashTable *
-gst_cmml_track_list_new ()
+gst_cmml_track_list_new (void)
 {
   return g_hash_table_new (g_str_hash, g_str_equal);
 }

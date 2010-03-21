@@ -101,7 +101,7 @@ static const gfloat test_output[] = {
 };
 
 static GstBuffer *
-create_test_buffer ()
+create_test_buffer (void)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (test_input));
   GstCaps *caps;

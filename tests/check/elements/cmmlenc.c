@@ -152,7 +152,7 @@ buffer_unref (void *buffer, void *user_data)
 }
 
 static void
-setup_cmmlenc ()
+setup_cmmlenc (void)
 {
   guint64 granulerate_n, granulerate_d;
 
@@ -179,7 +179,7 @@ setup_cmmlenc ()
 }
 
 static void
-teardown_cmmlenc ()
+teardown_cmmlenc (void)
 {
   /* free encoded buffers */
   g_list_foreach (buffers, buffer_unref, NULL);
@@ -231,7 +231,7 @@ push_data (const gchar * name, const gchar * data, gint size)
 }
 
 static void
-check_headers ()
+check_headers (void)
 {
   /* push the cmml start tag */
   flow = push_data ("preamble", PREAMBLE, strlen (PREAMBLE));
@@ -473,7 +473,7 @@ GST_START_TEST (test_time_limits)
 GST_END_TEST;
 
 static Suite *
-cmmlenc_suite ()
+cmmlenc_suite (void)
 {
   Suite *s = suite_create ("cmmlenc");
   TCase *tc_general = tcase_create ("general");

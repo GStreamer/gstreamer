@@ -115,7 +115,7 @@ gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 static gint32 sintable[1024 + 256];
 
 static void
-initSinTable ()
+initSinTable (void)
 {
   gint32 *tptr, *tsinptr;
   double i;
