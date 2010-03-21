@@ -5,7 +5,6 @@ resample_SOURCES = \
 	resample.c \
 	resample_functable.c \
 	resample_ref.c \
-	resample_chunk.c \
 	resample.h \
 	buffer.c
 
