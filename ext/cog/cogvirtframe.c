@@ -257,7 +257,7 @@ cog_virt_frame_render_downsample_horiz_cosite_3tap (CogFrame * frame,
   }
 }
 
-void
+static void
 cog_virt_frame_render_downsample_horiz_halfsite (CogFrame * frame,
     void *_dest, int component, int i)
 {
@@ -345,7 +345,7 @@ cog_virt_frame_new_horiz_downsample (CogFrame * vf, int n_taps)
   return virt_frame;
 }
 
-void
+static void
 cog_virt_frame_render_downsample_vert_cosite (CogFrame * frame,
     void *_dest, int component, int i)
 {
@@ -412,7 +412,7 @@ cog_virt_frame_render_downsample_vert_halfsite_4tap (CogFrame * frame,
 }
 
 
-void
+static void
 cog_virt_frame_render_downsample_vert_halfsite (CogFrame * frame,
     void *_dest, int component, int i)
 {
@@ -507,7 +507,7 @@ cog_virt_frame_new_vert_downsample (CogFrame * vf, int n_taps)
   return virt_frame;
 }
 
-void
+static void
 cog_virt_frame_render_resample_vert_1tap (CogFrame * frame, void *_dest,
     int component, int i)
 {
@@ -530,7 +530,7 @@ cog_virt_frame_render_resample_vert_1tap (CogFrame * frame, void *_dest,
   orc_memcpy (dest, src1, frame->components[component].width);
 }
 
-void
+static void
 cog_virt_frame_render_resample_vert_2tap (CogFrame * frame, void *_dest,
     int component, int i)
 {
@@ -561,7 +561,7 @@ cog_virt_frame_render_resample_vert_2tap (CogFrame * frame, void *_dest,
   }
 }
 
-void
+static void
 cog_virt_frame_render_resample_vert_4tap (CogFrame * frame, void *_dest,
     int component, int i)
 {
@@ -624,7 +624,7 @@ cog_virt_frame_new_vert_resample (CogFrame * vf, int height, int n_taps)
   return virt_frame;
 }
 
-void
+static void
 cog_virt_frame_render_resample_horiz_1tap (CogFrame * frame, void *_dest,
     int component, int i)
 {
@@ -645,7 +645,7 @@ cog_virt_frame_render_resample_horiz_1tap (CogFrame * frame, void *_dest,
   }
 }
 
-void
+static void
 cog_virt_frame_render_resample_horiz_2tap (CogFrame * frame, void *_dest,
     int component, int i)
 {
@@ -692,7 +692,7 @@ cog_virt_frame_render_resample_horiz_2tap (CogFrame * frame, void *_dest,
   }
 }
 
-void
+static void
 cog_virt_frame_render_resample_horiz_4tap (CogFrame * frame, void *_dest,
     int component, int i)
 {

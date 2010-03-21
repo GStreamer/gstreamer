@@ -8,7 +8,7 @@
 
 #define SCALE 256
 
-void
+static void
 get_taps (double *taps, double x)
 {
   taps[3] = x * x * (x - 1);

@@ -74,6 +74,9 @@ struct _GstMSEClass
   GstElementClass parent;
 };
 
+GType gst_mse_get_type (void);
+
+
 enum
 {
   PROP_0,

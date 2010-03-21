@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gstcogutils.h"
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <cog/cog.h>
