@@ -4,7 +4,7 @@ if HAVE_GTK
 
 GST_CAMERABIN_GTK_EXAMPLES = gst-camera
 
-gst_camera_SOURCES = gst-camera.c
+gst_camera_SOURCES = gst-camera.h gst-camera.c
 gst_camera_CFLAGS  = \
         -I$(top_builddir)/gst-libs \
         $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \

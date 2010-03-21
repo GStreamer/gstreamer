@@ -29,6 +29,8 @@
 #  include "config.h"
 #endif
 
+#include "gst-camera.h"
+
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/colorbalance.h>
