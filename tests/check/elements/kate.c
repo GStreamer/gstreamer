@@ -460,12 +460,12 @@ GST_START_TEST (test_kate_encode_simple)
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_ref (inbuffer);
 
   caps = gst_caps_from_string ("text/plain");
   fail_unless (caps != NULL);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
+  gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
   /* pushing gives away my reference ... */
@@ -513,12 +513,12 @@ GST_START_TEST (test_kate_encode_spu)
       1 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_ref (inbuffer);
 
   caps = gst_caps_from_string ("video/x-dvd-subpicture");
   fail_unless (caps != NULL);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
+  gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (kateenc, bus);
   /* pushing gives away my reference ... */
@@ -815,7 +815,7 @@ GST_START_TEST (test_kate_tag)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 kate_suite (void)
 {
   Suite *s = suite_create ("kate");
