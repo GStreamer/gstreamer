@@ -169,7 +169,7 @@ test_basic (const gchar * elem_name, int count, check_cb cb)
   gst_check_teardown_element (rtpmux);
 }
 
-void
+static void
 basic_check_cb (GstPad * pad, int i)
 {
   fail_unless (buffers && g_list_length (buffers) == 1);
@@ -194,7 +194,7 @@ GST_START_TEST (test_rtpdtmfmux_basic)
 
 GST_END_TEST;
 
-void
+static void
 lock_check_cb (GstPad * pad, int i)
 {
   GstStructure *s;
