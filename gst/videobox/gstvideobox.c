@@ -580,7 +580,7 @@ static const guint8 yuv_colors_U[VIDEO_BOX_FILL_LAST] = { 128, 46, 255 };
 static const guint8 yuv_colors_V[VIDEO_BOX_FILL_LAST] = { 128, 21, 107 };
 
 static void
-gst_video_box_copy_plane_i420 (GstVideoBox * video_box, guint8 * src,
+gst_video_box_copy_plane_i420 (GstVideoBox * video_box, const guint8 * src,
     guint8 * dest, gint br, gint bl, gint bt, gint bb, gint src_crop_width,
     gint src_crop_height, gint src_stride, gint dest_width, gint dest_stride,
     guint8 fill_color)
@@ -617,11 +617,12 @@ gst_video_box_apply_alpha (guint8 * dest, guint8 alpha)
 }
 
 static void
-gst_video_box_ayuv_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
+gst_video_box_ayuv_ayuv (GstVideoBox * video_box, const guint8 * src,
+    guint8 * dest)
 {
   gint dblen = video_box->out_height * video_box->out_width;
   guint32 *destb = (guint32 *) dest;
-  guint32 *srcb = (guint32 *) src;
+  const guint32 *srcb = (const guint32 *) src;
   guint8 b_alpha = (guint8) (video_box->border_alpha * 255);
   guint8 i_alpha = (guint8) (video_box->alpha * 255);
   gint br, bl, bt, bb, crop_w, crop_h;
@@ -670,7 +671,7 @@ gst_video_box_ayuv_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   if (crop_h <= 0 || crop_w <= 0) {
     oil_splat_u32_ns (destb, &empty_pixel, dblen);
   } else {
-    guint32 *src_loc = srcb;
+    const guint32 *src_loc = srcb;
 
     /* Top border */
     if (bt < 0) {
@@ -740,7 +741,8 @@ UVceil (gint j)
 }
 
 static void
-gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
+gst_video_box_ayuv_i420 (GstVideoBox * video_box, const guint8 * src,
+    guint8 * dest)
 {
   gint br, bl, bt, bb, crop_w, crop_h, rest;
   gint Ysize, Usize, Vsize;
@@ -833,10 +835,10 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     oil_splat_u8_ns (Vdest, (guint8 *) & empty_px_values[2], Vsize);
   } else {
     gboolean sumbuff = FALSE;
-    guint32 *src_loc1;
+    const guint32 *src_loc1;
     gint a = 0;
 
-    src_loc1 = (guint32 *) src;
+    src_loc1 = (const guint32 *) src;
 
     if (bt < 0) {
       oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], (-bt) * Ywidth);
@@ -1000,9 +1002,10 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 }
 
 static void
-gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
+gst_video_box_i420_ayuv (GstVideoBox * video_box, const guint8 * src,
+    guint8 * dest)
 {
-  guint8 *srcY, *srcU, *srcV;
+  const guint8 *srcY, *srcU, *srcV;
   gint crop_width, crop_width2, crop_height;
   gint out_width, out_height;
   gint src_stridey, src_strideu, src_stridev;
@@ -1114,9 +1117,10 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
 
 static void
-gst_video_box_i420_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
+gst_video_box_i420_i420 (GstVideoBox * video_box, const guint8 * src,
+    guint8 * dest)
 {
-  guint8 *srcY, *srcU, *srcV;
+  const guint8 *srcY, *srcU, *srcV;
   guint8 *destY, *destU, *destV;
   gint crop_width, crop_height;
   gint out_width, out_height;
@@ -1210,7 +1214,8 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  guint8 *indata, *outdata;
+  const guint8 *indata;
+  guint8 *outdata;
   GstClockTime timestamp, stream_time;
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
