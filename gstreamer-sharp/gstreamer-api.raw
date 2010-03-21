@@ -8182,7 +8182,7 @@
       <method name="Fill" cname="gst_byte_writer_fill">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="guint8" name="byte" />
+          <parameter type="const-guint8" name="value" />
           <parameter type="guint" name="size" />
         </parameters>
       </method>
@@ -8250,28 +8250,28 @@
           <parameter type="guint" name="size" />
         </parameters>
       </method>
-      <method name="PutDoubleBe" cname="gst_byte_writer_put_double_be">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="gdouble" name="val" />
-        </parameters>
-      </method>
-      <method name="PutDoubleLe" cname="gst_byte_writer_put_double_le">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="gdouble" name="val" />
-        </parameters>
-      </method>
-      <method name="PutFloatBe" cname="gst_byte_writer_put_float_be">
+      <method name="PutFloat32Be" cname="gst_byte_writer_put_float32_be">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gfloat" name="val" />
         </parameters>
       </method>
-      <method name="PutFloatLe" cname="gst_byte_writer_put_float_le">
+      <method name="PutFloat32Le" cname="gst_byte_writer_put_float32_le">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gfloat" name="val" />
+        </parameters>
+      </method>
+      <method name="PutFloat64Be" cname="gst_byte_writer_put_float64_be">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble" name="val" />
+        </parameters>
+      </method>
+      <method name="PutFloat64Le" cname="gst_byte_writer_put_float64_le">
+        <return-type type="gboolean" />
+        <parameters>
+          <parameter type="gdouble" name="val" />
         </parameters>
       </method>
       <method name="PutInt16Be" cname="gst_byte_writer_put_int16_be">
@@ -8403,11 +8403,11 @@
       <method name="Reset" cname="gst_byte_writer_reset">
         <return-type type="void" />
       </method>
-      <method name="ResetAndGetData" cname="gst_byte_writer_reset_and_get_data">
-        <return-type type="guint8*" />
-      </method>
       <method name="ResetAndGetBuffer" cname="gst_byte_writer_reset_and_get_buffer">
         <return-type type="GstBuffer*" />
+      </method>
+      <method name="ResetAndGetData" cname="gst_byte_writer_reset_and_get_data">
+        <return-type type="guint8*" />
       </method>
     </struct>
   </namespace>
@@ -8661,13 +8661,13 @@
         <return-type type="gboolean" />
         <parameters>
           <parameter type="GstClockTime" name="timestamp" />
-          <parameter type="GValue*" name="value" />
+          <parameter type="const-GValue*" name="value" />
         </parameters>
       </method>
       <method name="SetFromList" cname="gst_interpolation_control_source_set_from_list">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GSList*" name="timedvalues" />
+          <parameter type="const-GSList*" name="timedvalues" />
         </parameters>
       </method>
       <method name="SetInterpolationMode" cname="gst_interpolation_control_source_set_interpolation_mode">
@@ -8958,6 +8958,7 @@
       <property name="MinLatency" cname="min-latency" type="gint64" readable="true" writeable="true" />
       <property name="MaxLatency" cname="max-latency" type="gint64" readable="true" writeable="true" />
       <property name="EmitSignals" cname="emit-signals" type="gboolean" readable="true" writeable="true" />
+      <property name="MinPercent" cname="min-percent" type="guint" readable="true" writeable="true" />
       <signal name="NeedData" cname="need-data" when="LAST" field_name="need_data">
         <return-type type="void" />
         <parameters>
