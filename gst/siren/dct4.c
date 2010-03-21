@@ -25,7 +25,8 @@
 
 #define PI 3.1415926
 
-typedef struct {
+typedef struct
+{
   float cos;
   float msin;
 } dct_table_type;
@@ -40,39 +41,44 @@ static dct_table_type dct_table_80[80];
 static dct_table_type dct_table_160[160];
 static dct_table_type dct_table_320[320];
 static dct_table_type dct_table_640[640];
-static dct_table_type *dct_tables[8] = {dct_table_5,
-                                        dct_table_10,
-                                        dct_table_20,
-                                        dct_table_40,
-                                        dct_table_80,
-                                        dct_table_160,
-                                        dct_table_320,
-                                        dct_table_640};
+static dct_table_type *dct_tables[8] = { dct_table_5,
+  dct_table_10,
+  dct_table_20,
+  dct_table_40,
+  dct_table_80,
+  dct_table_160,
+  dct_table_320,
+  dct_table_640
+};
 
 static int dct4_initialized = 0;
 
-void siren_dct4_init() {
+void
+siren_dct4_init ()
+{
   int i, j = 0;
-  double scale_320 = (float) sqrt(2.0/320);
-  double scale_640 = (float) sqrt(2.0/640);
+  double scale_320 = (float) sqrt (2.0 / 320);
+  double scale_640 = (float) sqrt (2.0 / 640);
   double angle;
   double scale;
 
   /* set up dct4 tables */
-  for(i = 0; i < 10; i++) {
-    angle = (float) ((i + 0.5) *  PI);
-    for (j = 0 ; j < 10; j++) {
-      dct_core_320[(i*10)+j] = (float) (scale_320 * cos((j + 0.5) * angle / 10));
-      dct_core_640[(i*10)+j] = (float) (scale_640 * cos((j + 0.5) * angle / 10));
+  for (i = 0; i < 10; i++) {
+    angle = (float) ((i + 0.5) * PI);
+    for (j = 0; j < 10; j++) {
+      dct_core_320[(i * 10) + j] =
+          (float) (scale_320 * cos ((j + 0.5) * angle / 10));
+      dct_core_640[(i * 10) + j] =
+          (float) (scale_640 * cos ((j + 0.5) * angle / 10));
     }
   }
 
-  for(i = 0; i < 8; i++) {
+  for (i = 0; i < 8; i++) {
     scale = (float) (PI / ((5 << i) * 4));
-    for (j = 0 ; j < (5 << i); j++) {
+    for (j = 0; j < (5 << i); j++) {
       angle = (float) (j + 0.5) * scale;
-      dct_tables[i][j].cos = (float) cos(angle);
-      dct_tables[i][j].msin = (float)  -sin(angle);
+      dct_tables[i][j].cos = (float) cos (angle);
+      dct_tables[i][j].msin = (float) -sin (angle);
     }
   }
 
@@ -80,11 +86,13 @@ void siren_dct4_init() {
 }
 
 
-void siren_dct4(float *Source, float *Destination, int dct_length) {
+void
+siren_dct4 (float *Source, float *Destination, int dct_length)
+{
   int log_length = 0;
-  float * dct_core = NULL;
-  dct_table_type ** dct_table_ptr_ptr = NULL;
-  dct_table_type * dct_table_ptr = NULL;
+  float *dct_core = NULL;
+  dct_table_type **dct_table_ptr_ptr = NULL;
+  dct_table_type *dct_table_ptr = NULL;
   float OutBuffer1[640];
   float OutBuffer2[640];
   float *Out_ptr;
@@ -97,10 +105,10 @@ void siren_dct4(float *Source, float *Destination, int dct_length) {
   float *Out_ptr_low = NULL;
   float *Out_ptr_high = NULL;
   float mult1, mult2, mult3, mult4, mult5, mult6, mult7, mult8, mult9, mult10;
-  int i,j;
+  int i, j;
 
   if (dct4_initialized == 0)
-    siren_dct4_init();
+    siren_dct4_init ();
 
   if (dct_length == 640) {
     log_length = 5;
@@ -116,7 +124,7 @@ void siren_dct4(float *Source, float *Destination, int dct_length) {
   for (i = 0; i <= log_length; i++) {
     for (j = 0; j < (1 << i); j++) {
       Out_ptr_low = Out_ptr + (j * (dct_length >> i));
-      Out_ptr_high = Out_ptr + ( (j+1) * (dct_length >> i));
+      Out_ptr_high = Out_ptr + ((j + 1) * (dct_length >> i));
       do {
         In_val_low = *In_Ptr++;
         In_val_high = *In_Ptr++;
@@ -131,20 +139,19 @@ void siren_dct4(float *Source, float *Destination, int dct_length) {
   }
 
   for (i = 0; i < (2 << log_length); i++) {
-    for (j = 0 ; j < 10 ;  j ++) {
-      mult1 = In_Ptr[(i*10)] * dct_core[j*10];
-      mult2 = In_Ptr[(i*10) + 1] * dct_core[(j*10) + 1];
-      mult3 = In_Ptr[(i*10) + 2] * dct_core[(j*10) + 2];
-      mult4 = In_Ptr[(i*10) + 3] * dct_core[(j*10) + 3];
-      mult5 = In_Ptr[(i*10) + 4] * dct_core[(j*10) + 4];
-      mult6 = In_Ptr[(i*10) + 5] * dct_core[(j*10) + 5];
-      mult7 = In_Ptr[(i*10) + 6] * dct_core[(j*10) + 6];
-      mult8 = In_Ptr[(i*10) + 7] * dct_core[(j*10) + 7];
-      mult9 = In_Ptr[(i*10) + 8] * dct_core[(j*10) + 8];
-      mult10 = In_Ptr[(i*10) + 9] * dct_core[(j*10) + 9];
-      Out_ptr[(i*10)+j] = mult1 + mult2 + mult3 + mult4 +
-          mult5 + mult6 + mult7 + mult8 +
-          mult9 + mult10;
+    for (j = 0; j < 10; j++) {
+      mult1 = In_Ptr[(i * 10)] * dct_core[j * 10];
+      mult2 = In_Ptr[(i * 10) + 1] * dct_core[(j * 10) + 1];
+      mult3 = In_Ptr[(i * 10) + 2] * dct_core[(j * 10) + 2];
+      mult4 = In_Ptr[(i * 10) + 3] * dct_core[(j * 10) + 3];
+      mult5 = In_Ptr[(i * 10) + 4] * dct_core[(j * 10) + 4];
+      mult6 = In_Ptr[(i * 10) + 5] * dct_core[(j * 10) + 5];
+      mult7 = In_Ptr[(i * 10) + 6] * dct_core[(j * 10) + 6];
+      mult8 = In_Ptr[(i * 10) + 7] * dct_core[(j * 10) + 7];
+      mult9 = In_Ptr[(i * 10) + 8] * dct_core[(j * 10) + 8];
+      mult10 = In_Ptr[(i * 10) + 9] * dct_core[(j * 10) + 9];
+      Out_ptr[(i * 10) + j] = mult1 + mult2 + mult3 + mult4 +
+          mult5 + mult6 + mult7 + mult8 + mult9 + mult10;
     }
   }
 
@@ -157,7 +164,7 @@ void siren_dct4(float *Source, float *Destination, int dct_length) {
     dct_table_ptr_ptr++;
     for (j = 0; j < (1 << i); j++) {
       dct_table_ptr = *dct_table_ptr_ptr;
-      if ( i == 0 )
+      if (i == 0)
         Out_ptr_low = Destination + (j * (dct_length >> i));
       else
         Out_ptr_low = Out_ptr + (j * (dct_length >> i));
@@ -165,13 +172,21 @@ void siren_dct4(float *Source, float *Destination, int dct_length) {
       Out_ptr_high = Out_ptr_low + (dct_length >> i);
 
       In_Ptr_low = In_Ptr + (j * (dct_length >> i));
-      In_Ptr_high = In_Ptr_low + (dct_length >> (i+1));
+      In_Ptr_high = In_Ptr_low + (dct_length >> (i + 1));
       do {
-        *Out_ptr_low++ = (*In_Ptr_low * (*dct_table_ptr).cos) - (*In_Ptr_high * (*dct_table_ptr).msin);
-        *--Out_ptr_high = (*In_Ptr_high++ * (*dct_table_ptr).cos) + (*In_Ptr_low++ * (*dct_table_ptr).msin);
+        *Out_ptr_low++ =
+            (*In_Ptr_low * (*dct_table_ptr).cos) -
+            (*In_Ptr_high * (*dct_table_ptr).msin);
+        *--Out_ptr_high =
+            (*In_Ptr_high++ * (*dct_table_ptr).cos) +
+            (*In_Ptr_low++ * (*dct_table_ptr).msin);
         dct_table_ptr++;
-        *Out_ptr_low++ = (*In_Ptr_low * (*dct_table_ptr).cos) + (*In_Ptr_high * (*dct_table_ptr).msin);
-        *--Out_ptr_high = (*In_Ptr_low++ * (*dct_table_ptr).msin) - (*In_Ptr_high++ * (*dct_table_ptr).cos);
+        *Out_ptr_low++ =
+            (*In_Ptr_low * (*dct_table_ptr).cos) +
+            (*In_Ptr_high * (*dct_table_ptr).msin);
+        *--Out_ptr_high =
+            (*In_Ptr_low++ * (*dct_table_ptr).msin) -
+            (*In_Ptr_high++ * (*dct_table_ptr).cos);
         dct_table_ptr++;
       } while (Out_ptr_low < Out_ptr_high);
     }
