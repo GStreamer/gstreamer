@@ -28,6 +28,6 @@
 
 GST_DEBUG_CATEGORY_EXTERN (cam_debug_cat);
 
-void cam_init ();
+void cam_init (void);
 
 #endif /* CAM_H */

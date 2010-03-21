@@ -92,7 +92,7 @@ static gint gst_dc1394_caps_set_framerate_list (GstStructure * gs,
 static void gst_dc1394_framerate_const_to_frac (int framerateconst,
     GValue * framefrac);
 
-static GstCaps *gst_dc1394_get_all_dc1394_caps ();
+static GstCaps *gst_dc1394_get_all_dc1394_caps (void);
 static GstCaps *gst_dc1394_get_cam_caps (GstDc1394 * src);
 static gboolean gst_dc1394_open_cam_with_best_caps (GstDc1394 * src);
 static gint gst_dc1394_framerate_frac_to_const (gint num, gint denom);
@@ -811,10 +811,8 @@ gst_dc1394_framerate_const_to_frac (gint framerateconst, GValue * framefrac)
   }
 }
 
-
-
-GstCaps *
-gst_dc1394_get_all_dc1394_caps ()
+static GstCaps *
+gst_dc1394_get_all_dc1394_caps (void)
 {
   /* 
      generate all possible caps

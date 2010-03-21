@@ -41,7 +41,7 @@ static CamReturn data_impl (CamALApplication * application,
     CamSLSession * session, guint tag, guint8 * buffer, guint length);
 
 CamConditionalAccess *
-cam_conditional_access_new ()
+cam_conditional_access_new (void)
 {
   CamConditionalAccess *cas;
   CamALApplication *application;

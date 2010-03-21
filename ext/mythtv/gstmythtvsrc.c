@@ -433,32 +433,6 @@ read_error:
   return GST_FLOW_ERROR;
 }
 
-gint64
-gst_mythtv_src_get_position (GstMythtvSrc * src)
-{
-  gint64 size_tmp = 0;
-  guint max_tries = 2;
-
-  if (src->live_tv == TRUE &&
-      (abs (src->content_size - src->bytes_read) <
-          GMYTHTV_TRANSFER_MAX_BUFFER)) {
-
-  get_file_pos:
-    g_usleep (10);
-    size_tmp = gmyth_recorder_get_file_position (src->spawn_livetv->recorder);
-    if (size_tmp > (src->content_size + GMYTHTV_TRANSFER_MAX_BUFFER))
-      src->content_size = size_tmp;
-    else if (size_tmp > 0 && --max_tries > 0)
-      goto get_file_pos;
-    GST_LOG_OBJECT (src, "file_position = %" G_GINT64_FORMAT, size_tmp);
-    /*
-     * sets the last content size amount before it can be updated 
-     */
-    src->prev_content_size = src->content_size;
-  }
-  return src->content_size;
-}
-
 static gboolean
 gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
 {
@@ -729,6 +703,32 @@ gst_mythtv_src_stop (GstBaseSrc * bsrc)
 }
 
 #if 0
+static gint64
+gst_mythtv_src_get_position (GstMythtvSrc * src)
+{
+  gint64 size_tmp = 0;
+  guint max_tries = 2;
+
+  if (src->live_tv == TRUE &&
+      (abs (src->content_size - src->bytes_read) <
+          GMYTHTV_TRANSFER_MAX_BUFFER)) {
+
+  get_file_pos:
+    g_usleep (10);
+    size_tmp = gmyth_recorder_get_file_position (src->spawn_livetv->recorder);
+    if (size_tmp > (src->content_size + GMYTHTV_TRANSFER_MAX_BUFFER))
+      src->content_size = size_tmp;
+    else if (size_tmp > 0 && --max_tries > 0)
+      goto get_file_pos;
+    GST_LOG_OBJECT (src, "file_position = %" G_GINT64_FORMAT, size_tmp);
+    /*
+     * sets the last content size amount before it can be updated 
+     */
+    src->prev_content_size = src->content_size;
+  }
+  return src->content_size;
+}
+
 static gboolean
 gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event)
 {
@@ -1010,11 +1010,4 @@ gst_mythtv_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_mythtv_src_uri_get_protocols;
   iface->get_uri = gst_mythtv_src_uri_get_uri;
   iface->set_uri = gst_mythtv_src_uri_set_uri;
-}
-
-void
-size_header_handler (void *src, const char *value)
-{
-  GST_DEBUG_OBJECT (src, "content size = %" G_GUINT64_FORMAT " bytes",
-      GST_MYTHTV_SRC (src)->content_size);
 }

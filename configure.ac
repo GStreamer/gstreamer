@@ -239,10 +239,12 @@ dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT)
+AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+    -Wmissing-declarations -Wmissing-prototypes ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_GIT)
+AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
+    -Wmissing-declarations ])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)

@@ -34,7 +34,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 /* Data probe cb to drop everything but count buffers and events */
-gboolean
+static gboolean
 probe_cb (GstPad * pad, GstMiniObject * obj, gpointer user_data)
 {
   gint count = 0;
@@ -60,7 +60,7 @@ probe_cb (GstPad * pad, GstMiniObject * obj, gpointer user_data)
 }
 
 /* Create and link output pad: selector:src%d ! output_pad */
-GstPad *
+static GstPad *
 setup_output_pad (GstElement * element)
 {
   GstPad *srcpad = NULL, *output_pad = NULL;
@@ -96,7 +96,7 @@ setup_output_pad (GstElement * element)
 }
 
 /* Clean up output/input pad and respective selector request pad */
-void
+static void
 cleanup_pad (GstPad * pad, GstElement * element)
 {
   GstPad *selpad = NULL;
@@ -134,7 +134,7 @@ cleanup_pad (GstPad * pad, GstElement * element)
 }
 
 /* Duplicate and push given buffer many times to all input_pads */
-void
+static void
 push_input_buffers (GList * input_pads, GstBuffer * buf, gint num_buffers)
 {
   GstBuffer *buf_in = NULL;
@@ -156,7 +156,7 @@ push_input_buffers (GList * input_pads, GstBuffer * buf, gint num_buffers)
 }
 
 /* Check that received buffers count match to expected buffers */
-void
+static void
 count_output_buffers (GList * output_pads, gint expected_buffers)
 {
   gint count = 0;
@@ -181,7 +181,7 @@ count_output_buffers (GList * output_pads, gint expected_buffers)
 }
 
 /* Set selector active pad */
-void
+static void
 selector_set_active_pad (GstElement * elem, GstPad * selpad)
 {
   gchar *padname = "";
@@ -198,7 +198,7 @@ selector_set_active_pad (GstElement * elem, GstPad * selpad)
 }
 
 /* Push buffers and switch for each selector pad */
-void
+static void
 push_switched_buffers (GList * input_pads,
     GstElement * elem, GList * peer_pads, gint num_buffers)
 {
@@ -233,7 +233,7 @@ push_switched_buffers (GList * input_pads,
 /* Create output-selector with given number of src pads and switch
    given number of input buffers to each src pad.
  */
-void
+static void
 run_output_selector_buffer_count (gint num_output_pads,
     gint num_buffers_per_output)
 {
@@ -268,7 +268,7 @@ run_output_selector_buffer_count (gint num_output_pads,
 }
 
 /* Create and link input pad: input_pad ! selector:sink%d */
-GstPad *
+static GstPad *
 setup_input_pad (GstElement * element)
 {
   GstPad *sinkpad = NULL, *input_pad = NULL;
@@ -300,7 +300,7 @@ setup_input_pad (GstElement * element)
 /* Create input-selector with given number of sink pads and switch
    given number of input buffers to each sink pad.
  */
-void
+static void
 run_input_selector_buffer_count (gint num_input_pads,
     gint num_buffers_per_input)
 {
@@ -371,7 +371,7 @@ GST_START_TEST (test_input_selector_buffer_count);
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 selector_suite (void)
 {
   Suite *s = suite_create ("selector");

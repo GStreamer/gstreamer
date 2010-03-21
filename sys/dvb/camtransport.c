@@ -56,7 +56,7 @@ typedef struct
 
 void cam_gst_util_dump_mem (const guchar * mem, guint size);
 
-CamTLConnection *
+static CamTLConnection *
 cam_tl_connection_new (CamTL * tl, guint8 id)
 {
   CamTLConnection *connection;
@@ -335,7 +335,7 @@ cam_tl_connection_delete (CamTLConnection * connection)
   return CAM_RETURN_OK;
 }
 
-CamReturn
+static CamReturn
 handle_control_tpdu (CamTL * tl, CamTLConnection * connection)
 {
   if (tl->body_length != 0) {
@@ -371,7 +371,7 @@ handle_control_tpdu (CamTL * tl, CamTLConnection * connection)
   return CAM_RETURN_OK;
 }
 
-CamReturn
+static CamReturn
 handle_data_tpdu (CamTL * tl, CamTLConnection * connection)
 {
   if (tl->body_length == 0) {

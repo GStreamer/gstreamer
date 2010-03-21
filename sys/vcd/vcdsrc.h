@@ -69,6 +69,8 @@ struct _GstVCDSrcClass {
   GstPushSrcClass parent_class;
 };
 
+GType gst_vcdsrc_get_type (void);
+
 G_END_DECLS
 
 #endif /* __VCDSRC_H__ */

@@ -144,6 +144,7 @@ typedef struct _ADPCMEnc
 
 } ADPCMEnc;
 
+GType adpcmenc_get_type (void);
 GST_BOILERPLATE (ADPCMEnc, adpcmenc, GstElement, GST_TYPE_ELEMENT);
 static gboolean
 adpcmenc_setup (ADPCMEnc * enc)

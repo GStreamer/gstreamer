@@ -36,7 +36,7 @@
 #define UNIX_PATH_MAX 108
 
 CamSwClient *
-cam_sw_client_new ()
+cam_sw_client_new (void)
 {
   CamSwClient *client = g_new0 (CamSwClient, 1);
 

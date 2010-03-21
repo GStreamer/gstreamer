@@ -300,7 +300,7 @@ gst_sdlaudio_sink_write (GstAudioSink * asink, gpointer data, guint length)
 }
 
 
-void
+static void
 mixaudio (void *unused, Uint8 * stream, int len)
 {
   GstSDLAudioSink *sdlaudio;

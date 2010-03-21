@@ -108,6 +108,7 @@ struct _GstDiracEncClass
   GstBaseVideoEncoderClass parent_class;
 };
 
+GType gst_dirac_enc_get_type (void);
 
 enum
 {

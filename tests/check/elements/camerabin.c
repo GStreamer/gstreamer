@@ -507,7 +507,7 @@ GST_START_TEST (validate_captured_video_files)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 camerabin_suite (void)
 {
   Suite *s = suite_create ("camerabin");

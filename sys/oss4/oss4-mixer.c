@@ -850,7 +850,7 @@ static struct
 /* Decent i18n is pretty much impossible with OSS's way of providing us with
  * mixer labels (and the fact that they are pretty much random), but that
  * doesn't mean we shouldn't at least try. */
-const gchar *
+static const gchar *
 gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
 {
   gchar name[128] = { 0, };

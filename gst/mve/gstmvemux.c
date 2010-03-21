@@ -37,13 +37,6 @@ gst-launch-0.10 filesrc location=movie.mve ! mvedemux name=d !
 GST_DEBUG_CATEGORY_STATIC (mvemux_debug);
 #define GST_CAT_DEFAULT mvemux_debug
 
-extern GstFlowReturn mve_encode_frame8 (GstMveMux * mve,
-    GstBuffer * frame, const guint32 * palette, guint16 max_data);
-extern GstFlowReturn mve_encode_frame16 (GstMveMux * mve,
-    GstBuffer * frame, guint16 max_data);
-extern gint mve_compress_audio (guint8 * dest,
-    const guint8 * src, guint16 len, guint8 channels);
-
 static const char mve_preamble[] = MVE_PREAMBLE;
 
 enum

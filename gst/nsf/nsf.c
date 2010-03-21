@@ -344,7 +344,7 @@ nsf_frame (nsf_t * nsf)
 }
 
 /* Deallocate memory */
-void
+static void
 nes_shutdown (nsf_t * nsf)
 {
   int i;

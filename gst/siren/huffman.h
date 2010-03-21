@@ -30,6 +30,6 @@ extern int decode_envelope(int number_of_regions, float *decoder_standard_deviat
 extern int decode_vector(SirenDecoder decoder, int number_of_regions, int number_of_available_bits, float *decoder_standard_deviation, int *power_categories, float *coefs, int scale_factor);
 
 extern void set_bitstream(int *stream);
-extern int next_bit();
+extern int next_bit(void);
 
 #endif /* _SIREN7_HUFFMAN_H_ */

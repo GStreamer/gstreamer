@@ -65,7 +65,7 @@ struct _MpegVideoParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_mpegvideoparse_get_type(void);
+GType mpegvideoparse_get_type(void);
 
 G_END_DECLS
 

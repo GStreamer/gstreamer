@@ -55,7 +55,7 @@ typedef struct
   CamConditionalAccess *cas;
 } CamDevice;
 
-CamDevice *cam_device_new ();
+CamDevice *cam_device_new (void);
 void cam_device_free (CamDevice *device);
 
 gboolean cam_device_open (CamDevice *device, const char *filename);

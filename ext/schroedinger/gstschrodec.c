@@ -63,6 +63,8 @@ struct _GstSchroDecClass
   GstBaseVideoDecoder base_video_decoder_class;
 };
 
+GType gst_schro_dec_get_type (void);
+
 
 /* GstSchroDec signals and args */
 enum

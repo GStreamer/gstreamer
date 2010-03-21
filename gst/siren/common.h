@@ -100,7 +100,7 @@ extern float step_size_inverse[8];
 
 
 
-extern void siren_init();
+extern void siren_init(void);
 extern int categorize_regions(int number_of_regions, int number_of_available_bits, int *absolute_region_power_index, int *power_categories, int *category_balance);
 extern int GetSirenCodecInfo(int flag, int sample_rate, int *number_of_coefs, int *sample_rate_bits, int *rate_control_bits, int *rate_control_possibilities, int *checksum_bits, int *esf_adjustment, int *scale_factor, int *number_of_regions, int *sample_rate_code, int *bits_per_frame );
 

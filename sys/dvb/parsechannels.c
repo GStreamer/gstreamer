@@ -27,6 +27,8 @@
 #include <string.h>
 #include <gst/gst.h>
 
+#include "parsechannels.h"
+
 /* this will do zap style channels.conf only for the moment*/
 GHashTable *
 parse_channels_conf_from_file (const gchar * filename)

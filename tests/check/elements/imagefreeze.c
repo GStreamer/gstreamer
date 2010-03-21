@@ -424,7 +424,7 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 imagefreeze_suite (void)
 {
   Suite *s = suite_create ("imagefreeze");

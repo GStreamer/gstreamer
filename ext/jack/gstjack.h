@@ -47,6 +47,6 @@ typedef enum {
 typedef jack_default_audio_sample_t sample_t;
 
 #define GST_TYPE_JACK_CONNECT (gst_jack_connect_get_type())
-GType gst_jack_connect_get_type();
+GType gst_jack_connect_get_type(void);
 
 #endif  // _GST_JACK_H_

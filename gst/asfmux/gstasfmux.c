@@ -1220,7 +1220,7 @@ gst_asf_mux_write_data_object (GstAsfMux * asfmux, guint8 ** buf)
   *buf += ASF_DATA_OBJECT_SIZE;
 }
 
-guint
+static guint
 gst_asf_mux_find_payload_parsing_info_size (GstAsfMux * asfmux)
 {
   /* Minimum payload parsing information size is 8 bytes */

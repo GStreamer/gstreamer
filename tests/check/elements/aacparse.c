@@ -67,7 +67,7 @@ typedef struct
 } buffer_verify_data_s;
 
 /* takes a copy of the passed buffer data */
-GstBuffer *
+static GstBuffer *
 buffer_new (const unsigned char *buffer_data, guint size)
 {
   GstBuffer *buffer;
@@ -143,7 +143,7 @@ buffer_verify_adts (void *buffer, void *user_data)
   buffer_counter++;
 }
 
-GstElement *
+static GstElement *
 setup_aacparse (const gchar * src_caps_str)
 {
   GstElement *aacparse;
@@ -487,7 +487,7 @@ GST_END_TEST;
 
 
 static Suite *
-aacparse_suite ()
+aacparse_suite (void)
 {
   Suite *s = suite_create ("aacparse");
   TCase *tc_chain = tcase_create ("general");

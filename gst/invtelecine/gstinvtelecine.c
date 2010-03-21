@@ -116,7 +116,7 @@ static GstFlowReturn
 gst_invtelecine_output_fields (GstInvtelecine * invtelecine, int num_fields);
 
 
-GType
+static GType
 gst_invtelecine_get_type (void)
 {
   static GType invtelecine_type = 0;

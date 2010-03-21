@@ -149,6 +149,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "width=(int)[0, max], " "height=(int)[0, max]")
     );
 
+GType gst_vmnc_dec_get_type (void);
 GST_BOILERPLATE (GstVMncDec, gst_vmnc_dec, GstElement, GST_TYPE_ELEMENT);
 
 static void vmnc_dec_get_property (GObject * object, guint prop_id,

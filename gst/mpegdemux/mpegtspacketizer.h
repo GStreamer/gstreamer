@@ -121,9 +121,9 @@ typedef enum {
   PACKET_NEED_MORE
 } MpegTSPacketizerPacketReturn;
 
-GType gst_mpegts_packetizer_get_type(void);
+GType mpegts_packetizer_get_type(void);
 
-MpegTSPacketizer *mpegts_packetizer_new ();
+MpegTSPacketizer *mpegts_packetizer_new (void);
 void mpegts_packetizer_clear (MpegTSPacketizer *packetizer);
 void mpegts_packetizer_push (MpegTSPacketizer *packetizer, GstBuffer *buffer);
 gboolean mpegts_packetizer_has_packets (MpegTSPacketizer *packetizer);

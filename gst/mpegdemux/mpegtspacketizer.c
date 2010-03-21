@@ -1967,7 +1967,7 @@ mpegts_packetizer_remove_stream (MpegTSPacketizer * packetizer, gint16 pid)
 }
 
 MpegTSPacketizer *
-mpegts_packetizer_new ()
+mpegts_packetizer_new (void)
 {
   MpegTSPacketizer *packetizer;
 
@@ -1983,7 +1983,7 @@ mpegts_packetizer_push (MpegTSPacketizer * packetizer, GstBuffer * buffer)
   gst_adapter_push (packetizer->adapter, buffer);
 }
 
-void
+static void
 mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
 {
   guint8 *dest;

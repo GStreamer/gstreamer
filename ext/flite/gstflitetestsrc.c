@@ -325,7 +325,7 @@ gst_flite_test_src_stop (GstBaseSrc * basesrc)
   return TRUE;
 }
 
-char *
+static char *
 get_channel_name (GstFliteTestSrc * src, int channel)
 {
   const char *numbers[10] = {

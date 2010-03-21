@@ -84,7 +84,9 @@ struct _GstMetadataDemuxClass
   GstBaseMetadataClass parent_class;
 };
 
-extern GType gst_metadata_demux_get_type (void);
+GType gst_metadata_demux_get_type (void);
+
+gboolean gst_metadata_demux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_METADATA_DEMUX_H__ */

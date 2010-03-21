@@ -47,10 +47,9 @@
 
 #include <gst/gst.h>
 
+#include "gstmetadatademux.h"
+#include "gstmetadatamux.h"
 #include "metadatatags.h"
-
-extern gboolean gst_metadata_demux_plugin_init (GstPlugin * plugin);
-extern gboolean gst_metadata_mux_plugin_init (GstPlugin * plugin);
 
 GST_DEBUG_CATEGORY_EXTERN (gst_metadata_exif_debug);
 GST_DEBUG_CATEGORY_EXTERN (gst_metadata_iptc_debug);

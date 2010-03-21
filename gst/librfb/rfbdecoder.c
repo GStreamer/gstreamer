@@ -155,7 +155,7 @@ rfb_decoder_iterate (RfbDecoder * decoder)
   return decoder->state (decoder);
 }
 
-guint8 *
+static guint8 *
 rfb_decoder_read (RfbDecoder * decoder, guint32 len)
 {
   guint32 total = 0;

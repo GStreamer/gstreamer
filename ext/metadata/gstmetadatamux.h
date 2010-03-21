@@ -85,7 +85,9 @@ struct _GstMetadataMuxClass
   GstBaseMetadataClass parent_class;
 };
 
-extern GType gst_metadata_mux_get_type (void);
+GType gst_metadata_mux_get_type (void);
+
+gboolean gst_metadata_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_METADATA_MUX_H__ */

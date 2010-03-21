@@ -275,7 +275,7 @@ GST_START_TEST (test_geo_location_tags)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 metadata_suite (void)
 {
   Suite *s = suite_create ("tagschecking");

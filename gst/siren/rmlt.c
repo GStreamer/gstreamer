@@ -30,7 +30,7 @@ static float rmlt_window_320[320];
 #define PI_2     1.57079632679489661923
 
 void
-siren_rmlt_init ()
+siren_rmlt_init (void)
 {
   int i = 0;
   float angle;

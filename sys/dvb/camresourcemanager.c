@@ -38,7 +38,7 @@ static CamReturn data_impl (CamALApplication * application,
     CamSLSession * session, guint tag, guint8 * buffer, guint length);
 
 CamResourceManager *
-cam_resource_manager_new ()
+cam_resource_manager_new (void)
 {
   CamALApplication *application;
   CamResourceManager *mgr;

@@ -29,19 +29,6 @@ GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
 #define GST_CAT_DEFAULT basevideo_debug
 
 
-guint64
-gst_base_video_convert_bytes_to_frames (GstVideoState * state, guint64 bytes)
-{
-  return gst_util_uint64_scale_int (bytes, 1, state->bytes_per_picture);
-}
-
-guint64
-gst_base_video_convert_frames_to_bytes (GstVideoState * state, guint64 frames)
-{
-  return frames * state->bytes_per_picture;
-}
-
-
 gboolean
 gst_base_video_rawvideo_convert (GstVideoState * state,
     GstFormat src_format, gint64 src_value,

@@ -33,9 +33,6 @@
 #include "buffer.h"
 #include "debug.h"
 
-void resample_scale_ref (ResampleState * r);
-void resample_scale_functable (ResampleState * r);
-
 GST_DEBUG_CATEGORY (libaudioresample_debug);
 
 void

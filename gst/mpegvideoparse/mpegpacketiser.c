@@ -118,7 +118,7 @@ mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end)
 
 /* Get the index of the next unfilled block in the buffer. May need to grow
  * the array first */
-gint
+static gint
 get_next_free_block (MPEGPacketiser * p)
 {
   gint next;

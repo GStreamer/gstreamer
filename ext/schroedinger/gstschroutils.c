@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gstschroutils.h"
+
 //#define SCHRO_ENABLE_UNSTABLE_API
 
 #include <gst/gst.h>

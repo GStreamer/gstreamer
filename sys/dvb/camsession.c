@@ -38,7 +38,7 @@
 static CamReturn connection_data_cb (CamTL * tl, CamTLConnection * connection,
     guint8 * spdu, guint spdu_length);
 
-CamSLSession *
+static CamSLSession *
 cam_sl_session_new (CamSL * sl, CamTLConnection * connection,
     guint16 session_nb, guint resource_id)
 {
@@ -53,7 +53,7 @@ cam_sl_session_new (CamSL * sl, CamTLConnection * connection,
   return session;
 }
 
-void
+static void
 cam_sl_session_destroy (CamSLSession * session)
 {
   g_free (session);

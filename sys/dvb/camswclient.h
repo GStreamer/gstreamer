@@ -41,7 +41,7 @@ typedef struct
 
 } CamSwClient;
 
-CamSwClient *cam_sw_client_new ();
+CamSwClient *cam_sw_client_new (void);
 void cam_sw_client_free (CamSwClient *sw_client);
 
 gboolean cam_sw_client_open (CamSwClient *sw_client, const char *sock_path);

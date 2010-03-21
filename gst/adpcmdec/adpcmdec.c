@@ -97,6 +97,7 @@ typedef struct _ADPCMDec
 
 } ADPCMDec;
 
+GType adpcmdec_get_type (void);
 GST_BOILERPLATE (ADPCMDec, adpcmdec, GstElement, GST_TYPE_ELEMENT);
 static gboolean
 adpcmdec_setup (ADPCMDec * dec)

@@ -315,7 +315,7 @@ find_stream_by_udpsrc (GstSDPStream * stream, gconstpointer a)
   return -1;
 }
 
-GstSDPStream *
+static GstSDPStream *
 find_stream (GstSDPDemux * demux, gconstpointer data, gconstpointer func)
 {
   GList *lstream;

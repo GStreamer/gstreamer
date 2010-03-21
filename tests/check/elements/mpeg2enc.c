@@ -56,7 +56,7 @@ static GMutex *mpeg2enc_mutex;
 static GCond *mpeg2enc_cond;
 static gboolean arrived_eos;
 
-gboolean
+static gboolean
 test_sink_event (GstPad * pad, GstEvent * event)
 {
 
@@ -74,8 +74,8 @@ test_sink_event (GstPad * pad, GstEvent * event)
   return gst_pad_event_default (pad, event);
 }
 
-GstElement *
-setup_mpeg2enc ()
+static GstElement *
+setup_mpeg2enc (void)
 {
   GstElement *mpeg2enc;
 
@@ -96,7 +96,7 @@ setup_mpeg2enc ()
   return mpeg2enc;
 }
 
-void
+static void
 cleanup_mpeg2enc (GstElement * mpeg2enc)
 {
   GST_DEBUG ("cleanup_mpeg2enc");
@@ -177,7 +177,7 @@ GST_START_TEST (test_video_pad)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 mpeg2enc_suite (void)
 {
   Suite *s = suite_create ("mpeg2enc");

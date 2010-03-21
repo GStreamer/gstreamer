@@ -41,13 +41,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "metadata_editor.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <gst/gst.h>
-#include <gtk/gtk.h>
 
 /*
  * Global constants
@@ -93,8 +98,8 @@ me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
 
 /* ui related functions */
 
-static void ui_refresh ();
-static void process_file();
+static void ui_refresh (void);
+static void process_file(void);
 
 /*
  * Global Vars 

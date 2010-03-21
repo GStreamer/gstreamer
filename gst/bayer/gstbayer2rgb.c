@@ -138,6 +138,7 @@ enum
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_bayer2rgb_debug, "bayer2rgb", 0, "bayer2rgb element");
 
+GType gst_bayer2rgb_get_type (void);
 GST_BOILERPLATE_FULL (GstBayer2RGB, gst_bayer2rgb, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 

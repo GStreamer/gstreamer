@@ -273,7 +273,7 @@ GST_END_TEST;
 CREATE_BASIC_TEST (xRGB);
 CREATE_BASIC_TEST (I420);
 
-Suite *
+static Suite *
 assrender_suite (void)
 {
   Suite *s = suite_create ("assrender");

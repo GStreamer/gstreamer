@@ -56,7 +56,7 @@ static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 /* setup and teardown needs some special handling for muxer */
-GstPad *
+static GstPad *
 setup_src_pad (GstElement * element,
     GstStaticPadTemplate * template, GstCaps * caps, gchar * sinkname)
 {
@@ -86,7 +86,7 @@ setup_src_pad (GstElement * element,
   return srcpad;
 }
 
-void
+static void
 teardown_src_pad (GstPad * srcpad)
 {
   GstPad *sinkpad;
@@ -110,7 +110,7 @@ teardown_src_pad (GstPad * srcpad)
   gst_object_unref (srcpad);
 }
 
-GstElement *
+static GstElement *
 setup_qtmux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
 {
   GstElement *qtmux;
@@ -125,7 +125,7 @@ setup_qtmux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
   return qtmux;
 }
 
-void
+static void
 cleanup_qtmux (GstElement * qtmux, gchar * sinkname)
 {
   GST_DEBUG ("cleanup_qtmux");
@@ -138,7 +138,7 @@ cleanup_qtmux (GstElement * qtmux, gchar * sinkname)
   gst_check_teardown_element (qtmux);
 }
 
-void
+static void
 check_qtmux_pad (GstStaticPadTemplate * srctemplate, gchar * sinkname)
 {
   GstElement *qtmux;
@@ -232,7 +232,7 @@ GST_START_TEST (test_audio_pad)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 qtmux_suite (void)
 {
   Suite *s = suite_create ("qtmux");

@@ -83,6 +83,8 @@ struct _GstSchroEncClass
   GstBaseVideoEncoderClass parent_class;
 };
 
+GType gst_schro_enc_get_type (void);
+
 
 
 enum

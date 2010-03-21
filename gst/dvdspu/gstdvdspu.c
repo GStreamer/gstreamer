@@ -1169,7 +1169,7 @@ gst_dvd_spu_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-gboolean
+static gboolean
 gst_dvd_spu_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (dvdspu_debug, "gstspu",

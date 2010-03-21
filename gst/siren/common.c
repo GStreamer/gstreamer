@@ -65,7 +65,7 @@ static int siren_initialized = 0;
 #define STEPSIZE 0.3010299957
 
 void
-siren_init ()
+siren_init (void)
 {
   int i;
   float region_power;

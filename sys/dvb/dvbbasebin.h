@@ -67,7 +67,7 @@ struct _DvbBaseBinClass {
   /* signals */
 };
 
-GType gst_dvb_base_bin_get_type(void);
+GType dvb_base_bin_get_type(void);
 gboolean gst_dvb_base_bin_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS

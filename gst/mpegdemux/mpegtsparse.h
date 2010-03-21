@@ -76,7 +76,7 @@ struct _MpegTSParseClass {
   void (*eit_info) (GstStructure *eit);
 };
 
-GType gst_mpegts_parse_get_type(void);
+GType mpegts_parse_get_type(void);
 
 gboolean gst_mpegtsparse_plugin_init (GstPlugin * plugin);
 

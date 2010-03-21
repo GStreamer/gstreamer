@@ -1013,7 +1013,7 @@ static MXFEssenceElementWriter mxf_mpeg_audio_essence_element_writer = {
       "channels = (int) [ 1, 8 ]"
 
 /* See ISO/IEC 13818-2 for MPEG ES format */
-gboolean
+static gboolean
 mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
 {
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);

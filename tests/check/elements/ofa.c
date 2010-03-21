@@ -363,7 +363,7 @@ GST_START_TEST (test_ofa_be_2ch)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 ofa_suite (void)
 {
   Suite *s = suite_create ("OFA");

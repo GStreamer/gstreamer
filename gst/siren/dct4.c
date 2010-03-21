@@ -54,7 +54,7 @@ static dct_table_type *dct_tables[8] = { dct_table_5,
 static int dct4_initialized = 0;
 
 void
-siren_dct4_init ()
+siren_dct4_init (void)
 {
   int i, j = 0;
   double scale_320 = (float) sqrt (2.0 / 320);

@@ -183,7 +183,7 @@ typedef struct AVExtFloat
   guint8 mantissa[8];
 } AVExtFloat;
 
-AVExtFloat
+static AVExtFloat
 av_dbl2ext (double d)
 {
   struct AVExtFloat ext = { {0} };

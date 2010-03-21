@@ -224,7 +224,7 @@ GST_START_TEST (test_gps_tags)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 metadata_suite (void)
 {
   Suite *s = suite_create ("MetaData");

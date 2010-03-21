@@ -33,7 +33,7 @@
 #define GST_CAT_DEFAULT cam_debug_cat
 
 CamDevice *
-cam_device_new ()
+cam_device_new (void)
 {
   CamDevice *device = g_new0 (CamDevice, 1);
 

@@ -32,7 +32,9 @@ typedef GstBinClass TestElement1Class;
 typedef GstBin TestElement2;
 typedef GstBinClass TestElement2Class;
 
+GType test_element1_get_type (void);
 G_DEFINE_TYPE (TestElement1, test_element1, GST_TYPE_BIN);
+GType test_element2_get_type (void);
 G_DEFINE_TYPE (TestElement2, test_element2, GST_TYPE_BIN);
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -149,7 +151,7 @@ GST_START_TEST (test_autoconvert_simple)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 autoconvert_suite (void)
 {
   Suite *s = suite_create ("autoconvert");

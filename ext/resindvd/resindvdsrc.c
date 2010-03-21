@@ -2780,14 +2780,3 @@ fail:
   GST_DEBUG_OBJECT (src, "Seek in format %d failed", segment->format);
   return FALSE;
 }
-
-gboolean
-rsndvdsrc_init (GstPlugin * plugin)
-{
-  gboolean res;
-
-  res = gst_element_register (plugin, "rsndvdsrc",
-      GST_RANK_NONE, RESIN_TYPE_DVDSRC);
-
-  return res;
-}

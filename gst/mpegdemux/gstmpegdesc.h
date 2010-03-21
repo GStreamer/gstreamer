@@ -329,7 +329,7 @@ typedef struct {
   guint8  *data;
 } GstMPEGDescriptor;
 
-void gst_mpegtsdesc_init_debug ();
+void gst_mpegtsdesc_init_debug (void);
 GstMPEGDescriptor* 	gst_mpeg_descriptor_parse 	(guint8 *data, guint size);
 void		 	gst_mpeg_descriptor_free 	(GstMPEGDescriptor *desc);
 

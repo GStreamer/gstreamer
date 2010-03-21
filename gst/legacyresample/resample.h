@@ -124,5 +124,8 @@ void resample_set_format (ResampleState *r, ResampleFormat format);
 void resample_set_method (ResampleState *r, int method);
 int resample_format_size (ResampleFormat format);
 
+void resample_scale_ref (ResampleState * r);
+void resample_scale_functable (ResampleState * r);
+
 #endif /* __RESAMPLE_H__ */
 

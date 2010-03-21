@@ -35,7 +35,7 @@ struct _CamResourceManager
   CamALApplication application;
 };
 
-CamResourceManager *cam_resource_manager_new ();
+CamResourceManager *cam_resource_manager_new (void);
 void cam_resource_manager_destroy (CamResourceManager *manager);
 
 #endif /* CAM_RESOURCE_MANAGER_H */

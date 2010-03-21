@@ -164,7 +164,7 @@ GST_START_TEST (test_parse_all_in_one_buf)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 jpegparse_suite (void)
 {
   Suite *s = suite_create ("jpegparse");

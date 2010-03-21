@@ -516,12 +516,13 @@ gst_dccp_set_ccid (GstElement * element, int sock_fd, uint8_t ccid)
   return TRUE;
 }
 
+#if 0
 /*
  * Get the current ccid of TX or RX half-connection. tx_or_rx parameter must be
  * DCCP_SOCKOPT_TX_CCID or DCCP_SOCKOPT_RX_CCID.
  * @return ccid or -1 on error or tx_or_rx not the correct option
  */
-uint8_t
+static uint8_t
 gst_dccp_get_ccid (GstElement * element, int sock_fd, int tx_or_rx)
 {
   uint8_t ccid;
@@ -548,6 +549,7 @@ gst_dccp_get_ccid (GstElement * element, int sock_fd, int tx_or_rx)
   }
   return ccid;
 }
+#endif
 
 /*
  * Get the socket MTU.

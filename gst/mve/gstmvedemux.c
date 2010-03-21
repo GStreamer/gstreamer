@@ -32,14 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (mvedemux_debug);
 #define GST_CAT_DEFAULT mvedemux_debug
 
-extern int ipvideo_decode_frame8 (const GstMveDemuxStream * s,
-    const unsigned char *data, unsigned short len);
-extern int ipvideo_decode_frame16 (const GstMveDemuxStream * s,
-    const unsigned char *data, unsigned short len);
-
-extern void ipaudio_uncompress (short *buffer,
-    unsigned short buf_len, const unsigned char *data, unsigned char channels);
-
 enum MveDemuxState
 {
   MVEDEMUX_STATE_INITIAL,       /* initial state, header not read */

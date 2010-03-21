@@ -65,5 +65,7 @@ struct _GstAutoConvertClass
   GstBinClass parent_class;
 };
 
+GType gst_auto_convert_get_type (void);
+
 G_END_DECLS
 #endif /* __GST_AUTO_CONVERT_H__ */

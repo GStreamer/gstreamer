@@ -1304,13 +1304,13 @@ gst_ssim_finalize (GObject * object)
 
 typedef gfloat (*GstSSimWeightFunc) (GstSSim * ssim, gint y, gint x);
 
-gfloat
+static gfloat
 gst_ssim_weight_func_none (GstSSim * ssim, gint y, gint x)
 {
   return 1;
 }
 
-gfloat
+static gfloat
 gst_ssim_weight_func_gauss (GstSSim * ssim, gint y, gint x)
 {
   gfloat coord = sqrt (x * x + y * y);
@@ -1318,7 +1318,7 @@ gst_ssim_weight_func_gauss (GstSSim * ssim, gint y, gint x)
       (ssim->sigma * sqrt (2 * G_PI));
 }
 
-gboolean
+static gboolean
 gst_ssim_regenerate_windows (GstSSim * ssim)
 {
   gint windowiseven;
@@ -1339,16 +1339,16 @@ gst_ssim_regenerate_windows (GstSSim * ssim)
 
   switch (ssim->windowtype) {
     case 0:
-      func = (GstSSimWeightFunc) gst_ssim_weight_func_none;
+      func = gst_ssim_weight_func_none;
       break;
     case 1:
-      func = (GstSSimWeightFunc) gst_ssim_weight_func_gauss;
+      func = gst_ssim_weight_func_gauss;
       break;
     default:
       GST_WARNING_OBJECT (ssim, "unknown window type - %d. Defaulting to %d",
           ssim->windowtype, 1);
       ssim->windowtype = 1;
-      func = (GstSSimWeightFunc) gst_ssim_weight_func_gauss;
+      func = gst_ssim_weight_func_gauss;
   }
 
   for (y = 0; y < ssim->windowsize; y++) {

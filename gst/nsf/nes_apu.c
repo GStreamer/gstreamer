@@ -1091,7 +1091,7 @@ apu_reset (void)
     apu->ext->reset ();
 }
 
-void
+static void
 apu_build_luts (int num_samples)
 {
   int i;

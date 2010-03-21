@@ -1551,7 +1551,7 @@ gst_auto_convert_internal_src_query_type (GstPad * pad)
   return ret;
 }
 
-gboolean
+static gboolean
 gst_auto_convert_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "autoconvert",

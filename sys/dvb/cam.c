@@ -27,7 +27,7 @@
 GST_DEBUG_CATEGORY (cam_debug_cat);
 
 void
-cam_init ()
+cam_init (void)
 {
   GST_DEBUG_CATEGORY_INIT (cam_debug_cat, "dvbcam", 0, "DVB CAM support");
 }

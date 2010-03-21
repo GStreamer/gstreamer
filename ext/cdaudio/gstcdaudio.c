@@ -128,6 +128,7 @@ _do_init (GType cdaudio_type)
       &urihandler_info);
 }
 
+GType gst_cdaudio_get_type (void);
 GST_BOILERPLATE_FULL (GstCDAudio, gst_cdaudio, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 

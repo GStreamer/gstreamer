@@ -99,6 +99,14 @@ struct _GstMveDemuxStream {
 
 GType gst_mve_demux_get_type (void);
 
+int ipvideo_decode_frame8 (const GstMveDemuxStream * s,
+    const unsigned char *data, unsigned short len);
+int ipvideo_decode_frame16 (const GstMveDemuxStream * s,
+    const unsigned char *data, unsigned short len);
+
+void ipaudio_uncompress (short *buffer,
+    unsigned short buf_len, const unsigned char *data, unsigned char channels);
+
 G_END_DECLS
 
 #endif /* __GST_MVE_DEMUX_H__ */

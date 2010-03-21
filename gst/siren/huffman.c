@@ -29,7 +29,7 @@ static int bit_idx = 0;
 static int *bitstream_ptr = NULL;
 
 int
-next_bit ()
+next_bit (void)
 {
   if (bitstream_ptr == NULL)
     return -1;

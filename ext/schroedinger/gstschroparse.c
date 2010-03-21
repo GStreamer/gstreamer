@@ -86,6 +86,9 @@ struct _GstSchroParseClass
   GstBaseVideoParseClass base_video_parse_class;
 };
 
+GType gst_schro_parse_get_type (void);
+
+
 /* GstSchroParse signals and args */
 enum
 {
