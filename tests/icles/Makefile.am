@@ -23,7 +23,7 @@ if HAVE_GTK
 
 GST_METADATA_TESTS = metadata_editor
 
-metadata_editor_SOURCES = metadata_editor.c
+metadata_editor_SOURCES = metadata_editor.h metadata_editor.c
 metadata_editor_CFLAGS  = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS) $(GMODULE_EXPORT_CFLAGS)
 metadata_editor_LDADD   = \
