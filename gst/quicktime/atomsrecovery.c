@@ -794,7 +794,7 @@ moov_recov_parse_buffers (MoovRecovFile * moovrf, MdatRecovFile * mdatrf,
   return TRUE;
 }
 
-guint32
+static guint32
 trak_recov_data_get_trak_atom_size (TrakRecovData * trak)
 {
   AtomSTBL *stbl = &trak->stbl;
@@ -832,7 +832,7 @@ fail:
   return 0;
 }
 
-guint8 *
+static guint8 *
 moov_recov_get_stbl_children_data (MoovRecovFile * moovrf, TrakRecovData * trak,
     guint64 * p_size)
 {

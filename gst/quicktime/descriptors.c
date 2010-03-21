@@ -206,13 +206,6 @@ desc_es_descriptor_clear (ESDescriptor * es)
   desc_sl_config_descriptor_clear (&es->sl_conf_desc);
 }
 
-void
-desc_es_descriptor_free (ESDescriptor * es)
-{
-  desc_es_descriptor_clear (es);
-  g_free (es);
-}
-
 /*
  * Size handling functions below
  */

@@ -341,15 +341,15 @@ atom_edts_clear (AtomEDTS * edts)
   atom_elst_clear (&edts->elst);
 }
 
-AtomEDTS *
-atom_edts_new ()
+static AtomEDTS *
+atom_edts_new (void)
 {
   AtomEDTS *edts = g_new0 (AtomEDTS, 1);
   atom_edts_init (edts);
   return edts;
 }
 
-void
+static void
 atom_edts_free (AtomEDTS * edts)
 {
   atom_edts_clear (edts);
@@ -3014,7 +3014,7 @@ atom_trak_set_audio_type (AtomTRAK * trak, AtomsContext * context,
   atom_trak_set_constant_size_samples (trak, sample_size);
 }
 
-AtomInfo *
+static AtomInfo *
 build_pasp_extension (AtomTRAK * trak, gint par_width, gint par_height)
 {
   AtomData *atom_data;
@@ -3378,7 +3378,7 @@ build_codec_data_extension (guint32 fourcc, const GstBuffer * codec_data)
 }
 
 AtomInfo *
-build_amr_extension ()
+build_amr_extension (void)
 {
   guint8 ext[9];
   GstBuffer *buf;
@@ -3405,7 +3405,7 @@ build_amr_extension ()
 }
 
 AtomInfo *
-build_h263_extension ()
+build_h263_extension (void)
 {
   guint8 ext[7];
   GstBuffer *buf;
