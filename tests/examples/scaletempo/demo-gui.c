@@ -111,7 +111,7 @@ demo_gui_seek_bar_format (GtkScale * scale, gdouble value, gpointer data)
       PRINTF_TIME_ARGS ((gint64) value));
 }
 
-gboolean
+static gboolean
 update_position (gpointer data)
 {
   DemoGui *gui = DEMO_GUI (data);
@@ -144,7 +144,7 @@ update_position (gpointer data)
 }
 
 
-gboolean
+static gboolean
 demo_gui_seek_bar_change (GtkRange * range,
     GtkScrollType scroll, gdouble value, gpointer data)
 {
