@@ -94,6 +94,8 @@ typedef struct _ACMMP3Dec
   GstCaps *output_caps;
 } ACMMP3Dec;
 
+GType acmmp3dec_get_type (void);
+
 GST_BOILERPLATE (ACMMP3Dec, acmmp3dec, GstElement, GST_TYPE_ELEMENT);
 
 static GstCaps *
@@ -103,7 +105,7 @@ acmmp3dec_caps_from_format (WAVEFORMATEX * fmt)
       NULL, (gst_riff_strf_auds *) fmt, NULL, NULL, NULL);
 }
 
-gboolean
+static gboolean
 acmmp3dec_set_input_format (ACMMP3Dec * dec)
 {
   dec->infmt.wfx.wFormatTag = WAVE_FORMAT_MPEGLAYER3;
@@ -124,7 +126,7 @@ acmmp3dec_set_input_format (ACMMP3Dec * dec)
   return TRUE;
 }
 
-gboolean
+static gboolean
 acmmp3dec_set_output_format (ACMMP3Dec * dec)
 {
   dec->outfmt.wFormatTag = WAVE_FORMAT_PCM;
@@ -319,7 +321,7 @@ done:
   return ret;
 }
 
-GstFlowReturn
+static GstFlowReturn
 acmmp3dec_finish_stream (ACMMP3Dec * dec)
 {
   MMRESULT res;
