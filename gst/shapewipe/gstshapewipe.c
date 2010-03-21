@@ -100,7 +100,7 @@ static GstStaticPadTemplate video_sink_pad_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB " ; "
-        GST_VIDEO_CAPS_BGRA));
+        GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA));
 
 static GstStaticPadTemplate mask_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("mask_sink",
@@ -118,7 +118,7 @@ static GstStaticPadTemplate mask_sink_pad_template =
 static GstStaticPadTemplate src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") " ; " GST_VIDEO_CAPS_ARGB " ; "
-        GST_VIDEO_CAPS_BGRA));
+        GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA));
 
 GST_DEBUG_CATEGORY_STATIC (gst_shape_wipe_debug);
 #define GST_CAT_DEFAULT gst_shape_wipe_debug
@@ -766,75 +766,6 @@ gst_shape_wipe_do_qos (GstShapeWipe * self, GstClockTime timestamp)
   return TRUE;
 }
 
-#define CREATE_AYUV_FUNCTIONS(depth, shift) \
-static void \
-gst_shape_wipe_blend_ayuv_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
-    GstBuffer * maskbuf, GstBuffer * outbuf) \
-{ \
-  const guint##depth *mask = (const guint##depth *) GST_BUFFER_DATA (maskbuf); \
-  const guint8 *input = (const guint8 *) GST_BUFFER_DATA (inbuf); \
-  guint8 *output = (guint8 *) GST_BUFFER_DATA (outbuf); \
-  guint i, j; \
-  guint mask_increment = ((depth == 16) ? GST_ROUND_UP_2 (self->width) : \
-                           GST_ROUND_UP_4 (self->width)) - self->width; \
-  gfloat position = self->mask_position; \
-  gfloat low = position - (self->mask_border / 2.0f); \
-  gfloat high = position + (self->mask_border / 2.0f); \
-  guint32 low_i, high_i, position_i, round_i; \
-  gint width = self->width, height = self->height; \
-  \
-  if (low < 0.0f) { \
-    high = 0.0f; \
-    low = 0.0f; \
-  } \
-  \
-  if (high > 1.0f) { \
-    low = 1.0f; \
-    high = 1.0f; \
-  } \
-  \
-  position_i = position * 65536; \
-  low_i = low * 65536; \
-  high_i = high * 65536; \
-  round_i = (high_i - low_i) >> 1; \
-  \
-  for (i = 0; i < height; i++) { \
-    for (j = 0; j < width; j++) { \
-      guint32 in = *mask << shift; \
-      \
-      if (in < low_i) { \
-        output[0] = 0x00;       /* A */ \
-        output[1] = input[1];   /* Y */ \
-        output[2] = input[2];   /* U */ \
-        output[3] = input[3];   /* V */ \
-      } else if (in >= high_i) { \
-        output[0] = input[0];   /* A */ \
-        output[1] = input[1];   /* Y */ \
-        output[2] = input[2];   /* U */ \
-        output[3] = input[3];   /* V */ \
-      } else { \
-        guint32 val; \
-        /* Note: This will never overflow or be larger than 255! */ \
-        val = (((in - low_i) << 16) + round_i) / (high_i - low_i); \
-        val = (val * input[0] + 32768) >> 16; \
-        \
-        output[0] = val;        /* A */ \
-        output[1] = input[1];   /* Y */ \
-        output[2] = input[2];   /* U */ \
-        output[3] = input[3];   /* V */ \
-      } \
-      \
-      mask++; \
-      input += 4; \
-      output += 4; \
-    } \
-    mask += mask_increment; \
-  } \
-}
-
-CREATE_AYUV_FUNCTIONS (16, 0);
-CREATE_AYUV_FUNCTIONS (8, 8);
-
 #define CREATE_ARGB_FUNCTIONS(depth, name, shift, a, r, g, b) \
 static void \
 gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstBuffer * inbuf, \
@@ -962,20 +893,26 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
     outbuf = buffer;
   }
 
-  if (self->fmt == GST_VIDEO_FORMAT_AYUV && self->mask_bpp == 16)
-    gst_shape_wipe_blend_ayuv_16 (self, buffer, mask, outbuf);
-  else if (self->fmt == GST_VIDEO_FORMAT_AYUV)
-    gst_shape_wipe_blend_ayuv_8 (self, buffer, mask, outbuf);
-  else if (self->fmt == GST_VIDEO_FORMAT_ARGB && self->mask_bpp == 16)
-    gst_shape_wipe_blend_argb_16 (self, buffer, mask, outbuf);
-  else if (self->fmt == GST_VIDEO_FORMAT_ARGB)
-    gst_shape_wipe_blend_argb_8 (self, buffer, mask, outbuf);
-  else if (self->fmt == GST_VIDEO_FORMAT_BGRA && self->mask_bpp == 16)
-    gst_shape_wipe_blend_bgra_16 (self, buffer, mask, outbuf);
-  else if (self->fmt == GST_VIDEO_FORMAT_BGRA)
-    gst_shape_wipe_blend_bgra_8 (self, buffer, mask, outbuf);
-  else
-    g_assert_not_reached ();
+  switch (self->fmt) {
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+      if (self->mask_bpp == 16)
+        gst_shape_wipe_blend_argb_16 (self, buffer, mask, outbuf);
+      else
+        gst_shape_wipe_blend_argb_8 (self, buffer, mask, outbuf);
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA:
+      if (self->mask_bpp == 16)
+        gst_shape_wipe_blend_bgra_16 (self, buffer, mask, outbuf);
+      else
+        gst_shape_wipe_blend_bgra_8 (self, buffer, mask, outbuf);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   gst_buffer_unref (mask);
   if (new_outbuf)
