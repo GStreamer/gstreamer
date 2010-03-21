@@ -108,6 +108,27 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="Fill">
+      <MemberSignature Language="C#" Value="public bool Fill (byte value, uint size);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="value" Type="System.Byte" />
+        <Parameter Name="size" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="value">To be added.</param>
+        <param name="size">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Finalize">
       <MemberSignature Language="C#" Value="~ByteWriter ();" />
       <MemberType>Method</MemberType>
@@ -1116,46 +1137,8 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="PutDoubleBe">
-      <MemberSignature Language="C#" Value="public bool PutDoubleBe (double val);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.3.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="val" Type="System.Double" />
-      </Parameters>
-      <Docs>
-        <param name="val">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="PutDoubleLe">
-      <MemberSignature Language="C#" Value="public bool PutDoubleLe (double val);" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>0.9.3.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="val" Type="System.Double" />
-      </Parameters>
-      <Docs>
-        <param name="val">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="PutFloatBe">
-      <MemberSignature Language="C#" Value="public bool PutFloatBe (float val);" />
+    <Member MemberName="PutFloat32Be">
+      <MemberSignature Language="C#" Value="public bool PutFloat32Be (float val);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
@@ -1173,8 +1156,8 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="PutFloatLe">
-      <MemberSignature Language="C#" Value="public bool PutFloatLe (float val);" />
+    <Member MemberName="PutFloat32Le">
+      <MemberSignature Language="C#" Value="public bool PutFloat32Le (float val);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
@@ -1184,6 +1167,44 @@
       </ReturnValue>
       <Parameters>
         <Parameter Name="val" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PutFloat64Be">
+      <MemberSignature Language="C#" Value="public bool PutFloat64Be (double val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.Double" />
+      </Parameters>
+      <Docs>
+        <param name="val">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PutFloat64Le">
+      <MemberSignature Language="C#" Value="public bool PutFloat64Le (double val);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="val" Type="System.Double" />
       </Parameters>
       <Docs>
         <param name="val">To be added.</param>

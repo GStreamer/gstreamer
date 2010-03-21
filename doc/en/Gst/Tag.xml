@@ -567,6 +567,34 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GeoLocationCity">
+      <MemberSignature Language="C#" Value="public const string GeoLocationCity;" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GeoLocationCountry">
+      <MemberSignature Language="C#" Value="public const string GeoLocationCountry;" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GeoLocationElevation">
       <MemberSignature Language="C#" Value="public const string GeoLocationElevation;" />
       <MemberType>Field</MemberType>
@@ -630,6 +658,20 @@
         <AssemblyVersion>0.9.2.0</AssemblyVersion>
         <AssemblyVersion>0.9.3.0</AssemblyVersion>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GeoLocationSublocation">
+      <MemberSignature Language="C#" Value="public const string GeoLocationSublocation;" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.3.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
