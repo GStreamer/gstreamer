@@ -213,6 +213,7 @@ GST_VAAPI_IMAGE_GET_CLASS
 <SECTION>
 <FILE>gstvaapisurface</FILE>
 GstVaapiChromaType
+GstVaapiSurfaceRenderFlags
 <TITLE>GstVaapiSurface</TITLE>
 GstVaapiSurface
 GstVaapiSurfaceClass

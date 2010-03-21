@@ -27,6 +27,7 @@
 G_BEGIN_DECLS
 
 typedef enum _GstVaapiChromaType                GstVaapiChromaType;
+typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
 
 /**
  * GstVaapiChromaType:
@@ -40,6 +41,33 @@ enum _GstVaapiChromaType {
     GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
     GST_VAAPI_CHROMA_TYPE_YUV422,
     GST_VAAPI_CHROMA_TYPE_YUV444
+};
+
+/**
+ * GstVaapiSurfaceRenderFlags
+ * @GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD:
+ *   selects the top field of the surface
+ * @GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD:
+ *   selects the bottom field of the surface
+ * @GST_VAAPI_PICTURE_STRUCTURE_FRAME:
+ *   selects the entire surface
+ * @GST_VAAPI_COLOR_STANDARD_ITUR_BT_601:
+ *   uses ITU-R BT.601 standard for color space conversion
+ * @GST_VAAPI_COLOR_STANDARD_ITUR_BT_709:
+ *   uses ITU-R BT.709 standard for color space conversion
+ *
+ * The set of all render flags for gst_vaapi_window_put_surface().
+ */
+enum _GstVaapiSurfaceRenderFlags {
+    GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD       = 1 << 0,
+    GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD    = 1 << 1,
+    GST_VAAPI_PICTURE_STRUCTURE_FRAME           =
+    (
+        GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD |
+        GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD
+    ),
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_601        = 1 << 2,
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 1 << 3,
 };
 
 #define GST_VAAPI_TYPE_SURFACE \
