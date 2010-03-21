@@ -138,13 +138,6 @@ gboolean
 gst_vaapi_window_put_surface(
     GstVaapiWindow          *window,
     GstVaapiSurface         *surface,
-    guint                    flags
-);
-
-gboolean
-gst_vaapi_window_put_surface_full(
-    GstVaapiWindow          *window,
-    GstVaapiSurface         *surface,
     const GstVideoRectangle *src_rect,
     const GstVideoRectangle *dst_rect,
     guint                    flags

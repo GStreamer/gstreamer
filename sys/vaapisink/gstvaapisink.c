@@ -176,7 +176,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         return GST_FLOW_UNEXPECTED;
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    if (!gst_vaapi_window_put_surface(sink->window, surface, flags))
+    if (!gst_vaapi_window_put_surface(sink->window, surface, NULL, NULL, flags))
         return GST_FLOW_UNEXPECTED;
 
     return GST_FLOW_OK;

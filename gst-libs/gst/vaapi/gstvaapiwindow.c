@@ -352,40 +352,6 @@ get_window_rect(GstVaapiWindow *window, GstVideoRectangle *rect)
  * gst_vaapi_window_put_surface:
  * @window: a #GstVaapiWindow
  * @surface: a #GstVaapiSurface
- * @flags: postprocessing flags
- *
- * Renders the whole @surface into the @window. The surface will be
- * scale to fit the window, while not preserving aspect ratio.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_window_put_surface(
-    GstVaapiWindow          *window,
-    GstVaapiSurface         *surface,
-    guint                    flags
-)
-{
-    GstVideoRectangle src_rect, dst_rect;
-
-    g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), FALSE);
-    g_return_val_if_fail(window->priv->is_constructed, FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-
-    get_surface_rect(surface, &src_rect);
-    get_window_rect(window, &dst_rect);
-
-    return GST_VAAPI_WINDOW_GET_CLASS(window)->render(window,
-                                                      surface,
-                                                      &src_rect,
-                                                      &dst_rect,
-                                                      flags);
-}
-
-/**
- * gst_vaapi_window_put_surface_full:
- * @window: a #GstVaapiWindow
- * @surface: a #GstVaapiSurface
  * @src_rect: (allow-none): the sub-rectangle of the source surface to
  *   extract and process. If %NULL, the entire surface will be used.
  * @dst_rect: (allow-none): the sub-rectangle of the destination
@@ -401,7 +367,7 @@ gst_vaapi_window_put_surface(
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_window_put_surface_full(
+gst_vaapi_window_put_surface(
     GstVaapiWindow          *window,
     GstVaapiSurface         *surface,
     const GstVideoRectangle *src_rect,

@@ -164,7 +164,6 @@ gst_vaapi_window_set_width
 gst_vaapi_window_set_height
 gst_vaapi_window_set_size
 gst_vaapi_window_put_surface
-gst_vaapi_window_put_surface_full
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW
 GST_VAAPI_IS_WINDOW

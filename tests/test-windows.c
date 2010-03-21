@@ -231,7 +231,7 @@ main(int argc, char *argv[])
 
         gst_vaapi_window_show(window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, flags))
+        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
             g_error("could not render surface");
 
         pause();
@@ -268,7 +268,7 @@ main(int argc, char *argv[])
 
         gst_vaapi_window_show(window);
 
-        if (!gst_vaapi_window_put_surface(window, surface, flags))
+        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
             g_error("could not render surface");
 
         pause();
