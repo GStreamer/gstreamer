@@ -302,7 +302,7 @@ gst_ddrawsurface_class_init (gpointer g_class, gpointer class_data)
   mini_object_class->finalize = GST_DEBUG_FUNCPTR (gst_ddrawsurface_finalize);
 }
 
-GType
+static GType
 gst_ddrawsurface_get_type (void)
 {
   static GType _gst_ddrawsurface_type;
@@ -1390,7 +1390,7 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
   return bRet;
 }
 
-long FAR PASCAL
+static long FAR PASCAL
 WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
@@ -1737,7 +1737,7 @@ gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
   return order;
 }
 
-HRESULT WINAPI
+static HRESULT WINAPI
 EnumModesCallback2 (LPDDSURFACEDESC lpDDSurfaceDesc, LPVOID lpContext)
 {
   GstDirectDrawSink *ddrawsink = (GstDirectDrawSink *) lpContext;
