@@ -19,6 +19,9 @@ public class MainWindow : Gtk.Window {
   bool _pipelineOK = false;
 
   public static void Main (string[] args) {
+    if (System.Environment.OSVersion.Platform == PlatformID.Unix)
+      XInitThreads ();
+
     Gtk.Application.Init ();
     Gst.Application.Init ();
     MainWindow window = new MainWindow ();
@@ -262,4 +265,7 @@ public class MainWindow : Gtk.Window {
   [DllImport ("libgdk-win32-2.0-0.dll") ]
   static extern bool gdk_window_ensure_native (IntPtr handle);
 #endif
+
+  [DllImport ("libX11.so.6")]
+  static extern int XInitThreads ();
 }
