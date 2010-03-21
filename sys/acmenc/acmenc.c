@@ -109,7 +109,7 @@ acmenc_caps_from_format (WAVEFORMATEX * fmt)
       (gst_riff_strf_auds *) fmt, NULL, NULL, NULL);
 }
 
-gboolean
+static gboolean
 acmenc_set_input_format (ACMEnc * enc, WAVEFORMATEX * infmt)
 {
   infmt->wFormatTag = WAVE_FORMAT_PCM;
@@ -122,7 +122,7 @@ acmenc_set_input_format (ACMEnc * enc, WAVEFORMATEX * infmt)
   return TRUE;
 }
 
-BOOL CALLBACK
+static BOOL CALLBACK
 acmenc_format_enum (HACMDRIVERID driverId, LPACMFORMATDETAILS fd,
     DWORD_PTR dwInstance, DWORD fdwSupport)
 {
@@ -160,7 +160,7 @@ acmenc_format_enum (HACMDRIVERID driverId, LPACMFORMATDETAILS fd,
   return TRUE;
 }
 
-gboolean
+static gboolean
 acmenc_set_format (ACMEnc * enc)
 {
   WAVEFORMATEX *in = NULL;
@@ -361,7 +361,7 @@ acmenc_chain (GstPad * pad, GstBuffer * buf)
   return ret;
 }
 
-GstFlowReturn
+static GstFlowReturn
 acmenc_finish_stream (ACMEnc * enc)
 {
   MMRESULT res;
