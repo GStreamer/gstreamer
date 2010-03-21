@@ -18,7 +18,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#include "config.h"
 #include "gstvaapiutils.h"
+#include "gstvaapisurface.h"
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -95,4 +97,32 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
     default: break;
     }
     return "<unknown>";
+}
+
+/**
+ * get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags:
+ *
+ * Converts #GstVaapiSurfaceRenderFlags to flags suitable for
+ * vaPutSurface().
+ */
+guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
+{
+    const guint va_top_bottom_fields = (VA_TOP_FIELD|VA_BOTTOM_FIELD);
+    guint va_flags = 0;
+
+    if (flags & GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
+        va_flags |= VA_TOP_FIELD;
+    if (flags & GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
+        va_flags |= VA_BOTTOM_FIELD;
+    if ((va_flags & va_top_bottom_fields) == va_top_bottom_fields) {
+        va_flags &= ~va_top_bottom_fields;
+        va_flags |= VA_FRAME_PICTURE;
+    }
+
+    if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_709)
+        va_flags |= VA_SRC_BT709;
+    else if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
+        va_flags |= VA_SRC_BT601;
+
+    return va_flags;
 }

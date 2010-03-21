@@ -177,7 +177,6 @@ gst_vaapi_window_x11_render(
     GstVaapiDisplay *display;
     VASurfaceID surface_id;
     VAStatus status;
-    guint va_flags = 0;
 
     display = gst_vaapi_surface_get_display(surface);
     if (!display)
@@ -186,18 +185,6 @@ gst_vaapi_window_x11_render(
     surface_id = gst_vaapi_surface_get_id(surface);
     if (surface_id == VA_INVALID_ID)
         return FALSE;
-
-    if (flags & GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
-        va_flags |= VA_TOP_FIELD;
-    if (flags & GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
-        va_flags |= VA_BOTTOM_FIELD;
-    if ((va_flags ^ (VA_TOP_FIELD|VA_BOTTOM_FIELD)) == 0)
-        va_flags  = VA_FRAME_PICTURE;
-
-    if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_709)
-        va_flags |= VA_SRC_BT709;
-    else if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
-        va_flags |= VA_SRC_BT601;
 
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaPutSurface(
@@ -213,7 +200,7 @@ gst_vaapi_window_x11_render(
         dst_rect->w,
         dst_rect->h,
         NULL, 0,
-        va_flags
+        get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(flags)
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaPutSurface()"))
