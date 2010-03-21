@@ -28,8 +28,8 @@
 
 #include <gst/gst.h>
 
-GType gst_multi_file_src_get_type (void);
-GType gst_multi_file_sink_get_type (void);
+#include "gstmultifilesink.h"
+#include "gstmultifilesrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
