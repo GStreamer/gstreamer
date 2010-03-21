@@ -107,7 +107,6 @@ struct _GstVaapiSurface {
     /*< private >*/
     GObject parent_instance;
 
-    /*< private >*/
     GstVaapiSurfacePrivate *priv;
 };
 

@@ -63,7 +63,6 @@ struct _GstVaapiSubpicture {
     /*< private >*/
     GObject parent_instance;
 
-    /*< private >*/
     GstVaapiSubpicturePrivate *priv;
 };
 

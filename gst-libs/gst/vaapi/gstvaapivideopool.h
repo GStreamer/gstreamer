@@ -63,7 +63,6 @@ struct _GstVaapiVideoPool {
     /*< private >*/
     GObject parent_instance;
 
-    /*< private >*/
     GstVaapiVideoPoolPrivate *priv;
 };
 
@@ -79,6 +78,7 @@ struct _GstVaapiVideoPoolClass {
     /*< private >*/
     GObjectClass parent_class;
 
+    /*< public >*/
     void     (*set_caps)    (GstVaapiVideoPool *pool, GstCaps *caps);
     gpointer (*alloc_object)(GstVaapiVideoPool *pool, GstVaapiDisplay *display);
 };

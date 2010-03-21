@@ -63,7 +63,6 @@ struct _GstVaapiImagePool {
     /*< private >*/
     GstVaapiVideoPool parent_instance;
 
-    /*< private >*/
     GstVaapiImagePoolPrivate *priv;
 };
 

@@ -88,7 +88,6 @@ struct _GstVaapiImage {
     /*< private >*/
     GObject parent_instance;
 
-    /*< private >*/
     GstVaapiImagePrivate *priv;
 };
 

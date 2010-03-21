@@ -91,7 +91,6 @@ struct _GstVaapiDisplay {
     /*< private >*/
     GObject parent_instance;
 
-    /*< private >*/
     GstVaapiDisplayPrivate *priv;
 };
 
@@ -109,6 +108,7 @@ struct _GstVaapiDisplayClass {
     /*< private >*/
     GObjectClass parent_class;
 
+    /*< public >*/
     gboolean   (*open_display)  (GstVaapiDisplay *display);
     void       (*close_display) (GstVaapiDisplay *display);
     void       (*lock_display)  (GstVaapiDisplay *display);

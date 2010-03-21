@@ -65,7 +65,6 @@ struct _GstVaapiVideoBuffer {
     /*< private >*/
     GstBuffer parent_instance;
 
-    /*< private >*/
     GstVaapiVideoBufferPrivate *priv;
 };
 

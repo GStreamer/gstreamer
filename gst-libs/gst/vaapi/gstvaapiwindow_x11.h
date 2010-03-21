@@ -64,7 +64,6 @@ struct _GstVaapiWindowX11 {
     /*< private >*/
     GstVaapiWindow parent_instance;
 
-    /*< private >*/
     GstVaapiWindowX11Private *priv;
 };
 

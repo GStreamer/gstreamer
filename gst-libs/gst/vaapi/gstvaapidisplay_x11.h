@@ -72,7 +72,6 @@ struct _GstVaapiDisplayX11 {
     /*< private >*/
     GstVaapiDisplay parent_instance;
 
-    /*< private >*/
     GstVaapiDisplayX11Private *priv;
 };
 
