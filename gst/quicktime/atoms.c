@@ -75,7 +75,7 @@ atoms_context_free (AtomsContext * context)
 #define LEAP_YEARS_FROM_1904_TO_1970 17
 
 static guint64
-get_current_qt_time ()
+get_current_qt_time (void)
 {
   GTimeVal timeval;
 
@@ -256,7 +256,7 @@ atom_esds_init (AtomESDS * esds)
 }
 
 static AtomESDS *
-atom_esds_new ()
+atom_esds_new (void)
 {
   AtomESDS *esds = g_new0 (AtomESDS, 1);
 
@@ -273,7 +273,7 @@ atom_esds_free (AtomESDS * esds)
 }
 
 static AtomFRMA *
-atom_frma_new ()
+atom_frma_new (void)
 {
   AtomFRMA *frma = g_new0 (AtomFRMA, 1);
 
@@ -289,7 +289,7 @@ atom_frma_free (AtomFRMA * frma)
 }
 
 static AtomWAVE *
-atom_wave_new ()
+atom_wave_new (void)
 {
   AtomWAVE *wave = g_new0 (AtomWAVE, 1);
 
@@ -394,7 +394,7 @@ sample_entry_mp4a_init (SampleTableEntryMP4A * mp4a)
 }
 
 static SampleTableEntryMP4A *
-sample_entry_mp4a_new ()
+sample_entry_mp4a_new (void)
 {
   SampleTableEntryMP4A *mp4a = g_new0 (SampleTableEntryMP4A, 1);
 
@@ -510,7 +510,7 @@ atom_ctts_init (AtomCTTS * ctts)
 }
 
 static AtomCTTS *
-atom_ctts_new ()
+atom_ctts_new (void)
 {
   AtomCTTS *ctts = g_new0 (AtomCTTS, 1);
 
@@ -683,7 +683,7 @@ atom_smhd_init (AtomSMHD * smhd)
 }
 
 static AtomSMHD *
-atom_smhd_new ()
+atom_smhd_new (void)
 {
   AtomSMHD *smhd = g_new0 (AtomSMHD, 1);
 
@@ -721,7 +721,7 @@ atom_hdlr_init (AtomHDLR * hdlr)
 }
 
 static AtomHDLR *
-atom_hdlr_new ()
+atom_hdlr_new (void)
 {
   AtomHDLR *hdlr = g_new0 (AtomHDLR, 1);
 
@@ -767,7 +767,7 @@ atom_url_free (AtomURL * url)
 }
 
 static AtomURL *
-atom_url_new ()
+atom_url_new (void)
 {
   AtomURL *url = g_new0 (AtomURL, 1);
 
@@ -776,7 +776,7 @@ atom_url_new ()
 }
 
 static AtomFull *
-atom_alis_new ()
+atom_alis_new (void)
 {
   guint8 flags[3] = { 0, 0, 1 };
   AtomFull *alis = g_new0 (AtomFull, 1);
@@ -1012,7 +1012,7 @@ atom_ilst_init (AtomILST * ilst)
 }
 
 static AtomILST *
-atom_ilst_new ()
+atom_ilst_new (void)
 {
   AtomILST *ilst = g_new0 (AtomILST, 1);
 
@@ -1043,7 +1043,7 @@ atom_meta_init (AtomMETA * meta)
 }
 
 static AtomMETA *
-atom_meta_new ()
+atom_meta_new (void)
 {
   AtomMETA *meta = g_new0 (AtomMETA, 1);
 
@@ -1070,7 +1070,7 @@ atom_udta_init (AtomUDTA * udta)
 }
 
 static AtomUDTA *
-atom_udta_new ()
+atom_udta_new (void)
 {
   AtomUDTA *udta = g_new0 (AtomUDTA, 1);
 
