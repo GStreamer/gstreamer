@@ -186,7 +186,8 @@ gst_vaapi_display_x11_get_size(
     guint           *pheight
 )
 {
-    GstVaapiDisplayX11Private * const priv = GST_VAAPI_DISPLAY_X11(display)->priv;
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11(display)->priv;
 
     if (!priv->x11_display)
         return;
@@ -196,6 +197,26 @@ gst_vaapi_display_x11_get_size(
 
     if (pheight)
         *pheight = DisplayHeight(priv->x11_display, priv->x11_screen);
+}
+
+static void
+gst_vaapi_display_x11_get_size_mm(
+    GstVaapiDisplay *display,
+    guint           *pwidth,
+    guint           *pheight
+)
+{
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11(display)->priv;
+
+    if (!priv->x11_display)
+        return;
+
+    if (pwidth)
+        *pwidth = DisplayWidthMM(priv->x11_display, priv->x11_screen);
+
+    if (pheight)
+        *pheight = DisplayHeightMM(priv->x11_display, priv->x11_screen);
 }
 
 static void
@@ -215,6 +236,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
     dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
     dpy_class->get_size         = gst_vaapi_display_x11_get_size;
+    dpy_class->get_size_mm      = gst_vaapi_display_x11_get_size_mm;
 
     /**
      * GstVaapiDisplayX11:x11-display:

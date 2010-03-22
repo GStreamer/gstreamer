@@ -45,6 +45,10 @@ struct _GstVaapiDisplayPrivate {
     VADisplay           display;
     guint               width;
     guint               height;
+    guint               width_mm;
+    guint               height_mm;
+    guint               par_n;
+    guint               par_d;
     gboolean            create_display;
     GArray             *profiles;
     GArray             *image_formats;
@@ -186,6 +190,51 @@ get_caps(GArray *formats)
 }
 
 static void
+gst_vaapi_display_calculate_pixel_aspect_ratio(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayPrivate * const priv = display->priv;
+    gdouble ratio, delta;
+    gint i, index;
+
+    static const gint par[][2] = {
+        {1, 1},         /* regular screen            */
+        {16, 15},       /* PAL TV                    */
+        {11, 10},       /* 525 line Rec.601 video    */
+        {54, 59},       /* 625 line Rec.601 video    */
+        {64, 45},       /* 1280x1024 on 16:9 display */
+        {5, 3},         /* 1280x1024 on  4:3 display */
+        {4, 3}          /*  800x600  on 16:9 display */
+    };
+
+    /* First, calculate the "real" ratio based on the X values;
+     * which is the "physical" w/h divided by the w/h in pixels of the
+     * display */
+    if (!priv->width || !priv->height || !priv->width_mm || !priv->height_mm)
+        ratio = 1.0;
+    else
+        ratio = (gdouble)(priv->width_mm * priv->height) /
+            (priv->height_mm * priv->width);
+    GST_DEBUG("calculated pixel aspect ratio: %f", ratio);
+
+    /* Now, find the one from par[][2] with the lowest delta to the real one */
+#define DELTA(idx) (ABS(ratio - ((gdouble)par[idx][0] / par[idx][1])))
+    delta = DELTA(0);
+    index = 0;
+
+    for (i = 1; i < G_N_ELEMENTS(par); i++) {
+        const gdouble this_delta = DELTA(i);
+        if (this_delta < delta) {
+            index = i;
+            delta = this_delta;
+        }
+    }
+#undef DELTA
+
+    priv->par_n = par[index][0];
+    priv->par_d = par[index][1];
+}
+
+static void
 gst_vaapi_display_destroy(GstVaapiDisplay *display)
 {
     GstVaapiDisplayPrivate * const priv = display->priv;
@@ -236,6 +285,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             priv->display = klass->get_display(display);
         if (klass->get_size)
             klass->get_size(display, &priv->width, &priv->height);
+        if (klass->get_size_mm)
+            klass->get_size_mm(display, &priv->width_mm, &priv->height_mm);
+        gst_vaapi_display_calculate_pixel_aspect_ratio(display);
     }
     if (!priv->display)
         return FALSE;
@@ -446,6 +498,10 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->display               = NULL;
     priv->width                 = 0;
     priv->height                = 0;
+    priv->width_mm              = 0;
+    priv->height_mm             = 0;
+    priv->par_n                 = 1;
+    priv->par_d                 = 1;
     priv->create_display        = TRUE;
     priv->profiles              = NULL;
     priv->image_formats         = NULL;
@@ -577,6 +633,30 @@ gst_vaapi_display_get_size(GstVaapiDisplay *display, guint *pwidth, guint *pheig
 
     if (pheight)
         *pheight = display->priv->height;
+}
+
+/**
+ * gst_vaapi_display_get_pixel_aspect_ratio:
+ * @display: a #GstVaapiDisplay
+ * @par_n: (out) (allow-none): return location for the numerator of pixel aspect ratio, or %NULL
+ * @par_d: (out) (allow-none): return location for the denominator of pixel aspect ratio, or %NULL
+ *
+ * Retrieves the pixel aspect ratio of a #GstVaapiDisplay.
+ */
+void
+gst_vaapi_display_get_pixel_aspect_ratio(
+    GstVaapiDisplay *display,
+    guint           *par_n,
+    guint           *par_d
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
+    if (par_n)
+        *par_n = display->priv->par_n;
+
+    if (par_d)
+        *par_d = display->priv->par_d;
 }
 
 /**

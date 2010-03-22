@@ -94,7 +94,7 @@ main(int argc, char *argv[])
     Display *x11_display;
     VADisplay va_display;
     GstVaapiDisplay *display;
-    guint width, height;
+    guint width, height, par_n, par_d;
 
     gst_init(&argc, &argv);
 
@@ -108,6 +108,9 @@ main(int argc, char *argv[])
 
         gst_vaapi_display_get_size(display, &width, &height);
         g_print("Display size: %ux%u\n", width, height);
+
+        gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
+        g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
         dump_caps(display);
         g_object_unref(display);
