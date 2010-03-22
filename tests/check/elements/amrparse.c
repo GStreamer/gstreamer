@@ -621,7 +621,7 @@ GST_END_TEST;
  * Create test suite.
  */
 static Suite *
-amrparse_suite ()
+amrparse_suite (void)
 {
   Suite *s = suite_create ("amrparse");
   TCase *tc_chain = tcase_create ("general");
