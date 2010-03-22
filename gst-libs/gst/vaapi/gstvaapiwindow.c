@@ -32,19 +32,6 @@
 
 G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
 
-#define GST_VAAPI_WINDOW_GET_PRIVATE(obj)                       \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_WINDOW,         \
-                                 GstVaapiWindowPrivate))
-
-struct _GstVaapiWindowPrivate {
-    GstVaapiDisplay    *display;
-    guint               width;
-    guint               height;
-    gboolean            is_constructed  : 1;
-    guint               is_fullscreen   : 1;
-};
-
 enum {
     PROP_0,
 

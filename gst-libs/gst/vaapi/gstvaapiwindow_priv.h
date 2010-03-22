@@ -25,6 +25,19 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_WINDOW_GET_PRIVATE(obj)                       \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
+                                 GST_VAAPI_TYPE_WINDOW,         \
+                                 GstVaapiWindowPrivate))
+
+struct _GstVaapiWindowPrivate {
+    GstVaapiDisplay    *display;
+    guint               width;
+    guint               height;
+    gboolean            is_constructed  : 1;
+    guint               is_fullscreen   : 1;
+};
+
 void
 _gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
     attribute_hidden;
