@@ -63,7 +63,7 @@ build()
 {
   if test -d $1; then
     cd $1
-    if test ! -e Makefile
+    if test ! -e Makefile -a -e autoregen.sh
     then
       echo "+ $1: autoregen.sh"
       ./autoregen.sh > "$tmp/$1-regen.log" 2>&1
@@ -74,6 +74,18 @@ build()
         return $ERROR_RETURN
       fi
       echo "+ $1: autoregen.sh done"
+    fi
+    else if test ! -e Makefile
+    then
+       echo "+ $1: autogen.sh"
+      ./autogen.sh > "$tmp/$1-gen.log" 2>&1
+      if test $? -ne 0
+      then
+        echo "$1: autogen.sh [$tmp/$1-gen.log]" >> $ERROR_LOG
+        cd ..
+        return $ERROR_RETURN
+      fi
+      echo "+ $1: autogen.sh done"
     fi
 
     echo "+ $1: make"
