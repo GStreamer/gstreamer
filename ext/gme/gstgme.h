@@ -63,6 +63,8 @@ struct _GstGmeDecClass
   GstElementClass parent_class;
 };
 
+GType gst_gme_dec_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_GME_DEC_H__ */
