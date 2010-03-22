@@ -385,65 +385,24 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 
   ret = gst_caps_new_empty ();
 
-  /* When going from the SINK pad to the src, we just need to make sure the
-   * format is AYUV or one of the ARGB variants */
-  if (direction == GST_PAD_SINK) {
-    for (i = 0; i < gst_caps_get_size (caps); i++) {
-      structure = gst_structure_copy (gst_caps_get_structure (caps, i));
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    structure = gst_structure_copy (gst_caps_get_structure (caps, i));
 
-      gst_structure_remove_field (structure, "format");
-      gst_structure_remove_field (structure, "endianness");
-      gst_structure_remove_field (structure, "depth");
-      gst_structure_remove_field (structure, "bpp");
-      gst_structure_remove_field (structure, "red_mask");
-      gst_structure_remove_field (structure, "green_mask");
-      gst_structure_remove_field (structure, "blue_mask");
-      gst_structure_remove_field (structure, "alpha_mask");
-      gst_structure_remove_field (structure, "color-matrix");
-      gst_structure_remove_field (structure, "chroma-site");
+    gst_structure_remove_field (structure, "format");
+    gst_structure_remove_field (structure, "endianness");
+    gst_structure_remove_field (structure, "depth");
+    gst_structure_remove_field (structure, "bpp");
+    gst_structure_remove_field (structure, "red_mask");
+    gst_structure_remove_field (structure, "green_mask");
+    gst_structure_remove_field (structure, "blue_mask");
+    gst_structure_remove_field (structure, "alpha_mask");
+    gst_structure_remove_field (structure, "color-matrix");
+    gst_structure_remove_field (structure, "chroma-site");
 
-      gst_structure_set_name (structure, "video/x-raw-yuv");
-      gst_structure_set (structure, "format",
-          GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
-
-      gst_caps_append_structure (ret, gst_structure_copy (structure));
-
-      gst_structure_remove_field (structure, "format");
-      gst_structure_set_name (structure, "video/x-raw-rgb");
-      gst_caps_append_structure (ret, structure);
-    }
-  } else {
-    /* In the other direction, prepend a copy of the caps with format AYUV, 
-     * and set the first to I420 */
-
-    for (i = 0; i < gst_caps_get_size (caps); i++) {
-      structure = gst_structure_copy (gst_caps_get_structure (caps, i));
-
-      gst_structure_set_name (structure, "video/x-raw-yuv");
-
-      gst_structure_remove_field (structure, "format");
-      gst_structure_remove_field (structure, "endianness");
-      gst_structure_remove_field (structure, "depth");
-      gst_structure_remove_field (structure, "bpp");
-      gst_structure_remove_field (structure, "red_mask");
-      gst_structure_remove_field (structure, "green_mask");
-      gst_structure_remove_field (structure, "blue_mask");
-      gst_structure_remove_field (structure, "alpha_mask");
-      gst_structure_remove_field (structure, "color-matrix");
-      gst_structure_remove_field (structure, "chroma-site");
-
-      gst_structure_set (structure, "format",
-          GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'), NULL);
-      gst_caps_append_structure (ret, gst_structure_copy (structure));
-
-      gst_structure_set (structure, "format",
-          GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'), NULL);
-      gst_caps_append_structure (ret, gst_structure_copy (structure));
-
-      gst_structure_set_name (structure, "video/x-raw-rgb");
-      gst_structure_remove_field (structure, "format");
-      gst_caps_append_structure (ret, structure);
-    }
+    gst_structure_set_name (structure, "video/x-raw-yuv");
+    gst_caps_append_structure (ret, gst_structure_copy (structure));
+    gst_structure_set_name (structure, "video/x-raw-rgb");
+    gst_caps_append_structure (ret, structure);
   }
 
   gst_caps_do_simplify (ret);
