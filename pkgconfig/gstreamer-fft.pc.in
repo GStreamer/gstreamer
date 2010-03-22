@@ -7,6 +7,6 @@ Name: GStreamer FFT Library
 Description: FFT implementation
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} -lgstfft-@GST_MAJORMINOR@ -lm
+Libs: -L${libdir} -lgstfft-@GST_MAJORMINOR@ @LIBM@
 Cflags: -I${includedir}
 

@@ -9,6 +9,6 @@ Name: GStreamer FFT Library, Uninstalled
 Description: FFT implementation, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
-Libs: @abs_top_builddir@/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la
+Libs: @abs_top_builddir@/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la @LIBM@
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
