@@ -376,6 +376,18 @@ gst_mxf_mux_setcaps (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
+static char *
+gst_mxf_mux_create_pad_name (GstPadTemplate * templ, guint id)
+{
+  GString *string;
+
+  string = g_string_new (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ));
+  g_string_truncate (string, string->len - 2);
+  g_string_append_printf (string, "%u", id);
+
+  return g_string_free (string, FALSE);
+}
+
 static GstPad *
 gst_mxf_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * pad_name)
@@ -399,7 +411,7 @@ gst_mxf_mux_request_new_pad (GstElement * element,
   }
 
   pad_number = g_atomic_int_exchange_and_add ((gint *) & mux->n_pads, 1);
-  name = g_strdup_printf (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ), pad_number);
+  name = gst_mxf_mux_create_pad_name (templ, pad_number);
 
   GST_DEBUG_OBJECT (mux, "Creating pad '%s'", name);
   pad = gst_pad_new_from_template (templ, name);
