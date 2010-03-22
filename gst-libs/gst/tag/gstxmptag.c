@@ -157,6 +157,130 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
   return ret;
 }
 
+/* (de)serialize functions */
+static gchar *
+serialize_exif_gps_coordinate (const GValue * value, gchar pos, gchar neg)
+{
+  gdouble num;
+  gchar c;
+  gint integer;
+  gchar fraction[G_ASCII_DTOSTR_BUF_SIZE];
+
+  g_return_val_if_fail (G_VALUE_TYPE (value) == G_TYPE_DOUBLE, NULL);
+
+  num = g_value_get_double (value);
+  if (num < 0) {
+    c = neg;
+    num *= -1;
+  } else {
+    c = pos;
+  }
+  integer = (gint) num;
+
+  g_ascii_dtostr (fraction, sizeof (fraction), (num - integer) * 60);
+
+  /* FIXME review GPSCoordinate serialization spec for the .mm or ,ss
+   * decision. Couldn't understand it clearly */
+  return g_strdup_printf ("%d,%s%c", integer, fraction, c);
+}
+
+static gchar *
+serialize_exif_latitude (const GValue * value)
+{
+  return serialize_exif_gps_coordinate (value, 'N', 'S');
+}
+
+static gchar *
+serialize_exif_longitude (const GValue * value)
+{
+  return serialize_exif_gps_coordinate (value, 'E', 'W');
+}
+
+static void
+deserialize_exif_gps_coordinate (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * str, gchar pos, gchar neg)
+{
+  gdouble value = 0;
+  gint d = 0, m = 0, s = 0;
+  gdouble m2 = 0;
+  gchar c;
+  const gchar *current;
+
+  /* get the degrees */
+  if (sscanf (str, "%d", &d) != 1)
+    goto error;
+
+  /* find the beginning of the minutes */
+  current = strchr (str, ',');
+  if (current == NULL)
+    goto end;
+  current += 1;
+
+  /* check if it uses ,SS or .mm */
+  if (strchr (current, ',') != NULL) {
+    sscanf (current, "%d,%d%c", &m, &s, &c);
+  } else {
+    gchar *copy = g_strdup (current);
+    gint len = strlen (copy);
+    gint i;
+
+    /* check the last letter */
+    for (i = len - 1; len >= 0; len--) {
+      if (g_ascii_isspace (copy[i]))
+        continue;
+
+      if (g_ascii_isalpha (copy[i])) {
+        /* found it */
+        c = copy[i];
+        copy[i] = '\0';
+        break;
+
+      } else {
+        /* something is wrong */
+        g_free (copy);
+        goto error;
+      }
+    }
+
+    /* use a copy so we can change the last letter as E can cause
+     * problems here */
+    m2 = g_ascii_strtod (copy, NULL);
+    g_free (copy);
+  }
+
+end:
+  /* we can add them all as those that aren't parsed are 0 */
+  value = d + (m / 60.0) + (s / (60.0 * 60.0)) + (m2 / 60.0);
+
+  if (c == pos) {
+    //NOP
+  } else if (c == neg) {
+    value *= -1;
+  } else {
+    goto error;
+  }
+
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, gst_tag, value, NULL);
+  return;
+
+error:
+  GST_WARNING ("Failed to deserialize gps coordinate: %s", str);
+}
+
+static void
+deserialize_exif_latitude (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * str)
+{
+  deserialize_exif_gps_coordinate (taglist, gst_tag, str, 'N', 'S');
+}
+
+static void
+deserialize_exif_longitude (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * str)
+{
+  deserialize_exif_gps_coordinate (taglist, gst_tag, str, 'E', 'W');
+}
+
 /* look at this page for addtional schemas
  * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/XMP.html
  */
@@ -181,6 +305,13 @@ _init_xmp_tag_map ()
   _xmp_tag_add_simple_mapping (GST_TAG_TITLE, "dc:title", NULL, NULL);
   /* FIXME: we probably want GST_TAG_{,AUDIO_,VIDEO_}MIME_TYPE */
   _xmp_tag_add_simple_mapping (GST_TAG_VIDEO_CODEC, "dc:format", NULL, NULL);
+
+  /* exif schema */
+  _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LATITUDE,
+      "exif:GPSLatitude", serialize_exif_latitude, deserialize_exif_latitude);
+  _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LONGITUDE,
+      "exif:GPSLongitude", serialize_exif_longitude,
+      deserialize_exif_longitude);
 
   /* photoshop schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_COUNTRY,

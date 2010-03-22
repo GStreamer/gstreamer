@@ -852,6 +852,116 @@ GST_START_TEST (test_xmp_parsing)
 
 GST_END_TEST;
 
+static void
+do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
+{
+  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist2;
+  GstBuffer *buf;
+  const gchar *name_sent, *name_recv;
+  const GValue *value_sent, *value_recv;
+  gboolean found;
+  gint comparison;
+  gint n_recv;
+  gint n_sent;
+  gint i, j;
+
+  fail_if (FALSE);
+
+  gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
+
+  buf = gst_tag_list_to_xmp_buffer (taglist, TRUE);
+  taglist2 = gst_tag_list_from_xmp_buffer (buf);
+
+  /* verify tags */
+  fail_unless (taglist2 != NULL);
+  n_recv = gst_structure_n_fields (taglist2);
+  n_sent = gst_structure_n_fields (taglist);
+  fail_unless (n_recv == n_sent);
+
+  /* FIXME: compare taglist values */
+  for (i = 0; i < n_sent; i++) {
+    name_sent = gst_structure_nth_field_name (taglist, i);
+    value_sent = gst_structure_get_value (taglist, name_sent);
+    found = FALSE;
+    for (j = 0; j < n_recv; j++) {
+      name_recv = gst_structure_nth_field_name (taglist2, j);
+      if (!strcmp (name_sent, name_recv)) {
+        value_recv = gst_structure_get_value (taglist2, name_recv);
+        comparison = gst_value_compare (value_sent, value_recv);
+        if (comparison != GST_VALUE_EQUAL) {
+          gchar *vs = g_strdup_value_contents (value_sent);
+          gchar *vr = g_strdup_value_contents (value_recv);
+          GST_DEBUG ("sent = %s:'%s', recv = %s:'%s'",
+              G_VALUE_TYPE_NAME (value_sent), vs,
+              G_VALUE_TYPE_NAME (value_recv), vr);
+          g_free (vs);
+          g_free (vr);
+        }
+        fail_unless (comparison == GST_VALUE_EQUAL,
+            "tag item %s has been received with different type or value",
+            name_sent);
+        found = TRUE;
+        break;
+      }
+    }
+    fail_unless (found, "tag item %s is lost", name_sent);
+  }
+
+  gst_buffer_unref (buf);
+  gst_tag_list_free (taglist);
+  gst_tag_list_free (taglist2);
+}
+
+GST_START_TEST (test_xmp_tags_serialization_deserialization)
+{
+  GValue value = { 0 };
+  GDate *date;
+
+  g_value_init (&value, G_TYPE_STRING);
+  g_value_set_static_string (&value, "my string");
+  do_xmp_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_COPYRIGHT, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DESCRIPTION, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_KEYWORDS, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_TITLE, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_VIDEO_CODEC, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_COUNTRY,
+      &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_CITY, &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_SUBLOCATION,
+      &value);
+
+  g_value_unset (&value);
+  g_value_init (&value, G_TYPE_DOUBLE);
+
+  g_value_set_double (&value, 0.0);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
+      &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_set_double (&value, 10.5);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
+      &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_set_double (&value, -32.375);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
+      &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, GST_TYPE_DATE);
+  date = g_date_new_dmy (22, 3, 2010);
+  gst_value_set_date (&value, date);
+  g_date_free (date);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE, &value);
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 tag_suite (void)
@@ -868,6 +978,7 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_language_utils);
   tcase_add_test (tc_chain, test_xmp_formatting);
   tcase_add_test (tc_chain, test_xmp_parsing);
+  tcase_add_test (tc_chain, test_xmp_tags_serialization_deserialization);
   return s;
 }
 
