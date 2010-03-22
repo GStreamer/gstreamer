@@ -58,8 +58,10 @@ struct _GstVideoBox
   /* caps */
   GstVideoFormat in_format;
   gint in_width, in_height;
+  gboolean in_sdtv;
   GstVideoFormat out_format;
   gint out_width, out_height;
+  gboolean out_sdtv;
 
   gint box_left, box_right, box_top, box_bottom;
 
@@ -72,6 +74,9 @@ struct _GstVideoBox
   GstVideoBoxFill fill_type;
 
   gboolean autocrop;
+
+  void (*fill) (GstVideoBoxFill fill_type, guint b_alpha, guint8 *dest, gboolean sdtv, gint width, gint height, gint x, gint y, gint w, gint h);
+  void (*copy) (guint i_alpha, guint8 *dest, gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x, gint dest_y, const guint8 *src, gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y, gint w, gint h);
 };
 
 struct _GstVideoBoxClass
