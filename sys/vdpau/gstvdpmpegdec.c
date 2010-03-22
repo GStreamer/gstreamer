@@ -256,7 +256,7 @@ error:
   goto done;
 }
 
-GstFlowReturn
+static GstFlowReturn
 gst_vdp_mpeg_dec_push_video_buffer (GstVdpMpegDec * mpeg_dec,
     GstVdpVideoBuffer * buf)
 {

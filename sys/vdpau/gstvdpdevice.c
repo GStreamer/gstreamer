@@ -239,7 +239,7 @@ gst_vdp_device_class_init (GstVdpDeviceClass * klass)
           "", G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
-GstVdpDevice *
+static GstVdpDevice *
 gst_vdp_device_new (const gchar * display_name)
 {
   GstVdpDevice *device;

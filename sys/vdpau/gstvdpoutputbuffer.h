@@ -45,7 +45,7 @@ GType gst_vdp_output_buffer_get_type (void);
 
 GstVdpOutputBuffer* gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format, gint width, gint height);
 
-GstCaps *gst_vdp_output_buffer_get_template_caps ();
+GstCaps *gst_vdp_output_buffer_get_template_caps (void);
 GstCaps *gst_vdp_output_buffer_get_allowed_caps (GstVdpDevice *device);
 gboolean gst_vdp_caps_to_rgba_format (GstCaps *caps, VdpRGBAFormat *rgba_format);
 

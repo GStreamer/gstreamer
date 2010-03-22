@@ -178,7 +178,7 @@ GstVdpOutputBufferFormats rgba_formats[] = {
 
 
 GstCaps *
-gst_vdp_output_buffer_get_template_caps ()
+gst_vdp_output_buffer_get_template_caps (void)
 {
   GstCaps *caps, *rgb_caps;
   gint i;
