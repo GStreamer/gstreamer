@@ -166,8 +166,10 @@ GstVaapiRectangle
 <TITLE>GstVaapiWindow</TITLE>
 GstVaapiWindow
 GstVaapiWindowClass
+gst_vaapi_window_get_display
 gst_vaapi_window_show
 gst_vaapi_window_hide
+gst_vaapi_window_get_fullscreen
 gst_vaapi_window_set_fullscreen
 gst_vaapi_window_get_width
 gst_vaapi_window_get_height

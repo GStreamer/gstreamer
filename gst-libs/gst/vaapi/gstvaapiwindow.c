@@ -49,7 +49,8 @@ enum {
 
     PROP_DISPLAY,
     PROP_WIDTH,
-    PROP_HEIGHT
+    PROP_HEIGHT,
+    PROP_FULLSCREEN
 };
 
 static void
@@ -113,6 +114,9 @@ gst_vaapi_window_set_property(
     case PROP_HEIGHT:
         gst_vaapi_window_set_height(window, g_value_get_uint(value));
         break;
+    case PROP_FULLSCREEN:
+        gst_vaapi_window_set_fullscreen(window, g_value_get_boolean(value));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -138,6 +142,9 @@ gst_vaapi_window_get_property(
         break;
     case PROP_HEIGHT:
         g_value_set_uint(value, gst_vaapi_window_get_height(window));
+        break;
+    case PROP_FULLSCREEN:
+        g_value_set_boolean(value, window->priv->is_fullscreen);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -201,6 +208,15 @@ gst_vaapi_window_class_init(GstVaapiWindowClass *klass)
                            "The window height",
                            1, G_MAXUINT32, 1,
                            G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_FULLSCREEN,
+         g_param_spec_boolean("fullscreen",
+                              "Fullscreen",
+                              "The fullscreen state of the window",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -262,6 +278,22 @@ gst_vaapi_window_hide(GstVaapiWindow *window)
     g_return_if_fail(window->priv->is_constructed);
 
     GST_VAAPI_WINDOW_GET_CLASS(window)->hide(window);
+}
+
+/**
+ * gst_vaapi_window_get_fullscreen:
+ * @window: a #GstVaapiWindow
+ *
+ * Retrieves whether the @window is fullscreen or not
+ *
+ * Return value: %TRUE if the window is fullscreen
+ */
+gboolean
+gst_vaapi_window_get_fullscreen(GstVaapiWindow *window)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), FALSE);
+
+    return window->priv->is_fullscreen;
 }
 
 /**

@@ -110,6 +110,9 @@ gst_vaapi_window_show(GstVaapiWindow *window);
 void
 gst_vaapi_window_hide(GstVaapiWindow *window);
 
+gboolean
+gst_vaapi_window_get_fullscreen(GstVaapiWindow *window);
+
 void
 gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen);
 
