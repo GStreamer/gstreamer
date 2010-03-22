@@ -17,7 +17,7 @@ m4_define([gst_version],
 # gst plugins-base version number
 m4_define([gst_plugins_base_major_version], [0])
 m4_define([gst_plugins_base_minor_version], [10])
-m4_define([gst_plugins_base_micro_version], [0])
+m4_define([gst_plugins_base_micro_version], [16])
 m4_define([gst_plugins_base_version],
           [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
 
@@ -82,6 +82,8 @@ GST_MAJORMINOR=gst_major_minor_version
 GST_VERSION_REQUIRED=gst_version
 GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
 AC_SUBST(GST_MAJORMINOR)
+AC_SUBST(GST_VERSION_REQUIRED)
+AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
 
 dnl Check for tools
 AC_PROG_CC
