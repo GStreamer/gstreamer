@@ -89,6 +89,9 @@ struct _GstVaapiWindowClass {
     void        (*destroy)(GstVaapiWindow *window);
     gboolean    (*show)   (GstVaapiWindow *window);
     gboolean    (*hide)   (GstVaapiWindow *window);
+    gboolean    (*get_geometry)  (GstVaapiWindow *window,
+                                  gint *px, gint *py,
+                                  guint *pwidth, guint *pheight);
     gboolean    (*set_fullscreen)(GstVaapiWindow *window, gboolean fullscreen);
     gboolean    (*resize) (GstVaapiWindow *window, guint width, guint height);
     gboolean    (*render) (GstVaapiWindow *window,

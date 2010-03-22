@@ -25,12 +25,25 @@
 
 #include "config.h"
 #include "gstvaapiwindow.h"
-#include "gstvaapiwindow_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
+
+#define GST_VAAPI_WINDOW_GET_PRIVATE(obj)                       \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
+                                 GST_VAAPI_TYPE_WINDOW,         \
+                                 GstVaapiWindowPrivate))
+
+struct _GstVaapiWindowPrivate {
+    GstVaapiDisplay    *display;
+    guint               width;
+    guint               height;
+    gboolean            is_constructed          : 1;
+    guint               is_fullscreen           : 1;
+    guint               is_fullscreen_changed   : 1;
+};
 
 enum {
     PROP_0,
@@ -40,6 +53,25 @@ enum {
     PROP_HEIGHT,
     PROP_FULLSCREEN
 };
+
+static void
+gst_vaapi_window_ensure_size(GstVaapiWindow *window)
+{
+    GstVaapiWindowPrivate * const priv = window->priv;
+    GstVaapiWindowClass * const klass  = GST_VAAPI_WINDOW_GET_CLASS(window);
+    guint display_width, display_height;
+
+    if (!priv->is_fullscreen_changed)
+        return;
+
+    if (klass->get_geometry)
+        klass->get_geometry(window, NULL, NULL, &priv->width, &priv->height);
+
+    gst_vaapi_display_get_size(priv->display, &display_width, &display_height);
+    priv->is_fullscreen_changed = FALSE;
+    priv->is_fullscreen         = (priv->width  == display_width &&
+                                   priv->height == display_height);
+}
 
 static void
 gst_vaapi_window_destroy(GstVaapiWindow *window)
@@ -218,6 +250,7 @@ gst_vaapi_window_init(GstVaapiWindow *window)
     priv->height                = 1;
     priv->is_constructed        = FALSE;
     priv->is_fullscreen         = FALSE;
+    priv->is_fullscreen_changed = FALSE;
 }
 
 /**
@@ -281,6 +314,8 @@ gst_vaapi_window_get_fullscreen(GstVaapiWindow *window)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), FALSE);
 
+    gst_vaapi_window_ensure_size(window);
+
     return window->priv->is_fullscreen;
 }
 
@@ -292,12 +327,6 @@ gst_vaapi_window_get_fullscreen(GstVaapiWindow *window)
  * Requests to place the @window in fullscreen or unfullscreen states.
  */
 void
-_gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
-{
-    window->priv->is_fullscreen = fullscreen;
-}
-
-void
 gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 {
     GstVaapiWindowClass *klass;
@@ -307,8 +336,10 @@ gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
     klass = GST_VAAPI_WINDOW_GET_CLASS(window);
 
     if (window->priv->is_fullscreen != fullscreen && klass->set_fullscreen) {
-        _gst_vaapi_window_set_fullscreen(window, fullscreen);
-        klass->set_fullscreen(window, fullscreen);
+        if (klass->set_fullscreen(window, fullscreen)) {
+            window->priv->is_fullscreen         = fullscreen;
+            window->priv->is_fullscreen_changed = TRUE;
+        }
     }
 }
 
@@ -325,6 +356,8 @@ gst_vaapi_window_get_width(GstVaapiWindow *window)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), 0);
     g_return_val_if_fail(window->priv->is_constructed, 0);
+
+    gst_vaapi_window_ensure_size(window);
 
     return window->priv->width;
 }
@@ -343,6 +376,8 @@ gst_vaapi_window_get_height(GstVaapiWindow *window)
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), 0);
     g_return_val_if_fail(window->priv->is_constructed, 0);
 
+    gst_vaapi_window_ensure_size(window);
+
     return window->priv->height;
 }
 
@@ -359,6 +394,8 @@ gst_vaapi_window_get_size(GstVaapiWindow *window, guint *pwidth, guint *pheight)
 {
     g_return_if_fail(GST_VAAPI_IS_WINDOW(window));
     g_return_if_fail(window->priv->is_constructed);
+
+    gst_vaapi_window_ensure_size(window);
 
     if (pwidth)
         *pwidth = window->priv->width;
@@ -405,24 +442,16 @@ gst_vaapi_window_set_height(GstVaapiWindow *window, guint height)
  *
  * Resizes the @window to match the specified @width and @height.
  */
-gboolean
-_gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
-{
-    if (width == window->priv->width && height == window->priv->height)
-        return FALSE;
-
-    window->priv->width  = width;
-    window->priv->height = height;
-    return TRUE;
-}
-
 void
 gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
 {
     g_return_if_fail(GST_VAAPI_IS_WINDOW(window));
 
-    if (!_gst_vaapi_window_set_size(window, width, height))
+    if (width == window->priv->width && height == window->priv->height)
         return;
+
+    window->priv->width  = width;
+    window->priv->height = height;
 
     if (window->priv->is_constructed)
         GST_VAAPI_WINDOW_GET_CLASS(window)->resize(window, width, height);

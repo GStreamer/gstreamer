@@ -39,7 +39,6 @@ libgstvaapi_source_h =				\
 libgstvaapi_source_priv_h =			\
 	gstvaapidebug.h				\
 	gstvaapiutils.h				\
-	gstvaapiwindow_priv.h			\
 	$(NULL)
 
 libgstvaapi_x11_source_c =			\

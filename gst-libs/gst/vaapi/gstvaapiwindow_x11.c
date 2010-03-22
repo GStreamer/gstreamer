@@ -131,10 +131,8 @@ timed_wait_event(GstVaapiWindow *window, int type, guint64 end_time, XEvent *e)
         GST_VAAPI_DISPLAY_LOCK(priv->display);
         got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, e);
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-        if (got_event) {
-            g_print("HERE\n");
+        if (got_event)
             return TRUE;
-        }
         g_get_current_time(&now);
         now_time = (guint64)now.tv_sec * 1000000 + now.tv_usec;
     } while (now_time < end_time);
@@ -163,6 +161,10 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
         wait_event(window, MapNotify);
 
     priv->is_mapped = TRUE;
+
+    if (priv->fullscreen_on_map)
+        gst_vaapi_window_set_fullscreen(window, TRUE);
+
     return TRUE;
 }
 
@@ -245,11 +247,29 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
 }
 
 static gboolean
+gst_vaapi_window_x11_get_geometry(
+    GstVaapiWindow *window,
+    gint           *px,
+    gint           *py,
+    guint          *pwidth,
+    guint          *pheight)
+{
+    GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
+    Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+
+    return x11_get_geometry(dpy, priv->xid, px, py, pwidth, pheight);
+}
+
+static gboolean
 gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XEvent e;
+    guint width, height;
     gboolean has_errors;
+    GTimeVal now;
+    guint64 end_time;
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
@@ -291,9 +311,31 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
             );
         }
     }
+    XSync(dpy, False);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    return !has_errors;
+    if (has_errors)
+        return FALSE;
+
+    /* Try to wait for the completion of the fullscreen mode switch */
+    if (priv->create_window && priv->is_mapped) {
+        const guint DELAY = 100000; /* 100 ms */
+        g_get_current_time(&now);
+        end_time = DELAY + ((guint64)now.tv_sec * 1000000 + now.tv_usec);
+        while (timed_wait_event(window, ConfigureNotify, end_time, &e)) {
+            if (fullscreen) {
+                gst_vaapi_display_get_size(priv->display, &width, &height);
+                if (e.xconfigure.width == width && e.xconfigure.height == height)
+                    return TRUE;
+            }
+            else {
+                gst_vaapi_window_get_size(window, &width, &height);
+                if (e.xconfigure.width != width || e.xconfigure.height != height)
+                    return TRUE;
+            }
+        }
+    }
+    return FALSE;
 }
 
 static gboolean
@@ -442,6 +484,7 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     window_class->destroy        = gst_vaapi_window_x11_destroy;
     window_class->show           = gst_vaapi_window_x11_show;
     window_class->hide           = gst_vaapi_window_x11_hide;
+    window_class->get_geometry   = gst_vaapi_window_x11_get_geometry;
     window_class->set_fullscreen = gst_vaapi_window_x11_set_fullscreen;
     window_class->resize         = gst_vaapi_window_x11_resize;
     window_class->render         = gst_vaapi_window_x11_render;
