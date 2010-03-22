@@ -687,7 +687,7 @@ static gboolean
 gst_dvbsrc_open_frontend (GstDvbSrc * object)
 {
   struct dvb_frontend_info fe_info;
-  char *adapter_desc = NULL;
+  const char *adapter_desc = NULL;
   gchar *frontend_dev;
   GstStructure *adapter_structure;
   char *adapter_name = NULL;

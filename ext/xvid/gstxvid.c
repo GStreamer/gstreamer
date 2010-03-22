@@ -58,10 +58,10 @@ gst_xvid_init (void)
   return TRUE;
 }
 
-gchar *
+const gchar *
 gst_xvid_error (int errorcode)
 {
-  gchar *error;
+  const gchar *error;
 
   switch (errorcode) {
     case XVID_ERR_FAIL:

@@ -561,9 +561,9 @@ gst_mms_uri_get_type (void)
 static gchar **
 gst_mms_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "mms", "mmsh", "mmst", "mmsu", NULL };
+  static const gchar *protocols[] = { "mms", "mmsh", "mmst", "mmsu", NULL };
 
-  return protocols;
+  return (gchar **) protocols;
 }
 
 static const gchar *

@@ -973,7 +973,7 @@ dvb_base_bin_uri_get_type (void)
 static gchar **
 dvb_base_bin_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "dvb", NULL };
+  static gchar *protocols[] = { (char *) "dvb", NULL };
 
   return protocols;
 }

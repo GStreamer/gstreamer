@@ -574,7 +574,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
         "DirectFB fullscreen");
     if (!dfbvideosink->dfb) {
       DFBGraphicsDeviceDescription hw_caps;
-      char *argv[] = { "-", "--dfb:quiet", NULL };
+      char *argv[] = { (char *) "-", (char *) "--dfb:quiet", NULL };
       int argc = 2;
       char **args;
 
@@ -667,16 +667,16 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
 
       /* Check that this layer is able to do colorbalance settings */
       if (dl_desc.caps & DLCAPS_BRIGHTNESS) {
-        channels_list = g_list_append (channels_list, "BRIGHTNESS");
+        channels_list = g_list_append (channels_list, (char *) "BRIGHTNESS");
       }
       if (dl_desc.caps & DLCAPS_CONTRAST) {
-        channels_list = g_list_append (channels_list, "CONTRAST");
+        channels_list = g_list_append (channels_list, (char *) "CONTRAST");
       }
       if (dl_desc.caps & DLCAPS_HUE) {
-        channels_list = g_list_append (channels_list, "HUE");
+        channels_list = g_list_append (channels_list, (char *) "HUE");
       }
       if (dl_desc.caps & DLCAPS_SATURATION) {
-        channels_list = g_list_append (channels_list, "SATURATION");
+        channels_list = g_list_append (channels_list, (char *) "SATURATION");
       }
 
       if (channels_list) {

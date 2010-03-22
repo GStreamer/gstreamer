@@ -55,9 +55,6 @@ on_radiobuttonVideoCapture_toggled (GtkToggleButton * togglebutton,
     gpointer user_data);
 
 void
-on_rbBntVidEff_toggled (GtkToggleButton * togglebutton, gchar * effect);
-
-void
 on_rbBntVidEffNone_toggled (GtkToggleButton * togglebutton, gpointer data);
 
 void

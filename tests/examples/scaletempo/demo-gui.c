@@ -411,7 +411,7 @@ demo_gui_do_playlist_next (GtkAction * action, gpointer data)
 static void
 demo_gui_do_about_dialog (GtkAction * action, gpointer data)
 {
-  static gchar *authors[] =
+  static const gchar *authors[] =
       { "Rov Juvano <rovjuvano@users.sourceforge.net>", NULL };
 
   gtk_show_about_dialog (NULL,

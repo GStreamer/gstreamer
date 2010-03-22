@@ -255,10 +255,10 @@ gst_jasper_enc_init_encoder (GstJasperEnc * enc)
   switch (enc->mode) {
     case GST_JP2ENC_MODE_J2C:
     case GST_JP2ENC_MODE_JPC:
-      enc->fmt = jas_image_strtofmt ("jpc");
+      enc->fmt = jas_image_strtofmt ((char *) "jpc");
       break;
     case GST_JP2ENC_MODE_JP2:
-      enc->fmt = jas_image_strtofmt ("jp2");
+      enc->fmt = jas_image_strtofmt ((char *) "jp2");
       break;
   }
 
@@ -422,7 +422,7 @@ gst_jasper_enc_get_data (GstJasperEnc * enc, guint8 * data, GstBuffer ** outbuf)
 
   GST_LOG_OBJECT (enc, "all components written");
 
-  if (jas_image_encode (enc->image, stream, enc->fmt, ""))
+  if (jas_image_encode (enc->image, stream, enc->fmt, (char *) ""))
     goto fail_encode;
 
   GST_LOG_OBJECT (enc, "image encoded");

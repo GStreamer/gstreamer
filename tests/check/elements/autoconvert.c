@@ -62,7 +62,7 @@ teardown (void)
 static void
 set_autoconvert_factories (GstElement * autoconvert)
 {
-  gchar *desired_features[] = { "testelement1", "testelement2" };
+  const gchar *desired_features[] = { "testelement1", "testelement2" };
   GstElementFactory *feature;
   GList *factories = NULL;
   gint i;
@@ -167,7 +167,7 @@ autoconvert_suite (void)
 /* Implementation of the test elements */
 
 static void
-configure_test_element (GstBin * bin, gchar * capsfilter)
+configure_test_element (GstBin * bin, const gchar * capsfilter)
 {
   GstElement *filter;
   GstElement *identity;

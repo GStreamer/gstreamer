@@ -57,7 +57,7 @@ static GstStaticPadTemplate srcaudiotemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, gchar * sinkname)
+    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -86,7 +86,7 @@ setup_src_pad (GstElement * element,
 }
 
 static void
-teardown_src_pad (GstElement * element, gchar * sinkname)
+teardown_src_pad (GstElement * element, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
   gchar *padname;
@@ -122,7 +122,7 @@ teardown_src_pad (GstElement * element, gchar * sinkname)
 }
 
 static GstElement *
-setup_asfmux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
+setup_asfmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
 {
   GstElement *asfmux;
 
@@ -137,7 +137,7 @@ setup_asfmux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
 }
 
 static void
-cleanup_asfmux (GstElement * asfmux, gchar * sinkname)
+cleanup_asfmux (GstElement * asfmux, const gchar * sinkname)
 {
   GST_DEBUG ("cleanup_asfmux");
   gst_element_set_state (asfmux, GST_STATE_NULL);
@@ -149,8 +149,8 @@ cleanup_asfmux (GstElement * asfmux, gchar * sinkname)
 }
 
 static void
-check_asfmux_pad (GstStaticPadTemplate * srctemplate, gchar * src_caps_string,
-    gchar * sinkname)
+check_asfmux_pad (GstStaticPadTemplate * srctemplate,
+    const gchar * src_caps_string, const gchar * sinkname)
 {
   GstElement *asfmux;
   GstBuffer *inbuffer;

@@ -682,8 +682,8 @@ gst_sdp_demux_media_to_caps (gint pt, const GstSDPMedia * media)
       /* <param>[=<value>] are separated with ';' */
       pairs = g_strsplit (p, ";", 0);
       for (i = 0; pairs[i]; i++) {
-        gchar *valpos;
-        gchar *val, *key;
+        gchar *valpos, *key;
+        const gchar *val;
 
         /* the key may not have a '=', the value can have other '='s */
         valpos = strstr (pairs[i], "=");
@@ -933,7 +933,8 @@ start_session_failure:
 static gboolean
 gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
 {
-  gchar *uri, *name, *destination;
+  gchar *uri, *name;
+  const gchar *destination;
   GstPad *pad;
 
   GST_DEBUG_OBJECT (demux, "creating UDP sources for multicast");

@@ -799,10 +799,10 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag (delivery);
         guint8 polarization =
             DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization (delivery);
-        gchar *polarization_str;
+        const gchar *polarization_str;
         guint8 modulation =
             DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation (delivery);
-        gchar *modulation_str;
+        const gchar *modulation_str;
         guint8 *symbol_rate_bcd =
             DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate (delivery);
         guint32 symbol_rate =
@@ -814,7 +814,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             100000 * ((symbol_rate_bcd[0] & 0xF0) >> 4);
         guint8 fec_inner =
             DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner (delivery);
-        gchar *fec_inner_str;
+        const gchar *fec_inner_str;
 
         switch (polarization) {
           case 0:
@@ -914,7 +914,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode (delivery);
         gboolean other_frequency =
             DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency (delivery);
-        gchar *constellation_str, *code_rate_hp_str, *code_rate_lp_str,
+        const gchar *constellation_str, *code_rate_hp_str, *code_rate_lp_str,
             *transmission_mode_str;
         /* do the stuff */
         /* bandwidth is 8 if 0, 7 if 1, 6 if 2, reserved otherwise */
@@ -1041,7 +1041,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
         guint8 modulation =
             DESC_DVB_CABLE_DELIVERY_SYSTEM_modulation (delivery);
-        gchar *modulation_str;
+        const gchar *modulation_str;
         guint8 *symbol_rate_bcd =
             DESC_DVB_CABLE_DELIVERY_SYSTEM_symbol_rate (delivery);
         guint32 symbol_rate =
@@ -1052,7 +1052,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
             10000 * (symbol_rate_bcd[0] & 0x0F) +
             100000 * ((symbol_rate_bcd[0] & 0xF0) >> 4);
         guint8 fec_inner = DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_inner (delivery);
-        gchar *fec_inner_str;
+        const gchar *fec_inner_str;
 
         switch (fec_inner) {
           case 0:
@@ -1386,7 +1386,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
             (gchar *) DESC_DVB_SERVICE_name_text (service_descriptor);
         if (servicename_length + serviceprovider_name_length + 2 <=
             DESC_LENGTH (service_descriptor)) {
-          gchar *running_status_tmp;
+          const gchar *running_status_tmp;
           switch (running_status) {
             case 0:
               running_status_tmp = "undefined";
@@ -1700,7 +1700,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           gint freq = 25;       /* 25 or 30 measured in Hertz */
           gboolean highdef = FALSE;
           gboolean panvectors = FALSE;
-          gchar *comptype = "";
+          const gchar *comptype = "";
 
           comp_descriptor = g_array_index (component_descriptors, guint8 *, i);
           switch (DESC_DVB_COMPONENT_stream_content (comp_descriptor)) {

@@ -443,7 +443,7 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecVersion version,
 {
   gpointer rv_custom_msg, rv_free, rv_init, rv_transform;
   GModule *module = NULL;
-  gchar *path, *names;
+  const gchar *path, *names;
   gchar **split_names, **split_path;
   int i, j;
 

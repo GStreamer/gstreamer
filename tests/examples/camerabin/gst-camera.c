@@ -127,8 +127,8 @@ static guint32 num_vids = 0;
 
 static gint max_fr_n = 0;
 static gint max_fr_d = 0;
-static gchar *video_post;
-static gchar *image_post;
+static const gchar *video_post;
+static const gchar *image_post;
 
 static GList *video_caps_list = NULL;
 
@@ -139,7 +139,7 @@ static gchar *iso_speed_labels[] = { "auto", "100", "200", "400" };
 
 static struct
 {
-  gchar *label;
+  const gchar *label;
   gint width;
   gint height;
 } image_resolution_label_map[] = {
@@ -920,8 +920,8 @@ on_radiobuttonVideoCapture_toggled (GtkToggleButton * togglebutton,
   }
 }
 
-void
-on_rbBntVidEff_toggled (GtkToggleButton * togglebutton, gchar * effect)
+static void
+on_rbBntVidEff_toggled (GtkToggleButton * togglebutton, const gchar * effect)
 {
   if (gtk_toggle_button_get_active (togglebutton)) {
     /* lets also use those effects to image */
@@ -1601,7 +1601,7 @@ static gboolean
 ui_create (void)
 {
   GError *error = NULL;
-  gchar *uifile = DEFAULT_UI_FILE;
+  const gchar *uifile = DEFAULT_UI_FILE;
 
   if (!g_file_test (uifile, G_FILE_TEST_EXISTS)) {
     uifile = SHARED_UI_FILE;

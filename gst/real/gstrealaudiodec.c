@@ -87,7 +87,7 @@ typedef struct
     guint16 (*RAOpenCodec2) (gpointer, const gchar *);
     guint16 (*RASetFlavor) (gpointer, guint16);
   void (*SetDLLAccessPath) (gchar *);
-  void (*RASetPwd) (gpointer, gchar *);
+  void (*RASetPwd) (gpointer, const gchar *);
 } GstRADecLibrary;
 
 typedef struct
@@ -211,7 +211,7 @@ close_library (GstRealAudioDec * dec, GstRADecLibrary * lib)
 static gboolean
 open_library (GstRealAudioDec * dec, gint version, GstRADecLibrary * lib)
 {
-  gchar *path, *names;
+  const gchar *path, *names;
   gchar **split_names, **split_path;
   gint i, j;
   gpointer ra_close_codec, ra_decode, ra_free_decoder;
@@ -300,7 +300,7 @@ codec_search_done:
   lib->RAOpenCodec2 = (guint16 (*)(gpointer, const gchar *)) ra_open_codec2;
   lib->RAInitDecoder = (guint16 (*)(gpointer, gpointer)) ra_init_decoder;
   lib->RASetFlavor = (guint16 (*)(gpointer, guint16)) ra_set_flavor;
-  lib->RASetPwd = (void (*)(gpointer, gchar *)) ra_set_pwd;
+  lib->RASetPwd = (void (*)(gpointer, const gchar *)) ra_set_pwd;
   lib->SetDLLAccessPath = (void (*)(gchar *)) set_dll_access_path;
 
   if (lib->SetDLLAccessPath)

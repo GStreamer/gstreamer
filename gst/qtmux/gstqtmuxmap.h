@@ -61,9 +61,9 @@ typedef enum _GstQTMuxFormat
 typedef struct _GstQTMuxFormatProp
 {
   GstQTMuxFormat format;
-  gchar *name;
-  gchar *long_name;
-  gchar *type_name;
+  const gchar *name;
+  const gchar *long_name;
+  const gchar *type_name;
   GstStaticCaps src_caps;
   GstStaticCaps video_sink_caps;
   GstStaticCaps audio_sink_caps;

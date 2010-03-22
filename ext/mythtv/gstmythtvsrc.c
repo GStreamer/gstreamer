@@ -969,9 +969,9 @@ gst_mythtv_src_uri_get_type (void)
 static gchar **
 gst_mythtv_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "myth", "myths", NULL };
+  static const gchar *protocols[] = { "myth", "myths", NULL };
 
-  return protocols;
+  return (gchar **) protocols;
 }
 
 static const gchar *

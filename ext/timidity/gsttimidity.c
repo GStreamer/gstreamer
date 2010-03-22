@@ -128,7 +128,7 @@ gst_timidity_init (GstTimidity * filter, GstTimidityClass * g_class)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
 
   /* initialise timidity library */
-  if (mid_init (TIMIDITY_CFG) == 0) {
+  if (mid_init ((char *) TIMIDITY_CFG) == 0) {
     filter->initialized = TRUE;
   } else {
     GST_WARNING ("can't initialize timidity with config: " TIMIDITY_CFG);

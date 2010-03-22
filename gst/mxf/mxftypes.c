@@ -645,8 +645,8 @@ mxf_utf8_to_utf16 (const gchar * str, guint16 * size)
   }
 
   ret = (guint8 *)
-      g_convert_with_fallback (str, -1, "UTF-16BE", "UTF-8", "*", NULL, &s,
-      &error);
+      g_convert_with_fallback (str, -1, "UTF-16BE", "UTF-8", (char *) "*", NULL,
+      &s, &error);
 
   if (ret == NULL) {
     GST_WARNING ("UTF-16-BE to UTF-8 conversion failed: %s", error->message);

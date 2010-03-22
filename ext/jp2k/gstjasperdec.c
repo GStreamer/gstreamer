@@ -218,7 +218,7 @@ gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
         break;
     }
 
-    dec->fmt = jas_image_strtofmt ("jpc");
+    dec->fmt = jas_image_strtofmt ((char *) "jpc");
     /* strip the j2c box stuff it is embedded in */
     if (!strcmp (mimetype, "image/x-jpc"))
       dec->strip = 0;
@@ -231,7 +231,7 @@ gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
       gst_buffer_ref (dec->codec_data);
     }
   } else if (!strcmp (mimetype, "image/jp2"))
-    dec->fmt = jas_image_strtofmt ("jp2");
+    dec->fmt = jas_image_strtofmt ((char *) "jp2");
 
   if (dec->fmt < 0)
     goto refuse_caps;
@@ -457,7 +457,7 @@ gst_jasper_dec_get_picture (GstJasperDec * dec, guint8 * data,
   if (!(stream = jas_stream_memopen ((gpointer) data, size)))
     goto fail_stream;
 
-  if (!(image = jas_image_decode (stream, dec->fmt, "")))
+  if (!(image = jas_image_decode (stream, dec->fmt, (char *) "")))
     goto fail_decode;
 
   if (!gst_jasper_dec_negotiate (dec, image))

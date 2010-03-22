@@ -589,7 +589,7 @@ cdaudio_uri_get_type (void)
 static gchar **
 cdaudio_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "cd", NULL };
+  static gchar *protocols[] = { (char *) "cd", NULL };
 
   return protocols;
 }

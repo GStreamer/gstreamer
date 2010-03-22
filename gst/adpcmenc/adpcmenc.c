@@ -152,8 +152,8 @@ adpcmenc_setup (ADPCMEnc * enc)
   const int DVI_IMA_HEADER_SIZE = 4;
   const int ADPCM_SAMPLES_PER_BYTE = 2;
   guint64 sample_bytes;
+  const char *layout;
 
-  char *layout;
   switch (enc->layout) {
     case LAYOUT_ADPCM_DVI:
       layout = "dvi";

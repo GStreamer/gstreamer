@@ -322,7 +322,7 @@ gst_base_metadata_dispose_members (GstBaseMetadata * filter)
 const gchar *
 gst_base_metadata_get_type_name (int img_type)
 {
-  gchar *type_name = NULL;
+  const gchar *type_name = NULL;
 
   switch (img_type) {
     case IMG_JPEG:
@@ -412,7 +412,7 @@ gst_base_metadata_configure_caps (GstBaseMetadata * filter)
 {
   GstCaps *caps = NULL;
   gboolean ret = FALSE;
-  gchar *mime = NULL;
+  const gchar *mime = NULL;
   GstPad *peer = NULL;
 
   peer = gst_pad_get_peer (filter->sinkpad);

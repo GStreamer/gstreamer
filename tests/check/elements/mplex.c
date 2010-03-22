@@ -118,7 +118,7 @@ test_sink_event (GstPad * pad, GstEvent * event)
 /* setup and teardown needs some special handling for muxer */
 static GstPad *
 setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps, gchar * sinkname)
+    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
 
@@ -146,7 +146,7 @@ setup_src_pad (GstElement * element,
 }
 
 static void
-teardown_src_pad (GstElement * element, gchar * sinkname)
+teardown_src_pad (GstElement * element, const gchar * sinkname)
 {
   GstPad *srcpad, *sinkpad;
   gchar *padname;

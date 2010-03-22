@@ -1026,8 +1026,8 @@ gst_neonhttp_src_uri_get_type (void)
 static gchar **
 gst_neonhttp_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "http", "https", NULL };
-  return protocols;
+  static const gchar *protocols[] = { "http", "https", NULL };
+  return (gchar **) protocols;
 }
 
 static const gchar *

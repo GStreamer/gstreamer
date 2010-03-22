@@ -26,10 +26,15 @@ extern GOptionGroup *gtk_get_option_group (gboolean);
 extern GOptionGroup *gst_init_get_option_group (void);
 
 static void
-handle_error_message (DemoPlayer * player, const gchar * msg, gpointer data)
+handle_player_error (DemoPlayer * player, const gchar * msg, gpointer unused)
 {
-  const gchar *format = (const gchar *) data;
-  g_print (format, msg);
+  g_print ("PLAYER ERROR: %s\n", msg);
+}
+
+static void
+handle_gui_error (DemoPlayer * player, const gchar * msg, gpointer unused)
+{
+  g_print ("GUI ERROR: %s\n", msg);
 }
 
 static void
@@ -71,10 +76,8 @@ main (int argc, char *argv[])
 
   gui = g_object_new (DEMO_TYPE_GUI, NULL);
   player = g_object_new (DEMO_TYPE_PLAYER, NULL);
-  g_signal_connect (player, "error", G_CALLBACK (handle_error_message),
-      "PLAYER ERROR: %s\n");
-  g_signal_connect (gui, "error", G_CALLBACK (handle_error_message),
-      "GUI ERROR: %s\n");
+  g_signal_connect (player, "error", G_CALLBACK (handle_player_error), NULL);
+  g_signal_connect (gui, "error", G_CALLBACK (handle_gui_error), NULL);
   demo_gui_set_player (gui, player);
 
   loop = g_main_loop_new (NULL, FALSE);

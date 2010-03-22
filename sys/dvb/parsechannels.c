@@ -37,14 +37,14 @@ parse_channels_conf_from_file (const gchar * filename)
   gchar **lines;
   gchar *line;
   gchar **fields;
-  gchar *terrestrial[] = { "inversion", "bandwidth",
+  const gchar *terrestrial[] = { "inversion", "bandwidth",
     "code-rate-hp", "code-rate-lp", "modulation", "transmission-mode",
     "guard", "hierarchy"
   };
-  gchar *satellite[] = { "polarity", "diseqc-source",
+  const gchar *satellite[] = { "polarity", "diseqc-source",
     "symbol-rate"
   };
-  gchar *cable[] = { "inversion", "symbol-rate", "code-rate-hp",
+  const gchar *cable[] = { "inversion", "symbol-rate", "code-rate-hp",
     "modulation"
   };
   int i;

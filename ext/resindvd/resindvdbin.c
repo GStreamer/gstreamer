@@ -175,7 +175,7 @@ rsn_dvdbin_uri_get_type (void)
 static gchar **
 rsn_dvdbin_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "dvd", NULL };
+  static gchar *protocols[] = { (char *) "dvd", NULL };
 
   return protocols;
 }

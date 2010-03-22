@@ -926,7 +926,7 @@ add_relative_volume_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   gint16 gain_int;
   guint8 peak_bits;
   GstId3v2Frame frame;
-  gchar *frame_id;
+  const gchar *frame_id;
 
   /* figure out tag names and the identification string to use */
   if (strcmp (tag, GST_TAG_TRACK_PEAK) == 0 ||
@@ -1154,7 +1154,8 @@ latin1_convert (const GstTagList * list, const gchar * tag,
 
   /* Convert to Latin-1 (ISO-8859-1), replacing unrepresentable characters
      with '?' */
-  latin1 = g_convert_with_fallback (str, -1, "ISO-8859-1", "UTF-8", "?",
+  latin1 =
+      g_convert_with_fallback (str, -1, "ISO-8859-1", "UTF-8", (char *) "?",
       NULL, &len, NULL);
 
   if (latin1 != NULL && *latin1 != '\0') {

@@ -201,7 +201,7 @@ gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter)
 {
   GstCaps *caps = NULL;
   gboolean ret = FALSE;
-  gchar *mime = NULL;
+  const gchar *mime = NULL;
 
   switch (GST_BASE_METADATA_IMG_TYPE (filter)) {
     case IMG_JPEG:

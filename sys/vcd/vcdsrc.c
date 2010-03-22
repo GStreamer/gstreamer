@@ -458,7 +458,7 @@ gst_vcdsrc_uri_get_type (void)
 static gchar **
 gst_vcdsrc_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "vcd", NULL };
+  static gchar *protocols[] = { (char *) "vcd", NULL };
 
   return protocols;
 }
