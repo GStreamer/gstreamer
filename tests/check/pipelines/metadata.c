@@ -194,7 +194,7 @@ GST_START_TEST (test_common_tags)
    * And since we don't have any programmatic feedback on whether
    * a tag is properly handled or not... we need to do this kind
    * of hack. */
-#if HAVE_XMP
+#ifdef HAVE_XMP
   test_tags ("taglist,title=\"test image\"");
 #endif
 }

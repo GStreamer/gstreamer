@@ -4,6 +4,7 @@
 #define HAS_YM3812 1
 typedef signed short int FMSAMPLE;
 
+#define HAS_Y8950 0
 
 #define BUILD_YM3812 (HAS_YM3812)
 #define BUILD_YM3526 (HAS_YM3526)

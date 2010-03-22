@@ -38,7 +38,7 @@
 
 #include "gstladspa.h"
 #include <ladspa.h>             /* main ladspa sdk include file */
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
 #include <lrdf.h>
 #endif
 
@@ -84,7 +84,7 @@ gst_ladspa_base_init (gpointer g_class)
   guint j, audio_in_count, audio_out_count, control_in_count, control_out_count;
   const gchar *klass_tags;
   gchar *longname, *author;
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   gchar *uri;
 #endif
   gchar *extra_klass_tags = NULL;
@@ -146,7 +146,7 @@ gst_ladspa_base_init (gpointer g_class)
   if (!author)
     author = g_strdup ("no author available");
 
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   /* libldrf support, we want to get extra class information here */
   uri = g_strdup_printf (LADSPA_BASE "%ld", desc->UniqueID);
   if (uri) {
@@ -232,7 +232,7 @@ gst_ladspa_base_init (gpointer g_class)
   } else
     klass_tags = "Filter/Effect/Audio/LADSPA";
 
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   if (extra_klass_tags) {
     char *s = g_strconcat (klass_tags, extra_klass_tags, NULL);
     g_free (extra_klass_tags);
@@ -716,7 +716,7 @@ ladspa_describe_plugin (LADSPA_Descriptor_Function descriptor_function)
   }
 }
 
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
 static gboolean
 ladspa_rdf_directory_search (const char *dir_name)
 {
@@ -798,7 +798,7 @@ ladspa_plugin_path_search (void)
   gchar **paths;
   gint i, j, path_entries;
   gboolean res = FALSE, skip;
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   gchar *pos, *prefix, *rdf_path;
 #endif
 
@@ -815,7 +815,7 @@ ladspa_plugin_path_search (void)
   path_entries = g_strv_length (paths);
   GST_INFO ("%d dirs in search paths \"%s\"", path_entries, ladspa_path);
 
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   for (i = 0; i < path_entries; i++) {
     skip = FALSE;
     for (j = 0; j < i; j++) {
@@ -871,7 +871,7 @@ plugin_init (GstPlugin * plugin)
       "LADSPA_PATH",
       GST_LADSPA_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
-#if HAVE_LRDF
+#ifdef HAVE_LRDF
   lrdf_init ();
 #endif
 

@@ -24,7 +24,7 @@
 #endif
 
 #include "gstmpeg2encoptions.hh"
-#if WIN32
+#ifdef WIN32
 #  include <windows.h> //For GetSystemInfo
 #endif
 
