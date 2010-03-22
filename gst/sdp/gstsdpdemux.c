@@ -112,7 +112,6 @@ enum
   PROP_LATENCY
 };
 
-static void gst_sdp_demux_base_init (gpointer g_class);
 static void gst_sdp_demux_finalize (GObject * object);
 
 static void gst_sdp_demux_set_property (GObject * object, guint prop_id,

@@ -166,14 +166,6 @@ gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter);
  * GObject callback functions declaration
  */
 
-static void gst_metadata_demux_base_init (gpointer gclass);
-
-static void gst_metadata_demux_class_init (GstMetadataDemuxClass * klass);
-
-static void
-gst_metadata_demux_init (GstMetadataDemux * filter,
-    GstMetadataDemuxClass * gclass);
-
 static void gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 

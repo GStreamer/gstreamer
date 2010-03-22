@@ -72,14 +72,5 @@ extern MetadataParsingReturn
 metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
-extern MetadataParsingReturn
-metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start,
-    guint32 * next_size, GstAdapter ** adapter);
-
-extern MetadataParsingReturn
-metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
-
 G_END_DECLS
 #endif /* __GST_METADATAPARSE_UTIL_H__ */

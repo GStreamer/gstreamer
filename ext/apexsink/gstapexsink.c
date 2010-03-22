@@ -109,11 +109,6 @@ gst_apexsink_jacktype_get_type (void)
 }
 
 
-static void gst_apexsink_base_init (gpointer g_class);
-static void gst_apexsink_class_init (GstApExSinkClass * klass);
-static void gst_apexsink_init (GstApExSink * apexsink,
-    GstApExSinkClass * g_class);
-
 static void gst_apexsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_apexsink_get_property (GObject * object, guint prop_id,

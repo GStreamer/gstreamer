@@ -68,11 +68,6 @@ static GstStaticPadTemplate gst_jasper_dec_src_template =
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B }"))
     );
 
-static void gst_jasper_dec_base_init (gpointer g_class);
-static void gst_jasper_dec_class_init (GstJasperDecClass * klass);
-static void gst_jasper_dec_init (GstJasperDec * filter,
-    GstJasperDecClass * klass);
-
 static void gst_jasper_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jasper_dec_get_property (GObject * object, guint prop_id,

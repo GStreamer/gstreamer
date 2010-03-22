@@ -303,13 +303,6 @@ static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
  * GObject callback functions declaration
  */
 
-static void gst_camerabin_base_init (gpointer gclass);
-
-static void gst_camerabin_class_init (GstCameraBinClass * klass);
-
-static void
-gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass);
-
 static void gst_camerabin_dispose (GObject * object);
 
 static void gst_camerabin_finalize (GObject * object);
@@ -2264,8 +2257,7 @@ static void
 gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
 {
   GstStructure *in_st, *new_st, *req_st;
-  gint i, in_width = 0, in_height = 0, req_width = 0, req_height =
-      0, crop = 0;
+  gint i, in_width = 0, in_height = 0, req_width = 0, req_height = 0, crop = 0;
   const gchar *field_name;
   gdouble ratio_w, ratio_h;
   GstCaps *filter_caps = NULL;

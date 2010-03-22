@@ -89,9 +89,6 @@ enum
   ARG_ORIGINAL_CANVAS_HEIGHT,
 };
 
-static void gst_kate_tag_base_init (gpointer g_class);
-static void gst_kate_tag_class_init (GstKateTagClass * klass);
-static void gst_kate_tag_init (GstKateTag * kt, GstKateTagClass * g_class);
 static GstFlowReturn gst_kate_tag_parse_packet (GstKateParse * parse,
     GstBuffer * buffer);
 static void gst_kate_tag_set_property (GObject * object, guint prop_id,

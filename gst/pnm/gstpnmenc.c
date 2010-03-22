@@ -62,6 +62,8 @@ static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
+GST_BOILERPLATE (GstPnmenc, gst_pnmenc, GstElement, GST_TYPE_ELEMENT);
+
 static void
 gst_pnmenc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
@@ -255,5 +257,3 @@ gst_pnmenc_class_init (GstPnmencClass * klass)
       g_param_spec_boolean ("ascii", "ASCII Encoding", "The output will be "
           "ASCII encoded", FALSE, G_PARAM_READWRITE));
 }
-
-GST_BOILERPLATE (GstPnmenc, gst_pnmenc, GstElement, GST_TYPE_ELEMENT)

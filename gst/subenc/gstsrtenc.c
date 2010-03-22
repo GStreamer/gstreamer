@@ -49,11 +49,8 @@ static GstFlowReturn gst_srt_enc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean plugin_init (GstPlugin * plugin);
 static gchar *gst_srt_enc_timeconvertion (GstSrtEnc * srtenc, GstBuffer * buf);
 static gchar *gst_srt_enc_timestamp_to_string (GstClockTime timestamp);
-static void gst_srt_enc_base_init (gpointer klass);
-static void gst_srt_enc_class_init (GstSrtEncClass * klass);
 static void gst_srt_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_srt_enc_init (GstSrtEnc * src, GstSrtEncClass * klass);
 static void gst_srt_enc_reset (GstSrtEnc * srtenc);
 static void gst_srt_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

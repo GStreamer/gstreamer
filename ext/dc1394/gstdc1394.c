@@ -89,8 +89,6 @@ static void gst_dc1394_set_caps_framesize_range (GstStructure * gs,
 
 static gint gst_dc1394_caps_set_framerate_list (GstStructure * gs,
     dc1394framerates_t * framerates);
-static void gst_dc1394_framerate_const_to_frac (int framerateconst,
-    GValue * framefrac);
 
 static GstCaps *gst_dc1394_get_all_dc1394_caps (void);
 static GstCaps *gst_dc1394_get_cam_caps (GstDc1394 * src);

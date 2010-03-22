@@ -95,8 +95,6 @@ struct _GstJifMuxPrivate
   const guint8 *scan_data;
 };
 
-static void gst_jif_mux_base_init (gpointer g_class);
-static void gst_jif_mux_class_init (GstJifMuxClass * klass);
 static void gst_jif_mux_finalize (GObject * object);
 
 static void gst_jif_mux_reset (GstJifMux * self);

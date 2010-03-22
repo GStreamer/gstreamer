@@ -75,8 +75,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_wildmidi_base_init (gpointer g_class);
-static void gst_wildmidi_class_init (GstWildmidiClass * klass);
 static void gst_wildmidi_finalize (GObject * object);
 
 static gboolean gst_wildmidi_sink_event (GstPad * pad, GstEvent * event);

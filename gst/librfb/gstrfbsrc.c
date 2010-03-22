@@ -70,8 +70,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) 0/1")
     );
 
-static void gst_rfb_src_base_init (gpointer g_class);
-static void gst_rfb_src_class_init (GstRfbSrcClass * klass);
 static void gst_rfb_src_dispose (GObject * object);
 static void gst_rfb_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

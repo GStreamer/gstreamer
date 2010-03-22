@@ -48,7 +48,6 @@ static GQuark QUARK_NETWORK_ID;
 static GQuark QUARK_CURRENT_NEXT_INDICATOR;
 static GQuark QUARK_ACTUAL_NETWORK;
 static GQuark QUARK_NETWORK_NAME;
-static GQuark QUARK_TRANSPORT_STREAM_ID;
 static GQuark QUARK_ORIGINAL_NETWORK_ID;
 static GQuark QUARK_TRANSPORTS;
 
@@ -2227,7 +2226,6 @@ _init_local ()
   QUARK_CURRENT_NEXT_INDICATOR = g_quark_from_string ("current-next-indicator");
   QUARK_ACTUAL_NETWORK = g_quark_from_string ("actual-network");
   QUARK_NETWORK_NAME = g_quark_from_string ("network-name");
-  QUARK_TRANSPORT_STREAM_ID = g_quark_from_string ("transport-stream-id");
   QUARK_ORIGINAL_NETWORK_ID = g_quark_from_string ("original-network-id");
   QUARK_TRANSPORTS = g_quark_from_string ("transports");
 

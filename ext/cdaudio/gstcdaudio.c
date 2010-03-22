@@ -91,8 +91,6 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_cdaudio_class_init (GstCDAudioClass * klass);
-static void gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class);
 static void gst_cdaudio_finalize (GObject * object);
 
 static void gst_cdaudio_set_property (GObject * object, guint prop_id,

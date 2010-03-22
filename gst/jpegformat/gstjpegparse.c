@@ -109,8 +109,6 @@ struct _GstJpegParsePrivate
   gint framerate_denominator;
 };
 
-static void gst_jpeg_parse_base_init (gpointer g_class);
-static void gst_jpeg_parse_class_init (GstJpegParseClass * klass);
 static void gst_jpeg_parse_dispose (GObject * object);
 
 static GstFlowReturn gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buffer);

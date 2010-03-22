@@ -65,11 +65,6 @@ static GstStaticPadTemplate gst_jasper_enc_src_template =
         "image/jp2")
     );
 
-static void gst_jasper_enc_base_init (gpointer g_class);
-static void gst_jasper_enc_class_init (GstJasperEncClass * klass);
-static void gst_jasper_enc_init (GstJasperEnc * filter,
-    GstJasperEncClass * klass);
-
 static void gst_jasper_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jasper_enc_get_property (GObject * object, guint prop_id,

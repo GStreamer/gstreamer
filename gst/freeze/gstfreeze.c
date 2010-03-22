@@ -58,7 +58,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void gst_freeze_class_init (GstFreezeClass * klass);
 static void gst_freeze_dispose (GObject * object);
 static void gst_freeze_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

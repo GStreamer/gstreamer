@@ -147,13 +147,6 @@ static gboolean gst_metadata_mux_configure_srccaps (GstMetadataMux * filter);
  * GObject callback functions declaration
  */
 
-static void gst_metadata_mux_base_init (gpointer gclass);
-
-static void gst_metadata_mux_class_init (GstMetadataMuxClass * klass);
-
-static void
-gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass);
-
 static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 

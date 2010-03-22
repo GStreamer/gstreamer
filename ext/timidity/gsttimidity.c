@@ -63,9 +63,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_timidity_base_init (gpointer g_class);
-static void gst_timidity_class_init (GstTimidityClass * klass);
-
 static gboolean gst_timidity_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_timidity_change_state (GstElement * element,
     GstStateChange transition);

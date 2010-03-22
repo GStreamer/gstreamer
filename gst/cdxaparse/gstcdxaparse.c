@@ -39,7 +39,6 @@ static gboolean gst_cdxa_parse_sink_activate (GstPad * sinkpad);
 static void gst_cdxa_parse_loop (GstPad * sinkpad);
 static gboolean gst_cdxa_parse_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
-static gboolean gst_cdxa_parse_sink_activate (GstPad * sinkpad);
 static GstStateChangeReturn gst_cdxa_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_cdxa_parse_src_event (GstPad * srcpad, GstEvent * event);
