@@ -57,7 +57,7 @@ typedef struct
 } dyn_link;
 
 static inline long
-myclock ()
+myclock (void)
 {
   struct timeval tv;
 

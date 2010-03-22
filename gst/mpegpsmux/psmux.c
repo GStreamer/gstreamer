@@ -67,7 +67,7 @@ static gboolean psmux_write_program_stream_map (PsMux * mux);
  * Returns: A new #PsMux object.
  */
 PsMux *
-psmux_new ()
+psmux_new (void)
 {
   PsMux *mux;
 

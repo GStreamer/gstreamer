@@ -437,7 +437,7 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
 
 /* NEON CALLBACK */
 static void
-oom_callback ()
+oom_callback (void)
 {
   GST_ERROR ("memory exeception in neon");
 }

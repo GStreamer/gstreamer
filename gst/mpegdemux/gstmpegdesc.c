@@ -202,7 +202,7 @@ gst_mpeg_descriptor_nth (GstMPEGDescriptor * desc, guint i)
 }
 
 void
-gst_mpegtsdesc_init_debug ()
+gst_mpegtsdesc_init_debug (void)
 {
   GST_DEBUG_CATEGORY_INIT (gstmpegtsdesc_debug, "mpegtsdesc", 0,
       "MPEG transport stream parser (descriptor)");

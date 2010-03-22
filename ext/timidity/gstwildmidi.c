@@ -127,7 +127,7 @@ gst_wildmidi_base_init (gpointer gclass)
 }
 
 static gboolean
-wildmidi_open_config ()
+wildmidi_open_config (void)
 {
   gchar *path = g_strdup (g_getenv ("WILDMIDI_CFG"));
   gint ret;

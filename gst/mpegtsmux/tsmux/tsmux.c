@@ -121,7 +121,7 @@ static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
  * Returns: A new #TsMux object.
  */
 TsMux *
-tsmux_new ()
+tsmux_new (void)
 {
   TsMux *mux;
 

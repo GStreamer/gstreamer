@@ -114,7 +114,7 @@ push_and_test (GstCaps * prop_caps, gboolean join, gboolean replace,
 #define SRC_HEIGHT 12
 
 static GstCaps *
-make_src_caps ()
+make_src_caps (void)
 {
   return gst_caps_new_simple ("video/x-raw-yuv", "width", G_TYPE_INT, SRC_WIDTH,
       "height", G_TYPE_INT, SRC_HEIGHT, NULL);

@@ -608,7 +608,7 @@ me_gst_setup_default_pipeline (gpointer data)
 }
 
 static void
-me_gst_cleanup_element ()
+me_gst_cleanup_element (void)
 {
   if (gst_camera_bin) {
     GstBus *bus;
@@ -630,7 +630,7 @@ me_gst_cleanup_element ()
 }
 
 static gboolean
-capture_mode_stop ()
+capture_mode_stop (void)
 {
   if (capture_state == CAP_STATE_VIDEO_PAUSED
       || capture_state == CAP_STATE_VIDEO_RECORDING) {
@@ -641,7 +641,7 @@ capture_mode_stop ()
 }
 
 static void
-capture_mode_config_gui ()
+capture_mode_config_gui (void)
 {
   switch (capture_state) {
     case CAP_STATE_IMAGE:
@@ -1193,7 +1193,7 @@ fill_resolution_combo (GstCaps * caps)
 }
 
 static GstCaps *
-create_default_caps ()
+create_default_caps (void)
 {
   GstCaps *default_caps;
 
@@ -1203,7 +1203,7 @@ create_default_caps ()
 }
 
 static void
-init_view_finder_resolution_combobox ()
+init_view_finder_resolution_combobox (void)
 {
   GstCaps *input_caps = NULL, *default_caps = NULL, *intersect = NULL;
 
@@ -1230,7 +1230,7 @@ init_view_finder_resolution_combobox ()
 }
 
 static void
-destroy_color_controls ()
+destroy_color_controls (void)
 {
   GList *widgets, *item;
   GtkWidget *widget = NULL;
@@ -1250,7 +1250,7 @@ destroy_color_controls ()
 }
 
 static void
-create_color_controls ()
+create_color_controls (void)
 {
   GstColorBalance *balance = NULL;
   const GList *controls, *item;
@@ -1487,7 +1487,7 @@ add_menuitem (GtkMenu * parent_menu, const gchar * item_name)
 }
 
 GList *
-create_iso_speed_labels ()
+create_iso_speed_labels (void)
 {
   GList *labels = NULL;
   gint i;
@@ -1498,7 +1498,7 @@ create_iso_speed_labels ()
 }
 
 GList *
-create_ev_comp_labels ()
+create_ev_comp_labels (void)
 {
   GList *labels = NULL;
   gdouble comp;
@@ -1568,7 +1568,7 @@ capture_image_res_toggled_cb (GtkRadioMenuItem * menuitem, gpointer user_data)
 }
 
 GList *
-create_image_resolution_labels ()
+create_image_resolution_labels (void)
 {
   GList *labels = NULL;
   int i;

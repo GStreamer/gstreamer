@@ -107,7 +107,7 @@ mpegts_packetizer_stream_subtable_new (guint8 table_id,
 }
 
 static MpegTSPacketizerStream *
-mpegts_packetizer_stream_new ()
+mpegts_packetizer_stream_new (void)
 {
   MpegTSPacketizerStream *stream;
 
@@ -2203,7 +2203,7 @@ out:
 }
 
 static void
-_init_local ()
+_init_local (void)
 {
   GST_DEBUG_CATEGORY_INIT (mpegts_packetizer_debug, "mpegtspacketizer", 0,
       "MPEG transport stream parser");

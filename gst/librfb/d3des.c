@@ -81,10 +81,8 @@ static unsigned char pc2[48] = {
 };
 
 void
-deskey (key, edf)               /* Thanks to James Gillogly & Phil Karn! */
-     unsigned char *key;
-     int32_t edf;
-{
+deskey (unsigned char *key, int32_t edf)
+{                               /* Thanks to James Gillogly & Phil Karn! */
   register int32_t i, j, l, m, n;
   unsigned char pc1m[56], pcr[56];
   unsigned long kn[32];
@@ -127,8 +125,7 @@ deskey (key, edf)               /* Thanks to James Gillogly & Phil Karn! */
 }
 
 static void
-cookey (raw1)
-     register unsigned long *raw1;
+cookey (register unsigned long *raw1)
 {
   register unsigned long *cook, *raw0;
   unsigned long dough[32];
@@ -151,8 +148,7 @@ cookey (raw1)
 }
 
 void
-cpkey (into)
-     register unsigned long *into;
+cpkey (register unsigned long *into)
 {
   register unsigned long *from, *endp;
 
@@ -163,8 +159,7 @@ cpkey (into)
 }
 
 void
-usekey (from)
-     register unsigned long *from;
+usekey (register unsigned long *from)
 {
   register unsigned long *to, *endp;
 
@@ -175,8 +170,7 @@ usekey (from)
 }
 
 void
-des (inblock, outblock)
-     unsigned char *inblock, *outblock;
+des (unsigned char *inblock, unsigned char *outblock)
 {
   unsigned long work[2];
 
@@ -187,9 +181,7 @@ des (inblock, outblock)
 }
 
 static void
-scrunch (outof, into)
-     register unsigned char *outof;
-     register unsigned long *into;
+scrunch (register unsigned char *outof, register unsigned long *into)
 {
   *into = (*outof++ & 0xffL) << 24;
   *into |= (*outof++ & 0xffL) << 16;
@@ -203,9 +195,7 @@ scrunch (outof, into)
 }
 
 static void
-unscrun (outof, into)
-     register unsigned long *outof;
-     register unsigned char *into;
+unscrun (register unsigned long *outof, register unsigned char *into)
 {
   *into++ = (*outof >> 24) & 0xffL;
   *into++ = (*outof >> 16) & 0xffL;
@@ -371,8 +361,7 @@ static unsigned long SP8[64] = {
 };
 
 static void
-desfunc (block, keys)
-     register unsigned long *block, *keys;
+desfunc (register unsigned long *block, register unsigned long *keys)
 {
   register unsigned long fval, work, right, leftt;
   register int32_t round;
