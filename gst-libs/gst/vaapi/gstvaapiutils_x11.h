@@ -45,7 +45,4 @@ x11_get_geometry(
     guint      *pheight
 ) attribute_hidden;
 
-void x11_wait_event(Display *dpy, Window w, int type)
-    attribute_hidden;
-
 #endif /* GST_VAAPI_UTILS_X11_H */

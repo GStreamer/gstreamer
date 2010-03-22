@@ -60,12 +60,11 @@ enum {
 #define _NET_WM_STATE_ADD       1 /* add/set property      */
 #define _NET_WM_STATE_TOGGLE    2 /* toggle property       */
 
-static gboolean
+static void
 send_wmspec_change_state(GstVaapiWindowX11 *window, Atom state, gboolean add)
 {
     GstVaapiWindowX11Private * const priv = window->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
-    gboolean has_errors;
     XClientMessageEvent xclient;
 
     memset(&xclient, 0, sizeof(xclient));
@@ -81,8 +80,6 @@ send_wmspec_change_state(GstVaapiWindowX11 *window, Atom state, gboolean add)
     xclient.data.l[3] = 0;
     xclient.data.l[4] = 0;
 
-    GST_VAAPI_DISPLAY_LOCK(priv->display);
-    x11_trap_errors();
     XSendEvent(
         dpy,
         DefaultRootWindow(dpy),
@@ -90,9 +87,58 @@ send_wmspec_change_state(GstVaapiWindowX11 *window, Atom state, gboolean add)
         SubstructureRedirectMask|SubstructureNotifyMask,
         (XEvent *)&xclient
     );
-    has_errors = x11_untrap_errors() != 0;
+}
+
+static void
+wait_event(GstVaapiWindow *window, int type)
+{
+    GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
+    Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XEvent e;
+    Bool got_event;
+
+    for (;;) {
+        GST_VAAPI_DISPLAY_LOCK(priv->display);
+        got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, &e);
+        GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        if (got_event)
+            break;
+        g_usleep(10);
+    }
+}
+
+static gboolean
+timed_wait_event(GstVaapiWindow *window, int type, guint64 end_time, XEvent *e)
+{
+    GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
+    Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XEvent tmp_event;
+    GTimeVal now;
+    guint64 now_time;
+    Bool got_event;
+
+    if (!e)
+        e = &tmp_event;
+
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
+    got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, e);
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    return !has_errors;
+    if (got_event)
+        return TRUE;
+
+    do {
+        g_usleep(10);
+        GST_VAAPI_DISPLAY_LOCK(priv->display);
+        got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, e);
+        GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        if (got_event) {
+            g_print("HERE\n");
+            return TRUE;
+        }
+        g_get_current_time(&now);
+        now_time = (guint64)now.tv_sec * 1000000 + now.tv_usec;
+    } while (now_time < end_time);
+    return FALSE;
 }
 
 static gboolean
@@ -108,12 +154,13 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XMapWindow(dpy, priv->xid);
-    if (priv->create_window)
-        x11_wait_event(dpy, priv->xid, MapNotify);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
     if (has_errors)
         return FALSE;
+
+    if (priv->create_window)
+        wait_event(window, MapNotify);
 
     priv->is_mapped = TRUE;
     return TRUE;
@@ -132,12 +179,13 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XUnmapWindow(dpy, priv->xid);
-    if (priv->create_window)
-        x11_wait_event(dpy, priv->xid, UnmapNotify);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
     if (has_errors)
         return FALSE;
+
+    if (priv->create_window)
+        wait_event(window, UnmapNotify);
 
     priv->is_mapped = FALSE;
     return TRUE;
@@ -203,12 +251,12 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
     gboolean has_errors;
 
+    GST_VAAPI_DISPLAY_LOCK(priv->display);
+    x11_trap_errors();
     if (fullscreen) {
         if (!priv->is_mapped) {
             priv->fullscreen_on_map = TRUE;
 
-            GST_VAAPI_DISPLAY_LOCK(priv->display);
-            x11_trap_errors();
             XChangeProperty(
                 dpy,
                 priv->xid,
@@ -216,11 +264,9 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
                 PropModeReplace,
                 (unsigned char *)&priv->atom_NET_WM_STATE_FULLSCREEN, 1
             );
-            has_errors = x11_untrap_errors() != 0;
-            GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         }
         else {
-            has_errors = !send_wmspec_change_state(
+            send_wmspec_change_state(
                 GST_VAAPI_WINDOW_X11(window),
                 priv->atom_NET_WM_STATE_FULLSCREEN,
                 TRUE
@@ -231,24 +277,22 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
         if (!priv->is_mapped) {
             priv->fullscreen_on_map = FALSE;
 
-            GST_VAAPI_DISPLAY_LOCK(priv->display);
-            x11_trap_errors();
             XDeleteProperty(
                 dpy,
                 priv->xid,
                 priv->atom_NET_WM_STATE
             );
-            has_errors = x11_untrap_errors() != 0;
-            GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         }
         else {
-            has_errors = !send_wmspec_change_state(
+            send_wmspec_change_state(
                 GST_VAAPI_WINDOW_X11(window),
                 priv->atom_NET_WM_STATE_FULLSCREEN,
                 FALSE
             );
         }
     }
+    has_errors = x11_untrap_errors() != 0;
+    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
     return !has_errors;
 }
 

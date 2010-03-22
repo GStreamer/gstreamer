@@ -130,10 +130,3 @@ x11_get_geometry(
     if (pheight) *pheight = height;
     return TRUE;
 }
-
-void x11_wait_event(Display *dpy, Window w, int type)
-{
-    XEvent e;
-    while (!XCheckTypedWindowEvent(dpy, w, type, &e))
-        g_usleep(10);
-}
