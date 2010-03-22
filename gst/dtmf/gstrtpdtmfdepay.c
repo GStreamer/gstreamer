@@ -117,7 +117,7 @@
 
 typedef struct st_dtmf_key
 {
-  char *event_name;
+  const char *event_name;
   int event_encoding;
   float low_frequency;
   float high_frequency;
