@@ -49,7 +49,7 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean res;
 
-#if ENABLE_NLS
+#ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
