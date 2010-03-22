@@ -279,8 +279,8 @@ static gboolean
 gst_vaapi_window_x11_render(
     GstVaapiWindow          *window,
     GstVaapiSurface         *surface,
-    const GstVideoRectangle *src_rect,
-    const GstVideoRectangle *dst_rect,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect,
     guint                    flags
 )
 {
@@ -303,12 +303,12 @@ gst_vaapi_window_x11_render(
         GST_VAAPI_WINDOW_X11(window)->priv->xid,
         src_rect->x,
         src_rect->y,
-        src_rect->w,
-        src_rect->h,
+        src_rect->width,
+        src_rect->height,
         dst_rect->x,
         dst_rect->y,
-        dst_rect->w,
-        dst_rect->h,
+        dst_rect->width,
+        dst_rect->height,
         NULL, 0,
         get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(flags)
     );

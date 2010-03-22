@@ -155,6 +155,13 @@ GST_VAAPI_VIDEO_BUFFER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapitypes</FILE>
+<TITLE>Basic data structures</TITLE>
+GstVaapiPoint
+GstVaapiRectangle
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapiwindow</FILE>
 <TITLE>GstVaapiWindow</TITLE>
 GstVaapiWindow

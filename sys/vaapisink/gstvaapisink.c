@@ -141,7 +141,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVideoRectangle * const win_rect = &sink->window_rect;
+    GstVaapiRectangle * const win_rect = &sink->window_rect;
     guint num, den;
     guint win_width, win_height;
     guint display_width, display_height, display_par_n, display_par_d;
@@ -202,15 +202,15 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     GST_DEBUG("window size %ux%u", win_width, win_height);
 
     if (sink->fullscreen) {
-        win_rect->x = (display_width - win_width) / 2;
-        win_rect->y = (display_height - win_height) / 2;
+        win_rect->x  = (display_width - win_width) / 2;
+        win_rect->y  = (display_height - win_height) / 2;
     }
     else {
-        win_rect->x = 0;
-        win_rect->y = 0;
+        win_rect->x  = 0;
+        win_rect->y  = 0;
     }
-    win_rect->w = win_width;
-    win_rect->h = win_height;
+    win_rect->width  = win_width;
+    win_rect->height = win_height;
 
     if (sink->window)
         gst_vaapi_window_set_size(sink->window, win_width, win_height);

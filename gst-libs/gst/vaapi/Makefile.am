@@ -29,6 +29,7 @@ libgstvaapi_source_h =				\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\
+	gstvaapitypes.h				\
 	gstvaapivideobuffer.h			\
 	gstvaapivideopool.h			\
 	gstvaapivideosink.h			\

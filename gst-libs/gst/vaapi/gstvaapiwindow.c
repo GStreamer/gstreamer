@@ -349,27 +349,27 @@ gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
 }
 
 static inline void
-get_surface_rect(GstVaapiSurface *surface, GstVideoRectangle *rect)
+get_surface_rect(GstVaapiSurface *surface, GstVaapiRectangle *rect)
 {
     guint width, height;
 
     gst_vaapi_surface_get_size(surface, &width, &height);
-    rect->x = 0;
-    rect->y = 0;
-    rect->w = width;
-    rect->h = height;
+    rect->x      = 0;
+    rect->y      = 0;
+    rect->width  = width;
+    rect->height = height;
 }
 
 static inline void
-get_window_rect(GstVaapiWindow *window, GstVideoRectangle *rect)
+get_window_rect(GstVaapiWindow *window, GstVaapiRectangle *rect)
 {
     guint width, height;
 
     gst_vaapi_window_get_size(window, &width, &height);
-    rect->x = 0;
-    rect->y = 0;
-    rect->w = width;
-    rect->h = height;
+    rect->x      = 0;
+    rect->y      = 0;
+    rect->width  = width;
+    rect->height = height;
 }
 
 /**
@@ -394,12 +394,12 @@ gboolean
 gst_vaapi_window_put_surface(
     GstVaapiWindow          *window,
     GstVaapiSurface         *surface,
-    const GstVideoRectangle *src_rect,
-    const GstVideoRectangle *dst_rect,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect,
     guint                    flags
 )
 {
-    GstVideoRectangle src_rect_default, dst_rect_default;
+    GstVaapiRectangle src_rect_default, dst_rect_default;
 
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), FALSE);
     g_return_val_if_fail(window->priv->is_constructed, FALSE);
