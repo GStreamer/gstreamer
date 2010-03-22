@@ -850,7 +850,7 @@ static struct
 /* Decent i18n is pretty much impossible with OSS's way of providing us with
  * mixer labels (and the fact that they are pretty much random), but that
  * doesn't mean we shouldn't at least try. */
-static const gchar *
+static gchar *
 gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
 {
   gchar name[128] = { 0, };
@@ -866,11 +866,11 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
   /* main virtual mixer controls (we hide the stream volumes) */
   if (sscanf (mc->mixext.extname, "vmix%d-%32c", &dummy, vmix_str) == 2) {
     if (strcmp (vmix_str, "src") == 0)
-      return _("Virtual Mixer Input");
+      return g_strdup (_("Virtual Mixer Input"));
     else if (strcmp (vmix_str, "vol") == 0)
-      return _("Virtual Mixer Output");
+      return g_strdup (_("Virtual Mixer Output"));
     else if (strcmp (vmix_str, "channels") == 0)
-      return _("Virtual Mixer Channels");
+      return g_strdup (_("Virtual Mixer Channels"));
   }
 
   g_strlcpy (name, mc->mixext.extname, sizeof (name));
@@ -914,7 +914,7 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
     for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
       if (g_strcasecmp (ptr, labels[i].oss_name) == 0) {
         g_snprintf (name, sizeof (name), fmtbuf, _(labels[i].label), num);
-        return g_quark_to_string (g_quark_from_string (name));
+        return g_strdup (name);
       }
     }
   } while ((ptr = strchr (ptr, '.')) != NULL);
@@ -922,7 +922,7 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
   /* failing that, just replace periods with spaces */
   g_strdelimit (name, ".", ' ');
   g_snprintf (scratch, sizeof (scratch), fmtbuf, name);
-  return g_quark_to_string (g_quark_from_string (scratch));     /* eek */
+  return g_strdup (scratch);
 }
 
 static const gchar *
@@ -1505,12 +1505,11 @@ gst_oss4_mixer_create_tracks (GstOss4Mixer * mixer, const GList * controls)
     if (track == NULL)
       continue;
 
-    /* The mixer API requires this to be g_strdup'd */
-    track->label = g_strdup (gst_oss4_mixer_control_get_translated_name (mc));
+    track->label = gst_oss4_mixer_control_get_translated_name (mc);
     track->flags = 0;
 
     GST_LOG ("translated label: %s [%s] = %s", track->label, mc->mixext.id,
-        gst_oss4_mixer_control_get_translated_name (mc));
+        track->label);
 
     /* This whole 'a track is either INPUT or OUTPUT' model is just flawed,
      * esp. if a slider's role can be changed on the fly, like when you change
