@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY (pulse_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#if ENABLE_NLS
+#ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);

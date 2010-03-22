@@ -28,6 +28,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
