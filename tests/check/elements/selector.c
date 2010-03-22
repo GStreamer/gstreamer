@@ -38,7 +38,7 @@ static gboolean
 probe_cb (GstPad * pad, GstMiniObject * obj, gpointer user_data)
 {
   gint count = 0;
-  gchar *count_type = NULL;
+  const gchar *count_type = NULL;
 
   GST_LOG_OBJECT (pad, "got data");
 
@@ -184,17 +184,15 @@ count_output_buffers (GList * output_pads, gint expected_buffers)
 static void
 selector_set_active_pad (GstElement * elem, GstPad * selpad)
 {
-  gchar *padname = "";
+  gchar *padname = NULL;
 
   if (selpad) {
     padname = gst_pad_get_name (selpad);
   }
 
   g_object_set (G_OBJECT (elem), "active-pad", selpad, NULL);
-  GST_DEBUG_OBJECT (elem, "activated selector pad: %s", padname);
-  if (selpad) {
-    g_free (padname);
-  }
+  GST_DEBUG_OBJECT (elem, "activated selector pad: %s", GST_STR_NULL (padname));
+  g_free (padname);
 }
 
 /* Push buffers and switch for each selector pad */
