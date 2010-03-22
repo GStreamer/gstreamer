@@ -43,6 +43,7 @@ struct _GstVaapiDisplayX11Private {
     gboolean    create_display;
     gchar      *display_name;
     Display    *x11_display;
+    int         x11_screen;
     VADisplay  *va_display;
 };
 
@@ -147,6 +148,7 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
     if (!priv->x11_display)
         return FALSE;
 
+    priv->x11_screen = DefaultScreen(priv->x11_display);
     priv->va_display = vaGetDisplay(priv->x11_display);
     return priv->va_display != NULL;
 }
@@ -178,6 +180,25 @@ gst_vaapi_display_x11_get_va_display(GstVaapiDisplay *display)
 }
 
 static void
+gst_vaapi_display_x11_get_size(
+    GstVaapiDisplay *display,
+    guint           *pwidth,
+    guint           *pheight
+)
+{
+    GstVaapiDisplayX11Private * const priv = GST_VAAPI_DISPLAY_X11(display)->priv;
+
+    if (!priv->x11_display)
+        return;
+
+    if (pwidth)
+        *pwidth = DisplayWidth(priv->x11_display, priv->x11_screen);
+
+    if (pheight)
+        *pheight = DisplayHeight(priv->x11_display, priv->x11_screen);
+}
+
+static void
 gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
@@ -193,6 +214,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     dpy_class->open_display     = gst_vaapi_display_x11_open_display;
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
     dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
+    dpy_class->get_size         = gst_vaapi_display_x11_get_size;
 
     /**
      * GstVaapiDisplayX11:x11-display:
@@ -231,6 +253,7 @@ gst_vaapi_display_x11_init(GstVaapiDisplayX11 *display)
     display->priv        = priv;
     priv->create_display = TRUE;
     priv->x11_display    = NULL;
+    priv->x11_screen     = 0;
     priv->display_name   = NULL;
 }
 

@@ -43,6 +43,8 @@ G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
 struct _GstVaapiDisplayPrivate {
     GStaticMutex        mutex;
     VADisplay           display;
+    guint               width;
+    guint               height;
     gboolean            create_display;
     GArray             *profiles;
     GArray             *image_formats;
@@ -52,7 +54,9 @@ struct _GstVaapiDisplayPrivate {
 enum {
     PROP_0,
 
-    PROP_DISPLAY
+    PROP_DISPLAY,
+    PROP_WIDTH,
+    PROP_HEIGHT
 };
 
 /* Append GstVaapiImageFormat to formats array */
@@ -230,6 +234,8 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             return FALSE;
         if (klass->get_display)
             priv->display = klass->get_display(display);
+        if (klass->get_size)
+            klass->get_size(display, &priv->width, &priv->height);
     }
     if (!priv->display)
         return FALSE;
@@ -360,6 +366,12 @@ gst_vaapi_display_get_property(
     case PROP_DISPLAY:
         g_value_set_pointer(value, gst_vaapi_display_get_display(display));
         break;
+    case PROP_WIDTH:
+        g_value_set_uint(value, gst_vaapi_display_get_width(display));
+        break;
+    case PROP_HEIGHT:
+        g_value_set_uint(value, gst_vaapi_display_get_height(display));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -405,6 +417,24 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
                               "VA display",
                               "VA display",
                               G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_WIDTH,
+         g_param_spec_uint("width",
+                           "Width",
+                           "The display width",
+                           1, G_MAXUINT32, 1,
+                           G_PARAM_READABLE));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_HEIGHT,
+         g_param_spec_uint("height",
+                           "height",
+                           "The display height",
+                           1, G_MAXUINT32, 1,
+                           G_PARAM_READABLE));
 }
 
 static void
@@ -414,6 +444,8 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
 
     display->priv               = priv;
     priv->display               = NULL;
+    priv->width                 = 0;
+    priv->height                = 0;
     priv->create_display        = TRUE;
     priv->profiles              = NULL;
     priv->image_formats         = NULL;
@@ -493,6 +525,58 @@ gst_vaapi_display_get_display(GstVaapiDisplay *display)
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
     return display->priv->display;
+}
+
+/**
+ * gst_vaapi_display_get_width:
+ * @display: a #GstVaapiDisplay
+ *
+ * Retrieves the width of a #GstVaapiDisplay.
+ *
+ * Return value: the width of the @display, in pixels
+ */
+guint
+gst_vaapi_display_get_width(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), 0);
+
+    return display->priv->width;
+}
+
+/**
+ * gst_vaapi_display_get_height:
+ * @display: a #GstVaapiDisplay
+ *
+ * Retrieves the height of a #GstVaapiDisplay
+ *
+ * Return value: the height of the @display, in pixels
+ */
+guint
+gst_vaapi_display_get_height(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), 0);
+
+    return display->priv->height;
+}
+
+/**
+ * gst_vaapi_display_get_size:
+ * @display: a #GstVaapiDisplay
+ * @pwidth: (out) (allow-none): return location for the width, or %NULL
+ * @pheight: (out) (allow-none): return location for the height, or %NULL
+ *
+ * Retrieves the dimensions of a #GstVaapiDisplay.
+ */
+void
+gst_vaapi_display_get_size(GstVaapiDisplay *display, guint *pwidth, guint *pheight)
+{
+    g_return_if_fail(GST_VAAPI_DISPLAY(display));
+
+    if (pwidth)
+        *pwidth = display->priv->width;
+
+    if (pheight)
+        *pheight = display->priv->height;
 }
 
 /**

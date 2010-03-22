@@ -101,6 +101,7 @@ struct _GstVaapiDisplay {
  * @lock_display: virtual function to lock a display
  * @unlock_display: virtual function to unlock a display
  * @get_display: virtual function to retrieve the #VADisplay
+ * @get_size: virtual function to retrieve the display dimensions
  *
  * Base class for VA displays.
  */
@@ -114,6 +115,7 @@ struct _GstVaapiDisplayClass {
     void       (*lock_display)  (GstVaapiDisplay *display);
     void       (*unlock_display)(GstVaapiDisplay *display);
     VADisplay  (*get_display)   (GstVaapiDisplay *display);
+    void       (*get_size)      (GstVaapiDisplay *display, guint *pw, guint *ph);
 };
 
 GType
@@ -130,6 +132,15 @@ gst_vaapi_display_unlock(GstVaapiDisplay *display);
 
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display);
+
+guint
+gst_vaapi_display_get_width(GstVaapiDisplay *display);
+
+guint
+gst_vaapi_display_get_height(GstVaapiDisplay *display);
+
+void
+gst_vaapi_display_get_size(GstVaapiDisplay *display, guint *pwidth, guint *pheight);
 
 gboolean
 gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile);

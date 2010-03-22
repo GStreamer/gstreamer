@@ -94,6 +94,7 @@ main(int argc, char *argv[])
     Display *x11_display;
     VADisplay va_display;
     GstVaapiDisplay *display;
+    guint width, height;
 
     gst_init(&argc, &argv);
 
@@ -104,6 +105,9 @@ main(int argc, char *argv[])
         display = gst_vaapi_display_x11_new(NULL);
         if (!display)
             g_error("could not create Gst/VA display");
+
+        gst_vaapi_display_get_size(display, &width, &height);
+        g_print("Display size: %ux%u\n", width, height);
 
         dump_caps(display);
         g_object_unref(display);
