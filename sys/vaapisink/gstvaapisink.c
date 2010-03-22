@@ -65,6 +65,7 @@ enum {
 
     PROP_DISPLAY,
     PROP_DISPLAY_NAME,
+    PROP_FULLSCREEN
 };
 
 static GstVaapiDisplay *
@@ -140,6 +141,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
+    GstVideoRectangle * const win_rect = &sink->window_rect;
     guint num, den;
     guint win_width, win_height;
     guint display_width, display_height, display_par_n, display_par_d;
@@ -186,7 +188,8 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     win_ratio = (gdouble)win_width / win_height;
     GST_DEBUG("scaling to %ux%u", win_width, win_height);
 
-    if (win_width > display_width || win_height > display_height) {
+    if (sink->fullscreen ||
+        win_width > display_width || win_height > display_height) {
         if (video_width > video_height) {
             win_width  = display_width;
             win_height = display_width / win_ratio;
@@ -198,6 +201,17 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     }
     GST_DEBUG("window size %ux%u", win_width, win_height);
 
+    if (sink->fullscreen) {
+        win_rect->x = (display_width - win_width) / 2;
+        win_rect->y = (display_height - win_height) / 2;
+    }
+    else {
+        win_rect->x = 0;
+        win_rect->y = 0;
+    }
+    win_rect->w = win_width;
+    win_rect->h = win_height;
+
     if (sink->window)
         gst_vaapi_window_set_size(sink->window, win_width, win_height);
     else {
@@ -207,6 +221,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         );
         if (!sink->window)
             return FALSE;
+        gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
         gst_vaapi_window_show(sink->window);
     }
     return TRUE;
@@ -228,7 +243,8 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         return GST_FLOW_UNEXPECTED;
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    if (!gst_vaapi_window_put_surface(sink->window, surface, NULL, NULL, flags))
+    if (!gst_vaapi_window_put_surface(sink->window, surface, NULL,
+                                      &sink->window_rect, flags))
         return GST_FLOW_UNEXPECTED;
 
     return GST_FLOW_OK;
@@ -257,6 +273,9 @@ gst_vaapisink_set_property(
         g_free(sink->display_name);
         sink->display_name = g_strdup(g_value_get_string(value));
         break;
+    case PROP_FULLSCREEN:
+        sink->fullscreen = g_value_get_boolean(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -279,6 +298,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_DISPLAY_NAME:
         g_value_set_string(value, sink->display_name);
+        break;
+    case PROP_FULLSCREEN:
+        g_value_set_boolean(value, sink->fullscreen);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -330,12 +352,22 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                              "X11 display name",
                              "",
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_FULLSCREEN,
+         g_param_spec_boolean("fullscreen",
+                              "Fullscreen",
+                              "Requests window in fullscreen state",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
     sink->display_name  = NULL;
     sink->display       = NULL;
+    sink->fullscreen    = FALSE;
 }
 
 GstVaapiDisplay *

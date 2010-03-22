@@ -62,6 +62,8 @@ struct _GstVaapiSink {
     gchar              *display_name;
     GstVaapiDisplay    *display;
     GstVaapiWindow     *window;
+    GstVideoRectangle   window_rect;
+    guint               fullscreen      : 1;
 };
 
 struct _GstVaapiSinkClass {
