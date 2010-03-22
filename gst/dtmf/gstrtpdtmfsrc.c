@@ -185,11 +185,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstRTPDTMFSrc, gst_rtp_dtmf_src, GstBaseSrc,
     GST_TYPE_BASE_SRC);
 
-
-static void gst_rtp_dtmf_src_base_init (gpointer g_class);
-static void gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass);
 static void gst_rtp_dtmf_src_finalize (GObject * object);
-
 
 static void gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
