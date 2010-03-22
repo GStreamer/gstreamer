@@ -854,14 +854,11 @@ static gchar *
 gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
 {
   gchar name[128] = { 0, };
-  gchar scratch[128] = { 0, };
-  gchar fmtbuf[128] = { 0, };
   gchar vmix_str[32] = { '\0', };
   gchar *ptr;
   int dummy, i;
   int num = -1;
-
-  g_strlcpy (fmtbuf, "%s", sizeof (fmtbuf));
+  gboolean function_suffix = FALSE;
 
   /* main virtual mixer controls (we hide the stream volumes) */
   if (sscanf (mc->mixext.extname, "vmix%d-%32c", &dummy, vmix_str) == 2) {
@@ -880,13 +877,12 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
       (g_str_has_prefix (name, "jack."))) {
     ptr = strchr (mc->mixext.extname, '.');
     ptr++;
-    g_strlcpy (scratch, ptr, sizeof (scratch));
-    g_strlcpy (name, scratch, sizeof (name));
+    g_strlcpy (name, ptr, sizeof (name));
   }
 
   /* special handling for jack retasking suffixes */
   if (g_str_has_suffix (name, ".function") || g_str_has_suffix (name, ".mode")) {
-    g_strlcpy (fmtbuf, _("%s Function"), sizeof (fmtbuf));
+    function_suffix = TRUE;
     ptr = strrchr (name, '.');
     *ptr = 0;
   }
@@ -900,10 +896,6 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
   if ((i > 0) && (name[i] != '\0')) {
     num = atoi (name + i);
     name[i] = '\0';
-    /* format appends a number to the base, but preserves any surrounding
-       format */
-    g_snprintf (scratch, sizeof (scratch), fmtbuf, _("%s %d"));
-    g_strlcpy (fmtbuf, scratch, sizeof (fmtbuf));
   }
 
   /* look for a match, progressively skipping '.' delimited prefixes as we go */
@@ -913,16 +905,29 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
       ptr++;
     for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
       if (g_strcasecmp (ptr, labels[i].oss_name) == 0) {
-        g_snprintf (name, sizeof (name), fmtbuf, _(labels[i].label), num);
-        return g_strdup (name);
+        g_strlcpy (name, _(labels[i].label), sizeof (name));
+        goto append_suffixes;
       }
     }
   } while ((ptr = strchr (ptr, '.')) != NULL);
 
   /* failing that, just replace periods with spaces */
   g_strdelimit (name, ".", ' ');
-  g_snprintf (scratch, sizeof (scratch), fmtbuf, name);
-  return g_strdup (scratch);
+
+append_suffixes:
+  if (num > -1) {
+    if (function_suffix) {
+      return g_strdup_printf (_("%s %d Function"), name, num);
+    } else {
+      return g_strdup_printf (_("%s %d"), name, num);
+    }
+  } else {
+    if (function_suffix) {
+      return g_strdup_printf (_("%s Function"), name);
+    } else {
+      return g_strdup (name);
+    }
+  }
 }
 
 static const gchar *
