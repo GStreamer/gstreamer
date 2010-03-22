@@ -1,7 +1,7 @@
-gst-vaapi NEWS -- summary of changes.  2010-03-DD
+gst-vaapi NEWS -- summary of changes.  2010-03-22
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.1.1 - DD.Mar.2010
+Version 0.1.1 - 22.Mar.2010
 * Document public API for libgstvaapi-*.so.*
 * Optimize `vaapiconvert' pipeline (direct-rendering)
 * Allow `vaapisink` to render videos in fullscreen mode
