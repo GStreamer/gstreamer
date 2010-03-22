@@ -167,8 +167,8 @@ gst_ladspa_base_init (gpointer g_class)
 
     /* get the rdf:type for this plugin */
     query.subject = uri;
-    query.predicate = RDF_BASE "type";
-    query.object = "?";
+    query.predicate = (char *) RDF_BASE "type";
+    query.object = (char *) "?";
     query.next = NULL;
     uris = lrdf_match_multi (&query);
     if (uris) {
