@@ -48,7 +48,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_bpm_detect_debug);
 struct _GstBPMDetectPrivate
 {
   gfloat bpm;
-#if HAVE_SOUNDTOUCH_1_4
+#ifdef HAVE_SOUNDTOUCH_1_4
     soundtouch::BPMDetect * detect;
 #else
   BPMDetect *detect;
@@ -201,7 +201,7 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       GST_ERROR_OBJECT (bpm_detect, "No channels or rate set yet");
       return GST_FLOW_ERROR;
     }
-#if HAVE_SOUNDTOUCH_1_4
+#ifdef HAVE_SOUNDTOUCH_1_4
     bpm_detect->priv->detect =
         new soundtouch::BPMDetect (filter->format.channels,
         filter->format.rate);
