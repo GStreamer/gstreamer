@@ -7,6 +7,6 @@ Name: GStreamer Floatcast Library
 Description: Platform independent floating point macros
 Requires: glib-2.0
 Version: @VERSION@
+Libs: @LIBM@
 Cflags: -I${includedir}
-Libs: -lm
 

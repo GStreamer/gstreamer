@@ -1,15 +1,16 @@
+# the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst
-includedir=${pcfiledir}/../gst-libs
-pluginsdir=${pcfiledir}/..
+libdir=
+# includedir is builddir because it is used to find gstconfig.h in places
+includedir=@abs_top_builddir@/gst-libs
+pluginsdir=@abs_top_builddir@
 
 Name: GStreamer Base Plugins Libraries, Uninstalled
 Description: Streaming media framework, base plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
+Libs: -L@abs_top_builddir@/gst-libs/gst/audio -L@abs_top_builddir@/gst-libs/gst/cdda -L@abs_top_builddir@/gst-libs/gst/fft -L@abs_top_builddir@/gst-libs/gst/floatcast -L@abs_top_builddir@/gst-libs/gst/interfaces -L@abs_top_builddir@/gst-libs/gst/netbuffer -L@abs_top_builddir@/gst-libs/gst/riff -L@abs_top_builddir@/gst-libs/gst/rtp -L@abs_top_builddir@/gst-libs/gst/rtsp -L@abs_top_builddir@/gst-libs/gst/sdp -L@abs_top_builddir@/gst-libs/gst/tag -L@abs_top_builddir@/gst-libs/gst/pbutils -L@abs_top_builddir@/gst-libs/gst/video -L@abs_top_builddir@/gst-libs/gst/app
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
-Libs: -L${libdir}/audio -L${libdir}/cdda -L${libdir}/fft -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/netbuffer -L${libdir}/riff -L${libdir}/rtp -L${libdir}/rtsp -L${libdir}/sdp -L${libdir}/tag -L${libdir}/pbutils -L${libdir}/video -L${libdir}/app
-Cflags: -I${includedir} -I@srcdir@/../gst-libs
-
-libraries=audio cdda fft floatcast interfaces netbuffer riff tag pbutils video
+libraries=app audio cdda fft floatcast interfaces netbuffer riff rtp rtsp sdp tag pbutils video

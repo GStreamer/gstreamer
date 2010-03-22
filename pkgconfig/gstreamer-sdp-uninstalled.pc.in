@@ -1,13 +1,14 @@
+# the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/sdp
-includedir=${pcfiledir}/../gst-libs
+libdir=
+# includedir is builddir because it is used to find gstconfig.h in places
+includedir=@abs_top_builddir@/gst-libs
 
 Name: GStreamer SDP Library, Uninstalled
 Description: SDP helper functions, uninstalled
 Version: @VERSION@
 Requires: glib-2.0
-
-Libs: -L${libdir} ${libdir}/libgstsdp-@GST_MAJORMINOR@.la
-Cflags: -I${includedir} -I@srcdir@/../gst-libs
+Libs: @abs_top_builddir@/gst-libs/gst/sdp/libgstsdp-@GST_MAJORMINOR@.la
+Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 
