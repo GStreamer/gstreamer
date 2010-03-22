@@ -314,7 +314,7 @@ gst_data_uri_src_get_uri_type (void)
 static gchar **
 gst_data_uri_src_get_protocols (void)
 {
-  static gchar *protocols[] = { "data", 0 };
+  static gchar *protocols[] = { (char *) "data", 0 };
 
   return protocols;
 }
@@ -423,8 +423,8 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
     gchar *data;
 
     data =
-        g_convert_with_fallback (old_data, -1, "UTF-8", charset, "*", &read,
-        &written, NULL);
+        g_convert_with_fallback (old_data, -1, "UTF-8", charset, (char *) "*",
+        &read, &written, NULL);
     g_free (old_data);
     GST_BUFFER_DATA (src->buffer) = GST_BUFFER_MALLOCDATA (src->buffer) =
         (guint8 *) data;
