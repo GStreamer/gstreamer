@@ -101,6 +101,9 @@ struct _GstVaapiWindowClass {
 GType
 gst_vaapi_window_get_type(void);
 
+GstVaapiDisplay *
+gst_vaapi_window_get_display(GstVaapiWindow *window);
+
 void
 gst_vaapi_window_show(GstVaapiWindow *window);
 

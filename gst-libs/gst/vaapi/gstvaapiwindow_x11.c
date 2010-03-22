@@ -53,7 +53,6 @@ struct _GstVaapiWindowX11Private {
 enum {
     PROP_0,
 
-    PROP_DISPLAY,
     PROP_XID,
 };
 
@@ -336,9 +335,6 @@ gst_vaapi_window_x11_set_property(
     GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        window->priv->display = g_object_ref(g_value_get_object(value));
-        break;
     case PROP_XID:
         window->priv->xid = g_value_get_uint(value);
         break;
@@ -359,9 +355,6 @@ gst_vaapi_window_x11_get_property(
     GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_object(value, window->priv->display);
-        break;
     case PROP_XID:
         g_value_set_uint(value, gst_vaapi_window_x11_get_xid(window));
         break;
@@ -375,7 +368,11 @@ static void
 gst_vaapi_window_x11_constructed(GObject *object)
 {
     GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
+    GstVaapiDisplay *display;
     GObjectClass *parent_class;
+
+    window->priv->display =
+        g_object_ref(gst_vaapi_window_get_display(GST_VAAPI_WINDOW(window)));
 
     window->priv->create_window = window->priv->xid == None;
 
@@ -404,20 +401,6 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     window_class->set_fullscreen = gst_vaapi_window_x11_set_fullscreen;
     window_class->resize         = gst_vaapi_window_x11_resize;
     window_class->render         = gst_vaapi_window_x11_render;
-
-    /**
-     * GstVaapiWindowX11:display:
-     *
-     * The #GstVaapiDisplay this window is bound to
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this window is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     /**
      * GstVaapiWindowX11:xid:
