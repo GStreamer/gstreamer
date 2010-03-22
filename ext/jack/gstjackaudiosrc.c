@@ -141,7 +141,7 @@ gst_jack_audio_src_free_channels (GstJackAudioSrc * src)
 
 /* ringbuffer abstract base class */
 static GType
-gst_jack_ring_buffer_get_type ()
+gst_jack_ring_buffer_get_type (void)
 {
   static GType ringbuffer_type = 0;
 
