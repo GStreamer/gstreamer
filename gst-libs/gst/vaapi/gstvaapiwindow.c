@@ -37,9 +37,10 @@ G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
                                  GstVaapiWindowPrivate))
 
 struct _GstVaapiWindowPrivate {
-    gboolean    is_constructed;
     guint       width;
     guint       height;
+    gboolean    is_constructed  : 1;
+    guint       is_fullscreen   : 1;
 };
 
 enum {
@@ -179,9 +180,10 @@ gst_vaapi_window_init(GstVaapiWindow *window)
     GstVaapiWindowPrivate *priv = GST_VAAPI_WINDOW_GET_PRIVATE(window);
 
     window->priv                = priv;
-    priv->is_constructed        = FALSE;
     priv->width                 = 1;
     priv->height                = 1;
+    priv->is_constructed        = FALSE;
+    priv->is_fullscreen         = FALSE;
 }
 
 /**
@@ -214,6 +216,28 @@ gst_vaapi_window_hide(GstVaapiWindow *window)
     g_return_if_fail(window->priv->is_constructed);
 
     GST_VAAPI_WINDOW_GET_CLASS(window)->hide(window);
+}
+
+/**
+ * gst_vaapi_window_set_fullscreen:
+ * @window: a #GstVaapiWindow
+ * @fullscreen: %TRUE to request window to get fullscreen
+ *
+ * Requests to place the @window in fullscreen or unfullscreen states.
+ */
+void
+gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
+{
+    GstVaapiWindowClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_WINDOW(window));
+
+    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
+
+    if (window->priv->is_fullscreen != fullscreen && klass->set_fullscreen) {
+        klass->set_fullscreen(window, fullscreen);
+        window->priv->is_fullscreen = fullscreen;
+    }
 }
 
 /**

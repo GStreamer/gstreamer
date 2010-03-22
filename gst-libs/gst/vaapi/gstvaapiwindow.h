@@ -73,6 +73,7 @@ struct _GstVaapiWindow {
  * @destroy: virtual function to destroy a window
  * @show: virtual function to show (map) a window
  * @hide: virtual function to hide (unmap) a window
+ * @set_fullscreen: virtual function to change window fullscreen state
  * @resize: virtual function to resize a window
  * @render: virtual function to render a #GstVaapiSurface into a window
  *
@@ -87,6 +88,7 @@ struct _GstVaapiWindowClass {
     void        (*destroy)(GstVaapiWindow *window);
     gboolean    (*show)   (GstVaapiWindow *window);
     gboolean    (*hide)   (GstVaapiWindow *window);
+    gboolean    (*set_fullscreen)(GstVaapiWindow *window, gboolean fullscreen);
     gboolean    (*resize) (GstVaapiWindow *window, guint width, guint height);
     gboolean    (*render) (GstVaapiWindow *window,
                            GstVaapiSurface *surface,
@@ -103,6 +105,9 @@ gst_vaapi_window_show(GstVaapiWindow *window);
 
 void
 gst_vaapi_window_hide(GstVaapiWindow *window);
+
+void
+gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen);
 
 guint
 gst_vaapi_window_get_width(GstVaapiWindow *window);
