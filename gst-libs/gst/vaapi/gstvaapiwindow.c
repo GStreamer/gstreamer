@@ -335,11 +335,10 @@ gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 
     klass = GST_VAAPI_WINDOW_GET_CLASS(window);
 
-    if (window->priv->is_fullscreen != fullscreen && klass->set_fullscreen) {
-        if (klass->set_fullscreen(window, fullscreen)) {
-            window->priv->is_fullscreen         = fullscreen;
-            window->priv->is_fullscreen_changed = TRUE;
-        }
+    if (window->priv->is_fullscreen != fullscreen &&
+        klass->set_fullscreen && klass->set_fullscreen(window, fullscreen)) {
+        window->priv->is_fullscreen         = fullscreen;
+        window->priv->is_fullscreen_changed = TRUE;
     }
 }
 
