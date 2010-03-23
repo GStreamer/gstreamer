@@ -190,19 +190,19 @@ AC_SUBST(pkgconfigdir)
 
 AC_OUTPUT([
     Makefile
-    debian/Makefile
-    debian/changelog
-    debian/control
-    debian/gstreamer$GST_MAJORMINOR-vaapi.install:\
-debian/gstreamer-vaapi.install.in
-    debian/gstreamer$GST_MAJORMINOR-vaapi-doc.install:\
-debian/gstreamer-vaapi-doc.install.in
-    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
-debian/libgstvaapi.install.in
-    debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:\
-debian/libgstvaapi-dev.install.in
-    debian/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
-debian/libgstvaapi-x11.install.in
+    debian.upstream/Makefile
+    debian.upstream/changelog
+    debian.upstream/control
+    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi.install:\
+debian.upstream/gstreamer-vaapi.install.in
+    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi-doc.install:\
+debian.upstream/gstreamer-vaapi-doc.install.in
+    debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi.install.in
+    debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:\
+debian.upstream/libgstvaapi-dev.install.in
+    debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi-x11.install.in
     docs/Makefile
     docs/reference/Makefile
     docs/reference/libs/Makefile
