@@ -240,8 +240,9 @@ AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Waggregate-return - libexif returns aggregates
+dnl -Wundef - Windows headers check _MSC_VER unconditionally
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
-    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
+    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
     -Wcast-align -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
     -Wnested-externs])
