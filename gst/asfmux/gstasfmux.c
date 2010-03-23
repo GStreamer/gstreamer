@@ -1267,7 +1267,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   gst_pad_push_event (asfmux->srcpad,
       gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
 
-  asfmux->file_id = gst_asf_generate_file_id ();
+  gst_asf_generate_file_id (&asfmux->file_id);
 
   /* Get the metadata for content description object.
    * We store our own taglist because it might get changed from now

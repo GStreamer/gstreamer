@@ -27,12 +27,6 @@
 #include <sys/filio.h>
 #endif
 
-/* Prototypes and definitions for private functions and not exported via gstdccp.h */
-GstFlowReturn gst_dccp_socket_write (GstElement * element, int socket,
-    const void *buf, size_t count, int packet_size);
-struct sockaddr_in gst_dccp_create_sockaddr (GstElement * element, gchar * ip,
-    int port);
-
 /*
  * Resolves host to IP address
  * @param element - the element
@@ -339,7 +333,7 @@ gst_dccp_listen_server_socket (GstElement * element, int server_sock_fd)
  * @param packet_size - the MTU
  * @return the number of bytes written.
  */
-GstFlowReturn
+static GstFlowReturn
 gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
     size_t size, int packet_size)
 {
@@ -420,26 +414,6 @@ gst_dccp_send_buffer (GstElement * this, GstBuffer * buffer, int client_sock_fd,
   }
 
   return gst_dccp_socket_write (this, client_sock_fd, data, size, packet_size);
-}
-
-/*
- * Create socket address.
- * @param element - the element
- * @param ip - the ip address
- * @param port - the port
- * @return sockaddr_in.
- */
-struct sockaddr_in
-gst_dccp_create_sockaddr (GstElement * element, gchar * ip, int port)
-{
-  struct sockaddr_in sin;
-
-  memset (&sin, 0, sizeof (sin));
-  sin.sin_family = AF_INET;     /* network socket */
-  sin.sin_port = htons (port);  /* on port */
-  sin.sin_addr.s_addr = inet_addr (ip); /* on host ip */
-
-  return sin;
 }
 
 /*

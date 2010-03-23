@@ -63,18 +63,16 @@ const Guid guids[] = {
  *
  * Returns: The generated GUID
  */
-Guid
-gst_asf_generate_file_id (void)
+void
+gst_asf_generate_file_id (Guid * guid)
 {
   guint32 aux;
-  Guid guid;
-  guid.v1 = g_random_int ();
-  aux = g_random_int ();
-  guid.v2 = (guint16) (aux & 0x0000FFFF);
-  guid.v3 = (guint16) (aux >> 16);
-  guid.v4 = (((guint64) g_random_int ()) << 32) | (guint64) g_random_int ();
 
-  return guid;
+  guid->v1 = g_random_int ();
+  aux = g_random_int ();
+  guid->v2 = (guint16) (aux & 0x0000FFFF);
+  guid->v3 = (guint16) (aux >> 16);
+  guid->v4 = (((guint64) g_random_int ()) << 32) | (guint64) g_random_int ();
 }
 
 /**

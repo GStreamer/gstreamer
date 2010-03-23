@@ -83,7 +83,7 @@ typedef struct _AsfPayload
   guint16 packet_count;
 } AsfPayload;
 
-Guid gst_asf_generate_file_id (void);
+void gst_asf_generate_file_id (Guid *guid);
 
 gboolean gst_byte_reader_get_asf_var_size_field (GstByteReader * reader,
     guint8 field_type, guint32 * var);
