@@ -103,6 +103,7 @@ AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes"])
 AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
+AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)

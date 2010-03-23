@@ -1,3 +1,4 @@
+gst_vaapi_object_get_type
 gst_vaapi_surface_pool_get_type
 gst_vaapi_video_pool_get_type
 gst_vaapi_video_sink_get_type

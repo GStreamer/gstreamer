@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include "gstvaapiobject.h"
-
+#include "gstvaapimarshal.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -34,6 +34,7 @@ G_DEFINE_TYPE(GstVaapiObject, gst_vaapi_object, G_TYPE_OBJECT);
 
 struct _GstVaapiObjectPrivate {
     GstVaapiDisplay    *display;
+    guint               is_destroying   : 1;
 };
 
 enum {
@@ -41,6 +42,28 @@ enum {
 
     PROP_DISPLAY,
 };
+
+enum {
+    DESTROY,
+
+    LAST_SIGNAL
+};
+
+static guint object_signals[LAST_SIGNAL] = { 0, };
+
+static void
+gst_vaapi_object_dispose(GObject *object)
+{
+    GstVaapiObjectPrivate * const priv = GST_VAAPI_OBJECT(object)->priv;
+
+    if (!priv->is_destroying) {
+        priv->is_destroying = TRUE;
+        g_signal_emit(object, object_signals[DESTROY], 0);
+        priv->is_destroying = FALSE;
+    }
+
+    G_OBJECT_CLASS(gst_vaapi_object_parent_class)->dispose(object);
+}
 
 static void
 gst_vaapi_object_finalize(GObject *object)
@@ -102,6 +125,7 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
 
     g_type_class_add_private(klass, sizeof(GstVaapiObjectPrivate));
 
+    object_class->dispose      = gst_vaapi_object_dispose;
     object_class->finalize     = gst_vaapi_object_finalize;
     object_class->set_property = gst_vaapi_object_set_property;
     object_class->get_property = gst_vaapi_object_get_property;
@@ -119,6 +143,23 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
                              "The GstVaapiDisplay this object is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    /**
+     * GstVaapiObject::destroy:
+     * @object: the object which received the signal
+     *
+     * The ::destroy signal is emitted when an object is destroyed,
+     * when the user released the last reference to @object.
+     */
+    object_signals[DESTROY] = g_signal_new(
+        "destroy",
+        G_TYPE_FROM_CLASS(object_class),
+        G_SIGNAL_RUN_CLEANUP | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
+        G_STRUCT_OFFSET(GstVaapiObjectClass, destroy),
+        NULL, NULL,
+        gst_vaapi_marshal_VOID__VOID,
+        G_TYPE_NONE, 0
+    );
 }
 
 static void
@@ -128,6 +169,7 @@ gst_vaapi_object_init(GstVaapiObject *object)
 
     object->priv  = priv;
     priv->display = NULL;
+    priv->is_destroying = FALSE;
 }
 
 /**

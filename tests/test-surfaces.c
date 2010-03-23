@@ -24,6 +24,12 @@
 
 #define MAX_SURFACES 4
 
+static void
+gst_vaapi_object_destroy_cb(gpointer object, gpointer user_data)
+{
+    g_print("Destroying GstVaapiObject %p\n", object);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -94,6 +100,12 @@ main(int argc, char *argv[])
         gst_vaapi_video_pool_put_object(pool, surfaces[i]);
         surfaces[i] = NULL;
     }
+
+    g_signal_connect(
+        G_OBJECT(surface),
+        "destroy",
+        G_CALLBACK(gst_vaapi_object_destroy_cb), NULL
+    );
 
     /* Unref in random order to check objects are correctly refcounted */
     g_print("unref display\n");

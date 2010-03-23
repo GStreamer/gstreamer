@@ -77,12 +77,16 @@ struct _GstVaapiObject {
 
 /**
  * GstVaapiObjectClass:
+ * @destroy: signal class handler for #GstVaapiObject::destroy
  *
  * VA object base class.
  */
 struct _GstVaapiObjectClass {
     /*< private >*/
     GObjectClass parent_class;
+
+    /*< public >*/
+    void (*destroy)(GstVaapiObject *oject);
 };
 
 GType
