@@ -58,6 +58,8 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
     GstVaapiDisplay *display;
     VAStatus status;
 
+    GST_DEBUG("subpicture 0x%08x", priv->subpicture_id);
+
     if (priv->subpicture_id != VA_INVALID_ID) {
         display = gst_vaapi_image_get_display(priv->image);
         if (display) {
@@ -105,6 +107,7 @@ gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
     if (!vaapi_check_status(status, "vaCreateSubpicture()"))
         return FALSE;
 
+    GST_DEBUG("subpicture 0x%08x", subpicture_id);
     priv->subpicture_id = subpicture_id;
     return TRUE;
 }
@@ -224,7 +227,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
-    GST_DEBUG("image 0x%08x", gst_vaapi_image_get_id(image));
+    GST_DEBUG("create from image 0x%08x", gst_vaapi_image_get_id(image));
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
                         "image", image,

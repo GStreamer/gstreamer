@@ -153,6 +153,8 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
 
     _gst_vaapi_image_unmap(image);
 
+    GST_DEBUG("image 0x%08x", priv->internal_image.image_id);
+
     if (priv->internal_image.image_id != VA_INVALID_ID) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
         status = vaDestroyImage(

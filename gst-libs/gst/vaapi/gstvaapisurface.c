@@ -70,6 +70,8 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
     GstVaapiSurfacePrivate * const priv = surface->priv;
     VAStatus status;
 
+    GST_DEBUG("surface 0x%08x", priv->surface_id);
+
     if (priv->surface_id != VA_INVALID_SURFACE) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
         status = vaDestroySurfaces(
@@ -129,6 +131,7 @@ gst_vaapi_surface_create(GstVaapiSurface *surface)
     if (!vaapi_check_status(status, "vaCreateSurfaces()"))
         return FALSE;
 
+    GST_DEBUG("surface 0x%08x", surface_id);
     priv->surface_id = surface_id;
     return TRUE;
 }
