@@ -47,7 +47,7 @@
 #include "qtutils.h"
 
 static GstCaps *
-audio_caps_from_string (gchar * str)
+audio_caps_from_string (const gchar * str)
 {
   GstCaps *res;
 

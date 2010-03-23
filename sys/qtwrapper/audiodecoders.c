@@ -956,7 +956,7 @@ qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
       g_strdup_printf ("QTWrapper SCAudio wrapper for decoder: %s",
       GST_STR_NULL (info));
   gst_element_class_set_details_simple (element_class,
-      longname "Codec/Decoder/Audio", description,
+      longname, "Codec/Decoder/Audio", description,
       "Fluendo <gstreamer@fluendo.com>, "
       "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 

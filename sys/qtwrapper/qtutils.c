@@ -81,7 +81,7 @@ get_name_info_from_component (Component componentID,
     tmpname = g_strndup ((*(char **) nameHandle) + 1,
         **((guint8 **) nameHandle));
     *name = g_convert_with_fallback (tmpname, -1, "ASCII", "MAC",
-        " ", &read, &written, NULL);
+        (gchar *) " ", &read, &written, NULL);
     if (!*name)
       GST_WARNING ("read:%" G_GSIZE_FORMAT ", written:%" G_GSIZE_FORMAT, read,
           written);
@@ -92,8 +92,8 @@ get_name_info_from_component (Component componentID,
     tmpinfo =
         g_strndup ((*(char **) infoHandle) + 1, **((guint8 **) infoHandle));
     *info =
-        g_convert_with_fallback (tmpinfo, -1, "ASCII", "MAC", " ", NULL, NULL,
-        NULL);
+        g_convert_with_fallback (tmpinfo, -1, "ASCII", "MAC", (gchar *) " ",
+        NULL, NULL, NULL);
     g_free (tmpinfo);
   }
 

@@ -127,6 +127,8 @@ addSInt32ToDictionary (CFMutableDictionaryRef dictionary, CFStringRef key,
 
 void dump_cvpixel_buffer (CVPixelBufferRef pixbuf);
 
+void dump_avcc_atom (guint8 * atom);
+
 AudioBufferList *AllocateAudioBufferList(UInt32 numChannels, UInt32 size);
 
 void DestroyAudioBufferList(AudioBufferList* list);

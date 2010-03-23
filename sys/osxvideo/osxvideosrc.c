@@ -323,7 +323,7 @@ typedef struct
 } video_device;
 
 static video_device *
-video_device_alloc ()
+video_device_alloc (void)
 {
   video_device *dev;
   dev = g_malloc (sizeof (video_device));
@@ -637,7 +637,7 @@ gst_osx_video_src_base_init (gpointer gclass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  GST_DEBUG (G_STRFUNC);
+  GST_DEBUG ("%s", G_STRFUNC);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
@@ -658,7 +658,7 @@ gst_osx_video_src_class_init (GstOSXVideoSrcClass * klass)
   GstPushSrcClass *pushsrc_class;
   OSErr err;
 
-  GST_DEBUG (G_STRFUNC);
+  GST_DEBUG ("%s", G_STRFUNC);
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -705,7 +705,7 @@ gst_osx_video_src_class_init (GstOSXVideoSrcClass * klass)
 static void
 gst_osx_video_src_init (GstOSXVideoSrc * self, GstOSXVideoSrcClass * klass)
 {
-  GST_DEBUG_OBJECT (self, G_STRFUNC);
+  GST_DEBUG_OBJECT (self, "%s", G_STRFUNC);
 
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
@@ -715,7 +715,7 @@ static void
 gst_osx_video_src_dispose (GObject * object)
 {
   GstOSXVideoSrc *self = GST_OSX_VIDEO_SRC (object);
-  GST_DEBUG_OBJECT (object, G_STRFUNC);
+  GST_DEBUG_OBJECT (object, "%s", G_STRFUNC);
 
   if (self->device_id) {
     g_free (self->device_id);
@@ -738,7 +738,7 @@ gst_osx_video_src_dispose (GObject * object)
 static void
 gst_osx_video_src_finalize (GstOSXVideoSrc * self)
 {
-  GST_DEBUG_OBJECT (self, G_STRFUNC);
+  GST_DEBUG_OBJECT (self, "%s", G_STRFUNC);
 
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (self));
 }
@@ -833,7 +833,7 @@ gst_osx_video_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   float fps;
   ComponentResult err;
 
-  GST_DEBUG_OBJECT (src, G_STRFUNC);
+  GST_DEBUG_OBJECT (src, "%s", G_STRFUNC);
 
   if (!self->seq_grab)
     return FALSE;

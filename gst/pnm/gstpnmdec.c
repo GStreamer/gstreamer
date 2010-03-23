@@ -42,8 +42,6 @@
 
 #include <string.h>
 
-static GstElementClass *parent_class;
-
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
