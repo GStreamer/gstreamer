@@ -53,7 +53,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (AUDIO_CAPS_STRING));
 
 
-GstElement *
+static GstElement *
 setup_faac (gboolean adts)
 {
   GstElement *faac;
@@ -70,7 +70,7 @@ setup_faac (gboolean adts)
   return faac;
 }
 
-void
+static void
 cleanup_faac (GstElement * faac)
 {
   GST_DEBUG ("cleanup_faac");
@@ -83,7 +83,7 @@ cleanup_faac (GstElement * faac)
   gst_check_teardown_element (faac);
 }
 
-void
+static void
 do_test (gboolean adts)
 {
   GstElement *faac;
@@ -207,7 +207,7 @@ GST_START_TEST (test_raw)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 faac_suite (void)
 {
   Suite *s = suite_create ("faac");
