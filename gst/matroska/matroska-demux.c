@@ -2090,7 +2090,6 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
 
   is_newsegment = (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
 
-  /* FIXME: access to demux->src is not thread-safe here */
   g_assert (demux->src->len == demux->num_streams);
   for (i = 0; i < demux->src->len; i++) {
     GstMatroskaTrackContext *stream;
@@ -2153,7 +2152,6 @@ gst_matroska_demux_get_seek_track (GstMatroskaDemux * demux,
   if (track && track->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
     return track;
 
-  /*  FIXME thread safety */
   for (i = 0; i < demux->src->len; i++) {
     GstMatroskaTrackContext *stream;
 
@@ -2230,6 +2228,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstMatroskaTrackContext *track = NULL;
   GstSegment seeksegment = { 0, };
   gboolean update;
+
+  /* no seeking until we are (safely) ready */
+  if (demux->state != GST_MATROSKA_DEMUX_STATE_DATA) {
+    GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
+    return FALSE;
+  }
 
   if (pad)
     track = gst_pad_get_element_private (pad);
