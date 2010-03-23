@@ -206,6 +206,8 @@ debian/libgstvaapi-x11.install.in
     docs/reference/Makefile
     docs/reference/libs/Makefile
     docs/reference/libs/libs-docs.xml
+    docs/reference/plugins/Makefile
+    docs/reference/plugins/plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile

@@ -1,0 +1,2 @@
+gst_vaapisink_get_type
+gst_vaapiconvert_get_type
