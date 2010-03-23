@@ -116,8 +116,11 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
 static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
-    if (!sink->display)
+    if (!sink->display) {
         sink->display = gst_vaapi_display_x11_new(sink->display_name);
+        if (!sink->display || !gst_vaapi_display_get_display(sink->display))
+            return NULL;
+    }
     return sink->display != NULL;
 }
 
