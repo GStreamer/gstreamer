@@ -74,7 +74,6 @@ enum {
     PROP_0,
 
     PROP_DISPLAY,
-    PROP_DISPLAY_NAME,
     PROP_FULLSCREEN
 };
 
@@ -282,7 +281,7 @@ gst_vaapisink_set_property(
     GstVaapiSink * const sink = GST_VAAPISINK(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY_NAME:
+    case PROP_DISPLAY:
         g_free(sink->display_name);
         sink->display_name = g_strdup(g_value_get_string(value));
         break;
@@ -307,9 +306,6 @@ gst_vaapisink_get_property(
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_object(value, sink->display);
-        break;
-    case PROP_DISPLAY_NAME:
         g_value_set_string(value, sink->display_name);
         break;
     case PROP_FULLSCREEN:
@@ -351,20 +347,11 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "display",
-                             "display",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READABLE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY_NAME,
-         g_param_spec_string("display-name",
+         g_param_spec_string("display",
                              "X11 display name",
                              "X11 display name",
                              "",
-                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (object_class,
