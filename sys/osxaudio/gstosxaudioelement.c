@@ -53,7 +53,7 @@ static void
 gst_osx_audio_element_class_init (GstOsxAudioElementInterface * klass);
 
 GType
-gst_osx_audio_element_get_type ()
+gst_osx_audio_element_get_type (void)
 {
   static GType gst_osxaudioelement_type = 0;
 
