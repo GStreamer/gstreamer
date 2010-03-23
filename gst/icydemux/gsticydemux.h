@@ -70,6 +70,9 @@ struct _GstICYDemux
   GstAdapter *meta_adapter;
 
   GstBuffer *typefind_buf;
+
+  /* upstream HTTP Content-Type */
+  gchar *content_type;
 };
 
 struct _GstICYDemuxClass 
