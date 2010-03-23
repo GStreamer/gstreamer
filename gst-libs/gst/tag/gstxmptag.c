@@ -53,6 +53,14 @@ struct _XmpTag
 };
 typedef struct _XmpTag XmpTag;
 
+struct _PendingXmpTag
+{
+  const gchar *gst_tag;
+  XmpTag *xmp_tag;
+  gchar *str;
+};
+typedef struct _PendingXmpTag PendingXmpTag;
+
 /*
  * Mappings from gstreamer tags to xmp tags
  *
@@ -309,6 +317,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
   guint i;
   const gchar *last_tag = NULL;
   XmpTag *last_xmp_tag = NULL;
+  GSList *pending_tags = NULL;
 
   xmp_tags_initialize ();
 
@@ -423,7 +432,14 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
                  */
                 gst_tag = _xmp_tag_get_mapping_reverse (as, &xmp_tag);
                 if (gst_tag) {
-                  read_one_tag (list, gst_tag, xmp_tag, v);
+                  PendingXmpTag *ptag;
+
+                  ptag = g_slice_new (PendingXmpTag);
+                  ptag->gst_tag = gst_tag;
+                  ptag->xmp_tag = xmp_tag;
+                  ptag->str = g_strdup (v);
+
+                  pending_tags = g_slist_append (pending_tags, ptag);
                 }
               }
               /* restore chars overwritten by '\0' */
@@ -475,7 +491,14 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
         /* only log non-newline nodes, we still have to parse them */
         GST_INFO ("txt: %s", part);
         if (last_tag) {
-          read_one_tag (list, last_tag, last_xmp_tag, part);
+          PendingXmpTag *ptag;
+
+          ptag = g_slice_new (PendingXmpTag);
+          ptag->gst_tag = last_tag;
+          ptag->xmp_tag = last_xmp_tag;
+          ptag->str = g_strdup (part);
+
+          pending_tags = g_slist_append (pending_tags, ptag);
         }
       }
       /* next cycle */
@@ -484,6 +507,19 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
       pp = part;
     }
   }
+
+  /* parse the entries */
+  while (pending_tags) {
+    PendingXmpTag *ptag = (PendingXmpTag *) pending_tags->data;
+
+    read_one_tag (list, ptag->gst_tag, ptag->xmp_tag, ptag->str);
+
+    g_free (ptag->str);
+    g_slice_free (PendingXmpTag, ptag);
+
+    pending_tags = g_slist_delete_link (pending_tags, pending_tags);
+  }
+
   GST_INFO ("xmp packet parsed, %d entries",
       gst_structure_n_fields ((GstStructure *) list));
 
