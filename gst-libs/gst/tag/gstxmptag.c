@@ -43,7 +43,8 @@
 
 typedef gchar *(*XmpSerializationFunc) (const GValue * value);
 typedef void (*XmpDeserializationFunc) (GstTagList * taglist,
-    const gchar * gst_tag, const gchar * str);
+    const gchar * gst_tag, const gchar * xmp_tag,
+    const gchar * str, GSList ** pending_tags);
 
 struct _XmpTag
 {
@@ -85,16 +86,27 @@ static GMutex *__xmp_tag_map_mutex;
 #define XMP_TAG_MAP_UNLOCK g_mutex_unlock (__xmp_tag_map_mutex)
 
 static void
+_xmp_tag_add_mapping (const gchar * gst_tag, GPtrArray * array)
+{
+  GQuark key;
+  GSList *list = NULL;
+
+  key = g_quark_from_string (gst_tag);
+
+  XMP_TAG_MAP_LOCK;
+  list = g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
+  list = g_slist_append (list, (gpointer) array);
+  g_hash_table_insert (__xmp_tag_map, GUINT_TO_POINTER (key), list);
+  XMP_TAG_MAP_UNLOCK;
+}
+
+static void
 _xmp_tag_add_simple_mapping (const gchar * gst_tag, const gchar * xmp_tag,
     XmpSerializationFunc serialization_func,
     XmpDeserializationFunc deserialization_func)
 {
-  GQuark key;
-  GSList *list = NULL;
   XmpTag *xmpinfo;
   GPtrArray *array;
-
-  key = g_quark_from_string (gst_tag);
 
   xmpinfo = g_slice_new (XmpTag);
   xmpinfo->tag_name = xmp_tag;
@@ -104,11 +116,7 @@ _xmp_tag_add_simple_mapping (const gchar * gst_tag, const gchar * xmp_tag,
   array = g_ptr_array_sized_new (1);
   g_ptr_array_add (array, xmpinfo);
 
-  XMP_TAG_MAP_LOCK;
-  list = g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
-  list = g_slist_append (list, (gpointer) array);
-  g_hash_table_insert (__xmp_tag_map, GUINT_TO_POINTER (key), list);
-  XMP_TAG_MAP_UNLOCK;
+  _xmp_tag_add_mapping (gst_tag, array);
 }
 
 /*
@@ -137,6 +145,7 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
   gpointer key, value;
   const gchar *ret = NULL;
   GSList *walk;
+  gint index;
 
   XMP_TAG_MAP_LOCK;
   g_hash_table_iter_init (&iter, __xmp_tag_map);
@@ -145,14 +154,20 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
 
     for (walk = list; walk; walk = g_slist_next (walk)) {
       GPtrArray *array = (GPtrArray *) walk->data;
-      XmpTag *xmpinfo = (XmpTag *) g_ptr_array_index (array, 0);
-      if (strcmp (xmpinfo->tag_name, xmp_tag) == 0) {
-        *_xmp_tag = xmpinfo;
-        ret = g_quark_to_string (GPOINTER_TO_UINT (key));
-        break;
+
+      for (index = 0; index < array->len; index++) {
+        XmpTag *xmpinfo = (XmpTag *) g_ptr_array_index (array, index);
+
+        if (strcmp (xmpinfo->tag_name, xmp_tag) == 0) {
+          *_xmp_tag = xmpinfo;
+          ret = g_quark_to_string (GPOINTER_TO_UINT (key));
+          goto out;
+        }
       }
     }
   }
+
+out:
   XMP_TAG_MAP_UNLOCK;
   return ret;
 }
@@ -269,16 +284,122 @@ error:
 
 static void
 deserialize_exif_latitude (GstTagList * taglist, const gchar * gst_tag,
-    const gchar * str)
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
 {
   deserialize_exif_gps_coordinate (taglist, gst_tag, str, 'N', 'S');
 }
 
 static void
 deserialize_exif_longitude (GstTagList * taglist, const gchar * gst_tag,
-    const gchar * str)
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
 {
   deserialize_exif_gps_coordinate (taglist, gst_tag, str, 'E', 'W');
+}
+
+static gchar *
+serialize_exif_altitude (const GValue * value)
+{
+  gdouble num;
+  gint frac_n;
+  gint frac_d;
+
+  num = g_value_get_double (value);
+
+  if (num < 0)
+    num *= -1;
+
+  gst_util_double_to_fraction (num, &frac_n, &frac_d);
+
+  return g_strdup_printf ("%d/%d", frac_n, frac_d);
+}
+
+static gchar *
+serialize_exif_altituderef (const GValue * value)
+{
+  gdouble num;
+
+  num = g_value_get_double (value);
+
+  if (num >= 0)
+    return g_strdup ("0");
+  return g_strdup ("1");
+}
+
+static void
+deserialize_exif_altitude (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  const gchar *altitude_str = NULL;
+  const gchar *altituderef_str = NULL;
+  gint frac_n;
+  gint frac_d;
+  gdouble value;
+
+  GSList *entry;
+  PendingXmpTag *ptag = NULL;
+
+  /* find the other missing part */
+  if (strcmp (xmp_tag, "exif:GPSAltitude") == 0) {
+    altitude_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, "exif:GPSAltitudeRef") == 0) {
+        altituderef_str = ptag->str;
+        break;
+      }
+    }
+
+  } else if (strcmp (xmp_tag, "exif:GPSAltitudeRef") == 0) {
+    altituderef_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, "exif:GPSAltitude") == 0) {
+        altitude_str = ptag->str;
+        break;
+      }
+    }
+
+  } else {
+    GST_WARNING ("Unexpected xmp tag %s", xmp_tag);
+    return;
+  }
+
+  if (!altitude_str) {
+    GST_WARNING ("Missing exif:GPSAltitude tag");
+    return;
+  }
+  if (!altituderef_str) {
+    GST_WARNING ("Missing exif:GPSAltitudeRef tag");
+    return;
+  }
+
+  if (sscanf (altitude_str, "%d/%d", &frac_n, &frac_d) != 2) {
+    GST_WARNING ("Failed to parse fraction: %s", altitude_str);
+    return;
+  }
+
+  gst_util_fraction_to_double (frac_n, frac_d, &value);
+
+  if (altituderef_str[0] == '0') {
+  } else if (altituderef_str[0] == '1') {
+    value *= -1;
+  } else {
+    GST_WARNING ("Unexpected exif:AltitudeRef value: %s", altituderef_str);
+    return;
+  }
+
+  /* add to the taglist */
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_GEO_LOCATION_ELEVATION, value, NULL);
+
+  /* clean up entry */
+  g_free (ptag->str);
+  g_slice_free (PendingXmpTag, ptag);
+  *pending_tags = g_slist_delete_link (*pending_tags, entry);
 }
 
 /* look at this page for addtional schemas
@@ -287,6 +408,9 @@ deserialize_exif_longitude (GstTagList * taglist, const gchar * gst_tag,
 static gpointer
 _init_xmp_tag_map ()
 {
+  GPtrArray *array;
+  XmpTag *xmpinfo;
+
   __xmp_tag_map_mutex = g_mutex_new ();
   __xmp_tag_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 
@@ -312,6 +436,20 @@ _init_xmp_tag_map ()
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LONGITUDE,
       "exif:GPSLongitude", serialize_exif_longitude,
       deserialize_exif_longitude);
+
+  /* compound tag */
+  array = g_ptr_array_sized_new (2);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSAltitude";
+  xmpinfo->serialize = serialize_exif_altitude;
+  xmpinfo->deserialize = deserialize_exif_altitude;
+  g_ptr_array_add (array, xmpinfo);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSAltitudeRef";
+  xmpinfo->serialize = serialize_exif_altituderef;
+  xmpinfo->deserialize = deserialize_exif_altitude;
+  g_ptr_array_add (array, xmpinfo);
+  _xmp_tag_add_mapping (GST_TAG_GEO_LOCATION_ELEVATION, array);
 
   /* photoshop schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_COUNTRY,
@@ -370,12 +508,12 @@ static GstXmpNamespaceMap ns_map[] = {
 
 static void
 read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
-    const gchar * v)
+    const gchar * v, GSList ** pending_tags)
 {
   GType tag_type;
 
   if (xmptag && xmptag->deserialize) {
-    xmptag->deserialize (list, tag, v);
+    xmptag->deserialize (list, tag, xmptag->tag_name, v, pending_tags);
     return;
   }
 
@@ -639,11 +777,12 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
     }
   }
 
-  /* parse the entries */
   while (pending_tags) {
     PendingXmpTag *ptag = (PendingXmpTag *) pending_tags->data;
 
-    read_one_tag (list, ptag->gst_tag, ptag->xmp_tag, ptag->str);
+    pending_tags = g_slist_delete_link (pending_tags, pending_tags);
+
+    read_one_tag (list, ptag->gst_tag, ptag->xmp_tag, ptag->str, &pending_tags);
 
     g_free (ptag->str);
     g_slice_free (PendingXmpTag, ptag);

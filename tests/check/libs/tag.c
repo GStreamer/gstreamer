@@ -898,6 +898,12 @@ do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
           g_free (vs);
           g_free (vr);
         }
+        if (strcmp (name_sent, GST_TAG_GEO_LOCATION_ELEVATION) == 0) {
+          gdouble a, b;
+          a = g_value_get_double (value_sent);
+          b = g_value_get_double (value_recv);
+          GST_WARNING ("A=%lf B=%lf", a, b);
+        }
         fail_unless (comparison == GST_VALUE_EQUAL,
             "tag item %s has been received with different type or value",
             name_sent);
@@ -949,6 +955,19 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
       &value);
   do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+
+  g_value_set_double (&value, 0);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_ELEVATION,
+      &value);
+  g_value_set_double (&value, 100);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_ELEVATION,
+      &value);
+  g_value_set_double (&value, 500.25);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_ELEVATION,
+      &value);
+  g_value_set_double (&value, -12.75);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_ELEVATION,
       &value);
   g_value_unset (&value);
 
