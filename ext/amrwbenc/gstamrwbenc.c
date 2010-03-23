@@ -55,7 +55,7 @@
 #endif
 
 static GType
-gst_amrwbenc_bandmode_get_type ()
+gst_amrwbenc_bandmode_get_type (void)
 {
   static GType gst_amrwbenc_bandmode_type = 0;
   static GEnumValue gst_amrwbenc_bandmode[] = {
