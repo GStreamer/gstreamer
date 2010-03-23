@@ -4,13 +4,10 @@
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
     <title>GStreamer VA-API Plugins @GST_MAJORMINOR@ Library Reference Manual</title>
-    <releaseinfo>
-      for GStreamer VA-API Library @GST_MAJORMINOR@ (@PACKAGE_VERSION@)
-    </releaseinfo>
   </bookinfo>
 
   <chapter>
-    <title>GStreamer VA-API Plugins Library</title>
+    <title>gst-plugins-vaapi Library</title>
     <xi:include href="xml/gstvaapitypes.xml"/>
     <xi:include href="xml/gstvaapidisplay.xml"/>
     <xi:include href="xml/gstvaapidisplay_x11.xml"/>
@@ -26,6 +23,17 @@
     <xi:include href="xml/gstvaapiimagepool.xml"/>
     <xi:include href="xml/gstvaapivideobuffer.xml"/>
     <xi:include href="xml/gstvaapivideosink.xml"/>
-    <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
   </chapter>
+
+  <chapter id="object-tree">
+    <title>Object Hierarchy</title>
+    <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+  </index>
+
+  <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
 </book>
