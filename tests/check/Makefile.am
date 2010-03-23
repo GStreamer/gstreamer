@@ -141,11 +141,10 @@ noinst_HEADERS = \
 EXTRA_DIST = \
 	libs/test_transform.c
 
-AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
+AM_CFLAGS = $(GST_OBJ_CFLAGS)
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(GST_OBJ_LIBS) \
-	$(CHECK_LIBS)
+	$(GST_OBJ_LIBS)
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
 
@@ -156,8 +155,8 @@ libs_gdp_LDADD = \
 	$(top_builddir)/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
-elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
-elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
+elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
+elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
