@@ -70,6 +70,9 @@ enum {
 };
 
 static GstVaapiDisplay *
+gst_vaapisink_get_display(GstVaapiSink *sink);
+
+static GstVaapiDisplay *
 gst_vaapi_video_sink_do_get_display(GstVaapiVideoSink *sink)
 {
     return gst_vaapisink_get_display(GST_VAAPISINK(sink));

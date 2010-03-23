@@ -74,9 +74,6 @@ struct _GstVaapiSinkClass {
 GType
 gst_vaapisink_get_type(void);
 
-GstVaapiDisplay *
-gst_vaapisink_get_display(GstVaapiSink *sink);
-
 G_END_DECLS
 
 #endif /* GST_VAAPISINK_H */
