@@ -198,6 +198,7 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XWindowAttributes wattr;
     Atom atoms[2];
     gboolean ok;
 
@@ -208,6 +209,8 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
 
     if (!priv->create_window && priv->xid) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
+        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        priv->is_mapped = wattr.map_state == IsViewable;
         ok = x11_get_geometry(dpy, priv->xid, NULL, NULL, width, height);
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         return ok;
