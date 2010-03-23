@@ -618,8 +618,8 @@ gst_vaapi_display_get_height(GstVaapiDisplay *display)
 /**
  * gst_vaapi_display_get_size:
  * @display: a #GstVaapiDisplay
- * @pwidth: (out) (allow-none): return location for the width, or %NULL
- * @pheight: (out) (allow-none): return location for the height, or %NULL
+ * @pwidth: return location for the width, or %NULL
+ * @pheight: return location for the height, or %NULL
  *
  * Retrieves the dimensions of a #GstVaapiDisplay.
  */
@@ -638,8 +638,8 @@ gst_vaapi_display_get_size(GstVaapiDisplay *display, guint *pwidth, guint *pheig
 /**
  * gst_vaapi_display_get_pixel_aspect_ratio:
  * @display: a #GstVaapiDisplay
- * @par_n: (out) (allow-none): return location for the numerator of pixel aspect ratio, or %NULL
- * @par_d: (out) (allow-none): return location for the denominator of pixel aspect ratio, or %NULL
+ * @par_n: return location for the numerator of pixel aspect ratio, or %NULL
+ * @par_d: return location for the denominator of pixel aspect ratio, or %NULL
  *
  * Retrieves the pixel aspect ratio of a #GstVaapiDisplay.
  */

@@ -414,8 +414,8 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 /**
  * gst_vaapi_surface_get_size:
  * @surface: a #GstVaapiSurface
- * @pwidth: (out) (allow-none): return location for the width, or %NULL
- * @pheight: (out) (allow-none): return location for the height, or %NULL
+ * @pwidth: return location for the width, or %NULL
+ * @pheight: return location for the height, or %NULL
  *
  * Retrieves the dimensions of a #GstVaapiSurface.
  */
@@ -574,9 +574,9 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
  * gst_vaapi_surface_associate_subpicture:
  * @surface: a #GstVaapiSurface
  * @subpicture: a #GstVaapiSubpicture
- * @src_rect: (allow-none): the sub-rectangle of the source subpicture
+ * @src_rect: the sub-rectangle of the source subpicture
  *   image to extract and process. If %NULL, the entire image will be used.
- * @dst_rect: (allow-none): the sub-rectangle of the destination
+ * @dst_rect: the sub-rectangle of the destination
  *   surface into which the image is rendered. If %NULL, the entire
  *   surface will be used.
  *

@@ -25,5 +25,6 @@
     <xi:include href="xml/gstvaapiimagepool.xml"/>
     <xi:include href="xml/gstvaapivideobuffer.xml"/>
     <xi:include href="xml/gstvaapivideosink.xml"/>
+    <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
   </chapter>
 </book>

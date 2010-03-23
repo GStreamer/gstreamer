@@ -34,6 +34,7 @@ m4_define([libva_sds_version], [libva_glx_sds_version_0_31])
 m4_define([libva_sds_package_version], [libva_glx_sds_package_version_0_31])
 
 # gtk-doc version number
+# XXX: introspection annotations require gtk-doc >= 1.12
 m4_define([gtkdoc_major_version], [1])
 m4_define([gtkdoc_minor_version], [9])
 m4_define([gtkdoc_version], [gtkdoc_major_version.gtkdoc_minor_version])

@@ -383,8 +383,8 @@ gst_vaapi_window_get_height(GstVaapiWindow *window)
 /**
  * gst_vaapi_window_get_size:
  * @window: a #GstVaapiWindow
- * @pwidth: (out) (allow-none): return location for the width, or %NULL
- * @pheight: (out) (allow-none): return location for the height, or %NULL
+ * @pwidth: return location for the width, or %NULL
+ * @pheight: return location for the height, or %NULL
  *
  * Retrieves the dimensions of a #GstVaapiWindow.
  */
@@ -484,9 +484,9 @@ get_window_rect(GstVaapiWindow *window, GstVaapiRectangle *rect)
  * gst_vaapi_window_put_surface:
  * @window: a #GstVaapiWindow
  * @surface: a #GstVaapiSurface
- * @src_rect: (allow-none): the sub-rectangle of the source surface to
+ * @src_rect: the sub-rectangle of the source surface to
  *   extract and process. If %NULL, the entire surface will be used.
- * @dst_rect: (allow-none): the sub-rectangle of the destination
+ * @dst_rect: the sub-rectangle of the destination
  *   window into which the surface is rendered. If %NULL, the entire
  *   window will be used.
  * @flags: postprocessing flags. See #GstVaapiSurfaceRenderFlags

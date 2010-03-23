@@ -563,7 +563,7 @@ gst_vaapi_image_get_id(GstVaapiImage *image)
 /**
  * gst_vaapi_image_get_image:
  * @image: a #GstVaapiImage
- * @va_image: (output): a VA image
+ * @va_image: a VA image
  *
  * Fills @va_image with the VA image used internally.
  *
@@ -721,8 +721,8 @@ gst_vaapi_image_get_height(GstVaapiImage *image)
 /**
  * gst_vaapi_image_get_size:
  * @image: a #GstVaapiImage
- * @pwidth: (out) (allow-none): return location for the width, or %NULL
- * @pheight: (out) (allow-none): return location for the height, or %NULL
+ * @pwidth: return location for the width, or %NULL
+ * @pheight: return location for the height, or %NULL
  *
  * Retrieves the dimensions of a #GstVaapiImage.
  */
