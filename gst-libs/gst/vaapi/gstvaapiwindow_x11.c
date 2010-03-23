@@ -454,7 +454,6 @@ static void
 gst_vaapi_window_x11_constructed(GObject *object)
 {
     GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
-    GstVaapiDisplay *display;
     GObjectClass *parent_class;
 
     window->priv->display =
