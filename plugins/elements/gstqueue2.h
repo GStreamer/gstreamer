@@ -45,6 +45,7 @@ G_BEGIN_DECLS
 typedef struct _GstQueue2 GstQueue2;
 typedef struct _GstQueue2Size GstQueue2Size;
 typedef struct _GstQueue2Class GstQueue2Class;
+typedef struct _GstQueue2Range GstQueue2Range;
 
 /* used to keep track of sizes (current and max) */
 struct _GstQueue2Size
@@ -53,6 +54,16 @@ struct _GstQueue2Size
   guint bytes;
   guint64 time;
   guint64 rate_time;
+};
+
+struct _GstQueue2Range
+{
+  GstQueue2Range *next;
+
+  guint64 offset;
+  guint64 writing_pos;
+  guint64 reading_pos;
+  guint64 max_reading_pos;
 };
 
 struct _GstQueue2
@@ -112,14 +123,13 @@ struct _GstQueue2
   gchar *temp_location;
   gboolean temp_remove;
   FILE *temp_file;
-  guint64 writing_pos;
-  guint64 reading_pos;
-  guint64 max_reading_pos;
+  /* list of downloaded areas and the current area */
+  GstQueue2Range *ranges;
+  GstQueue2Range *current;
   /* we need this to send the first new segment event of the stream
    * because we can't save it on the file */
   gboolean segment_event_received;
   GstEvent *starting_segment;
-
 };
 
 struct _GstQueue2Class
