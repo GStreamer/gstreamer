@@ -2488,6 +2488,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("audio/x-musepack, streamversion = (int) 7");
   } else if (!strcmp (format_name, "vqf")) {
     caps = gst_caps_from_string ("audio/x-vqf");
+  } else if (!strcmp (format_name, "nsv")) {
+    caps = gst_caps_from_string ("video/x-nsv");
   } else {
     gchar *name;
 
