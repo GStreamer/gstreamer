@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
