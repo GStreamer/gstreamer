@@ -22,6 +22,7 @@
 #define GST_VAAPI_IMAGE_H
 
 #include <gst/gstbuffer.h>
+#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimageformat.h>
 
@@ -86,7 +87,7 @@ typedef struct _GstVaapiImageClass              GstVaapiImageClass;
  */
 struct _GstVaapiImage {
     /*< private >*/
-    GObject parent_instance;
+    GstVaapiObject parent_instance;
 
     GstVaapiImagePrivate *priv;
 };
@@ -98,7 +99,7 @@ struct _GstVaapiImage {
  */
 struct _GstVaapiImageClass {
     /*< private >*/
-    GObjectClass parent_class;
+    GstVaapiObjectClass parent_class;
 };
 
 GType
@@ -120,9 +121,6 @@ gst_vaapi_image_get_id(GstVaapiImage *image);
 
 gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image);
-
-GstVaapiDisplay *
-gst_vaapi_image_get_display(GstVaapiImage *image);
 
 GstVaapiImageFormat
 gst_vaapi_image_get_format(GstVaapiImage *image);

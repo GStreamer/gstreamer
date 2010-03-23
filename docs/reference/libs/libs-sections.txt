@@ -190,6 +190,22 @@ GST_VAAPI_WINDOW_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapiobject</FILE>
+<TITLE>GstVaapiObject</TITLE>
+GstVaapiObject
+GstVaapiObjectClass
+gst_vaapi_object_get_display
+<SUBSECTION Standard>
+GST_VAAPI_OBJECT
+GST_VAAPI_IS_OBJECT
+GST_VAAPI_TYPE_OBJECT
+gst_vaapi_object_get_type
+GST_VAAPI_OBJECT_CLASS
+GST_VAAPI_IS_OBJECT_CLASS
+GST_VAAPI_OBJECT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapiimage</FILE>
 GST_VAAPI_IMAGE_FORMAT
 GST_VAAPI_IMAGE_WIDTH
@@ -201,7 +217,6 @@ gst_vaapi_image_new
 gst_vaapi_image_new_with_image
 gst_vaapi_image_get_id
 gst_vaapi_image_get_image
-gst_vaapi_image_get_display
 gst_vaapi_image_get_format
 gst_vaapi_image_get_width
 gst_vaapi_image_get_height
@@ -234,7 +249,6 @@ GstVaapiSurface
 GstVaapiSurfaceClass
 gst_vaapi_surface_new
 gst_vaapi_surface_get_id
-gst_vaapi_surface_get_display
 gst_vaapi_surface_get_chroma_type
 gst_vaapi_surface_get_width
 gst_vaapi_surface_get_height

@@ -21,6 +21,7 @@
 #ifndef GST_VAAPI_SUBPICTURE_H
 #define GST_VAAPI_SUBPICTURE_H
 
+#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 
@@ -61,7 +62,7 @@ typedef struct _GstVaapiSubpictureClass         GstVaapiSubpictureClass;
  */
 struct _GstVaapiSubpicture {
     /*< private >*/
-    GObject parent_instance;
+    GstVaapiObject parent_instance;
 
     GstVaapiSubpicturePrivate *priv;
 };
@@ -73,7 +74,7 @@ struct _GstVaapiSubpicture {
  */
 struct _GstVaapiSubpictureClass {
     /*< private >*/
-    GObjectClass parent_class;
+    GstVaapiObjectClass parent_class;
 };
 
 GType

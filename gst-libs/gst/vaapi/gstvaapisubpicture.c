@@ -32,7 +32,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, GST_VAAPI_TYPE_OBJECT);
 
 #define GST_VAAPI_SUBPICTURE_GET_PRIVATE(obj)                   \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
@@ -54,14 +54,13 @@ enum {
 static void
 gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 {
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(subpicture);
     GstVaapiSubpicturePrivate * const priv = subpicture->priv;
-    GstVaapiDisplay *display;
     VAStatus status;
 
     GST_DEBUG("subpicture 0x%08x", priv->subpicture_id);
 
     if (priv->subpicture_id != VA_INVALID_ID) {
-        display = gst_vaapi_image_get_display(priv->image);
         if (display) {
             GST_VAAPI_DISPLAY_LOCK(display);
             status = vaDestroySubpicture(
@@ -85,16 +84,12 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 static gboolean
 gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
 {
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(subpicture);
     GstVaapiSubpicturePrivate * const priv = subpicture->priv;
-    GstVaapiDisplay *display;
     VASubpictureID subpicture_id;
     VAStatus status;
 
     if (!priv->image)
-        return FALSE;
-
-    display = gst_vaapi_image_get_display(priv->image);
-    if (!display)
         return FALSE;
 
     GST_VAAPI_DISPLAY_LOCK(display);
@@ -230,7 +225,8 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
     GST_DEBUG("create from image 0x%08x", gst_vaapi_image_get_id(image));
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
-                        "image", image,
+                        "display", GST_VAAPI_OBJECT_GET_DISPLAY(image),
+                        "image",   image,
                         NULL);
 }
 

@@ -32,7 +32,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, GST_VAAPI_TYPE_OBJECT);
 
 #define GST_VAAPI_IMAGE_GET_PRIVATE(obj)                \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                 \
@@ -40,7 +40,6 @@ G_DEFINE_TYPE(GstVaapiImage, gst_vaapi_image, G_TYPE_OBJECT);
                                  GstVaapiImagePrivate))
 
 struct _GstVaapiImagePrivate {
-    GstVaapiDisplay    *display;
     VAImage             internal_image;
     VAImage             image;
     guchar             *image_data;
@@ -56,7 +55,6 @@ struct _GstVaapiImagePrivate {
 enum {
     PROP_0,
 
-    PROP_DISPLAY,
     PROP_IMAGE,
     PROP_IMAGE_ID,
     PROP_FORMAT,
@@ -148,6 +146,7 @@ vaapi_image_is_linear(const VAImage *va_image)
 static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
     GstVaapiImagePrivate * const priv = image->priv;
     VAStatus status;
 
@@ -156,47 +155,43 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
     GST_DEBUG("image 0x%08x", priv->internal_image.image_id);
 
     if (priv->internal_image.image_id != VA_INVALID_ID) {
-        GST_VAAPI_DISPLAY_LOCK(priv->display);
+        GST_VAAPI_DISPLAY_LOCK(display);
         status = vaDestroyImage(
-            GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
+            GST_VAAPI_DISPLAY_VADISPLAY(display),
             priv->internal_image.image_id
         );
-        GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        GST_VAAPI_DISPLAY_UNLOCK(display);
         if (!vaapi_check_status(status, "vaDestroyImage()"))
             g_warning("failed to destroy image 0x%08x\n",
                       priv->internal_image.image_id);
         priv->internal_image.image_id = VA_INVALID_ID;
-    }
-
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
     }
 }
 
 static gboolean
 _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 {
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
     GstVaapiImagePrivate * const priv = image->priv;
     const VAImageFormat *va_format;
     VAStatus status;
 
-    if (!gst_vaapi_display_has_image_format(priv->display, format))
+    if (!gst_vaapi_display_has_image_format(display, format))
         return FALSE;
 
     va_format = gst_vaapi_image_format_get_va_format(format);
     if (!va_format)
         return FALSE;
 
-    GST_VAAPI_DISPLAY_LOCK(priv->display);
+    GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateImage(
-        GST_VAAPI_DISPLAY_VADISPLAY(priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
         (VAImageFormat *)va_format,
         priv->width,
         priv->height,
         &priv->internal_image
     );
-    GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+    GST_VAAPI_DISPLAY_UNLOCK(display);
     if (status != VA_STATUS_SUCCESS ||
         priv->internal_image.format.fourcc != va_format->fourcc)
         return FALSE;
@@ -274,9 +269,6 @@ gst_vaapi_image_set_property(
     GstVaapiImagePrivate * const priv  = image->priv;
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        priv->display = g_object_ref(g_value_get_object(value));
-        break;
     case PROP_IMAGE: {
         const VAImage * const va_image = g_value_get_boxed(value);
         if (va_image)
@@ -309,9 +301,6 @@ gst_vaapi_image_get_property(
     GstVaapiImage * const image = GST_VAAPI_IMAGE(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_pointer(value, gst_vaapi_image_get_display(image));
-        break;
     case PROP_IMAGE:
         g_value_set_boxed(value, &image->priv->image);
         break;
@@ -357,20 +346,6 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
     object_class->set_property = gst_vaapi_image_set_property;
     object_class->get_property = gst_vaapi_image_get_property;
     object_class->constructed  = gst_vaapi_image_constructed;
-
-    /**
-     * GstVaapiImage:display:
-     *
-     * The #GstVaapiDisplay this image is bound to.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this image is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     g_object_class_install_property
         (object_class,
@@ -434,7 +409,6 @@ gst_vaapi_image_init(GstVaapiImage *image)
     GstVaapiImagePrivate *priv = GST_VAAPI_IMAGE_GET_PRIVATE(image);
 
     image->priv                   = priv;
-    priv->display                 = NULL;
     priv->image_data              = NULL;
     priv->width                   = 0;
     priv->height                  = 0;
@@ -651,23 +625,6 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
 }
 
 /**
- * gst_vaapi_image_get_display:
- * @image: a #GstVaapiImage
- *
- * Returns the #GstVaapiDisplay this @image is bound to.
- *
- * Return value: the parent #GstVaapiDisplay object
- */
-GstVaapiDisplay *
-gst_vaapi_image_get_display(GstVaapiImage *image)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
-
-    return image->priv->display;
-}
-
-/**
  * gst_vaapi_image_get_format:
  * @image: a #GstVaapiImage
  *
@@ -802,19 +759,24 @@ gst_vaapi_image_map(GstVaapiImage *image)
 gboolean
 _gst_vaapi_image_map(GstVaapiImage *image)
 {
+    GstVaapiDisplay *display;
     void *image_data;
     VAStatus status;
 
     if (_gst_vaapi_image_is_mapped(image))
         return TRUE;
 
-    GST_VAAPI_DISPLAY_LOCK(image->priv->display);
+    display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    if (!display)
+        return FALSE;
+
+    GST_VAAPI_DISPLAY_LOCK(display);
     status = vaMapBuffer(
-        GST_VAAPI_DISPLAY_VADISPLAY(image->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
         image->priv->image.buf,
         &image_data
     );
-    GST_VAAPI_DISPLAY_UNLOCK(image->priv->display);
+    GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaMapBuffer()"))
         return FALSE;
 
@@ -843,17 +805,22 @@ gst_vaapi_image_unmap(GstVaapiImage *image)
 gboolean
 _gst_vaapi_image_unmap(GstVaapiImage *image)
 {
+    GstVaapiDisplay *display;
     VAStatus status;
 
     if (!_gst_vaapi_image_is_mapped(image))
         return FALSE;
 
-    GST_VAAPI_DISPLAY_LOCK(image->priv->display);
+    display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    if (!display)
+        return FALSE;
+
+    GST_VAAPI_DISPLAY_LOCK(display);
     status = vaUnmapBuffer(
-        GST_VAAPI_DISPLAY_VADISPLAY(image->priv->display),
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
         image->priv->image.buf
     );
-    GST_VAAPI_DISPLAY_UNLOCK(image->priv->display);
+    GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaUnmapBuffer()"))
         return FALSE;
 

@@ -21,7 +21,7 @@
 #ifndef GST_VAAPI_SURFACE_H
 #define GST_VAAPI_SURFACE_H
 
-#include <gst/vaapi/gstvaapitypes.h>
+#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
@@ -107,7 +107,7 @@ typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
  */
 struct _GstVaapiSurface {
     /*< private >*/
-    GObject parent_instance;
+    GstVaapiObject parent_instance;
 
     GstVaapiSurfacePrivate *priv;
 };
@@ -119,7 +119,7 @@ struct _GstVaapiSurface {
  */
 struct _GstVaapiSurfaceClass {
     /*< private >*/
-    GObjectClass parent_class;
+    GstVaapiObjectClass parent_class;
 };
 
 GType
@@ -135,9 +135,6 @@ gst_vaapi_surface_new(
 
 VASurfaceID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface);
-
-GstVaapiDisplay *
-gst_vaapi_surface_get_display(GstVaapiSurface *surface);
 
 GstVaapiChromaType
 gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface);
