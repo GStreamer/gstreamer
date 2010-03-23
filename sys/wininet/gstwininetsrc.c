@@ -403,9 +403,9 @@ gst_win_inet_src_uri_get_type (void)
 static gchar **
 gst_win_inet_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "http", "https", "ftp", NULL };
+  static const gchar *protocols[] = { "http", "https", "ftp", NULL };
 
-  return protocols;
+  return (gchar **) protocols;
 }
 
 static G_CONST_RETURN gchar *
