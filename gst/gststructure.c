@@ -1514,6 +1514,10 @@ gst_structure_get_abbrs (gint * n_abbrs)
       ,
       {"i", G_TYPE_INT}
       ,
+      {"uint", G_TYPE_UINT}
+      ,
+      {"u", G_TYPE_UINT}
+      ,
       {"float", G_TYPE_FLOAT}
       ,
       {"f", G_TYPE_FLOAT}

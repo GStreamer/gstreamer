@@ -73,6 +73,49 @@ GST_START_TEST (test_from_string_int)
 
 GST_END_TEST;
 
+GST_START_TEST (test_from_string_uint)
+{
+  const char *strings[] = {
+    "taglist, bar = (uint) 123456",
+    "taglist, bar = (uint) 0xFFFF",
+    "taglist, bar = (uint) 0x0000FFFF",
+    "taglist, bar = (uint) 0x7FFFFFFF",
+    "taglist, bar = (uint) 0x80000000",
+    "taglist, bar = (uint) 0xFF000000"
+  };
+  guint results[] = {
+    123456,
+    0xFFFF,
+    0xFFFF,
+    0x7FFFFFFF,
+    0x80000000,
+    0xFF000000,
+  };
+  GstStructure *structure;
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    const char *s;
+    const gchar *name;
+    guint value;
+
+    s = strings[i];
+
+    structure = gst_structure_from_string (s, NULL);
+    fail_if (structure == NULL, "Could not get structure from string %s", s);
+    name = gst_structure_nth_field_name (structure, 0);
+    fail_unless (gst_structure_get_uint (structure, name, &value));
+    fail_unless (value == results[i],
+        "Value %u is not the expected result %u for string %s",
+        value, results[i], s);
+
+    /* cleanup */
+    gst_structure_free (structure);
+  }
+}
+
+GST_END_TEST;
+
 /* Test type conversions from string */
 GST_START_TEST (test_from_string)
 {
@@ -566,6 +609,7 @@ gst_structure_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_from_string_int);
+  tcase_add_test (tc_chain, test_from_string_uint);
   tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_to_string);
   tcase_add_test (tc_chain, test_to_from_string);
