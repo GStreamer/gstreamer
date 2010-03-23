@@ -618,7 +618,7 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
       *pp = '\0';
       /* create node */
       /* {TXT, ns, (ne-ns)-1} */
-      if (ns[0] != '\n' && &ns[1] < ne) {
+      if (ns[0] != '\n' && &ns[1] <= ne) {
         /* only log non-newline nodes, we still have to parse them */
         GST_INFO ("txt: %s", part);
         if (last_tag) {
