@@ -253,24 +253,47 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
                   "01401592ffe10017674d401592540a0fd8088000000300" \
                   "8000001e478b175001000468ee3c80, stream-format=(string)avc"
 
+#define COMMON_TAGS \
+    "taglist,title=test_title,"    \
+    "artist=test_artist,"          \
+    "keywords=\"key1,key2\","      \
+    "description=test_desc"
+
 GST_START_TEST (test_common_tags)
 {
-  test_tags ("taglist,title=(string)test_title", H264_CAPS, "qtmux", "qtdemux");
+  test_tags (COMMON_TAGS, H264_CAPS, "qtmux", "qtdemux");
+  test_tags (COMMON_TAGS, H264_CAPS, "mp4mux", "qtdemux");
+  test_tags (COMMON_TAGS, H264_CAPS, "gppmux", "qtdemux");
 }
 
 GST_END_TEST;
 
+#define GEO_LOCATION_TAGS \
+    "taglist,geo-location-country=Brazil,"    \
+      "geo-location-city=\"Campina Grande\"," \
+      "geo-location-sublocation=Bodocongo,"   \
+      "geo-location-latitude=-12.125,"        \
+      "geo-location-longitude=56.75,"         \
+      "geo-location-elevation=327.5"
+
 GST_START_TEST (test_geo_location_tags)
 {
-  test_tags ("taglist,geo-location-country=Brazil,"
-      "geo-location-city=\"Campina Grande\","
-      "geo-location-sublocation=Bodocongo", H264_CAPS, "qtmux", "qtdemux");
-  test_tags ("taglist,geo-location-country=Brazil,"
-      "geo-location-city=\"Campina Grande\","
-      "geo-location-sublocation=Bodocongo", H264_CAPS, "mp4mux", "qtdemux");
-  test_tags ("taglist,geo-location-country=Brazil,"
-      "geo-location-city=\"Campina Grande\","
-      "geo-location-sublocation=Bodocongo", H264_CAPS, "gppmux", "qtdemux");
+  test_tags (GEO_LOCATION_TAGS, H264_CAPS, "qtmux", "qtdemux");
+  test_tags (GEO_LOCATION_TAGS, H264_CAPS, "mp4mux", "qtdemux");
+  test_tags (GEO_LOCATION_TAGS, H264_CAPS, "gppmux", "qtdemux");
+}
+
+GST_END_TEST;
+
+
+#define USER_TAGS \
+    "taglist,user-rating=(uint)85"
+
+GST_START_TEST (test_user_tags)
+{
+  test_tags (USER_TAGS, H264_CAPS, "qtmux", "qtdemux");
+  test_tags (USER_TAGS, H264_CAPS, "mp4mux", "qtdemux");
+  test_tags (USER_TAGS, H264_CAPS, "gppmux", "qtdemux");
 }
 
 GST_END_TEST;
@@ -288,6 +311,7 @@ metadata_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_common_tags);
   tcase_add_test (tc_chain, test_geo_location_tags);
+  tcase_add_test (tc_chain, test_user_tags);
 
   return s;
 }
