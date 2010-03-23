@@ -90,7 +90,7 @@ static gboolean gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink *
     ddrawsink, GstCaps * caps, DDPIXELFORMAT * pPixelFormat);
 static void gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink,
     RECT src, RECT dst, RECT * result);
-char *DDErrorString (HRESULT hr);
+static const char *DDErrorString (HRESULT hr);
 
 /* surfaces management functions */
 static void gst_directdraw_sink_surface_destroy (GstDirectDrawSink * ddrawsink,
@@ -1139,7 +1139,7 @@ gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink, RECT src,
  * @hr: HRESULT code
  * Returns: Text representation of the error.
  */
-char *
+static const char *
 DDErrorString (HRESULT hr)
 {
   switch (hr) {
@@ -1453,7 +1453,7 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MBUTTONUP:
         case WM_MOUSEMOVE:{
           gint x, y, button;
-          gchar *action;
+          const gchar *action;
 
           switch (message) {
             case WM_MOUSEMOVE:
