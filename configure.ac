@@ -33,6 +33,11 @@ m4_define([libva_glx_sds_package_version_0_31], [0.31.0-1+sds1])
 m4_define([libva_sds_version], [libva_glx_sds_version_0_31])
 m4_define([libva_sds_package_version], [libva_glx_sds_package_version_0_31])
 
+# gtk-doc version number
+m4_define([gtkdoc_major_version], [1])
+m4_define([gtkdoc_minor_version], [9])
+m4_define([gtkdoc_version], [gtkdoc_major_version.gtkdoc_minor_version])
+
 AC_PREREQ([2.57])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
     [gbeauchesne@splitted-desktop.com],
@@ -91,8 +96,10 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
 dnl Check for Gtk doc
-GTK_DOC_CHECK([1.9])
+GTKDOC_VERSION=gtkdoc_version
+GTK_DOC_CHECK([$GTKDOC_VERSION])
 AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes"])
+AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
@@ -186,6 +193,8 @@ AC_OUTPUT([
     debian/control
     debian/gstreamer$GST_MAJORMINOR-vaapi.install:\
 debian/gstreamer-vaapi.install.in
+    debian/gstreamer$GST_MAJORMINOR-vaapi-doc.install:\
+debian/gstreamer-vaapi-doc.install.in
     debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian/libgstvaapi.install.in
     debian/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:\

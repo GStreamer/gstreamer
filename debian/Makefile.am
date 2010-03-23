@@ -14,6 +14,8 @@ DEBIANFILES = \
 	copyright						\
 	gstreamer-vaapi.install.in				\
 	gstreamer$(GST_MAJORMINOR)-vaapi.install		\
+	gstreamer-vaapi-doc.install.in				\
+	gstreamer$(GST_MAJORMINOR)-vaapi-doc.install		\
 	libgstvaapi.install.in					\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
 	libgstvaapi-dev.install.in				\
@@ -27,6 +29,7 @@ DEBIANGENFILES = \
 	control							\
 	changelog						\
 	gstreamer$(GST_MAJORMINOR)-vaapi.install		\
+	gstreamer$(GST_MAJORMINOR)-vaapi-doc.install		\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION)-dev.install	\
 	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\

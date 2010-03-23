@@ -5,6 +5,8 @@ include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/rules/utils.mk
 
+gst_pkgname = $(shell dpkg-parsechangelog | grep ^Source: | cut -d' ' -f2)
+
 # Allow SMP build
 ifeq ($(DEBIAN_BUILD_NCPUS),)
 	DEBIAN_BUILD_NCPUS = $(shell /usr/bin/getconf _NPROCESSORS_ONLN)
@@ -13,3 +15,15 @@ ifneq ($(DEBIAN_BUILD_NCPUS),)
 	EXTRA_MAKE_FLAGS += -j$(DEBIAN_BUILD_NCPUS)
 endif
 MAKE += $(EXTRA_MAKE_FLAGS)
+
+# Allow HTML documentation build
+indep_conf_flags = \
+	--with-html-dir=\$${prefix}/share/doc/$(gst_pkgname)
+
+# only build the docs if gtk-doc-tools is installed, i.e. binary-indep is
+# called
+ifeq ($(shell test "`dpkg -l gtk-doc-tools | grep ^ii`" && echo binary-indep),binary-indep)
+indep_conf_flags += --enable-gtk-doc
+endif
+
+DEB_CONFIGURE_EXTRA_FLAGS += $(indep_conf_flags)

@@ -8,16 +8,25 @@ Build-Depends: debhelper (>= 5),
 	       libgstreamer@GST_MAJORMINOR@-dev (>= @GST_VERSION_REQUIRED@),
 	       libgstreamer-plugins-base@GST_MAJORMINOR@-dev (>= @GST_PLUGINS_BASE_VERSION_REQUIRED@),
 	       libva-dev (>= @LIBVA_SDS_PACKAGE_VERSION@)
+Build-Depends-Indep: gtk-doc-tools (>= @GTKDOC_VERSION@)
 Standards-Version: 3.7.2
 
 Package: gstreamer@GST_MAJORMINOR@-vaapi
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Suggests: gstreamer@GST_MAJORMINOR@-vaapi-doc
 Description: VA-API plugins for GStreamer
  This package contains GStreamer plugins for VA-API support:
  - `vaapiconvert': converts from YUV pixels to VA surfaces 
  - `vaapisink': a VA-API based video sink
+
+Package: gstreamer@GST_MAJORMINOR@-vaapi-doc
+Architecture: all
+Section: doc
+Recommends: libgstvaapi@GST_VAAPI_MAJOR_VERSION@-dev (= ${source:Version})
+Description: GStreamer VA-API documentation and manuals
+ This packages contains documentation for libraries and elements.
 
 Package: gstreamer@GST_MAJORMINOR@-vaapi-dbg
 Section: libdevel
