@@ -18,6 +18,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gstvaapiconvert
+ * @short_description: A VA-API based video pixels format converter
+ *
+ * vaapiconvert converts from raw YUV pixels to surfaces suitable for
+ * the vaapisink element.
+ */
+
 #include "config.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -231,6 +239,25 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
     trans_class->get_unit_size  = gst_vaapiconvert_get_unit_size;
     trans_class->prepare_output_buffer = gst_vaapiconvert_prepare_output_buffer;
 
+    /**
+     * GstVaapiConvert:direct-rendering:
+     *
+     * Selects the direct rendering level.
+     * <orderedlist>
+     * <listitem override="0">
+     *   Disables direct rendering.
+     * </listitem>
+     * <listitem>
+     *   Enables direct rendering to the output buffer. i.e. this
+     *   tries to use a single buffer for both sink and src pads.
+     * </listitem>
+     * <listitem>
+     *   Enables direct rendering to the underlying surface. i.e. with
+     *   drivers supporting vaDeriveImage(), the output surface pixels
+     *   will be modified directly.
+     * </listitem>
+     * </orderedlist>
+     */
     g_object_class_install_property
         (object_class,
          PROP_DIRECT_RENDERING,

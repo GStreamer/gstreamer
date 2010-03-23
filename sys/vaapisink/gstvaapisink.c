@@ -18,6 +18,15 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gstvaapisink
+ * @short_description: A VA-API based videosink
+ *
+ * vaapisink renders video frames to a drawable (X #Window) on a local
+ * display using the Video Acceleration (VA) API. The element will
+ * create its own internal window and render into it.
+ */
+
 #include "config.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
