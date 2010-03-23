@@ -144,6 +144,7 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XWindowAttributes wattr;
     gboolean has_errors;
 
     if (priv->is_mapped)
@@ -151,21 +152,31 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
+    if (!priv->create_window) {
+        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        if (!(wattr.your_event_mask & StructureNotifyMask))
+            XSelectInput(dpy, priv->xid, StructureNotifyMask);
+    }
     XMapWindow(dpy, priv->xid);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    if (has_errors)
-        return FALSE;
 
-    if (priv->create_window)
+    if (!has_errors) {
         wait_event(window, MapNotify);
+        if (!priv->create_window &&
+            !(wattr.your_event_mask & StructureNotifyMask)) {
+            GST_VAAPI_DISPLAY_LOCK(priv->display);
+            x11_trap_errors();
+            XSelectInput(dpy, priv->xid, wattr.your_event_mask);
+            has_errors = x11_untrap_errors() != 0;
+            GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        }
+        priv->is_mapped = TRUE;
 
-    priv->is_mapped = TRUE;
-
-    if (priv->fullscreen_on_map)
-        gst_vaapi_window_set_fullscreen(window, TRUE);
-
-    return TRUE;
+        if (priv->fullscreen_on_map)
+            gst_vaapi_window_set_fullscreen(window, TRUE);
+    }
+    return !has_errors;
 }
 
 static gboolean
@@ -173,6 +184,7 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    XWindowAttributes wattr;
     gboolean has_errors;
 
     if (!priv->is_mapped)
@@ -180,17 +192,28 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
+    if (!priv->create_window) {
+        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        if (!(wattr.your_event_mask & StructureNotifyMask))
+            XSelectInput(dpy, priv->xid, StructureNotifyMask);
+    }
     XUnmapWindow(dpy, priv->xid);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    if (has_errors)
-        return FALSE;
 
-    if (priv->create_window)
+    if (!has_errors) {
         wait_event(window, UnmapNotify);
-
-    priv->is_mapped = FALSE;
-    return TRUE;
+        if (!priv->create_window &&
+            !(wattr.your_event_mask & StructureNotifyMask)) {
+            GST_VAAPI_DISPLAY_LOCK(priv->display);
+            x11_trap_errors();
+            XSelectInput(dpy, priv->xid, wattr.your_event_mask);
+            has_errors = x11_untrap_errors() != 0;
+            GST_VAAPI_DISPLAY_UNLOCK(priv->display);
+        }
+        priv->is_mapped = FALSE;
+    }
+    return !has_errors;
 }
 
 static gboolean
