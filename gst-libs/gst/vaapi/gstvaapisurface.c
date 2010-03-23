@@ -583,7 +583,8 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
  * Associates the @subpicture with the @surface. The @src_rect
  * coordinates and size are relative to the source image bound to
  * @subpicture. The @dst_rect coordinates and size are relative to the
- * target @surface.
+ * target @surface. Note that the @surface holds an additional
+ * reference to the @subpicture.
  *
  * Return value: %TRUE on success
  */
