@@ -39,6 +39,77 @@ typedef void (*DrawRectFunc)(
     guint32 color
 );
 
+static void draw_rect_ARGB(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    guint i, j;
+
+    color = GUINT32_TO_BE(color);
+
+    for (j = 0; j < height; j++) {
+        guint32 *p = (guint32 *)(pixels[0] + (y + j) * stride[0] + x * 4);
+        for (i = 0; i < width; i++)
+            p[i] = color;
+    }
+}
+
+static void draw_rect_BGRA(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    // Converts ARGB color to BGRA
+    color = GUINT32_SWAP_LE_BE(color);
+
+    draw_rect_ARGB(pixels, stride, x, y, width, height, color);
+}
+
+static void draw_rect_RGBA(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    // Converts ARGB color to RGBA
+    color = ((color >> 24) & 0xff) | ((color & 0xffffff) << 8);
+
+    draw_rect_ARGB(pixels, stride, x, y, width, height, color);
+}
+
+static void draw_rect_ABGR(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    // Converts ARGB color to ABGR
+    color = ((color & 0xff00ff00)   |
+             ((color >> 16) & 0xff) |
+             ((color & 0xff) << 16));
+
+    draw_rect_ARGB(pixels, stride, x, y, width, height, color);
+}
+
 static void draw_rect_NV12( // Y, UV planes
     guchar *pixels[3],
     guint   stride[3],
@@ -122,6 +193,25 @@ static gboolean draw_rgb_rects(GstVaapiImage *image)
         return FALSE;
 
     switch (format) {
+    case GST_VAAPI_IMAGE_ARGB:
+        draw_rect   = draw_rect_ARGB;
+        goto RGB_colors;
+    case GST_VAAPI_IMAGE_BGRA:
+        draw_rect   = draw_rect_BGRA;
+        goto RGB_colors;
+    case GST_VAAPI_IMAGE_RGBA:
+        draw_rect   = draw_rect_RGBA;
+        goto RGB_colors;
+    case GST_VAAPI_IMAGE_ABGR:
+        draw_rect   = draw_rect_ABGR;
+    RGB_colors:
+        pixels[0]   = gst_vaapi_image_get_plane(image, 0);
+        stride[0]   = gst_vaapi_image_get_pitch(image, 0);
+        red_color   = 0xffff0000;
+        green_color = 0xff00ff00;
+        blue_color  = 0xff0000ff;
+        black_color = 0xff000000;
+        break;
     case GST_VAAPI_IMAGE_NV12:
         draw_rect   = draw_rect_NV12;
         pixels[0]   = gst_vaapi_image_get_plane(image, 0);
@@ -171,10 +261,11 @@ static gboolean draw_rgb_rects(GstVaapiImage *image)
 int
 main(int argc, char *argv[])
 {
-    GstVaapiDisplay *display;
-    GstVaapiWindow  *window;
-    GstVaapiSurface *surface;
-    GstVaapiImage   *image = NULL;
+    GstVaapiDisplay    *display;
+    GstVaapiWindow     *window;
+    GstVaapiSurface    *surface;
+    GstVaapiImage      *image      = NULL;
+    GstVaapiSubpicture *subpicture = NULL;
     GstVaapiImageFormat format;
     guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     guint i;
@@ -183,6 +274,10 @@ main(int argc, char *argv[])
         GST_VAAPI_IMAGE_NV12,
         GST_VAAPI_IMAGE_YV12,
         GST_VAAPI_IMAGE_I420,
+        GST_VAAPI_IMAGE_ARGB,
+        GST_VAAPI_IMAGE_BGRA,
+        GST_VAAPI_IMAGE_RGBA,
+        GST_VAAPI_IMAGE_ABGR,
         0
     };
 
@@ -215,8 +310,19 @@ main(int argc, char *argv[])
     if (!draw_rgb_rects(image))
         g_error("could not draw RGB rectangles");
 
-    if (!gst_vaapi_surface_put_image(surface, image))
-        g_error("could not upload image");
+    if (gst_vaapi_image_format_is_rgb(format)) {
+        subpicture = gst_vaapi_subpicture_new(image);
+        if (!subpicture)
+            g_error("could not create Gst/VA subpicture");
+
+        if (!gst_vaapi_surface_associate_subpicture(surface, subpicture,
+                                                    NULL, NULL))
+            g_error("could not associate subpicture to surface");
+    }
+    else {
+        if (!gst_vaapi_surface_put_image(surface, image))
+            g_error("could not upload image");
+    }
 
     if (!gst_vaapi_surface_sync(surface))
         g_error("could not complete image upload");
@@ -277,6 +383,8 @@ main(int argc, char *argv[])
         XDestroyWindow(dpy, win);
     }
 
+    if (subpicture)
+        g_object_unref(subpicture);
     g_object_unref(image);
     g_object_unref(surface);
     g_object_unref(display);

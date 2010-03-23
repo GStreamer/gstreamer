@@ -21,8 +21,10 @@
 #ifndef GST_VAAPI_SURFACE_H
 #define GST_VAAPI_SURFACE_H
 
-#include <gst/vaapi/gstvaapiimage.h>
+#include <gst/vaapi/gstvaapitypes.h>
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiimage.h>
+#include <gst/vaapi/gstvaapisubpicture.h>
 
 G_BEGIN_DECLS
 
@@ -161,6 +163,20 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image);
 
 gboolean
 gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image);
+
+gboolean
+gst_vaapi_surface_associate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+);
+
+gboolean
+gst_vaapi_surface_deassociate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture
+);
 
 gboolean
 gst_vaapi_surface_sync(GstVaapiSurface *surface);

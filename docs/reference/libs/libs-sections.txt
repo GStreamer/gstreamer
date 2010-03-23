@@ -242,6 +242,8 @@ gst_vaapi_surface_get_size
 gst_vaapi_surface_derive_image
 gst_vaapi_surface_get_image
 gst_vaapi_surface_put_image
+gst_vaapi_surface_associate_subpicture
+gst_vaapi_surface_deassociate_subpicture
 gst_vaapi_surface_sync
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE

@@ -45,6 +45,7 @@ struct _GstVaapiSurfacePrivate {
     guint               width;
     guint               height;
     GstVaapiChromaType  chroma_type;
+    GPtrArray          *subpictures;
 };
 
 enum {
@@ -56,6 +57,12 @@ enum {
     PROP_HEIGHT,
     PROP_CHROMA_TYPE
 };
+
+static void
+destroy_subpicture_cb(gpointer subpicture, gpointer user_data)
+{
+    g_object_unref(subpicture);
+}
 
 static void
 gst_vaapi_surface_destroy(GstVaapiSurface *surface)
@@ -73,6 +80,12 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
         if (!vaapi_check_status(status, "vaDestroySurfaces()"))
             g_warning("failed to destroy surface 0x%08x\n", priv->surface_id);
         priv->surface_id = VA_INVALID_SURFACE;
+    }
+
+    if (priv->subpictures) {
+        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, NULL);
+        g_ptr_array_free(priv->subpictures, TRUE);
+        priv->subpictures = NULL;
     }
 
     if (priv->display) {
@@ -282,6 +295,7 @@ gst_vaapi_surface_init(GstVaapiSurface *surface)
     priv->width         = 0;
     priv->height        = 0;
     priv->chroma_type   = 0;
+    priv->subpictures   = NULL;
 }
 
 /**
@@ -550,6 +564,130 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
     if (!vaapi_check_status(status, "vaPutImage()"))
         return FALSE;
 
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_surface_associate_subpicture:
+ * @surface: a #GstVaapiSurface
+ * @subpicture: a #GstVaapiSubpicture
+ * @src_rect: (allow-none): the sub-rectangle of the source subpicture
+ *   image to extract and process. If %NULL, the entire image will be used.
+ * @dst_rect: (allow-none): the sub-rectangle of the destination
+ *   surface into which the image is rendered. If %NULL, the entire
+ *   surface will be used.
+ *
+ * Associates the @subpicture with the @surface. The @src_rect
+ * coordinates and size are relative to the source image bound to
+ * @subpicture. The @dst_rect coordinates and size are relative to the
+ * target @surface.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_surface_associate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+    GstVaapiRectangle src_rect_default, dst_rect_default;
+    GstVaapiImage *image;
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+
+    if (!gst_vaapi_surface_deassociate_subpicture(surface, subpicture))
+        return FALSE;
+
+    if (!surface->priv->subpictures) {
+        surface->priv->subpictures = g_ptr_array_new();
+        if (!surface->priv->subpictures)
+            return FALSE;
+    }
+
+    if (!src_rect) {
+        image = gst_vaapi_subpicture_get_image(subpicture);
+        if (!image)
+            return FALSE;
+        src_rect                = &src_rect_default;
+        src_rect_default.x      = 0;
+        src_rect_default.y      = 0;
+        gst_vaapi_image_get_size(
+            image,
+            &src_rect_default.width,
+            &src_rect_default.height
+        );
+    }
+
+    if (!dst_rect) {
+        dst_rect                = &dst_rect_default;
+        dst_rect_default.x      = 0;
+        dst_rect_default.y      = 0;
+        dst_rect_default.width  = surface->priv->width;
+        dst_rect_default.height = surface->priv->height;
+    }
+
+    GST_VAAPI_DISPLAY_LOCK(surface->priv->display);
+    status = vaAssociateSubpicture(
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
+        gst_vaapi_subpicture_get_id(subpicture),
+        &surface->priv->surface_id, 1,
+        src_rect->x, src_rect->y, src_rect->width, src_rect->height,
+        dst_rect->x, dst_rect->y, dst_rect->width, dst_rect->height,
+        0
+    );
+    GST_VAAPI_DISPLAY_UNLOCK(surface->priv->display);
+    if (!vaapi_check_status(status, "vaAssociateSubpicture()"))
+        return FALSE;
+
+    g_ptr_array_add(surface->priv->subpictures, g_object_ref(subpicture));
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_surface_deassociate_subpicture:
+ * @surface: a #GstVaapiSurface
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Deassociates @subpicture from @surface. Other associations are kept.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_surface_deassociate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture
+)
+{
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+
+    if (!surface->priv->subpictures)
+        return TRUE;
+
+    /* First, check subpicture was really associated with this surface */
+    if (!g_ptr_array_remove_fast(surface->priv->subpictures, subpicture)) {
+        GST_DEBUG("subpicture 0x%08x was not bound to surface 0x%08x",
+                  gst_vaapi_subpicture_get_id(subpicture),
+                  surface->priv->surface_id);
+        return TRUE;
+    }
+
+    GST_VAAPI_DISPLAY_LOCK(surface->priv->display);
+    status = vaDeassociateSubpicture(
+        GST_VAAPI_DISPLAY_VADISPLAY(surface->priv->display),
+        gst_vaapi_subpicture_get_id(subpicture),
+        &surface->priv->surface_id, 1
+    );
+    GST_VAAPI_DISPLAY_UNLOCK(surface->priv->display);
+    g_object_unref(subpicture);
+    if (!vaapi_check_status(status, "vaDeassociateSubpicture()"))
+        return FALSE;
     return TRUE;
 }
 
