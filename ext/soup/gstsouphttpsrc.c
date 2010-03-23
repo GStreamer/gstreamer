@@ -774,7 +774,8 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       src->src_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
     }
-  } else if ((value =
+  }
+  if ((value =
           soup_message_headers_get_content_type (msg->response_headers,
               &params)) != NULL) {
     GST_DEBUG_OBJECT (src, "Content-Type: %s", value);
@@ -801,6 +802,11 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
           "depth", G_TYPE_INT, 16,
           "signed", G_TYPE_BOOLEAN, TRUE,
           "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
+    } else {
+      /* Set the Content-Type field on the caps */
+      if (src->src_caps)
+        gst_caps_set_simple (src->src_caps, "content-type", G_TYPE_STRING,
+            value, NULL);
     }
   }
 
