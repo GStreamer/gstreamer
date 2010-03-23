@@ -79,7 +79,7 @@ x11_create_window(Display *display, guint width, guint height)
 
     xswa_mask             = CWBorderPixel | CWBackPixel;
     xswa.border_pixel     = black_pixel;
-    xswa.background_pixel = white_pixel;
+    xswa.background_pixel = black_pixel;
 
     window = XCreateWindow(
         display,
