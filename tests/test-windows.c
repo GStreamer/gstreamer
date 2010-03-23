@@ -265,7 +265,7 @@ main(int argc, char *argv[])
     GstVaapiWindow     *window;
     GstVaapiSurface    *surface;
     GstVaapiImage      *image      = NULL;
-    GstVaapiSubpicture *subpicture = NULL;
+    GstVaapiSubpicture *subpicture;
     GstVaapiImageFormat format;
     guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     guint i;
@@ -318,6 +318,9 @@ main(int argc, char *argv[])
         if (!gst_vaapi_surface_associate_subpicture(surface, subpicture,
                                                     NULL, NULL))
             g_error("could not associate subpicture to surface");
+
+        /* The surface holds a reference to the subpicture. This is safe. */
+        g_object_unref(subpicture);
     }
     else {
         if (!gst_vaapi_surface_put_image(surface, image))
@@ -383,8 +386,6 @@ main(int argc, char *argv[])
         XDestroyWindow(dpy, win);
     }
 
-    if (subpicture)
-        g_object_unref(subpicture);
     g_object_unref(image);
     g_object_unref(surface);
     g_object_unref(display);
