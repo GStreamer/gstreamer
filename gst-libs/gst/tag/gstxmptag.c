@@ -402,6 +402,26 @@ deserialize_exif_altitude (GstTagList * taglist, const gchar * gst_tag,
   *pending_tags = g_slist_delete_link (*pending_tags, entry);
 }
 
+static void
+deserialize_xmp_rating (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  guint value;
+
+  if (sscanf (str, "%u", &value) != 1) {
+    GST_WARNING ("Failed to parse xmp:Rating %s", str);
+    return;
+  }
+
+  if (value < 0 || value > 100) {
+    GST_WARNING ("Unsupported Rating tag %u (should be from 0 to 100), "
+        "ignoring", value);
+    return;
+  }
+
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, gst_tag, value, NULL);
+}
+
 /* look at this page for addtional schemas
  * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/XMP.html
  */
@@ -429,6 +449,10 @@ _init_xmp_tag_map ()
   _xmp_tag_add_simple_mapping (GST_TAG_TITLE, "dc:title", NULL, NULL);
   /* FIXME: we probably want GST_TAG_{,AUDIO_,VIDEO_}MIME_TYPE */
   _xmp_tag_add_simple_mapping (GST_TAG_VIDEO_CODEC, "dc:format", NULL, NULL);
+
+  /* xap (xmp) schema */
+  _xmp_tag_add_simple_mapping (GST_TAG_USER_RATING, "xmp:Rating", NULL,
+      deserialize_xmp_rating);
 
   /* exif schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LATITUDE,
@@ -840,6 +864,10 @@ gst_value_serialize_xmp (const GValue * value)
   switch (G_VALUE_TYPE (value)) {
     case G_TYPE_STRING:
       return g_markup_escape_text (g_value_get_string (value), -1);
+    case G_TYPE_INT:
+      return g_strdup_printf ("%d", g_value_get_int (value));
+    case G_TYPE_UINT:
+      return g_strdup_printf ("%u", g_value_get_uint (value));
     default:
       break;
   }

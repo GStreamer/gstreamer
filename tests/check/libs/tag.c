@@ -977,6 +977,15 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   g_date_free (date);
   do_xmp_tag_serialization_deserialization (GST_TAG_DATE, &value);
   g_value_unset (&value);
+
+  g_value_init (&value, G_TYPE_UINT);
+  g_value_set_uint (&value, 0);
+  do_xmp_tag_serialization_deserialization (GST_TAG_USER_RATING, &value);
+  g_value_set_uint (&value, 100);
+  do_xmp_tag_serialization_deserialization (GST_TAG_USER_RATING, &value);
+  g_value_set_uint (&value, 22);
+  do_xmp_tag_serialization_deserialization (GST_TAG_USER_RATING, &value);
+  g_value_unset (&value);
 }
 
 GST_END_TEST;
