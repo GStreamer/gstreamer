@@ -27,7 +27,7 @@
 static void
 gst_vaapi_object_destroy_cb(gpointer object, gpointer user_data)
 {
-    g_print("Destroying GstVaapiObject %p\n", object);
+    g_print("destroying GstVaapiObject %p\n", object);
 }
 
 int
