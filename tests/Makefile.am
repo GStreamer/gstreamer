@@ -5,13 +5,11 @@ noinst_PROGRAMS = 	\
 	$(NULL)
 
 TEST_CFLAGS = \
-	$(LIBVA_EXTRA_CFLAGS) \
 	$(GST_CFLAGS) \
 	-I$(top_srcdir)/gst-libs \
 	$(X11_CFLAGS)
 
 TEST_LIBS = \
-	$(LIBVA_EXTRA_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-@GST_MAJORMINOR@.la \
 	$(X11_LIBS)
 

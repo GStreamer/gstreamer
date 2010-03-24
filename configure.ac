@@ -181,6 +181,8 @@ PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME],
 if test "$ac_cv_have_vaapi_x11" = "no"; then
     if test "$ac_cv_have_vaapi_old" = "yes"; then
         LIBVA_X11_PKGNAME="libva"
+        CFLAGS="$CFLAGS $LIBVA_EXTRA_CFLAGS"
+        LIBS="$LIBS $LIBVA_EXTRA_LIBS"
     else
         AC_MSG_ERROR([could not find VA-API])
     fi
