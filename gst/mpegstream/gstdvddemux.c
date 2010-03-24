@@ -125,11 +125,6 @@ GST_STATIC_PAD_TEMPLATE ("current_subpicture",
 GST_BOILERPLATE_FULL (GstDVDDemux, gst_dvd_demux, GstMPEGDemux,
     GST_TYPE_MPEG_DEMUX, _do_init);
 
-static void gst_dvd_demux_class_init (GstDVDDemuxClass * klass);
-static void gst_dvd_demux_base_init (gpointer klass);
-static void gst_dvd_demux_init (GstDVDDemux * dvd_demux,
-    GstDVDDemuxClass * klass);
-
 static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);
 static gboolean gst_dvd_demux_parse_packhead (GstMPEGParse * mpeg_parse,

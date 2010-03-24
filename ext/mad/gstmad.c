@@ -75,9 +75,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_mad_base_init (gpointer g_class);
-static void gst_mad_class_init (GstMadClass * klass);
-static void gst_mad_init (GstMad * mad, GstMadClass * klass);
 static void gst_mad_dispose (GObject * object);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,

@@ -82,7 +82,6 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE_FULL (GstMPEGParse, gst_mpeg_parse, GstElement,
     GST_TYPE_ELEMENT, _do_init);
 
-static void gst_mpeg_parse_class_init (GstMPEGParseClass * klass);
 static GstStateChangeReturn gst_mpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
 

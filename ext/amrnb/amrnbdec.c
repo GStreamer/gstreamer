@@ -67,7 +67,7 @@ static const gint block_size_if2[16] = { 12, 13, 15, 17, 18, 20, 25, 30, 5,
 };
 
 static GType
-gst_amrnb_variant_get_type ()
+gst_amrnb_variant_get_type (void)
 {
   static GType gst_amrnb_variant_type = 0;
   static const GEnumValue gst_amrnb_variant[] = {

@@ -51,6 +51,7 @@ struct _GstPNMSrcClass
   GstPushSrcClass parent_class;
 };
 
+GType gst_pnm_src_get_type (void);
 gboolean gst_pnm_src_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

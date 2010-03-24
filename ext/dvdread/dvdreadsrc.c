@@ -1580,7 +1580,7 @@ gst_dvd_read_src_uri_get_type (void)
 static gchar **
 gst_dvd_read_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "dvd", NULL };
+  static gchar *protocols[] = { (gchar *) "dvd", NULL };
 
   return protocols;
 }

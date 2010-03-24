@@ -65,7 +65,7 @@ typedef struct _GstXingSeekEntry
 } GstXingSeekEntry;
 
 static inline GstXingSeekEntry *
-gst_xing_seek_entry_new ()
+gst_xing_seek_entry_new (void)
 {
   return g_slice_new (GstXingSeekEntry);
 }

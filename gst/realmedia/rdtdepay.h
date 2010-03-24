@@ -65,6 +65,8 @@ struct _GstRDTDepayClass
   GstElementClass parent_class;
 };
 
+GType gst_rdt_depay_get_type (void);
+
 gboolean gst_rdt_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

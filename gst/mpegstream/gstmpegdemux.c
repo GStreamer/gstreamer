@@ -82,8 +82,6 @@ GST_STATIC_PAD_TEMPLATE ("private_%d",
 GST_BOILERPLATE_FULL (GstMPEGDemux, gst_mpeg_demux, GstMPEGParse,
     GST_TYPE_MPEG_PARSE, _do_init);
 
-static void gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass);
-
 static gboolean gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);
 

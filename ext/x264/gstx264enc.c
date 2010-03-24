@@ -407,7 +407,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Interlaced material", ARG_INTERLACED_DEFAULT, G_PARAM_READWRITE));
 }
 
-void
+static void
 gst_x264_enc_log_callback (gpointer private, gint level, const char *format,
     va_list args)
 {

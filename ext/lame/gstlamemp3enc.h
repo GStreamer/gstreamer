@@ -83,8 +83,8 @@ struct _GstLameMP3EncClass {
 };
 
 GType gst_lamemp3enc_get_type(void);
+gboolean gst_lamemp3enc_register (GstPlugin * plugin);
 
 G_END_DECLS
-
 
 #endif /* __GST_LAMEMP3ENC_H__ */

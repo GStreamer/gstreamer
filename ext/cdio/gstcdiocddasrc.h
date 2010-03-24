@@ -46,7 +46,7 @@ struct _GstCdioCddaSrcClass
   GstCddaBaseSrcClass  cddabasesrc_class;
 };
 
-GType   gst_cdio_cdda_src_get_type ();
+GType   gst_cdio_cdda_src_get_type (void);
 
 #endif /* __GST_CDIO_CDDA_SRC_H__ */
 

@@ -41,7 +41,7 @@
 #include "amrnbenc.h"
 
 static GType
-gst_amrnbenc_bandmode_get_type ()
+gst_amrnbenc_bandmode_get_type (void)
 {
   static GType gst_amrnbenc_bandmode_type = 0;
   static const GEnumValue gst_amrnbenc_bandmode[] = {

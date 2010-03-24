@@ -53,7 +53,7 @@ GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define MIN_RESYNC_FRAMES 3
 
 static inline MPEGAudioSeekEntry *
-mpeg_audio_seek_entry_new ()
+mpeg_audio_seek_entry_new (void)
 {
   return g_slice_new (MPEGAudioSeekEntry);
 }
@@ -95,11 +95,6 @@ enum
       /* FILL ME */
 };
 
-
-static void gst_mp3parse_class_init (GstMPEGAudioParseClass * klass);
-static void gst_mp3parse_base_init (gpointer klass);
-static void gst_mp3parse_init (GstMPEGAudioParse * mp3parse,
-    GstMPEGAudioParseClass * klass);
 
 static gboolean gst_mp3parse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mp3parse_chain (GstPad * pad, GstBuffer * buffer);

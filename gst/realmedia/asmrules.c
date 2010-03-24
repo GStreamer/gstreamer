@@ -577,7 +577,7 @@ gst_asm_scan_parse_rule (GstASMScan * scan)
   return rule;
 }
 
-gboolean
+static gboolean
 gst_asm_rule_evaluate (GstASMRule * rule, GHashTable * vars)
 {
   gboolean res;
@@ -616,12 +616,6 @@ gst_asm_rule_book_new (const gchar * rulebook)
   gst_asm_scan_free (scan);
 
   return book;
-}
-
-gint
-gst_asm_rule_book_n_rules (GstASMRuleBook * book)
-{
-  return book->n_rules;
 }
 
 void
@@ -680,7 +674,7 @@ main (gint argc, gchar * argv[])
       "#(($Bandwidth >= 27500) && ($OldPNMPlayer)),AverageBandwidth=27500,priority=9,PNMKeyframeRule=T;#(($Bandwidth >= 27500) && ($OldPNMPlayer)),AverageBandwidth=0,priority=5,PNMNonKeyframeRule=T;#(($Bandwidth < 27500) && ($OldPNMPlayer)),TimestampDelivery=T,DropByN=T,priority=9,PNMThinningRule=T;#($Bandwidth < 13899),TimestampDelivery=T,DropByN=T,priority=9;#($Bandwidth >= 13899) && ($Bandwidth < 19000),AverageBandwidth=13899,Priority=9;#($Bandwidth >= 13899) && ($Bandwidth < 19000),AverageBandwidth=0,Priority=5,OnDepend=\\\"4\\\";#($Bandwidth >= 19000) && ($Bandwidth < 27500),AverageBandwidth=19000,Priority=9;#($Bandwidth >= 19000) && ($Bandwidth < 27500),AverageBandwidth=0,Priority=5,OnDepend=\\\"6\\\";#($Bandwidth >= 27500) && ($Bandwidth < 132958),AverageBandwidth=27500,Priority=9;#($Bandwidth >= 27500) && ($Bandwidth < 132958),AverageBandwidth=0,Priority=5,OnDepend=\\\"8\\\";#($Bandwidth >= 132958) && ($Bandwidth < 187958),AverageBandwidth=132958,Priority=9;#($Bandwidth >= 132958) && ($Bandwidth < 187958),AverageBandwidth=0,Priority=5,OnDepend=\\\"10\\\";#($Bandwidth >= 187958),AverageBandwidth=187958,Priority=9;#($Bandwidth >= 187958),AverageBandwidth=0,Priority=5,OnDepend=\\\"12\\\";";
 
   vars = g_hash_table_new (g_str_hash, g_str_equal);
-  g_hash_table_insert (vars, "Bandwidth", "300000");
+  g_hash_table_insert (vars, (gchar *) "Bandwidth", (gchar *) "300000");
 
   book = gst_asm_rule_book_new (rules1);
   n = gst_asm_rule_book_match (book, vars, rulematch);

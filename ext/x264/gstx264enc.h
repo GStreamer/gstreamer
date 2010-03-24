@@ -107,6 +107,8 @@ struct _GstX264EncClass
   GstElementClass parent_class;
 };
 
+GType gst_x264_enc_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_X264_ENC_H__ */

@@ -207,9 +207,9 @@ G_STMT_START {			       \
 
 #define READ_BUFFER_GEN(src, func, name, dest, dest_len)    \
 G_STMT_START {			                            \
-  dest = (gchar *)func (src, name);                                  \
+  dest = (gchar *)func (src, name);                         \
   if (!dest) {                                              \
-    dest = "";                                              \
+    dest = (char *) "";                                     \
     dest_len = 0;                                           \
   }                                                         \
   else if (!strncmp (dest, "buffer;\"", 8)) {               \
@@ -243,11 +243,11 @@ G_STMT_START {			                          \
 G_STMT_START {			                              \
   const gchar *val = gst_sdp_media_get_attribute_val (media, name); \
   if (val && !strncmp (val, "string;\"", 8)) {                \
-    dest = (gchar *) val + 8;                                           \
+    dest = (gchar *) val + 8;                                 \
     dest_len = strlen (dest) - 1;                             \
     dest[dest_len] = '\0';                                    \
   } else {                                                    \
-    dest = "";                                                \
+    dest = (char *) "";                                       \
     dest_len = 0;                                             \
   }                                                           \
 } G_STMT_END
@@ -363,7 +363,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   /* fix the hashtale for the rule parser */
   rules = g_string_new ("");
   vars = g_hash_table_new (g_str_hash, g_str_equal);
-  g_hash_table_insert (vars, "Bandwidth", DEFAULT_BANDWIDTH);
+  g_hash_table_insert (vars, (gchar *) "Bandwidth",
+      (gchar *) DEFAULT_BANDWIDTH);
 
   /* MDPR */
   for (i = 0; i < ctx->n_streams; i++) {
