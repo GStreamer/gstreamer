@@ -116,9 +116,6 @@ gst_vaapi_image_new(
 GstVaapiImage *
 gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image);
 
-VAImageID
-gst_vaapi_image_get_id(GstVaapiImage *image);
-
 gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image);
 

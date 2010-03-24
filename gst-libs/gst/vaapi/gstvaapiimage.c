@@ -56,7 +56,6 @@ enum {
     PROP_0,
 
     PROP_IMAGE,
-    PROP_IMAGE_ID,
     PROP_FORMAT,
     PROP_WIDTH,
     PROP_HEIGHT
@@ -147,24 +146,22 @@ static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
-    GstVaapiImagePrivate * const priv = image->priv;
+    VAImageID image_id;
     VAStatus status;
 
     _gst_vaapi_image_unmap(image);
 
-    GST_DEBUG("image 0x%08x", priv->internal_image.image_id);
+    image_id = GST_VAAPI_OBJECT_ID(image);
+    GST_DEBUG("image %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(image_id));
 
-    if (priv->internal_image.image_id != VA_INVALID_ID) {
+    if (image_id != VA_INVALID_ID) {
         GST_VAAPI_DISPLAY_LOCK(display);
-        status = vaDestroyImage(
-            GST_VAAPI_DISPLAY_VADISPLAY(display),
-            priv->internal_image.image_id
-        );
+        status = vaDestroyImage(GST_VAAPI_DISPLAY_VADISPLAY(display), image_id);
         GST_VAAPI_DISPLAY_UNLOCK(display);
         if (!vaapi_check_status(status, "vaDestroyImage()"))
-            g_warning("failed to destroy image 0x%08x\n",
-                      priv->internal_image.image_id);
-        priv->internal_image.image_id = VA_INVALID_ID;
+            g_warning("failed to destroy image %" GST_VAAPI_ID_FORMAT "\n",
+                      GST_VAAPI_ID_ARGS(image_id));
+        GST_VAAPI_OBJECT_ID(image) = VA_INVALID_ID;
     }
 }
 
@@ -206,6 +203,7 @@ gst_vaapi_image_create(GstVaapiImage *image)
     GstVaapiImagePrivate * const priv = image->priv;
     GstVaapiImageFormat format = priv->format;
     const VAImageFormat *va_format;
+    VAImageID image_id;
 
     if (!priv->create_image)
         return (priv->image.image_id != VA_INVALID_ID &&
@@ -227,6 +225,7 @@ gst_vaapi_image_create(GstVaapiImage *image)
             return FALSE;
     }
     priv->image = priv->internal_image;
+    image_id    = priv->image.image_id;
 
     if (priv->format != priv->internal_format) {
         switch (priv->format) {
@@ -243,9 +242,10 @@ gst_vaapi_image_create(GstVaapiImage *image)
             break;
         }
     }
-
-    GST_DEBUG("image 0x%08x", priv->image.image_id);
     priv->is_linear = vaapi_image_is_linear(&priv->image);
+
+    GST_DEBUG("image %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(image_id));
+    GST_VAAPI_OBJECT_ID(image) = image_id;
     return TRUE;
 }
 
@@ -304,9 +304,6 @@ gst_vaapi_image_get_property(
     case PROP_IMAGE:
         g_value_set_boxed(value, &image->priv->image);
         break;
-    case PROP_IMAGE_ID:
-        g_value_set_uint(value, gst_vaapi_image_get_id(image));
-        break;
     case PROP_FORMAT:
         g_value_set_uint(value, gst_vaapi_image_get_format(image));
         break;
@@ -355,20 +352,6 @@ gst_vaapi_image_class_init(GstVaapiImageClass *klass)
                             "The underlying VA image",
                             VAAPI_TYPE_IMAGE,
                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    /**
-     * GstVaapiImage:id:
-     *
-     * The underlying #VAImageID of the image.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_IMAGE_ID,
-         g_param_spec_uint("id",
-                           "VA image id",
-                           "The underlying VA image id",
-                           0, G_MAXUINT32, VA_INVALID_ID,
-                           G_PARAM_READABLE));
 
     g_object_class_install_property
         (object_class,
@@ -515,23 +498,6 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
         return NULL;
     }
     return image;
-}
-
-/**
- * gst_vaapi_image_get_id:
- * @image: a #GstVaapiImage
- *
- * Returns the underlying VAImageID of the @image.
- *
- * Return value: the underlying VA image id
- */
-VAImageID
-gst_vaapi_image_get_id(GstVaapiImage *image)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
-    g_return_val_if_fail(image->priv->is_constructed, VA_INVALID_ID);
-
-    return image->priv->image.image_id;
 }
 
 /**

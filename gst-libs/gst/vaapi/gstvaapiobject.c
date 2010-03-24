@@ -26,6 +26,7 @@
 #include "config.h"
 #include "gstvaapiobject.h"
 #include "gstvaapiobject_priv.h"
+#include "gstvaapiparamspecs.h"
 #include "gstvaapimarshal.h"
 
 #define DEBUG 1
@@ -37,6 +38,7 @@ enum {
     PROP_0,
 
     PROP_DISPLAY,
+    PROP_ID
 };
 
 enum {
@@ -66,6 +68,8 @@ gst_vaapi_object_finalize(GObject *object)
 {
     GstVaapiObjectPrivate * const priv = GST_VAAPI_OBJECT(object)->priv;
 
+    priv->id = VA_INVALID_ID;
+
     if (priv->display) {
         g_object_unref(priv->display);
         priv->display = NULL;
@@ -88,6 +92,9 @@ gst_vaapi_object_set_property(
     case PROP_DISPLAY:
         object->priv->display = g_object_ref(g_value_get_object(value));
         break;
+    case PROP_ID:
+        object->priv->id = gst_vaapi_value_get_id(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, prop_id, pspec);
         break;
@@ -107,6 +114,9 @@ gst_vaapi_object_get_property(
     switch (prop_id) {
     case PROP_DISPLAY:
         g_value_set_object(value, gst_vaapi_object_get_display(object));
+        break;
+    case PROP_ID:
+        gst_vaapi_value_set_id(value, gst_vaapi_object_get_id(object));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, prop_id, pspec);
@@ -141,6 +151,20 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     /**
+     * GstVaapiObject:id:
+     *
+     * The #GstVaapiID contained in this object.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_ID,
+         gst_vaapi_param_spec_id("id",
+                                 "ID",
+                                 "The GstVaapiID contained in this object",
+                                 VA_INVALID_ID,
+                                 G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    /**
      * GstVaapiObject::destroy:
      * @object: the object which received the signal
      *
@@ -165,6 +189,7 @@ gst_vaapi_object_init(GstVaapiObject *object)
 
     object->priv  = priv;
     priv->display = NULL;
+    priv->id            = VA_INVALID_ID;
     priv->is_destroying = FALSE;
 }
 
@@ -182,4 +207,20 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
     g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), NULL);
 
     return object->priv->display;
+}
+
+/**
+ * gst_vaapi_object_get_id:
+ * @object: a #GstVaapiObject
+ *
+ * Returns the #GstVaapiID contained in the @object.
+ *
+ * Return value: the #GstVaapiID of the @object
+ */
+GstVaapiID
+gst_vaapi_object_get_id(GstVaapiObject *object)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), NULL);
+
+    return object->priv->id;
 }

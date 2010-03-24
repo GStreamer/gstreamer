@@ -40,14 +40,12 @@ G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, GST_VAAPI_TYPE_OBJECT);
                                  GstVaapiSubpicturePrivate))
 
 struct _GstVaapiSubpicturePrivate {
-    VASubpictureID      subpicture_id;
     GstVaapiImage      *image;
 };
 
 enum {
     PROP_0,
 
-    PROP_SUBPICTURE_ID,
     PROP_IMAGE
 };
 
@@ -56,23 +54,26 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(subpicture);
     GstVaapiSubpicturePrivate * const priv = subpicture->priv;
+    VASubpictureID subpicture_id;
     VAStatus status;
 
-    GST_DEBUG("subpicture 0x%08x", priv->subpicture_id);
+    subpicture_id = GST_VAAPI_OBJECT_ID(subpicture);
+    GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(subpicture_id));
 
-    if (priv->subpicture_id != VA_INVALID_ID) {
+    if (subpicture_id != VA_INVALID_ID) {
         if (display) {
             GST_VAAPI_DISPLAY_LOCK(display);
             status = vaDestroySubpicture(
                 GST_VAAPI_DISPLAY_VADISPLAY(display),
-                priv->subpicture_id
+                subpicture_id
             );
             GST_VAAPI_DISPLAY_UNLOCK(display);
             if (!vaapi_check_status(status, "vaDestroySubpicture()"))
-                g_warning("failed to destroy subpicture 0x%08x\n",
-                          priv->subpicture_id);
+                g_warning("failed to destroy subpicture %" GST_VAAPI_ID_FORMAT "\n",
+                          GST_VAAPI_ID_ARGS(subpicture_id));
         }
-        priv->subpicture_id = VA_INVALID_ID;
+        GST_VAAPI_OBJECT_ID(subpicture) = VA_INVALID_ID;
     }
 
     if (priv->image) {
@@ -95,15 +96,16 @@ gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateSubpicture(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        gst_vaapi_image_get_id(priv->image),
+        GST_VAAPI_OBJECT_ID(priv->image),
         &subpicture_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaCreateSubpicture()"))
         return FALSE;
 
-    GST_DEBUG("subpicture 0x%08x", subpicture_id);
-    priv->subpicture_id = subpicture_id;
+    GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(subpicture_id));
+    GST_VAAPI_OBJECT_ID(subpicture) = subpicture_id;
     return TRUE;
 }
 
@@ -146,9 +148,6 @@ gst_vaapi_subpicture_get_property(
     GstVaapiSubpicture * const subpicture = GST_VAAPI_SUBPICTURE(object);
 
     switch (prop_id) {
-    case PROP_SUBPICTURE_ID:
-        g_value_set_uint(value, gst_vaapi_subpicture_get_id(subpicture));
-        break;
     case PROP_IMAGE:
         g_value_set_object(value, gst_vaapi_subpicture_get_image(subpicture));
         break;
@@ -168,20 +167,6 @@ gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
     object_class->finalize     = gst_vaapi_subpicture_finalize;
     object_class->set_property = gst_vaapi_subpicture_set_property;
     object_class->get_property = gst_vaapi_subpicture_get_property;
-
-    /**
-     * GstVaapiSubpicture:id:
-     *
-     * The underlying #VASubpictureID of the subpicture.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_SUBPICTURE_ID,
-         g_param_spec_uint("id",
-                           "VA subpicture id",
-                           "The underlying VA subpicture id",
-                           0, G_MAXUINT32, VA_INVALID_ID,
-                           G_PARAM_READABLE));
 
     /**
      * GstVaapiSubpicture:image:
@@ -204,7 +189,6 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
     GstVaapiSubpicturePrivate *priv = GST_VAAPI_SUBPICTURE_GET_PRIVATE(subpicture);
 
     subpicture->priv    = priv;
-    priv->subpicture_id = VA_INVALID_ID;
     priv->image         = NULL;
 }
 
@@ -222,28 +206,13 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
-    GST_DEBUG("create from image 0x%08x", gst_vaapi_image_get_id(image));
+    GST_DEBUG("create from image %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(image)));
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
                         "display", GST_VAAPI_OBJECT_GET_DISPLAY(image),
                         "image",   image,
                         NULL);
-}
-
-/**
- * gst_vaapi_subpicture_get_id:
- * @subpicture: a #GstVaapiSubpicture
- *
- * Returns the underlying VASubpictureID of the @subpicture.
- *
- * Return value: the underlying VA subpicture id
- */
-VASubpictureID
-gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), VA_INVALID_ID);
-
-    return subpicture->priv->subpicture_id;
 }
 
 /**

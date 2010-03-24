@@ -33,12 +33,13 @@ gst_vaapi_object_destroy_cb(gpointer object, gpointer user_data)
 int
 main(int argc, char *argv[])
 {
-    GstVaapiDisplay *display;
-    GstVaapiSurface *surface;
-    GstVaapiSurface *surfaces[MAX_SURFACES];
-    GstVaapiVideoPool *pool;
-    GstCaps *caps;
-    gint i;
+    GstVaapiDisplay    *display;
+    GstVaapiSurface    *surface;
+    GstVaapiID          surface_id;
+    GstVaapiSurface    *surfaces[MAX_SURFACES];
+    GstVaapiVideoPool  *pool;
+    GstCaps            *caps;
+    gint                i;
 
     static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     static const guint              width       = 320;
@@ -53,6 +54,14 @@ main(int argc, char *argv[])
     surface = gst_vaapi_surface_new(display, chroma_type, width, height);
     if (!surface)
         g_error("could not create Gst/VA surface");
+
+    /* This also tests for the GstVaapiParamSpecID */
+    g_object_get(G_OBJECT(surface), "id", &surface_id, NULL);
+    if (surface_id != gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surface)))
+        g_error("could not retrieve the native surface ID");
+    g_print("created surface %" GST_VAAPI_ID_FORMAT "\n",
+            GST_VAAPI_ID_ARGS(surface_id));
+
     g_object_unref(surface);
 
     caps = gst_caps_new_simple(
@@ -72,8 +81,8 @@ main(int argc, char *argv[])
         surface = gst_vaapi_video_pool_get_object(pool);
         if (!surface)
             g_error("could not allocate Gst/VA surface from pool");
-        g_print("created surface 0x%08x from pool\n",
-                gst_vaapi_surface_get_id(surface));
+        g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool\n",
+                GST_VAAPI_ID_ARGS(gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surface))));
         surfaces[i] = surface;
     }
 
@@ -87,8 +96,8 @@ main(int argc, char *argv[])
         surfaces[i] = gst_vaapi_video_pool_get_object(pool);
         if (!surfaces[i])
             g_error("could not re-allocate Gst/VA surface%d from pool", i);
-        g_print("created surface 0x%08x from pool (realloc)\n",
-                gst_vaapi_surface_get_id(surfaces[i]));
+        g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool (realloc)\n",
+                GST_VAAPI_ID_ARGS(gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surfaces[i]))));
     }
 
     if (surface == surfaces[0])

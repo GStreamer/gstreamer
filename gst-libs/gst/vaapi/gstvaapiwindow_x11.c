@@ -404,7 +404,7 @@ gst_vaapi_window_x11_render(
     if (!display)
         return FALSE;
 
-    surface_id = gst_vaapi_surface_get_id(surface);
+    surface_id = GST_VAAPI_OBJECT_ID(surface);
     if (surface_id == VA_INVALID_ID)
         return FALSE;
 

@@ -86,6 +86,9 @@ gst_vaapi_object_get_type(void);
 GstVaapiDisplay *
 gst_vaapi_object_get_display(GstVaapiObject *object);
 
+GstVaapiID
+gst_vaapi_object_get_id(GstVaapiObject *object);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_OBJECT_H */

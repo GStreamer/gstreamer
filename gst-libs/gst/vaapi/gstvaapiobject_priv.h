@@ -30,15 +30,27 @@ G_BEGIN_DECLS
                                  GST_VAAPI_TYPE_OBJECT,         \
                                  GstVaapiObjectPrivate))
 
+#define GST_VAAPI_OBJECT_CAST(object) ((GstVaapiObject *)(object))
+
 /**
  * GST_VAAPI_OBJECT_GET_DISPLAY:
  * @object: a #GstVaapiObject
  *
- * Macro that evaluates to the #GstVaapiDisplay @object is bound to.
- * This is an internal macro that does not do any run-time type checks.
+ * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
+ * This is an internal macro that does not do any run-time type check.
  */
 #define GST_VAAPI_OBJECT_GET_DISPLAY(object) \
-    (((GstVaapiObject *)(object))->priv->display)
+    GST_VAAPI_OBJECT_CAST(object)->priv->display
+
+/**
+ * GST_VAAPI_OBJECT_ID:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #GstVaapiID contained in @object.
+ * This is an internal macro that does not do any run-time type checks.
+ */
+#define GST_VAAPI_OBJECT_ID(object) \
+    GST_VAAPI_OBJECT_CAST(object)->priv->id
 
 /**
  * GstVaapiObjectPrivate:
@@ -47,6 +59,7 @@ G_BEGIN_DECLS
  */
 struct _GstVaapiObjectPrivate {
     GstVaapiDisplay    *display;
+    GstVaapiID          id;
     guint               is_destroying   : 1;
 };
 
