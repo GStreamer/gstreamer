@@ -337,21 +337,6 @@ if test x$gst_cv_uint128_t = xyes; then
   AC_DEFINE(HAVE_UINT128_T, 1, [Have __uint128_t type])
 fi
 
-OPT_CFLAGS=
-dnl Check for some compiler flags that optimize our code.
-if test "x$GCC" = xyes; then
-  AS_COMPILER_FLAG(-fno-common, OPT_CFLAGS="$OPT_CFLAGS -fno-common")
-fi
-
-dnl FIXME: decide what kind of flag this is, maybe it's not an optimization
-dnl flag
-dnl check if we should use -Wa,-mregnames on PowerPC, so we can use
-dnl symbolic register names in inline asm
-if test x$HAVE_CPU_PPC = xyes ; then
-  AS_COMPILER_FLAG(["-Wa,-mregnames"],
-    [OPT_CFLAGS="$OPT_CFLAGS -Wa,-mregnames"])
-fi
-
 dnl *** checks for library functions ***
 
 AC_CHECK_FUNCS([sigaction])
