@@ -220,7 +220,7 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
 GstVaapiID
 gst_vaapi_object_get_id(GstVaapiObject *object)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), VA_INVALID_ID);
 
     return object->priv->id;
 }
