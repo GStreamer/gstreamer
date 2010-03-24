@@ -477,14 +477,12 @@ gst_parse_test_element_change_state (GstElement * element,
 static void
 gst_parse_test_element_base_init (gpointer g_class)
 {
-  static const GstElementDetails cdfoo_details =
-      GST_ELEMENT_DETAILS ((char *) "Test element for parse launch tests",
-      (char *) "Source",
-      (char *) "Test element for parse launch tests in core",
-      (char *) "GStreamer Devel <gstreamer-devel@lists.sf.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &cdfoo_details);
+  gst_element_class_set_details_simple (element_class,
+      "Test element for parse launch tests", "Source",
+      "Test element for parse launch tests in core",
+      "GStreamer Devel <gstreamer-devel@lists.sf.net>");
 }
 
 static void
