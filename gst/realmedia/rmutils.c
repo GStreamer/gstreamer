@@ -101,7 +101,7 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
           encoding = "ISO-8859-15";
       }
       GST_DEBUG ("converting tag from %s to UTF-8", encoding);
-      tmp = g_convert_with_fallback (str, -1, "UTF-8", encoding, "*",
+      tmp = g_convert_with_fallback (str, -1, "UTF-8", encoding, (gchar *) "*",
           NULL, NULL, NULL);
       g_free (str);
       str = tmp;
