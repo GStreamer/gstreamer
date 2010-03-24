@@ -49,6 +49,28 @@ typedef guint64 GstVaapiID;
 #endif
 
 /**
+ * GST_VAAPI_ID_FORMAT:
+ *
+ * Can be used together with #GST_VAAPI_ID_ARGS to properly output an
+ * integer value in a printf()-style text message.
+ * <informalexample>
+ * <programlisting>
+ * printf("id: %" GST_VAAPI_ID_FORMAT "\n", GST_VAAPI_ID_ARGS(id));
+ * </programlisting>
+ * </informalexample>
+ */
+#define GST_VAAPI_ID_FORMAT "p"
+
+/**
+ * GST_VAAPI_ID_ARGS:
+ * @id: a #GstVaapiID
+ *
+ * Can be used together with #GST_VAAPI_ID_FORMAT to properly output
+ * an integer value in a printf()-style text message.
+ */
+#define GST_VAAPI_ID_ARGS(id) GUINT_TO_POINTER(id)
+
+/**
  * GST_VAAPI_TYPE_ID:
  *
  * A #GValue type that represents a VA identifier.
