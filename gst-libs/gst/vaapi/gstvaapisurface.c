@@ -71,6 +71,12 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
     surface_id = GST_VAAPI_OBJECT_ID(surface);
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
 
+    if (priv->subpictures) {
+        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, NULL);
+        g_ptr_array_free(priv->subpictures, TRUE);
+        priv->subpictures = NULL;
+    }
+
     if (surface_id != VA_INVALID_SURFACE) {
         GST_VAAPI_DISPLAY_LOCK(display);
         status = vaDestroySurfaces(
@@ -82,12 +88,6 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
             g_warning("failed to destroy surface %" GST_VAAPI_ID_FORMAT "\n",
                       GST_VAAPI_ID_ARGS(surface_id));
         GST_VAAPI_OBJECT_ID(surface) = VA_INVALID_SURFACE;
-    }
-
-    if (priv->subpictures) {
-        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, NULL);
-        g_ptr_array_free(priv->subpictures, TRUE);
-        priv->subpictures = NULL;
     }
 }
 
