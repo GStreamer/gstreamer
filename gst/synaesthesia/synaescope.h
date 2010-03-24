@@ -31,7 +31,7 @@
 
 typedef struct syn_instance syn_instance;
 
-void synaesthesia_init ();
+void synaesthesia_init (void);
 syn_instance *synaesthesia_new (guint resx, guint resy);
 void synaesthesia_close (syn_instance * si);
 

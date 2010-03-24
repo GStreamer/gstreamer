@@ -337,7 +337,7 @@ synaesthesia_update (syn_instance * si, gint16 data[2][FFT_BUFFER_SIZE])
 }
 
 void
-synaesthesia_init ()
+synaesthesia_init (void)
 {
   static int inited = 0;
   int i;
