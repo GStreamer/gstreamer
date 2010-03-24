@@ -80,6 +80,7 @@ struct _GstQueue2
 
   /* flowreturn when srcpad is paused */
   GstFlowReturn srcresult;
+  GstFlowReturn sinkresult;
   gboolean is_eos;
   gboolean unexpected;
 
