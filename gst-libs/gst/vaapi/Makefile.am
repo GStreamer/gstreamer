@@ -26,7 +26,6 @@ libgstvaapi_source_c =				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
-	gstvaapicompat.h			\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
@@ -45,6 +44,7 @@ libgstvaapi_source_h =				\
 	$(NULL)
 
 libgstvaapi_source_priv_h =			\
+	gstvaapicompat.h			\
 	gstvaapidebug.h				\
 	gstvaapiobject_priv.h			\
 	gstvaapiutils.h				\
@@ -58,6 +58,7 @@ libgstvaapi_x11_source_c =			\
 	$(NULL)
 
 libgstvaapi_x11_source_h =			\
+	gstvaapicompat.h			\
 	gstvaapidisplay_x11.h			\
 	gstvaapiwindow_x11.h			\
 	$(NULL)
