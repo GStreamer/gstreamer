@@ -79,7 +79,7 @@ destroy_subpicture_cb(gpointer subpicture, gpointer surface)
 static void
 gst_vaapi_surface_destroy(GstVaapiSurface *surface)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
     GstVaapiSurfacePrivate * const priv = surface->priv;
     VASurfaceID surface_id;
     VAStatus status;
@@ -110,7 +110,7 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
 static gboolean
 gst_vaapi_surface_create(GstVaapiSurface *surface)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
     GstVaapiSurfacePrivate * const priv = surface->priv;
     VASurfaceID surface_id;
     VAStatus status;
@@ -410,7 +410,7 @@ gst_vaapi_surface_derive_image(GstVaapiSurface *surface)
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    display           = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display           = GST_VAAPI_OBJECT_DISPLAY(surface);
     va_image.image_id = VA_INVALID_ID;
     va_image.buf      = VA_INVALID_ID;
 
@@ -450,7 +450,7 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 
@@ -497,7 +497,7 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 
@@ -591,7 +591,7 @@ _gst_vaapi_surface_associate_subpicture(
     VASurfaceID surface_id;
     VAStatus status;
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 
@@ -684,7 +684,7 @@ _gst_vaapi_surface_deassociate_subpicture(
     VASurfaceID surface_id;
     VAStatus status;
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 
@@ -722,7 +722,7 @@ gst_vaapi_surface_sync(GstVaapiSurface *surface)
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 

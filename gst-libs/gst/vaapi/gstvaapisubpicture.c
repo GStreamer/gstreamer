@@ -53,7 +53,7 @@ enum {
 static void
 gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(subpicture);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
     GstVaapiSubpicturePrivate * const priv = subpicture->priv;
     VASubpictureID subpicture_id;
     VAStatus status;
@@ -86,7 +86,7 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
 static gboolean
 gst_vaapi_subpicture_create(GstVaapiSubpicture *subpicture)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(subpicture);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
     GstVaapiSubpicturePrivate * const priv = subpicture->priv;
     VASubpictureID subpicture_id;
     VAStatus status;
@@ -211,7 +211,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
               GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(image)));
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
-                        "display", GST_VAAPI_OBJECT_GET_DISPLAY(image),
+                        "display", GST_VAAPI_OBJECT_DISPLAY(image),
                         "id",      GST_VAAPI_ID(VA_INVALID_ID),
                         "image",   image,
                         NULL);

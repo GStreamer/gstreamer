@@ -405,7 +405,7 @@ gst_vaapi_window_x11_render(
     VASurfaceID surface_id;
     VAStatus status;
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
         return FALSE;
 

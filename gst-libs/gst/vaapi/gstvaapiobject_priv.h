@@ -33,13 +33,13 @@ G_BEGIN_DECLS
 #define GST_VAAPI_OBJECT_CAST(object) ((GstVaapiObject *)(object))
 
 /**
- * GST_VAAPI_OBJECT_GET_DISPLAY:
+ * GST_VAAPI_OBJECT_DISPLAY:
  * @object: a #GstVaapiObject
  *
  * Macro that evaluates to the #GstVaapiDisplay the @object is bound to.
  * This is an internal macro that does not do any run-time type check.
  */
-#define GST_VAAPI_OBJECT_GET_DISPLAY(object) \
+#define GST_VAAPI_OBJECT_DISPLAY(object) \
     GST_VAAPI_OBJECT_CAST(object)->priv->display
 
 /**

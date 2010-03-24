@@ -67,7 +67,7 @@ gst_vaapi_window_ensure_size(GstVaapiWindow *window)
         klass->get_geometry(window, NULL, NULL, &priv->width, &priv->height);
 
     gst_vaapi_display_get_size(
-        GST_VAAPI_OBJECT_GET_DISPLAY(window),
+        GST_VAAPI_OBJECT_DISPLAY(window),
         &display_width,
         &display_height
     );
@@ -241,7 +241,7 @@ gst_vaapi_window_get_display(GstVaapiWindow *window)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), NULL);
 
-    return GST_VAAPI_OBJECT_GET_DISPLAY(window);
+    return GST_VAAPI_OBJECT_DISPLAY(window);
 }
 
 /**

@@ -147,7 +147,7 @@ vaapi_image_is_linear(const VAImage *va_image)
 static void
 gst_vaapi_image_destroy(GstVaapiImage *image)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(image);
     VAImageID image_id;
     VAStatus status;
 
@@ -170,7 +170,7 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
 static gboolean
 _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(image);
     GstVaapiImagePrivate * const priv = image->priv;
     const VAImageFormat *va_format;
     VAStatus status;
@@ -736,7 +736,7 @@ _gst_vaapi_image_map(GstVaapiImage *image)
     if (_gst_vaapi_image_is_mapped(image))
         return TRUE;
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    display = GST_VAAPI_OBJECT_DISPLAY(image);
     if (!display)
         return FALSE;
 
@@ -781,7 +781,7 @@ _gst_vaapi_image_unmap(GstVaapiImage *image)
     if (!_gst_vaapi_image_is_mapped(image))
         return FALSE;
 
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(image);
+    display = GST_VAAPI_OBJECT_DISPLAY(image);
     if (!display)
         return FALSE;
 
