@@ -100,7 +100,7 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
         );
         GST_VAAPI_DISPLAY_UNLOCK(display);
         if (!vaapi_check_status(status, "vaDestroySurfaces()"))
-            g_warning("failed to destroy surface %" GST_VAAPI_ID_FORMAT "\n",
+            g_warning("failed to destroy surface %" GST_VAAPI_ID_FORMAT,
                       GST_VAAPI_ID_ARGS(surface_id));
         GST_VAAPI_OBJECT_ID(surface) = VA_INVALID_SURFACE;
     }

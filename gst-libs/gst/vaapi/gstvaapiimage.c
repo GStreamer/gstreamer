@@ -160,7 +160,7 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
         status = vaDestroyImage(GST_VAAPI_DISPLAY_VADISPLAY(display), image_id);
         GST_VAAPI_DISPLAY_UNLOCK(display);
         if (!vaapi_check_status(status, "vaDestroyImage()"))
-            g_warning("failed to destroy image %" GST_VAAPI_ID_FORMAT "\n",
+            g_warning("failed to destroy image %" GST_VAAPI_ID_FORMAT,
                       GST_VAAPI_ID_ARGS(image_id));
         GST_VAAPI_OBJECT_ID(image) = VA_INVALID_ID;
     }

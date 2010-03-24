@@ -70,7 +70,7 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
             );
             GST_VAAPI_DISPLAY_UNLOCK(display);
             if (!vaapi_check_status(status, "vaDestroySubpicture()"))
-                g_warning("failed to destroy subpicture %" GST_VAAPI_ID_FORMAT "\n",
+                g_warning("failed to destroy subpicture %" GST_VAAPI_ID_FORMAT,
                           GST_VAAPI_ID_ARGS(subpicture_id));
         }
         GST_VAAPI_OBJECT_ID(subpicture) = VA_INVALID_ID;
