@@ -27,6 +27,7 @@
 #include <string.h>
 #include "gstvaapiutils.h"
 #include "gstvaapisubpicture.h"
+#include "gstvaapiobject_priv.h"
 #include <va/va_backend.h>
 
 #define DEBUG 1

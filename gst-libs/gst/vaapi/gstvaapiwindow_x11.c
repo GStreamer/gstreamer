@@ -29,6 +29,7 @@
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapiutils_x11.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

@@ -41,6 +41,7 @@ libgstvaapi_source_h =				\
 
 libgstvaapi_source_priv_h =			\
 	gstvaapidebug.h				\
+	gstvaapiobject_priv.h			\
 	gstvaapiutils.h				\
 	$(NULL)
 

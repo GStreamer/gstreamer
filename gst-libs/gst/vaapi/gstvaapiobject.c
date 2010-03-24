@@ -25,22 +25,13 @@
 
 #include "config.h"
 #include "gstvaapiobject.h"
+#include "gstvaapiobject_priv.h"
 #include "gstvaapimarshal.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
 G_DEFINE_TYPE(GstVaapiObject, gst_vaapi_object, G_TYPE_OBJECT);
-
-#define GST_VAAPI_OBJECT_GET_PRIVATE(obj)                       \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_OBJECT,         \
-                                 GstVaapiObjectPrivate))
-
-struct _GstVaapiObjectPrivate {
-    GstVaapiDisplay    *display;
-    guint               is_destroying   : 1;
-};
 
 enum {
     PROP_0,

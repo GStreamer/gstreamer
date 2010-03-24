@@ -50,15 +50,6 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_OBJECT,   \
                                GstVaapiObjectClass))
 
-/**
- * GST_VAAPI_OBJECT_GET_DISPLAY:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the #GstVaapiDisplay @object is bound to.
- */
-#define GST_VAAPI_OBJECT_GET_DISPLAY(object) \
-    gst_vaapi_object_get_display(GST_VAAPI_OBJECT(object))
-
 typedef struct _GstVaapiObject                  GstVaapiObject;
 typedef struct _GstVaapiObjectPrivate           GstVaapiObjectPrivate;
 typedef struct _GstVaapiObjectClass             GstVaapiObjectClass;
