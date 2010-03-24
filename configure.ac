@@ -195,6 +195,13 @@ AC_SUBST(LIBVA_EXTRA_LIBS)
 VA_VERSION=`$PKG_CONFIG --modversion libva`
 VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
 VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
+VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
+VA_SDS_VERSION=`$PKG_CONFIG libva --variable sdsversion`
+
+VA_VERSION_STR="$VA_VERSION"
+if test -n "$VA_SDS_VERSION"; then
+    VA_VERSION_STR="$VA_VERSION_STR-sds$VA_SDS_VERSION"
+fi
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
@@ -236,5 +243,5 @@ dnl Print summary
 echo
 echo gstreamer-vaapi configuration summary:
 echo
-echo VA-API version ................... : $VA_VERSION
+echo VA-API version ................... : $VA_VERSION_STR
 echo
