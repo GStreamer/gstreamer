@@ -241,7 +241,7 @@ debian.upstream/libgstvaapi-x11.install.in
 
 dnl Print summary
 echo
-echo gstreamer-vaapi configuration summary:
+echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
 echo
