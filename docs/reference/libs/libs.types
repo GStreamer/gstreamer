@@ -1,5 +1,6 @@
 gst_vaapi_display_get_type
 gst_vaapi_display_x11_get_type
+gst_vaapi_id_get_type
 gst_vaapi_image_get_type
 gst_vaapi_image_pool_get_type
 gst_vaapi_object_get_type

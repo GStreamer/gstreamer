@@ -1,5 +1,5 @@
 /*
- *  gstvaapitypes.h - Misc types
+ *  gstvaapitypes.h - Basic types
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *
@@ -21,9 +21,58 @@
 #ifndef GST_VAAPI_TYPES_H
 #define GST_VAAPI_TYPES_H
 
-#include <glib/gtypes.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
+
+/**
+ * GstVaapiID:
+ *
+ * An integer large enough to hold a generic VA id or a pointer
+ * wherever necessary.
+ */
+#if defined(GLIB_SIZEOF_VOID_P)
+# define GST_VAAPI_TYPE_ID_SIZE GLIB_SIZEOF_VOID_P
+#elif G_MAXULONG == 0xffffffff
+# define GST_VAAPI_TYPE_ID_SIZE 4
+#elif G_MAXULONG == 0xffffffffffffffffull
+# define GST_VAAPI_TYPE_ID_SIZE 8
+#else
+# error "could not determine size of GstVaapiID"
+#endif
+#if GST_VAAPI_TYPE_ID_SIZE == 4
+typedef guint32 GstVaapiID;
+#elif GST_VAAPI_TYPE_ID_SIZE == 8
+typedef guint64 GstVaapiID;
+#else
+# error "unsupported value for GST_VAAPI_TYPE_ID_SIZE"
+#endif
+
+/**
+ * GST_VAAPI_TYPE_ID:
+ *
+ * A #GValue type that represents a VA identifier.
+ *
+ * Return value: the #GType of GstVaapiID
+ */
+#define GST_VAAPI_TYPE_ID gst_vaapi_id_get_type()
+
+/**
+ * GST_VAAPI_VALUE_HOLDS_ID:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GstVaapiID value.
+ */
+#define GST_VAAPI_VALUE_HOLDS_ID(x) (G_VALUE_HOLDS((x), GST_VAAPI_TYPE_ID))
+
+GType
+gst_vaapi_id_get_type(void);
+
+GstVaapiID
+gst_vaapi_value_get_id(const GValue *value);
+
+void
+gst_vaapi_value_set_id(GValue *value, GstVaapiID id);
 
 /**
  * GstVaapiPoint:

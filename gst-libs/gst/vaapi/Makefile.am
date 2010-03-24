@@ -16,6 +16,7 @@ libgstvaapi_source_c =				\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
+	gstvaapitypes.c				\
 	gstvaapiutils.c				\
 	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
