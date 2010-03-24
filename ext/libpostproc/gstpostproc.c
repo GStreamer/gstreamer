@@ -41,9 +41,9 @@ typedef struct _PostProcDetails PostProcDetails;
 
 struct _PostProcDetails
 {
-  char *shortname;
-  char *longname;
-  char *description;
+  const char *shortname;
+  const char *longname;
+  const char *description;
 };
 
 static PostProcDetails filterdetails[] = {
@@ -314,7 +314,7 @@ static void inline
 append (gchar ** base, gchar * app)
 {
   gchar *res;
-  gchar *sep;
+  const gchar *sep;
 
   if (**base && *app)
     sep = ":";
@@ -352,22 +352,21 @@ gst_post_proc_base_init (GstPostProcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details;
   gint ppidx;
+  gchar *longname, *description;
 
   ppidx = GPOINTER_TO_INT (g_hash_table_lookup (global_plugins,
           GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class))));
 
-  details.longname = g_strdup_printf ("LibPostProc %s filter",
+  longname = g_strdup_printf ("LibPostProc %s filter",
       filterdetails[ppidx].longname);
-  details.klass = "Filter/Video";
-  details.description = g_strdup_printf ("LibPostProc %s",
+  description = g_strdup_printf ("LibPostProc %s",
       filterdetails[ppidx].description);
-  details.author =
-      "Edward Hervey <edward@fluendo.com>, Mark Nauwelaerts (manauw@skynet.be)";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.description);
+  gst_element_class_set_details_simple (element_class, longname, "Filter/Video",
+      description,
+      "Edward Hervey <edward@fluendo.com>, Mark Nauwelaerts (manauw@skynet.be)");
+  g_free (longname);
+  g_free (description);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_post_proc_src_template));
@@ -827,7 +826,7 @@ gst_post_proc_forcequant_get_property (GObject * object, guint prop_id,
 }
 
 
-gboolean
+static gboolean
 gst_post_proc_register (GstPlugin * plugin)
 {
   GTypeInfo typeinfo = {

@@ -76,14 +76,10 @@ typedef struct _GstFFMpegScaleClass
 #define GST_IS_FFMPEGSCALE_CLASS(klass) \
 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGSCALE))
 
+GType gst_ffmpegscale_get_type (void);
+
 GST_DEBUG_CATEGORY (ffmpegscale_debug);
 #define GST_CAT_DEFAULT ffmpegscale_debug
-
-static const GstElementDetails plugin_details =
-GST_ELEMENT_DETAILS ("FFMPEG Scale element",
-    "Filter/Converter/Video",
-    "Converts video from one resolution to another",
-    "Luca Ognibene <luogni@tin.it>, Mark Nauwelaerts <mnauw@users.sf.net>");
 
 /* libswscale supported formats depend on endianness */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -197,7 +193,10 @@ gst_ffmpegscale_base_init (gpointer g_class)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "FFMPEG Scale element",
+      "Filter/Converter/Video",
+      "Converts video from one resolution to another",
+      "Luca Ognibene <luogni@tin.it>, Mark Nauwelaerts <mnauw@users.sf.net>");
 }
 
 static void
@@ -787,7 +786,7 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 }
 #endif
 
-gboolean
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (ffmpegscale_debug, "ffvideoscale", 0,
