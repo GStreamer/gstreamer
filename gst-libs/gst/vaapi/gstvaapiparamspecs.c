@@ -26,20 +26,13 @@
 #include "config.h"
 #include "gstvaapiparamspecs.h"
 #include "gstvaapivalue.h"
-#include "gstvaapicompat.h"
-
-#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
-# include <va.h>
-#else
-# include <va/va.h>
-#endif
 
 /* --- GstVaapiParamSpecID --- */
 
 static void
 gst_vaapi_param_id_init(GParamSpec *pspec)
 {
-    GST_VAAPI_PARAM_SPEC_ID(pspec)->default_value = VA_INVALID_ID;
+    GST_VAAPI_PARAM_SPEC_ID(pspec)->default_value = GST_VAAPI_ID_NONE;
 }
 
 static void

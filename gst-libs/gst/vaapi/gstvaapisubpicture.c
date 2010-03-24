@@ -212,6 +212,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
 
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
                         "display", GST_VAAPI_OBJECT_GET_DISPLAY(image),
+                        "id",      GST_VAAPI_ID(VA_INVALID_ID),
                         "image",   image,
                         NULL);
 }

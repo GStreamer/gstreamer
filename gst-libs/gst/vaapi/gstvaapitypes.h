@@ -49,6 +49,21 @@ typedef guint64 GstVaapiID;
 #endif
 
 /**
+ * GST_VAAPI_ID:
+ * @id: an arbitrary integer value
+ *
+ * Macro that creates a #GstVaapiID from @id.
+ */
+#define GST_VAAPI_ID(id) ((GstVaapiID)(id))
+
+/**
+ * GST_VAAPI_ID_NONE:
+ *
+ * Macro that evaluates to the default #GstVaapiID value.
+ */
+#define GST_VAAPI_ID_NONE GST_VAAPI_ID(0)
+
+/**
  * GST_VAAPI_ID_FORMAT:
  *
  * Can be used together with #GST_VAAPI_ID_ARGS to properly output an

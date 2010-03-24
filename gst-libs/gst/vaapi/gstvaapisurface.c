@@ -298,6 +298,7 @@ gst_vaapi_surface_new(
 
     return g_object_new(GST_VAAPI_TYPE_SURFACE,
                         "display",      display,
+                        "id",           GST_VAAPI_ID(VA_INVALID_ID),
                         "width",        width,
                         "height",       height,
                         "chroma-type",  chroma_type,

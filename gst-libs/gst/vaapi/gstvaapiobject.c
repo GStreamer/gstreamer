@@ -24,7 +24,6 @@
  */
 
 #include "config.h"
-#include "gstvaapicompat.h"
 #include "gstvaapiobject.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapiparamspecs.h"
@@ -70,7 +69,7 @@ gst_vaapi_object_finalize(GObject *object)
 {
     GstVaapiObjectPrivate * const priv = GST_VAAPI_OBJECT(object)->priv;
 
-    priv->id = VA_INVALID_ID;
+    priv->id = GST_VAAPI_ID_NONE;
 
     if (priv->display) {
         g_object_unref(priv->display);
@@ -163,7 +162,7 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
          gst_vaapi_param_spec_id("id",
                                  "ID",
                                  "The GstVaapiID contained in this object",
-                                 VA_INVALID_ID,
+                                 GST_VAAPI_ID_NONE,
                                  G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     /**
@@ -191,7 +190,7 @@ gst_vaapi_object_init(GstVaapiObject *object)
 
     object->priv        = priv;
     priv->display       = NULL;
-    priv->id            = VA_INVALID_ID;
+    priv->id            = GST_VAAPI_ID_NONE;
     priv->is_destroying = FALSE;
 }
 
@@ -222,7 +221,7 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
 GstVaapiID
 gst_vaapi_object_get_id(GstVaapiObject *object)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), VA_INVALID_ID);
+    g_return_val_if_fail(GST_VAAPI_IS_OBJECT(object), GST_VAAPI_ID_NONE);
 
     return object->priv->id;
 }

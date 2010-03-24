@@ -514,7 +514,7 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
                         "display", display,
-                        "id",      (GstVaapiID)None,
+                        "id",      GST_VAAPI_ID(None),
                         "width",   width,
                         "height",  height,
                         NULL);
@@ -542,7 +542,7 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
                         "display", display,
-                        "id",      (GstVaapiID)xid,
+                        "id",      GST_VAAPI_ID(xid),
                         NULL);
 }
 

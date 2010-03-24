@@ -444,6 +444,7 @@ gst_vaapi_image_new(
     image = g_object_new(
         GST_VAAPI_TYPE_IMAGE,
         "display", display,
+        "id",      GST_VAAPI_ID(VA_INVALID_ID),
         "format",  format,
         "width",   width,
         "height",  height,
@@ -489,6 +490,7 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
     image = g_object_new(
         GST_VAAPI_TYPE_IMAGE,
         "display", display,
+        "id",      GST_VAAPI_ID(va_image->image_id),
         "image",   va_image,
         NULL
     );
