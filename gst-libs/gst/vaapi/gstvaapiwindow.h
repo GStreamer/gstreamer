@@ -23,6 +23,7 @@
 
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapitypes.h>
+#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
@@ -63,7 +64,7 @@ typedef struct _GstVaapiWindowClass             GstVaapiWindowClass;
  */
 struct _GstVaapiWindow {
     /*< private >*/
-    GObject parent_instance;
+    GstVaapiObject parent_instance;
 
     GstVaapiWindowPrivate *priv;
 };
@@ -82,7 +83,7 @@ struct _GstVaapiWindow {
  */
 struct _GstVaapiWindowClass {
     /*< private >*/
-    GObjectClass parent_class;
+    GstVaapiObjectClass parent_class;
 
     /*< public >*/
     gboolean    (*create) (GstVaapiWindow *window, guint *width, guint *height);

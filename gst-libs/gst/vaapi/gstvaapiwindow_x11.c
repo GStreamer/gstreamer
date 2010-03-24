@@ -44,18 +44,11 @@ G_DEFINE_TYPE(GstVaapiWindowX11, gst_vaapi_window_x11, GST_VAAPI_TYPE_WINDOW);
 
 struct _GstVaapiWindowX11Private {
     GstVaapiDisplay    *display;
-    Window              xid;
     Atom                atom_NET_WM_STATE;
     Atom                atom_NET_WM_STATE_FULLSCREEN;
     guint               create_window           : 1;
     guint               is_mapped               : 1;
     guint               fullscreen_on_map       : 1;
-};
-
-enum {
-    PROP_0,
-
-    PROP_XID,
 };
 
 #define _NET_WM_STATE_REMOVE    0 /* remove/unset property */
@@ -72,7 +65,7 @@ send_wmspec_change_state(GstVaapiWindowX11 *window, Atom state, gboolean add)
     memset(&xclient, 0, sizeof(xclient));
 
     xclient.type         = ClientMessage;
-    xclient.window       = priv->xid;
+    xclient.window       = GST_VAAPI_OBJECT_ID(window);
     xclient.message_type = priv->atom_NET_WM_STATE;
     xclient.format       = 32;
 
@@ -96,12 +89,13 @@ wait_event(GstVaapiWindow *window, int type)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
     XEvent e;
     Bool got_event;
 
     for (;;) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
-        got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, &e);
+        got_event = XCheckTypedWindowEvent(dpy, xid, type, &e);
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         if (got_event)
             break;
@@ -114,6 +108,7 @@ timed_wait_event(GstVaapiWindow *window, int type, guint64 end_time, XEvent *e)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
     XEvent tmp_event;
     GTimeVal now;
     guint64 now_time;
@@ -123,7 +118,7 @@ timed_wait_event(GstVaapiWindow *window, int type, guint64 end_time, XEvent *e)
         e = &tmp_event;
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
-    got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, e);
+    got_event = XCheckTypedWindowEvent(dpy, xid, type, e);
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
     if (got_event)
         return TRUE;
@@ -131,7 +126,7 @@ timed_wait_event(GstVaapiWindow *window, int type, guint64 end_time, XEvent *e)
     do {
         g_usleep(10);
         GST_VAAPI_DISPLAY_LOCK(priv->display);
-        got_event = XCheckTypedWindowEvent(dpy, priv->xid, type, e);
+        got_event = XCheckTypedWindowEvent(dpy, xid, type, e);
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         if (got_event)
             return TRUE;
@@ -146,6 +141,7 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
     XWindowAttributes wattr;
     gboolean has_errors;
 
@@ -155,11 +151,11 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     if (!priv->create_window) {
-        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        XGetWindowAttributes(dpy, xid, &wattr);
         if (!(wattr.your_event_mask & StructureNotifyMask))
-            XSelectInput(dpy, priv->xid, StructureNotifyMask);
+            XSelectInput(dpy, xid, StructureNotifyMask);
     }
-    XMapWindow(dpy, priv->xid);
+    XMapWindow(dpy, xid);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
 
@@ -169,7 +165,7 @@ gst_vaapi_window_x11_show(GstVaapiWindow *window)
             !(wattr.your_event_mask & StructureNotifyMask)) {
             GST_VAAPI_DISPLAY_LOCK(priv->display);
             x11_trap_errors();
-            XSelectInput(dpy, priv->xid, wattr.your_event_mask);
+            XSelectInput(dpy, xid, wattr.your_event_mask);
             has_errors = x11_untrap_errors() != 0;
             GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         }
@@ -186,6 +182,7 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
     XWindowAttributes wattr;
     gboolean has_errors;
 
@@ -195,11 +192,11 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     if (!priv->create_window) {
-        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        XGetWindowAttributes(dpy, xid, &wattr);
         if (!(wattr.your_event_mask & StructureNotifyMask))
-            XSelectInput(dpy, priv->xid, StructureNotifyMask);
+            XSelectInput(dpy, xid, StructureNotifyMask);
     }
-    XUnmapWindow(dpy, priv->xid);
+    XUnmapWindow(dpy, xid);
     has_errors = x11_untrap_errors() != 0;
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
 
@@ -209,7 +206,7 @@ gst_vaapi_window_x11_hide(GstVaapiWindow *window)
             !(wattr.your_event_mask & StructureNotifyMask)) {
             GST_VAAPI_DISPLAY_LOCK(priv->display);
             x11_trap_errors();
-            XSelectInput(dpy, priv->xid, wattr.your_event_mask);
+            XSelectInput(dpy, xid, wattr.your_event_mask);
             has_errors = x11_untrap_errors() != 0;
             GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         }
@@ -223,6 +220,7 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    Window xid = GST_VAAPI_OBJECT_ID(window);
     XWindowAttributes wattr;
     Atom atoms[2];
     gboolean ok;
@@ -232,11 +230,11 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
         "_NET_WM_STATE_FULLSCREEN",
     };
 
-    if (!priv->create_window && priv->xid) {
+    if (!priv->create_window && xid) {
         GST_VAAPI_DISPLAY_LOCK(priv->display);
-        XGetWindowAttributes(dpy, priv->xid, &wattr);
+        XGetWindowAttributes(dpy, xid, &wattr);
         priv->is_mapped = wattr.map_state == IsViewable;
-        ok = x11_get_geometry(dpy, priv->xid, NULL, NULL, width, height);
+        ok = x11_get_geometry(dpy, xid, NULL, NULL, width, height);
         GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         return ok;
     }
@@ -246,11 +244,14 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
     priv->atom_NET_WM_STATE            = atoms[0];
     priv->atom_NET_WM_STATE_FULLSCREEN = atoms[1];
 
-    priv->xid = x11_create_window(dpy, *width, *height);
-    if (priv->xid)
-        XRaiseWindow(dpy, priv->xid);
+    xid = x11_create_window(dpy, *width, *height);
+    if (xid)
+        XRaiseWindow(dpy, xid);
     GST_VAAPI_DISPLAY_UNLOCK(priv->display);
-    return priv->xid != None;
+
+    GST_DEBUG("xid %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(xid));
+    GST_VAAPI_OBJECT_ID(window) = xid;
+    return xid != None;
 }
 
 static void
@@ -258,14 +259,15 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
 
-    if (priv->xid) {
+    if (xid) {
         if (priv->create_window) {
             GST_VAAPI_DISPLAY_LOCK(priv->display);
-            XDestroyWindow(dpy, priv->xid);
+            XDestroyWindow(dpy, xid);
             GST_VAAPI_DISPLAY_UNLOCK(priv->display);
         }
-        priv->xid = None;
+        GST_VAAPI_OBJECT_ID(window) = None;
     }
 
     if (priv->display) {
@@ -284,8 +286,9 @@ gst_vaapi_window_x11_get_geometry(
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
 
-    return x11_get_geometry(dpy, priv->xid, px, py, pwidth, pheight);
+    return x11_get_geometry(dpy, xid, px, py, pwidth, pheight);
 }
 
 static gboolean
@@ -293,6 +296,7 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 {
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(priv->display);
+    const Window xid = GST_VAAPI_OBJECT_ID(window);
     XEvent e;
     guint width, height;
     gboolean has_errors;
@@ -307,7 +311,7 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 
             XChangeProperty(
                 dpy,
-                priv->xid,
+                xid,
                 priv->atom_NET_WM_STATE, XA_ATOM, 32,
                 PropModeReplace,
                 (unsigned char *)&priv->atom_NET_WM_STATE_FULLSCREEN, 1
@@ -327,7 +331,7 @@ gst_vaapi_window_x11_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 
             XDeleteProperty(
                 dpy,
-                priv->xid,
+                xid,
                 priv->atom_NET_WM_STATE
             );
         }
@@ -372,14 +376,14 @@ gst_vaapi_window_x11_resize(GstVaapiWindow *window, guint width, guint height)
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     gboolean has_errors;
 
-    if (!priv->xid)
+    if (!GST_VAAPI_OBJECT_ID(window))
         return FALSE;
 
     GST_VAAPI_DISPLAY_LOCK(priv->display);
     x11_trap_errors();
     XResizeWindow(
         GST_VAAPI_DISPLAY_XDISPLAY(priv->display),
-        priv->xid,
+        GST_VAAPI_OBJECT_ID(window),
         width,
         height
     );
@@ -413,7 +417,7 @@ gst_vaapi_window_x11_render(
     status = vaPutSurface(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
         surface_id,
-        GST_VAAPI_WINDOW_X11(window)->priv->xid,
+        GST_VAAPI_OBJECT_ID(window),
         src_rect->x,
         src_rect->y,
         src_rect->width,
@@ -439,46 +443,6 @@ gst_vaapi_window_x11_finalize(GObject *object)
 }
 
 static void
-gst_vaapi_window_x11_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
-
-    switch (prop_id) {
-    case PROP_XID:
-        window->priv->xid = g_value_get_uint(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_window_x11_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
-
-    switch (prop_id) {
-    case PROP_XID:
-        g_value_set_uint(value, gst_vaapi_window_x11_get_xid(window));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
 gst_vaapi_window_x11_constructed(GObject *object)
 {
     GstVaapiWindowX11 * const window = GST_VAAPI_WINDOW_X11(object);
@@ -487,7 +451,7 @@ gst_vaapi_window_x11_constructed(GObject *object)
     window->priv->display =
         g_object_ref(gst_vaapi_window_get_display(GST_VAAPI_WINDOW(window)));
 
-    window->priv->create_window = window->priv->xid == None;
+    window->priv->create_window = GST_VAAPI_OBJECT_ID(object) == None;
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_window_x11_parent_class);
     if (parent_class->constructed)
@@ -503,8 +467,6 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     g_type_class_add_private(klass, sizeof(GstVaapiWindowX11Private));
 
     object_class->finalize       = gst_vaapi_window_x11_finalize;
-    object_class->set_property   = gst_vaapi_window_x11_set_property;
-    object_class->get_property   = gst_vaapi_window_x11_get_property;
     object_class->constructed    = gst_vaapi_window_x11_constructed;
 
     window_class->create         = gst_vaapi_window_x11_create;
@@ -515,20 +477,6 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     window_class->set_fullscreen = gst_vaapi_window_x11_set_fullscreen;
     window_class->resize         = gst_vaapi_window_x11_resize;
     window_class->render         = gst_vaapi_window_x11_render;
-
-    /**
-     * GstVaapiWindowX11:xid:
-     *
-     * The underlying X11 #Window XID.
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_XID,
-         g_param_spec_uint("xid",
-                           "X window id",
-                           "The underlying X11 window id",
-                           0, G_MAXUINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -538,7 +486,6 @@ gst_vaapi_window_x11_init(GstVaapiWindowX11 *window)
 
     window->priv                = priv;
     priv->display               = NULL;
-    priv->xid                   = None;
     priv->create_window         = TRUE;
     priv->is_mapped             = FALSE;
     priv->fullscreen_on_map     = FALSE;
@@ -567,6 +514,7 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
                         "display", display,
+                        "id",      (GstVaapiID)None,
                         "width",   width,
                         "height",  height,
                         NULL);
@@ -594,7 +542,7 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
                         "display", display,
-                        "xid",     xid,
+                        "id",      (GstVaapiID)xid,
                         NULL);
 }
 
@@ -613,5 +561,5 @@ gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 {
     g_return_val_if_fail(GST_VAAPI_WINDOW_X11(window), None);
 
-    return window->priv->xid;
+    return GST_VAAPI_OBJECT_ID(window);
 }

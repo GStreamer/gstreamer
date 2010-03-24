@@ -25,11 +25,12 @@
 
 #include "config.h"
 #include "gstvaapiwindow.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, GST_VAAPI_TYPE_OBJECT);
 
 #define GST_VAAPI_WINDOW_GET_PRIVATE(obj)                       \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
@@ -37,7 +38,6 @@ G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, G_TYPE_OBJECT);
                                  GstVaapiWindowPrivate))
 
 struct _GstVaapiWindowPrivate {
-    GstVaapiDisplay    *display;
     guint               width;
     guint               height;
     gboolean            is_constructed          : 1;
@@ -48,7 +48,6 @@ struct _GstVaapiWindowPrivate {
 enum {
     PROP_0,
 
-    PROP_DISPLAY,
     PROP_WIDTH,
     PROP_HEIGHT,
     PROP_FULLSCREEN
@@ -67,7 +66,11 @@ gst_vaapi_window_ensure_size(GstVaapiWindow *window)
     if (klass->get_geometry)
         klass->get_geometry(window, NULL, NULL, &priv->width, &priv->height);
 
-    gst_vaapi_display_get_size(priv->display, &display_width, &display_height);
+    gst_vaapi_display_get_size(
+        GST_VAAPI_OBJECT_GET_DISPLAY(window),
+        &display_width,
+        &display_height
+    );
     priv->is_fullscreen_changed = FALSE;
     priv->is_fullscreen         = (priv->width  == display_width &&
                                    priv->height == display_height);
@@ -76,14 +79,7 @@ gst_vaapi_window_ensure_size(GstVaapiWindow *window)
 static void
 gst_vaapi_window_destroy(GstVaapiWindow *window)
 {
-    GstVaapiWindowPrivate * const priv = window->priv;
-
     GST_VAAPI_WINDOW_GET_CLASS(window)->destroy(window);
-
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
-    }
 }
 
 static gboolean
@@ -125,9 +121,6 @@ gst_vaapi_window_set_property(
     GstVaapiWindow * const window = GST_VAAPI_WINDOW(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        window->priv->display = g_object_ref(g_value_get_object(value));
-        break;
     case PROP_WIDTH:
         gst_vaapi_window_set_width(window, g_value_get_uint(value));
         break;
@@ -154,9 +147,6 @@ gst_vaapi_window_get_property(
     GstVaapiWindow * const window = GST_VAAPI_WINDOW(object);
 
     switch (prop_id) {
-    case PROP_DISPLAY:
-        g_value_set_object(value, gst_vaapi_window_get_display(window));
-        break;
     case PROP_WIDTH:
         g_value_set_uint(value, gst_vaapi_window_get_width(window));
         break;
@@ -197,20 +187,6 @@ gst_vaapi_window_class_init(GstVaapiWindowClass *klass)
     object_class->get_property = gst_vaapi_window_get_property;
     object_class->constructed  = gst_vaapi_window_constructed;
 
-    /**
-     * GstVaapiWindowX11:display:
-     *
-     * The #GstVaapiDisplay this window is bound to
-     */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_object("display",
-                             "Display",
-                             "The GstVaapiDisplay this window is bound to",
-                             GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
     g_object_class_install_property
         (object_class,
          PROP_WIDTH,
@@ -245,7 +221,6 @@ gst_vaapi_window_init(GstVaapiWindow *window)
     GstVaapiWindowPrivate *priv = GST_VAAPI_WINDOW_GET_PRIVATE(window);
 
     window->priv                = priv;
-    priv->display               = NULL;
     priv->width                 = 1;
     priv->height                = 1;
     priv->is_constructed        = FALSE;
@@ -266,7 +241,7 @@ gst_vaapi_window_get_display(GstVaapiWindow *window)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), NULL);
 
-    return window->priv->display;
+    return GST_VAAPI_OBJECT_GET_DISPLAY(window);
 }
 
 /**
