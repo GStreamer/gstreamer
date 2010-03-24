@@ -36,6 +36,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_YUV ("{ I420 }") ";"
+        GST_VIDEO_CAPS_YUV ("{ YUY2 }") ";"
         "video/x-dv,"
         "systemstream = (boolean) FALSE,"
         "width = (int) [ 1, MAX ],"
