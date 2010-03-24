@@ -54,9 +54,24 @@ enum {
     PROP_CHROMA_TYPE
 };
 
+static gboolean
+_gst_vaapi_surface_associate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+);
+
+static gboolean
+_gst_vaapi_surface_deassociate_subpicture(
+    GstVaapiSurface    *surface,
+    GstVaapiSubpicture *subpicture
+);
+
 static void
-destroy_subpicture_cb(gpointer subpicture, gpointer user_data)
+destroy_subpicture_cb(gpointer subpicture, gpointer surface)
 {
+    _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
     g_object_unref(subpicture);
 }
 
@@ -72,7 +87,7 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
 
     if (priv->subpictures) {
-        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, NULL);
+        g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, surface);
         g_ptr_array_free(priv->subpictures, TRUE);
         priv->subpictures = NULL;
     }
@@ -533,18 +548,10 @@ gst_vaapi_surface_associate_subpicture(
     const GstVaapiRectangle *dst_rect
 )
 {
-    GstVaapiDisplay *display;
-    GstVaapiRectangle src_rect_default, dst_rect_default;
-    GstVaapiImage *image;
-    VASurfaceID surface_id;
-    VAStatus status;
+    gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
-
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
-    if (!display)
-        return FALSE;
 
     if (!gst_vaapi_surface_deassociate_subpicture(surface, subpicture))
         return FALSE;
@@ -554,6 +561,37 @@ gst_vaapi_surface_associate_subpicture(
         if (!surface->priv->subpictures)
             return FALSE;
     }
+
+    success = _gst_vaapi_surface_associate_subpicture(
+        surface,
+        subpicture,
+        src_rect,
+        dst_rect
+    );
+    if (!success)
+        return FALSE;
+
+    g_ptr_array_add(surface->priv->subpictures, g_object_ref(subpicture));
+    return TRUE;
+}
+
+gboolean
+_gst_vaapi_surface_associate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+    GstVaapiDisplay *display;
+    GstVaapiRectangle src_rect_default, dst_rect_default;
+    GstVaapiImage *image;
+    VASurfaceID surface_id;
+    VAStatus status;
+
+    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    if (!display)
+        return FALSE;
 
     surface_id = GST_VAAPI_OBJECT_ID(surface);
     if (surface_id == VA_INVALID_SURFACE)
@@ -594,7 +632,6 @@ gst_vaapi_surface_associate_subpicture(
     if (!vaapi_check_status(status, "vaAssociateSubpicture()"))
         return FALSE;
 
-    g_ptr_array_add(surface->priv->subpictures, g_object_ref(subpicture));
     return TRUE;
 }
 
@@ -613,16 +650,10 @@ gst_vaapi_surface_deassociate_subpicture(
     GstVaapiSubpicture      *subpicture
 )
 {
-    GstVaapiDisplay *display;
-    VASurfaceID surface_id;
-    VAStatus status;
+    gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
-
-    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
-    if (!display)
-        return FALSE;
 
     if (!surface->priv->subpictures)
         return TRUE;
@@ -636,6 +667,25 @@ gst_vaapi_surface_deassociate_subpicture(
         return TRUE;
     }
 
+    success = _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
+    g_object_unref(subpicture);
+    return success;
+}
+
+gboolean
+_gst_vaapi_surface_deassociate_subpicture(
+    GstVaapiSurface         *surface,
+    GstVaapiSubpicture      *subpicture
+)
+{
+    GstVaapiDisplay *display;
+    VASurfaceID surface_id;
+    VAStatus status;
+
+    display = GST_VAAPI_OBJECT_GET_DISPLAY(surface);
+    if (!display)
+        return FALSE;
+
     surface_id = GST_VAAPI_OBJECT_ID(surface);
     if (surface_id == VA_INVALID_SURFACE)
         return FALSE;
@@ -647,9 +697,9 @@ gst_vaapi_surface_deassociate_subpicture(
         &surface_id, 1
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
-    g_object_unref(subpicture);
     if (!vaapi_check_status(status, "vaDeassociateSubpicture()"))
         return FALSE;
+
     return TRUE;
 }
 
