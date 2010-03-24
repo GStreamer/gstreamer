@@ -1172,15 +1172,25 @@ update_fill (gpointer data)
 
       query = gst_query_new_buffering (GST_FORMAT_PERCENT);
       if (gst_element_query (element, query)) {
-        gint64 start, stop;
+        gint64 start, stop, buffering_total;
         GstFormat format;
         gdouble fill;
         gboolean busy;
         gint percent;
+        GstBufferingMode mode;
+        gint avg_in, avg_out;
+        gint64 buffering_left;
 
         gst_query_parse_buffering_percent (query, &busy, &percent);
-        gst_query_parse_buffering_range (query, &format, &start, &stop, NULL);
+        gst_query_parse_buffering_range (query, &format, &start, &stop,
+            &buffering_total);
+        gst_query_parse_buffering_stats (query, &mode, &avg_in, &avg_out,
+            &buffering_left);
 
+        /* note that we could start the playback when buffering_left < remaining
+         * playback time */
+        GST_DEBUG ("buffering total %" G_GINT64_FORMAT " ms, left %"
+            G_GINT64_FORMAT " ms", buffering_total, buffering_left);
         GST_DEBUG ("start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT,
             start, stop);
 
