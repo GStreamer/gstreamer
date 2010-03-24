@@ -1,1 +1,6 @@
 #include <gst/gst.h>
+
+#include <gst/interfaces/photography.h>
+
+gst_photography_get_type
+

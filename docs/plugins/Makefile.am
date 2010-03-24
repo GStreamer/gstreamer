@@ -166,7 +166,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h \
 	$(top_srcdir)/gst/valve/gstvalve.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
-	$(top_srcdir)/sys/dvb/gstdvbsrc.h
+	$(top_srcdir)/sys/dvb/gstdvbsrc.h \
+	$(top_srcdir)/gst-libs/gst/interfaces/photography.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES = $(srcdir)/figures/*.png

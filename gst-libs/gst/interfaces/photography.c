@@ -28,10 +28,15 @@
 #include "photography.h"
 
 /**
- * SECTION:photography
- * @short_description: Interface for elements having digital imaging controls
+ * SECTION:gstphotography
+ * @short_description: Interface for digital image capture elements
  *
- * The interface allows access to some common digital imaging controls
+ * The interface allows access to some common digital image capture parameters.
+ *
+ * <note>
+ *   The GstPhotography interface is unstable API and may change in future.
+ *   One can define GST_USE_UNSTABLE_API to acknowledge and avoid this warning.
+ * </note>
  */
 
 static void gst_photography_iface_base_init (GstPhotographyInterface * iface);

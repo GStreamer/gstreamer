@@ -184,4 +184,9 @@
     <title>gst-plugins-bad Classes</title>
     <xi:include href="xml/gstbasemetadata.xml" />
   </chapter>
+
+  <chapter>
+    <title>gst-plugins-bad Interfaces</title>
+    <xi:include href="xml/gstphotography.xml" />
+  </chapter>
 </book>
