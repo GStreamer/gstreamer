@@ -27,6 +27,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegenc.h"
+#include "gstffmpegcfg.h"
 
 #include <string.h>
 
@@ -381,7 +382,7 @@ static gint huffyuv[] = {
  * or some may have slightly varying enum-types with more or less options.
  * The enum-types themselves should be declared above. */
 void
-gst_ffmpeg_cfg_init ()
+gst_ffmpeg_cfg_init (void)
 {
   GParamSpec *pspec;
 

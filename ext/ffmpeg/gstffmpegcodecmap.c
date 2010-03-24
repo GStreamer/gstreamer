@@ -1268,7 +1268,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_EA_XAS:
     case CODEC_ID_ADPCM_THP:
     {
-      gchar *layout = NULL;
+      const gchar *layout = NULL;
 
       switch (codec_id) {
         case CODEC_ID_ADPCM_IMA_QT:
@@ -1417,7 +1417,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_XAN_DPCM:
     case CODEC_ID_SOL_DPCM:
     {
-      gchar *layout = NULL;
+      const gchar *layout = NULL;
 
       switch (codec_id) {
         case CODEC_ID_ROQ_DPCM:

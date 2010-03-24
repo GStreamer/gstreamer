@@ -125,7 +125,4 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
 
 
-GstBuffer *
-new_aligned_buffer (gint size, GstCaps * caps);
-
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

@@ -23,7 +23,7 @@
 
 G_BEGIN_DECLS
 
-void gst_ffmpeg_cfg_init ();
+void gst_ffmpeg_cfg_init (void);
 
 void gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base);
 

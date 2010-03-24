@@ -934,6 +934,18 @@ gst_ffmpegdemux_aggregated_flow (GstFFMpegDemux * demux)
   return res;
 }
 
+static gchar *
+gst_ffmpegdemux_create_padname (const gchar * templ, gint n)
+{
+  GString *string;
+
+  string = g_string_new (templ);
+  g_string_truncate (string, string->len - 4);
+  g_string_append_printf (string, "%02d", n);
+
+  return g_string_free (string, FALSE);
+}
+
 static GstFFStream *
 gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 {
@@ -988,7 +1000,9 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream->unknown = FALSE;
 
   /* create new pad for this stream */
-  padname = g_strdup_printf (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ), num);
+  padname =
+      gst_ffmpegdemux_create_padname (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ),
+      num);
   pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 

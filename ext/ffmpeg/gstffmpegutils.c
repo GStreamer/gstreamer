@@ -92,7 +92,7 @@ typedef struct PixFmtInfo
 /* this table gives more information about formats */
 static PixFmtInfo pix_fmt_info[PIX_FMT_NB];
 void
-gst_ffmpeg_init_pix_fmt_info ()
+gst_ffmpeg_init_pix_fmt_info (void)
 {
   /* YUV formats */
   pix_fmt_info[PIX_FMT_YUV420P].name = g_strdup ("yuv420p");

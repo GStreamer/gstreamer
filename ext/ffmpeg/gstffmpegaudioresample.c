@@ -65,6 +65,8 @@ typedef struct _GstFFMpegAudioResampleClass
 #define GST_IS_FFMPEGAUDIORESAMPLE_CLASS(klass) \
 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGAUDIORESAMPLE))
 
+GType gst_ffmpegaudioresample_get_type (void);
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
