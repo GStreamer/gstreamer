@@ -161,10 +161,23 @@ GST_VAAPI_VIDEO_BUFFER_GET_CLASS
 GstVaapiID
 GST_VAAPI_ID_FORMAT
 GST_VAAPI_ID_ARGS
-gst_vaapi_value_get_id
-gst_vaapi_value_set_id
 GstVaapiPoint
 GstVaapiRectangle
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapivalue</FILE>
+<TITLE></TITLE>
+GST_VAAPI_TYPE_ID
+gst_vaapi_value_get_id
+gst_vaapi_value_set_id
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapiparamspecs</FILE>
+<TITLE></TITLE>
+GstVaapiParamSpecID
+gst_vaapi_param_spec_id
 </SECTION>
 
 <SECTION>

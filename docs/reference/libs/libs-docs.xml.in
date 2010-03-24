@@ -9,6 +9,8 @@
   <chapter>
     <title>gst-plugins-vaapi Library</title>
     <xi:include href="xml/gstvaapitypes.xml"/>
+    <xi:include href="xml/gstvaapivalue.xml"/>
+    <xi:include href="xml/gstvaapiparamspecs.xml"/>
     <xi:include href="xml/gstvaapidisplay.xml"/>
     <xi:include href="xml/gstvaapidisplay_x11.xml"/>
     <xi:include href="xml/gstvaapiwindow.xml"/>

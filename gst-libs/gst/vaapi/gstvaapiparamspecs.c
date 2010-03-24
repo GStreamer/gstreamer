@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gstvaapiparamspecs
+ * @short_description: GParamSpecs for some of our types
+ */
+
 #include "config.h"
 #include <va/va.h>
 #include "gstvaapiparamspecs.h"
