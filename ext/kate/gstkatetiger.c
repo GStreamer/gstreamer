@@ -134,7 +134,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement, GST_TYPE_ELEMENT);
 
 static GType
-gst_kate_tiger_font_effect_get_type ()
+gst_kate_tiger_font_effect_get_type (void)
 {
   static GType font_effect_type = 0;
 
