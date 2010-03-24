@@ -43,6 +43,13 @@
 #include "config.h"
 #endif
 
+/* Required to not get an undefined warning
+ * https://bugzilla.gnome.org/show_bug.cgi?id=613795
+ */
+#ifndef WORDS_BIGENDIAN
+#define WORDS_BIGENDIAN 0
+#endif
+
 #include <stdafx.h>
 #include <libmodplug/sndfile.h>
 
