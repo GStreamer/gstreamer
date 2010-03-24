@@ -478,7 +478,8 @@ clean_ranges (GstQueue2 * queue)
 static GstQueue2Range *
 find_range (GstQueue2 * queue, guint64 offset, guint64 length)
 {
-  GstQueue2Range *range, *walk;
+  GstQueue2Range *range = NULL;
+  GstQueue2Range *walk;
 
   /* first do a quick check for the current range */
   for (walk = queue->ranges; walk; walk = walk->next) {
