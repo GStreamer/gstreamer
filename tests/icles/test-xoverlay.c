@@ -72,7 +72,8 @@ animate_render_rect (gpointer user_data)
     r->h = anim_state.h / 2;
     r->y = (r->h - (r->h / 2)) + s * (r->h / 2);
 
-    gst_x_overlay_set_render_rectangle (anim_state.overlay, r);
+    gst_x_overlay_set_render_rectangle (anim_state.overlay, r->x, r->y,
+        r->w, r->h);
     gtk_widget_queue_draw (anim_state.widget);
   }
   return TRUE;

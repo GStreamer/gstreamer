@@ -24,7 +24,6 @@
 #define __GST_X_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
 
 G_BEGIN_DECLS
 
@@ -56,7 +55,7 @@ typedef struct _GstXOverlayClass GstXOverlayClass;
  * @set_xwindow_id: virtual method to configure the XWindow id
  * @expose: virtual method to handle expose events
  * @handle_events: virtual method to handle events
- * @set_render_rectangle: virtual method to set the render rectange (since 0.10.29)
+ * @set_render_rectangle: virtual method to set the render rectangle (since 0.10.29)
  *
  * #GstXOverlay interface
  */
@@ -73,7 +72,9 @@ struct _GstXOverlayClass {
                                 gboolean     handle_events);  
 
   void (* set_render_rectangle) (GstXOverlay *overlay,
-                                GstVideoRectangle *rect);
+                                 gint x, gint y,
+                                 gint width, gint height);
+
     /*< private >*/
   gpointer                 _gst_reserved[GST_PADDING - 2];
 };
@@ -85,7 +86,8 @@ void gst_x_overlay_set_xwindow_id      (GstXOverlay *overlay,
                                         gulong xwindow_id);
 
 gboolean gst_x_overlay_set_render_rectangle (GstXOverlay *overlay,
-                                        GstVideoRectangle *rect);
+                                             gint x, gint y,
+                                             gint width, gint height);
 
 void gst_x_overlay_expose              (GstXOverlay *overlay);
 

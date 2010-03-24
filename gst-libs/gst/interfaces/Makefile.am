@@ -56,8 +56,7 @@ nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
 	$(built_sources)				\
 	interfaces-marshal.h
 
-# only need base cflags here, xoverlay includes videosink.h for a struct */
-libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(LIBM) 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
@@ -90,13 +89,10 @@ GstInterfaces-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@G
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
-		--add-include-path=$(builddir)/../video \
 		--library=gstinterfaces-0.10 \
 		--include=Gst-0.10 \
-		--include=GstVideo-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
-		--pkg gstreamer-video-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

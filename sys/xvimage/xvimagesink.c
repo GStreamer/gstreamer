@@ -2858,16 +2858,21 @@ gst_xvimagesink_set_event_handling (GstXOverlay * overlay,
 }
 
 static void
-gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay,
-    GstVideoRectangle * rect)
+gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
+    gint width, gint height)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
-  if (rect) {
-    memcpy (&xvimagesink->render_rect, rect, sizeof (GstVideoRectangle));
+  /* FIXME: how about some locking? */
+  if (x >= 0 && y >= 0 && width >= 0 && height >= 0) {
+    xvimagesink->render_rect.x = x;
+    xvimagesink->render_rect.y = y;
+    xvimagesink->render_rect.w = width;
+    xvimagesink->render_rect.h = height;
     xvimagesink->have_render_rect = TRUE;
   } else {
-    xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
+    xvimagesink->render_rect.x = 0;
+    xvimagesink->render_rect.y = 0;
     xvimagesink->render_rect.w = xvimagesink->xwindow->width;
     xvimagesink->render_rect.h = xvimagesink->xwindow->height;
     xvimagesink->have_render_rect = FALSE;
