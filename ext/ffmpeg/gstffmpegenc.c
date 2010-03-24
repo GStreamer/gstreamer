@@ -124,9 +124,9 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   AVCodec *in_plugin;
-  GstElementDetails details;
   GstPadTemplate *srctempl = NULL, *sinktempl = NULL;
   GstCaps *srccaps = NULL, *sinkcaps = NULL;
+  gchar *longname, *classification, *description;
 
   in_plugin =
       (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -134,17 +134,17 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFmpeg %s encoder",
-      in_plugin->long_name);
-  details.klass = g_strdup_printf ("Codec/Encoder/%s",
+  longname = g_strdup_printf ("FFmpeg %s encoder", in_plugin->long_name);
+  classification = g_strdup_printf ("Codec/Encoder/%s",
       (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
-  details.description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
-  details.author = "Wim Taymans <wim.taymans@gmail.com>, "
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
+  gst_element_class_set_details_simple (element_class, longname, classification,
+      description,
+      "Wim Taymans <wim.taymans@gmail.com>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+  g_free (longname);
+  g_free (classification);
+  g_free (description);
 
   if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
     GST_DEBUG ("Couldn't get source caps for encoder '%s'", in_plugin->name);

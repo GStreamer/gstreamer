@@ -182,9 +182,9 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   AVInputFormat *in_plugin;
   gchar *p, *name;
-  GstElementDetails details;
   GstCaps *sinkcaps;
   GstPadTemplate *sinktempl, *audiosrctempl, *videosrctempl;
+  gchar *longname, *description;
 
   in_plugin = (AVInputFormat *)
       g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), GST_FFDEMUX_PARAMS_QDATA);
@@ -198,17 +198,15 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   }
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFmpeg %s demuxer",
-      in_plugin->long_name);
-  details.klass = "Codec/Demuxer";
-  details.description = g_strdup_printf ("FFmpeg %s demuxer",
-      in_plugin->long_name);
-  details.author = "Wim Taymans <wim@fluendo.com>, "
+  longname = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
+  description = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
+  gst_element_class_set_details_simple (element_class, longname,
+      "Codec/Demuxer", description,
+      "Wim Taymans <wim@fluendo.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
-      "Edward Hervey <bilboed@bilboed.com>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.description);
+      "Edward Hervey <bilboed@bilboed.com>");
+  g_free (longname);
+  g_free (description);
 
   /* pad templates */
   sinkcaps = gst_ffmpeg_formatid_to_caps (name);

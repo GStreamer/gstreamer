@@ -296,10 +296,10 @@ static void
 gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails details;
   GstPadTemplate *sinktempl, *srctempl;
   GstCaps *sinkcaps, *srccaps;
   AVCodec *in_plugin;
+  gchar *longname, *classification, *description;
 
   in_plugin =
       (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -307,18 +307,18 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFmpeg %s decoder",
-      in_plugin->long_name);
-  details.klass = g_strdup_printf ("Codec/Decoder/%s",
+  longname = g_strdup_printf ("FFmpeg %s decoder", in_plugin->long_name);
+  classification = g_strdup_printf ("Codec/Decoder/%s",
       (in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
-  details.description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
-  details.author = "Wim Taymans <wim.taymans@gmail.com>, "
+  description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
+  gst_element_class_set_details_simple (element_class, longname, classification,
+      description,
+      "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
-      "Edward Hervey <bilboed@bilboed.com>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+      "Edward Hervey <bilboed@bilboed.com>");
+  g_free (longname);
+  g_free (classification);
+  g_free (description);
 
   /* get the caps */
   sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);

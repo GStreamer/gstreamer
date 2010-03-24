@@ -142,11 +142,11 @@ gst_ffmpegmux_base_init (gpointer g_class)
 {
   GstFFMpegMuxClass *klass = (GstFFMpegMuxClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstElementDetails details;
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
   AVOutputFormat *in_plugin;
   GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
   enum CodecID *video_ids = NULL, *audio_ids = NULL;
+  gchar *longname, *description;
 
   in_plugin =
       (AVOutputFormat *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -154,16 +154,14 @@ gst_ffmpegmux_base_init (gpointer g_class)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
-  details.klass = g_strdup ("Codec/Muxer");
-  details.description = g_strdup_printf ("FFmpeg %s muxer",
-      in_plugin->long_name);
-  details.author = "Wim Taymans <wim.taymans@chello.be>, "
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>";
-  gst_element_class_set_details (element_class, &details);
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+  description = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+  gst_element_class_set_details_simple (element_class, longname, "Codec/Muxer",
+      description,
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+  g_free (longname);
+  g_free (description);
 
   /* Try to find the caps that belongs here */
   srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);

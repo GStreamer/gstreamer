@@ -101,19 +101,16 @@ static gboolean gst_ffmpegscale_handle_src_event (GstPad * pad,
 static void
 gst_ffmpegscale_base_init (gpointer g_class)
 {
-  static GstElementDetails plugin_details = {
-    "FFMPEG Scale element",
-    "Filter/Converter/Video",
-    "Converts video from one resolution to another",
-    "Luca Ognibene <luogni@tin.it>",
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details_simple (element_class, "FFMPEG Scale element",
+      "Filter/Converter/Video",
+      "Converts video from one resolution to another",
+      "Luca Ognibene <luogni@tin.it>");
 }
 
 static void
