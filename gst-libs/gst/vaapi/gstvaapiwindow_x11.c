@@ -26,6 +26,7 @@
 #include "config.h"
 #include <string.h>
 #include <X11/Xatom.h>
+#include "gstvaapicompat.h"
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapiutils_x11.h"

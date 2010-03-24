@@ -24,8 +24,8 @@
  */
 
 #include "config.h"
-#include <glib.h>
 #include <gst/video/video.h>
+#include "gstvaapicompat.h"
 #include "gstvaapiimageformat.h"
 
 typedef enum _GstVaapiImageFormatType           GstVaapiImageFormatType;

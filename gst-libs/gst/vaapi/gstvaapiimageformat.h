@@ -21,14 +21,7 @@
 #ifndef GST_VAAPI_IMAGE_FORMAT_H
 #define GST_VAAPI_IMAGE_FORMAT_H
 
-#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
-# include <va.h>
-# include <gst/vaapi/gstvaapicompat.h>
-#else
-# include <va/va.h>
-#endif
-
-#include <glib/gtypes.h>
+#include <gst/gstvalue.h>
 
 G_BEGIN_DECLS
 
@@ -56,14 +49,14 @@ typedef enum _GstVaapiImageFormat               GstVaapiImageFormat;
  * The set of all image formats for #GstVaapiImage.
  */
 enum _GstVaapiImageFormat {
-    GST_VAAPI_IMAGE_NV12 = VA_FOURCC('N','V','1','2'),
-    GST_VAAPI_IMAGE_YV12 = VA_FOURCC('Y','V','1','2'),
-    GST_VAAPI_IMAGE_I420 = VA_FOURCC('I','4','2','0'),
-    GST_VAAPI_IMAGE_AYUV = VA_FOURCC('A','Y','U','V'),
-    GST_VAAPI_IMAGE_ARGB = VA_FOURCC('A','R','G','B'),
-    GST_VAAPI_IMAGE_RGBA = VA_FOURCC('R','G','B','A'),
-    GST_VAAPI_IMAGE_ABGR = VA_FOURCC('A','B','G','R'),
-    GST_VAAPI_IMAGE_BGRA = VA_FOURCC('B','G','R','A'),
+    GST_VAAPI_IMAGE_NV12 = GST_MAKE_FOURCC('N','V','1','2'),
+    GST_VAAPI_IMAGE_YV12 = GST_MAKE_FOURCC('Y','V','1','2'),
+    GST_VAAPI_IMAGE_I420 = GST_MAKE_FOURCC('I','4','2','0'),
+    GST_VAAPI_IMAGE_AYUV = GST_MAKE_FOURCC('A','Y','U','V'),
+    GST_VAAPI_IMAGE_ARGB = GST_MAKE_FOURCC('A','R','G','B'),
+    GST_VAAPI_IMAGE_RGBA = GST_MAKE_FOURCC('R','G','B','A'),
+    GST_VAAPI_IMAGE_ABGR = GST_MAKE_FOURCC('A','B','G','R'),
+    GST_VAAPI_IMAGE_BGRA = GST_MAKE_FOURCC('B','G','R','A'),
 };
 
 gboolean

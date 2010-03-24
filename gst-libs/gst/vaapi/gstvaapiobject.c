@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#include "gstvaapicompat.h"
 #include "gstvaapiobject.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapiparamspecs.h"
