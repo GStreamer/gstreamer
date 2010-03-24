@@ -104,8 +104,8 @@ struct _GstLameClass {
 };
 
 GType gst_lame_get_type(void);
+gboolean gst_lame_register (GstPlugin * plugin);
 
 G_END_DECLS
-
 
 #endif /* __GST_LAME_H__ */

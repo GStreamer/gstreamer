@@ -24,8 +24,8 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
-gboolean gst_lamemp3enc_register (GstPlugin * plugin);
-gboolean gst_lame_register (GstPlugin * plugin);
+#include "gstlame.h"
+#include "gstlamemp3enc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
