@@ -115,7 +115,6 @@ GType gst_vaapi_ ## type ## _get_type(void)                             \
             0                                                           \
         );                                                              \
     }                                                                   \
-                                                                        \
     return gst_vaapi_ ## type ## _type;                                 \
 }
 
