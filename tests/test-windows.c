@@ -179,6 +179,27 @@ static void draw_rect_YV12( // Y, U, V planes
         }
 }
 
+static void draw_rect_AYUV(
+    guchar *pixels[3],
+    guint   stride[3],
+    gint    x,
+    gint    y,
+    guint   width,
+    guint   height,
+    guint32 color
+)
+{
+    guint i, j;
+
+    color = color | 0xff000000;
+
+    for (j = 0; j < height; j++) {
+        guint32 *p = (guint32 *)(pixels[0] + (y + j) * stride[0] + x * 4);
+        for (i = 0; i < width; i++)
+            p[i] = color;
+    }
+}
+
 static gboolean draw_rgb_rects(GstVaapiImage *image)
 {
     GstVaapiImageFormat format = GST_VAAPI_IMAGE_FORMAT(image);
@@ -236,6 +257,11 @@ static gboolean draw_rgb_rects(GstVaapiImage *image)
         stride[1]   = gst_vaapi_image_get_pitch(image, 1);
         pixels[2]   = gst_vaapi_image_get_plane(image, 2);
         stride[2]   = gst_vaapi_image_get_pitch(image, 2);
+        goto YUV_colors;
+    case GST_VAAPI_IMAGE_AYUV:
+        draw_rect   = draw_rect_AYUV;
+        pixels[0]   = gst_vaapi_image_get_plane(image, 0);
+        stride[0]   = gst_vaapi_image_get_pitch(image, 0);
     YUV_colors:
         red_color   = 0x515af0;
         green_color = 0x913622;
@@ -311,6 +337,7 @@ main(int argc, char *argv[])
         GST_VAAPI_IMAGE_NV12,
         GST_VAAPI_IMAGE_YV12,
         GST_VAAPI_IMAGE_I420,
+        GST_VAAPI_IMAGE_AYUV,
         GST_VAAPI_IMAGE_ARGB,
         GST_VAAPI_IMAGE_BGRA,
         GST_VAAPI_IMAGE_RGBA,

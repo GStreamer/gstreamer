@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-03-23
+gst-vaapi NEWS -- summary of changes.  2010-03-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.1.2 - DD.Mar.2010
+* Add AYUV image format
 
 Version 0.1.1 - 23.Mar.2010
 * Document public API for libgstvaapi-*.so.*

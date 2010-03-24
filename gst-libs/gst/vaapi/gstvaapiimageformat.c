@@ -60,6 +60,7 @@ static const GstVaapiImageFormatMap gst_vaapi_image_formats[] = {
     DEF_YUV(NV12, ('N','V','1','2'), LSB, 12),
     DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12),
     DEF_YUV(I420, ('I','4','2','0'), LSB, 12),
+    DEF_YUV(AYUV, ('A','Y','U','V'), LSB, 32),
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     DEF_RGB(ARGB, ('A','R','G','B'), MSB, 32,
             32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),

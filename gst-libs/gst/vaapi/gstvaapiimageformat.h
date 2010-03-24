@@ -36,6 +36,8 @@ typedef enum _GstVaapiImageFormat               GstVaapiImageFormat;
  *   planar YUV 4:2:0, 12-bit, 3 planes for Y V U
  * @GST_VAAPI_IMAGE_I420:
  *   planar YUV 4:2:0, 12-bit, 3 planes for Y U V
+ * @GST_VAAPI_IMAGE_AYUV:
+ *   packed YUV 4:4:4, 32-bit, A Y U V, native endian byte-order
  * @GST_VAAPI_IMAGE_ARGB:
  *   packed RGB 8:8:8, 32-bit, A R G B
  * @GST_VAAPI_IMAGE_RGBA:
@@ -51,6 +53,7 @@ enum _GstVaapiImageFormat {
     GST_VAAPI_IMAGE_NV12 = VA_FOURCC('N','V','1','2'),
     GST_VAAPI_IMAGE_YV12 = VA_FOURCC('Y','V','1','2'),
     GST_VAAPI_IMAGE_I420 = VA_FOURCC('I','4','2','0'),
+    GST_VAAPI_IMAGE_AYUV = VA_FOURCC('A','Y','U','V'),
     GST_VAAPI_IMAGE_ARGB = VA_FOURCC('A','R','G','B'),
     GST_VAAPI_IMAGE_RGBA = VA_FOURCC('R','G','B','A'),
     GST_VAAPI_IMAGE_ABGR = VA_FOURCC('A','B','G','R'),
