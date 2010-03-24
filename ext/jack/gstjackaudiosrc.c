@@ -41,7 +41,7 @@
  */
 
 /**
- * SECTION:element-jack_audio_src
+ * SECTION:element-jackaudiosrc
  * @see_also: #GstBaseAudioSrc, #GstRingBuffer
  *
  * A Src that inputs data from Jack ports.
