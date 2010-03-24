@@ -29,6 +29,7 @@
  * split a continuous stream into single-frame buffers. Also reads the
  * image header searching for image properties such as width and height
  * among others.
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
