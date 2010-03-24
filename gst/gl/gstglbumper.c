@@ -49,12 +49,6 @@
 #define GST_CAT_DEFAULT gst_gl_bumper_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("OpenGL bumper filter",
-    "Filter/Effect",
-    "Bump mapping filter",
-    "Cyril Comparon <cyril.comparon@gmail.com>, Julien Isorce <julien.isorce@gmail.com>");
-
 enum
 {
   PROP_0,
@@ -270,7 +264,10 @@ gst_gl_bumper_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "OpenGL bumper filter",
+      "Filter/Effect", "Bump mapping filter",
+      "Cyril Comparon <cyril.comparon@gmail.com>, "
+      "Julien Isorce <julien.isorce@gmail.com>");
 }
 
 static void

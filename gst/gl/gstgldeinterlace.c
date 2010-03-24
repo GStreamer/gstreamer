@@ -41,12 +41,6 @@
 #define GST_CAT_DEFAULT gst_gl_deinterlace_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("OpenGL deinterlacing filter",
-    "Deinterlace",
-    "Deinterlacing based on fragment shaders",
-    "Julien Isorce <julien.isorce@mail.com>");
-
 enum
 {
   PROP_0
@@ -164,7 +158,10 @@ gst_gl_deinterlace_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "OpenGL deinterlacing filter", "Deinterlace",
+      "Deinterlacing based on fragment shaders",
+      "Julien Isorce <julien.isorce@mail.com>");
 }
 
 static void

@@ -53,12 +53,6 @@
 #define GST_CAT_DEFAULT gst_gl_colorscale_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("OpenGL color scale",
-    "Filter/Effect",
-    "Colorspace converter and video scaler",
-    "Julien Isorce <julien.isorce@gmail.com>");
-
 /* Source pad definition */
 static GstStaticPadTemplate gst_gl_colorscale_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -120,7 +114,9 @@ gst_gl_colorscale_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "OpenGL color scale",
+      "Filter/Effect", "Colorspace converter and video scaler",
+      "Julien Isorce <julien.isorce@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_colorscale_src_pad_template));

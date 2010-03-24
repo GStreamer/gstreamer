@@ -77,12 +77,6 @@ static const gchar *vconv9_fragment_source =
 #define GST_CAT_DEFAULT gst_gl_filterblur_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("Gstreamer OpenGL Blur",
-    "Filter/Effect",
-    "Blur with 9x9 separable convolution",
-    "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
 #define DEBUG_INIT(bla)							\
   GST_DEBUG_CATEGORY_INIT (gst_gl_filterblur_debug, "glfilterblur", 0, "glfilterblur element");
 
@@ -136,7 +130,9 @@ gst_gl_filterblur_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "Gstreamer OpenGL Blur",
+      "Filter/Effect", "Blur with 9x9 separable convolution",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static void

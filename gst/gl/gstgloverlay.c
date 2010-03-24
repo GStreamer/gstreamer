@@ -68,12 +68,6 @@ static gboolean gst_gl_overlay_filter (GstGLFilter * filter,
 
 static gboolean gst_gl_overlay_loader (GstGLFilter * filter);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("Gstreamer OpenGL Overlay",
-    "Filter/Effect",
-    "Overlay GL video texture with a PNG image",
-    "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
 enum
 {
   PROP_0,
@@ -113,7 +107,10 @@ gst_gl_overlay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "Gstreamer OpenGL Overlay", "Filter/Effect",
+      "Overlay GL video texture with a PNG image",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static void

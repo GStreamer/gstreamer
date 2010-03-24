@@ -68,12 +68,6 @@
 #define GST_CAT_DEFAULT gst_gl_download_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("OpenGL video maker",
-    "Filter/Effect",
-    "A from GL to video flow filter",
-    "Julien Isorce <julien.isorce@gmail.com>");
-
 #ifndef OPENGL_ES2
 #define ADDITIONAL_CAPS \
         
@@ -155,7 +149,9 @@ gst_gl_download_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "OpenGL video maker",
+      "Filter/Effect", "A from GL to video flow filter",
+      "Julien Isorce <julien.isorce@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_download_src_pad_template));

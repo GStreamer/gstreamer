@@ -66,12 +66,6 @@ static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
 static gboolean gst_gl_effects_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
-static const GstElementDetails element_details =
-GST_ELEMENT_DETAILS ("Gstreamer OpenGL Effects",
-    "Filter/Effect",
-    "GL Shading Language effects",
-    "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
 /* dont' forget to edit the following when a new effect is added */
 typedef enum
 {
@@ -234,7 +228,10 @@ gst_gl_effects_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "Gstreamer OpenGL Effects", "Filter/Effect",
+      "GL Shading Language effects",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static void

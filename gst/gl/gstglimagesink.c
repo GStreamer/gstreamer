@@ -118,12 +118,6 @@ static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
 static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
     klass);
 
-static const GstElementDetails gst_glimage_sink_details =
-GST_ELEMENT_DETAILS ("OpenGL video sink",
-    "Sink/Video",
-    "A videosink based on OpenGL",
-    "Julien Isorce <julien.isorce@gmail.com>");
-
 #ifndef OPENGL_ES2
 static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -193,10 +187,12 @@ gst_glimage_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_glimage_sink_details);
+  gst_element_class_set_details_simple (element_class, "OpenGL video sink",
+      "Sink/Video", "A videosink based on OpenGL",
+      "Julien Isorce <julien.isorce@gmail.com>");
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_glimage_sink_template));
-
 }
 
 static void
