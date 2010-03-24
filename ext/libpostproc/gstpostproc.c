@@ -46,7 +46,7 @@ struct _PostProcDetails
   const char *description;
 };
 
-static PostProcDetails filterdetails[] = {
+static const PostProcDetails filterdetails[] = {
   {"hb", "hdeblock", "horizontal deblocking filter"},
   {"vb", "vdeblock", "vertical deblocking filter"},
   {"h1", "x1hdeblock", "experimental horizontal deblocking filter 1"},
