@@ -21,6 +21,7 @@
 #include "config.h"
 #include <va/va.h>
 #include "gstvaapiparamspecs.h"
+#include "gstvaapivalue.h"
 
 /* --- GstVaapiParamSpecID --- */
 

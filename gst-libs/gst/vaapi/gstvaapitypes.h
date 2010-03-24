@@ -21,7 +21,7 @@
 #ifndef GST_VAAPI_TYPES_H
 #define GST_VAAPI_TYPES_H
 
-#include <glib-object.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
@@ -69,32 +69,6 @@ typedef guint64 GstVaapiID;
  * an integer value in a printf()-style text message.
  */
 #define GST_VAAPI_ID_ARGS(id) GUINT_TO_POINTER(id)
-
-/**
- * GST_VAAPI_TYPE_ID:
- *
- * A #GValue type that represents a VA identifier.
- *
- * Return value: the #GType of GstVaapiID
- */
-#define GST_VAAPI_TYPE_ID gst_vaapi_id_get_type()
-
-/**
- * GST_VAAPI_VALUE_HOLDS_ID:
- * @x: the #GValue to check
- *
- * Checks if the given #GValue contains a #GstVaapiID value.
- */
-#define GST_VAAPI_VALUE_HOLDS_ID(x) (G_VALUE_HOLDS((x), GST_VAAPI_TYPE_ID))
-
-GType
-gst_vaapi_id_get_type(void);
-
-GstVaapiID
-gst_vaapi_value_get_id(const GValue *value);
-
-void
-gst_vaapi_value_set_id(GValue *value, GstVaapiID id);
 
 /**
  * GstVaapiPoint:

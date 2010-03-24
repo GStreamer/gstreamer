@@ -1,5 +1,5 @@
 /*
- *  gstvaapitypes.h - Basic types
+ *  gstvaapivalue.c - GValue implementations specific to VA-API
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *
@@ -19,14 +19,51 @@
  */
 
 /**
- * SECTION:gstvaapitypes
- * @short_description: Basic types
+ * SECTION:gstvaapivalue
+ * @short_description: GValue implementations specific to VA-API
  */
 
 #include "config.h"
-#include <gst/gstvalue.h>
 #include <gobject/gvaluecollector.h>
-#include "gstvaapitypes.h"
+#include "gstvaapivalue.h"
+
+static GTypeInfo gst_vaapi_type_info = {
+    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    0,
+    0,
+    NULL,
+    NULL,
+};
+
+static GTypeFundamentalInfo gst_vaapi_type_finfo = {
+    0
+};
+
+#define GST_VAAPI_TYPE_DEFINE(type, name)                               \
+GType gst_vaapi_ ## type ## _get_type(void)                             \
+{                                                                       \
+    static GType gst_vaapi_ ## type ## _type = 0;                       \
+                                                                        \
+    if (G_UNLIKELY(gst_vaapi_ ## type ## _type == 0)) {                 \
+        gst_vaapi_type_info.value_table =                               \
+            &gst_vaapi_ ## type ## _value_table;                        \
+        gst_vaapi_ ## type ## _type = g_type_register_fundamental(      \
+            g_type_fundamental_next(),                                  \
+            name,                                                       \
+            &gst_vaapi_type_info,                                       \
+            &gst_vaapi_type_finfo,                                      \
+            0                                                           \
+        );                                                              \
+    }                                                                   \
+    return gst_vaapi_ ## type ## _type;                                 \
+}
+
+/* --- GstVaapiID --- */
 
 #if GST_VAAPI_TYPE_ID_SIZE == 4
 # define GST_VAAPI_VALUE_ID_(cvalue)    ((cvalue).v_int)
@@ -80,42 +117,6 @@ gst_vaapi_value_id_lcopy(
 
     *id_p = GST_VAAPI_VALUE_ID(value);
     return NULL;
-}
-
-static GTypeInfo gst_vaapi_type_info = {
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0,
-    0,
-    NULL,
-    NULL,
-};
-
-static GTypeFundamentalInfo gst_vaapi_type_finfo = {
-    0
-};
-
-#define GST_VAAPI_TYPE_DEFINE(type, name)                               \
-GType gst_vaapi_ ## type ## _get_type(void)                             \
-{                                                                       \
-    static GType gst_vaapi_ ## type ## _type = 0;                       \
-                                                                        \
-    if (G_UNLIKELY(gst_vaapi_ ## type ## _type == 0)) {                 \
-        gst_vaapi_type_info.value_table =                               \
-            &gst_vaapi_ ## type ## _value_table;                        \
-        gst_vaapi_ ## type ## _type = g_type_register_fundamental(      \
-            g_type_fundamental_next(),                                  \
-            name,                                                       \
-            &gst_vaapi_type_info,                                       \
-            &gst_vaapi_type_finfo,                                      \
-            0                                                           \
-        );                                                              \
-    }                                                                   \
-    return gst_vaapi_ ## type ## _type;                                 \
 }
 
 static const GTypeValueTable gst_vaapi_id_value_table = {
