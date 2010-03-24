@@ -21,8 +21,13 @@
 #ifndef GST_VAAPI_DISPLAY_X11_H
 #define GST_VAAPI_DISPLAY_X11_H
 
+#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
+# include <va_x11.h>
+#else
+# include <va/va_x11.h>
+#endif
+
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <va/va_x11.h>
 
 G_BEGIN_DECLS
 

@@ -3,6 +3,7 @@ Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.1.2 - DD.Mar.2010
 * Add AYUV image format
+* Add compatibility with the original VA-API 0.29
 
 Version 0.1.1 - 23.Mar.2010
 * Document public API for libgstvaapi-*.so.*

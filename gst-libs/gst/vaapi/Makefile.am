@@ -26,6 +26,7 @@ libgstvaapi_source_c =				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
+	gstvaapicompat.h			\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
@@ -83,12 +84,14 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(LIBVA_CFLAGS)				\
+	$(LIBVA_EXTRA_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GST_BASE_LIBS)			\
 	$(GST_LIBS)				\
 	$(LIBVA_LIBS)				\
+	$(LIBVA_EXTRA_LIBS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_SOURCES =	\
@@ -108,11 +111,13 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_CFLAGS =	\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
 	$(LIBVA_X11_CFLAGS)			\
+	$(LIBVA_EXTRA_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
+	$(LIBVA_EXTRA_LIBS)			\
 	libgstvaapi-@GST_MAJORMINOR@.la		\
 	$(NULL)
 

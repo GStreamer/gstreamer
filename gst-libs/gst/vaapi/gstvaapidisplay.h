@@ -21,7 +21,12 @@
 #ifndef GST_VAAPI_DISPLAY_H
 #define GST_VAAPI_DISPLAY_H
 
-#include <va/va.h>
+#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
+# include <va.h>
+#else
+# include <va/va.h>
+#endif
+
 #include <gst/gst.h>
 #include <gst/vaapi/gstvaapiimageformat.h>
 

@@ -147,43 +147,52 @@ AC_MSG_RESULT([$GST_PLUGINS_DIR])
 plugindir="$GST_PLUGINS_DIR"
 AC_SUBST(plugindir)
 
-dnl Check for VA-API
-PKG_CHECK_MODULES(LIBVA, [libva])
+dnl Check for X11
 PKG_CHECK_MODULES(X11, [x11])
-PKG_CHECK_MODULES(LIBVA_X11, [libva-x11])
 
-dnl Check for SDS extensions to VA-API
-AC_CACHE_CHECK([for VA-API],
-  ac_cv_libva_sds_extensions, [
-  saved_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $LIBVA_DEPS_CFLAGS"
-  AC_TRY_COMPILE([
-    #include <va/va_version.h>
-    #if VA_MAJOR_VERSION == 0 && VA_MINOR_VERSION == 29
-    # if !defined(VA_SDS_VERSION) || (VA_SDS_VERSION < $LIBVA_SDS_VERSION_0_29)
-    #  error "VA-API version >= 0.29.0-sds$LIBVA_SDS_VERSION_0_29 is required"
-    # endif
-    #elif VA_MAJOR_VERSION == 0 && VA_MINOR_VERSION == 30
-    # if !defined(VA_SDS_VERSION) || (VA_SDS_VERSION < $LIBVA_SDS_VERSION_0_30)
-    #  error "VA-API version >= 0.30.0-sds$LIBVA_SDS_VERSION_0_30 is required"
-    # endif
-    #elif !VA_CHECK_VERSION(0,31,0)
-    # error "VA-API version >= 0.31 is required"
-    #endif
-  ], [],
-  [ac_cv_libva_sds_extensions="yes"],
-  [ac_cv_libva_sds_extensions="no"])
-  CFLAGS="$saved_CFLAGS"
+dnl Check for VA-API
+LIBVA_PKGNAME="libva"
+PKG_CHECK_MODULES(LIBVA, [$LIBVA_PKGNAME])
+AC_SUBST(LIBVA_PKGNAME)
+
+AC_CACHE_CHECK([for old VA-API 0.29],
+    ac_cv_have_vaapi_old, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
+    AC_TRY_LINK(
+    [#include <va_x11.h>],
+    [vaGetDisplay(NULL)],
+    [ac_cv_have_vaapi_old="yes"],
+    [ac_cv_have_vaapi_old="no"])
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
 ])
+if test "$ac_cv_have_vaapi_old" = "yes"; then
+    LIBVA_EXTRA_CFLAGS="$LIBVA_CFLAGS -DGST_VAAPI_USE_OLD_VAAPI_0_29"
+fi
+
+LIBVA_X11_PKGNAME="libva-x11"
+PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME],
+    [ac_cv_have_vaapi_x11="yes"],
+    [ac_cv_have_vaapi_x11="no"]
+)
+if test "$ac_cv_have_vaapi_x11" = "no"; then
+    if test "$ac_cv_have_vaapi_old" = "yes"; then
+        LIBVA_X11_PKGNAME="libva"
+    else
+        AC_MSG_ERROR([could not find VA-API])
+    fi
+fi
+AC_SUBST(LIBVA_X11_PKGNAME)
+
+AC_SUBST(LIBVA_EXTRA_CFLAGS)
+AC_SUBST(LIBVA_EXTRA_LIBS)
+
 VA_VERSION=`$PKG_CONFIG --modversion libva`
 VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
 VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
-VA_DRIVER_INIT_FUNC="__vaDriverInit_${VA_MAJOR_VERSION}_${VA_MINOR_VERSION}_sds"
-if test "$ac_cv_libva_sds_extensions" = "yes"; then
-    AC_DEFINE_UNQUOTED([VA_DRIVER_INIT_FUNC], [$VA_DRIVER_INIT_FUNC], [Define driver entry-point])
-else
-    AC_MSG_ERROR([Your VA-API SDK does not include SDS extensions])
-fi
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
@@ -220,3 +229,10 @@ debian.upstream/libgstvaapi-x11.install.in
     sys/vaapisink/Makefile
     tests/Makefile
 ])
+
+dnl Print summary
+echo
+echo gstreamer-vaapi configuration summary:
+echo
+echo VA-API version ................... : $VA_VERSION
+echo

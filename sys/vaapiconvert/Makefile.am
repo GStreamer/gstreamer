@@ -1,9 +1,11 @@
 plugin_LTLIBRARIES = libgstvaapiconvert.la
 
 libgstvaapi_CFLAGS = \
+	$(LIBVA_EXTRA_CFLAGS) \
 	-I$(top_srcdir)/gst-libs
 
 libgstvaapi_LIBS = \
+	$(LIBVA_EXTRA_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la
 
 libgstvaapiconvert_la_SOURCES =	\

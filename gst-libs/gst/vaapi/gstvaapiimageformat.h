@@ -21,7 +21,13 @@
 #ifndef GST_VAAPI_IMAGE_FORMAT_H
 #define GST_VAAPI_IMAGE_FORMAT_H
 
-#include <va/va.h>
+#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
+# include <va.h>
+# include <gst/vaapi/gstvaapicompat.h>
+#else
+# include <va/va.h>
+#endif
+
 #include <glib/gtypes.h>
 
 G_BEGIN_DECLS

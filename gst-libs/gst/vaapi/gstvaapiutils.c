@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
 #include <stdio.h>
@@ -107,22 +108,23 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
  */
 guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
 {
-    const guint va_top_bottom_fields = (VA_TOP_FIELD|VA_BOTTOM_FIELD);
-    guint va_flags = 0;
+    guint va_fields = 0, va_csc = 0;
 
     if (flags & GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
-        va_flags |= VA_TOP_FIELD;
+        va_fields |= VA_TOP_FIELD;
     if (flags & GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
-        va_flags |= VA_BOTTOM_FIELD;
-    if ((va_flags & va_top_bottom_fields) == va_top_bottom_fields) {
-        va_flags &= ~va_top_bottom_fields;
-        va_flags |= VA_FRAME_PICTURE;
-    }
+        va_fields |= VA_BOTTOM_FIELD;
+    if ((va_fields ^ (VA_TOP_FIELD|VA_BOTTOM_FIELD)) == 0)
+        va_fields  = VA_FRAME_PICTURE;
 
+#ifdef VA_SRC_BT601
+    if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
+        va_csc = VA_SRC_BT601;
+#endif
+#ifdef VA_SRC_BT709
     if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_709)
-        va_flags |= VA_SRC_BT709;
-    else if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
-        va_flags |= VA_SRC_BT601;
+        va_csc = VA_SRC_BT709;
+#endif
 
-    return va_flags;
+    return va_fields|va_csc;
 }

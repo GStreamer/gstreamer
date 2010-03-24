@@ -24,9 +24,15 @@
  */
 
 #include "config.h"
-#include <va/va.h>
 #include "gstvaapiparamspecs.h"
 #include "gstvaapivalue.h"
+#include "gstvaapicompat.h"
+
+#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
+# include <va.h>
+#else
+# include <va/va.h>
+#endif
 
 /* --- GstVaapiParamSpecID --- */
 

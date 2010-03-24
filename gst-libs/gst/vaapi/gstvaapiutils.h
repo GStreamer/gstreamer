@@ -22,8 +22,13 @@
 #define GST_VAAPI_UTILS_H
 
 #include "config.h"
-#include <va/va.h>
 #include <glib/gtypes.h>
+
+#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
+# include <va.h>
+#else
+# include <va/va.h>
+#endif
 
 /** Debug output */
 void vaapi_dprintf(const char *format, ...)

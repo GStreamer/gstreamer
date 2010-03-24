@@ -6,7 +6,7 @@ pluginsdir=@libdir@/gstreamer-@GST_MAJORMINOR@
 
 Name: GStreamer VA-API (x11) Plugins Libraries
 Description: Streaming media framework, VA-API (x11) plugins libraries
-Requires: gstreamer-vaapi-@GST_MAJORMINOR@ libva-x11
+Requires: gstreamer-vaapi-@GST_MAJORMINOR@ @LIBVA_X11_PKGNAME@
 Version: @VERSION@
-Libs: -L${libdir} -lgstvaapi-x11-@GST_MAJORMINOR@
-Cflags: -I${includedir}
+Libs: -L${libdir} -lgstvaapi-x11-@GST_MAJORMINOR@ @LIBVA_EXTRA_LIBS@
+Cflags: -I${includedir} @LIBVA_EXTRA_CFLAGS@
