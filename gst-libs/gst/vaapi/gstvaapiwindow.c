@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-window
- * @short_description:
+ * SECTION:gstvaapiwindow
+ * @short_description: VA window abstraction
  */
 
 #include "config.h"

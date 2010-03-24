@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-subpicture
- * @short_description:
+ * SECTION:gstvaapisubpicture
+ * @short_description: VA subpicture abstraction
  */
 
 #include "config.h"

@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-display-x11
- * @short_description:
+ * SECTION:gstvaapidisplay_x11
+ * @short_description: VA/X11 display abstraction
  */
 
 #include "config.h"

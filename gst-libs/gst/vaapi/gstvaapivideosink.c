@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gst-vaapi-video-sink:
+ * SECTION:gstvaapivideosink
  * @short_description: An interface for implementing VA-API sink elements
  */
 

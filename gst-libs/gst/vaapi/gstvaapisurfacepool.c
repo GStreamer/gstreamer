@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-surface-pool
- * @short_description:
+ * SECTION:gstvaapisurfacepool
+ * @short_description: VA surface pool
  */
 
 #include "config.h"

@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-surface
- * @short_description:
+ * SECTION:gstvaapisurface
+ * @short_description: VA surface abstraction
  */
 
 #include "config.h"

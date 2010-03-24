@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-image
- * @short_description:
+ * SECTION:gstvaapiimage
+ * @short_description: VA image abstraction
  */
 
 #include "config.h"

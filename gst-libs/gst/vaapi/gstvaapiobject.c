@@ -18,6 +18,11 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+/**
+ * SECTION:gstvaapiobject
+ * @short_description: Base VA object
+ */
+
 #include "config.h"
 #include "gstvaapiobject.h"
 #include "gstvaapimarshal.h"

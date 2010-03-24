@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-video-buffer
- * @short_description:
+ * SECTION:gstvaapivideobuffer
+ * @short_description: VA video buffer for GStreamer
  */
 
 #include "config.h"

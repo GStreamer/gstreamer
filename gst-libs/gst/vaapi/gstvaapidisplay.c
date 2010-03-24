@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-display
- * @short_description:
+ * SECTION:gstvaapidisplay
+ * @short_description: VA display abstraction
  */
 
 #include "config.h"

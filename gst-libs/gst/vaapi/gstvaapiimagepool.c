@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-image-pool
- * @short_description:
+ * SECTION:gstvaapiimagepool
+ * @short_description: VA image pool
  */
 
 #include "config.h"

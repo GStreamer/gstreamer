@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:gst-vaapi-video-pool
- * @short_description:
+ * SECTION:gstvaapivideopool
+ * @short_description: Video object pool abstraction
  */
 
 #include "config.h"
