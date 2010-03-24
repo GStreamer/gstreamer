@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2010 Stefan Kost <stefan.kost@nokia.com>
+ * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
  *
  * gstxmptag.c: library for reading / modifying xmp tags
  *
@@ -41,7 +42,20 @@
 #include <string.h>
 #include <time.h>
 
+/*
+ * Serializes a GValue into a string.
+ */
 typedef gchar *(*XmpSerializationFunc) (const GValue * value);
+
+/*
+ * Deserializes @str that is the gstreamer tag @gst_tag represented in
+ * XMP as the @xmp_tag and adds the result to the @taglist.
+ *
+ * @pending_tags is passed so that compound xmp tags can search for its
+ * complements on the list and use them. Note that used complements should
+ * be freed and removed from the list.
+ * The list is of PendingXmpTag
+ */
 typedef void (*XmpDeserializationFunc) (GstTagList * taglist,
     const gchar * gst_tag, const gchar * xmp_tag,
     const gchar * str, GSList ** pending_tags);
@@ -148,13 +162,17 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
   gint index;
 
   XMP_TAG_MAP_LOCK;
+
+  /* Iterate over the hashtable */
   g_hash_table_iter_init (&iter, __xmp_tag_map);
   while (!ret && g_hash_table_iter_next (&iter, &key, &value)) {
     GSList *list = (GSList *) value;
 
+    /* each entry might contain multiple mappigns */
     for (walk = list; walk; walk = g_slist_next (walk)) {
       GPtrArray *array = (GPtrArray *) walk->data;
 
+      /* each mapping might contain complementary tags */
       for (index = 0; index < array->len; index++) {
         XmpTag *xmpinfo = (XmpTag *) g_ptr_array_index (array, index);
 
@@ -320,6 +338,7 @@ serialize_exif_altituderef (const GValue * value)
 
   num = g_value_get_double (value);
 
+  /* 0 means above sea level, 1 means below */
   if (num >= 0)
     return g_strdup ("0");
   return g_strdup ("1");
@@ -385,6 +404,7 @@ deserialize_exif_altitude (GstTagList * taglist, const gchar * gst_tag,
   gst_util_fraction_to_double (frac_n, frac_d, &value);
 
   if (altituderef_str[0] == '0') {
+    /* nop */
   } else if (altituderef_str[0] == '1') {
     value *= -1;
   } else {
