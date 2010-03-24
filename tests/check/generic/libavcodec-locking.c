@@ -85,7 +85,8 @@ run_pipeline (GstElement * pipe, const gchar * descr,
     } else if (revent & events) {
       continue;
     }
-    g_critical ("Unexpected message received of type %d, '%s', looking for %d: %s",
+    g_critical
+        ("Unexpected message received of type %d, '%s', looking for %d: %s",
         revent, gst_message_type_get_name (revent), tevent, descr);
   }
 
@@ -96,29 +97,36 @@ done:
 
 GST_START_TEST (test_libavcodec_locks)
 {
-  gchar *sink[NUM_SINKS+1], *s, *sinks;
+  gchar *sink[NUM_SINKS + 1], *s, *sinks;
   gint i;
 
-  for (i=0; i<NUM_SINKS; i++)
-    sink[i] = g_strdup_printf (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true", i);
+  for (i = 0; i < NUM_SINKS; i++)
+    sink[i] =
+        g_strdup_printf
+        (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true",
+        i);
 
-  sink [NUM_SINKS] = NULL;
+  sink[NUM_SINKS] = NULL;
 
   sinks = g_strjoinv (" ", sink);
 
-  s = g_strdup_printf ("videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)10/1 ! tee name=t %s", sinks);
+  s = g_strdup_printf
+      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)10/1 ! tee name=t %s",
+      sinks);
 
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
   g_free (s);
 
-  for (i=0; i<NUM_SINKS; i++)
+  for (i = 0; i < NUM_SINKS; i++)
     g_free (sink[i]);
   g_free (sinks);
 }
 
-GST_END_TEST Suite *
+GST_END_TEST;
+
+static Suite *
 simple_launch_lines_suite (void)
 {
   gint timeout = 0;
@@ -140,7 +148,7 @@ simple_launch_lines_suite (void)
 #ifndef GST_DISABLE_PARSE
   /* only run this if we haven't been configured with --disable-encoders */
   if (gst_default_registry_check_feature_version ("ffenc_mpeg4",
-      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
     tcase_add_test (tc_chain, test_libavcodec_locks);
   } else {
     g_print ("******* Skipping libavcodec_locks test, no encoder available\n");
