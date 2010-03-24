@@ -1991,8 +1991,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
             GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
                 stream->is_vbr, res);
             /* we need these or we have no way to come up with timestamps */
-            if ((stream->is_vbr && !stream->strf.auds->av_bps) ||
-                (!stream->is_vbr && (!stream->strh->scale ||
+            if ((!stream->is_vbr && !stream->strf.auds->av_bps) ||
+                (stream->is_vbr && (!stream->strh->scale ||
                         !stream->strh->rate))) {
               GST_WARNING_OBJECT (element,
                   "invalid audio header, ignoring stream");
