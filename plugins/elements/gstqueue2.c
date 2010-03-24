@@ -1942,22 +1942,42 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       } else {
         gint64 start, stop;
         guint64 writing_pos;
+        gint64 estimated_total, buffering_left;
+        GstFormat peer_fmt;
+        gint64 duration;
+        gboolean peer_res, is_buffering;
+        gdouble byte_in_rate, byte_out_rate;
+
+        /* we need a current download region */
+        if (queue->current == NULL)
+          return FALSE;
+
+        writing_pos = queue->current->writing_pos;
+        byte_in_rate = queue->byte_in_rate;
+        byte_out_rate = queue->byte_out_rate;
+        is_buffering = queue->is_buffering;
+
+        /* get duration of upstream in bytes */
+        peer_fmt = GST_FORMAT_BYTES;
+        peer_res = gst_pad_query_peer_duration (queue->sinkpad, &peer_fmt,
+            &duration);
+
+        /* calculate remaining and total download time */
+        if (peer_res && byte_in_rate > 0.0) {
+          estimated_total = (duration * 1000) / byte_in_rate;
+          buffering_left = ((duration - writing_pos) * 1000) / byte_in_rate;
+        } else {
+          estimated_total = -1;
+          buffering_left = -1;
+        }
 
         gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
         switch (format) {
           case GST_FORMAT_PERCENT:
-          {
-            gint64 duration;
-            GstFormat peer_fmt;
-
-            peer_fmt = GST_FORMAT_BYTES;
-
-            if (!gst_pad_query_peer_duration (queue->sinkpad, &peer_fmt,
-                    &duration))
+            /* we need duration */
+            if (!peer_res)
               goto peer_failed;
-
-            writing_pos = queue->current->writing_pos;
 
             GST_DEBUG_OBJECT (queue, "duration %" G_GINT64_FORMAT ", writing %"
                 G_GINT64_FORMAT, duration, writing_pos);
@@ -1969,18 +1989,21 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
             else
               stop = -1;
             break;
-          }
           case GST_FORMAT_BYTES:
             start = 0;
-            stop = queue->current->writing_pos;
+            stop = writing_pos;
             break;
           default:
             start = -1;
             stop = -1;
             break;
         }
-        gst_query_set_buffering_percent (query, queue->is_buffering, 100);
-        gst_query_set_buffering_range (query, format, start, stop, -1);
+        /* FIXME, percent buffering is not right */
+        gst_query_set_buffering_percent (query, is_buffering, 100);
+        gst_query_set_buffering_range (query, format, start, stop,
+            estimated_total);
+        gst_query_set_buffering_stats (query, GST_BUFFERING_DOWNLOAD,
+            byte_in_rate, byte_out_rate, buffering_left);
       }
       break;
     }
