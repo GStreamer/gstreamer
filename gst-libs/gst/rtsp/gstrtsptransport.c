@@ -271,7 +271,7 @@ parse_mode (GstRTSPTransport * transport, const gchar * str)
   transport->mode_record = (strstr (str, "record") != NULL);
 }
 
-static void
+static gboolean
 parse_range (const gchar * str, GstRTSPRange * range)
 {
   gchar *minus;
@@ -303,13 +303,13 @@ parse_range (const gchar * str, GstRTSPRange * range)
     range->max = -1;
   }
 
-  return;
+  return TRUE;
 
 invalid_range:
   {
     range->min = -1;
     range->max = -1;
-    return;
+    return FALSE;
   }
 }
 
@@ -363,6 +363,12 @@ rtsp_transport_ltrans_as_text (const GstRTSPTransport * transport)
 
   return NULL;
 }
+
+#define IS_VALID_PORT_RANGE(range) \
+    (range.min >= 0 && range.min < 65536 && range.max < 65536)
+
+#define IS_VALID_INTERLEAVE_RANGE(range) \
+    (range.min >= 0 && range.min < 256 && range.max < 256)
 
 /**
  * gst_rtsp_transport_parse:
@@ -470,9 +476,7 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
     } else if (g_str_has_prefix (split[i], "interleaved=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_INTERLEAVED);
       parse_range (split[i] + 12, &transport->interleaved);
-      if (transport->interleaved.min < 0 ||
-          transport->interleaved.min >= 256 ||
-          transport->interleaved.max >= 256)
+      if (!IS_VALID_INTERLEAVE_RANGE (transport->interleaved))
         goto invalid_transport;
     } else if (g_str_has_prefix (split[i], "ttl=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_TTL);
@@ -481,24 +485,22 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
         goto invalid_transport;
     } else if (g_str_has_prefix (split[i], "port=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_PORT);
-      parse_range (split[i] + 5, &transport->port);
-      if (transport->port.min < 0 ||
-          transport->port.min >= 65536 || transport->port.max >= 65536)
-        goto invalid_transport;
+      if (parse_range (split[i] + 5, &transport->port)) {
+        if (!IS_VALID_PORT_RANGE (transport->port))
+          goto invalid_transport;
+      }
     } else if (g_str_has_prefix (split[i], "client_port=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_CLIENT_PORT);
-      parse_range (split[i] + 12, &transport->client_port);
-      if (transport->client_port.min < 0 ||
-          transport->client_port.min >= 65536 ||
-          transport->client_port.max >= 65536)
-        goto invalid_transport;
+      if (parse_range (split[i] + 12, &transport->client_port)) {
+        if (!IS_VALID_PORT_RANGE (transport->client_port))
+          goto invalid_transport;
+      }
     } else if (g_str_has_prefix (split[i], "server_port=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_SERVER_PORT);
-      parse_range (split[i] + 12, &transport->server_port);
-      if (transport->server_port.min < 0 ||
-          transport->server_port.min >= 65536 ||
-          transport->server_port.max >= 65536)
-        goto invalid_transport;
+      if (parse_range (split[i] + 12, &transport->server_port)) {
+        if (!IS_VALID_PORT_RANGE (transport->server_port))
+          goto invalid_transport;
+      }
     } else if (g_str_has_prefix (split[i], "ssrc=")) {
       RTSP_TRANSPORT_PARAMETER_IS_UNIQUE (RTSP_TRANSPORT_SSRC);
       transport->ssrc = strtoul (split[i] + 5, NULL, 16);
