@@ -187,8 +187,8 @@ gst_vaapi_object_init(GstVaapiObject *object)
 {
     GstVaapiObjectPrivate *priv = GST_VAAPI_OBJECT_GET_PRIVATE(object);
 
-    object->priv  = priv;
-    priv->display = NULL;
+    object->priv        = priv;
+    priv->display       = NULL;
     priv->id            = VA_INVALID_ID;
     priv->is_destroying = FALSE;
 }
