@@ -26,7 +26,6 @@
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"
-#include <va/va_backend.h>
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
