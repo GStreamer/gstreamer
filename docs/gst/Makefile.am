@@ -33,7 +33,7 @@ include $(top_srcdir)/common/upload-doc.mak
 #$(basefiles): gstreamer-@GST_MAJORMINOR@%: gstreamer%
 #	cp $< $@
 
-#CLEANFILES = $(basefiles)
+#CLEANFILES += $(basefiles)
 
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
@@ -75,14 +75,17 @@ IGNORE_HFILES= \
 	grammar.tab.pre.h \
 	types.h
 
+gst-universe.svg: gst-universe.dot
+	-dot -Tsvg $< | sed 's/\(font-size:[0-9]*\.[0-9]*\);/\1px;/g' >$@
+
 # Images to copy into HTML directory.
 HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files = building.xml running.xml
+content_files = building.xml running.xml gst-universe.svg
 
 # Other files to distribute.
-extra_files =
+extra_files = gst-universe.dot
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
@@ -100,3 +103,7 @@ GTKDOC_EXTRA_ENVIRONMENT= \
 DOC_OVERRIDES = $(DOC_MODULE)-overrides.txt
 
 include $(top_srcdir)/common/gtk-doc.mak
+
+# gtk-doc.mak defines CLEANFILES
+CLEANFILES += gst-universe.svg
+

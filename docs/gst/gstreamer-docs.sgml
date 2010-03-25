@@ -32,6 +32,15 @@ GStreamer is cross-platform and works on most UNIX-like platforms as well as
 Windows.  It is released under the GNU Library General Public License
 (GNU LGPL).
     </para>
+    
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="gst-universe.svg" format="SVG"/>
+      </imageobject>
+      <caption>
+        <para>Relation between gstreamer core objects.</para>
+      </caption>
+    </mediaobject>
 
     <xi:include href="building.xml" />
     <xi:include href="running.xml" />
