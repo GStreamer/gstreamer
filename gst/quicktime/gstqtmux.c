@@ -245,8 +245,6 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_qt_mux_change_state);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_qt_mux_release_pad);
-
-  GST_DEBUG_CATEGORY_INIT (gst_qt_mux_debug, "qtmux", 0, "QT Muxer");
 }
 
 static void
@@ -2741,6 +2739,8 @@ gst_qt_mux_register (GstPlugin * plugin)
   GstQTMuxFormat format;
   GstQTMuxClassParams *params;
   guint i = 0;
+
+  GST_DEBUG_CATEGORY_INIT (gst_qt_mux_debug, "qtmux", 0, "QT Muxer");
 
   GST_LOG ("Registering muxers");
 
