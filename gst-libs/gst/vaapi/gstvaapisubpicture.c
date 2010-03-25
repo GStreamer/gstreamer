@@ -218,6 +218,22 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
 }
 
 /**
+ * gst_vaapi_subpicture_get_id:
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Returns the underlying VASubpictureID of the @subpicture.
+ *
+ * Return value: the underlying VA subpicture id
+ */
+VASubpictureID
+gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), VA_INVALID_ID);
+
+    return GST_VAAPI_OBJECT_ID(subpicture);
+}
+
+/**
  * gst_vaapi_subpicture_get_image:
  * @subpicture: a #GstVaapiSubpicture
  *

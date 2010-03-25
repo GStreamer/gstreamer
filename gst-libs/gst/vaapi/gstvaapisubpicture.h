@@ -83,6 +83,9 @@ gst_vaapi_subpicture_get_type(void);
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image);
 
+VASubpictureID
+gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture);
+
 GstVaapiImage *
 gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture);
 

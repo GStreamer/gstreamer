@@ -57,7 +57,7 @@ main(int argc, char *argv[])
 
     /* This also tests for the GstVaapiParamSpecID */
     g_object_get(G_OBJECT(surface), "id", &surface_id, NULL);
-    if (surface_id != gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surface)))
+    if (surface_id != gst_vaapi_surface_get_id(surface))
         g_error("could not retrieve the native surface ID");
     g_print("created surface %" GST_VAAPI_ID_FORMAT "\n",
             GST_VAAPI_ID_ARGS(surface_id));
@@ -82,7 +82,7 @@ main(int argc, char *argv[])
         if (!surface)
             g_error("could not allocate Gst/VA surface from pool");
         g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool\n",
-                GST_VAAPI_ID_ARGS(gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surface))));
+                GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
         surfaces[i] = surface;
     }
 
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
         if (!surfaces[i])
             g_error("could not re-allocate Gst/VA surface%d from pool", i);
         g_print("created surface %" GST_VAAPI_ID_FORMAT " from pool (realloc)\n",
-                GST_VAAPI_ID_ARGS(gst_vaapi_object_get_id(GST_VAAPI_OBJECT(surfaces[i]))));
+                GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surfaces[i])));
     }
 
     if (surface == surfaces[0])

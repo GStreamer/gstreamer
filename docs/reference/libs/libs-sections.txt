@@ -236,6 +236,7 @@ GstVaapiImage
 GstVaapiImageClass
 gst_vaapi_image_new
 gst_vaapi_image_new_with_image
+gst_vaapi_image_get_id
 gst_vaapi_image_get_image
 gst_vaapi_image_get_format
 gst_vaapi_image_get_width
@@ -268,6 +269,7 @@ GstVaapiSurfaceRenderFlags
 GstVaapiSurface
 GstVaapiSurfaceClass
 gst_vaapi_surface_new
+gst_vaapi_surface_get_id
 gst_vaapi_surface_get_chroma_type
 gst_vaapi_surface_get_width
 gst_vaapi_surface_get_height
@@ -294,6 +296,7 @@ GST_VAAPI_SURFACE_GET_CLASS
 GstVaapiSubpicture
 GstVaapiSubpictureClass
 gst_vaapi_subpicture_new
+gst_vaapi_subpicture_get_id
 gst_vaapi_subpicture_get_image
 gst_vaapi_subpicture_set_image
 <SUBSECTION Standard>

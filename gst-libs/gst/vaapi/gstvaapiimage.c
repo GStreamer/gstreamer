@@ -505,6 +505,23 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
 }
 
 /**
+ * gst_vaapi_image_get_id:
+ * @image: a #GstVaapiImage
+ *
+ * Returns the underlying VAImageID of the @image.
+ *
+ * Return value: the underlying VA image id
+ */
+VAImageID
+gst_vaapi_image_get_id(GstVaapiImage *image)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
+    g_return_val_if_fail(image->priv->is_constructed, VA_INVALID_ID);
+
+    return GST_VAAPI_OBJECT_ID(image);
+}
+
+/**
  * gst_vaapi_image_get_image:
  * @image: a #GstVaapiImage
  * @va_image: a VA image

@@ -306,6 +306,22 @@ gst_vaapi_surface_new(
 }
 
 /**
+ * gst_vaapi_surface_get_id:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the underlying VASurfaceID of the @surface.
+ *
+ * Return value: the underlying VA surface id
+ */
+VASurfaceID
+gst_vaapi_surface_get_id(GstVaapiSurface *surface)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), VA_INVALID_SURFACE);
+
+    return GST_VAAPI_OBJECT_ID(surface);
+}
+
+/**
  * gst_vaapi_surface_get_chroma_type:
  * @surface: a #GstVaapiSurface
  *
