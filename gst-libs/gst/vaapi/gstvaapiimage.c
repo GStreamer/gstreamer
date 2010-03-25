@@ -623,7 +623,7 @@ GstVaapiImageFormat
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, 0);
 
     return image->priv->format;
 }
@@ -640,7 +640,7 @@ guint
 gst_vaapi_image_get_width(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, 0);
 
     return image->priv->width;
 }
@@ -657,7 +657,7 @@ guint
 gst_vaapi_image_get_height(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), 0);
-    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, 0);
 
     return image->priv->height;
 }
