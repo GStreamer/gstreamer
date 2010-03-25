@@ -43,6 +43,47 @@ G_BEGIN_DECLS
     GST_VAAPI_OBJECT_CAST(object)->priv->display
 
 /**
+ * GST_VAAPI_OBJECT_VADISPLAY:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #VADisplay of @display.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#define GST_VAAPI_OBJECT_VADISPLAY(object) \
+    GST_VAAPI_DISPLAY_VADISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
+ * GST_VAAPI_OBJECT_XDISPLAY:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the underlying X11 #Display of @display.
+ * This is an internal macro that does not do any run-time type check.
+ * Besides, this is only valid within libgstvaapi-x11.
+ */
+#define GST_VAAPI_OBJECT_XDISPLAY(object) \
+    GST_VAAPI_DISPLAY_XDISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
+ * GST_VAAPI_OBJECT_LOCK_DISPLAY:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that locks the #GstVaapiDisplay contained in the @object.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#define GST_VAAPI_OBJECT_LOCK_DISPLAY(object) \
+    GST_VAAPI_DISPLAY_LOCK(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
+ * GST_VAAPI_OBJECT_UNLOCK_DISPLAY:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that unlocks the #GstVaapiDisplay contained in the @object.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#define GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object) \
+    GST_VAAPI_DISPLAY_UNLOCK(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
  * GST_VAAPI_OBJECT_ID:
  * @object: a #GstVaapiObject
  *
