@@ -901,12 +901,11 @@ update_cur_level (GstQueue2 * queue, GstQueue2Range * range)
     queue->cur_level.bytes = 0;
 }
 
-static void
+static gboolean
 gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
 {
   guint size;
   guint8 *data;
-  int ret;
   guint64 writing_pos, max_reading_pos;
   GstQueue2Range *next;
 
@@ -924,11 +923,9 @@ gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  ret = fwrite (data, 1, size, queue->temp_file);
-  if (ret < size) {
-    /* FIXME do something useful here */
-    GST_ERROR_OBJECT (queue, "fwrite returned error");
-  }
+  if (fwrite (data, size, 1, queue->temp_file) != 1)
+    goto handle_error;
+
   writing_pos += size;
 
   GST_INFO_OBJECT (queue,
@@ -960,6 +957,25 @@ gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
     debug_ranges (queue);
   }
   queue->current->writing_pos = writing_pos;
+
+  return TRUE;
+
+  /* ERRORS */
+handle_error:
+  {
+    switch (errno) {
+      case ENOSPC:{
+        GST_ELEMENT_ERROR (queue, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
+        break;
+      }
+      default:{
+        GST_ELEMENT_ERROR (queue, RESOURCE, WRITE,
+            (_("Error while writing to download file.")),
+            ("%s", g_strerror (errno)));
+      }
+    }
+    return FALSE;
+  }
 }
 
 static void
