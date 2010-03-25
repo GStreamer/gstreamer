@@ -97,6 +97,7 @@ struct _GstQueue2
 
   /* current buffering state */
   gboolean is_buffering;
+  gint buffering_percent;
   guint buffering_iteration;
 
   /* for measuring input/output rates */

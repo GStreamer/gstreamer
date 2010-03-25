@@ -747,6 +747,8 @@ update_buffering (GstQueue2 * queue)
     if (percent > 100)
       percent = 100;
 
+    queue->buffering_percent = percent;
+
     if (QUEUE_IS_USING_TEMP_FILE (queue)) {
       GstFormat fmt = GST_FORMAT_BYTES;
       gint64 duration;
@@ -1978,6 +1980,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       } else {
         gint64 start, stop;
         guint64 writing_pos;
+        gint percent;
         gint64 estimated_total, buffering_left;
         GstFormat peer_fmt;
         gint64 duration;
@@ -1992,6 +1995,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
         byte_in_rate = queue->byte_in_rate;
         byte_out_rate = queue->byte_out_rate;
         is_buffering = queue->is_buffering;
+        percent = queue->buffering_percent;
 
         /* get duration of upstream in bytes */
         peer_fmt = GST_FORMAT_BYTES;
@@ -2035,7 +2039,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
             break;
         }
         /* FIXME, percent buffering is not right */
-        gst_query_set_buffering_percent (query, is_buffering, 100);
+        gst_query_set_buffering_percent (query, is_buffering, percent);
         gst_query_set_buffering_range (query, format, start, stop,
             estimated_total);
         gst_query_set_buffering_stats (query, GST_BUFFERING_DOWNLOAD,
