@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-12 17:17+0000\n"
+"POT-Creation-Date: 2010-03-25 17:38+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -848,6 +848,16 @@ msgstr ""
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+
+# officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....AgendaType.Duration.text
+#, fuzzy
+msgid "user rating"
+msgstr "Igihe- ngombwa"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
 msgstr ""
 
 msgid ", "
