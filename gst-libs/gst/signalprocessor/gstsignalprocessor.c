@@ -165,8 +165,8 @@ gst_signal_processor_pad_get_type (void)
 static void
 _do_init (GType object_type)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_signal_processor_debug, "gst-dsp", 0,
-      "signalprocessor element");
+  GST_DEBUG_CATEGORY_INIT (gst_signal_processor_debug, "signalprocessor", 0,
+      "signalprocessor baseclass");
 }
 
 GST_BOILERPLATE_FULL (GstSignalProcessor, gst_signal_processor, GstElement,
