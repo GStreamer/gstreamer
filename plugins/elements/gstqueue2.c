@@ -2038,7 +2038,6 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
             stop = -1;
             break;
         }
-        /* FIXME, percent buffering is not right */
         gst_query_set_buffering_percent (query, is_buffering, percent);
         gst_query_set_buffering_range (query, format, start, stop,
             estimated_total);
