@@ -225,6 +225,8 @@ static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_queue2_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_queue2_handle_query (GstElement * element,
+    GstQuery * query);
 
 static GstCaps *gst_queue2_getcaps (GstPad * pad);
 static gboolean gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps);
@@ -347,6 +349,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
   gobject_class->finalize = gst_queue2_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue2_change_state);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_queue2_handle_query);
 }
 
 static void
@@ -2061,6 +2064,13 @@ peer_failed:
     GST_DEBUG_OBJECT (queue, "failed peer query");
     return FALSE;
   }
+}
+
+static gboolean
+gst_queue2_handle_query (GstElement * element, GstQuery * query)
+{
+  /* simply forward to the srcpad query function */
+  return gst_queue2_handle_src_query (GST_QUEUE2_CAST (element)->srcpad, query);
 }
 
 static GstFlowReturn
