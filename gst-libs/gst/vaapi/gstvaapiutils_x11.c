@@ -57,36 +57,38 @@ static const int x11_event_mask = (KeyPressMask |
 
 /**
  * x11_create_window:
- * @display: an X11 #Display
- * @width: the requested width, in pixels
- * @height: the requested height, in pixels
+ * @dpy: an X11 #Display
+ * @w: the requested width, in pixels
+ * @h: the requested height, in pixels
  * @vis: the request visual
+ * @cmap: the request colormap
  *
  * Creates a border-less window with the specified dimensions. If @vis
- * is %NULL, the default visual for @display will be used. The default
- * background color is black.
+ * is %NULL, the default visual for @display will be used. If @cmap is
+ * %None, no specific colormap will be bound to the window. Also note
+ * the default background color is black.
  *
  * Return value: the newly created X #Window.
  */
 Window
-x11_create_window(Display *display, guint width, guint height, Visual *vis)
+x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap)
 {
-    Window root_window, window;
+    Window rootwin, win;
     int screen, depth;
     XSetWindowAttributes xswa;
     unsigned long xswa_mask;
     XWindowAttributes wattr;
     unsigned long black_pixel, white_pixel;
 
-    screen      = DefaultScreen(display);
-    root_window = RootWindow(display, screen);
-    black_pixel = BlackPixel(display, screen);
-    white_pixel = WhitePixel(display, screen);
+    screen      = DefaultScreen(dpy);
+    rootwin     = RootWindow(dpy, screen);
+    black_pixel = BlackPixel(dpy, screen);
+    white_pixel = WhitePixel(dpy, screen);
 
     if (!vis)
-        vis = DefaultVisual(display, screen);
+        vis = DefaultVisual(dpy, screen);
 
-    XGetWindowAttributes(display, root_window, &wattr);
+    XGetWindowAttributes(dpy, rootwin, &wattr);
     depth = wattr.depth;
     if (depth != 15 && depth != 16 && depth != 24 && depth != 32)
         depth = 24;
@@ -95,21 +97,26 @@ x11_create_window(Display *display, guint width, guint height, Visual *vis)
     xswa.border_pixel     = black_pixel;
     xswa.background_pixel = black_pixel;
 
-    window = XCreateWindow(
-        display,
-        root_window,
-        0, 0, width, height,
+    if (cmap) {
+        xswa_mask        |= CWColormap;
+        xswa.colormap     = cmap;
+    }
+
+    win = XCreateWindow(
+        dpy,
+        rootwin,
+        0, 0, w, h,
         0,
         depth,
         InputOutput,
         vis,
         xswa_mask, &xswa
     );
-    if (!window)
+    if (!win)
         return None;
 
-    XSelectInput(display, window, x11_event_mask);
-    return window;
+    XSelectInput(dpy, win, x11_event_mask);
+    return win;
 }
 
 gboolean

@@ -218,6 +218,9 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
     GstVaapiWindowX11Private * const priv = GST_VAAPI_WINDOW_X11(window)->priv;
     Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
     Window                           xid  = GST_VAAPI_OBJECT_ID(window);
+    Visual                          *vis  = NULL;
+    Colormap                         cmap = None;
+    GstVaapiWindowX11Class          *klass;
     XWindowAttributes                wattr;
     Atom                             atoms[2];
     gboolean                         ok;
@@ -236,12 +239,25 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
         return ok;
     }
 
+    klass = GST_VAAPI_WINDOW_X11_GET_CLASS(window);
+    if (klass) {
+        if (klass->get_visual)
+            vis = klass->get_visual(window);
+        if (klass->get_colormap)
+            cmap = klass->get_colormap(window);
+    }
+
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    XInternAtoms(dpy, (char **)atom_names, G_N_ELEMENTS(atom_names), False, atoms);
+    XInternAtoms(
+        dpy,
+        (char **)atom_names, G_N_ELEMENTS(atom_names),
+        False,
+        atoms
+    );
     priv->atom_NET_WM_STATE            = atoms[0];
     priv->atom_NET_WM_STATE_FULLSCREEN = atoms[1];
 
-    xid = x11_create_window(dpy, *width, *height, NULL);
+    xid = x11_create_window(dpy, *width, *height, vis, cmap);
     if (xid)
         XRaiseWindow(dpy, xid);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
@@ -494,7 +510,7 @@ gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height)
     GST_DEBUG("new window, size %ux%u", width, height);
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(width  > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
 
     return g_object_new(GST_VAAPI_TYPE_WINDOW_X11,
@@ -544,7 +560,7 @@ gst_vaapi_window_x11_new_with_xid(GstVaapiDisplay *display, Window xid)
 Window
 gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 {
-    g_return_val_if_fail(GST_VAAPI_WINDOW_X11(window), None);
+    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_X11(window), None);
 
     return GST_VAAPI_OBJECT_ID(window);
 }

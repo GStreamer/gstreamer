@@ -32,7 +32,7 @@ int x11_untrap_errors(void)
     attribute_hidden;
 
 Window
-x11_create_window(Display *display, guint width, guint height, Visual *vis)
+x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap)
     attribute_hidden;
 
 gboolean
