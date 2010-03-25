@@ -280,8 +280,11 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
         if (klass->open_display && !klass->open_display(display))
             return FALSE;
-        if (klass->get_display)
+        if (klass->get_display) {
             priv->display = klass->get_display(display);
+            if (!priv->display)
+                return FALSE;
+        }
         if (klass->get_size)
             klass->get_size(display, &priv->width, &priv->height);
         if (klass->get_size_mm)

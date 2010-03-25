@@ -44,7 +44,6 @@ struct _GstVaapiDisplayX11Private {
     gchar      *display_name;
     Display    *x11_display;
     int         x11_screen;
-    VADisplay  *va_display;
 };
 
 enum {
@@ -149,8 +148,7 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
         return FALSE;
 
     priv->x11_screen = DefaultScreen(priv->x11_display);
-    priv->va_display = vaGetDisplay(priv->x11_display);
-    return priv->va_display != NULL;
+    return TRUE;
 }
 
 static void
@@ -169,14 +167,12 @@ gst_vaapi_display_x11_close_display(GstVaapiDisplay *display)
         g_free(priv->display_name);
         priv->display_name = NULL;
     }
-
-    priv->va_display = NULL;
 }
 
 static VADisplay
 gst_vaapi_display_x11_get_va_display(GstVaapiDisplay *display)
 {
-    return GST_VAAPI_DISPLAY_X11(display)->priv->va_display;
+    return vaGetDisplay(GST_VAAPI_DISPLAY_XDISPLAY(display));
 }
 
 static void
