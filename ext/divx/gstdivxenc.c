@@ -78,10 +78,10 @@ static GstElementClass *parent_class = NULL;
 static guint gst_divxenc_signals[LAST_SIGNAL] = { 0 };
 
 
-static gchar *
+static const gchar *
 gst_divxenc_error (int errorcode)
 {
-  gchar *error;
+  const gchar *error;
 
   switch (errorcode) {
     case ENC_BUFFER:

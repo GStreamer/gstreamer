@@ -71,10 +71,10 @@ static GstElementClass *parent_class = NULL;
 /* static guint gst_divxdec_signals[LAST_SIGNAL] = { 0 }; */
 
 
-static gchar *
+static const gchar *
 gst_divxdec_error (int errorcode)
 {
-  gchar *error;
+  const gchar *error;
 
   switch (errorcode) {
     case DEC_OK:
