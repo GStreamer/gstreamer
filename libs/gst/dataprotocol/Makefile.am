@@ -30,7 +30,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstdataprotocol_@GST_MAJORMINOR@_la_S
 gir_cincludes=$(patsubst %,--c-include='gst/dataprotocol/%',$(libgstdataprotocol_@GST_MAJORMINOR@_include_HEADERS))
 
 GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotocol-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstDataprotocol \
 		--strip-prefix=Gst \
 		--nsversion=@GST_MAJORMINOR@ \

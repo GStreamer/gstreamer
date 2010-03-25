@@ -53,7 +53,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/base/%',$(libgstbase_@GST_MAJORMINOR@include_HEADERS))
 
 GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstBase \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
