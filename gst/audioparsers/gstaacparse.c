@@ -97,6 +97,8 @@ gboolean gst_aacparse_convert (GstBaseParse * parse,
 
 gboolean gst_aacparse_is_seekable (GstBaseParse * parse);
 
+gint gst_aacparse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer);
+
 gboolean gst_aacparse_event (GstBaseParse * parse, GstEvent * event);
 
 #define _do_init(bla) \
@@ -160,6 +162,8 @@ gst_aacparse_class_init (GstAacParseClass * klass)
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_aacparse_parse_frame);
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_aacparse_check_valid_frame);
+  parse_class->get_frame_overhead =
+      GST_DEBUG_FUNCPTR (gst_aacparse_get_frame_overhead);
 }
 
 
@@ -462,14 +466,12 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->mpegversion = (data[1] & 0x08) ? 2 : 4;
     aacparse->object_type = (data[2] & 0xc0) >> 6;
     aacparse->channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
-    aacparse->bitrate = ((data[5] & 0x1f) << 6) | ((data[6] & 0xfc) >> 2);
 
     gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
         aacparse->sample_rate, 1024, 50);
 
-    GST_DEBUG ("ADTS: samplerate %d, channels %d, bitrate %d, objtype %d",
-        aacparse->sample_rate, aacparse->channels, aacparse->bitrate,
-        aacparse->object_type);
+    GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d",
+        aacparse->sample_rate, aacparse->channels, aacparse->object_type);
 
     return TRUE;
   } else if (need_data) {
@@ -705,4 +707,33 @@ gst_aacparse_is_seekable (GstBaseParse * parse)
 
   /* Not seekable if ADIF header is found */
   return (aacparse->header_type != DSPAAC_HEADER_ADIF);
+}
+
+/**
+ * gst_aacparse_get_frame_overhead:
+ * @parse: #GstBaseParse.
+ * @buffer: #GstBuffer.
+ *
+ * Implementation of "get_frame_overhead" vmethod in #GstBaseParse class. ADTS
+ * streams have a 7 byte header in each frame. MP4 and ADIF streams don't have
+ * a per-frame header.
+ *
+ * We're making a couple of simplifying assumptions:
+ *
+ * 1. We count Program Configuration Elements rather than searching for them
+ *    in the streams to discount them - the overhead is negligible.
+ *
+ * 2. We ignore CRC. This has a worst-case impact of (num_raw_blocks + 1)*16
+ *    bits, which should still not be significant enough to warrant the
+ *    additional parsing through the headers
+ */
+gint
+gst_aacparse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer)
+{
+  GstAacParse *aacparse = GST_AACPARSE (parse);
+
+  if (aacparse->header_type == DSPAAC_HEADER_ADTS)
+    return 7;
+  else
+    return 0;
 }
