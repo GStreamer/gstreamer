@@ -800,15 +800,15 @@ gst_signal_processor_update_outputs (GstSignalProcessor * self,
     gst_signal_processor_interleave_group (&self->group_out[i], nprocessed);
 }
 
-static void
+static gboolean
 gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
 {
   GstElement *elem;
   GstSignalProcessorClass *klass;
 
   /* check if we have buffers enqueued */
-  g_return_if_fail (self->pending_in == 0);
-  g_return_if_fail (self->pending_out == 0);
+  g_return_val_if_fail (self->pending_in == 0, FALSE);
+  g_return_val_if_fail (self->pending_out == 0, FALSE);
 
   elem = GST_ELEMENT (self);
 
@@ -826,14 +826,14 @@ gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
   gst_signal_processor_update_inputs (self, nframes);
   gst_signal_processor_update_outputs (self, nframes);
 
-  return;
+  return TRUE;
 
 flow_error:
   {
     GST_WARNING_OBJECT (self,
         "gst_signal_processor_prepare() returned %d, flow_ref=%s", nframes,
         gst_flow_get_name (self->flow_state));
-    return;
+    return FALSE;
   }
 }
 
@@ -1032,9 +1032,8 @@ gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
   gst_signal_processor_pen_buffer (self, pad, buffer);
 
   if (self->pending_in == 0) {
-    gst_signal_processor_process (self, G_MAXUINT);
-
-    gst_signal_processor_do_pushes (self);
+    if (gst_signal_processor_process (self, G_MAXUINT))
+      gst_signal_processor_do_pushes (self);
   }
 
   gst_object_unref (self);
