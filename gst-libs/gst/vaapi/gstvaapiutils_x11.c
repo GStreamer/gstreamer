@@ -55,22 +55,36 @@ static const int x11_event_mask = (KeyPressMask |
                                    ExposureMask |
                                    StructureNotifyMask);
 
+/**
+ * x11_create_window:
+ * @display: an X11 #Display
+ * @width: the requested width, in pixels
+ * @height: the requested height, in pixels
+ * @vis: the request visual
+ *
+ * Creates a border-less window with the specified dimensions. If @vis
+ * is %NULL, the default visual for @display will be used. The default
+ * background color is black.
+ *
+ * Return value: the newly created X #Window.
+ */
 Window
-x11_create_window(Display *display, guint width, guint height)
+x11_create_window(Display *display, guint width, guint height, Visual *vis)
 {
     Window root_window, window;
     int screen, depth;
-    Visual *vis;
     XSetWindowAttributes xswa;
     unsigned long xswa_mask;
     XWindowAttributes wattr;
     unsigned long black_pixel, white_pixel;
 
     screen      = DefaultScreen(display);
-    vis         = DefaultVisual(display, screen);
     root_window = RootWindow(display, screen);
     black_pixel = BlackPixel(display, screen);
     white_pixel = WhitePixel(display, screen);
+
+    if (!vis)
+        vis = DefaultVisual(display, screen);
 
     XGetWindowAttributes(display, root_window, &wattr);
     depth = wattr.depth;

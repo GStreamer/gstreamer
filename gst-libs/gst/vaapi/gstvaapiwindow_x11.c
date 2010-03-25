@@ -241,7 +241,7 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
     priv->atom_NET_WM_STATE            = atoms[0];
     priv->atom_NET_WM_STATE_FULLSCREEN = atoms[1];
 
-    xid = x11_create_window(dpy, *width, *height);
+    xid = x11_create_window(dpy, *width, *height, NULL);
     if (xid)
         XRaiseWindow(dpy, xid);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
