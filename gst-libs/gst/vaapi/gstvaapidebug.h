@@ -21,16 +21,11 @@
 #ifndef GST_VAAPI_DEBUG_H
 #define GST_VAAPI_DEBUG_H
 
-#include "gstvaapiutils.h"
+#include <gst/gstinfo.h>
 
 #if DEBUG
-# define D(x) x
-#else
-# define D(x)
-#endif
-#define bug vaapi_dprintf
-
 GST_DEBUG_CATEGORY_EXTERN(gst_debug_vaapi);
 #define GST_CAT_DEFAULT gst_debug_vaapi
+#endif
 
 #endif /* GST_VAAPI_DEBUG_H */
