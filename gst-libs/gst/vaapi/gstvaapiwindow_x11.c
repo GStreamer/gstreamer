@@ -564,3 +564,20 @@ gst_vaapi_window_x11_get_xid(GstVaapiWindowX11 *window)
 
     return GST_VAAPI_OBJECT_ID(window);
 }
+
+/**
+ * gst_vaapi_window_x11_is_foreign_xid:
+ * @window: a #GstVaapiWindowX11
+ *
+ * Checks whether the @window XID was created by gst_vaapi_window_x11_new() or bound with gst_vaapi_window_x11_new_with_xid().
+ *
+ * Return value: %TRUE if the underlying X window is owned by the
+ *   caller (foreign window)
+ */
+gboolean
+gst_vaapi_window_x11_is_foreign_xid(GstVaapiWindowX11 *window)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_X11(window), FALSE);
+
+    return !window->priv->create_window;
+}
