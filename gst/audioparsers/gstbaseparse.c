@@ -243,15 +243,8 @@ struct _GstBaseParsePrivate
   GstBuffer *cache;
 };
 
-struct _GstBaseParseClassPrivate
-{
-  gpointer _padding;
-};
-
 static GstElementClass *parent_class = NULL;
 
-static void gst_base_parse_base_init (gpointer g_class);
-static void gst_base_parse_base_finalize (gpointer g_class);
 static void gst_base_parse_class_init (GstBaseParseClass * klass);
 static void gst_base_parse_init (GstBaseParse * parse,
     GstBaseParseClass * klass);
@@ -264,8 +257,8 @@ gst_base_parse_get_type (void)
   if (!base_parse_type) {
     static const GTypeInfo base_parse_info = {
       sizeof (GstBaseParseClass),
-      (GBaseInitFunc) gst_base_parse_base_init,
-      (GBaseFinalizeFunc) gst_base_parse_base_finalize,
+      (GBaseInitFunc) NULL,
+      (GBaseFinalizeFunc) NULL,
       (GClassInitFunc) gst_base_parse_class_init,
       NULL,
       NULL,
@@ -320,31 +313,6 @@ gboolean gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
 static void gst_base_parse_drain (GstBaseParse * parse);
 
 static void
-gst_base_parse_base_init (gpointer g_class)
-{
-  GstBaseParseClass *klass = GST_BASE_PARSE_CLASS (g_class);
-  GstBaseParseClassPrivate *priv;
-
-  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
-      "baseparse element");
-
-  /* TODO: Remove this once GObject supports class private data */
-  priv = g_slice_new0 (GstBaseParseClassPrivate);
-  if (klass->priv)
-    memcpy (priv, klass->priv, sizeof (GstBaseParseClassPrivate));
-  klass->priv = priv;
-}
-
-static void
-gst_base_parse_base_finalize (gpointer g_class)
-{
-  GstBaseParseClass *klass = GST_BASE_PARSE_CLASS (g_class);
-
-  g_slice_free (GstBaseParseClassPrivate, klass->priv);
-  klass->priv = NULL;
-}
-
-static void
 gst_base_parse_finalize (GObject * object)
 {
   GstBaseParse *parse = GST_BASE_PARSE (object);
@@ -392,6 +360,9 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->is_seekable = gst_base_parse_is_seekable;
   klass->convert = gst_base_parse_convert;
+
+  GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
+      "baseparse element");
 }
 
 static void

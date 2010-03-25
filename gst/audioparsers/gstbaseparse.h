@@ -112,7 +112,6 @@ G_BEGIN_DECLS
 typedef struct _GstBaseParse GstBaseParse;
 typedef struct _GstBaseParseClass GstBaseParseClass;
 typedef struct _GstBaseParsePrivate GstBaseParsePrivate;
-typedef struct _GstBaseParseClassPrivate GstBaseParseClassPrivate;
 
 /**
  * GstBaseParse:
@@ -239,7 +238,6 @@ struct _GstBaseParseClass {
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];  
-  GstBaseParseClassPrivate *priv;
 };
 
 GType           gst_base_parse_get_type         (void);
