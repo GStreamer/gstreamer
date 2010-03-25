@@ -20,7 +20,8 @@ gst-launch-0.10 -v filesrc location=/usr/share/sounds/login.wav ! wavparse ! aud
 
 Requires calf <http://calf.sourceforge.net/>
 
-GST_DEBUG="*:2,gst-dsp:5,lv2:5" 
+GST_DEBUG="*:2,signalprocessor:5,lv2:5" 
 gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" ! pulsesink
 gst-launch calf-sourceforge-net-plugins-Monosynth event-in="C-3" name=ms ! pulsesink ms. ! fakesink
+gst-launch calf-sourceforge-net-plugins-Organ event-in="C-3" name=s ! interleave name=i ! pulsesink s. ! i.
 
