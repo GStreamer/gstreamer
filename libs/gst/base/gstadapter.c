@@ -463,22 +463,15 @@ gst_adapter_copy (GstAdapter * adapter, guint8 * dest, guint offset, guint size)
  *
  * See also: gst_adapter_peek().
  */
-void
-gst_adapter_flush (GstAdapter * adapter, guint flush)
+static void
+gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
 {
   GstBuffer *cur;
   guint size;
   GstAdapterPrivate *priv;
   GSList *g;
 
-  g_return_if_fail (GST_IS_ADAPTER (adapter));
-  g_return_if_fail (flush <= adapter->size);
-
   GST_LOG_OBJECT (adapter, "flushing %u bytes", flush);
-
-  /* flushing out 0 bytes will do nothing */
-  if (G_UNLIKELY (flush == 0))
-    return;
 
   priv = adapter->priv;
 
@@ -517,6 +510,19 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   /* account for the remaining bytes */
   adapter->skip = flush;
   adapter->priv->distance += flush;
+}
+
+void
+gst_adapter_flush (GstAdapter * adapter, guint flush)
+{
+  g_return_if_fail (GST_IS_ADAPTER (adapter));
+  g_return_if_fail (flush <= adapter->size);
+
+  /* flushing out 0 bytes will do nothing */
+  if (G_UNLIKELY (flush == 0))
+    return;
+
+  gst_adapter_flush_unchecked (adapter, flush);
 }
 
 /**
@@ -559,7 +565,7 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
     copy_into_unchecked (adapter, data, adapter->skip, nbytes);
   }
 
-  gst_adapter_flush (adapter, nbytes);
+  gst_adapter_flush_unchecked (adapter, nbytes);
 
   return data;
 }
@@ -646,7 +652,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   }
 
 done:
-  gst_adapter_flush (adapter, nbytes);
+  gst_adapter_flush_unchecked (adapter, nbytes);
 
   return buffer;
 }
