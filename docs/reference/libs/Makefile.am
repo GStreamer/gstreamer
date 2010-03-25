@@ -54,6 +54,7 @@ CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c
 IGNORE_HFILES = \
 	gstvaapidebug.h \
 	gstvaapiutils.h \
+	gstvaapiutils_glx.h \
 	gstvaapiutils_x11.h \
 	$(NULL)
 
@@ -91,6 +92,7 @@ INCLUDES = \
 GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la \
 	$(GLIB_LIBS)
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.

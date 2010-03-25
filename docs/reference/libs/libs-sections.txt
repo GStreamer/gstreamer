@@ -74,6 +74,7 @@ GST_VAAPI_WINDOW_XWINDOW
 gst_vaapi_window_x11_new
 gst_vaapi_window_x11_new_with_xid
 gst_vaapi_window_x11_get_xid
+gst_vaapi_window_x11_is_foreign_xid
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW_X11
 GST_VAAPI_IS_WINDOW_X11
@@ -82,6 +83,43 @@ gst_vaapi_window_x11_get_type
 GST_VAAPI_WINDOW_X11_CLASS
 GST_VAAPI_IS_WINDOW_X11_CLASS
 GST_VAAPI_WINDOW_X11_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapidisplay_glx</FILE>
+<TITLE>GstVaapiDisplayGLX</TITLE>
+GstVaapiDisplayGLX
+GstVaapiDisplayGLXClass
+gst_vaapi_display_glx_new
+gst_vaapi_display_glx_new_with_display
+<SUBSECTION Standard>
+GST_VAAPI_DISPLAY_GLX
+GST_VAAPI_IS_DISPLAY_GLX
+GST_VAAPI_TYPE_DISPLAY_GLX
+gst_vaapi_display_glx_get_type
+GST_VAAPI_DISPLAY_GLX_CLASS
+GST_VAAPI_IS_DISPLAY_GLX_CLASS
+GST_VAAPI_DISPLAY_GLX_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapiwindow_glx</FILE>
+<TITLE>GstVaapiWindowGLX</TITLE>
+GstVaapiWindowGLX
+GstVaapiWindowGLXClass
+gst_vaapi_window_glx_new
+gst_vaapi_window_glx_new_with_xid
+gst_vaapi_window_glx_get_context
+gst_vaapi_window_glx_set_context
+gst_vaapi_window_glx_swap_buffers
+<SUBSECTION Standard>
+GST_VAAPI_WINDOW_GLX
+GST_VAAPI_IS_WINDOW_GLX
+GST_VAAPI_TYPE_WINDOW_GLX
+gst_vaapi_window_glx_get_type
+GST_VAAPI_WINDOW_GLX_CLASS
+GST_VAAPI_IS_WINDOW_GLX_CLASS
+GST_VAAPI_WINDOW_GLX_GET_CLASS
 </SECTION>
 
 <SECTION>

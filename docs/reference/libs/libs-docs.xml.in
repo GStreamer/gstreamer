@@ -13,8 +13,10 @@
     <xi:include href="xml/gstvaapiparamspecs.xml"/>
     <xi:include href="xml/gstvaapidisplay.xml"/>
     <xi:include href="xml/gstvaapidisplay_x11.xml"/>
+    <xi:include href="xml/gstvaapidisplay_glx.xml"/>
     <xi:include href="xml/gstvaapiwindow.xml"/>
     <xi:include href="xml/gstvaapiwindow_x11.xml"/>
+    <xi:include href="xml/gstvaapiwindow_glx.xml"/>
     <xi:include href="xml/gstvaapiobject.xml"/>
     <xi:include href="xml/gstvaapisurface.xml"/>
     <xi:include href="xml/gstvaapiimage.xml"/>
