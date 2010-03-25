@@ -84,7 +84,8 @@
  *     cached duration values so that the next duration query will perform
  *     a full duration recalculation. The duration change is posted to the
  *     application so that it can refetch the new duration with a duration
- *     query.
+ *     query. Note that these messages can be posted before the bin is
+ *     prerolled, in which case the duration query might fail.
  *     </para></listitem>
  *   </varlistentry>
  *   <varlistentry>
