@@ -735,7 +735,6 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
         group->buffer =
             (gfloat *) g_realloc (group->buffer,
             samples_avail * srcpad->channels * sizeof (gfloat));
-      g_assert (group->buffer);
       group->channels = srcpad->channels;
       group->nframes = samples_avail;
       self->pending_out++;
