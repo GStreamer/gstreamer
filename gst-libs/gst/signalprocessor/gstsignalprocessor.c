@@ -108,7 +108,8 @@ gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 32, "channels", G_TYPE_INT, channels, NULL);
+      "width", G_TYPE_INT, 32, "channels", G_TYPE_INT, channels,
+      "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   new = g_object_new (GST_TYPE_SIGNAL_PROCESSOR_PAD_TEMPLATE,
       "name", name, "name-template", name,
