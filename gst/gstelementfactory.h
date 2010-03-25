@@ -36,6 +36,10 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 
 G_BEGIN_DECLS
 
+/* FIXME 0.11: Move GstElementDetails into a private header and use it internally
+ * in GstElementFactory, GstElementClass and the registry
+ */
+
 typedef struct _GstElementDetails GstElementDetails;
 
 /**
