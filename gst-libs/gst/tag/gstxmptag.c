@@ -830,8 +830,6 @@ gst_tag_list_from_xmp_buffer (const GstBuffer * buffer)
 
     g_free (ptag->str);
     g_slice_free (PendingXmpTag, ptag);
-
-    pending_tags = g_slist_delete_link (pending_tags, pending_tags);
   }
 
   GST_INFO ("xmp packet parsed, %d entries",
