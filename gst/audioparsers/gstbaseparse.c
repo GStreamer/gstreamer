@@ -228,7 +228,15 @@ struct _GstBaseParsePrivate
 
   guint64 framecount;
   guint64 bytecount;
+  guint64 data_bytecount;
   guint64 acc_duration;
+
+  gboolean post_min_bitrate;
+  gboolean post_avg_bitrate;
+  gboolean post_max_bitrate;
+  guint min_bitrate;
+  guint avg_bitrate;
+  guint max_bitrate;
 
   GList *pending_events;
 
@@ -281,6 +289,7 @@ static gboolean gst_base_parse_sink_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
+static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
@@ -545,6 +554,11 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
       && GST_EVENT_TYPE (event) != GST_EVENT_NEWSEGMENT
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_START
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_TAG)
+      /* See if any bitrate tags were posted */
+      gst_base_parse_handle_tag (parse, event);
+
     parse->priv->pending_events =
         g_list_append (parse->priv->pending_events, event);
     ret = TRUE;
@@ -871,6 +885,91 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
 }
 
 /**
+ * gst_base_parse_update_bitrates:
+ * @parse: #GstBaseParse.
+ * @buffer: Current frame as a #GstBuffer
+ *
+ * Keeps track of the minimum and maximum bitrates, and also maintains a
+ * running average bitrate of the stream so far.
+ */
+static void
+gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
+{
+  /* Only update the tag on a 10 kbps delta */
+  static const gint update_threshold = 10000;
+
+  GstBaseParseClass *klass;
+  guint64 data_len, frame_dur;
+  gint overhead = 0, frame_bitrate, old_avg_bitrate = parse->priv->avg_bitrate;
+  gboolean update_min = FALSE, update_avg = FALSE, update_max = FALSE;
+
+  klass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  if (klass->get_frame_overhead) {
+    overhead = klass->get_frame_overhead (parse, buffer);
+    if (overhead == -1)
+      return;
+  }
+
+  data_len = GST_BUFFER_SIZE (buffer) - overhead;
+  parse->priv->data_bytecount += data_len;
+
+  if (parse->priv->fps_num) {
+    /* Calculate duration of a frame from frame properties */
+    frame_dur = (GST_SECOND * parse->priv->fps_den) / parse->priv->fps_num;
+    parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
+        (parse->priv->framecount * frame_dur);
+
+  } else if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    /* Calculate duration of a frame from buffer properties */
+    frame_dur = GST_BUFFER_DURATION (buffer);
+    parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
+        parse->priv->acc_duration;
+
+  } else {
+    /* No way to figure out frame duration (is this even possible?) */
+    return;
+  }
+
+  frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
+
+  if (frame_bitrate < parse->priv->min_bitrate) {
+    parse->priv->min_bitrate = frame_bitrate;
+    update_min = parse->priv->post_min_bitrate;
+  }
+
+  if (frame_bitrate > parse->priv->max_bitrate) {
+    parse->priv->max_bitrate = frame_bitrate;
+    update_max = parse->priv->post_max_bitrate;
+  }
+
+  if (old_avg_bitrate / update_threshold !=
+      parse->priv->avg_bitrate / update_threshold)
+    update_avg = parse->priv->post_avg_bitrate;
+
+  if (update_min || update_avg || update_max) {
+    GstTagList *taglist = gst_tag_list_new ();
+
+    if (update_min)
+      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MINIMUM_BITRATE,
+          parse->priv->min_bitrate, NULL);
+    if (update_avg)
+      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+          parse->priv->avg_bitrate, NULL);
+    if (update_max)
+      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MAXIMUM_BITRATE,
+          parse->priv->max_bitrate, NULL);
+
+    GST_DEBUG_OBJECT (parse, "Updated bitrates. Min: %u, Avg: %u, Max: %u",
+        parse->priv->min_bitrate, parse->priv->avg_bitrate,
+        parse->priv->max_bitrate);
+
+    gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad,
+        taglist);
+  }
+}
+
+/**
  * gst_base_parse_handle_and_push_buffer:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
@@ -965,6 +1064,8 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   if (parse->priv->update_interval &&
       (parse->priv->framecount % parse->priv->update_interval) == 0)
     gst_base_parse_update_duration (parse);
+
+  gst_base_parse_update_bitrates (parse, buffer);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     last_stop = GST_BUFFER_TIMESTAMP (buffer);
@@ -1493,6 +1594,12 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->estimated_duration = -1;
     parse->priv->next_ts = 0;
     parse->priv->passthrough = FALSE;
+    parse->priv->post_min_bitrate = TRUE;
+    parse->priv->post_avg_bitrate = TRUE;
+    parse->priv->post_max_bitrate = TRUE;
+    parse->priv->min_bitrate = G_MAXUINT;
+    parse->priv->max_bitrate = 0;
+    parse->priv->max_bitrate = 0;
 
     if (parse->pending_segment)
       gst_event_unref (parse->pending_segment);
@@ -2109,6 +2216,29 @@ wrong_type:
   }
 }
 
+/**
+ * gst_base_parse_handle_tag:
+ * @parse: #GstBaseParse.
+ * @event: #GstEvent.
+ *
+ * Checks if bitrates are available from upstream tags so that we don't
+ * override them later
+ */
+static void
+gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
+{
+  GstTagList *taglist = NULL;
+  guint tmp;
+
+  gst_event_parse_tag (event, &taglist);
+
+  if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp))
+    parse->priv->post_min_bitrate = FALSE;
+  if (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &tmp))
+    parse->priv->post_avg_bitrate = FALSE;
+  if (gst_tag_list_get_uint (taglist, GST_TAG_MAXIMUM_BITRATE, &tmp))
+    parse->priv->post_max_bitrate = FALSE;
+}
 
 /**
  * gst_base_parse_sink_setcaps:
