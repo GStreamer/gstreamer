@@ -176,7 +176,8 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (GST_BUFFER_IS_DISCONT (buf))
     zap_dtmf_detect_init (&self->dtmf_state);
-
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
+    return GST_FLOW_OK;
 
   zap_dtmf_detect (&self->dtmf_state, (int16_t *) GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf) / 2, FALSE);
