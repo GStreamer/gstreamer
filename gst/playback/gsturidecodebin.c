@@ -888,7 +888,7 @@ static const gchar *no_media_mimes[] = {
 
 /* media types we can download */
 static const gchar *download_media[] = {
-  "video/quicktime", "video/x-flv", NULL
+  "video/quicktime", "video/x-flv", "video/x-msvideo", NULL
 };
 
 #define IS_STREAM_URI(uri)          (array_has_uri_value (stream_uris, uri))
