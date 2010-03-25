@@ -26,51 +26,34 @@
  * SECTION:element-dtmfdetect
  * @short_description: Detects DTMF tones
  *
- * This element will detect DTMF tones and emit messages
+ * This element will detect DTMF tones and emit messages.
  *
- * The message is called "dtmf-event" and has the following fields
- * <informaltable>
- * <tgroup cols='4'>
- * <colspec colname='Name' />
- * <colspec colname='Type' />
- * <colspec colname='Possible values' />
- * <colspec colname='Purpose' />
- * <thead>
- * <row>
- * <entry>Name</entry>
- * <entry>GType</entry>
- * <entry>Possible values</entry>
- * <entry>Purpose</entry>
- * </row>
- * </thead>
- * <tbody>
- * <row>
- * <entry>type</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>0-1</entry>
- * <entry>The application uses this field to specify which of the two methods
- * specified in RFC 2833 to use. The value should be 0 for tones and 1 for
- * named events. Tones are specified by their frequencies and events are specied
- * by their number. This element can only take events as input. Do not confuse
- * with "method" which specified the output.
- * </entry>
- * </row>
-  * <row>
- * <entry>number</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>0-16</entry>
- * <entry>The event number.</entry>
- * </row>
- * <row>
- * <entry>method</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>2</entry>
- * <entry>This field will always been 2 (ie sound) from this element.
- * </entry>
- * </row>
- * </tbody>
- * </tgroup>
- * </informaltable>
+ * The message is called <classname>&quot;dtmf-event&quot;</classname> and has
+ * the following fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   gint <classname>type</classname> (0-1):
+ *   The application uses this field to specify which of the two methods
+ *   specified in RFC 2833 to use. The value should be 0 for tones and 1 for
+ *   named events. Tones are specified by their frequencies and events are
+ *   specfied by their number. This element can only take events as input.
+ *   Do not confuse with "method" which specified the output.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   gint <classname>number</classname> (0-16):
+ *   The event number.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   gint <classname>method</classname> (2):
+ *   This field will always been 2 (ie sound) from this element.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H
