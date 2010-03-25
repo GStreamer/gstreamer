@@ -173,3 +173,7 @@ $(BUILDIMAGESDIR)/%.ps: %.png
 check-local: $(BUILDDIR)/$(MAIN)
 	@cp -f $(srcdir)/../image-png $(BUILDDIR)/image.entities
 	cd $(BUILDDIR) && xmllint -noout -valid $(MAIN)
+
+# avoid 'cp: cannot create regular file `build/image.entities': File exists'
+# errors during 'make distcheck' by disabling parallel builds
+.NOTPARALLEL:
