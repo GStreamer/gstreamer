@@ -86,6 +86,8 @@ static gboolean gst_flac_parse_check_valid_frame (GstBaseParse * parse,
     GstBuffer * buffer, guint * framesize, gint * skipsize);
 static GstFlowReturn gst_flac_parse_parse_frame (GstBaseParse * parse,
     GstBuffer * buffer);
+static gint gst_flac_parse_get_frame_overhead (GstBaseParse * parse,
+    GstBuffer * buffer);
 
 GST_BOILERPLATE (GstFlacParse, gst_flac_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE);
@@ -122,6 +124,8 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_flac_parse_check_valid_frame);
   baseparse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_flac_parse_parse_frame);
+  baseparse_class->get_frame_overhead =
+      GST_DEBUG_FUNCPTR (gst_flac_parse_get_frame_overhead);
 }
 
 static void
@@ -1287,4 +1291,18 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
     flacparse->sample_number = 0;
     return GST_FLOW_OK;
   }
+}
+
+static gint
+gst_flac_parse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer)
+{
+  GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+
+  if (flacparse->state != GST_FLAC_PARSE_STATE_DATA)
+    return -1;
+  else
+    /* To simplify, we just assume that it's a fixed size header and ignore
+     * subframe headers. The first could lead us to being off by 88 bits and
+     * the second even less, so the total inaccuracy is negligible. */
+    return 7;
 }
