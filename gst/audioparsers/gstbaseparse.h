@@ -184,6 +184,12 @@ struct _GstBaseParse {
  *                  seekability of the stream. Otherwise the element assumes
  *                  that stream is always seekable.
  *
+ * @get_frame_overhead: Finds the metadata overhead for the given frame. This
+ *                      is used to enable more accurate bitrate computations.
+ *                      If NULL, the per-frame overhead is assumed to be 0. If
+ *                      this returns -1, it is assumed that this frame should
+ *                      be skipped in bitrate calculation.
+ *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @check_valid_frame and @parse_frame needs to be
  * overridden.
@@ -227,6 +233,9 @@ struct _GstBaseParseClass {
                                        GstEvent *event);
 
   gboolean      (*is_seekable)        (GstBaseParse *parse);
+
+  gint          (*get_frame_overhead) (GstBaseParse *parse,
+                                       GstBuffer *buf);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];  
