@@ -70,6 +70,11 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
+AC_ARG_ENABLE(glx,
+    AC_HELP_STRING([--enable-glx],
+                   [enable OpenGL/X11 @<:@default=yes@:>@]),
+    [], [enable_glx="yes"])
+
 dnl Check for __attribute__((visibility()))
 AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
   vaapi_cv_visibility_attribute,
@@ -150,11 +155,28 @@ AC_SUBST(plugindir)
 dnl Check for X11
 PKG_CHECK_MODULES(X11, [x11])
 
+dnl Check for OpenGL
+USE_GLX=1
+if test "$enable_glx" != "yes"; then
+    USE_GLX=0
+fi
+OPENGL_CFLAGS=""
+OPENGL_LIBS=""
+AC_CHECK_HEADERS([GL/gl.h GL/glext.h GL/glx.h], [], [USE_GLX=0], [
+#ifdef HAVE_GL_GL_H
+# include <GL/gl.h>
+#endif
+])
+AC_CHECK_LIB(GL, glXCreateContext, [OPENGL_LIBS="-lGL -ldl"], [USE_GLX=0])
+AC_SUBST(OPENGL_CFLAGS)
+AC_SUBST(OPENGL_LIBS)
+
 dnl Check for VA-API
 LIBVA_PKGNAME="libva"
 PKG_CHECK_MODULES(LIBVA, [$LIBVA_PKGNAME])
 AC_SUBST(LIBVA_PKGNAME)
 
+dnl ... original VA-API 0.29
 AC_CACHE_CHECK([for old VA-API 0.29],
     ac_cv_have_vaapi_old, [
     saved_CFLAGS="$CFLAGS"
@@ -173,6 +195,7 @@ if test "$ac_cv_have_vaapi_old" = "yes"; then
     LIBVA_EXTRA_CFLAGS="$LIBVA_CFLAGS -DGST_VAAPI_USE_OLD_VAAPI_0_29"
 fi
 
+dnl ... VA-API >= 0.31 or -sds
 LIBVA_X11_PKGNAME="libva-x11"
 PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME],
     [ac_cv_have_vaapi_x11="yes"],
@@ -189,8 +212,23 @@ if test "$ac_cv_have_vaapi_x11" = "no"; then
 fi
 AC_SUBST(LIBVA_X11_PKGNAME)
 
+dnl ... VA-API >= 0.31 or -sds
+LIBVA_GLX_PKGNAME="libva-glx"
+PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME],
+    [ac_cv_have_vaapi_glx="yes"],
+    [ac_cv_have_vaapi_glx="no"]
+)
+if test "$ac_cv_have_vaapi_glx" = "no"; then
+    AC_MSG_WARN([could not find VA/GLX extensions. Disabling GLX support])
+    USE_GLX=0
+fi
+AC_SUBST(LIBVA_GLX_PKGNAME)
+
 AC_SUBST(LIBVA_EXTRA_CFLAGS)
 AC_SUBST(LIBVA_EXTRA_LIBS)
+
+AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX, [Defined to 1 if GLX is enabled])
+AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
 
 VA_VERSION=`$PKG_CONFIG --modversion libva`
 VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
@@ -231,8 +269,12 @@ debian.upstream/libgstvaapi-x11.install.in
     gst-libs/gst/Makefile
     gst-libs/gst/vaapi/Makefile
     pkgconfig/Makefile
-    pkgconfig/gstreamer-vaapi.pc
-    pkgconfig/gstreamer-vaapi-x11.pc
+    pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\
+pkgconfig/gstreamer-vaapi.pc.in
+    pkgconfig/gstreamer-vaapi-glx-$GST_MAJORMINOR.pc:\
+pkgconfig/gstreamer-vaapi-glx.pc.in
+    pkgconfig/gstreamer-vaapi-x11-$GST_MAJORMINOR.pc:\
+pkgconfig/gstreamer-vaapi-x11.pc.in
     sys/Makefile
     sys/vaapiconvert/Makefile
     sys/vaapisink/Makefile
@@ -244,4 +286,5 @@ echo
 echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
+echo GLX support ...................... : $(test $USE_GLX  -eq 1 && echo yes || echo no)
 echo

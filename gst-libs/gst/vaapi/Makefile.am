@@ -3,6 +3,10 @@ lib_LTLIBRARIES = 				\
 	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
 	$(NULL)
 
+if USE_GLX
+lib_LTLIBRARIES += libgstvaapi-glx-@GST_MAJORMINOR@.la
+endif
+
 libgstvaapi_includedir =			\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vaapi
 
@@ -68,6 +72,26 @@ libgstvaapi_x11_source_priv_h =			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
 
+libgstvaapi_glx_source_c =			\
+	gstvaapidisplay_glx.c			\
+	gstvaapiutils.c				\
+	gstvaapiutils_glx.c			\
+	gstvaapiutils_x11.c			\
+	gstvaapiwindow_glx.c			\
+	$(NULL)
+
+libgstvaapi_glx_source_h =			\
+	gstvaapicompat.h			\
+	gstvaapidisplay_glx.h			\
+	gstvaapiwindow_glx.h			\
+	$(NULL)
+
+libgstvaapi_glx_source_priv_h =			\
+	gstvaapiutils.h				\
+	gstvaapiutils_glx.h			\
+	gstvaapiutils_x11.h			\
+	$(NULL)
+
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\
@@ -116,6 +140,31 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-@GST_MAJORMINOR@.la		\
+	$(NULL)
+
+libgstvaapi_glx_@GST_MAJORMINOR@_la_SOURCES =	\
+	$(libgstvaapi_glx_source_c)		\
+	$(libgstvaapi_glx_source_priv_h)	\
+	$(NULL)
+
+libgstvaapi_glx_@GST_MAJORMINOR@include_HEADERS = \
+	$(libgstvaapi_glx_source_h)		\
+	$(NULL)
+
+libgstvaapi_glx_@GST_MAJORMINOR@includedir =	\
+	$(libgstvaapi_includedir)
+
+libgstvaapi_glx_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-I$(top_srcdir)/gst-libs		\
+	$(GLIB_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
+	$(LIBVA_GLX_CFLAGS)			\
+	$(NULL)
+
+libgstvaapi_glx_@GST_MAJORMINOR@_la_LIBADD =	\
+	$(GLIB_LIBS)				\
+	$(LIBVA_GLX_LIBS)			\
+	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
