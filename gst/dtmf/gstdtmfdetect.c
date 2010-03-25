@@ -170,9 +170,9 @@ static GstFlowReturn
 gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstDtmfDetect *self = GST_DTMF_DETECT (trans);
-  int dtmf_count;
-  char dtmfbuf[MAX_DTMF_DIGITS] = "";
-  int i;
+  gint dtmf_count;
+  gchar dtmfbuf[MAX_DTMF_DIGITS] = "";
+  gint i;
 
   if (GST_BUFFER_IS_DISCONT (buf))
     zap_dtmf_detect_init (&self->dtmf_state);
