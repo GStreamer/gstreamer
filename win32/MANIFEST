@@ -1,6 +1,5 @@
 win32/MANIFEST
 win32/common/config.h
-win32/common/config.h.in
 win32/vs6/gst_plugins_ugly.dsw
 win32/vs6/libgstac3parse.dsp
 win32/vs6/libgstasfdemux.dsp
