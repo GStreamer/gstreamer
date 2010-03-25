@@ -124,7 +124,7 @@ gst_dtmf_detect_base_init (gpointer klass)
       gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details_simple (element_class, "DTMF detector element",
-      "Detect",
+      "Filter/Analyzer/Audio",
       "This element detects DTMF tones",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
