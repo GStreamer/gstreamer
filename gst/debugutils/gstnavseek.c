@@ -149,6 +149,39 @@ gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
 }
 
 static void
+gst_navseek_change_playback_rate (GstNavSeek * navseek, gdouble rate)
+{
+  GstFormat peer_format = GST_FORMAT_TIME;
+  gboolean ret;
+  GstPad *peer_pad;
+  gint64 current_position;
+
+  peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
+  ret = gst_pad_query_position (peer_pad, &peer_format, &current_position);
+
+  if (ret && peer_format == GST_FORMAT_TIME) {
+    GstEvent *event;
+    gint64 start;
+    gint64 stop;
+
+    if (rate > 0.0) {
+      start = current_position;
+      stop = -1;
+    } else {
+      /* negative rate: we play from stop to start */
+      start = 0;
+      stop = current_position;
+    }
+
+    event = gst_event_new_seek (rate, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SKIP,
+        GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
+
+    gst_pad_send_event (peer_pad, event);
+  }
+}
+
+static void
 gst_navseek_segseek (GstNavSeek * navseek)
 {
   GstEvent *event;
@@ -221,6 +254,15 @@ gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
           /* Toggle the loop flag. If we have both start and end segment times send a seek */
           navseek->loop = !navseek->loop;
           gst_navseek_segseek (navseek);
+        } else if (strcmp (key, "f") == 0) {
+          /* fast forward */
+          gst_navseek_change_playback_rate (navseek, 2.0);
+        } else if (strcmp (key, "r") == 0) {
+          /* rewind */
+          gst_navseek_change_playback_rate (navseek, -2.0);
+        } else if (strcmp (key, "n") == 0) {
+          /* normal speed */
+          gst_navseek_change_playback_rate (navseek, 1.0);
         }
       } else {
         break;
