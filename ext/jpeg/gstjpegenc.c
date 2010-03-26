@@ -274,10 +274,7 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
 
   jpegenc->srcpad =
       gst_pad_new_from_static_template (&gst_jpegenc_src_pad_template, "src");
-  gst_pad_set_getcaps_function (jpegenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jpegenc_getcaps));
-  /*gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps); */
-  gst_pad_use_fixed_caps (jpegenc->sinkpad);
+  gst_pad_use_fixed_caps (jpegenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->srcpad);
 
   /* reset the initial video state */
@@ -317,38 +314,25 @@ static GstCaps *
 gst_jpegenc_getcaps (GstPad * pad)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
-  GstPad *otherpad;
   GstCaps *caps;
-  const char *name;
   int i;
   GstStructure *structure = NULL;
 
   /* we want to proxy properties like width, height and framerate from the
      other end of the element */
-  otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
 
-  caps = gst_pad_peer_get_caps (otherpad);
+  caps = gst_pad_peer_get_caps (jpegenc->srcpad);
   if (caps == NULL)
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   else
     caps = gst_caps_make_writable (caps);
 
-  if (pad == jpegenc->srcpad) {
-    name = "image/jpeg";
-  } else {
-    name = "video/x-raw-yuv";
-  }
-
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
 
-    gst_structure_set_name (structure, name);
-    gst_structure_remove_field (structure, "format");
-    /* ... but for the sink pad, we only do I420 anyway, so add that */
-    if (pad == jpegenc->sinkpad) {
-      gst_structure_set (structure, "format", GST_TYPE_FOURCC,
-          GST_STR_FOURCC ("I420"), NULL);
-    }
+    gst_structure_set_name (structure, "video/x-raw-yuv");
+    gst_structure_set (structure, "format", GST_TYPE_FOURCC,
+        GST_STR_FOURCC ("I420"), NULL);
   }
   gst_object_unref (jpegenc);
 
@@ -358,40 +342,32 @@ gst_jpegenc_getcaps (GstPad * pad)
 static gboolean
 gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
-  GstStructure *structure;
-  GstCaps *othercaps;
-  GstPad *otherpad;
-  gboolean ret;
+  GstJpegEnc *jpegenc;
   const GValue *framerate;
+  GstStructure *structure;
+  GstCaps *pcaps;
+  gboolean ret;
 
-  otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
+  jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   framerate = gst_structure_get_value (structure, "framerate");
   gst_structure_get_int (structure, "width", &jpegenc->width);
   gst_structure_get_int (structure, "height", &jpegenc->height);
 
-  othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
-  if (framerate) {
-    gst_caps_set_simple (othercaps,
-        "width", G_TYPE_INT, jpegenc->width,
-        "height", G_TYPE_INT, jpegenc->height,
-        "framerate", GST_TYPE_FRACTION,
-        gst_value_get_fraction_numerator (framerate),
-        gst_value_get_fraction_denominator (framerate), NULL);
-  } else {
-    gst_caps_set_simple (othercaps,
-        "width", G_TYPE_INT, jpegenc->width,
-        "height", G_TYPE_INT, jpegenc->height, NULL);
-  }
+  pcaps = gst_caps_new_simple ("image/jpeg",
+      "width", G_TYPE_INT, jpegenc->width,
+      "height", G_TYPE_INT, jpegenc->height, NULL);
+  structure = gst_caps_get_structure (pcaps, 0);
+  if (framerate)
+    gst_structure_set_value (structure, "framerate", framerate);
 
-  ret = gst_pad_set_caps (jpegenc->srcpad, othercaps);
-  gst_caps_unref (othercaps);
+  ret = gst_pad_set_caps (jpegenc->srcpad, pcaps);
 
   if (ret)
     gst_jpegenc_resync (jpegenc);
 
+  gst_caps_unref (pcaps);
   gst_object_unref (jpegenc);
 
   return ret;
