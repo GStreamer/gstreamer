@@ -103,8 +103,8 @@ struct _GstVaapiDisplay {
  * GstVaapiDisplayClass:
  * @open_display: virtual function to open a display
  * @close_display: virtual function to close a display
- * @lock_display: virtual function to lock a display
- * @unlock_display: virtual function to unlock a display
+ * @lock: virtual function to lock a display
+ * @unlock: virtual function to unlock a display
  * @get_display: virtual function to retrieve the #VADisplay
  * @get_size: virtual function to retrieve the display dimensions, in pixels
  * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
@@ -118,8 +118,8 @@ struct _GstVaapiDisplayClass {
     /*< public >*/
     gboolean   (*open_display)  (GstVaapiDisplay *display);
     void       (*close_display) (GstVaapiDisplay *display);
-    void       (*lock_display)  (GstVaapiDisplay *display);
-    void       (*unlock_display)(GstVaapiDisplay *display);
+    void       (*lock)          (GstVaapiDisplay *display);
+    void       (*unlock)        (GstVaapiDisplay *display);
     VADisplay  (*get_display)   (GstVaapiDisplay *display);
     void       (*get_size)      (GstVaapiDisplay *display,
                                  guint *pwidth, guint *pheight);

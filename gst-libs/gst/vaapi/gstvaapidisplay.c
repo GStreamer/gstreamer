@@ -461,8 +461,8 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
     object_class->get_property  = gst_vaapi_display_get_property;
     object_class->constructed   = gst_vaapi_display_constructed;
 
-    dpy_class->lock_display     = gst_vaapi_display_lock_default;
-    dpy_class->unlock_display   = gst_vaapi_display_unlock_default;
+    dpy_class->lock             = gst_vaapi_display_lock_default;
+    dpy_class->unlock           = gst_vaapi_display_unlock_default;
 
     g_object_class_install_property
         (object_class,
@@ -545,8 +545,8 @@ gst_vaapi_display_lock(GstVaapiDisplay *display)
     g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
-    if (klass->lock_display)
-        klass->lock_display(display);
+    if (klass->lock)
+        klass->lock(display);
 }
 
 /**
@@ -565,8 +565,8 @@ gst_vaapi_display_unlock(GstVaapiDisplay *display)
     g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
 
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
-    if (klass->unlock_display)
-        klass->unlock_display(display);
+    if (klass->unlock)
+        klass->unlock(display);
 }
 
 /**
