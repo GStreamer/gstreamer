@@ -110,6 +110,8 @@ struct _GstBaseRTPAudioPayloadPrivate
   guint cached_ptime;
   guint cached_min_length;
   guint cached_max_length;
+  guint cached_ptime_multiple;
+  guint cached_align;
 
   gboolean buffer_list;
 };
@@ -637,6 +639,7 @@ gst_base_rtp_audio_payload_get_lengths (GstBaseRTPPayload *
   guint max_mtu, mtu;
   guint maxptime_octets;
   guint minptime_octets;
+  guint ptime_mult_octets;
 
   payload = GST_BASE_RTP_AUDIO_PAYLOAD_CAST (basepayload);
   priv = payload->priv;
@@ -644,20 +647,25 @@ gst_base_rtp_audio_payload_get_lengths (GstBaseRTPPayload *
   if (priv->align == 0)
     return FALSE;
 
-  *align = priv->align;
-
   mtu = GST_BASE_RTP_PAYLOAD_MTU (payload);
 
   /* check cached values */
   if (G_LIKELY (priv->cached_mtu == mtu
+          && priv->cached_ptime_multiple ==
+          basepayload->abidata.ABI.ptime_multiple
           && priv->cached_ptime == basepayload->abidata.ABI.ptime
           && priv->cached_max_ptime == basepayload->max_ptime
           && priv->cached_min_ptime == basepayload->min_ptime)) {
     /* if nothing changed, return cached values */
     *min_payload_len = priv->cached_min_length;
     *max_payload_len = priv->cached_max_length;
+    *align = priv->cached_align;
     return TRUE;
   }
+
+  ptime_mult_octets = priv->time_to_bytes (payload,
+      basepayload->abidata.ABI.ptime_multiple);
+  *align = ALIGN_DOWN (MAX (priv->align, ptime_mult_octets), priv->align);
 
   /* ptime max */
   if (basepayload->max_ptime != -1) {
@@ -698,8 +706,10 @@ gst_base_rtp_audio_payload_get_lengths (GstBaseRTPPayload *
   priv->cached_ptime = basepayload->abidata.ABI.ptime;
   priv->cached_min_ptime = basepayload->min_ptime;
   priv->cached_max_ptime = basepayload->max_ptime;
+  priv->cached_ptime_multiple = basepayload->abidata.ABI.ptime_multiple;
   priv->cached_min_length = *min_payload_len;
   priv->cached_max_length = *max_payload_len;
+  priv->cached_align = *align;
 
   return TRUE;
 }
@@ -849,7 +859,8 @@ gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload *
   GST_DEBUG_OBJECT (payload, "got buffer size %u, available %u",
       size, available);
 
-  if (available == 0 && (size >= min_payload_len && size <= max_payload_len)) {
+  if (available == 0 && (size >= min_payload_len && size <= max_payload_len) &&
+      (size % align == 0)) {
     /* If buffer fits on an RTP packet, let's just push it through
      * this will check against max_ptime and max_mtu */
     GST_DEBUG_OBJECT (payload, "Fast packet push");
