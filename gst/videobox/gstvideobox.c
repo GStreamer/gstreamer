@@ -222,10 +222,10 @@ copy_ayuv_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
   src = src + src_y * src_width * 4 + src_x * 4;
 
   widthY = w;
-  widthUV = (w + 1) / 2;
+  widthUV = w / 2;
 
   hY = h;
-  hUV = (h + 1) / 2;
+  hUV = h / 2;
 
   if (src_sdtv != dest_sdtv) {
     gint matrix[12];
