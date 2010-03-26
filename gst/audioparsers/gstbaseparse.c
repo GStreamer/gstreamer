@@ -190,6 +190,8 @@
 
 #include "gstbaseparse.h"
 
+#define MIN_FRAMES_TO_POST_BITRATE 10
+
 GST_DEBUG_CATEGORY_STATIC (gst_base_parse_debug);
 #define GST_CAT_DEFAULT gst_base_parse_debug
 
@@ -311,6 +313,9 @@ gboolean gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
     gint64 src_value, GstFormat dest_format, gint64 * dest_value);
 
 static void gst_base_parse_drain (GstBaseParse * parse);
+
+static void gst_base_parse_post_bitrates (GstBaseParse * parse,
+    gboolean post_min, gboolean post_avg, gboolean post_max);
 
 static void
 gst_base_parse_finalize (GObject * object)
@@ -534,6 +539,11 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
         g_list_append (parse->priv->pending_events, event);
     ret = TRUE;
   } else {
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
+        parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE)
+      /* We've not posted bitrate tags yet - do so now */
+      gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
 
     if (bclass->event)
       handled = bclass->event (parse, event);
@@ -855,6 +865,31 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
   }
 }
 
+static void
+gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
+    gboolean post_avg, gboolean post_max)
+{
+  GstTagList *taglist = gst_tag_list_new ();
+
+  if (post_min && parse->priv->post_min_bitrate)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
+
+  if (post_avg && parse->priv->post_min_bitrate)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+        parse->priv->avg_bitrate, NULL);
+
+  if (post_max && parse->priv->post_max_bitrate)
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MAXIMUM_BITRATE, parse->priv->max_bitrate, NULL);
+
+  GST_DEBUG_OBJECT (parse, "Updated bitrates. Min: %u, Avg: %u, Max: %u",
+      parse->priv->min_bitrate, parse->priv->avg_bitrate,
+      parse->priv->max_bitrate);
+
+  gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, taglist);
+}
+
 /**
  * gst_base_parse_update_bitrates:
  * @parse: #GstBaseParse.
@@ -906,38 +941,21 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
 
   if (frame_bitrate < parse->priv->min_bitrate) {
     parse->priv->min_bitrate = frame_bitrate;
-    update_min = parse->priv->post_min_bitrate;
+    update_min = TRUE;
   }
 
   if (frame_bitrate > parse->priv->max_bitrate) {
     parse->priv->max_bitrate = frame_bitrate;
-    update_max = parse->priv->post_max_bitrate;
+    update_max = TRUE;
   }
 
   if (old_avg_bitrate / update_threshold !=
       parse->priv->avg_bitrate / update_threshold)
-    update_avg = parse->priv->post_avg_bitrate;
+    update_avg = TRUE;
 
-  if (update_min || update_avg || update_max) {
-    GstTagList *taglist = gst_tag_list_new ();
-
-    if (update_min)
-      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MINIMUM_BITRATE,
-          parse->priv->min_bitrate, NULL);
-    if (update_avg)
-      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
-          parse->priv->avg_bitrate, NULL);
-    if (update_max)
-      gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MAXIMUM_BITRATE,
-          parse->priv->max_bitrate, NULL);
-
-    GST_DEBUG_OBJECT (parse, "Updated bitrates. Min: %u, Avg: %u, Max: %u",
-        parse->priv->min_bitrate, parse->priv->avg_bitrate,
-        parse->priv->max_bitrate);
-
-    gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad,
-        taglist);
-  }
+  if (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE &&
+      (update_min || update_avg || update_max))
+    gst_base_parse_post_bitrates (parse, update_min, update_avg, update_max);
 }
 
 /**
