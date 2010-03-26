@@ -1015,6 +1015,7 @@ push_headers:
     GstFlowReturn ret;
 
     l->data = NULL;
+    buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf,
         GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse))));
 
