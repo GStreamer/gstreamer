@@ -74,6 +74,7 @@ libgstvaapi_x11_source_priv_h =			\
 
 libgstvaapi_glx_source_c =			\
 	gstvaapidisplay_glx.c			\
+	gstvaapitexture.c			\
 	gstvaapiutils.c				\
 	gstvaapiutils_glx.c			\
 	gstvaapiutils_x11.c			\
@@ -82,6 +83,7 @@ libgstvaapi_glx_source_c =			\
 
 libgstvaapi_glx_source_h =			\
 	gstvaapidisplay_glx.h			\
+	gstvaapitexture.h			\
 	gstvaapiwindow_glx.h			\
 	$(NULL)
 

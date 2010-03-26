@@ -209,3 +209,129 @@ gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
     }
     return glXMakeCurrent(dpy, win, ctx);
 }
+
+/**
+ * gl_bind_texture:
+ * @ts: a #GLTextureState
+ * @target: the target to which the texture is bound
+ * @texture: the name of a texture
+ *
+ * Binds @texture to the specified @target, while recording the
+ * previous state in @ts.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
+{
+    ts->target      = target;
+    ts->old_texture = 0;
+    ts->was_bound   = 0;
+    ts->was_enabled = glIsEnabled(target);
+    if (!ts->was_enabled)
+        glEnable(target);
+
+    GLenum texture_binding;
+    switch (target) {
+    case GL_TEXTURE_1D:
+        texture_binding = GL_TEXTURE_BINDING_1D;
+        break;
+    case GL_TEXTURE_2D:
+        texture_binding = GL_TEXTURE_BINDING_2D;
+        break;
+    case GL_TEXTURE_3D:
+        texture_binding = GL_TEXTURE_BINDING_3D;
+        break;
+    case GL_TEXTURE_RECTANGLE_ARB:
+        texture_binding = GL_TEXTURE_BINDING_RECTANGLE_ARB;
+        break;
+    default:
+        g_assert(!texture);
+        return FALSE;
+    }
+
+    if (ts->was_enabled && gl_get_param(texture_binding, &ts->old_texture) < 0)
+        return FALSE;
+
+    ts->was_bound = texture == ts->old_texture;
+    if (!ts->was_bound) {
+        gl_purge_errors();
+        glBindTexture(target, texture);
+        if (gl_check_error())
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/**
+ * gl_unbind_texture:
+ * @ts: a #GLTextureState
+ *
+ * Rebinds the texture that was previously bound and recorded in @ts.
+ */
+void
+gl_unbind_texture(GLTextureState *ts)
+{
+    if (!ts->was_bound && ts->old_texture)
+        glBindTexture(ts->target, ts->old_texture);
+    if (!ts->was_enabled)
+        glDisable(ts->target);
+}
+
+/**
+ * gl_create_texture:
+ * @target: the target to which the texture is bound
+ * @format: the format of the pixel data
+ * @width: the requested width, in pixels
+ * @height: the requested height, in pixels
+ *
+ * Creates a texture with the specified dimensions and @format. The
+ * internal format will be automatically derived from @format.
+ *
+ * Return value: the newly created texture name
+ */
+GLuint
+gl_create_texture(GLenum target, GLenum format, guint width, guint height)
+{
+    GLuint texture;
+    GLTextureState ts;
+    guint bytes_per_component;
+
+    switch (format) {
+    case GL_LUMINANCE:
+        bytes_per_component = 1;
+        break;
+    case GL_LUMINANCE_ALPHA:
+        bytes_per_component = 2;
+        break;
+    case GL_RGBA:
+    case GL_BGRA:
+        bytes_per_component = 4;
+        break;
+    default:
+        bytes_per_component = 0;
+        break;
+    }
+    g_assert(bytes_per_component > 0);
+
+    glGenTextures(1, &texture);
+    if (!gl_bind_texture(&ts, target, texture))
+        return 0;
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, bytes_per_component);
+    glTexImage2D(
+        target,
+        0,
+        bytes_per_component,
+        width, height,
+        0,
+        format,
+        GL_UNSIGNED_BYTE,
+        NULL
+    );
+    gl_unbind_texture(&ts);
+    return texture;
+}

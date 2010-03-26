@@ -64,4 +64,24 @@ gboolean
 gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
     attribute_hidden;
 
+typedef struct _GLTextureState GLTextureState;
+struct _GLTextureState {
+    gboolean    was_enabled;
+    gboolean    was_bound;
+    GLenum      target;
+    GLuint      old_texture;
+};
+
+gboolean
+gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
+    attribute_hidden;
+
+void
+gl_unbind_texture(GLTextureState *ts)
+    attribute_hidden;
+
+GLuint
+gl_create_texture(GLenum target, GLenum format, guint width, guint height)
+    attribute_hidden;
+
 #endif /* GST_VAAPI_UTILS_GLX_H */
