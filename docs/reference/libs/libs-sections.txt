@@ -255,6 +255,8 @@ GST_VAAPI_WINDOW_GET_CLASS
 GstVaapiObject
 GstVaapiObjectClass
 gst_vaapi_object_get_display
+gst_vaapi_object_lock_display
+gst_vaapi_object_unlock_display
 gst_vaapi_object_get_id
 <SUBSECTION Standard>
 GST_VAAPI_OBJECT

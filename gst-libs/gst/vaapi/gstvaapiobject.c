@@ -211,6 +211,38 @@ gst_vaapi_object_get_display(GstVaapiObject *object)
 }
 
 /**
+ * gst_vaapi_object_lock_display:
+ * @object: a #GstVaapiObject
+ *
+ * Locks @object parent display. If display is already locked by
+ * another thread, the current thread will block until display is
+ * unlocked by the other thread.
+ */
+void
+gst_vaapi_object_lock_display(GstVaapiObject *object)
+{
+    g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(object);
+}
+
+/**
+ * gst_vaapi_object_unlock_display:
+ * @object: a #GstVaapiObject
+ *
+ * Unlocks @object parent display. If another thread is blocked in a
+ * gst_vaapi_object_lock_display() call, it will be woken and can lock
+ * display itself.
+ */
+void
+gst_vaapi_object_unlock_display(GstVaapiObject *object)
+{
+    g_return_if_fail(GST_VAAPI_IS_OBJECT(object));
+
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object);
+}
+
+/**
  * gst_vaapi_object_get_id:
  * @object: a #GstVaapiObject
  *
