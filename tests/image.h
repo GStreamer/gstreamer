@@ -22,6 +22,7 @@
 #define IMAGE_H
 
 #include <gst/vaapi/gstvaapiimage.h>
+#include <gst/vaapi/gstvaapisurface.h>
 
 GstVaapiImage *
 image_generate(
@@ -40,5 +41,8 @@ image_draw_rectangle(
     guint          height,
     guint32        color
 );
+
+gboolean
+image_upload(GstVaapiImage *image, GstVaapiSurface *surface);
 
 #endif /* IMAGE_H */

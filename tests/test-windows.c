@@ -30,45 +30,6 @@ static inline void pause(void)
     getchar();
 }
 
-static gboolean
-upload_image(GstVaapiSurface *surface, GstVaapiImage *image)
-{
-    GstVaapiDisplay *display;
-    GstVaapiImageFormat format;
-    GstVaapiSubpicture *subpicture;
-
-    display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
-    if (!display)
-        return FALSE;
-
-    format = gst_vaapi_image_get_format(image);
-    if (!format)
-        return FALSE;
-
-    if (gst_vaapi_surface_put_image(surface, image))
-        return TRUE;
-
-    g_print("could not upload %" GST_FOURCC_FORMAT" image to surface\n",
-            GST_FOURCC_ARGS(format));
-
-    if (!gst_vaapi_display_has_subpicture_format(display, format))
-        return FALSE;
-
-    g_print("trying as a subpicture\n");
-
-    subpicture = gst_vaapi_subpicture_new(image);
-    if (!subpicture)
-        g_error("could not create Gst/VA subpicture");
-
-    if (!gst_vaapi_surface_associate_subpicture(surface, subpicture,
-                                                NULL, NULL))
-        g_error("could not associate subpicture to surface");
-
-    /* The surface holds a reference to the subpicture. This is safe */
-    g_object_unref(subpicture);
-    return TRUE;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -112,7 +73,7 @@ main(int argc, char *argv[])
 
         image = image_generate(display, format, width, height);
         if (image) {
-            if (upload_image(surface, image))
+            if (image_upload(image, surface))
                 break;
             g_object_unref(image);
         }
