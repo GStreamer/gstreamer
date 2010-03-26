@@ -122,7 +122,7 @@ static const gint cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit[] = {
 
 static void
 fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
-    gboolean sdtv, gint width, gint height, gint x, gint y, gint w, gint h)
+    gboolean sdtv, gint width, gint height)
 {
   guint32 empty_pixel;
 
@@ -135,18 +135,7 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
         (yuv_hdtv_colors_Y[fill_type] << 16) |
         (yuv_hdtv_colors_U[fill_type] << 8) | yuv_hdtv_colors_V[fill_type]);
 
-  if (width == w && height == h && x == 0 && y == 0) {
-    oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, width * height);
-  } else {
-    gint i;
-    gint stride = 4 * width;
-
-    dest = dest + y * width * 4 + x * 4;
-    for (i = 0; i < h; i++) {
-      oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, w);
-      dest += stride;
-    }
-  }
+  oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, width * height);
 }
 
 static void
@@ -383,7 +372,7 @@ copy_ayuv_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
 
 static void
 fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
-    gboolean sdtv, gint width, gint height, gint x, gint y, gint w, gint h)
+    gboolean sdtv, gint width, gint height)
 {
   guint8 empty_pixel[3];
   guint8 *destY, *destU, *destV;
@@ -418,37 +407,9 @@ fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
   heightUV =
       gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 1, height);
 
-  if (width == w && height == h && x == 0 && y == 0) {
-    oil_splat_u8_ns (destY, &empty_pixel[0], strideY * heightY);
-    oil_splat_u8_ns (destU, &empty_pixel[1], strideUV * heightUV);
-    oil_splat_u8_ns (destV, &empty_pixel[2], strideUV * heightUV);
-  } else {
-    gint i;
-    gint widthY, widthUV;
-    gint hY, hUV;
-
-    widthY = w;
-    widthUV = (w + 1) / 2;
-
-    hY = h;
-    hUV = (h + 1) / 2;
-
-    destY = destY + y * strideY + x;
-    destU = destU + (y / 2) * strideUV + x / 2;
-    destV = destV + (y / 2) * strideUV + x / 2;
-
-    for (i = 0; i < hY; i++) {
-      oil_splat_u8_ns (destY, &empty_pixel[0], widthY);
-      destY += strideY;
-    }
-
-    for (i = 0; i < hUV; i++) {
-      oil_splat_u8_ns (destU, &empty_pixel[1], widthUV);
-      oil_splat_u8_ns (destV, &empty_pixel[2], widthUV);
-      destU += strideUV;
-      destV += strideUV;
-    }
-  }
+  oil_splat_u8_ns (destY, &empty_pixel[0], strideY * heightY);
+  oil_splat_u8_ns (destU, &empty_pixel[1], strideUV * heightUV);
+  oil_splat_u8_ns (destV, &empty_pixel[2], strideUV * heightUV);
 }
 
 static void
@@ -1383,8 +1344,7 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
 
   if (crop_h < 0 || crop_w < 0) {
     video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-        video_box->out_width, video_box->out_height, 0, 0, video_box->out_width,
-        video_box->out_height);
+        video_box->out_width, video_box->out_height);
   } else if (bb == 0 && bt == 0 && br == 0 && bl == 0) {
     video_box->copy (i_alpha, dest, video_box->out_sdtv, video_box->out_width,
         video_box->out_height, 0, 0, src, video_box->in_sdtv,
@@ -1393,11 +1353,13 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
     gint src_x = 0, src_y = 0;
     gint dest_x = 0, dest_y = 0;
 
+    /* Fill everything if a border should be added somewhere */
+    if (bt < 0 || bb < 0 || br < 0 || bl < 0)
+      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
+          video_box->out_width, video_box->out_height);
+
     /* Top border */
     if (bt < 0) {
-      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-          video_box->out_width, video_box->out_height, 0, 0,
-          video_box->out_width, -bt);
       dest_y += -bt;
     } else {
       src_y += bt;
@@ -1405,25 +1367,9 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
 
     /* Left border */
     if (bl < 0) {
-      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-          video_box->out_width, video_box->out_height, 0, dest_y, -bl, crop_h);
       dest_x += -bl;
     } else {
       src_x += bl;
-    }
-
-    /* Right border */
-    if (br < 0) {
-      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-          video_box->out_width, video_box->out_height,
-          video_box->out_width + br, dest_y, -br, crop_h);
-    }
-
-    /* Bottom border */
-    if (bb < 0) {
-      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-          video_box->out_width, video_box->out_height, 0, dest_y + crop_h,
-          video_box->out_width, -bb);
     }
 
     /* Frame */
