@@ -198,8 +198,11 @@ gst_vaapi_display_x11_sync(GstVaapiDisplay *display)
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
-    if (priv->x11_display)
+    if (priv->x11_display) {
+        GST_VAAPI_DISPLAY_LOCK(display);
         XSync(priv->x11_display, False);
+        GST_VAAPI_DISPLAY_UNLOCK(display);
+    }
 }
 
 static void
@@ -208,8 +211,11 @@ gst_vaapi_display_x11_flush(GstVaapiDisplay *display)
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
-    if (priv->x11_display)
+    if (priv->x11_display) {
+        GST_VAAPI_DISPLAY_LOCK(display);
         XFlush(priv->x11_display);
+        GST_VAAPI_DISPLAY_UNLOCK(display);
+    }
 }
 
 static VADisplay
