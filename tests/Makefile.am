@@ -42,7 +42,7 @@ test_surfaces_SOURCES	= test-surfaces.c
 test_surfaces_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_surfaces_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
 
-test_windows_SOURCES	= test-windows.c
+test_windows_SOURCES	= test-windows.c image.c
 test_windows_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_windows_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
 
