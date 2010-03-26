@@ -19,7 +19,12 @@
  */
 
 #include <gst/video/video.h>
+#ifdef USE_X11
 #include <gst/vaapi/gstvaapidisplay_x11.h>
+#endif
+#ifdef USE_GLX
+#include <gst/vaapi/gstvaapidisplay_glx.h>
+#endif
 
 static void
 print_caps(GstCaps *caps, const gchar *name)
@@ -98,6 +103,7 @@ main(int argc, char *argv[])
 
     gst_init(&argc, &argv);
 
+#ifdef USE_X11
     g_print("#\n");
     g_print("# Create display with gst_vaapi_display_x11_new()\n");
     g_print("#\n");
@@ -136,7 +142,7 @@ main(int argc, char *argv[])
     g_print("\n");
 
     g_print("#\n");
-    g_print("# Create display with gst_vaapi_display_new_with_display()\n");
+    g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplay()]\n");
     g_print("#\n");
     {
         x11_display = XOpenDisplay(NULL);
@@ -156,6 +162,68 @@ main(int argc, char *argv[])
         XCloseDisplay(x11_display);
     }
     g_print("\n");
+#endif
+
+#ifdef USE_GLX
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_glx_new()\n");
+    g_print("#\n");
+    {
+        display = gst_vaapi_display_glx_new(NULL);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        gst_vaapi_display_get_size(display, &width, &height);
+        g_print("Display size: %ux%u\n", width, height);
+
+        gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
+        g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
+
+        dump_caps(display);
+        g_object_unref(display);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_glx_new_with_display()\n");
+    g_print("#\n");
+    {
+        x11_display = XOpenDisplay(NULL);
+        if (!x11_display)
+            g_error("could not create X11 display");
+
+        display = gst_vaapi_display_glx_new_with_display(x11_display);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        XCloseDisplay(x11_display);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplayGLX()]\n");
+    g_print("#\n");
+    {
+        x11_display = XOpenDisplay(NULL);
+        if (!x11_display)
+            g_error("could not create X11 display");
+
+        va_display = vaGetDisplayGLX(x11_display);
+        if (!va_display)
+            g_error("could not create VA display");
+
+        display = gst_vaapi_display_new_with_display(va_display);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        XCloseDisplay(x11_display);
+    }
+    g_print("\n");
+#endif
 
     gst_deinit();
     return 0;
