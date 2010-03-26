@@ -47,6 +47,7 @@ struct _GstVaapiWindowGLXPrivate {
     XVisualInfo         vi_static;
     Colormap            cmap;
     GLXContext          context;
+    guint               is_constructed  : 1;
     guint               foreign_context : 1;
     guint               foreign_window  : 1;
 };
@@ -83,7 +84,7 @@ gst_vaapi_window_glx_destroy_context(GstVaapiWindowGLX *window)
         if (!priv->foreign_context) {
             GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
             if (glXGetCurrentContext() == priv->context)
-                glXMakeCurrent(dpy, None, NULL);
+                gl_make_current(dpy, None, NULL, NULL);
             glXDestroyContext(dpy, priv->context);
             GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
         }
@@ -98,6 +99,7 @@ gst_vaapi_window_glx_create_context(GstVaapiWindowGLX *window)
     GstVaapiWindowGLXPrivate * const priv = window->priv;
     Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
     GLXContext                       ctx  = NULL;
+    GLContextState                   cs;
     guint                            width, height;
     gboolean                         has_errors = TRUE;
 
@@ -108,7 +110,7 @@ gst_vaapi_window_glx_create_context(GstVaapiWindowGLX *window)
     ctx = glXCreateContext(dpy, priv->vi, NULL, True);
     if (ctx && glXIsDirect(dpy, ctx)) {
         _gst_vaapi_window_glx_set_context(window, ctx, FALSE);
-        if (glXMakeCurrent(dpy, GST_VAAPI_OBJECT_ID(window), ctx)) {
+        if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), ctx, &cs)) {
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
             glDisable(GL_CULL_FACE);
@@ -122,6 +124,8 @@ gst_vaapi_window_glx_create_context(GstVaapiWindowGLX *window)
 
             gl_set_bgcolor(0);
             glClear(GL_COLOR_BUFFER_BIT);
+            if (cs.context)
+                gl_make_current(dpy, cs.window, cs.context, NULL);
             has_errors = FALSE;
         }
     }
@@ -258,6 +262,26 @@ gst_vaapi_window_glx_get_colormap(GstVaapiWindow *window)
     return gst_vaapi_window_glx_create_colormap(GST_VAAPI_WINDOW_GLX(window));
 }
 
+static gboolean
+gst_vaapi_window_glx_resize(GstVaapiWindow *window, guint width, guint height)
+{
+    GstVaapiWindowGLXPrivate * const priv = GST_VAAPI_WINDOW_GLX(window)->priv;
+    Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
+    GLContextState                   cs;
+
+    if (!GST_VAAPI_WINDOW_CLASS(gst_vaapi_window_glx_parent_class)->
+        resize(window, width, height))
+        return FALSE;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), priv->context, &cs)) {
+        gl_resize(width, height);
+        gl_make_current(dpy, cs.window, cs.context, NULL);
+    }
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    return TRUE;
+}
+
 static void
 gst_vaapi_window_glx_finalize(GObject *object)
 {
@@ -325,7 +349,7 @@ gst_vaapi_window_glx_constructed(GObject *object)
     priv->foreign_window =
         gst_vaapi_window_x11_is_foreign_xid(GST_VAAPI_WINDOW_X11(object));
 
-    if (!priv->foreign_context)
+    priv->is_constructed = priv->foreign_context ||
         gst_vaapi_window_glx_create_context(GST_VAAPI_WINDOW_GLX(object));
 }
 
@@ -333,6 +357,7 @@ static void
 gst_vaapi_window_glx_class_init(GstVaapiWindowGLXClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstVaapiWindowClass * const win_class = GST_VAAPI_WINDOW_CLASS(klass);
     GstVaapiWindowX11Class * const xwin_class = GST_VAAPI_WINDOW_X11_CLASS(klass);
 
     g_type_class_add_private(klass, sizeof(GstVaapiWindowGLXPrivate));
@@ -342,6 +367,7 @@ gst_vaapi_window_glx_class_init(GstVaapiWindowGLXClass *klass)
     object_class->get_property  = gst_vaapi_window_glx_get_property;
     object_class->constructed   = gst_vaapi_window_glx_constructed;
 
+    win_class->resize           = gst_vaapi_window_glx_resize;
     xwin_class->get_visual      = gst_vaapi_window_glx_get_visual;
     xwin_class->get_colormap    = gst_vaapi_window_glx_get_colormap;
 
@@ -369,7 +395,9 @@ gst_vaapi_window_glx_init(GstVaapiWindowGLX *window)
     priv->vi                    = NULL;
     priv->cmap                  = None;
     priv->context               = NULL;
+    priv->is_constructed        = FALSE;
     priv->foreign_context       = FALSE;
+    priv->foreign_window        = FALSE;
 }
 
 /**
@@ -437,6 +465,7 @@ GLXContext
 gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), NULL);
+    g_return_val_if_fail(window->priv->is_constructed, FALSE);
 
     return window->priv->context;
 }
@@ -457,6 +486,7 @@ gboolean
 gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx)
 {
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(window->priv->is_constructed, FALSE);
 
     gst_vaapi_window_glx_destroy_context(window);
 
@@ -465,6 +495,35 @@ gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx)
         return TRUE;
     }
     return gst_vaapi_window_glx_create_context(window);
+}
+
+/**
+ * gst_vaapi_window_glx_make_current:
+ * @window: a #GstVaapiWindowGLX
+ *
+ * Makes the @window GLX context the current GLX rendering context of
+ * the calling thread, replacing the previously current context if
+ * there was one.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window)
+{
+    gboolean success;
+
+    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(window->priv->is_constructed, FALSE);
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    success = gl_make_current(
+        GST_VAAPI_OBJECT_XDISPLAY(window),
+        GST_VAAPI_OBJECT_ID(window),
+        window->priv->context,
+        NULL
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    return success;
 }
 
 /**
@@ -479,10 +538,13 @@ void
 gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window)
 {
     g_return_if_fail(GST_VAAPI_IS_WINDOW_GLX(window));
+    g_return_if_fail(window->priv->is_constructed);
 
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     glXSwapBuffers(
         GST_VAAPI_OBJECT_XDISPLAY(window),
         GST_VAAPI_OBJECT_ID(window)
     );
     glClear(GL_COLOR_BUFFER_BIT);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
 }

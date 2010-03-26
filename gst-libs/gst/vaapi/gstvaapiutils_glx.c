@@ -181,3 +181,31 @@ gl_resize(guint width, guint height)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
+
+/**
+ * gl_make_current:
+ * @dpy: an X11 #Display
+ * @win: an X11 #Window
+ * @ctx: the requested GLX context
+ * @state: an optional #GLContextState
+ *
+ * Makes the @window GLX context the current GLX rendering context of
+ * the calling thread, replacing the previously current context if
+ * there was one.
+ *
+ * If @state is non %NULL, the previously current GLX context and
+ * window are recorded.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
+{
+    if (state) {
+        state->context = glXGetCurrentContext();
+        state->window  = glXGetCurrentDrawable();
+        if (state->context == ctx && state->window == win)
+            return TRUE;
+    }
+    return glXMakeCurrent(dpy, win, ctx);
+}

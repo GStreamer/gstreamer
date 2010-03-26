@@ -54,4 +54,14 @@ void
 gl_resize(guint width, guint height)
     attribute_hidden;
 
+typedef struct _GLContextState GLContextState;
+struct _GLContextState {
+    GLXContext  context;
+    Window      window;
+};
+
+gboolean
+gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
+    attribute_hidden;
+
 #endif /* GST_VAAPI_UTILS_GLX_H */

@@ -92,6 +92,9 @@ gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window);
 gboolean
 gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx);
 
+gboolean
+gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window);
+
 void
 gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window);
 
