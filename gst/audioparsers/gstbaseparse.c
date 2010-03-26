@@ -1040,7 +1040,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   gst_base_parse_update_bitrates (parse, buffer);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    last_start = GST_BUFFER_TIMESTAMP (buffer);
+    last_start = last_stop = GST_BUFFER_TIMESTAMP (buffer);
   if (last_start != GST_CLOCK_TIME_NONE
       && GST_BUFFER_DURATION_IS_VALID (buffer))
     last_stop = last_start + GST_BUFFER_DURATION (buffer);
