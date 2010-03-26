@@ -559,16 +559,29 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:{
       gint64 samples;
+      guint depth;
 
       samples = metadata->data.stream_info.total_samples;
 
       flacdec->min_blocksize = metadata->data.stream_info.min_blocksize;
       flacdec->max_blocksize = metadata->data.stream_info.max_blocksize;
       flacdec->sample_rate = metadata->data.stream_info.sample_rate;
-      flacdec->depth = metadata->data.stream_info.bits_per_sample;
+      flacdec->depth = depth = metadata->data.stream_info.bits_per_sample;
+      flacdec->channels = metadata->data.stream_info.channels;
+
+      if (depth < 9)
+        flacdec->width = 8;
+      else if (depth < 17)
+        flacdec->width = 16;
+      else
+        flacdec->width = 32;
 
       GST_DEBUG_OBJECT (flacdec, "blocksize: min=%u, max=%u",
           flacdec->min_blocksize, flacdec->max_blocksize);
+      GST_DEBUG_OBJECT (flacdec, "sample rate: %u, channels: %u",
+          flacdec->sample_rate, flacdec->channels);
+      GST_DEBUG_OBJECT (flacdec, "depth: %u, width: %u", flacdec->depth,
+          flacdec->width);
 
       /* Only scan for last block in pull-mode, since it uses pull_range() */
       if (samples == 0 && !flacdec->streaming) {
@@ -792,6 +805,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   GstBuffer *outbuf;
   guint depth = frame->header.bits_per_sample;
   guint width;
+  guint sample_rate = frame->header.sample_rate;
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
   guint j, i;
@@ -846,6 +860,16 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       goto done;
   }
 
+  if (sample_rate == 0) {
+    if (flacdec->sample_rate != 0) {
+      sample_rate = flacdec->sample_rate;
+    } else {
+      GST_ERROR_OBJECT (flacdec, "unknown sample rate");
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+  }
+
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
     GstCaps *caps;
 
@@ -869,7 +893,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     flacdec->depth = depth;
     flacdec->width = width;
     flacdec->channels = channels;
-    flacdec->sample_rate = frame->header.sample_rate;
+    flacdec->sample_rate = sample_rate;
 
     gst_pad_set_caps (flacdec->srcpad, caps);
     gst_caps_unref (caps);
