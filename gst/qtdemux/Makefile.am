@@ -10,7 +10,8 @@ libgstqtdemux_la_LIBADD = \
     -lgsttag-@GST_MAJORMINOR@ \
     $(GST_BASE_LIBS) $(GST_LIBS) $(ZLIB_LIBS)
 libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
-libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c qtdemux.c qtdemux_types.c qtdemux_dump.c
+libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c \
+	qtdemux.c qtdemux_types.c qtdemux_dump.c qtdemux_lang.c
 libgstqtdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
@@ -19,5 +20,6 @@ noinst_HEADERS = \
 	qtdemux_types.h  \
 	qtdemux_dump.h   \
 	qtdemux_fourcc.h \
+	qtdemux_lang.h   \
 	qtpalette.h      \
 	gstrtpxqtdepay.h

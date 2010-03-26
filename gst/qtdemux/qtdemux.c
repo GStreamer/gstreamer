@@ -55,6 +55,7 @@
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "qtdemux_fourcc.h"
+#include "qtdemux_lang.h"
 #include "qtdemux.h"
 #include "qtpalette.h"
 
@@ -200,8 +201,7 @@ struct _QtDemuxStream
   guint32 timescale;
 
   /* language */
-  guint lang_code;
-  gchar lang_id[4];             /* in ISO 639-2 */
+  gchar lang_id[4];             /* ISO 639-2T language code */
 
   /* our samples */
   guint32 n_samples;
@@ -5037,6 +5037,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GstTagList *list = NULL;
   gchar *codec = NULL;
   const guint8 *stsd_data;
+  guint16 lang_code;            /* quicktime lang code or packed iso code */
   guint32 version;
   guint32 tkhd_flags = 0;
   guint8 tkhd_version = 0;
@@ -5080,26 +5081,30 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       goto corrupt_file;
     stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 28);
     stream->duration = QT_UINT64 ((guint8 *) mdhd->data + 32);
-    stream->lang_code = QT_UINT16 ((guint8 *) mdhd->data + 36);
+    lang_code = QT_UINT16 ((guint8 *) mdhd->data + 36);
   } else {
     if (len < 30)
       goto corrupt_file;
     stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 20);
     stream->duration = QT_UINT32 ((guint8 *) mdhd->data + 24);
-    stream->lang_code = QT_UINT16 ((guint8 *) mdhd->data + 28);
+    lang_code = QT_UINT16 ((guint8 *) mdhd->data + 28);
   }
 
-  stream->lang_id[0] = 0x60 + ((stream->lang_code >> 10) & 0x1F);
-  stream->lang_id[1] = 0x60 + ((stream->lang_code >> 5) & 0x1F);
-  stream->lang_id[2] = 0x60 + (stream->lang_code & 0x1F);
-  stream->lang_id[3] = 0;
+  if (lang_code < 0x800) {
+    qtdemux_lang_map_qt_code_to_iso (stream->lang_id, lang_code);
+  } else {
+    stream->lang_id[0] = 0x60 + ((lang_code >> 10) & 0x1F);
+    stream->lang_id[1] = 0x60 + ((lang_code >> 5) & 0x1F);
+    stream->lang_id[2] = 0x60 + (lang_code & 0x1F);
+    stream->lang_id[3] = 0;
+  }
 
   GST_LOG_OBJECT (qtdemux, "track timescale: %" G_GUINT32_FORMAT,
       stream->timescale);
   GST_LOG_OBJECT (qtdemux, "track duration: %" G_GUINT64_FORMAT,
       stream->duration);
-  GST_LOG_OBJECT (qtdemux, "track language code/id: 0x%x/%s",
-      stream->lang_code, stream->lang_id);
+  GST_LOG_OBJECT (qtdemux, "track language code/id: 0x%04x/%s",
+      lang_code, stream->lang_id);
 
   if (G_UNLIKELY (stream->timescale == 0 || qtdemux->timescale == 0))
     goto corrupt_file;
@@ -5950,7 +5955,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     goto segments_failed;
 
   /* add some language tag, if useful */
-  if (stream->lang_code && strcmp (stream->lang_id, "unk") &&
+  if (stream->lang_id[0] != '\0' && strcmp (stream->lang_id, "unk") &&
       strcmp (stream->lang_id, "und")) {
     const gchar *lang_code;
 
