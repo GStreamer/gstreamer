@@ -1157,7 +1157,7 @@ static const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     is_keyframe_true,
     is_header_fLaC,
-    NULL
+    packet_duration_flac
   },
   {
     "\177FLAC", 5, 36,
