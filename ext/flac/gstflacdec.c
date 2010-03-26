@@ -436,6 +436,10 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   else if (sr == 0x0D || sr == 0x0E)
     sr_from_end = 16;
 
+  /* FIXME: This is can be 36 bit if variable block size is used,
+   * fortunately not encoder supports this yet and we check for that
+   * above.
+   */
   val = (guint32) g_utf8_get_char_validated ((gchar *) data + 4, -1);
 
   if (val == (guint32) - 1 || val == (guint32) - 2) {
@@ -446,16 +450,22 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   headerlen = 4 + g_unichar_to_utf8 ((gunichar) val, NULL) +
       (bs_from_end / 8) + (sr_from_end / 8);
 
-  if (gst_flac_calculate_crc8 (data, headerlen) != data[headerlen])
+  if (gst_flac_calculate_crc8 (data, headerlen) != data[headerlen]) {
+    GST_LOG_OBJECT (flacdec, "invalid checksum");
     return FALSE;
+  }
 
   if (flacdec->min_blocksize == flacdec->max_blocksize) {
     *last_sample_num = (val + 1) * flacdec->min_blocksize;
   } else {
-    *last_sample_num = val;     /* FIXME: + length of last block in samples */
+    *last_sample_num = 0;       /* FIXME: + length of last block in samples */
   }
 
-  if (flacdec->sample_rate > 0) {
+  /* FIXME: only valid for fixed block size streams */
+  GST_DEBUG_OBJECT (flacdec, "frame number: %" G_GINT64_FORMAT,
+      *last_sample_num);
+
+  if (flacdec->sample_rate > 0 && *last_sample_num != 0) {
     GST_DEBUG_OBJECT (flacdec, "last sample %" G_GINT64_FORMAT " = %"
         GST_TIME_FORMAT, *last_sample_num,
         GST_TIME_ARGS (*last_sample_num * GST_SECOND / flacdec->sample_rate));
@@ -470,13 +480,18 @@ static void
 gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
 {
   GstFormat format = GST_FORMAT_BYTES;
-
   gint64 file_size, offset;
 
   GST_INFO_OBJECT (flacdec, "total number of samples unknown, scanning file");
 
   if (!gst_pad_query_peer_duration (flacdec->sinkpad, &format, &file_size)) {
     GST_WARNING_OBJECT (flacdec, "failed to query upstream size!");
+    return;
+  }
+
+  if (flacdec->min_blocksize != flacdec->max_blocksize) {
+    GST_WARNING_OBJECT (flacdec, "scanning for last sample only works "
+        "for FLAC files with constant blocksize");
     return;
   }
 
