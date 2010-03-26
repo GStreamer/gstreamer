@@ -482,11 +482,16 @@ gst_vaapi_window_put_surface(
     guint                    flags
 )
 {
+    GstVaapiWindowClass *klass;
     GstVaapiRectangle src_rect_default, dst_rect_default;
 
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW(window), FALSE);
     g_return_val_if_fail(window->priv->is_constructed, FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+
+    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
+    if (!klass->render)
+        return FALSE;
 
     if (!src_rect) {
         src_rect = &src_rect_default;
@@ -498,9 +503,5 @@ gst_vaapi_window_put_surface(
         get_window_rect(window, &dst_rect_default);
     }
 
-    return GST_VAAPI_WINDOW_GET_CLASS(window)->render(window,
-                                                      surface,
-                                                      src_rect,
-                                                      dst_rect,
-                                                      flags);
+    return klass->render(window, surface, src_rect, dst_rect, flags);
 }
