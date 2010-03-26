@@ -274,6 +274,7 @@ gst_vaapi_window_glx_resize(GstVaapiWindow *window, guint width, guint height)
         return FALSE;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    XSync(dpy, False); /* make sure resize completed */
     if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), priv->context, &cs)) {
         gl_resize(width, height);
         if (cs.context)
