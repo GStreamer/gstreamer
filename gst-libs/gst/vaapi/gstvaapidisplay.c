@@ -48,10 +48,10 @@ struct _GstVaapiDisplayPrivate {
     guint               height_mm;
     guint               par_n;
     guint               par_d;
-    gboolean            create_display;
     GArray             *profiles;
     GArray             *image_formats;
     GArray             *subpicture_formats;
+    guint               create_display  : 1;
 };
 
 enum {
@@ -504,10 +504,10 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->height_mm             = 0;
     priv->par_n                 = 1;
     priv->par_d                 = 1;
-    priv->create_display        = TRUE;
     priv->profiles              = NULL;
     priv->image_formats         = NULL;
     priv->subpicture_formats    = NULL;
+    priv->create_display        = TRUE;
 
     g_static_mutex_init(&priv->mutex);
 }
@@ -567,6 +567,52 @@ gst_vaapi_display_unlock(GstVaapiDisplay *display)
     klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
     if (klass->unlock)
         klass->unlock(display);
+}
+
+/**
+ * gst_vaapi_display_sync:
+ * @display: a #GstVaapiDisplay
+ *
+ * Flushes any requests queued for the windowing system and waits until
+ * all requests have been handled. This is often used for making sure
+ * that the display is synchronized with the current state of the program.
+ *
+ * This is most useful for X11. On windowing systems where requests are
+ * handled synchronously, this function will do nothing.
+ */
+void
+gst_vaapi_display_sync(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
+    klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+    if (klass->sync)
+        klass->sync(display);
+    else if (klass->flush)
+        klass->flush(display);
+}
+
+/**
+ * gst_vaapi_display_sync:
+ * @display: a #GstVaapiDisplay
+ *
+ * Flushes any requests queued for the windowing system.
+ *
+ * This is most useful for X11. On windowing systems where requests
+ * are handled synchronously, this function will do nothing.
+ */
+void
+gst_vaapi_display_flush(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayClass *klass;
+
+    g_return_if_fail(GST_VAAPI_IS_DISPLAY(display));
+
+    klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
+    if (klass->flush)
+        klass->flush(display);
 }
 
 /**

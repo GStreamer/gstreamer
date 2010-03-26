@@ -192,6 +192,26 @@ gst_vaapi_display_x11_close_display(GstVaapiDisplay *display)
     }
 }
 
+static void
+gst_vaapi_display_x11_sync(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11(display)->priv;
+
+    if (priv->x11_display)
+        XSync(priv->x11_display, False);
+}
+
+static void
+gst_vaapi_display_x11_flush(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11(display)->priv;
+
+    if (priv->x11_display)
+        XFlush(priv->x11_display);
+}
+
 static VADisplay
 gst_vaapi_display_x11_get_va_display(GstVaapiDisplay *display)
 {
@@ -253,6 +273,8 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
 
     dpy_class->open_display     = gst_vaapi_display_x11_open_display;
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
+    dpy_class->sync             = gst_vaapi_display_x11_sync;
+    dpy_class->flush            = gst_vaapi_display_x11_flush;
     dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
     dpy_class->get_size         = gst_vaapi_display_x11_get_size;
     dpy_class->get_size_mm      = gst_vaapi_display_x11_get_size_mm;

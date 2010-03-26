@@ -133,6 +133,8 @@ GstVaapiDisplayClass
 gst_vaapi_display_new_with_display
 gst_vaapi_display_lock
 gst_vaapi_display_unlock
+gst_vaapi_display_sync
+gst_vaapi_display_flush
 gst_vaapi_display_get_display
 gst_vaapi_display_get_width
 gst_vaapi_display_get_height
