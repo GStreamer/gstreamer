@@ -62,12 +62,12 @@ libgstvaapi_x11_source_c =			\
 	$(NULL)
 
 libgstvaapi_x11_source_h =			\
-	gstvaapicompat.h			\
 	gstvaapidisplay_x11.h			\
 	gstvaapiwindow_x11.h			\
 	$(NULL)
 
 libgstvaapi_x11_source_priv_h =			\
+	gstvaapicompat.h			\
 	gstvaapiutils.h				\
 	gstvaapiutils_x11.h			\
 	$(NULL)
@@ -81,12 +81,12 @@ libgstvaapi_glx_source_c =			\
 	$(NULL)
 
 libgstvaapi_glx_source_h =			\
-	gstvaapicompat.h			\
 	gstvaapidisplay_glx.h			\
 	gstvaapiwindow_glx.h			\
 	$(NULL)
 
 libgstvaapi_glx_source_priv_h =			\
+	gstvaapicompat.h			\
 	gstvaapiutils.h				\
 	gstvaapiutils_glx.h			\
 	gstvaapiutils_x11.h			\
