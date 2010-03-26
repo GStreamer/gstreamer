@@ -40,15 +40,17 @@ G_DEFINE_TYPE(GstVaapiDisplayX11,
                                  GstVaapiDisplayX11Private))
 
 struct _GstVaapiDisplayX11Private {
-    gboolean    create_display;
     gchar      *display_name;
     Display    *x11_display;
     int         x11_screen;
+    guint       create_display  : 1;
+    guint       synchronous     : 1;
 };
 
 enum {
     PROP_0,
 
+    PROP_SYNCHRONOUS,
     PROP_DISPLAY_NAME,
     PROP_X11_DISPLAY
 };
@@ -73,6 +75,18 @@ set_display_name(GstVaapiDisplayX11 *display, const gchar *display_name)
 }
 
 static void
+set_synchronous(GstVaapiDisplayX11 *display, gboolean synchronous)
+{
+    GstVaapiDisplayX11Private * const priv = display->priv;
+
+    if (priv->synchronous != synchronous) {
+        priv->synchronous = synchronous;
+        if (priv->x11_display)
+            XSynchronize(priv->x11_display, synchronous);
+    }
+}
+
+static void
 gst_vaapi_display_x11_set_property(
     GObject      *object,
     guint         prop_id,
@@ -83,6 +97,9 @@ gst_vaapi_display_x11_set_property(
     GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
 
     switch (prop_id) {
+    case PROP_SYNCHRONOUS:
+        set_synchronous(display, g_value_get_boolean(value));
+        break;
     case PROP_DISPLAY_NAME:
         set_display_name(display, g_value_get_string(value));
         break;
@@ -106,6 +123,9 @@ gst_vaapi_display_x11_get_property(
     GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
 
     switch (prop_id) {
+    case PROP_SYNCHRONOUS:
+        g_value_set_boolean(value, display->priv->synchronous);
+        break;
     case PROP_DISPLAY_NAME:
         g_value_set_string(value, display->priv->display_name);
         break;
@@ -146,6 +166,9 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
         priv->x11_display = XOpenDisplay(priv->display_name);
     if (!priv->x11_display)
         return FALSE;
+
+    if (priv->synchronous)
+        XSynchronize(priv->x11_display, True);
 
     priv->x11_screen = DefaultScreen(priv->x11_display);
     return TRUE;
@@ -233,6 +256,21 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
     dpy_class->get_size         = gst_vaapi_display_x11_get_size;
     dpy_class->get_size_mm      = gst_vaapi_display_x11_get_size_mm;
+
+    /**
+     * GstVaapiDisplayX11:synchronous:
+     *
+     * When enabled, runs the X display in synchronous mode. Note that
+     * this is used only for debugging.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_SYNCHRONOUS,
+         g_param_spec_boolean("synchronous",
+                              "Synchronous mode",
+                              "Toggles X display synchronous mode",
+                              FALSE,
+                              G_PARAM_READWRITE));
 
     /**
      * GstVaapiDisplayX11:x11-display:

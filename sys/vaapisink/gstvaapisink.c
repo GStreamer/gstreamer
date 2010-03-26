@@ -74,7 +74,8 @@ enum {
     PROP_0,
 
     PROP_DISPLAY,
-    PROP_FULLSCREEN
+    PROP_FULLSCREEN,
+    PROP_SYNCHRONOUS
 };
 
 static GstVaapiDisplay *
@@ -120,6 +121,7 @@ gst_vaapisink_ensure_display(GstVaapiSink *sink)
         sink->display = gst_vaapi_display_x11_new(sink->display_name);
         if (!sink->display || !gst_vaapi_display_get_display(sink->display))
             return FALSE;
+        g_object_set(sink, "synchronous", sink->synchronous, NULL);
     }
     return sink->display != NULL;
 }
@@ -291,6 +293,9 @@ gst_vaapisink_set_property(
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
         break;
+    case PROP_SYNCHRONOUS:
+        sink->synchronous = g_value_get_boolean(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -313,6 +318,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
+        break;
+    case PROP_SYNCHRONOUS:
+        g_value_set_boolean(value, sink->synchronous);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -364,6 +372,21 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Requests window in fullscreen state",
                               FALSE,
                               G_PARAM_READWRITE));
+
+    /**
+     * GstVaapiSink:synchronous:
+     *
+     * When enabled, runs the X display in synchronous mode. Note that
+     * this is used only for debugging.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_SYNCHRONOUS,
+         g_param_spec_boolean("synchronous",
+                              "Synchronous mode",
+                              "Toggles X display synchronous mode",
+                              FALSE,
+                              G_PARAM_READWRITE));
 }
 
 static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
@@ -371,6 +394,7 @@ static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->display_name  = NULL;
     sink->display       = NULL;
     sink->fullscreen    = FALSE;
+    sink->synchronous   = FALSE;
 }
 
 GstVaapiDisplay *

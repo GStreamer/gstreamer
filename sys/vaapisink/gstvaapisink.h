@@ -64,6 +64,7 @@ struct _GstVaapiSink {
     GstVaapiWindow     *window;
     GstVaapiRectangle   window_rect;
     guint               fullscreen      : 1;
+    guint               synchronous     : 1;
 };
 
 struct _GstVaapiSinkClass {
