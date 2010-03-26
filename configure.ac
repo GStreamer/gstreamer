@@ -160,16 +160,16 @@ USE_GLX=1
 if test "$enable_glx" != "yes"; then
     USE_GLX=0
 fi
-OPENGL_CFLAGS=""
-OPENGL_LIBS=""
+GLX_CFLAGS=""
+GLX_LIBS=""
 AC_CHECK_HEADERS([GL/gl.h GL/glext.h GL/glx.h], [], [USE_GLX=0], [
 #ifdef HAVE_GL_GL_H
 # include <GL/gl.h>
 #endif
 ])
-AC_CHECK_LIB(GL, glXCreateContext, [OPENGL_LIBS="-lGL -ldl"], [USE_GLX=0])
-AC_SUBST(OPENGL_CFLAGS)
-AC_SUBST(OPENGL_LIBS)
+AC_CHECK_LIB(GL, glXCreateContext, [GLX_LIBS="-lGL"], [USE_GLX=0])
+AC_SUBST(GLX_CFLAGS)
+AC_SUBST(GLX_LIBS)
 
 dnl Check for VA-API
 LIBVA_PKGNAME="libva"

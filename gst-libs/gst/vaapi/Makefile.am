@@ -133,11 +133,13 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
+	$(X11_CFLAGS)				\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(X11_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-@GST_MAJORMINOR@.la		\
 	$(NULL)
@@ -158,11 +160,13 @@ libgstvaapi_glx_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
+	$(GLX_CFLAGS)				\
 	$(LIBVA_GLX_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_glx_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
+	$(GLX_LIBS)				\
 	$(LIBVA_GLX_LIBS)			\
 	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
 	$(NULL)
