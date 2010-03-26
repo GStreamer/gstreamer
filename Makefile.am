@@ -61,3 +61,12 @@ win32-update:
 
 include $(top_srcdir)/common/coverage/lcov.mak
 
+# cruft: plugins that have been merged or moved or renamed
+
+CRUFT_FILES = \
+	$(top_builddir)/common/shave \
+	$(top_builddir)/common/shave-libtool
+
+include $(top_srcdir)/common/cruft.mak
+
+all-local: check-cruft
