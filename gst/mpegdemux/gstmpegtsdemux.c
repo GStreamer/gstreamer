@@ -2376,7 +2376,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
       case PID_TYPE_ELEMENTARY:
       {
         if (payload_unit_start_indicator) {
-          GST_DEBUG_OBJECT (demux, "new PES start for PID 0x%04x, used %u"
+          GST_DEBUG_OBJECT (demux, "new PES start for PID 0x%04x, used %u "
               "bytes of %u bytes in the PES buffer",
               PID, stream->pes_buffer_used, stream->pes_buffer_size);
           /* Flush buffered PES data */
