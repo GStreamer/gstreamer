@@ -1,10 +1,5 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 
-all-local: gst-element-check-@GST_MAJORMINOR@.m4
-
-gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
-	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
-
 # note: keep in sync with configure.ac
 ACLOCAL_AMFLAGS = -I common/m4 -I .
 
@@ -155,3 +150,16 @@ endif
 endif
 
 check: $(CHECK_EXPORTS) check-enum-gettypes
+
+gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
+	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+
+# cruft: plugins that have been merged or moved or renamed
+
+CRUFT_FILES = \
+	$(top_builddir)/common/shave \
+	$(top_builddir)/common/shave-libtool
+
+include $(top_srcdir)/common/cruft.mak
+
+all-local: gst-element-check-@GST_MAJORMINOR@.m4 check-cruft
