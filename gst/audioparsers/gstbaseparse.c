@@ -1015,6 +1015,7 @@ GstFlowReturn
 gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime last_start = GST_CLOCK_TIME_NONE;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
 
   GST_LOG_OBJECT (parse,
@@ -1039,9 +1040,10 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   gst_base_parse_update_bitrates (parse, buffer);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    last_stop = GST_BUFFER_TIMESTAMP (buffer);
-  if (last_stop != GST_CLOCK_TIME_NONE && GST_BUFFER_DURATION_IS_VALID (buffer))
-    last_stop += GST_BUFFER_DURATION (buffer);
+    last_start = GST_BUFFER_TIMESTAMP (buffer);
+  if (last_start != GST_CLOCK_TIME_NONE
+      && GST_BUFFER_DURATION_IS_VALID (buffer))
+    last_stop = last_start + GST_BUFFER_DURATION (buffer);
 
   /* should have caps by now */
   g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
@@ -1052,13 +1054,13 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
    * actual frame data might lead subclass to different timestamps,
    * so override segment start from what is supplied there */
   if (G_UNLIKELY (parse->pending_segment && !parse->priv->passthrough &&
-          GST_CLOCK_TIME_IS_VALID (last_stop))) {
+          GST_CLOCK_TIME_IS_VALID (last_start))) {
     gst_event_unref (parse->pending_segment);
     /* stop time possibly lost this way,
      * but unlikely and not really supported */
     parse->pending_segment =
         gst_event_new_new_segment (FALSE, parse->segment.rate,
-        parse->segment.format, last_stop, -1, last_stop);
+        parse->segment.format, last_start, -1, last_start);
   }
 
   /* and should then also be linked downstream, so safe to send some events */
