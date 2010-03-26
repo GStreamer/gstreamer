@@ -276,7 +276,8 @@ gst_vaapi_window_glx_resize(GstVaapiWindow *window, guint width, guint height)
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), priv->context, &cs)) {
         gl_resize(width, height);
-        gl_make_current(dpy, cs.window, cs.context, NULL);
+        if (cs.context)
+            gl_make_current(dpy, cs.window, cs.context, NULL);
     }
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     return TRUE;
