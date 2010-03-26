@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C)  2005 Sebastien Moutte <sebastien@moutte.net>
  * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ * Copyright (C) 2010 Fluendo S.A. <support@fluendo.com>
  *
  * gstdirectsoundsink.h: 
  *
@@ -35,6 +36,9 @@
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
+#include <mmreg.h> 
+#include <ks.h> 
+#include <ksmedia.h> 
 
 G_BEGIN_DECLS
 #define GST_TYPE_DIRECTSOUND_SINK            (gst_directsound_sink_get_type())
@@ -72,10 +76,14 @@ struct _GstDirectSoundSink
   /* tracks list of our mixer interface implementation */
   GList *tracks;
 
+  GstCaps *cached_caps;
+
   /* lock used to protect writes and resets */
   GMutex *dsound_lock;
 
   gboolean first_buffer_after_reset;
+
+  GstBufferFormat buffer_format;
 };
 
 struct _GstDirectSoundSinkClass

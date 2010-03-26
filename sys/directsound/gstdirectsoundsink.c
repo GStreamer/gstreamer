@@ -1,6 +1,7 @@
 /* GStreamer
 * Copyright (C) 2005 Sebastien Moutte <sebastien@moutte.net>
 * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+* Copyright (C) 2010 Fluendo S.A. <support@fluendo.com>
 *
 * gstdirectsoundsink.c:
 *
@@ -56,7 +57,19 @@
 #include <math.h>
 
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
+#define GST_CAT_DEFAULT directsoundsink_debug
 
+/* elementfactory information */
+static const GstElementDetails gst_directsound_sink_details =
+GST_ELEMENT_DETAILS ("Direct Sound Audio Sink",
+    "Sink/Audio",
+    "Output to a sound card via Direct Sound",
+    "Sebastien Moutte <sebastien@moutte.net>");
+
+static void gst_directsound_sink_base_init (gpointer g_class);
+static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
+static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
+    GstDirectSoundSinkClass * g_class);
 static void gst_directsound_sink_finalise (GObject * object);
 
 static void gst_directsound_sink_set_property (GObject * object, guint prop_id,
@@ -75,6 +88,8 @@ static guint gst_directsound_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_directsound_sink_delay (GstAudioSink * asink);
 static void gst_directsound_sink_reset (GstAudioSink * asink);
+static GstCaps *gst_directsound_probe_supported_formats (GstDirectSoundSink *
+    dsoundsink, const GstCaps * template_caps);
 
 /* interfaces */
 static void gst_directsound_sink_interfaces_init (GType type);
@@ -96,7 +111,8 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
+        "audio/x-iec958"));
 
 enum
 {
@@ -244,10 +260,7 @@ gst_directsound_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class,
-      "Direct Sound Audio Sink", "Sink/Audio",
-      "Output to a sound card via Direct Sound",
-      "Sebastien Moutte <sebastien@moutte.net>");
+  gst_element_class_set_details (element_class, &gst_directsound_sink_details);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&directsoundsink_sink_factory));
 }
@@ -314,6 +327,7 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
   dsoundsink->tracks = g_list_append (dsoundsink->tracks, track);
 
   dsoundsink->pDS = NULL;
+  dsoundsink->cached_caps = NULL;
   dsoundsink->pDSBSecondary = NULL;
   dsoundsink->current_circular_offset = 0;
   dsoundsink->buffer_size = DSBSIZE_MIN;
@@ -358,13 +372,35 @@ gst_directsound_sink_get_property (GObject * object,
 static GstCaps *
 gst_directsound_sink_getcaps (GstBaseSink * bsink)
 {
-  GstDirectSoundSink *dsoundsink;
+  GstElementClass *element_class;
+  GstPadTemplate *pad_template;
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (bsink);
+  GstCaps *caps;
 
-  dsoundsink = GST_DIRECTSOUND_SINK (bsink);
+  if (dsoundsink->pDS == NULL) {
+    GST_DEBUG_OBJECT (dsoundsink, "device not open, using template caps");
+    return NULL;                /* base class will get template caps for us */
+  }
 
-  return
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
-          (dsoundsink)));
+  if (dsoundsink->cached_caps) {
+    GST_DEBUG_OBJECT (dsoundsink, "Returning cached caps: %s",
+        gst_caps_to_string (dsoundsink->cached_caps));
+    return gst_caps_ref (dsoundsink->cached_caps);
+  }
+
+  element_class = GST_ELEMENT_GET_CLASS (dsoundsink);
+  pad_template = gst_element_class_get_pad_template (element_class, "sink");
+  g_return_val_if_fail (pad_template != NULL, NULL);
+
+  caps = gst_directsound_probe_supported_formats (dsoundsink,
+      gst_pad_template_get_caps (pad_template));
+  if (caps) {
+    dsoundsink->cached_caps = gst_caps_ref (caps);
+  }
+
+  GST_DEBUG_OBJECT (dsoundsink, "returning caps %s", gst_caps_to_string (caps));
+
+  return caps;
 }
 
 static gboolean
@@ -400,29 +436,43 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   DSBUFFERDESC descSecondary;
   WAVEFORMATEX wfx;
 
-  /*save number of bytes per sample */
+  /*save number of bytes per sample and buffer format */
   dsoundsink->bytes_per_sample = spec->bytes_per_sample;
+  dsoundsink->buffer_format = spec->format;
 
-  /* fill the WAVEFORMATEX struture with spec params */
+  /* fill the WAVEFORMATEX structure with spec params */
   memset (&wfx, 0, sizeof (wfx));
-  wfx.cbSize = sizeof (wfx);
-  wfx.wFormatTag = WAVE_FORMAT_PCM;
-  wfx.nChannels = spec->channels;
-  wfx.nSamplesPerSec = spec->rate;
-  wfx.wBitsPerSample = (spec->bytes_per_sample * 8) / wfx.nChannels;
-  wfx.nBlockAlign = spec->bytes_per_sample;
-  wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+  if (spec->format != GST_IEC958) {
+    wfx.cbSize = sizeof (wfx);
+    wfx.wFormatTag = WAVE_FORMAT_PCM;
+    wfx.nChannels = spec->channels;
+    wfx.nSamplesPerSec = spec->rate;
+    wfx.wBitsPerSample = (spec->bytes_per_sample * 8) / wfx.nChannels;
+    wfx.nBlockAlign = spec->bytes_per_sample;
+    wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
-  /* Create directsound buffer with size based on our configured 
-   * buffer_size (which is 200 ms by default) */
-  dsoundsink->buffer_size =
-      gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
-      GST_MSECOND);
+    /* Create directsound buffer with size based on our configured  
+     * buffer_size (which is 200 ms by default) */
+    dsoundsink->buffer_size =
+        gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
+        GST_MSECOND);
 
-  spec->segsize =
-      gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
-      GST_MSECOND);
-  spec->segtotal = dsoundsink->buffer_size / spec->segsize;
+    spec->segsize =
+        gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
+        GST_MSECOND);
+    spec->segtotal = dsoundsink->buffer_size / spec->segsize;
+  } else {
+    wfx.cbSize = 0;
+    wfx.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+    wfx.nChannels = 2;
+    wfx.nSamplesPerSec = spec->rate;
+    wfx.wBitsPerSample = 16;
+    wfx.nBlockAlign = wfx.wBitsPerSample / 8 * wfx.nChannels;
+    wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+
+    spec->segsize = 6144;
+    spec->segtotal = 10;
+  }
 
   // Make the final buffer size be an integer number of segments
   dsoundsink->buffer_size = spec->segsize * spec->segtotal;
@@ -430,15 +480,16 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (dsoundsink,
       "GstRingBufferSpec->channels: %d, GstRingBufferSpec->rate: %d, GstRingBufferSpec->bytes_per_sample: %d\n"
       "WAVEFORMATEX.nSamplesPerSec: %ld, WAVEFORMATEX.wBitsPerSample: %d, WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld\n"
-      "Size of dsound cirucular buffe=>%d\n", spec->channels, spec->rate,
+      "Size of dsound circular buffer=>%d\n", spec->channels, spec->rate,
       spec->bytes_per_sample, wfx.nSamplesPerSec, wfx.wBitsPerSample,
       wfx.nBlockAlign, wfx.nAvgBytesPerSec, dsoundsink->buffer_size);
 
   /* create a secondary directsound buffer */
   memset (&descSecondary, 0, sizeof (DSBUFFERDESC));
   descSecondary.dwSize = sizeof (DSBUFFERDESC);
-  descSecondary.dwFlags = DSBCAPS_GETCURRENTPOSITION2 |
-      DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLVOLUME;
+  descSecondary.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  if (spec->format != GST_IEC958)
+    descSecondary.dwFlags |= DSBCAPS_CTRLVOLUME;
 
   descSecondary.dwBufferBytes = dsoundsink->buffer_size;
   descSecondary.lpwfxFormat = (WAVEFORMATEX *) & wfx;
@@ -465,8 +516,10 @@ gst_directsound_sink_unprepare (GstAudioSink * asink)
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
   /* release secondary DirectSound buffer */
-  if (dsoundsink->pDSBSecondary)
+  if (dsoundsink->pDSBSecondary) {
     IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
+    dsoundsink->pDSBSecondary = NULL;
+  }
 
   return TRUE;
 }
@@ -481,6 +534,9 @@ gst_directsound_sink_close (GstAudioSink * asink)
   /* release DirectSound object */
   g_return_val_if_fail (dsoundsink->pDS != NULL, FALSE);
   IDirectSound_Release (dsoundsink->pDS);
+  dsoundsink->pDS = NULL;
+
+  gst_caps_replace (&dsoundsink->cached_caps, NULL);
 
   return TRUE;
 }
@@ -496,6 +552,10 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
   DWORD dwCurrentPlayCursor;
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
+
+  /* Fix endianness */
+  if (dsoundsink->buffer_format == GST_IEC958)
+    _swab (data, data, length);
 
   GST_DSOUND_LOCK (dsoundsink);
 
@@ -647,4 +707,65 @@ gst_directsound_sink_reset (GstAudioSink * asink)
   dsoundsink->first_buffer_after_reset = TRUE;
 
   GST_DSOUND_UNLOCK (dsoundsink);
+}
+
+/* 
+ * gst_directsound_probe_supported_formats: 
+ * 
+ * Takes the template caps and returns the subset which is actually 
+ * supported by this device. 
+ * 
+ */
+
+static GstCaps *
+gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
+    const GstCaps * template_caps)
+{
+  HRESULT hRes;
+  DSBUFFERDESC descSecondary;
+  WAVEFORMATEX wfx;
+  GstCaps *caps;
+
+  caps = gst_caps_copy (template_caps);
+
+  /* 
+   * Check availability of digital output by trying to create an SPDIF buffer 
+   */
+
+  /* fill the WAVEFORMATEX structure with some standard AC3 over SPDIF params */
+  memset (&wfx, 0, sizeof (wfx));
+  wfx.cbSize = 0;
+  wfx.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+  wfx.nChannels = 2;
+  wfx.nSamplesPerSec = 48000;
+  wfx.wBitsPerSample = 16;
+  wfx.nBlockAlign = 4;
+  wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+
+  // create a secondary directsound buffer 
+  memset (&descSecondary, 0, sizeof (DSBUFFERDESC));
+  descSecondary.dwSize = sizeof (DSBUFFERDESC);
+  descSecondary.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
+  descSecondary.dwBufferBytes = 6144;
+  descSecondary.lpwfxFormat = &wfx;
+
+  hRes = IDirectSound_CreateSoundBuffer (dsoundsink->pDS, &descSecondary,
+      &dsoundsink->pDSBSecondary, NULL);
+  if (FAILED (hRes)) {
+    GST_INFO_OBJECT (dsoundsink, "AC3 passthrough not supported "
+        "(IDirectSound_CreateSoundBuffer returned: %s)\n",
+        DXGetErrorString9 (hRes));
+    caps =
+        gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-iec958", NULL));
+  } else {
+    GST_INFO_OBJECT (dsoundsink, "AC3 passthrough supported");
+    hRes = IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
+    if (FAILED (hRes)) {
+      GST_DEBUG_OBJECT (dsoundsink,
+          "(IDirectSoundBuffer_Release returned: %s)\n",
+          DXGetErrorString9 (hRes));
+    }
+  }
+
+  return caps;
 }
