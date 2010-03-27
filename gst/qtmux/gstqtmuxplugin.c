@@ -63,5 +63,5 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "qtmux",
     "Quicktime Muxer plugin",
-    gst_qt_mux_plugin_init, VERSION, "LGPL", "gsoc2008 package",
-    "embedded.ufcg.edu.br")
+    gst_qt_mux_plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN);
