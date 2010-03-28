@@ -319,8 +319,6 @@ G_CONST_RETURN gchar *
 	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func) G_GNUC_NO_INSTRUMENT;
 
 
-#ifndef GST_DISABLE_GST_DEBUG
-
 const gchar   * gst_debug_message_get    (GstDebugMessage  * message);
 
 void            gst_debug_log_default    (GstDebugCategory * category,
@@ -346,11 +344,31 @@ gboolean        gst_debug_is_active   (void);
 void            gst_debug_set_colored (gboolean colored);
 gboolean        gst_debug_is_colored  (void);
 
-void            gst_debug_set_default_threshold	    (GstDebugLevel level);
-GstDebugLevel   gst_debug_get_default_threshold	    (void);
-void            gst_debug_set_threshold_for_name    (const gchar * name,
-                                                     GstDebugLevel level);
-void            gst_debug_unset_threshold_for_name  (const gchar * name);
+void            gst_debug_set_default_threshold      (GstDebugLevel level);
+GstDebugLevel   gst_debug_get_default_threshold      (void);
+void            gst_debug_set_threshold_for_name     (const gchar * name,
+                                                      GstDebugLevel level);
+void            gst_debug_unset_threshold_for_name   (const gchar * name);
+
+
+void            gst_debug_category_free              (GstDebugCategory *	category);
+void	            gst_debug_category_set_threshold     (GstDebugCategory *	category,
+                                                      GstDebugLevel		level);
+void            gst_debug_category_reset_threshold   (GstDebugCategory *	category);
+GstDebugLevel   gst_debug_category_get_threshold     (GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+	            gst_debug_category_get_name          (GstDebugCategory *	category);
+guint           gst_debug_category_get_color         (GstDebugCategory *	category);
+G_CONST_RETURN gchar *
+                gst_debug_category_get_description   (GstDebugCategory *	category);
+GSList *        gst_debug_get_all_categories	(void);
+
+
+gchar * gst_debug_construct_term_color (guint colorinfo);
+gint    gst_debug_construct_win_color  (guint colorinfo);
+
+
+#ifndef GST_DISABLE_GST_DEBUG
 
 /**
  * GST_DEBUG_CATEGORY:
@@ -418,20 +436,6 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
     cat = _gst_debug_category_new (name,color,description);		\
 }G_STMT_END
 
-void	gst_debug_category_free		(GstDebugCategory *	category);
-void	gst_debug_category_set_threshold (GstDebugCategory *	category,
-					 GstDebugLevel		level);
-void	gst_debug_category_reset_threshold(GstDebugCategory *	category);
-GstDebugLevel
-	gst_debug_category_get_threshold (GstDebugCategory *	category);
-G_CONST_RETURN gchar *
-	gst_debug_category_get_name	(GstDebugCategory *	category);
-guint	gst_debug_category_get_color	(GstDebugCategory *	category);
-G_CONST_RETURN gchar *
-	gst_debug_category_get_description (GstDebugCategory *	category);
-GSList *
-        gst_debug_get_all_categories	(void);
-
 /**
  * GST_DEBUG_CATEGORY_GET:
  * @cat: the category to initialize.
@@ -464,11 +468,6 @@ GSList *
   cat = _gst_debug_get_category (name);			\
 }G_STMT_END
 #endif
-
-
-gchar * gst_debug_construct_term_color	(guint colorinfo);
-gint    gst_debug_construct_win_color (guint colorinfo);
-
 
 /**
  * GST_CAT_DEFAULT:
@@ -1169,8 +1168,6 @@ GST_FIXME (const char *format, ...)
 #define gst_debug_level_get_name(level)				("NONE")
 #define gst_debug_message_get(message)  			("")
 #define gst_debug_add_log_function(func,data)		G_STMT_START{ }G_STMT_END
-guint gst_debug_remove_log_function (GstLogFunction func);
-guint gst_debug_remove_log_function_by_data (gpointer data);
 #define gst_debug_set_active(active)			G_STMT_START{ }G_STMT_END
 #define gst_debug_is_active()				(FALSE)
 #define gst_debug_set_colored(colored)			G_STMT_START{ }G_STMT_END
