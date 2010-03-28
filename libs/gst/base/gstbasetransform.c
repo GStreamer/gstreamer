@@ -1524,7 +1524,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseTransformPrivate *priv;
   GstFlowReturn res;
   gboolean proxy, suggest, same_caps;
-  GstCaps *sink_suggest;
+  GstCaps *sink_suggest = NULL;
   guint size_suggest;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
@@ -1549,7 +1549,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   if (same_caps) {
     /* we have seen this before, see below if we need to proxy */
     GST_DEBUG_OBJECT (trans, "have old caps %p, size %u", caps, size);
-    sink_suggest = caps;
+    gst_caps_replace (&sink_suggest, caps);
     size_suggest = size;
     suggest = FALSE;
   } else {
@@ -1568,7 +1568,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     } else {
       GST_DEBUG_OBJECT (trans, "using caps %p %" GST_PTR_FORMAT " size %u",
           caps, caps, size);
-      sink_suggest = caps;
+      gst_caps_replace (&sink_suggest, caps);
       size_suggest = size;
       suggest = FALSE;
     }
@@ -1709,9 +1709,12 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         "doing suggestion of size %u, caps %p %" GST_PTR_FORMAT, size_suggest,
         sink_suggest, sink_suggest);
     GST_BUFFER_CAPS (*buf) = sink_suggest;
+    sink_suggest = NULL;
   }
 
   gst_object_unref (trans);
+  if (sink_suggest)
+    gst_caps_unref (sink_suggest);
 
   return res;
 
@@ -1719,7 +1722,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 alloc_failed:
   {
     GST_DEBUG_OBJECT (trans, "pad alloc failed: %s", gst_flow_get_name (res));
-    if (suggest)
+    if (sink_suggest)
       gst_caps_unref (sink_suggest);
     gst_object_unref (trans);
     return res;
@@ -1727,7 +1730,7 @@ alloc_failed:
 not_supported:
   {
     GST_DEBUG_OBJECT (trans, "pad alloc with unsupported caps");
-    if (suggest)
+    if (sink_suggest)
       gst_caps_unref (sink_suggest);
     gst_object_unref (trans);
     return GST_FLOW_NOT_NEGOTIATED;
