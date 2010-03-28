@@ -238,7 +238,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   if (lookup != GST_QUERY_NONE)
     return lookup;
 
-  query = g_new0 (GstQueryTypeDefinition, 1);
+  query = g_slice_new (GstQueryTypeDefinition);
   query->value = _n_values;
   query->nick = g_strdup (nick);
   query->description = g_strdup (description);

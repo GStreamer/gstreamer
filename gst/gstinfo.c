@@ -1016,7 +1016,7 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
 
   g_return_if_fail (func != NULL);
 
-  entry = g_new (LogFuncEntry, 1);
+  entry = g_slice_new (LogFuncEntry);
   entry->func = func;
   entry->user_data = data;
   /* FIXME: we leak the old list here - other threads might access it right now
@@ -1066,7 +1066,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
       new = g_slist_copy (new);
       continue;
     }
-    g_free (found->data);
+    g_slice_free (LogFuncEntry, found->data);
     new = g_slist_delete_link (new, found);
     removals++;
   }
@@ -1272,7 +1272,7 @@ gst_debug_set_threshold_for_name (const gchar * name, GstDebugLevel level)
   g_return_if_fail (name != NULL);
 
   pat = g_pattern_spec_new (name);
-  entry = g_new (LevelNameEntry, 1);
+  entry = g_slice_new (LevelNameEntry);
   entry->pat = pat;
   entry->level = level;
   g_static_mutex_lock (&__level_name_mutex);
@@ -1307,7 +1307,7 @@ gst_debug_unset_threshold_for_name (const gchar * name)
     if (g_pattern_spec_equal (entry->pat, pat)) {
       __level_name = g_slist_remove_link (__level_name, walk);
       g_pattern_spec_free (entry->pat);
-      g_free (entry);
+      g_slice_free (LevelNameEntry, entry);
       g_slist_free_1 (walk);
       walk = __level_name;
     }
@@ -1325,7 +1325,7 @@ _gst_debug_category_new (const gchar * name, guint color,
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  cat = g_new (GstDebugCategory, 1);
+  cat = g_slice_new (GstDebugCategory);
   cat->name = g_strdup (name);
   cat->color = color;
   if (description != NULL) {
@@ -1363,7 +1363,7 @@ gst_debug_category_free (GstDebugCategory * category)
 
   g_free ((gpointer) category->name);
   g_free ((gpointer) category->description);
-  g_free (category);
+  g_slice_free (GstDebugCategory, category);
 }
 
 /**

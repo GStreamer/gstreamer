@@ -375,7 +375,8 @@ gst_pad_init (GstPad * pad)
   pad->preroll_lock = g_mutex_new ();
   pad->preroll_cond = g_cond_new ();
 
-  pad->stream_rec_lock = g_new (GStaticRecMutex, 1);
+  /* FIXME 0.11: Store this directly in the instance struct */
+  pad->stream_rec_lock = g_slice_new (GStaticRecMutex);
   g_static_rec_mutex_init (pad->stream_rec_lock);
 
   pad->block_cond = g_cond_new ();
@@ -430,7 +431,7 @@ gst_pad_finalize (GObject * object)
 
   if (pad->stream_rec_lock) {
     g_static_rec_mutex_free (pad->stream_rec_lock);
-    g_free (pad->stream_rec_lock);
+    g_slice_free (GStaticRecMutex, pad->stream_rec_lock);
     pad->stream_rec_lock = NULL;
   }
   if (pad->preroll_lock) {
@@ -3131,7 +3132,7 @@ static void
 int_link_iter_data_free (IntLinkIterData * data)
 {
   g_list_free (data->list);
-  g_free (data);
+  g_slice_free (IntLinkIterData, data);
 }
 #endif
 
@@ -3185,7 +3186,7 @@ gst_pad_iterate_internal_links_default (GstPad * pad)
      * INTLINKFUNC() returned a different list but then this would only work if
      * two concurrent iterators were used and the last iterator would still be
      * thread-unsafe. Just don't use this method anymore. */
-    data = g_new0 (IntLinkIterData, 1);
+    data = g_slice_new (IntLinkIterData);
     data->list = GST_PAD_INTLINKFUNC (pad) (pad);
     data->cookie = 0;
 

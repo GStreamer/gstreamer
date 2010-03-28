@@ -66,6 +66,7 @@ static void gst_index_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstIndexGroup *gst_index_group_new (guint groupnum);
+static void gst_index_group_free (GstIndexGroup * group);
 
 static gboolean gst_index_path_resolver (GstIndex * index, GstObject * writer,
     gchar ** writer_string, gpointer data);
@@ -196,7 +197,7 @@ gst_index_finalize (GObject * object)
   GstIndex *index = GST_INDEX (object);
 
   if (index->groups) {
-    g_list_foreach (index->groups, (GFunc) g_free, NULL);
+    g_list_foreach (index->groups, (GFunc) gst_index_group_free, NULL);
     g_list_free (index->groups);
     index->groups = NULL;
   }
@@ -257,7 +258,7 @@ gst_index_get_property (GObject * object, guint prop_id,
 static GstIndexGroup *
 gst_index_group_new (guint groupnum)
 {
-  GstIndexGroup *indexgroup = g_new (GstIndexGroup, 1);
+  GstIndexGroup *indexgroup = g_slice_new (GstIndexGroup);
 
   indexgroup->groupnum = groupnum;
   indexgroup->entries = NULL;
@@ -267,6 +268,12 @@ gst_index_group_new (guint groupnum)
   GST_DEBUG ("created new index group %d", groupnum);
 
   return indexgroup;
+}
+
+static void
+gst_index_group_free (GstIndexGroup * group)
+{
+  g_slice_free (GstIndexGroup, group);
 }
 
 /**
@@ -499,7 +506,10 @@ gst_index_set_resolver_full (GstIndex * index, GstIndexResolver resolver,
 GstIndexEntry *
 gst_index_entry_copy (GstIndexEntry * entry)
 {
-  return g_memdup (entry, sizeof (*entry));
+  GstIndexEntry *new_entry = g_slice_new (GstIndexEntry);
+
+  memcpy (new_entry, entry, sizeof (GstIndexEntry));
+  return new_entry;
 }
 
 /**
@@ -530,7 +540,7 @@ gst_index_entry_free (GstIndexEntry * entry)
       break;
   }
 
-  g_free (entry);
+  g_slice_free (GstIndexEntry, entry);
 }
 
 /**
@@ -557,7 +567,7 @@ gst_index_add_format (GstIndex * index, gint id, GstFormat format)
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
 
-  entry = g_new0 (GstIndexEntry, 1);
+  entry = g_slice_new (GstIndexEntry);
   entry->type = GST_INDEX_ENTRY_FORMAT;
   entry->id = id;
   entry->data.format.format = format;
@@ -591,7 +601,7 @@ gst_index_add_id (GstIndex * index, gint id, gchar * description)
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
 
-  entry = g_new0 (GstIndexEntry, 1);
+  entry = g_slice_new (GstIndexEntry);
   entry->type = GST_INDEX_ENTRY_ID;
   entry->id = id;
   entry->data.id.description = description;
@@ -699,7 +709,7 @@ gst_index_get_writer_id (GstIndex * index, GstObject * writer, gint * id)
     if (!entry) {
       /* index is probably not writable, make an entry anyway
        * to keep it in our cache */
-      entry = g_new0 (GstIndexEntry, 1);
+      entry = g_slice_new (GstIndexEntry);
       entry->type = GST_INDEX_ENTRY_ID;
       entry->id = *id;
       entry->data.id.description = writer_string;
@@ -751,7 +761,7 @@ gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
   if (!GST_INDEX_IS_WRITABLE (index) || id == -1)
     return NULL;
 
-  entry = g_malloc (sizeof (GstIndexEntry));
+  entry = g_slice_new (GstIndexEntry);
 
   entry->type = GST_INDEX_ENTRY_ASSOCIATION;
   entry->id = id;

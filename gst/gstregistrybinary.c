@@ -101,7 +101,7 @@ typedef struct BinaryRegistryCache
 static BinaryRegistryCache *
 gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
 {
-  BinaryRegistryCache *cache = g_new0 (BinaryRegistryCache, 1);
+  BinaryRegistryCache *cache = g_slice_new0 (BinaryRegistryCache);
   cache->location = location;
   return cache;
 }
@@ -155,7 +155,7 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
   }
 
   g_free (cache->mem);
-  g_free (cache);
+  g_slice_free (BinaryRegistryCache, cache);
   return ret;
 }
 
@@ -171,7 +171,7 @@ typedef struct BinaryRegistryCache
 static BinaryRegistryCache *
 gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
 {
-  BinaryRegistryCache *cache = g_new0 (BinaryRegistryCache, 1);
+  BinaryRegistryCache *cache = g_slice_new0 (BinaryRegistryCache);
 
   cache->location = location;
   cache->tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
@@ -192,7 +192,7 @@ gst_registry_binary_cache_init (GstRegistry * registry, const char *location)
     if (cache->cache_fd == -1) {
       GST_DEBUG ("g_mkstemp() failed: %s", g_strerror (errno));
       g_free (cache->tmp_location);
-      g_free (cache);
+      g_slice_free (BinaryRegistryCache, cache);
       return NULL;
     }
   }
@@ -241,7 +241,7 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
   }
 
   g_free (cache->tmp_location);
-  g_free (cache);
+  g_slice_free (BinaryRegistryCache, cache);
   GST_INFO ("Wrote binary registry cache");
   return TRUE;
 
@@ -250,7 +250,7 @@ fail_after_close:
   {
     g_unlink (cache->tmp_location);
     g_free (cache->tmp_location);
-    g_free (cache);
+    g_slice_free (BinaryRegistryCache, cache);
     return FALSE;
   }
 fsync_failed:
@@ -398,9 +398,8 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
     gboolean res;
 
     res = gst_registry_binary_write_chunk (cache, cur, &file_position);
-    if (!(cur->flags & GST_REGISTRY_CHUNK_FLAG_CONST))
-      g_free (cur->data);
-    g_free (cur);
+
+    _priv_gst_registry_chunk_free (cur);
     walk->data = NULL;
     if (!res)
       goto fail_free_list;
@@ -418,11 +417,8 @@ fail_free_list:
     for (walk = to_write; walk; walk = g_list_next (walk)) {
       GstRegistryChunk *cur = walk->data;
 
-      if (cur) {
-        if (!(cur->flags & GST_REGISTRY_CHUNK_FLAG_CONST))
-          g_free (cur->data);
-        g_free (cur);
-      }
+      if (cur)
+        _priv_gst_registry_chunk_free (cur);
     }
     g_list_free (to_write);
 

@@ -135,7 +135,7 @@ static gboolean plugin_loader_sync_with_child (GstPluginLoader * l);
 static GstPluginLoader *
 plugin_loader_new (GstRegistry * registry)
 {
-  GstPluginLoader *l = g_new0 (GstPluginLoader, 1);
+  GstPluginLoader *l = g_slice_new0 (GstPluginLoader);
 
   if (registry)
     l->registry = gst_object_ref (registry);
@@ -196,12 +196,12 @@ plugin_loader_free (GstPluginLoader * loader)
   while (cur) {
     PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
     g_free (entry->filename);
-    g_free (entry);
+    g_slice_free (PendingPluginEntry, entry);
 
     cur = g_list_delete_link (cur, cur);
   }
 
-  g_free (loader);
+  g_slice_free (GstPluginLoader, loader);
 
   return got_plugin_details;
 }
@@ -220,7 +220,7 @@ plugin_loader_load (GstPluginLoader * loader, const gchar * filename,
   GST_LOG_OBJECT (loader->registry,
       "Sending file %s to child. tag %u", filename, loader->next_tag);
 
-  entry = g_new (PendingPluginEntry, 1);
+  entry = g_slice_new (PendingPluginEntry);
   entry->tag = loader->next_tag++;
   entry->filename = g_strdup (filename);
   entry->file_size = file_size;
@@ -644,9 +644,7 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
         GstRegistryChunk *cur = walk->data;
         put_chunk (l, cur, &offset);
 
-        if (!(cur->flags & GST_REGISTRY_CHUNK_FLAG_CONST))
-          g_free (cur->data);
-        g_free (cur);
+        _priv_gst_registry_chunk_free (cur);
       }
 
       g_list_free (chunks);
@@ -677,9 +675,7 @@ fail:
     for (walk = chunks; walk; walk = g_list_next (walk)) {
       GstRegistryChunk *cur = walk->data;
 
-      if (!(cur->flags & GST_REGISTRY_CHUNK_FLAG_CONST))
-        g_free (cur->data);
-      g_free (cur);
+      _priv_gst_registry_chunk_free (cur);
     }
 
     g_list_free (chunks);
@@ -764,7 +760,7 @@ handle_rx_packet (GstPluginLoader * l,
         } else {
           cur = g_list_delete_link (cur, cur);
           g_free (e->filename);
-          g_free (e);
+          g_slice_free (PendingPluginEntry, e);
         }
       }
 
@@ -798,7 +794,7 @@ handle_rx_packet (GstPluginLoader * l,
 
       if (entry != NULL) {
         g_free (entry->filename);
-        g_free (entry);
+        g_slice_free (PendingPluginEntry, entry);
       }
 
       /* Remove the plugin entry we just loaded */

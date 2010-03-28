@@ -439,7 +439,7 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
     return;
   }
 
-  info = g_new (GstTagInfo, 1);
+  info = g_slice_new (GstTagInfo);
   info->flag = flag;
   info->type = type;
   info->nick = g_strdup (nick);

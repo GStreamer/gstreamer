@@ -284,7 +284,8 @@ gst_element_init (GstElement * element)
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
 
-  element->state_lock = g_new0 (GStaticRecMutex, 1);
+  /* FIXME 0.11: Store this directly in the instance struct */
+  element->state_lock = g_slice_new (GStaticRecMutex);
   g_static_rec_mutex_init (element->state_lock);
   element->state_cond = g_cond_new ();
 }
@@ -2894,7 +2895,7 @@ gst_element_finalize (GObject * object)
   element->state_cond = NULL;
   GST_STATE_UNLOCK (element);
   g_static_rec_mutex_free (element->state_lock);
-  g_free (element->state_lock);
+  g_slice_free (GStaticRecMutex, element->state_lock);
   element->state_lock = NULL;
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");

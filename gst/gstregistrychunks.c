@@ -96,6 +96,18 @@ _strnlen (const gchar * str, gint maxlen)
 #define alignment(_address)  (gsize)_address%ALIGNMENT
 #define align(_ptr)          _ptr += (( alignment(_ptr) == 0) ? 0 : ALIGNMENT-alignment(_ptr))
 
+void
+_priv_gst_registry_chunk_free (GstRegistryChunk * chunk)
+{
+  if (!(chunk->flags & GST_REGISTRY_CHUNK_FLAG_CONST)) {
+    if ((chunk->flags & GST_REGISTRY_CHUNK_FLAG_MALLOC))
+      g_free (chunk->data);
+    else
+      g_slice_free1 (chunk->size, chunk->data);
+  }
+  g_slice_free (GstRegistryChunk, chunk);
+}
+
 /*
  * gst_registry_chunks_save_const_string:
  *
@@ -113,7 +125,7 @@ gst_registry_chunks_save_const_string (GList ** list, const gchar * str)
     str = "";
   }
 
-  chunk = g_malloc (sizeof (GstRegistryChunk));
+  chunk = g_slice_new (GstRegistryChunk);
   chunk->data = (gpointer) str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;
   chunk->flags = GST_REGISTRY_CHUNK_FLAG_CONST;
@@ -134,10 +146,10 @@ gst_registry_chunks_save_string (GList ** list, gchar * str)
 {
   GstRegistryChunk *chunk;
 
-  chunk = g_malloc (sizeof (GstRegistryChunk));
+  chunk = g_slice_new (GstRegistryChunk);
   chunk->data = str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;
-  chunk->flags = GST_REGISTRY_CHUNK_FLAG_NONE;
+  chunk->flags = GST_REGISTRY_CHUNK_FLAG_MALLOC;
   chunk->align = FALSE;
   *list = g_list_prepend (*list, chunk);
   return TRUE;
@@ -155,7 +167,7 @@ gst_registry_chunks_make_data (gpointer data, gulong size)
 {
   GstRegistryChunk *chunk;
 
-  chunk = g_malloc (sizeof (GstRegistryChunk));
+  chunk = g_slice_new (GstRegistryChunk);
   chunk->data = data;
   chunk->size = size;
   chunk->flags = GST_REGISTRY_CHUNK_FLAG_NONE;
@@ -178,7 +190,7 @@ gst_registry_chunks_save_pad_template (GList ** list,
   GstRegistryChunkPadTemplate *pt;
   GstRegistryChunk *chk;
 
-  pt = g_malloc0 (sizeof (GstRegistryChunkPadTemplate));
+  pt = g_slice_new (GstRegistryChunkPadTemplate);
   chk =
       gst_registry_chunks_make_data (pt, sizeof (GstRegistryChunkPadTemplate));
 
@@ -219,7 +231,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstRegistryChunkElementFactory *ef;
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-    ef = g_malloc0 (sizeof (GstRegistryChunkElementFactory));
+    ef = g_slice_new (GstRegistryChunkElementFactory);
     chk =
         gst_registry_chunks_make_data (ef,
         sizeof (GstRegistryChunkElementFactory));
@@ -279,7 +291,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
     gchar *str;
 
-    tff = g_malloc0 (sizeof (GstRegistryChunkTypeFindFactory));
+    tff = g_slice_new (GstRegistryChunkTypeFindFactory);
     chk =
         gst_registry_chunks_make_data (tff,
         sizeof (GstRegistryChunkTypeFindFactory));
@@ -309,11 +321,10 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
   } else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
-    pf = g_malloc0 (sizeof (GstRegistryChunkPluginFeature));
+    pf = g_slice_new (GstRegistryChunkPluginFeature);
     chk =
         gst_registry_chunks_make_data (pf,
         sizeof (GstRegistryChunkPluginFeature));
-    pf->rank = feature->rank;
 
     /* pack element factory strings */
     gst_registry_chunks_save_const_string (list, factory->longdesc);
@@ -346,7 +357,7 @@ gst_registry_chunks_save_plugin_dep (GList ** list, GstPluginDep * dep)
   GstRegistryChunk *chk;
   gchar **s;
 
-  ed = g_malloc0 (sizeof (GstRegistryChunkDep));
+  ed = g_slice_new (GstRegistryChunkDep);
   chk = gst_registry_chunks_make_data (ed, sizeof (GstRegistryChunkDep));
 
   ed->flags = dep->flags;
@@ -388,7 +399,7 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
   GList *plugin_features = NULL;
   GList *walk;
 
-  pe = g_malloc0 (sizeof (GstRegistryChunkPluginElement));
+  pe = g_slice_new (GstRegistryChunkPluginElement);
   chk =
       gst_registry_chunks_make_data (pe,
       sizeof (GstRegistryChunkPluginElement));
@@ -473,9 +484,10 @@ gst_registry_chunks_load_pad_template (GstElementFactory * factory, gchar ** in,
       *in);
   unpack_element (*in, pt, GstRegistryChunkPadTemplate, end, fail);
 
-  template = g_new0 (GstStaticPadTemplate, 1);
+  template = g_slice_new (GstStaticPadTemplate);
   template->presence = pt->presence;
   template->direction = pt->direction;
+  template->static_caps.caps.refcount = 0;
 
   /* unpack pad template strings */
   unpack_const_string (*in, template->name_template, end, fail);
@@ -487,7 +499,8 @@ gst_registry_chunks_load_pad_template (GstElementFactory * factory, gchar ** in,
   return TRUE;
 fail:
   GST_INFO ("Reading pad template failed");
-  g_free (template);
+  if (template)
+    g_slice_free (GstStaticPadTemplate, template);
   return FALSE;
 }
 
@@ -690,7 +703,7 @@ gst_registry_chunks_load_plugin_dep (GstPlugin * plugin, gchar ** in,
   GST_LOG_OBJECT (plugin, "Unpacking GstRegistryChunkDep from %p", *in);
   unpack_element (*in, d, GstRegistryChunkDep, end, fail);
 
-  dep = g_malloc0 (sizeof (GstPluginDep));
+  dep = g_slice_new (GstPluginDep);
 
   dep->env_hash = d->env_hash;
   dep->stat_hash = d->stat_hash;

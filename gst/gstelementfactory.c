@@ -177,7 +177,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
       g_ptr_array_free (caps->structs, TRUE);
       caps->refcount = 0;
     }
-    g_free (templ);
+    g_slice_free (GstStaticPadTemplate, templ);
   }
   g_list_free (factory->staticpadtemplates);
   factory->staticpadtemplates = NULL;
@@ -259,10 +259,11 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     GstPadTemplate *templ = item->data;
     GstStaticPadTemplate *newt;
 
-    newt = g_new0 (GstStaticPadTemplate, 1);
+    newt = g_slice_new (GstStaticPadTemplate);
     newt->name_template = g_intern_string (templ->name_template);
     newt->direction = templ->direction;
     newt->presence = templ->presence;
+    newt->static_caps.caps.refcount = 0;
     newt->static_caps.string = gst_caps_to_string (templ->caps);
     factory->staticpadtemplates =
         g_list_append (factory->staticpadtemplates, newt);

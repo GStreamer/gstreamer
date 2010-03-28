@@ -113,7 +113,7 @@ gint _gst_trace_on = 1;
 GstTrace *
 gst_trace_new (const gchar * filename, gint size)
 {
-  GstTrace *trace = g_malloc (sizeof (GstTrace));
+  GstTrace *trace = g_slice_new (GstTrace);
 
   g_return_val_if_fail (trace != NULL, NULL);
   trace->filename = g_strdup (filename);
@@ -152,7 +152,7 @@ gst_trace_destroy (GstTrace * trace)
     gst_trace_flush (trace);
   close (trace->fd);
   g_free (trace->buf);
-  g_free (trace);
+  g_slice_free (GstTrace, trace);
 }
 
 /**
@@ -285,7 +285,7 @@ _gst_alloc_trace_register (const gchar * name)
 
   g_return_val_if_fail (name, NULL);
 
-  trace = g_new0 (GstAllocTrace, 1);
+  trace = g_slice_new (GstAllocTrace);
   trace->name = g_strdup (name);
   trace->live = 0;
   trace->mem_live = NULL;

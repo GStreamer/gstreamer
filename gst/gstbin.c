@@ -2662,7 +2662,7 @@ gst_bin_continue_func (BinContinueData * data)
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
   gst_object_unref (bin);
-  g_free (data);
+  g_slice_free (BinContinueData, data);
   return;
 
 interrupted:
@@ -2671,7 +2671,7 @@ interrupted:
     GST_STATE_UNLOCK (bin);
     GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
     gst_object_unref (bin);
-    g_free (data);
+    g_slice_free (BinContinueData, data);
     return;
   }
 }
@@ -2864,7 +2864,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
         "continue state change, pending %s",
         gst_element_state_get_name (pending));
 
-    cont = g_new0 (BinContinueData, 1);
+    cont = g_slice_new (BinContinueData);
 
     /* ref to the bin */
     cont->bin = gst_object_ref (bin);

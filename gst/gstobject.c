@@ -241,7 +241,8 @@ gst_object_class_init (GstObjectClass * klass)
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";
-  klass->lock = g_new0 (GStaticRecMutex, 1);
+  /* FIXME 0.11: Store this directly in the class struct */
+  klass->lock = g_slice_new (GStaticRecMutex);
   g_static_rec_mutex_init (klass->lock);
 
   klass->signal_object = g_object_newv (gst_signal_object_get_type (), 0, NULL);

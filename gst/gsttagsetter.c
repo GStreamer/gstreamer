@@ -130,7 +130,7 @@ gst_tag_data_free (gpointer p)
   if (data->list)
     gst_tag_list_free (data->list);
 
-  g_free (data);
+  g_slice_free (GstTagData, data);
 }
 
 static GstTagData *
@@ -140,7 +140,7 @@ gst_tag_setter_get_data (GstTagSetter * setter)
 
   data = g_object_get_qdata (G_OBJECT (setter), gst_tag_key);
   if (!data) {
-    data = g_new (GstTagData, 1);
+    data = g_slice_new (GstTagData);
     data->list = NULL;
     data->mode = GST_TAG_MERGE_KEEP;
     g_object_set_qdata_full (G_OBJECT (setter), gst_tag_key, data,
