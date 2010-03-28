@@ -19,3 +19,12 @@ SUBDIRS = \
 	app
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h
+
+# dependencies:
+audio: interfaces
+
+cdda: tag
+
+riff: tag
+
+rtsp: sdp
