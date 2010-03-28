@@ -1505,10 +1505,11 @@ static GstStructureAbbreviation *
 gst_structure_get_abbrs (gint * n_abbrs)
 {
   static GstStructureAbbreviation *abbrs = NULL;
-  static gint num = 0;
+  static volatile gsize num = 0;
 
-  if (abbrs == NULL) {
+  if (g_once_init_enter (&num)) {
     /* dynamically generate the array */
+    gsize _num;
     GstStructureAbbreviation dyn_abbrs[] = {
       {"int", G_TYPE_INT}
       ,
@@ -1548,10 +1549,11 @@ gst_structure_get_abbrs (gint * n_abbrs)
       ,
       {"structure", GST_TYPE_STRUCTURE}
     };
-    num = G_N_ELEMENTS (dyn_abbrs);
+    _num = G_N_ELEMENTS (dyn_abbrs);
     /* permanently allocate and copy the array now */
-    abbrs = g_new0 (GstStructureAbbreviation, num);
-    memcpy (abbrs, dyn_abbrs, sizeof (GstStructureAbbreviation) * num);
+    abbrs = g_new0 (GstStructureAbbreviation, _num);
+    memcpy (abbrs, dyn_abbrs, sizeof (GstStructureAbbreviation) * _num);
+    g_once_init_leave (&num, _num);
   }
   *n_abbrs = num;
 
