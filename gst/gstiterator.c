@@ -71,6 +71,11 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
+/* FIXME 0.11: Store the size inside the iterator, use GSlice for allocation
+ * and let gst_iterator_free() free the memory while the free-func only frees
+ * additional resources (maybe call it finalize?).
+ */
+
 static void
 gst_iterator_init (GstIterator * it,
     GType type,
