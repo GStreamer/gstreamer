@@ -1510,9 +1510,10 @@ static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
 
 /* This function MUST NOT return NULL */
 const gchar *
-_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
+_gst_debug_nameof_funcptr (gpointer ptr)
 {
   gchar *ptrname;
+  GstDebugFuncPtr func = (GstDebugFuncPtr) ptr;
 
 #ifdef HAVE_DLADDR
   Dl_info dl_info;
@@ -1549,10 +1550,8 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 }
 
 void
-_gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
+_gst_debug_register_funcptr (gpointer ptr, const gchar * ptrname)
 {
-  gpointer ptr = (gpointer) func;
-
   g_static_mutex_lock (&__dbg_functions_mutex);
 
   if (!__gst_function_pointers)
