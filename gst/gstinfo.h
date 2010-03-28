@@ -254,7 +254,6 @@ typedef void (*GstLogFunction)  (GstDebugCategory * category,
                                  GstDebugMessage  * message,
                                  gpointer           data);
 
-#ifndef GST_DISABLE_GST_DEBUG
 
 /* FIXME 0.11: move this into private headers */
 void            _gst_debug_init (void);
@@ -293,6 +292,31 @@ void            gst_debug_log_valist     (GstDebugCategory * category,
                                           GObject          * object,
                                           const gchar      * format,
                                           va_list            args) G_GNUC_NO_INSTRUMENT;
+
+/* do not use this function, use the GST_DEBUG_CATEGORY_INIT macro */
+GstDebugCategory *_gst_debug_category_new (const gchar * name,
+                                           guint         color,
+                                           const gchar * description);
+/* do not use this function, use the GST_DEBUG_CATEGORY_GET macro */
+GstDebugCategory *_gst_debug_get_category (const gchar *name);
+
+
+/* do not use this function, use the GST_CAT_MEMDUMP_* macros */
+void _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * msg,
+    const guint8 * data, guint length);
+
+/* FIXME:0.11 remove, we don't use it */
+typedef	void (* GstDebugFuncPtr)	(void);
+
+/* do no use these functions, use the GST_DEBUG*_FUNCPTR macros */
+void	_gst_debug_register_funcptr	(gpointer	func,
+					 const gchar *		ptrname);
+G_CONST_RETURN gchar *
+	_gst_debug_nameof_funcptr	(gpointer	func) G_GNUC_NO_INSTRUMENT;
+
+
+#ifndef GST_DISABLE_GST_DEBUG
 
 const gchar   * gst_debug_message_get    (GstDebugMessage  * message);
 
@@ -351,10 +375,6 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
 
-/* do not use this function, use the GST_DEBUG_CATEGORY_INIT macro below */
-GstDebugCategory *_gst_debug_category_new (const gchar * name,
-                                           guint         color,
-                                           const gchar * description);
 /**
  * GST_DEBUG_CATEGORY_INIT:
  * @cat: the category to initialize.
@@ -408,9 +428,6 @@ G_CONST_RETURN gchar *
 	gst_debug_category_get_description (GstDebugCategory *	category);
 GSList *
         gst_debug_get_all_categories	(void);
-
-/* do not use this function, use the GST_DEBUG_CATEGORY_GET macro below */
-GstDebugCategory *_gst_debug_get_category (const gchar *name);
 
 /**
  * GST_DEBUG_CATEGORY_GET:
@@ -512,11 +529,6 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 }
 #endif
 #endif /* G_HAVE_ISO_VARARGS */
-
-/* private helper function */
-void _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
-    const gchar * func, gint line, GObject * obj, const gchar * msg,
-    const guint8 * data, guint length);
 
 /* This one doesn't have varargs in the macro, so it's different than all the
  * other macros and hence in a separate block right here. Docs chunks are
@@ -1094,12 +1106,6 @@ GST_FIXME (const char *format, ...)
 
 /********** function pointer stuff **********/
 
-typedef	void (* GstDebugFuncPtr)	(void);
-void	_gst_debug_register_funcptr	(GstDebugFuncPtr	func,
-					 const gchar *		ptrname);
-G_CONST_RETURN gchar *
-	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func) G_GNUC_NO_INSTRUMENT;
-
 /**
  * GST_DEBUG_REGISTER_FUNCPTR:
  * @ptr: pointer to the function to register
@@ -1112,7 +1118,7 @@ G_CONST_RETURN gchar *
  * Since: 0.10.26
  */
 #define GST_DEBUG_REGISTER_FUNCPTR(ptr) \
-  _gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr)
+  _gst_debug_register_funcptr((gpointer)(ptr), #ptr)
 /**
  * GST_DEBUG_FUNCPTR:
  * @ptr: pointer to the function to register
@@ -1123,7 +1129,7 @@ G_CONST_RETURN gchar *
  * Returns: the value passed to @ptr.
  */
 #define GST_DEBUG_FUNCPTR(ptr) \
-  (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , ptr)
+  (_gst_debug_register_funcptr((gpointer)(ptr), #ptr) , ptr)
 
 /**
  * GST_DEBUG_FUNCPTR_NAME:
@@ -1136,7 +1142,7 @@ G_CONST_RETURN gchar *
  * freed by the caller.
  */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
-  _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)
+  _gst_debug_nameof_funcptr((gpointer)ptr)
 
 
 #else /* GST_DISABLE_GST_DEBUG */
