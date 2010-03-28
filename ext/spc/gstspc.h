@@ -65,6 +65,8 @@ struct _GstSpcDecClass
   GstElementClass parent_class;
 };
 
+GType gst_spc_dec_get_type(void);
+
 G_END_DECLS
 
 #endif /* __GST_SPC_DEC_H__ */
