@@ -26,3 +26,4 @@ DIST_SUBDIRS = \
   ximage \
   xvimage
 
+include $(top_srcdir)/common/parallel-subdirs.mak

@@ -81,3 +81,5 @@ DIST_SUBDIRS = \
   pango \
   theora \
   vorbis
+
+include $(top_srcdir)/common/parallel-subdirs.mak
