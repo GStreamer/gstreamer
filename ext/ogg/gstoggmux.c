@@ -20,7 +20,7 @@
 
 /**
  * SECTION:element-oggmux
- * @see_also: <link linkend="gst-plugins-base-plugins-deoggmux">oggdemux</link>
+ * @see_also: <link linkend="gst-plugins-base-plugins-oggdemux">oggdemux</link>
  *
  * This element merges streams (audio and video) into ogg files.
  *
