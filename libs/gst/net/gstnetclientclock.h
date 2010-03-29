@@ -80,7 +80,7 @@ struct _GstNetClientClock {
 
   GstClockTime current_timeout;
 
-  struct sockaddr_id *servaddr;
+  struct sockaddr_in *servaddr;
 
   GThread *thread;
 
