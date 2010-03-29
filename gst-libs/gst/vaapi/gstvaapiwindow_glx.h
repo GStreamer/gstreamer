@@ -24,6 +24,7 @@
 #include <GL/glx.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
+#include <gst/vaapi/gstvaapitexture.h>
 
 G_BEGIN_DECLS
 
@@ -97,6 +98,14 @@ gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window);
 
 void
 gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window);
+
+gboolean
+gst_vaapi_window_glx_put_texture(
+    GstVaapiWindowGLX       *window,
+    GstVaapiTexture         *texture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+);
 
 G_END_DECLS
 

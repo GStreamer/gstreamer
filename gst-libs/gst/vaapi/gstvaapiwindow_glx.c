@@ -61,6 +61,35 @@ enum {
 static XVisualInfo *
 gst_vaapi_window_glx_create_visual(GstVaapiWindowGLX *window);
 
+/* Fill rectangle coords with capped bounds */
+static inline void
+fill_rect(
+    GstVaapiRectangle       *dst_rect,
+    const GstVaapiRectangle *src_rect,
+    guint                    width,
+    guint                    height
+)
+{
+    if (src_rect) {
+        dst_rect->x = src_rect->x > 0 ? src_rect->x : 0;
+        dst_rect->y = src_rect->y > 0 ? src_rect->y : 0;
+        if (src_rect->x + src_rect->width < width)
+            dst_rect->width = src_rect->width;
+        else
+            dst_rect->width = width - dst_rect->x;
+        if (src_rect->y + src_rect->height < height)
+            dst_rect->height = src_rect->height;
+        else
+            dst_rect->height = height - dst_rect->y;
+    }
+    else {
+        dst_rect->x      = 0;
+        dst_rect->y      = 0;
+        dst_rect->width  = width;
+        dst_rect->height = height;
+    }
+}
+
 static inline void
 _gst_vaapi_window_glx_set_context(
     GstVaapiWindowGLX *window,
@@ -549,4 +578,78 @@ gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window)
     );
     glClear(GL_COLOR_BUFFER_BIT);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+}
+
+/**
+ * gst_vaapi_window_glx_put_texture:
+ * @window: a #GstVaapiWindowGLX
+ * @texture: a #GstVaapiTexture
+ * @src_rect: the sub-rectangle of the source texture to
+ *   extract and process. If %NULL, the entire texture will be used.
+ * @dst_rect: the sub-rectangle of the destination
+ *   window into which the texture is rendered. If %NULL, the entire
+ *   window will be used.
+ *
+ * Renders the @texture region specified by @src_rect into the @window
+ * region specified by @dst_rect.
+ *
+ * NOTE: only GL_TEXTURE_2D textures are supported at this time.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_window_glx_put_texture(
+    GstVaapiWindowGLX       *window,
+    GstVaapiTexture         *texture,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+    GstVaapiRectangle tmp_src_rect, tmp_dst_rect;
+    GLTextureState ts;
+    GLenum tex_target;
+    GLuint tex_id;
+    guint tex_width, tex_height;
+    guint win_width, win_height;
+
+    g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), FALSE);
+
+    gst_vaapi_texture_get_size(texture, &tex_width, &tex_height);
+    fill_rect(&tmp_src_rect, src_rect, tex_width, tex_height);
+    src_rect = &tmp_src_rect;
+
+    gst_vaapi_window_get_size(GST_VAAPI_WINDOW(window), &win_width, &win_height);
+    fill_rect(&tmp_dst_rect, dst_rect, win_width, win_height);
+    dst_rect = &tmp_dst_rect;
+
+    tex_target = gst_vaapi_texture_get_target(texture);
+    tex_id     = gst_vaapi_texture_get_id(texture);
+
+    /* XXX: only GL_TEXTURE_2D textures are supported at this time */
+    if (tex_target != GL_TEXTURE_2D)
+        return FALSE;
+
+    if (!gl_bind_texture(&ts, tex_target, tex_id))
+        return FALSE;
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glPushMatrix();
+    glTranslatef((GLfloat)dst_rect->x, (GLfloat)dst_rect->y, 0.0f);
+    glBegin(GL_QUADS);
+    {
+        const float tx1 = (float)src_rect->x / tex_width;
+        const float tx2 = (float)(src_rect->x + src_rect->width) / tex_width;
+        const float ty1 = (float)src_rect->y / tex_height;
+        const float ty2 = (float)(src_rect->y + src_rect->height) / tex_height;
+        const guint w   = dst_rect->width;
+        const guint h   = dst_rect->height;
+        glTexCoord2f(tx1, ty1); glVertex2i(0, 0);
+        glTexCoord2f(tx1, ty2); glVertex2i(0, h);
+        glTexCoord2f(tx2, ty2); glVertex2i(w, h);
+        glTexCoord2f(tx2, ty1); glVertex2i(w, 0);
+    }
+    glEnd();
+    glPopMatrix();
+    gl_unbind_texture(&ts);
+    return TRUE;
 }
