@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <math.h>
 #include "gstvaapiutils_glx.h"
 
 #define DEBUG 1
@@ -164,6 +165,59 @@ gl_set_bgcolor(guint32 color)
 }
 
 /**
+ * gl_perspective:
+ * @fovy: the field of view angle, in degrees, in the y direction
+ * @aspect: the aspect ratio that determines the field of view in the
+ *   x direction.  The aspect ratio is the ratio of x (width) to y
+ *   (height)
+ * @zNear: the distance from the viewer to the near clipping plane
+ *   (always positive)
+ * @zFar: the distance from the viewer to the far clipping plane
+ *   (always positive)
+ *
+ * Specified a viewing frustum into the world coordinate system. This
+ * basically is the Mesa implementation of gluPerspective().
+ */
+static void
+frustum(GLdouble left, GLdouble right,
+        GLdouble bottom, GLdouble top, 
+        GLdouble nearval, GLdouble farval)
+{
+    GLdouble x, y, a, b, c, d;
+    GLdouble m[16];
+
+    x = (2.0 * nearval) / (right - left);
+    y = (2.0 * nearval) / (top - bottom);
+    a = (right + left) / (right - left);
+    b = (top + bottom) / (top - bottom);
+    c = -(farval + nearval) / ( farval - nearval);
+    d = -(2.0 * farval * nearval) / (farval - nearval);
+
+#define M(row,col)  m[col*4+row]
+    M(0,0) = x;     M(0,1) = 0.0F;  M(0,2) = a;      M(0,3) = 0.0F;
+    M(1,0) = 0.0F;  M(1,1) = y;     M(1,2) = b;      M(1,3) = 0.0F;
+    M(2,0) = 0.0F;  M(2,1) = 0.0F;  M(2,2) = c;      M(2,3) = d;
+    M(3,0) = 0.0F;  M(3,1) = 0.0F;  M(3,2) = -1.0F;  M(3,3) = 0.0F;
+#undef M
+
+    glMultMatrixd(m);
+}
+
+static void
+gl_perspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
+{
+    GLdouble xmin, xmax, ymin, ymax;
+
+    ymax = zNear * tan(fovy * M_PI / 360.0);
+    ymin = -ymax;
+    xmin = ymin * aspect;
+    xmax = ymax * aspect;
+
+    /* Don't call glFrustum() because of error semantics (covglu) */
+    frustum(xmin, xmax, ymin, ymax, zNear, zFar);
+}
+
+/**
  * gl_resize:
  * @width: the requested width, in pixels
  * @height: the requested height, in pixels
@@ -175,12 +229,22 @@ gl_set_bgcolor(guint32 color)
 void
 gl_resize(guint width, guint height)
 {
+#define FOVY     60.0f
+#define ASPECT   1.0f
+#define Z_NEAR   0.1f
+#define Z_FAR    100.0f
+#define Z_CAMERA 0.869f
+
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, width, height, 0, -1, 1);
+    gl_perspective(FOVY, ASPECT, Z_NEAR, Z_FAR);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    glTranslatef(-0.5f, -0.5f, -Z_CAMERA);
+    glScalef(1.0f/width, -1.0f/height, 1.0f/width);
+    glTranslatef(0.0f, -1.0f*height, 0.0f);
 }
 
 /**

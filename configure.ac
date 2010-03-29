@@ -106,6 +106,9 @@ AC_DEFINE_UNQUOTED([attribute_hidden],
                    [$vaapi_cv_visibility_attribute_hidden],
                    [Define the "hidden" visibility attribute])
 
+dnl Check for basic libraries
+AC_CHECK_LIB(m, tan)
+
 dnl Check for Gtk doc
 GTKDOC_VERSION=gtkdoc_version
 GTK_DOC_CHECK([$GTKDOC_VERSION])
