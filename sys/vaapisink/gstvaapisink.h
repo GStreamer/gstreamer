@@ -24,7 +24,7 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
-#if USE_GLX
+#if USE_VAAPISINK_GLX
 #include <gst/vaapi/gstvaapitexture.h>
 #endif
 #include <X11/Xlib.h>
@@ -58,7 +58,7 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiSink                    GstVaapiSink;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
 
-#if !USE_GLX
+#if !USE_VAAPISINK_GLX
 typedef struct _GstVaapiTexture                 GstVaapiTexture;
 #endif
 

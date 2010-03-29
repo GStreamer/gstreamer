@@ -34,7 +34,7 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
-#if USE_GLX
+#if USE_VAAPISINK_GLX
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
@@ -125,7 +125,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
     GstVaapiDisplay * const display = sink->display;
 
     if (!sink->window) {
-#if USE_GLX
+#if USE_VAAPISINK_GLX
         if (sink->use_glx)
             sink->window = gst_vaapi_window_glx_new(display, width, height);
         else
@@ -139,7 +139,7 @@ static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
     if (!sink->display) {
-#if USE_GLX
+#if USE_VAAPISINK_GLX
         if (sink->use_glx)
             sink->display = gst_vaapi_display_glx_new(sink->display_name);
         else
@@ -285,7 +285,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
-#if USE_GLX
+#if USE_VAAPISINK_GLX
     if (sink->use_glx) {
         GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
         gst_vaapi_window_glx_make_current(window);
@@ -418,14 +418,14 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll     = gst_vaapisink_show_frame;
     basesink_class->render      = gst_vaapisink_show_frame;
 
-#if USE_GLX
+#if USE_VAAPISINK_GLX
     g_object_class_install_property
         (object_class,
          PROP_USE_GLX,
          g_param_spec_boolean("use-glx",
                               "GLX rendering",
                               "Enables GLX rendering",
-                              FALSE,
+                              TRUE,
                               G_PARAM_READWRITE));
 #endif
 
@@ -473,7 +473,7 @@ static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->video_height  = 0;
     sink->fullscreen    = FALSE;
     sink->synchronous   = FALSE;
-    sink->use_glx       = FALSE;
+    sink->use_glx       = USE_VAAPISINK_GLX;
 }
 
 GstVaapiDisplay *

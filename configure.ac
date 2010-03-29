@@ -75,6 +75,11 @@ AC_ARG_ENABLE(glx,
                    [enable OpenGL/X11 @<:@default=yes@:>@]),
     [], [enable_glx="yes"])
 
+AC_ARG_ENABLE(vaapisink-glx,
+    AC_HELP_STRING([--enable-vaapisink-glx],
+                   [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
+    [], [enable_vaapisink_glx="no"])
+
 dnl Check for __attribute__((visibility()))
 AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
   vaapi_cv_visibility_attribute,
@@ -227,8 +232,19 @@ AC_SUBST(LIBVA_GLX_PKGNAME)
 AC_SUBST(LIBVA_EXTRA_CFLAGS)
 AC_SUBST(LIBVA_EXTRA_LIBS)
 
+dnl Check for OpenGL support to
+if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
+    USE_VAAPISINK_GLX=1
+else
+    USE_VAAPISINK_GLX=0
+fi
+
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX, [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_VAAPISINK_GLX, $USE_VAAPISINK_GLX,
+    [Defined to 1 to enable GLX support to vaapisink])
+AM_CONDITIONAL(USE_VAAPISINK_GLX, test $USE_VAAPISINK_GLX -eq 1)
 
 VA_VERSION=`$PKG_CONFIG --modversion libva`
 VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
@@ -289,4 +305,5 @@ echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(test $USE_GLX  -eq 1 && echo yes || echo no)
+echo Build vaapisink with OpenGL ...... : $(test $USE_VAAPISINK_GLX  -eq 1 && echo yes || echo no)
 echo

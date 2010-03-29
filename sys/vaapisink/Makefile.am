@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstvaapisink.la
 libgstvaapi_CFLAGS = \
 	-I$(top_srcdir)/gst-libs
 
-if USE_GLX
+if USE_VAAPISINK_GLX
 libgstvaapi_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
 else
