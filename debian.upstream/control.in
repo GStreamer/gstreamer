@@ -55,6 +55,15 @@ Description: GStreamer libraries from the "vaapi" set
  .
  This package contains x11 libraries for the "vaapi" set.
 
+Package: libgstvaapi-glx-@GST_VAAPI_MAJOR_VERSION@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GStreamer libraries from the "vaapi" set
+ VA-API support libraries for GStreamer.
+ .
+ This package contains glx libraries for the "vaapi" set.
+
 Package: libgstvaapi@GST_VAAPI_MAJOR_VERSION@-dev
 Architecture: any
 Section: libdevel

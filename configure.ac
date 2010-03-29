@@ -259,6 +259,8 @@ debian.upstream/libgstvaapi.install.in
 debian.upstream/libgstvaapi-dev.install.in
     debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-x11.install.in
+    debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi-glx.install.in
     docs/Makefile
     docs/reference/Makefile
     docs/reference/libs/Makefile
