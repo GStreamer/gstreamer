@@ -64,6 +64,10 @@ gboolean
 gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
     attribute_hidden;
 
+void
+gl_swap_buffers(Display *dpy, Window win)
+    attribute_hidden;
+
 typedef struct _GLTextureState GLTextureState;
 struct _GLTextureState {
     gboolean    was_enabled;

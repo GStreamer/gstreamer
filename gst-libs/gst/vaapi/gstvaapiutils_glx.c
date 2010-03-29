@@ -212,6 +212,21 @@ gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
 }
 
 /**
+ * gl_swap_buffers:
+ * @dpy: an X11 #Display
+ * @win: an X11 #Window
+ *
+ * Promotes the contents of the back buffer of the @win window to
+ * become the contents of the front buffer. This simply is wrapper
+ * around glXSwapBuffers().
+ */
+void
+gl_swap_buffers(Display *dpy, Window win)
+{
+    glXSwapBuffers(dpy, win);
+}
+
+/**
  * gl_bind_texture:
  * @ts: a #GLTextureState
  * @target: the target to which the texture is bound

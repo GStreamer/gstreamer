@@ -50,6 +50,7 @@ struct _GstVaapiWindowGLXPrivate {
     guint               is_constructed  : 1;
     guint               foreign_context : 1;
     guint               foreign_window  : 1;
+    guint               swapped_buffers : 1;
 };
 
 enum {
@@ -112,8 +113,13 @@ gst_vaapi_window_glx_destroy_context(GstVaapiWindowGLX *window)
     if (priv->context) {
         if (!priv->foreign_context) {
             GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-            if (glXGetCurrentContext() == priv->context)
+            if (glXGetCurrentContext() == priv->context) {
+                /* XXX: if buffers were never swapped, the application
+                   will crash later with the NVIDIA driver */
+                if (!priv->swapped_buffers)
+                    gl_swap_buffers(dpy, GST_VAAPI_OBJECT_ID(window));
                 gl_make_current(dpy, None, NULL, NULL);
+            }
             glXDestroyContext(dpy, priv->context);
             GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
         }
@@ -429,6 +435,7 @@ gst_vaapi_window_glx_init(GstVaapiWindowGLX *window)
     priv->is_constructed        = FALSE;
     priv->foreign_context       = FALSE;
     priv->foreign_window        = FALSE;
+    priv->swapped_buffers       = FALSE;
 }
 
 /**
@@ -572,12 +579,14 @@ gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window)
     g_return_if_fail(window->priv->is_constructed);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    glXSwapBuffers(
+    gl_swap_buffers(
         GST_VAAPI_OBJECT_XDISPLAY(window),
         GST_VAAPI_OBJECT_ID(window)
     );
     glClear(GL_COLOR_BUFFER_BIT);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+
+    window->priv->swapped_buffers = TRUE;
 }
 
 /**
