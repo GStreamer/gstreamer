@@ -80,7 +80,8 @@ enum {
     PROP_USE_GLX,
     PROP_DISPLAY,
     PROP_FULLSCREEN,
-    PROP_SYNCHRONOUS
+    PROP_SYNCHRONOUS,
+    PROP_USE_REFLECTION
 };
 
 static GstVaapiDisplay *
@@ -268,6 +269,125 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     return TRUE;
 }
 
+#if USE_VAAPISINK_GLX
+static void
+render_background(GstVaapiSink *sink)
+{
+    /* Original code from Mirco Muller (MacSlow):
+       <http://cgit.freedesktop.org/~macslow/gl-gst-player/> */
+    GLfloat fStartX = 0.0f;
+    GLfloat fStartY = 0.0f;
+    GLfloat fWidth  = (GLfloat)sink->window_rect.width;
+    GLfloat fHeight = (GLfloat)sink->window_rect.height;
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBegin(GL_QUADS);
+    {
+        /* top third, darker grey to white */
+        glColor3f(0.85f, 0.85f, 0.85f);
+        glVertex3f(fStartX, fStartY, 0.0f);
+        glColor3f(0.85f, 0.85f, 0.85f);
+        glVertex3f(fStartX + fWidth, fStartY, 0.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glVertex3f(fStartX + fWidth, fStartY + fHeight / 3.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glVertex3f(fStartX, fStartY + fHeight / 3.0f, 0.0f);
+
+        /* middle third, just plain white */
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glVertex3f(fStartX, fStartY + fHeight / 3.0f, 0.0f);
+        glVertex3f(fStartX + fWidth, fStartY + fHeight / 3.0f, 0.0f);
+        glVertex3f(fStartX + fWidth, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
+        glVertex3f(fStartX, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
+
+        /* bottom third, white to lighter grey */
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glVertex3f(fStartX, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glVertex3f(fStartX + fWidth, fStartY + 2.0f * fHeight / 3.0f, 0.0f);
+        glColor3f(0.62f, 0.66f, 0.69f);
+        glVertex3f(fStartX + fWidth, fStartY + fHeight, 0.0f);
+        glColor3f(0.62f, 0.66f, 0.69f);
+        glVertex3f(fStartX, fStartY + fHeight, 0.0f);
+    }
+    glEnd();
+}
+
+static void
+render_frame(GstVaapiSink *sink)
+{
+    const guint w = sink->window_rect.width;
+    const guint h = sink->window_rect.height;
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    {
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, 0);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, h);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(w, h);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(w, 0);
+    }
+    glEnd();
+}
+
+static void
+render_reflection(GstVaapiSink *sink)
+{
+    const guint w  = sink->window_rect.width;
+    const guint h  = sink->window_rect.height;
+    const guint rh = h / 5;
+    GLfloat     ry = 1.0f - (GLfloat)rh / (GLfloat)h;
+
+    glBegin(GL_QUADS);
+    {
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(w, 0);
+
+        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
+        glTexCoord2f(1.0f, ry); glVertex2i(w, rh);
+        glTexCoord2f(0.0f, ry); glVertex2i(0, rh);
+    }
+    glEnd();
+}
+
+static gboolean
+gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
+{
+    GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
+    GLenum target;
+    GLuint texture;
+
+    if (!sink->use_reflection)
+        return gst_vaapi_window_glx_put_texture(window, sink->texture,
+                                                NULL, &sink->window_rect);
+
+    target  = gst_vaapi_texture_get_target(sink->texture);
+    texture = gst_vaapi_texture_get_id(sink->texture);
+    if (target != GL_TEXTURE_2D || !texture)
+        return FALSE;
+
+    render_background(sink);
+
+    glEnable(target);
+    glBindTexture(target, texture);
+    {
+        glPushMatrix();
+        glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
+        glTranslatef(50.0f, 0.0f, 0.0f);
+        render_frame(sink);
+        glPushMatrix();
+        glTranslatef(0.0, (GLfloat)sink->window_rect.height + 5.0f, 0.0f);
+        render_reflection(sink);
+        glPopMatrix();
+        glPopMatrix();
+    }
+    glBindTexture(target, 0);
+    glDisable(target);
+    return TRUE;
+}
+#endif
+
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 {
@@ -306,8 +426,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
             GST_DEBUG("could not transfer VA surface to texture");
             return GST_FLOW_UNEXPECTED;
         }
-        if (!gst_vaapi_window_glx_put_texture(window, sink->texture,
-                                              NULL, &sink->window_rect)) {
+        if (!gst_vaapisink_show_frame_glx(sink)) {
             GST_DEBUG("could not render VA/GLX texture");
             return GST_FLOW_UNEXPECTED;
         }
@@ -356,6 +475,9 @@ gst_vaapisink_set_property(
     case PROP_SYNCHRONOUS:
         sink->synchronous = g_value_get_boolean(value);
         break;
+    case PROP_USE_REFLECTION:
+        sink->use_reflection = g_value_get_boolean(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -384,6 +506,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_SYNCHRONOUS:
         g_value_set_boolean(value, sink->synchronous);
+        break;
+    case PROP_USE_REFLECTION:
+        g_value_set_boolean(value, sink->use_reflection);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -427,6 +552,15 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Enables GLX rendering",
                               TRUE,
                               G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_USE_REFLECTION,
+         g_param_spec_boolean("use-reflection",
+                              "Reflection effect",
+                              "Enables OpenGL reflection effect",
+                              FALSE,
+                              G_PARAM_READWRITE));
 #endif
 
     g_object_class_install_property
@@ -465,15 +599,16 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 
 static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
-    sink->display_name  = NULL;
-    sink->display       = NULL;
-    sink->window        = NULL;
-    sink->texture       = NULL;
-    sink->video_width   = 0;
-    sink->video_height  = 0;
-    sink->fullscreen    = FALSE;
-    sink->synchronous   = FALSE;
-    sink->use_glx       = USE_VAAPISINK_GLX;
+    sink->display_name   = NULL;
+    sink->display        = NULL;
+    sink->window         = NULL;
+    sink->texture        = NULL;
+    sink->video_width    = 0;
+    sink->video_height   = 0;
+    sink->fullscreen     = FALSE;
+    sink->synchronous    = FALSE;
+    sink->use_glx        = USE_VAAPISINK_GLX;
+    sink->use_reflection = FALSE;
 }
 
 GstVaapiDisplay *

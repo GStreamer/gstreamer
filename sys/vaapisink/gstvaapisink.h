@@ -76,6 +76,7 @@ struct _GstVaapiSink {
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
     guint               use_glx         : 1;
+    guint               use_reflection  : 1;
 };
 
 struct _GstVaapiSinkClass {
