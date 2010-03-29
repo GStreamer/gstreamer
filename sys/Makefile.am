@@ -73,3 +73,5 @@ endif
 SUBDIRS=$(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
 DIST_SUBDIRS=directsound oss osxaudio osxvideo sunaudio v4l2 waveform ximage
+
+include $(top_srcdir)/common/parallel-subdirs.mak

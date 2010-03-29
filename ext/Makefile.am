@@ -168,3 +168,5 @@ DIST_SUBDIRS = \
 	speex \
 	taglib \
 	wavpack
+
+include $(top_srcdir)/common/parallel-subdirs.mak
