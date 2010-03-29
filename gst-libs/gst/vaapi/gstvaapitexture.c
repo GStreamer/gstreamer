@@ -263,6 +263,25 @@ gst_vaapi_texture_init(GstVaapiTexture *texture)
     priv->is_constructed        = FALSE;
 }
 
+/**
+ * gst_vaapi_texture_new:
+ * @display: a #GstVaapiDisplay
+ * @target: the target to which the texture is bound
+ * @format: the format of the pixel data
+ * @width: the requested width, in pixels
+ * @height: the requested height, in pixels
+ *
+ * Creates a texture with the specified dimensions, @target and
+ * @format. Note that only GL_TEXTURE_2D @target and GL_RGBA or
+ * GL_BGRA formats are supported at this time.
+ *
+ * The application shall maintain the live GL context itself. That is,
+ * gst_vaapi_window_glx_make_current() must be called beforehand, or
+ * any other function like glXMakeCurrent() if the context is managed
+ * outside of this library.
+ *
+ * Return value: the newly created #GstVaapiTexture object
+ */
 GstVaapiTexture *
 gst_vaapi_texture_new(
     GstVaapiDisplay *display,
@@ -284,6 +303,25 @@ gst_vaapi_texture_new(
                         NULL);
 }
 
+/**
+ * gst_vaapi_texture_new_with_texture:
+ * @display: a #GstVaapiDisplay
+ * @texture: the foreign GL texture name to use
+ * @target: the target to which the texture is bound
+ * @format: the format of the pixel data
+ *
+ * Creates a texture from an existing GL texture, with the specified
+ * @target and @format. Note that only GL_TEXTURE_2D @target and
+ * GL_RGBA or GL_BGRA formats are supported at this time. The
+ * dimensions will be retrieved from the @texture.
+ *
+ * The application shall maintain the live GL context itself. That is,
+ * gst_vaapi_window_glx_make_current() must be called beforehand, or
+ * any other function like glXMakeCurrent() if the context is managed
+ * outside of this library.
+ *
+ * Return value: the newly created #GstVaapiTexture object
+ */
 GstVaapiTexture *
 gst_vaapi_texture_new_with_texture(
     GstVaapiDisplay *display,
@@ -429,7 +467,7 @@ gst_vaapi_texture_get_size(
 }
 
 /**
- * gst_vaapi_window_put_texture:
+ * gst_vaapi_texture_put_surface:
  * @texture: a #GstVaapiTexture
  * @surface: a #GstVaapiSurface
  * @flags: postprocessing flags. See #GstVaapiTextureRenderFlags

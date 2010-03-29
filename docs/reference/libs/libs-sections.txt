@@ -111,7 +111,9 @@ gst_vaapi_window_glx_new
 gst_vaapi_window_glx_new_with_xid
 gst_vaapi_window_glx_get_context
 gst_vaapi_window_glx_set_context
+gst_vaapi_window_glx_make_current
 gst_vaapi_window_glx_swap_buffers
+gst_vaapi_window_glx_put_texture
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW_GLX
 GST_VAAPI_IS_WINDOW_GLX
@@ -363,4 +365,28 @@ gst_vaapi_image_format_from_fourcc
 gst_vaapi_image_format_get_va_format
 gst_vaapi_image_format_get_caps
 gst_vaapi_image_format_get_score
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapitexture</FILE>
+<TITLE>GstVaapiTexture</TITLE>
+GstVaapiTexture
+GstVaapiTextureClass
+gst_vaapi_texture_new
+gst_vaapi_texture_new_with_texture
+gst_vaapi_texture_get_id
+gst_vaapi_texture_get_target
+gst_vaapi_texture_get_format
+gst_vaapi_texture_get_width
+gst_vaapi_texture_get_height
+gst_vaapi_texture_get_size
+gst_vaapi_texture_put_surface
+<SUBSECTION Standard>
+GST_VAAPI_TEXTURE
+GST_VAAPI_IS_TEXTURE
+GST_VAAPI_TYPE_TEXTURE
+gst_vaapi_texture_get_type
+GST_VAAPI_TEXTURE_CLASS
+GST_VAAPI_IS_TEXTURE_CLASS
+GST_VAAPI_TEXTURE_GET_CLASS
 </SECTION>

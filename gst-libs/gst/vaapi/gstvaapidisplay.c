@@ -595,7 +595,7 @@ gst_vaapi_display_sync(GstVaapiDisplay *display)
 }
 
 /**
- * gst_vaapi_display_sync:
+ * gst_vaapi_display_flush:
  * @display: a #GstVaapiDisplay
  *
  * Flushes any requests queued for the windowing system.

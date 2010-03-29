@@ -22,6 +22,7 @@
     <xi:include href="xml/gstvaapiimage.xml"/>
     <xi:include href="xml/gstvaapiimageformat.xml"/>
     <xi:include href="xml/gstvaapisubpicture.xml"/>
+    <xi:include href="xml/gstvaapitexture.xml"/>
     <xi:include href="xml/gstvaapivideopool.xml"/>
     <xi:include href="xml/gstvaapisurfacepool.xml"/>
     <xi:include href="xml/gstvaapiimagepool.xml"/>
