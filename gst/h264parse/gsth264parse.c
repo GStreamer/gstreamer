@@ -1474,6 +1474,9 @@ gst_h264_parse_write_nal_prefix (GstH264Parse * h264parse, GstBuffer * nal)
       nal = gst_buffer_make_writable (nal);
       while (offset + 4 <= GST_BUFFER_SIZE (nal)) {
         nalu_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (nal) + offset);
+        /* input may already be in byte-stream */
+        if (nalu_size == 1)
+          break;
         GST_WRITE_UINT32_BE (GST_BUFFER_DATA (nal) + offset, 0x01);
         offset += nalu_size + 4;
       }
