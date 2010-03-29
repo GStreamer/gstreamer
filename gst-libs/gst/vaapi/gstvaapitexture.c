@@ -75,7 +75,7 @@ gst_vaapi_texture_destroy(GstVaapiTexture *texture)
         priv->gl_surface = NULL;
     }
 
-    if (texture) {
+    if (texture_id) {
         if (!priv->foreign_texture)
             glDeleteTextures(1, &texture_id);
         GST_VAAPI_OBJECT_ID(texture) = 0;
@@ -331,15 +331,23 @@ gst_vaapi_texture_new_with_texture(
 )
 {
     guint width, height, border_width;
+    GLTextureState ts;
+    gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
     /* Check texture dimensions */
-    if (!gl_get_texture_param(GL_TEXTURE_WIDTH, &width))
-        return NULL;
-    if (!gl_get_texture_param(GL_TEXTURE_HEIGHT, &height))
-        return NULL;
-    if (!gl_get_texture_param(GL_TEXTURE_BORDER, &border_width))
+    GST_VAAPI_DISPLAY_LOCK(display);
+    success = gl_bind_texture(&ts, target, texture);
+    if (success) {
+        if (!gl_get_texture_param(target, GL_TEXTURE_WIDTH,  &width)  ||
+            !gl_get_texture_param(target, GL_TEXTURE_HEIGHT, &height) ||
+            !gl_get_texture_param(target, GL_TEXTURE_BORDER, &border_width))
+            success = FALSE;
+        gl_unbind_texture(&ts);
+    }
+    GST_VAAPI_DISPLAY_UNLOCK(display);
+    if (!success)
         return NULL;
 
     width  -= 2 * border_width;

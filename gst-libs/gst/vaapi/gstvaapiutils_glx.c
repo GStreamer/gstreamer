@@ -120,7 +120,8 @@ gl_get_param(GLenum param, guint *pval)
 }
 
 /**
- * gl_get_param:
+ * gl_get_texture_param:
+ * @target: the target to which the texture is bound
  * @param: the parameter name
  * @pval: return location for the value
  *
@@ -130,12 +131,12 @@ gl_get_param(GLenum param, guint *pval)
  * Return value: %TRUE on success
  */
 gboolean
-gl_get_texture_param(GLenum param, guint *pval)
+gl_get_texture_param(GLenum target, GLenum param, guint *pval)
 {
     GLint val;
 
     gl_purge_errors();
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, param, &val);
+    glGetTexLevelParameteriv(target, 0, param, &val);
     if (gl_check_error())
         return FALSE;
 
@@ -250,7 +251,7 @@ gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
         return FALSE;
     }
 
-    if (ts->was_enabled && gl_get_param(texture_binding, &ts->old_texture) < 0)
+    if (ts->was_enabled && !gl_get_param(texture_binding, &ts->old_texture))
         return FALSE;
 
     ts->was_bound = texture == ts->old_texture;

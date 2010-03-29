@@ -43,7 +43,7 @@ gl_get_param(GLenum param, guint *pval)
     attribute_hidden;
 
 gboolean
-gl_get_texture_param(GLenum param, guint *pval)
+gl_get_texture_param(GLenum target, GLenum param, guint *pval)
     attribute_hidden;
 
 void
