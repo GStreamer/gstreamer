@@ -322,16 +322,18 @@ render_background(GstVaapiSink *sink)
 static void
 render_frame(GstVaapiSink *sink)
 {
-    const guint w = sink->window_width;
-    const guint h = sink->window_height;
+    const guint x1 = sink->display_rect.x;
+    const guint x2 = sink->display_rect.x + sink->display_rect.width;
+    const guint y1 = sink->display_rect.y;
+    const guint y2 = sink->display_rect.y + sink->display_rect.height;
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, 0);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, h);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(w, h);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(w, 0);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(x1, y1);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(x1, y2);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(x2, y2);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(x2, y1);
     }
     glEnd();
 }
@@ -339,20 +341,21 @@ render_frame(GstVaapiSink *sink)
 static void
 render_reflection(GstVaapiSink *sink)
 {
-    const guint w  = sink->window_width;
-    const guint h  = sink->window_height;
-    const guint rh = h / 5;
-    GLfloat     ry = 1.0f - (GLfloat)rh / (GLfloat)h;
+    const guint x1 = sink->display_rect.x;
+    const guint x2 = sink->display_rect.x + sink->display_rect.width;
+    const guint y1 = sink->display_rect.y;
+    const guint rh = sink->display_rect.height / 5;
+    GLfloat     ry = 1.0f - (GLfloat)rh / (GLfloat)sink->display_rect.height;
 
     glBegin(GL_QUADS);
     {
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(w, 0);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(x1, y1);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(x2, y1);
 
         glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
-        glTexCoord2f(1.0f, ry); glVertex2i(w, rh);
-        glTexCoord2f(0.0f, ry); glVertex2i(0, rh);
+        glTexCoord2f(1.0f, ry); glVertex2i(x2, y1 + rh);
+        glTexCoord2f(0.0f, ry); glVertex2i(x1, y1 + rh);
     }
     glEnd();
 }
@@ -383,7 +386,7 @@ gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
         glTranslatef(50.0f, 0.0f, 0.0f);
         render_frame(sink);
         glPushMatrix();
-        glTranslatef(0.0, (GLfloat)sink->window_height + 5.0f, 0.0f);
+        glTranslatef(0.0, (GLfloat)sink->display_rect.height + 5.0f, 0.0f);
         render_reflection(sink);
         glPopMatrix();
         glPopMatrix();
