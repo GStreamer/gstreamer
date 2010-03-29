@@ -24,6 +24,9 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
+#if USE_GLX
+#include <gst/vaapi/gstvaapitexture.h>
+#endif
 #include <X11/Xlib.h>
 
 G_BEGIN_DECLS
@@ -63,8 +66,12 @@ struct _GstVaapiSink {
     GstVaapiDisplay    *display;
     GstVaapiWindow     *window;
     GstVaapiRectangle   window_rect;
+    GstVaapiTexture    *texture;
+    guint               video_width;
+    guint               video_height;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
+    guint               use_glx         : 1;
 };
 
 struct _GstVaapiSinkClass {

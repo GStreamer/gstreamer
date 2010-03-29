@@ -34,6 +34,10 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
+#if USE_GLX
+#include <gst/vaapi/gstvaapidisplay_glx.h>
+#include <gst/vaapi/gstvaapiwindow_glx.h>
+#endif
 #include "gstvaapisink.h"
 
 #define GST_PLUGIN_NAME "vaapisink"
@@ -73,6 +77,7 @@ GST_BOILERPLATE_FULL(
 enum {
     PROP_0,
 
+    PROP_USE_GLX,
     PROP_DISPLAY,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS
@@ -115,10 +120,31 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
 }
 
 static inline gboolean
+gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
+{
+    GstVaapiDisplay * const display = sink->display;
+
+    if (!sink->window) {
+#if USE_GLX
+        if (sink->use_glx)
+            sink->window = gst_vaapi_window_glx_new(display, width, height);
+        else
+#endif
+            sink->window = gst_vaapi_window_x11_new(display, width, height);
+    }
+    return sink->window != NULL;
+}
+
+static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
     if (!sink->display) {
-        sink->display = gst_vaapi_display_x11_new(sink->display_name);
+#if USE_GLX
+        if (sink->use_glx)
+            sink->display = gst_vaapi_display_glx_new(sink->display_name);
+        else
+#endif
+            sink->display = gst_vaapi_display_x11_new(sink->display_name);
         if (!sink->display || !gst_vaapi_display_get_display(sink->display))
             return FALSE;
         g_object_set(sink, "synchronous", sink->synchronous, NULL);
@@ -171,6 +197,8 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         return FALSE;
     if (!gst_structure_get_int(structure, "height", &video_height))
         return FALSE;
+    sink->video_width  = video_width;
+    sink->video_height = video_height;
 
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
@@ -232,11 +260,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (sink->window)
         gst_vaapi_window_set_size(sink->window, win_width, win_height);
     else {
-        sink->window = gst_vaapi_window_x11_new(
-            sink->display,
-            win_width, win_height
-        );
-        if (!sink->window)
+        if (!gst_vaapisink_ensure_window(sink, win_width, win_height))
             return FALSE;
         gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
         gst_vaapi_window_show(sink->window);
@@ -260,10 +284,43 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         return GST_FLOW_UNEXPECTED;
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    if (!gst_vaapi_window_put_surface(sink->window, surface, NULL,
-                                      &sink->window_rect, flags))
-        return GST_FLOW_UNEXPECTED;
 
+#if USE_GLX
+    if (sink->use_glx) {
+        GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
+        gst_vaapi_window_glx_make_current(window);
+        if (!sink->texture) {
+            sink->texture = gst_vaapi_texture_new(
+                sink->display,
+                GL_TEXTURE_2D,
+                GL_BGRA,
+                sink->video_width,
+                sink->video_height
+            );
+            if (!sink->texture) {
+                GST_DEBUG("could not create VA/GLX texture");
+                return GST_FLOW_UNEXPECTED;
+            }
+        }
+        if (!gst_vaapi_texture_put_surface(sink->texture, surface, flags)) {
+            GST_DEBUG("could not transfer VA surface to texture");
+            return GST_FLOW_UNEXPECTED;
+        }
+        if (!gst_vaapi_window_glx_put_texture(window, sink->texture,
+                                              NULL, &sink->window_rect)) {
+            GST_DEBUG("could not render VA/GLX texture");
+            return GST_FLOW_UNEXPECTED;
+        }
+        gst_vaapi_window_glx_swap_buffers(window);
+        return GST_FLOW_OK;
+    }
+#endif
+
+    if (!gst_vaapi_window_put_surface(sink->window, surface,
+                                      NULL, &sink->window_rect, flags)) {
+        GST_DEBUG("could not render VA surface");
+        return GST_FLOW_UNEXPECTED;
+    }
     return GST_FLOW_OK;
 }
 
@@ -286,6 +343,9 @@ gst_vaapisink_set_property(
     GstVaapiSink * const sink = GST_VAAPISINK(object);
 
     switch (prop_id) {
+    case PROP_USE_GLX:
+        sink->use_glx = g_value_get_boolean(value);
+        break;
     case PROP_DISPLAY:
         g_free(sink->display_name);
         sink->display_name = g_strdup(g_value_get_string(value));
@@ -313,6 +373,9 @@ gst_vaapisink_get_property(
     GstVaapiSink * const sink = GST_VAAPISINK(object);
 
     switch (prop_id) {
+    case PROP_USE_GLX:
+        g_value_set_boolean(value, sink->use_glx);
+        break;
     case PROP_DISPLAY:
         g_value_set_string(value, sink->display_name);
         break;
@@ -355,6 +418,17 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll     = gst_vaapisink_show_frame;
     basesink_class->render      = gst_vaapisink_show_frame;
 
+#if USE_GLX
+    g_object_class_install_property
+        (object_class,
+         PROP_USE_GLX,
+         g_param_spec_boolean("use-glx",
+                              "GLX rendering",
+                              "Enables GLX rendering",
+                              FALSE,
+                              G_PARAM_READWRITE));
+#endif
+
     g_object_class_install_property
         (object_class,
          PROP_DISPLAY,
@@ -393,8 +467,13 @@ static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
     sink->display_name  = NULL;
     sink->display       = NULL;
+    sink->window        = NULL;
+    sink->texture       = NULL;
+    sink->video_width   = 0;
+    sink->video_height  = 0;
     sink->fullscreen    = FALSE;
     sink->synchronous   = FALSE;
+    sink->use_glx       = FALSE;
 }
 
 GstVaapiDisplay *
