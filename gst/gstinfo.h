@@ -1177,9 +1177,12 @@ GST_FIXME (const char *format, ...)
 #define gst_debug_set_threshold_for_name(name,level)	G_STMT_START{ }G_STMT_END
 #define gst_debug_unset_threshold_for_name(name)	G_STMT_START{ }G_STMT_END
 
+/* we are using dummy function prototypes here to eat ';' as these macros are
+ * used outside of functions */
 #define GST_DEBUG_CATEGORY(var)				void _gst_debug_dummy_##var (void)
 #define GST_DEBUG_CATEGORY_EXTERN(var)			void _gst_debug_dummy_extern_##var (void)
 #define GST_DEBUG_CATEGORY_STATIC(var)			void _gst_debug_dummy_static_##var (void)
+
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	G_STMT_START{ }G_STMT_END
 #define GST_DEBUG_CATEGORY_GET(var,name)		G_STMT_START{ }G_STMT_END
 #define gst_debug_category_free(category)		G_STMT_START{ }G_STMT_END
