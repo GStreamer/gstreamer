@@ -306,14 +306,17 @@ void _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
     const gchar * func, gint line, GObject * obj, const gchar * msg,
     const guint8 * data, guint length);
 
-/* FIXME:0.11 remove, we don't use it */
+/* we define this to avoid a compiler warning regarding a cast from a function
+ * pointer to a void pointer
+ * (see https://bugzilla.gnome.org/show_bug.cgi?id=309253)
+ */
 typedef	void (* GstDebugFuncPtr)	(void);
 
 /* do no use these functions, use the GST_DEBUG*_FUNCPTR macros */
-void	_gst_debug_register_funcptr	(gpointer	func,
+void	_gst_debug_register_funcptr	(GstDebugFuncPtr	func,
 					 const gchar *		ptrname);
 G_CONST_RETURN gchar *
-	_gst_debug_nameof_funcptr	(gpointer	func) G_GNUC_NO_INSTRUMENT;
+	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func) G_GNUC_NO_INSTRUMENT;
 
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1118,7 +1121,7 @@ GST_FIXME (const char *format, ...)
  * Since: 0.10.26
  */
 #define GST_DEBUG_REGISTER_FUNCPTR(ptr) \
-  _gst_debug_register_funcptr((gpointer)(ptr), #ptr)
+  _gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr)
 /**
  * GST_DEBUG_FUNCPTR:
  * @ptr: pointer to the function to register
@@ -1129,7 +1132,7 @@ GST_FIXME (const char *format, ...)
  * Returns: the value passed to @ptr.
  */
 #define GST_DEBUG_FUNCPTR(ptr) \
-  (_gst_debug_register_funcptr((gpointer)(ptr), #ptr) , ptr)
+  (_gst_debug_register_funcptr((GstDebugFuncPtr)(ptr), #ptr) , ptr)
 
 /**
  * GST_DEBUG_FUNCPTR_NAME:
@@ -1142,7 +1145,7 @@ GST_FIXME (const char *format, ...)
  * freed by the caller.
  */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
-  _gst_debug_nameof_funcptr((gpointer)ptr)
+  _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)
 
 
 #else /* GST_DISABLE_GST_DEBUG */

@@ -1510,10 +1510,9 @@ static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
 
 /* This function MUST NOT return NULL */
 const gchar *
-_gst_debug_nameof_funcptr (gpointer ptr)
+_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
   gchar *ptrname;
-  GstDebugFuncPtr func = (GstDebugFuncPtr) ptr;
 
 #ifdef HAVE_DLADDR
   Dl_info dl_info;
@@ -1550,8 +1549,10 @@ _gst_debug_nameof_funcptr (gpointer ptr)
 }
 
 void
-_gst_debug_register_funcptr (gpointer ptr, const gchar * ptrname)
+_gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 {
+  gpointer ptr = (gpointer) func;
+
   g_static_mutex_lock (&__dbg_functions_mutex);
 
   if (!__gst_function_pointers)
@@ -1690,13 +1691,13 @@ _gst_debug_category_new (const gchar * name, guint color,
 }
 
 void
-_gst_debug_register_funcptr (gpointer func, const gchar * ptrname)
+_gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 {
 }
 
 /* This function MUST NOT return NULL */
 const gchar *
-_gst_debug_nameof_funcptr (gpointer func)
+_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
   return "(NULL)";
 }
