@@ -50,5 +50,7 @@ test_textures_SOURCES	= test-textures.c image.c
 test_textures_CFLAGS	= $(TEST_CFLAGS) $(TEST_GLX_CFLAGS)
 test_textures_LDADD	= $(TEST_LIBS) $(TEST_GLX_LIBS)
 
+EXTRA_DIST = image.h
+
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
