@@ -118,7 +118,13 @@ include $(top_srcdir)/gtk-doc.make
 # e.g. EXTRA_DIST += version.xml.in
 EXTRA_DIST += \
 	libs-docs.xml.in \
+	libs.core.types \
+	libs.x11.types \
+	libs.glx.types \
 	$(NULL)
+
+DISTCLEANFILES = $(srcdir)/$(DOC_MODULE).types
+BUILT_SOURCES  = $(srcdir)/$(DOC_MODULE).types
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in lib-docs.xml
