@@ -23,6 +23,13 @@ DOC_SOURCE_DIR = $(top_srcdir)/gst-libs/gst/vaapi
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS = --type-init-func="g_type_init()"
 
+# List files used by scanobj
+SCANOBJ_TYPES  = $(srcdir)/$(DOC_MODULE).core.types
+SCANOBJ_TYPES += $(srcdir)/$(DOC_MODULE).x11.types
+if USE_GLX
+SCANOBJ_TYPES += $(srcdir)/$(DOC_MODULE).glx.types
+endif
+
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED"
 SCAN_OPTIONS = --deprecated-guards="GST_VAAPI_DISABLE_DEPRECATED"
@@ -47,7 +54,7 @@ FIXXREF_OPTIONS = \
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
 HFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.h
-CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c
+CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c $(srcdir)/$(DOC_MODULE).types
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -84,16 +91,25 @@ expand_content_files = \
 # e.g. GTKDOC_LIBS=$(top_builddir)/gtk/$(gtktargetlib)
 
 INCLUDES = \
+	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/gst-libs \
-	-I$(top_srcdir)/gst-libs/gst/vaapi \
-	$(GLIB_CFLAGS)
+	-I$(top_srcdir)/gst-libs/gst/vaapi
 
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la
+
+GTKDOC_LIBS += \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la
+
+if USE_GLX
+GTKDOC_LIBS += \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
+endif
+
+$(srcdir)/$(DOC_MODULE).types: $(SCANOBJ_TYPES)
+	cat $(SCANOBJ_TYPES) > $@
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make

@@ -1,0 +1,3 @@
+gst_vaapi_display_glx_get_type
+gst_vaapi_texture_get_type
+gst_vaapi_window_glx_get_type

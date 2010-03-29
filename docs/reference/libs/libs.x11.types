@@ -1,0 +1,2 @@
+gst_vaapi_display_x11_get_type
+gst_vaapi_window_x11_get_type
