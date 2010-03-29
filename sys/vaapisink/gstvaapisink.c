@@ -185,7 +185,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVaapiRectangle * const win_rect = &sink->window_rect;
+    GstVaapiRectangle * const disp_rect = &sink->display_rect;
     guint num, den;
     guint win_width, win_height;
     guint display_width, display_height, display_par_n, display_par_d;
@@ -248,24 +248,30 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     GST_DEBUG("window size %ux%u", win_width, win_height);
 
     if (sink->fullscreen) {
-        win_rect->x  = (display_width - win_width) / 2;
-        win_rect->y  = (display_height - win_height) / 2;
+        disp_rect->x  = (display_width - win_width) / 2;
+        disp_rect->y  = (display_height - win_height) / 2;
     }
     else {
-        win_rect->x  = 0;
-        win_rect->y  = 0;
+        disp_rect->x  = 0;
+        disp_rect->y  = 0;
     }
-    win_rect->width  = win_width;
-    win_rect->height = win_height;
+    disp_rect->width  = win_width;
+    disp_rect->height = win_height;
 
     if (sink->window)
         gst_vaapi_window_set_size(sink->window, win_width, win_height);
     else {
+        if (sink->fullscreen) {
+            win_width  = display_width;
+            win_height = display_height;
+        }
         if (!gst_vaapisink_ensure_window(sink, win_width, win_height))
             return FALSE;
         gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
         gst_vaapi_window_show(sink->window);
     }
+    sink->window_width  = win_width;
+    sink->window_height = win_height;
     return TRUE;
 }
 
@@ -277,8 +283,8 @@ render_background(GstVaapiSink *sink)
        <http://cgit.freedesktop.org/~macslow/gl-gst-player/> */
     GLfloat fStartX = 0.0f;
     GLfloat fStartY = 0.0f;
-    GLfloat fWidth  = (GLfloat)sink->window_rect.width;
-    GLfloat fHeight = (GLfloat)sink->window_rect.height;
+    GLfloat fWidth  = (GLfloat)sink->window_width;
+    GLfloat fHeight = (GLfloat)sink->window_height;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glBegin(GL_QUADS);
@@ -316,8 +322,8 @@ render_background(GstVaapiSink *sink)
 static void
 render_frame(GstVaapiSink *sink)
 {
-    const guint w = sink->window_rect.width;
-    const guint h = sink->window_rect.height;
+    const guint w = sink->window_width;
+    const guint h = sink->window_height;
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
@@ -333,8 +339,8 @@ render_frame(GstVaapiSink *sink)
 static void
 render_reflection(GstVaapiSink *sink)
 {
-    const guint w  = sink->window_rect.width;
-    const guint h  = sink->window_rect.height;
+    const guint w  = sink->window_width;
+    const guint h  = sink->window_height;
     const guint rh = h / 5;
     GLfloat     ry = 1.0f - (GLfloat)rh / (GLfloat)h;
 
@@ -360,7 +366,7 @@ gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
 
     if (!sink->use_reflection)
         return gst_vaapi_window_glx_put_texture(window, sink->texture,
-                                                NULL, &sink->window_rect);
+                                                NULL, &sink->display_rect);
 
     target  = gst_vaapi_texture_get_target(sink->texture);
     texture = gst_vaapi_texture_get_id(sink->texture);
@@ -377,7 +383,7 @@ gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
         glTranslatef(50.0f, 0.0f, 0.0f);
         render_frame(sink);
         glPushMatrix();
-        glTranslatef(0.0, (GLfloat)sink->window_rect.height + 5.0f, 0.0f);
+        glTranslatef(0.0, (GLfloat)sink->window_height + 5.0f, 0.0f);
         render_reflection(sink);
         glPopMatrix();
         glPopMatrix();
@@ -436,7 +442,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 #endif
 
     if (!gst_vaapi_window_put_surface(sink->window, surface,
-                                      NULL, &sink->window_rect, flags)) {
+                                      NULL, &sink->display_rect, flags)) {
         GST_DEBUG("could not render VA surface");
         return GST_FLOW_UNEXPECTED;
     }
@@ -602,6 +608,8 @@ static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->display_name   = NULL;
     sink->display        = NULL;
     sink->window         = NULL;
+    sink->window_width   = 0;
+    sink->window_height  = 0;
     sink->texture        = NULL;
     sink->video_width    = 0;
     sink->video_height   = 0;

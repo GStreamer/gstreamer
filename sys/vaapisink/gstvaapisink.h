@@ -69,10 +69,12 @@ struct _GstVaapiSink {
     gchar              *display_name;
     GstVaapiDisplay    *display;
     GstVaapiWindow     *window;
-    GstVaapiRectangle   window_rect;
+    guint               window_width;
+    guint               window_height;
     GstVaapiTexture    *texture;
     guint               video_width;
     guint               video_height;
+    GstVaapiRectangle   display_rect;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
     guint               use_glx         : 1;
