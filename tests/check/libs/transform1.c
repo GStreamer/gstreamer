@@ -642,7 +642,10 @@ GST_START_TEST (basetransform_chain_ct1)
 
   buffer_alloc_ct1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* FIXME, why would this call the alloc function? we try to alloc something
    * with caps that are not supported on the sinkpad */
   fail_unless (buffer_alloc_ct1_called == FALSE);
@@ -743,7 +746,10 @@ GST_START_TEST (basetransform_chain_ct1)
 
   buffer_alloc_ct1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* should not call the pad-alloc function */
   fail_unless (buffer_alloc_ct1_called == FALSE);
 
@@ -933,7 +939,10 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer_alloc_ct2_case = 2;
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* should not call pad-alloc because the caps and sizes are different */
   fail_unless (buffer_alloc_ct2_called == FALSE);
 
@@ -1024,7 +1033,10 @@ GST_START_TEST (basetransform_chain_ct2)
   buffer_alloc_ct2_case = 2;
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* should not call the pad-alloc function */
   fail_unless (buffer_alloc_ct2_called == FALSE);
 
@@ -1086,7 +1098,10 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer_alloc_ct2_case = 2;
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 20, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* should not call pad-alloc because the caps and sizes are different */
   fail_unless (buffer_alloc_ct2_called == FALSE);
 
@@ -1173,7 +1188,10 @@ GST_START_TEST (basetransform_chain_ct3)
   buffer_alloc_ct2_case = 2;
   buffer_alloc_ct2_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, outcaps, &buffer);
-  fail_unless (res == GST_FLOW_NOT_NEGOTIATED);
+  fail_unless (res == GST_FLOW_OK);
+  fail_if (buffer == NULL);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), incaps));
+  gst_buffer_unref (buffer);
   /* FIXME should not call the pad-alloc function but it currently does */
   fail_unless (buffer_alloc_ct2_called == FALSE);
 
