@@ -6,6 +6,14 @@ endif
 
 pcfiles = $(pcfiles_in:%.pc.in=%-@GST_MAJORMINOR@.pc)
 
+all_pcfiles_in  = gstreamer-vaapi.pc.in
+all_pcfiles_in += gstreamer-vaapi-x11.pc.in
+if USE_GLX
+all_pcfiles_in += gstreamer-vaapi-glx.pc.in
+endif
+
+all_pcfiles = $(all_pcfiles_in:%.pc.in=%-@GST_MAJORMINOR@.pc)
+
 pkgconfigdir = @pkgconfigdir@
 pkgconfig_DATA = $(pcfiles)
 
@@ -15,7 +23,7 @@ EXTRA_DIST = 				\
 	gstreamer-vaapi-x11.pc.in	\
 	$(NULL)
 
-DISTCLEANFILES = $(pcfiles)
+DISTCLEANFILES = $(all_pcfiles)
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
