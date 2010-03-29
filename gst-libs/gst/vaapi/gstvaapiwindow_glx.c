@@ -457,7 +457,7 @@ gst_vaapi_window_glx_new_with_xid(GstVaapiDisplay *display, Window xid)
 
 /**
  * gst_vaapi_window_glx_get_context:
- * @window: a #GstVaapiWindow
+ * @window: a #GstVaapiWindowGLX
  *
  * Returns the #GLXContext bound to the @window.
  *
@@ -474,7 +474,7 @@ gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window)
 
 /**
  * gst_vaapi_window_glx_set_context:
- * @window: a #GstVaapiWindow
+ * @window: a #GstVaapiWindowGLX
  * @ctx: a GLX context
  *
  * Binds GLX context @ctx to @window. If @ctx is non %NULL, the caller
