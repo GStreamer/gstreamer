@@ -20,11 +20,22 @@
 
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #include <gst/vaapi/gstvaapiwindow_glx.h>
+#include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapiimage.h>
+#include <gst/vaapi/gstvaapitexture.h>
+#include "image.h"
 
 static inline void pause(void)
 {
     g_print("Press any key to continue...\n");
     getchar();
+}
+
+static inline guint gl_get_current_texture_2d(void)
+{
+    GLint texture;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &texture);
+    return (guint)texture;
 }
 
 int
@@ -33,9 +44,14 @@ main(int argc, char *argv[])
     GstVaapiDisplay    *display;
     GstVaapiWindow     *window;
     GstVaapiWindowGLX  *glx_window;
-    GLXContext          glx_context;
-    Display            *x11_display;
-    Window              x11_window;
+    GstVaapiSurface    *surface;
+    GstVaapiImage      *image;
+    GstVaapiTexture    *textures[2];
+    GstVaapiTexture    *texture;
+    GLuint              texture_id;
+    GstVaapiRectangle   src_rect;
+    GstVaapiRectangle   dst_rect;
+    guint               flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
     static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     static const guint              width       = 320;
@@ -47,23 +63,126 @@ main(int argc, char *argv[])
 
     display = gst_vaapi_display_glx_new(NULL);
     if (!display)
-        g_error("could not create Gst/VA display");
+        g_error("could not create VA display");
+
+    surface = gst_vaapi_surface_new(display, chroma_type, width, height);
+    if (!surface)
+        g_error("could not create VA surface");
+
+    image = image_generate(display, GST_VAAPI_IMAGE_NV12, width, height);
+    if (!image)
+        g_error("could not create VA image");
+    if (!image_upload(image, surface))
+        g_error("could not upload VA image to surface");
 
     window = gst_vaapi_window_glx_new(display, win_width, win_height);
     if (!window)
         g_error("could not create window");
+    glx_window = GST_VAAPI_WINDOW_GLX(window);
 
     gst_vaapi_window_show(window);
 
-    glx_window  = GST_VAAPI_WINDOW_GLX(window);
-    glx_context = gst_vaapi_window_glx_get_context(glx_window);
-    x11_display = gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
-    x11_window  = gst_vaapi_object_get_id(GST_VAAPI_OBJECT(window));
+    if (!gst_vaapi_window_glx_make_current(glx_window))
+        g_error("coult not bind GL context");
 
-    if (!glXMakeCurrent(x11_display, x11_window, glx_context))
-        g_error("could not make VA/GLX window context current");
+    g_print("#\n");
+    g_print("# Create texture with gst_vaapi_texture_new()\n");
+    g_print("#\n");
+    {
+        texture = gst_vaapi_texture_new(
+            display,
+            GL_TEXTURE_2D,
+            GL_RGBA,
+            width,
+            height
+        );
+        if (!texture)
+            g_error("could not create VA texture");
 
+        textures[0] = texture;
+        texture_id  = gst_vaapi_texture_get_id(texture);
+
+        if (!gst_vaapi_texture_put_surface(texture, surface, flags))
+            g_error("could not transfer VA surface to texture");
+
+        if (!gst_vaapi_window_glx_put_texture(glx_window, texture, NULL, NULL))
+            g_error("could not render texture into the window");
+    }
+
+    g_print("#\n");
+    g_print("# Create texture with gst_vaapi_texture_new_with_texture()\n");
+    g_print("#\n");
+    {
+        const GLenum target = GL_TEXTURE_2D;
+        const GLenum format = GL_BGRA;
+
+        glEnable(target);
+        glGenTextures(1, &texture_id);
+        glBindTexture(target, texture_id);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glTexImage2D(
+            target,
+            0,
+            GL_RGBA8,
+            width, height,
+            0,
+            format,
+            GL_UNSIGNED_BYTE,
+            NULL
+        );
+        glDisable(target);
+
+        texture = gst_vaapi_texture_new_with_texture(
+            display,
+            texture_id,
+            target,
+            format
+        );
+        if (!texture)
+            g_error("could not create VA texture");
+
+        if (texture_id != gst_vaapi_texture_get_id(texture))
+            g_error("invalid texture id");
+
+        if (gl_get_current_texture_2d() != texture_id)
+            g_error("gst_vaapi_texture_new_with_texture() altered texture bindings");
+
+        textures[1] = texture;
+
+        if (!gst_vaapi_texture_put_surface(texture, surface, flags))
+            g_error("could not transfer VA surface to texture");
+
+        if (gl_get_current_texture_2d() != texture_id)
+            g_error("gst_vaapi_texture_put_surface() altered texture bindings");
+
+        src_rect.x      = 0;
+        src_rect.y      = 0;
+        src_rect.width  = width;
+        src_rect.height = height;
+
+        dst_rect.x      = win_width/2;
+        dst_rect.y      = win_height/2;
+        dst_rect.width  = win_width/2;
+        dst_rect.height = win_height/2;
+
+        if (!gst_vaapi_window_glx_put_texture(glx_window, texture, 
+                                              &src_rect, &dst_rect))
+            g_error("could not render texture into the window");
+
+        if (gl_get_current_texture_2d() != texture_id)
+            g_error("gst_vaapi_window_glx_put_texture() altered texture bindings");
+    }
+
+    gst_vaapi_window_glx_swap_buffers(glx_window);
     pause();
+
+    g_object_unref(textures[0]);
+    g_object_unref(textures[1]);
+    glDeleteTextures(1, &texture_id);
 
     g_object_unref(window);
     g_object_unref(display);

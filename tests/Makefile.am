@@ -46,7 +46,7 @@ test_windows_SOURCES	= test-windows.c image.c
 test_windows_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_windows_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
 
-test_textures_SOURCES	= test-textures.c
+test_textures_SOURCES	= test-textures.c image.c
 test_textures_CFLAGS	= $(TEST_CFLAGS) $(TEST_GLX_CFLAGS)
 test_textures_LDADD	= $(TEST_LIBS) $(TEST_GLX_LIBS)
 
