@@ -89,3 +89,5 @@ DIST_SUBDIRS = \
 	sidplay \
 	twolame \
 	x264
+
+include $(top_srcdir)/common/parallel-subdirs.mak
