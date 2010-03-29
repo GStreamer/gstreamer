@@ -1179,11 +1179,7 @@ GST_FIXME (const char *format, ...)
 
 #define GST_DEBUG_CATEGORY(var)				void _gst_debug_dummy_##var (void)
 #define GST_DEBUG_CATEGORY_EXTERN(var)			void _gst_debug_dummy_extern_##var (void)
-#if !defined(G_HAVE_GNUC_VARARGS) && !defined(G_HAVE_ISO_VARARGS)
-#define GST_DEBUG_CATEGORY_STATIC(var)			static GstDebugCategory *_gst_debug_dummy_##var = NULL
-#else
-#define GST_DEBUG_CATEGORY_STATIC(var)			void _gst_debug_dummy_##var (void)
-#endif
+#define GST_DEBUG_CATEGORY_STATIC(var)			void _gst_debug_dummy_static_##var (void)
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	G_STMT_START{ }G_STMT_END
 #define GST_DEBUG_CATEGORY_GET(var,name)		G_STMT_START{ }G_STMT_END
 #define gst_debug_category_free(category)		G_STMT_START{ }G_STMT_END
