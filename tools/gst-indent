@@ -36,4 +36,5 @@ $INDENT \
   --honour-newlines \
   --tab-size8 \
   --indent-level2 \
+  --leave-preprocessor-space \
   $*
