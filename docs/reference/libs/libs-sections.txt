@@ -308,6 +308,7 @@ GST_VAAPI_IMAGE_GET_CLASS
 <SECTION>
 <FILE>gstvaapisurface</FILE>
 GstVaapiChromaType
+GstVaapiSurfaceStatus
 GstVaapiSurfaceRenderFlags
 <TITLE>GstVaapiSurface</TITLE>
 GstVaapiSurface
@@ -324,6 +325,7 @@ gst_vaapi_surface_put_image
 gst_vaapi_surface_associate_subpicture
 gst_vaapi_surface_deassociate_subpicture
 gst_vaapi_surface_sync
+gst_vaapi_surface_query_status
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE
 GST_VAAPI_IS_SURFACE

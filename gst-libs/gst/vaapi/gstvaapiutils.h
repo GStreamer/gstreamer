@@ -53,4 +53,7 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
 guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
     attribute_hidden;
 
+guint to_GstVaapiSurfaceStatus(guint va_flags)
+    attribute_hidden;
+
 #endif /* GST_VAAPI_UTILS_H */

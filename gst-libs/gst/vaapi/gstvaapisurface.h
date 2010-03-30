@@ -29,6 +29,7 @@
 G_BEGIN_DECLS
 
 typedef enum _GstVaapiChromaType                GstVaapiChromaType;
+typedef enum _GstVaapiSurfaceStatus             GstVaapiSurfaceStatus;
 typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
 
 /**
@@ -43,6 +44,26 @@ enum _GstVaapiChromaType {
     GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
     GST_VAAPI_CHROMA_TYPE_YUV422,
     GST_VAAPI_CHROMA_TYPE_YUV444
+};
+
+/**
+ * GstVaapiSurfaceStatus:
+ * @GST_VAAPI_SURFACE_STATUS_IDLE:
+ *   the surface is not being rendered or displayed
+ * @GST_VAAPI_SURFACE_STATUS_RENDERING:
+ *   the surface is used for rendering (decoding to the surface in progress)
+ * @GST_VAAPI_SURFACE_STATUS_DISPLAYING:
+ *   the surface is being displayed to screen
+ * @GST_VAAPI_SURFACE_STATUS_SKIPPED:
+ *   indicates a skipped frame during encode
+ *
+ * The set of all surface status for #GstVaapiSurface.
+ */
+enum _GstVaapiSurfaceStatus {
+    GST_VAAPI_SURFACE_STATUS_IDLE       = 1 << 0,
+    GST_VAAPI_SURFACE_STATUS_RENDERING  = 1 << 1,
+    GST_VAAPI_SURFACE_STATUS_DISPLAYING = 1 << 2,
+    GST_VAAPI_SURFACE_STATUS_SKIPPED    = 1 << 3
 };
 
 /**
@@ -177,6 +198,12 @@ gst_vaapi_surface_deassociate_subpicture(
 
 gboolean
 gst_vaapi_surface_sync(GstVaapiSurface *surface);
+
+gboolean
+gst_vaapi_surface_query_status(
+    GstVaapiSurface       *surface,
+    GstVaapiSurfaceStatus *pstatus
+);
 
 G_END_DECLS
 

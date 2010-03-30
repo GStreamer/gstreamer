@@ -753,3 +753,39 @@ gst_vaapi_surface_sync(GstVaapiSurface *surface)
 
     return TRUE;
 }
+
+/**
+ * gst_vaapi_surface_query_status:
+ * @surface: a #GstVaapiSurface
+ * @pstatus: return location for the #GstVaapiSurfaceStatus
+ *
+ * Finds out any pending operations on the @surface. The
+ * #GstVaapiSurfaceStatus flags are returned into @pstatus.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_surface_query_status(
+    GstVaapiSurface       *surface,
+    GstVaapiSurfaceStatus *pstatus
+)
+{
+    VASurfaceStatus surface_status;
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(surface);
+    status = vaQuerySurfaceStatus(
+        GST_VAAPI_OBJECT_VADISPLAY(surface),
+        GST_VAAPI_OBJECT_ID(surface),
+        &surface_status
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(surface);
+    if (!vaapi_check_status(status, "vaQuerySurfaceStatus()"))
+        return FALSE;
+
+    if (pstatus)
+        *pstatus = to_GstVaapiSurfaceStatus(surface_status);
+    return TRUE;
+}

@@ -128,3 +128,42 @@ guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
 
     return va_fields|va_csc;
 }
+
+/**
+ * to_GstVaapiSurfaceStatus:
+ * @flags: the #GstVaapiSurfaceStatus flags to translate
+ *
+ * Converts vaQuerySurfaceStatus() @flags to #GstVaapiSurfaceStatus
+ * flags.
+ *
+ * Return value: the #GstVaapiSurfaceStatus flags
+ */
+guint to_GstVaapiSurfaceStatus(guint va_flags)
+{
+    guint flags;
+    const guint va_flags_mask = (VASurfaceReady|
+                                 VASurfaceRendering|
+                                 VASurfaceDisplaying);
+
+    /* Check for core status */
+    switch (va_flags & va_flags_mask) {
+    case VASurfaceReady:
+        flags = GST_VAAPI_SURFACE_STATUS_IDLE;
+        break;
+    case VASurfaceRendering:
+        flags = GST_VAAPI_SURFACE_STATUS_RENDERING;
+        break;
+    case VASurfaceDisplaying:
+        flags = GST_VAAPI_SURFACE_STATUS_DISPLAYING;
+        break;
+    default:
+        flags = 0;
+        break;
+    }
+
+    /* Check for encoder status */
+    if (va_flags & VASurfaceSkipped)
+        flags |= GST_VAAPI_SURFACE_STATUS_SKIPPED;
+
+    return flags;
+}
