@@ -917,12 +917,14 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
 append_suffixes:
   if (num > -1) {
     if (function_suffix) {
+      /* TRANSLATORS: name + number of a volume mixer control */
       return g_strdup_printf (_("%s %d Function"), name, num);
     } else {
-      return g_strdup_printf (_("%s %d"), name, num);
+      return g_strdup_printf ("%s %d", name, num);
     }
   } else {
     if (function_suffix) {
+      /* TRANSLATORS: name of a volume mixer control */
       return g_strdup_printf (_("%s Function"), name);
     } else {
       return g_strdup (name);
