@@ -18,12 +18,37 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#define _GNU_SOURCE 1 /* RTLD_DEFAULT */
 #include "config.h"
+#include <string.h>
 #include <math.h>
+#include <dlfcn.h>
 #include "gstvaapiutils_glx.h"
+#include "gstvaapiutils_x11.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
+
+/** Lookup for substring NAME in string EXT using SEP as separators */
+static gboolean
+find_string(const char *name, const char *ext, const char *sep)
+{
+    const char *end;
+    int name_len, n;
+
+    if (!name || !ext)
+        return FALSE;
+
+    end = ext + strlen(ext);
+    name_len = strlen(name);
+    while (ext < end) {
+        n = strcspn(ext, sep);
+        if (n == name_len && strncmp(name, ext, n) == 0)
+            return TRUE;
+        ext += (n + 1);
+    }
+    return FALSE;
+}
 
 /**
  * gl_get_error_string:
@@ -414,4 +439,595 @@ gl_create_texture(GLenum target, GLenum format, guint width, guint height)
     );
     gl_unbind_texture(&ts);
     return texture;
+}
+
+/**
+ * get_proc_address:
+ * @name: the name of the OpenGL extension function to lookup
+ *
+ * Returns the specified OpenGL extension function
+ *
+ * Return value: the OpenGL extension matching @name, or %NULL if none
+ *   was found
+ */
+typedef void (*GLFuncPtr)(void);
+typedef GLFuncPtr (*GLXGetProcAddressProc)(const char *);
+
+static GLFuncPtr
+get_proc_address_default(const char *name)
+{
+    return NULL;
+}
+
+static GLXGetProcAddressProc
+get_proc_address_func(void)
+{
+    GLXGetProcAddressProc get_proc_func;
+
+    dlerror();
+    get_proc_func = (GLXGetProcAddressProc)
+        dlsym(RTLD_DEFAULT, "glXGetProcAddress");
+    if (!dlerror())
+        return get_proc_func;
+
+    get_proc_func = (GLXGetProcAddressProc)
+        dlsym(RTLD_DEFAULT, "glXGetProcAddressARB");
+    if (!dlerror())
+        return get_proc_func;
+
+    return get_proc_address_default;
+}
+
+static inline GLFuncPtr
+get_proc_address(const char *name)
+{
+    static GLXGetProcAddressProc get_proc_func = NULL;
+    if (!get_proc_func)
+        get_proc_func = get_proc_address_func();
+    return get_proc_func(name);
+}
+
+/**
+ * gl_init_vtable:
+ *
+ * Initializes the global #GLVTable.
+ *
+ * Return value: the #GLVTable filled in with OpenGL extensions, or
+ *   %NULL on error.
+ */
+static GLVTable gl_vtable_static;
+
+static GLVTable *
+gl_init_vtable(void)
+{
+    GLVTable * const gl_vtable = &gl_vtable_static;
+    const gchar *gl_extensions = (const gchar *)glGetString(GL_EXTENSIONS);
+    gboolean has_extension;
+
+    /* GLX_EXT_texture_from_pixmap */
+    gl_vtable->glx_bind_tex_image = (PFNGLXBINDTEXIMAGEEXTPROC)
+        get_proc_address("glXBindTexImageEXT");
+    if (!gl_vtable->glx_bind_tex_image)
+        return NULL;
+    gl_vtable->glx_release_tex_image = (PFNGLXRELEASETEXIMAGEEXTPROC)
+        get_proc_address("glXReleaseTexImageEXT");
+    if (!gl_vtable->glx_release_tex_image)
+        return NULL;
+
+    /* GL_ARB_framebuffer_object */
+    has_extension = (
+        find_string("GL_ARB_framebuffer_object", gl_extensions, " ") ||
+        find_string("GL_EXT_framebuffer_object", gl_extensions, " ")
+    );
+    if (has_extension) {
+        gl_vtable->gl_gen_framebuffers = (PFNGLGENFRAMEBUFFERSEXTPROC)
+            get_proc_address("glGenFramebuffersEXT");
+        if (!gl_vtable->gl_gen_framebuffers)
+            return NULL;
+        gl_vtable->gl_delete_framebuffers = (PFNGLDELETEFRAMEBUFFERSEXTPROC)
+            get_proc_address("glDeleteFramebuffersEXT");
+        if (!gl_vtable->gl_delete_framebuffers)
+            return NULL;
+        gl_vtable->gl_bind_framebuffer = (PFNGLBINDFRAMEBUFFEREXTPROC)
+            get_proc_address("glBindFramebufferEXT");
+        if (!gl_vtable->gl_bind_framebuffer)
+            return NULL;
+        gl_vtable->gl_gen_renderbuffers = (PFNGLGENRENDERBUFFERSEXTPROC)
+            get_proc_address("glGenRenderbuffersEXT");
+        if (!gl_vtable->gl_gen_renderbuffers)
+            return NULL;
+        gl_vtable->gl_delete_renderbuffers = (PFNGLDELETERENDERBUFFERSEXTPROC)
+            get_proc_address("glDeleteRenderbuffersEXT");
+        if (!gl_vtable->gl_delete_renderbuffers)
+            return NULL;
+        gl_vtable->gl_bind_renderbuffer = (PFNGLBINDRENDERBUFFEREXTPROC)
+            get_proc_address("glBindRenderbufferEXT");
+        if (!gl_vtable->gl_bind_renderbuffer)
+            return NULL;
+        gl_vtable->gl_renderbuffer_storage = (PFNGLRENDERBUFFERSTORAGEEXTPROC)
+            get_proc_address("glRenderbufferStorageEXT");
+        if (!gl_vtable->gl_renderbuffer_storage)
+            return NULL;
+        gl_vtable->gl_framebuffer_renderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)
+            get_proc_address("glFramebufferRenderbufferEXT");
+        if (!gl_vtable->gl_framebuffer_renderbuffer)
+            return NULL;
+        gl_vtable->gl_framebuffer_texture_2d = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)
+            get_proc_address("glFramebufferTexture2DEXT");
+        if (!gl_vtable->gl_framebuffer_texture_2d)
+            return NULL;
+        gl_vtable->gl_check_framebuffer_status = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)
+            get_proc_address("glCheckFramebufferStatusEXT");
+        if (!gl_vtable->gl_check_framebuffer_status)
+            return NULL;
+        gl_vtable->has_framebuffer_object = TRUE;
+    }
+
+    /* GL_ARB_fragment_program */
+    has_extension = (
+        find_string("GL_ARB_fragment_program", gl_extensions, " ")
+    );
+    if (has_extension) {
+        gl_vtable->gl_gen_programs = (PFNGLGENPROGRAMSARBPROC)
+            get_proc_address("glGenProgramsARB");
+        if (!gl_vtable->gl_gen_programs)
+            return NULL;
+        gl_vtable->gl_delete_programs = (PFNGLDELETEPROGRAMSARBPROC)
+            get_proc_address("glDeleteProgramsARB");
+        if (!gl_vtable->gl_delete_programs)
+            return NULL;
+        gl_vtable->gl_bind_program = (PFNGLBINDPROGRAMARBPROC)
+            get_proc_address("glBindProgramARB");
+        if (!gl_vtable->gl_bind_program)
+            return NULL;
+        gl_vtable->gl_program_string = (PFNGLPROGRAMSTRINGARBPROC)
+            get_proc_address("glProgramStringARB");
+        if (!gl_vtable->gl_program_string)
+            return NULL;
+        gl_vtable->gl_get_program_iv = (PFNGLGETPROGRAMIVARBPROC)
+            get_proc_address("glGetProgramivARB");
+        if (!gl_vtable->gl_get_program_iv)
+            return NULL;
+        gl_vtable->gl_program_local_parameter_4fv = (PFNGLPROGRAMLOCALPARAMETER4FVARBPROC)
+            get_proc_address("glProgramLocalParameter4fvARB");
+        if (!gl_vtable->gl_program_local_parameter_4fv)
+            return NULL;
+        gl_vtable->has_fragment_program = TRUE;
+    }
+
+    /* GL_ARB_multitexture */
+    has_extension = (
+        find_string("GL_ARB_multitexture", gl_extensions, " ")
+    );
+    if (has_extension) {
+        gl_vtable->gl_active_texture = (PFNGLACTIVETEXTUREPROC)
+            get_proc_address("glActiveTextureARB");
+        if (!gl_vtable->gl_active_texture)
+            return NULL;
+        gl_vtable->gl_multi_tex_coord_2f = (PFNGLMULTITEXCOORD2FPROC)
+            get_proc_address("glMultiTexCoord2fARB");
+        if (!gl_vtable->gl_multi_tex_coord_2f)
+            return NULL;
+        gl_vtable->has_multitexture = TRUE;
+    }
+    return gl_vtable;
+}
+
+/**
+ * gl_get_vtable:
+ *
+ * Retrieves a VTable for OpenGL extensions.
+ *
+ * Return value: VTable for OpenGL extensions
+ */
+GLVTable *
+gl_get_vtable(void)
+{
+    static GStaticMutex mutex          = G_STATIC_MUTEX_INIT;
+    static gboolean     gl_vtable_init = TRUE;
+    static GLVTable    *gl_vtable      = NULL;
+
+    g_static_mutex_lock(&mutex);
+    if (gl_vtable_init) {
+        gl_vtable_init = FALSE;
+        gl_vtable      = gl_init_vtable();
+    }
+    g_static_mutex_unlock(&mutex);
+    return gl_vtable;
+}
+
+/**
+ * gl_create_pixmap_object:
+ * @dpy: an X11 #Display
+ * @width: the request width, in pixels
+ * @height: the request height, in pixels
+ *
+ * Creates a #GLPixmapObject of the specified dimensions. This
+ * requires the GLX_EXT_texture_from_pixmap extension.
+ *
+ * Return value: the newly created #GLPixmapObject object
+ */
+GLPixmapObject *
+gl_create_pixmap_object(Display *dpy, guint width, guint height)
+{
+    GLVTable * const    gl_vtable = gl_get_vtable();
+    GLPixmapObject     *pixo;
+    GLXFBConfig        *fbconfig;
+    int                 screen;
+    Window              rootwin;
+    XWindowAttributes   wattr;
+    int                *attr;
+    int                 n_fbconfig_attrs;
+
+    int fbconfig_attrs[32] = {
+        GLX_DRAWABLE_TYPE,      GLX_PIXMAP_BIT,
+        GLX_DOUBLEBUFFER,       GL_TRUE,
+        GLX_RENDER_TYPE,        GLX_RGBA_BIT,
+        GLX_X_RENDERABLE,       GL_TRUE,
+        GLX_Y_INVERTED_EXT,     GL_TRUE,
+        GLX_RED_SIZE,           8,
+        GLX_GREEN_SIZE,         8,
+        GLX_BLUE_SIZE,          8,
+        GL_NONE,
+    };
+
+    int pixmap_attrs[10] = {
+        GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
+        GLX_MIPMAP_TEXTURE_EXT, GL_FALSE,
+        GL_NONE,
+    };
+
+    if (!gl_vtable)
+        return NULL;
+
+    screen  = DefaultScreen(dpy);
+    rootwin = RootWindow(dpy, screen);
+
+    /* XXX: this won't work for different displays */
+    if (!gl_vtable->has_texture_from_pixmap) {
+        const char *glx_extensions;
+        int glx_major, glx_minor;
+        glx_extensions = glXQueryExtensionsString(dpy, screen);
+        if (!glx_extensions)
+            return NULL;
+        if (!find_string("GLX_EXT_texture_from_pixmap", glx_extensions, " "))
+            return NULL;
+        if (!glXQueryVersion(dpy, &glx_major, &glx_minor))
+            return NULL;
+        if (glx_major < 0 || (glx_major == 1 && glx_minor < 3)) /* 1.3 */
+            return NULL;
+        gl_vtable->has_texture_from_pixmap = TRUE;
+    }
+
+    pixo = calloc(1, sizeof(*pixo));
+    if (!pixo)
+        return NULL;
+
+    pixo->dpy           = dpy;
+    pixo->width         = width;
+    pixo->height        = height;
+    pixo->pixmap        = None;
+    pixo->glx_pixmap    = None;
+    pixo->is_bound      = FALSE;
+
+    XGetWindowAttributes(dpy, rootwin, &wattr);
+    pixo->pixmap  = XCreatePixmap(dpy, rootwin, width, height, wattr.depth);
+    if (!pixo->pixmap)
+        goto error;
+
+    /* Initialize FBConfig attributes */
+    for (attr = fbconfig_attrs; *attr != GL_NONE; attr += 2)
+        ;
+    *attr++ = GLX_DEPTH_SIZE;                 *attr++ = wattr.depth;
+    if (wattr.depth == 32) {
+    *attr++ = GLX_ALPHA_SIZE;                 *attr++ = 8;
+    *attr++ = GLX_BIND_TO_TEXTURE_RGBA_EXT;   *attr++ = GL_TRUE;
+    }
+    else {
+    *attr++ = GLX_BIND_TO_TEXTURE_RGB_EXT;    *attr++ = GL_TRUE;
+    }
+    *attr++ = GL_NONE;
+
+    fbconfig = glXChooseFBConfig(
+        dpy,
+        screen,
+        fbconfig_attrs, &n_fbconfig_attrs
+    );
+    if (!fbconfig)
+        goto error;
+
+    /* Initialize GLX Pixmap attrutes */
+    for (attr = pixmap_attrs; *attr != GL_NONE; attr += 2)
+        ;
+    *attr++ = GLX_TEXTURE_FORMAT_EXT;
+    if (wattr.depth == 32)
+    *attr++ = GLX_TEXTURE_FORMAT_RGBA_EXT;
+    else
+    *attr++ = GLX_TEXTURE_FORMAT_RGB_EXT;
+    *attr++ = GL_NONE;
+
+    x11_trap_errors();
+    pixo->glx_pixmap = glXCreatePixmap(dpy, fbconfig[0], pixo->pixmap, pixmap_attrs);
+    free(fbconfig);
+    if (x11_untrap_errors() != 0)
+        goto error;
+    return pixo;
+
+error:
+    gl_destroy_pixmap_object(pixo);
+    return NULL;
+}
+
+/**
+ * gl_destroy_pixmap_object:
+ * @pixo: a #GLPixmapObject
+ *
+ * Destroys the #GLPixmapObject object.
+ */
+void
+gl_destroy_pixmap_object(GLPixmapObject *pixo)
+{
+    if (!pixo)
+        return;
+
+    gl_unbind_pixmap_object(pixo);
+
+    if (pixo->glx_pixmap) {
+        glXDestroyPixmap(pixo->dpy, pixo->glx_pixmap);
+        pixo->glx_pixmap = None;
+    }
+
+    if (pixo->pixmap) {
+        XFreePixmap(pixo->dpy, pixo->pixmap);
+        pixo->pixmap = None;
+    }
+    free(pixo);
+}
+
+/**
+ * gl_bind_pixmap_object:
+ * @pixo: a #GLPixmapObject
+ *
+ * Defines a two-dimensional texture image. The texture image is taken
+ * from the @pixo pixmap and need not be copied. The texture target,
+ * format and size are derived from attributes of the @pixo pixmap.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_bind_pixmap_object(GLPixmapObject *pixo)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+
+    if (pixo->is_bound)
+        return TRUE;
+
+    x11_trap_errors();
+    gl_vtable->glx_bind_tex_image(
+        pixo->dpy,
+        pixo->glx_pixmap,
+        GLX_FRONT_LEFT_EXT,
+        NULL
+    );
+    XSync(pixo->dpy, False);
+    if (x11_untrap_errors() != 0) {
+        GST_DEBUG("failed to bind pixmap");
+        return FALSE;
+    }
+
+    pixo->is_bound = TRUE;
+    return TRUE;
+}
+
+/**
+ * gl_unbind_pixmap_object:
+ * @pixo: a #GLPixmapObject
+ *
+ * Releases a color buffers that is being used as a texture.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_unbind_pixmap_object(GLPixmapObject *pixo)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+
+    if (!pixo->is_bound)
+        return TRUE;
+
+    x11_trap_errors();
+    gl_vtable->glx_release_tex_image(
+        pixo->dpy,
+        pixo->glx_pixmap,
+        GLX_FRONT_LEFT_EXT
+    );
+    XSync(pixo->dpy, False);
+    if (x11_untrap_errors() != 0) {
+        GST_DEBUG("failed to release pixmap");
+        return FALSE;
+    }
+
+    pixo->is_bound = FALSE;
+    return TRUE;
+}
+
+/**
+ * gl_create_framebuffer_object:
+ * @target: the target to which the texture is bound
+ * @texture: the GL texture to hold the framebuffer
+ * @width: the requested width, in pixels
+ * @height: the requested height, in pixels
+ *
+ * Creates an FBO with the specified texture and size.
+ *
+ * Return value: the newly created #GLFramebufferObject, or %NULL if
+ *   an error occurred
+ */
+GLFramebufferObject *
+gl_create_framebuffer_object(
+    GLenum target,
+    GLuint texture,
+    guint  width,
+    guint  height
+)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+    GLFramebufferObject *fbo;
+    GLTextureState ts;
+    GLenum status;
+    gboolean texture_was_bound;
+
+    if (!gl_vtable || !gl_vtable->has_framebuffer_object)
+        return NULL;
+
+    /* XXX: we only support GL_TEXTURE_2D at this time */
+    if (target != GL_TEXTURE_2D)
+        return NULL;
+
+    fbo = calloc(1, sizeof(*fbo));
+    if (!fbo)
+        return NULL;
+
+    fbo->width          = width;
+    fbo->height         = height;
+    fbo->fbo            = 0;
+    fbo->fbo_buffer     = 0;
+    fbo->fbo_target     = target;
+    fbo->fbo_texture    = 0;
+    fbo->old_fbo        = 0;
+    fbo->is_bound       = FALSE;
+
+    fbo->fbo_texture = gl_create_texture(target, GL_BGRA, width, height);
+    if (!fbo->fbo_texture)
+        goto error;
+
+    gl_get_param(GL_FRAMEBUFFER_BINDING, &fbo->old_fbo);
+    gl_vtable->gl_gen_framebuffers(1, &fbo->fbo);
+    gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->fbo);
+    gl_vtable->gl_gen_renderbuffers(1, &fbo->fbo_buffer);
+    gl_vtable->gl_bind_renderbuffer(GL_RENDERBUFFER_EXT, fbo->fbo_buffer);
+
+    texture_was_bound = gl_bind_texture(&ts, target, texture);
+    if (texture_was_bound) {
+        gl_vtable->gl_framebuffer_texture_2d(
+            GL_FRAMEBUFFER_EXT,
+            GL_COLOR_ATTACHMENT0_EXT,
+            target, texture,
+            0
+        );
+        gl_unbind_texture(&ts);
+    }
+    status = gl_vtable->gl_check_framebuffer_status(GL_DRAW_FRAMEBUFFER_EXT);
+    gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->old_fbo);
+    if (!texture_was_bound || status != GL_FRAMEBUFFER_COMPLETE_EXT)
+        goto error;
+    return fbo;
+
+error:
+    gl_destroy_framebuffer_object(fbo);
+    return NULL;
+}
+
+/**
+ * gl_destroy_framebuffer_object:
+ * @fbo: a #GLFramebufferObject
+ *
+ * Destroys the @fbo object.
+ */
+void
+gl_destroy_framebuffer_object(GLFramebufferObject *fbo)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+
+    if (!fbo)
+        return;
+
+    gl_unbind_framebuffer_object(fbo);
+
+    if (fbo->fbo_texture) {
+        glDeleteTextures(1, &fbo->fbo_texture);
+        fbo->fbo_texture = 0;
+    }
+
+    if (fbo->fbo_buffer) {
+        gl_vtable->gl_delete_renderbuffers(1, &fbo->fbo_buffer);
+        fbo->fbo_buffer = 0;
+    }
+
+    if (fbo->fbo) {
+        gl_vtable->gl_delete_framebuffers(1, &fbo->fbo);
+        fbo->fbo = 0;
+    }
+    free(fbo);
+}
+
+/**
+ * gl_bind_framebuffer_object:
+ * @fbo: a #GLFramebufferObject
+ *
+ * Binds @fbo object.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_bind_framebuffer_object(GLFramebufferObject *fbo)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+    const guint width  = fbo->width;
+    const guint height = fbo->height;
+
+    const guint attribs = (GL_VIEWPORT_BIT|
+                           GL_CURRENT_BIT|
+                           GL_ENABLE_BIT|
+                           GL_TEXTURE_BIT|
+                           GL_COLOR_BUFFER_BIT);
+
+    if (fbo->is_bound)
+        return TRUE;
+
+    gl_get_param(GL_FRAMEBUFFER_BINDING, &fbo->old_fbo);
+    gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->fbo);
+    glPushAttrib(attribs);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glViewport(0, 0, width, height);
+    glTranslatef(-1.0f, -1.0f, 0.0f);
+    glScalef(2.0f / width, 2.0f / height, 1.0f);
+
+    if (!gl_bind_texture(&fbo->old_texture, fbo->fbo_target, fbo->fbo_texture))
+        return FALSE;
+
+    fbo->is_bound = TRUE;
+    return TRUE;
+}
+
+/**
+ * gl_unbind_framebuffer_object:
+ * @fbo: a #GLFramebufferObject
+ *
+ * Releases @fbo object.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gl_unbind_framebuffer_object(GLFramebufferObject *fbo)
+{
+    GLVTable * const gl_vtable = gl_get_vtable();
+
+    if (!fbo->is_bound)
+        return TRUE;
+
+    glPopAttrib();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->old_fbo);
+
+    fbo->is_bound = FALSE;
+    return TRUE;
 }

@@ -23,8 +23,19 @@
 
 #include "config.h"
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include <GL/glx.h>
+#include <GL/glxext.h>
 #include <glib/gtypes.h>
+
+#if GLX_GLXEXT_VERSION < 18
+typedef void (*PFNGLXBINDTEXIMAGEEXTPROC)(Display *, GLXDrawable, int, const int *);
+typedef void (*PFNGLXRELEASETEXIMAGEEXTPROC)(Display *, GLXDrawable, int);
+#endif
+
+#ifndef GL_FRAMEBUFFER_BINDING
+#define GL_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING_EXT
+#endif
 
 const char *
 gl_get_error_string(GLenum error)
@@ -86,6 +97,97 @@ gl_unbind_texture(GLTextureState *ts)
 
 GLuint
 gl_create_texture(GLenum target, GLenum format, guint width, guint height)
+    attribute_hidden;
+
+typedef struct _GLVTable GLVTable;
+struct _GLVTable {
+    PFNGLXBINDTEXIMAGEEXTPROC           glx_bind_tex_image;
+    PFNGLXRELEASETEXIMAGEEXTPROC        glx_release_tex_image;
+    PFNGLGENFRAMEBUFFERSEXTPROC         gl_gen_framebuffers;
+    PFNGLDELETEFRAMEBUFFERSEXTPROC      gl_delete_framebuffers;
+    PFNGLBINDFRAMEBUFFEREXTPROC         gl_bind_framebuffer;
+    PFNGLGENRENDERBUFFERSEXTPROC        gl_gen_renderbuffers;
+    PFNGLDELETERENDERBUFFERSEXTPROC     gl_delete_renderbuffers;
+    PFNGLBINDRENDERBUFFEREXTPROC        gl_bind_renderbuffer;
+    PFNGLRENDERBUFFERSTORAGEEXTPROC     gl_renderbuffer_storage;
+    PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC gl_framebuffer_renderbuffer;
+    PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    gl_framebuffer_texture_2d;
+    PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  gl_check_framebuffer_status;
+    PFNGLGENPROGRAMSARBPROC             gl_gen_programs;
+    PFNGLDELETEPROGRAMSARBPROC          gl_delete_programs;
+    PFNGLBINDPROGRAMARBPROC             gl_bind_program;
+    PFNGLPROGRAMSTRINGARBPROC           gl_program_string;
+    PFNGLGETPROGRAMIVARBPROC            gl_get_program_iv;
+    PFNGLPROGRAMLOCALPARAMETER4FVARBPROC gl_program_local_parameter_4fv;
+    PFNGLACTIVETEXTUREPROC              gl_active_texture;
+    PFNGLMULTITEXCOORD2FPROC            gl_multi_tex_coord_2f;
+    guint                               has_texture_from_pixmap : 1;
+    guint                               has_framebuffer_object  : 1;
+    guint                               has_fragment_program    : 1;
+    guint                               has_multitexture        : 1;
+};
+
+GLVTable *
+gl_get_vtable(void)
+    attribute_hidden;
+
+typedef struct _GLPixmapObject GLPixmapObject;
+struct _GLPixmapObject {
+    Display    *dpy;
+    guint       width;
+    guint       height;
+    Pixmap      pixmap;
+    GLXPixmap   glx_pixmap;
+    guint       is_bound        : 1;
+};
+
+GLPixmapObject *
+gl_create_pixmap_object(Display *dpy, guint width, guint height)
+    attribute_hidden;
+
+void
+gl_destroy_pixmap_object(GLPixmapObject *pixo)
+    attribute_hidden;
+
+gboolean
+gl_bind_pixmap_object(GLPixmapObject *pixo)
+    attribute_hidden;
+
+gboolean
+gl_unbind_pixmap_object(GLPixmapObject *pixo)
+    attribute_hidden;
+
+typedef struct _GLFramebufferObject GLFramebufferObject;
+struct _GLFramebufferObject {
+    guint           width;
+    guint           height;
+    GLuint          fbo;
+    GLuint          fbo_buffer;
+    GLenum          fbo_target;
+    GLuint          fbo_texture;
+    GLuint          old_fbo;
+    GLTextureState  old_texture;
+    guint           is_bound    : 1;
+};
+
+GLFramebufferObject *
+gl_create_framebuffer_object(
+    GLenum target,
+    GLuint texture,
+    guint  width,
+    guint  height
+) attribute_hidden;
+
+void
+gl_destroy_framebuffer_object(GLFramebufferObject *fbo)
+    attribute_hidden;
+
+gboolean
+gl_bind_framebuffer_object(GLFramebufferObject *fbo)
+    attribute_hidden;
+
+gboolean
+gl_unbind_framebuffer_object(GLFramebufferObject *fbo)
     attribute_hidden;
 
 #endif /* GST_VAAPI_UTILS_GLX_H */
