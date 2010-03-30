@@ -47,8 +47,8 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
-		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
 		--library=gstapp-0.10 \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
@@ -69,7 +69,12 @@ typelibsdir = $(libdir)/girepository-1.0/
 typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	$(AM_V_GEN)$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+	$(AM_V_GEN)$(INTROSPECTION_COMPILER) \
+		--includedir=$(srcdir) \
+		--includedir=$(builddir) \
+		--includedir=`$(PKG_CONFIG) --variable=typelibdir gstreamer-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=typelibdir gstreamer-base-0.10` \
+		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif

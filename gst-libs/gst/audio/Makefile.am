@@ -75,9 +75,9 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		$(gir_cincludes) \
-		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst \
-		--add-include-path=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` \
 		--add-include-path=$(builddir)/../interfaces \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
 		--library=gstaudio-0.10 \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
@@ -100,7 +100,13 @@ typelibsdir = $(libdir)/girepository-1.0/
 typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
-	$(AM_V_GEN)$(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=$(builddir) --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-0.10`/gst --includedir=`$(PKG_CONFIG) --variable=libdir gstreamer-base-0.10` --includedir=$(builddir)/../interfaces $(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
+	$(AM_V_GEN)$(INTROSPECTION_COMPILER) \
+		--includedir=$(srcdir) \
+		--includedir=$(builddir) \
+		--includedir=$(builddir)/../interfaces \
+		--includedir=`$(PKG_CONFIG) --variable=typelibdir gstreamer-base-0.10` \
+		--includedir=`$(PKG_CONFIG) --variable=typelibdir gstreamer-0.10` \
+		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
