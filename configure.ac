@@ -64,7 +64,7 @@ dnl allow for different autotools
 AS_AUTOTOOLS_ALTERNATE
 
 dnl Add parameters for aclocal (keep in sync with Makefile.am)
-AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4 -I .")
+AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
 dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
@@ -728,6 +728,7 @@ docs/pwg/Makefile
 docs/slides/Makefile
 docs/xsl/Makefile
 docs/version.entities
+m4/Makefile
 pkgconfig/Makefile
 stamp.h
 pkgconfig/gstreamer.pc
