@@ -2632,8 +2632,8 @@ read_joystick (GIOChannel * source, GIOCondition condition, gpointer user_data)
   result =
       g_io_channel_read (source, buf, sizeof (struct js_event), &bytes_read);
   if (bytes_read != sizeof (struct js_event)) {
-    g_print ("error reading joystick, read %u bytes of %u\n", bytes_read,
-        sizeof (struct js_event));
+    g_print ("error reading joystick, read %u bytes of %u\n",
+        (guint) bytes_read, (guint) sizeof (struct js_event));
     return TRUE;
   }
 
