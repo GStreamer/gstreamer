@@ -116,9 +116,11 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
     frame_data += 4;
     frame_data_size -= 4;
-    if (work->parse_size < frame_data_size) {
-      GST_WARNING ("ID3v2 frame %s has invalid size %d.", tag_name,
-          frame_data_size);
+    GST_LOG ("Un-unsynced data size %d (of %d)", work->parse_size,
+        frame_data_size);
+    if (work->parse_size > frame_data_size) {
+      GST_WARNING ("ID3v2 frame %s data has invalid size %d (>%d)",
+          work->frame_id, work->parse_size, frame_data_size);
       return FALSE;
     }
   }
