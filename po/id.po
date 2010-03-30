@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-06 01:33+0000\n"
+"POT-Creation-Date: 2010-03-30 01:13+0100\n"
 "PO-Revision-Date: 2009-08-24 11:38-0400\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -364,13 +364,15 @@ msgstr "Keluaran Mixer Virtual"
 msgid "Virtual Mixer Channels"
 msgstr "Kanal Mixer Virtual"
 
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "Fungsi %s"
+
+#. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
 msgstr "Fungsi %s"
-
-#, c-format
-msgid "%s %d"
-msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -407,6 +409,9 @@ msgstr "Perekaman tak didukung oleh divais audio ini."
 
 msgid "Error recording from audio device."
 msgstr "Galat ketika merekam dari divais audio."
+
+#~ msgid "%s %d"
+#~ msgstr "%s %d"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Galat jam internal."

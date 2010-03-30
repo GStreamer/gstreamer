@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-06 01:33+0000\n"
+"POT-Creation-Date: 2010-03-30 01:13+0100\n"
 "PO-Revision-Date: 2009-08-12 23:33+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -367,13 +367,15 @@ msgstr "Virtuális keverőkimenet"
 msgid "Virtual Mixer Channels"
 msgstr "Virtuális keverőcsatornák"
 
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "%s funkció"
+
+#. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
 msgstr "%s funkció"
-
-#, c-format
-msgid "%s %d"
-msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -410,6 +412,9 @@ msgstr "A hangeszköz nem támogatja a felvételt."
 
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."
+
+#~ msgid "%s %d"
+#~ msgstr "%s %d"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Belső órahiba."

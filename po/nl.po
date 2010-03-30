@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-06 01:33+0000\n"
+"POT-Creation-Date: 2010-03-30 01:13+0100\n"
 "PO-Revision-Date: 2009-08-13 00:06+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -368,13 +368,15 @@ msgstr "Virtuele mixer-uitvoer"
 msgid "Virtual Mixer Channels"
 msgstr "Virtuele mixer-kanalen"
 
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "%s-functie"
+
+#. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
 msgstr "%s-functie"
-
-#, c-format
-msgid "%s %d"
-msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -411,6 +413,9 @@ msgstr "Opnemen wordt door dit audio-apparaat niet ondersteund."
 
 msgid "Error recording from audio device."
 msgstr "Fout bij opnemen met dit audio-apparaat."
+
+#~ msgid "%s %d"
+#~ msgstr "%s %d"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Interne fout met de klok."

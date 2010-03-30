@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-06 01:33+0000\n"
+"POT-Creation-Date: 2010-03-30 01:13+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -383,12 +383,14 @@ msgstr ""
 msgid "Virtual Mixer Channels"
 msgstr ""
 
+#. TRANSLATORS: name + number of a volume mixer control
 #, c-format
-msgid "%s Function"
+msgid "%s %d Function"
 msgstr ""
 
+#. TRANSLATORS: name of a volume mixer control
 #, c-format
-msgid "%s %d"
+msgid "%s Function"
 msgstr ""
 
 msgid ""

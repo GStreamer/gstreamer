@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-06 01:33+0000\n"
+"POT-Creation-Date: 2010-03-30 01:13+0100\n"
 "PO-Revision-Date: 2009-08-26 16:52+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -364,13 +364,15 @@ msgstr "Wyjście wirtualnego miksera"
 msgid "Virtual Mixer Channels"
 msgstr "Kanały wirtualnego miksera"
 
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "Funkcja %s"
+
+#. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
 msgstr "Funkcja %s"
-
-#, c-format
-msgid "%s %d"
-msgstr "%s %d"
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -407,6 +409,9 @@ msgstr "To urządzenie dźwiękowe nie obsługuje nagrywania."
 
 msgid "Error recording from audio device."
 msgstr "Błąd nagrywania z urządzenia dźwiękowego."
+
+#~ msgid "%s %d"
+#~ msgstr "%s %d"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Błąd wewnętrzny zegara."
