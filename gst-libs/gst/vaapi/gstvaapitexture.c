@@ -24,10 +24,11 @@
  */
 
 #include "config.h"
-#include <va/va_glx.h>
 #include "gstvaapitexture.h"
+#include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_glx.h"
+#include "gstvaapidisplay_glx.h"
 #include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
@@ -41,13 +42,15 @@ G_DEFINE_TYPE(GstVaapiTexture, gst_vaapi_texture, GST_VAAPI_TYPE_OBJECT);
                                  GstVaapiTexturePrivate))
 
 struct _GstVaapiTexturePrivate {
-    GLenum      target;
-    GLenum      format;
-    guint       width;
-    guint       height;
-    void       *gl_surface;
-    guint       foreign_texture : 1;
-    guint       is_constructed  : 1;
+    GLenum               target;
+    GLenum               format;
+    guint                width;
+    guint                height;
+    void                *gl_surface;
+    GLPixmapObject      *pixo;
+    GLFramebufferObject *fbo;
+    guint                foreign_texture : 1;
+    guint                is_constructed  : 1;
 };
 
 enum {
@@ -60,27 +63,87 @@ enum {
 };
 
 static void
-gst_vaapi_texture_destroy(GstVaapiTexture *texture)
+_gst_vaapi_texture_destroy_objects(GstVaapiTexture *texture)
 {
     GstVaapiTexturePrivate * const priv = texture->priv;
-    const GLuint texture_id = GST_VAAPI_OBJECT_ID(texture);
-    VAStatus status;
 
+#if USE_VAAPI_GLX
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     if (priv->gl_surface) {
-        status = vaDestroySurfaceGLX(
+        vaDestroySurfaceGLX(
             GST_VAAPI_OBJECT_VADISPLAY(texture),
             priv->gl_surface
         );
         priv->gl_surface = NULL;
     }
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+#else
+    if (priv->fbo) {
+        gl_destroy_framebuffer_object(priv->fbo);
+        priv->fbo = NULL;
+    }
+
+    if (priv->pixo) {
+        gl_destroy_pixmap_object(priv->pixo);
+        priv->pixo = NULL;
+    }
+#endif
+}
+
+static void
+gst_vaapi_texture_destroy(GstVaapiTexture *texture)
+{
+    GstVaapiTexturePrivate * const priv = texture->priv;
+    const GLuint texture_id = GST_VAAPI_OBJECT_ID(texture);
+
+    _gst_vaapi_texture_destroy_objects(texture);
 
     if (texture_id) {
         if (!priv->foreign_texture)
             glDeleteTextures(1, &texture_id);
         GST_VAAPI_OBJECT_ID(texture) = 0;
     }
+}
+
+static gboolean
+_gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
+{
+    GstVaapiTexturePrivate * const priv = texture->priv;
+
+#if USE_VAAPI_GLX
+    VAStatus status;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    status = vaCreateSurfaceGLX(
+        GST_VAAPI_OBJECT_VADISPLAY(texture),
+        priv->target,
+        texture_id,
+        &priv->gl_surface
+    );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!vaapi_check_status(status, "vaCreateSurfaceGLX()"))
+        return FALSE;
+#else
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    priv->pixo = gl_create_pixmap_object(
+        GST_VAAPI_OBJECT_XDISPLAY(texture),
+        priv->width,
+        priv->height
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!priv->pixo)
+        return FALSE;
+
+    priv->fbo = gl_create_framebuffer_object(
+        priv->target,
+        texture_id,
+        priv->width,
+        priv->height
+    );
+    if (!priv->fbo)
+        return FALSE;
+#endif
+    return TRUE;
 }
 
 static gboolean
@@ -88,7 +151,6 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
 {
     GstVaapiTexturePrivate * const priv = texture->priv;
     GLuint texture_id;
-    VAStatus status;
 
     if (priv->foreign_texture)
         texture_id = GST_VAAPI_OBJECT_ID(texture);
@@ -106,17 +168,7 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
         GST_VAAPI_OBJECT_ID(texture) = texture_id;
     }
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    status = vaCreateSurfaceGLX(
-        GST_VAAPI_OBJECT_VADISPLAY(texture),
-        priv->target,
-        texture_id,
-        &priv->gl_surface
-    );
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-    if (!vaapi_check_status(status, "vaCreateSurfaceGLX()"))
-        return FALSE;
-    return TRUE;
+    return _gst_vaapi_texture_create_objects(texture, texture_id);
 }
 
 static void
@@ -259,6 +311,8 @@ gst_vaapi_texture_init(GstVaapiTexture *texture)
     priv->width                 = 0;
     priv->height                = 0;
     priv->gl_surface            = NULL;
+    priv->pixo                  = NULL;
+    priv->fbo                   = NULL;
     priv->foreign_texture       = FALSE;
     priv->is_constructed        = FALSE;
 }
@@ -486,6 +540,98 @@ gst_vaapi_texture_get_size(
  *
  * Return value: %TRUE on success
  */
+static gboolean
+_gst_vaapi_texture_put_surface(
+    GstVaapiTexture *texture,
+    GstVaapiSurface *surface,
+    guint            flags
+)
+{
+    GstVaapiTexturePrivate * const priv = texture->priv;
+    VAStatus status;
+
+#if USE_VAAPI_GLX
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    status = vaCopySurfaceGLX(
+        GST_VAAPI_OBJECT_VADISPLAY(texture),
+        priv->gl_surface,
+        GST_VAAPI_OBJECT_ID(surface),
+        from_GstVaapiSurfaceRenderFlags(flags)
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!vaapi_check_status(status, "vaCopySurfaceGLX()"))
+        return FALSE;
+#else
+    guint surface_width, surface_height;
+    GLTextureState ts;
+    gboolean success = FALSE;
+
+    gst_vaapi_surface_get_size(surface, &surface_width, &surface_height);
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    status = vaPutSurface(
+        GST_VAAPI_OBJECT_VADISPLAY(texture),
+        GST_VAAPI_OBJECT_ID(surface),
+        priv->pixo->pixmap,
+        0, 0, surface_width, surface_height,
+        0, 0, priv->width, priv->height,
+        NULL, 0,
+        from_GstVaapiSurfaceRenderFlags(flags)
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!vaapi_check_status(status, "vaPutSurface() [TFP]"))
+        return FALSE;
+
+    if (!gl_bind_texture(&ts, priv->target, GST_VAAPI_OBJECT_ID(texture)))
+        return FALSE;
+
+    success = gl_bind_framebuffer_object(priv->fbo);
+    if (!success) {
+        GST_DEBUG("could not bind FBO");
+        goto out_unbind_texture;
+    }
+
+    success = gst_vaapi_surface_sync(surface);
+    if (!success) {
+        GST_DEBUG("could not render surface to pixmap");
+        goto out_unbind_fbo;
+    }
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    success = gl_bind_pixmap_object(priv->pixo);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!success) {
+        GST_DEBUG("could not bind GLX pixmap");
+        goto out_unbind_fbo;
+    }
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    {
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0,           0           );
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0,           priv->height);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(priv->width, priv->height);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(priv->width, 0           );
+    }
+    glEnd();
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    success = gl_unbind_pixmap_object(priv->pixo);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!success) {
+        GST_DEBUG("could not release GLX pixmap");
+        goto out_unbind_fbo;
+    }
+
+out_unbind_fbo:
+    success = gl_unbind_framebuffer_object(priv->fbo);
+out_unbind_texture:
+    gl_unbind_texture(&ts);
+    return success;
+#endif
+    return TRUE;
+}
+
 gboolean
 gst_vaapi_texture_put_surface(
     GstVaapiTexture *texture,
@@ -493,22 +639,9 @@ gst_vaapi_texture_put_surface(
     guint            flags
 )
 {
-    VAStatus status;
-
     g_return_val_if_fail(GST_VAAPI_IS_TEXTURE(texture), FALSE);
     g_return_val_if_fail(texture->priv->is_constructed, FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    status = vaCopySurfaceGLX(
-        GST_VAAPI_OBJECT_VADISPLAY(texture),
-        texture->priv->gl_surface,
-        GST_VAAPI_OBJECT_ID(surface),
-        from_GstVaapiSurfaceRenderFlags(flags)
-    );
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-
-    if (!vaapi_check_status(status, "vaCopySurfaceGLX()"))
-        return FALSE;
-    return TRUE;
+    return _gst_vaapi_texture_put_surface(texture, surface, flags);
 }

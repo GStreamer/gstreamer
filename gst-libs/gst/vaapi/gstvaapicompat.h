@@ -28,6 +28,12 @@
 # include <va/va.h>
 #endif
 
+#if USE_VAAPI_GLX
+# include <va/va_glx.h>
+#else
+# define vaGetDisplayGLX(dpy) vaGetDisplay(dpy)
+#endif
+
 /* Check for VA version */
 #ifndef VA_CHECK_VERSION
 #define VA_MAJOR_VERSION 0

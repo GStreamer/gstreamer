@@ -24,6 +24,7 @@
  */
 
 #include "config.h"
+#include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay_glx.h"
 

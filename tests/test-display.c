@@ -26,6 +26,12 @@
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
 
+#if USE_VAAPI_GLX
+# include <va/va_glx.h>
+#else
+# define vaGetDisplayGLX(dpy) vaGetDisplay(dpy)
+#endif
+
 static void
 print_caps(GstCaps *caps, const gchar *name)
 {

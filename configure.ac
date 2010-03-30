@@ -75,6 +75,11 @@ AC_ARG_ENABLE(glx,
                    [enable OpenGL/X11 @<:@default=yes@:>@]),
     [], [enable_glx="yes"])
 
+AC_ARG_ENABLE(vaapi-glx,
+    AC_HELP_STRING([--enable-vaapi-glx],
+                   [enable VA/GLX extensions @<:@default=yes@:>@]),
+    [], [enable_vaapi_glx="yes"])
+
 AC_ARG_ENABLE(vaapisink-glx,
     AC_HELP_STRING([--enable-vaapisink-glx],
                    [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
@@ -220,15 +225,20 @@ if test "$ac_cv_have_vaapi_x11" = "no"; then
 fi
 AC_SUBST(LIBVA_X11_PKGNAME)
 
-dnl ... VA-API >= 0.31 or -sds
-LIBVA_GLX_PKGNAME="libva-glx"
-PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME],
-    [ac_cv_have_vaapi_glx="yes"],
-    [ac_cv_have_vaapi_glx="no"]
-)
-if test "$ac_cv_have_vaapi_glx" = "no"; then
-    AC_MSG_WARN([could not find VA/GLX extensions. Disabling GLX support])
-    USE_GLX=0
+dnl ... VA-API >= 0.31 or -sds (VA/GLX extensions)
+USE_VAAPI_GLX=0
+if test $USE_GLX -eq 1; then
+    if test "$enable_vaapi_glx" = "yes"; then
+        LIBVA_GLX_PKGNAME="libva-glx"
+        PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME],
+            [ac_cv_have_vaapi_glx="yes" USE_VAAPI_GLX=1],
+            [ac_cv_have_vaapi_glx="no"]
+        )
+    fi
+    if test $USE_VAAPI_GLX -eq 0; then
+        AC_MSG_WARN([VA/GLX not found or disabled. Fallbacking to TFP+FBO])
+        LIBVA_GLX_PKGNAME="$LIBVA_X11_PKGNAME"
+    fi
 fi
 AC_SUBST(LIBVA_GLX_PKGNAME)
 
@@ -242,8 +252,13 @@ else
     USE_VAAPISINK_GLX=0
 fi
 
-AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX, [Defined to 1 if GLX is enabled])
+AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
+    [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_VAAPI_GLX, $USE_VAAPI_GLX,
+    [Defined to 1 if VA/GLX is enabled])
+AM_CONDITIONAL(USE_VAAPI_GLX, test $USE_VAAPI_GLX -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_VAAPISINK_GLX, $USE_VAAPISINK_GLX,
     [Defined to 1 to enable GLX support to vaapisink])
@@ -303,10 +318,14 @@ pkgconfig/gstreamer-vaapi-x11.pc.in
 ])
 
 dnl Print summary
+conf_glx=$(test $USE_GLX  -eq 1 && echo yes || echo no)
+conf_vaapi_glx=$(test $USE_VAAPI_GLX  -eq 1 && echo yes || echo no)
+conf_vaapisink_glx=$(test $USE_VAAPISINK_GLX  -eq 1 && echo yes || echo no)
 echo
 echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
-echo GLX support ...................... : $(test $USE_GLX  -eq 1 && echo yes || echo no)
-echo Build vaapisink with OpenGL ...... : $(test $USE_VAAPISINK_GLX  -eq 1 && echo yes || echo no)
+echo GLX support ...................... : $conf_glx
+echo VA/GLX support ................... : $conf_vaapi_glx
+echo VaapiSink/GL ..................... : $conf_vaapisink_glx
 echo
