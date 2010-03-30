@@ -25,7 +25,7 @@ audio: interfaces
 
 cdda: tag
 
-riff: tag
+riff: tag audio
 
 rtsp: sdp
 
