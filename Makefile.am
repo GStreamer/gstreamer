@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = debian.upstream gst-libs pkgconfig sys tests docs
+SUBDIRS = debian.upstream gst-libs gst pkgconfig tests docs
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \

@@ -46,8 +46,8 @@ FIXXREF_OPTIONS = \
 # Used for dependencies. The docs will be rebuilt if any of these change.
 # e.g. HFILE_GLOB=$(top_srcdir)/gtk/*.h
 # e.g. CFILE_GLOB=$(top_srcdir)/gtk/*.c
-HFILE_GLOB = $(top_srcdir)/sys/*/*.h
-CFILE_GLOB = $(top_srcdir)/sys/*/*.c
+HFILE_GLOB = $(top_srcdir)/gst/*/*.h
+CFILE_GLOB = $(top_srcdir)/gst/*/*.c
 
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
@@ -88,8 +88,8 @@ INCLUDES = \
 GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la \
-	$(top_builddir)/sys/vaapiconvert/libgstvaapiconvert.la \
-	$(top_builddir)/sys/vaapisink/libgstvaapisink.la \
+	$(top_builddir)/gst/vaapiconvert/libgstvaapiconvert.la \
+	$(top_builddir)/gst/vaapisink/libgstvaapisink.la \
 	$(GLIB_LIBS)
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
