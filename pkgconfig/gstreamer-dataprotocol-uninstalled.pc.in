@@ -3,6 +3,8 @@ prefix=
 exec_prefix=
 libdir=
 includedir=
+girdir=@abs_top_builddir@/libs/gst/dataprotocol
+typelibdir=@abs_top_builddir@/libs/gst/dataprotocol
 
 Name: GStreamer data protocol library, uninstalled
 Description: Data protocol for plug-ins, Not Installed

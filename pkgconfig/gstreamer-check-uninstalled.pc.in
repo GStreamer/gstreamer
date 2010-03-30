@@ -3,6 +3,8 @@ prefix=
 exec_prefix=
 libdir=
 includedir=
+girdir=@abs_top_builddir@/libs/gst/check
+typelibdir=@abs_top_builddir@/libs/gst/check
 
 Name: GStreamer check unit testing, uninstalled
 Description: Unit testing helper library for GStreamer modules, Not Installed

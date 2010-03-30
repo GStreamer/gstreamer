@@ -3,6 +3,8 @@ prefix=
 exec_prefix=
 libdir=
 includedir=
+girdir=@abs_top_builddir@/libs/gst/controller
+typelibdir=@abs_top_builddir@/libs/gst/controller
 
 Name: GStreamer controller, uninstalled
 Description: Dynamic parameter control for GStreamer elements, Not Installed

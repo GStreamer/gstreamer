@@ -6,6 +6,8 @@ libdir=
 includedir=@abs_top_builddir@
 toolsdir=@abs_top_builddir@/tools
 pluginsdir=@abs_top_builddir@
+girdir=@abs_top_builddir@/gst
+typelibdir=@abs_top_builddir@/gst
 
 Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed

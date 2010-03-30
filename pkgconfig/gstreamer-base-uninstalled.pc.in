@@ -3,6 +3,8 @@ prefix=
 exec_prefix=
 libdir=
 includedir=
+girdir=@abs_top_builddir@/libs/gst/base
+typelibdir=@abs_top_builddir@/libs/gst/base
 
 Name: GStreamer base classes, uninstalled
 Description: Base classes for GStreamer elements, Not Installed

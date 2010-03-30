@@ -3,6 +3,8 @@ prefix=
 exec_prefix=
 libdir=
 includedir=
+girdir=@abs_top_builddir@/libs/gst/net
+typelibdir=@abs_top_builddir@/libs/gst/net
 
 Name: GStreamer networking library, uninstalled
 Description: Network-enabled GStreamer plug-ins and clocking, uninstalled
