@@ -73,6 +73,16 @@ static const struct
   GST_U8, AFMT_U8, "audio/x-raw-int", 8, 8, 0, FALSE}
 };
 
+/* formats we assume the OSS4 layer can always handle and convert internally */
+#define CONVERTIBLE_FORMATS (   \
+    AFMT_MU_LAW | AFMT_A_LAW |  \
+    AFMT_S32_LE | AFMT_S32_BE | \
+    AFMT_S24_LE | AFMT_S24_BE | \
+    AFMT_S24_PACKED |           \
+    AFMT_S16_LE | AFMT_S16_BE | \
+    AFMT_U16_LE | AFMT_U16_BE | \
+    AFMT_S8 | AFMT_U8 )
+
 static gboolean
 gst_oss4_append_format_to_caps (gint fmt, GstCaps * caps)
 {
@@ -411,6 +421,7 @@ gst_oss4_audio_probe_caps (GstObject * obj, int fd)
   oss_audioinfo ai = { 0, };
   gboolean output;
   GstCaps *caps;
+  int nonnative_formats = 0;
   int formats, i;
 
   output = GST_IS_OSS4_SINK (obj);
@@ -427,8 +438,21 @@ gst_oss4_audio_probe_caps (GstObject * obj, int fd)
 
   caps = gst_caps_new_empty ();
 
+  /* first list all the formats natively supported */
   for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
     if ((formats & fmt_map[i].oss_fmt)) {
+      gst_oss4_append_format_to_caps (fmt_map[i].oss_fmt, caps);
+    } else if ((fmt_map[i].oss_fmt & CONVERTIBLE_FORMATS)) {
+      nonnative_formats |= fmt_map[i].oss_fmt;
+    }
+  }
+
+  GST_LOG_OBJECT (obj, "adding non-native %s formats : 0x%08x",
+      (output) ? "out" : "in", nonnative_formats);
+
+  /* now append non-native formats for which conversion would be needed */
+  for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
+    if ((nonnative_formats & fmt_map[i].oss_fmt)) {
       gst_oss4_append_format_to_caps (fmt_map[i].oss_fmt, caps);
     }
   }
