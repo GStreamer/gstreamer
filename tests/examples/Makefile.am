@@ -49,3 +49,5 @@ SUBDIRS = 				\
 	$(GST_LOADSAVE_DIRS)
 
 DIST_SUBDIRS = $(always_dirs) adapter xml typefind launch
+
+include $(top_srcdir)/common/parallel-subdirs.mak
