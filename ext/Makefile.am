@@ -476,3 +476,5 @@ DIST_SUBDIRS = \
 	timidity \
 	xvid \
 	zbar
+
+include $(top_srcdir)/common/parallel-subdirs.mak

@@ -87,3 +87,4 @@ SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR
 DIST_SUBDIRS = acmenc acmmp3dec directdraw directsound dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
 			   oss4 osxvideo qtwrapper vcd vdpau wasapi wininet winks winscreencap
 
+include $(top_srcdir)/common/parallel-subdirs.mak
