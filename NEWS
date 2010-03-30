@@ -1,10 +1,10 @@
-gst-vaapi NEWS -- summary of changes.  2010-03-29
+gst-vaapi NEWS -- summary of changes.  2010-03-30
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.1.2 - 29.Mar.2010
+Version 0.1.2 - 30.Mar.2010
 * Add AYUV image format
-* Add support for VA/GLX extensions
 * Add compatibility with the original VA-API 0.29
+* Add OpenGL support through VA/GLX extensions or TFP+FBO fallback
 
 Version 0.1.1 - 23.Mar.2010
 * Document public API for libgstvaapi-*.so.*

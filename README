@@ -19,10 +19,17 @@ gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
   * `vaapiconvert' is used to convert from video/x-raw-yuv pixels to
-    video/x-vaapi-surface surfaces
+    video/x-vaapi-surface surfaces.
 
   * `vaapisink' is used to display video/x-vaapi-surface surfaces to
     screen.
+
+
+Features
+--------
+
+  * VA-API support from 0.29 to 0.31
+  * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
 
 
 Requirements
@@ -30,4 +37,4 @@ Requirements
 
 libgstreamer0.10-dev >= 0.10.0
 libgstreamer-plugins-base0.10-dev >= 0.10.0
-libva-dev >= 0.31.0-1+sds9
+libva-dev >= 0.31.0-1+sds9 (VA/GLX)
