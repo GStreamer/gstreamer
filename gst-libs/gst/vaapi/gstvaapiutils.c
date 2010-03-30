@@ -101,12 +101,13 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
 }
 
 /**
- * get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags:
+ * from_GstVaapiSurfaceRenderFlags:
+ * @flags: the #GstVaapiSurfaceRenderFlags
  *
  * Converts #GstVaapiSurfaceRenderFlags to flags suitable for
  * vaPutSurface().
  */
-guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
+guint from_GstVaapiSurfaceRenderFlags(guint flags)
 {
     guint va_fields = 0, va_csc = 0;
 

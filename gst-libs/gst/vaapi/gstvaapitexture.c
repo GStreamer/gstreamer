@@ -504,7 +504,7 @@ gst_vaapi_texture_put_surface(
         GST_VAAPI_OBJECT_VADISPLAY(texture),
         texture->priv->gl_surface,
         GST_VAAPI_OBJECT_ID(surface),
-        get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(flags)
+        from_GstVaapiSurfaceRenderFlags(flags)
     );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
 

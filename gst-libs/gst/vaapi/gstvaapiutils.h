@@ -50,7 +50,7 @@ const char *string_of_VAProfile(VAProfile profile)
 const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
     attribute_hidden;
 
-guint get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(guint flags)
+guint from_GstVaapiSurfaceRenderFlags(guint flags)
     attribute_hidden;
 
 guint to_GstVaapiSurfaceStatus(guint va_flags)

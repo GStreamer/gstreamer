@@ -433,7 +433,7 @@ gst_vaapi_window_x11_render(
         dst_rect->width,
         dst_rect->height,
         NULL, 0,
-        get_PutSurface_flags_from_GstVaapiSurfaceRenderFlags(flags)
+        from_GstVaapiSurfaceRenderFlags(flags)
     );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     if (!vaapi_check_status(status, "vaPutSurface()"))
