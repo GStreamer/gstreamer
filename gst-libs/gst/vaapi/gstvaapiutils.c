@@ -159,8 +159,9 @@ to_GstVaapiSurfaceStatus(guint va_flags)
     }
 
     /* Check for encoder status */
+#if VA_CHECK_VERSION(0,30,0)
     if (va_flags & VASurfaceSkipped)
         flags |= GST_VAAPI_SURFACE_STATUS_SKIPPED;
-
+#endif
     return flags;
 }
