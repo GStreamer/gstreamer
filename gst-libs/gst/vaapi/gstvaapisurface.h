@@ -133,7 +133,7 @@ gst_vaapi_surface_new(
     guint               height
 );
 
-VASurfaceID
+GstVaapiID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface);
 
 GstVaapiChromaType

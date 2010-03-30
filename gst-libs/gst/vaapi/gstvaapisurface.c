@@ -313,7 +313,7 @@ gst_vaapi_surface_new(
  *
  * Return value: the underlying VA surface id
  */
-VASurfaceID
+GstVaapiID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), VA_INVALID_SURFACE);

@@ -116,7 +116,7 @@ gst_vaapi_image_new(
 GstVaapiImage *
 gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image);
 
-VAImageID
+GstVaapiID
 gst_vaapi_image_get_id(GstVaapiImage *image);
 
 gboolean

@@ -225,7 +225,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
  *
  * Return value: the underlying VA subpicture id
  */
-VASubpictureID
+GstVaapiID
 gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), VA_INVALID_ID);

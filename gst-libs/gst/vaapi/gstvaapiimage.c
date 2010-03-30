@@ -512,7 +512,7 @@ gst_vaapi_image_new_with_image(GstVaapiDisplay *display, VAImage *va_image)
  *
  * Return value: the underlying VA image id
  */
-VAImageID
+GstVaapiID
 gst_vaapi_image_get_id(GstVaapiImage *image)
 {
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), VA_INVALID_ID);
