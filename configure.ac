@@ -289,8 +289,7 @@ debian.upstream/gstreamer-vaapi.install.in
 debian.upstream/gstreamer-vaapi-doc.install.in
     debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi.install.in
-    debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION-dev.install:\
-debian.upstream/libgstvaapi-dev.install.in
+    debian.upstream/libgstvaapi-dev.install
     debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-x11.install.in
     debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\

@@ -64,7 +64,7 @@ Description: GStreamer libraries from the "vaapi" set
  .
  This package contains glx libraries for the "vaapi" set.
 
-Package: libgstvaapi@GST_VAAPI_MAJOR_VERSION@-dev
+Package: libgstvaapi-dev
 Architecture: any
 Section: libdevel
 Depends: ${shlibs:Depends}, ${misc:Depends}

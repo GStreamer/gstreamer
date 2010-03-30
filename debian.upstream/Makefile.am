@@ -19,7 +19,7 @@ DEBIANFILES = \
 	libgstvaapi.install.in					\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
 	libgstvaapi-dev.install.in				\
-	libgstvaapi$(GST_VAAPI_MAJOR_VERSION)-dev.install	\
+	libgstvaapi-dev.install					\
 	libgstvaapi-x11.install.in				\
 	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-glx.install.in				\
@@ -33,7 +33,7 @@ DEBIANGENFILES = \
 	gstreamer$(GST_MAJORMINOR)-vaapi.install		\
 	gstreamer$(GST_MAJORMINOR)-vaapi-doc.install		\
 	libgstvaapi$(GST_VAAPI_MAJOR_VERSION).install		\
-	libgstvaapi$(GST_VAAPI_MAJOR_VERSION)-dev.install	\
+	libgstvaapi-dev.install					\
 	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-glx-$(GST_VAAPI_MAJOR_VERSION).install	\
 	$(NULL)
