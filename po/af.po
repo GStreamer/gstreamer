@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -830,6 +830,10 @@ msgstr "Lêer \"%s\" is 'n sok."
 
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fout tydens skryf na lêer \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

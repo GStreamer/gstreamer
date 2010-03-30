@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-02-09 23:00+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -833,6 +833,10 @@ msgstr "Tập tin « %s » là ổ cắm."
 
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
 
 msgid "No Temp directory specified."
 msgstr "Chưa xác định thư mục tạm thời."

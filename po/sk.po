@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2009-09-21 10:11+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -849,6 +849,10 @@ msgstr "Súbor \"%s\" je zásuvka."
 
 msgid "Failed after iterations as requested."
 msgstr "Zlyhanie po vykonaní požadovaných iterácií."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Chyba pri zápise do súboru \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

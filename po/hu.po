@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-02-01 15:04+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -832,6 +832,10 @@ msgstr "A(z) „%s” fájl egy foglalat."
 
 msgid "Failed after iterations as requested."
 msgstr "Ismétlések után kérésére meghiúsult."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Hiba a(z) „%s” fájl írása közben."
 
 msgid "No Temp directory specified."
 msgstr "Nincs megadva ideiglenes könyvtár."

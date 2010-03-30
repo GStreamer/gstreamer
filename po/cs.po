@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2008-10-12 12:12+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -833,6 +833,10 @@ msgstr "Soubor \"%s\" je socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Chyba při zápisu do souboru \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

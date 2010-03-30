@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2009-11-05 01:18-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -850,6 +850,10 @@ msgstr "O arquivo \"%s\" é um soquete."
 
 msgid "Failed after iterations as requested."
 msgstr "Falha após as interações requeridas."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Erro ao escrever no arquivo \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

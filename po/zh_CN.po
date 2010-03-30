@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -806,6 +806,10 @@ msgstr "文件“%s”是套接字。"
 
 msgid "Failed after iterations as requested."
 msgstr "在完成所要求的迭代操作后出错。"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "写入文件“%s”时出错。"
 
 msgid "No Temp directory specified."
 msgstr "未指定临时目录。"

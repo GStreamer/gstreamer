@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -828,6 +828,10 @@ msgstr "Filen \"%s\" er en sokkel."
 
 msgid "Failed after iterations as requested."
 msgstr "Fejlede efter iterationer som forespurgt."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fejl under skrivning til filen \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

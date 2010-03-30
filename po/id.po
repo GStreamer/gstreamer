@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-01-28 10:04-0500\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -833,6 +833,10 @@ msgstr "Berkas \"%s\" adalah soket."
 
 msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Galat ketika menulis ke berkas \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr "Tak ada direktori Temp yang ditentukan."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -828,6 +828,10 @@ msgstr "“%s” 是一個 socket。"
 
 msgid "Failed after iterations as requested."
 msgstr ""
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
 
 msgid "No Temp directory specified."
 msgstr ""

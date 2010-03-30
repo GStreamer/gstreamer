@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-01-30 21:23+0100\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -836,6 +836,10 @@ msgstr "Le fichier « %s » est un connecteur."
 
 msgid "Failed after iterations as requested."
 msgstr "Échec suite aux itérations demandées."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Erreur d'écriture dans le fichier « %s »."
 
 msgid "No Temp directory specified."
 msgstr "Aucun répertoire temporaire indiqué."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-01-28 21:10+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -844,6 +844,10 @@ msgstr "Filen \"%s\" är ett uttag."
 
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fel vid skrivning till filen \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr "Ingen temporärkatalog angiven."

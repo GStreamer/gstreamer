@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2009-08-29 12:04+0200\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -842,6 +842,10 @@ msgstr "\"%s\" fitxategia socket-a da."
 
 msgid "Failed after iterations as requested."
 msgstr "Huts egin du eskatutako iterazioak egin ondoren."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
 
 msgid "No Temp directory specified."
 msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-02-23 10:27+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -830,6 +830,10 @@ msgstr "Файлът „%s“ е гнездо."
 
 msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Грешка при запис във файл „%s“."
 
 msgid "No Temp directory specified."
 msgstr "Не е указана временна папка"

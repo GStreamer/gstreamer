@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2010-02-21 15:19+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -841,6 +841,10 @@ msgstr "Bestand \"%s\" is een socket."
 
 msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr "Geen tijdelijke map opgegeven."

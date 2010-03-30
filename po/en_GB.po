@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -836,6 +836,10 @@ msgstr "File \"%s\" isn't a regular file."
 
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Error while writing to file \"%s\"."
 
 msgid "No Temp directory specified."
 msgstr ""

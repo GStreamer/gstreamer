@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-25 17:38+0000\n"
+"POT-Creation-Date: 2010-03-30 15:02+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -805,6 +805,10 @@ msgstr "ファイル \"%s\" はソケットです"
 
 msgid "Failed after iterations as requested."
 msgstr ""
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
 msgid "No Temp directory specified."
 msgstr ""
