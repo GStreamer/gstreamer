@@ -3737,7 +3737,7 @@ gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
     GST_DEBUG_OBJECT (demux, "header packet: len=%u bytes, flags=0x%02x",
         len, (guint) pdata[off]);
 
-    ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata + off, len);
+    ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata + off, len + 4);
     if (ret != GST_FLOW_OK)
       return ret;
 
