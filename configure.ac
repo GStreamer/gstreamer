@@ -317,14 +317,15 @@ pkgconfig/gstreamer-vaapi-x11.pc.in
 ])
 
 dnl Print summary
-conf_glx=$(test $USE_GLX  -eq 1 && echo yes || echo no)
-conf_vaapi_glx=$(test $USE_VAAPI_GLX  -eq 1 && echo yes || echo no)
-conf_vaapisink_glx=$(test $USE_VAAPISINK_GLX  -eq 1 && echo yes || echo no)
+yesno() {
+    test $1 -eq 1 && echo yes || echo no
+}
+
 echo
 echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
-echo GLX support ...................... : $conf_glx
-echo VA/GLX support ................... : $conf_vaapi_glx
-echo VaapiSink/GL ..................... : $conf_vaapisink_glx
+echo GLX support ...................... : $(yesno $USE_GLX)
+echo VA/GLX support ................... : $(yesno $USE_VAAPI_GLX)
+echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
 echo
