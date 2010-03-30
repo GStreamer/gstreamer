@@ -25,24 +25,18 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-/* Debug output */
-void vaapi_dprintf(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    fprintf(stdout, "[GstVaapi] ");
-    vfprintf(stdout, format, args);
-    va_end(args);
-}
+#define DEBUG 1
+#include "gstvaapidebug.h"
 
 /* Check VA status for success or print out an error */
-int vaapi_check_status(VAStatus status, const char *msg)
+gboolean
+vaapi_check_status(VAStatus status, const char *msg)
 {
     if (status != VA_STATUS_SUCCESS) {
-        vaapi_dprintf("%s: %s\n", msg, vaErrorStr(status));
-        return 0;
+        GST_DEBUG("%s: %s", msg, vaErrorStr(status));
+        return FALSE;
     }
-    return 1;
+    return TRUE;
 }
 
 /* Return a string representation of a FOURCC */
@@ -107,7 +101,8 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
  * Converts #GstVaapiSurfaceRenderFlags to flags suitable for
  * vaPutSurface().
  */
-guint from_GstVaapiSurfaceRenderFlags(guint flags)
+guint
+from_GstVaapiSurfaceRenderFlags(guint flags)
 {
     guint va_fields = 0, va_csc = 0;
 
@@ -139,7 +134,8 @@ guint from_GstVaapiSurfaceRenderFlags(guint flags)
  *
  * Return value: the #GstVaapiSurfaceStatus flags
  */
-guint to_GstVaapiSurfaceStatus(guint va_flags)
+guint
+to_GstVaapiSurfaceStatus(guint va_flags)
 {
     guint flags;
     const guint va_flags_mask = (VASurfaceReady|

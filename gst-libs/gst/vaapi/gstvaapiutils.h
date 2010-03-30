@@ -30,12 +30,9 @@
 # include <va/va.h>
 #endif
 
-/** Debug output */
-void vaapi_dprintf(const char *format, ...)
-    attribute_hidden;
-
 /** Check VA status for success or print out an error */
-int vaapi_check_status(VAStatus status, const char *msg)
+gboolean
+vaapi_check_status(VAStatus status, const char *msg)
     attribute_hidden;
 
 /** Return a string representation of a FOURCC */
@@ -50,10 +47,12 @@ const char *string_of_VAProfile(VAProfile profile)
 const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
     attribute_hidden;
 
-guint from_GstVaapiSurfaceRenderFlags(guint flags)
+guint
+from_GstVaapiSurfaceRenderFlags(guint flags)
     attribute_hidden;
 
-guint to_GstVaapiSurfaceStatus(guint va_flags)
+guint
+to_GstVaapiSurfaceStatus(guint va_flags)
     attribute_hidden;
 
 #endif /* GST_VAAPI_UTILS_H */
