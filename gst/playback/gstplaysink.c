@@ -2413,7 +2413,7 @@ gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
   /* Figure out the GstPlaySinkType based on the template */
   if (!strcmp (tplname, "audio_sink"))
     type = GST_PLAY_SINK_TYPE_AUDIO;
-  else if (!strcmp (tplname, "aduio_raw_sink"))
+  else if (!strcmp (tplname, "audio_raw_sink"))
     type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
   else if (!strcmp (tplname, "video_sink"))
     type = GST_PLAY_SINK_TYPE_VIDEO;
