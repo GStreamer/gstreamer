@@ -856,6 +856,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
   if (!GST_CLOCK_TIME_IS_VALID (demux->audio_start)) {
     demux->audio_start = GST_BUFFER_TIMESTAMP (outbuf);
   }
+  if (!GST_CLOCK_TIME_IS_VALID (demux->audio_first_ts)) {
+    demux->audio_first_ts = GST_BUFFER_TIMESTAMP (outbuf);
+  }
 
   if (G_UNLIKELY (!demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->audio_start,
@@ -870,13 +873,23 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
   /* Push downstream */
   ret = gst_pad_push (demux->audio_pad, outbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-        " bytes audio buffer: %s", demux->tag_data_size,
-        gst_flow_get_name (ret));
-    if (ret == GST_FLOW_NOT_LINKED) {
-      demux->audio_linked = FALSE;
+    if (demux->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
+        demux->segment.last_stop > demux->segment.stop) {
+      /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+       * we are at the end of the segment, so we just need to jump
+       * back to the previous section. */
+      GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
+      demux->audio_done = TRUE;
+      ret = GST_FLOW_OK;
+    } else {
+      GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+          " bytes audio buffer: %s", demux->tag_data_size,
+          gst_flow_get_name (ret));
+      if (ret == GST_FLOW_NOT_LINKED) {
+        demux->audio_linked = FALSE;
+      }
+      goto beach;
     }
-    goto beach;
   }
 
   demux->audio_linked = TRUE;
@@ -1192,6 +1205,9 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
   if (!GST_CLOCK_TIME_IS_VALID (demux->video_start)) {
     demux->video_start = GST_BUFFER_TIMESTAMP (outbuf);
   }
+  if (!GST_CLOCK_TIME_IS_VALID (demux->audio_first_ts)) {
+    demux->video_first_ts = GST_BUFFER_TIMESTAMP (outbuf);
+  }
 
   if (G_UNLIKELY (!demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->video_start,
@@ -1207,13 +1223,23 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
   ret = gst_pad_push (demux->video_pad, outbuf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
-        " bytes video buffer: %s", demux->tag_data_size,
-        gst_flow_get_name (ret));
-    if (ret == GST_FLOW_NOT_LINKED) {
-      demux->video_linked = FALSE;
+    if (demux->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
+        demux->segment.last_stop > demux->segment.stop) {
+      /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+       * we are at the end of the segment, so we just need to jump
+       * back to the previous section. */
+      GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
+      demux->video_done = TRUE;
+      ret = GST_FLOW_OK;
+    } else {
+      GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+          " bytes video buffer: %s", demux->tag_data_size,
+          gst_flow_get_name (ret));
+      if (ret == GST_FLOW_NOT_LINKED) {
+        demux->video_linked = FALSE;
+      }
+      goto beach;
     }
-    goto beach;
   }
 
   demux->video_linked = TRUE;

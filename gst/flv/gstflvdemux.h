@@ -129,6 +129,14 @@ struct _GstFLVDemux
 
   GstClockTime index_max_time;
   gint64 index_max_pos;
+
+  /* reverse playback */
+  GstClockTime video_first_ts;
+  GstClockTime audio_first_ts;
+  gboolean video_done;
+  gboolean audio_done;
+  gint64 from_offset;
+  gint64 to_offset;
 };
 
 struct _GstFLVDemuxClass
