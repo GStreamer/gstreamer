@@ -131,7 +131,9 @@
       <listitem>
         <para>
           <emphasis>queries</emphasis>: allow application to request information
-          from the pipeline. Queries are answered synchronously.
+          from the pipeline. Queries are answered synchronously. Also elements
+          can use queries. They can be used both ways, but most common are
+          downstream queries.
         </para>
       </listitem>
     </itemizedlist>
