@@ -1179,8 +1179,8 @@ gboolean gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint *re
  * are unfortunately not possible. The implementation of
  * these functions is in gstevent.c.
  */
-GstEvent*       gst_event_new_sink_message      (struct _GstMessage *msg);
-void            gst_event_parse_sink_message    (GstEvent *event, struct _GstMessage **msg);
+GstEvent*       gst_event_new_sink_message      (GstMessage *msg);
+void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
 
 
 G_END_DECLS
