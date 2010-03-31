@@ -182,7 +182,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   n_read = fread (magic, 1, sizeof (magic), fp);
 
   /* Check for valid magic number */
-  if (!png_check_sig (magic, sizeof (magic))) {
+  if (png_sig_cmp (magic, 0, sizeof (magic))) {
     fclose (fp);
     LOAD_ERROR ("not a valid PNG image");
   }
