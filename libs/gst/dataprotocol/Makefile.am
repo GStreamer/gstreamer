@@ -37,7 +37,7 @@ GstDataprotocol-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstdataprotoco
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
-		--library=gstdataprotocol-0.10 \
+		--library=libgstdataprotocol-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \

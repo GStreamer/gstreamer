@@ -118,7 +118,7 @@ GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMI
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
-		--library=gstcheck-0.10 \
+		--library=libgstcheck-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
