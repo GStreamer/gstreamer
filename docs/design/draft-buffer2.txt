@@ -148,9 +148,11 @@ GstBufferMetaInfo will point to more information about the metadata and looks li
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
+    GstMetaCopyFunction        copy_func;
     GstMetaSubFunction         sub_func;
     GstMetaSerializeFunction   serialize_func
     GstMetaDeserializeFunction deserialize_func
+    GstMetaConvFunction        conv_func;
   }
 
 Tag will contain a GQuark of the metadata name. We will be able to refer to specific
@@ -166,6 +168,9 @@ function that can be used to modify the metadata when a subbuffer is taken.
 We also add serialize and deserialize function for the metadata in case we need special
 logic for reading and writing the metadata. This is needed for GDP payloading of the
 metadata.
+
+We add a conv function to the Info structure that will be called when a buffer
+should be converted to an old-style buffer for backward compatibility.
 
 The purpose of the separate MetaInfo is to not have to carry the free/init functions in
 each buffer instance but to define them globally. We still want quick access to the info
@@ -310,8 +315,8 @@ Memory management
   MetaInfo associated with the entries. Usually, this function will be NULL.
 
 
-Subbufers
----------
+Subbuffers
+----------
 
 Subbuffers are a first class feature of the GstBuffer. 
 
