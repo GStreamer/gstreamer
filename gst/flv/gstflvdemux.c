@@ -772,90 +772,60 @@ gst_flv_demux_loop (GstPad * pad)
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
-  if (TRUE || demux->segment.rate >= 0) {
-    /* pull in data */
-    switch (demux->state) {
-      case FLV_STATE_TAG_TYPE:
-        if (demux->from_offset == -1)
-          demux->from_offset = demux->offset;
-        ret = gst_flv_demux_pull_tag (pad, demux);
-        /* if we have seen real data, we probably passed a possible metadata
-         * header located at start.  So if we do not yet have an index,
-         * try to pick up metadata (index, duration) at the end */
-        if (G_UNLIKELY (!demux->file_size && !demux->indexed &&
-                (demux->has_video || demux->has_audio)))
-          demux->file_size = gst_flv_demux_get_metadata (demux);
-        break;
-      case FLV_STATE_DONE:
-        ret = GST_FLOW_UNEXPECTED;
-        break;
-      case FLV_STATE_SEEK:
-        /* seek issued with insufficient index;
-         * scan for index in task thread from current maximum offset to
-         * desired time and then perform seek */
-        /* TODO maybe some buffering message or so to indicate scan progress */
-        ret = gst_flv_demux_create_index (demux, demux->index_max_pos,
-            demux->seek_time);
-        if (ret != GST_FLOW_OK)
-          goto pause;
-        /* position and state arranged by seek,
-         * also unrefs event */
-        gst_flv_demux_handle_seek_pull (demux, demux->seek_event, FALSE);
-        demux->seek_event = NULL;
-        break;
-      default:
-        ret = gst_flv_demux_pull_header (pad, demux);
-        /* index scans start after header */
-        demux->index_max_pos = demux->offset;
-        break;
-    }
-
-    if (demux->segment.rate < 0.0) {
-      /* check end of section */
-      if ((gint64) demux->offset >= demux->to_offset ||
-          demux->segment.last_stop >= demux->segment.stop + 2 * GST_SECOND ||
-          (demux->audio_done && demux->video_done))
-        ret = gst_flv_demux_seek_to_prev_keyframe (demux);
-    } else {
-      /* check EOS condition */
-      if ((demux->segment.stop != -1) &&
-          (demux->segment.last_stop >= demux->segment.stop)) {
-        ret = GST_FLOW_UNEXPECTED;
-      }
-    }
-
-    /* pause if something went wrong or at end */
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto pause;
-  } else {                      /* Reverse playback */
-    /* pull in data */
-    switch (demux->state) {
-      case FLV_STATE_TAG_TYPE:
-        ret = gst_flv_demux_pull_tag (pad, demux);
-        /* When packet parsing returns UNEXPECTED that means we ve reached the
-           point where we want to go to the previous keyframe. This is either
-           the last FLV tag or the keyframe we used last time */
-        if (ret == GST_FLOW_UNEXPECTED) {
-          ret = gst_flv_demux_seek_to_prev_keyframe (demux);
-          demux->state = FLV_STATE_TAG_TYPE;
-        }
-        break;
-      default:
-        ret = gst_flv_demux_pull_header (pad, demux);
-        if (ret == GST_FLOW_OK)
-          gst_flv_demux_create_index (demux, demux->offset, G_MAXINT64);
-    }
-
-    /* pause if something went wrong */
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto pause;
-
-    /* check EOS condition */
-    if (demux->segment.last_stop <= demux->segment.start) {
+  /* pull in data */
+  switch (demux->state) {
+    case FLV_STATE_TAG_TYPE:
+      if (demux->from_offset == -1)
+        demux->from_offset = demux->offset;
+      ret = gst_flv_demux_pull_tag (pad, demux);
+      /* if we have seen real data, we probably passed a possible metadata
+       * header located at start.  So if we do not yet have an index,
+       * try to pick up metadata (index, duration) at the end */
+      if (G_UNLIKELY (!demux->file_size && !demux->indexed &&
+              (demux->has_video || demux->has_audio)))
+        demux->file_size = gst_flv_demux_get_metadata (demux);
+      break;
+    case FLV_STATE_DONE:
       ret = GST_FLOW_UNEXPECTED;
-      goto pause;
+      break;
+    case FLV_STATE_SEEK:
+      /* seek issued with insufficient index;
+       * scan for index in task thread from current maximum offset to
+       * desired time and then perform seek */
+      /* TODO maybe some buffering message or so to indicate scan progress */
+      ret = gst_flv_demux_create_index (demux, demux->index_max_pos,
+          demux->seek_time);
+      if (ret != GST_FLOW_OK)
+        goto pause;
+      /* position and state arranged by seek,
+       * also unrefs event */
+      gst_flv_demux_handle_seek_pull (demux, demux->seek_event, FALSE);
+      demux->seek_event = NULL;
+      break;
+    default:
+      ret = gst_flv_demux_pull_header (pad, demux);
+      /* index scans start after header */
+      demux->index_max_pos = demux->offset;
+      break;
+  }
+
+  if (demux->segment.rate < 0.0) {
+    /* check end of section */
+    if ((gint64) demux->offset >= demux->to_offset ||
+        demux->segment.last_stop >= demux->segment.stop + 2 * GST_SECOND ||
+        (demux->audio_done && demux->video_done))
+      ret = gst_flv_demux_seek_to_prev_keyframe (demux);
+  } else {
+    /* check EOS condition */
+    if ((demux->segment.stop != -1) &&
+        (demux->segment.last_stop >= demux->segment.stop)) {
+      ret = GST_FLOW_UNEXPECTED;
     }
   }
+
+  /* pause if something went wrong or at end */
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto pause;
 
   gst_object_unref (demux);
 
