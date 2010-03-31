@@ -97,4 +97,54 @@
 
   </sect1>
 
+  <sect1 id="section-intro-basics-communication">
+    <title>Communication</title>
+
+    <para>
+      &GStreamer; provides several mechanisms for communication and data exchange
+      between the <emphasis>application</emphasis> and the <emphasis>pipeline</emphasis>.
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>
+          <emphasis>buffers</emphasis>: are objects for passing streaming data
+          between elements in the pipeline. Buffers always travel from sources
+          to sinks (downstream).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>events</emphasis>: are objects send between elements or from
+          the application to elements. Events can travel upstream and downstream.
+          Downstream events can be synchronised to the data flow.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>messages</emphasis>: are object send from elements over the
+          bus to the application. Messages can be received synchronously, but
+          then from the streaming thread context of the sender or asynchronously
+          marshalled to the main thread of the application.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>queries</emphasis>: allow application to request information
+          from the pipeline. Queries are answered synchronously.
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <figure float="1" id="section-communication-img">
+      <title>&GStreamer; pipeline with different communication flows</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata scale="75" fileref="images/communication.&image;" format="&IMAGE;" />
+        </imageobject>
+      </mediaobject>  
+    </figure>
+
+  </sect1>
+
 </chapter>
