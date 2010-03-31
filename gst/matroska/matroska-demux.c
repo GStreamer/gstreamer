@@ -3636,6 +3636,11 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         "Checking for resync on stream %d (%" GST_TIME_FORMAT ")", stream_nr,
         GST_TIME_ARGS (context->pos));
 
+    if (G_LIKELY (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE)) {
+      GST_LOG_OBJECT (demux, "Skipping sync on non-subtitle stream");
+      continue;
+    }
+
     /* does it lag? 0.5 seconds is a random threshold...
      * lag need only be considered if we have advanced into requested segment */
     if (GST_CLOCK_TIME_IS_VALID (context->pos) &&
