@@ -339,6 +339,29 @@ Possible use cases are to make sure we write out the fields with a specific size
 and endianness.
 
 
+Transformations
+---------------
+
+After certain transformations, the metadata on a buffer might not be relevant
+anymore.
+
+Consider, for example, metadata that lists certain regions of interest
+on the video data. If the video is scaled or rotated, the coordinates might not
+make sense anymore. A transform element should be able to adjust or remove the
+associated metadata when it becomes invalid. 
+
+We can make the transform element aware of the metadata so that it can adjust or
+remove in an intelligent way. Since we allow arbitrary metadata, we can't do
+this for all metadata and thus we need some other way.
+
+One proposition is to tag the metadata type with keywords that specify what it
+functionally refers too. We could, for example, tag the metadata for the regions
+of interest with a tag that notes that the metadata refers to absolute pixel
+positions. A transform could then know that the metadata is not valid anymore
+when the position of the pixels changed (due to rotation, flipping, scaling and
+so on).
+
+
 Other use cases
 ---------------
 
@@ -386,13 +409,35 @@ A scheme like this would still allow us to functionally specify the desired
 video resolution while the implementation details would be inside the metadata.
 
 
+Compatibility
+-------------
+
+We need to make sure that elements exchange metadata that they both understand,
+This is particulary important when the metadata describes the data layout in
+memory (such as strides).
+
+Currently the only way to communicate buffer formats between elements is by
+using caps. We would like to use the caps system to negotiate the metadata that
+will be put on buffers.
+
+We would like to add to the caps on the buffer (and pad) an array of metadata
+structures (as strings) that is on the buffer. This way, an element can
+quickly know what metadata to look for.
+
+In order to remain compatibility with older plugins we need to convert buffers
+that use metadata to specify a non-standard data layout to the old format. We
+need to do this before handing buffers to old elements. We will require elements
+that are metadata aware to set a flag on their pads; any buffer passed on that
+pad will be converted to the old layout when the flag is not set.
+
+
 Notes:
 ------
 
 Some structures that we need to be able to add to buffers.
 
   Clean Aperture
-  Abitrary Matrix Transform
+  Arbitrary Matrix Transform
   Aspect ratio
   Pan/crop/zoom
   Video strides
