@@ -67,16 +67,31 @@ gl_resize(guint width, guint height)
 
 typedef struct _GLContextState GLContextState;
 struct _GLContextState {
-    GLXContext  context;
-    Window      window;
+    Display     *display;
+    Window       window;
+    XVisualInfo *visual;
+    GLXContext   context;
+    guint        swapped_buffers;
 };
 
-gboolean
-gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
+GLContextState *
+gl_create_context(Display *dpy, int screen, GLContextState *parent)
     attribute_hidden;
 
 void
-gl_swap_buffers(Display *dpy, Window win)
+gl_destroy_context(GLContextState *cs)
+    attribute_hidden;
+
+void
+gl_get_current_context(GLContextState *cs)
+    attribute_hidden;
+
+gboolean
+gl_set_current_context(GLContextState *new_cs, GLContextState *old_cs)
+    attribute_hidden;
+
+void
+gl_swap_buffers(GLContextState *cs)
     attribute_hidden;
 
 typedef struct _GLTextureState GLTextureState;

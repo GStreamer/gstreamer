@@ -43,14 +43,10 @@ G_DEFINE_TYPE(GstVaapiWindowGLX,
                                  GstVaapiWindowGLXPrivate))
 
 struct _GstVaapiWindowGLXPrivate {
-    XVisualInfo        *vi;
-    XVisualInfo         vi_static;
     Colormap            cmap;
-    GLXContext          context;
+    GLContextState     *gl_context;
     guint               is_constructed  : 1;
-    guint               foreign_context : 1;
     guint               foreign_window  : 1;
-    guint               swapped_buffers : 1;
 };
 
 enum {
@@ -58,9 +54,6 @@ enum {
 
     PROP_GLX_CONTEXT
 };
-
-static XVisualInfo *
-gst_vaapi_window_glx_create_visual(GstVaapiWindowGLX *window);
 
 /* Fill rectangle coords with capped bounds */
 static inline void
@@ -91,149 +84,114 @@ fill_rect(
     }
 }
 
-static inline void
-_gst_vaapi_window_glx_set_context(
+static void
+_gst_vaapi_window_glx_destroy_context(GstVaapiWindowGLX *window)
+{
+    GstVaapiWindowGLXPrivate * const priv = window->priv;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    if (priv->gl_context) {
+        gl_destroy_context(priv->gl_context);
+        priv->gl_context = NULL;
+    }
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+}
+
+static gboolean
+_gst_vaapi_window_glx_create_context(
     GstVaapiWindowGLX *window,
-    GLXContext         context,
-    gboolean           is_foreign
+    GLXContext         foreign_context
+)
+{
+    GstVaapiWindowGLXPrivate * const priv = window->priv;
+    Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
+    GLContextState                   parent_cs;
+
+    parent_cs.display = dpy;
+    parent_cs.window  = None;
+    parent_cs.context = foreign_context;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    priv->gl_context = gl_create_context(dpy, DefaultScreen(dpy), &parent_cs);
+    if (!priv->gl_context) {
+        GST_DEBUG("could not create GLX context");
+        goto end;
+    }
+
+    if (!glXIsDirect(dpy, priv->gl_context->context)) {
+        GST_DEBUG("could not create a direct-rendering GLX context");
+        goto out_destroy_context;
+    }
+    goto end;
+
+out_destroy_context:
+    gl_destroy_context(priv->gl_context);
+    priv->gl_context = NULL;
+end:
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    return priv->gl_context != NULL;
+}
+
+static gboolean
+_gst_vaapi_window_glx_ensure_context(
+    GstVaapiWindowGLX *window,
+    GLXContext         foreign_context
 )
 {
     GstVaapiWindowGLXPrivate * const priv = window->priv;
 
-    priv->context         = context;
-    priv->foreign_context = is_foreign;
-}
-
-static void
-gst_vaapi_window_glx_destroy_context(GstVaapiWindowGLX *window)
-{
-    GstVaapiWindowGLXPrivate * const priv = window->priv;
-    Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
-
-    if (priv->context) {
-        if (!priv->foreign_context) {
-            GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-            if (glXGetCurrentContext() == priv->context) {
-                /* XXX: if buffers were never swapped, the application
-                   will crash later with the NVIDIA driver */
-                if (!priv->swapped_buffers)
-                    gl_swap_buffers(dpy, GST_VAAPI_OBJECT_ID(window));
-                gl_make_current(dpy, None, NULL, NULL);
-            }
-            glXDestroyContext(dpy, priv->context);
-            GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
-        }
-        priv->context         = NULL;
-        priv->foreign_context = FALSE;
+    if (priv->gl_context) {
+        if (!foreign_context || foreign_context == priv->gl_context->context)
+            return TRUE;
+        _gst_vaapi_window_glx_destroy_context(window);
     }
+    return _gst_vaapi_window_glx_create_context(window, foreign_context);
 }
 
 static gboolean
-gst_vaapi_window_glx_create_context(GstVaapiWindowGLX *window)
+gst_vaapi_window_glx_ensure_context(
+    GstVaapiWindowGLX *window,
+    GLXContext         foreign_context
+)
 {
     GstVaapiWindowGLXPrivate * const priv = window->priv;
-    Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
-    GLXContext                       ctx  = NULL;
-    GLContextState                   cs;
-    guint                            width, height;
-    gboolean                         has_errors = TRUE;
+    GLContextState old_cs;
+    guint width, height;
 
-    if (!gst_vaapi_window_glx_create_visual(window))
+    if (!_gst_vaapi_window_glx_ensure_context(window, foreign_context))
         return FALSE;
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    ctx = glXCreateContext(dpy, priv->vi, NULL, True);
-    if (ctx && glXIsDirect(dpy, ctx)) {
-        _gst_vaapi_window_glx_set_context(window, ctx, FALSE);
-        if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), ctx, &cs)) {
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-            glDisable(GL_CULL_FACE);
-            glDrawBuffer(GL_BACK);
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-            gst_vaapi_window_get_size(GST_VAAPI_WINDOW(window), &width, &height);
-            gl_resize(width, height);
-
-            gl_set_bgcolor(0);
-            glClear(GL_COLOR_BUFFER_BIT);
-            if (cs.context)
-                gl_make_current(dpy, cs.window, cs.context, NULL);
-            has_errors = FALSE;
-        }
+    priv->gl_context->window = GST_VAAPI_OBJECT_ID(window);
+    if (!gl_set_current_context(priv->gl_context, &old_cs)) {
+        GST_DEBUG("could not make newly created GLX context current");
+        return FALSE;
     }
-    else if (ctx)
-        glXDestroyContext(dpy, ctx);
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
 
-    return !has_errors;
-}
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    glDrawBuffer(GL_BACK);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-static inline void
-gst_vaapi_window_glx_destroy_visual(GstVaapiWindowGLX *window)
-{
-    GstVaapiWindowGLXPrivate * const priv = window->priv;
+    gst_vaapi_window_get_size(GST_VAAPI_WINDOW(window), &width, &height);
+    gl_resize(width, height);
 
-    if (priv->vi) {
-        if (priv->vi != &priv->vi_static)
-            XFree(priv->vi);
-        priv->vi = NULL;
-    }
-}
-
-static XVisualInfo *
-gst_vaapi_window_glx_create_visual(GstVaapiWindowGLX *window)
-{
-    GstVaapiWindowGLXPrivate * const priv = window->priv;
-    Display * const dpy = GST_VAAPI_OBJECT_XDISPLAY(window);
-    XWindowAttributes wattr;
-    int screen;
-    gboolean has_errors;
-
-    /* XXX: add and use a GstVaapiWindow:double-buffer property? */
-    static GLint gl_visual_attr[] = {
-        GLX_RGBA,
-        GLX_RED_SIZE,   1,
-        GLX_GREEN_SIZE, 1,
-        GLX_BLUE_SIZE,  1,
-        GLX_DOUBLEBUFFER,
-        GL_NONE
-    };
-
-    if (!priv->vi) {
-        /* XXX: add and use a GstVaapiDisplayX11:x11-screen property? */
-        screen = DefaultScreen(dpy);
-
-        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-        x11_trap_errors();
-        if (!priv->foreign_window)
-            priv->vi = glXChooseVisual(dpy, screen, gl_visual_attr);
-        else {
-            XGetWindowAttributes(dpy, GST_VAAPI_OBJECT_ID(window), &wattr);
-            if (XMatchVisualInfo(dpy, screen, wattr.depth, wattr.visual->class,
-                                 &priv->vi_static))
-                priv->vi = &priv->vi_static;
-        }
-        has_errors = x11_untrap_errors() != 0;
-        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
-
-        if (has_errors)
-            return NULL;
-    }
-    return priv->vi;
+    gl_set_bgcolor(0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    gl_set_current_context(&old_cs, NULL);
+    return TRUE;
 }
 
 static Visual *
 gst_vaapi_window_glx_get_visual(GstVaapiWindow *window)
 {
-    XVisualInfo *vi;
+    GstVaapiWindowGLX * const glx_window = GST_VAAPI_WINDOW_GLX(window);
 
-    vi = gst_vaapi_window_glx_create_visual(GST_VAAPI_WINDOW_GLX(window));
-    if (!vi)
+    if (!_gst_vaapi_window_glx_ensure_context(glx_window, NULL))
         return NULL;
-    return vi->visual;
+    return glx_window->priv->gl_context->visual->visual;
 }
 
 static void
@@ -259,33 +217,34 @@ gst_vaapi_window_glx_create_colormap(GstVaapiWindowGLX *window)
     Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
     int                              screen;
     XWindowAttributes                wattr;
-    XVisualInfo                     *vi;
-    gboolean                         has_errors;
+    gboolean                         success = FALSE;
 
     if (!priv->cmap) {
-        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-        x11_trap_errors();
         if (!priv->foreign_window) {
-            vi = gst_vaapi_window_glx_create_visual(window);
-            if (vi) {
-                /* XXX: add a GstVaapiDisplayX11:x11-screen property? */
-                screen     = DefaultScreen(dpy);
-                priv->cmap = XCreateColormap(
-                    dpy,
-                    RootWindow(dpy, screen),
-                    vi->visual,
-                    AllocNone
-                );
-            }
+            if (!_gst_vaapi_window_glx_ensure_context(window, NULL))
+                return None;
+            GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+            x11_trap_errors();
+            /* XXX: add a GstVaapiDisplayX11:x11-screen property? */
+            screen     = DefaultScreen(dpy);
+            priv->cmap = XCreateColormap(
+                dpy,
+                RootWindow(dpy, screen),
+                priv->gl_context->visual->visual,
+                AllocNone
+            );
+            success = x11_untrap_errors() == 0;
+            GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
         }
         else {
+            GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+            x11_trap_errors();
             XGetWindowAttributes(dpy, GST_VAAPI_OBJECT_ID(window), &wattr);
             priv->cmap = wattr.colormap;
+            success = x11_untrap_errors() == 0;
+            GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
         }
-        has_errors = x11_untrap_errors() != 0;
-        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
-
-        if (has_errors)
+        if (!success)
             return None;
     }
     return priv->cmap;
@@ -302,7 +261,7 @@ gst_vaapi_window_glx_resize(GstVaapiWindow *window, guint width, guint height)
 {
     GstVaapiWindowGLXPrivate * const priv = GST_VAAPI_WINDOW_GLX(window)->priv;
     Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
-    GLContextState                   cs;
+    GLContextState                   old_cs;
 
     if (!GST_VAAPI_WINDOW_CLASS(gst_vaapi_window_glx_parent_class)->
         resize(window, width, height))
@@ -310,10 +269,9 @@ gst_vaapi_window_glx_resize(GstVaapiWindow *window, guint width, guint height)
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     XSync(dpy, False); /* make sure resize completed */
-    if (gl_make_current(dpy, GST_VAAPI_OBJECT_ID(window), priv->context, &cs)) {
+    if (gl_set_current_context(priv->gl_context, &old_cs)) {
         gl_resize(width, height);
-        if (cs.context)
-            gl_make_current(dpy, cs.window, cs.context, NULL);
+        gl_set_current_context(&old_cs, NULL);
     }
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     return TRUE;
@@ -324,8 +282,7 @@ gst_vaapi_window_glx_finalize(GObject *object)
 {
     GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(object);
 
-    gst_vaapi_window_glx_destroy_context(window);
-    gst_vaapi_window_glx_destroy_visual(window);
+    _gst_vaapi_window_glx_destroy_context(window);
     gst_vaapi_window_glx_destroy_colormap(window);
 
     G_OBJECT_CLASS(gst_vaapi_window_glx_parent_class)->finalize(object);
@@ -377,8 +334,6 @@ gst_vaapi_window_glx_constructed(GObject *object)
     GstVaapiWindowGLXPrivate * const priv = GST_VAAPI_WINDOW_GLX(object)->priv;
     GObjectClass *parent_class;
 
-    priv->foreign_context = priv->context != NULL;
-
     parent_class = G_OBJECT_CLASS(gst_vaapi_window_glx_parent_class);
     if (parent_class->constructed)
         parent_class->constructed(object);
@@ -386,8 +341,8 @@ gst_vaapi_window_glx_constructed(GObject *object)
     priv->foreign_window =
         gst_vaapi_window_x11_is_foreign_xid(GST_VAAPI_WINDOW_X11(object));
 
-    priv->is_constructed = priv->foreign_context ||
-        gst_vaapi_window_glx_create_context(GST_VAAPI_WINDOW_GLX(object));
+    priv->is_constructed =
+        gst_vaapi_window_glx_ensure_context(GST_VAAPI_WINDOW_GLX(object), NULL);
 }
 
 static void
@@ -429,13 +384,10 @@ gst_vaapi_window_glx_init(GstVaapiWindowGLX *window)
     GstVaapiWindowGLXPrivate *priv = GST_VAAPI_WINDOW_GLX_GET_PRIVATE(window);
 
     window->priv                = priv;
-    priv->vi                    = NULL;
     priv->cmap                  = None;
-    priv->context               = NULL;
+    priv->gl_context            = NULL;
     priv->is_constructed        = FALSE;
-    priv->foreign_context       = FALSE;
     priv->foreign_window        = FALSE;
-    priv->swapped_buffers       = FALSE;
 }
 
 /**
@@ -505,7 +457,7 @@ gst_vaapi_window_glx_get_context(GstVaapiWindowGLX *window)
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), NULL);
     g_return_val_if_fail(window->priv->is_constructed, FALSE);
 
-    return window->priv->context;
+    return window->priv->gl_context->context;
 }
 
 /**
@@ -526,13 +478,7 @@ gst_vaapi_window_glx_set_context(GstVaapiWindowGLX *window, GLXContext ctx)
     g_return_val_if_fail(GST_VAAPI_IS_WINDOW_GLX(window), FALSE);
     g_return_val_if_fail(window->priv->is_constructed, FALSE);
 
-    gst_vaapi_window_glx_destroy_context(window);
-
-    if (ctx) {
-        _gst_vaapi_window_glx_set_context(window, ctx, TRUE);
-        return TRUE;
-    }
-    return gst_vaapi_window_glx_create_context(window);
+    return gst_vaapi_window_glx_ensure_context(window, ctx);
 }
 
 /**
@@ -554,12 +500,7 @@ gst_vaapi_window_glx_make_current(GstVaapiWindowGLX *window)
     g_return_val_if_fail(window->priv->is_constructed, FALSE);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    success = gl_make_current(
-        GST_VAAPI_OBJECT_XDISPLAY(window),
-        GST_VAAPI_OBJECT_ID(window),
-        window->priv->context,
-        NULL
-    );
+    success = gl_set_current_context(window->priv->gl_context, NULL);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
     return success;
 }
@@ -579,14 +520,8 @@ gst_vaapi_window_glx_swap_buffers(GstVaapiWindowGLX *window)
     g_return_if_fail(window->priv->is_constructed);
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    gl_swap_buffers(
-        GST_VAAPI_OBJECT_XDISPLAY(window),
-        GST_VAAPI_OBJECT_ID(window)
-    );
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl_swap_buffers(window->priv->gl_context);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
-
-    window->priv->swapped_buffers = TRUE;
 }
 
 /**

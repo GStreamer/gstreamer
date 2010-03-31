@@ -46,6 +46,7 @@ struct _GstVaapiTexturePrivate {
     GLenum               format;
     guint                width;
     guint                height;
+    GLContextState      *gl_context;
     void                *gl_surface;
     GLPixmapObject      *pixo;
     GLFramebufferObject *fbo;
@@ -103,6 +104,13 @@ gst_vaapi_texture_destroy(GstVaapiTexture *texture)
             glDeleteTextures(1, &texture_id);
         GST_VAAPI_OBJECT_ID(texture) = 0;
     }
+
+    if (priv->gl_context) {
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+        gl_destroy_context(priv->gl_context);
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+        priv->gl_context = NULL;
+    }
 }
 
 static gboolean
@@ -151,6 +159,18 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
 {
     GstVaapiTexturePrivate * const priv = texture->priv;
     GLuint texture_id;
+    GLContextState old_cs;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    gl_get_current_context(&old_cs);
+    priv->gl_context = gl_create_context(
+        GST_VAAPI_OBJECT_XDISPLAY(texture),
+        DefaultScreen(GST_VAAPI_OBJECT_XDISPLAY(texture)),
+        &old_cs
+    );
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
+    if (!priv->gl_context)
+        return FALSE;
 
     if (priv->foreign_texture)
         texture_id = GST_VAAPI_OBJECT_ID(texture);
@@ -310,6 +330,7 @@ gst_vaapi_texture_init(GstVaapiTexture *texture)
     priv->format                = GL_NONE;
     priv->width                 = 0;
     priv->height                = 0;
+    priv->gl_context            = NULL;
     priv->gl_surface            = NULL;
     priv->pixo                  = NULL;
     priv->fbo                   = NULL;

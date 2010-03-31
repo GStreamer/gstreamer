@@ -273,46 +273,165 @@ gl_resize(guint width, guint height)
 }
 
 /**
- * gl_make_current:
+ * gl_create_context:
  * @dpy: an X11 #Display
- * @win: an X11 #Window
- * @ctx: the requested GLX context
- * @state: an optional #GLContextState
+ * @screen: the associated screen of @dpy
+ * @parent: the parent #GLContextState, or %NULL if none is to be used
  *
- * Makes the @window GLX context the current GLX rendering context of
+ * Creates a GLX context sharing textures and displays lists with
+ * @parent, if not %NULL.
+ *
+ * Return value: the newly created GLX context
+ */
+GLContextState *
+gl_create_context(Display *dpy, int screen, GLContextState *parent)
+{
+    GLContextState *cs;
+    GLXFBConfig *fb_configs = NULL;
+    int n_fb_configs;
+
+    static GLint fb_config_attrs[] = {
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+        GLX_DOUBLEBUFFER,  True,
+        GLX_RED_SIZE,      1,
+        GLX_GREEN_SIZE,    1, 
+        GLX_BLUE_SIZE,     1,
+        None
+    };
+
+    cs = malloc(sizeof(*cs));
+    if (!cs)
+        goto error;
+
+    cs->display         = dpy;
+    cs->window          = parent ? parent->window : None;
+    cs->visual          = NULL;
+    cs->context         = NULL;
+    cs->swapped_buffers = FALSE;
+
+    fb_configs = glXChooseFBConfig(dpy, screen, fb_config_attrs, &n_fb_configs);
+    if (!fb_configs)
+        goto error;
+
+    cs->visual = glXGetVisualFromFBConfig(dpy, fb_configs[0]);
+    if (!cs->visual)
+        goto error;
+
+    cs->context = glXCreateNewContext(
+        dpy,
+        fb_configs[0],
+        GLX_RGBA_TYPE,
+        parent ? parent->context : NULL,
+        True
+    );
+    if (cs->context)
+        goto end;
+
+error:
+    gl_destroy_context(cs);
+    cs = NULL;
+end:
+    if (fb_configs)
+        XFree(fb_configs);
+    return cs;
+}
+
+/**
+ * gl_destroy_context:
+ * @cs: a #GLContextState
+ *
+ * Destroys the GLX context @cs
+ */
+void
+gl_destroy_context(GLContextState *cs)
+{
+    if (!cs)
+        return;
+
+    if (cs->visual) {
+        XFree(cs->visual);
+        cs->visual = NULL;
+    }
+
+    if (cs->display && cs->context) {
+        if (glXGetCurrentContext() == cs->context) {
+            /* XXX: if buffers were never swapped, the application
+               will crash later with the NVIDIA driver */
+            if (!cs->swapped_buffers)
+                gl_swap_buffers(cs);
+            glXMakeCurrent(cs->display, None, NULL);
+        }
+        glXDestroyContext(cs->display, cs->context);
+        cs->display = NULL;
+        cs->context = NULL;
+    }
+    free(cs);
+}
+
+/**
+ * gl_get_current_context:
+ * @cs: return location to the current #GLContextState
+ *
+ * Retrieves the current GLX context, display and drawable packed into
+ * the #GLContextState struct.
+ */
+void
+gl_get_current_context(GLContextState *cs)
+{
+    cs->display = glXGetCurrentDisplay();
+    cs->window  = glXGetCurrentDrawable();
+    cs->context = glXGetCurrentContext();
+}
+
+/**
+ * gl_set_current_context:
+ * @new_cs: the requested new #GLContextState
+ * @old_cs: return location to the context that was previously current
+ *
+ * Makes the @new_cs GLX context the current GLX rendering context of
  * the calling thread, replacing the previously current context if
  * there was one.
  *
- * If @state is non %NULL, the previously current GLX context and
+ * If @old_cs is non %NULL, the previously current GLX context and
  * window are recorded.
  *
  * Return value: %TRUE on success
  */
 gboolean
-gl_make_current(Display *dpy, Window win, GLXContext ctx, GLContextState *state)
+gl_set_current_context(GLContextState *new_cs, GLContextState *old_cs)
 {
-    if (state) {
-        state->context = glXGetCurrentContext();
-        state->window  = glXGetCurrentDrawable();
-        if (state->context == ctx && state->window == win)
+    /* If display is NULL, this could be that new_cs was retrieved from
+       gl_get_current_context() with none set previously. If that case,
+       the other fields are also NULL and we don't return an error */
+    if (!new_cs->display)
+        return !new_cs->window && !new_cs->context;
+
+    if (old_cs) {
+        if (old_cs == new_cs)
+            return TRUE;
+        gl_get_current_context(old_cs);
+        if (old_cs->display == new_cs->display &&
+            old_cs->window  == new_cs->window  &&
+            old_cs->context == new_cs->context)
             return TRUE;
     }
-    return glXMakeCurrent(dpy, win, ctx);
+    return glXMakeCurrent(new_cs->display, new_cs->window, new_cs->context);
 }
 
 /**
  * gl_swap_buffers:
- * @dpy: an X11 #Display
- * @win: an X11 #Window
+ * @cs: a #GLContextState
  *
  * Promotes the contents of the back buffer of the @win window to
  * become the contents of the front buffer. This simply is wrapper
  * around glXSwapBuffers().
  */
 void
-gl_swap_buffers(Display *dpy, Window win)
+gl_swap_buffers(GLContextState *cs)
 {
-    glXSwapBuffers(dpy, win);
+    glXSwapBuffers(cs->display, cs->window);
+    cs->swapped_buffers = TRUE;
 }
 
 /**
