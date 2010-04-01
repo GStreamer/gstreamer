@@ -5013,6 +5013,10 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
   return uri;
 }
 
+/*
+ * XXX: This code is duplicated in gst/mastroska/matroska-demux.c. Please
+ * replicate any changes you make over there as well.
+ */
 static gchar *
 avc_profile_idc_to_string (guint profile_idc, guint constraint_set_flags)
 {

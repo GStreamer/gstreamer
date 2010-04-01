@@ -50,6 +50,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <glib/gprintf.h>
 
 /* For AVI compatibility mode
    and for fourcc stuff */
@@ -5803,6 +5804,103 @@ gst_matroska_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return TRUE;
 }
 
+/*
+ * XXX: This code is duplicated in gst/qtdemux/qtdemux.c. Please replicate any
+ * changes you make over there as well.
+ */
+static gchar *
+avc_profile_idc_to_string (guint profile_idc, guint constraint_set_flags)
+{
+  const gchar *profile = NULL;
+  gint csf1, csf3;
+
+  csf1 = (constraint_set_flags & 0x40) >> 6;
+  csf3 = (constraint_set_flags & 0x10) >> 4;
+
+  switch (profile_idc) {
+    case 66:
+      if (csf1)
+        profile = "constrained-baseline";
+      else
+        profile = "baseline";
+      break;
+    case 77:
+      profile = "main";
+      break;
+    case 88:
+      profile = "extended";
+      break;
+    case 100:
+      profile = "high";
+      break;
+    case 110:
+      if (csf3)
+        profile = "high-10-intra";
+      else
+        profile = "high-10";
+      break;
+    case 122:
+      if (csf3)
+        profile = "high-4:2:2-intra";
+      else
+        profile = "high-4:2:2";
+      break;
+    case 244:
+      if (csf3)
+        profile = "high-4:4:4-intra";
+      else
+        profile = "high-4:4:4";
+      break;
+    case 44:
+      profile = "cavlc-4:4:4-intra";
+      break;
+    default:
+      return NULL;
+  }
+
+  return g_strdup (profile);
+}
+
+static gchar *
+avc_level_idc_to_string (guint level_idc, guint constraint_set_flags)
+{
+  const gchar *level = NULL;
+  gchar buf[4];
+  gint csf3;
+
+  csf3 = (constraint_set_flags & 0x10) >> 4;
+
+  if (level_idc == 11 && csf3)
+    level = "1b";
+  else {
+    /* Level is (level_idc / 10) */
+    if (level_idc % 10 == 0)
+      g_sprintf (buf, "%u", level_idc / 10);
+    else
+      g_sprintf (buf, "%u.%u", level_idc / 10, level_idc % 10);
+
+    level = buf;
+  }
+
+  return g_strdup (level);
+}
+
+static void
+avc_get_profile_and_level_string (const guint8 * avc_data, gint size,
+    gchar ** profile, gchar ** level)
+{
+  if (size >= 2)
+    /* First byte is the version, second is the profile indication,
+     * and third is the 5 contraint_set_flags and 3 reserved bits */
+    *profile = avc_profile_idc_to_string (GST_READ_UINT8 (avc_data + 1),
+        GST_READ_UINT8 (avc_data + 2));
+
+  if (size >= 4)
+    /* Fourth byte is the level indication */
+    *level = avc_level_idc_to_string (GST_READ_UINT8 (avc_data + 3),
+        GST_READ_UINT8 (avc_data + 2));
+}
+
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     videocontext, const gchar * codec_id, guint8 * data, guint size,
@@ -5967,6 +6065,17 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     caps = gst_caps_new_simple ("video/x-h264", NULL);
     if (data) {
       GstBuffer *priv = gst_buffer_new_and_alloc (size);
+      gchar *profile = NULL, *level = NULL;
+
+      avc_get_profile_and_level_string (data, size, &profile, &level);
+      if (profile) {
+        gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+        g_free (profile);
+      }
+      if (level) {
+        gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+        g_free (level);
+      }
 
       memcpy (GST_BUFFER_DATA (priv), data, size);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
