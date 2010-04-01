@@ -314,8 +314,6 @@ gst_tag_demux_dispose (GObject * object)
 static gboolean
 gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
 {
-  GstPad *srcpad = NULL;
-
   if (tagdemux->priv->src_caps == NULL ||
       !gst_caps_is_equal (new_caps, tagdemux->priv->src_caps)) {
 
@@ -332,7 +330,7 @@ gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
   }
 
   if (tagdemux->priv->srcpad == NULL) {
-    srcpad = tagdemux->priv->srcpad =
+    tagdemux->priv->srcpad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (tagdemux), "src"), "src");
     g_return_val_if_fail (tagdemux->priv->srcpad != NULL, FALSE);
