@@ -5014,7 +5014,7 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
 }
 
 static gchar *
-avc_profile_idc_to_string (gint profile_idc, gint constraint_set_flags)
+avc_profile_idc_to_string (guint profile_idc, guint constraint_set_flags)
 {
   const gchar *profile = NULL;
   gint csf1, csf3;
@@ -5067,7 +5067,7 @@ avc_profile_idc_to_string (gint profile_idc, gint constraint_set_flags)
 }
 
 static gchar *
-avc_level_idc_to_string (gint level_idc, gint constraint_set_flags)
+avc_level_idc_to_string (guint level_idc, guint constraint_set_flags)
 {
   const gchar *level = NULL;
   gchar buf[4];
@@ -5080,14 +5080,30 @@ avc_level_idc_to_string (gint level_idc, gint constraint_set_flags)
   else {
     /* Level is (level_idc / 10) */
     if (level_idc % 10 == 0)
-      g_sprintf (buf, "%d", level_idc / 10);
+      g_sprintf (buf, "%u", level_idc / 10);
     else
-      g_sprintf (buf, "%d.%d", level_idc / 10, level_idc % 10);
+      g_sprintf (buf, "%u.%u", level_idc / 10, level_idc % 10);
 
     level = buf;
   }
 
   return g_strdup (level);
+}
+
+static void
+avc_get_profile_and_level_string (const guint8 * avc_data, gint size,
+    gchar ** profile, gchar ** level)
+{
+  if (size >= 2)
+    /* First byte is the version, second is the profile indication,
+     * and third is the 5 contraint_set_flags and 3 reserved bits */
+    *profile = avc_profile_idc_to_string (QT_UINT8 (avc_data + 1),
+        QT_UINT8 (avc_data + 2));
+
+  if (size >= 4)
+    /* Fourth byte is the level indication */
+    *level = avc_level_idc_to_string (QT_UINT8 (avc_data + 3),
+        QT_UINT8 (avc_data + 2));
 }
 
 /* parse the traks.
@@ -5333,34 +5349,24 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           if (len > 0x8 && QT_FOURCC (avc_data + 0x4) == FOURCC_avcC) {
             GstBuffer *buf;
             gint size;
-            gchar *profile, *level;
+            gchar *profile = NULL, *level = NULL;
 
             if (QT_UINT32 (avc_data) < len)
               size = QT_UINT32 (avc_data) - 0x8;
             else
               size = len - 0x8;
 
-            if (size >= 3) {
-              /* First byte is the version, second is the profile indication,
-               * and third is the 5 contraint_set_flags and 3 reserved bits */
-              profile = avc_profile_idc_to_string (QT_UINT8 (avc_data + 0x9),
-                  QT_UINT8 (avc_data + 0xA));
-              if (profile) {
-                gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
-                    profile, NULL);
-                g_free (profile);
-              }
+            avc_get_profile_and_level_string (avc_data + 0x8, size, &profile,
+                &level);
+            if (profile) {
+              gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
+                  profile, NULL);
+              g_free (profile);
             }
-
-            if (size >= 4) {
-              /* Fourth byte is the level indication */
-              level = avc_level_idc_to_string (QT_UINT8 (avc_data + 0xB),
-                  QT_UINT8 (avc_data + 0xA));
-              if (level) {
-                gst_caps_set_simple (stream->caps, "level", G_TYPE_STRING,
-                    level, NULL);
-                g_free (level);
-              }
+            if (level) {
+              gst_caps_set_simple (stream->caps, "level", G_TYPE_STRING,
+                  level, NULL);
+              g_free (level);
             }
 
             GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
