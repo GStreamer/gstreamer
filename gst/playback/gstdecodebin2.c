@@ -2602,7 +2602,7 @@ static void
 gst_decode_chain_handle_eos (GstDecodeChain * eos_chain)
 {
   GstDecodeBin *dbin = eos_chain->dbin;
-  GstDecodeGroup *group = eos_chain->parent;
+  GstDecodeGroup *group;
   GstDecodeChain *chain = eos_chain;
   gboolean drained;
 
