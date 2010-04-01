@@ -659,11 +659,13 @@ _gst_vaapi_texture_put_surface(
     }
 
 out_unbind_fbo:
-    success = gl_unbind_framebuffer_object(priv->fbo);
+    if (!gl_unbind_framebuffer_object(priv->fbo))
+        success = FALSE;
 out_unbind_texture:
     gl_unbind_texture(&ts);
 out_reset_context:
-    success = gl_set_current_context(&old_cs, NULL);
+    if (!gl_set_current_context(&old_cs, NULL))
+        success = FALSE;
 end:
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     return success;
