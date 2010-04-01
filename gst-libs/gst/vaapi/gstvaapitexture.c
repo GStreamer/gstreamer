@@ -80,6 +80,12 @@ _gst_vaapi_texture_destroy_objects(GstVaapiTexture *texture)
     }
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
 #else
+    GLContextState old_cs;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    if (priv->gl_context)
+        gl_set_current_context(priv->gl_context, &old_cs);
+
     if (priv->fbo) {
         gl_destroy_framebuffer_object(priv->fbo);
         priv->fbo = NULL;
@@ -89,6 +95,13 @@ _gst_vaapi_texture_destroy_objects(GstVaapiTexture *texture)
         gl_destroy_pixmap_object(priv->pixo);
         priv->pixo = NULL;
     }
+
+    if (priv->gl_context) {
+        gl_set_current_context(&old_cs, NULL);
+        gl_destroy_context(priv->gl_context);
+        priv->gl_context = NULL;
+    }
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
 #endif
 }
 
@@ -105,19 +118,13 @@ gst_vaapi_texture_destroy(GstVaapiTexture *texture)
             glDeleteTextures(1, &texture_id);
         GST_VAAPI_OBJECT_ID(texture) = 0;
     }
-
-    if (priv->gl_context) {
-        GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-        gl_destroy_context(priv->gl_context);
-        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-        priv->gl_context = NULL;
-    }
 }
 
 static gboolean
 _gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
 {
     GstVaapiTexturePrivate * const priv = texture->priv;
+    gboolean success = FALSE;
 
 #if USE_VAAPI_GLX
     VAStatus status;
@@ -130,36 +137,8 @@ _gst_vaapi_texture_create_objects(GstVaapiTexture *texture, GLuint texture_id)
         &priv->gl_surface
     );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-    if (!vaapi_check_status(status, "vaCreateSurfaceGLX()"))
-        return FALSE;
+    success = vaapi_check_status(status, "vaCreateSurfaceGLX()");
 #else
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    priv->pixo = gl_create_pixmap_object(
-        GST_VAAPI_OBJECT_XDISPLAY(texture),
-        priv->width,
-        priv->height
-    );
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-    if (!priv->pixo)
-        return FALSE;
-
-    priv->fbo = gl_create_framebuffer_object(
-        priv->target,
-        texture_id,
-        priv->width,
-        priv->height
-    );
-    if (!priv->fbo)
-        return FALSE;
-#endif
-    return TRUE;
-}
-
-static gboolean
-gst_vaapi_texture_create(GstVaapiTexture *texture)
-{
-    GstVaapiTexturePrivate * const priv = texture->priv;
-    GLuint texture_id;
     GLContextState old_cs;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
@@ -169,9 +148,37 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
         GST_VAAPI_OBJECT_XSCREEN(texture),
         &old_cs
     );
+    if (!priv->gl_context || !gl_set_current_context(priv->gl_context, NULL))
+        goto end;
+
+    priv->pixo = gl_create_pixmap_object(
+        GST_VAAPI_OBJECT_XDISPLAY(texture),
+        priv->width,
+        priv->height
+    );
+    if (!priv->pixo)
+        goto end;
+
+    priv->fbo = gl_create_framebuffer_object(
+        priv->target,
+        texture_id,
+        priv->width,
+        priv->height
+    );
+    if (priv->fbo)
+        success = TRUE;
+end:
+    gl_set_current_context(&old_cs, NULL);
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
-    if (!priv->gl_context)
-        return FALSE;
+#endif
+    return success;
+}
+
+static gboolean
+gst_vaapi_texture_create(GstVaapiTexture *texture)
+{
+    GstVaapiTexturePrivate * const priv = texture->priv;
+    GLuint texture_id;
 
     if (priv->foreign_texture)
         texture_id = GST_VAAPI_OBJECT_ID(texture);
@@ -585,6 +592,7 @@ _gst_vaapi_texture_put_surface(
         return FALSE;
 #else
     guint surface_width, surface_height;
+    GLContextState old_cs;
     GLTextureState ts;
     gboolean success = FALSE;
 
@@ -604,8 +612,15 @@ _gst_vaapi_texture_put_surface(
     if (!vaapi_check_status(status, "vaPutSurface() [TFP]"))
         return FALSE;
 
-    if (!gl_bind_texture(&ts, priv->target, GST_VAAPI_OBJECT_ID(texture)))
-        return FALSE;
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
+    success = gl_set_current_context(priv->gl_context, &old_cs);
+    if (!success)
+        goto end;
+
+    if (!gl_bind_texture(&ts, priv->target, GST_VAAPI_OBJECT_ID(texture))) {
+        GST_DEBUG("could not bind texture %u", GST_VAAPI_OBJECT_ID(texture));
+        goto out_reset_context;
+    }
 
     success = gl_bind_framebuffer_object(priv->fbo);
     if (!success) {
@@ -613,15 +628,15 @@ _gst_vaapi_texture_put_surface(
         goto out_unbind_texture;
     }
 
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     success = gst_vaapi_surface_sync(surface);
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     if (!success) {
         GST_DEBUG("could not render surface to pixmap");
         goto out_unbind_fbo;
     }
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     success = gl_bind_pixmap_object(priv->pixo);
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     if (!success) {
         GST_DEBUG("could not bind GLX pixmap");
         goto out_unbind_fbo;
@@ -637,9 +652,7 @@ _gst_vaapi_texture_put_surface(
     }
     glEnd();
 
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
     success = gl_unbind_pixmap_object(priv->pixo);
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     if (!success) {
         GST_DEBUG("could not release GLX pixmap");
         goto out_unbind_fbo;
@@ -649,6 +662,10 @@ out_unbind_fbo:
     success = gl_unbind_framebuffer_object(priv->fbo);
 out_unbind_texture:
     gl_unbind_texture(&ts);
+out_reset_context:
+    success = gl_set_current_context(&old_cs, NULL);
+end:
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
     return success;
 #endif
     return TRUE;

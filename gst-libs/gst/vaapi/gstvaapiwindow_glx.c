@@ -572,13 +572,12 @@ gst_vaapi_window_glx_put_texture(
     fill_rect(&tmp_dst_rect, dst_rect, win_width, win_height);
     dst_rect = &tmp_dst_rect;
 
-    tex_target = gst_vaapi_texture_get_target(texture);
-    tex_id     = gst_vaapi_texture_get_id(texture);
-
     /* XXX: only GL_TEXTURE_2D textures are supported at this time */
+    tex_target = gst_vaapi_texture_get_target(texture);
     if (tex_target != GL_TEXTURE_2D)
         return FALSE;
 
+    tex_id = gst_vaapi_texture_get_id(texture);
     if (!gl_bind_texture(&ts, tex_target, tex_id))
         return FALSE;
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
