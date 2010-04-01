@@ -573,7 +573,7 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
