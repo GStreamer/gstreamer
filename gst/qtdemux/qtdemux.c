@@ -5012,6 +5012,59 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
   return uri;
 }
 
+static gchar *
+avc_profile_idc_to_string (gint profile_idc, gint constraint_set_flags)
+{
+  const gchar *profile = NULL;
+  gint csf1, csf3;
+
+  csf1 = (constraint_set_flags & 0x40) >> 6;
+  csf3 = (constraint_set_flags & 0x10) >> 4;
+
+  switch (profile_idc) {
+    case 66:
+      if (csf1)
+        profile = "constrained-baseline";
+      else
+        profile = "baseline";
+      break;
+    case 77:
+      profile = "main";
+      break;
+    case 88:
+      profile = "extended";
+      break;
+    case 100:
+      profile = "high";
+      break;
+    case 110:
+      if (csf3)
+        profile = "high-10-intra";
+      else
+        profile = "high-10";
+      break;
+    case 122:
+      if (csf3)
+        profile = "high-4:2:2-intra";
+      else
+        profile = "high-4:2:2";
+      break;
+    case 244:
+      if (csf3)
+        profile = "high-4:4:4-intra";
+      else
+        profile = "high-4:4:4";
+      break;
+    case 44:
+      profile = "cavlc-4:4:4-intra";
+      break;
+    default:
+      return NULL;
+  }
+
+  return g_strdup (profile);
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -5255,11 +5308,24 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           if (len > 0x8 && QT_FOURCC (avc_data + 0x4) == FOURCC_avcC) {
             GstBuffer *buf;
             gint size;
+            gchar *profile;
 
             if (QT_UINT32 (avc_data) < len)
               size = QT_UINT32 (avc_data) - 0x8;
             else
               size = len - 0x8;
+
+            if (size >= 3) {
+              /* First byte is the version, second is the profile indication,
+               * and third is the 5 contraint_set_flags and 3 reserved bits */
+              profile = avc_profile_idc_to_string (QT_UINT8 (avc_data + 0x9),
+                  QT_UINT8 (avc_data + 0xA));
+              if (profile) {
+                gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
+                    profile, NULL);
+                g_free (profile);
+              }
+            }
 
             GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
 
