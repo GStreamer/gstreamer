@@ -60,6 +60,11 @@ GST_START_TEST (test_basetime_calculation)
   GstPad *pad;
   GMainLoop *loop;
 
+  /* Don't run with osxaudiosrc . This is because libcheck runs the actual
+   * test in a forked process and causes havoc with osx's API. */
+  if (G_UNLIKELY (!g_ascii_strcasecmp (DEFAULT_AUDIOSRC, "osxaudiosrc")))
+    return;
+
   loop = g_main_loop_new (NULL, FALSE);
 
   /* The "main" pipeline */
