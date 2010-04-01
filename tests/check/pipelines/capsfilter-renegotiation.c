@@ -134,6 +134,7 @@ GST_START_TEST (test_capsfilter_renegotiation)
   if (current_caps)
     gst_caps_unref (current_caps);
   gst_message_unref (msg);
+  g_object_unref (bus);
   g_object_unref (G_OBJECT (pipeline));
 }
 
