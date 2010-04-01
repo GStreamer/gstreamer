@@ -71,7 +71,7 @@ struct _GLContextState {
     Window       window;
     XVisualInfo *visual;
     GLXContext   context;
-    guint        swapped_buffers;
+    guint        swapped_buffers : 1;
 };
 
 GLContextState *
@@ -96,10 +96,10 @@ gl_swap_buffers(GLContextState *cs)
 
 typedef struct _GLTextureState GLTextureState;
 struct _GLTextureState {
-    gboolean    was_enabled;
-    gboolean    was_bound;
     GLenum      target;
     GLuint      old_texture;
+    guint       was_enabled     : 1;
+    guint       was_bound       : 1;
 };
 
 gboolean
