@@ -26,6 +26,7 @@
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay_x11.h"
+#include "gstvaapidisplay_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

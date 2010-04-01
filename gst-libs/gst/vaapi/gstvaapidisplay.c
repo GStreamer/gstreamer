@@ -26,6 +26,7 @@
 #include "config.h"
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"
+#include "gstvaapidisplay_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -33,26 +34,6 @@
 GST_DEBUG_CATEGORY(gst_debug_vaapi);
 
 G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
-
-#define GST_VAAPI_DISPLAY_GET_PRIVATE(obj)                      \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DISPLAY,	\
-                                 GstVaapiDisplayPrivate))
-
-struct _GstVaapiDisplayPrivate {
-    GStaticMutex        mutex;
-    VADisplay           display;
-    guint               width;
-    guint               height;
-    guint               width_mm;
-    guint               height_mm;
-    guint               par_n;
-    guint               par_d;
-    GArray             *profiles;
-    GArray             *image_formats;
-    GArray             *subpicture_formats;
-    guint               create_display  : 1;
-};
 
 enum {
     PROP_0,

@@ -50,8 +50,10 @@ libgstvaapi_source_h =				\
 libgstvaapi_source_priv_h =			\
 	gstvaapicompat.h			\
 	gstvaapidebug.h				\
+	gstvaapidisplay_priv.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapiutils.h				\
+	gstvaapi_priv.h				\
 	$(NULL)
 
 libgstvaapi_x11_source_c =			\

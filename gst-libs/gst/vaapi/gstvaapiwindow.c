@@ -25,7 +25,7 @@
 
 #include "config.h"
 #include "gstvaapiwindow.h"
-#include "gstvaapiobject_priv.h"
+#include "gstvaapi_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"

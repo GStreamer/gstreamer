@@ -56,33 +56,6 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY,  \
                                GstVaapiDisplayClass))
 
-/**
- * GST_VAAPI_DISPLAY_VADISPLAY:
- * @display: a #GstVaapiDisplay
- *
- * Macro that evaluates to the #VADisplay bound to @display
- */
-#define GST_VAAPI_DISPLAY_VADISPLAY(display) \
-    gst_vaapi_display_get_display(display)
-
-/**
- * GST_VAAPI_DISPLAY_LOCK:
- * @display: a #GstVaapiDisplay
- *
- * Locks @display
- */
-#define GST_VAAPI_DISPLAY_LOCK(display) \
-    gst_vaapi_display_lock(display)
-
-/**
- * GST_VAAPI_DISPLAY_UNLOCK:
- * @display: a #GstVaapiDisplay
- *
- * Unlocks @display
- */
-#define GST_VAAPI_DISPLAY_UNLOCK(display) \
-    gst_vaapi_display_unlock(display)
-
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;

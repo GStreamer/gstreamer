@@ -29,7 +29,7 @@
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_glx.h"
 #include "gstvaapidisplay_glx.h"
-#include "gstvaapiobject_priv.h"
+#include "gstvaapi_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
