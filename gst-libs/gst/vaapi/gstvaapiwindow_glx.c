@@ -26,6 +26,7 @@
 #include "config.h"
 #include "gstvaapiwindow_glx.h"
 #include "gstvaapidisplay_x11.h"
+#include "gstvaapidisplay_x11_priv.h"
 #include "gstvaapiutils_x11.h"
 #include "gstvaapiutils_glx.h"
 #include "gstvaapi_priv.h"
@@ -112,7 +113,11 @@ _gst_vaapi_window_glx_create_context(
     parent_cs.context = foreign_context;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    priv->gl_context = gl_create_context(dpy, DefaultScreen(dpy), &parent_cs);
+    priv->gl_context = gl_create_context(
+        dpy,
+        GST_VAAPI_OBJECT_XSCREEN(window),
+        &parent_cs
+    );
     if (!priv->gl_context) {
         GST_DEBUG("could not create GLX context");
         goto end;
@@ -226,7 +231,7 @@ gst_vaapi_window_glx_create_colormap(GstVaapiWindowGLX *window)
             GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
             x11_trap_errors();
             /* XXX: add a GstVaapiDisplayX11:x11-screen property? */
-            screen     = DefaultScreen(dpy);
+            screen     = GST_VAAPI_OBJECT_XSCREEN(window);
             priv->cmap = XCreateColormap(
                 dpy,
                 RootWindow(dpy, screen),

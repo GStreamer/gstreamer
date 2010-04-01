@@ -29,6 +29,7 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapidisplay_x11.h"
+#include "gstvaapidisplay_x11_priv.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_x11.h"
 #include "gstvaapi_priv.h"

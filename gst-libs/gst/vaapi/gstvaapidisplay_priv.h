@@ -39,6 +39,7 @@ G_BEGIN_DECLS
  * Macro that evaluates to the #VADisplay of @display.
  * This is an internal macro that does not do any run-time type check.
  */
+#undef  GST_VAAPI_DISPLAY_VADISPLAY
 #define GST_VAAPI_DISPLAY_VADISPLAY(display_) \
     GST_VAAPI_DISPLAY_CAST(display_)->priv->display
 
@@ -48,8 +49,9 @@ G_BEGIN_DECLS
  *
  * Locks @display
  */
+#undef  GST_VAAPI_DISPLAY_LOCK
 #define GST_VAAPI_DISPLAY_LOCK(display) \
-    gst_vaapi_display_lock(display)
+    gst_vaapi_display_lock(GST_VAAPI_DISPLAY_CAST(display))
 
 /**
  * GST_VAAPI_DISPLAY_UNLOCK:
@@ -57,8 +59,9 @@ G_BEGIN_DECLS
  *
  * Unlocks @display
  */
+#undef  GST_VAAPI_DISPLAY_UNLOCK
 #define GST_VAAPI_DISPLAY_UNLOCK(display) \
-    gst_vaapi_display_unlock(display)
+    gst_vaapi_display_unlock(GST_VAAPI_DISPLAY_CAST(display))
 
 /**
  * GstVaapiDisplayPrivate:

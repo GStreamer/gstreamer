@@ -43,11 +43,44 @@ G_BEGIN_DECLS
     GST_VAAPI_OBJECT_CAST(object)->priv->display
 
 /**
+ * GST_VAAPI_OBJECT_ID:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #GstVaapiID contained in @object.
+ * This is an internal macro that does not do any run-time type checks.
+ */
+#define GST_VAAPI_OBJECT_ID(object) \
+    GST_VAAPI_OBJECT_CAST(object)->priv->id
+
+/**
+ * GST_VAAPI_OBJECT_DISPLAY_X11:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #GstVaapiDisplayX11 the @object is bound to.
+ * This is an internal macro that does not do any run-time type check
+ * and requires #include "gstvaapidisplay_x11_priv.h"
+ */
+#define GST_VAAPI_OBJECT_DISPLAY_X11(object) \
+    GST_VAAPI_DISPLAY_X11_CAST(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
+ * GST_VAAPI_OBJECT_DISPLAY_GLX:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the #GstVaapiDisplayGLX the @object is bound to.
+ * This is an internal macro that does not do any run-time type check
+ * and requires #include "gstvaapidisplay_glx_priv.h".
+ */
+#define GST_VAAPI_OBJECT_DISPLAY_GLX(object) \
+    GST_VAAPI_DISPLAY_GLX_CAST(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
  * GST_VAAPI_OBJECT_VADISPLAY:
  * @object: a #GstVaapiObject
  *
  * Macro that evaluates to the #VADisplay of @display.
- * This is an internal macro that does not do any run-time type check.
+ * This is an internal macro that does not do any run-time type check
+ * and requires #include "gstvaapidisplay_priv.h".
  */
 #define GST_VAAPI_OBJECT_VADISPLAY(object) \
     GST_VAAPI_DISPLAY_VADISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
@@ -57,11 +90,22 @@ G_BEGIN_DECLS
  * @object: a #GstVaapiObject
  *
  * Macro that evaluates to the underlying X11 #Display of @display.
- * This is an internal macro that does not do any run-time type check.
- * Besides, this is only valid within libgstvaapi-x11.
+ * This is an internal macro that does not do any run-time type check
+ * and requires #include "gstvaapidisplay_x11_priv.h".
  */
 #define GST_VAAPI_OBJECT_XDISPLAY(object) \
     GST_VAAPI_DISPLAY_XDISPLAY(GST_VAAPI_OBJECT_DISPLAY(object))
+
+/**
+ * GST_VAAPI_OBJECT_XSCREEN:
+ * @object: a #GstVaapiObject
+ *
+ * Macro that evaluates to the underlying X11 screen of @display.
+ * This is an internal macro that does not do any run-time type check
+ * and requires #include "gstvaapidisplay_x11_priv.h".
+ */
+#define GST_VAAPI_OBJECT_XSCREEN(object) \
+    GST_VAAPI_DISPLAY_XSCREEN(GST_VAAPI_OBJECT_DISPLAY(object))
 
 /**
  * GST_VAAPI_OBJECT_LOCK_DISPLAY:
@@ -82,16 +126,6 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_OBJECT_UNLOCK_DISPLAY(object) \
     GST_VAAPI_DISPLAY_UNLOCK(GST_VAAPI_OBJECT_DISPLAY(object))
-
-/**
- * GST_VAAPI_OBJECT_ID:
- * @object: a #GstVaapiObject
- *
- * Macro that evaluates to the #GstVaapiID contained in @object.
- * This is an internal macro that does not do any run-time type checks.
- */
-#define GST_VAAPI_OBJECT_ID(object) \
-    GST_VAAPI_OBJECT_CAST(object)->priv->id
 
 /**
  * GstVaapiObjectPrivate:

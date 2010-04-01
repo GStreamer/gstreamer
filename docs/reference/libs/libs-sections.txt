@@ -51,10 +51,10 @@ gst_vaapi_video_sink_get_type
 <TITLE>GstVaapiDisplayX11</TITLE>
 GstVaapiDisplayX11
 GstVaapiDisplayX11Class
-GST_VAAPI_DISPLAY_XDISPLAY
 gst_vaapi_display_x11_new
 gst_vaapi_display_x11_new_with_display
 gst_vaapi_display_x11_get_display
+gst_vaapi_display_x11_get_screen
 <SUBSECTION Standard>
 GST_VAAPI_DISPLAY_X11
 GST_VAAPI_IS_DISPLAY_X11

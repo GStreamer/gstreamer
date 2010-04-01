@@ -30,6 +30,7 @@
 #include "gstvaapiutils_glx.h"
 #include "gstvaapidisplay_glx.h"
 #include "gstvaapi_priv.h"
+#include "gstvaapidisplay_x11_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -165,7 +166,7 @@ gst_vaapi_texture_create(GstVaapiTexture *texture)
     gl_get_current_context(&old_cs);
     priv->gl_context = gl_create_context(
         GST_VAAPI_OBJECT_XDISPLAY(texture),
-        DefaultScreen(GST_VAAPI_OBJECT_XDISPLAY(texture)),
+        GST_VAAPI_OBJECT_XSCREEN(texture),
         &old_cs
     );
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);

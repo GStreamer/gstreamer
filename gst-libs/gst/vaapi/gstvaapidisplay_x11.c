@@ -25,8 +25,9 @@
 
 #include "config.h"
 #include "gstvaapiutils.h"
-#include "gstvaapidisplay_x11.h"
 #include "gstvaapidisplay_priv.h"
+#include "gstvaapidisplay_x11.h"
+#include "gstvaapidisplay_x11_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -35,25 +36,13 @@ G_DEFINE_TYPE(GstVaapiDisplayX11,
               gst_vaapi_display_x11,
               GST_VAAPI_TYPE_DISPLAY);
 
-#define GST_VAAPI_DISPLAY_X11_GET_PRIVATE(obj)                  \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_DISPLAY_X11,	\
-                                 GstVaapiDisplayX11Private))
-
-struct _GstVaapiDisplayX11Private {
-    gchar      *display_name;
-    Display    *x11_display;
-    int         x11_screen;
-    guint       create_display  : 1;
-    guint       synchronous     : 1;
-};
-
 enum {
     PROP_0,
 
     PROP_SYNCHRONOUS,
     PROP_DISPLAY_NAME,
-    PROP_X11_DISPLAY
+    PROP_X11_DISPLAY,
+    PROP_X11_SCREEN
 };
 
 static void
@@ -107,6 +96,9 @@ gst_vaapi_display_x11_set_property(
     case PROP_X11_DISPLAY:
         display->priv->x11_display = g_value_get_pointer(value);
         break;
+    case PROP_X11_SCREEN:
+        display->priv->x11_screen = g_value_get_int(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -132,6 +124,9 @@ gst_vaapi_display_x11_get_property(
         break;
     case PROP_X11_DISPLAY:
         g_value_set_pointer(value, gst_vaapi_display_x11_get_display(display));
+        break;
+    case PROP_X11_SCREEN:
+        g_value_set_int(value, gst_vaapi_display_x11_get_screen(display));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -163,15 +158,17 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
     /* XXX: maintain an X11 display cache */
-    if (!priv->x11_display && priv->create_display)
+    if (priv->create_display) {
         priv->x11_display = XOpenDisplay(priv->display_name);
+        if (!priv->x11_display)
+            return FALSE;
+        priv->x11_screen = DefaultScreen(priv->x11_display);
+    }
     if (!priv->x11_display)
         return FALSE;
 
     if (priv->synchronous)
         XSynchronize(priv->x11_display, True);
-
-    priv->x11_screen = DefaultScreen(priv->x11_display);
     return TRUE;
 }
 
@@ -316,6 +313,21 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
                               G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 
     /**
+     * GstVaapiDisplayX11:x11-screen:
+     *
+     * The X11 screen that was created by gst_vaapi_display_x11_new()
+     * or that was bound from gst_vaapi_display_x11_new_with_display().
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_X11_SCREEN,
+         g_param_spec_int("x11-screen",
+                          "X11 screen",
+                          "X11 screen",
+                          0, G_MAXINT32, 0,
+                          G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    /**
      * GstVaapiDisplayX11:display-name:
      *
      * The X11 display name.
@@ -374,8 +386,11 @@ gst_vaapi_display_x11_new(const gchar *display_name)
 GstVaapiDisplay *
 gst_vaapi_display_x11_new_with_display(Display *x11_display)
 {
+    g_return_val_if_fail(x11_display, NULL);
+
     return g_object_new(GST_VAAPI_TYPE_DISPLAY_X11,
                         "x11-display", x11_display,
+                        "x11-screen",  DefaultScreen(x11_display),
                         NULL);
 }
 
@@ -395,4 +410,22 @@ gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display)
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
 
     return display->priv->x11_display;
+}
+
+/**
+ * gst_vaapi_display_x11_get_screen:
+ * @display: a #GstVaapiDisplayX11
+ *
+ * Returns the default X11 screen that was created by
+ * gst_vaapi_display_x11_new() or that was bound from
+ * gst_vaapi_display_x11_new_with_display().
+ *
+ * Return value: the X11 #Display attached to @display
+ */
+int
+gst_vaapi_display_x11_get_screen(GstVaapiDisplayX11 *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), -1);
+
+    return display->priv->x11_screen;
 }

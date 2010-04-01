@@ -105,7 +105,7 @@ main(int argc, char *argv[])
     g_print("# Create window with gst_vaapi_window_x11_new_with_xid()\n");
     g_print("#\n");
     {
-        Display * const dpy = GST_VAAPI_DISPLAY_XDISPLAY(display);
+        Display * const dpy = gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
         Window rootwin, win;
         int screen;
         unsigned long white_pixel, black_pixel;

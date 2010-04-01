@@ -70,6 +70,7 @@ libgstvaapi_x11_source_h =			\
 
 libgstvaapi_x11_source_priv_h =			\
 	gstvaapicompat.h			\
+	gstvaapidisplay_x11_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiutils_x11.h			\
 	$(NULL)
@@ -91,6 +92,7 @@ libgstvaapi_glx_source_h =			\
 
 libgstvaapi_glx_source_priv_h =			\
 	gstvaapicompat.h			\
+	gstvaapidisplay_glx_priv.h		\
 	gstvaapiutils.h				\
 	gstvaapiutils_glx.h			\
 	gstvaapiutils_x11.h			\
