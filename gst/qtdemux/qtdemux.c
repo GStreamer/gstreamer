@@ -49,6 +49,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+#include <glib/gprintf.h>
 #include <gst/tag/tag.h>
 
 #include "qtatomparser.h"
@@ -5065,6 +5066,30 @@ avc_profile_idc_to_string (gint profile_idc, gint constraint_set_flags)
   return g_strdup (profile);
 }
 
+static gchar *
+avc_level_idc_to_string (gint level_idc, gint constraint_set_flags)
+{
+  const gchar *level = NULL;
+  gchar buf[4];
+  gint csf3;
+
+  csf3 = (constraint_set_flags & 0x10) >> 4;
+
+  if (level_idc == 11 && csf3)
+    level = "1b";
+  else {
+    /* Level is (level_idc / 10) */
+    if (level_idc % 10 == 0)
+      g_sprintf (buf, "%d", level_idc / 10);
+    else
+      g_sprintf (buf, "%d.%d", level_idc / 10, level_idc % 10);
+
+    level = buf;
+  }
+
+  return g_strdup (level);
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -5308,7 +5333,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           if (len > 0x8 && QT_FOURCC (avc_data + 0x4) == FOURCC_avcC) {
             GstBuffer *buf;
             gint size;
-            gchar *profile;
+            gchar *profile, *level;
 
             if (QT_UINT32 (avc_data) < len)
               size = QT_UINT32 (avc_data) - 0x8;
@@ -5324,6 +5349,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
                     profile, NULL);
                 g_free (profile);
+              }
+            }
+
+            if (size >= 4) {
+              /* Fourth byte is the level indication */
+              level = avc_level_idc_to_string (QT_UINT8 (avc_data + 0xB),
+                  QT_UINT8 (avc_data + 0xA));
+              if (level) {
+                gst_caps_set_simple (stream->caps, "level", G_TYPE_STRING,
+                    level, NULL);
+                g_free (level);
               }
             }
 
