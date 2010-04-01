@@ -2398,7 +2398,6 @@ gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
 {
   GstPlaySink *psink;
   GstPad *pad;
-  GstElementClass *klass;
   GstPlaySinkType type;
   const gchar *tplname;
 
@@ -2407,7 +2406,6 @@ gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_DEBUG_OBJECT (element, "name:%s", name);
 
   psink = GST_PLAY_SINK (element);
-  klass = GST_ELEMENT_GET_CLASS (element);
   tplname = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
 
   /* Figure out the GstPlaySinkType based on the template */
