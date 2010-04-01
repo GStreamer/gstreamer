@@ -6628,6 +6628,140 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   }
 }
 
+static void
+qtdemux_add_double_tag_from_str (GstQTDemux * demux, const gchar * tag,
+    guint8 * data, guint32 datasize)
+{
+  gdouble value;
+  gchar *datacopy;
+
+  /* make a copy to have \0 at the end */
+  datacopy = g_strndup ((gchar *) data, datasize);
+
+  /* convert the str to double */
+  if (sscanf (datacopy, "%lf", &value) == 1) {
+    GST_DEBUG_OBJECT (demux, "adding tag: %s [%s]", tag, datacopy);
+    gst_tag_list_add (demux->tag_list, GST_TAG_MERGE_REPLACE, tag, value, NULL);
+  } else {
+    GST_WARNING_OBJECT (demux, "Failed to parse double from string: %s",
+        datacopy);
+  }
+  g_free (datacopy);
+}
+
+
+static void
+qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
+    const char *tag_bis, GNode * node)
+{
+  GNode *mean;
+  GNode *name;
+  GNode *data;
+  guint32 meansize;
+  guint32 namesize;
+  guint32 datatype;
+  guint32 datasize;
+  const gchar *meanstr;
+  const gchar *namestr;
+
+  /* checking the whole ---- atom size for consistency */
+  if (QT_UINT32 (node->data) <= 4 + 12 + 12 + 16) {
+    GST_WARNING_OBJECT (demux, "Tag ---- atom is too small, ignoring");
+    return;
+  }
+
+  mean = qtdemux_tree_get_child_by_type (node, FOURCC_mean);
+  if (!mean) {
+    GST_WARNING_OBJECT (demux, "No 'mean' atom found");
+    return;
+  }
+
+  meansize = QT_UINT32 (mean->data);
+  if (meansize <= 12) {
+    GST_WARNING_OBJECT (demux, "Small mean atom, ignoring the whole tag");
+    return;
+  }
+  meanstr = ((gchar *) mean->data) + 12;
+
+  name = qtdemux_tree_get_child_by_type (node, FOURCC_name);
+  if (!name) {
+    GST_WARNING_OBJECT (demux, "'name' atom not found, ignoring tag");
+    return;
+  }
+
+  namesize = QT_UINT32 (name->data);
+  if (namesize <= 12) {
+    GST_WARNING_OBJECT (demux, "'name' atom is too small, ignoring tag");
+    return;
+  }
+  namestr = ((gchar *) name->data) + 12;
+
+  /*
+   * Data atom is:
+   * uint32 - size
+   * uint32 - name
+   * uint8  - version
+   * uint24 - data type
+   * uint32 - all 0
+   * rest   - the data
+   */
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (!data) {
+    GST_WARNING_OBJECT (demux, "No data atom in this tag");
+    return;
+  }
+  datasize = QT_UINT32 (data->data);
+  if (datasize <= 16) {
+    GST_WARNING_OBJECT (demux, "Data atom too small");
+    return;
+  }
+  datatype = QT_UINT32 (((gchar *) data->data) + 8) & 0xFFFFFF;
+
+  if (strncmp (meanstr, "com.apple.iTunes", meansize - 12) == 0) {
+    if (strncmp (namestr, "replaygain_track_gain", namesize - 12) == 0) {
+      qtdemux_add_double_tag_from_str (demux,
+          GST_TAG_TRACK_GAIN, ((guint8 *) data->data) + 16, datasize - 16);
+
+    } else if (strncmp (namestr, "replaygain_track_peak", namesize - 12) == 0) {
+      qtdemux_add_double_tag_from_str (demux,
+          GST_TAG_TRACK_PEAK, ((guint8 *) data->data) + 16, datasize - 16);
+
+    } else if (strncmp (namestr, "replaygain_album_gain", namesize - 12) == 0) {
+      qtdemux_add_double_tag_from_str (demux,
+          GST_TAG_ALBUM_GAIN, ((guint8 *) data->data) + 16, datasize - 16);
+
+    } else if (strncmp (namestr, "replaygain_album_peak", namesize - 12) == 0) {
+      qtdemux_add_double_tag_from_str (demux,
+          GST_TAG_ALBUM_PEAK, ((guint8 *) data->data) + 16, datasize - 16);
+
+    } else {
+      goto unknown_tag;
+    }
+
+  } else {
+    goto unknown_tag;
+  }
+
+  return;
+
+/* errors */
+unknown_tag:
+  {
+    gchar *namestr_dbg;
+    gchar *meanstr_dbg;
+
+    meanstr_dbg = g_strndup (meanstr, meansize - 12);
+    namestr_dbg = g_strndup (namestr, namesize - 12);
+
+    GST_WARNING_OBJECT (demux, "This tag %s:%s type:%u is not mapped, "
+        "file a bug at bugzilla.gnome.org", meanstr_dbg, namestr_dbg, datatype);
+
+    g_free (namestr_dbg);
+    g_free (meanstr_dbg);
+    return;
+  }
+}
+
 typedef void (*GstQTDemuxAddTagFunc) (GstQTDemux * demux,
     const char *tag, const char *tag_bis, GNode * node);
 
@@ -6690,7 +6824,14 @@ static const struct
   FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
   FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
   FOURCC_clsf, GST_QT_DEMUX_CLASSIFICATION_TAG, NULL,
-        qtdemux_tag_add_classification}
+        qtdemux_tag_add_classification}, {
+
+    /* This is a special case, some tags are stored in this
+     * 'reverse dns naming', according to:
+     * http://atomicparsley.sourceforge.net/mpeg-4files.html and
+     * bug #614471
+     */
+  FOURCC_____, "", NULL, qtdemux_tag_add_revdns}
 };
 
 static void
@@ -6770,7 +6911,8 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   GST_DEBUG_OBJECT (qtdemux, "new tag list");
   qtdemux->tag_list = gst_tag_list_new ();
 
-  for (i = 0; i < G_N_ELEMENTS (add_funcs); ++i) {
+  i = 0;
+  while (i < G_N_ELEMENTS (add_funcs)) {
     node = qtdemux_tree_get_child_by_type (ilst, add_funcs[i].fourcc);
     if (node) {
       gint len;
@@ -6784,6 +6926,8 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
             add_funcs[i].gst_tag_bis, node);
       }
       g_node_destroy (node);
+    } else {
+      i++;
     }
   }
 

@@ -120,6 +120,8 @@ G_BEGIN_DECLS
 #define FOURCC_soco     GST_MAKE_FOURCC('s','o','c','o')
 #define FOURCC_sosn     GST_MAKE_FOURCC('s','o','s','n')
 #define FOURCC_____     GST_MAKE_FOURCC('-','-','-','-')
+#define FOURCC_mean     GST_MAKE_FOURCC('m','e','a','n')
+#define FOURCC_name     GST_MAKE_FOURCC('n','a','m','e')
 #define FOURCC_free     GST_MAKE_FOURCC('f','r','e','e')
 #define FOURCC_data     GST_MAKE_FOURCC('d','a','t','a')
 #define FOURCC_SVQ3     GST_MAKE_FOURCC('S','V','Q','3')
