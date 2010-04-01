@@ -588,6 +588,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   gst_pad_remove_event_probe (probe_pad, probe);
   gst_object_unref (probe_pad);
   gst_message_unref (msg);
+  gst_event_unref (newseg_event);
   gst_object_unref (bus);
   gst_object_unref (pipe);
 }
