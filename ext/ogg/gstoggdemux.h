@@ -111,6 +111,7 @@ struct _GstOggPad
 
   gboolean discont;
   GstFlowReturn last_ret;       /* last return of _pad_push() */
+  gboolean is_eos;
 
   gboolean added;
 };

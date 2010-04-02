@@ -375,6 +375,7 @@ gst_ogg_pad_reset (GstOggPad * pad)
   pad->last_stop = GST_CLOCK_TIME_NONE;
   pad->current_granule = -1;
   pad->keyframe_granule = -1;
+  pad->is_eos = FALSE;
 }
 
 /* called when the skeleton fishead is found. Caller ensures the packet is
@@ -678,6 +679,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
   GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current_time));
+
+  /* check stream eos */
+  if ((ogg->segment.rate > 0.0 && ogg->segment.stop != GST_CLOCK_TIME_NONE &&
+          current_time > ogg->segment.stop) ||
+      (ogg->segment.rate > 0.0 && ogg->segment.start != GST_CLOCK_TIME_NONE &&
+          current_time < ogg->segment.start)) {
+    pad->is_eos = TRUE;
+  }
 
 done:
   if (buf)
@@ -2936,6 +2945,29 @@ done:
   return ret;
 }
 
+/* returns TRUE if all streams in current chain reached EOS, FALSE otherwise */
+static gboolean
+gst_ogg_demux_check_eos (GstOggDemux * ogg)
+{
+  GstOggChain *chain;
+  gboolean eos = TRUE;
+
+  chain = ogg->current_chain;
+  if (G_LIKELY (chain)) {
+    gint i;
+
+    for (i = 0; i < chain->streams->len; i++) {
+      GstOggPad *opad = g_array_index (chain->streams, GstOggPad *, i);
+
+      eos = eos && opad->is_eos;
+    }
+  } else {
+    eos = FALSE;
+  }
+
+  return eos;
+}
+
 static GstFlowReturn
 gst_ogg_demux_loop_forward (GstOggDemux * ogg)
 {
@@ -2970,11 +3002,9 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
   }
 
   /* check for the end of the segment */
-  if (ogg->segment.stop != -1 && ogg->segment.last_stop != -1) {
-    if (ogg->segment.last_stop > ogg->segment.stop) {
-      ret = GST_FLOW_UNEXPECTED;
-      goto done;
-    }
+  if (gst_ogg_demux_check_eos (ogg)) {
+    ret = GST_FLOW_UNEXPECTED;
+    goto done;
   }
 done:
   return ret;
@@ -3019,11 +3049,9 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
     goto done;
 
   /* check for the end of the segment */
-  if (ogg->segment.start != -1 && ogg->segment.last_stop != -1) {
-    if (ogg->segment.last_stop <= ogg->segment.start) {
-      ret = GST_FLOW_UNEXPECTED;
-      goto done;
-    }
+  if (gst_ogg_demux_check_eos (ogg)) {
+    ret = GST_FLOW_UNEXPECTED;
+    goto done;
   }
 done:
   return ret;
