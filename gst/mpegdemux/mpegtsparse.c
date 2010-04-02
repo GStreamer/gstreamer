@@ -773,7 +773,7 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
   GList *srcpads;
 
   pid = packet->pid;
-  buffer = packet->buffer;
+  buffer = gst_buffer_make_metadata_writable (packet->buffer);
   /* we have the same caps on all the src pads */
   gst_buffer_set_caps (buffer, parse->packetizer->caps);
 
