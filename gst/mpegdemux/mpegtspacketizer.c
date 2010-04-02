@@ -103,6 +103,7 @@ mpegts_packetizer_stream_subtable_new (guint8 table_id,
   subtable->version_number = VERSION_NUMBER_UNSET;
   subtable->table_id = table_id;
   subtable->subtable_extension = subtable_extension;
+  subtable->crc = 0;
   return subtable;
 }
 
@@ -264,7 +265,7 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
     MpegTSPacketizerStream * stream, MpegTSPacketizerSection * section)
 {
   guint8 tmp;
-  guint8 *data;
+  guint8 *data, *crc_data;
   MpegTSPacketizerStreamSubtable *subtable;
   GSList *subtable_list = NULL;
 
@@ -302,21 +303,30 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
   tmp = *data++;
   section->version_number = (tmp >> 1) & 0x1F;
   section->current_next_indicator = tmp & 0x01;
+
   if (!section->current_next_indicator)
     goto not_applicable;
 
-  if (section->version_number == subtable->version_number)
+  /* CRC is at the end of the section */
+  crc_data =
+      GST_BUFFER_DATA (section->buffer) + GST_BUFFER_SIZE (section->buffer) - 4;
+  section->crc = GST_READ_UINT32_BE (crc_data);
+
+  if (section->version_number == subtable->version_number &&
+      section->crc == subtable->crc)
     goto not_applicable;
+
   subtable->version_number = section->version_number;
+  subtable->crc = section->crc;
   stream->section_table_id = section->table_id;
 
   return TRUE;
 
 not_applicable:
   GST_LOG
-      ("not applicable pid %d table_id %d subtable_extension %d, current_next %d version %d",
+      ("not applicable pid %d table_id %d subtable_extension %d, current_next %d version %d, crc 0x%x",
       section->pid, section->table_id, section->subtable_extension,
-      section->current_next_indicator, section->version_number);
+      section->current_next_indicator, section->version_number, section->crc);
   section->complete = FALSE;
   gst_buffer_unref (section->buffer);
   return TRUE;
