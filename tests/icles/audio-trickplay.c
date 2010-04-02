@@ -3,6 +3,17 @@
  *
  * Builds a pipeline with two audiotestsources mixed with adder. Assigns
  * controller patterns to the audio generators and test various trick modes.
+ *
+ * There are currently several issues:
+ * - adder only work with flushing seeks
+ * - backwards playback does not work for adder at all
+ * - there is a gap of almost 4 seconds before backwards playback
+ *   - it is "waiting for free space"
+ *   - using sync=false on the sink does not help (but has some other weird effects)
+ *   - using fakesink shows same behaviour
+ *
+ * GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:2,default:3,*sink*:4,*ring*:4,*pulse*:5" ./audio-trickplay 2>log.txt
+ * GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:2,default:3,*sink*:4,*ring*:4,*pulse*:5" ./audio-trickplay -a -f 2>log-af.txt
  */
 
 #include <gst/gst.h>
@@ -10,15 +21,24 @@
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
 static void
-check_position (GstElement * sink, GstQuery * pos, const gchar * info)
+check_position (GstElement * elem, GstQuery * pos, const gchar * info)
 {
-  if (gst_element_query (sink, pos)) {
+  if (gst_element_query (elem, pos)) {
     gint64 play_pos;
     gst_query_parse_position (pos, NULL, &play_pos);
-    printf ("pos: %" GST_TIME_FORMAT " %s\n", GST_TIME_ARGS (play_pos), info);
+    GST_INFO ("pos : %" GST_TIME_FORMAT " %s", GST_TIME_ARGS (play_pos), info);
   } else {
     GST_WARNING ("position query failed");
   }
+}
+
+static gboolean
+print_buffer_ts (GstPad * pad, GstBuffer * buffer, gpointer user_data)
+{
+  GstClockTime ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_DEBUG ("  ts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+  return TRUE;
 }
 
 gint
@@ -33,10 +53,14 @@ main (gint argc, gchar ** argv)
   GstClockID clock_id;
   GstClockReturn wait_ret;
   GValue vol = { 0, };
-  GstEvent *pos_seek, *rate_seek;
+  GstEvent *pos_seek, *rate_seek1, *rate_seek2;
   GstQuery *pos;
+  GstSeekFlags flags;
+  GstPad *src_pad;
   /* options */
   gboolean use_adder = FALSE;
+  gboolean use_flush = FALSE;
+  gboolean be_quiet = FALSE;
 
   gst_init (&argc, &argv);
   gst_controller_init (&argc, &argv);
@@ -46,6 +70,10 @@ main (gint argc, gchar ** argv)
     for (arg = 0; arg < argc; arg++) {
       if (!strcmp (argv[arg], "-a"))
         use_adder = TRUE;
+      else if (!strcmp (argv[arg], "-f"))
+        use_flush = TRUE;
+      else if (!strcmp (argv[arg], "-q"))
+        be_quiet = TRUE;
     }
   }
 
@@ -64,7 +92,8 @@ main (gint argc, gchar ** argv)
       goto Error;
     }
   }
-  sink = gst_element_factory_make ("autoaudiosink", NULL);
+  sink = gst_element_factory_make ((be_quiet ? "fakesink" : "autoaudiosink"),
+      NULL);
   if (!sink) {
     GST_WARNING ("need autoaudiosink from gst-plugins-base");
     goto Error;
@@ -83,6 +112,17 @@ main (gint argc, gchar ** argv)
       goto Error;
     }
   }
+
+  /* use 10 buffers per second */
+  g_object_set (src, "samplesperbuffer", 44100 / 10, NULL);
+
+  if (be_quiet) {
+    g_object_set (sink, "sync", TRUE, NULL);
+  }
+
+  src_pad = gst_element_get_static_pad (src, "src");
+  gst_pad_add_buffer_probe (src_pad, G_CALLBACK (print_buffer_ts), NULL);
+  gst_object_unref (src_pad);
 
   /* add a controller to the source */
   if (!(ctrl = gst_controller_new (G_OBJECT (src), "freq", "volume", NULL))) {
@@ -124,10 +164,14 @@ main (gint argc, gchar ** argv)
   g_object_unref (csource2);
 
   /* prepare events */
-  pos_seek = gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+  flags = use_flush ? GST_SEEK_FLAG_FLUSH : GST_SEEK_FLAG_NONE;
+  pos_seek = gst_event_new_seek (1.0, GST_FORMAT_TIME, flags,
       GST_SEEK_TYPE_SET, 3 * GST_SECOND,
       GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
-  rate_seek = gst_event_new_seek (0.5, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+  rate_seek1 = gst_event_new_seek (0.5, GST_FORMAT_TIME, flags,
+      GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
+      GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+  rate_seek2 = gst_event_new_seek (-1.0, GST_FORMAT_TIME, flags,
       GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE,
       GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
 
@@ -136,29 +180,30 @@ main (gint argc, gchar ** argv)
 
 
   /* run the show */
-  if (gst_element_set_state (bin, GST_STATE_PAUSED)) {
+  if (gst_element_set_state (bin, GST_STATE_PAUSED) != GST_STATE_CHANGE_FAILURE) {
 
     /* run for 5 seconds */
     clock_id =
         gst_clock_new_single_shot_id (clock,
         gst_clock_get_time (clock) + (5 * GST_SECOND));
 
-    if (gst_element_set_state (bin, GST_STATE_PLAYING)) {
-      check_position (sink, pos, "start");
+    if (gst_element_set_state (bin,
+            GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE) {
+      check_position (bin, pos, "start");
       if ((wait_ret = gst_clock_id_wait (clock_id, NULL)) != GST_CLOCK_OK) {
         GST_WARNING ("clock_id_wait returned: %d", wait_ret);
       }
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (sink, pos, "before seek to new pos");
+    check_position (bin, pos, "before seek to new pos");
 
     /* seek to 3:00 sec (back 2 sec) */
     if (!gst_element_send_event (sink, pos_seek)) {
       GST_WARNING ("element failed to seek to new position");
     }
 
-    check_position (sink, pos, "after seek to new pos");
+    check_position (bin, pos, "after seek to new pos");
 
     /* run for 2 seconds */
     clock_id =
@@ -169,14 +214,14 @@ main (gint argc, gchar ** argv)
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (sink, pos, "before rate change");
+    check_position (bin, pos, "before slow down rate change");
 
-    /* change playback rate */
-    if (!gst_element_send_event (sink, rate_seek)) {
+    /* change playback rate to 0.5 */
+    if (!gst_element_send_event (sink, rate_seek1)) {
       GST_WARNING ("element failed to change playback rate");
     }
 
-    check_position (sink, pos, "after rate change");
+    check_position (bin, pos, "after slow down rate change");
 
     /* run for 4 seconds */
     clock_id =
@@ -187,7 +232,25 @@ main (gint argc, gchar ** argv)
     }
     gst_clock_id_unref (clock_id);
 
-    check_position (sink, pos, "done");
+    check_position (bin, pos, "before reverse rate change");
+
+    /* change playback rate to -1.0  */
+    if (!gst_element_send_event (sink, rate_seek2)) {
+      GST_WARNING ("element failed to change playback rate");
+    }
+
+    check_position (bin, pos, "after reverse rate change");
+
+    /* run for 7 seconds */
+    clock_id =
+        gst_clock_new_single_shot_id (clock,
+        gst_clock_get_time (clock) + (7 * GST_SECOND));
+    if ((wait_ret = gst_clock_id_wait (clock_id, NULL)) != GST_CLOCK_OK) {
+      GST_WARNING ("clock_id_wait returned: %d", wait_ret);
+    }
+    gst_clock_id_unref (clock_id);
+
+    check_position (bin, pos, "done");
 
     gst_element_set_state (bin, GST_STATE_NULL);
   }
