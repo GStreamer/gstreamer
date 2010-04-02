@@ -938,8 +938,10 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   GstClockTime time;
 
-  segment->time = segment->start;
+  GST_DEBUG_OBJECT (src, "seeking %" GST_SEGMENT_FORMAT, segment);
+
   time = segment->last_stop;
+  src->reverse = (segment->rate < 0.0);
 
   /* now move to the time indicated */
   src->next_sample =
@@ -948,7 +950,21 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   src->next_time =
       gst_util_uint64_scale_int (src->next_sample, GST_SECOND, src->samplerate);
 
+  GST_DEBUG_OBJECT (src, "seeking next_sample=%" G_GINT64_FORMAT
+      " next_time=%" GST_TIME_FORMAT, src->next_sample,
+      GST_TIME_ARGS (src->next_time));
+
   g_assert (src->next_time <= time);
+
+  if (!src->reverse) {
+    if (GST_CLOCK_TIME_IS_VALID (segment->start)) {
+      segment->time = segment->start;
+    }
+  } else {
+    if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+      segment->time = segment->stop;
+    }
+  }
 
   if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
     time = segment->stop;
@@ -990,7 +1006,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   GstBuffer *buf;
   GstClockTime next_time;
   gint64 next_sample, next_byte;
-  guint bytes, samples;
+  gint bytes, samples;
   GstElementClass *eclass;
 
   src = GST_AUDIO_TEST_SRC (basesrc);
@@ -1011,8 +1027,10 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     src->tags_pushed = TRUE;
   }
 
-  if (src->eos_reached)
+  if (src->eos_reached) {
+    GST_INFO_OBJECT (src, "eos");
     return GST_FLOW_UNEXPECTED;
+  }
 
   /* if no length was given, use our default length in samples otherwise convert
    * the length in bytes to samples. */
@@ -1048,7 +1066,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   } else {
     /* calculate full buffer */
     src->generate_samples_per_buffer = samples;
-    next_sample = src->next_sample + samples;
+    next_sample = src->next_sample + (src->reverse ? (-samples) : samples);
   }
 
   bytes = src->generate_samples_per_buffer * src->sample_size * src->channels;
@@ -1058,20 +1076,23 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     return res;
   }
 
-  next_byte = src->next_byte + bytes;
+  next_byte = src->next_byte + (src->reverse ? (-bytes) : bytes);
   next_time = gst_util_uint64_scale_int (next_sample, GST_SECOND,
       src->samplerate);
 
   GST_LOG_OBJECT (src, "samplerate %d", src->samplerate);
-  GST_LOG_OBJECT (src, "next_sample %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
-      next_sample, GST_TIME_ARGS (next_time));
 
-  GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->next_time;
   GST_BUFFER_OFFSET (buf) = src->next_sample;
   GST_BUFFER_OFFSET_END (buf) = next_sample;
-  GST_BUFFER_DURATION (buf) = next_time - src->next_time;
+  if (!src->reverse) {
+    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + next_time;
+    GST_BUFFER_DURATION (buf) = next_time - src->next_time;
+  } else {
+    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->next_time;
+    GST_BUFFER_DURATION (buf) = src->next_time - next_time;
+  }
 
-  gst_object_sync_values (G_OBJECT (src), src->next_time);
+  gst_object_sync_values (G_OBJECT (src), GST_BUFFER_TIMESTAMP (buf));
 
   src->next_time = next_time;
   src->next_sample = next_sample;
