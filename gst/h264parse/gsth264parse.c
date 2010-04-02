@@ -963,11 +963,13 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   for (i = 0; i < MAX_SPS_COUNT; i++) {
     if (h264parse->sps_buffers[i])
       g_slice_free (GstH264Sps, h264parse->sps_buffers[i]);
+    h264parse->sps_buffers[i] = NULL;
     gst_buffer_replace (&h264parse->sps_nals[i], NULL);
   }
   for (i = 0; i < MAX_PPS_COUNT; i++) {
     if (h264parse->pps_buffers[i])
       g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
+    h264parse->pps_buffers[i] = NULL;
     gst_buffer_replace (&h264parse->pps_nals[i], NULL);
   }
   h264parse->sps = NULL;
@@ -993,10 +995,7 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->last_outbuf_dts = GST_CLOCK_TIME_NONE;
 
   list = h264parse->codec_nals;
-  while (list) {
-    gst_buffer_unref (list->data);
-    list = g_slist_next (list);
-  }
+  g_slist_foreach (list, (GFunc) gst_buffer_unref, NULL);
   g_slist_free (h264parse->codec_nals);
   h264parse->codec_nals = NULL;
 
