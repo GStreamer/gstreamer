@@ -294,7 +294,7 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
       if (!ogg->pullmode) {
-        GST_DEBUG_OBJECT (ogg, "seek on pull mode stream not implemented yet");
+        GST_DEBUG_OBJECT (ogg, "seek on push mode stream not implemented yet");
         goto error;
       }
 
