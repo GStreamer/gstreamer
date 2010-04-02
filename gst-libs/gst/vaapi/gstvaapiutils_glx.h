@@ -148,12 +148,15 @@ gl_get_vtable(void)
 
 typedef struct _GLPixmapObject GLPixmapObject;
 struct _GLPixmapObject {
-    Display    *dpy;
-    guint       width;
-    guint       height;
-    Pixmap      pixmap;
-    GLXPixmap   glx_pixmap;
-    guint       is_bound        : 1;
+    Display        *dpy;
+    GLenum          target;
+    GLuint          texture;
+    GLTextureState  old_texture;
+    guint           width;
+    guint           height;
+    Pixmap          pixmap;
+    GLXPixmap       glx_pixmap;
+    guint           is_bound    : 1;
 };
 
 GLPixmapObject *
@@ -177,11 +180,7 @@ struct _GLFramebufferObject {
     guint           width;
     guint           height;
     GLuint          fbo;
-    GLuint          fbo_buffer;
-    GLenum          fbo_target;
-    GLuint          fbo_texture;
     GLuint          old_fbo;
-    GLTextureState  old_texture;
     guint           is_bound    : 1;
 };
 

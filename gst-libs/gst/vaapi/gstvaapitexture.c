@@ -593,7 +593,6 @@ _gst_vaapi_texture_put_surface(
 #else
     guint surface_width, surface_height;
     GLContextState old_cs;
-    GLTextureState ts;
     gboolean success = FALSE;
 
     gst_vaapi_surface_get_size(surface, &surface_width, &surface_height);
@@ -613,19 +612,16 @@ _gst_vaapi_texture_put_surface(
         return FALSE;
 
     GST_VAAPI_OBJECT_LOCK_DISPLAY(texture);
-    success = gl_set_current_context(priv->gl_context, &old_cs);
-    if (!success)
-        goto end;
-
-    if (!gl_bind_texture(&ts, priv->target, GST_VAAPI_OBJECT_ID(texture))) {
-        GST_DEBUG("could not bind texture %u", GST_VAAPI_OBJECT_ID(texture));
-        goto out_reset_context;
+    if (priv->gl_context) {
+        success = gl_set_current_context(priv->gl_context, &old_cs);
+        if (!success)
+            goto end;
     }
 
     success = gl_bind_framebuffer_object(priv->fbo);
     if (!success) {
         GST_DEBUG("could not bind FBO");
-        goto out_unbind_texture;
+        goto out_reset_context;
     }
 
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);
@@ -661,10 +657,8 @@ _gst_vaapi_texture_put_surface(
 out_unbind_fbo:
     if (!gl_unbind_framebuffer_object(priv->fbo))
         success = FALSE;
-out_unbind_texture:
-    gl_unbind_texture(&ts);
 out_reset_context:
-    if (!gl_set_current_context(&old_cs, NULL))
+    if (priv->gl_context && !gl_set_current_context(&old_cs, NULL))
         success = FALSE;
 end:
     GST_VAAPI_OBJECT_UNLOCK_DISPLAY(texture);

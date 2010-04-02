@@ -474,7 +474,7 @@ gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
         return FALSE;
     }
 
-    if (ts->was_enabled && !gl_get_param(texture_binding, &ts->old_texture))
+    if (!gl_get_param(texture_binding, &ts->old_texture))
         return FALSE;
 
     ts->was_bound = texture == ts->old_texture;
@@ -780,7 +780,7 @@ gl_create_pixmap_object(Display *dpy, guint width, guint height)
 
     int fbconfig_attrs[32] = {
         GLX_DRAWABLE_TYPE,      GLX_PIXMAP_BIT,
-        GLX_DOUBLEBUFFER,       GL_TRUE,
+        GLX_DOUBLEBUFFER,       GL_FALSE,
         GLX_RENDER_TYPE,        GLX_RGBA_BIT,
         GLX_X_RENDERABLE,       GL_TRUE,
         GLX_Y_INVERTED_EXT,     GL_TRUE,
@@ -855,7 +855,7 @@ gl_create_pixmap_object(Display *dpy, guint width, guint height)
     if (!fbconfig)
         goto error;
 
-    /* Initialize GLX Pixmap attrutes */
+    /* Initialize GLX Pixmap attributes */
     for (attr = pixmap_attrs; *attr != GL_NONE; attr += 2)
         ;
     *attr++ = GLX_TEXTURE_FORMAT_EXT;
@@ -870,6 +870,14 @@ gl_create_pixmap_object(Display *dpy, guint width, guint height)
     free(fbconfig);
     if (x11_untrap_errors() != 0)
         goto error;
+
+    pixo->target = GL_TEXTURE_2D;
+    glGenTextures(1, &pixo->texture);
+    if (!gl_bind_texture(&pixo->old_texture, pixo->target, pixo->texture))
+        goto error;
+    glTexParameteri(pixo->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(pixo->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl_unbind_texture(&pixo->old_texture);
     return pixo;
 
 error:
@@ -890,6 +898,11 @@ gl_destroy_pixmap_object(GLPixmapObject *pixo)
         return;
 
     gl_unbind_pixmap_object(pixo);
+
+    if (pixo->texture) {
+        glDeleteTextures(1, &pixo->texture);
+        pixo->texture = 0;
+    }
 
     if (pixo->glx_pixmap) {
         glXDestroyPixmap(pixo->dpy, pixo->glx_pixmap);
@@ -920,6 +933,9 @@ gl_bind_pixmap_object(GLPixmapObject *pixo)
 
     if (pixo->is_bound)
         return TRUE;
+
+    if (!gl_bind_texture(&pixo->old_texture, pixo->target, pixo->texture))
+        return FALSE;
 
     x11_trap_errors();
     gl_vtable->glx_bind_tex_image(
@@ -966,6 +982,8 @@ gl_unbind_pixmap_object(GLPixmapObject *pixo)
         return FALSE;
     }
 
+    gl_unbind_texture(&pixo->old_texture);
+
     pixo->is_bound = FALSE;
     return TRUE;
 }
@@ -992,9 +1010,7 @@ gl_create_framebuffer_object(
 {
     GLVTable * const gl_vtable = gl_get_vtable();
     GLFramebufferObject *fbo;
-    GLTextureState ts;
     GLenum status;
-    gboolean texture_was_bound;
 
     if (!gl_vtable || !gl_vtable->has_framebuffer_object)
         return NULL;
@@ -1010,35 +1026,22 @@ gl_create_framebuffer_object(
     fbo->width          = width;
     fbo->height         = height;
     fbo->fbo            = 0;
-    fbo->fbo_buffer     = 0;
-    fbo->fbo_target     = target;
-    fbo->fbo_texture    = 0;
     fbo->old_fbo        = 0;
     fbo->is_bound       = FALSE;
-
-    fbo->fbo_texture = gl_create_texture(target, GL_BGRA, width, height);
-    if (!fbo->fbo_texture)
-        goto error;
 
     gl_get_param(GL_FRAMEBUFFER_BINDING, &fbo->old_fbo);
     gl_vtable->gl_gen_framebuffers(1, &fbo->fbo);
     gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->fbo);
-    gl_vtable->gl_gen_renderbuffers(1, &fbo->fbo_buffer);
-    gl_vtable->gl_bind_renderbuffer(GL_RENDERBUFFER_EXT, fbo->fbo_buffer);
+    gl_vtable->gl_framebuffer_texture_2d(
+        GL_FRAMEBUFFER_EXT,
+        GL_COLOR_ATTACHMENT0_EXT,
+        target, texture,
+        0
+    );
 
-    texture_was_bound = gl_bind_texture(&ts, target, texture);
-    if (texture_was_bound) {
-        gl_vtable->gl_framebuffer_texture_2d(
-            GL_FRAMEBUFFER_EXT,
-            GL_COLOR_ATTACHMENT0_EXT,
-            target, texture,
-            0
-        );
-        gl_unbind_texture(&ts);
-    }
     status = gl_vtable->gl_check_framebuffer_status(GL_DRAW_FRAMEBUFFER_EXT);
     gl_vtable->gl_bind_framebuffer(GL_FRAMEBUFFER_EXT, fbo->old_fbo);
-    if (!texture_was_bound || status != GL_FRAMEBUFFER_COMPLETE_EXT)
+    if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
         goto error;
     return fbo;
 
@@ -1062,16 +1065,6 @@ gl_destroy_framebuffer_object(GLFramebufferObject *fbo)
         return;
 
     gl_unbind_framebuffer_object(fbo);
-
-    if (fbo->fbo_texture) {
-        glDeleteTextures(1, &fbo->fbo_texture);
-        fbo->fbo_texture = 0;
-    }
-
-    if (fbo->fbo_buffer) {
-        gl_vtable->gl_delete_renderbuffers(1, &fbo->fbo_buffer);
-        fbo->fbo_buffer = 0;
-    }
 
     if (fbo->fbo) {
         gl_vtable->gl_delete_framebuffers(1, &fbo->fbo);
@@ -1116,9 +1109,6 @@ gl_bind_framebuffer_object(GLFramebufferObject *fbo)
     glViewport(0, 0, width, height);
     glTranslatef(-1.0f, -1.0f, 0.0f);
     glScalef(2.0f / width, 2.0f / height, 1.0f);
-
-    if (!gl_bind_texture(&fbo->old_texture, fbo->fbo_target, fbo->fbo_texture))
-        return FALSE;
 
     fbo->is_bound = TRUE;
     return TRUE;
