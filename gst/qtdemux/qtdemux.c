@@ -5094,7 +5094,7 @@ static void
 avc_get_profile_and_level_string (const guint8 * avc_data, gint size,
     gchar ** profile, gchar ** level)
 {
-  if (size >= 2)
+  if (size >= 3)
     /* First byte is the version, second is the profile indication,
      * and third is the 5 contraint_set_flags and 3 reserved bits */
     *profile = avc_profile_idc_to_string (QT_UINT8 (avc_data + 1),
