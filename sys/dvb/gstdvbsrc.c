@@ -344,8 +344,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FREQUENCY,
-      g_param_spec_int ("frequency",
-          "frequency", "Frequency", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_uint ("frequency",
+          "frequency", "Frequency", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_POLARITY,
       g_param_spec_string ("polarity",
@@ -359,10 +359,10 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
           "8192", G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_SYM_RATE,
-      g_param_spec_int ("symbol-rate",
+      g_param_spec_uint ("symbol-rate",
           "symbol rate",
           "Symbol Rate (DVB-S, DVB-C)",
-          0, G_MAXINT, DEFAULT_SYMBOL_RATE, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_SYMBOL_RATE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_TUNE,
       g_param_spec_pointer ("tune",
@@ -491,7 +491,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_DISEQC_ID");
       break;
     case ARG_DVBSRC_FREQUENCY:
-      object->freq = g_value_get_int (value);
+      object->freq = g_value_get_uint (value);
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_FREQUENCY");
       break;
     case ARG_DVBSRC_POLARITY:
@@ -557,7 +557,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     }
       break;
     case ARG_DVBSRC_SYM_RATE:
-      object->sym_rate = g_value_get_int (value);
+      object->sym_rate = g_value_get_uint (value);
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_SYM_RATE to value %d",
           g_value_get_int (value));
       break;
@@ -624,7 +624,7 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       g_value_set_int (value, object->frontend_number);
       break;
     case ARG_DVBSRC_FREQUENCY:
-      g_value_set_int (value, object->freq);
+      g_value_set_uint (value, object->freq);
       break;
     case ARG_DVBSRC_POLARITY:
       if (object->pol == DVB_POL_H)
@@ -633,7 +633,7 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
         g_value_set_static_string (value, "V");
       break;
     case ARG_DVBSRC_SYM_RATE:
-      g_value_set_int (value, object->sym_rate);
+      g_value_set_uint (value, object->sym_rate);
       break;
     case ARG_DVBSRC_DISEQC_SRC:
       g_value_set_int (value, object->diseqc_src);
