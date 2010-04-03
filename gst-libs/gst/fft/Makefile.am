@@ -58,7 +58,7 @@ GstFft-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstfft-@GST_MAJORMINOR@
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--library=gstfft-0.10 \
+		--library=libgstfft-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \

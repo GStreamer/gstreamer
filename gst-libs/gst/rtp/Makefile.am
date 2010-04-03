@@ -36,7 +36,7 @@ GstRtp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_MAJORMINOR@
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=gstrtp-0.10 \
+		--library=libgstrtp-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
 		--libtool="$(top_builddir)/libtool" \

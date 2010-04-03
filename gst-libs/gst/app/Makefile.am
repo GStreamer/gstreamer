@@ -49,7 +49,7 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=gstapp-0.10 \
+		--library=libgstapp-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
 		--libtool="$(top_builddir)/libtool" \

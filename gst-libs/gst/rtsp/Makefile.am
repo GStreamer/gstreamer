@@ -69,7 +69,7 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--library=gstrtsp-0.10 \
+		--library=libgstrtsp-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstSdp-0.10 \
 		--libtool="$(top_builddir)/libtool" \

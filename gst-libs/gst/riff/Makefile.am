@@ -37,7 +37,7 @@ GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINO
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=$(builddir)/../interfaces \
-		--library=gstriff-0.10 \
+		--library=libgstriff-0.10.la \
 		--include=GstAudio-0.10 \
 		--include=GstTag-0.10 \
 		--include=Gst-0.10 \

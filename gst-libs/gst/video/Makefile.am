@@ -47,7 +47,7 @@ GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMI
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=gstvideo-0.10 \
+		--library=libgstvideo-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
 		--libtool="$(top_builddir)/libtool" \

@@ -31,7 +31,7 @@ GstCdda-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcdda-@GST_MAJORMINO
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
 		--add-include-path=$(builddir)/../tag \
-		--library=gstcdda-0.10 \
+		--library=libgstcdda-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
 		--include=GstTag-0.10 \

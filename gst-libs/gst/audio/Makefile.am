@@ -78,7 +78,7 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 		--add-include-path=$(builddir)/../interfaces \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-0.10` \
-		--library=gstaudio-0.10 \
+		--library=libgstaudio-0.10.la \
 		--include=Gst-0.10 \
 		--include=GstBase-0.10 \
 		--include=GstInterfaces-0.10 \

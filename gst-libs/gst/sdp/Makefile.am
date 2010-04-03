@@ -26,7 +26,7 @@ GstSdp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_MAJORMINOR@
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--library=gstsdp-0.10 \
+		--library=libgstsdp-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \

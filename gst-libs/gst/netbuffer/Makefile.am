@@ -23,7 +23,7 @@ GstNetbuffer-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnetbuffer-@GST
 		--strip-prefix=Gst \
 		$(gir_cincludes) \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
-		--library=gstnetbuffer-0.10 \
+		--library=libgstnetbuffer-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
