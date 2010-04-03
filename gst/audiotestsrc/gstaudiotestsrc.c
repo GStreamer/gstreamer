@@ -1081,14 +1081,16 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
       src->samplerate);
 
   GST_LOG_OBJECT (src, "samplerate %d", src->samplerate);
+  GST_LOG_OBJECT (src, "next_sample %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
+      next_sample, GST_TIME_ARGS (next_time));
 
   GST_BUFFER_OFFSET (buf) = src->next_sample;
   GST_BUFFER_OFFSET_END (buf) = next_sample;
   if (!src->reverse) {
-    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + next_time;
+    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->next_time;
     GST_BUFFER_DURATION (buf) = next_time - src->next_time;
   } else {
-    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->next_time;
+    GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + next_time;
     GST_BUFFER_DURATION (buf) = src->next_time - next_time;
   }
 
