@@ -1025,6 +1025,7 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
 
   pulsesink->pa_defer_ran = TRUE;
   pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+  gst_object_unref (pulsesink);
 }
 
 /* stop playback, we flush everything. */
@@ -1071,6 +1072,7 @@ cleanup:
 
   GST_DEBUG_OBJECT (psink, "scheduling stream status");
   psink->pa_defer_ran = FALSE;
+  gst_object_ref (psink);
   pa_mainloop_api_once (pa_threaded_mainloop_get_api (psink->mainloop),
       mainloop_leave_defer_cb, psink);
 
