@@ -632,7 +632,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       }
     }
 
-    v4l2buf = gst_v4l2_buffer_pool_get (v4l2sink->pool);
+    v4l2buf = gst_v4l2_buffer_pool_get (v4l2sink->pool, TRUE);
 
     if (G_LIKELY (v4l2buf)) {
       GST_DEBUG_OBJECT (v4l2sink, "allocated buffer: %p", v4l2buf);

@@ -454,14 +454,22 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
 
 /**
  * gst_v4l2_buffer_pool_get:
- * @pool: the pool
+ * @pool:   the "this" object
+ * @blocking:  should this call suspend until there is a buffer available
+ *    in the buffer pool?
  *
  * Get an available buffer in the pool
  */
 GstV4l2Buffer *
-gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
+gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool, gboolean blocking)
 {
-  GstV4l2Buffer *buf = g_async_queue_try_pop (pool->avail_buffers);
+  GstV4l2Buffer *buf;
+
+  if (blocking) {
+    buf = g_async_queue_pop (pool->avail_buffers);
+  } else {
+    buf = g_async_queue_try_pop (pool->avail_buffers);
+  }
 
   if (buf) {
     GST_BUFFER_SIZE (buf) = buf->vbuffer.length;

@@ -82,7 +82,7 @@ void gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool);
 GstV4l2BufferPool *gst_v4l2_buffer_pool_new (GstElement *v4l2elem, gint fd, gint num_buffers, GstCaps * caps, gboolean requeuebuf, enum v4l2_buf_type type);
 
 
-GstV4l2Buffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool);
+GstV4l2Buffer *gst_v4l2_buffer_pool_get (GstV4l2BufferPool *pool, gboolean blocking);
 gboolean gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool *pool, GstV4l2Buffer *buf);
 GstV4l2Buffer *gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool *pool);
 
