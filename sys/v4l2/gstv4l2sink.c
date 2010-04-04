@@ -56,7 +56,7 @@
 GST_DEBUG_CATEGORY (v4l2sink_debug);
 #define GST_CAT_DEFAULT v4l2sink_debug
 
-#define PROP_DEF_QUEUE_SIZE         8
+#define PROP_DEF_QUEUE_SIZE         12
 #define DEFAULT_PROP_DEVICE   "/dev/video1"
 
 enum
@@ -670,7 +670,9 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
         &newbuf);
 
     if (GST_FLOW_OK != ret) {
-      return ret;
+      GST_DEBUG_OBJECT (v4l2sink,
+          "dropping frame!  Consider increasing 'queue-size' property!");
+      return GST_FLOW_OK;
     }
 
     memcpy (GST_BUFFER_DATA (newbuf),
