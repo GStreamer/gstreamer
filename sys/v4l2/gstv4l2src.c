@@ -51,7 +51,7 @@
 
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
 #include "gstv4l2xoverlay.h"
 #endif
 #include "gstv4l2vidorient.h"
@@ -79,7 +79,7 @@ enum
 GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
 GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
@@ -92,7 +92,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
 
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   g_assert (iface_type == GST_TYPE_TUNER ||
       iface_type == GST_TYPE_X_OVERLAY ||
       iface_type == GST_TYPE_COLOR_BALANCE ||
@@ -106,7 +106,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
   if (v4l2object->video_fd == -1)
     return FALSE;
 
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L2_IS_OVERLAY (v4l2object))
     return FALSE;
 #endif
@@ -142,7 +142,7 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
     NULL,
   };
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   static const GInterfaceInfo v4l2_xoverlay_info = {
     (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
     NULL,
@@ -169,7 +169,7 @@ gst_v4l2src_init_interfaces (GType type)
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
   g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
 #endif
   g_type_add_interface_static (type,

@@ -37,6 +37,8 @@
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
 
+#include "gst/gst-i18n-plugin.h"
+
 struct _GstV4l2Xv
 {
   Display *dpy;
@@ -101,7 +103,8 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   }
   min = s.st_rdev & 0xff;
   for (i = 0; i < anum; i++) {
-    if (!strcmp (ai[i].name, "video4linux2")) {
+    if (!strcmp (ai[i].name, "video4linux2") ||
+        !strcmp (ai[i].name, "video4linux")) {
       if (first_id == 0)
         first_id = ai[i].base_id;
 

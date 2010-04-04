@@ -1,13 +1,12 @@
 plugin_LTLIBRARIES = libgstvideo4linux2.la
 
-# overlay is still not supported in current implementation
-# if USE_XVIDEO
-#xv_source = gstv4l2xoverlay.c
-#xv_libs = $(X_LIBS) $(XVIDEO_LIBS)
-#else
-#xv_source =
-#xv_libs =
-#endif
+if USE_XVIDEO
+xv_source = gstv4l2xoverlay.c
+xv_libs = $(X_LIBS) $(XVIDEO_LIBS)
+else
+xv_source =
+xv_libs =
+endif
 
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2colorbalance.c \

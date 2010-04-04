@@ -34,7 +34,7 @@
 
 #include "v4l2_calls.h"
 #include "gstv4l2tuner.h"
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
 #include "gstv4l2xoverlay.h"
 #endif
 #include "gstv4l2colorbalance.h"
@@ -695,7 +695,7 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
   else
     return FALSE;
 
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   gst_v4l2_xoverlay_start (v4l2object);
 #endif
 
@@ -705,7 +705,7 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
 gboolean
 gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 {
-#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
+#ifdef HAVE_XVIDEO
   gst_v4l2_xoverlay_stop (v4l2object);
 #endif
 
