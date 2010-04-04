@@ -322,10 +322,15 @@ gst_jpegenc_getcaps (GstPad * pad)
      other end of the element */
 
   caps = gst_pad_peer_get_caps (jpegenc->srcpad);
-  if (caps == NULL)
+
+  if (caps == NULL) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-  else
+  } else if (gst_caps_is_any (caps)) {
+    gst_caps_unref (caps);
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  } else {
     caps = gst_caps_make_writable (caps);
+  }
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
