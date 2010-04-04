@@ -61,16 +61,16 @@ struct _GstV4l2Sink {
   guint32 min_queued_bufs;
 
   /*
-   * field to store requested overlay-top/left/width/height props:
+   * field to store requested overlay and crop top/left/width/height props:
    * note, could maybe be combined with 'vwin' field in GstV4l2Object?
    */
-  struct v4l2_rect overlay;
+  struct v4l2_rect overlay, crop;
 
   /*
-   * bitmask to track which 'overlay' fields user has requested by
+   * bitmask to track which overlay and crop fields user has requested by
    * setting properties:
    */
-  guint8 overlay_fields_set;
+  guint8 overlay_fields_set, crop_fields_set;
 
   guint8 state;
 };

@@ -70,6 +70,10 @@ enum
   PROP_OVERLAY_LEFT,
   PROP_OVERLAY_WIDTH,
   PROP_OVERLAY_HEIGHT,
+  PROP_CROP_TOP,
+  PROP_CROP_LEFT,
+  PROP_CROP_WIDTH,
+  PROP_CROP_HEIGHT,
 };
 
 
@@ -254,6 +258,23 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
           "The height of the video overlay; default is equal to negotiated image height",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CROP_TOP,
+      g_param_spec_int ("crop-top", "Crop top",
+          "The topmost (y) coordinate of the video crop; top left corner of image is 0,0",
+          0x80000000, 0x7fffffff, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CROP_LEFT,
+      g_param_spec_int ("crop-left", "Crop left",
+          "The leftmost (x) coordinate of the video crop; top left corner of image is 0,0",
+          0x80000000, 0x7fffffff, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
+      g_param_spec_uint ("crop-width", "Crop width",
+          "The width of the video crop; default is equal to negotiated image width",
+          0, 0xffffffff, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
+      g_param_spec_uint ("crop-height", "Crop height",
+          "The height of the video crop; default is equal to negotiated image height",
+          0, 0xffffffff, 0, G_PARAM_READWRITE));
+
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
   basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_v4l2sink_buffer_alloc);
@@ -282,6 +303,7 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink, GstV4l2SinkClass * klass)
   v4l2sink->current_caps = NULL;
 
   v4l2sink->overlay_fields_set = 0;
+  v4l2sink->crop_fields_set = 0;
   v4l2sink->state = 0;
 }
 
@@ -323,15 +345,15 @@ enum
 };
 
 /*
- * flags to indicate which overlay properties the user has set (and therefore
- * which ones should override the defaults from the driver)
+ * flags to indicate which overlay/crop properties the user has set (and
+ * therefore which ones should override the defaults from the driver)
  */
 enum
 {
-  OVERLAY_TOP_SET = 0x01,
-  OVERLAY_LEFT_SET = 0x02,
-  OVERLAY_WIDTH_SET = 0x04,
-  OVERLAY_HEIGHT_SET = 0x08
+  RECT_TOP_SET = 0x01,
+  RECT_LEFT_SET = 0x02,
+  RECT_WIDTH_SET = 0x04,
+  RECT_HEIGHT_SET = 0x08
 };
 
 static void
@@ -350,19 +372,63 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
 
     g_return_if_fail (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) >= 0);
 
-    if (v4l2sink->overlay_fields_set & OVERLAY_TOP_SET)
+    GST_DEBUG_OBJECT (v4l2sink,
+        "setting overlay: overlay_fields_set=0x%02x, top=%d, left=%d, width=%d, height=%d",
+        v4l2sink->overlay_fields_set,
+        v4l2sink->overlay.top, v4l2sink->overlay.left,
+        v4l2sink->overlay.width, v4l2sink->overlay.height);
+
+    if (v4l2sink->overlay_fields_set & RECT_TOP_SET)
       format.fmt.win.w.top = v4l2sink->overlay.top;
-    if (v4l2sink->overlay_fields_set & OVERLAY_LEFT_SET)
+    if (v4l2sink->overlay_fields_set & RECT_LEFT_SET)
       format.fmt.win.w.left = v4l2sink->overlay.left;
-    if (v4l2sink->overlay_fields_set & OVERLAY_WIDTH_SET)
+    if (v4l2sink->overlay_fields_set & RECT_WIDTH_SET)
       format.fmt.win.w.width = v4l2sink->overlay.width;
-    if (v4l2sink->overlay_fields_set & OVERLAY_HEIGHT_SET)
+    if (v4l2sink->overlay_fields_set & RECT_HEIGHT_SET)
       format.fmt.win.w.height = v4l2sink->overlay.height;
 
     g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) >= 0);
-    v4l2sink->overlay_fields_set = 0;
 
+    v4l2sink->overlay_fields_set = 0;
     v4l2sink->overlay = format.fmt.win.w;
+  }
+}
+
+static void
+gst_v4l2sink_sync_crop_fields (GstV4l2Sink * v4l2sink)
+{
+  if (!v4l2sink->crop_fields_set)
+    return;
+
+  if (GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
+
+    gint fd = v4l2sink->v4l2object->video_fd;
+    struct v4l2_crop crop;
+
+    memset (&crop, 0x00, sizeof (struct v4l2_crop));
+    crop.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+
+    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_G_CROP, &crop) >= 0);
+
+    GST_DEBUG_OBJECT (v4l2sink,
+        "setting crop: crop_fields_set=0x%02x, top=%d, left=%d, width=%d, height=%d",
+        v4l2sink->crop_fields_set,
+        v4l2sink->crop.top, v4l2sink->crop.left,
+        v4l2sink->crop.width, v4l2sink->crop.height);
+
+    if (v4l2sink->crop_fields_set & RECT_TOP_SET)
+      crop.c.top = v4l2sink->crop.top;
+    if (v4l2sink->crop_fields_set & RECT_LEFT_SET)
+      crop.c.left = v4l2sink->crop.left;
+    if (v4l2sink->crop_fields_set & RECT_WIDTH_SET)
+      crop.c.width = v4l2sink->crop.width;
+    if (v4l2sink->crop_fields_set & RECT_HEIGHT_SET)
+      crop.c.height = v4l2sink->crop.height;
+
+    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_CROP, &crop) >= 0);
+
+    v4l2sink->crop_fields_set = 0;
+    v4l2sink->crop = crop.c;
   }
 }
 
@@ -384,23 +450,43 @@ gst_v4l2sink_set_property (GObject * object,
         break;
       case PROP_OVERLAY_TOP:
         v4l2sink->overlay.top = g_value_get_int (value);
-        v4l2sink->overlay_fields_set |= OVERLAY_TOP_SET;
+        v4l2sink->overlay_fields_set |= RECT_TOP_SET;
         gst_v4l2sink_sync_overlay_fields (v4l2sink);
         break;
       case PROP_OVERLAY_LEFT:
         v4l2sink->overlay.left = g_value_get_int (value);
-        v4l2sink->overlay_fields_set |= OVERLAY_LEFT_SET;
+        v4l2sink->overlay_fields_set |= RECT_LEFT_SET;
         gst_v4l2sink_sync_overlay_fields (v4l2sink);
         break;
       case PROP_OVERLAY_WIDTH:
         v4l2sink->overlay.width = g_value_get_uint (value);
-        v4l2sink->overlay_fields_set |= OVERLAY_WIDTH_SET;
+        v4l2sink->overlay_fields_set |= RECT_WIDTH_SET;
         gst_v4l2sink_sync_overlay_fields (v4l2sink);
         break;
       case PROP_OVERLAY_HEIGHT:
         v4l2sink->overlay.height = g_value_get_uint (value);
-        v4l2sink->overlay_fields_set |= OVERLAY_HEIGHT_SET;
+        v4l2sink->overlay_fields_set |= RECT_HEIGHT_SET;
         gst_v4l2sink_sync_overlay_fields (v4l2sink);
+        break;
+      case PROP_CROP_TOP:
+        v4l2sink->crop.top = g_value_get_int (value);
+        v4l2sink->crop_fields_set |= RECT_TOP_SET;
+        gst_v4l2sink_sync_crop_fields (v4l2sink);
+        break;
+      case PROP_CROP_LEFT:
+        v4l2sink->crop.left = g_value_get_int (value);
+        v4l2sink->crop_fields_set |= RECT_LEFT_SET;
+        gst_v4l2sink_sync_crop_fields (v4l2sink);
+        break;
+      case PROP_CROP_WIDTH:
+        v4l2sink->crop.width = g_value_get_uint (value);
+        v4l2sink->crop_fields_set |= RECT_WIDTH_SET;
+        gst_v4l2sink_sync_crop_fields (v4l2sink);
+        break;
+      case PROP_CROP_HEIGHT:
+        v4l2sink->crop.height = g_value_get_uint (value);
+        v4l2sink->crop_fields_set |= RECT_HEIGHT_SET;
+        gst_v4l2sink_sync_crop_fields (v4l2sink);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -436,6 +522,18 @@ gst_v4l2sink_get_property (GObject * object,
         break;
       case PROP_OVERLAY_HEIGHT:
         g_value_set_uint (value, v4l2sink->overlay.height);
+        break;
+      case PROP_CROP_TOP:
+        g_value_set_int (value, v4l2sink->crop.top);
+        break;
+      case PROP_CROP_LEFT:
+        g_value_set_int (value, v4l2sink->crop.left);
+        break;
+      case PROP_CROP_WIDTH:
+        g_value_set_uint (value, v4l2sink->crop.width);
+        break;
+      case PROP_CROP_HEIGHT:
+        g_value_set_uint (value, v4l2sink->crop.height);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -605,8 +703,6 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
   }
 
-  gst_v4l2sink_sync_overlay_fields (v4l2sink);
-
   v4l2sink->current_caps = gst_caps_ref (caps);
 
   return TRUE;
@@ -638,6 +734,10 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
                   V4L2_BUF_TYPE_VIDEO_OUTPUT))) {
         return GST_FLOW_ERROR;
       }
+
+      gst_v4l2sink_sync_overlay_fields (v4l2sink);
+      gst_v4l2sink_sync_crop_fields (v4l2sink);
+
 #ifdef HAVE_XVIDEO
       if (GST_V4L2_IS_OVERLAY (v4l2sink->v4l2object)) {
         gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (v4l2sink));
