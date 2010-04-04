@@ -249,7 +249,6 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
   basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_v4l2sink_buffer_alloc);
-  basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_v4l2sink_show_frame);
 }
 
