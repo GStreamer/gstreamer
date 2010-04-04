@@ -463,8 +463,10 @@ gst_v4l2_buffer_pool_get (GstV4l2BufferPool * pool)
 {
   GstV4l2Buffer *buf = g_async_queue_try_pop (pool->avail_buffers);
 
-  if (buf)
+  if (buf) {
     GST_BUFFER_SIZE (buf) = buf->vbuffer.length;
+    GST_BUFFER_FLAG_UNSET (buf, 0xffffffff);
+  }
 
   pool->running = TRUE;
 
