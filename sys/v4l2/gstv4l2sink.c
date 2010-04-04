@@ -57,6 +57,7 @@ GST_DEBUG_CATEGORY (v4l2sink_debug);
 #define GST_CAT_DEFAULT v4l2sink_debug
 
 #define PROP_DEF_QUEUE_SIZE         12
+#define PROP_DEF_MIN_QUEUED_BUFS    1
 #define DEFAULT_PROP_DEVICE   "/dev/video1"
 
 enum
@@ -64,6 +65,7 @@ enum
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
   PROP_QUEUE_SIZE,
+  PROP_MIN_QUEUED_BUFS,
   PROP_OVERLAY_TOP,
   PROP_OVERLAY_LEFT,
   PROP_OVERLAY_WIDTH,
@@ -229,6 +231,12 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
           "Number of buffers to be enqueud in the driver in streaming mode",
           GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, PROP_DEF_QUEUE_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MIN_QUEUED_BUFS,
+      g_param_spec_uint ("min-queued-bufs", "Minimum queued bufs",
+          "Minimum number of queued bufs; v4l2sink won't dqbuf if the driver "
+          "doesn't have more than this number (which normally you shouldn't change)",
+          0, GST_V4L2_MAX_BUFFERS, PROP_DEF_MIN_QUEUED_BUFS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_TOP,
       g_param_spec_int ("overlay-top", "Overlay top",
           "The topmost (y) coordinate of the video overlay; top left corner of screen is 0,0",
@@ -268,6 +276,7 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink, GstV4l2SinkClass * klass)
 
   /* number of buffers requested */
   v4l2sink->num_buffers = PROP_DEF_QUEUE_SIZE;
+  v4l2sink->min_queued_bufs = PROP_DEF_MIN_QUEUED_BUFS;
 
   v4l2sink->probed_caps = NULL;
   v4l2sink->current_caps = NULL;
@@ -370,6 +379,9 @@ gst_v4l2sink_set_property (GObject * object,
       case PROP_QUEUE_SIZE:
         v4l2sink->num_buffers = g_value_get_uint (value);
         break;
+      case PROP_MIN_QUEUED_BUFS:
+        v4l2sink->min_queued_bufs = g_value_get_uint (value);
+        break;
       case PROP_OVERLAY_TOP:
         v4l2sink->overlay.top = g_value_get_int (value);
         v4l2sink->overlay_fields_set |= OVERLAY_TOP_SET;
@@ -409,6 +421,9 @@ gst_v4l2sink_get_property (GObject * object,
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
         g_value_set_uint (value, v4l2sink->num_buffers);
+        break;
+      case PROP_MIN_QUEUED_BUFS:
+        g_value_set_uint (value, v4l2sink->min_queued_bufs);
         break;
       case PROP_OVERLAY_TOP:
         g_value_set_int (value, v4l2sink->overlay.top);
@@ -701,7 +716,8 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
    * just queued, then dequeue one immediately to make it available via
    * _buffer_alloc():
    */
-  if (gst_v4l2_buffer_pool_available_buffers (v4l2sink->pool) > 1) {
+  if (gst_v4l2_buffer_pool_available_buffers (v4l2sink->pool) >
+      v4l2sink->min_queued_bufs) {
     GstV4l2Buffer *v4l2buf = gst_v4l2_buffer_pool_dqbuf (v4l2sink->pool);
 
     /* note: if we get a buf, we don't want to use it directly (because
