@@ -630,7 +630,6 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 static GstFlowReturn
 gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   GstAlphaColor *alpha = GST_ALPHA_COLOR (btrans);
 
   if (G_UNLIKELY (GST_BUFFER_SIZE (inbuf) != 4 * alpha->width * alpha->height)) {
@@ -648,7 +647,7 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
   alpha->process (GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf),
       alpha->matrix);
 
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static gboolean
