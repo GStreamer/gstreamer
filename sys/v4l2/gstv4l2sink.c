@@ -783,6 +783,29 @@ gst_v4l2sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   if (!GST_IS_V4L2_BUFFER (buf)) {
     GstFlowReturn ret;
 
+    /* special case check for sub-buffers:  In certain cases, places like
+     * GstBaseTransform, which might check that the buffer is writable
+     * before copying metadata, timestamp, and such, will find that the
+     * buffer has more than one reference to it.  In these cases, they
+     * will create a sub-buffer with an offset=0 and length equal to the
+     * original buffer size.
+     *
+     * This could happen in two scenarios: (1) a tee in the pipeline, and
+     * (2) because the refcnt is incremented in gst_mini_object_free()
+     * before the finalize function is called, and decremented after it
+     * returns..  but returning this buffer to the buffer pool in the
+     * finalize function, could wake up a thread blocked in _buffer_alloc()
+     * which could run and get a buffer w/ refcnt==2 before the thread
+     * originally unref'ing the buffer returns from finalize function and
+     * decrements the refcnt back to 1!
+     */
+    if (buf->parent &&
+        (GST_BUFFER_DATA (buf) == GST_BUFFER_DATA (buf->parent)) &&
+        (GST_BUFFER_SIZE (buf) == GST_BUFFER_SIZE (buf->parent))) {
+      GST_DEBUG_OBJECT (v4l2sink, "I have a sub-buffer!");
+      return gst_v4l2sink_show_frame (bsink, buf->parent);
+    }
+
     GST_DEBUG_OBJECT (v4l2sink, "slow-path.. I got a %s so I need to memcpy",
         g_type_name (G_OBJECT_TYPE (buf)));
 
