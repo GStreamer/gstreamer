@@ -35,6 +35,7 @@
 #endif
 
 #include "gstalsamixer.h"
+#include <errno.h>
 
 static void gst_alsa_mixer_update_option (GstAlsaMixer * mixer,
     GstAlsaMixerOptions * alsa_opts);
@@ -418,6 +419,7 @@ task_monitor_alsa (gpointer data)
   unsigned int nfds, rnfds;
   unsigned short revents;
   GstAlsaMixer *mixer = (GstAlsaMixer *) data;
+  gint ret;
 
   g_static_rec_mutex_lock (mixer->rec_mutex);
 
@@ -433,6 +435,14 @@ task_monitor_alsa (gpointer data)
   rnfds = snd_mixer_poll_descriptors (mixer->handle, pfds, nfds);
   g_assert (rnfds <= nfds);
 
+  if (rnfds < 0) {
+    GST_ELEMENT_ERROR (mixer, RESOURCE, READ, (NULL), ("alsa error: %s",
+            snd_strerror (rnfds)));
+    gst_task_pause (mixer->task);
+    g_static_rec_mutex_unlock (mixer->rec_mutex);
+    return;
+  }
+
   pfds[rnfds].fd = mixer->pfd[0];
   pfds[rnfds].events = POLLIN | POLLPRI | POLLHUP | POLLERR;
   pfds[rnfds].revents = 0;
@@ -440,14 +450,28 @@ task_monitor_alsa (gpointer data)
   g_static_rec_mutex_unlock (mixer->rec_mutex);
 
   GST_LOG ("task loop");
-  poll (pfds, rnfds + 1, -1);
+  ret = poll (pfds, rnfds + 1, -1);
+
+  if (ret < 0) {
+    GST_ELEMENT_ERROR (mixer, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    gst_task_pause (mixer->task);
+    return;
+  }
 
   g_static_rec_mutex_lock (mixer->rec_mutex);
 
-  snd_mixer_poll_descriptors_revents (mixer->handle, pfds, nfds, &revents);
-  if (revents & POLLIN || revents & POLLPRI) {
+  ret =
+      snd_mixer_poll_descriptors_revents (mixer->handle, pfds, nfds, &revents);
+  if (ret < 0) {
+    GST_ELEMENT_ERROR (mixer, RESOURCE, READ, (NULL), ("alsa error: %s",
+            snd_strerror (ret)));
+    gst_task_pause (mixer->task);
+  } else if (revents & (POLLIN | POLLPRI)) {
     GST_DEBUG ("Handling events");
     snd_mixer_handle_events (mixer->handle);
+  } else if (revents & (POLLERR | POLLNVAL | POLLHUP)) {
+    GST_ELEMENT_ERROR (mixer, RESOURCE, READ, (NULL), (NULL));
+    gst_task_pause (mixer->task);
   }
 
   g_static_rec_mutex_unlock (mixer->rec_mutex);
