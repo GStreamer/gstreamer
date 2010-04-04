@@ -853,11 +853,8 @@ GST_START_TEST (test_xmp_parsing)
 GST_END_TEST;
 
 static void
-do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
+tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
 {
-  GstTagList *taglist = gst_tag_list_new ();
-  GstTagList *taglist2;
-  GstBuffer *buf;
   const gchar *name_sent, *name_recv;
   const GValue *value_sent, *value_recv;
   gboolean found;
@@ -865,13 +862,6 @@ do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
   gint n_recv;
   gint n_sent;
   gint i, j;
-
-  fail_if (FALSE);
-
-  gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
-
-  buf = gst_tag_list_to_xmp_buffer (taglist, TRUE);
-  taglist2 = gst_tag_list_from_xmp_buffer (buf);
 
   /* verify tags */
   fail_unless (taglist2 != NULL);
@@ -898,12 +888,6 @@ do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
           g_free (vs);
           g_free (vr);
         }
-        if (strcmp (name_sent, GST_TAG_GEO_LOCATION_ELEVATION) == 0) {
-          gdouble a, b;
-          a = g_value_get_double (value_sent);
-          b = g_value_get_double (value_recv);
-          GST_WARNING ("A=%lf B=%lf", a, b);
-        }
         fail_unless (comparison == GST_VALUE_EQUAL,
             "tag item %s has been received with different type or value",
             name_sent);
@@ -913,6 +897,21 @@ do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
     }
     fail_unless (found, "tag item %s is lost", name_sent);
   }
+}
+
+static void
+do_xmp_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
+{
+  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist2;
+  GstBuffer *buf;
+
+  gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
+
+  buf = gst_tag_list_to_xmp_buffer (taglist, TRUE);
+  taglist2 = gst_tag_list_from_xmp_buffer (buf);
+
+  tag_list_equals (taglist, taglist2);
 
   gst_buffer_unref (buf);
   gst_tag_list_free (taglist);
