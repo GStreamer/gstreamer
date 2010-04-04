@@ -112,6 +112,7 @@ gst_oss_helper_probe_caps (gint fd)
       probe = g_new0 (GstOssProbe, 1);
       probe->fd = fd;
       probe->format = format_bit;
+      /* FIXME: this is not working for all cards, see bug #518474 */
       probe->n_channels = 2;
 
       ret = gst_oss_helper_rate_probe_check (probe);
