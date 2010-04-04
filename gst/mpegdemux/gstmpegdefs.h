@@ -178,6 +178,7 @@
 #define ST_BD_AUDIO_AC3_TRUE_HD         0x83
 #define ST_BD_AUDIO_AC3_PLUS            0x84
 #define ST_BD_AUDIO_DTS_HD              0x85
+#define ST_BD_AUDIO_DTS_HD_MASTER_AUDIO 0x86
 #define ST_BD_AUDIO_EAC3                0x87
 #define ST_BD_PGS_SUBPICTURE            0x90
 #define ST_BD_IGS                       0x91
