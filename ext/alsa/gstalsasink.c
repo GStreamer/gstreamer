@@ -764,52 +764,27 @@ static gboolean
 gst_alsasink_unprepare (GstAudioSink * asink)
 {
   GstAlsaSink *alsa;
-  gint err;
 
   alsa = GST_ALSA_SINK (asink);
 
-  CHECK (snd_pcm_drop (alsa->handle), drop);
-
-  CHECK (snd_pcm_hw_free (alsa->handle), hw_free);
+  snd_pcm_drop (alsa->handle);
+  snd_pcm_hw_free (alsa->handle);
 
   return TRUE;
-
-  /* ERRORS */
-drop:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not drop samples: %s", snd_strerror (err)));
-    return FALSE;
-  }
-hw_free:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not free hw params: %s", snd_strerror (err)));
-    return FALSE;
-  }
 }
 
 static gboolean
 gst_alsasink_close (GstAudioSink * asink)
 {
   GstAlsaSink *alsa = GST_ALSA_SINK (asink);
-  gint err;
 
   if (alsa->handle) {
-    CHECK (snd_pcm_close (alsa->handle), close_error);
+    snd_pcm_close (alsa->handle);
     alsa->handle = NULL;
   }
   gst_caps_replace (&alsa->cached_caps, NULL);
 
   return TRUE;
-
-  /* ERRORS */
-close_error:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, CLOSE, (NULL),
-        ("Playback close error: %s", snd_strerror (err)));
-    return FALSE;
-  }
 }
 
 

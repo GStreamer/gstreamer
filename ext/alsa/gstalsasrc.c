@@ -693,37 +693,14 @@ static gboolean
 gst_alsasrc_unprepare (GstAudioSrc * asrc)
 {
   GstAlsaSrc *alsa;
-  gint err;
 
   alsa = GST_ALSA_SRC (asrc);
 
-  CHECK (snd_pcm_drop (alsa->handle), drop);
-
-  CHECK (snd_pcm_hw_free (alsa->handle), hw_free);
-
-  CHECK (snd_pcm_nonblock (alsa->handle, 1), non_block);
+  snd_pcm_drop (alsa->handle);
+  snd_pcm_hw_free (alsa->handle);
+  snd_pcm_nonblock (alsa->handle, 1);
 
   return TRUE;
-
-  /* ERRORS */
-drop:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not drop samples: %s", snd_strerror (err)));
-    return FALSE;
-  }
-hw_free:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not free hw params: %s", snd_strerror (err)));
-    return FALSE;
-  }
-non_block:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not set device to nonblocking: %s", snd_strerror (err)));
-    return FALSE;
-  }
 }
 
 static gboolean
