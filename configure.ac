@@ -297,6 +297,23 @@ PKG_CHECK_MODULES(QT, QtGui >= 4.6, [
 AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
 AM_CONDITIONAL(HAVE_QT_GV, test "x$HAVE_QT_GV" = "xyes")
 
+dnl chck for linux headers needed by the joystick seek example
+AC_COMPILE_IFELSE(
+[
+  AC_LANG_PROGRAM([
+    #include <linux/input.h>
+    #include <linux/joystick.h>
+  ],[
+    struct js_event js;
+    js.type = JS_EVENT_AXIS;
+  ])
+], [
+  HAVE_LINUX_JOYSTICK_HEADERS="yes"
+], [
+  HAVE_LINUX_JOYSTICK_HEADERS="no"
+])
+AM_CONDITIONAL(HAVE_LINUX_JOYSTICK_HEADERS, test "x$HAVE_LINUX_JOYSTICK_HEADERS" = "xyes")
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice

@@ -1,5 +1,9 @@
 if HAVE_GTK_X11
+if HAVE_LINUX_JOYSTICK_HEADERS
 GTK_EXAMPLES=seek scrubby jsseek
+else
+GTK_EXAMPLES=seek scrubby
+endif
 endif
 
 examples = $(GTK_EXAMPLES) stepping stepping2
