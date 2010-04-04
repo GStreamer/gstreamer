@@ -224,6 +224,20 @@ GstTagList *            gst_tag_list_from_xmp_buffer  (const GstBuffer *  buffer
 GstBuffer *             gst_tag_list_to_xmp_buffer    (const GstTagList * list,
                                                        gboolean           read_only);
 
+/* functions related to exif */
+GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * list,
+                                                     gint byte_order,
+                                                     guint32 base_offset);
+
+GstBuffer *             gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist);
+
+GstTagList *            gst_tag_list_from_exif_buffer (const GstBuffer * buffer,
+                                                       gint byte_order,
+                                                       guint32 base_offset);
+
+GstTagList *            gst_tag_list_from_exif_buffer_with_tiff_header (
+                                                      const GstBuffer * buffer);
+
 /* other tag-related functions */
 
 gboolean                gst_tag_parse_extended_comment (const gchar  * ext_comment,
