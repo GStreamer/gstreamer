@@ -237,7 +237,6 @@ gst_v4l2_tuner_set_norm (GstV4l2Object * v4l2object, GstTunerNorm * norm)
 GstTunerNorm *
 gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object)
 {
-  GList *item;
   v4l2_std_id norm;
 
   /* assert that we're opened and that we're using a known item */
@@ -245,12 +244,34 @@ gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object)
 
   gst_v4l2_get_norm (v4l2object, &norm);
 
+  return gst_v4l2_tuner_get_norm_by_std_id (v4l2object, norm);
+}
+
+GstTunerNorm *
+gst_v4l2_tuner_get_norm_by_std_id (GstV4l2Object * v4l2object, v4l2_std_id norm)
+{
+  GList *item;
+
   for (item = v4l2object->norms; item != NULL; item = item->next) {
     if (norm & GST_V4L2_TUNER_NORM (item->data)->index)
       return (GstTunerNorm *) item->data;
   }
 
   return NULL;
+}
+
+v4l2_std_id
+gst_v4l2_tuner_get_std_id_by_norm (GstV4l2Object * v4l2object,
+    GstTunerNorm * norm)
+{
+  GList *item;
+
+  for (item = v4l2object->norms; item != NULL; item = item->next) {
+    if (norm == GST_TUNER_NORM (item->data))
+      return GST_V4L2_TUNER_NORM (item->data)->index;
+  }
+
+  return 0;
 }
 
 void

@@ -108,7 +108,7 @@ struct _GstV4l2Object {
   GList *channels;
 
   /* properties */
-  gchar *norm;
+  v4l2_std_id tv_norm;
   gchar *channel;
   gulong frequency;
 
@@ -137,7 +137,8 @@ GType gst_v4l2_object_get_type (void);
     PROP_BRIGHTNESS,			\
     PROP_CONTRAST,			\
     PROP_SATURATION,			\
-    PROP_HUE
+    PROP_HUE,				\
+    PROP_TV_NORM
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
