@@ -94,6 +94,11 @@ void              gst_v4l2_tuner_set_norm_and_notify      (GstV4l2Object * v4l2o
 GstTunerNorm*     gst_v4l2_tuner_get_norm                 (GstV4l2Object * v4l2object);
 gboolean          gst_v4l2_tuner_set_norm                 (GstV4l2Object * v4l2object,
 		                                           GstTunerNorm * norm);
+GstTunerNorm*     gst_v4l2_tuner_get_norm_by_std_id       (GstV4l2Object * v4l2object,
+                                               v4l2_std_id norm);
+v4l2_std_id       gst_v4l2_tuner_get_std_id_by_norm       (GstV4l2Object * v4l2object,
+                                               GstTunerNorm * norm);
+
 /* frequency */
 void              gst_v4l2_tuner_set_frequency_and_notify (GstV4l2Object * v4l2object,
                                                            GstTunerChannel * channel, 

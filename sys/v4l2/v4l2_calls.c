@@ -229,6 +229,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         standard.frameperiod.denominator, standard.frameperiod.numerator);
     v4l2norm->index = standard.id;
 
+    GST_DEBUG_OBJECT (v4l2object->element, "index=%08x, label=%s",
+        (unsigned int) v4l2norm->index, norm->label);
+
     v4l2object->norms = g_list_prepend (v4l2object->norms, (gpointer) norm);
   }
   v4l2object->norms = g_list_reverse (v4l2object->norms);
