@@ -75,8 +75,8 @@ struct _GstVideoBox
 
   gboolean autocrop;
 
-  void (*fill) (GstVideoBoxFill fill_type, guint b_alpha, guint8 *dest, gboolean sdtv, gint width, gint height);
-  void (*copy) (guint i_alpha, guint8 *dest, gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x, gint dest_y, const guint8 *src, gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y, gint w, gint h);
+  void (*fill) (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format, guint8 *dest, gboolean sdtv, gint width, gint height);
+  void (*copy) (guint i_alpha, GstVideoFormat dest_format, guint8 *dest, gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x, gint dest_y, GstVideoFormat src_format, const guint8 *src, gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y, gint w, gint h);
 };
 
 struct _GstVideoBoxClass

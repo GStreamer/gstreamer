@@ -121,8 +121,8 @@ static const gint cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit[] = {
 #define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
-fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
-    gboolean sdtv, gint width, gint height)
+fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
+    guint8 * dest, gboolean sdtv, gint width, gint height)
 {
   guint32 empty_pixel;
 
@@ -139,10 +139,11 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
 }
 
 static void
-copy_ayuv_ayuv (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
-    gint dest_width, gint dest_height, gint dest_x, gint dest_y,
-    const guint8 * src, gboolean src_sdtv, gint src_width, gint src_height,
-    gint src_x, gint src_y, gint w, gint h)
+copy_ayuv_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
 {
   gint i, j;
   gint src_stride = 4 * src_width;
@@ -189,10 +190,11 @@ copy_ayuv_ayuv (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
 }
 
 static void
-copy_ayuv_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
-    gint dest_width, gint dest_height, gint dest_x, gint dest_y,
-    const guint8 * src, gboolean src_sdtv, gint src_width, gint src_height,
-    gint src_x, gint src_y, gint w, gint h)
+copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destU, *destV;
@@ -371,8 +373,8 @@ copy_ayuv_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
 }
 
 static void
-fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
-    gboolean sdtv, gint width, gint height)
+fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
+    guint8 * dest, gboolean sdtv, gint width, gint height)
 {
   guint8 empty_pixel[3];
   guint8 *destY, *destU, *destV;
@@ -413,10 +415,11 @@ fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, guint8 * dest,
 }
 
 static void
-copy_i420_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
-    gint dest_width, gint dest_height, gint dest_x, gint dest_y,
-    const guint8 * src, gboolean src_sdtv, gint src_width, gint src_height,
-    gint src_x, gint src_y, gint w, gint h)
+copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
 {
   gint i;
   guint8 *destY, *destU, *destV;
@@ -554,10 +557,11 @@ copy_i420_i420 (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
 }
 
 static void
-copy_i420_ayuv (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
-    gint dest_width, gint dest_height, gint dest_x, gint dest_y,
-    const guint8 * src, gboolean src_sdtv, gint src_width, gint src_height,
-    gint src_x, gint src_y, gint w, gint h)
+copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
 {
   gint i;
   const guint8 *srcY, *srcU, *srcV;
@@ -725,6 +729,289 @@ copy_i420_ayuv (guint i_alpha, guint8 * dest, gboolean dest_sdtv,
   }
 }
 
+static void
+fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
+    guint8 * dest, gboolean sdtv, gint width, gint height)
+{
+  guint32 empty_pixel;
+  gint a_off, r_off, g_off, b_off;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      a_off = 24;
+      r_off = 16;
+      g_off = 8;
+      b_off = 0;
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      a_off = 24;
+      b_off = 16;
+      g_off = 8;
+      r_off = 0;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      r_off = 24;
+      g_off = 16;
+      b_off = 8;
+      a_off = 0;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      b_off = 24;
+      g_off = 16;
+      r_off = 8;
+      a_off = 0;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  empty_pixel = GUINT32_FROM_BE ((b_alpha << a_off) |
+      (rgb_colors_R[fill_type] << r_off) |
+      (rgb_colors_G[fill_type] << g_off) | (rgb_colors_B[fill_type] << b_off));
+
+  oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, width * height);
+}
+
+static void
+copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  gint src_stride = 4 * src_width;
+  gint dest_stride = 4 * dest_width;
+  gboolean in_alpha, out_alpha;
+  gint p_out[4];
+  gint p_in[4];
+
+  switch (dest_format) {
+    case GST_VIDEO_FORMAT_ARGB:
+      out_alpha = TRUE;
+    case GST_VIDEO_FORMAT_xRGB:
+      p_out[0] = 0;
+      p_out[1] = 1;
+      p_out[2] = 2;
+      p_out[3] = 3;
+      switch (src_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xRGB:
+          p_in[0] = 0;
+          p_in[1] = 1;
+          p_in[2] = 2;
+          p_in[3] = 3;
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xBGR:
+          p_in[0] = 0;
+          p_in[1] = 3;
+          p_in[2] = 2;
+          p_in[3] = 1;
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_RGBx:
+          p_in[0] = 3;
+          p_in[1] = 0;
+          p_in[2] = 1;
+          p_in[3] = 2;
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_BGRx:
+          p_in[0] = 3;
+          p_in[1] = 2;
+          p_in[2] = 1;
+          p_in[3] = 0;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      out_alpha = TRUE;
+    case GST_VIDEO_FORMAT_xBGR:
+      p_out[0] = 0;
+      p_out[1] = 3;
+      p_out[2] = 2;
+      p_out[3] = 1;
+      switch (src_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xRGB:
+          p_in[0] = 0;
+          p_in[1] = 1;
+          p_in[2] = 2;
+          p_in[3] = 3;
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xBGR:
+          p_in[0] = 0;
+          p_in[1] = 3;
+          p_in[2] = 2;
+          p_in[3] = 1;
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_RGBx:
+          p_in[0] = 3;
+          p_in[1] = 0;
+          p_in[2] = 1;
+          p_in[3] = 2;
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_BGRx:
+          p_in[0] = 3;
+          p_in[1] = 2;
+          p_in[2] = 1;
+          p_in[3] = 0;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      out_alpha = TRUE;
+    case GST_VIDEO_FORMAT_RGBx:
+      p_out[0] = 3;
+      p_out[1] = 0;
+      p_out[2] = 1;
+      p_out[3] = 2;
+      switch (src_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xRGB:
+          p_in[0] = 0;
+          p_in[1] = 1;
+          p_in[2] = 2;
+          p_in[3] = 3;
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xBGR:
+          p_in[0] = 0;
+          p_in[1] = 3;
+          p_in[2] = 2;
+          p_in[3] = 1;
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_RGBx:
+          p_in[0] = 3;
+          p_in[1] = 0;
+          p_in[2] = 1;
+          p_in[3] = 2;
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_BGRx:
+          p_in[0] = 3;
+          p_in[1] = 2;
+          p_in[2] = 1;
+          p_in[3] = 0;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      out_alpha = TRUE;
+    case GST_VIDEO_FORMAT_BGRx:
+      p_out[0] = 3;
+      p_out[1] = 2;
+      p_out[2] = 1;
+      p_out[3] = 0;
+      switch (src_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xRGB:
+          p_in[0] = 0;
+          p_in[1] = 1;
+          p_in[2] = 2;
+          p_in[3] = 3;
+          break;
+        case GST_VIDEO_FORMAT_ABGR:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_xBGR:
+          p_in[0] = 0;
+          p_in[1] = 3;
+          p_in[2] = 2;
+          p_in[3] = 1;
+          break;
+        case GST_VIDEO_FORMAT_RGBA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_RGBx:
+          p_in[0] = 3;
+          p_in[1] = 0;
+          p_in[2] = 1;
+          p_in[3] = 2;
+          break;
+        case GST_VIDEO_FORMAT_BGRA:
+          in_alpha = TRUE;
+        case GST_VIDEO_FORMAT_BGRx:
+          p_in[0] = 3;
+          p_in[1] = 2;
+          p_in[2] = 1;
+          p_in[3] = 0;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  dest = dest + dest_y * dest_width * 4 + dest_x * 4;
+  src = src + src_y * src_width * 4 + src_x * 4;
+
+  w *= 4;
+
+  if (in_alpha && out_alpha) {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        dest[j + p_out[0]] = (src[j + p_in[0]] * i_alpha) >> 8;
+        dest[j + p_out[1]] = src[j + p_in[1]];
+        dest[j + p_out[2]] = src[j + p_in[2]];
+        dest[j + p_out[3]] = src[j + p_in[3]];
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else if (out_alpha) {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        dest[j + p_out[0]] = i_alpha & 0xff;
+        dest[j + p_out[1]] = src[j + p_in[1]];
+        dest[j + p_out[2]] = src[j + p_in[2]];
+        dest[j + p_out[3]] = src[j + p_in[3]];
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        dest[j + p_out[1]] = src[j + p_in[1]];
+        dest[j + p_out[2]] = src[j + p_in[2]];
+        dest[j + p_out[3]] = src[j + p_in[3]];
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  }
+}
+
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -752,7 +1039,11 @@ static GstStaticPadTemplate gst_video_box_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA)
     );
 
 static GstStaticPadTemplate gst_video_box_sink_template =
@@ -760,7 +1051,11 @@ static GstStaticPadTemplate gst_video_box_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_YUV ("I420"))
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA)
     );
 
 GST_BOILERPLATE (GstVideoBox, gst_video_box, GstBaseTransform,
@@ -1084,6 +1379,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstCaps *to, *ret;
   const GstCaps *templ;
+  const gchar *name;
   GstStructure *structure;
   GstPad *other;
   gint width, height;
@@ -1091,10 +1387,62 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   to = gst_caps_copy (from);
   structure = gst_caps_get_structure (to, 0);
 
-  /* get rid of format */
-  gst_structure_remove_field (structure, "format");
-  gst_structure_remove_field (structure, "color-matrix");
-  gst_structure_remove_field (structure, "chroma-site");
+  /* For I420/AYUV we support conversion, for all
+   * 32bpp RGBs we support conversion and for
+   * everything else we only support passthrough
+   */
+  name = gst_structure_get_name (structure);
+  if (g_str_equal (name, "video/x-raw-yuv")) {
+    guint32 fourcc;
+
+    if (gst_structure_get_fourcc (structure, "format", &fourcc) &&
+        (fourcc == GST_STR_FOURCC ("AYUV") ||
+            fourcc == GST_STR_FOURCC ("I420"))) {
+      GValue list = { 0, };
+      GValue val = { 0, };
+
+      /* get rid of format */
+      gst_structure_remove_field (structure, "format");
+      gst_structure_remove_field (structure, "color-matrix");
+      gst_structure_remove_field (structure, "chroma-site");
+
+      g_value_init (&list, GST_TYPE_LIST);
+      g_value_init (&val, GST_TYPE_FOURCC);
+      gst_value_set_fourcc (&val, GST_STR_FOURCC ("AYUV"));
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      gst_structure_set_value (structure, "format", &list);
+      g_value_unset (&list);
+    }
+  } else if (g_str_equal (name, "video/x-raw-rgb")) {
+    gint bpp;
+
+    if (gst_structure_get_int (structure, "bpp", &bpp) && bpp == 32) {
+      GValue list = { 0, };
+      GValue val = { 0, };
+
+      /* get rid of format */
+      gst_structure_remove_field (structure, "depth");
+      gst_structure_remove_field (structure, "red_mask");
+      gst_structure_remove_field (structure, "green_mask");
+      gst_structure_remove_field (structure, "blue_mask");
+      gst_structure_remove_field (structure, "alpha_mask");
+
+      g_value_init (&list, GST_TYPE_LIST);
+      g_value_init (&val, G_TYPE_INT);
+      g_value_set_int (&val, 32);
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      g_value_set_int (&val, 24);
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      gst_structure_set_value (structure, "depth", &list);
+      g_value_unset (&list);
+    }
+  }
 
   /* otherwise caps nego will fail: */
   if (video_box->autocrop) {
@@ -1196,6 +1544,29 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
         case GST_VIDEO_FORMAT_I420:
           video_box->copy = copy_i420_i420;
           break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+      video_box->fill = fill_rgb32;
+      switch (video_box->in_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_BGRx:
+          video_box->copy = copy_rgb32;
         default:
           break;
       }
@@ -1343,20 +1714,21 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
       i_alpha, b_alpha);
 
   if (crop_h < 0 || crop_w < 0) {
-    video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-        video_box->out_width, video_box->out_height);
+    video_box->fill (fill_type, b_alpha, video_box->out_format, dest,
+        video_box->out_sdtv, video_box->out_width, video_box->out_height);
   } else if (bb == 0 && bt == 0 && br == 0 && bl == 0) {
-    video_box->copy (i_alpha, dest, video_box->out_sdtv, video_box->out_width,
-        video_box->out_height, 0, 0, src, video_box->in_sdtv,
-        video_box->in_width, video_box->in_height, 0, 0, crop_w, crop_h);
+    video_box->copy (i_alpha, video_box->out_format, dest, video_box->out_sdtv,
+        video_box->out_width, video_box->out_height, 0, 0, video_box->in_format,
+        src, video_box->in_sdtv, video_box->in_width, video_box->in_height, 0,
+        0, crop_w, crop_h);
   } else {
     gint src_x = 0, src_y = 0;
     gint dest_x = 0, dest_y = 0;
 
     /* Fill everything if a border should be added somewhere */
     if (bt < 0 || bb < 0 || br < 0 || bl < 0)
-      video_box->fill (fill_type, b_alpha, dest, video_box->out_sdtv,
-          video_box->out_width, video_box->out_height);
+      video_box->fill (fill_type, b_alpha, video_box->out_format, dest,
+          video_box->out_sdtv, video_box->out_width, video_box->out_height);
 
     /* Top border */
     if (bt < 0) {
@@ -1373,10 +1745,10 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
     }
 
     /* Frame */
-    video_box->copy (i_alpha, dest, video_box->out_sdtv, video_box->out_width,
-        video_box->out_height, dest_x, dest_y, src, video_box->in_sdtv,
-        video_box->in_width, video_box->in_height, src_x, src_y, crop_w,
-        crop_h);
+    video_box->copy (i_alpha, video_box->out_format, dest, video_box->out_sdtv,
+        video_box->out_width, video_box->out_height, dest_x, dest_y,
+        video_box->in_format, src, video_box->in_sdtv, video_box->in_width,
+        video_box->in_height, src_x, src_y, crop_w, crop_h);
   }
 
   GST_LOG_OBJECT (video_box, "image created");
