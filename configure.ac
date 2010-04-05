@@ -320,12 +320,14 @@ dnl *** checks for structures ***
 dnl *** checks for compiler characteristics ***
 
 dnl check if the compiler supports __uint128_t (gcc)
+dnl Actually check for 128-bit division, since that's what we use
+dnl uint128_t for.
 AC_CACHE_CHECK(for __uint128_t, gst_cv_uint128_t,
-    AC_TRY_COMPILE([ ], [
-      unsigned long long v1 = 1024ULL;
-      unsigned long long v2 = 0x8000000000000000ULL;
-      __uint128_t u = ((__uint128_t)v1)*((__uint128_t)v2);
-
+    AC_TRY_LINK([ ], [
+      static __uint128_t v1 = 100;
+      static __uint128_t v2 = 10;
+      static __uint128_t u;
+      u = v1 / v2;
       return 0;
     ], [
       gst_cv_uint128_t=yes
