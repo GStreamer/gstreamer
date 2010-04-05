@@ -129,6 +129,25 @@ enum
   LAST_SIGNAL
 };
 
+#define GST_TYPE_RTSP_SRC_BUFFER_MODE (gst_rtsp_src_buffer_mode_get_type())
+static GType
+gst_rtsp_src_buffer_mode_get_type (void)
+{
+  static GType buffer_mode_type = 0;
+  static const GEnumValue buffer_modes[] = {
+    {0, "Only use RTP timestamps", "none"},
+    {1, "Slave receiver to sender clock", "slave"},
+    {2, "Do low/high watermark buffering", "buffer"},
+    {0, NULL, NULL},
+  };
+
+  if (!buffer_mode_type) {
+    buffer_mode_type =
+        g_enum_register_static ("GstRTSPSrcBufferMode", buffer_modes);
+  }
+  return buffer_mode_type;
+}
+
 #define DEFAULT_LOCATION         NULL
 #define DEFAULT_PROTOCOLS        GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_DEBUG            FALSE
@@ -143,6 +162,7 @@ enum
 #define DEFAULT_RTP_BLOCKSIZE    0
 #define DEFAULT_USER_ID          NULL
 #define DEFAULT_USER_PW          NULL
+#define DEFAULT_BUFFER_MODE      1
 
 enum
 {
@@ -161,6 +181,7 @@ enum
   PROP_RTP_BLOCKSIZE,
   PROP_USER_ID,
   PROP_USER_PW,
+  PROP_BUFFER_MODE,
   PROP_LAST
 };
 
@@ -379,6 +400,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "RTSP location URI user password for authentication", DEFAULT_USER_PW,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc::buffer-mode:
+   *
+   * Control the buffering and timestamping mode used by the jitterbuffer.
+   *
+   * Since: 0.10.22
+   */
+  g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
+      g_param_spec_enum ("buffer-mode", "Buffer Mode",
+          "Control the buffering algorithm in use",
+          GST_TYPE_RTSP_SRC_BUFFER_MODE, DEFAULT_BUFFER_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -412,6 +446,7 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->rtp_blocksize = DEFAULT_RTP_BLOCKSIZE;
   src->user_id = g_strdup (DEFAULT_USER_ID);
   src->user_pw = g_strdup (DEFAULT_USER_PW);
+  src->buffer_mode = DEFAULT_BUFFER_MODE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -584,6 +619,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         g_free (rtspsrc->user_pw);
       rtspsrc->user_pw = g_value_dup_string (value);
       break;
+    case PROP_BUFFER_MODE:
+      rtspsrc->buffer_mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -656,6 +694,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_USER_PW:
       g_value_set_string (value, rtspsrc->user_pw);
+      break;
+    case PROP_BUFFER_MODE:
+      g_value_set_enum (value, rtspsrc->buffer_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2108,6 +2149,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* configure the manager */
     if (src->session == NULL) {
+      GObjectClass *klass;
       GstState target;
 
       if (!(src->session = gst_element_factory_make (manager, NULL))) {
@@ -2134,6 +2176,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
         goto start_session_failure;
 
       g_object_set (src->session, "latency", src->latency, NULL);
+
+      klass = G_OBJECT_GET_CLASS (G_OBJECT (src->session));
+      if (g_object_class_find_property (klass, "buffer-mode"))
+        g_object_set (src->session, "buffer-mode", src->buffer_mode, NULL);
 
       /* connect to signals if we did not already do so */
       GST_DEBUG_OBJECT (src, "connect to signals on session manager, stream %p",

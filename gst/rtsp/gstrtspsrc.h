@@ -197,6 +197,7 @@ struct _GstRTSPSrc {
   guint             rtp_blocksize;
   gchar            *user_id;
   gchar            *user_pw;
+  gint              buffer_mode;
 
   /* state */
   GstRTSPState       state;
