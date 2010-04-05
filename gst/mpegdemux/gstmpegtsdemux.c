@@ -767,6 +767,7 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
       caps = gst_caps_new_simple ("audio/x-eac3", NULL);
       break;
     case ST_PS_AUDIO_DTS:
+    case ST_BD_AUDIO_DTS:
     case ST_BD_AUDIO_DTS_HD:
     case ST_BD_AUDIO_DTS_HD_MASTER_AUDIO:
       template = klass->audio_template;
