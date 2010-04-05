@@ -27,6 +27,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/tag/tag.h>
+#include <gst/base/gstbytewriter.h>
 #include <string.h>
 
 GST_START_TEST (test_parse_extended_comment)
@@ -852,6 +853,7 @@ GST_START_TEST (test_xmp_parsing)
 
 GST_END_TEST;
 
+
 static void
 tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
 {
@@ -1036,6 +1038,116 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
 
 GST_END_TEST;
 
+GST_START_TEST (test_exif_parsing)
+{
+  GstTagList *taglist;
+  GstBuffer *buf;
+  GstByteWriter writer;
+  const gchar *str;
+
+  gst_byte_writer_init (&writer);
+
+  /* write the IFD */
+  /* 1 entry */
+  gst_byte_writer_put_uint16_le (&writer, 1);
+
+  /* copyright tag */
+  /* tag id */
+  gst_byte_writer_put_uint16_le (&writer, 0x8298);
+  /* tag type */
+  gst_byte_writer_put_uint16_le (&writer, 0x2);
+  /* count */
+  gst_byte_writer_put_uint32_le (&writer, strlen ("my copyright") + 1);
+  /* offset */
+  gst_byte_writer_put_uint32_le (&writer, 8 + 14);
+
+  /* data */
+  gst_byte_writer_put_string (&writer, "my copyright");
+
+  buf = gst_byte_writer_reset_and_get_buffer (&writer);
+
+  taglist = gst_tag_list_from_exif_buffer (buf, G_LITTLE_ENDIAN, 8);
+
+  fail_unless (gst_structure_n_fields (taglist) == 1);
+  fail_unless (gst_structure_has_field_typed (taglist, GST_TAG_COPYRIGHT,
+          G_TYPE_STRING));
+  str = gst_structure_get_string (taglist, GST_TAG_COPYRIGHT);
+  fail_unless (strcmp (str, "my copyright") == 0);
+
+  gst_tag_list_free (taglist);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+
+static void
+do_exif_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
+{
+  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist2;
+  GstBuffer *buf;
+
+  gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
+
+  /* LE */
+  buf = gst_tag_list_to_exif_buffer (taglist, G_LITTLE_ENDIAN, 0);
+  taglist2 = gst_tag_list_from_exif_buffer (buf, G_LITTLE_ENDIAN, 0);
+  gst_buffer_unref (buf);
+
+  tag_list_equals (taglist, taglist2);
+  gst_tag_list_free (taglist2);
+
+  /* BE */
+  buf = gst_tag_list_to_exif_buffer (taglist, G_BIG_ENDIAN, 0);
+  taglist2 = gst_tag_list_from_exif_buffer (buf, G_BIG_ENDIAN, 0);
+  gst_buffer_unref (buf);
+
+  tag_list_equals (taglist, taglist2);
+  gst_tag_list_free (taglist2);
+
+  /* APP1 */
+  buf = gst_tag_list_to_exif_buffer_with_tiff_header (taglist);
+  taglist2 = gst_tag_list_from_exif_buffer_with_tiff_header (buf);
+  gst_buffer_unref (buf);
+
+  tag_list_equals (taglist, taglist2);
+  gst_tag_list_free (taglist2);
+
+  gst_tag_list_free (taglist);
+}
+
+GST_START_TEST (test_exif_tags_serialization_deserialization)
+{
+  GValue value = { 0 };
+
+  g_value_init (&value, G_TYPE_STRING);
+  g_value_set_static_string (&value, "my string");
+  do_exif_tag_serialization_deserialization (GST_TAG_COPYRIGHT, &value);
+  g_value_set_static_string (&value, "ty");
+  do_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, G_TYPE_DOUBLE);
+  g_value_set_double (&value, 30.5);
+  do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
+      &value);
+  g_value_set_double (&value, -12.125);
+  do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LATITUDE,
+      &value);
+  g_value_set_double (&value, 0);
+  do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_set_double (&value, 65.0);
+  do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_set_double (&value, -0.75);
+  do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
+      &value);
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
 
 static Suite *
 tag_suite (void)
@@ -1053,6 +1165,8 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_xmp_formatting);
   tcase_add_test (tc_chain, test_xmp_parsing);
   tcase_add_test (tc_chain, test_xmp_tags_serialization_deserialization);
+  tcase_add_test (tc_chain, test_exif_parsing);
+  tcase_add_test (tc_chain, test_exif_tags_serialization_deserialization);
   return s;
 }
 
