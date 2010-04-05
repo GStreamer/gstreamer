@@ -321,7 +321,7 @@ gst_jpegenc_getcaps (GstPad * pad)
   /* we want to proxy properties like width, height and framerate from the
      other end of the element */
 
-  caps = gst_pad_peer_get_caps (jpegenc->srcpad);
+  caps = gst_pad_get_allowed_caps (jpegenc->srcpad);
 
   if (caps == NULL) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
