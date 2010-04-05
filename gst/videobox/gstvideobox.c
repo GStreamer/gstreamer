@@ -865,6 +865,17 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       dest += dest_stride;
       src += src_stride;
     }
+  } else if (out_alpha && packed_in) {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j++) {
+        dest[4 * j + p_out[0]] = i_alpha & 0xff;
+        dest[4 * j + p_out[1]] = src[in_bpp * j + p_in[1]];
+        dest[4 * j + p_out[2]] = src[in_bpp * j + p_in[2]];
+        dest[4 * j + p_out[3]] = src[in_bpp * j + p_in[3]];
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
   } else if (!packed_out && !packed_in) {
     w *= 4;
     for (i = 0; i < h; i++) {
