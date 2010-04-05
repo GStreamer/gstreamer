@@ -613,7 +613,8 @@ AG_GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
     AC_CHECK_LIB(cdda_paranoia,
                  paranoia_cachemodel_size,
                  : ,
-                 HAVE_CDPARANOIA=no)
+                 HAVE_CDPARANOIA=no,
+		 [-lcdda_interface])
   fi
 
   AC_SUBST(CDPARANOIA_LIBS)
