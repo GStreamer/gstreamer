@@ -50,6 +50,12 @@ else
 check_gdkpixbuf = 
 endif
 
+if USE_JPEG
+check_jpeg = elements/jpegenc
+else
+check_jpeg =
+endif
+
 if USE_SOUP
 check_soup = elements/souphttpsrc
 else
@@ -126,6 +132,7 @@ check_PROGRAMS = \
 	pipelines/effectv \
 	$(check_flac) \
 	$(check_gdkpixbuf) \
+        $(check_jpeg) \
 	$(check_soup) \
 	$(check_sunaudio) \
 	$(check_taglib) \
