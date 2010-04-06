@@ -49,8 +49,6 @@ static void gst_rtsp_client_finalize (GObject * obj);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 
-static void unlink_streams (GstRTSPClient * client);
-
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
 static void
@@ -103,8 +101,6 @@ gst_rtsp_client_finalize (GObject * obj)
     g_object_weak_unref (G_OBJECT (msession),
         (GWeakNotify) client_session_finalized, client);
   }
-
-  unlink_streams (client);
 
   g_list_free (client->sessions);
 
@@ -350,21 +346,6 @@ unlink_stream (GstRTSPClient * client, GstRTSPSessionStream * stream)
 }
 
 static void
-unlink_streams (GstRTSPClient * client)
-{
-  GList *walk;
-
-  GST_DEBUG ("client %p: unlinking streams", client);
-  for (walk = client->streams; walk; walk = g_list_next (walk)) {
-    GstRTSPSessionStream *stream = (GstRTSPSessionStream *) walk->data;
-
-    gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
-  }
-  g_list_free (client->streams);
-  client->streams = NULL;
-}
-
-static void
 unlink_session_streams (GstRTSPClient * client, GstRTSPSessionMedia * media)
 {
   guint n_streams, i;
@@ -384,6 +365,28 @@ unlink_session_streams (GstRTSPClient * client, GstRTSPSessionMedia * media)
       /* for TCP, unlink the stream from the TCP connection of the client */
       unlink_stream (client, sstream);
     }
+  }
+}
+
+static void
+close_connection (GstRTSPClient * client)
+{
+  const gchar * tunnelid;
+
+  GST_DEBUG ("client %p: closing connection", client);
+
+  if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
+    g_mutex_lock (tunnels_lock);
+    /* remove from tunnelids */
+    g_hash_table_remove (tunnels, tunnelid);
+    g_mutex_unlock (tunnels_lock);
+  }
+
+  gst_rtsp_connection_close (client->connection);
+  if (client->watchid) {
+    g_source_destroy ((GSource *) client->watch);
+    client->watchid = 0;
+    client->watch = NULL;
   }
 }
 
@@ -428,12 +431,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPUrl * uri,
 
   send_response (client, session, &response);
 
-  GST_DEBUG ("client %p: closing connection", client);
-  if (client->watchid) {
-    g_source_destroy ((GSource *) client->watch);
-    client->watchid = 0;
-  }
-  gst_rtsp_connection_close (client->connection);
+  close_connection (client);
 
   return TRUE;
 
@@ -1133,10 +1131,18 @@ santize_uri (GstRTSPUrl * uri)
 static void
 client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
 {
+  GList *medias;
+
+  GST_INFO ("client %p: session %p finished", client, session);
+
+  /* unlink all media managed in this session */
+  for (medias = session->medias; medias; medias = g_list_next (medias)) {
+    unlink_session_streams (client, (GstRTSPSessionMedia *) medias->data);
+  }
+
   if (!(client->sessions = g_list_remove (client->sessions, session))) {
-    GST_INFO ("all sessions finalized, close the connection");
-    g_source_destroy ((GSource *) client->watch);
-    client->watchid = 0;
+    GST_INFO ("client %p: all sessions finalized, close the connection", client);
+    close_connection (client);
   }
 }
 
@@ -1459,9 +1465,6 @@ closed (GstRTSPWatch * watch, gpointer user_data)
     g_mutex_unlock (tunnels_lock);
   }
 
-  /* remove all streams that are streaming over this client connection */
-  unlink_streams (client);
-
   return GST_RTSP_OK;
 }
 
@@ -1589,6 +1592,9 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
    * remove the ref to it. */
   g_object_ref (oclient);
   g_hash_table_remove (tunnels, tunnelid);
+
+  if (oclient->watch == NULL)
+    goto tunnel_closed;
   g_mutex_unlock (tunnels_lock);
 
   GST_INFO ("client %p: found tunnel %p (old %p, new %p)", client, oclient,
@@ -1602,6 +1608,7 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   /* we don't need this watch anymore */
   g_source_destroy ((GSource *) client->watch);
   client->watchid = 0;
+  client->watch = NULL;
 
   return GST_RTSP_OK;
 
@@ -1615,6 +1622,13 @@ no_tunnel:
   {
     g_mutex_unlock (tunnels_lock);
     GST_INFO ("client %p: tunnel session %s not found", client, tunnelid);
+    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+  }
+tunnel_closed:
+  {
+    g_mutex_unlock (tunnels_lock);
+    GST_INFO ("client %p: tunnel session %s was closed", client, tunnelid);
+    g_object_unref (oclient);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
 }
@@ -1635,6 +1649,7 @@ client_watch_notify (GstRTSPClient * client)
 {
   GST_INFO ("client %p: watch destroyed", client);
   client->watchid = 0;
+  client->watch = NULL;
   g_object_unref (client);
 }
 
