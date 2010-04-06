@@ -421,6 +421,20 @@ gst_rtsp_session_touch (GstRTSPSession * session)
   g_get_current_time (&session->last_access);
 }
 
+void
+gst_rtsp_session_prevent_expire (GstRTSPSession *session)
+{
+  g_return_if_fail (GST_IS_RTSP_SESSION (session));
+
+  g_atomic_int_add (&session->expire_count, 1);
+}
+
+void
+gst_rtsp_session_allow_expire (GstRTSPSession *session)
+{
+  g_atomic_int_add (&session->expire_count, -1);
+}
+
 /**
  * gst_rtsp_session_next_timeout:
  * @session: a #GstRTSPSession
@@ -438,6 +452,11 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
   g_return_val_if_fail (now != NULL, -1);
+
+  if (g_atomic_int_get (&session->expire_count) != 0) {
+    /* touch session when the expire count is not 0 */
+    g_get_current_time (&session->last_access);
+  }
 
   last_access = GST_TIMEVAL_TO_TIME (session->last_access);
   /* add timeout allow for 5 seconds of extra time */

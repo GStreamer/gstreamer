@@ -88,6 +88,7 @@ struct _GstRTSPSessionMedia
  * @timeout: the timeout of the session
  * @create_time: the time when the session was created
  * @last_access: the time the session was last accessed
+ * @expire_count: the expire prevention counter
  * @media: a list of #GstRTSPSessionMedia managed in this session
  *
  * Session information kept by the server for a specific client.
@@ -102,6 +103,7 @@ struct _GstRTSPSession {
   guint         timeout;
   GTimeVal      create_time;
   GTimeVal      last_access;
+  gint          expire_count;
 
   GList        *medias;
 };
@@ -122,6 +124,8 @@ guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *se
 
 /* session timeout stuff */
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
+void                   gst_rtsp_session_prevent_expire       (GstRTSPSession *session);
+void                   gst_rtsp_session_allow_expire         (GstRTSPSession *session);
 gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
 gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
 
