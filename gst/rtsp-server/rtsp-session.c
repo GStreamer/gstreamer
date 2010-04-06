@@ -300,7 +300,6 @@ GstRTSPSessionStream *
 gst_rtsp_session_media_get_stream (GstRTSPSessionMedia * media, guint idx)
 {
   GstRTSPSessionStream *result;
-  GstRTSPMediaStream *media_stream;
 
   g_return_val_if_fail (media != NULL, NULL);
   g_return_val_if_fail (media->media != NULL, NULL);
@@ -310,6 +309,8 @@ gst_rtsp_session_media_get_stream (GstRTSPSessionMedia * media, guint idx)
 
   result = g_array_index (media->streams, GstRTSPSessionStream *, idx);
   if (result == NULL) {
+    GstRTSPMediaStream *media_stream;
+
     media_stream = gst_rtsp_media_get_stream (media->media, idx);
     if (media_stream == NULL)
       goto no_media;
@@ -477,9 +478,10 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
  * @ct: a client #GstRTSPTransport
  *
  * Set @ct as the client transport and create and return a matching server
- * transport.
+ * transport. This function takes ownership of the passed @ct.
  *
- * Returns: a server transport or NULL if something went wrong.
+ * Returns: a server transport or NULL if something went wrong. Use
+ * gst_rtsp_transport_free () after usage.
  */
 GstRTSPTransport *
 gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
