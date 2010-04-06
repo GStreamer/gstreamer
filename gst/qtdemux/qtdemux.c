@@ -5342,45 +5342,85 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           const guint8 *avc_data = stsd_data + 0x66;
 
           /* find avcC */
-          while (len >= 0x8 &&
-              QT_FOURCC (avc_data + 0x4) != FOURCC_avcC &&
-              QT_UINT32 (avc_data) < len) {
-            len -= QT_UINT32 (avc_data);
-            avc_data += QT_UINT32 (avc_data);
-          }
-
-          /* parse, if found */
-          if (len > 0x8 && QT_FOURCC (avc_data + 0x4) == FOURCC_avcC) {
-            GstBuffer *buf;
+          while (len >= 0x8) {
             gint size;
-            gchar *profile = NULL, *level = NULL;
 
-            if (QT_UINT32 (avc_data) < len)
+            if (QT_UINT32 (avc_data) <= len)
               size = QT_UINT32 (avc_data) - 0x8;
             else
               size = len - 0x8;
 
-            avc_get_profile_and_level_string (avc_data + 0x8, size, &profile,
-                &level);
-            if (profile) {
-              gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
-                  profile, NULL);
-              g_free (profile);
-            }
-            if (level) {
-              gst_caps_set_simple (stream->caps, "level", G_TYPE_STRING,
-                  level, NULL);
-              g_free (level);
+            if (size < 1)
+              /* No real data, so break out */
+              break;
+
+            switch (QT_FOURCC (avc_data + 0x4)) {
+              case FOURCC_avcC:
+              {
+                /* parse, if found */
+                GstBuffer *buf;
+                gchar *profile = NULL, *level = NULL;
+
+                avc_get_profile_and_level_string (avc_data + 0x8, size,
+                    &profile, &level);
+                if (profile) {
+                  gst_caps_set_simple (stream->caps, "profile", G_TYPE_STRING,
+                      profile, NULL);
+                  g_free (profile);
+                }
+                if (level) {
+                  gst_caps_set_simple (stream->caps, "level", G_TYPE_STRING,
+                      level, NULL);
+                  g_free (level);
+                }
+
+                GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
+
+                buf = gst_buffer_new_and_alloc (size);
+                memcpy (GST_BUFFER_DATA (buf), avc_data + 0x8, size);
+                gst_caps_set_simple (stream->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
+
+                break;
+              }
+              case FOURCC_btrt:
+              {
+                guint avg_bitrate, max_bitrate;
+
+                /* bufferSizeDB, maxBitrate and avgBitrate - 4 bytes each */
+                if (size < 12)
+                  break;
+
+                max_bitrate = QT_UINT32 (avc_data + 0xc);
+                avg_bitrate = QT_UINT32 (avc_data + 0x10);
+
+                if (!max_bitrate && !avg_bitrate)
+                  break;
+
+                if (!list)
+                  list = gst_tag_list_new ();
+
+                if (max_bitrate > 0 && max_bitrate < G_MAXUINT32) {
+                  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+                      GST_TAG_MAXIMUM_BITRATE, max_bitrate, NULL);
+                }
+                if (avg_bitrate > 0 && avg_bitrate < G_MAXUINT32) {
+                  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+                      GST_TAG_BITRATE, avg_bitrate, NULL);
+                }
+
+                break;
+              }
+
+              default:
+                break;
             }
 
-            GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
-
-            buf = gst_buffer_new_and_alloc (size);
-            memcpy (GST_BUFFER_DATA (buf), avc_data + 0x8, size);
-            gst_caps_set_simple (stream->caps,
-                "codec_data", GST_TYPE_BUFFER, buf, NULL);
-            gst_buffer_unref (buf);
+            len -= QT_UINT32 (avc_data);
+            avc_data += QT_UINT32 (avc_data);
           }
+
           break;
         }
         case FOURCC_mjp2:
