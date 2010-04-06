@@ -322,6 +322,8 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   size = GST_BUFFER_SIZE (buffer);
   gst_rtsp_message_take_body (&message, data, size);
 
+  /* FIXME, client->watch could have been finalized here, we need to keep an
+   * extra refcount to the watch.  */
   gst_rtsp_watch_send_message (client->watch, &message, NULL);
 
   gst_rtsp_message_steal_body (&message, &data, &size);
@@ -333,6 +335,7 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 static void
 link_stream (GstRTSPClient * client, GstRTSPSessionStream * stream)
 {
+  GST_DEBUG ("client %p: linking stream %p", client, stream);
   gst_rtsp_session_stream_set_callbacks (stream, (GstRTSPSendFunc) do_send_data,
       (GstRTSPSendFunc) do_send_data, client, NULL);
   client->streams = g_list_prepend (client->streams, stream);
@@ -341,6 +344,7 @@ link_stream (GstRTSPClient * client, GstRTSPSessionStream * stream)
 static void
 unlink_stream (GstRTSPClient * client, GstRTSPSessionStream * stream)
 {
+  GST_DEBUG ("client %p: unlinking stream %p", client, stream);
   gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
   client->streams = g_list_remove (client->streams, stream);
 }
@@ -350,6 +354,7 @@ unlink_streams (GstRTSPClient * client)
 {
   GList *walk;
 
+  GST_DEBUG ("client %p: unlinking streams", client);
   for (walk = client->streams; walk; walk = g_list_next (walk)) {
     GstRTSPSessionStream *stream = (GstRTSPSessionStream *) walk->data;
 
@@ -419,7 +424,16 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPUrl * uri,
   gst_rtsp_message_init_response (&response, code,
       gst_rtsp_status_as_text (code), request);
 
+  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONNECTION, "close");
+
   send_response (client, session, &response);
+
+  GST_DEBUG ("client %p: closing connection", client);
+  if (client->watchid) {
+    g_source_destroy ((GSource *) client->watch);
+    client->watchid = 0;
+  }
+  gst_rtsp_connection_close (client->connection);
 
   return TRUE;
 
@@ -1122,6 +1136,7 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
   if (!(client->sessions = g_list_remove (client->sessions, session))) {
     GST_INFO ("all sessions finalized, close the connection");
     g_source_destroy ((GSource *) client->watch);
+    client->watchid = 0;
   }
 }
 
@@ -1439,6 +1454,7 @@ closed (GstRTSPWatch * watch, gpointer user_data)
 
   if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
     g_mutex_lock (tunnels_lock);
+    /* remove from tunnelids */
     g_hash_table_remove (tunnels, tunnelid);
     g_mutex_unlock (tunnels_lock);
   }
@@ -1478,22 +1494,17 @@ error_full (GstRTSPWatch * watch, GstRTSPResult result,
   return GST_RTSP_OK;
 }
 
-static GstRTSPStatusCode
-tunnel_start (GstRTSPWatch * watch, gpointer user_data)
+static gboolean
+remember_tunnel (GstRTSPClient * client)
 {
-  GstRTSPClient *client;
   const gchar *tunnelid;
-
-  client = GST_RTSP_CLIENT (user_data);
-
-  GST_INFO ("client %p: tunnel start", client);
 
   /* store client in the pending tunnels */
   tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
   if (tunnelid == NULL)
     goto no_tunnelid;
 
-  GST_INFO ("client %p: inserting %s", client, tunnelid);
+  GST_INFO ("client %p: inserting tunnel session %s", client, tunnelid);
 
   /* we can't have two clients connecting with the same tunnelid */
   g_mutex_lock (tunnels_lock);
@@ -1503,20 +1514,57 @@ tunnel_start (GstRTSPWatch * watch, gpointer user_data)
   g_hash_table_insert (tunnels, g_strdup (tunnelid), g_object_ref (client));
   g_mutex_unlock (tunnels_lock);
 
-  return GST_RTSP_STS_OK;
+  return TRUE;
 
   /* ERRORS */
 no_tunnelid:
   {
-    GST_INFO ("client %p: no tunnelid provided", client);
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+    GST_ERROR ("client %p: no tunnelid provided", client);
+    return FALSE;
   }
 tunnel_existed:
   {
     g_mutex_unlock (tunnels_lock);
-    GST_INFO ("client %p: tunnel session %s existed", client, tunnelid);
+    GST_ERROR ("client %p: tunnel session %s already existed", client, tunnelid);
+    return FALSE;
+  }
+}
+
+static GstRTSPStatusCode
+tunnel_start (GstRTSPWatch * watch, gpointer user_data)
+{
+  GstRTSPClient *client;
+
+  client = GST_RTSP_CLIENT (user_data);
+
+  GST_INFO ("client %p: tunnel start (connection %p)", client, client->connection);
+
+  if (!remember_tunnel (client))
+    goto tunnel_error;
+
+  return GST_RTSP_STS_OK;
+
+  /* ERRORS */
+tunnel_error:
+  {
+    GST_ERROR ("client %p: error starting tunnel", client);
     return GST_RTSP_STS_SERVICE_UNAVAILABLE;
   }
+}
+
+static GstRTSPResult
+tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
+{
+  GstRTSPClient *client;
+
+  client = GST_RTSP_CLIENT (user_data);
+
+  GST_INFO ("client %p: tunnel lost (connection %p)", client, client->connection);
+
+  /* ignore error, it'll only be a problem when the client does a POST again */
+  remember_tunnel (client);
+
+  return GST_RTSP_OK;
 }
 
 static GstRTSPResult
@@ -1543,7 +1591,8 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   g_hash_table_remove (tunnels, tunnelid);
   g_mutex_unlock (tunnels_lock);
 
-  GST_INFO ("client %p: found tunnel %p", client, oclient);
+  GST_INFO ("client %p: found tunnel %p (old %p, new %p)", client, oclient,
+      oclient->connection, client->connection);
 
   /* merge the tunnels into the first client */
   gst_rtsp_connection_do_tunnel (oclient->connection, client->connection);
@@ -1577,8 +1626,17 @@ static GstRTSPWatchFuncs watch_funcs = {
   error,
   tunnel_start,
   tunnel_complete,
-  error_full
+  error_full,
+  tunnel_lost
 };
+
+static void
+client_watch_notify (GstRTSPClient * client)
+{
+  GST_INFO ("client %p: watch destroyed", client);
+  client->watchid = 0;
+  g_object_unref (client);
+}
 
 /**
  * gst_rtsp_client_attach:
@@ -1637,7 +1695,7 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
 
   /* create watch for the connection and attach */
   client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
-      g_object_ref (client), g_object_unref);
+      g_object_ref (client), (GDestroyNotify) client_watch_notify);
 
   /* find the context to add the watch */
   if ((source = g_main_current_source ()))
