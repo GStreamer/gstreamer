@@ -27,7 +27,7 @@
  *                     a pipeline
  * @see_also: #GstPad, #GstElement
  *
- * The event class provides factory methods to construct event for sending
+ * The event class provides factory methods to construct events for sending
  * and functions to query (parse) received events.
  *
  * Events are usually created with gst_event_new_*() which takes event-type
@@ -476,7 +476,7 @@ gst_event_new_flush_stop (void)
  * When all sinks have posted an EOS message, an EOS message is
  * forwarded to the application.
  *
- * The EOS event itself will no cause any state transitions of the pipeline.
+ * The EOS event itself will not cause any state transitions of the pipeline.
  *
  * Returns: The new EOS event.
  */
