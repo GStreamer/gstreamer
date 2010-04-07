@@ -574,6 +574,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
           return outbuf;
         }
+        break;
       }
       case 26:
         /* MTAP16    Multi-time aggregation packet      5.7.2 */
