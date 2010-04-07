@@ -900,6 +900,196 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   }
 }
 
+static void
+copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  gint src_stride, dest_stride;
+  gboolean in_alpha;
+  gint in_bpp;
+  gint p_in[4];
+  gboolean packed_in = (src_format == GST_VIDEO_FORMAT_RGB
+      || src_format == GST_VIDEO_FORMAT_BGR);
+  gint matrix[12];
+  gint a;
+  gint y, u, v;
+  gint r, g, b;
+
+  src_stride = (packed_in) ? GST_ROUND_UP_4 (3 * src_width) : 4 * src_width;
+  dest_stride = 4 * dest_width;
+  in_bpp = (packed_in) ? 3 : 4;
+
+  _argb_order (src_format, p_in, &in_alpha);
+
+  memcpy (matrix,
+      (dest_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
+      cog_rgb_to_ycbcr_matrix_8bit_hdtv, 12 * sizeof (gint));
+
+  dest = dest + dest_y * dest_stride + dest_x * 4;
+  src = src + src_y * src_stride + src_x * in_bpp;
+
+  if (in_alpha) {
+    w *= 4;
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        a = (src[j + p_in[0]] * i_alpha) >> 8;
+        r = src[j + p_in[1]];
+        g = src[j + p_in[2]];
+        b = src[j + p_in[3]];
+
+        y = APPLY_MATRIX (matrix, 0, r, g, b);
+        u = APPLY_MATRIX (matrix, 1, r, g, b);
+        v = APPLY_MATRIX (matrix, 2, r, g, b);
+
+        dest[j + 0] = a;
+        dest[j + 1] = CLAMP (y, 0, 255);
+        dest[j + 2] = CLAMP (u, 0, 255);
+        dest[j + 3] = CLAMP (v, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else if (!packed_in) {
+    w *= 4;
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        a = i_alpha & 0xff;
+        r = src[j + p_in[1]];
+        g = src[j + p_in[2]];
+        b = src[j + p_in[3]];
+
+        y = APPLY_MATRIX (matrix, 0, r, g, b);
+        u = APPLY_MATRIX (matrix, 1, r, g, b);
+        v = APPLY_MATRIX (matrix, 2, r, g, b);
+
+        dest[j + 0] = a;
+        dest[j + 1] = CLAMP (y, 0, 255);
+        dest[j + 2] = CLAMP (u, 0, 255);
+        dest[j + 3] = CLAMP (v, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j++) {
+        a = i_alpha & 0xff;
+        r = src[in_bpp * j + p_in[1]];
+        g = src[in_bpp * j + p_in[2]];
+        b = src[in_bpp * j + p_in[3]];
+
+        y = APPLY_MATRIX (matrix, 0, r, g, b);
+        u = APPLY_MATRIX (matrix, 1, r, g, b);
+        v = APPLY_MATRIX (matrix, 2, r, g, b);
+
+        dest[4 * j + 0] = a;
+        dest[4 * j + 1] = CLAMP (y, 0, 255);
+        dest[4 * j + 2] = CLAMP (u, 0, 255);
+        dest[4 * j + 3] = CLAMP (v, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  }
+}
+
+static void
+copy_ayuv_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  gint src_stride, dest_stride;
+  gboolean out_alpha;
+  gint out_bpp;
+  gint p_out[4];
+  gboolean packed_out = (dest_format == GST_VIDEO_FORMAT_RGB
+      || dest_format == GST_VIDEO_FORMAT_BGR);
+  gint matrix[12];
+  gint a;
+  gint y, u, v;
+  gint r, g, b;
+
+  dest_stride = (packed_out) ? GST_ROUND_UP_4 (3 * dest_width) : 4 * dest_width;
+  src_stride = 4 * src_width;
+  out_bpp = (packed_out) ? 3 : 4;
+
+  _argb_order (dest_format, p_out, &out_alpha);
+
+  memcpy (matrix,
+      (src_sdtv) ? cog_ycbcr_to_rgb_matrix_8bit_sdtv :
+      cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint));
+
+  dest = dest + dest_y * dest_stride + dest_x * out_bpp;
+  src = src + src_y * src_stride + src_x * 4;
+
+  if (out_alpha) {
+    w *= 4;
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        a = (src[j + 0] * i_alpha) >> 8;
+        y = src[j + 1];
+        u = src[j + 2];
+        v = src[j + 3];
+
+        r = APPLY_MATRIX (matrix, 0, y, u, v);
+        g = APPLY_MATRIX (matrix, 1, y, u, v);
+        b = APPLY_MATRIX (matrix, 2, y, u, v);
+
+        dest[j + p_out[0]] = a;
+        dest[j + p_out[1]] = CLAMP (r, 0, 255);
+        dest[j + p_out[2]] = CLAMP (g, 0, 255);
+        dest[j + p_out[3]] = CLAMP (b, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else if (!packed_out) {
+    w *= 4;
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j += 4) {
+        y = src[j + 1];
+        u = src[j + 2];
+        v = src[j + 3];
+
+        r = APPLY_MATRIX (matrix, 0, y, u, v);
+        g = APPLY_MATRIX (matrix, 1, y, u, v);
+        b = APPLY_MATRIX (matrix, 2, y, u, v);
+
+        dest[j + p_out[1]] = CLAMP (r, 0, 255);
+        dest[j + p_out[2]] = CLAMP (g, 0, 255);
+        dest[j + p_out[3]] = CLAMP (b, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  } else {
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j++) {
+        y = src[4 * j + 1];
+        u = src[4 * j + 2];
+        v = src[4 * j + 3];
+
+        r = APPLY_MATRIX (matrix, 0, y, u, v);
+        g = APPLY_MATRIX (matrix, 1, y, u, v);
+        b = APPLY_MATRIX (matrix, 2, y, u, v);
+
+        dest[out_bpp * j + p_out[1]] = CLAMP (r, 0, 255);
+        dest[out_bpp * j + p_out[2]] = CLAMP (g, 0, 255);
+        dest[out_bpp * j + p_out[3]] = CLAMP (b, 0, 255);
+      }
+      dest += dest_stride;
+      src += src_stride;
+    }
+  }
+}
+
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -1275,69 +1465,11 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   gint width, height;
 
   to = gst_caps_copy (from);
+  /* Just to be sure... */
+  gst_caps_truncate (to);
   structure = gst_caps_get_structure (to, 0);
 
-  /* For I420/AYUV we support conversion, for all
-   * 24/32bpp RGBs we support conversion and for
-   * everything else we only support passthrough
-   */
-  name = gst_structure_get_name (structure);
-  if (g_str_equal (name, "video/x-raw-yuv")) {
-    guint32 fourcc;
-
-    if (gst_structure_get_fourcc (structure, "format", &fourcc) &&
-        (fourcc == GST_STR_FOURCC ("AYUV") ||
-            fourcc == GST_STR_FOURCC ("I420"))) {
-      GValue list = { 0, };
-      GValue val = { 0, };
-
-      /* get rid of format */
-      gst_structure_remove_field (structure, "format");
-      gst_structure_remove_field (structure, "color-matrix");
-      gst_structure_remove_field (structure, "chroma-site");
-
-      g_value_init (&list, GST_TYPE_LIST);
-      g_value_init (&val, GST_TYPE_FOURCC);
-      gst_value_set_fourcc (&val, GST_STR_FOURCC ("AYUV"));
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      gst_structure_set_value (structure, "format", &list);
-      g_value_unset (&list);
-    }
-  } else if (g_str_equal (name, "video/x-raw-rgb")) {
-    gint bpp;
-
-    if (gst_structure_get_int (structure, "bpp", &bpp) &&
-        (bpp == 32 || bpp == 24)) {
-      GValue list = { 0, };
-      GValue val = { 0, };
-
-      /* get rid of format */
-      gst_structure_remove_field (structure, "depth");
-      gst_structure_remove_field (structure, "bpp");
-      gst_structure_remove_field (structure, "red_mask");
-      gst_structure_remove_field (structure, "green_mask");
-      gst_structure_remove_field (structure, "blue_mask");
-      gst_structure_remove_field (structure, "alpha_mask");
-
-      g_value_init (&list, GST_TYPE_LIST);
-      g_value_init (&val, G_TYPE_INT);
-      g_value_set_int (&val, 32);
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      g_value_set_int (&val, 24);
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      gst_structure_set_value (structure, "depth", &list);
-      gst_structure_set_value (structure, "bpp", &list);
-      g_value_unset (&list);
-    }
-  }
-
-  /* otherwise caps nego will fail: */
+  /* Transform width/height */
   if (video_box->autocrop) {
     gst_structure_remove_field (structure, "width");
     gst_structure_remove_field (structure, "height");
@@ -1372,6 +1504,96 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 
       GST_DEBUG_OBJECT (trans, "New caps height: %d", height);
       gst_structure_set (structure, "height", G_TYPE_INT, height, NULL);
+    }
+  }
+
+  /* Supported conversions:
+   * I420->AYUV
+   * AYUV->I420
+   * AYUV->xRGB (24bpp, 32bpp, incl. alpha)
+   * xRGB->xRGB (24bpp, 32bpp, from/to all variants, incl. alpha)
+   * xRGB->AYUV (24bpp, 32bpp, incl. alpha)
+   *
+   * Passthrough only for everything else.
+   */
+  name = gst_structure_get_name (structure);
+  if (g_str_equal (name, "video/x-raw-yuv")) {
+    guint32 fourcc;
+
+    if (gst_structure_get_fourcc (structure, "format", &fourcc) &&
+        (fourcc == GST_STR_FOURCC ("AYUV") ||
+            fourcc == GST_STR_FOURCC ("I420"))) {
+      GValue list = { 0, };
+      GValue val = { 0, };
+      GstStructure *s2;
+
+      /* get rid of format */
+      gst_structure_remove_field (structure, "format");
+      gst_structure_remove_field (structure, "color-matrix");
+      gst_structure_remove_field (structure, "chroma-site");
+
+      s2 = gst_structure_copy (structure);
+
+      g_value_init (&list, GST_TYPE_LIST);
+      g_value_init (&val, GST_TYPE_FOURCC);
+      gst_value_set_fourcc (&val, GST_STR_FOURCC ("AYUV"));
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
+      gst_value_list_append_value (&list, &val);
+      g_value_unset (&val);
+      gst_structure_set_value (structure, "format", &list);
+      g_value_unset (&list);
+
+      gst_structure_set_name (s2, "video/x-raw-rgb");
+      g_value_init (&list, GST_TYPE_LIST);
+      g_value_init (&val, G_TYPE_INT);
+      g_value_set_int (&val, 32);
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      g_value_set_int (&val, 24);
+      gst_value_list_append_value (&list, &val);
+      g_value_unset (&val);
+      gst_structure_set_value (s2, "depth", &list);
+      gst_structure_set_value (s2, "bpp", &list);
+      g_value_unset (&list);
+      gst_caps_append_structure (to, s2);
+    }
+  } else if (g_str_equal (name, "video/x-raw-rgb")) {
+    gint bpp;
+
+    if (gst_structure_get_int (structure, "bpp", &bpp) &&
+        (bpp == 32 || bpp == 24)) {
+      GValue list = { 0, };
+      GValue val = { 0, };
+      GstStructure *s2;
+
+      /* get rid of format */
+      gst_structure_remove_field (structure, "depth");
+      gst_structure_remove_field (structure, "bpp");
+      gst_structure_remove_field (structure, "red_mask");
+      gst_structure_remove_field (structure, "green_mask");
+      gst_structure_remove_field (structure, "blue_mask");
+      gst_structure_remove_field (structure, "alpha_mask");
+
+      s2 = gst_structure_copy (structure);
+
+      g_value_init (&list, GST_TYPE_LIST);
+      g_value_init (&val, G_TYPE_INT);
+      g_value_set_int (&val, 32);
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      g_value_set_int (&val, 24);
+      gst_value_list_append_value (&list, &val);
+      g_value_unset (&val);
+      gst_structure_set_value (structure, "depth", &list);
+      gst_structure_set_value (structure, "bpp", &list);
+      g_value_unset (&list);
+
+      gst_structure_set_name (s2, "video/x-raw-yuv");
+      gst_structure_set (s2, "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
+          NULL);
+      gst_caps_append_structure (to, s2);
     }
   }
 
@@ -1424,6 +1646,18 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
         case GST_VIDEO_FORMAT_I420:
           video_box->copy = copy_i420_ayuv;
           break;
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+          video_box->copy = copy_rgb32_ayuv;
+          break;
         default:
           break;
       }
@@ -1466,6 +1700,9 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
         case GST_VIDEO_FORMAT_RGB:
         case GST_VIDEO_FORMAT_BGR:
           video_box->copy = copy_rgb32;
+          break;
+        case GST_VIDEO_FORMAT_AYUV:
+          video_box->copy = copy_ayuv_rgb32;
         default:
           break;
       }
