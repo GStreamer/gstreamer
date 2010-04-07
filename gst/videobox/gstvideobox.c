@@ -804,9 +804,9 @@ fill_rgb24 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      dest[3 * j + p[0]] = rgb_colors_R[fill_type];
-      dest[3 * j + p[1]] = rgb_colors_G[fill_type];
-      dest[3 * j + p[2]] = rgb_colors_B[fill_type];
+      dest[3 * j + p[1]] = rgb_colors_R[fill_type];
+      dest[3 * j + p[2]] = rgb_colors_G[fill_type];
+      dest[3 * j + p[3]] = rgb_colors_B[fill_type];
     }
     dest += dest_stride;
   }
