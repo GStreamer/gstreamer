@@ -555,7 +555,7 @@ no_output:
   /* ERORRS */
 switch_failed:
   {
-    GST_ELEMENT_ERROR (rtptheoradepay, STREAM, DECODE,
+    GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
     return NULL;
   }
