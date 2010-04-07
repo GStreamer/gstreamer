@@ -240,6 +240,13 @@ typedef enum {
             "height = " GST_VIDEO_SIZE_RANGE ", "                       \
             "framerate = " GST_VIDEO_FPS_RANGE
 
+/**
+ * GST_VIDEO_CAPS_YUV:
+ * @fourcc: YUV fourcc format that describes the pixel layout, as string
+ *     (e.g. "I420", "YV12", "YUY2", "AYUV", etc.)
+ *
+ * Generic caps string for YUV video, for use in pad templates.
+ */
 #define GST_VIDEO_CAPS_YUV(fourcc)                                      \
         "video/x-raw-yuv, "                                             \
         "format = (fourcc) " fourcc ", "                                \
@@ -247,6 +254,13 @@ typedef enum {
         "height = " GST_VIDEO_SIZE_RANGE ", "                           \
         "framerate = " GST_VIDEO_FPS_RANGE
 
+/**
+ * GST_VIDEO_CAPS_GRAY8:
+ *
+ * Generic caps string for 8-bit grayscale video, for use in pad templates.
+ *
+ * Since: 0.10.29
+ */
 #define GST_VIDEO_CAPS_GRAY8                                            \
         "video/x-raw-gray, "                                            \
         "bpp = (int) 8, "                                               \
@@ -255,6 +269,15 @@ typedef enum {
         "height = " GST_VIDEO_SIZE_RANGE ", "                           \
         "framerate = " GST_VIDEO_FPS_RANGE
 
+/**
+ * GST_VIDEO_CAPS_GRAY16:
+ * @endianness: endianness as string, ie. either "1234", "4321", "BIG_ENDIAN"
+ *     or "LITTLE_ENDIAN"
+ *
+ * Generic caps string for 16-bit grayscale video, for use in pad templates.
+ *
+ * Since: 0.10.29
+ */
 #define GST_VIDEO_CAPS_GRAY16(endianness)                               \
         "video/x-raw-gray, "                                            \
         "bpp = (int) 16, "                                              \
