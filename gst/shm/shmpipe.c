@@ -474,7 +474,7 @@ sp_writer_free_block (ShmBlock * block)
 /* Returns the number of client this has successfully been sent to */
 
 int
-sp_writer_send_buf (ShmPipe * self, char * buf, size_t size)
+sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
 {
   ShmArea *area = NULL;
   unsigned long offset = 0;
@@ -583,9 +583,9 @@ sp_client_recv (ShmPipe * self, char **buf)
       newarea->next = self->shm_area;
       self->shm_area = newarea;
       /*
-      if (oldarea)
-        sp_shm_area_dec (self, oldarea);
-      */
+         if (oldarea)
+         sp_shm_area_dec (self, oldarea);
+       */
       break;
 
     case COMMAND_CLOSE_SHM_AREA:
@@ -824,7 +824,7 @@ sp_writer_pending_writes (ShmPipe * self)
 }
 
 const char *
-sp_writer_get_path (ShmPipe *pipe)
+sp_writer_get_path (ShmPipe * pipe)
 {
   return pipe->socket_path;
 }
