@@ -411,7 +411,9 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
 
       ok &= gst_structure_get_int (structure, "depth", &depth);
       ok &= gst_structure_get_int (structure, "bpp", &bpp);
-      ok &= gst_structure_get_int (structure, "endianness", &endianness);
+
+      if (bpp > 8)
+        ok &= gst_structure_get_int (structure, "endianness", &endianness);
 
       if (depth == 8 && bpp == 8) {
         *format = GST_VIDEO_FORMAT_GRAY8;
