@@ -112,6 +112,10 @@ test_sub_func (GstBuffer * sub, GstTestMeta * meta, GstBuffer * buffer,
       /* else clear */
       test->duration = GST_CLOCK_TIME_NONE;
     }
+  } else {
+    test->pts = -1;
+    test->dts = -1;
+    test->duration = -1;
   }
   test->clock_rate = meta->clock_rate;
 }

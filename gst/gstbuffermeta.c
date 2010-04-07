@@ -27,8 +27,8 @@
  */
 #include "gst_private.h"
 
-#include "gstbuffermeta.h"
 #include "gstbuffer.h"
+#include "gstbuffermeta.h"
 #include "gstinfo.h"
 #include "gstutils.h"
 

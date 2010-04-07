@@ -210,6 +210,7 @@ gst_buffer_join
 gst_buffer_merge
 
 GstBufferMeta
+GST_BUFFER_META_TRACE_NAME
 
 gst_buffer_get_meta
 gst_buffer_remove_meta
