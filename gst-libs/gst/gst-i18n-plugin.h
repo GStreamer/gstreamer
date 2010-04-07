@@ -28,6 +28,8 @@
 
 #ifdef ENABLE_NLS
 
+#include <locale.h>
+
 #include "gettext.h" /* included with gettext distribution and copied */
 
 /* we want to use shorthand _() for translating and N_() for marking */

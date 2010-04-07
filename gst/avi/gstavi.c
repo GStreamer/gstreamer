@@ -29,10 +29,6 @@
 #include "gstavimux.h"
 #include "gstavisubtitle.h"
 
-#ifdef ENABLE_NLS
-#include <locale.h>
-#endif /* ENABLE_NLS */
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
