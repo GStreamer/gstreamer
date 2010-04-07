@@ -796,18 +796,31 @@ metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
       meudata->resolution_unit = exif_get_short (entry->data, byte_order);
       if (meudata->resolution_unit == 3) {
         /* if [xy]resolution has alredy been add in cm, replace it in inches */
-        gfloat value;
+        GValue cm = { 0, };
+        GValue inch = { 0, };
+        GValue factor = { 0, };
 
-        if (gst_tag_list_get_float (meudata->taglist,
-                GST_TAG_IMAGE_XRESOLUTION, &value)) {
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_IMAGE_XRESOLUTION, value * 0.4f, NULL);
+        g_value_init (&factor, GST_TYPE_FRACTION);
+        gst_value_set_fraction (&factor, 2, 5);
+
+        if (gst_tag_list_copy_value (&cm, meudata->taglist,
+                GST_TAG_IMAGE_XRESOLUTION)) {
+          g_value_init (&inch, GST_TYPE_FRACTION);
+          gst_tag_list_add_value (meudata->taglist, GST_TAG_MERGE_REPLACE,
+              GST_TAG_IMAGE_XRESOLUTION, &inch);
+          g_value_unset (&inch);
+          g_value_unset (&cm);
         }
-        if (gst_tag_list_get_float (meudata->taglist,
-                GST_TAG_IMAGE_YRESOLUTION, &value)) {
-          gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
-              GST_TAG_IMAGE_YRESOLUTION, value * 0.4f, NULL);
+        if (gst_tag_list_copy_value (&cm, meudata->taglist,
+                GST_TAG_IMAGE_YRESOLUTION)) {
+          g_value_init (&inch, GST_TYPE_FRACTION);
+          gst_tag_list_add_value (meudata->taglist, GST_TAG_MERGE_REPLACE,
+              GST_TAG_IMAGE_YRESOLUTION, &inch);
+          g_value_unset (&inch);
+          g_value_unset (&cm);
         }
+
+        g_value_unset (&factor);
       }
       break;
     case EXIF_TAG_GPS_ALTITUDE_REF:
