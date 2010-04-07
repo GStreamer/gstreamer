@@ -1,4 +1,4 @@
-AC_PREREQ(2.52)
+AC_PREREQ(2.60)
 
 dnl please read gstreamer/docs/random/autotools before changing this file
 
