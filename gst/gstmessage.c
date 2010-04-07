@@ -987,6 +987,24 @@ gst_message_get_structure (GstMessage * message)
  * Extracts the tag list from the GstMessage. The tag list returned in the
  * output argument is a copy; the caller must free it when done.
  *
+ * Typical usage of this function might be:
+ * |[
+ *   ...
+ *   switch (GST_MESSAGE_TYPE (msg)) {
+ *     case GST_MESSAGE_TAG: {
+ *       GstTagList *tags = NULL;
+ *       
+ *       gst_message_parse_tag (msg, &amp;tags);
+ *       g_print ("Got tags from element %s\n", GST_OBJECT_NAME (msg->src));
+ *       handle_tags (tags);
+ *       gst_tag_list_free (tags);
+ *       break;
+ *     }
+ *     ...
+ *   }
+ *   ...
+ * ]|
+ *
  * MT safe.
  */
 void
@@ -1135,6 +1153,25 @@ gst_message_parse_buffering_stats (GstMessage * message,
  * @pending: the pending (target) state, or NULL
  *
  * Extracts the old and new states from the GstMessage.
+ *
+ * Typical usage of this function might be:
+ * |[
+ *   ...
+ *   switch (GST_MESSAGE_TYPE (msg)) {
+ *     case GST_MESSAGE_STATE_CHANGED: {
+ *       GstState old_state, new_state;
+ *       
+ *       gst_message_parse_state_changed (msg, &amp;old_state, &amp;new_state, NULL);
+ *       g_print ("Element %s changed state from %s to %s.\n",
+ *           GST_OBJECT_NAME (msg->src),
+ *           gst_element_state_get_name (old_state),
+ *           gst_element_state_get_name (new_state));
+ *       break;
+ *     }
+ *     ...
+ *   }
+ *   ...
+ * ]|
  *
  * MT safe.
  */
@@ -1292,6 +1329,27 @@ gst_message_parse_structure_change (GstMessage * message,
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
+ *
+ * Typical usage of this function might be:
+ * |[
+ *   ...
+ *   switch (GST_MESSAGE_TYPE (msg)) {
+ *     case GST_MESSAGE_ERROR: {
+ *       GError *err = NULL;
+ *       gchar *dbg_info = NULL;
+ *       
+ *       gst_message_parse_error (msg, &amp;err, &amp;dbg_info);
+ *       g_printerr ("ERROR from element %s: %s\n",
+ *           GST_OBJECT_NAME (msg->src), err->message);
+ *       g_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+ *       g_error_free (err);
+ *       g_free (dbg_info);
+ *       break;
+ *     }
+ *     ...
+ *   }
+ *   ...
+ * ]|
  *
  * MT safe.
  */
