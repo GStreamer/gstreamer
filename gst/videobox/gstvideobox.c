@@ -211,19 +211,17 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   gint widthY, widthUV;
   gint hY, hUV;
 
-  dest_strideY =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, dest_width);
-  dest_strideUV =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, dest_width);
+  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
 
   destY =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
+      dest + gst_video_format_get_component_offset (dest_format, 0,
       dest_width, dest_height);
   destU =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      dest + gst_video_format_get_component_offset (dest_format, 1,
       dest_width, dest_height);
   destV =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      dest + gst_video_format_get_component_offset (dest_format, 2,
       dest_width, dest_height);
 
   destY = destY + dest_y * dest_strideY + dest_x;
@@ -407,11 +405,9 @@ fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
       dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
       width, height);
   destU =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
-      width, height);
+      dest + gst_video_format_get_component_offset (format, 1, width, height);
   destV =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
-      width, height);
+      dest + gst_video_format_get_component_offset (format, 2, width, height);
 
   heightY =
       gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 0, height);
@@ -451,20 +447,20 @@ copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
       dest_width, dest_height);
   destU =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      dest + gst_video_format_get_component_offset (dest_format, 1,
       dest_width, dest_height);
   destV =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      dest + gst_video_format_get_component_offset (dest_format, 2,
       dest_width, dest_height);
 
   srcY =
       src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
       src_width, src_height);
   srcU =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      src + gst_video_format_get_component_offset (src_format, 1,
       src_width, src_height);
   srcV =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      src + gst_video_format_get_component_offset (src_format, 2,
       src_width, src_height);
 
 
@@ -587,10 +583,10 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
       src_width, src_height);
   srcU =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 1,
+      src + gst_video_format_get_component_offset (src_format, 1,
       src_width, src_height);
   srcV =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 2,
+      src + gst_video_format_get_component_offset (src_format, 2,
       src_width, src_height);
 
 
@@ -1190,6 +1186,7 @@ static GstStaticPadTemplate gst_video_box_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
@@ -1206,6 +1203,7 @@ static GstStaticPadTemplate gst_video_box_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
@@ -1590,7 +1588,11 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 
   /* Supported conversions:
    * I420->AYUV
+   * I420->YV12
+   * YV12->AYUV
+   * YV12->I420
    * AYUV->I420
+   * AYUV->YV12
    * AYUV->xRGB (24bpp, 32bpp, incl. alpha)
    * xRGB->xRGB (24bpp, 32bpp, from/to all variants, incl. alpha)
    * xRGB->AYUV (24bpp, 32bpp, incl. alpha)
@@ -1603,7 +1605,8 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 
     if (gst_structure_get_fourcc (structure, "format", &fourcc) &&
         (fourcc == GST_STR_FOURCC ("AYUV") ||
-            fourcc == GST_STR_FOURCC ("I420"))) {
+            fourcc == GST_STR_FOURCC ("I420") ||
+            fourcc == GST_STR_FOURCC ("YV12"))) {
       GValue list = { 0, };
       GValue val = { 0, };
       GstStructure *s2;
@@ -1621,6 +1624,9 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       gst_value_list_append_value (&list, &val);
       g_value_reset (&val);
       gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
+      gst_value_list_append_value (&list, &val);
+      g_value_reset (&val);
+      gst_value_set_fourcc (&val, GST_STR_FOURCC ("YV12"));
       gst_value_list_append_value (&list, &val);
       g_value_unset (&val);
       gst_structure_set_value (structure, "format", &list);
@@ -1725,6 +1731,7 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
           video_box->copy = copy_ayuv_ayuv;
           break;
         case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
           video_box->copy = copy_i420_ayuv;
           break;
         case GST_VIDEO_FORMAT_ARGB:
@@ -1744,12 +1751,14 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
       }
       break;
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
       video_box->fill = fill_i420;
       switch (video_box->in_format) {
         case GST_VIDEO_FORMAT_AYUV:
           video_box->copy = copy_ayuv_i420;
           break;
         case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
           video_box->copy = copy_i420_i420;
           break;
         default:
