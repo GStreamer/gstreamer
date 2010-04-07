@@ -247,6 +247,23 @@ typedef enum {
         "height = " GST_VIDEO_SIZE_RANGE ", "                           \
         "framerate = " GST_VIDEO_FPS_RANGE
 
+#define GST_VIDEO_CAPS_GRAY8                                            \
+        "video/x-raw-gray, "                                            \
+        "bpp = (int) 8, "                                               \
+        "depth = (int) 8, "                                             \
+        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
+        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
+        "framerate = " GST_VIDEO_FPS_RANGE
+
+#define GST_VIDEO_CAPS_GRAY16(endianness)                               \
+        "video/x-raw-gray, "                                            \
+        "bpp = (int) 16, "                                              \
+        "depth = (int) 16, "                                            \
+        "endianness = (int) " endianness ", "                           \
+        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
+        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
+        "framerate = " GST_VIDEO_FPS_RANGE
+
 /* buffer flags */
 
 /**
