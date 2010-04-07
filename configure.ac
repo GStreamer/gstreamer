@@ -1,4 +1,4 @@
-AC_PREREQ(2.52)
+AC_PREREQ(2.60)
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
