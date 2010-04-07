@@ -28,6 +28,12 @@
 #define YYERROR_VERBOSE 1
 #define YYLEX_PARAM scanner
 
+#define YYENABLE_NLS 0
+
+#ifndef YYLTYPE_IS_TRIVIAL
+#define YYLTYPE_IS_TRIVIAL 0
+#endif
+
 typedef void* yyscan_t;
 
 int _gst_parse_yylex (void * yylval_param , yyscan_t yyscanner);
