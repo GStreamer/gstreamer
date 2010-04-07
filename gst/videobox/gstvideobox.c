@@ -1099,6 +1099,69 @@ copy_ayuv_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   }
 }
 
+static void
+fill_gray (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
+    guint8 * dest, gboolean sdtv, gint width, gint height)
+{
+  gint i, j;
+  gint dest_stride;
+
+  if (format == GST_VIDEO_FORMAT_GRAY8) {
+    guint8 val = yuv_sdtv_colors_Y[fill_type];
+
+    dest_stride = GST_ROUND_UP_4 (width);
+    for (i = 0; i < height; i++) {
+      oil_splat_u8_ns (dest, &val, width);
+      dest += dest_stride;
+    }
+  } else {
+    guint16 val = yuv_sdtv_colors_Y[fill_type] << 8;
+
+    dest_stride = GST_ROUND_UP_4 (width * 2);
+    if (format == GST_VIDEO_FORMAT_GRAY16_BE) {
+      for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+          GST_WRITE_UINT16_BE (dest + 2 * j, val);
+        }
+        dest += dest_stride;
+      }
+    } else {
+      for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+          GST_WRITE_UINT16_LE (dest + 2 * j, val);
+        }
+        dest += dest_stride;
+      }
+    }
+  }
+}
+
+static void
+copy_packed_simple (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i;
+  gint src_stride, dest_stride;
+  gint pixel_stride, row_size;
+
+  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
+  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  pixel_stride = gst_video_format_get_pixel_stride (dest_format, 0);
+  row_size = w * pixel_stride;
+
+  dest = dest + dest_y * dest_stride + dest_x * pixel_stride;
+  src = src + src_y * src_stride + src_x * pixel_stride;
+
+  for (i = 0; i < h; i++) {
+    oil_copy_u8 (dest, src, row_size);
+    dest += dest_stride;
+    src += src_stride;
+  }
+}
+
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -1131,7 +1194,10 @@ static GstStaticPadTemplate gst_video_box_src_template =
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_GRAY8 ";"
+        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
+        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
     );
 
 static GstStaticPadTemplate gst_video_box_sink_template =
@@ -1144,7 +1210,10 @@ static GstStaticPadTemplate gst_video_box_sink_template =
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_GRAY8 ";"
+        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
+        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
     );
 
 GST_BOILERPLATE (GstVideoBox, gst_video_box, GstBaseTransform,
@@ -1715,6 +1784,20 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
           break;
         case GST_VIDEO_FORMAT_AYUV:
           video_box->copy = copy_ayuv_rgb32;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
+      video_box->fill = fill_gray;
+      switch (video_box->in_format) {
+        case GST_VIDEO_FORMAT_GRAY8:
+        case GST_VIDEO_FORMAT_GRAY16_BE:
+        case GST_VIDEO_FORMAT_GRAY16_LE:
+          video_box->copy = copy_packed_simple;
+          break;
         default:
           break;
       }
