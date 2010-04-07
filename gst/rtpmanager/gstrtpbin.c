@@ -2150,8 +2150,9 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
 
   gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
+
+  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 
   return;
 
