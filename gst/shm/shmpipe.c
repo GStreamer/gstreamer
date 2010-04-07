@@ -297,26 +297,27 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
 static void
 sp_close_shm (ShmPipe * self, ShmArea * area)
 {
-  ShmArea *item = NULL;
-  ShmArea *prev_item = NULL;
-
   assert (area->use_count == 0);
 
   if (area->allocspace)
     shm_alloc_space_free (area->allocspace);
 
+  if (self != NULL) {
+    ShmArea *item = NULL;
+    ShmArea *prev_item = NULL;
 
-  for (item = self->shm_area; item; item = item->next) {
-    if (item == area) {
-      if (prev_item)
-        prev_item->next = item->next;
-      else
-        self->shm_area = item->next;
-      break;
+    for (item = self->shm_area; item; item = item->next) {
+      if (item == area) {
+        if (prev_item)
+          prev_item->next = item->next;
+        else
+          self->shm_area = item->next;
+        break;
+      }
+      prev_item = item;
     }
-    prev_item = item;
+    assert (item);
   }
-  assert (item);
 
   if (area->shm_area != MAP_FAILED)
     munmap (area->shm_area, area->shm_area_len);
