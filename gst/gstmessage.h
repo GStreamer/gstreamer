@@ -85,9 +85,9 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_REQUEST_STATE: Posted by elements when they want the pipeline to
  * change state. This message is a suggestion to the application which can
  * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
- * @GST_MESSAGE_STEP_START: A stepping operation was started.
+ * @GST_MESSAGE_STEP_START: A stepping operation was started. Since: 0.10.24
  * @GST_MESSAGE_QOS: A buffer was dropped or an element changed its processing
- * strategy for Quality of Service reasons.
+ * strategy for Quality of Service reasons. Since: 0.10.29
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
