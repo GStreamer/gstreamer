@@ -13,6 +13,7 @@ EXPORTS
 	gst_video_format_get_size
 	gst_video_format_get_type
 	gst_video_format_has_alpha
+	gst_video_format_is_gray
 	gst_video_format_is_rgb
 	gst_video_format_is_yuv
 	gst_video_format_new_caps
