@@ -251,6 +251,8 @@ GST_START_TEST (test_periodic_shot)
   gst_clock_id_unref (id);
   gst_clock_id_unschedule (id2);
   gst_clock_id_unref (id2);
+
+  gst_object_unref (clock);
 }
 
 GST_END_TEST;
