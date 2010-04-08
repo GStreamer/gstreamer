@@ -476,7 +476,8 @@ no_channels:
           g_strdup_printf (_
           ("Could not open device for playback in %d-channel mode."),
           alsa->channels);
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (msg), (snd_strerror (err)));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, ("%s", msg),
+        ("%s", snd_strerror (err)));
     g_free (msg);
     snd_pcm_hw_params_free (params);
     return err;
