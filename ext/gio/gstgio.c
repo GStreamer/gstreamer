@@ -239,10 +239,10 @@ plugin_init (GstPlugin * plugin)
    * to replace gnomevfssink/src. For testing purposes PRIMARY+1 one makes sense
    * so it gets autoplugged and preferred over filesrc/sink. */
 
-  ret &= gst_element_register (plugin, "giosink", GST_RANK_MARGINAL,
+  ret &= gst_element_register (plugin, "giosink", GST_RANK_SECONDARY,
       GST_TYPE_GIO_SINK);
 
-  ret &= gst_element_register (plugin, "giosrc", GST_RANK_MARGINAL,
+  ret &= gst_element_register (plugin, "giosrc", GST_RANK_SECONDARY,
       GST_TYPE_GIO_SRC);
 
   ret &= gst_element_register (plugin, "giostreamsink", GST_RANK_NONE,
