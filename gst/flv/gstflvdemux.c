@@ -58,7 +58,7 @@ GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY (flvdemux_debug);
+GST_DEBUG_CATEGORY_STATIC (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
 GST_BOILERPLATE (GstFlvDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
