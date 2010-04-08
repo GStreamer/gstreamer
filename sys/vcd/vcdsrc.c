@@ -36,6 +36,8 @@
 
 #include "vcdsrc.h"
 
+#define DEFAULT_DEVICE "/dev/cdrom"
+
 /* VCDSrc signals and args */
 enum
 {
@@ -139,7 +141,7 @@ gst_vcdsrc_class_init (GstVCDSrcClass * klass)
 static void
 gst_vcdsrc_init (GstVCDSrc * vcdsrc, GstVCDSrcClass * klass)
 {
-  vcdsrc->device = g_strdup ("/dev/cdrom");
+  vcdsrc->device = g_strdup (DEFAULT_DEVICE);
   vcdsrc->track = 1;
   vcdsrc->fd = 0;
   vcdsrc->trackoffset = 0;
@@ -373,11 +375,23 @@ gst_vcdsrc_start (GstBaseSrc * bsrc)
 {
   int i;
   GstVCDSrc *src = GST_VCDSRC (bsrc);
+  struct stat buf;
 
   /* open the device */
   src->fd = open (src->device, O_RDONLY);
   if (src->fd < 0)
     goto open_failed;
+
+  if (fstat (src->fd, &buf) < 0)
+    goto toc_failed;
+  /* If it's not a block device, then we need to try and
+   * parse the cue file if there is one
+   * FIXME implement */
+  if (!S_ISBLK (buf.st_mode)) {
+    GST_DEBUG ("Reading CUE files not handled yet, cannot process %s",
+        GST_STR_NULL (src->device));
+    goto toc_failed;
+  }
 
   /* read the table of contents */
   if (ioctl (src->fd, CDROMREADTOCHDR, &src->tochdr))
@@ -500,16 +514,32 @@ gst_vcdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 
   GST_DEBUG_OBJECT (src, "have location '%s'", location);
 
-  if (*location == '\0') {
-    /* empty location selects track 1 */
-    tracknr = 1;
-  } else {
-    /* scan the track number */
-    if (sscanf (location, "%d", &tracknr) != 1)
-      goto invalid_location;
+  /*
+   * URI structure: vcd:///path/to/device,track-num
+   */
+  if (g_str_has_prefix (uri, "vcd://")) {
+    GST_OBJECT_LOCK (src);
+    g_free (src->device);
+    if (strlen (uri) > 6)
+      src->device = g_strdup (uri + 6);
+    else
+      src->device = g_strdup (DEFAULT_DEVICE);
+    GST_DEBUG_OBJECT (src, "configured device %s", src->device);
+    GST_OBJECT_UNLOCK (src);
+  }
 
-    if (tracknr < 1)
+  /* Parse the track number */
+  {
+    char **split;
+
+    split = g_strsplit (location, ",", 2);
+    if (split == NULL || *split == NULL || split[1] == NULL) {
+      tracknr = 1;
+    } else if (sscanf (split[1], "%d", &tracknr) != 1 || tracknr < 1) {
+      g_strfreev (split);
       goto invalid_location;
+    }
+    g_strfreev (split);
   }
 
   GST_OBJECT_LOCK (src);
@@ -556,7 +586,7 @@ gst_vcdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "vcdsrc", GST_RANK_NONE,
+  return gst_element_register (plugin, "vcdsrc", GST_RANK_SECONDARY,
       GST_TYPE_VCDSRC);
 }
 
