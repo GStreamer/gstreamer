@@ -433,8 +433,6 @@ GstCairoRenderClass
 GST_TYPE_CAIRO_RENDER
 GST_CAIRO_RENDER
 GST_CAIRO_RENDER_CLASS
-GST_IS_CAIRO_RENDER
-GST_IS_CAIRO_RENDER_CLASS
 gst_cairo_render_get_type
 </SECTION>
 
@@ -742,8 +740,9 @@ gst_flac_tag_get_type
 <TITLE>flvdemux</TITLE>
 GstFLVDemux
 <SUBSECTION Standard>
+gst_flv_demux_query
+gst_flv_demux_src_event
 GstFLVDemuxClass
-GstFLVDemuxFlags
 GstFLVDemuxState
 GST_FLV_DEMUX
 GST_FLV_DEMUX_CLASS
@@ -759,7 +758,6 @@ gst_flv_demux_get_type
 GstFlvMux
 <SUBSECTION Standard>
 GstFlvMuxClass
-GstFlvMuxFlags
 GstFlvMuxState
 GST_FLV_MUX
 GST_FLV_MUX_CLASS
