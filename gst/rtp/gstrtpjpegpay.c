@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:rtpjpegpay
+ * SECTION:element-rtpjpegpay
  *
  * Payload encode JPEG pictures into RTP packets according to RFC 2435.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc2435.txt

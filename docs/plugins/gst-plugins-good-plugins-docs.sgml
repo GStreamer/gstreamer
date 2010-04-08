@@ -126,6 +126,7 @@
     <xi:include href="xml/element-rgvolume.xml" />
     <xi:include href="xml/element-rippletv.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
+    <xi:include href="xml/element-rtpj2kpay.xml" />
     <xi:include href="xml/element-rtpjpegpay.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-shagadelictv.xml" />

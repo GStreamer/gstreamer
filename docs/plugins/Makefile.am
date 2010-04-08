@@ -181,6 +181,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
+	$(top_srcdir)/gst/rtp/gstrtpj2kpay.h \
 	$(top_srcdir)/gst/rtp/gstrtpjpegpay.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpbin.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpjitterbuffer.h \

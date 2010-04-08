@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:rtpj2kpay
+ * SECTION:element-rtpj2kpay
  *
  * Payload encode JPEG 2000 pictures into RTP packets according to RFC 5371.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc5371.txt

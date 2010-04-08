@@ -1513,6 +1513,21 @@ gst_rtp_dec_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rtpj2kpay</FILE>
+<TITLE>rtpj2kpay</TITLE>
+GstRtpJ2KPay
+<SUBSECTION Standard>
+GstRtpJ2KPayClass
+GST_RTP_J2K_PAY
+GST_IS_RTP_J2K_PAY
+GST_TYPE_RTP_J2K_PAY
+GST_RTP_J2K_PAY_CLASS
+GST_IS_RTP_J2K_PAY_CLASS
+gst_rtp_j2k_pay_plugin_init
+gst_rtp_j2k_pay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpjpegpay</FILE>
 <TITLE>rtpjpegpay</TITLE>
 GstRtpJPEGPay
