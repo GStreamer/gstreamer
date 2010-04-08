@@ -1716,6 +1716,15 @@ gst_udpsink_get_type
 <TITLE>videobox</TITLE>
 GstVideoBox
 <SUBSECTION Standard>
+GstVideoBoxClass
+GstVideoBoxFill
+GST_IS_VIDEO_BOX
+GST_IS_VIDEO_BOX_CLASS
+GST_TYPE_VIDEO_BOX
+GST_VIDEO_BOX
+GST_VIDEO_BOX_CLASS
+gst_video_box_get_type
+gst_video_crop_get_type
 </SECTION>
 
 <SECTION>
@@ -1802,6 +1811,7 @@ GST_IS_VIDEO_MIXER
 GST_TYPE_VIDEO_MIXER
 GST_VIDEO_MIXER_CLASS
 GST_IS_VIDEO_MIXER_CLASS
+gst_video_mixer_get_type
 </SECTION>
 
 <SECTION>
