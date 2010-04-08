@@ -151,7 +151,7 @@ GST_START_TEST (test_parse_all_in_one_buf)
 
   gst_buffer_set_caps (buffer, gst_caps_new_simple ("image/jpeg", "parsed",
           G_TYPE_BOOLEAN, FALSE, NULL));
-  GST_LOG ("Pushing single buffer of %u bytes.", total_size);
+  GST_LOG ("Pushing single buffer of %u bytes.", (guint) total_size);
   buffer_in = g_list_append (buffer_in, buffer);
 
   buffer_out = make_buffers_out (buffer_out, test_data_short_frame);
