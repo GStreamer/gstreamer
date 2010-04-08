@@ -993,6 +993,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       /* only update the offset when in random_access mode */
       if (priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS)
         priv->offset += buf_size;
+      *buf = gst_buffer_make_metadata_writable (*buf);
       gst_buffer_set_caps (*buf, priv->caps);
 
       /* signal that we removed an item */
