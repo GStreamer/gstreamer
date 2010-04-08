@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY (oss4_debug);
 
 #define GST_CAT_DEFAULT oss4_debug
 
-static const struct
+typedef struct
 {
   const GstBufferFormat gst_fmt;
   const gint oss_fmt;
@@ -54,7 +54,10 @@ static const struct
   const gint width;
   const gint endianness;
   const gboolean signedness;
-} fmt_map[] = {
+} GstOss4AudioFormat;
+
+/* *INDENT-OFF* */
+static const GstOss4AudioFormat fmt_map[] = {
   /* note: keep sorted by preference, prefered formats first */
   {
   GST_MU_LAW, AFMT_MU_LAW, "audio/x-mulaw", 0, 0, 0, FALSE}, {
@@ -72,6 +75,7 @@ static const struct
   GST_S8, AFMT_S8, "audio/x-raw-int", 8, 8, 0, TRUE}, {
   GST_U8, AFMT_U8, "audio/x-raw-int", 8, 8, 0, FALSE}
 };
+/* *INDENT-ON* */
 
 /* formats we assume the OSS4 layer can always handle and convert internally */
 #define CONVERTIBLE_FORMATS (   \
@@ -83,27 +87,18 @@ static const struct
     AFMT_U16_LE | AFMT_U16_BE | \
     AFMT_S8 | AFMT_U8 )
 
-static gboolean
-gst_oss4_append_format_to_caps (gint fmt, GstCaps * caps)
+static void
+gst_oss4_append_format_to_caps (const GstOss4AudioFormat * fmt, GstCaps * caps)
 {
-  gint i;
+  GstStructure *s;
 
-  for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
-    if (fmt_map[i].oss_fmt == fmt) {
-      GstStructure *s;
-
-      s = gst_structure_empty_new (fmt_map[i].name);
-      if (fmt_map[i].width != 0 && fmt_map[i].depth != 0) {
-        gst_structure_set (s, "width", G_TYPE_INT, fmt_map[i].width,
-            "depth", G_TYPE_INT, fmt_map[i].depth, "endianness", G_TYPE_INT,
-            fmt_map[i].endianness, "signed", G_TYPE_BOOLEAN,
-            fmt_map[i].signedness, NULL);
-      }
-      gst_caps_append_structure (caps, s);
-      return TRUE;
-    }
+  s = gst_structure_empty_new (fmt->name);
+  if (fmt->width != 0 && fmt->depth != 0) {
+    gst_structure_set (s, "width", G_TYPE_INT, fmt->width,
+        "depth", G_TYPE_INT, fmt->depth, "endianness", G_TYPE_INT,
+        fmt->endianness, "signed", G_TYPE_BOOLEAN, fmt->signedness, NULL);
   }
-  return FALSE;
+  gst_caps_append_structure (caps, s);
 }
 
 static gint
@@ -441,7 +436,7 @@ gst_oss4_audio_probe_caps (GstObject * obj, int fd)
   /* first list all the formats natively supported */
   for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
     if ((formats & fmt_map[i].oss_fmt)) {
-      gst_oss4_append_format_to_caps (fmt_map[i].oss_fmt, caps);
+      gst_oss4_append_format_to_caps (&fmt_map[i], caps);
     } else if ((fmt_map[i].oss_fmt & CONVERTIBLE_FORMATS)) {
       nonnative_formats |= fmt_map[i].oss_fmt;
     }
@@ -453,7 +448,7 @@ gst_oss4_audio_probe_caps (GstObject * obj, int fd)
   /* now append non-native formats for which conversion would be needed */
   for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
     if ((nonnative_formats & fmt_map[i].oss_fmt)) {
-      gst_oss4_append_format_to_caps (fmt_map[i].oss_fmt, caps);
+      gst_oss4_append_format_to_caps (&fmt_map[i], caps);
     }
   }
 
@@ -501,7 +496,7 @@ gst_oss4_audio_get_template_caps (void)
   caps = gst_caps_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (fmt_map); ++i) {
-    gst_oss4_append_format_to_caps (fmt_map[i].oss_fmt, caps);
+    gst_oss4_append_format_to_caps (&fmt_map[i], caps);
   }
 
   gst_caps_do_simplify (caps);
