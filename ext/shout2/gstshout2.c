@@ -648,13 +648,17 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
 
   delay = shout_delay (sink->conn);
 
-  GST_LOG_OBJECT (sink, "waiting %d msec", delay);
-  if (gst_poll_wait (sink->timer, GST_MSECOND * delay) == -1) {
-    GST_LOG_OBJECT (sink, "unlocked");
+  if (delay > 0) {
+    GST_LOG_OBJECT (sink, "waiting %d msec", delay);
+    if (gst_poll_wait (sink->timer, GST_MSECOND * delay) == -1) {
+      GST_LOG_OBJECT (sink, "unlocked");
 
-    fret = gst_base_sink_wait_preroll (basesink);
-    if (fret != GST_FLOW_OK)
-      return fret;
+      fret = gst_base_sink_wait_preroll (basesink);
+      if (fret != GST_FLOW_OK)
+        return fret;
+    }
+  } else {
+    GST_LOG_OBJECT (sink, "we're %d msec late", -delay);
   }
 
   GST_LOG_OBJECT (sink, "sending %u bytes of data", GST_BUFFER_SIZE (buf));
