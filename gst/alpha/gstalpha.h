@@ -44,7 +44,8 @@ G_BEGIN_DECLS
 typedef struct _GstAlpha GstAlpha;
 typedef struct _GstAlphaClass GstAlphaClass;
 
-/** GstAlphaMethod:
+/** 
+ * GstAlphaMethod:
  * @ALPHA_METHOD_SET: Set/adjust alpha channel
  * @ALPHA_METHOD_GREEN: Chroma Key green
  * @ALPHA_METHOD_BLUE: Chroma Key blue
