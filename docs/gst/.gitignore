@@ -40,5 +40,7 @@ html-build.stamp
 gtkdoc-fixxref
 xml
 
+gst-universe.svg
+
 gstreamer.types
 gstreamer-scan.gcno
