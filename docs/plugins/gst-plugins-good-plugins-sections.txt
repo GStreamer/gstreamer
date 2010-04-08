@@ -755,8 +755,6 @@ gst_flac_tag_get_type
 <TITLE>flvdemux</TITLE>
 GstFLVDemux
 <SUBSECTION Standard>
-gst_flv_demux_query
-gst_flv_demux_src_event
 GstFLVDemuxClass
 GstFLVDemuxState
 GST_FLV_DEMUX

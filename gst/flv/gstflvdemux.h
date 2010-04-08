@@ -146,8 +146,5 @@ struct _GstFLVDemuxClass
 
 GType gst_flv_demux_get_type (void);
 
-gboolean gst_flv_demux_query (GstPad * pad, GstQuery * query);
-gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
-
 G_END_DECLS
 #endif /* __FLV_DEMUX_H__ */
