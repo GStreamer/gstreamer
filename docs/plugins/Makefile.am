@@ -192,7 +192,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/smpte/gstsmpte.h \
 	$(top_srcdir)/gst/smpte/gstsmptealpha.h \
 	$(top_srcdir)/gst/spectrum/gstspectrum.h \
-	$(top_srcdir)/gst/udp/gstdynudpsink.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/udp/gstudpsink.h \
