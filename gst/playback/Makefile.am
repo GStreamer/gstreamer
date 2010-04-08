@@ -53,6 +53,7 @@ libgstdecodebin2_la_LIBADD = \
 libgstdecodebin2_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
+	gstplayback.h \
 	gstplaybasebin.h \
 	gstplaysink.h \
 	gststreaminfo.h \

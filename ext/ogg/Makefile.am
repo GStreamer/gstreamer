@@ -8,14 +8,16 @@ libgstogg_la_SOURCES = \
 	gstoggaviparse.c \
 	gstoggparse.c \
 	gstoggstream.c \
-	gstoggstream.h \
 	dirac_parse.c \
-	dirac_parse.h \
-	vorbis_parse.c \
-	vorbis_parse.h
+	vorbis_parse.c
 
 noinst_HEADERS = \
-	gstoggdemux.h gstoggmux.h
+	gstogg.h \
+	gstoggdemux.h \
+	gstoggmux.h \
+	gstoggstream.h \
+	dirac_parse.h \
+	vorbis_parse.h
 
 libgstogg_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(OGG_CFLAGS)
 libgstogg_la_LIBADD = \

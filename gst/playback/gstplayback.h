@@ -28,4 +28,4 @@ gboolean gst_play_bin_plugin_init (GstPlugin * plugin);
 gboolean gst_play_bin2_plugin_init (GstPlugin * plugin);
 
 
-#endif /* __GST_PLAY_SINK_H__ */
+#endif /* __GST_PLAY_BACK_H__ */
