@@ -42,22 +42,6 @@ G_BEGIN_DECLS
 #define GST_IS_MATROSKA_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_MUX))
 
-typedef struct _BITMAPINFOHEADER {
-  guint32 bi_size;
-  guint32 bi_width;
-  guint32 bi_height;
-  guint16 bi_planes;
-  guint16 bi_bit_count;
-  guint32 bi_compression;
-  guint32 bi_size_image;
-  guint32 bi_x_pels_per_meter;
-  guint32 bi_y_pels_per_meter;
-  guint32 bi_clr_used;
-  guint32 bi_clr_important;
-} BITMAPINFOHEADER;
-
-#define WAVEFORMATEX_SIZE 18
-
 typedef enum {
   GST_MATROSKA_MUX_STATE_START,
   GST_MATROSKA_MUX_STATE_HEADER,

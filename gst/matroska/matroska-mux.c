@@ -741,8 +741,8 @@ skip_details:
       || !strcmp (mimetype, "video/x-h263")
       || !strcmp (mimetype, "video/x-msmpeg")
       || !strcmp (mimetype, "video/x-wmv")) {
-    BITMAPINFOHEADER *bih;
-    gint size = sizeof (BITMAPINFOHEADER);
+    gst_riff_strf_vids *bih;
+    gint size = sizeof (gst_riff_strf_vids);
     guint32 fourcc = 0;
 
     if (!strcmp (mimetype, "video/x-xvid"))
@@ -802,22 +802,22 @@ skip_details:
     if (!fourcc)
       goto refuse_caps;
 
-    bih = g_new0 (BITMAPINFOHEADER, 1);
-    GST_WRITE_UINT32_LE (&bih->bi_size, size);
-    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
-    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
-    GST_WRITE_UINT32_LE (&bih->bi_compression, fourcc);
-    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
-    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
-    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
+    bih = g_new0 (gst_riff_strf_vids, 1);
+    GST_WRITE_UINT32_LE (&bih->size, size);
+    GST_WRITE_UINT32_LE (&bih->width, videocontext->pixel_width);
+    GST_WRITE_UINT32_LE (&bih->height, videocontext->pixel_height);
+    GST_WRITE_UINT32_LE (&bih->compression, fourcc);
+    GST_WRITE_UINT16_LE (&bih->planes, (guint16) 1);
+    GST_WRITE_UINT16_LE (&bih->bit_cnt, (guint16) 24);
+    GST_WRITE_UINT32_LE (&bih->image_size, videocontext->pixel_width *
         videocontext->pixel_height * 3);
 
     /* process codec private/initialization data, if any */
     if (codec_buf) {
       size += GST_BUFFER_SIZE (codec_buf);
       bih = g_realloc (bih, size);
-      GST_WRITE_UINT32_LE (&bih->bi_size, size);
-      memcpy ((guint8 *) bih + sizeof (BITMAPINFOHEADER),
+      GST_WRITE_UINT32_LE (&bih->size, size);
+      memcpy ((guint8 *) bih + sizeof (gst_riff_strf_vids),
           GST_BUFFER_DATA (codec_buf), GST_BUFFER_SIZE (codec_buf));
     }
 
@@ -1624,7 +1624,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (gst_structure_get_int (structure, "depth", &depth))
       audiocontext->bitdepth = depth;
 
-    codec_priv_size = WAVEFORMATEX_SIZE;
+    codec_priv_size = sizeof (gst_riff_strf_auds);
     if (buf)
       codec_priv_size += GST_BUFFER_SIZE (buf);
 
@@ -1643,7 +1643,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     /* process codec private/initialization data, if any */
     if (buf) {
-      memcpy ((guint8 *) codec_priv + WAVEFORMATEX_SIZE,
+      memcpy ((guint8 *) codec_priv + sizeof (gst_riff_strf_auds),
           GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
 
