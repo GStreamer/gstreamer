@@ -94,9 +94,11 @@ gst_oss4_append_format_to_caps (const GstOss4AudioFormat * fmt, GstCaps * caps)
 
   s = gst_structure_empty_new (fmt->name);
   if (fmt->width != 0 && fmt->depth != 0) {
-    gst_structure_set (s, "width", G_TYPE_INT, fmt->width,
-        "depth", G_TYPE_INT, fmt->depth, "endianness", G_TYPE_INT,
-        fmt->endianness, "signed", G_TYPE_BOOLEAN, fmt->signedness, NULL);
+    gst_structure_set (s, "width", G_TYPE_INT, fmt->width, "depth", G_TYPE_INT,
+        fmt->depth, "signed", G_TYPE_BOOLEAN, fmt->signedness, NULL);
+  }
+  if (fmt->endianness != 0) {
+    gst_structure_set (s, "endianness", G_TYPE_INT, fmt->endianness, NULL);
   }
   gst_caps_append_structure (caps, s);
 }
