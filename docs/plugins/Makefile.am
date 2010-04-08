@@ -215,6 +215,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/osxaudio/gstosxaudiosink.h \
 	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
+	$(top_srcdir)/sys/v4l2/gstv4l2sink.h \
 	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
