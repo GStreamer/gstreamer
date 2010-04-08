@@ -76,6 +76,4 @@ struct _GstRtpSessionClass {
 
 GType gst_rtp_session_get_type (void);
 
-void gst_rtp_session_set_ssrc (GstRtpSession *sess, guint32 ssrc);
-
 #endif /* __GST_RTP_SESSION_H__ */
