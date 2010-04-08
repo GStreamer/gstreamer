@@ -71,6 +71,7 @@
     <xi:include href="xml/element-flactag.xml" />
     <xi:include href="xml/element-flvdemux.xml" />
     <xi:include href="xml/element-flvmux.xml" />
+    <xi:include href="xml/element-flxdec.xml" />
     <xi:include href="xml/element-gamma.xml" />
     <xi:include href="xml/element-gconfaudiosrc.xml" />
     <xi:include href="xml/element-gconfaudiosink.xml" />

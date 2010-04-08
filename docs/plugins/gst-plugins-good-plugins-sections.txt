@@ -795,6 +795,21 @@ gst_flv_mux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-flxdec</FILE>
+<TITLE>flxdec</TITLE>
+GstFlxDec
+<SUBSECTION Standard>
+GstFlxDecClass
+GstFlxDecState
+GST_FLXDEC
+GST_FLXDEC_CLASS
+GST_IS_FLXDEC
+GST_IS_FLXDEC_CLASS
+GST_TYPE_FLXDEC
+gst_flxdec_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-gamma</FILE>
 <TITLE>gamma</TITLE>
 GstGamma
