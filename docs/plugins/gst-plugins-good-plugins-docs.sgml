@@ -39,6 +39,7 @@
     <xi:include href="xml/element-audioinvert.xml" />
     <xi:include href="xml/element-audiopanorama.xml" />
     <xi:include href="xml/element-audiokaraoke.xml" />
+    <xi:include href="xml/element-auparse.xml" />
     <xi:include href="xml/element-autoaudiosink.xml" />
     <xi:include href="xml/element-autoaudiosrc.xml" />
     <xi:include href="xml/element-autovideosink.xml" />

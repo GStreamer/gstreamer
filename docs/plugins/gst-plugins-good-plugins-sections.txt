@@ -279,6 +279,20 @@ gst_audio_wsinclimit_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-auparse</FILE>
+<TITLE>auparse</TITLE>
+GstAuParse
+<SUBSECTION Standard>
+GstAuParseClass
+GST_TYPE_AU_PARSE
+GST_AU_PARSE
+GST_AU_PARSE_CLASS
+GST_IS_AU_PARSE
+GST_IS_AU_PARSE_CLASS
+gst_au_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 <TITLE>autoaudiosink</TITLE>
 GstAutoAudioSink
