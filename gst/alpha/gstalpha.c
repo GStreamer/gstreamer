@@ -20,6 +20,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-alpha
+ * 
+ * The alpha element adds an alpha channel to a video stream. The values
+ * of the alpha channel can be either be set to a constant or can be
+ * dynamically calculated via chroma keying, e.g. blue can be set as
+ * the transparent color.
+ *
+ * Sample pipeline:
+ * |[
+ * gst-launch videotestsrc pattern=smpte75 ! alpha method=green ! \
+ *   videomixer name=mixer ! ffmpegcolorspace ! autovideosink     \
+ *   videotestsrc pattern=snow ! mixer.
+ * ]| This pipeline adds a alpha channel to the SMPTE color bars
+ * with green as the transparent color and mixes the output with
+ * a snow video stream.
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -40,6 +40,21 @@ gst_alaw_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-alpha</FILE>
+<TITLE>alpha</TITLE>
+GstAlpha
+GstAlphaMethod
+<SUBSECTION Standard>
+GstAlphaClass
+GST_ALPHA
+GST_IS_ALPHA
+GST_TYPE_ALPHA
+gst_alpha_get_type
+GST_ALPHA_CLASS
+GST_IS_ALPHA_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-alphacolor</FILE>
 <TITLE>alphacolor</TITLE>
 GstAlphaColor

@@ -20,6 +20,7 @@
     <title>gst-plugins-good Elements</title>
     <xi:include href="xml/element-aasink.xml" />
     <xi:include href="xml/element-agingtv.xml" />
+    <xi:include href="xml/element-alpha.xml" />
     <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-alawdec.xml" />
     <xi:include href="xml/element-alawenc.xml" />
