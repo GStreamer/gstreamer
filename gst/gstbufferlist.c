@@ -39,14 +39,14 @@
  * gst_buffer_list_iterator_next_group() is necessary before calls to
  * gst_buffer_list_iterator_next() can return buffers.
  *
- * <informalexample>
+ * <informalfigure>
  *   <programlisting>
  *      +--- group0 ----------------------+--- group1 ------------+
  *      |   buffer0   buffer1   buffer2   |   buffer3   buffer4   |
  *    ^   ^         ^         ^         ^   ^         ^         ^
  *    Iterator positions between buffers
  *   </programlisting>
- * </informalexample>
+ * </informalfigure>
  *
  * The gst_buffer_list_iterator_remove(), gst_buffer_list_iterator_steal(),
  * gst_buffer_list_iterator_take() and gst_buffer_list_iterator_do() functions
