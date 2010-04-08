@@ -31,7 +31,8 @@
 
 #include <string.h>
 #include "gstwavenc.h"
-#include "riff.h"
+
+#include <gst/riff/riff-media.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavenc_debug);
 #define GST_CAT_DEFAULT wavenc_debug
@@ -303,7 +304,7 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
       GST_WARNING_OBJECT (wavenc, "caps incomplete");
       goto fail;
     }
-    wavenc->format = GST_RIFF_WAVE_FORMAT_FLOAT;
+    wavenc->format = GST_RIFF_WAVE_FORMAT_IEEE_FLOAT;
     wavenc->width = width;
   } else if (strcmp (name, "audio/x-alaw") == 0) {
     wavenc->format = GST_RIFF_WAVE_FORMAT_ALAW;
