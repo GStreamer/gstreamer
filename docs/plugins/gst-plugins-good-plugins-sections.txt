@@ -753,10 +753,10 @@ gst_flac_tag_get_type
 <SECTION>
 <FILE>element-flvdemux</FILE>
 <TITLE>flvdemux</TITLE>
-GstFLVDemux
+GstFlvDemux
 <SUBSECTION Standard>
-GstFLVDemuxClass
-GstFLVDemuxState
+GstFlvDemuxClass
+GstFlvDemuxState
 GST_FLV_DEMUX
 GST_FLV_DEMUX_CLASS
 GST_IS_FLV_DEMUX

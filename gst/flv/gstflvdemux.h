@@ -27,15 +27,15 @@ G_BEGIN_DECLS
 #define GST_TYPE_FLV_DEMUX \
   (gst_flv_demux_get_type())
 #define GST_FLV_DEMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLV_DEMUX,GstFLVDemux))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLV_DEMUX,GstFlvDemux))
 #define GST_FLV_DEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLV_DEMUX,GstFLVDemuxClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLV_DEMUX,GstFlvDemuxClass))
 #define GST_IS_FLV_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLV_DEMUX))
 #define GST_IS_FLV_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLV_DEMUX))
-typedef struct _GstFLVDemux GstFLVDemux;
-typedef struct _GstFLVDemuxClass GstFLVDemuxClass;
+typedef struct _GstFlvDemux GstFlvDemux;
+typedef struct _GstFlvDemuxClass GstFlvDemuxClass;
 
 typedef enum
 {
@@ -47,9 +47,9 @@ typedef enum
   FLV_STATE_SEEK,
   FLV_STATE_DONE,
   FLV_STATE_NONE
-} GstFLVDemuxState;
+} GstFlvDemuxState;
 
-struct _GstFLVDemux
+struct _GstFlvDemux
 {
   GstElement element;
 
@@ -76,7 +76,7 @@ struct _GstFLVDemux
 
   GstTagList *taglist;
 
-  GstFLVDemuxState state;
+  GstFlvDemuxState state;
 
   guint64 offset;
   guint64 cur_tag_offset;
@@ -139,7 +139,7 @@ struct _GstFLVDemux
   gint64 to_offset;
 };
 
-struct _GstFLVDemuxClass
+struct _GstFlvDemuxClass
 {
   GstElementClass parent_class;
 };

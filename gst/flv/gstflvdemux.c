@@ -61,16 +61,16 @@ GST_STATIC_PAD_TEMPLATE ("video",
 GST_DEBUG_CATEGORY (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
-GST_BOILERPLATE (GstFLVDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstFlvDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
 
 /* 9 bytes of header + 4 bytes of first previous tag size */
 #define FLV_HEADER_SIZE 13
 /* 1 byte of tag type + 3 bytes of tag data size */
 #define FLV_TAG_TYPE_SIZE 4
 
-static gboolean flv_demux_handle_seek_push (GstFLVDemux * demux,
+static gboolean flv_demux_handle_seek_push (GstFlvDemux * demux,
     GstEvent * event);
-static gboolean gst_flv_demux_handle_seek_pull (GstFLVDemux * demux,
+static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
     GstEvent * event, gboolean seeking);
 
 static gboolean gst_flv_demux_query (GstPad * pad, GstQuery * query);
@@ -78,7 +78,7 @@ static gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
 
 
 static void
-gst_flv_demux_parse_and_add_index_entry (GstFLVDemux * demux, GstClockTime ts,
+gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     guint64 pos, gboolean keyframe)
 {
   static GstIndexAssociation associations[2];
@@ -222,7 +222,7 @@ parse_flv_demux_parse_date_string (GDate * date, const gchar * s)
 }
 
 static gboolean
-gst_flv_demux_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
+gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
     gboolean * end_marker)
 {
   gchar *tag_name = NULL;
@@ -459,7 +459,7 @@ error:
 }
 
 static GstFlowReturn
-gst_flv_demux_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
+gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
@@ -555,7 +555,7 @@ gst_flv_demux_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
 }
 
 static gboolean
-gst_flv_demux_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
+gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     guint32 rate, guint32 channels, guint32 width)
 {
   GstCaps *caps = NULL;
@@ -656,7 +656,7 @@ beach:
 }
 
 static GstFlowReturn
-gst_flv_demux_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
+gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 pts = 0, codec_tag = 0, rate = 5512, width = 8, channels = 1;
@@ -951,7 +951,7 @@ beach:
 }
 
 static gboolean
-gst_flv_demux_video_negotiate (GstFLVDemux * demux, guint32 codec_tag)
+gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
 {
   gboolean ret = FALSE;
   GstCaps *caps = NULL;
@@ -1023,7 +1023,7 @@ beach:
 }
 
 static GstFlowReturn
-gst_flv_demux_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
+gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 pts = 0, codec_data = 1, pts_ext = 0;
@@ -1301,7 +1301,7 @@ beach:
 }
 
 static GstClockTime
-gst_flv_demux_parse_tag_timestamp (GstFLVDemux * demux, gboolean index,
+gst_flv_demux_parse_tag_timestamp (GstFlvDemux * demux, gboolean index,
     GstBuffer * buffer, size_t * tag_size)
 {
   guint32 pts = 0, pts_ext = 0;
@@ -1371,7 +1371,7 @@ gst_flv_demux_parse_tag_timestamp (GstFLVDemux * demux, gboolean index,
 }
 
 static GstFlowReturn
-gst_flv_demux_parse_tag_type (GstFLVDemux * demux, GstBuffer * buffer)
+gst_flv_demux_parse_tag_type (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 tag_type = 0;
@@ -1409,7 +1409,7 @@ gst_flv_demux_parse_tag_type (GstFLVDemux * demux, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_flv_demux_parse_header (GstFLVDemux * demux, GstBuffer * buffer)
+gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 *data = GST_BUFFER_DATA (buffer);
@@ -1455,7 +1455,7 @@ beach:
 
 
 static void
-gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
+gst_flv_demux_flush (GstFlvDemux * demux, gboolean discont)
 {
   GST_DEBUG_OBJECT (demux, "flushing queued data in the FLV demuxer");
 
@@ -1476,7 +1476,7 @@ gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
 }
 
 static void
-gst_flv_demux_cleanup (GstFLVDemux * demux)
+gst_flv_demux_cleanup (GstFlvDemux * demux)
 {
   GST_DEBUG_OBJECT (demux, "cleaning up FLV demuxer");
 
@@ -1567,7 +1567,7 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
  * Create and push a flushing seek event upstream
  */
 static gboolean
-flv_demux_seek_to_offset (GstFLVDemux * demux, guint64 offset)
+flv_demux_seek_to_offset (GstFlvDemux * demux, guint64 offset)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -1590,7 +1590,7 @@ static GstFlowReturn
 gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstFLVDemux *demux = NULL;
+  GstFlvDemux *demux = NULL;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
@@ -1826,7 +1826,7 @@ seek_failed:
 }
 
 static GstFlowReturn
-gst_flv_demux_pull_range (GstFLVDemux * demux, GstPad * pad, guint64 offset,
+gst_flv_demux_pull_range (GstFlvDemux * demux, GstPad * pad, guint64 offset,
     guint size, GstBuffer ** buffer)
 {
   GstFlowReturn ret;
@@ -1854,7 +1854,7 @@ gst_flv_demux_pull_range (GstFLVDemux * demux, GstPad * pad, guint64 offset,
 }
 
 static GstFlowReturn
-gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
+gst_flv_demux_pull_tag (GstPad * pad, GstFlvDemux * demux)
 {
   GstBuffer *buffer = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1923,7 +1923,7 @@ beach:
 }
 
 static GstFlowReturn
-gst_flv_demux_pull_header (GstPad * pad, GstFLVDemux * demux)
+gst_flv_demux_pull_header (GstPad * pad, GstFlvDemux * demux)
 {
   GstBuffer *buffer = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1946,7 +1946,7 @@ beach:
 }
 
 static void
-gst_flv_demux_move_to_offset (GstFLVDemux * demux, gint64 offset,
+gst_flv_demux_move_to_offset (GstFlvDemux * demux, gint64 offset,
     gboolean reset)
 {
   demux->offset = offset;
@@ -1974,7 +1974,7 @@ gst_flv_demux_move_to_offset (GstFLVDemux * demux, gint64 offset,
 }
 
 static GstFlowReturn
-gst_flv_demux_seek_to_prev_keyframe (GstFLVDemux * demux)
+gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
 {
   GstFlowReturn ret = GST_FLOW_UNEXPECTED;
   GstIndexEntry *entry = NULL;
@@ -2022,7 +2022,7 @@ done:
 }
 
 static gboolean
-gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
+gst_flv_demux_push_src_event (GstFlvDemux * demux, GstEvent * event)
 {
   gboolean ret = TRUE;
 
@@ -2038,7 +2038,7 @@ gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_flv_demux_create_index (GstFLVDemux * demux, gint64 pos, GstClockTime ts)
+gst_flv_demux_create_index (GstFlvDemux * demux, gint64 pos, GstClockTime ts)
 {
   gint64 size;
   GstFormat fmt = GST_FORMAT_BYTES;
@@ -2084,7 +2084,7 @@ exit:
 }
 
 static gint64
-gst_flv_demux_get_metadata (GstFLVDemux * demux)
+gst_flv_demux_get_metadata (GstFlvDemux * demux)
 {
   gint64 ret = 0, offset;
   GstFormat fmt = GST_FORMAT_BYTES;
@@ -2148,7 +2148,7 @@ exit:
 static void
 gst_flv_demux_loop (GstPad * pad)
 {
-  GstFLVDemux *demux = NULL;
+  GstFlvDemux *demux = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
@@ -2271,7 +2271,7 @@ pause:
 }
 
 static guint64
-gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
+gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
 {
   gint64 bytes = 0;
   gint64 time = 0;
@@ -2313,7 +2313,7 @@ gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
 }
 
 static gboolean
-flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
+flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 {
   GstFormat format;
   GstSeekFlags flags;
@@ -2396,7 +2396,7 @@ wrong_format:
 }
 
 static gboolean
-gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
+gst_flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 {
   if (!demux->indexed) {
     guint64 seek_offset = 0;
@@ -2454,7 +2454,7 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
 }
 
 static gboolean
-gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event,
+gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     gboolean seeking)
 {
   GstFormat format;
@@ -2651,7 +2651,7 @@ gst_flv_demux_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_flv_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
 {
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (sinkpad));
 
@@ -2668,7 +2668,7 @@ gst_flv_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
 static gboolean
 gst_flv_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (sinkpad));
 
@@ -2687,7 +2687,7 @@ gst_flv_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 static gboolean
 gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
   gboolean ret = FALSE;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
@@ -2764,7 +2764,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
 {
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
   gboolean ret = FALSE;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
@@ -2793,7 +2793,7 @@ static gboolean
 gst_flv_demux_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
@@ -2893,7 +2893,7 @@ beach:
 static GstStateChangeReturn
 gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
 {
-  GstFLVDemux *demux;
+  GstFlvDemux *demux;
   GstStateChangeReturn ret;
 
   demux = GST_FLV_DEMUX (element);
@@ -2942,7 +2942,7 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
 static void
 gst_flv_demux_set_index (GstElement * element, GstIndex * index)
 {
-  GstFLVDemux *demux = GST_FLV_DEMUX (element);
+  GstFlvDemux *demux = GST_FLV_DEMUX (element);
 
   GST_OBJECT_LOCK (demux);
   if (demux->index)
@@ -2962,7 +2962,7 @@ gst_flv_demux_get_index (GstElement * element)
 {
   GstIndex *result = NULL;
 
-  GstFLVDemux *demux = GST_FLV_DEMUX (element);
+  GstFlvDemux *demux = GST_FLV_DEMUX (element);
 
   GST_OBJECT_LOCK (demux);
   if (demux->index)
@@ -2975,7 +2975,7 @@ gst_flv_demux_get_index (GstElement * element)
 static void
 gst_flv_demux_dispose (GObject * object)
 {
-  GstFLVDemux *demux = GST_FLV_DEMUX (object);
+  GstFlvDemux *demux = GST_FLV_DEMUX (object);
 
   GST_DEBUG_OBJECT (demux, "disposing FLV demuxer");
 
@@ -3056,7 +3056,7 @@ gst_flv_demux_base_init (gpointer g_class)
 }
 
 static void
-gst_flv_demux_class_init (GstFLVDemuxClass * klass)
+gst_flv_demux_class_init (GstFlvDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -3070,7 +3070,7 @@ gst_flv_demux_class_init (GstFLVDemuxClass * klass)
 }
 
 static void
-gst_flv_demux_init (GstFLVDemux * demux, GstFLVDemuxClass * g_class)
+gst_flv_demux_init (GstFlvDemux * demux, GstFlvDemuxClass * g_class)
 {
   demux->sinkpad =
       gst_pad_new_from_static_template (&flv_sink_template, "sink");
