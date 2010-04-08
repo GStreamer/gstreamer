@@ -1131,10 +1131,10 @@ gst_level_get_type
 <FILE>element-matroskamux</FILE>
 <TITLE>matroskamux</TITLE>
 GstMatroskaMux
-GstMatroskaMetaSeekIndex
 <SUBSECTION Standard>
 GstMatroskaMuxClass
 GstMatroskaMuxState
+GstMatroskaMetaSeekIndex
 GST_TYPE_MATROSKA_MUX
 GST_MATROSKA_MUX
 GST_MATROSKA_MUX_CLASS
@@ -1217,9 +1217,9 @@ gst_multi_file_src_get_type
 <FILE>element-multifilesink</FILE>
 <TITLE>multifilesink</TITLE>
 GstMultiFileSink
-GstMultiFileSinkNext
 <SUBSECTION Standard>
 GstMultiFileSinkClass
+GstMultiFileSinkNext
 GST_MULTI_FILE_SINK
 GST_MULTI_FILE_SINK_CLASS
 GST_IS_MULTI_FILE_SINK
