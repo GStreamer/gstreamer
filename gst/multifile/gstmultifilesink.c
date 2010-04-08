@@ -95,8 +95,8 @@
  * </listitem>
  * </itemizedlist>
  *
- * <title>Example launch line</title>
  * <refsect2>
+ * <title>Example launch line</title>
  * |[
  * gst-launch audiotestsrc ! multifilesink
  * gst-launch videotestsrc ! multifilesink post-messages=true filename="frame%d"

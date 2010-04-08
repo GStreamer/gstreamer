@@ -24,8 +24,9 @@
  *
  * Amplifies an audio stream by a given factor and allows the selection of different clipping modes.
  * The difference between the clipping modes is best evaluated by testing.
- * <title>Example launch line</title>
+ *
  * <refsect2>
+ * <title>Example launch line</title>
  * |[
  * gst-launch audiotestsrc wave=saw ! audioamplify amplification=1.5 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioamplify amplification=1.5 method=wrap-negative ! alsasink
