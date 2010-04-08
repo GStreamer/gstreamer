@@ -144,7 +144,7 @@ struct _GstDeinterlaceSimpleMethodClass {
 GType gst_deinterlace_simple_method_get_type (void);
 
 
-#define MAX_FIELD_HISTORY 10
+#define GST_DEINTERLACE_MAX_FIELD_HISTORY 10
 
 #define PICTURE_PROGRESSIVE 0
 #define PICTURE_INTERLACED_BOTTOM 1
@@ -155,7 +155,7 @@ typedef struct
 {
   /* pointer to the start of data for this field */
   GstBuffer *buf;
-  /* see PICTURE_ flags */
+  /* see PICTURE_ flags in *.c */
   guint flags;
 } GstPicture;
 
@@ -244,7 +244,7 @@ struct _GstDeinterlace
      Pointers are NULL if the picture in question isn't valid, e.g. because
      the program just started or a picture was skipped.
    */
-  GstPicture field_history[MAX_FIELD_HISTORY];
+  GstPicture field_history[GST_DEINTERLACE_MAX_FIELD_HISTORY];
   guint history_count;
 
   /* Set to TRUE if we're in still frame mode,

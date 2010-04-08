@@ -756,7 +756,8 @@ gst_deinterlace_reset_history (GstDeinterlace * self)
       self->field_history[i].buf = NULL;
     }
   }
-  memset (self->field_history, 0, MAX_FIELD_HISTORY * sizeof (GstPicture));
+  memset (self->field_history, 0,
+      GST_DEINTERLACE_MAX_FIELD_HISTORY * sizeof (GstPicture));
   self->history_count = 0;
 
   if (self->last_buffer)
@@ -918,14 +919,15 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   guint fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
   gint field1_flags, field2_flags;
 
-  g_return_if_fail (self->history_count < MAX_FIELD_HISTORY - fields_to_push);
+  g_return_if_fail (self->history_count <
+      GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push);
 
   GST_DEBUG_OBJECT (self, "Pushing new buffer to the history: %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT " and size %u",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_SIZE (buffer));
 
-  for (i = MAX_FIELD_HISTORY - 1; i >= fields_to_push; i--) {
+  for (i = GST_DEINTERLACE_MAX_FIELD_HISTORY - 1; i >= fields_to_push; i--) {
     self->field_history[i].buf = self->field_history[i - fields_to_push].buf;
     self->field_history[i].flags =
         self->field_history[i - fields_to_push].flags;

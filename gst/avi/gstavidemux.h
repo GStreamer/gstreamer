@@ -56,11 +56,6 @@ typedef struct {
   guint64        total;   /* total bytes before */
 } GstAviIndexEntry;
 
-#define GST_AVI_KEYFRAME 1
-#define ENTRY_IS_KEYFRAME(e) ((e)->flags == GST_AVI_KEYFRAME)
-#define ENTRY_SET_KEYFRAME(e) ((e)->flags = GST_AVI_KEYFRAME)
-#define ENTRY_UNSET_KEYFRAME(e) ((e)->flags = 0)
-
 typedef struct {
   /* index of this streamcontext */
   guint          num;
