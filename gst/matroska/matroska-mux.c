@@ -69,6 +69,9 @@ enum
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
 
+/* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
+#define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -1624,7 +1627,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (gst_structure_get_int (structure, "depth", &depth))
       audiocontext->bitdepth = depth;
 
-    codec_priv_size = sizeof (gst_riff_strf_auds);
+    codec_priv_size = WAVEFORMATEX_SIZE;
     if (buf)
       codec_priv_size += GST_BUFFER_SIZE (buf);
 
@@ -1643,7 +1646,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     /* process codec private/initialization data, if any */
     if (buf) {
-      memcpy ((guint8 *) codec_priv + sizeof (gst_riff_strf_auds),
+      memcpy ((guint8 *) codec_priv + WAVEFORMATEX_SIZE,
           GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
 
