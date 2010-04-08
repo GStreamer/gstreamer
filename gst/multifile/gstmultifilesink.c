@@ -27,7 +27,7 @@
  *
  * Write incoming data to a series of sequentially-named files.
  *
- * The filename property should contain a string with a %d placeholder that will
+ * The filename property should contain a string with a \%d placeholder that will
  * be substituted with the index for each filename.
  *
  * If the #GstMultiFileSink:post-messages property is #TRUE, it sends an application

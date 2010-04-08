@@ -27,7 +27,7 @@
  * to force to caps containing a framerate. Otherwise image decoders send EOS
  * after the first picture.
  *
- * File names are created by replacing "%%d" with the index using printf().
+ * File names are created by replacing "\%d" with the index using printf().
  *
  * <refsect2>
  * <title>Example launch line</title>

@@ -28,30 +28,30 @@
  * #GstRtpBin is configured with a number of request pads that define the
  * functionality that is activated, similar to the #GstRtpSession element.
  *
- * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
+ * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_\%d pad. The session
  * number must be specified in the pad name.
- * Data received on the recv_rtp_sink_%%d pad will be processed in the #GstRtpSession
+ * Data received on the recv_rtp_sink_\%d pad will be processed in the #GstRtpSession
  * manager and after being validated forwarded on #GstRtpSsrcDemux element. Each
  * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
  * the packets are released from the jitterbuffer, they will be forwarded to a
  * #GstRtpSsrcDemux element. The #GstRtpSsrcDemux element will demux the packets based
- * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
+ * on the payload type and will create a unique pad recv_rtp_src_\%d_\%d_\%d on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
  *
- * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
+ * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_\%d pad. The
  * session number must be specified in the pad name.
  *
  * If you want the session manager to generate and send RTCP packets, request
- * the send_rtcp_src_%%d pad with the session number in the pad name. Packet pushed
+ * the send_rtcp_src_\%d pad with the session number in the pad name. Packet pushed
  * on this pad contain SR/RR RTCP reports that should be sent to all participants
  * in the session.
  *
- * To use #GstRtpBin as a sender, request a send_rtp_sink_%%d pad, which will
- * automatically create a send_rtp_src_%%d pad. If the session number is not provided,
+ * To use #GstRtpBin as a sender, request a send_rtp_sink_\%d pad, which will
+ * automatically create a send_rtp_src_\%d pad. If the session number is not provided,
  * the pad from the lowest available session will be returned. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
- * send_rtp_src_%%d pad after updating its internal state.
+ * send_rtp_src_\%d pad after updating its internal state.
  *
  * The session manager needs the clock-rate of the payload types it is handling
  * and will signal the #GstRtpSession::request-pt-map signal when it needs such a
