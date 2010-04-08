@@ -1958,6 +1958,7 @@ gst_y4m_encode_get_type
 <TITLE>agingtv</TITLE>
 GstAgingTV
 <SUBSECTION Standard>
+SCRATCH_MAX
 GstAgingTVClass
 GST_AGINGTV
 GST_AGINGTV_CLASS
@@ -1996,6 +1997,20 @@ gst_edgetv_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-optv</FILE>
+<TITLE>optv</TITLE>
+GstOpTV
+<SUBSECTION Standard>
+GstOpTVClass
+GST_OPTV
+GST_OPTV_CLASS
+GST_IS_OPTV
+GST_IS_OPTV_CLASS
+GST_TYPE_OPTV
+gst_optv_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-quarktv</FILE>
 <TITLE>quarktv</TITLE>
 GstQuarkTV
@@ -2007,6 +2022,20 @@ GST_IS_QUARKTV
 GST_IS_QUARKTV_CLASS
 GST_TYPE_QUARKTV
 gst_quarktv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-radioactv</FILE>
+<TITLE>radioactv</TITLE>
+GstRadioacTV
+<SUBSECTION Standard>
+GstRadioacTVClass
+GST_RADIOACTV
+GST_RADIOACTV_CLASS
+GST_IS_RADIOACTV
+GST_IS_RADIOACTV_CLASS
+GST_TYPE_RADIOACTV
+gst_radioactv_get_type
 </SECTION>
 
 <SECTION>
@@ -2024,6 +2053,20 @@ gst_revtv_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-rippletv</FILE>
+<TITLE>rippletv</TITLE>
+GstRippleTV
+<SUBSECTION Standard>
+GstRippleTVClass
+GST_RIPPLETV
+GST_RIPPLETV_CLASS
+GST_IS_RIPPLETV
+GST_IS_RIPPLETV_CLASS
+GST_TYPE_RIPPLETV
+gst_rippletv_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-shagadelictv</FILE>
 <TITLE>shagadelictv</TITLE>
 GstShagadelicTV
@@ -2035,6 +2078,21 @@ GST_IS_SHAGADELICTV
 GST_IS_SHAGADELICTV_CLASS
 GST_TYPE_SHAGADELICTV
 gst_shagadelictv_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-streaktv</FILE>
+<TITLE>streaktv</TITLE>
+GstStreakTV
+<SUBSECTION Standard>
+PLANES
+GstStreakTVClass
+GST_STREAKTV
+GST_STREAKTV_CLASS
+GST_IS_STREAKTV
+GST_IS_STREAKTV_CLASS
+GST_TYPE_STREAKTV
+gst_streaktv_get_type
 </SECTION>
 
 <SECTION>
@@ -2063,61 +2121,5 @@ GST_IS_WARPTV
 GST_IS_WARPTV_CLASS
 GST_TYPE_WARPTV
 gst_warptv_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-rippletv</FILE>
-<TITLE>rippletv</TITLE>
-GstRippleTV
-<SUBSECTION Standard>
-GstRippleTVClass
-GST_RIPPLETV
-GST_RIPPLETV_CLASS
-GST_IS_RIPPLETV
-GST_IS_RIPPLETV_CLASS
-GST_TYPE_RIPPLETV
-gst_rippletv_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-streaktv</FILE>
-<TITLE>streaktv</TITLE>
-GstStreakTV
-<SUBSECTION Standard>
-GstStreakTVClass
-GST_STREAKTV
-GST_STREAKTV_CLASS
-GST_IS_STREAKTV
-GST_IS_STREAKTV_CLASS
-GST_TYPE_STREAKTV
-gst_streaktv_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-optv</FILE>
-<TITLE>optv</TITLE>
-GstOpTV
-<SUBSECTION Standard>
-GstOpTVClass
-GST_OPTV
-GST_OPTV_CLASS
-GST_IS_OPTV
-GST_IS_OPTV_CLASS
-GST_TYPE_OPTV
-gst_optv_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-radioactv</FILE>
-<TITLE>radioactv</TITLE>
-GstRadioacTV
-<SUBSECTION Standard>
-GstRadioacTVClass
-GST_RADIOACTV
-GST_RADIOACTV_CLASS
-GST_IS_RADIOACTV
-GST_IS_RADIOACTV_CLASS
-GST_TYPE_RADIOACTV
-gst_radioactv_get_type
 </SECTION>
 
