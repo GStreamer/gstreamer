@@ -29,8 +29,7 @@
       <longname>Auto audio source</longname>
       <class>Source/Audio</class>
       <description>Wrapper audio source for automatically detected audio source</description>
-      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;
-    Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -60,8 +59,7 @@
       <longname>Auto video source</longname>
       <class>Source/Video</class>
       <description>Wrapper video source for automatically detected video source</description>
-      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;
-    Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
           <name>src</name>

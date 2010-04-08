@@ -14,9 +14,7 @@
       <longname>Icecast network sink</longname>
       <class>Sink/Network</class>
       <description>Sends data to an icecast server</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;
-    Pedro Corte-Real &lt;typo@netcabo.pt&gt;
-    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Pedro Corte-Real &lt;typo@netcabo.pt&gt;, Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

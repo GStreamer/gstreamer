@@ -47,9 +47,7 @@
       <longname>RTSP packet receiver</longname>
       <class>Source/Network</class>
       <description>Receive data over the network via RTSP (RFC 2326)</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;
-    Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;
-    Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;, Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
       <pads>
         <caps>
           <name>stream%d</name>

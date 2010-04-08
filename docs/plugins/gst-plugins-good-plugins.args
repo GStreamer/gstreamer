@@ -719,6 +719,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::buffer-mode</NAME>
+<TYPE>GstRTSPSrcBufferMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Mode</NICK>
+<BLURB>Control the buffering algorithm in use.</BLURB>
+<DEFAULT>Slave receiver to sender clock</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -20596,5 +20606,15 @@
 <NICK>Position</NICK>
 <BLURB>Position of the mask.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlvMux::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>The stream is live and does not need an index.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

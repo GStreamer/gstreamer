@@ -35,9 +35,7 @@
       <longname>GdkPixbuf image scaler</longname>
       <class>Filter/Effect/Video</class>
       <description>Resizes video</description>
-      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;
-    Wim Taymans &lt;wim.taymans@chello.be&gt;
-    Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;, Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

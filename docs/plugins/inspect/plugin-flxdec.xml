@@ -11,7 +11,7 @@
   <elements>
     <element>
       <name>flxdec</name>
-      <longname>FLX audio decoder</longname>
+      <longname>FLX video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>FLC/FLI/FLX video decoder</description>
       <author>Sepp Wijnands &lt;mrrazz@garbage-coderz.net&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>

@@ -740,8 +740,7 @@
       <longname>RTP MPEG Transport Stream depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG2 TS from RTP packets (RFC 2250)</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;
-    Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

@@ -14,8 +14,7 @@
       <longname>ICY tag demuxer</longname>
       <class>Codec/Demuxer/Metadata</class>
       <description>Read and output ICY tags while demuxing the contents</description>
-      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;
-    Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

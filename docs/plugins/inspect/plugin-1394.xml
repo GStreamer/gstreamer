@@ -14,10 +14,7 @@
       <longname>Firewire (1394) DV video source</longname>
       <class>Source/Video</class>
       <description>Source for DV video data from firewire port</description>
-      <author>Erik Walthinsen &lt;omega@temple-baptist.com&gt;
-    Daniel Fischer &lt;dan@f3c.com&gt;
-    Wim Taymans &lt;wim@fluendo.com&gt;
-    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <author>Erik Walthinsen &lt;omega@temple-baptist.com&gt;, Daniel Fischer &lt;dan@f3c.com&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>src</name>

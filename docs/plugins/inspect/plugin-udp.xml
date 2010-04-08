@@ -59,8 +59,7 @@
       <longname>UDP packet receiver</longname>
       <class>Source/Network</class>
       <description>Receive data over the network via UDP</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;
-    Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>
