@@ -458,8 +458,8 @@ gst_invtelecine_chain (GstPad * pad, GstBuffer * buffer)
 
   field_index = (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_TFF) ? 0 : 1;
 
-  GST_DEBUG ("duration %lld flags %04x %s %s %s",
-      GST_BUFFER_DURATION (buffer),
+  GST_DEBUG ("duration %" GST_TIME_FORMAT " flags %04x %s %s %s",
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
       GST_BUFFER_FLAGS (buffer),
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_TFF) ? "tff" : "",
       (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_RFF) ? "rff" : "",
