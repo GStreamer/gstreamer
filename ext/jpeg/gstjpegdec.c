@@ -48,6 +48,9 @@
 #define MIN_HEIGHT 8
 #define MAX_HEIGHT 65535
 
+#define CINFO_GET_JPEGDEC(cinfo_ptr) \
+        (((struct GstJpegDecSourceMgr*)((cinfo_ptr)->src))->dec)
+
 #define JPEG_DEFAULT_IDCT_METHOD	JDCT_FASTEST
 
 enum

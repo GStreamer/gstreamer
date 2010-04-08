@@ -58,9 +58,6 @@ struct GstJpegDecSourceMgr {
   GstJpegDec              *dec;
 };
 
-#define CINFO_GET_JPEGDEC(cinfo_ptr) \
-        (((struct GstJpegDecSourceMgr*)((cinfo_ptr)->src))->dec)
-
 /* Can't use GstBaseTransform, because GstBaseTransform
  * doesn't handle the N buffers in, 1 buffer out case,
  * but only the 1-in 1-out case */
