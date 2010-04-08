@@ -43,8 +43,6 @@ G_BEGIN_DECLS
 typedef struct _GstSpeexDec GstSpeexDec;
 typedef struct _GstSpeexDecClass GstSpeexDecClass;
 
-#define DEC_MAX_FRAME_SIZE 2000
-
 struct _GstSpeexDec {
   GstElement            element;
 
