@@ -163,15 +163,15 @@ _libass_message_cb (gint level, const gchar * fmt, va_list args, gpointer data)
   gchar *message = g_strdup_vprintf (fmt, args);
 
   if (level < 2)
-    GST_CAT_ERROR_OBJECT (gst_ass_render_lib_debug, render, message);
+    GST_CAT_ERROR_OBJECT (gst_ass_render_lib_debug, render, "%s", message);
   else if (level < 4)
-    GST_CAT_WARNING_OBJECT (gst_ass_render_lib_debug, render, message);
+    GST_CAT_WARNING_OBJECT (gst_ass_render_lib_debug, render, "%s", message);
   else if (level < 5)
-    GST_CAT_INFO_OBJECT (gst_ass_render_lib_debug, render, message);
+    GST_CAT_INFO_OBJECT (gst_ass_render_lib_debug, render, "%s", message);
   else if (level < 6)
-    GST_CAT_DEBUG_OBJECT (gst_ass_render_lib_debug, render, message);
+    GST_CAT_DEBUG_OBJECT (gst_ass_render_lib_debug, render, "%s", message);
   else
-    GST_CAT_LOG_OBJECT (gst_ass_render_lib_debug, render, message);
+    GST_CAT_LOG_OBJECT (gst_ass_render_lib_debug, render, "%s", message);
 
   g_free (message);
 }
