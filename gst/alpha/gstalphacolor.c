@@ -21,7 +21,14 @@
  * SECTION:element-alphacolor
  *
  * The alphacolor element does memory-efficient (in-place) colourspace
- * conversion from RGBA to AYUV, preserving the alpha channel.
+ * conversion from RGBA to AYUV or AYUV to RGBA while preserving the
+ * alpha channel.
+ *
+ * Sample pipeline:
+ * |[
+ * gst-launch videotestsrc ! "video/x-raw-yuv,format=(fourcc)AYUV" ! \
+ *   alphacolor ! "video/x-raw-rgb" ! ffmpegcolorspace ! autovideosink
+ * ]|
  */
 
 #ifdef HAVE_CONFIG_H
