@@ -231,7 +231,10 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstRegistryChunkElementFactory *ef;
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-    ef = g_slice_new (GstRegistryChunkElementFactory);
+    /* Initialize with zeroes because of struct padding and
+     * valgrind complaining about copying unitialized memory
+     */
+    ef = g_slice_new0 (GstRegistryChunkElementFactory);
     chk =
         gst_registry_chunks_make_data (ef,
         sizeof (GstRegistryChunkElementFactory));
@@ -291,7 +294,10 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
     gchar *str;
 
-    tff = g_slice_new (GstRegistryChunkTypeFindFactory);
+    /* Initialize with zeroes because of struct padding and
+     * valgrind complaining about copying unitialized memory
+     */
+    tff = g_slice_new0 (GstRegistryChunkTypeFindFactory);
     chk =
         gst_registry_chunks_make_data (tff,
         sizeof (GstRegistryChunkTypeFindFactory));
