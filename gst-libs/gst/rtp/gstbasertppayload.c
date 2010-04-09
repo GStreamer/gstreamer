@@ -72,6 +72,7 @@ enum
 #define DEFAULT_MAX_PTIME               -1
 #define DEFAULT_MIN_PTIME               0
 #define DEFAULT_PERFECT_RTPTIME         TRUE
+#define DEFAULT_PTIME_MULTIPLE          0
 
 enum
 {
@@ -86,6 +87,7 @@ enum
   PROP_TIMESTAMP,
   PROP_SEQNUM,
   PROP_PERFECT_RTPTIME,
+  PROP_PTIME_MULTIPLE,
   PROP_LAST
 };
 
@@ -225,6 +227,18 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
       g_param_spec_boolean ("perfect-rtptime", "Perfect RTP Time",
           "Generate perfect RTP timestamps when possible",
           DEFAULT_PERFECT_RTPTIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseRTPAudioPayload:ptime-multiple:
+   *
+   * Force buffers to be multiples of this duration in ns (0 disables)
+   *
+   * Since: 0.10.29
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PTIME_MULTIPLE,
+      g_param_spec_int64 ("ptime-multiple", "Packet time multiple",
+          "Force buffers to be multiples of this duration in ns (0 disables)",
+          0, G_MAXINT64, DEFAULT_PTIME_MULTIPLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 
@@ -279,6 +293,7 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->max_ptime = DEFAULT_MAX_PTIME;
   basertppayload->min_ptime = DEFAULT_MIN_PTIME;
   basertppayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
+  basertppayload->abidata.ABI.ptime_multiple = DEFAULT_PTIME_MULTIPLE;
 
   basertppayload->media = NULL;
   basertppayload->encoding_name = NULL;
@@ -906,6 +921,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_PERFECT_RTPTIME:
       priv->perfect_rtptime = g_value_get_boolean (value);
       break;
+    case PROP_PTIME_MULTIPLE:
+      basertppayload->abidata.ABI.ptime_multiple = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -961,6 +979,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PERFECT_RTPTIME:
       g_value_set_boolean (value, priv->perfect_rtptime);
+      break;
+    case PROP_PTIME_MULTIPLE:
+      g_value_set_int64 (value, basertppayload->abidata.ABI.ptime_multiple);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
