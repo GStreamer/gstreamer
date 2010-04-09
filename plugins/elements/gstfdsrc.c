@@ -212,6 +212,7 @@ gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
   fdsrc->new_fd = DEFAULT_FD;
   fdsrc->seekable_fd = FALSE;
   fdsrc->fd = -1;
+  fdsrc->size = -1;
   fdsrc->timeout = DEFAULT_TIMEOUT;
   fdsrc->uri = g_strdup_printf ("fd://0");
   fdsrc->curoffset = 0;
@@ -229,7 +230,7 @@ gst_fd_src_dispose (GObject * obj)
 }
 
 static void
-gst_fd_src_update_fd (GstFdSrc * src)
+gst_fd_src_update_fd (GstFdSrc * src, guint64 size)
 {
   struct stat stat_results;
 
@@ -252,10 +253,14 @@ gst_fd_src_update_fd (GstFdSrc * src)
     gst_poll_fd_ctl_read (src->fdset, &fd, TRUE);
   }
 
+
   if (src->fd != src->new_fd) {
     GST_INFO_OBJECT (src, "Updating to fd %d", src->new_fd);
 
     src->fd = src->new_fd;
+
+    GST_INFO_OBJECT (src, "Setting size to fd %" G_GUINT64_FORMAT, size);
+    src->size = size;
 
     g_free (src->uri);
     src->uri = g_strdup_printf ("fd://%d", src->fd);
@@ -292,7 +297,7 @@ gst_fd_src_start (GstBaseSrc * bsrc)
   if ((src->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 
-  gst_fd_src_update_fd (src);
+  gst_fd_src_update_fd (src, -1);
 
   return TRUE;
 
@@ -359,7 +364,7 @@ gst_fd_src_set_property (GObject * object, guint prop_id, const GValue * value,
       GST_OBJECT_LOCK (object);
       if (GST_STATE (GST_ELEMENT (src)) <= GST_STATE_READY) {
         GST_DEBUG_OBJECT (src, "state ready or lower, updating to use new fd");
-        gst_fd_src_update_fd (src);
+        gst_fd_src_update_fd (src, -1);
       } else {
         GST_DEBUG_OBJECT (src, "state above ready, not updating to new fd yet");
       }
@@ -546,6 +551,11 @@ gst_fd_src_get_size (GstBaseSrc * bsrc, guint64 * size)
   GstFdSrc *src = GST_FD_SRC (bsrc);
   struct stat stat_results;
 
+  if (src->size != -1) {
+    *size = src->size;
+    return TRUE;
+  }
+
   if (!src->seekable_fd) {
     /* If it isn't seekable, we won't know the length (but fstat will still
      * succeed, and wrongly say our length is zero. */
@@ -620,9 +630,12 @@ gst_fd_src_uri_get_uri (GstURIHandler * handler)
 static gboolean
 gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  gchar *protocol;
+  gchar *protocol, *q;
   GstFdSrc *src = GST_FD_SRC (handler);
   gint fd;
+  guint64 size = -1;
+
+  GST_INFO_OBJECT (src, "checking uri %s", uri);
 
   protocol = gst_uri_get_protocol (uri);
   if (strcmp (protocol, "fd") != 0) {
@@ -634,11 +647,26 @@ gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   if (sscanf (uri, "fd://%d", &fd) != 1 || fd < 0)
     return FALSE;
 
+  if ((q = g_strstr_len (uri, -1, "?"))) {
+    gchar *sp;
+
+    GST_INFO_OBJECT (src, "found ?");
+
+    if ((sp = g_strstr_len (q, -1, "size="))) {
+      if (sscanf (sp, "size=%" G_GUINT64_FORMAT, &size) != 1) {
+        GST_INFO_OBJECT (src, "parsing size failed");
+        size = -1;
+      } else {
+        GST_INFO_OBJECT (src, "found size %" G_GUINT64_FORMAT, size);
+      }
+    }
+  }
+
   src->new_fd = fd;
 
   GST_OBJECT_LOCK (src);
   if (GST_STATE (GST_ELEMENT (src)) <= GST_STATE_READY) {
-    gst_fd_src_update_fd (src);
+    gst_fd_src_update_fd (src, size);
   }
   GST_OBJECT_UNLOCK (src);
 

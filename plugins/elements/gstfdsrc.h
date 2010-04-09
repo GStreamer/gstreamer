@@ -61,6 +61,7 @@ struct _GstFdSrc {
   /* fd and flag indicating whether fd is seekable */
   gint fd;
   gboolean seekable_fd;
+  guint64 size;
 
   /* poll timeout */
   guint64 timeout;
