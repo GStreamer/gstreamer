@@ -108,8 +108,7 @@ VALGRIND_TESTS_DISABLE = \
 # changes to fix this are needed in the camerabin test)
 # neon: too flaky (almost always fails 'the first time')
 noinst_PROGRAMS = \
-	$(check_neon)      \
-	elements/camerabin
+	$(check_neon)
 
 check_PROGRAMS = \
 	generic/states \
@@ -125,6 +124,7 @@ check_PROGRAMS = \
 	elements/amrparse \
 	elements/autoconvert \
 	elements/asfmux \
+	elements/camerabin \
 	elements/capssetter \
 	elements/dataurisrc \
 	elements/imagefreeze \
