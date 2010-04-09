@@ -421,19 +421,19 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       src_obj = GST_MESSAGE_SRC (message);
 
       if (GST_IS_ELEMENT (src_obj)) {
-        g_print (_("Got message #%u from element \"%s\" (%s): "),
+        PRINT (_("Got message #%u from element \"%s\" (%s): "),
             (guint) seqnum, GST_ELEMENT_NAME (src_obj),
             GST_MESSAGE_TYPE_NAME (message));
       } else if (GST_IS_PAD (src_obj)) {
-        g_print (_("Got message #%u from pad \"%s:%s\" (%s): "),
+        PRINT (_("Got message #%u from pad \"%s:%s\" (%s): "),
             (guint) seqnum, GST_DEBUG_PAD_NAME (src_obj),
             GST_MESSAGE_TYPE_NAME (message));
       } else if (GST_IS_OBJECT (src_obj)) {
-        g_print (_("Got message #%u from object \"%s\" (%s): "),
+        PRINT (_("Got message #%u from object \"%s\" (%s): "),
             (guint) seqnum, GST_OBJECT_NAME (src_obj),
             GST_MESSAGE_TYPE_NAME (message));
       } else {
-        g_print (_("Got message #%u (%s): "), (guint) seqnum,
+        PRINT (_("Got message #%u (%s): "), (guint) seqnum,
             GST_MESSAGE_TYPE_NAME (message));
       }
 
@@ -441,10 +441,10 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gchar *sstr;
 
         sstr = gst_structure_to_string (s);
-        g_print ("%s\n", sstr);
+        PRINT ("%s\n", sstr);
         g_free (sstr);
       } else {
-        g_print ("no message details\n");
+        PRINT ("no message details\n");
       }
     }
 
@@ -455,7 +455,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_new_clock (message, &clock);
 
-        g_print ("New clock: %s\n", (clock ? GST_OBJECT_NAME (clock) : "NULL"));
+        PRINT ("New clock: %s\n", (clock ? GST_OBJECT_NAME (clock) : "NULL"));
         break;
       }
       case GST_MESSAGE_CLOCK_LOST:
@@ -463,14 +463,14 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         /* disabled for now as it caused problems with rtspsrc. We need to fix
          * rtspsrc first, then release -good before we can reenable this again
          */
-        g_print ("Clock lost, selecting a new one\n");
+        PRINT ("Clock lost, selecting a new one\n");
         gst_element_set_state (pipeline, GST_STATE_PAUSED);
         gst_element_set_state (pipeline, GST_STATE_PLAYING);
 #endif
         break;
       case GST_MESSAGE_EOS:{
         waiting_eos = FALSE;
-        g_print (_("Got EOS from element \"%s\".\n"),
+        PRINT (_("Got EOS from element \"%s\".\n"),
             GST_MESSAGE_SRC_NAME (message));
         goto exit;
       }
@@ -479,16 +479,16 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           GstTagList *tags;
 
           if (GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
-            g_print (_("FOUND TAG      : found by element \"%s\".\n"),
+            PRINT (_("FOUND TAG      : found by element \"%s\".\n"),
                 GST_MESSAGE_SRC_NAME (message));
           } else if (GST_IS_PAD (GST_MESSAGE_SRC (message))) {
-            g_print (_("FOUND TAG      : found by pad \"%s:%s\".\n"),
+            PRINT (_("FOUND TAG      : found by pad \"%s:%s\".\n"),
                 GST_DEBUG_PAD_NAME (GST_MESSAGE_SRC (message)));
           } else if (GST_IS_OBJECT (GST_MESSAGE_SRC (message))) {
-            g_print (_("FOUND TAG      : found by object \"%s\".\n"),
+            PRINT (_("FOUND TAG      : found by object \"%s\".\n"),
                 GST_MESSAGE_SRC_NAME (message));
           } else {
-            g_print (_("FOUND TAG\n"));
+            PRINT (_("FOUND TAG\n"));
           }
 
           gst_message_parse_tag (message, &tags);
@@ -503,7 +503,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_info (message, &gerror, &debug);
         if (debug) {
-          g_print (_("INFO:\n%s\n"), debug);
+          PRINT (_("INFO:\n%s\n"), debug);
         }
         g_error_free (gerror);
         g_free (debug);
@@ -520,9 +520,9 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
             GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.warning");
 
         gst_message_parse_warning (message, &gerror, &debug);
-        g_print (_("WARNING: from element %s: %s\n"), name, gerror->message);
+        PRINT (_("WARNING: from element %s: %s\n"), name, gerror->message);
         if (debug) {
-          g_print (_("Additional debug info:\n%s\n"), debug);
+          PRINT (_("Additional debug info:\n%s\n"), debug);
         }
         g_error_free (gerror);
         g_free (debug);
@@ -723,9 +723,9 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     if (err)
-      g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+      g_printerr ("Error initializing: %s\n", GST_STR_NULL (err->message));
     else
-      g_print ("Error initializing: Unknown error!\n");
+      g_printerr ("Error initializing: Unknown error!\n");
     exit (1);
   }
   g_option_context_free (ctx);
@@ -888,7 +888,7 @@ main (int argc, char *argv[])
 
       diff = GST_CLOCK_DIFF (tfthen, tfnow);
 
-      g_print (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
+      PRINT (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
     }
 
     PRINT (_("Setting pipeline to PAUSED ...\n"));
