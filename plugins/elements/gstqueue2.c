@@ -2003,7 +2003,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
         gint64 estimated_total, buffering_left;
         GstFormat peer_fmt;
         gint64 duration;
-        gboolean peer_res, is_buffering;
+        gboolean peer_res, is_buffering, is_eos;
         gdouble byte_in_rate, byte_out_rate;
 
         /* we need a current download region */
@@ -2014,12 +2014,19 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
         byte_in_rate = queue->byte_in_rate;
         byte_out_rate = queue->byte_out_rate;
         is_buffering = queue->is_buffering;
+        is_eos = queue->is_eos;
         percent = queue->buffering_percent;
 
-        /* get duration of upstream in bytes */
-        peer_fmt = GST_FORMAT_BYTES;
-        peer_res = gst_pad_query_peer_duration (queue->sinkpad, &peer_fmt,
-            &duration);
+        if (is_eos) {
+          /* we're EOS, we know the duration in bytes now */
+          peer_res = TRUE;
+          duration = writing_pos;
+        } else {
+          /* get duration of upstream in bytes */
+          peer_fmt = GST_FORMAT_BYTES;
+          peer_res = gst_pad_query_peer_duration (queue->sinkpad, &peer_fmt,
+              &duration);
+        }
 
         /* calculate remaining and total download time */
         if (peer_res && byte_in_rate > 0.0) {
