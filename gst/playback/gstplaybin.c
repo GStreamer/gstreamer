@@ -483,6 +483,10 @@ gst_play_bin_dispose (GObject * object)
     gst_object_unref (play_bin->textoverlay_element);
     play_bin->textoverlay_element = NULL;
   }
+  if (play_bin->volume_element) {
+    gst_object_unref (play_bin->volume_element);
+    play_bin->volume_element = NULL;
+  }
   if (play_bin->spu_element != NULL) {
     gst_object_unref (play_bin->spu_element);
     play_bin->spu_element = NULL;
@@ -638,6 +642,10 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case ARG_AUDIO_SINK:
       if (play_bin->audio_sink != NULL) {
         gst_object_unref (play_bin->audio_sink);
+      }
+      if (play_bin->volume_element != NULL) {
+        gst_object_unref (play_bin->volume_element);
+        play_bin->volume_element = NULL;
       }
       play_bin->audio_sink = g_value_get_object (value);
       if (play_bin->audio_sink != NULL) {
@@ -1439,11 +1447,6 @@ remove_sinks (GstPlayBin * play_bin)
   if (play_bin->textoverlay_element) {
     gst_object_unref (play_bin->textoverlay_element);
     play_bin->textoverlay_element = NULL;
-  }
-
-  if (play_bin->volume_element) {
-    gst_object_unref (play_bin->volume_element);
-    play_bin->volume_element = NULL;
   }
 }
 
