@@ -2036,6 +2036,8 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
           estimated_total = -1;
           buffering_left = -1;
         }
+        GST_DEBUG_OBJECT (queue, "estimated %" G_GINT64_FORMAT ", left %"
+            G_GINT64_FORMAT, estimated_total, buffering_left);
 
         gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
