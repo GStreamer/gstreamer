@@ -1197,8 +1197,18 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * the later streams would be delayed until the stream times
      * match.
      */
-    event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
-        1.0, GST_FORMAT_TIME, adder->timestamp, -1, adder->segment_position);
+    if (adder->segment_rate > 0.0) {
+      event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
+          1.0, GST_FORMAT_TIME, adder->timestamp, GST_CLOCK_TIME_NONE,
+          adder->segment_position);
+    } else {
+      event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
+          1.0, GST_FORMAT_TIME, G_GINT64_CONSTANT (0), adder->timestamp,
+          adder->segment_position);
+    }
+    GST_INFO_OBJECT (adder->srcpad, "new segment event for "
+        "rate:%lf start:%" G_GINT64_FORMAT "  cur:%" G_GUINT64_FORMAT,
+        adder->segment_rate, adder->timestamp, adder->segment_position);
 
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
@@ -1209,7 +1219,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       adder->segment_position = 0;
     } else {
       GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
-          "start:%" G_GINT64_FORMAT "  pos:%" G_GINT64_FORMAT " failed",
+          "start:%" G_GINT64_FORMAT "  pos:%" G_GUINT64_FORMAT " failed",
           adder->timestamp, adder->segment_position);
     }
   }
@@ -1233,7 +1243,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
-  adder->offset += outsize / adder->bps;
+  if (adder->segment_rate > 0.0) {
+    adder->offset += outsize / adder->bps;
+  } else {
+    adder->offset -= outsize / adder->bps;
+  }
   adder->timestamp = gst_util_uint64_scale_int (adder->offset,
       GST_SECOND, adder->rate);
 
