@@ -1491,7 +1491,11 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
       gst_structure_get_fraction (structure, "framerate", &self->frame_rate_n,
       &self->frame_rate_d);
   res &= gst_structure_get_fourcc (structure, "format", &fourcc);
-  res &= gst_video_format_parse_caps_interlaced (caps, &self->interlaced);
+  if (pad == self->sinkpad) {
+    res &= gst_video_format_parse_caps_interlaced (caps, &self->interlaced);
+  } else {
+    res &= gst_video_format_parse_caps_interlaced (caps, &self->src_interlaced);
+  }
   if (!res)
     goto invalid_caps;
 

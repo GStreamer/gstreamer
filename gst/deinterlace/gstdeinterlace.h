@@ -213,6 +213,7 @@ struct _GstDeinterlace
   guint frame_size;
   gint frame_rate_n, frame_rate_d;
   gboolean interlaced;
+  gboolean src_interlaced;
 
   /* Number of bytes of actual data in each scanline.  May be less than
      OverlayPitch since the overlay's scanlines might have alignment
