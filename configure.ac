@@ -272,11 +272,13 @@ dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
+dnl -Wundef: too many broken headers
+dnl -Waggregate-return: causes problems with ObjC code like in osxvideosink
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
         -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
         -Wwrite-strings -Wold-style-definition -Wcast-align
         -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
-        -Waggregate-return -Wnested-externs ])
+        -Wnested-externs ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
