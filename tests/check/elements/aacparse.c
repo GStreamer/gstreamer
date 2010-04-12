@@ -37,7 +37,6 @@
     "audio/mpeg, framed=(boolean)true, mpegversion=4, rate=96000, channels=2"
 #define SINK_CAPS_TMPL  "audio/mpeg, framed=(boolean)true, mpegversion=(int){2,4}"
 
-GList *buffers;
 GList *current_buf = NULL;
 
 GstPad *srcpad, *sinkpad;
