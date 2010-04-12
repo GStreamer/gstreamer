@@ -135,6 +135,8 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 {
   guint32 empty_pixel;
 
+  b_alpha = CLAMP (b_alpha, 0, 255);
+
   if (sdtv)
     empty_pixel = GUINT32_FROM_BE ((b_alpha << 24) |
         (yuv_sdtv_colors_Y[fill_type] << 16) |
@@ -602,6 +604,9 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   hY = h;
   hUV = (h + 1) / 2;
 
+
+  i_alpha = CLAMP (i_alpha, 0, 255);
+
   if (src_sdtv != dest_sdtv) {
     gint matrix[12];
     gint y1, y2, y3, y4;
@@ -788,6 +793,8 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 
   _argb_order (format, p, &alpha);
 
+  b_alpha = CLAMP (b_alpha, 0, 255);
+
   empty_pixel = GUINT32_FROM_BE ((b_alpha << (p[0] * 8)) |
       (rgb_colors_R[fill_type] << (p[1] * 8)) |
       (rgb_colors_G[fill_type] << (p[2] * 8)) |
@@ -860,9 +867,11 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
   } else if (out_alpha && !packed_in) {
     w *= 4;
+    i_alpha = CLAMP (i_alpha, 0, 255);
+
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
-        dest[j + p_out[0]] = i_alpha & 0xff;
+        dest[j + p_out[0]] = i_alpha;
         dest[j + p_out[1]] = src[j + p_in[1]];
         dest[j + p_out[2]] = src[j + p_in[2]];
         dest[j + p_out[3]] = src[j + p_in[3]];
@@ -871,9 +880,11 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src += src_stride;
     }
   } else if (out_alpha && packed_in) {
+    i_alpha = CLAMP (i_alpha, 0, 255);
+
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j++) {
-        dest[4 * j + p_out[0]] = i_alpha & 0xff;
+        dest[4 * j + p_out[0]] = i_alpha;
         dest[4 * j + p_out[1]] = src[in_bpp * j + p_in[1]];
         dest[4 * j + p_out[2]] = src[in_bpp * j + p_in[2]];
         dest[4 * j + p_out[3]] = src[in_bpp * j + p_in[3]];
@@ -960,9 +971,11 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
   } else if (!packed_in) {
     w *= 4;
+    i_alpha = CLAMP (i_alpha, 0, 255);
+
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
-        a = i_alpha & 0xff;
+        a = i_alpha;
         r = src[j + p_in[1]];
         g = src[j + p_in[2]];
         b = src[j + p_in[3]];
@@ -980,9 +993,11 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src += src_stride;
     }
   } else {
+    i_alpha = CLAMP (i_alpha, 0, 255);
+
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j++) {
-        a = i_alpha & 0xff;
+        a = i_alpha;
         r = src[in_bpp * j + p_in[1]];
         g = src[in_bpp * j + p_in[2]];
         b = src[in_bpp * j + p_in[3]];
