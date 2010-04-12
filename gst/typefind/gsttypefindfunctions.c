@@ -686,8 +686,10 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         goto next;
       }
 
+      /* check if there's a second ADTS frame */
       snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
+        GstCaps *caps;
         guint mpegversion, sample_freq_idx, channel_config, profile, rate;
         gint level;
 
@@ -713,29 +715,33 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         /* ADTS counts profiles from 0 instead of 1 to save bits */
         level = gst_aac_level_from_header (profile + 1, rate, channel_config);
 
-        if (level == -1) {
-          /* Could not determine the level */
-          gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
-              "framed", G_TYPE_BOOLEAN, FALSE,
-              "mpegversion", G_TYPE_INT, mpegversion,
-              "stream-type", G_TYPE_STRING, "adts",
-              "base-profile", G_TYPE_STRING, profile_to_string[profile],
-              "profile", G_TYPE_STRING, profile_to_string[profile], NULL);
-        } else {
+        caps = gst_caps_new_simple ("audio/mpeg",
+            "framed", G_TYPE_BOOLEAN, FALSE,
+            "mpegversion", G_TYPE_INT, mpegversion,
+            "stream-type", G_TYPE_STRING, "adts",
+            "base-profile", G_TYPE_STRING, profile_to_string[profile],
+            "profile", G_TYPE_STRING, profile_to_string[profile], NULL);
+
+        if (level != -1) {
           gchar level_str[16];
 
           /* we use a string here because h.264 levels are also strings and
            * there aren't a lot of levels, so it's not too awkward to not use
            * and integer here and keep the field type consistent with h.264 */
           g_snprintf (level_str, sizeof (level_str), "%d", level);
-          gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
-              "framed", G_TYPE_BOOLEAN, FALSE,
-              "mpegversion", G_TYPE_INT, mpegversion,
-              "stream-type", G_TYPE_STRING, "adts",
-              "base-profile", G_TYPE_STRING, profile_to_string[profile],
-              "profile", G_TYPE_STRING, profile_to_string[profile],
-              "level", G_TYPE_STRING, level_str, NULL);
+          gst_caps_set_simple (caps, "level", G_TYPE_STRING, level_str, NULL);
         }
+
+        /* add rate and number of channels if we can */
+        if (channel_config != 0 && channel_config <= 7) {
+          const guint channels_map[] = { 0, 1, 2, 3, 4, 5, 6, 8 };
+
+          gst_caps_set_simple (caps, "channels", G_TYPE_INT,
+              channels_map[channel_config], "rate", G_TYPE_INT, rate, NULL);
+        }
+
+        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+        gst_caps_unref (caps);
         break;
       }
 
