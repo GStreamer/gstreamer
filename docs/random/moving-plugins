@@ -127,6 +127,9 @@ CHECKLIST
   - wrong pipelines
   - bad data
 
+- The element must not rely on a running GLib main loop, meaning it can't
+  use g_idle_add(), g_timeout_add(), g_io_add_watch(), etc.
+
 - The plugins need to be marked correctly for translations.
 - All error conditions should be correctly handled using GST_ELEMENT_ERROR
   and following practice outlined in
