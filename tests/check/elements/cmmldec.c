@@ -92,8 +92,6 @@ static GstBus *bus;
 
 static GstFlowReturn flow;
 
-GList *buffers;
-
 static GList *current_buf;
 
 static gint64 granulerate;

@@ -24,7 +24,6 @@
 
 #include <gst/check/gstcheck.h>
 
-GList *buffers = NULL;
 gboolean have_eos = FALSE;
 
 /* For ease of programming we use globals to keep refs for our floating

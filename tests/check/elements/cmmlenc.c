@@ -109,7 +109,6 @@ G_STMT_START {                                                          \
   g_free (b_up);                                                        \
 } G_STMT_END;
 
-GList *buffers;
 static GList *current_buf;
 static guint64 granulerate;
 static guint8 granuleshift;

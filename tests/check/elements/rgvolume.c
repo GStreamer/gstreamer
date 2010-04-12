@@ -24,7 +24,6 @@
 
 #include <math.h>
 
-GList *buffers = NULL;
 GList *events = NULL;
 
 /* For ease of programming we use globals to keep refs for our floating src and
