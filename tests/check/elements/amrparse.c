@@ -36,7 +36,6 @@
 
 #define AMR_FRAME_DURATION (GST_SECOND/50)
 
-GList *buffers;
 GList *current_buf = NULL;
 
 GstPad *srcpad, *sinkpad;
