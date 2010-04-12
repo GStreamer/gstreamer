@@ -26,6 +26,7 @@
 #endif
 
 #include <glib.h>
+#include <glib/gprintf.h>
 
 /* don't want to add gio xdgmime typefinder if gio was disabled via configure */
 #ifdef HAVE_GIO
@@ -42,6 +43,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "gstaacutil.h"
 
 GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
@@ -652,6 +655,9 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 {
   /* LUT to convert the AudioObjectType from the ADTS header to a string */
   static const gchar profile_to_string[][5] = { "main", "lc", "ssr", "ltp" };
+  static const guint sample_freq[] = { 96000, 88200, 64000, 48000, 44100,
+    32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350
+  };
   DataScanCtx c = { 0, NULL, 0 };
 
   while (c.offset < AAC_AMOUNT) {
@@ -682,18 +688,54 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
       snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
-        gint mpegversion, profile;
+        guint mpegversion, sample_freq_idx, channel_config, profile, rate;
+        gint level;
 
         mpegversion = (c.data[1] & 0x08) ? 2 : 4;
         profile = c.data[2] >> 6;
+        sample_freq_idx = ((c.data[2] & 0x3c) >> 2);
+        channel_config = ((c.data[2] & 0x01) << 2) + (c.data[3] >> 6);
+
         GST_DEBUG ("Found second ADTS-%d syncpoint at offset 0x%"
             G_GINT64_MODIFIER "x, framelen %u", mpegversion, c.offset, len);
-        gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
-            "framed", G_TYPE_BOOLEAN, FALSE,
-            "mpegversion", G_TYPE_INT, mpegversion,
-            "base-profile", G_TYPE_STRING, profile_to_string[profile],
-            "profile", G_TYPE_STRING, profile_to_string[profile],
-            "stream-type", G_TYPE_STRING, "adts", NULL);
+
+        /* 0xd and 0xe are reserved. 0xf means the sample frequency is directly
+         * specified in the header, but that's not allowed for ADTS */
+        if (sample_freq_idx > 0xc) {
+          GST_DEBUG ("Unexpected sample frequency index %d or wrong sync",
+              sample_freq_idx);
+          goto next;
+        }
+
+        rate = sample_freq[sample_freq_idx];
+        GST_LOG ("ADTS: profile=%u, rate=%u", profile, rate);
+
+        /* ADTS counts profiles from 0 instead of 1 to save bits */
+        level = gst_aac_level_from_header (profile + 1, rate, channel_config);
+
+        if (level == -1) {
+          /* Could not determine the level */
+          gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+              "framed", G_TYPE_BOOLEAN, FALSE,
+              "mpegversion", G_TYPE_INT, mpegversion,
+              "stream-type", G_TYPE_STRING, "adts",
+              "base-profile", G_TYPE_STRING, profile_to_string[profile],
+              "profile", G_TYPE_STRING, profile_to_string[profile], NULL);
+        } else {
+          gchar level_str[16];
+
+          /* we use a string here because h.264 levels are also strings and
+           * there aren't a lot of levels, so it's not too awkward to not use
+           * and integer here and keep the field type consistent with h.264 */
+          g_snprintf (level_str, sizeof (level_str), "%d", level);
+          gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+              "framed", G_TYPE_BOOLEAN, FALSE,
+              "mpegversion", G_TYPE_INT, mpegversion,
+              "stream-type", G_TYPE_STRING, "adts",
+              "base-profile", G_TYPE_STRING, profile_to_string[profile],
+              "profile", G_TYPE_STRING, profile_to_string[profile],
+              "level", G_TYPE_STRING, level_str, NULL);
+        }
         break;
       }
 
