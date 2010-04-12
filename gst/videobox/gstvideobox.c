@@ -570,9 +570,9 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
     gint w, gint h)
 {
-  gint i;
   const guint8 *srcY, *srcU, *srcV;
   gint src_strideY, src_strideUV;
+  gint dest_stride;
   gint widthY, widthUV;
   gint hY, hUV;
 
@@ -591,8 +591,9 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src + gst_video_format_get_component_offset (src_format, 2,
       src_width, src_height);
 
+  dest_stride = dest_width * 4;
 
-  dest = dest + dest_y * dest_width * 4 + dest_x * 4;
+  dest = dest + dest_y * dest_stride + dest_x * 4;
 
   srcY = srcY + src_y * src_strideY + src_x;
   srcU = srcU + (src_y / 2) * src_strideUV + src_x / 2;
@@ -604,137 +605,65 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   hY = h;
   hUV = (h + 1) / 2;
 
-
   i_alpha = CLAMP (i_alpha, 0, 255);
 
   if (src_sdtv != dest_sdtv) {
+    gint i, j, uv_idx;
+    gint y, u, v;
+    gint y1, u1, v1;
     gint matrix[12];
-    gint y1, y2, y3, y4;
-    gint u1, u2, u3, u4;
-    gint v1, v2, v3, v4;
-    gint j;
-    guint8 *dest2;
-    const guint8 *srcY2 = srcY + src_strideY;
-
-    dest2 = dest + dest_width * 4;
-
-    src_strideY *= 2;
 
     memcpy (matrix,
         dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
         cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
 
-    for (i = 0; i < hUV; i++) {
-      if (i * 2 == hY) {
-        srcY2 = srcY;
+    for (i = 0; i < h; i++) {
+      for (j = 0, uv_idx = src_x % 2; j < w; j++, uv_idx++) {
+        y = srcY[j];
+        u = srcU[uv_idx / 2];
+        v = srcV[uv_idx / 2];
+
+        y1 = APPLY_MATRIX (matrix, 0, y, u, v);
+        u1 = APPLY_MATRIX (matrix, 1, y, u, v);
+        v1 = APPLY_MATRIX (matrix, 2, y, u, v);
+
+        dest[4 * j + 0] = i_alpha;
+        dest[4 * j + 1] = y1;
+        dest[4 * j + 2] = u1;
+        dest[4 * j + 3] = v1;
       }
+      dest += dest_stride;
 
-      for (j = 0; j < widthUV; j++) {
-        y1 = srcY[2 * j];
-        y3 = srcY2[2 * j];
-        y2 = (j * 2 < widthY) ? srcY[2 * j + 1] : y1;
-        y4 = (j * 2 < widthY) ? srcY2[2 * j + 1] : y3;
-
-        u1 = u2 = u3 = u4 = srcU[j];
-        v1 = v2 = v3 = v4 = srcV[j];
-
-        y1 = APPLY_MATRIX (matrix, 0, y1, u1, v1);
-        u1 = APPLY_MATRIX (matrix, 1, y1, u1, v1);
-        v1 = APPLY_MATRIX (matrix, 2, y1, u1, v1);
-
-        y3 = APPLY_MATRIX (matrix, 0, y3, u3, v3);
-        u3 = APPLY_MATRIX (matrix, 1, y3, u3, v3);
-        v3 = APPLY_MATRIX (matrix, 2, y3, u3, v3);
-
-        if (j * 2 < widthY) {
-          y2 = APPLY_MATRIX (matrix, 0, y2, u2, v2);
-          u2 = APPLY_MATRIX (matrix, 1, y2, u2, v2);
-          v2 = APPLY_MATRIX (matrix, 2, y2, u2, v2);
-
-          y4 = APPLY_MATRIX (matrix, 0, y4, u4, v4);
-          u4 = APPLY_MATRIX (matrix, 1, y4, u4, v4);
-          v4 = APPLY_MATRIX (matrix, 2, y4, u4, v4);
-        }
-
-        dest[8 * j] = i_alpha;
-        dest[8 * j + 1] = y1;
-        dest[8 * j + 2] = u1;
-        dest[8 * j + 3] = v1;
-        dest2[8 * j] = i_alpha;
-        dest2[8 * j + 1] = y3;
-        dest2[8 * j + 2] = u3;
-        dest2[8 * j + 3] = v3;
-        if (j * 2 < widthY) {
-          dest[8 * j + 4] = i_alpha;
-          dest[8 * j + 5] = y2;
-          dest[8 * j + 6] = u2;
-          dest[8 * j + 7] = v2;
-          dest2[8 * j + 4] = i_alpha;
-          dest2[8 * j + 5] = y4;
-          dest2[8 * j + 6] = u4;
-          dest2[8 * j + 7] = v4;
-        }
-      }
-      dest += dest_width * 8;
+      src_y++;
       srcY += src_strideY;
-      dest2 += dest_width * 8;
-      srcY2 += src_strideY;
-
-      srcU += src_strideUV;
-      srcV += src_strideUV;
+      if (src_y % 2 == 0) {
+        srcU += src_strideUV;
+        srcV += src_strideUV;
+      }
     }
   } else {
-    gint y1, y2, y3, y4;
-    gint u1, u2, u3, u4;
-    gint v1, v2, v3, v4;
-    gint j;
-    guint8 *dest2;
-    const guint8 *srcY2 = srcY + src_strideY;
+    gint i, j, uv_idx;
+    gint y, u, v;
 
-    dest2 = dest + dest_width * 4;
+    for (i = 0; i < h; i++) {
+      for (j = 0, uv_idx = src_x % 2; j < w; j++, uv_idx++) {
+        y = srcY[j];
+        u = srcU[uv_idx / 2];
+        v = srcV[uv_idx / 2];
 
-    src_strideY *= 2;
-
-    for (i = 0; i < hUV; i++) {
-      if (i * 2 == hY) {
-        srcY2 = srcY;
+        dest[4 * j + 0] = i_alpha;
+        dest[4 * j + 1] = y;
+        dest[4 * j + 2] = u;
+        dest[4 * j + 3] = v;
       }
+      dest += dest_stride;
 
-      for (j = 0; j < widthUV; j++) {
-        y1 = srcY[2 * j];
-        y3 = srcY2[2 * j];
-        y2 = (j * 2 < widthY) ? srcY[2 * j + 1] : y1;
-        y4 = (j * 2 < widthY) ? srcY2[2 * j + 1] : y3;
-
-        u1 = u2 = u3 = u4 = srcU[j];
-        v1 = v2 = v3 = v4 = srcV[j];
-
-        dest[8 * j] = i_alpha;
-        dest[8 * j + 1] = y1;
-        dest[8 * j + 2] = u1;
-        dest[8 * j + 3] = v1;
-        dest2[8 * j] = i_alpha;
-        dest2[8 * j + 1] = y3;
-        dest2[8 * j + 2] = u3;
-        dest2[8 * j + 3] = v3;
-        if (j * 2 < widthY) {
-          dest[8 * j + 4] = i_alpha;
-          dest[8 * j + 5] = y2;
-          dest[8 * j + 6] = u2;
-          dest[8 * j + 7] = v2;
-          dest2[8 * j + 4] = i_alpha;
-          dest2[8 * j + 5] = y4;
-          dest2[8 * j + 6] = u4;
-          dest2[8 * j + 7] = v4;
-        }
-      }
-      dest += dest_width * 8;
+      src_y++;
       srcY += src_strideY;
-      dest2 += dest_width * 8;
-      srcY2 += src_strideY;
-
-      srcU += src_strideUV;
-      srcV += src_strideUV;
+      if (src_y % 2 == 0) {
+        srcU += src_strideUV;
+        srcV += src_strideUV;
+      }
     }
   }
 }
