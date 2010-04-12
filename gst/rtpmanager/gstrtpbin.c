@@ -2768,25 +2768,47 @@ gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)
 {
   gboolean name_found = FALSE;
   gint session = 0;
-  GstPad *pad = NULL;
   GstIterator *pad_it = NULL;
   gchar *pad_name = NULL;
 
   GST_DEBUG_OBJECT (element, "find a free pad name for template");
   while (!name_found) {
+    gboolean done = FALSE;
     g_free (pad_name);
     pad_name = g_strdup_printf (templ->name_template, session++);
     pad_it = gst_element_iterate_pads (GST_ELEMENT (element));
     name_found = TRUE;
-    while (name_found &&
-        gst_iterator_next (pad_it, (gpointer) & pad) == GST_ITERATOR_OK) {
-      gchar *name;
+    while (!done) {
+      gpointer data;
 
-      name = gst_pad_get_name (pad);
-      if (strcmp (name, pad_name) == 0)
-        name_found = FALSE;
-      g_free (name);
-      gst_object_unref (pad);
+      switch (gst_iterator_next (pad_it, &data)) {
+        case GST_ITERATOR_OK:
+        {
+          GstPad *pad;
+          gchar *name;
+
+          pad = GST_PAD_CAST (data);
+          name = gst_pad_get_name (pad);
+
+          if (strcmp (name, pad_name) == 0) {
+            done = TRUE;
+            name_found = FALSE;
+          }
+          g_free (name);
+          gst_object_unref (pad);
+          break;
+        }
+        case GST_ITERATOR_ERROR:
+        case GST_ITERATOR_RESYNC:
+          /* restart iteration */
+          done = TRUE;
+          name_found = FALSE;
+          session = 0;
+          break;
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+          break;
+      }
     }
     gst_iterator_free (pad_it);
   }
