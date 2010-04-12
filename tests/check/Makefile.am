@@ -10,7 +10,10 @@ TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
-	STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink halaudiosrc halaudiosink v4l2src osssrc osssink pulsesink pulsesrc pulsemixer"
+	STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink \
+		cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink \
+		halaudiosrc halaudiosink v4l2src osssrc osssink pulsesink pulsesrc pulsemixer \
+		osxaudiosink osxaudiosrc osxvideosrc osxvideosink"
 
 # fake device drivers: we could run hardware element tests against dummy drivers
 # v4l2: vivo (part of normal kernel)
