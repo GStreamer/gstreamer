@@ -5869,25 +5869,16 @@ avc_profile_idc_to_string (guint profile_idc, guint constraint_set_flags)
 static gchar *
 avc_level_idc_to_string (guint level_idc, guint constraint_set_flags)
 {
-  const gchar *level = NULL;
-  gchar buf[4];
   gint csf3;
 
   csf3 = (constraint_set_flags & 0x10) >> 4;
 
   if (level_idc == 11 && csf3)
-    level = "1b";
-  else {
-    /* Level is (level_idc / 10) */
-    if (level_idc % 10 == 0)
-      g_sprintf (buf, "%u", level_idc / 10);
-    else
-      g_sprintf (buf, "%u.%u", level_idc / 10, level_idc % 10);
-
-    level = buf;
-  }
-
-  return g_strdup (level);
+    return g_strdup ("1b");
+  else if (level_idc % 10 == 0)
+    return g_strdup_printf ("%u", level_idc / 10);
+  else
+    return g_strdup_printf ("%u.%u", level_idc / 10, level_idc % 10);
 }
 
 static void
