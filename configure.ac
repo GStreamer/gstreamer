@@ -249,7 +249,7 @@ AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
-    -Wmissing-declarations -Wredundant-decls -Wundef
+    -Wmissing-declarations -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Wcast-align -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
 
