@@ -756,12 +756,14 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   sps = nal[SPS_NI].p_payload;
 #else
   sps = nal[SPS_NI].p_payload + 4;
+  /* skip NAL unit type */
+  sps++;
 #endif
 
   buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
-  buffer[1] = sps[1];           /* profile_idc                             */
-  buffer[2] = sps[2];           /* profile_compability                     */
-  buffer[3] = sps[3];           /* level_idc                               */
+  buffer[1] = sps[0];           /* profile_idc                             */
+  buffer[2] = sps[1];           /* profile_compability                     */
+  buffer[3] = sps[2];           /* level_idc                               */
   buffer[4] = 0xfc | (4 - 1);   /* nal_length_size_minus1                  */
 
   i_size = 5;
