@@ -127,6 +127,12 @@ static const gint cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit[] = {
   0, -19, 252, 2918,
 };
 
+static const gint cog_identity_matrix_8bit[] = {
+  256, 0, 0, 0,
+  0, 256, 0, 0,
+  0, 0, 256, 0,
+};
+
 #define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
@@ -208,13 +214,20 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     gint w, gint h)
 {
   gint i, j;
-  guint8 *destY, *destU, *destV;
+  guint8 *destY, *destY2, *destU, *destV;
   gint dest_strideY, dest_strideUV;
-  gint widthY, widthUV;
-  gint hY, hUV;
+  const guint8 *src2;
+  gint src_stride;
+  gint y_idx, uv_idx;
+  gint y1, y2, y3, y4;
+  gint u1, u2, u3, u4;
+  gint v1, v2, v3, v4;
+  gint matrix[12];
 
   dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
   dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
+
+  src_stride = 4 * src_width;
 
   destY =
       dest + gst_video_format_get_component_offset (dest_format, 0,
@@ -227,156 +240,387 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       dest_width, dest_height);
 
   destY = destY + dest_y * dest_strideY + dest_x;
+  destY2 = (dest_y < dest_height) ? destY + dest_strideY : destY;
   destU = destU + (dest_y / 2) * dest_strideUV + dest_x / 2;
   destV = destV + (dest_y / 2) * dest_strideUV + dest_x / 2;
 
-  src = src + src_y * src_width * 4 + src_x * 4;
+  src = src + src_y * src_stride + src_x * 4;
+  src2 = (src_y < src_height) ? src + src_stride : src;
 
-  widthY = w;
-  widthUV = w / 2;
+  h = dest_y + h;
+  w = dest_x + w;
 
-  hY = h;
-  hUV = h / 2;
-
-  if (src_sdtv != dest_sdtv) {
-    gint matrix[12];
-    gint y1, y2, y3, y4;
-    gint u1, u2, u3, u4;
-    gint v1, v2, v3, v4;
-    guint8 *destY2 = destY + dest_strideY;
-    const guint8 *src2 = src + src_width * 4;
-
-    dest_strideY *= 2;
-
+  if (src_sdtv != dest_sdtv)
     memcpy (matrix,
         dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
         cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+  else
+    memcpy (matrix, cog_identity_matrix_8bit, 12 * sizeof (gint));
 
-    for (i = 0; i < hUV; i++) {
-      if (i * 2 == hY) {
-        destY2 = destY;
-      }
+  /* 1. Handle the first destination scanline specially if it
+   *    doesn't start at the macro pixel boundary, i.e. blend
+   *    with the background! */
+  if (dest_y % 2 == 1) {
+    /* 1.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 2 == 1) {
+      y1 = src[4 * 0 + 1];
+      u1 = src[4 * 0 + 2];
+      v1 = src[4 * 0 + 3];
 
-      for (j = 0; j < widthUV; j++) {
-        y1 = src[8 * j + 1];
-        u1 = src[8 * j + 2];
-        v1 = src[8 * j + 3];
-        y2 = src[8 * j + 5];
-        u2 = src[8 * j + 6];
-        v2 = src[8 * j + 7];
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[0] =
+          CLAMP ((3 * destU[0] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0,
+          255);
+      destV[0] =
+          CLAMP ((3 * destV[0] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 4, 0,
+          255);
 
-        if (j * 2 < widthY) {
-          y3 = src2[8 * j + 1];
-          u3 = src2[8 * j + 2];
-          v3 = src2[8 * j + 3];
-          y4 = src2[8 * j + 5];
-          u4 = src2[8 * j + 6];
-          v4 = src2[8 * j + 7];
-        } else {
-          y3 = y1;
-          u3 = u1;
-          v3 = v1;
-          y4 = y2;
-          u4 = u2;
-          v4 = v2;
-        }
-
-        y1 = APPLY_MATRIX (matrix, 0, y1, u1, v1);
-        u1 = APPLY_MATRIX (matrix, 1, y1, u1, v1);
-        v1 = APPLY_MATRIX (matrix, 2, y1, u1, v1);
-
-        y3 = APPLY_MATRIX (matrix, 0, y3, u3, v3);
-        u3 = APPLY_MATRIX (matrix, 1, y3, u3, v3);
-        v3 = APPLY_MATRIX (matrix, 2, y3, u3, v3);
-
-        if (j * 2 < widthY) {
-          y2 = APPLY_MATRIX (matrix, 0, y2, u2, v2);
-          u2 = APPLY_MATRIX (matrix, 1, y2, u2, v2);
-          v2 = APPLY_MATRIX (matrix, 2, y2, u2, v2);
-
-          y4 = APPLY_MATRIX (matrix, 0, y4, u4, v4);
-          u4 = APPLY_MATRIX (matrix, 1, y4, u4, v4);
-          v4 = APPLY_MATRIX (matrix, 2, y4, u4, v4);
-        } else {
-          u2 = u1;
-          v2 = v1;
-          u4 = u3;
-          v4 = v3;
-        }
-
-        destY[2 * j] = y1;
-        destY2[2 * j] = y3;
-        if (j * 2 < widthY) {
-          destY[2 * j + 1] = y2;
-          destY2[2 * j + 1] = y4;
-        }
-
-        destU[j] = (u1 + u2 + u3 + u4) / 4;
-        destV[j] = (v1 + v2 + v3 + v4) / 4;
-      }
-      src += src_width * 8;
-      destY += dest_strideY;
-      src2 += src_width * 8;
-      destY2 += dest_strideY;
-
-      destU += dest_strideUV;
-      destV += dest_strideUV;
+      j = dest_x + 1;
+      y_idx = uv_idx = 1;
+    } else {
+      j = dest_x;
+      y_idx = uv_idx = 0;
     }
+
+    /* 1.2. Copy all macro pixels from the source to the destination
+     *      but blend with the background because we're only filling
+     *      the lower part of the macro pixels. */
+    for (; j < w - 1; j += 2) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src[4 * y_idx + 4 + 1];
+
+      u1 = src[4 * y_idx + 2];
+      u2 = src[4 * y_idx + 4 + 2];
+
+      v1 = src[4 * y_idx + 3];
+      v2 = src[4 * y_idx + 4 + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[y_idx + 1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (2 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u2, v2)) / 4, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (2 * destV[uv_idx] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+
+      y_idx += 2;
+      uv_idx++;
+    }
+
+    /* 1.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (destV[uv_idx] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 2, 0, 255);
+    } else if (j == w - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (3 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0,
+          255);
+      destV[uv_idx] =
+          CLAMP ((3 * destV[uv_idx] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 4,
+          0, 255);
+    }
+
+    destY += dest_strideY;
+    destY2 += dest_strideY;
+    destU += dest_strideUV;
+    destV += dest_strideUV;
+    src += src_stride;
+    src2 += src_stride;
+    i = dest_y + 1;
   } else {
-    gint y1, y2, y3, y4;
-    gint u1, u2, u3, u4;
-    gint v1, v2, v3, v4;
-    guint8 *destY2 = destY + dest_strideY;
-    const guint8 *src2 = src + src_width * 4;
+    i = dest_y;
+  }
 
-    dest_strideY *= 2;
+  /* 2. Copy all macro pixel scanlines, the destination scanline
+   *    now starts at macro pixel boundary. */
+  for (; i < h - 1; i += 2) {
+    /* 2.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 2 == 1) {
+      y1 = src[4 * 0 + 1];
+      y2 = src2[4 * 0 + 1];
+      u1 = src[4 * 0 + 2];
+      u2 = src2[4 * 0 + 2];
+      v1 = src[4 * 0 + 3];
+      v2 = src2[4 * 0 + 3];
 
-    for (i = 0; i < hUV; i++) {
-      if (i * 2 == hY) {
-        destY2 = destY;
-      }
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY2[0] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destU[0] = CLAMP (
+          (2 * destU[0] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u2, v2)) / 4, 0, 255);
+      destV[0] = CLAMP (
+          (2 * destV[0] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+      j = dest_x + 1;
+      y_idx = uv_idx = 1;
+    } else {
+      j = dest_x;
+      y_idx = uv_idx = 0;
+    }
 
-      for (j = 0; j < widthUV; j++) {
-        y1 = src[8 * j + 1];
-        u1 = src[8 * j + 2];
-        v1 = src[8 * j + 3];
-        y2 = src[8 * j + 5];
-        u2 = src[8 * j + 6];
-        v2 = src[8 * j + 7];
+    /* 2.2. Copy all macro pixels from the source to the destination.
+     *      All pixels now start at macro pixel boundary, i.e. no
+     *      blending with the background is necessary. */
+    for (; j < w - 1; j += 2) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src[4 * y_idx + 4 + 1];
+      y3 = src2[4 * y_idx + 1];
+      y4 = src2[4 * y_idx + 4 + 1];
 
-        if (j * 2 < widthY) {
-          y3 = src2[8 * j + 1];
-          u3 = src2[8 * j + 2];
-          v3 = src2[8 * j + 3];
-          y4 = src2[8 * j + 5];
-          u4 = src2[8 * j + 6];
-          v4 = src2[8 * j + 7];
-        } else {
-          y3 = y1;
-          u3 = u1;
-          v3 = v1;
-          y4 = y2;
-          u4 = u2;
-          v4 = v2;
-        }
+      u1 = src[4 * y_idx + 2];
+      u2 = src[4 * y_idx + 4 + 2];
+      u3 = src2[4 * y_idx + 2];
+      u4 = src2[4 * y_idx + 4 + 2];
 
-        destY[2 * j] = y1;
-        destY2[2 * j] = y3;
-        if (j * 2 < widthY) {
-          destY[2 * j + 1] = y2;
-          destY2[2 * j + 1] = y4;
-        }
+      v1 = src[4 * y_idx + 3];
+      v2 = src[4 * y_idx + 4 + 3];
+      v3 = src2[4 * y_idx + 3];
+      v4 = src2[4 * y_idx + 4 + 3];
 
-        destU[j] = (u1 + u2 + u3 + u4) / 4;
-        destV[j] = (v1 + v2 + v3 + v4) / 4;
-      }
-      src += src_width * 8;
-      destY += dest_strideY;
-      src2 += src_width * 8;
-      destY2 += dest_strideY;
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[y_idx + 1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destY2[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y3, u3, v3), 0, 255);
+      destY2[y_idx + 1] = CLAMP (APPLY_MATRIX (matrix, 0, y4, u4, v4), 0, 255);
 
-      destU += dest_strideUV;
-      destV += dest_strideUV;
+      destU[uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 1, y1, u1, v1) + APPLY_MATRIX (matrix, 1, y2,
+                  u2, v2) + APPLY_MATRIX (matrix, 1, y3, u3,
+                  v3) + APPLY_MATRIX (matrix, 1, y4, u4, v4)) / 4, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 2, y1, u1, v1) + APPLY_MATRIX (matrix, 2, y2,
+                  u2, v2) + APPLY_MATRIX (matrix, 2, y3, u3,
+                  v3) + APPLY_MATRIX (matrix, 2, y4, u4, v4)) / 4, 0, 255);
+
+      y_idx += 2;
+      uv_idx++;
+    }
+
+    /* 2.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src2[4 * y_idx + 1];
+
+      u1 = src[4 * y_idx + 2];
+      u2 = src2[4 * y_idx + 2];
+
+      v1 = src[4 * y_idx + 3];
+      v2 = src2[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY2[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 1, y1, u1, v1) + APPLY_MATRIX (matrix, 2, y2,
+                  u2, v2)) / 2, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 1, y1, u1, v1) + APPLY_MATRIX (matrix, 2, y2,
+                  u2, v2)) / 2, 0, 255);
+    } else if (j == w - 1) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src2[4 * y_idx + 1];
+
+      u1 = src[4 * y_idx + 2];
+      u2 = src2[4 * y_idx + 2];
+
+      v1 = src[4 * y_idx + 3];
+      v2 = src2[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY2[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (2 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (2 * destV[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+    }
+
+    destY += 2 * dest_strideY;
+    destY2 += 2 * dest_strideY;
+    destU += dest_strideUV;
+    destV += dest_strideUV;
+    src += 2 * src_stride;
+    src2 += 2 * src_stride;
+  }
+
+  /* 3. Handle the last scanline if one exists. This again
+   *    doesn't start at macro pixel boundary but should
+   *    only fill the upper part of the macro pixels. */
+  if (i == h - 1 && i == dest_height - 1) {
+    /* 3.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 2 == 1) {
+      y1 = src[4 * 0 + 1];
+      u1 = src[4 * 0 + 2];
+      v1 = src[4 * 0 + 3];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[0] =
+          CLAMP ((destU[0] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+      destV[0] =
+          CLAMP ((destV[0] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 2, 0, 255);
+
+      j = dest_x + 1;
+      y_idx = uv_idx = 1;
+    } else {
+      j = dest_x;
+      y_idx = uv_idx = 0;
+    }
+
+    /* 3.2. Copy all macro pixels from the source to the destination
+     *      but blend with the background because we're only filling
+     *      the upper part of the macro pixels. */
+    for (; j < w - 1; j += 2) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src[4 * y_idx + 4 + 1];
+
+      u1 = src[4 * y_idx + 2];
+      u2 = src[4 * y_idx + 4 + 2];
+
+      v1 = src[4 * y_idx + 3];
+      v2 = src[4 * y_idx + 4 + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[y_idx + 1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+
+      destU[uv_idx] = CLAMP (
+          (2 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u2, v2)) / 4, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (2 * destV[uv_idx] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+
+      y_idx += 2;
+      uv_idx++;
+    }
+
+    /* 3.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (destV[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+    } else if (j == w - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (3 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0,
+          255);
+      destV[uv_idx] =
+          CLAMP ((3 * destV[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4,
+          0, 255);
+    }
+  } else if (i == h - 1) {
+    /* 3.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 2 == 1) {
+      y1 = src[4 * 0 + 1];
+      u1 = src[4 * 0 + 2];
+      v1 = src[4 * 0 + 3];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[0] =
+          CLAMP ((3 * destU[0] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0,
+          255);
+      destV[0] =
+          CLAMP ((3 * destV[0] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 4, 0,
+          255);
+
+      j = dest_x + 1;
+      y_idx = uv_idx = 1;
+    } else {
+      j = dest_x;
+      y_idx = uv_idx = 0;
+    }
+
+    /* 3.2. Copy all macro pixels from the source to the destination
+     *      but blend with the background because we're only filling
+     *      the upper part of the macro pixels. */
+    for (; j < w - 1; j += 2) {
+      y1 = src[4 * y_idx + 1];
+      y2 = src[4 * y_idx + 4 + 1];
+
+      u1 = src[4 * y_idx + 2];
+      u2 = src[4 * y_idx + 4 + 2];
+
+      v1 = src[4 * y_idx + 3];
+      v2 = src[4 * y_idx + 4 + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[y_idx + 1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+
+      destU[uv_idx] = CLAMP (
+          (2 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u2, v2)) / 4, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (2 * destV[uv_idx] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u2, v2)) / 4, 0, 255);
+
+      y_idx += 2;
+      uv_idx++;
+    }
+
+    /* 3.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+      destV[uv_idx] = CLAMP (
+          (destV[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+    } else if (j == w - 1) {
+      y1 = src[4 * y_idx + 1];
+      u1 = src[4 * y_idx + 2];
+      v1 = src[4 * y_idx + 3];
+
+      destY[y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[uv_idx] = CLAMP (
+          (3 * destU[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0,
+          255);
+      destV[uv_idx] =
+          CLAMP ((3 * destV[uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4,
+          0, 255);
     }
   }
 }
@@ -573,8 +817,6 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   const guint8 *srcY, *srcU, *srcV;
   gint src_strideY, src_strideUV;
   gint dest_stride;
-  gint widthY, widthUV;
-  gint hY, hUV;
 
   src_strideY =
       gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, src_width);
@@ -598,12 +840,6 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   srcY = srcY + src_y * src_strideY + src_x;
   srcU = srcU + (src_y / 2) * src_strideUV + src_x / 2;
   srcV = srcV + (src_y / 2) * src_strideUV + src_x / 2;
-
-  widthY = w;
-  widthUV = (w + 1) / 2;
-
-  hY = h;
-  hUV = (h + 1) / 2;
 
   i_alpha = CLAMP (i_alpha, 0, 255);
 
