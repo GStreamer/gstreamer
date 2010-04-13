@@ -484,7 +484,8 @@ gst_photography_iface_class_init (gpointer g_class)
           "White balance mode property",
           "White balance affects the color temperature of the photo",
           GST_TYPE_WHITE_BALANCE_MODE,
-          GST_PHOTOGRAPHY_WB_MODE_AUTO, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_WB_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Colour tone */
   g_object_interface_install_property (g_class,
@@ -492,7 +493,8 @@ gst_photography_iface_class_init (gpointer g_class)
           "Colour tone mode property",
           "Colour tone setting changes colour shading in the photo",
           GST_TYPE_COLOUR_TONE_MODE,
-          GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Scene mode */
   g_object_interface_install_property (g_class,
@@ -500,7 +502,8 @@ gst_photography_iface_class_init (gpointer g_class)
           "Scene mode property",
           "Scene mode works as a preset for different photo shooting mode settings",
           GST_TYPE_SCENE_MODE,
-          GST_PHOTOGRAPHY_SCENE_MODE_AUTO, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_SCENE_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Flash mode */
   g_object_interface_install_property (g_class,
@@ -508,7 +511,8 @@ gst_photography_iface_class_init (gpointer g_class)
           "Flash mode property",
           "Flash mode defines how the flash light should be used",
           GST_TYPE_FLASH_MODE,
-          GST_PHOTOGRAPHY_FLASH_MODE_AUTO, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_FLASH_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Flicker reduction mode */
   g_object_interface_install_property (g_class,
@@ -516,7 +520,8 @@ gst_photography_iface_class_init (gpointer g_class)
           "Flicker reduction mode property",
           "Flicker reduction mode defines a line frequency for flickering prevention",
           GST_TYPE_FLICKER_REDUCTION_MODE,
-          GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Focus mode */
   g_object_interface_install_property (g_class,
@@ -524,47 +529,48 @@ gst_photography_iface_class_init (gpointer g_class)
           "Focus mode property",
           "Focus mode defines the range of focal lengths to use in autofocus search",
           GST_TYPE_FOCUS_MODE,
-          GST_PHOTOGRAPHY_FOCUS_MODE_AUTO, G_PARAM_READWRITE));
+          GST_PHOTOGRAPHY_FOCUS_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Capabilities */
   g_object_interface_install_property (g_class,
       g_param_spec_ulong (GST_PHOTOGRAPHY_PROP_CAPABILITIES,
           "Photo capabilities bitmask",
           "Tells the photo capabilities of the device",
-          0, G_MAXULONG, 0, G_PARAM_READABLE));
+          0, G_MAXULONG, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* EV_compensation */
   g_object_interface_install_property (g_class,
       g_param_spec_float (GST_PHOTOGRAPHY_PROP_EV_COMP,
           "EV compensation property",
           "EV compensation affects the brightness of the image",
-          -2.5, 2.5, 0, G_PARAM_READWRITE));
+          -2.5, 2.5, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* ISO value */
   g_object_interface_install_property (g_class,
       g_param_spec_uint (GST_PHOTOGRAPHY_PROP_ISO_SPEED,
           "ISO speed property",
           "ISO speed defines the light sensitivity (0 = auto)",
-          0, 6400, 0, G_PARAM_READWRITE));
+          0, 6400, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Aperture */
   g_object_interface_install_property (g_class,
       g_param_spec_uint (GST_PHOTOGRAPHY_PROP_APERTURE,
           "Aperture property",
           "Aperture defines the size of lens opening  (0 = auto)",
-          0, G_MAXUINT8, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT8, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Exposure */
   g_object_interface_install_property (g_class,
       g_param_spec_uint (GST_PHOTOGRAPHY_PROP_EXPOSURE,
           "Exposure time in milliseconds",
           "Exposure time defines how long the shutter will stay open (0 = auto)",
-          0, G_MAXUINT32, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Image capture caps */
   g_object_interface_install_property (g_class,
       g_param_spec_boxed (GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
           "Image capture supported caps",
           "Caps describing supported image capture formats", GST_TYPE_CAPS,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }

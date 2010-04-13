@@ -2544,7 +2544,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_FILENAME,
       g_param_spec_string ("filename", "Filename",
-          "Filename of the image or video to save", "", G_PARAM_READWRITE));
+          "Filename of the image or video to save", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:mode:
@@ -2558,7 +2559,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_MODE,
       g_param_spec_enum ("mode", "Mode",
           "The capture mode (still image capture or video recording)",
-          GST_TYPE_CAMERABIN_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
+          GST_TYPE_CAMERABIN_MODE, DEFAULT_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:flags
@@ -2580,7 +2582,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_MUTE,
       g_param_spec_boolean ("mute", "Mute",
           "True to mute the recording. False to record with audio",
-          ARG_DEFAULT_MUTE, G_PARAM_READWRITE));
+          ARG_DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:zoom:
@@ -2592,7 +2594,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_ZOOM,
       g_param_spec_int ("zoom", "Zoom",
           "The zoom. 100 for 1x, 200 for 2x and so on",
-          MIN_ZOOM, MAX_ZOOM, DEFAULT_ZOOM, G_PARAM_READWRITE));
+          MIN_ZOOM, MAX_ZOOM, DEFAULT_ZOOM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:image-post-processing:
@@ -2605,7 +2608,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_param_spec_object ("image-post-processing",
           "Image post processing element",
           "Image Post-Processing GStreamer element (default is NULL)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:image-encoder:
@@ -2618,7 +2621,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_IMAGE_ENC,
       g_param_spec_object ("image-encoder", "Image encoder",
           "Image encoder GStreamer element (default is jpegenc)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:video-post-processing:
@@ -2632,7 +2635,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_param_spec_object ("video-post-processing",
           "Video post processing element",
           "Video post processing GStreamer element (default is NULL)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:video-encoder:
@@ -2645,7 +2648,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VIDEO_ENC,
       g_param_spec_object ("video-encoder", "Video encoder",
           "Video encoder GStreamer element (default is theoraenc)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:audio-encoder:
@@ -2658,7 +2661,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_AUDIO_ENC,
       g_param_spec_object ("audio-encoder", "Audio encoder",
           "Audio encoder GStreamer element (default is vorbisenc)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:video-muxer:
@@ -2671,7 +2674,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VIDEO_MUX,
       g_param_spec_object ("video-muxer", "Video muxer",
           "Video muxer GStreamer element (default is oggmux)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:viewfinder-sink:
@@ -2685,7 +2688,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VF_SINK,
       g_param_spec_object ("viewfinder-sink", "Viewfinder sink",
           "Viewfinder sink GStreamer element (NULL = default video sink)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:video-source:
@@ -2699,7 +2702,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VIDEO_SRC,
       g_param_spec_object ("video-source", "Video source element",
           "Video source GStreamer element (NULL = default video src)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    *  GstCameraBin:audio-source:
    *
@@ -2712,7 +2715,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_AUDIO_SRC,
       g_param_spec_object ("audio-source", "Audio source element",
           "Audio source GStreamer element (NULL = default audio src)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    *  GstCameraBin:video-source-filter:
@@ -2729,7 +2732,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VIDEO_SOURCE_FILTER,
       g_param_spec_object ("video-source-filter", "video source filter element",
           "Optional video filter GStreamer element, filters all frames from"
-          "the video source", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          "the video source", GST_TYPE_ELEMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:video-source-caps:
@@ -2743,7 +2747,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_INPUT_CAPS,
       g_param_spec_boxed ("video-source-caps", "Video source caps",
           "The allowed modes of the video source operation",
-          GST_TYPE_CAPS, G_PARAM_READABLE));
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:filter-caps:
@@ -2757,7 +2761,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_FILTER_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter video data coming from videosrc element",
-          GST_TYPE_CAPS, G_PARAM_READWRITE));
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:preview-caps:
@@ -2771,7 +2775,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_PREVIEW_CAPS,
       g_param_spec_boxed ("preview-caps", "Preview caps",
           "Caps defining the preview image format",
-          GST_TYPE_CAPS, G_PARAM_READWRITE));
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:viewfinder-filter:
@@ -2786,7 +2790,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   g_object_class_install_property (gobject_class, ARG_VIEWFINDER_FILTER,
       g_param_spec_object ("viewfinder-filter", "viewfinder filter element",
           "viewfinder filter GStreamer element",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin:block-after-capture:
@@ -2803,7 +2807,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_param_spec_boolean ("block-after-capture",
           "Block viewfinder after capture",
           "Block viewfinder after capturing an image or video",
-          DEFAULT_BLOCK_VIEWFINDER, G_PARAM_READWRITE));
+          DEFAULT_BLOCK_VIEWFINDER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstCameraBin::capture-start:
