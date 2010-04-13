@@ -488,6 +488,9 @@ camerabin_setup_src_elements (GstCameraBin * camera)
   GstCaps *new_caps;
   gboolean detect_framerate = FALSE;
 
+  /* clear video update status */
+  camera->video_capture_caps_update = FALSE;
+
   if (!camera->view_finder_caps) {
     st = gst_structure_from_string (CAMERABIN_DEFAULT_VF_CAPS, NULL);
   } else {
@@ -1534,6 +1537,47 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
   }
 }
 
+ /*
+  * FIXME ideally a caps renegotiation is better here
+  */
+static void
+reset_video_capture_caps (GstCameraBin * camera)
+{
+  GstState state, pending;
+  GstPad *activepad = NULL;
+
+  GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
+      camera->width, camera->height, camera->fps_n, camera->fps_d);
+
+  /* Interrupt ongoing capture */
+  gst_camerabin_do_stop (camera);
+
+  gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
+  if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
+    GST_INFO_OBJECT (camera,
+        "changing to READY to initialize videosrc with new format");
+    g_object_get (G_OBJECT (camera->src_out_sel), "active-pad", &activepad,
+        NULL);
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
+  }
+  if (pending != GST_STATE_VOID_PENDING) {
+    GST_LOG_OBJECT (camera, "restoring pending state: %s",
+        gst_element_state_get_name (pending));
+    state = pending;
+  }
+
+  /* Re-set the active pad since switching camerabin to READY state clears this
+   * setting in output-selector */
+  if (activepad) {
+    GST_INFO_OBJECT (camera, "re-setting active pad in output-selector");
+
+    g_object_set (G_OBJECT (camera->src_out_sel), "active-pad", activepad,
+        NULL);
+  }
+
+  gst_element_set_state (GST_ELEMENT (camera), state);
+}
+
 /*
  * gst_camerabin_start_video_recording:
  * @camera: camerabin object
@@ -1548,6 +1592,11 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
    * use a queue overrun signal?
    */
   GST_INFO_OBJECT (camera, "starting video capture");
+
+  /* check if need to update video capture caps */
+  if (camera->video_capture_caps_update) {
+    reset_video_capture_caps (camera);
+  }
 
   gst_camerabin_rewrite_tags (camera);
 
@@ -2835,6 +2884,40 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           "The height used for image capture", 0, G_MAXINT16,
           DEFAULT_CAPTURE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+    * GstCameraBin:video-capture-width:
+    *
+    * The width to be used when capturing video.
+    */
+  g_object_class_install_property (gobject_class, ARG_VIDEO_CAPTURE_WIDTH,
+      g_param_spec_int ("video-capture-width",
+          "The width used for video capture",
+          "The width used for video capture", 0, G_MAXINT16,
+          DEFAULT_CAPTURE_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstCameraBin:video-capture-height:
+   *
+   * The height to be used when capturing video.
+   */
+  g_object_class_install_property (gobject_class, ARG_VIDEO_CAPTURE_HEIGHT,
+      g_param_spec_int ("video-capture-height",
+          "The height used for video capture",
+          "The height used for video capture", 0, G_MAXINT16,
+          DEFAULT_CAPTURE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstCameraBin:video-capture-framerate:
+   *
+   * The framerate to be used when capturing video.
+   */
+  g_object_class_install_property (gobject_class, ARG_VIDEO_CAPTURE_FRAMERATE,
+      gst_param_spec_fraction ("video-capture-framerate",
+          "The framerate used for video capture",
+          "The framerate used for video capture", 0, 1, G_MAXINT32, 1,
+          DEFAULT_FPS_N, DEFAULT_FPS_D,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -2895,6 +2978,10 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    *
    * Setting @fps_n or @fps_d to 0 configures maximum framerate for the
    * given resolution, unless in night mode when minimum is configured.
+   *
+   * This is the same as setting the 'video-capture-width',
+   * 'video-capture-height' and 'video-capture-framerate' properties, but it
+   * already updates the caps to force use this resolution and framerate.
    */
 
   camerabin_signals[SET_VIDEO_RESOLUTION_FPS_SIGNAL] =
@@ -3321,6 +3408,40 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       }
     }
       break;
+    case ARG_VIDEO_CAPTURE_WIDTH:
+    {
+      gint width = g_value_get_int (value);
+
+      if (width != camera->width) {
+        camera->width = width;
+        camera->video_capture_caps_update = TRUE;
+      }
+    }
+      break;
+    case ARG_VIDEO_CAPTURE_HEIGHT:
+    {
+      gint height = g_value_get_int (value);
+
+      if (height != camera->height) {
+        camera->height = height;
+        camera->video_capture_caps_update = TRUE;
+      }
+    }
+      break;
+    case ARG_VIDEO_CAPTURE_FRAMERATE:
+    {
+      gint fps_n, fps_d;
+
+      fps_n = gst_value_get_fraction_numerator (value);
+      fps_d = gst_value_get_fraction_denominator (value);
+
+      if (fps_n != camera->fps_n || fps_d != camera->fps_d) {
+        camera->fps_n = fps_n;
+        camera->fps_d = fps_d;
+        camera->video_capture_caps_update = TRUE;
+      }
+    }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3424,6 +3545,15 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       break;
     case ARG_IMAGE_CAPTURE_HEIGHT:
       g_value_set_int (value, camera->image_capture_height);
+      break;
+    case ARG_VIDEO_CAPTURE_WIDTH:
+      g_value_set_int (value, camera->width);
+      break;
+    case ARG_VIDEO_CAPTURE_HEIGHT:
+      g_value_set_int (value, camera->height);
+      break;
+    case ARG_VIDEO_CAPTURE_FRAMERATE:
+      gst_value_set_fraction (value, camera->fps_n, camera->fps_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3705,43 +3835,10 @@ static void
 gst_camerabin_set_video_resolution_fps (GstCameraBin * camera, gint width,
     gint height, gint fps_n, gint fps_d)
 {
-  GstState state, pending;
-  GstPad *activepad = NULL;
+  g_object_set (camera, "video-capture-width", width, "video-capture-height",
+      height, "video-capture-framerate", fps_n, fps_d, NULL);
 
-  GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
-      width, height, fps_n, fps_d);
-
-  /* Interrupt ongoing capture */
-  gst_camerabin_do_stop (camera);
-
-  gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
-  if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
-    GST_INFO_OBJECT (camera,
-        "changing to READY to initialize videosrc with new format");
-    g_object_get (G_OBJECT (camera->src_out_sel), "active-pad", &activepad,
-        NULL);
-    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
-  }
-  camera->width = width;
-  camera->height = height;
-  camera->fps_n = fps_n;
-  camera->fps_d = fps_d;
-  if (pending != GST_STATE_VOID_PENDING) {
-    GST_LOG_OBJECT (camera, "restoring pending state: %s",
-        gst_element_state_get_name (pending));
-    state = pending;
-  }
-
-  /* Re-set the active pad since switching camerabin to READY state clears this
-   * setting in output-selector */
-  if (activepad) {
-    GST_INFO_OBJECT (camera, "re-setting active pad in output-selector");
-
-    g_object_set (G_OBJECT (camera->src_out_sel), "active-pad", activepad,
-        NULL);
-  }
-
-  gst_element_set_state (GST_ELEMENT (camera), state);
+  reset_video_capture_caps (camera);
 }
 
 static void

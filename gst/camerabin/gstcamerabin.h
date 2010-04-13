@@ -72,6 +72,8 @@ struct _GstCameraBin
   gint fps_n;
   gint fps_d;
 
+  gboolean video_capture_caps_update;
+
   /* Image capture resolution */
   gint image_capture_width;
   gint image_capture_height;
