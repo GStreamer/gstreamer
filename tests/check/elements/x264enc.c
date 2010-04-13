@@ -154,7 +154,7 @@ GST_START_TEST (test_video_pad)
     switch (i) {
       case 0:
       {
-        gint nsize, npos, j, type;
+        gint nsize, npos, j, type, next_type;
         guint8 *data = GST_BUFFER_DATA (outbuffer);
         gint size = GST_BUFFER_SIZE (outbuffer);
 
@@ -162,6 +162,8 @@ GST_START_TEST (test_video_pad)
 
         npos = 0;
         j = 0;
+        /* need SPS first */
+        next_type = 7;
         /* loop through NALs */
         while (npos < size) {
           fail_unless (size - npos >= 4);
@@ -169,24 +171,17 @@ GST_START_TEST (test_video_pad)
           fail_unless (nsize > 0);
           fail_unless (npos + 4 + nsize <= size);
           type = data[npos + 4] & 0x1F;
-          /* check the first NALs, disregard AU (9) */
-          if (type != 9) {
-            switch (j) {
-              case 0:
-                /* SEI */
-                fail_unless (type == 6);
-                break;
-              case 1:
+          /* check the first NALs, disregard AU (9), SEI (6) */
+          if (type != 9 && type != 6) {
+            fail_unless (type == next_type);
+            switch (type) {
+              case 7:
                 /* SPS */
-                fail_unless (type == 7);
+                next_type = 8;
                 break;
-              case 2:
+              case 8:
                 /* PPS */
-                fail_unless (type == 8);
-                break;
-              case 3:
-                /* IDR */
-                fail_unless (type == 5);
+                next_type = 5;
                 break;
               default:
                 break;
