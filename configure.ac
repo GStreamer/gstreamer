@@ -328,7 +328,6 @@ AC_CACHE_CHECK(for __uint128_t, gst_cv_uint128_t,
       static __uint128_t v2 = 10;
       static __uint128_t u;
       u = v1 / v2;
-      return 0;
     ], [
       gst_cv_uint128_t=yes
     ], [
@@ -412,7 +411,6 @@ AC_CACHE_CHECK(for posix timers, gst_cv_posix_timers,
 #if !defined(_POSIX_TIMERS) || _POSIX_TIMERS < 0 || !defined(CLOCK_REALTIME)
 #error Either _POSIX_TIMERS or CLOCK_REALTIME not defined
 #endif
-      return 0;
     ], [
       gst_cv_posix_timers=yes
     ], [
@@ -439,7 +437,6 @@ AC_CACHE_CHECK(for monotonic clock, gst_cv_monotonic_clock,
 #if !defined(_POSIX_MONOTONIC_CLOCK) || _POSIX_MONOTONIC_CLOCK < 0 || !defined(CLOCK_MONOTONIC)
 #error Either _POSIX_MONOTONIC_CLOCK or CLOCK_MONOTONIC not defined
 #endif
-      return 0;
     ], [
       gst_cv_monotonic_clock=yes
     ], [
