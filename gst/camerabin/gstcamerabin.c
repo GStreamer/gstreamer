@@ -1497,7 +1497,7 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
       g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 1, NULL);
     }
 
-    if (!camera->image_capture_caps) {
+    if (!camera->image_capture_caps || camera->image_capture_caps_update) {
       if (camera->image_capture_width && camera->image_capture_height) {
         /* Resolution is set, but it isn't in use yet */
         gst_camerabin_set_image_capture_caps (camera,
@@ -1505,6 +1505,7 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
       } else {
         /* Capture resolution not set. Use viewfinder resolution */
         camera->image_capture_caps = gst_caps_copy (camera->view_finder_caps);
+        camera->image_capture_caps_update = FALSE;
       }
     }
 
@@ -2810,6 +2811,30 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           DEFAULT_BLOCK_VIEWFINDER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+    * GstCameraBin:image-capture-width:
+    *
+    * The width to be used when capturing still images. If 0, the
+    * viewfinder's width will be used.
+    */
+  g_object_class_install_property (gobject_class, ARG_IMAGE_CAPTURE_WIDTH,
+      g_param_spec_int ("image-capture-width",
+          "The width used for image capture",
+          "The width used for image capture", 0, G_MAXINT16,
+          DEFAULT_CAPTURE_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+   /**
+    * GstCameraBin:image-capture-height:
+    *
+    * The height to be used when capturing still images. If 0, the
+    * viewfinder's height will be used.
+    */
+  g_object_class_install_property (gobject_class, ARG_IMAGE_CAPTURE_HEIGHT,
+      g_param_spec_int ("image-capture-height",
+          "The height used for image capture",
+          "The height used for image capture", 0, G_MAXINT16,
+          DEFAULT_CAPTURE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -2888,6 +2913,9 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    *
    * Changes the resolution used for still image capture.
    * Does not affect view finder mode and video recording.
+   *
+   * This actually sets the 'image-capture-width' and 'image-capture-height'
+   * properties.
    */
 
   camerabin_signals[SET_IMAGE_RESOLUTION_SIGNAL] =
@@ -3273,6 +3301,26 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       gst_camerabin_change_viewfinder_blocking (camera,
           g_value_get_boolean (value));
       break;
+    case ARG_IMAGE_CAPTURE_WIDTH:
+    {
+      gint width = g_value_get_int (value);
+
+      if (width != camera->image_capture_width) {
+        camera->image_capture_width = width;
+        camera->image_capture_caps_update = TRUE;
+      }
+    }
+      break;
+    case ARG_IMAGE_CAPTURE_HEIGHT:
+    {
+      gint height = g_value_get_int (value);
+
+      if (height != camera->image_capture_height) {
+        camera->image_capture_height = height;
+        camera->image_capture_caps_update = TRUE;
+      }
+    }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3370,6 +3418,12 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       break;
     case ARG_BLOCK_VIEWFINDER:
       g_value_set_boolean (value, camera->block_viewfinder);
+      break;
+    case ARG_IMAGE_CAPTURE_WIDTH:
+      g_value_set_int (value, camera->image_capture_width);
+      break;
+    case ARG_IMAGE_CAPTURE_HEIGHT:
+      g_value_set_int (value, camera->image_capture_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3714,18 +3768,15 @@ gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
   GST_INFO_OBJECT (camera,
       "init filter caps for image capture %" GST_PTR_FORMAT, new_caps);
   gst_caps_replace (&camera->image_capture_caps, new_caps);
+  camera->image_capture_caps_update = FALSE;
 }
 
 static void
 gst_camerabin_set_image_resolution (GstCameraBin * camera, gint width,
     gint height)
 {
-  /* Set the caps now already, if possible */
-  gst_camerabin_set_image_capture_caps (camera, width, height);
-
-  /* These will be used in _start_image_capture() function */
-  camera->image_capture_width = width;
-  camera->image_capture_height = height;
+  g_object_set (camera, "image-capture-width", (guint16) width,
+      "image-capture-height", (guint16) height, NULL);
 }
 
 /* entry point to initialize the plug-in

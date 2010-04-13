@@ -81,6 +81,7 @@ struct _GstCameraBin
 
   /* Caps applied to capsfilters when taking still image */
   GstCaps *image_capture_caps;
+  gboolean image_capture_caps_update;
 
   /* Caps applied to capsfilters when in view finder mode */
   GstCaps *view_finder_caps;
