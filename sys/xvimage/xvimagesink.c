@@ -2789,12 +2789,24 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
           GST_VIDEO_SINK_HEIGHT (xvimagesink));
     }
   } else {
+    XWindowAttributes attr;
+
     xwindow = g_new0 (GstXWindow, 1);
     xwindow->win = xwindow_id;
 
     /* Set the event we want to receive and create a GC */
     g_mutex_lock (xvimagesink->x_lock);
+
+    XGetWindowAttributes (xvimagesink->xcontext->disp, xwindow->win, &attr);
+
+    xwindow->width = attr.width;
+    xwindow->height = attr.height;
     xwindow->internal = FALSE;
+    if (!xvimagesink->have_render_rect) {
+      xvimagesink->render_rect.x = xvimagesink->render_rect.y = 0;
+      xvimagesink->render_rect.w = attr.width;
+      xvimagesink->render_rect.h = attr.height;
+    }
     if (xvimagesink->handle_events) {
       XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
           StructureNotifyMask | PointerMotionMask | KeyPressMask |
