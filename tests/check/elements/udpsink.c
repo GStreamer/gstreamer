@@ -167,7 +167,7 @@ udpsink_test (gboolean use_buffer_lists)
   gst_check_teardown_element (udpsink);
 
   if (use_buffer_lists)
-    fail_if (data_size != render_list_bytes_received);
+    fail_unless_equals_int (data_size, render_list_bytes_received);
 }
 
 GST_START_TEST (test_udpsink)
