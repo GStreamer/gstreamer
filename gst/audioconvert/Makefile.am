@@ -27,5 +27,5 @@ noinst_HEADERS = \
 
 #channelmixtest_CFLAGS = $(GST_CFLAGS)
 #channelmixtest_LDADD = libgstaudioconvert.la \
-#	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
-#channelmixtest_LDFLAGS = $(GST_LIBS)
+#	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+#	$(GST_LIBS)
