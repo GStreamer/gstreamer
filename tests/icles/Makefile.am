@@ -1,8 +1,8 @@
 if HAVE_GTK
 GTK_TESTS = gdkpixbufsink-test
 gdkpixbufsink_test_SOURCES = gdkpixbufsink-test.c
-gdkpixbufsink_test_CFLAGS  = $(GTK_CFLAGS) $(GST_CFLAGS)
-gdkpixbufsink_test_LDADD   = $(GTK_LIBS) $(GST_LIBS)
+gdkpixbufsink_test_CFLAGS  = $(GST_CFLAGS) $(GTK_CFLAGS)
+gdkpixbufsink_test_LDADD   = $(GST_LIBS) $(GTK_LIBS)
 gdkpixbufsink_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 else
 GTK_TESTS =
@@ -25,7 +25,7 @@ X_TESTS = ximagesrc-test
 
 ximagesrc_test_SOURCES = ximagesrc-test.c
 ximagesrc_test_CFLAGS = $(GST_CFLAGS)
-ximagesrc_test_LDFLAGS = $(GST_LIBS)
+ximagesrc_test_LDADD = $(GST_LIBS)
 else
 X_TESTS =
 endif
