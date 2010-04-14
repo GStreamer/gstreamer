@@ -2083,7 +2083,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
 
   name = r;
   if (G_UNLIKELY (!gst_structure_parse_string (r, &w, &r, TRUE))) {
-    GST_WARNING ("Failed to parse structure string");
+    GST_WARNING ("Failed to parse structure string '%s'", string);
     goto error;
   }
 
