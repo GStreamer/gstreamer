@@ -1754,6 +1754,7 @@ docs/version.entities
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-bad.pc
 pkgconfig/gstreamer-plugins-bad-uninstalled.pc
+tools/Makefile
 m4/Makefile
 win32/common/config.h
 )

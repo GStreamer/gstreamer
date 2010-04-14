@@ -2,11 +2,11 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 SUBDIRS = \
 	gst-libs gst sys ext pkgconfig \
-	m4 common docs tests po
+	m4 common docs tests po tools
 
 DIST_SUBDIRS = \
 	gst gst-libs sys ext pkgconfig \
-	m4 common docs tests po
+	m4 common docs tests po tools
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak

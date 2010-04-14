@@ -1,0 +1,233 @@
+#!/bin/sh
+
+class=basetransform
+
+GST_IS_REPLACE=MY_IS_EXAMPLE
+GST_REPLACE=MY_EXAMPLE
+GST_TYPE_REPLACE=MY_TYPE_EXAMPLE
+GstReplace=MyExample
+gst_replace=my_example
+gstreplace=myexample
+replace=example
+
+source=gst$class.c
+pkg=`grep -A 10000 '^% pkg-config' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GST_TYPE_BASE_REPLACE=`grep -A 10000 '^% TYPE_CLASS_NAME' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+GstBaseReplace=`grep -A 10000 '^% ClassName' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
+
+generate ()
+{
+
+grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+EOF
+
+grep -A 10000 '^% includes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+#include "gstreplace.h"
+
+/* prototypes */
+
+EOF
+
+grep -A 10000 '^% prototypes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% prototypes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+enum
+{
+  PROP_0
+};
+
+/* pad templates */
+
+static GstStaticPadTemplate gst_replace_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/unknown")
+    );
+
+static GstStaticPadTemplate gst_replace_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/unknown")
+    );
+
+/* class initialization */
+
+GST_BOILERPLATE (GstReplace, gst_replace, GstBaseReplace,
+    GST_TYPE_BASE_REPLACE);
+
+static void
+gst_replace_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_replace_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_replace_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "FIXME",
+      "Generic", "FIXME", "FIXME <fixme@example.com>");
+}
+
+static void
+gst_replace_class_init (GstReplaceClass * klass)
+{
+EOF
+grep -A 10000 '^% declare-class' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% declare-class' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+echo
+
+grep -A 10000 '^% set-methods' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% set-methods' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+}
+
+static void
+gst_replace_init (GstReplace * replace, GstReplaceClass * replace_class)
+{
+
+}
+EOF
+
+
+grep -A 10000 '^% methods' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% methods' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+
+cat <<EOF
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+
+  gst_element_register (plugin, "replace", GST_RANK_NONE,
+      gst_replace_get_type ());
+
+  return TRUE;
+}
+
+#define VERSION "0.0.FIXME"
+#define PACKAGE "FIXME_package"
+#define PACKAGE_NAME "FIXME_package_name"
+#define PACKAGE_ORIGIN "http://FIXME.org/"
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "replace",
+    "FIXME",
+    plugin_init, VERSION, "LGPL", PACKAGE_NAME, PACKAGE_ORIGIN)
+
+EOF
+
+
+}
+
+generate_header ()
+{
+
+grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+#ifndef _GST_REPLACE_H_
+#define _GST_REPLACE_H_
+
+EOF
+
+grep -A 10000 '^% includes' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' gobject.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+grep -A 10000 '^% includes' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+
+cat <<EOF
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_REPLACE \
+  (gst_replace_get_type())
+#define GST_REPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REPLACE,GstReplace))
+#define GST_REPLACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REPLACE,GstReplaceClass))
+#define GST_IS_REPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_REPLACE))
+#define GST_IS_REPLACE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_REPLACE))
+
+typedef struct _GstReplace GstReplace;
+typedef struct _GstReplaceClass GstReplaceClass;
+
+struct _GstReplace
+{
+  GstBaseReplace base_replace;
+
+};
+
+struct _GstReplaceClass
+{
+  GstBaseReplaceClass base_replace_class;
+};
+
+GType gst_replace_get_type (void);
+
+G_END_DECLS
+
+#endif
+EOF
+
+
+}
+
+
+generate | sed \
+  -e "s/GST_BASE_REPLACE/$GST_BASE_REPLACE/g" \
+  -e "s/GST_TYPE_BASE_REPLACE/$GST_TYPE_BASE_REPLACE/g" \
+  -e "s/GstBaseReplace/$GstBaseReplace/g" \
+  -e "s/GST_IS_REPLACE/$GST_IS_REPLACE/g" \
+  -e "s/GST_REPLACE/$GST_REPLACE/g" \
+  -e "s/GST_TYPE_REPLACE/$GST_TYPE_REPLACE/g" \
+  -e "s/GstReplace/$GstReplace/g" \
+  -e "s/gst_replace/$gst_replace/g" \
+  -e "s/gstreplace/$gstreplace/g" \
+  -e "s/replace/$replace/g" >myexample.c
+
+generate_header | sed \
+  -e "s/GST_BASE_REPLACE/$GST_BASE_REPLACE/g" \
+  -e "s/GST_TYPE_BASE_REPLACE/$GST_TYPE_BASE_REPLACE/g" \
+  -e "s/GstBaseReplace/$GstBaseReplace/g" \
+  -e "s/GST_IS_REPLACE/$GST_IS_REPLACE/g" \
+  -e "s/GST_REPLACE/$GST_REPLACE/g" \
+  -e "s/GST_TYPE_REPLACE/$GST_TYPE_REPLACE/g" \
+  -e "s/GstReplace/$GstReplace/g" \
+  -e "s/gst_replace/$gst_replace/g" \
+  -e "s/gstreplace/$gstreplace/g" \
+  -e "s/replace/$replace/g" >myexample.h
+
+gst-indent myexample.c
+
+echo pkg is $pkg
+
+gcc -Wall $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o myexample.o myexample.c
+gcc -shared -o myexample.so myexample.o $(pkg-config --libs gstreamer-0.10 $pkg)
+
+
