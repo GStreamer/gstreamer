@@ -971,6 +971,60 @@ GST_START_TEST (test_link_structure_change)
 
 GST_END_TEST;
 
+static GstBusSyncReply
+sync_handler_remove_sink (GstBus * bus, GstMessage * message, gpointer data)
+{
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+    GstElement *child;
+
+    child = gst_bin_get_by_name (GST_BIN (data), "fakesink");
+    fail_unless (child != NULL, "Could not find fakesink");
+
+    gst_bin_remove (GST_BIN (data), child);
+    gst_object_unref (child);
+  }
+  return GST_BUS_PASS;
+}
+
+GST_START_TEST (test_state_failure_remove)
+{
+  GstElement *src, *sink, *pipeline;
+  GstBus *bus;
+  GstStateChangeReturn ret;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  src = gst_element_factory_make ("fakesrc", "fakesrc");
+  fail_unless (src != NULL, "Could not create fakesrc");
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Could not create fakesink");
+
+  g_object_set (sink, "state-error", 1, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  gst_element_link (src, sink);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (bus != NULL, "Could not get bus");
+
+  gst_bus_set_sync_handler (bus, sync_handler_remove_sink, pipeline);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS,
+      "did not get state change success");
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -992,6 +1046,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_add_self);
   tcase_add_test (tc_chain, test_iterate_sorted);
   tcase_add_test (tc_chain, test_link_structure_change);
+  tcase_add_test (tc_chain, test_state_failure_remove);
 
   return s;
 }

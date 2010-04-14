@@ -2446,17 +2446,22 @@ restart:
             /* Only fail if the child is still inside
              * this bin. It might've been removed already
              * because of the error by the bin subclass
-             * to ignore the error.
-             */
+             * to ignore the error.  */
             parent = gst_object_get_parent (GST_OBJECT_CAST (child));
             if (parent == GST_OBJECT_CAST (element)) {
+              /* element is still in bin, really error now */
               gst_object_unref (child);
               gst_object_unref (parent);
               goto done;
             }
+            /* child removed from bin, let the resync code redo the state
+             * change */
+            GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+                "child '%s' was removed from the bin",
+                GST_ELEMENT_NAME (child));
+
             if (parent)
               gst_object_unref (parent);
-            gst_object_unref (child);
 
             break;
           }
