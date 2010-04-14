@@ -1,13 +1,13 @@
 # Slovak translations for gst-plugins-base.
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:57+0100\n"
-"PO-Revision-Date: 2009-09-21 09:53+0100\n"
+"POT-Creation-Date: 2010-04-14 13:49+0100\n"
+"PO-Revision-Date: 2010-03-08 09:21+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -200,7 +200,7 @@ msgid "The autovideosink element is not working."
 msgstr "Nefunguje prvok autovideosink."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Používateľský textový prvok sink nie je použiteľný."
 
 msgid "No volume control found"
 msgstr "+Ziadny ovl8da4 hlasitosti sa nena3iel"
@@ -486,15 +486,6 @@ msgstr "Zariadenie \"%s\" sa už používa."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
 
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"queue2\"."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"typefind\""
-
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Nemôžem zobrazovať naraz textové titulky aj podobrázky."
 
@@ -509,6 +500,15 @@ msgstr "Nepodarilo sa otvoriť zariadenie  \"%s\" pre čítanie a zápis."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Vnútorná chyba prúdu údajov."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin2\"."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Nepodarilo sa vytvoriť prvok \"queue2\"."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Nepodarilo sa vytvoriť prvok \"typefind\""
 
 #~ msgid "No file name specified."
 #~ msgstr "Nebolo zadané meno súboru."

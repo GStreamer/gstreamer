@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.25.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:57+0100\n"
-"PO-Revision-Date: 2010-02-09 22:34+1030\n"
+"POT-Creation-Date: 2010-04-14 13:49+0100\n"
+"PO-Revision-Date: 2010-03-06 22:16+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -483,12 +483,3 @@ msgstr "Thiết bị « %s » đang được dùng."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Không thể tạo phần tử « decodebin2 »."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Không thể tạo phần tử « queue2 »."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Không thể tạo phần tử « typefind »."

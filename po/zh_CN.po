@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-11 11:57+0100\n"
+"POT-Creation-Date: 2010-04-14 13:49+0100\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -177,9 +177,9 @@ msgstr "autovideosink 和 xvimagesink 组件都缺少。"
 msgid "The autovideosink element is missing."
 msgstr "autovideosink 和 xvimagesink 组件都缺少。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "autovideosink 和 xvimagesink 组件都缺少。"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -203,9 +203,9 @@ msgstr "autovideosink 和 alsasink 组件都缺少。"
 msgid "The autoaudiosink element is missing."
 msgstr "autovideosink 和 alsasink 组件都缺少。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "autovideosink 和 alsasink 组件都缺少。"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "Both autoaudiosink and %s elements are not working."
