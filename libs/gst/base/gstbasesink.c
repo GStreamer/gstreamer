@@ -365,7 +365,6 @@ static gboolean gst_base_sink_pad_activate (GstPad * pad);
 static gboolean gst_base_sink_pad_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad);
@@ -1026,7 +1025,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     query = gst_query_new_latency ();
 
     /* ask the peer for the latency */
-    if ((res = gst_base_sink_peer_query (sink, query))) {
+    if ((res = gst_pad_peer_query (sink->sinkpad, query))) {
       /* get upstream min and max latency */
       gst_query_parse_latency (query, &us_live, &us_min, &us_max);
 
@@ -4233,19 +4232,6 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   return result;
 }
 
-static gboolean
-gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
-{
-  GstPad *peer;
-  gboolean res = FALSE;
-
-  if ((peer = gst_pad_get_peer (sink->sinkpad))) {
-    res = gst_pad_query (peer, query);
-    gst_object_unref (peer);
-  }
-  return res;
-}
-
 /* get the end position of the last seen object, this is used
  * for EOS and for making sure that we don't report a position we
  * have not reached yet. With LOCK. */
@@ -4551,7 +4537,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
         gst_query_set_position (query, format, cur);
       } else if (upstream) {
         /* fallback to peer query */
-        res = gst_base_sink_peer_query (basesink, query);
+        res = gst_pad_peer_query (basesink->sinkpad, query);
       }
       break;
     }
@@ -4590,7 +4576,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
         }
       } else {
         /* in push mode we simply forward upstream */
-        res = gst_base_sink_peer_query (basesink, query);
+        res = gst_pad_peer_query (basesink->sinkpad, query);
       }
       break;
     }
@@ -4622,7 +4608,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     case GST_QUERY_CONVERT:
     case GST_QUERY_FORMATS:
     default:
-      res = gst_base_sink_peer_query (basesink, query);
+      res = gst_pad_peer_query (basesink->sinkpad, query);
       break;
   }
   GST_DEBUG_OBJECT (basesink, "query %s returns %d",
