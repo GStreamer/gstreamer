@@ -848,6 +848,10 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_position (query, &format, NULL);
+
+      GST_DEBUG_OBJECT (src, "position query in format %s",
+          gst_format_get_name (format));
+
       switch (format) {
         case GST_FORMAT_PERCENT:
         {

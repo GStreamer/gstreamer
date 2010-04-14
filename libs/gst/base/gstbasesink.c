@@ -4542,7 +4542,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
 
-      GST_DEBUG_OBJECT (basesink, "position format %d", format);
+      GST_DEBUG_OBJECT (basesink, "position query in format %s",
+          gst_format_get_name (format));
 
       /* first try to get the position based on the clock */
       if ((res =
@@ -4624,6 +4625,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       res = gst_base_sink_peer_query (basesink, query);
       break;
   }
+  GST_DEBUG_OBJECT (basesink, "query %s returns %d",
+      GST_QUERY_TYPE_NAME (query), res);
   return res;
 }
 
