@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-09 00:23+0000\n"
-"PO-Revision-Date: 2010-02-09 22:32+0930\n"
+"POT-Creation-Date: 2010-04-14 20:18+0100\n"
+"PO-Revision-Date: 2010-03-06 22:15+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
