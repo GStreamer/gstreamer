@@ -1576,18 +1576,21 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       gst_structure_set_value (structure, "format", &list);
       g_value_unset (&list);
 
-      gst_structure_set_name (s2, "video/x-raw-rgb");
-      g_value_init (&list, GST_TYPE_LIST);
-      g_value_init (&val, G_TYPE_INT);
-      g_value_set_int (&val, 32);
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      g_value_set_int (&val, 24);
-      gst_value_list_append_value (&list, &val);
-      g_value_unset (&val);
-      gst_structure_set_value (s2, "depth", &list);
-      gst_structure_set_value (s2, "bpp", &list);
-      g_value_unset (&list);
+      /* We can only convert to RGB if input is AYUV */
+      if (fourcc == GST_STR_FOURCC ("AYUV")) {
+        gst_structure_set_name (s2, "video/x-raw-rgb");
+        g_value_init (&list, GST_TYPE_LIST);
+        g_value_init (&val, G_TYPE_INT);
+        g_value_set_int (&val, 32);
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_int (&val, 24);
+        gst_value_list_append_value (&list, &val);
+        g_value_unset (&val);
+        gst_structure_set_value (s2, "depth", &list);
+        gst_structure_set_value (s2, "bpp", &list);
+        g_value_unset (&list);
+      }
       gst_caps_append_structure (to, s2);
     }
   } else if (g_str_equal (name, "video/x-raw-rgb")) {
