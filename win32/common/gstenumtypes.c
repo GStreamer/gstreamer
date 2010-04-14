@@ -887,6 +887,7 @@ gst_message_type_get_type (void)
     {C_FLAGS (GST_MESSAGE_REQUEST_STATE), "GST_MESSAGE_REQUEST_STATE",
         "request-state"},
     {C_FLAGS (GST_MESSAGE_STEP_START), "GST_MESSAGE_STEP_START", "step-start"},
+    {C_FLAGS (GST_MESSAGE_QOS), "GST_MESSAGE_QOS", "qos"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };

@@ -3,7 +3,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
-AC_INIT(GStreamer, 0.10.28.1,
+AC_INIT(GStreamer, 0.10.28.2,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
 AG_GST_INIT
@@ -48,7 +48,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 24, 1, 24)
+AS_LIBTOOL(GST, 25, 0, 25)
 
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
@@ -769,6 +769,7 @@ sed \
     -e 's/.* HAVE_WIN32$/#define HAVE_WIN32 1/' \
     -e 's/.* HAVE_WINSOCK2_H$/#define HAVE_WINSOCK2_H 1/' \
     -e 's/.* HOST_CPU$/#define HOST_CPU "i686"/' \
+    -e 's/.* BUFFER_ALIGNMENT_MALLOC/#define BUFFER_ALIGNMENT_MALLOC 1/' \
     -e 's/.* LIBDIR$/#ifdef _DEBUG\n#  define LIBDIR PREFIX "\\\\debug\\\\lib"\n#else\n#  define LIBDIR PREFIX "\\\\lib"\n#endif/' \
     -e 's/.* LOCALEDIR$/#define LOCALEDIR PREFIX "\\\\share\\\\locale"/' \
     -e 's/.* PACKAGE$/#define PACKAGE "gstreamer"/' \
