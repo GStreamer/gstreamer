@@ -437,8 +437,11 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
         outbuf = crop_copy_i420_buffer (mpeg2dec, input);
       }
 
+      GST_DEBUG ("cropping buffer");
+
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mpeg2dec->srcpad));
-      gst_buffer_copy_metadata (outbuf, input, GST_BUFFER_COPY_TIMESTAMPS);
+      gst_buffer_copy_metadata (outbuf, input,
+          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
       gst_buffer_unref (input);
 
       *buf = outbuf;
