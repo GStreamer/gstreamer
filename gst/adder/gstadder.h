@@ -85,7 +85,7 @@ struct _GstAdder {
   GstPadEventFunction  collect_event;
   GstSegment      segment;
   gboolean        segment_pending;
-  guint64         segment_position;
+  guint64         segment_start, segment_end;
   gdouble         segment_rate;
   /* src event handling */
   gboolean        flush_stop_pending;
