@@ -430,11 +430,14 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
   /* The metadata blocks have been read, now we are reading audio data */
   if (tag->state == GST_FLAC_TAG_STATE_AUDIO_DATA) {
     GstBuffer *buffer;
-    buffer =
-        gst_adapter_take_buffer (tag->adapter,
-        gst_adapter_available (tag->adapter));
-    gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
-    ret = gst_pad_push (tag->srcpad, buffer);
+    guint avail;
+
+    avail = gst_adapter_available (tag->adapter);
+    if (avail > 0) {
+      buffer = gst_adapter_take_buffer (tag->adapter, avail);
+      gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
+      ret = gst_pad_push (tag->srcpad, buffer);
+    }
   }
 
 cleanup:
