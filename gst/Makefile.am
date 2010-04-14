@@ -132,10 +132,11 @@ libgstreamer_@GST_MAJORMINOR@_la_LIBADD =		\
 	$(GST_PARSE_LA)					\
 	$(GST_ALL_LIBS)					\
 	$(WIN32_LIBS)					\
-	$(XML_LIBS)
+	$(XML_LIBS)					\
+	$(LIBM)
 
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS =		\
-	$(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) $(LIBM)
+	$(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 
