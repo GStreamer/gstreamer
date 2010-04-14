@@ -44,7 +44,8 @@ G_BEGIN_DECLS
 typedef enum {
   GST_MATROSKA_DEMUX_STATE_START,
   GST_MATROSKA_DEMUX_STATE_HEADER,
-  GST_MATROSKA_DEMUX_STATE_DATA
+  GST_MATROSKA_DEMUX_STATE_DATA,
+  GST_MATROSKA_DEMUX_STATE_SEEK
 } GstMatroskaDemuxState;
 
 typedef struct _GstMatroskaDemux {
@@ -70,6 +71,7 @@ typedef struct _GstMatroskaDemux {
   gint64                   created;
 
   /* state */
+  gboolean                 streaming;
   GstMatroskaDemuxState    state;
   guint                    level_up;
   guint64                  seek_block;
@@ -105,6 +107,12 @@ typedef struct _GstMatroskaDemux {
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
+  /* index stuff */
+  gboolean                 seekable;
+  gboolean                 building_index;
+  guint64                  index_offset;
+  GstEvent                *seek_event;
+  gboolean                 need_newsegment;
 
   /* reverse playback */
   GArray                  *seek_index;
