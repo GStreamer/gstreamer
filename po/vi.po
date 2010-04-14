@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-30 15:02+0100\n"
-"PO-Revision-Date: 2010-02-09 23:00+0930\n"
+"POT-Creation-Date: 2010-04-14 02:08+0100\n"
+"PO-Revision-Date: 2010-03-06 22:18+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"

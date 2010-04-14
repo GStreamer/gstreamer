@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2005 gstreamer's COPYRIGHT HOLDER
 # This file is put in the public domain.
 #
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-03-30 15:02+0100\n"
-"PO-Revision-Date: 2009-09-21 10:11+0100\n"
+"POT-Creation-Date: 2010-04-14 02:08+0100\n"
+"PO-Revision-Date: 2010-03-08 09:33+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -81,9 +81,8 @@ msgstr "Zakázať zachytávanie chýb segmentácie počas načítania zásuvnéh
 msgid "Disable updating the registry"
 msgstr "Zakázať aktualizáciu registrov"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Zakázať používanie fork() počas skenovania registrov"
+msgstr "Zakázať vytváranie pomocných procesov počas skenovania registrov"
 
 msgid "GStreamer Options"
 msgstr "Možnosti pre GStreamer"
@@ -656,56 +655,54 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "názov šou"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Názov tv/podcast/seriálovej šou z ktorého pochádza toto médium"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#, fuzzy
 msgid "show sortname"
-msgstr "umelec/triedenie"
+msgstr "názov šou pre triedenie"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Názov tv/podcast/seriálovej šou z ktorého pochádza toto médium, pre účely "
+"triedenia"
 
-#, fuzzy
 msgid "episode number"
-msgstr "číslo disku"
+msgstr "číslo epizódy"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Číslo epizódy v tomto období, ktorého súčasťou je toto médium"
 
-#, fuzzy
 msgid "season number"
-msgstr "číslo disku"
+msgstr "číslo obdobia"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Číslo obdobia tejto šou, ktorej súčasťou je toto médium"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licencia"
+msgstr "text"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Text tohto média, zvyčajne sa používa pri piesňach"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "názov/triedenie"
+msgstr "meno skladateľa pre triedenie"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "osoby zodpovedné za nahrávku, na účely triedenia"
 
 msgid "grouping"
-msgstr ""
+msgstr "zoskupovanie"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Zoskupí súvisiace médiá, ktoré zaberajú viacero stôp, ako napríklad rôzne "
+"časti koncertu. Toto je vyššia úroveň než stopa, ale nižšia než album."
 
 #, fuzzy
 msgid "user rating"
@@ -855,9 +852,9 @@ msgid "Error while writing to download file."
 msgstr "Chyba pri zápise do súboru \"%s\"."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Nebol určený dočasný priečinok (Temp)."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Nepodarilo sa získať informácie o \"%s\"."
 
@@ -895,7 +892,7 @@ msgid "controllable"
 msgstr "ovládateľné"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Zakázané súbory:"
 
 msgid "Total count: "
 msgstr "Celkový počet:"
@@ -903,9 +900,9 @@ msgstr "Celkový počet:"
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d zakázaný súbor"
+msgstr[1] "%d zakázané súbory"
+msgstr[2] "%d zakázaných súborov"
 
 #, c-format
 msgid "%d plugin"
@@ -917,9 +914,9 @@ msgstr[2] "%d zásuvných modulov"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d zakázaná položka"
+msgstr[1] "%d zakázané položky"
+msgstr[2] "%d zakázaných položiek"
 
 #, c-format
 msgid "%d feature"
@@ -932,9 +929,8 @@ msgid "Print all elements"
 msgstr "Vypísať všetky prvky"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Vytlačiť zoznam zakázaných súborov"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
