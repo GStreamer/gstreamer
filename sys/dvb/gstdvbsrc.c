@@ -586,17 +586,17 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_INVERSION:
       object->inversion = g_value_get_enum (value);
       break;
-    case ARG_DVBSRC_TUNE:
+    case ARG_DVBSRC_TUNE:{
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_TUNE");
+
       /* if we are in paused/playing state tune now, otherwise in ready to paused state change */
-      if (gst_element_get_state
-          (GST_ELEMENT (object), NULL, NULL,
-              GST_CLOCK_TIME_NONE) > GST_STATE_READY) {
+      if (GST_STATE (object) > GST_STATE_READY) {
         g_mutex_lock (object->tune_mutex);
         gst_dvbsrc_tune (object);
         g_mutex_unlock (object->tune_mutex);
       }
       break;
+    }
     case ARG_DVBSRC_STATS_REPORTING_INTERVAL:
       object->stats_interval = g_value_get_uint (value);
       object->stats_counter = 0;
