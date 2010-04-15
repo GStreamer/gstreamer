@@ -2839,17 +2839,20 @@ gst_flups_demux_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   switch (ret) {
-    case GST_FLOW_NEED_MORE_DATA:
-      /* Go and get more data */
-      ret = GST_FLOW_OK;
-      goto done;
-    case GST_FLOW_LOST_SYNC:
-      /* for FLOW_OK or lost-sync, carry onto resync */
-      ret = GST_FLOW_OK;
-      break;
     case GST_FLOW_OK:
       break;
     default:
+      /* FIXME: gcc 4.5 warns if comparing some integer with
+       * an enum value! */
+      if ((gint) ret == GST_FLOW_NEED_MORE_DATA) {
+        /* Go and get more data */
+        ret = GST_FLOW_OK;
+        goto done;
+      } else if ((gint) ret == GST_FLOW_LOST_SYNC) {
+        /* for FLOW_OK or lost-sync, carry onto resync */
+        ret = GST_FLOW_OK;
+        break;
+      }
       /* Any other return value should be sent upstream immediately */
       goto done;
   }
@@ -2895,23 +2898,26 @@ gst_flups_demux_chain (GstPad * pad, GstBuffer * buffer)
       save = FALSE;
 
     switch (ret) {
-      case GST_FLOW_NEED_MORE_DATA:
-        GST_DEBUG_OBJECT (demux, "need more data");
-        ret = GST_FLOW_OK;
-        goto done;
-      case GST_FLOW_LOST_SYNC:
-        if (!save || demux->sink_segment.rate >= 0.0) {
-          GST_DEBUG_OBJECT (demux, "flushing 3 bytes");
-          gst_adapter_flush (demux->adapter, 3);
-          ADAPTER_OFFSET_FLUSH (3);
-        } else {
-          GST_DEBUG_OBJECT (demux, "saving 3 bytes");
-          gst_adapter_push (demux->rev_adapter,
-              gst_adapter_take_buffer (demux->adapter, 3));
-        }
-        ret = GST_FLOW_OK;
-        break;
       default:
+        /* FIXME: gcc 4.5 warns if comparing some integer with
+         * an enum value! */
+        if ((gint) ret == GST_FLOW_NEED_MORE_DATA) {
+          GST_DEBUG_OBJECT (demux, "need more data");
+          ret = GST_FLOW_OK;
+          goto done;
+        } else if ((gint) ret == GST_FLOW_LOST_SYNC) {
+          if (!save || demux->sink_segment.rate >= 0.0) {
+            GST_DEBUG_OBJECT (demux, "flushing 3 bytes");
+            gst_adapter_flush (demux->adapter, 3);
+            ADAPTER_OFFSET_FLUSH (3);
+          } else {
+            GST_DEBUG_OBJECT (demux, "saving 3 bytes");
+            gst_adapter_push (demux->rev_adapter,
+                gst_adapter_take_buffer (demux->adapter, 3));
+          }
+          ret = GST_FLOW_OK;
+          break;
+        }
         break;
     }
   }
