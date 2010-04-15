@@ -3589,7 +3589,7 @@ GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
 {
   GstIterator *children;
-  GstIterator *result;
+  gpointer result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
