@@ -791,7 +791,11 @@ metadataparse_handle_unit_tags (ExifEntry * entry, MEUserData * meudata,
 {
   gboolean ret = TRUE;
 
-  switch (entry->tag) {
+  /* FIXME: Cast to gint because EXIF_TAG_GPS_ALTITUDE_REF
+   * and EXIF_TAG_GPS_LONGITUDE_REF are not part of ExifTag
+   * and gcc warns about this
+   */
+  switch ((gint) entry->tag) {
     case EXIF_TAG_RESOLUTION_UNIT:
       meudata->resolution_unit = exif_get_short (entry->data, byte_order);
       if (meudata->resolution_unit == 3) {
