@@ -276,14 +276,14 @@ dnl -Wundef: too many broken headers
 dnl -Waggregate-return: causes problems with ObjC code like in osxvideosink
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
         -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-        -Wwrite-strings -Wold-style-definition -Wcast-align
+        -Wwrite-strings -Wold-style-definition
         -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
         -Wnested-externs ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
         -Wmissing-declarations -Wredundant-decls
-        -Wwrite-strings -Wcast-align
+        -Wwrite-strings
         -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
 
 dnl define correct level for debugging messages
