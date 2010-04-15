@@ -52,6 +52,7 @@ struct _GstSMPTEAlpha {
   gint           border;
   gint           depth;
   gdouble        position;
+  gboolean       invert;
 
   /* negotiated format */
   GstVideoFormat format;

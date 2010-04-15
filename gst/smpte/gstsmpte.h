@@ -56,6 +56,7 @@ struct _GstSMPTE {
   gint           border;
   gint           depth;
   guint64        duration;
+  gboolean       invert;
 
   /* negotiated format */
   gint           format;

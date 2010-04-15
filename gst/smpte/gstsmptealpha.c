@@ -88,6 +88,7 @@ enum
 #define DEFAULT_PROP_BORDER	0
 #define DEFAULT_PROP_DEPTH	16
 #define DEFAULT_PROP_POSITION	0.0
+#define DEFAULT_PROP_INVERT   FALSE
 
 enum
 {
@@ -96,6 +97,7 @@ enum
   PROP_BORDER,
   PROP_DEPTH,
   PROP_POSITION,
+  PROP_INVERT,
   PROP_LAST,
 };
 
@@ -231,6 +233,10 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
       g_param_spec_double ("position", "Position",
           "Position of the transition effect", 0.0, 1.0, DEFAULT_PROP_POSITION,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INVERT,
+      g_param_spec_boolean ("invert", "Invert",
+          "Invert transition mask", DEFAULT_PROP_POSITION,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_smpte_alpha_setcaps);
   trans_class->get_unit_size =
@@ -239,8 +245,8 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
 }
 
 static gboolean
-gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type, gint depth,
-    gint width, gint height)
+gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type,
+    gboolean invert, gint depth, gint width, gint height)
 {
   GstMask *newmask;
 
@@ -248,12 +254,14 @@ gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type, gint depth,
    * correct */
   if (smpte->mask) {
     if (smpte->type == type &&
+        smpte->invert == invert &&
         smpte->depth == depth &&
         smpte->width == width && smpte->height == height)
       return TRUE;
   }
 
   smpte->type = type;
+  smpte->invert = invert;
   smpte->depth = depth;
   smpte->width = width;
   smpte->height = height;
@@ -263,7 +271,7 @@ gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type, gint depth,
     return TRUE;
   }
 
-  newmask = gst_mask_factory_new (type, depth, width, height);
+  newmask = gst_mask_factory_new (type, invert, depth, width, height);
   if (!newmask)
     goto mask_failed;
 
@@ -306,8 +314,9 @@ gst_smpte_alpha_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
   /* try to update the mask now, this will also adjust the width/height on
    * success */
   GST_OBJECT_LOCK (smpte);
-  ret = gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->depth,
-      width, height);
+  ret =
+      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->invert,
+      smpte->depth, width, height);
   GST_OBJECT_UNLOCK (smpte);
   if (!ret)
     goto mask_failed;
@@ -383,6 +392,7 @@ gst_smpte_alpha_init (GstSMPTEAlpha * smpte)
   smpte->border = DEFAULT_PROP_BORDER;
   smpte->depth = DEFAULT_PROP_DEPTH;
   smpte->position = DEFAULT_PROP_POSITION;
+  smpte->invert = DEFAULT_PROP_INVERT;
 }
 
 static void
@@ -574,7 +584,7 @@ gst_smpte_alpha_set_property (GObject * object, guint prop_id,
        * have to wait for the transform lock */
       GST_OBJECT_LOCK (smpte);
       GST_OBJECT_UNLOCK (smpte);
-      gst_smpte_alpha_update_mask (smpte, type,
+      gst_smpte_alpha_update_mask (smpte, type, smpte->invert,
           smpte->depth, smpte->width, smpte->height);
       GST_BASE_TRANSFORM_UNLOCK (smpte);
       break;
@@ -594,7 +604,7 @@ gst_smpte_alpha_set_property (GObject * object, guint prop_id,
        * have to wait for the transform lock */
       GST_OBJECT_LOCK (smpte);
       GST_OBJECT_UNLOCK (smpte);
-      gst_smpte_alpha_update_mask (smpte, smpte->type,
+      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->invert,
           depth, smpte->width, smpte->height);
       GST_BASE_TRANSFORM_UNLOCK (smpte);
       break;
@@ -604,6 +614,20 @@ gst_smpte_alpha_set_property (GObject * object, guint prop_id,
       smpte->position = g_value_get_double (value);
       GST_OBJECT_UNLOCK (smpte);
       break;
+    case PROP_INVERT:{
+      gboolean invert;
+
+      invert = g_value_get_boolean (value);
+      GST_BASE_TRANSFORM_LOCK (smpte);
+      /* also lock with the object lock so that reading the property doesn't
+       * have to wait for the transform lock */
+      GST_OBJECT_LOCK (smpte);
+      GST_OBJECT_UNLOCK (smpte);
+      gst_smpte_alpha_update_mask (smpte, smpte->type, invert,
+          smpte->depth, smpte->width, smpte->height);
+      GST_BASE_TRANSFORM_UNLOCK (smpte);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -637,6 +661,11 @@ gst_smpte_alpha_get_property (GObject * object, guint prop_id,
     case PROP_POSITION:
       GST_OBJECT_LOCK (smpte);
       g_value_set_double (value, smpte->position);
+      GST_OBJECT_UNLOCK (smpte);
+      break;
+    case PROP_INVERT:
+      GST_OBJECT_LOCK (smpte);
+      g_value_set_boolean (value, smpte->invert);
       GST_OBJECT_UNLOCK (smpte);
       break;
     default:

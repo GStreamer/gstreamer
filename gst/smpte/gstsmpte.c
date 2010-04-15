@@ -87,6 +87,7 @@ enum
 #define DEFAULT_PROP_DEPTH	16
 #define DEFAULT_PROP_FPS	0.
 #define DEFAULT_PROP_DURATION	GST_SECOND
+#define DEFAULT_PROP_INVERT   FALSE
 
 enum
 {
@@ -96,6 +97,7 @@ enum
   PROP_DEPTH,
   PROP_FPS,
   PROP_DURATION,
+  PROP_INVERT,
   PROP_LAST,
 };
 
@@ -242,6 +244,9 @@ gst_smpte_class_init (GstSMPTEClass * klass)
       g_param_spec_uint64 ("duration", "Duration",
           "Duration of the transition effect in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROP_DURATION, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INVERT,
+      g_param_spec_boolean ("invert", "Invert",
+          "Invert transition mask", DEFAULT_PROP_INVERT, G_PARAM_READWRITE));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
 }
@@ -266,25 +271,27 @@ fill_i420 (guint8 * data, gint width, gint height, gint color)
 }
 
 static gboolean
-gst_smpte_update_mask (GstSMPTE * smpte, gint type, gint depth, gint width,
-    gint height)
+gst_smpte_update_mask (GstSMPTE * smpte, gint type, gboolean invert,
+    gint depth, gint width, gint height)
 {
   GstMask *newmask;
 
   if (smpte->mask) {
     if (smpte->type == type &&
+        smpte->invert == invert &&
         smpte->depth == depth &&
         smpte->width == width && smpte->height == height)
       return TRUE;
   }
 
-  newmask = gst_mask_factory_new (type, depth, width, height);
+  newmask = gst_mask_factory_new (type, invert, depth, width, height);
   if (newmask) {
     if (smpte->mask) {
       gst_mask_destroy (smpte->mask);
     }
     smpte->mask = newmask;
     smpte->type = type;
+    smpte->invert = invert;
     smpte->depth = depth;
     smpte->width = width;
     smpte->height = height;
@@ -321,8 +328,9 @@ gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (smpte, "duration: %d frames", smpte->end_position);
 
-  ret = gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width,
-      smpte->height);
+  ret =
+      gst_smpte_update_mask (smpte, smpte->type, smpte->invert, smpte->depth,
+      smpte->width, smpte->height);
 
   return ret;
 }
@@ -365,6 +373,7 @@ gst_smpte_init (GstSMPTE * smpte)
   smpte->border = DEFAULT_PROP_BORDER;
   smpte->depth = DEFAULT_PROP_DEPTH;
   smpte->duration = DEFAULT_PROP_DURATION;
+  smpte->invert = DEFAULT_PROP_INVERT;
   smpte->fps_num = 0;
   smpte->fps_denom = 1;
 }
@@ -558,6 +567,9 @@ gst_smpte_set_property (GObject * object, guint prop_id,
     case PROP_DURATION:
       smpte->duration = g_value_get_uint64 (value);
       break;
+    case PROP_INVERT:
+      smpte->invert = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -587,6 +599,9 @@ gst_smpte_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DURATION:
       g_value_set_uint64 (value, smpte->duration);
+      break;
+    case PROP_INVERT:
+      g_value_set_boolean (value, smpte->invert);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
