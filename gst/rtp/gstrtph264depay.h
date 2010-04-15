@@ -56,6 +56,7 @@ struct _GstRtpH264Depay
   gboolean    picture_start;
   gboolean    picture_complete;
   GstClockTime last_ts;
+  gboolean    last_delta;
 };
 
 struct _GstRtpH264DepayClass
