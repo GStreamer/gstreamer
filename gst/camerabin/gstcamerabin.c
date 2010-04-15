@@ -1128,6 +1128,7 @@ gst_camerabin_setup_zoom (GstCameraBin * camera)
   GST_INFO_OBJECT (camera, "setting zoom %d", zoom);
 
   if (gst_camerabin_set_videosrc_zoom (camera, zoom)) {
+    gst_camerabin_set_element_zoom (camera, ZOOM_1X);
     GST_INFO_OBJECT (camera, "zoom set using videosrc");
   } else if (gst_camerabin_set_element_zoom (camera, zoom)) {
     GST_INFO_OBJECT (camera, "zoom set using gst elements");
