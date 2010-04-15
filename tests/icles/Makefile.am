@@ -46,6 +46,10 @@ playbin_text_SOURCES = playbin-text.c
 playbin_text_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 playbin_text_LDADD = $(GST_LIBS) $(LIBM)
 
+position_formats_SOURCES = position-formats.c
+position_formats_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+position_formats_LDADD = $(GST_LIBS) $(LIBM)
+
 stress_playbin_SOURCES = stress-playbin.c
 stress_playbin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 stress_playbin_LDADD = $(GST_LIBS) $(LIBM)
@@ -59,4 +63,5 @@ test_box_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_box_LDADD = $(GST_LIBS) $(LIBM)
 
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
-        audio-trickplay playbin-text stress-playbin test-scale test-box
+	audio-trickplay playbin-text position-formats stress-playbin \
+	test-scale test-box

@@ -1,5 +1,6 @@
 audio-trickplay
 playbin-text
+position-formats
 stress-playbin
 stress-xoverlay
 test-textoverlay
