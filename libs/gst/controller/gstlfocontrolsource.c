@@ -866,12 +866,12 @@ gst_lfo_control_source_bind (GstControlSource * source, GParamSpec * pspec)
       g_value_set_double (&self->priv->maximum_value, tpspec->maximum);
       if (!G_IS_VALUE (&self->priv->amplitude)) {
         g_value_init (&self->priv->amplitude, type);
-        g_value_set_float (&self->priv->amplitude, 0.0);
+        g_value_set_double (&self->priv->amplitude, 0.0);
       }
 
       if (!G_IS_VALUE (&self->priv->offset)) {
         g_value_init (&self->priv->offset, type);
-        g_value_set_float (&self->priv->offset, tpspec->default_value);
+        g_value_set_double (&self->priv->offset, tpspec->default_value);
       }
       break;
     }
