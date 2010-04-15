@@ -6,7 +6,6 @@
  *
  * There are currently several issues:
  * - adder only work with flushing seeks
- * - backwards playback does not work for adder at all
  * - there is a gap of almost 4 seconds before backwards playback
  *   - it is "waiting for free space"
  *   - using sync=false on the sink does not help (but has some other weird effects)
