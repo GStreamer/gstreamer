@@ -4513,6 +4513,39 @@ convert_failed:
 }
 
 static gboolean
+gst_base_sink_get_duration (GstBaseSink * basesink, GstFormat format,
+    gint64 * dur, gboolean * upstream)
+{
+  gboolean res = FALSE;
+
+  if (basesink->pad_mode == GST_ACTIVATE_PULL) {
+    GstFormat uformat = GST_FORMAT_BYTES;
+    gint64 uduration;
+
+    /* get the duration in bytes, in pull mode that's all we are sure to
+     * know. We have to explicitly get this value from upstream instead of
+     * using our cached value because it might change. Duration caching
+     * should be done at a higher level. */
+    res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat, &uduration);
+    if (res) {
+      gst_segment_set_duration (&basesink->segment, uformat, uduration);
+      if (format != uformat) {
+        /* convert to the requested format */
+        res = gst_pad_query_convert (basesink->sinkpad, uformat, uduration,
+            &format, dur);
+      } else {
+        *dur = uduration;
+      }
+    }
+    *upstream = FALSE;
+  } else {
+    *upstream = TRUE;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_base_sink_query (GstElement * element, GstQuery * query)
 {
   gboolean res = FALSE;
@@ -4539,44 +4572,62 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
         /* fallback to peer query */
         res = gst_pad_peer_query (basesink->sinkpad, query);
       }
+      if (!res) {
+        /* we can handle a few things if upstream failed */
+        if (format == GST_FORMAT_PERCENT) {
+          gint64 dur = 0;
+          GstFormat uformat = GST_FORMAT_TIME;
+
+          res = gst_base_sink_get_position (basesink, GST_FORMAT_TIME, &cur,
+              &upstream);
+          if (!res && upstream) {
+            res = gst_pad_query_peer_position (basesink->sinkpad, &uformat,
+                &cur);
+          }
+          if (res) {
+            res = gst_base_sink_get_duration (basesink, GST_FORMAT_TIME, &dur,
+                &upstream);
+            if (!res && upstream) {
+              res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat,
+                  &dur);
+            }
+          }
+          if (res) {
+            gint64 pos;
+
+            pos = gst_util_uint64_scale (100 * GST_FORMAT_PERCENT_SCALE, cur,
+                dur);
+            gst_query_set_position (query, GST_FORMAT_PERCENT, pos);
+          }
+        }
+      }
       break;
     }
     case GST_QUERY_DURATION:
     {
-      GstFormat format, uformat;
-      gint64 duration, uduration;
+      gint64 dur = 0;
+      GstFormat format;
+      gboolean upstream = FALSE;
 
       gst_query_parse_duration (query, &format, NULL);
 
       GST_DEBUG_OBJECT (basesink, "duration query in format %s",
           gst_format_get_name (format));
 
-      if (basesink->pad_mode == GST_ACTIVATE_PULL) {
-        uformat = GST_FORMAT_BYTES;
-
-        /* get the duration in bytes, in pull mode that's all we are sure to
-         * know. We have to explicitly get this value from upstream instead of
-         * using our cached value because it might change. Duration caching
-         * should be done at a higher level. */
-        res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat,
-            &uduration);
-        if (res) {
-          gst_segment_set_duration (&basesink->segment, uformat, uduration);
-          if (format != uformat) {
-            /* convert to the requested format */
-            res = gst_pad_query_convert (basesink->sinkpad, uformat, uduration,
-                &format, &duration);
-          } else {
-            duration = uduration;
-          }
-          if (res) {
-            /* set the result */
-            gst_query_set_duration (query, format, duration);
-          }
-        }
-      } else {
-        /* in push mode we simply forward upstream */
+      if ((res =
+              gst_base_sink_get_duration (basesink, format, &dur, &upstream))) {
+        gst_query_set_duration (query, format, dur);
+      } else if (upstream) {
+        /* fallback to peer query */
         res = gst_pad_peer_query (basesink->sinkpad, query);
+      }
+      if (!res) {
+        /* we can handle a few things if upstream failed */
+        if (format == GST_FORMAT_PERCENT) {
+          gst_query_set_duration (query, GST_FORMAT_PERCENT,
+              GST_FORMAT_PERCENT_MAX);
+          res = TRUE;
+        }
       }
       break;
     }
