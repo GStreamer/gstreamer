@@ -189,13 +189,13 @@ dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
-    -Wcast-align -Winit-self -Wmissing-include-dirs -Waddress
+    -Winit-self -Wmissing-include-dirs -Waddress
     -Waggregate-return -Wno-multichar -Wnested-externs ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
     -Wmissing-declarations -Wredundant-decls
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wcast-align
+    -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
     -Wno-multichar])
 
