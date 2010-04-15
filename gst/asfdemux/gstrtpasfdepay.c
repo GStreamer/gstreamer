@@ -41,6 +41,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define SINK_CAPS \
   "application/x-rtp, "                                          \
   "media = (string) { \"application\", \"video\", \"audio\" }, " \
+  "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "         \
   "clock-rate = (int) [1, MAX ], "                               \
   "encoding-name = (string) \"X-ASF-PF\""
 
