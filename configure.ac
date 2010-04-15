@@ -328,14 +328,14 @@ dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wformat-nonliteral - see ext/pango/gstclockoverlay.c and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wcast-align
+    -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
     -Wno-multichar -Wnested-externs ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
     -Wmissing-declarations -Wredundant-decls -Wundef
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wcast-align
+    -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
     -Wno-multichar])
 
