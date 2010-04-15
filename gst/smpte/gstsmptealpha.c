@@ -253,6 +253,16 @@ gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type, gint depth,
       return TRUE;
   }
 
+  smpte->type = type;
+  smpte->depth = depth;
+  smpte->width = width;
+  smpte->height = height;
+
+  /* Not negotiated yet */
+  if (width == 0 || height == 0) {
+    return TRUE;
+  }
+
   newmask = gst_mask_factory_new (type, depth, width, height);
   if (!newmask)
     goto mask_failed;
@@ -261,10 +271,6 @@ gst_smpte_alpha_update_mask (GstSMPTEAlpha * smpte, gint type, gint depth,
     gst_mask_destroy (smpte->mask);
 
   smpte->mask = newmask;
-  smpte->type = type;
-  smpte->depth = depth;
-  smpte->width = width;
-  smpte->height = height;
 
   return TRUE;
 
@@ -376,6 +382,7 @@ gst_smpte_alpha_init (GstSMPTEAlpha * smpte)
   smpte->type = DEFAULT_PROP_TYPE;
   smpte->border = DEFAULT_PROP_BORDER;
   smpte->depth = DEFAULT_PROP_DEPTH;
+  smpte->position = DEFAULT_PROP_POSITION;
 }
 
 static void
@@ -557,33 +564,41 @@ gst_smpte_alpha_set_property (GObject * object, guint prop_id,
   smpte = GST_SMPTE_ALPHA (object);
 
   switch (prop_id) {
-    case PROP_TYPE:
+    case PROP_TYPE:{
+      gint type;
+
+      type = g_value_get_enum (value);
+
       GST_BASE_TRANSFORM_LOCK (smpte);
       /* also lock with the object lock so that reading the property doesn't
        * have to wait for the transform lock */
       GST_OBJECT_LOCK (smpte);
-      smpte->type = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (smpte);
-      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->depth,
-          smpte->width, smpte->height);
+      gst_smpte_alpha_update_mask (smpte, type,
+          smpte->depth, smpte->width, smpte->height);
       GST_BASE_TRANSFORM_UNLOCK (smpte);
       break;
+    }
     case PROP_BORDER:
       GST_OBJECT_LOCK (smpte);
       smpte->border = g_value_get_int (value);
       GST_OBJECT_UNLOCK (smpte);
       break;
-    case PROP_DEPTH:
+    case PROP_DEPTH:{
+      gint depth;
+
+      depth = g_value_get_int (value);
+
       GST_BASE_TRANSFORM_LOCK (smpte);
       /* also lock with the object lock so that reading the property doesn't
        * have to wait for the transform lock */
       GST_OBJECT_LOCK (smpte);
-      smpte->depth = g_value_get_int (value);
       GST_OBJECT_UNLOCK (smpte);
-      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->depth,
-          smpte->width, smpte->height);
+      gst_smpte_alpha_update_mask (smpte, smpte->type,
+          depth, smpte->width, smpte->height);
       GST_BASE_TRANSFORM_UNLOCK (smpte);
       break;
+    }
     case PROP_POSITION:
       GST_OBJECT_LOCK (smpte);
       smpte->position = g_value_get_double (value);
