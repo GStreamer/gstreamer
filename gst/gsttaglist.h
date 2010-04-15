@@ -426,7 +426,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_ALBUM_SORTNAME         "album-sortname"
 /**
- * GST_TAG_ALBUM_ARTIST
+ * GST_TAG_ALBUM_ARTIST:
  *
  * The artist of the entire album, as it should be displayed.
  *
@@ -434,7 +434,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_ALBUM_ARTIST           "album-artist"
 /**
- * GST_TAG_ALBUM_ARTIST_SORTNAME
+ * GST_TAG_ALBUM_ARTIST_SORTNAME:
  *
  * The artist of the entire album, as it should be sorted.
  *
@@ -823,7 +823,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GEO_LOCATION_SUBLOCATION             "geo-location-sublocation"
 /**
- * GST_TAG_SHOW_NAME
+ * GST_TAG_SHOW_NAME:
  *
  * Name of the show, used for displaying (string)
  *
@@ -831,7 +831,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_SHOW_NAME                         "show-name"
 /**
- * GST_TAG_SHOW_SORTNAME
+ * GST_TAG_SHOW_SORTNAME:
  *
  * Name of the show, used for sorting (string)
  *
@@ -839,7 +839,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_SHOW_SORTNAME                     "show-sortname"
 /**
- * GST_TAG_SHOW_EPISODE_NUMBER
+ * GST_TAG_SHOW_EPISODE_NUMBER:
  *
  * Number of the episode within a season/show (unsigned integer)
  *
@@ -847,7 +847,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_SHOW_EPISODE_NUMBER               "show-episode-number"
 /**
- * GST_TAG_SHOW_SEASON_NUMBER
+ * GST_TAG_SHOW_SEASON_NUMBER:
  *
  * Number of the season of a show/series (unsigned integer)
  *
@@ -855,7 +855,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_SHOW_SEASON_NUMBER                "show-season-number"
 /**
- * GST_TAG_LYRICS
+ * GST_TAG_LYRICS:
  *
  * The lyrics of the media (string)
  *
@@ -863,7 +863,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_LYRICS                            "lyrics"
 /**
- * GST_TAG_COMPOSER_SORTNAME
+ * GST_TAG_COMPOSER_SORTNAME:
  *
  * The composer's name, used for sorting (string)
  *
@@ -871,7 +871,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_COMPOSER_SORTNAME                 "composer-sortname"
 /**
- * GST_TAG_GROUPING
+ * GST_TAG_GROUPING:
  *
  * Groups together media that are related and spans multiple tracks. An
  * example are multiple pieces of a concerto. (string)
@@ -880,7 +880,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GROUPING                          "grouping"
 /**
- * GST_TAG_USER_RATING
+ * GST_TAG_USER_RATING:
  *
  * Rating attributed by a person (likely the application user).
  * The higher the value, the more the user likes this media
