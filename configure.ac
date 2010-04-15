@@ -244,14 +244,14 @@ dnl -Wundef - Windows headers check _MSC_VER unconditionally
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
-    -Wcast-align -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
+    -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
     -Wnested-externs])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
     -Wmissing-declarations -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
-    -Wcast-align -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
+    -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
