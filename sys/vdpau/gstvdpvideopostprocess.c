@@ -175,7 +175,7 @@ static VdpVideoMixerFeature
 gst_vdp_feature_from_deinterlace_method (GstVdpDeinterlaceMethods method)
 {
   gint i;
-  VdpVideoMixerFeature feature;
+  VdpVideoMixerFeature feature = 0;
 
   typedef struct
   {
@@ -183,7 +183,7 @@ gst_vdp_feature_from_deinterlace_method (GstVdpDeinterlaceMethods method)
     VdpVideoMixerFeature feature;
   } VdpDeinterlaceMethod;
 
-  VdpDeinterlaceMethod deinterlace_methods[2] = {
+  static const VdpDeinterlaceMethod deinterlace_methods[] = {
     {GST_VDP_DEINTERLACE_METHOD_TEMPORAL,
         VDP_VIDEO_MIXER_FEATURE_DEINTERLACE_TEMPORAL},
     {GST_VDP_DEINTERLACE_METHOD_TEMPORAL_SPATIAL,
