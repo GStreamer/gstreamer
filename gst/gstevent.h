@@ -77,13 +77,19 @@ typedef enum {
 /**
  * GstEventType:
  * @GST_EVENT_UNKNOWN: unknown event.
- * @GST_EVENT_FLUSH_START: Start a flush operation
- * @GST_EVENT_FLUSH_STOP: Stop a flush operation
+ * @GST_EVENT_FLUSH_START: Start a flush operation. This event clears all data
+ *                 from the pipeline and unblock all streaming threads.
+ * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
+ *                 running-time of the pipeline.
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without a NEWSEGMENT event.
- * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
+ * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow. The
+ *                 segment events contains information for clipping buffers and
+ *                 converting buffer timestamps to running-time and
+ *                 stream-time.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
- * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements
+ * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements. Currently not
+ *                 used yet.
  * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
  *                          send messages that should be emitted in sync with
  *                          rendering.
@@ -94,8 +100,11 @@ typedef enum {
  * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
  *                        user requests, such as mouse or keyboard movements,
  *                        to upstream elements.
- * @GST_EVENT_LATENCY: Notification of new latency adjustment. Since: 0.10.12
- * @GST_EVENT_STEP: A request for stepping through the media. Since: 0.10.24
+ * @GST_EVENT_LATENCY: Notification of new latency adjustment. Sinks will use
+ *                     the latency information to adjust their synchronisation.
+ *                     Since: 0.10.12
+ * @GST_EVENT_STEP: A request for stepping through the media. Sinks will usually
+ *                  execute the step operation. Since: 0.10.24
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
