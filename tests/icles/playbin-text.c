@@ -38,7 +38,7 @@ struct _App
   GMainLoop *loop;
 };
 
-App s_app;
+static App s_app;
 
 static gboolean
 bus_message (GstBus * bus, GstMessage * message, App * app)
