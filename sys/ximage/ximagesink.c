@@ -922,10 +922,13 @@ gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink)
   XWindowAttributes attr;
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
-  g_return_if_fail (ximagesink->xwindow != NULL);
 
   /* Update the window geometry */
   g_mutex_lock (ximagesink->x_lock);
+  if (G_UNLIKELY (ximagesink->xwindow == NULL)) {
+    g_mutex_unlock (ximagesink->x_lock);
+    return;
+  }
 
   XGetWindowAttributes (ximagesink->xcontext->disp,
       ximagesink->xwindow->win, &attr);
