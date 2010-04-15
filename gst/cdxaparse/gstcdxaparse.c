@@ -420,7 +420,7 @@ gst_cdxa_parse_do_seek (GstCDXAParse * cdxa, GstEvent * event)
     return FALSE;
   }
 
-  if (format != GST_SEEK_TYPE_SET) {
+  if (start_type != GST_SEEK_TYPE_SET) {
     GST_DEBUG_OBJECT (cdxa, "Can only handle seek from start (SEEK_TYPE_SET)");
     return FALSE;
   }
