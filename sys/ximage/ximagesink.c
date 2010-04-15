@@ -131,8 +131,7 @@ MotifWmHints, MwmHints;
 static void gst_ximagesink_reset (GstXImageSink * ximagesink);
 static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     GstXImageBuffer * ximage);
-static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink,
-    GstXWindow * xwindow);
+static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink);
 static void gst_ximagesink_expose (GstXOverlay * overlay);
 
 static GstStaticPadTemplate gst_ximagesink_sink_template_factory =
@@ -918,13 +917,12 @@ gst_ximagesink_xwindow_destroy (GstXImageSink * ximagesink,
 }
 
 static void
-gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink,
-    GstXWindow * xwindow)
+gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink)
 {
   XWindowAttributes attr;
 
-  g_return_if_fail (xwindow != NULL);
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  g_return_if_fail (ximagesink->xwindow != NULL);
 
   /* Update the window geometry */
   g_mutex_lock (ximagesink->x_lock);
@@ -1071,8 +1069,7 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
         break;
       case ConfigureNotify:
         g_mutex_unlock (ximagesink->x_lock);
-        gst_ximagesink_xwindow_update_geometry (ximagesink,
-            ximagesink->xwindow);
+        gst_ximagesink_xwindow_update_geometry (ximagesink);
         g_mutex_lock (ximagesink->x_lock);
         configured = TRUE;
         break;
@@ -2056,7 +2053,7 @@ gst_ximagesink_expose (GstXOverlay * overlay)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
 
-  gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
+  gst_ximagesink_xwindow_update_geometry (ximagesink);
   gst_ximagesink_ximage_put (ximagesink, NULL);
 }
 
