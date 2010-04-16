@@ -288,9 +288,8 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     guint len, num_sps, num_pps;
     gint i;
     guint8 *data;
-    guint32 profile_id;
 
-    if (ps == NULL || profile == NULL)
+    if (ps == NULL)
       goto incomplete_caps;
 
     params = g_strsplit (ps, ",", 0);
@@ -330,16 +329,31 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     }
     g_strfreev (params);
 
+    if (num_sps == 0 || (GST_READ_UINT16_BE (sps[0]) < 3) || num_pps == 0) {
+      g_strfreev ((gchar **) pps);
+      g_strfreev ((gchar **) sps);
+      goto incomplete_caps;
+    }
+
     codec_data = gst_buffer_new_and_alloc (len);
     data = GST_BUFFER_DATA (codec_data);
 
     /* 8 bits version == 1 */
     *data++ = 1;
-    /* hex: AVCProfileIndication:8 | profile_compat:8 | AVCLevelIndication:8 */
-    sscanf (profile, "%6x", &profile_id);
-    *data++ = (profile_id >> 16) & 0xff;
-    *data++ = (profile_id >> 8) & 0xff;
-    *data++ = profile_id & 0xff;
+    if (profile) {
+      guint32 profile_id;
+
+      /* hex: AVCProfileIndication:8 | profile_compat:8 | AVCLevelIndication:8 */
+      sscanf (profile, "%6x", &profile_id);
+      *data++ = (profile_id >> 16) & 0xff;
+      *data++ = (profile_id >> 8) & 0xff;
+      *data++ = profile_id & 0xff;
+    } else {
+      /* extract from SPS */
+      *data++ = sps[0][3];
+      *data++ = sps[0][4];
+      *data++ = sps[0][5];
+    }
     /* 6 bits reserved | 2 bits lengthSizeMinusOn */
     *data++ = 0xff;
     /* 3 bits reserved | 5 bits numOfSequenceParameterSets */
