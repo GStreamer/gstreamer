@@ -55,12 +55,16 @@ struct _GstSMPTEAlpha {
   gboolean       invert;
 
   /* negotiated format */
-  GstVideoFormat format;
+  GstVideoFormat in_format, out_format;
   gint           width;
   gint           height;
 
   /* state of the effect */
   GstMask       *mask;
+
+  /* processing function */
+  void (*process) (GstSMPTEAlpha * smpte, const guint8 * in, guint8 * out,
+    GstMask * mask, gint width, gint height, gint border, gint pos);
 };
 
 struct _GstSMPTEAlphaClass {

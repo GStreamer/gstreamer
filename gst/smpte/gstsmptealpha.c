@@ -148,6 +148,14 @@ static gboolean gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans,
 static GstFlowReturn gst_smpte_alpha_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
 
+static void
+gst_smpte_alpha_process_i420_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
+    guint8 * out, GstMask * mask, gint width, gint height, gint border,
+    gint pos);
+static void gst_smpte_alpha_process_ayuv_ayuv (GstSMPTEAlpha * smpte,
+    const guint8 * in, guint8 * out, GstMask * mask, gint width, gint height,
+    gint border, gint pos);
+
 GST_BOILERPLATE (GstSMPTEAlpha, gst_smpte_alpha, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
@@ -260,7 +268,12 @@ gst_smpte_alpha_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
   gboolean ret;
   gint width, height;
 
-  if (!gst_video_format_parse_caps (incaps, &smpte->format, &width, &height))
+  smpte->process = NULL;
+
+  if (!gst_video_format_parse_caps (incaps, &smpte->in_format, &width, &height))
+    goto invalid_caps;
+  if (!gst_video_format_parse_caps (outcaps, &smpte->out_format, &width,
+          &height))
     goto invalid_caps;
 
   /* try to update the mask now, this will also adjust the width/height on
@@ -272,6 +285,23 @@ gst_smpte_alpha_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
   GST_OBJECT_UNLOCK (smpte);
   if (!ret)
     goto mask_failed;
+
+  switch (smpte->out_format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+          smpte->process = gst_smpte_alpha_process_ayuv_ayuv;
+          break;
+        case GST_VIDEO_FORMAT_I420:
+          smpte->process = gst_smpte_alpha_process_i420_ayuv;
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
 
   return ret;
 
@@ -324,11 +354,12 @@ gst_smpte_alpha_finalize (GstSMPTEAlpha * smpte)
 }
 
 static void
-gst_smpte_alpha_do_ayuv (GstSMPTEAlpha * smpte, guint8 * in, guint8 * out,
-    GstMask * mask, gint width, gint height, gint border, gint pos)
+gst_smpte_alpha_process_ayuv_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
+    guint8 * out, GstMask * mask, gint width, gint height, gint border,
+    gint pos)
 {
   gint i, j;
-  guint32 *maskp;
+  const guint32 *maskp;
   gint value;
   gint min, max;
 
@@ -356,17 +387,18 @@ gst_smpte_alpha_do_ayuv (GstSMPTEAlpha * smpte, guint8 * in, guint8 * out,
 }
 
 static void
-gst_smpte_alpha_do_i420 (GstSMPTEAlpha * smpte, guint8 * in, guint8 * out,
-    GstMask * mask, gint width, gint height, gint border, gint pos)
+gst_smpte_alpha_process_i420_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
+    guint8 * out, GstMask * mask, gint width, gint height, gint border,
+    gint pos)
 {
-  guint8 *srcY;
-  guint8 *srcU;
-  guint8 *srcV;
+  const guint8 *srcY;
+  const guint8 *srcU;
+  const guint8 *srcV;
   gint i, j;
   gint src_wrap, src_uv_wrap;
   gint y_stride, uv_stride;
   gboolean odd_width;
-  guint32 *maskp;
+  const guint32 *maskp;
   gint value;
   gint min, max;
 
@@ -435,6 +467,9 @@ gst_smpte_alpha_transform (GstBaseTransform * trans, GstBuffer * in,
   gdouble position;
   gint border;
 
+  if (G_UNLIKELY (!smpte->process))
+    goto not_negotiated;
+
   /* first sync the controller to the current stream_time of the buffer */
   timestamp = GST_BUFFER_TIMESTAMP (in);
   stream_time =
@@ -454,22 +489,9 @@ gst_smpte_alpha_transform (GstBaseTransform * trans, GstBuffer * in,
   GST_OBJECT_UNLOCK (smpte);
 
   /* run the type specific filter code */
-  switch (smpte->format) {
-    case GST_VIDEO_FORMAT_I420:
-      gst_smpte_alpha_do_i420 (smpte, GST_BUFFER_DATA (in),
-          GST_BUFFER_DATA (out),
-          smpte->mask, smpte->width, smpte->height,
-          border, ((1 << smpte->depth) + border) * position);
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      gst_smpte_alpha_do_ayuv (smpte, GST_BUFFER_DATA (in),
-          GST_BUFFER_DATA (out),
-          smpte->mask, smpte->width, smpte->height,
-          border, ((1 << smpte->depth) + border) * position);
-      break;
-    default:
-      goto not_negotiated;
-  }
+  smpte->process (smpte, GST_BUFFER_DATA (in), GST_BUFFER_DATA (out),
+      smpte->mask, smpte->width, smpte->height, border,
+      ((1 << smpte->depth) + border) * position);
 
   return GST_FLOW_OK;
 
