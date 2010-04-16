@@ -71,6 +71,7 @@
 #include "gstrtpmp4apay.h"
 #include "gstrtpmp4gdepay.h"
 #include "gstrtpmp4gpay.h"
+#include "gstrtpqcelpdepay.h"
 #include "gstrtpqdmdepay.h"
 #include "gstrtpsirenpay.h"
 #include "gstrtpsirendepay.h"
@@ -235,6 +236,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_mp4g_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_qcelp_depay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_qdm2_depay_plugin_init (plugin))
