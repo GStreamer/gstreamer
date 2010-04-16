@@ -247,9 +247,11 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GST_LOG ("SBIT : %d , EBIT : %d", SBIT, EBIT);
   GST_LOG ("payload_len : %d, header_len : %d , leftover : 0x%x",
       payload_len, header_len, rtph263depay->leftover);
-#if 0
-  gst_util_dump_mem (payload, header_len);
-#endif
+
+  if (G_UNLIKELY (!rtph263depay->start)) {
+    GST_DEBUG ("no frame start yet, skipping payload");
+    goto skip;
+  }
 
   /* skip header */
   payload += header_len;
@@ -268,31 +270,28 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   if (!EBIT) {
-    if (rtph263depay->start) {
-      GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
+    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
 
-      /* Copy the entire buffer, FIXME, use subbuffers */
-      memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
-      gst_adapter_push (rtph263depay->adapter, tmp);
-    }
+    /* Copy the entire buffer, FIXME, use subbuffers */
+    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
+    gst_adapter_push (rtph263depay->adapter, tmp);
   } else {
-    if (rtph263depay->start) {
-      GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
+    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
 
-      /* Copy the entire buffer except for the last byte. FIXME, use
-       * subbuffers. */
-      memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
-      gst_adapter_push (rtph263depay->adapter, tmp);
+    /* Copy the entire buffer except for the last byte. FIXME, use
+     * subbuffers. */
+    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
+    gst_adapter_push (rtph263depay->adapter, tmp);
 
-      /* Put the last byte into the leftover */
-      GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
-      GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
-      rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
-      rtph263depay->offset = 1;
-      GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
-    }
+    /* Put the last byte into the leftover */
+    GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
+    GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
+    rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
+    rtph263depay->offset = 1;
+    GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
   }
 
+skip:
   if (M) {
     if (rtph263depay->start) {
       /* frame is completed */
