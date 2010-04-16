@@ -325,6 +325,7 @@ skip:
       gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
       rtph263depay->offset = 0;
       rtph263depay->leftover = 0;
+      rtph263depay->start = FALSE;
     } else {
       rtph263depay->start = TRUE;
     }
