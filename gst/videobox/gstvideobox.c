@@ -1689,6 +1689,117 @@ copy_packed_simple (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   }
 }
 
+static void
+fill_yuy2 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
+    guint8 * dest, gboolean sdtv, gint width, gint height)
+{
+  guint8 y, u, v;
+  gint i, j;
+  gint stride = gst_video_format_get_row_stride (format, 0, width);
+
+  y = (sdtv) ? yuv_sdtv_colors_Y[fill_type] : yuv_hdtv_colors_Y[fill_type];
+  u = (sdtv) ? yuv_sdtv_colors_U[fill_type] : yuv_hdtv_colors_U[fill_type];
+  v = (sdtv) ? yuv_sdtv_colors_V[fill_type] : yuv_hdtv_colors_V[fill_type];
+
+  width = width + (width % 2);
+
+  if (format == GST_VIDEO_FORMAT_YUY2) {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j += 2) {
+        dest[j * 2 + 0] = y;
+        dest[j * 2 + 1] = u;
+        dest[j * 2 + 2] = y;
+        dest[j * 2 + 3] = v;
+      }
+
+      dest += stride;
+    }
+  } else {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j += 2) {
+        dest[j * 2 + 0] = u;
+        dest[j * 2 + 1] = y;
+        dest[j * 2 + 2] = v;
+        dest[j * 2 + 3] = y;
+      }
+
+      dest += stride;
+    }
+  }
+}
+
+static void
+copy_yuy2_yuy2 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  gint src_stride, dest_stride;
+
+  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
+  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+
+  dest_x = (dest_x & ~1);
+  src_x = (src_x & ~1);
+
+  w = w + (w % 2);
+
+  dest = dest + dest_y * dest_stride + dest_x * 2;
+  src = src + src_y * src_stride + src_x * 2;
+
+  if (src_sdtv != dest_sdtv) {
+    gint y1, u1, v1;
+    gint y2, u2, v2;
+    gint matrix[12];
+
+    memcpy (matrix,
+        dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+
+    if (src_format == GST_VIDEO_FORMAT_YUY2) {
+      for (i = 0; i < h; i++) {
+        for (j = 0; j < w; j += 2) {
+          y1 = src[j * 2 + 0];
+          y2 = src[j * 2 + 2];
+          u1 = u2 = src[j * 2 + 1];
+          v1 = v2 = src[j * 2 + 3];
+
+          dest[j * 2 + 0] = APPLY_MATRIX (matrix, 0, y1, u1, v1);
+          dest[j * 2 + 1] = APPLY_MATRIX (matrix, 1, y1, u1, v1);
+          dest[j * 2 + 2] = APPLY_MATRIX (matrix, 0, y1, u2, v2);
+          dest[j * 2 + 3] = APPLY_MATRIX (matrix, 2, y2, u2, v2);
+        }
+        dest += dest_stride;
+        src += src_stride;
+      }
+    } else {
+      for (i = 0; i < h; i++) {
+        for (j = 0; j < w; j += 2) {
+          u1 = u2 = src[j * 2 + 0];
+          v1 = v2 = src[j * 2 + 2];
+          y1 = src[j * 2 + 1];
+          y2 = src[j * 2 + 3];
+
+          dest[j * 2 + 1] = APPLY_MATRIX (matrix, 0, y1, u1, v1);
+          dest[j * 2 + 0] = APPLY_MATRIX (matrix, 1, y1, u1, v1);
+          dest[j * 2 + 3] = APPLY_MATRIX (matrix, 0, y1, u2, v2);
+          dest[j * 2 + 2] = APPLY_MATRIX (matrix, 2, y2, u2, v2);
+        }
+        dest += dest_stride;
+        src += src_stride;
+      }
+    }
+  } else {
+    for (i = 0; i < h; i++) {
+      oil_copy_u8 (dest, src, w * 2);
+      dest += dest_stride;
+      src += src_stride;
+    }
+  }
+}
+
 #define DEFAULT_LEFT      0
 #define DEFAULT_RIGHT     0
 #define DEFAULT_TOP       0
@@ -1718,6 +1829,8 @@ static GstStaticPadTemplate gst_video_box_src_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
         GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
@@ -1735,6 +1848,8 @@ static GstStaticPadTemplate gst_video_box_sink_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
         GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
@@ -2340,6 +2455,18 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
         case GST_VIDEO_FORMAT_GRAY16_BE:
         case GST_VIDEO_FORMAT_GRAY16_LE:
           video_box->copy = copy_packed_simple;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+      video_box->fill = fill_yuy2;
+      switch (video_box->in_format) {
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_UYVY:
+          video_box->copy = copy_yuy2_yuy2;
           break;
         default:
           break;
