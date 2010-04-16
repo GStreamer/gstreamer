@@ -327,6 +327,12 @@ _gst_tag_initialize (void)
       _("user rating"),
       _("Rating attributed by a user. The higher the rank, "
           "the more the user likes this media"), NULL);
+  gst_tag_register (GST_TAG_DEVICE_MANUFACTURER, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("device manufacturer"),
+      _("Manufacturer of the device used to create this media"), NULL);
+  gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("device model"),
+      _("Model of the device used to create this media"), NULL);
 }
 
 /**

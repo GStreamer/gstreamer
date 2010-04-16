@@ -889,6 +889,22 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * Since: 0.10.29
  */
 #define GST_TAG_USER_RATING                       "user-rating"
+/**
+ * GST_TAG_DEVICE_MANUFACTURER:
+ *
+ * Manufacturer of the device used to create the media (string)
+ *
+ * Since: 0.10.30
+ */
+#define GST_TAG_DEVICE_MANUFACTURER               "device-manufacturer"
+/**
+ * GST_TAG_DEVICE_MODEL:
+ *
+ * Model of the device used to create the media (string)
+ *
+ * Since: 0.10.30
+ */
+#define GST_TAG_DEVICE_MODEL                      "device-model"
 
 G_END_DECLS
 
