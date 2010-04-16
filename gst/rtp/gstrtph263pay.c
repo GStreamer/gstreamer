@@ -1302,7 +1302,7 @@ gst_rtp_h263_pay_A_fragment_push (GstRtpH263Pay * rtph263pay,
       (context->gobs[last]->end - context->gobs[first]->start) + 1;
   pack->marker = FALSE;
 
-  if (last == format_props[context->piclayer->ptype_srcformat][0] - 1) {
+  if (last == context->no_gobs - 1) {
     pack->marker = TRUE;
   }
 
@@ -1645,6 +1645,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
     GstRtpH263PayBoundry bound;
     gint first;
     guint payload_len;
+    gboolean forcea = FALSE;
 
     GST_DEBUG ("Frame too large for MTU");
     /*
@@ -1660,10 +1661,16 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {
       GST_DEBUG ("Searching for gob %d", i);
       if (!gst_rtp_h263_pay_gobfinder (rtph263pay, &bound)) {
-        GST_WARNING
-            ("No GOB's were found in data stream! Please enable RTP mode in encoder. Forcing mode A for now.");
-        ret = gst_rtp_h263_send_entire_frame (rtph263pay, context);
-        goto end;
+        if (i <= 1) {
+          GST_WARNING
+              ("No GOB's were found in data stream! Please enable RTP mode in encoder. Forcing mode A for now.");
+          ret = gst_rtp_h263_send_entire_frame (rtph263pay, context);
+          goto end;
+        } else {
+          /* try to send fragments corresponding to found GOBs */
+          forcea = TRUE;
+          break;
+        }
       }
 
       context->gobs[i] = gst_rtp_h263_pay_gob_new (&bound, i);
@@ -1673,6 +1680,10 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
           context->gobs[i]->start, context->gobs[i]->length,
           context->gobs[i]->ebit, context->gobs[i]->sbit);
     }
+    /* NOTE some places may still assume this to be the max possible */
+    context->no_gobs = i;
+    GST_DEBUG ("Found %d GOBS of maximum %d",
+        context->no_gobs, format_props[context->piclayer->ptype_srcformat][0]);
 
     // Make packages smaller than MTU
     //   A mode
@@ -1682,13 +1693,13 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
     first = 0;
     payload_len = 0;
     i = 0;
-    while (i < format_props[context->piclayer->ptype_srcformat][0]) {
+    while (i < context->no_gobs) {
 
       if (context->gobs[i]->length >= context->mtu) {
         if (payload_len == 0) {
 
           GST_DEBUG ("GOB len > MTU");
-          if (rtph263pay->prop_payload_mode) {
+          if (rtph263pay->prop_payload_mode || forcea) {
             payload_len = context->gobs[i]->length;
             goto force_a;
           }
@@ -1723,7 +1734,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
         GST_DEBUG ("GOB %d fills mtu", i);
         payload_len += context->gobs[i]->length;
         i++;
-        if (i == format_props[context->piclayer->ptype_srcformat][0]) {
+        if (i == context->no_gobs) {
           GST_DEBUG ("LAST GOB %d", i);
           goto payload_a_push;
         }

@@ -80,6 +80,7 @@ struct _GstRtpH263PayContext
   guint8 *win_end;
   guint8 cpm;
 
+  guint no_gobs;
   GstRtpH263PayGob **gobs;
 
 };
