@@ -98,13 +98,13 @@ Resolving deltas: 100% (240/240), done.
       Note that capitalization is important for the name of the plugin. Under
       some operating systems, capitalization is also important when specifying
       directory names. For example, the following commands create the
-      ExampleFilter plugin based on the plugin template and put the output files
+      MyFilter plugin based on the plugin template and put the output files
       in the <filename class="directory">gst-template/gst-plugin/src</filename>
       directory:
     </para>
     <screen>
 <prompt>shell $ </prompt><userinput>cd gst-template/gst-plugin/src</userinput>
-<prompt>shell $ </prompt><userinput>../tools/make_element ExampleFilter</userinput>
+<prompt>shell $ </prompt><userinput>../tools/make_element MyFilter</userinput>
     </screen>
     <para>
       The last command creates two files:

@@ -94,7 +94,7 @@
         guide have contained no explicit example code, perhaps making things a
         bit abstract and difficult to understand. In contrast, this section will
         present both applications and code by following the development of an
-        example audio filter plugin called <quote>ExampleFilter</quote>.
+        example audio filter plugin called <quote>MyFilter</quote>.
       </para>
       <para>
         The example filter element will begin with a single input pad and a 
