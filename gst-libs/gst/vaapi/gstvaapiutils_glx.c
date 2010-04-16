@@ -287,16 +287,17 @@ GLContextState *
 gl_create_context(Display *dpy, int screen, GLContextState *parent)
 {
     GLContextState *cs;
-    GLXFBConfig *fb_configs = NULL;
-    int n_fb_configs;
+    GLXFBConfig *fbconfigs = NULL;
+    int fbconfig_id, val, n, n_fbconfigs;
+    Status status;
 
-    static GLint fb_config_attrs[] = {
+    static GLint fbconfig_attrs[] = {
         GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
         GLX_RENDER_TYPE,   GLX_RGBA_BIT,
         GLX_DOUBLEBUFFER,  True,
-        GLX_RED_SIZE,      1,
-        GLX_GREEN_SIZE,    1, 
-        GLX_BLUE_SIZE,     1,
+        GLX_RED_SIZE,      8,
+        GLX_GREEN_SIZE,    8, 
+        GLX_BLUE_SIZE,     8,
         None
     };
 
@@ -310,17 +311,49 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
     cs->context         = NULL;
     cs->swapped_buffers = FALSE;
 
-    fb_configs = glXChooseFBConfig(dpy, screen, fb_config_attrs, &n_fb_configs);
-    if (!fb_configs)
-        goto error;
+    if (parent && parent->context) {
+        status = glXQueryContext(
+            parent->display,
+            parent->context,
+            GLX_FBCONFIG_ID, &fbconfig_id
+        );
+        if (status != Success)
+            goto error;
 
-    cs->visual = glXGetVisualFromFBConfig(dpy, fb_configs[0]);
-    if (!cs->visual)
-        goto error;
+        fbconfigs = glXGetFBConfigs(dpy, screen, &n_fbconfigs);
+        if (!fbconfigs)
+            goto error;
 
+        /* Find out a GLXFBConfig compatible with the parent context */
+        for (n = 0; n < n_fbconfigs; n++) {
+            status = glXGetFBConfigAttrib(
+                dpy,
+                fbconfigs[n],
+                GLX_FBCONFIG_ID, &val
+            );
+            if (status == Success && val == fbconfig_id)
+                break;
+        }
+        if (n == n_fbconfigs)
+            goto error;
+    }
+    else {
+        fbconfigs = glXChooseFBConfig(
+            dpy,
+            screen,
+            fbconfig_attrs, &n_fbconfigs
+        );
+        if (!fbconfigs)
+            goto error;
+
+        /* Select the first one */
+        n = 0;
+    }
+
+    cs->visual  = glXGetVisualFromFBConfig(dpy, fbconfigs[n]);
     cs->context = glXCreateNewContext(
         dpy,
-        fb_configs[0],
+        fbconfigs[n],
         GLX_RGBA_TYPE,
         parent ? parent->context : NULL,
         True
@@ -332,8 +365,8 @@ error:
     gl_destroy_context(cs);
     cs = NULL;
 end:
-    if (fb_configs)
-        XFree(fb_configs);
+    if (fbconfigs)
+        XFree(fbconfigs);
     return cs;
 }
 
