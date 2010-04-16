@@ -226,7 +226,7 @@
     target |= ((guint64) (*data++ & 0xFE)) >> 1;
 
 /* some extra GstFlowReturn values used internally */
-#define GST_FLOW_NEED_MORE_DATA   -100
-#define GST_FLOW_LOST_SYNC        -101
+#define GST_FLOW_NEED_MORE_DATA   GST_FLOW_CUSTOM_SUCCESS
+#define GST_FLOW_LOST_SYNC        GST_FLOW_CUSTOM_SUCCESS_1
 
 #endif /* __GST_MPEG_DEFS_H__ */
