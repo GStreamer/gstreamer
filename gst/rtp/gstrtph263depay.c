@@ -248,14 +248,20 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GST_LOG ("payload_len : %d, header_len : %d , leftover : 0x%x",
       payload_len, header_len, rtph263depay->leftover);
 
-  if (G_UNLIKELY (!rtph263depay->start)) {
-    GST_DEBUG ("no frame start yet, skipping payload");
-    goto skip;
-  }
-
   /* skip header */
   payload += header_len;
   payload_len -= header_len;
+
+  if (!rtph263depay->start) {
+    /* do not skip this fragment if it is a Mode A with picture start code */
+    if (!F && payload_len > 4 && (GST_READ_UINT32_BE (payload) >> 10 == 0x20)) {
+      GST_DEBUG ("Mode A with PSC => frame start");
+      rtph263depay->start = TRUE;
+    } else {
+      GST_DEBUG ("no frame start yet, skipping payload");
+      goto skip;
+    }
+  }
 
   if (SBIT) {
     /* take the leftover and merge it at the beginning, FIXME make the buffer
