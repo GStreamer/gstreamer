@@ -637,6 +637,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       /* we can drop the buffer completely */
       gst_buffer_unref (buf);
+      buf = NULL;
 
       if (!audiorate->silent)
         g_object_notify (G_OBJECT (audiorate), "drop");
@@ -701,10 +702,14 @@ send:
       GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf));
 
   ret = gst_pad_push (audiorate->srcpad, buf);
+  buf = NULL;
   audiorate->out++;
 
   audiorate->next_offset = in_offset_end;
 beach:
+
+  if (buf)
+    gst_buffer_unref (buf);
 
   gst_object_unref (audiorate);
 
@@ -713,6 +718,8 @@ beach:
   /* ERRORS */
 not_negotiated:
   {
+    gst_buffer_unref (buf);
+
     GST_ELEMENT_ERROR (audiorate, STREAM, FORMAT,
         (NULL), ("pipeline error, format was not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
