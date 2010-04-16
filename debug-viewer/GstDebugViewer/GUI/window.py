@@ -215,7 +215,9 @@ class Window (object):
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
                             ("cancel-load", gtk.STOCK_CANCEL, None,),
                             ("clear-line-view", gtk.STOCK_CLEAR, None),
-                            ("show-about", gtk.STOCK_ABOUT, None)])
+                            ("show-about", gtk.STOCK_ABOUT, None),
+                            ("enlarge-text", gtk.STOCK_ZOOM_IN, _("Enlarge Text"), "<Ctrl>plus"),
+                            ("shrink-text", gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus")])
         self.actions.add_group (group)
         self.actions.reload_file.props.sensitive = False
 
@@ -295,7 +297,7 @@ class Window (object):
                             "hide-before-line", "hide-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message", "set-base-time",
                             "hide-log-level", "hide-log-category", "hide-log-object",
-                            "hide-filename", "show-about",):
+                            "hide-filename", "show-about", "enlarge-text", "shrink-text"):
             name = action_name.replace ("-", "_")
             action = getattr (self.actions, name)
             handler = getattr (self, "handle_%s_action_activate" % (name,))
@@ -573,6 +575,20 @@ class Window (object):
 
         col_id = LogModelBase.COL_MESSAGE
         self.clipboard.set_text (self.get_active_line ()[col_id])
+
+    def handle_enlarge_text_action_activate (self, action):
+        for col in self.column_manager.columns:
+            cell = col.view_column.get_cell_renderers ()[0]
+            cell.props.scale *= 1.15
+            col.view_column.queue_resize ()
+        self.widgets.log_view_scrolled_window.props.vadjustment.emit ("value-changed")
+
+    def handle_shrink_text_action_activate (self, action):
+        for col in self.column_manager.columns:
+            cell = col.view_column.get_cell_renderers ()[0]
+            cell.props.scale /= 1.15
+            col.view_column.queue_resize ()
+        self.widgets.log_view_scrolled_window.props.vadjustment.emit ("value-changed")
 
     def add_model_filter (self, filter):
 

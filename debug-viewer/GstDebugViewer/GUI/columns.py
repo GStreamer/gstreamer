@@ -72,6 +72,7 @@ class TextColumn (SizedColumn):
         column.pack_start (cell)
 
         cell.props.yalign = 0.
+        cell.props.ypad = 0
 
         if self.font_family:
             cell.props.family = self.font_family

@@ -80,6 +80,19 @@ class App (object):
         self.load_plugins ()
 
         self.windows = []
+        
+        # we override expander size because of:
+        # https://bugzilla.gnome.org/show_bug.cgi?id=615985
+        rcstring = """
+        style "no-expander-treeview-style" {
+            GtkTreeView::expander_size = 1
+            #GtkTreeView::vertical-separator = 0
+            GtkWidget::focus-line-width = 0
+        }
+        
+        widget "*.log_view" style "no-expander-treeview-style"
+        """
+        gtk.rc_parse_string (rcstring)
 
         self.open_window ()
 

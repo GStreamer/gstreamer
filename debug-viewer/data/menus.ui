@@ -34,6 +34,9 @@
       <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+      <separator/>
+      <menuitem name="ZoomInMessage" action="enlarge-text"/>
+      <menuitem name="ZoomOutMessage" action="shrink-text"/>
     </menu>
     <menu name="HelpMenu" action="HelpMenuAction">
       <placeholder name="HelpMenuAdditions"/>
@@ -66,6 +69,9 @@
       <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+      <separator/>
+      <menuitem name="ZoomInMessage" action="enlarge-text"/>
+      <menuitem name="ZoomOutMessage" action="shrink-text"/>
     </menu>
     <menu name="LineViewContextMenu" action="LineViewContextMenuAction">
       <menuitem name="LineViewContextMenuClear" action="clear-line-view"/>
