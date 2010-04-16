@@ -93,9 +93,6 @@ typedef enum {
 
 /**
  * GstFlowReturn:
- * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
- *                               this to define custom success codes.
- *                               Since 0.10.7.
  * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps (not
  *                                 sent yet) (unused/unimplemented).
  * @GST_FLOW_OK:		 Data passing was ok.
@@ -107,16 +104,31 @@ typedef enum {
  *                               this error should post an error message with more
  *                               details.
  * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.
+ * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
+ *                               this (and higher) to define custom success
+ *                               codes. Since 0.10.7.
+ * @GST_FLOW_CUSTOM_SUCCESS_1:	 Pre-defined custom success code (define your
+ *                               custom success code to this to avoid compiler
+ *                               warnings). Since 0.10.29.
+ * @GST_FLOW_CUSTOM_SUCCESS_2:	 Pre-defined custom success code. Since 0.10.29.
  * @GST_FLOW_CUSTOM_ERROR:	 Elements can use values starting from
- *                               this to define custom error codes. Since 0.10.7.
+ *                               this (and lower) to define custom error codes.
+ *                               Since 0.10.7.
+ * @GST_FLOW_CUSTOM_ERROR_1:	 Pre-defined custom error code (define your
+ *                               custom error code to this to avoid compiler
+ *                               warnings). Since 0.10.29.
+ * @GST_FLOW_CUSTOM_ERROR_2:	 Pre-defined custom error code. Since 0.10.29.
  *
  * The result of passing data to a pad.
  *
  * Note that the custom return values should not be exposed outside of the
  * element scope and are available since 0.10.7.
  */
+/* FIXME 0.11: remove custom flow returns */
 typedef enum {
   /* custom success starts here */
+  GST_FLOW_CUSTOM_SUCCESS_2 = 102,
+  GST_FLOW_CUSTOM_SUCCESS_1 = 101,
   GST_FLOW_CUSTOM_SUCCESS = 100,
 
   /* core predefined */
@@ -132,7 +144,9 @@ typedef enum {
   GST_FLOW_NOT_SUPPORTED  = -6,
 
   /* custom error starts here */
-  GST_FLOW_CUSTOM_ERROR   = -100
+  GST_FLOW_CUSTOM_ERROR   = -100,
+  GST_FLOW_CUSTOM_ERROR_1 = -101,
+  GST_FLOW_CUSTOM_ERROR_2 = -102
 } GstFlowReturn;
 
 /**
