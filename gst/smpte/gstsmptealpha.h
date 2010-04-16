@@ -67,6 +67,7 @@ struct _GstSMPTEAlphaClass {
   GstVideoFilterClass parent_class;
 };
 
+GType gst_smpte_alpha_get_type (void);
 gboolean gst_smpte_alpha_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
