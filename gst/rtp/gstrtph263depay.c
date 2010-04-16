@@ -270,17 +270,17 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   if (!EBIT) {
-    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
+    GstBuffer *tmp;
 
-    /* Copy the entire buffer, FIXME, use subbuffers */
-    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
+    /* Take the entire buffer */
+    tmp = gst_rtp_buffer_get_payload_subbuffer (buf, header_len, payload_len);
     gst_adapter_push (rtph263depay->adapter, tmp);
   } else {
-    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
+    GstBuffer *tmp;
 
-    /* Copy the entire buffer except for the last byte. FIXME, use
-     * subbuffers. */
-    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
+    /* Take the entire buffer except for the last byte */
+    tmp = gst_rtp_buffer_get_payload_subbuffer (buf, header_len,
+        payload_len - 1);
     gst_adapter_push (rtph263depay->adapter, tmp);
 
     /* Put the last byte into the leftover */
