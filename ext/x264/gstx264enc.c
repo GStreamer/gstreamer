@@ -716,10 +716,7 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 #endif
   guint8 *buffer, *sps;
   gulong buffer_size;
-
-#define SEI_NI 0
-#define SPS_NI 1
-#define PPS_NI 2
+  gint sei_ni = 2, sps_ni = 0, pps_ni = 1;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return NULL;
@@ -733,29 +730,36 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
     return NULL;
   }
 
+  /* old x264 returns SEI, SPS and PPS, newer one has SEI last */
+  if (i_nal == 3 && nal[sps_ni].i_type != 7) {
+    sei_ni = 0;
+    sps_ni = 1;
+    pps_ni = 2;
+  }
+
   /* x264 is expected to return an SEI (some identification info),
-   * followed by an SPS and PPS */
-  if (i_nal != 3 || nal[SPS_NI].i_type != 7 || nal[PPS_NI].i_type != 8 ||
-      nal[SPS_NI].i_payload < 4 || nal[PPS_NI].i_payload < 1) {
+   * and SPS and PPS */
+  if (i_nal != 3 || nal[sps_ni].i_type != 7 || nal[pps_ni].i_type != 8 ||
+      nal[sps_ni].i_payload < 4 || nal[pps_ni].i_payload < 1) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, (NULL),
         ("Unexpected x264 header."));
     return NULL;
   }
 
-  GST_MEMDUMP ("SEI", nal[SEI_NI].p_payload, nal[SEI_NI].i_payload);
-  GST_MEMDUMP ("SPS", nal[SPS_NI].p_payload, nal[SPS_NI].i_payload);
-  GST_MEMDUMP ("PPS", nal[PPS_NI].p_payload, nal[PPS_NI].i_payload);
+  GST_MEMDUMP ("SEI", nal[sei_ni].p_payload, nal[sei_ni].i_payload);
+  GST_MEMDUMP ("SPS", nal[sps_ni].p_payload, nal[sps_ni].i_payload);
+  GST_MEMDUMP ("PPS", nal[pps_ni].p_payload, nal[pps_ni].i_payload);
 
   /* nal payloads with emulation_prevention_three_byte, and some header data */
-  buffer_size = (nal[SPS_NI].i_payload + nal[PPS_NI].i_payload) * 4 + 100;
+  buffer_size = (nal[sps_ni].i_payload + nal[pps_ni].i_payload) * 4 + 100;
   buffer = g_malloc (buffer_size);
 
   /* old style API: nal's are not encapsulated, and have no sync/size prefix,
    * new style API: nal's are encapsulated, and have 4-byte size prefix */
 #ifndef X264_ENC_NALS
-  sps = nal[SPS_NI].p_payload;
+  sps = nal[sps_ni].p_payload;
 #else
-  sps = nal[SPS_NI].p_payload + 4;
+  sps = nal[sps_ni].p_payload + 4;
   /* skip NAL unit type */
   sps++;
 #endif
@@ -772,10 +776,10 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
 #ifndef X264_ENC_NALS
   i_data = buffer_size - i_size - 2;
-  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[SPS_NI]);
+  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[sps_ni]);
 #else
-  nal_size = nal[SPS_NI].i_payload - 4;
-  memcpy (buffer + i_size + 2, nal[SPS_NI].p_payload + 4, nal_size);
+  nal_size = nal[sps_ni].i_payload - 4;
+  memcpy (buffer + i_size + 2, nal[sps_ni].p_payload + 4, nal_size);
 #endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
@@ -784,10 +788,10 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
 #ifndef X264_ENC_NALS
   i_data = buffer_size - i_size - 2;
-  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[PPS_NI]);
+  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[pps_ni]);
 #else
-  nal_size = nal[PPS_NI].i_payload - 4;
-  memcpy (buffer + i_size + 2, nal[PPS_NI].p_payload + 4, nal_size);
+  nal_size = nal[pps_ni].i_payload - 4;
+  memcpy (buffer + i_size + 2, nal[pps_ni].p_payload + 4, nal_size);
 #endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
