@@ -45,14 +45,12 @@
 #endif
 
 #include "gstgamma.h"
-#ifdef HAVE_LIBOIL
 #include <liboil/liboil.h>
-#endif
 #include <string.h>
 #include <math.h>
 
 #include <gst/video/video.h>
-
+#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (gamma_debug);
 #define GST_CAT_DEFAULT gamma_debug
@@ -123,7 +121,7 @@ gst_gamma_class_init (GstGammaClass * g_class)
   g_object_class_install_property (gobject_class, PROP_GAMMA,
       g_param_spec_double ("gamma", "Gamma", "gamma",
           0.01, 10, DEFAULT_PROP_GAMMA,
-          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+          GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
@@ -149,8 +147,10 @@ gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
 
       GST_DEBUG_OBJECT (gamma, "Changing gamma from %lf to %lf", gamma->gamma,
           val);
+      GST_OBJECT_LOCK (gamma);
       gamma->gamma = val;
       gst_gamma_calculate_tables (gamma);
+      GST_OBJECT_UNLOCK (gamma);
       break;
     }
     default:
@@ -196,21 +196,6 @@ gst_gamma_calculate_tables (GstGamma * gamma)
     gamma->gamma_table[n] = (guint8) floor (val + 0.5);
   }
 }
-
-#ifndef HAVE_LIBOIL
-static void
-oil_tablelookup_u8 (guint8 * dest, gint dstr, const guint8 * src, gint sstr,
-    const guint8 * table, gint tstr, gint n)
-{
-  gint i;
-
-  for (i = 0; i < n; i++) {
-    *dest = table[*src * tstr];
-    dest += dstr;
-    src += sstr;
-  }
-}
-#endif
 
 /* Useful macros */
 #define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -259,6 +244,17 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstGamma *gamma = GST_GAMMA (base);
   guint8 *data;
   guint size;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (gamma, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (gamma), stream_time);
 
   if (base->passthrough)
     goto done;
@@ -269,8 +265,10 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (size != gamma->size)
     goto wrong_size;
 
+  GST_OBJECT_LOCK (gamma);
   gst_gamma_planar411_ip (gamma, data,
       gamma->height * GST_VIDEO_I420_Y_ROWSTRIDE (gamma->width));
+  GST_OBJECT_UNLOCK (gamma);
 
 done:
   return GST_FLOW_OK;
@@ -288,6 +286,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
+
+  oil_init ();
+  gst_controller_init (NULL, NULL);
 
   return gst_element_register (plugin, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);
 }
