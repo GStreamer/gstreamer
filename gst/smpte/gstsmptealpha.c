@@ -62,11 +62,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_smpte_alpha_debug);
 #define GST_CAT_DEFAULT gst_smpte_alpha_debug
 
 static GstStaticPadTemplate gst_smpte_alpha_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_ARGB)
     );
 
 static GstStaticPadTemplate gst_smpte_alpha_sink_template =
@@ -74,7 +75,8 @@ static GstStaticPadTemplate gst_smpte_alpha_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("AYUV")
-    )
+        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_RGBA
+        ";" GST_VIDEO_CAPS_ARGB)
     );
 
 /* SMPTE signals and properties */
@@ -147,14 +149,8 @@ static gboolean gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_smpte_alpha_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
-
-static void
-gst_smpte_alpha_process_i420_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
-    guint8 * out, GstMask * mask, gint width, gint height, gint border,
-    gint pos);
-static void gst_smpte_alpha_process_ayuv_ayuv (GstSMPTEAlpha * smpte,
-    const guint8 * in, guint8 * out, GstMask * mask, gint width, gint height,
-    gint border, gint pos);
+static GstCaps *gst_smpte_alpha_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * from);
 
 GST_BOILERPLATE (GstSMPTEAlpha, gst_smpte_alpha, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
@@ -212,6 +208,8 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_smpte_alpha_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_smpte_alpha_transform);
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_smpte_alpha_transform_caps);
 }
 
 static gboolean
@@ -260,79 +258,6 @@ mask_failed:
   }
 }
 
-static gboolean
-gst_smpte_alpha_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstSMPTEAlpha *smpte = GST_SMPTE_ALPHA (btrans);
-  gboolean ret;
-  gint width, height;
-
-  smpte->process = NULL;
-
-  if (!gst_video_format_parse_caps (incaps, &smpte->in_format, &width, &height))
-    goto invalid_caps;
-  if (!gst_video_format_parse_caps (outcaps, &smpte->out_format, &width,
-          &height))
-    goto invalid_caps;
-
-  /* try to update the mask now, this will also adjust the width/height on
-   * success */
-  GST_OBJECT_LOCK (smpte);
-  ret =
-      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->invert,
-      smpte->depth, width, height);
-  GST_OBJECT_UNLOCK (smpte);
-  if (!ret)
-    goto mask_failed;
-
-  switch (smpte->out_format) {
-    case GST_VIDEO_FORMAT_AYUV:
-      switch (smpte->in_format) {
-        case GST_VIDEO_FORMAT_AYUV:
-          smpte->process = gst_smpte_alpha_process_ayuv_ayuv;
-          break;
-        case GST_VIDEO_FORMAT_I420:
-          smpte->process = gst_smpte_alpha_process_i420_ayuv;
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_ERROR_OBJECT (smpte, "Invalid caps: %" GST_PTR_FORMAT, incaps);
-    return FALSE;
-  }
-mask_failed:
-  {
-    GST_ERROR_OBJECT (smpte, "failed creating the mask");
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    guint * size)
-{
-  gint width, height;
-  GstVideoFormat format;
-
-  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
-    return FALSE;
-
-  *size = gst_video_format_get_size (format, width, height);
-
-  return TRUE;
-}
-
 static void
 gst_smpte_alpha_init (GstSMPTEAlpha * smpte, GstSMPTEAlphaClass * klass)
 {
@@ -343,15 +268,46 @@ gst_smpte_alpha_init (GstSMPTEAlpha * smpte, GstSMPTEAlphaClass * klass)
   smpte->invert = DEFAULT_PROP_INVERT;
 }
 
-static void
-gst_smpte_alpha_finalize (GstSMPTEAlpha * smpte)
-{
-  if (smpte->mask)
-    gst_mask_destroy (smpte->mask);
-  smpte->mask = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) smpte);
+#define CREATE_ARGB_FUNC(name, A, R, G, B) \
+static void \
+gst_smpte_alpha_process_##name##_##name (GstSMPTEAlpha * smpte, const guint8 * in, \
+    guint8 * out, GstMask * mask, gint width, gint height, gint border, \
+    gint pos) \
+{ \
+  gint i, j; \
+  const guint32 *maskp; \
+  gint value; \
+  gint min, max; \
+  \
+  if (border == 0) \
+    border++; \
+  \
+  min = pos - border; \
+  max = pos; \
+  GST_DEBUG_OBJECT (smpte, "pos %d, min %d, max %d, border %d", pos, min, max, \
+      border); \
+  \
+  maskp = mask->data; \
+  \
+  /* we basically copy the source to dest but we scale the alpha channel with \
+   * the mask */ \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      value = *maskp++; \
+      out[A] = (in[A] * ((CLAMP (value, min, max) - min) << 8) / border) >> 8; \
+      out[R] = in[R]; \
+      out[G] = in[G]; \
+      out[B] = in[B]; \
+      out += 4; \
+      in += 4; \
+    } \
+  } \
 }
+
+CREATE_ARGB_FUNC (argb, 0, 1, 2, 3);
+CREATE_ARGB_FUNC (bgra, 3, 2, 1, 0);
+CREATE_ARGB_FUNC (abgr, 0, 3, 2, 1);
+CREATE_ARGB_FUNC (rgba, 3, 0, 1, 2);
 
 static void
 gst_smpte_alpha_process_ayuv_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
@@ -502,6 +458,162 @@ not_negotiated:
         ("No input format negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
+}
+
+static GstCaps *
+gst_smpte_alpha_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * from)
+{
+  GstCaps *to = gst_caps_copy (from);
+  GstStructure *s;
+
+  gst_caps_truncate (to);
+  s = gst_caps_get_structure (to, 0);
+
+  if (gst_structure_has_name (s, "video/x-raw-yuv")) {
+    GValue list = { 0, };
+    GValue val = { 0, };
+
+    gst_structure_remove_field (s, "format");
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&val, GST_TYPE_FOURCC);
+    gst_value_set_fourcc (&val, GST_STR_FOURCC ("AYUV"));
+    gst_value_list_append_value (&list, &val);
+    g_value_reset (&val);
+    gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
+    gst_value_list_append_value (&list, &val);
+    g_value_reset (&val);
+    gst_value_set_fourcc (&val, GST_STR_FOURCC ("YV12"));
+    gst_value_list_append_value (&list, &val);
+    g_value_unset (&val);
+    gst_structure_set_value (s, "format", &list);
+    g_value_unset (&list);
+  } else if (!gst_structure_has_name (s, "video/x-raw-rgb")) {
+    gst_caps_unref (to);
+    to = gst_caps_new_empty ();
+  }
+
+  return to;
+}
+
+static gboolean
+gst_smpte_alpha_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstSMPTEAlpha *smpte = GST_SMPTE_ALPHA (btrans);
+  gboolean ret;
+  gint width, height;
+
+  smpte->process = NULL;
+
+  if (!gst_video_format_parse_caps (incaps, &smpte->in_format, &width, &height))
+    goto invalid_caps;
+  if (!gst_video_format_parse_caps (outcaps, &smpte->out_format, &width,
+          &height))
+    goto invalid_caps;
+
+  /* try to update the mask now, this will also adjust the width/height on
+   * success */
+  GST_OBJECT_LOCK (smpte);
+  ret =
+      gst_smpte_alpha_update_mask (smpte, smpte->type, smpte->invert,
+      smpte->depth, width, height);
+  GST_OBJECT_UNLOCK (smpte);
+  if (!ret)
+    goto mask_failed;
+
+  switch (smpte->out_format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+          smpte->process = gst_smpte_alpha_process_ayuv_ayuv;
+          break;
+        case GST_VIDEO_FORMAT_I420:
+          smpte->process = gst_smpte_alpha_process_i420_ayuv;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_ARGB:
+          smpte->process = gst_smpte_alpha_process_argb_argb;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_RGBA:
+          smpte->process = gst_smpte_alpha_process_rgba_rgba;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_ABGR:
+          smpte->process = gst_smpte_alpha_process_abgr_abgr;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      switch (smpte->in_format) {
+        case GST_VIDEO_FORMAT_BGRA:
+          smpte->process = gst_smpte_alpha_process_bgra_bgra;
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (smpte, "Invalid caps: %" GST_PTR_FORMAT, incaps);
+    return FALSE;
+  }
+mask_failed:
+  {
+    GST_ERROR_OBJECT (smpte, "failed creating the mask");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
+{
+  gint width, height;
+  GstVideoFormat format;
+
+  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+    return FALSE;
+
+  *size = gst_video_format_get_size (format, width, height);
+
+  return TRUE;
+}
+
+static void
+gst_smpte_alpha_finalize (GstSMPTEAlpha * smpte)
+{
+  if (smpte->mask)
+    gst_mask_destroy (smpte->mask);
+  smpte->mask = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) smpte);
 }
 
 static void
