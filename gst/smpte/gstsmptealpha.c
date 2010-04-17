@@ -74,7 +74,8 @@ static GstStaticPadTemplate gst_smpte_alpha_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("AYUV")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("YV12")
+        ";" GST_VIDEO_CAPS_YUV ("AYUV")
         ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_RGBA
         ";" GST_VIDEO_CAPS_ARGB)
     );
@@ -368,16 +369,16 @@ gst_smpte_alpha_process_i420_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
 
   maskp = mask->data;
 
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+  y_stride = gst_video_format_get_row_stride (smpte->in_format, 0, width);
+  uv_stride = gst_video_format_get_row_stride (smpte->in_format, 1, width);
 
   src_wrap = y_stride - width;
   src_uv_wrap = uv_stride - (width / 2);
 
   srcY = in;
-  srcU = in + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcU = in + gst_video_format_get_component_offset (smpte->in_format,
       1, width, height);
-  srcV = in + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcV = in + gst_video_format_get_component_offset (smpte->in_format,
       2, width, height);
 
   odd_width = (width % 2 != 0);
