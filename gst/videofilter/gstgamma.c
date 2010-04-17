@@ -57,13 +57,7 @@
 GST_DEBUG_CATEGORY_STATIC (gamma_debug);
 #define GST_CAT_DEFAULT gamma_debug
 
-/* GstGamma signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
+/* GstGamma properties */
 enum
 {
   PROP_0,
@@ -102,7 +96,6 @@ static void gst_gamma_calculate_tables (GstGamma * gamma);
 
 GST_BOILERPLATE (GstGamma, gst_gamma, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
-
 static void
 gst_gamma_base_init (gpointer g_class)
 {
@@ -121,18 +114,16 @@ gst_gamma_base_init (gpointer g_class)
 static void
 gst_gamma_class_init (GstGammaClass * g_class)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
 
   gobject_class->set_property = gst_gamma_set_property;
   gobject_class->get_property = gst_gamma_get_property;
 
   g_object_class_install_property (gobject_class, PROP_GAMMA,
       g_param_spec_double ("gamma", "Gamma", "gamma",
-          0.01, 10, DEFAULT_PROP_GAMMA, G_PARAM_READWRITE));
+          0.01, 10, DEFAULT_PROP_GAMMA,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
@@ -141,8 +132,6 @@ gst_gamma_class_init (GstGammaClass * g_class)
 static void
 gst_gamma_init (GstGamma * gamma, GstGammaClass * g_class)
 {
-  GST_DEBUG_OBJECT (gamma, "gst_gamma_init");
-
   /* properties */
   gamma->gamma = DEFAULT_PROP_GAMMA;
   gst_gamma_calculate_tables (gamma);
@@ -152,17 +141,18 @@ static void
 gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstGamma *gamma;
+  GstGamma *gamma = GST_GAMMA (object);
 
-  g_return_if_fail (GST_IS_GAMMA (object));
-  gamma = GST_GAMMA (object);
-
-  GST_DEBUG ("gst_gamma_set_property");
   switch (prop_id) {
-    case PROP_GAMMA:
-      gamma->gamma = g_value_get_double (value);
+    case PROP_GAMMA:{
+      gdouble val = g_value_get_double (value);
+
+      GST_DEBUG_OBJECT (gamma, "Changing gamma from %lf to %lf", gamma->gamma,
+          val);
+      gamma->gamma = val;
       gst_gamma_calculate_tables (gamma);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -173,10 +163,7 @@ static void
 gst_gamma_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstGamma *gamma;
-
-  g_return_if_fail (GST_IS_GAMMA (object));
-  gamma = GST_GAMMA (object);
+  GstGamma *gamma = GST_GAMMA (object);
 
   switch (prop_id) {
     case PROP_GAMMA:
@@ -191,9 +178,9 @@ gst_gamma_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_gamma_calculate_tables (GstGamma * gamma)
 {
-  int n;
-  double val;
-  double exp;
+  gint n;
+  gdouble val;
+  gdouble exp;
 
   if (gamma->gamma == 1.0) {
     GST_BASE_TRANSFORM (gamma)->passthrough = TRUE;
@@ -206,16 +193,16 @@ gst_gamma_calculate_tables (GstGamma * gamma)
     val = n / 255.0;
     val = pow (val, exp);
     val = 255.0 * val;
-    gamma->gamma_table[n] = (unsigned char) floor (val + 0.5);
+    gamma->gamma_table[n] = (guint8) floor (val + 0.5);
   }
 }
 
 #ifndef HAVE_LIBOIL
 static void
-oil_tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
-    guint8 * table, int tstr, int n)
+oil_tablelookup_u8 (guint8 * dest, gint dstr, const guint8 * src, gint sstr,
+    const guint8 * table, gint tstr, gint n)
 {
-  int i;
+  gint i;
 
   for (i = 0; i < n; i++) {
     *dest = table[*src * tstr];
@@ -239,23 +226,22 @@ static gboolean
 gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstGamma *this;
+  GstGamma *gamma = GST_GAMMA (base);
   GstStructure *structure;
   gboolean res;
 
-  this = GST_GAMMA (base);
-
-  GST_DEBUG_OBJECT (this,
-      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
+  GST_DEBUG_OBJECT (gamma,
+      "setting caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps,
+      outcaps);
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  res = gst_structure_get_int (structure, "width", &this->width);
-  res &= gst_structure_get_int (structure, "height", &this->height);
+  res = gst_structure_get_int (structure, "width", &gamma->width);
+  res &= gst_structure_get_int (structure, "height", &gamma->height);
   if (!res)
     goto done;
 
-  this->size = GST_VIDEO_I420_SIZE (this->width, this->height);
+  gamma->size = GST_VIDEO_I420_SIZE (gamma->width, gamma->height);
 
 done:
   return res;
@@ -270,11 +256,9 @@ gst_gamma_planar411_ip (GstGamma * gamma, guint8 * data, gint size)
 static GstFlowReturn
 gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  GstGamma *gamma;
+  GstGamma *gamma = GST_GAMMA (base);
   guint8 *data;
   guint size;
-
-  gamma = GST_GAMMA (base);
 
   if (base->passthrough)
     goto done;
