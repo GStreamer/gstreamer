@@ -89,7 +89,6 @@ static gboolean gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
 static GstFlowReturn gst_gamma_transform_ip (GstBaseTransform * transform,
     GstBuffer * buf);
 
-static void gst_gamma_planar411_ip (GstGamma * gamma, guint8 * data, gint size);
 static void gst_gamma_calculate_tables (GstGamma * gamma);
 
 GST_BOILERPLATE (GstGamma, gst_gamma, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
@@ -197,45 +196,54 @@ gst_gamma_calculate_tables (GstGamma * gamma)
   }
 }
 
-/* Useful macros */
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+static void
+gst_gamma_planar_ip (GstGamma * gamma, guint8 * data)
+{
+  gint size;
 
-#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+  data =
+      data + gst_video_format_get_component_offset (gamma->format, 0,
+      gamma->width, gamma->height);
+  size =
+      gst_video_format_get_row_stride (gamma->format, 0,
+      gamma->width) * gst_video_format_get_component_height (gamma->format, 0,
+      gamma->height);
+
+  oil_tablelookup_u8 (data, 1, data, 1, gamma->gamma_table, 1, size);
+}
 
 static gboolean
 gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstGamma *gamma = GST_GAMMA (base);
-  GstStructure *structure;
-  gboolean res;
 
   GST_DEBUG_OBJECT (gamma,
       "setting caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps,
       outcaps);
 
-  structure = gst_caps_get_structure (incaps, 0);
+  if (!gst_video_format_parse_caps (incaps, &gamma->format, &gamma->width,
+          &gamma->height))
+    goto invalid_caps;
 
-  res = gst_structure_get_int (structure, "width", &gamma->width);
-  res &= gst_structure_get_int (structure, "height", &gamma->height);
-  if (!res)
-    goto done;
+  gamma->size =
+      gst_video_format_get_size (gamma->format, gamma->width, gamma->height);
 
-  gamma->size = GST_VIDEO_I420_SIZE (gamma->width, gamma->height);
+  switch (gamma->format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      gamma->process = gst_gamma_planar_ip;
+      break;
+    default:
+      goto invalid_caps;
+      break;
+  }
 
-done:
-  return res;
-}
+  return TRUE;
 
-static void
-gst_gamma_planar411_ip (GstGamma * gamma, guint8 * data, gint size)
-{
-  oil_tablelookup_u8 (data, 1, data, 1, gamma->gamma_table, 1, size);
+invalid_caps:
+  GST_ERROR_OBJECT (gamma, "Invalid caps: %" GST_PTR_FORMAT, incaps);
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -245,6 +253,9 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   guint8 *data;
   guint size;
   GstClockTime timestamp, stream_time;
+
+  if (!gamma->process)
+    goto not_negotiated;
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
   stream_time =
@@ -266,8 +277,7 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     goto wrong_size;
 
   GST_OBJECT_LOCK (gamma);
-  gst_gamma_planar411_ip (gamma, data,
-      gamma->height * GST_VIDEO_I420_Y_ROWSTRIDE (gamma->width));
+  gamma->process (gamma, data);
   GST_OBJECT_UNLOCK (gamma);
 
 done:
@@ -279,6 +289,11 @@ wrong_size:
     GST_ELEMENT_ERROR (gamma, STREAM, FORMAT,
         (NULL), ("Invalid buffer size %d, expected %d", size, gamma->size));
     return GST_FLOW_ERROR;
+  }
+not_negotiated:
+  {
+    GST_ERROR_OBJECT (gamma, "Not negotiated yet");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
