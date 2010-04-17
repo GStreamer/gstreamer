@@ -182,7 +182,7 @@ zoom_filter_xmmx (int prevX, int prevY,
         "#4 \n\t addl %[prevX],%%eax"
         "#4 \n\t movq (%%esi,%%eax,4),%%mm2"::[expix1] "g" (expix1)
         ,[prevX] "g" (prevX)
-        :"eax", "esi");
+        :"eax", "esi", "edx");
 
     /*
      * pre :       mm0 : expix1[position]
