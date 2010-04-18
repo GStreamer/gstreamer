@@ -706,6 +706,19 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, &adder->segment_rate, NULL, &flags, &curtype,
           &cur, &endtype, &end);
 
+      if ((curtype != GST_SEEK_TYPE_NONE) && (curtype != GST_SEEK_TYPE_SET)) {
+        result = FALSE;
+        GST_DEBUG_OBJECT (adder,
+            "seeking failed, unhandled seek type for start: %d", curtype);
+        goto done;
+      }
+      if ((endtype != GST_SEEK_TYPE_NONE) && (endtype != GST_SEEK_TYPE_SET)) {
+        result = FALSE;
+        GST_DEBUG_OBJECT (adder,
+            "seeking failed, unhandled seek type for end: %d", endtype);
+        goto done;
+      }
+
       flush = (flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH;
 
       /* check if we are flushing */
@@ -773,6 +786,8 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       result = forward_event (adder, event, FALSE);
       break;
   }
+
+done:
   gst_object_unref (adder);
 
   return result;
