@@ -58,7 +58,7 @@ enum
       /* FILL ME */
 };
 
-#define PROP_METHOD_DEFAULT GST_VIDEO_FLIP_METHOD_90R
+#define PROP_METHOD_DEFAULT GST_VIDEO_FLIP_METHOD_IDENTITY
 
 GST_DEBUG_CATEGORY_STATIC (video_flip_debug);
 #define GST_CAT_DEFAULT video_flip_debug
@@ -843,4 +843,5 @@ static void
 gst_video_flip_init (GstVideoFlip * videoflip, GstVideoFlipClass * klass)
 {
   videoflip->method = PROP_METHOD_DEFAULT;
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (videoflip), TRUE);
 }
