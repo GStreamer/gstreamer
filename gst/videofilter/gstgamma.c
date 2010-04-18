@@ -131,6 +131,8 @@ gst_gamma_class_init (GstGammaClass * g_class)
   GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
 
+  GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
+
   gobject_class->set_property = gst_gamma_set_property;
   gobject_class->get_property = gst_gamma_get_property;
 
@@ -436,19 +438,3 @@ not_negotiated:
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
-
-  gst_controller_init (NULL, NULL);
-
-  return gst_element_register (plugin, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gamma",
-    "Changes gamma on video images",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

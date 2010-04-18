@@ -610,17 +610,3 @@ gst_video_balance_get_type (void)
   }
   return video_balance_type;
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "videobalance", GST_RANK_NONE,
-      GST_TYPE_VIDEO_BALANCE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "videobalance",
-    "Changes hue, saturation, brightness etc. on video images",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

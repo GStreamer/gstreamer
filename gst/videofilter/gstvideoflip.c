@@ -625,6 +625,8 @@ gst_video_flip_class_init (gpointer klass, gpointer class_data)
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
 
+  GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
+
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
@@ -659,15 +661,6 @@ gst_video_flip_init (GTypeInstance * instance, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_video_flip_handle_src_event));
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
-
-  return gst_element_register (plugin, "videoflip", GST_RANK_NONE,
-      GST_TYPE_VIDEO_FLIP);
-}
-
 GType
 gst_video_flip_get_type (void)
 {
@@ -691,9 +684,3 @@ gst_video_flip_get_type (void)
   }
   return video_flip_type;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "videoflip",
-    "Flips and rotates video",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
