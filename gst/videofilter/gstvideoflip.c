@@ -46,6 +46,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
 /* GstVideoFlip properties */
@@ -77,24 +78,25 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
 
+static const GEnumValue video_flip_methods[] = {
+  {GST_VIDEO_FLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
+  {GST_VIDEO_FLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
+  {GST_VIDEO_FLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
+  {GST_VIDEO_FLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
+      "counterclockwise"},
+  {GST_VIDEO_FLIP_METHOD_HORIZ, "Flip horizontally", "horizontal-flip"},
+  {GST_VIDEO_FLIP_METHOD_VERT, "Flip vertically", "vertical-flip"},
+  {GST_VIDEO_FLIP_METHOD_TRANS,
+      "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
+  {GST_VIDEO_FLIP_METHOD_OTHER,
+      "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
+  {0, NULL, NULL},
+};
+
 static GType
 gst_video_flip_method_get_type (void)
 {
   static GType video_flip_method_type = 0;
-  static const GEnumValue video_flip_methods[] = {
-    {GST_VIDEO_FLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
-    {GST_VIDEO_FLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
-    {GST_VIDEO_FLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
-    {GST_VIDEO_FLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
-        "counterclockwise"},
-    {GST_VIDEO_FLIP_METHOD_HORIZ, "Flip horizontally", "horizontal-flip"},
-    {GST_VIDEO_FLIP_METHOD_VERT, "Flip vertically", "vertical-flip"},
-    {GST_VIDEO_FLIP_METHOD_TRANS,
-        "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
-    {GST_VIDEO_FLIP_METHOD_OTHER,
-        "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
-    {0, NULL, NULL},
-  };
 
   if (!video_flip_method_type) {
     video_flip_method_type = g_enum_register_static ("GstVideoFlipMethod",
@@ -461,6 +463,17 @@ gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
   gconstpointer src;
   int sw, sh, dw, dh;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (out);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (videoflip, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (videoflip), stream_time);
 
   src = GST_BUFFER_DATA (in);
   dest = GST_BUFFER_DATA (out);
@@ -469,8 +482,8 @@ gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
   dw = videoflip->to_width;
   dh = videoflip->to_height;
 
-  GST_LOG_OBJECT (videoflip, "videoflip: scaling planar 4:1:1 %dx%d to %dx%d",
-      sw, sh, dw, dh);
+  GST_LOG_OBJECT (videoflip, "videoflip: flipping %dx%d to %dx%d (%s)",
+      sw, sh, dw, dh, video_flip_methods[videoflip->method].value_nick);
 
   ret = gst_video_flip_flip (videoflip, dest, src, sw, sh, dw, dh);
 
@@ -556,11 +569,12 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
       if (method != videoflip->method) {
         GstBaseTransform *btrans = GST_BASE_TRANSFORM (videoflip);
 
-        g_mutex_lock (btrans->transform_lock);
-        gst_pad_set_caps (btrans->sinkpad, NULL);
-        gst_pad_set_caps (btrans->srcpad, NULL);
-        g_mutex_unlock (btrans->transform_lock);
+        GST_DEBUG_OBJECT (videoflip, "Changing method from %s to %s",
+            video_flip_methods[videoflip->method].value_nick,
+            video_flip_methods[method].value_nick);
+
         videoflip->method = method;
+        gst_base_transform_reconfigure (btrans);
       }
     }
       break;
@@ -615,7 +629,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_flip_transform_caps);
@@ -628,7 +642,5 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 static void
 gst_video_flip_init (GstVideoFlip * videoflip, GstVideoFlipClass * klass)
 {
-  GST_DEBUG_OBJECT (videoflip, "gst_video_flip_init");
-
   videoflip->method = PROP_METHOD_DEFAULT;
 }
