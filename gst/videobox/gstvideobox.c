@@ -2181,6 +2181,66 @@ gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static inline gint
+gst_video_box_transform_dimension (gint val, gint delta)
+{
+  gint64 new_val = (gint64) val + (gint64) delta;
+
+  new_val = CLAMP (new_val, 1, G_MAXINT);
+
+  return (gint) new_val;
+}
+
+static gboolean
+gst_video_box_transform_dimension_value (const GValue * src_val,
+    gint delta, GValue * dest_val)
+{
+  gboolean ret = TRUE;
+
+  g_value_init (dest_val, G_VALUE_TYPE (src_val));
+
+  if (G_VALUE_HOLDS_INT (src_val)) {
+    gint ival = g_value_get_int (src_val);
+
+    ival = gst_video_box_transform_dimension (ival, delta);
+    g_value_set_int (dest_val, ival);
+  } else if (GST_VALUE_HOLDS_INT_RANGE (src_val)) {
+    gint min = gst_value_get_int_range_min (src_val);
+    gint max = gst_value_get_int_range_max (src_val);
+
+    min = gst_video_box_transform_dimension (min, delta);
+    max = gst_video_box_transform_dimension (max, delta);
+    if (min > max) {
+      ret = FALSE;
+      g_value_unset (dest_val);
+    } else {
+      gst_value_set_int_range (dest_val, min, max);
+    }
+  } else if (GST_VALUE_HOLDS_LIST (src_val)) {
+    gint i;
+
+    for (i = 0; i < gst_value_list_get_size (src_val); ++i) {
+      const GValue *list_val;
+      GValue newval = { 0, };
+
+      list_val = gst_value_list_get_value (src_val, i);
+      if (gst_video_box_transform_dimension_value (list_val, delta, &newval))
+        gst_value_list_append_value (dest_val, &newval);
+      g_value_unset (&newval);
+    }
+
+    if (gst_value_list_get_size (dest_val) == 0) {
+      g_value_unset (dest_val);
+      ret = FALSE;
+    }
+  } else {
+    g_value_unset (dest_val);
+    ret = FALSE;
+  }
+
+  return ret;
+}
+
 static GstCaps *
 gst_video_box_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * from)
@@ -2191,7 +2251,6 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
   const gchar *name;
   GstStructure *structure;
   GstPad *other;
-  gint width, height;
 
   to = gst_caps_copy (from);
   /* Just to be sure... */
@@ -2203,37 +2262,52 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
     gst_structure_remove_field (structure, "width");
     gst_structure_remove_field (structure, "height");
   } else {
+    gint dw = 0, dh = 0;
+    const GValue *v;
+    GValue w_val = { 0, };
+    GValue h_val = { 0, };
+
     /* calculate width and height */
-    if (gst_structure_get_int (structure, "width", &width)) {
-      if (direction == GST_PAD_SINK) {
-        width -= video_box->box_left;
-        width -= video_box->box_right;
-      } else {
-        width += video_box->box_left;
-        width += video_box->box_right;
-      }
-      if (width <= 0)
-        width = 1;
-
-      GST_DEBUG_OBJECT (trans, "New caps width: %d", width);
-      gst_structure_set (structure, "width", G_TYPE_INT, width, NULL);
+    if (direction == GST_PAD_SINK) {
+      dw -= video_box->box_left;
+      dw -= video_box->box_right;
+    } else {
+      dw += video_box->box_left;
+      dw += video_box->box_right;
     }
 
-    if (gst_structure_get_int (structure, "height", &height)) {
-      if (direction == GST_PAD_SINK) {
-        height -= video_box->box_top;
-        height -= video_box->box_bottom;
-      } else {
-        height += video_box->box_top;
-        height += video_box->box_bottom;
-      }
 
-      if (height <= 0)
-        height = 1;
-
-      GST_DEBUG_OBJECT (trans, "New caps height: %d", height);
-      gst_structure_set (structure, "height", G_TYPE_INT, height, NULL);
+    if (direction == GST_PAD_SINK) {
+      dh -= video_box->box_top;
+      dh -= video_box->box_bottom;
+    } else {
+      dh += video_box->box_top;
+      dh += video_box->box_bottom;
     }
+
+    v = gst_structure_get_value (structure, "width");
+    if (!gst_video_box_transform_dimension_value (v, dw, &w_val)) {
+      GST_WARNING_OBJECT (video_box, "could not tranform width value with dw=%d"
+          ", caps structure=%" GST_PTR_FORMAT, dw, structure);
+      gst_caps_unref (to);
+      to = gst_caps_new_empty ();
+      return to;
+    }
+    gst_structure_set_value (structure, "width", &w_val);
+
+    v = gst_structure_get_value (structure, "height");
+    if (!gst_video_box_transform_dimension_value (v, dh, &h_val)) {
+      g_value_unset (&w_val);
+      GST_WARNING_OBJECT (video_box,
+          "could not tranform height value with dh=%d" ", caps structure=%"
+          GST_PTR_FORMAT, dh, structure);
+      gst_caps_unref (to);
+      to = gst_caps_new_empty ();
+      return to;
+    }
+    gst_structure_set_value (structure, "height", &h_val);
+    g_value_unset (&w_val);
+    g_value_unset (&h_val);
   }
 
   /* Supported conversions:
