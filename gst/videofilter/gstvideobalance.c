@@ -44,9 +44,6 @@
 #endif
 
 #include "gstvideobalance.h"
-#ifdef HAVE_LIBOIL
-#include <liboil/liboil.h>
-#endif
 #include <string.h>
 #include <math.h>
 
@@ -61,7 +58,7 @@
 #define rint(x) (floor((x)+0.5))
 #endif
 
-/* GstVideoBalance signals and args */
+/* GstVideoBalance properties */
 #define DEFAULT_PROP_CONTRAST		1.0
 #define DEFAULT_PROP_BRIGHTNESS		0.0
 #define DEFAULT_PROP_HUE		0.0
@@ -152,21 +149,6 @@ gst_video_balance_update_properties (GstVideoBalance * videobalance)
   }
 }
 
-#ifndef HAVE_LIBOIL
-static void
-oil_tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
-    guint8 * table, int tstr, int n)
-{
-  int i;
-
-  for (i = 0; i < n; i++) {
-    *dest = table[*src * tstr];
-    dest += dstr;
-    src += sstr;
-  }
-}
-#endif
-
 /* Useful macros */
 #define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
 #define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
@@ -191,8 +173,13 @@ gst_video_balance_planar411_ip (GstVideoBalance * videobalance, guint8 * data,
   ystride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
 
   for (y = 0; y < height; y++) {
-    oil_tablelookup_u8 (ydata, 1, ydata, 1, videobalance->tabley, 1, width);
-    ydata += ystride;
+    guint8 *yptr;
+
+    yptr = ydata + y * ystride;
+    for (x = 0; x < width; x++) {
+      *ydata = videobalance->tabley[*ydata];
+      ydata++;
+    }
   }
 
   width2 = width >> 1;
@@ -384,10 +371,6 @@ gst_video_balance_class_init (gpointer g_class, gpointer class_data)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_balance_set_caps);
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_video_balance_transform_ip);
-
-#ifdef HAVE_LIBOIL
-  oil_init ();
-#endif
 }
 
 static void
