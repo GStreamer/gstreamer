@@ -65,21 +65,31 @@ enum
 #define DEFAULT_PROP_GAMMA  1
 
 static GstStaticPadTemplate gst_gamma_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
         ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21, "
-            "  YUY2, UYVY, AYUV, YVYU}"))
+            "  YUY2, UYVY, AYUV, YVYU}") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
     );
 
 static GstStaticPadTemplate gst_gamma_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
         ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21, "
-            "  YUY2, UYVY, AYUV, YVYU}"))
+            "  YUY2, UYVY, AYUV, YVYU}") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
     );
 
 static void gst_gamma_set_property (GObject * object, guint prop_id,
@@ -252,6 +262,68 @@ gst_gamma_packed_yuv_ip (GstGamma * gamma, guint8 * data)
   }
 }
 
+static const int cog_ycbcr_to_rgb_matrix_8bit_sdtv[] = {
+  298, 0, 409, -57068,
+  298, -100, -208, 34707,
+  298, 516, 0, -70870,
+};
+
+static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
+  66, 129, 25, 4096,
+  -38, -74, 112, 32768,
+  112, -94, -18, 32768,
+};
+
+#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
+
+static void
+gst_gamma_packed_rgb_ip (GstGamma * gamma, guint8 * data)
+{
+  gint i, j, height;
+  gint width, row_stride, row_wrap;
+  gint pixel_stride;
+  const guint8 *table = gamma->gamma_table;
+  gint offsets[3];
+  gint r, g, b;
+  gint y, u, v;
+
+  offsets[0] = gst_video_format_get_component_offset (gamma->format, 0,
+      gamma->width, gamma->height);
+  offsets[1] = gst_video_format_get_component_offset (gamma->format, 1,
+      gamma->width, gamma->height);
+  offsets[2] = gst_video_format_get_component_offset (gamma->format, 2,
+      gamma->width, gamma->height);
+
+  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
+  height = gst_video_format_get_component_height (gamma->format, 0,
+      gamma->height);
+  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
+  pixel_stride = gst_video_format_get_pixel_stride (gamma->format, 0);
+  row_wrap = row_stride - pixel_stride * width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      r = data[offsets[0]];
+      g = data[offsets[1]];
+      b = data[offsets[2]];
+
+      y = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 0, r, g, b);
+      u = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 1, r, g, b);
+      v = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 2, r, g, b);
+
+      y = table[CLAMP (y, 0, 255)];
+      r = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 0, y, u, v);
+      g = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 1, y, u, v);
+      b = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 2, y, u, v);
+      data[offsets[0]] = CLAMP (r, 0, 255);
+      data[offsets[1]] = CLAMP (g, 0, 255);
+      data[offsets[2]] = CLAMP (b, 0, 255);
+      data += pixel_stride;
+    }
+    data += row_wrap;
+  }
+}
+
 static gboolean
 gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
@@ -284,6 +356,18 @@ gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_YVYU:
       gamma->process = gst_gamma_packed_yuv_ip;
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      gamma->process = gst_gamma_packed_rgb_ip;
       break;
     default:
       goto invalid_caps;
