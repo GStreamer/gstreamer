@@ -47,6 +47,7 @@
 #include <string.h>
 #include <math.h>
 
+#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 #include <gst/interfaces/colorbalance.h>
 
@@ -266,6 +267,23 @@ done:
   return res;
 }
 
+static void
+gst_video_balance_before_transform (GstBaseTransform * base, GstBuffer * buf)
+{
+  GstVideoBalance *balance = GST_VIDEO_BALANCE (base);
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  stream_time =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (balance, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (balance), stream_time);
+}
+
 static GstFlowReturn
 gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
@@ -369,20 +387,24 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONTRAST,
       g_param_spec_double ("contrast", "Contrast", "contrast",
           0.0, 2.0, DEFAULT_PROP_CONTRAST,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
       g_param_spec_double ("brightness", "Brightness", "brightness", -1.0, 1.0,
-          DEFAULT_PROP_BRIGHTNESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_BRIGHTNESS,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HUE,
       g_param_spec_double ("hue", "Hue", "hue", -1.0, 1.0, DEFAULT_PROP_HUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SATURATION,
       g_param_spec_double ("saturation", "Saturation", "saturation", 0.0, 2.0,
-          DEFAULT_PROP_SATURATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_SATURATION,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_balance_set_caps);
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_video_balance_transform_ip);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_video_balance_before_transform);
 }
 
 static void
