@@ -21,6 +21,7 @@
 #define __GST_VIDEO_FLIP_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -72,10 +73,12 @@ struct _GstVideoFlip {
   GstVideoFilter videofilter;
   
   /* < private > */
+  GstVideoFormat format;
   gint from_width, from_height;
   gint to_width, to_height;
   
   GstVideoFlipMethod method;
+  void (*process) (GstVideoFlip *videoflip, guint8 *dest, const guint8 *src);
 };
 
 struct _GstVideoFlipClass {
