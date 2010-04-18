@@ -56,8 +56,6 @@ struct _GstVideoBalance {
   gdouble hue;
   gdouble saturation;
 
-  gboolean passthru;
-
   /* format */
   gint width;
   gint height;
