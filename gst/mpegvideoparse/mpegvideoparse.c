@@ -250,6 +250,17 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
   if (memcmp (&mpegvideoparse->seq_hdr, &new_hdr, sizeof (MPEGSeqHdr)) != 0) {
     GstCaps *caps;
     GstBuffer *seq_buf;
+    /*
+     * Profile indication - 1 => High, 2 => Spatially Scalable,
+     *                      3 => SNR Scalable, 4 => Main, 5 => Simple
+     * 4:2:2 and Multi-view have profile = 0, with the escape bit set to 1
+     */
+    const gchar *profiles[] = { "HP", "Spatial", "SNR", "MP", "SP" };
+    /*
+     * Level indication - 4 => High, 6 => High-1440, 8 => Main, 10 => Low,
+     *                    except in the case of profile = 0
+     */
+    const gchar *levels[] = { "HL", "H-14", "ML", "LL" };
 
     /* Store the entire sequence header + sequence header extension
        for output as codec_data */
@@ -267,6 +278,51 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, new_hdr.par_w, new_hdr.par_h,
         "interlaced", G_TYPE_BOOLEAN, !new_hdr.progressive,
         "codec_data", GST_TYPE_BUFFER, seq_buf, NULL);
+
+    if (new_hdr.mpeg_version == 2) {
+      const gchar *profile = NULL, *level = NULL;
+
+      if (new_hdr.profile > 0 && new_hdr.profile < 6)
+        profile = profiles[new_hdr.profile - 1];
+
+      if ((new_hdr.level > 3) && (new_hdr.level < 11) &&
+          (new_hdr.level % 2 == 0))
+        level = levels[(new_hdr.level >> 1) - 1];
+
+      if (new_hdr.profile == 8) {
+        /* Non-hierarchical profile */
+        switch (new_hdr.level) {
+          case 2:
+            level = levels[0];
+          case 5:
+            level = levels[2];
+            profile = "422P";
+            break;
+          case 10:
+            level = levels[0];
+          case 11:
+            level = levels[1];
+          case 13:
+            level = levels[2];
+          case 14:
+            level = levels[3];
+            profile = "MVP";
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (profile)
+        gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+      else
+        GST_DEBUG ("Invalid profile - %u", new_hdr.profile);
+
+      if (level)
+        gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+      else
+        GST_DEBUG ("Invalid level - %u", new_hdr.level);
+    }
 
     GST_DEBUG ("New mpegvideoparse caps: %" GST_PTR_FORMAT, caps);
     if (!gst_pad_set_caps (mpegvideoparse->srcpad, caps)) {
