@@ -536,26 +536,8 @@ gst_video_balance_finalize (GObject * object)
 {
   GList *channels = NULL;
   GstVideoBalance *balance = GST_VIDEO_BALANCE (object);
-  gint i;
 
-  if (balance->tableu) {
-    for (i = 0; i < 256; i++)
-      g_free (balance->tableu[i]);
-    g_free (balance->tableu);
-    balance->tableu = NULL;
-  }
-
-  if (balance->tablev) {
-    for (i = 0; i < 256; i++)
-      g_free (balance->tablev[i]);
-    g_free (balance->tablev);
-    balance->tablev = NULL;
-  }
-
-  if (balance->tabley) {
-    g_free (balance->tabley);
-    balance->tabley = NULL;
-  }
+  g_free (balance->tableu[0]);
 
   channels = balance->channels;
   while (channels) {
@@ -623,12 +605,13 @@ gst_video_balance_init (GstVideoBalance * videobalance,
   videobalance->hue = DEFAULT_PROP_HUE;
   videobalance->saturation = DEFAULT_PROP_SATURATION;
 
-  videobalance->tabley = g_new (guint8, 256);
-  videobalance->tableu = g_new (guint8 *, 256);
-  videobalance->tablev = g_new (guint8 *, 256);
+  videobalance->tableu[0] = g_new (guint8, 256 * 256 * 2);
   for (i = 0; i < 256; i++) {
-    videobalance->tableu[i] = g_new (guint8, 256);
-    videobalance->tablev[i] = g_new (guint8, 256);
+    videobalance->tableu[i] =
+        videobalance->tableu[0] + i * 256 * sizeof (guint8);
+    videobalance->tablev[i] =
+        videobalance->tableu[0] + 256 * 256 * sizeof (guint8) +
+        i * 256 * sizeof (guint8);
   }
 
   gst_video_balance_update_properties (videobalance);

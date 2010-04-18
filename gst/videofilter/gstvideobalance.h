@@ -67,7 +67,9 @@ struct _GstVideoBalance {
   gint size;
 
   /* tables */
-  guint8   *tabley, **tableu, **tablev;
+  guint8 tabley[256];
+  guint8 *tableu[256];
+  guint8 *tablev[256];
 
   void (*process) (GstVideoBalance *balance, guint8 *data);
 };
