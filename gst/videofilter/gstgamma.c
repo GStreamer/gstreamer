@@ -45,7 +45,6 @@
 #endif
 
 #include "gstgamma.h"
-#include <liboil/liboil.h>
 #include <string.h>
 #include <math.h>
 
@@ -199,17 +198,27 @@ gst_gamma_calculate_tables (GstGamma * gamma)
 static void
 gst_gamma_planar_ip (GstGamma * gamma, guint8 * data)
 {
-  gint size;
+  gint i, j, height;
+  gint width, row_stride, row_wrap;
+  const guint8 *table = gamma->gamma_table;
 
   data =
       data + gst_video_format_get_component_offset (gamma->format, 0,
       gamma->width, gamma->height);
-  size =
-      gst_video_format_get_row_stride (gamma->format, 0,
-      gamma->width) * gst_video_format_get_component_height (gamma->format, 0,
-      gamma->height);
 
-  oil_tablelookup_u8 (data, 1, data, 1, gamma->gamma_table, 1, size);
+  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
+  height = gst_video_format_get_component_height (gamma->format, 0,
+      gamma->height);
+  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
+  row_wrap = row_stride - width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      *data = table[*data];
+      data++;
+    }
+    data += row_wrap;
+  }
 }
 
 static gboolean
@@ -302,7 +311,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
 
-  oil_init ();
   gst_controller_init (NULL, NULL);
 
   return gst_element_register (plugin, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);

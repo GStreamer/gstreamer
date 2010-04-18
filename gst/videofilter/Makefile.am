@@ -35,12 +35,10 @@ libgstvideobalance_la_LIBTOOLFLAGS = --tag=disable-static
 libgstgamma_la_SOURCES = gstgamma.c
 libgstgamma_la_CFLAGS = $(GST_CFLAGS) $(GST_CONTROLLER_CFLAGS) \
 			$(GST_BASE_CFLAGS) \
-			$(GST_PLUGINS_BASE_CFLAGS) \
-			$(LIBOIL_CFLAGS)
+			$(GST_PLUGINS_BASE_CFLAGS)
 libgstgamma_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
 			$(GST_CONTROLLER_LIBS) \
-			$(GST_BASE_LIBS) $(GST_LIBS) \
-			$(LIBOIL_LIBS)
+			$(GST_BASE_LIBS) $(GST_LIBS)
 libgstgamma_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstgamma_la_LIBTOOLFLAGS = --tag=disable-static
 
