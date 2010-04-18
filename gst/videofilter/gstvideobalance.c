@@ -59,6 +59,9 @@
 #define rint(x) (floor((x)+0.5))
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
+#define GST_CAT_DEFAULT videobalance_debug
+
 /* GstVideoBalance properties */
 #define DEFAULT_PROP_CONTRAST		1.0
 #define DEFAULT_PROP_BRIGHTNESS		0.0
@@ -401,6 +404,9 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (videobalance_debug, "videobalance", 0,
+      "videobalance");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_video_balance_finalize);
   gobject_class->set_property = gst_video_balance_set_property;
