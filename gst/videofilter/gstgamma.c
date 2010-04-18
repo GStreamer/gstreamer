@@ -105,6 +105,8 @@ static gboolean gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
 static GstFlowReturn gst_gamma_transform_ip (GstBaseTransform * transform,
     GstBuffer * buf);
+static void gst_gamma_before_transform (GstBaseTransform * transform,
+    GstBuffer * buf);
 
 static void gst_gamma_calculate_tables (GstGamma * gamma);
 
@@ -143,6 +145,8 @@ gst_gamma_class_init (GstGammaClass * g_class)
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_gamma_before_transform);
 }
 
 static void
@@ -388,16 +392,11 @@ invalid_caps:
   return FALSE;
 }
 
-static GstFlowReturn
-gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+static void
+gst_gamma_before_transform (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstGamma *gamma = GST_GAMMA (base);
-  guint8 *data;
-  guint size;
   GstClockTime timestamp, stream_time;
-
-  if (!gamma->process)
-    goto not_negotiated;
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
   stream_time =
@@ -408,6 +407,17 @@ gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (gamma), stream_time);
+}
+
+static GstFlowReturn
+gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+{
+  GstGamma *gamma = GST_GAMMA (base);
+  guint8 *data;
+  guint size;
+
+  if (!gamma->process)
+    goto not_negotiated;
 
   if (base->passthrough)
     goto done;
