@@ -42,6 +42,8 @@
  * gst-launch videotestsrc ! gamma gamma=0.5 ! ffmpegcolorspace ! ximagesink
  * ]| This pipeline will make the image "darker".
  * </refsect2>
+ *
+ * Last reviewed on 2010-04-18 (0.10.22)
  */
 
 #ifdef HAVE_CONFIG_H

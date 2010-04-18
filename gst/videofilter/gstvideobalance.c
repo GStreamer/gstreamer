@@ -37,7 +37,7 @@
  * saturation to 0.0.
  * </refsect2>
  *
- * Last reviewed on 2006-03-03 (0.10.3)
+ * Last reviewed on 2010-04-18 (0.10.22)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -35,7 +35,7 @@
  * ]| This pipeline flips the test image 90 degrees clockwise.
  * </refsect2>
  *
- * Last reviewed on 2006-03-03 (0.10.3)
+ * Last reviewed on 2010-04-18 (0.10.22)
  */
 
 
