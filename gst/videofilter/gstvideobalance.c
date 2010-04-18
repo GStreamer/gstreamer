@@ -78,14 +78,16 @@ static GstStaticPadTemplate gst_video_balance_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstStaticPadTemplate gst_video_balance_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 
@@ -262,6 +264,9 @@ gst_video_balance_set_caps (GstBaseTransform * base, GstCaps * incaps,
   switch (videobalance->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
       videobalance->process = gst_video_balance_planar_yuv;
       break;
     default:
