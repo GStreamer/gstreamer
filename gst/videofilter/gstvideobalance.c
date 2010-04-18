@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
+ * Copyright (C) <2010> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,7 +49,6 @@
 #include <math.h>
 
 #include <gst/controller/gstcontroller.h>
-#include <gst/video/video.h>
 #include <gst/interfaces/colorbalance.h>
 
 #ifndef M_PI
@@ -183,28 +183,24 @@ gst_video_balance_update_properties (GstVideoBalance * videobalance)
     gst_video_balance_update_tables (videobalance);
 }
 
-/* Useful macros */
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
-
-#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
-
 static void
-gst_video_balance_planar411_ip (GstVideoBalance * videobalance, guint8 * data,
-    gint width, gint height)
+gst_video_balance_planar_yuv (GstVideoBalance * videobalance, guint8 * data)
 {
   gint x, y;
   guint8 *ydata;
   guint8 *udata, *vdata;
   gint ystride, ustride, vstride;
+  GstVideoFormat format;
+  gint width, height;
   gint width2, height2;
 
-  ydata = data + GST_VIDEO_I420_Y_OFFSET (width, height);
-  ystride = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+  format = videobalance->format;
+  width = videobalance->width;
+  height = videobalance->height;
+
+  ydata =
+      data + gst_video_format_get_component_offset (format, 0, width, height);
+  ystride = gst_video_format_get_row_stride (format, 0, width);
 
   for (y = 0; y < height; y++) {
     guint8 *yptr;
@@ -216,13 +212,15 @@ gst_video_balance_planar411_ip (GstVideoBalance * videobalance, guint8 * data,
     }
   }
 
-  width2 = width >> 1;
-  height2 = height >> 1;
+  width2 = gst_video_format_get_component_width (format, 1, width);
+  height2 = gst_video_format_get_component_height (format, 1, height);
 
-  udata = data + GST_VIDEO_I420_U_OFFSET (width, height);
-  vdata = data + GST_VIDEO_I420_V_OFFSET (width, height);
-  ustride = GST_VIDEO_I420_U_ROWSTRIDE (width);
-  vstride = GST_VIDEO_I420_V_ROWSTRIDE (width);
+  udata =
+      data + gst_video_format_get_component_offset (format, 1, width, height);
+  vdata =
+      data + gst_video_format_get_component_offset (format, 2, width, height);
+  ustride = gst_video_format_get_row_stride (format, 1, width);
+  vstride = gst_video_format_get_row_stride (format, 1, width);
 
   for (y = 0; y < height2; y++) {
     guint8 *uptr, *vptr;
@@ -247,24 +245,34 @@ gst_video_balance_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstVideoBalance *videobalance = GST_VIDEO_BALANCE (base);
-  GstStructure *structure;
-  gboolean res;
 
   GST_DEBUG_OBJECT (videobalance,
       "in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
-  structure = gst_caps_get_structure (incaps, 0);
+  videobalance->process = NULL;
 
-  res = gst_structure_get_int (structure, "width", &videobalance->width);
-  res &= gst_structure_get_int (structure, "height", &videobalance->height);
-  if (!res)
-    goto done;
+  if (!gst_video_format_parse_caps (incaps, &videobalance->format,
+          &videobalance->width, &videobalance->height))
+    goto invalid_caps;
 
   videobalance->size =
-      GST_VIDEO_I420_SIZE (videobalance->width, videobalance->height);
+      gst_video_format_get_size (videobalance->format, videobalance->width,
+      videobalance->height);
 
-done:
-  return res;
+  switch (videobalance->format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      videobalance->process = gst_video_balance_planar_yuv;
+      break;
+    default:
+      break;
+  }
+
+  return videobalance->process != NULL;
+
+invalid_caps:
+  GST_ERROR_OBJECT (videobalance, "Invalid caps: %" GST_PTR_FORMAT, incaps);
+  return FALSE;
 }
 
 static void
@@ -291,6 +299,9 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   guint8 *data;
   guint size;
 
+  if (!videobalance->process)
+    goto not_negotiated;
+
   /* if no change is needed, we are done */
   if (base->passthrough)
     goto done;
@@ -298,11 +309,10 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   data = GST_BUFFER_DATA (outbuf);
   size = GST_BUFFER_SIZE (outbuf);
 
-  if (size < videobalance->size)
+  if (size != videobalance->size)
     goto wrong_size;
 
-  gst_video_balance_planar411_ip (videobalance, data,
-      videobalance->width, videobalance->height);
+  videobalance->process (videobalance, data);
 
 done:
   return GST_FLOW_OK;
@@ -315,6 +325,9 @@ wrong_size:
             videobalance->size));
     return GST_FLOW_ERROR;
   }
+not_negotiated:
+  GST_ERROR_OBJECT (videobalance, "Not negotiated yet");
+  return GST_FLOW_NOT_NEGOTIATED;
 }
 
 static void

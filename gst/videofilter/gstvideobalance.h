@@ -21,6 +21,8 @@
 #ifndef __GST_VIDEO_BALANCE_H__
 #define __GST_VIDEO_BALANCE_H__
 
+#include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -47,6 +49,8 @@ typedef struct _GstVideoBalanceClass GstVideoBalanceClass;
 struct _GstVideoBalance {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   /* channels for interface */
   GList *channels;
 
@@ -57,12 +61,15 @@ struct _GstVideoBalance {
   gdouble saturation;
 
   /* format */
+  GstVideoFormat format;
   gint width;
   gint height;
   gint size;
 
   /* tables */
   guint8   *tabley, **tableu, **tablev;
+
+  void (*process) (GstVideoBalance *balance, guint8 *data);
 };
 
 struct _GstVideoBalanceClass {
