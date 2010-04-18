@@ -1,6 +1,7 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2010> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -1881,6 +1882,8 @@ static void gst_video_box_before_transform (GstBaseTransform * trans,
     GstBuffer * in);
 static void gst_video_box_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static gboolean gst_video_box_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
 static GType
@@ -1996,6 +1999,7 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_box_set_caps);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_box_get_unit_size);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_box_fixate_caps);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_box_src_event);
 }
 
 static void
@@ -2275,7 +2279,6 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       dw += video_box->box_left;
       dw += video_box->box_right;
     }
-
 
     if (direction == GST_PAD_SINK) {
       dh -= video_box->box_top;
@@ -2648,6 +2651,52 @@ gst_video_box_fixate_caps (GstBaseTransform * trans,
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_int (s, "width", width);
   gst_structure_fixate_field_nearest_int (s, "height", height);
+}
+
+static gboolean
+gst_video_box_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
+  GstStructure *new_structure;
+  const GstStructure *structure;
+  const gchar *event_name;
+  gdouble pointer_x;
+  gdouble pointer_y;
+
+  GST_OBJECT_LOCK (video_box);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
+      (video_box->box_left != 0 || video_box->box_top != 0)) {
+    structure = gst_event_get_structure (event);
+    event_name = gst_structure_get_string (structure, "event");
+
+    if (event_name &&
+        (strcmp (event_name, "mouse-move") == 0 ||
+            strcmp (event_name, "mouse-button-press") == 0 ||
+            strcmp (event_name, "mouse-button-release") == 0)) {
+      if (gst_structure_get_double (structure, "pointer_x", &pointer_x) &&
+          gst_structure_get_double (structure, "pointer_y", &pointer_y)) {
+        gdouble new_pointer_x, new_pointer_y;
+        GstEvent *new_event;
+
+        new_pointer_x = pointer_x + video_box->box_left;
+        new_pointer_y = pointer_y + video_box->box_top;
+
+        new_structure = gst_structure_copy (structure);
+        gst_structure_set (new_structure,
+            "pointer_x", G_TYPE_DOUBLE, (gdouble) (new_pointer_x),
+            "pointer_y", G_TYPE_DOUBLE, (gdouble) (new_pointer_y), NULL);
+
+        new_event = gst_event_new_navigation (new_structure);
+        gst_event_unref (event);
+        event = new_event;
+      } else {
+        GST_WARNING_OBJECT (video_box, "Failed to read navigation event");
+      }
+    }
+  }
+  GST_OBJECT_UNLOCK (video_box);
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 }
 
 static void
