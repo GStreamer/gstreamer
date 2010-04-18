@@ -209,6 +209,9 @@ elements_sunaudio_LDADD = \
 elements_videocrop_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
+elements_videofilter_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_videofilter_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(LDADD)
+
 # FIXME: configure should check for gdk-pixbuf not gtk
 # only need video.h header, not the lib
 elements_gdkpixbufsink_CFLAGS = \

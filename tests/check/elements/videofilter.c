@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 
+#include <gst/video/video.h>
 #include <gst/check/gstcheck.h>
 
 gboolean have_eos = FALSE;
@@ -32,23 +33,20 @@ gboolean have_eos = FALSE;
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define VIDEO_CAPS_STRING "video/x-raw-yuv, " \
-  "format = (fourcc) I420, " \
-  "width = (int) 384, " \
-  "height = (int) 288, " \
-  "framerate = (fraction) 25/1, " \
-  "pixel-aspect-ratio = (fraction) 1/1"
-
+#define VIDEO_CAPS_TEMPLATE_STRING \
+  GST_VIDEO_CAPS_YUV ("I420") ";" \
+  GST_VIDEO_CAPS_YUV ("AYUV") ";" \
+  GST_VIDEO_CAPS_xRGB
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS_STRING)
+    GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS_STRING)
+    GST_STATIC_CAPS (VIDEO_CAPS_TEMPLATE_STRING)
     );
 
 /* takes over reference for outcaps */
@@ -79,30 +77,23 @@ cleanup_filter (GstElement * filter)
 }
 
 static void
-check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
+check_filter_caps (const gchar * name, GstCaps * caps, gint size,
+    gint num_buffers, const gchar * prop, va_list varargs)
 {
   GstElement *filter;
   GstBuffer *inbuffer, *outbuffer;
-  GstCaps *caps;
-  int i, size;
-  va_list varargs;
+  gint i;
 
-  va_start (varargs, prop);
   filter = setup_filter (name, prop, varargs);
-  va_end (varargs);
   fail_unless (gst_element_set_state (filter,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  /* corresponds to I420 buffer for the size mentioned in the caps */
-  size = 384 * 288 * 3 / 2;
   for (i = 0; i < num_buffers; ++i) {
     inbuffer = gst_buffer_new_and_alloc (size);
     /* makes valgrind's memcheck happier */
     memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
-    caps = gst_caps_from_string (VIDEO_CAPS_STRING);
     gst_buffer_set_caps (inbuffer, caps);
-    gst_caps_unref (caps);
     GST_BUFFER_TIMESTAMP (inbuffer) = 0;
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -135,6 +126,38 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
   buffers = NULL;
 }
 
+static void
+check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
+{
+  gint i, n;
+  GstVideoFormat format;
+  gint size;
+  GstCaps *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);
+  va_list varargs;
+
+  n = gst_caps_get_size (templ);
+
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (templ, i);
+    GstCaps *caps = gst_caps_new_empty ();
+
+    gst_caps_append_structure (caps, gst_structure_copy (s));
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, 384, "height", G_TYPE_INT,
+        288, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
+
+    GST_DEBUG ("Testing with caps: %" GST_PTR_FORMAT, caps);
+
+    gst_video_format_parse_caps (caps, &format, NULL, NULL);
+    size = gst_video_format_get_size (format, 384, 288);
+    va_start (varargs, prop);
+    check_filter_caps (name, caps, size, num_buffers, prop, varargs);
+    va_end (varargs);
+
+    gst_caps_unref (caps);
+  }
+
+  gst_caps_unref (templ);
+}
 
 GST_START_TEST (test_videobalance)
 {
