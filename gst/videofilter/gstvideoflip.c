@@ -670,7 +670,9 @@ gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
       videoflip->from_width, videoflip->from_height, videoflip->to_width,
       videoflip->to_height, video_flip_methods[videoflip->method].value_nick);
 
+  GST_OBJECT_LOCK (videoflip);
   videoflip->process (videoflip, dest, src);
+  GST_OBJECT_UNLOCK (videoflip);
 
   return GST_FLOW_OK;
 
@@ -755,18 +757,22 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
       GstVideoFlipMethod method;
 
       method = g_value_get_enum (value);
+      GST_OBJECT_LOCK (videoflip);
       if (method != videoflip->method) {
         GstBaseTransform *btrans = GST_BASE_TRANSFORM (videoflip);
-
-        gst_base_transform_set_passthrough (btrans,
-            method == GST_VIDEO_FLIP_METHOD_IDENTITY);
 
         GST_DEBUG_OBJECT (videoflip, "Changing method from %s to %s",
             video_flip_methods[videoflip->method].value_nick,
             video_flip_methods[method].value_nick);
 
         videoflip->method = method;
+        GST_OBJECT_UNLOCK (videoflip);
+
+        gst_base_transform_set_passthrough (btrans,
+            method == GST_VIDEO_FLIP_METHOD_IDENTITY);
         gst_base_transform_reconfigure (btrans);
+      } else {
+        GST_OBJECT_UNLOCK (videoflip);
       }
     }
       break;
