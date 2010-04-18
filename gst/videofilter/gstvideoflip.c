@@ -67,14 +67,16 @@ static GstStaticPadTemplate gst_video_flip_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 static GstStaticPadTemplate gst_video_flip_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444 }"))
     );
 
 #define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
@@ -160,7 +162,6 @@ gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   GstVideoFlip *videoflip = GST_VIDEO_FLIP (btrans);
   GstVideoFormat format;
   gint width, height;
-
 
   if (!gst_video_format_parse_caps (caps, &format, &width, &height))
     return FALSE;
@@ -494,6 +495,9 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   switch (vf->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
       vf->process = gst_video_flip_planar_yuv;
       break;
     default:
