@@ -69,7 +69,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21 }"))
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21, "
+            "  YUY2, UYVY, AYUV, YVYU}"))
     );
 
 static GstStaticPadTemplate gst_gamma_sink_template =
@@ -77,7 +78,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21 }"))
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, NV12, NV21, "
+            "  YUY2, UYVY, AYUV, YVYU}"))
     );
 
 static void gst_gamma_set_property (GObject * object, guint prop_id,
@@ -198,7 +200,7 @@ gst_gamma_calculate_tables (GstGamma * gamma)
 }
 
 static void
-gst_gamma_planar_ip (GstGamma * gamma, guint8 * data)
+gst_gamma_planar_yuv_ip (GstGamma * gamma, guint8 * data)
 {
   gint i, j, height;
   gint width, row_stride, row_wrap;
@@ -218,6 +220,33 @@ gst_gamma_planar_ip (GstGamma * gamma, guint8 * data)
     for (j = 0; j < width; j++) {
       *data = table[*data];
       data++;
+    }
+    data += row_wrap;
+  }
+}
+
+static void
+gst_gamma_packed_yuv_ip (GstGamma * gamma, guint8 * data)
+{
+  gint i, j, height;
+  gint width, row_stride, row_wrap;
+  gint pixel_stride;
+  const guint8 *table = gamma->gamma_table;
+
+  data = data + gst_video_format_get_component_offset (gamma->format, 0,
+      gamma->width, gamma->height);
+
+  width = gst_video_format_get_component_width (gamma->format, 0, gamma->width);
+  height = gst_video_format_get_component_height (gamma->format, 0,
+      gamma->height);
+  row_stride = gst_video_format_get_row_stride (gamma->format, 0, gamma->width);
+  pixel_stride = gst_video_format_get_pixel_stride (gamma->format, 0);
+  row_wrap = row_stride - pixel_stride * width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      *data = table[*data];
+      data += pixel_stride;
     }
     data += row_wrap;
   }
@@ -248,7 +277,13 @@ gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
-      gamma->process = gst_gamma_planar_ip;
+      gamma->process = gst_gamma_planar_yuv_ip;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_YVYU:
+      gamma->process = gst_gamma_packed_yuv_ip;
       break;
     default:
       goto invalid_caps;
