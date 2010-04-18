@@ -1877,6 +1877,8 @@ static gboolean gst_video_box_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
+static void gst_video_box_before_transform (GstBaseTransform * trans,
+    GstBuffer * in);
 static void gst_video_box_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
@@ -1987,6 +1989,8 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
           "Auto crop", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_box_transform);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_video_box_before_transform);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_box_transform_caps);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_box_set_caps);
@@ -2655,13 +2659,10 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
   GST_LOG_OBJECT (video_box, "image created");
 }
 
-static GstFlowReturn
-gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer * out)
+static void
+gst_video_box_before_transform (GstBaseTransform * trans, GstBuffer * in)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  const guint8 *indata;
-  guint8 *outdata;
   GstClockTime timestamp, stream_time;
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
@@ -2673,6 +2674,15 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (video_box), stream_time);
+}
+
+static GstFlowReturn
+gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
+    GstBuffer * out)
+{
+  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
+  const guint8 *indata;
+  guint8 *outdata;
 
   indata = GST_BUFFER_DATA (in);
   outdata = GST_BUFFER_DATA (out);
