@@ -518,36 +518,59 @@ gst_video_balance_colorbalance_init (GstColorBalanceClass * iface)
   iface->get_value = gst_video_balance_colorbalance_get_value;
 }
 
+static GstColorBalanceChannel *
+gst_video_balance_find_channel (GstVideoBalance * balance, const gchar * label)
+{
+  GList *l;
+
+  for (l = balance->channels; l; l = l->next) {
+    GstColorBalanceChannel *channel = l->data;
+
+    if (g_ascii_strcasecmp (channel->label, label) == 0)
+      return channel;
+  }
+  return NULL;
+}
+
 static void
 gst_video_balance_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoBalance *balance = GST_VIDEO_BALANCE (object);
   gdouble d;
+  const gchar *label = NULL;
 
   switch (prop_id) {
     case PROP_CONTRAST:
       d = g_value_get_double (value);
       GST_DEBUG_OBJECT (balance, "Changing contrast from %lf to %lf",
           balance->contrast, d);
+      if (d != balance->contrast)
+        label = "CONTRAST";
       balance->contrast = d;
       break;
     case PROP_BRIGHTNESS:
       d = g_value_get_double (value);
       GST_DEBUG_OBJECT (balance, "Changing brightness from %lf to %lf",
           balance->brightness, d);
+      if (d != balance->brightness)
+        label = "BRIGHTNESS";
       balance->brightness = d;
       break;
     case PROP_HUE:
       d = g_value_get_double (value);
       GST_DEBUG_OBJECT (balance, "Changing hue from %lf to %lf", balance->hue,
           d);
+      if (d != balance->hue)
+        label = "HUE";
       balance->hue = d;
       break;
     case PROP_SATURATION:
       d = g_value_get_double (value);
       GST_DEBUG_OBJECT (balance, "Changing saturation from %lf to %lf",
           balance->saturation, d);
+      if (d != balance->saturation)
+        label = "SATURATION";
       balance->saturation = d;
       break;
     default:
@@ -556,6 +579,13 @@ gst_video_balance_set_property (GObject * object, guint prop_id,
   }
 
   gst_video_balance_update_properties (balance);
+
+  if (label) {
+    GstColorBalanceChannel *channel =
+        gst_video_balance_find_channel (balance, label);
+    gst_color_balance_value_changed (GST_COLOR_BALANCE (balance), channel,
+        gst_color_balance_get_value (GST_COLOR_BALANCE (balance), channel));
+  }
 }
 
 static void
