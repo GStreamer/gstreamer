@@ -139,6 +139,7 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
 GST_START_TEST (test_videobalance)
 {
   check_filter ("videobalance", 2, NULL);
+  check_filter ("videobalance", 2, "saturation", 0.5, "hue", 0.8, NULL);
 }
 
 GST_END_TEST;
@@ -147,6 +148,7 @@ GST_END_TEST;
 GST_START_TEST (test_videoflip)
 {
   /* these we can handle with the caps */
+  check_filter ("videoflip", 2, "method", 0, NULL);
   check_filter ("videoflip", 2, "method", 2, NULL);
   check_filter ("videoflip", 2, "method", 4, NULL);
   check_filter ("videoflip", 2, "method", 5, NULL);
@@ -157,6 +159,7 @@ GST_END_TEST;
 GST_START_TEST (test_gamma)
 {
   check_filter ("gamma", 2, NULL);
+  check_filter ("gamma", 2, "gamma", 2.0, NULL);
 }
 
 GST_END_TEST;
