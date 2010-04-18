@@ -78,19 +78,27 @@ enum
 };
 
 static GstStaticPadTemplate gst_video_balance_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, " "  YUY2, UYVY, AYUV, YVYU}"))
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU}")
+        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
+        ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx
+        ";" GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGB
+        ";" GST_VIDEO_CAPS_BGR)
     );
 
 static GstStaticPadTemplate gst_video_balance_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, " "  YUY2, UYVY, AYUV, YVYU}"))
+        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU}")
+        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
+        ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx
+        ";" GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGB
+        ";" GST_VIDEO_CAPS_BGR)
     );
 
 
@@ -200,6 +208,9 @@ gst_video_balance_planar_yuv (GstVideoBalance * videobalance, guint8 * data)
   GstVideoFormat format;
   gint width, height;
   gint width2, height2;
+  guint8 *tabley = videobalance->tabley;
+  guint8 **tableu = videobalance->tableu;
+  guint8 **tablev = videobalance->tablev;
 
   format = videobalance->format;
   width = videobalance->width;
@@ -214,7 +225,7 @@ gst_video_balance_planar_yuv (GstVideoBalance * videobalance, guint8 * data)
 
     yptr = ydata + y * ystride;
     for (x = 0; x < width; x++) {
-      *ydata = videobalance->tabley[*ydata];
+      *ydata = tabley[*ydata];
       ydata++;
     }
   }
@@ -240,8 +251,8 @@ gst_video_balance_planar_yuv (GstVideoBalance * videobalance, guint8 * data)
       u1 = *uptr;
       v1 = *vptr;
 
-      *uptr++ = videobalance->tableu[u1][v1];
-      *vptr++ = videobalance->tablev[u1][v1];
+      *uptr++ = tableu[u1][v1];
+      *vptr++ = tablev[u1][v1];
     }
   }
 }
@@ -257,6 +268,9 @@ gst_video_balance_packed_yuv (GstVideoBalance * videobalance, guint8 * data)
   GstVideoFormat format;
   gint width, height;
   gint width2, height2;
+  guint8 *tabley = videobalance->tabley;
+  guint8 **tableu = videobalance->tableu;
+  guint8 **tablev = videobalance->tablev;
 
   format = videobalance->format;
   width = videobalance->width;
@@ -272,7 +286,7 @@ gst_video_balance_packed_yuv (GstVideoBalance * videobalance, guint8 * data)
 
     yptr = ydata + y * ystride;
     for (x = 0; x < width; x++) {
-      *ydata = videobalance->tabley[*ydata];
+      *ydata = tabley[*ydata];
       ydata += yoff;
     }
   }
@@ -300,12 +314,90 @@ gst_video_balance_packed_yuv (GstVideoBalance * videobalance, guint8 * data)
       u1 = *uptr;
       v1 = *vptr;
 
-      *uptr = videobalance->tableu[u1][v1];
-      *vptr = videobalance->tablev[u1][v1];
+      *uptr = tableu[u1][v1];
+      *vptr = tablev[u1][v1];
 
       uptr += uoff;
       vptr += voff;
     }
+  }
+}
+
+static const int cog_ycbcr_to_rgb_matrix_8bit_sdtv[] = {
+  298, 0, 409, -57068,
+  298, -100, -208, 34707,
+  298, 516, 0, -70870,
+};
+
+static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
+  66, 129, 25, 4096,
+  -38, -74, 112, 32768,
+  112, -94, -18, 32768,
+};
+
+#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
+
+static void
+gst_video_balance_packed_rgb (GstVideoBalance * videobalance, guint8 * data)
+{
+  gint i, j, height;
+  gint width, row_stride, row_wrap;
+  gint pixel_stride;
+  gint offsets[3];
+  gint r, g, b;
+  gint y, u, v;
+  gint u_tmp, v_tmp;
+  guint8 *tabley = videobalance->tabley;
+  guint8 **tableu = videobalance->tableu;
+  guint8 **tablev = videobalance->tablev;
+
+  offsets[0] = gst_video_format_get_component_offset (videobalance->format, 0,
+      videobalance->width, videobalance->height);
+  offsets[1] = gst_video_format_get_component_offset (videobalance->format, 1,
+      videobalance->width, videobalance->height);
+  offsets[2] = gst_video_format_get_component_offset (videobalance->format, 2,
+      videobalance->width, videobalance->height);
+
+  width =
+      gst_video_format_get_component_width (videobalance->format, 0,
+      videobalance->width);
+  height =
+      gst_video_format_get_component_height (videobalance->format, 0,
+      videobalance->height);
+  row_stride =
+      gst_video_format_get_row_stride (videobalance->format, 0,
+      videobalance->width);
+  pixel_stride = gst_video_format_get_pixel_stride (videobalance->format, 0);
+  row_wrap = row_stride - pixel_stride * width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      r = data[offsets[0]];
+      g = data[offsets[1]];
+      b = data[offsets[2]];
+
+      y = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 0, r, g, b);
+      u_tmp = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 1, r, g, b);
+      v_tmp = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 2, r, g, b);
+
+      y = CLAMP (y, 0, 255);
+      u_tmp = CLAMP (u_tmp, 0, 255);
+      v_tmp = CLAMP (v_tmp, 0, 255);
+
+      y = tabley[y];
+      u = tableu[u_tmp][v_tmp];
+      v = tablev[u_tmp][v_tmp];
+
+      r = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 0, y, u, v);
+      g = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 1, y, u, v);
+      b = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 2, y, u, v);
+
+      data[offsets[0]] = CLAMP (r, 0, 255);
+      data[offsets[1]] = CLAMP (g, 0, 255);
+      data[offsets[2]] = CLAMP (b, 0, 255);
+      data += pixel_stride;
+    }
+    data += row_wrap;
   }
 }
 
@@ -342,6 +434,18 @@ gst_video_balance_set_caps (GstBaseTransform * base, GstCaps * incaps,
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_YVYU:
       videobalance->process = gst_video_balance_packed_yuv;
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      videobalance->process = gst_video_balance_packed_rgb;
       break;
     default:
       break;
