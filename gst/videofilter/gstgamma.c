@@ -3,6 +3,7 @@
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) 2003 Arwed v. Merkatz <v.merkatz@gmx.net>
  * Copyright (C) 2006 Mark Nauwelaerts <manauw@skynet.be>
+ * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,6 +38,9 @@
  * |[
  * gst-launch videotestsrc ! gamma gamma=2.0 ! ffmpegcolorspace ! ximagesink
  * ]| This pipeline will make the image "brighter".
+ * |[
+ * gst-launch videotestsrc ! gamma gamma=0.5 ! ffmpegcolorspace ! ximagesink
+ * ]| This pipeline will make the image "darker".
  * </refsect2>
  */
 
@@ -315,6 +319,7 @@ gst_gamma_packed_rgb_ip (GstGamma * gamma, guint8 * data)
       r = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 0, y, u, v);
       g = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 1, y, u, v);
       b = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 2, y, u, v);
+
       data[offsets[0]] = CLAMP (r, 0, 255);
       data[offsets[1]] = CLAMP (g, 0, 255);
       data[offsets[2]] = CLAMP (b, 0, 255);

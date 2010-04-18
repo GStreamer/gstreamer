@@ -53,6 +53,8 @@ struct _GstGamma
 {
   GstVideoFilter videofilter;
 
+  /* < private > */
+
   /* format */
   GstVideoFormat format;
   gint width;
