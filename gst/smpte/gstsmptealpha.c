@@ -150,6 +150,8 @@ static gboolean gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_smpte_alpha_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
+static void gst_smpte_alpha_before_transform (GstBaseTransform * trans,
+    GstBuffer * buf);
 static GstCaps *gst_smpte_alpha_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * from);
 
@@ -209,6 +211,8 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_smpte_alpha_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_smpte_alpha_transform);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_smpte_alpha_before_transform);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_smpte_alpha_transform_caps);
 }
@@ -415,20 +419,14 @@ gst_smpte_alpha_process_i420_ayuv (GstSMPTEAlpha * smpte, const guint8 * in,
   }
 }
 
-static GstFlowReturn
-gst_smpte_alpha_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer * out)
+static void
+gst_smpte_alpha_before_transform (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstSMPTEAlpha *smpte = GST_SMPTE_ALPHA (trans);
   GstClockTime timestamp, stream_time;
-  gdouble position;
-  gint border;
-
-  if (G_UNLIKELY (!smpte->process))
-    goto not_negotiated;
 
   /* first sync the controller to the current stream_time of the buffer */
-  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
       gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
 
@@ -437,6 +435,18 @@ gst_smpte_alpha_transform (GstBaseTransform * trans, GstBuffer * in,
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (G_OBJECT (smpte), stream_time);
+}
+
+static GstFlowReturn
+gst_smpte_alpha_transform (GstBaseTransform * trans, GstBuffer * in,
+    GstBuffer * out)
+{
+  GstSMPTEAlpha *smpte = GST_SMPTE_ALPHA (trans);
+  gdouble position;
+  gint border;
+
+  if (G_UNLIKELY (!smpte->process))
+    goto not_negotiated;
 
   /* these are the propertis we update with only the object lock, others are
    * only updated with the TRANSFORM_LOCK. */
