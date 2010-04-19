@@ -686,7 +686,8 @@ gst_base_transform_getcaps (GstPad * pad)
     /* and filter against the template of this pad */
     templ = gst_pad_get_pad_template_caps (pad);
     GST_DEBUG_OBJECT (pad, "our template  %" GST_PTR_FORMAT, templ);
-    temp = gst_caps_intersect (caps, templ);
+    /* We keep the caps sorted like the returned caps */
+    temp = gst_caps_intersect_full (caps, templ, GST_CAPS_INTERSECT_FIRST);
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
     /* this is what we can do */
