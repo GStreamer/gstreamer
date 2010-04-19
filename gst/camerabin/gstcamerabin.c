@@ -552,6 +552,7 @@ camerabin_setup_src_elements (GstCameraBin * camera)
   gst_caps_unref (new_caps);
 
   /* Set caps for view finder mode */
+  /* This also sets zoom */
   gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
 }
 
@@ -736,7 +737,7 @@ camerabin_create_elements (GstCameraBin * camera)
   GstPadLinkReturn link_ret = GST_PAD_LINK_REFUSED;
   GstPad *unconnected_pad;
 
-  GST_LOG_OBJECT (camera, "creating elems");
+  GST_LOG_OBJECT (camera, "creating elements");
 
   /* Create "src" elements */
   if (!camerabin_create_src_elements (camera)) {
@@ -1052,6 +1053,7 @@ static gboolean
 gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gint zoom)
 {
   gboolean ret = FALSE;
+
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
           "zoom")) {
     g_object_set (G_OBJECT (camera->src_vid_src), "zoom",
@@ -3231,7 +3233,9 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_ZOOM:
       g_atomic_int_set (&camera->zoom, g_value_get_int (value));
-      gst_camerabin_setup_zoom (camera);
+      /* does not set it if in NULL, the src is not created yet */
+      if (GST_STATE (camera) != GST_STATE_NULL)
+        gst_camerabin_setup_zoom (camera);
       break;
     case ARG_MODE:
       gst_camerabin_change_mode (camera, g_value_get_enum (value));
