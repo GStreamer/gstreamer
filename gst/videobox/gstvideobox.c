@@ -1247,62 +1247,20 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-_argb_order (GstVideoFormat format, gint p[4], gboolean * alpha)
-{
-  *alpha = FALSE;
-  switch (format) {
-    case GST_VIDEO_FORMAT_ARGB:
-      *alpha = TRUE;
-    case GST_VIDEO_FORMAT_xRGB:
-      p[0] = 0;
-      p[1] = 1;
-      p[2] = 2;
-      p[3] = 3;
-      break;
-    case GST_VIDEO_FORMAT_ABGR:
-      *alpha = TRUE;
-    case GST_VIDEO_FORMAT_xBGR:
-      p[0] = 0;
-      p[1] = 3;
-      p[2] = 2;
-      p[3] = 1;
-      break;
-    case GST_VIDEO_FORMAT_RGBA:
-      *alpha = TRUE;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_RGB:
-      p[0] = 3;
-      p[1] = 0;
-      p[2] = 1;
-      p[3] = 2;
-      break;
-    case GST_VIDEO_FORMAT_BGRA:
-      *alpha = TRUE;
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_BGR:
-      p[0] = 3;
-      p[1] = 2;
-      p[2] = 1;
-      p[3] = 0;
-      break;
-    default:
-      g_assert_not_reached ();
-  }
-}
-
-static void
 fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
     guint8 * dest, gboolean sdtv, gint width, gint height)
 {
   guint32 empty_pixel;
   gint p[4];
-  gboolean alpha;
 
-  _argb_order (format, p, &alpha);
+  p[0] = gst_video_format_get_component_offset (format, 3, width, height);
+  p[1] = gst_video_format_get_component_offset (format, 0, width, height);
+  p[2] = gst_video_format_get_component_offset (format, 1, width, height);
+  p[3] = gst_video_format_get_component_offset (format, 2, width, height);
 
   b_alpha = CLAMP (b_alpha, 0, 255);
 
-  empty_pixel = GUINT32_FROM_BE ((b_alpha << (p[0] * 8)) |
+  empty_pixel = GUINT32_FROM_LE ((b_alpha << (p[0] * 8)) |
       (rgb_colors_R[fill_type] << (p[1] * 8)) |
       (rgb_colors_G[fill_type] << (p[2] * 8)) |
       (rgb_colors_B[fill_type] << (p[3] * 8)));
@@ -1316,10 +1274,12 @@ fill_rgb24 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 {
   gint dest_stride = GST_ROUND_UP_4 (width * 3);
   gint p[4];
-  gboolean alpha;
   gint i, j;
 
-  _argb_order (format, p, &alpha);
+  p[0] = gst_video_format_get_component_offset (format, 3, width, height);
+  p[1] = gst_video_format_get_component_offset (format, 0, width, height);
+  p[2] = gst_video_format_get_component_offset (format, 1, width, height);
+  p[3] = gst_video_format_get_component_offset (format, 2, width, height);
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -1354,8 +1314,33 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   in_bpp = (packed_in) ? 3 : 4;
   out_bpp = (packed_out) ? 3 : 4;
 
-  _argb_order (dest_format, p_out, &out_alpha);
-  _argb_order (src_format, p_in, &in_alpha);
+  out_alpha = gst_video_format_has_alpha (dest_format);
+  p_out[0] =
+      gst_video_format_get_component_offset (dest_format, 3, dest_width,
+      dest_height);
+  p_out[1] =
+      gst_video_format_get_component_offset (dest_format, 0, dest_width,
+      dest_height);
+  p_out[2] =
+      gst_video_format_get_component_offset (dest_format, 1, dest_width,
+      dest_height);
+  p_out[3] =
+      gst_video_format_get_component_offset (dest_format, 2, dest_width,
+      dest_height);
+
+  in_alpha = gst_video_format_has_alpha (src_format);
+  p_in[0] =
+      gst_video_format_get_component_offset (src_format, 3, src_width,
+      src_height);
+  p_in[1] =
+      gst_video_format_get_component_offset (src_format, 0, src_width,
+      src_height);
+  p_in[2] =
+      gst_video_format_get_component_offset (src_format, 1, src_width,
+      src_height);
+  p_in[3] =
+      gst_video_format_get_component_offset (src_format, 2, src_width,
+      src_height);
 
   dest = dest + dest_y * dest_stride + dest_x * out_bpp;
   src = src + src_y * src_stride + src_x * in_bpp;
@@ -1446,7 +1431,19 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   dest_stride = 4 * dest_width;
   in_bpp = (packed_in) ? 3 : 4;
 
-  _argb_order (src_format, p_in, &in_alpha);
+  in_alpha = gst_video_format_has_alpha (src_format);
+  p_in[0] =
+      gst_video_format_get_component_offset (src_format, 3, src_width,
+      src_height);
+  p_in[1] =
+      gst_video_format_get_component_offset (src_format, 0, src_width,
+      src_height);
+  p_in[2] =
+      gst_video_format_get_component_offset (src_format, 1, src_width,
+      src_height);
+  p_in[3] =
+      gst_video_format_get_component_offset (src_format, 2, src_width,
+      src_height);
 
   memcpy (matrix,
       (dest_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
@@ -1547,7 +1544,19 @@ copy_ayuv_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   src_stride = 4 * src_width;
   out_bpp = (packed_out) ? 3 : 4;
 
-  _argb_order (dest_format, p_out, &out_alpha);
+  out_alpha = gst_video_format_has_alpha (dest_format);
+  p_out[0] =
+      gst_video_format_get_component_offset (dest_format, 3, dest_width,
+      dest_height);
+  p_out[1] =
+      gst_video_format_get_component_offset (dest_format, 0, dest_width,
+      dest_height);
+  p_out[2] =
+      gst_video_format_get_component_offset (dest_format, 1, dest_width,
+      dest_height);
+  p_out[3] =
+      gst_video_format_get_component_offset (dest_format, 2, dest_width,
+      dest_height);
 
   memcpy (matrix,
       (src_sdtv) ? cog_ycbcr_to_rgb_matrix_8bit_sdtv :
