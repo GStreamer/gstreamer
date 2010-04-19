@@ -108,7 +108,8 @@ NAME_BLEND (guint8 * dest, const guint8 * src, gint src_height, gint src_width,
         "3:                            \n\t"
         :"=r" (src), "=r" (dest)
         :"0" (src), "1" (dest), "m" (s_alpha), "m" (src_width)
-	:"%eax", "%ecx", "memory"
+	:"%eax", "%ecx", "memory",
+         "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
         , "mm0", "mm1", "mm2", "mm4", "mm3", "mm5", "mm6", "mm7"
 #endif
@@ -131,8 +132,8 @@ _memcpy_u8_mmx (guint8 * dest, const guint8 * src, guint count)
     "test       $7,    %0     \n\t"
     "je         3f            \n\t"
     "2:                       \n\t"
-    "movb     (%2),  %%ah     \n\t"
-    "movb     %%ah,  (%1)     \n\t"
+    "movb     (%2),  %%al     \n\t"
+    "movb     %%al,  (%1)     \n\t"
     "inc        %2            \n\t"
     "inc        %1            \n\t"
     "dec        %0            \n\t"
@@ -151,9 +152,10 @@ _memcpy_u8_mmx (guint8 * dest, const guint8 * src, guint count)
     "jne        4b            \n\t"
     "5:                       \n\t"
     "emms                     \n\t"
-    : "=r" (count), "=R" (dest), "=R" (src)
+    : "=r" (count), "=q" (dest), "=q" (src)
     : "0" (count), "1" (dest), "2" (src)
-    : "memory", "ah"
+    : "memory", "al",
+     "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
       , "mm0"
 #endif
@@ -195,7 +197,8 @@ _memset_u8_mmx (guint8 * dest, guint val, guint count)
     "emms                     \n\t"
     : "=r" (count), "=q" (dest)
     : "0" (count), "1" (dest), "q" (val8), "m" (val64)
-    : "memory"
+    : "memory",
+      "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
       , "mm0"
 #endif
@@ -235,7 +238,8 @@ _memset_u32_mmx (guint32 * dest, guint32 val, guint count)
     "emms                     \n\t"
     : "=r" (count), "=r" (dest)
     : "0" (count), "1" (dest), "r" (val), "m" (val64)
-    : "memory"
+    : "memory",
+      "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
       , "mm0"
 #endif
@@ -331,7 +335,8 @@ _blend_u8_mmx (guint8 * dest, const guint8 * src,
         "4:                            \n\t"
         :"=r" (src), "=r" (dest)
         :"0" (src), "1" (dest), "m" (s_alpha), "m" (src_width)
-        :"%eax", "%ecx", "memory"
+        :"%eax", "%ecx", "memory",
+         "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
         , "mm1", "mm2", "mm3", "mm4", "mm6", "mm7"
 #endif
