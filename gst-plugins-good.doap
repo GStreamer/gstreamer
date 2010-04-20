@@ -26,11 +26,10 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
 
  <repository>
-   <CVSRepository>
-     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
-     <module>gst-plugins-good</module>
-     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-plugins-good/" />
-   </CVSRepository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-good"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-good"/>
+   </GitRepository>
  </repository> 
 
  <release>
@@ -279,11 +278,6 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
   <foaf:Person>
      <foaf:name>Wim Taymans</foaf:name>
      <foaf:mbox_sha1sum>0d93fde052812d51a05fd86de9bdbf674423daa2</foaf:mbox_sha1sum>
-  </foaf:Person>
- </maintainer>
- <maintainer>
-  <foaf:Person>
-     <foaf:name>Thomas Vander Stichele</foaf:name>
   </foaf:Person>
  </maintainer>
 
