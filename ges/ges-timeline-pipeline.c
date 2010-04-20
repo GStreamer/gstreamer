@@ -111,6 +111,72 @@ ges_timeline_pipeline_new (void)
   return g_object_new (GES_TYPE_TIMELINE_PIPELINE, NULL);
 }
 
+#define TRACK_COMPATIBLE_PROFILE(tracktype, proftype) \
+  (((proftype) == GST_ENCODING_PROFILE_AUDIO && (tracktype) == GES_TRACK_TYPE_AUDIO) || \
+  ((proftype) == GST_ENCODING_PROFILE_VIDEO && (tracktype) == GES_TRACK_TYPE_VIDEO) || \
+   ((proftype) == GST_ENCODING_PROFILE_TEXT && (tracktype) == GES_TRACK_TYPE_TEXT))
+
+static gboolean
+ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
+{
+  gboolean res = FALSE;
+  GList *ltrack, *tracks, *lstream;
+
+  if (!self->profile)
+    return TRUE;
+
+  GST_DEBUG ("Updating track caps");
+
+  tracks = ges_timeline_get_tracks (self->timeline);
+
+  /* Take each stream of the encoding profile and find a matching
+   * track to set the caps on */
+  for (ltrack = tracks; ltrack; ltrack = ltrack->next) {
+    GESTrack *track = (GESTrack *) ltrack->data;
+
+    /* Find a matching stream setting */
+    for (lstream = self->profile->encodingprofiles; lstream;
+        lstream = lstream->next) {
+      GstStreamEncodingProfile *prof =
+          (GstStreamEncodingProfile *) lstream->data;
+
+      if (TRACK_COMPATIBLE_PROFILE (track->type, prof->type)) {
+        if (self->mode == TIMELINE_MODE_SMART_RENDER) {
+          GstCaps *ocaps, *rcaps;
+
+          GST_DEBUG ("Smart Render mode, setting output caps");
+          ocaps = gst_stream_encoding_profile_get_output_caps (prof);
+          if (track->type == GES_TRACK_TYPE_AUDIO)
+            rcaps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+          else
+            rcaps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+          gst_caps_append (ocaps, rcaps);
+          ges_track_set_caps (track, ocaps);
+        } else {
+          /* Raw preview or rendering mode */
+          if (track->type == GES_TRACK_TYPE_VIDEO)
+            ges_track_set_caps (track,
+                gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb"));
+          else if (track->type == GES_TRACK_TYPE_AUDIO)
+            ges_track_set_caps (track,
+                gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float"));
+        }
+        break;
+      }
+    }
+
+    g_object_unref (track);
+  }
+
+  if (tracks)
+    g_list_free (tracks);
+
+  GST_DEBUG ("Done updating caps");
+
+beach:
+  return TRUE;
+}
+
 static GstStateChangeReturn
 ges_timeline_pipeline_change_state (GstElement * element,
     GstStateChange transition)
@@ -121,7 +187,6 @@ ges_timeline_pipeline_change_state (GstElement * element,
   self = GES_TIMELINE_PIPELINE (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (G_UNLIKELY (self->timeline == NULL)) {
         GST_ERROR_OBJECT (element,
@@ -129,6 +194,15 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
+      if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+        GST_DEBUG ("rendering => Updating pipeline caps");
+      if (!ges_timeline_pipeline_update_caps (self)) {
+        GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
+      }
+      /* Set caps on all tracks according to profile if present */
+      /* FIXME : Add a new SMART_RENDER mode to avoid decoding */
       break;
     default:
       break;
@@ -235,9 +309,8 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GstPad *sinkpad;
   gboolean reconfigured = FALSE;
 
-  GST_DEBUG_OBJECT (self, "new pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-
-  /* FIXME : Adapt for usage of render sink */
+  GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), GST_PAD_CAPS (pad));
 
   if (G_UNLIKELY (!(track =
               ges_timeline_get_track_for_pad (self->timeline, pad)))) {
@@ -248,18 +321,20 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   /* Don't connect track if it's not going to be used */
   if (track->type == GES_TRACK_TYPE_VIDEO &&
       !(self->mode & TIMELINE_MODE_PREVIEW_VIDEO) &&
-      !(self->mode & TIMELINE_MODE_RENDER)) {
+      !(self->mode & TIMELINE_MODE_RENDER) &&
+      !(self->mode & TIMELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
   }
   if (track->type == GES_TRACK_TYPE_AUDIO &&
       !(self->mode & TIMELINE_MODE_PREVIEW_AUDIO) &&
-      !(self->mode & TIMELINE_MODE_RENDER)) {
+      !(self->mode & TIMELINE_MODE_RENDER) &&
+      !(self->mode & TIMELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
   }
 
-  /* Create a new chain */
-  chain = g_new0 (OutputChain, 1);
-  chain->pipeline = self;
+  /* Get an existing chain or create it */
+  if (!(chain = get_output_chain_for_track (self, track)))
+    chain = new_output_chain_for_track (self, track);
   chain->srcpad = pad;
 
   /* Adding tee */
@@ -268,7 +343,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   gst_element_sync_state_with_parent (chain->tee);
 
   /* Linking pad to tee */
-  sinkpad = gst_element_get_pad (chain->tee, "sink");
+  sinkpad = gst_element_get_static_pad (chain->tee, "sink");
   gst_pad_link (pad, sinkpad);
 
   /* Connect playsink */
@@ -296,13 +371,13 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     /* Request a sinkpad from playsink */
     if (G_UNLIKELY (!(sinkpad =
                 gst_element_get_request_pad (self->playsink, sinkpad_name)))) {
-      GST_WARNING_OBJECT (self, "Couldn't get a pad from the playsink !");
+      GST_ERROR_OBJECT (self, "Couldn't get a pad from the playsink !");
       goto error;
     }
 
     if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
                     "src%d"), sinkpad) != GST_PAD_LINK_OK)) {
-      GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
+      GST_ERROR_OBJECT (self, "Couldn't link track pad to playsink");
       goto error;
     }
 
@@ -316,32 +391,36 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   }
 
   /* Connect to encodebin */
-  if (self->mode & TIMELINE_MODE_RENDER) {
+  if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
-    /* Check for unused static pads */
-    sinkpad = get_compatible_unlinked_pad (self->encodebin, pad);
+    if (!chain->encodebinpad) {
+      /* Check for unused static pads */
+      sinkpad = get_compatible_unlinked_pad (self->encodebin, pad);
 
-    if (sinkpad == NULL) {
-      /* If no compatible static pad is available, request a pad */
-      g_signal_emit_by_name (self->encodebin, "request-pad",
-          gst_pad_get_caps (pad), &sinkpad);
-      if (G_UNLIKELY (sinkpad == NULL)) {
-        GST_WARNING_OBJECT (self, "Couldn't get a pad from encodebin !");
-        goto error;
+      if (sinkpad == NULL) {
+        /* If no compatible static pad is available, request a pad */
+        g_signal_emit_by_name (self->encodebin, "request-pad",
+            gst_pad_get_caps (pad), &sinkpad);
+        if (G_UNLIKELY (sinkpad == NULL)) {
+          GST_ERROR_OBJECT (self, "Couldn't get a pad from encodebin !");
+          goto error;
+        }
       }
+      chain->encodebinpad = sinkpad;
     }
 
     if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
-                    "src%d"), sinkpad) != GST_PAD_LINK_OK)) {
+                    "src%d"), chain->encodebinpad) != GST_PAD_LINK_OK)) {
       GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
       goto error;
     }
 
-    chain->encodebinpad = sinkpad;
   }
 
-  self->chains = g_list_append (self->chains, chain);
+  /* If chain wasn't already present, insert it in list */
+  if (!get_output_chain_for_track (self, track))
+    self->chains = g_list_append (self->chains, chain);
 
   GST_DEBUG ("done");
   return;
@@ -363,7 +442,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GST_DEBUG_OBJECT (self, "pad removed %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* FIXME : IMPLEMENT ! */
-  GST_WARNING_OBJECT (self, "IMPLEMENTE ME !");
+  GST_ERROR_OBJECT (self, "IMPLEMENT ME !");
 
   GST_DEBUG ("done");
 }
@@ -481,7 +560,8 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
     g_object_ref (pipeline->playsink);
     gst_bin_remove (GST_BIN_CAST (pipeline), pipeline->playsink);
   }
-  if ((pipeline->mode & TIMELINE_MODE_RENDER) && !(mode & TIMELINE_MODE_RENDER)) {
+  if ((pipeline->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
+      !(mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
     g_object_ref (pipeline->encodebin);
@@ -501,7 +581,8 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
       return FALSE;
     }
   }
-  if (!(pipeline->mode & TIMELINE_MODE_RENDER) && (mode & TIMELINE_MODE_RENDER)) {
+  if (!(pipeline->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
+      (mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
     /* Adding render bin */
     GST_DEBUG ("Adding render bin");
 
