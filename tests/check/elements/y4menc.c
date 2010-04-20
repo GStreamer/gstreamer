@@ -30,6 +30,7 @@
 static GstPad *mysrcpad, *mysinkpad;
 
 #define VIDEO_CAPS_STRING "video/x-raw-yuv, " \
+                           "format = (fourcc) I420, "\
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1, " \
@@ -83,7 +84,9 @@ GST_START_TEST (test_y4m)
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   int i, num_buffers, size;
-  const gchar *data0 = "YUV4MPEG2 W384 H288 Ip F25:1 A1:1\nFRAME\n";
+  const gchar *data0 = "YUV4MPEG2 W384 H288 Ip F25:1 A1:1\n";
+  const gchar *data1 = "YUV4MPEG2 C420 W384 H288 Ip F25:1 A1:1\n";
+  const gchar *data2 = "FRAME\n";
 
   y4menc = setup_y4menc ();
   fail_unless (gst_element_set_state (y4menc,
@@ -107,15 +110,27 @@ GST_START_TEST (test_y4m)
 
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
+    gchar *data;
+
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
     switch (i) {
       case 0:
-        fail_unless (strlen (data0) == 40);
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == size + 40);
+        fail_unless (GST_BUFFER_SIZE (outbuffer) > size);
         fail_unless (memcmp (data0, GST_BUFFER_DATA (outbuffer),
-                strlen (data0)) == 0);
+                strlen (data0)) == 0 ||
+            memcmp (data1, GST_BUFFER_DATA (outbuffer), strlen (data1)) == 0);
+        /* so we know there is a newline */
+        data = (gchar *) GST_BUFFER_DATA (outbuffer);
+        data = strchr (data, '\n');
+        fail_unless (data != NULL);
+        data++;
+        fail_unless (memcmp (data2, data, strlen (data2)) == 0);
+        data += strlen (data2);
+        /* remainder must be frame data */
+        fail_unless ((data - (gchar *) GST_BUFFER_DATA (outbuffer)) + size ==
+            GST_BUFFER_SIZE (outbuffer));
         break;
       default:
         break;
