@@ -1,4 +1,5 @@
 noinst_PROGRAMS = 	\
+	playlist	\
 	simple1		\
 	test1		\
 	test2		\
