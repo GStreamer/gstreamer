@@ -553,3 +553,24 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 
   return NULL;
 }
+
+/**
+ * ges_timeline_get_tracks:
+ * @timeline: a #GESTimeline
+ *
+ * Returns the list of #GESTrack used by the Timeline.
+ *
+ * Returns: A list of #GESTrack. The caller should unref each track
+ * once he is done with them. */
+GList *
+ges_timeline_get_tracks (GESTimeline * timeline)
+{
+  GList *tmp, *res = NULL;
+
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *priv = (TrackPrivate *) tmp->data;
+    res = g_list_append (res, g_object_ref (priv->track));
+  }
+
+  return res;
+}

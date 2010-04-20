@@ -53,8 +53,7 @@ struct _GESTimeline {
 
   /*< private >*/
   GList *layers; /* A list of GESTimelineLayer sorted by priority */
-  /*< public >*/
-  GList *tracks;
+  GList *tracks; /* A list of private track data */
 };
 
 struct _GESTimelineClass {
@@ -82,6 +81,7 @@ gboolean ges_timeline_add_track (GESTimeline *timeline, GESTrack *track);
 gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
+GList *ges_timeline_get_tracks (GESTimeline *timeline);
 
 G_END_DECLS
 

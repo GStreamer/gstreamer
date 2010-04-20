@@ -104,6 +104,7 @@ ges_timeline_remove_track
 ges_timeline_get_track_for_pad
 ges_timeline_load_from_uri
 ges_timeline_save
+ges_timeline_get_tracks
 <SUBSECTION Standard>
 ges_timeline_get_type
 GES_IS_TIMELINE
