@@ -75,6 +75,8 @@ struct _GESTimelinePipeline {
   GESPipelineFlags mode;
 
   GList *chains;
+
+  GstEncodingProfile *profile;
 };
 
 struct _GESTimelinePipelineClass {

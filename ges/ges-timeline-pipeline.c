@@ -437,6 +437,7 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
   }
 
   g_object_set (pipeline->encodebin, "profile", profile, NULL);
+  pipeline->profile = profile;
 
   return TRUE;
 }
