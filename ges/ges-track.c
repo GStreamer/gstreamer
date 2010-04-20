@@ -275,6 +275,7 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
     gst_caps_unref (track->caps);
   track->caps = gst_caps_copy (caps);
 
+  g_object_set (track->composition, "caps", caps, NULL);
   /* FIXME : update all trackobjects ? */
 }
 
