@@ -210,10 +210,26 @@ static gint aspect_ratio_table[6][2] = { {-1, -1}, {1, 1}, {12, 11},
 {10, 11}, {16, 11}, {40, 33}
 };
 
+static void
+gst_mpeg4vparse_set_config (GstMpeg4VParse * parse, const guint8 * data,
+    gsize size)
+{
+  /* limit possible caps noise */
+  if (parse->config && size == GST_BUFFER_SIZE (parse->config) &&
+      memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0)
+    return;
+
+  if (parse->config != NULL)
+    gst_buffer_unref (parse->config);
+
+  parse->config = gst_buffer_new_and_alloc (size);
+  memcpy (GST_BUFFER_DATA (parse->config), data, size);
+}
+
 /* Handle parsing a video object */
 static gboolean
 gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
-    gsize size)
+    gsize size, gboolean set_codec_data)
 {
   guint32 bits;
   bitstream_t bs = { data, 0, 0, size };
@@ -221,6 +237,9 @@ gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
   guint16 fixed_time_increment = 0;
   gint aspect_ratio_width = -1, aspect_ratio_height = -1;
   gint height = -1, width = -1;
+
+  if (set_codec_data)
+    gst_mpeg4vparse_set_config (parse, data, size);
 
   /* expecting a video object startcode */
   GET_BITS (&bs, 32, &bits);
@@ -384,11 +403,7 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   /* Even if we fail to parse, then some other element might succeed, so always
    * put the VOS in the config */
   parse->profile = profile;
-  if (parse->config != NULL)
-    gst_buffer_unref (parse->config);
-
-  parse->config = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (parse->config), data, size);
+  gst_mpeg4vparse_set_config (parse, data, size);
 
   parse->have_config = TRUE;
 
@@ -440,7 +455,7 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   data = &bs.data[bs.offset];
   size -= bs.offset;
 
-  return gst_mpeg4vparse_handle_vo (parse, data, size);
+  return gst_mpeg4vparse_handle_vo (parse, data, size, FALSE);
 
 out:
   return gst_mpeg4vparse_set_new_caps (parse, 0, 0, -1, -1, -1, -1);
@@ -577,7 +592,7 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
               /* end of VOS found, interpret the config data and restart the
                * search for the VOP */
               gst_mpeg4vparse_handle_vo (parse, data + parse->vos_offset,
-                  parse->offset - parse->vos_offset);
+                  parse->offset - parse->vos_offset, TRUE);
               parse->state = PARSE_START_FOUND;
               break;
             default:
@@ -685,7 +700,8 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
           /* Sometimes, instead, it'll just have the video object/video object
              layer data. We can parse that too, though it'll give us slightly
              less information. */
-          res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf));
+          res = gst_mpeg4vparse_handle_vo (parse, data, GST_BUFFER_SIZE (buf),
+              FALSE);
         }
       } else {
         GST_WARNING_OBJECT (parse,
