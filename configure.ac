@@ -3,7 +3,7 @@ AC_PREREQ(2.52)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Editing Services, 0.10.0.0,
+AC_INIT(GStreamer Editing Services, 0.10.0.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer-editing-services)
 
@@ -16,7 +16,7 @@ dnl define PACKAGE_VERSION_* variables
 AS_VERSION
 
 dnl check if this is a release version
-AS_NANO(GST_CVS="no", GST_CVS="yes")
+AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([ges/ges-timeline.c])
@@ -185,13 +185,16 @@ dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef \
+				   -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition \
+				   -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar \
+				   -Wnested-externs])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CXXFLAGS($GST_GIT)
 
 dnl define correct level for debugging messages
-AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
@@ -228,7 +231,7 @@ dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS) -DGST_USE_UNSTABLE_API"
 GST_CXXFLAGS="$GST_CXXFLAGS \$(GST_OPTION_CXXFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_CXXFLAGS)
