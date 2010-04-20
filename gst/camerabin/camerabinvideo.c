@@ -570,8 +570,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   /* Add queue element for video */
   vid->tee_video_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
 
-  if (!(vid->video_queue =
-          gst_camerabin_create_and_add_element (vidbin, "queue"))) {
+  vid->video_queue = gst_element_factory_make ("queue", "video-queue");
+  if (!gst_camerabin_add_element (vidbin, vid->video_queue)) {
     goto error;
   }
 
@@ -621,7 +621,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     }
 
     /* Add queue element for audio */
-    if (!(gst_camerabin_create_and_add_element (vidbin, "queue"))) {
+    queue = gst_element_factory_make ("queue", "audio-queue");
+    if (!gst_camerabin_add_element (vidbin, queue)) {
       goto error;
     }
 
@@ -664,7 +665,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
   /* Add queue leading out of the video bin and to view finder */
   vid->tee_vf_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
-  if (!(queue = gst_camerabin_create_and_add_element (vidbin, "queue"))) {
+  queue = gst_element_factory_make ("queue", "viewfinder-queue");
+  if (!gst_camerabin_add_element (vidbin, queue)) {
     goto error;
   }
   /* Set queue leaky, we don't want to block video encoder feed, but

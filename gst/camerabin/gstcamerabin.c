@@ -750,9 +750,9 @@ camerabin_create_elements (GstCameraBin * camera)
   gst_pad_add_buffer_probe (camera->pad_src_img,
       G_CALLBACK (gst_camerabin_have_img_buffer), camera);
 
-  /* Add image queue */
-  if (!(camera->img_queue =
-          gst_camerabin_create_and_add_element (GST_BIN (camera), "queue"))) {
+  /* Add queue leading to image bin */
+  camera->img_queue = gst_element_factory_make ("queue", "image-queue");
+  if (!gst_camerabin_add_element (GST_BIN (camera), camera->img_queue)) {
     goto done;
   }
 
