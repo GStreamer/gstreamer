@@ -637,7 +637,7 @@ ks_video_create_pin_conn_from_media_type (KsVideoMediaType * media_type)
   conn->PinId = media_type->pin_id;
   conn->PinToHandle = NULL;
   conn->Priority.PriorityClass = KSPRIORITY_NORMAL;
-  conn->Priority.PrioritySubClass = 1;
+  conn->Priority.PrioritySubClass = KSPRIORITY_NORMAL;
 
   format = (KSDATAFORMAT *) (conn + 1);
   memcpy (format, media_type->range, sizeof (KSDATAFORMAT));
