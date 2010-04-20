@@ -68,7 +68,7 @@ static GstStaticPadTemplate gst_video_flip_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, AYUV }") ";"
+        ("{ IYUV, I420, YV12, Y444, AYUV }") ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
@@ -81,7 +81,7 @@ static GstStaticPadTemplate gst_video_flip_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, AYUV }") ";"
+        ("{ IYUV, I420, YV12, Y444, AYUV }") ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
@@ -616,8 +616,6 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   switch (vf->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y444:
       vf->process = gst_video_flip_planar_yuv;
       break;
