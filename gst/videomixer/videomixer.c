@@ -471,7 +471,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";" GST_VIDEO_CAPS_YUV ("Y42B") ";"
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12 }") ";"
+        GST_VIDEO_CAPS_YUV ("Y41B") ";" GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
@@ -481,7 +483,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";" GST_VIDEO_CAPS_YUV ("Y42B") ";"
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12 }") ";"
+        GST_VIDEO_CAPS_YUV ("Y41B") ";" GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx)
     );
@@ -975,10 +979,34 @@ gst_videomixer_setcaps (GstPad * pad, GstCaps * caps)
       mixer->fill_color = gst_video_mixer_fill_color_rgba;
       ret = TRUE;
       break;
+    case GST_VIDEO_FORMAT_Y444:
+      mixer->blend = gst_video_mixer_blend_y444;
+      mixer->fill_checker = gst_video_mixer_fill_checker_y444;
+      mixer->fill_color = gst_video_mixer_fill_color_y444;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      mixer->blend = gst_video_mixer_blend_y42b;
+      mixer->fill_checker = gst_video_mixer_fill_checker_y42b;
+      mixer->fill_color = gst_video_mixer_fill_color_y42b;
+      ret = TRUE;
+      break;
     case GST_VIDEO_FORMAT_I420:
       mixer->blend = gst_video_mixer_blend_i420;
       mixer->fill_checker = gst_video_mixer_fill_checker_i420;
       mixer->fill_color = gst_video_mixer_fill_color_i420;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+      mixer->blend = gst_video_mixer_blend_yv12;
+      mixer->fill_checker = gst_video_mixer_fill_checker_yv12;
+      mixer->fill_color = gst_video_mixer_fill_color_yv12;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      mixer->blend = gst_video_mixer_blend_y41b;
+      mixer->fill_checker = gst_video_mixer_fill_checker_y41b;
+      mixer->fill_color = gst_video_mixer_fill_color_y41b;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_RGB:
