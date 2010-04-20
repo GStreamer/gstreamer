@@ -496,6 +496,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   HANDLE pin_handle = INVALID_HANDLE_VALUE;
   KSPIN_CONNECT *pin_conn = NULL;
   DWORD ret;
+  guint retry_count;
 
   GUID *propsets = NULL;
   gulong propsets_len;
@@ -513,9 +514,20 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
    */
   pin_conn = ks_video_create_pin_conn_from_media_type (media_type);
 
-  GST_DEBUG ("calling KsCreatePin with pin_id = %d", media_type->pin_id);
+  for (retry_count = 0; retry_count != 5; retry_count++) {
 
-  ret = KsCreatePin (priv->filter_handle, pin_conn, GENERIC_READ, &pin_handle);
+    GST_DEBUG ("calling KsCreatePin with pin_id = %d", media_type->pin_id);
+
+    ret = KsCreatePin (priv->filter_handle, pin_conn, GENERIC_READ,
+        &pin_handle);
+    if (ret != ERROR_NOT_READY)
+      break;
+
+    /* wait and retry, like the reference implementation does */
+    if (WaitForSingleObject (priv->cancel_event, 1000) == WAIT_OBJECT_0)
+      goto cancelled;
+  }
+
   if (ret != ERROR_SUCCESS)
     goto error_create_pin;
 
@@ -586,7 +598,9 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
   }
 
   g_free (framing);
+  framing = NULL;
   g_free (framing_ex);
+  framing_ex = NULL;
 
   /*
    * TODO: We also need to respect alignment, but for now we just assume
@@ -642,9 +656,11 @@ error_create_pin:
 
     goto beach;
   }
+cancelled:
 beach:
   {
     g_free (framing);
+    g_free (framing_ex);
     if (ks_is_valid_handle (pin_handle))
       CloseHandle (pin_handle);
     g_free (pin_conn);
