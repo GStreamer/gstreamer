@@ -439,10 +439,45 @@ error:
 static void
 pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 {
+  OutputChain *chain;
+  GESTrack *track;
+  GstPad *peer;
+
   GST_DEBUG_OBJECT (self, "pad removed %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  /* FIXME : IMPLEMENT ! */
-  GST_ERROR_OBJECT (self, "IMPLEMENT ME !");
+  if (G_UNLIKELY (!(track =
+              ges_timeline_get_track_for_pad (self->timeline, pad)))) {
+    GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
+    return;
+  }
+
+  if (G_UNLIKELY (!(chain = get_output_chain_for_track (self, track)))) {
+    GST_DEBUG_OBJECT (self, "Pad wasn't used");
+    return;
+  }
+
+  /* Unlink encodebin */
+  if (chain->encodebinpad) {
+    peer = gst_pad_get_peer (chain->encodebinpad);
+    gst_pad_unlink (peer, chain->encodebinpad);
+    gst_element_release_request_pad (self->encodebin, chain->encodebinpad);
+  }
+
+  /* Unlink playsink */
+  if (chain->playsinkpad) {
+    peer = gst_pad_get_peer (chain->playsinkpad);
+    gst_pad_unlink (peer, chain->playsinkpad);
+    gst_element_release_request_pad (self->playsink, chain->playsinkpad);
+  }
+
+  /* Unlike/remove tee */
+  peer = gst_element_get_static_pad (chain->tee, "sink");
+  gst_pad_unlink (pad, peer);
+  gst_element_set_state (chain->tee, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (self), chain->tee);
+
+  self->chains = g_list_remove (self->chains, chain);
+  g_free (chain);
 
   GST_DEBUG ("done");
 }
