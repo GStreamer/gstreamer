@@ -36,7 +36,7 @@
 
 typedef struct
 {
-  GESTimelinePipeline *pipeline;
+  GESTrack *track;
   GstElement *tee;
   GstPad *srcpad;               /* Timeline source pad */
   GstPad *playsinkpad;
@@ -48,6 +48,10 @@ G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
 static GstStateChangeReturn ges_timeline_pipeline_change_state (GstElement *
     element, GstStateChange transition);
 
+static OutputChain *get_output_chain_for_track (GESTimelinePipeline * self,
+    GESTrack * track);
+static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
+    GESTrack * track);
 
 static void
 ges_timeline_pipeline_finalize (GObject * object)
@@ -136,6 +140,31 @@ ges_timeline_pipeline_change_state (GstElement * element,
 
 done:
   return ret;
+}
+
+static OutputChain *
+new_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
+{
+  OutputChain *chain;
+
+  chain = g_new0 (OutputChain, 1);
+  chain->track = track;
+
+  return chain;
+}
+
+static OutputChain *
+get_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
+{
+  GList *tmp;
+
+  for (tmp = self->chains; tmp; tmp = tmp->next) {
+    OutputChain *chain = (OutputChain *) tmp->data;
+    if (chain->track == track)
+      return chain;
+  }
+
+  return NULL;
 }
 
 /* Fetches a ocmpatible pad on the target element which isn't already
