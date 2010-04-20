@@ -348,7 +348,6 @@ error:
   {
     if (chain->tee) {
       gst_bin_remove (GST_BIN_CAST (self), chain->tee);
-      gst_object_unref (chain->tee);
     }
     if (sinkpad)
       gst_object_unref (sinkpad);

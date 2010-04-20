@@ -403,7 +403,6 @@ pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
   GST_DEBUG ("Removing ghostpad");
   gst_pad_set_active (priv->ghostpad, FALSE);
   gst_element_remove_pad (GST_ELEMENT (priv->timeline), priv->ghostpad);
-  gst_object_unref (priv->ghostpad);
   priv->ghostpad = NULL;
   priv->pad = NULL;
 }
