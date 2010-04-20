@@ -26,11 +26,10 @@ colorspace conversion elements.
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
 
  <repository>
-   <CVSRepository>
-     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
-     <module>gst-ffmpeg</module>
-     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-ffmpeg/" />
-   </CVSRepository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-ffmpeg"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-ffmpeg"/>
+   </GitRepository>
  </repository> 
 
  <release>
@@ -240,7 +239,7 @@ colorspace conversion elements.
  </maintainer>
  <maintainer>
   <foaf:Person>
-     <foaf:name>Thomas Vander Stichele</foaf:name>
+     <foaf:name>Edward Hervey</foaf:name>
   </foaf:Person>
  </maintainer>
 
