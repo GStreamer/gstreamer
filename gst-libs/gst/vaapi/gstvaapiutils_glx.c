@@ -320,6 +320,9 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
         if (status != Success)
             goto error;
 
+        if (fbconfig_id == GLX_DONT_CARE)
+            goto choose_fbconfig;
+
         fbconfigs = glXGetFBConfigs(dpy, screen, &n_fbconfigs);
         if (!fbconfigs)
             goto error;
@@ -338,6 +341,7 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
             goto error;
     }
     else {
+    choose_fbconfig:
         fbconfigs = glXChooseFBConfig(
             dpy,
             screen,
