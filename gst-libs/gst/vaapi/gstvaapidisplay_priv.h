@@ -77,7 +77,8 @@ struct _GstVaapiDisplayPrivate {
     guint               height_mm;
     guint               par_n;
     guint               par_d;
-    GArray             *profiles;
+    GArray             *decoders;
+    GArray             *encoders;
     GArray             *image_formats;
     GArray             *subpicture_formats;
     guint               create_display  : 1;

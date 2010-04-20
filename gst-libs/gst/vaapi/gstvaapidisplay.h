@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include <gst/vaapi/gstvaapiimageformat.h>
+#include <gst/vaapi/gstvaapiprofile.h>
 
 G_BEGIN_DECLS
 
@@ -141,8 +142,23 @@ gst_vaapi_display_get_pixel_aspect_ratio(
     guint           *par_d
 );
 
+GstCaps *
+gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display);
+
 gboolean
-gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile);
+gst_vaapi_display_has_decoder(
+    GstVaapiDisplay *display,
+    GstVaapiProfile  profile
+);
+
+GstCaps *
+gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display);
+
+gboolean
+gst_vaapi_display_has_encoder(
+    GstVaapiDisplay *display,
+    GstVaapiProfile  profile
+);
 
 GstCaps *
 gst_vaapi_display_get_image_caps(GstVaapiDisplay *display);

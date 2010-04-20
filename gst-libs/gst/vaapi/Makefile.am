@@ -18,6 +18,7 @@ libgstvaapi_source_c =				\
 	gstvaapimarshal.c			\
 	gstvaapiobject.c			\
 	gstvaapiparamspecs.c			\
+	gstvaapiprofile.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
@@ -36,6 +37,7 @@ libgstvaapi_source_h =				\
 	gstvaapiimagepool.h			\
 	gstvaapiobject.h			\
 	gstvaapiparamspecs.h			\
+	gstvaapiprofile.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\

@@ -33,7 +33,38 @@
 #endif
 
 static void
-print_caps(GstCaps *caps, const gchar *name)
+print_profile_caps(GstCaps *caps, const gchar *name)
+{
+    guint i, n_caps = gst_caps_get_size(caps);
+    gint version;
+    const gchar *profile;
+    gboolean has_version;
+
+    g_print("%u %s caps\n", n_caps, name);
+
+    for (i = 0; i < gst_caps_get_size(caps); i++) {
+        GstStructure * const structure = gst_caps_get_structure(caps, i);
+        if (!structure)
+            g_error("could not get caps structure %d", i);
+
+        has_version = (
+            gst_structure_get_int(structure, "version", &version) ||
+            gst_structure_get_int(structure, "mpegversion", &version)
+        );
+
+        g_print("  %s", gst_structure_get_name(structure));
+        if (has_version)
+            g_print("%d", version);
+
+        profile = gst_structure_get_string(structure, "profile");
+        if (!profile)
+            g_error("could not get structure profile");
+        g_print(": %s profile\n", profile);
+    }
+}
+
+static void
+print_format_caps(GstCaps *caps, const gchar *name)
 {
     guint i, n_caps = gst_caps_get_size(caps);
 
@@ -84,18 +115,32 @@ dump_caps(GstVaapiDisplay *display)
 {
     GstCaps *caps;
 
+    caps = gst_vaapi_display_get_decode_caps(display);
+    if (!caps)
+        g_error("could not get VA decode caps");
+
+    print_profile_caps(caps, "decoders");
+    gst_caps_unref(caps);
+
+    caps = gst_vaapi_display_get_encode_caps(display);
+    if (!caps)
+        g_error("could not get VA encode caps");
+
+    print_profile_caps(caps, "encoders");
+    gst_caps_unref(caps);
+
     caps = gst_vaapi_display_get_image_caps(display);
     if (!caps)
         g_error("could not get VA image caps");
 
-    print_caps(caps, "image");
+    print_format_caps(caps, "image");
     gst_caps_unref(caps);
 
     caps = gst_vaapi_display_get_subpicture_caps(display);
     if (!caps)
         g_error("could not get VA subpicture caps");
 
-    print_caps(caps, "subpicture");
+    print_format_caps(caps, "subpicture");
     gst_caps_unref(caps);
 }
 

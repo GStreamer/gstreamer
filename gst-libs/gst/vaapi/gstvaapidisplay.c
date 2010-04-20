@@ -126,14 +126,35 @@ compare_rgb_formats(gconstpointer a, gconstpointer b)
 
 /* Check if profiles array contains profile */
 static inline gboolean
-find_profile(GArray *profiles, VAProfile profile)
+find_profile(GArray *profiles, GstVaapiProfile profile)
 {
     guint i;
 
     for (i = 0; i < profiles->len; i++)
-        if (g_array_index(profiles, VAProfile, i) == profile)
+        if (g_array_index(profiles, GstVaapiProfile, i) == profile)
             return TRUE;
     return FALSE;
+}
+
+/* Convert profiles array to GstCaps */
+static GstCaps *
+get_profile_caps(GArray *profiles)
+{
+    GstVaapiProfile profile;
+    GstCaps *out_caps, *caps;
+    guint i;
+
+    out_caps = gst_caps_new_empty();
+    if (!out_caps)
+        return NULL;
+
+    for (i = 0; i < profiles->len; i++) {
+        profile = g_array_index(profiles, GstVaapiProfile, i);
+        caps    = gst_vaapi_profile_get_caps(profile);
+        if (caps)
+            gst_caps_append(out_caps, caps);
+    }
+    return out_caps;
 }
 
 /* Check if formats array contains format */
@@ -150,7 +171,7 @@ find_format(GArray *formats, GstVaapiImageFormat format)
 
 /* Convert formats array to GstCaps */
 static GstCaps *
-get_caps(GArray *formats)
+get_format_caps(GArray *formats)
 {
     GstVaapiImageFormat format;
     GstCaps *out_caps, *caps;
@@ -219,9 +240,14 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
 {
     GstVaapiDisplayPrivate * const priv = display->priv;
 
-    if (priv->profiles) {
-        g_array_free(priv->profiles, TRUE);
-        priv->profiles = NULL;
+    if (priv->decoders) {
+        g_array_free(priv->decoders, TRUE);
+        priv->decoders = NULL;
+    }
+
+    if (priv->encoders) {
+        g_array_free(priv->encoders, TRUE);
+        priv->encoders = NULL;
     }
 
     if (priv->image_formats) {
@@ -252,9 +278,10 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     GstVaapiDisplayPrivate * const priv = display->priv;
     gboolean            has_errors      = TRUE;
     VAProfile          *profiles        = NULL;
+    VAEntrypoint       *entrypoints     = NULL;
     VAImageFormat      *formats         = NULL;
     unsigned int       *flags           = NULL;
-    gint                i, n, major_version, minor_version;
+    gint                i, j, n, num_entrypoints, major_version, minor_version;
     VAStatus            status;
 
     if (!priv->display && priv->create_display) {
@@ -284,6 +311,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     profiles = g_new(VAProfile, vaMaxNumProfiles(priv->display));
     if (!profiles)
         goto end;
+    entrypoints = g_new(VAEntrypoint, vaMaxNumEntrypoints(priv->display));
+    if (!entrypoints)
+        goto end;
     status = vaQueryConfigProfiles(priv->display, profiles, &n);
     if (!vaapi_check_status(status, "vaQueryConfigProfiles()"))
         goto end;
@@ -292,10 +322,50 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     for (i = 0; i < n; i++)
         GST_DEBUG("  %s", string_of_VAProfile(profiles[i]));
 
-    priv->profiles = g_array_new(FALSE, FALSE, sizeof(VAProfile));
-    if (!priv->profiles)
+    priv->decoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiProfile));
+    if (!priv->decoders)
         goto end;
-    g_array_append_vals(priv->profiles, profiles, n);
+    priv->encoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiProfile));
+    if (!priv->encoders)
+        goto end;
+
+    for (i = 0; i < n; i++) {
+        GstVaapiProfile profile;
+        gboolean has_decoder = FALSE, has_encoder = FALSE;
+
+        profile = gst_vaapi_profile(profiles[i]);
+        if (!profile)
+            continue;
+
+        status = vaQueryConfigEntrypoints(
+            priv->display,
+            profiles[i],
+            entrypoints, &num_entrypoints
+        );
+        if (!vaapi_check_status(status, "vaQueryConfigEntrypoints()"))
+            goto end;
+
+        for (j = 0; j < num_entrypoints; j++) {
+            switch (entrypoints[j]) {
+            case VAEntrypointVLD:
+            case VAEntrypointIZZ:
+            case VAEntrypointIDCT:
+            case VAEntrypointMoComp:
+            case VAEntrypointDeblocking:
+                has_decoder = TRUE;
+                break;
+#if VA_CHECK_VERSION(0,30,0)
+            case VAEntrypointEncSlice:
+                has_encoder = TRUE;
+                break;
+#endif
+            }
+        }
+        if (has_decoder)
+            g_array_append_val(priv->decoders, profile);
+        if (has_encoder)
+            g_array_append_val(priv->encoders, profile);
+    }
 
     /* VA image formats */
     formats = g_new(VAImageFormat, vaMaxNumImageFormats(priv->display));
@@ -340,6 +410,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     has_errors = FALSE;
 end:
     g_free(profiles);
+    g_free(entrypoints);
     g_free(formats);
     g_free(flags);
     return !has_errors;
@@ -485,7 +556,8 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->height_mm             = 0;
     priv->par_n                 = 1;
     priv->par_d                 = 1;
-    priv->profiles              = NULL;
+    priv->decoders              = NULL;
+    priv->encoders              = NULL;
     priv->image_formats         = NULL;
     priv->subpicture_formats    = NULL;
     priv->create_display        = TRUE;
@@ -689,20 +761,75 @@ gst_vaapi_display_get_pixel_aspect_ratio(
 }
 
 /**
- * gst_vaapi_display_has_profile:
+ * gst_vaapi_display_get_decode_caps:
+ * @display: a #GstVaapiDisplay
+ *
+ * Gets the supported profiles for decoding as #GstCaps capabilities.
+ *
+ * Return value: a newly allocated #GstCaps object, possibly empty
+ */
+GstCaps *
+gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    return get_profile_caps(display->priv->decoders);
+}
+
+/**
+ * gst_vaapi_display_has_decoder:
  * @display: a #GstVaapiDisplay
  * @profile: a #VAProfile
  *
- * Returns whether VA @display supports @profile.
+ * Returns whether VA @display supports @profile for decoding.
  *
- * Return value: %TRUE if VA @display supports @profile
+ * Return value: %TRUE if VA @display supports @profile for decoding.
  */
 gboolean
-gst_vaapi_display_has_profile(GstVaapiDisplay *display, VAProfile profile)
+gst_vaapi_display_has_decoder(
+    GstVaapiDisplay *display,
+    GstVaapiProfile  profile
+)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
 
-    return find_profile(display->priv->profiles, profile);
+    return find_profile(display->priv->decoders, profile);
+}
+
+/**
+ * gst_vaapi_display_get_encode_caps:
+ * @display: a #GstVaapiDisplay
+ *
+ * Gets the supported profiles for decoding as #GstCaps capabilities.
+ *
+ * Return value: a newly allocated #GstCaps object, possibly empty
+ */
+GstCaps *
+gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    return get_profile_caps(display->priv->encoders);
+}
+
+/**
+ * gst_vaapi_display_has_encoder:
+ * @display: a #GstVaapiDisplay
+ * @profile: a #VAProfile
+ *
+ * Returns whether VA @display supports @profile for encoding.
+ *
+ * Return value: %TRUE if VA @display supports @profile for encoding.
+ */
+gboolean
+gst_vaapi_display_has_encoder(
+    GstVaapiDisplay *display,
+    GstVaapiProfile  profile
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    return find_profile(display->priv->encoders, profile);
 }
 
 /**
@@ -726,7 +853,7 @@ gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
-    return get_caps(display->priv->image_formats);
+    return get_format_caps(display->priv->image_formats);
 }
 
 /**
@@ -768,7 +895,7 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
-    return get_caps(display->priv->subpicture_formats);
+    return get_format_caps(display->priv->subpicture_formats);
 }
 
 /**

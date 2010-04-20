@@ -142,7 +142,10 @@ gst_vaapi_display_get_width
 gst_vaapi_display_get_height
 gst_vaapi_display_get_size
 gst_vaapi_display_get_pixel_aspect_ratio
-gst_vaapi_display_has_profile
+gst_vaapi_display_get_decode_caps
+gst_vaapi_display_has_decoder
+gst_vaapi_display_get_encode_caps
+gst_vaapi_display_has_encoder
 gst_vaapi_display_get_image_caps
 gst_vaapi_display_has_image_format
 gst_vaapi_display_get_subpicture_caps
@@ -367,6 +370,18 @@ gst_vaapi_image_format_from_fourcc
 gst_vaapi_image_format_get_va_format
 gst_vaapi_image_format_get_caps
 gst_vaapi_image_format_get_score
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapiprofile</FILE>
+<TITLE>GstVaapiProfile</TITLE>
+GstVaapiCodec
+GstVaapiProfile
+gst_vaapi_profile
+gst_vaapi_profile_from_caps
+gst_vaapi_profile_get_va_profile
+gst_vaapi_profile_get_caps
+gst_vaapi_profile_get_codec
 </SECTION>
 
 <SECTION>

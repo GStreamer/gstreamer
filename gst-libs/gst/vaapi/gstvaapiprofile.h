@@ -1,0 +1,115 @@
+/*
+ *  gstvaapiprofile.h - VA profile abstraction
+ *
+ *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+ */
+
+#ifndef GST_VAAPI_PROFILE_H
+#define GST_VAAPI_PROFILE_H
+
+#include <gst/gstvalue.h>
+
+G_BEGIN_DECLS
+
+typedef enum _GstVaapiCodec                     GstVaapiCodec;
+typedef enum _GstVaapiProfile                   GstVaapiProfile;
+
+/**
+ * GstVaapiCodec:
+ * @GST_VAAPI_CODEC_MPEG1: MPEG-1 (ISO/IEC 11172)
+ * @GST_VAAPI_CODEC_MPEG2: MPEG-2 (ISO/IEC 13818-2)
+ * @GST_VAAPI_CODEC_MPEG4: MPEG-4 Part 2 (ISO/IEC 14496-2)
+ * @GST_VAAPI_CODEC_H263: H.263
+ * @GST_VAAPI_CODEC_H264: H.264 aka MPEG-4 Part 10 (ISO/IEC 14496-10)
+ * @GST_VAAPI_CODEC_VC1: VC-1 (SMPTE 421M)
+ *
+ * The set of all codecs for #GstVaapiCodec.
+ */
+enum _GstVaapiCodec {
+    GST_VAAPI_CODEC_MPEG1       = GST_MAKE_FOURCC('M','P','1',0),
+    GST_VAAPI_CODEC_MPEG2       = GST_MAKE_FOURCC('M','P','2',0),
+    GST_VAAPI_CODEC_MPEG4       = GST_MAKE_FOURCC('M','P','4',0),
+    GST_VAAPI_CODEC_H263        = GST_MAKE_FOURCC('2','6','3',0),
+    GST_VAAPI_CODEC_H264        = GST_MAKE_FOURCC('2','6','4',0),
+    GST_VAAPI_CODEC_VC1         = GST_MAKE_FOURCC('V','C','1',0),
+};
+
+/**
+ * GstVaapiProfile:
+ * @GST_VAAPI_PROFILE_MPEG1:
+ *   MPEG-1
+ * @GST_VAAPI_PROFILE_MPEG2_SIMPLE:
+ *   MPEG-2 simple profile
+ * @GST_VAAPI_PROFILE_MPEG2_MAIN:
+ *   MPEG-2 main profile
+ * @GST_VAAPI_PROFILE_MPEG4_SIMPLE:
+ *   MPEG-4 Part-2 simple profile
+ * @GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE:
+ *   MPEG-4 Part-2 advanced simple profile
+ * @GST_VAAPI_PROFILE_MPEG4_MAIN:
+ *   MPEG-4 Part-2 main profile
+ * @GST_VAAPI_PROFILE_H263_BASELINE:
+ *   H.263 baseline profile
+ * @GST_VAAPI_PROFILE_H264_BASELINE:
+ *   H.264 (MPEG-4 Part-10) baseline profile
+ * @GST_VAAPI_PROFILE_H264_MAIN:
+ *   H.264 (MPEG-4 Part-10) main profile
+ * @GST_VAAPI_PROFILE_H264_HIGH:
+ *   H.264 (MPEG-4 Part-10) high profile
+ * @GST_VAAPI_PROFILE_VC1_SIMPLE:
+ *   VC-1 simple profile
+ * @GST_VAAPI_PROFILE_VC1_MAIN:
+ *   VC-1 main profile (WMV3)
+ * @GST_VAAPI_PROFILE_VC1_ADVANCED:
+ *   VC-1 advanced profile
+ *
+ * The set of all profile for #GstVaapiProfile.
+ */
+enum _GstVaapiProfile {
+    GST_VAAPI_PROFILE_MPEG1                     = GST_VAAPI_CODEC_MPEG1|1,
+    GST_VAAPI_PROFILE_MPEG2_SIMPLE              = GST_VAAPI_CODEC_MPEG2|1,
+    GST_VAAPI_PROFILE_MPEG2_MAIN                = GST_VAAPI_CODEC_MPEG2|2,
+    GST_VAAPI_PROFILE_MPEG4_SIMPLE              = GST_VAAPI_CODEC_MPEG4|1,
+    GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE     = GST_VAAPI_CODEC_MPEG4|2,
+    GST_VAAPI_PROFILE_MPEG4_MAIN                = GST_VAAPI_CODEC_MPEG4|3,
+    GST_VAAPI_PROFILE_H263_BASELINE             = GST_VAAPI_CODEC_H263|1,
+    GST_VAAPI_PROFILE_H264_BASELINE             = GST_VAAPI_CODEC_H264|1,
+    GST_VAAPI_PROFILE_H264_MAIN                 = GST_VAAPI_CODEC_H264|2,
+    GST_VAAPI_PROFILE_H264_HIGH                 = GST_VAAPI_CODEC_H264|3,
+    GST_VAAPI_PROFILE_VC1_SIMPLE                = GST_VAAPI_CODEC_VC1|1,
+    GST_VAAPI_PROFILE_VC1_MAIN                  = GST_VAAPI_CODEC_VC1|2,
+    GST_VAAPI_PROFILE_VC1_ADVANCED              = GST_VAAPI_CODEC_VC1|3,
+};
+
+GstVaapiProfile
+gst_vaapi_profile(VAProfile profile);
+
+GstVaapiProfile
+gst_vaapi_profile_from_caps(GstCaps *caps);
+
+VAProfile
+gst_vaapi_profile_get_va_profile(GstVaapiProfile profile);
+
+GstCaps *
+gst_vaapi_profile_get_caps(GstVaapiProfile profile);
+
+GstVaapiCodec
+gst_vaapi_profile_get_codec(GstVaapiProfile profile);
+
+G_END_DECLS
+
+#endif /* GST_GST_VAAPI_IMAGE_H */
