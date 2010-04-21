@@ -29,11 +29,17 @@
 #include "gstvaapiprofile.h"
 
 typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
+typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
 
 struct _GstVaapiProfileMap {
     GstVaapiProfile             profile;
     VAProfile                   va_profile;
     const char                 *caps_str;
+};
+
+struct _GstVaapiEntrypointMap {
+    GstVaapiEntrypoint          entrypoint;
+    VAEntrypoint                va_entrypoint;
 };
 
 /* Profiles */
@@ -79,8 +85,16 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { 0, }
 };
 
+/* Entry-points */
+static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
+    { GST_VAAPI_ENTRYPOINT_VLD,         VAEntrypointVLD         },
+    { GST_VAAPI_ENTRYPOINT_IDCT,        VAEntrypointIDCT        },
+    { GST_VAAPI_ENTRYPOINT_MOCO,        VAEntrypointMoComp      },
+    { 0, }
+};
+
 static const GstVaapiProfileMap *
-get_map(GstVaapiProfile profile)
+get_profiles_map(GstVaapiProfile profile)
 {
     const GstVaapiProfileMap *m;
 
@@ -90,13 +104,26 @@ get_map(GstVaapiProfile profile)
     return NULL;
 }
 
+static const GstVaapiEntrypointMap *
+get_entrypoints_map(GstVaapiEntrypoint entrypoint)
+{
+    const GstVaapiEntrypointMap *m;
+
+    for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
+        if (m->entrypoint == entrypoint)
+            return m;
+    return NULL;
+}
+
 /**
  * gst_vaapi_profile:
- * @va_profile: a #VAProfile
+ * @profile: a #VAProfile
  *
- * Converts a VA profile into the corresponding #GstVaapiProfile. If the profile cannot be represented by #GstVaapiProfile, then zero is returned.
+ * Converts a VA profile into the corresponding #GstVaapiProfile. If
+ * the profile cannot be represented by #GstVaapiProfile, then zero is
+ * returned.
  *
- * Return value: the #GstVaapiProfile describing the @va_profile
+ * Return value: the #GstVaapiProfile describing the @profile
  */
 GstVaapiProfile
 gst_vaapi_profile(VAProfile profile)
@@ -163,7 +190,7 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
 VAProfile
 gst_vaapi_profile_get_va_profile(GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_map(profile);
+    const GstVaapiProfileMap * const m = get_profiles_map(profile);
 
     return m ? m->va_profile : (VAProfile)-1;
 }
@@ -180,7 +207,7 @@ gst_vaapi_profile_get_va_profile(GstVaapiProfile profile)
 GstCaps *
 gst_vaapi_profile_get_caps(GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_map(profile);
+    const GstVaapiProfileMap * const m = get_profiles_map(profile);
 
     return m ? gst_caps_from_string(m->caps_str) : NULL;
 }
@@ -197,4 +224,43 @@ GstVaapiCodec
 gst_vaapi_profile_get_codec(GstVaapiProfile profile)
 {
     return (GstVaapiCodec)(((guint32)profile) & 0xffffff00);
+}
+
+/**
+ * gst_vaapi_entrypoint:
+ * @entryprofile: a #VAEntrypoint
+ *
+ * Converts a VA entry-point into the corresponding #GstVaapiEntrypoint.
+ * If the entry-point cannot be represented by #GstVaapiEntrypoint,
+ * then zero is returned.
+ *
+ * Return value: the #GstVaapiEntrypoint describing the @entrypoint
+ */
+GstVaapiEntrypoint
+gst_vaapi_entrypoint(VAEntrypoint entrypoint)
+{
+    const GstVaapiEntrypointMap *m;
+
+    for (m = gst_vaapi_entrypoints; m->entrypoint; m++)
+        if (m->va_entrypoint == entrypoint)
+            return m->entrypoint;
+    return 0;
+}
+
+/**
+ * gst_vaapi_entrypoint_get_va_entrypoint:
+ * @entrypoint: a #GstVaapiEntrypoint
+ *
+ * Converts a #GstVaapiEntrypoint into the corresponding VA
+ * entry-point. If no matching VA entry-point was found, -1 is
+ * returned and this error must be reported to be fixed.
+ *
+ * Return value: the VA entry-point, or -1 if none was found
+ */
+VAEntrypoint
+gst_vaapi_entrypoint_get_va_entrypoint(GstVaapiEntrypoint entrypoint)
+{
+    const GstVaapiEntrypointMap * const m = get_entrypoints_map(entrypoint);
+
+    return m ? m->va_entrypoint : (VAEntrypoint)-1;
 }

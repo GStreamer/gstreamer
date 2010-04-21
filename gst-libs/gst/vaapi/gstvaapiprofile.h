@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef enum _GstVaapiCodec                     GstVaapiCodec;
 typedef enum _GstVaapiProfile                   GstVaapiProfile;
+typedef enum _GstVaapiEntrypoint                GstVaapiEntrypoint;
 
 /**
  * GstVaapiCodec:
@@ -77,7 +78,7 @@ enum _GstVaapiCodec {
  * @GST_VAAPI_PROFILE_VC1_ADVANCED:
  *   VC-1 advanced profile
  *
- * The set of all profile for #GstVaapiProfile.
+ * The set of all profiles for #GstVaapiProfile.
  */
 enum _GstVaapiProfile {
     GST_VAAPI_PROFILE_MPEG1                     = GST_VAAPI_CODEC_MPEG1|1,
@@ -95,6 +96,20 @@ enum _GstVaapiProfile {
     GST_VAAPI_PROFILE_VC1_ADVANCED              = GST_VAAPI_CODEC_VC1|3,
 };
 
+/**
+ * GstVaapiEntrypoint:
+ * @GST_VAAPI_ENTRYPOINT_VLD: Variable Length Decoding
+ * @GST_VAAPI_ENTRYPOINT_IDCT: Inverse Decrete Cosine Transform
+ * @GST_VAAPI_ENTRYPOINT_MOCO: Motion Compensation
+ *
+ * The set of all entrypoints for #GstVaapiEntrypoint
+ */
+enum _GstVaapiEntrypoint {
+    GST_VAAPI_ENTRYPOINT_VLD = 1,
+    GST_VAAPI_ENTRYPOINT_IDCT,
+    GST_VAAPI_ENTRYPOINT_MOCO
+};
+
 GstVaapiProfile
 gst_vaapi_profile(VAProfile profile);
 
@@ -109,6 +124,12 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile);
 
 GstVaapiCodec
 gst_vaapi_profile_get_codec(GstVaapiProfile profile);
+
+GstVaapiEntrypoint
+gst_vaapi_entrypoint(VAEntrypoint entrypoint);
+
+VAEntrypoint
+gst_vaapi_entrypoint_get_va_entrypoint(GstVaapiEntrypoint entrypoint);
 
 G_END_DECLS
 
