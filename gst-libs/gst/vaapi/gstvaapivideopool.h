@@ -21,6 +21,7 @@
 #ifndef GST_VAAPI_VIDEO_POOL_H
 #define GST_VAAPI_VIDEO_POOL_H
 
+#include <glib.h>
 #include <gst/gstcaps.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
@@ -94,6 +95,24 @@ gst_vaapi_video_pool_get_object(GstVaapiVideoPool *pool);
 
 void
 gst_vaapi_video_pool_put_object(GstVaapiVideoPool *pool, gpointer object);
+
+gboolean
+gst_vaapi_video_pool_add_object(GstVaapiVideoPool *pool, gpointer object);
+
+gboolean
+gst_vaapi_video_pool_add_objects(GstVaapiVideoPool *pool, GPtrArray *objects);
+
+guint
+gst_vaapi_video_pool_get_size(GstVaapiVideoPool *pool);
+
+gboolean
+gst_vaapi_video_pool_reserve(GstVaapiVideoPool *pool, guint n);
+
+guint
+gst_vaapi_video_pool_get_capacity(GstVaapiVideoPool *pool);
+
+void
+gst_vaapi_video_pool_set_capacity(GstVaapiVideoPool *pool, guint capacity);
 
 G_END_DECLS
 
