@@ -155,6 +155,7 @@ fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
         dest[C1] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
         dest[C2] = 128; \
         dest[C3] = 128; \
+        dest += 4; \
       } \
     } \
   } else { \
@@ -208,6 +209,7 @@ _fill_color_loop_##name##_c (guint8 *dest, gint height, gint width, gint c1, gin
       dest[C1] = c1; \
       dest[C2] = c2; \
       dest[C3] = c3; \
+      dest += 4; \
     } \
   } \
 }
