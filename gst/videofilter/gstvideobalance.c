@@ -81,26 +81,43 @@ static GstStaticPadTemplate gst_video_balance_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU}")
-        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
-        ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx
-        ";" GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGB
-        ";" GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("IYUV") ";" GST_VIDEO_CAPS_YUV ("Y41B")
+    )
     );
 
 static GstStaticPadTemplate gst_video_balance_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
-        ("{ IYUV, I420, YV12, Y41B, Y42B, Y444, YUY2, UYVY, AYUV, YVYU}")
-        ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
-        ";" GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx
-        ";" GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGB
-        ";" GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
+        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("IYUV") ";" GST_VIDEO_CAPS_YUV ("Y41B")
+    )
     );
-
 
 static void gst_video_balance_colorbalance_init (GstColorBalanceClass * iface);
 static void gst_video_balance_interface_init (GstImplementsInterfaceClass *
