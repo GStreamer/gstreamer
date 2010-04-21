@@ -1,7 +1,7 @@
 /**
  * Weave frames, top-field-first.
  * Copyright (C) 2003 Billy Biggs <vektor@dumbterm.net>.
- * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,6 @@
 # include "config.h"
 #endif
 
-#include "_stdint.h"
 #include "gstdeinterlace.h"
 #include <string.h>
 
@@ -44,27 +43,24 @@
 GType gst_deinterlace_method_weave_tff_get_type (void);
 
 typedef GstDeinterlaceSimpleMethod GstDeinterlaceMethodWeaveTFF;
-
 typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodWeaveTFFClass;
 
-
 static void
-deinterlace_scanline_weave (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, parent->row_stride);
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
-copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace * parent,
-    guint8 * out, GstDeinterlaceScanlineData * scanlines, gint width)
+copy_scanline_packed (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    oil_memcpy (out, scanlines->bb0, parent->row_stride);
+    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
   } else {
-    oil_memcpy (out, scanlines->bb2, parent->row_stride);
+    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
   }
 }
 
@@ -84,8 +80,10 @@ gst_deinterlace_method_weave_tff_class_init (GstDeinterlaceMethodWeaveTFFClass *
   dim_class->nick = "weavetff";
   dim_class->latency = 0;
 
-  dism_class->interpolate_scanline = deinterlace_scanline_weave;
-  dism_class->copy_scanline = copy_scanline;
+  dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
+  dism_class->copy_scanline_yuy2 = copy_scanline_packed;
+  dism_class->copy_scanline_yvyu = copy_scanline_packed;
 }
 
 static void

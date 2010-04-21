@@ -4,7 +4,7 @@
  * sources.
  *
  * Copyright (C) 2002 Billy Biggs <vektor@dumbterm.net>.
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,6 @@
 # include "config.h"
 #endif
 
-#include "_stdint.h"
 #include "gstdeinterlace.h"
 #include <string.h>
 
@@ -46,57 +45,55 @@
 GType gst_deinterlace_method_linear_blend_get_type (void);
 
 typedef GstDeinterlaceSimpleMethod GstDeinterlaceMethodLinearBlend;
-
 typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodLinearBlendClass;
 
-
 static inline void
-deinterlace_scanline_linear_blend_c (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_linear_blend_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const guint8 * t0, const guint8 * b0, const guint8 * m1,
+    gint size)
 {
-  guint8 *t0 = scanlines->t0;
-  guint8 *b0 = scanlines->b0;
-  guint8 *m1 = scanlines->m1;
-
-  width *= 2;
-
-  while (width--) {
+  while (size--) {
     *out++ = (*t0++ + *b0++ + (*m1++ << 1)) >> 2;
   }
 }
 
-static inline void
-deinterlace_scanline_linear_blend2_c (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+static void
+deinterlace_scanline_linear_blend_packed_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  guint8 *m0 = scanlines->m0;
-  guint8 *t1 = scanlines->t1;
-  guint8 *b1 = scanlines->b1;
+  deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
+      scanlines->m1, self->parent.row_stride[0]);
+}
 
-  width *= 2;
-  while (width--) {
+static inline void
+deinterlace_scanline_linear_blend2_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
+    gint size)
+{
+  while (size--) {
     *out++ = (*t1++ + *b1++ + (*m0++ << 1)) >> 2;
   }
+}
+
+static void
+deinterlace_scanline_linear_blend2_packed_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
+      scanlines->b1, self->parent.row_stride[0]);
 }
 
 #ifdef BUILD_X86_ASM
 #include "mmx.h"
 static inline void
-deinterlace_scanline_linear_blend_mmx (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_linear_blend_mmx (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const guint8 * t0, const guint8 * b0, const guint8 * m1,
+    gint size)
 {
-  guint8 *t0 = scanlines->t0;
-  guint8 *b0 = scanlines->b0;
-  guint8 *m1 = scanlines->m1;
   gint i;
 
-  // Get width in bytes.
-  width *= 2;
-  i = width / 8;
-  width -= i * 8;
+  i = size / 8;
+  size -= i * 8;
 
   pxor_r2r (mm7, mm7);
   while (i--) {
@@ -134,26 +131,29 @@ deinterlace_scanline_linear_blend_mmx (GstDeinterlaceMethod * self,
     b0 += 8;
     m1 += 8;
   }
-  while (width--) {
+  emms ();
+  while (size--) {
     *out++ = (*t0++ + *b0++ + (*m1++ << 1)) >> 2;
   }
-  emms ();
+}
+
+static void
+deinterlace_scanline_linear_blend_packed_mmx (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
+      scanlines->b0, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static inline void
-deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
+    gint size)
 {
-  guint8 *m0 = scanlines->m0;
-  guint8 *t1 = scanlines->t1;
-  guint8 *b1 = scanlines->b1;
   gint i;
 
-  // Get width in bytes.
-  width *= 2;
-  i = width / 8;
-  width -= i * 8;
+  i = size / 8;
+  size -= i * 8;
 
   pxor_r2r (mm7, mm7);
   while (i--) {
@@ -191,10 +191,19 @@ deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceMethod * self,
     b1 += 8;
     m0 += 8;
   }
-  while (width--) {
+  emms ();
+
+  while (size--) {
     *out++ = (*t1++ + *b1++ + (*m0++ << 1)) >> 2;
   }
-  emms ();
+}
+
+static void
+deinterlace_scanline_linear_blend2_packed_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
+      scanlines->t1, scanlines->b1, self->parent.row_stride[0]);
 }
 
 #endif
@@ -218,13 +227,23 @@ static void
   dim_class->nick = "linearblend";
   dim_class->latency = 0;
 
-  dism_class->interpolate_scanline = deinterlace_scanline_linear_blend_c;
-  dism_class->copy_scanline = deinterlace_scanline_linear_blend2_c;
+  dism_class->interpolate_scanline_yuy2 =
+      deinterlace_scanline_linear_blend_packed_c;
+  dism_class->interpolate_scanline_yvyu =
+      deinterlace_scanline_linear_blend_packed_c;
+  dism_class->copy_scanline_yuy2 = deinterlace_scanline_linear_blend2_packed_c;
+  dism_class->copy_scanline_yvyu = deinterlace_scanline_linear_blend2_packed_c;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
-    dism_class->interpolate_scanline = deinterlace_scanline_linear_blend_mmx;
-    dism_class->copy_scanline = deinterlace_scanline_linear_blend2_mmx;
+    dism_class->interpolate_scanline_yuy2 =
+        deinterlace_scanline_linear_blend_packed_mmx;
+    dism_class->interpolate_scanline_yvyu =
+        deinterlace_scanline_linear_blend_packed_mmx;
+    dism_class->copy_scanline_yuy2 =
+        deinterlace_scanline_linear_blend2_packed_mmx;
+    dism_class->copy_scanline_yvyu =
+        deinterlace_scanline_linear_blend2_packed_mmx;
   }
 #endif
 }

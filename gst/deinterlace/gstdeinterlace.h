@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2005 Martin Eikermann <meiker@upb.de>
- * Copyright (C) 2008-2009 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008-2010 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+
 #include <liboil/liboil.h>
 #include <liboil/liboilcpu.h>
 #include <liboil/liboilfunction.h>
@@ -61,12 +62,39 @@ typedef struct _GstDeinterlaceClass GstDeinterlaceClass;
 typedef struct _GstDeinterlaceMethod GstDeinterlaceMethod;
 typedef struct _GstDeinterlaceMethodClass GstDeinterlaceMethodClass;
 
+
+#define PICTURE_PROGRESSIVE 0
+#define PICTURE_INTERLACED_BOTTOM 1
+#define PICTURE_INTERLACED_TOP 2
+#define PICTURE_INTERLACED_MASK (PICTURE_INTERLACED_BOTTOM | PICTURE_INTERLACED_TOP)
+
+typedef struct
+{
+  /* pointer to the start of data for this field */
+  GstBuffer *buf;
+  /* see PICTURE_ flags in *.c */
+  guint flags;
+} GstDeinterlaceField;
+
 /*
  * This structure defines the deinterlacer plugin.
  */
 
+
+typedef void (*GstDeinterlaceMethodDeinterlaceFunction) (GstDeinterlaceMethod *self, const GstDeinterlaceField *history, guint history_count, GstBuffer *outbuf);
+
 struct _GstDeinterlaceMethod {
   GstObject parent;
+
+  GstVideoFormat format;
+  gint frame_width, frame_height;
+  gint width[4];
+  gint height[4];
+  gint offset[4];
+  gint row_stride[4];
+  gint pixel_stride[4];
+
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame;
 };
 
 struct _GstDeinterlaceMethodClass {
@@ -74,7 +102,12 @@ struct _GstDeinterlaceMethodClass {
   guint fields_required;
   guint latency;
 
-  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace * parent, GstBuffer *outbuf);
+  gboolean (*supported) (GstDeinterlaceMethodClass *klass, GstVideoFormat format, gint width, gint height);
+
+  void (*setup) (GstDeinterlaceMethod *self, GstVideoFormat format, gint width, gint height);
+
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yuy2;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yvyu;
 
   const gchar *name;
   const gchar *nick;
@@ -99,10 +132,10 @@ typedef struct _GstDeinterlaceScanlineData GstDeinterlaceScanlineData;
  */
 
 struct _GstDeinterlaceScanlineData {
- guint8 *tt0, *t0, *m0, *b0, *bb0;
- guint8 *tt1, *t1, *m1, *b1, *bb1;
- guint8 *tt2, *t2, *m2, *b2, *bb2;
- guint8 *tt3, *t3, *m3, *b3, *bb3;
+ const guint8 *tt0, *t0, *m0, *b0, *bb0;
+ const guint8 *tt1, *t1, *m1, *b1, *bb1;
+ const guint8 *tt2, *t2, *m2, *b2, *bb2;
+ const guint8 *tt3, *t3, *m3, *b3, *bb3;
  gboolean bottom_field;
 };
 
@@ -130,34 +163,28 @@ struct _GstDeinterlaceScanlineData {
  * All other values are NULL.
  */
 
+typedef void (*GstDeinterlaceSimpleMethodPackedFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines);
+
 struct _GstDeinterlaceSimpleMethod {
   GstDeinterlaceMethod parent;
+
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_packed;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_packed;
 };
 
 struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceMethodClass parent_class;
 
-  void (*interpolate_scanline) (GstDeinterlaceMethod *self, GstDeinterlace * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
-  void (*copy_scanline) (GstDeinterlaceMethod *self, GstDeinterlace * parent, guint8 *out, GstDeinterlaceScanlineData *scanlines, gint width);
+  /* Packed formats */
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yuy2;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yuy2;
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yvyu;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yvyu;
 };
 
 GType gst_deinterlace_simple_method_get_type (void);
 
-
 #define GST_DEINTERLACE_MAX_FIELD_HISTORY 10
-
-#define PICTURE_PROGRESSIVE 0
-#define PICTURE_INTERLACED_BOTTOM 1
-#define PICTURE_INTERLACED_TOP 2
-#define PICTURE_INTERLACED_MASK (PICTURE_INTERLACED_BOTTOM | PICTURE_INTERLACED_TOP)
-
-typedef struct
-{
-  /* pointer to the start of data for this field */
-  GstBuffer *buf;
-  /* see PICTURE_ flags in *.c */
-  guint flags;
-} GstPicture;
 
 typedef enum
 {
@@ -210,42 +237,20 @@ struct _GstDeinterlace
   GstDeinterlaceMethods method_id;
   GstDeinterlaceMethod *method;
 
-  guint frame_size;
-  gint frame_rate_n, frame_rate_d;
-  gboolean interlaced;
-  gboolean src_interlaced;
+  GstVideoFormat format;
+  gint width, height; /* frame width & height */
+  guint frame_size; /* frame size in bytes */
+  gint fps_n, fps_d; /* frame rate */
+  gboolean interlaced; /* is input interlaced? */
 
-  /* Number of bytes of actual data in each scanline.  May be less than
-     OverlayPitch since the overlay's scanlines might have alignment
-     requirements.  Generally equal to FrameWidth * 2.
-   */
-  guint row_stride;
-
-  /* Number of pixels in each scanline. */
-  gint frame_width;
-
-  /* Number of scanlines per frame. */
-  gint frame_height;
-
-  /* Number of scanlines per field.  FrameHeight / 2, mostly for
-     cleanliness so we don't have to keep dividing FrameHeight by 2.
-   */
-  gint field_height;
-
-  /* distance between lines in image
-     need not match the pixel width
-   */
-  guint field_stride;
-
-  /* Duration of one field */
-  GstClockTime field_duration;
+  GstClockTime field_duration; /* Duration of one field */
 
   /* The most recent pictures 
      PictureHistory[0] is always the most recent.
      Pointers are NULL if the picture in question isn't valid, e.g. because
      the program just started or a picture was skipped.
    */
-  GstPicture field_history[GST_DEINTERLACE_MAX_FIELD_HISTORY];
+  GstDeinterlaceField field_history[GST_DEINTERLACE_MAX_FIELD_HISTORY];
   guint history_count;
 
   /* Set to TRUE if we're in still frame mode,
@@ -278,4 +283,5 @@ struct _GstDeinterlaceClass
 GType gst_deinterlace_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_DEINTERLACE_H__ */

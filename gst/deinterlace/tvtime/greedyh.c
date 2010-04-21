@@ -2,7 +2,7 @@
  *
  * GStreamer
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,10 +32,9 @@
 #include "greedyhmacros.h"
 
 #include <stdlib.h>
-#include "_stdint.h"
 #include <string.h>
 
-#include "gst/gst.h"
+#include <gst/gst.h>
 #include "plugins.h"
 #include "gstdeinterlace.h"
 
@@ -54,41 +53,45 @@ typedef struct
   guint max_comb, motion_threshold, motion_sense;
 } GstDeinterlaceMethodGreedyH;
 
+typedef void (*ScanlineFunction) (GstDeinterlaceMethodGreedyH * self,
+    const guint8 * L2, const guint8 * L1, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint width);
+
 typedef struct
 {
   GstDeinterlaceMethodClass parent_class;
-  void (*scanline) (GstDeinterlaceMethodGreedyH * self, uint8_t * L2,
-      uint8_t * L1, uint8_t * L3, uint8_t * L2P, uint8_t * Dest, int size);
+  ScanlineFunction scanline_yuy2;       /* This is for YVYU too */
 } GstDeinterlaceMethodGreedyHClass;
 
 static void
-greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
-    uint8_t * L3, uint8_t * L2P, uint8_t * Dest, int size)
+greedyh_scanline_yuy2_C (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
+    const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest,
+    gint width)
 {
-  int Pos;
-  uint8_t l1_l, l1_1_l, l3_l, l3_1_l;
-  uint8_t l1_c, l1_1_c, l3_c, l3_1_c;
-  uint8_t avg_l, avg_c, avg_l_1, avg_c_1;
-  uint8_t avg_l__1 = 0, avg_c__1 = 0;
-  uint8_t avg_s_l, avg_s_c;
-  uint8_t avg_sc_l, avg_sc_c;
-  uint8_t best_l, best_c;
-  uint16_t mov_l;
-  uint8_t out_l, out_c;
-  uint8_t l2_l, l2_c, lp2_l, lp2_c;
-  uint8_t l2_l_diff, l2_c_diff, lp2_l_diff, lp2_c_diff;
-  uint8_t min_l, min_c, max_l, max_c;
+  gint Pos;
+  guint8 l1_l, l1_1_l, l3_l, l3_1_l;
+  guint8 l1_c, l1_1_c, l3_c, l3_1_c;
+  guint8 avg_l, avg_c, avg_l_1, avg_c_1;
+  guint8 avg_l__1 = 0, avg_c__1 = 0;
+  guint8 avg_s_l, avg_s_c;
+  guint8 avg_sc_l, avg_sc_c;
+  guint8 best_l, best_c;
+  guint16 mov_l;
+  guint8 out_l, out_c;
+  guint8 l2_l, l2_c, lp2_l, lp2_c;
+  guint8 l2_l_diff, l2_c_diff, lp2_l_diff, lp2_c_diff;
+  guint8 min_l, min_c, max_l, max_c;
   guint max_comb = self->max_comb;
   guint motion_sense = self->motion_sense;
   guint motion_threshold = self->motion_threshold;
 
-  for (Pos = 0; Pos < size; Pos += 2) {
+  for (Pos = 0; Pos < width; Pos++) {
     l1_l = L1[0];
     l1_c = L1[1];
     l3_l = L3[0];
     l3_c = L3[1];
 
-    if (Pos == size - 1) {
+    if (Pos == width - 1) {
       l1_1_l = l1_l;
       l1_1_c = l1_c;
       l3_1_l = l3_l;
@@ -207,7 +210,8 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
 
 #define IS_MMXEXT
 #define SIMD_TYPE MMXEXT
-#define FUNCT_NAME greedyDScaler_MMXEXT
+#define C_FUNCT greedyh_scanline_yuy2_C
+#define FUNCT_NAME greedyh_scanline_yuy2_MMXEXT
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMXEXT
@@ -215,7 +219,7 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
 
 #define IS_3DNOW
 #define SIMD_TYPE 3DNOW
-#define FUNCT_NAME greedyDScaler_3DNOW
+#define FUNCT_NAME greedyh_scanline_yuy2_3DNOW
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_3DNOW
@@ -223,74 +227,95 @@ greedyDScaler_C (GstDeinterlaceMethodGreedyH * self, uint8_t * L1, uint8_t * L2,
 
 #define IS_MMX
 #define SIMD_TYPE MMX
-#define FUNCT_NAME greedyDScaler_MMX
+#define FUNCT_NAME greedyh_scanline_yuy2_MMX
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMX
 #undef FUNCT_NAME
+#undef C_FUNCT
 
 #endif
 
 static void
-deinterlace_frame_di_greedyh (GstDeinterlaceMethod * d_method,
-    GstDeinterlace * object, GstBuffer * outbuf)
+deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
+    const GstDeinterlaceField * history, guint history_count,
+    GstBuffer * outbuf)
 {
-  GstDeinterlaceMethodGreedyH *self =
-      GST_DEINTERLACE_METHOD_GREEDY_H (d_method);
+  GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
   GstDeinterlaceMethodGreedyHClass *klass =
       GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS (self);
-  int InfoIsOdd = 0;
-  int Line;
-  unsigned int Pitch = object->field_stride;
+  gint InfoIsOdd = 0;
+  gint Line;
+  gint RowStride = method->row_stride[0];
+  gint FieldHeight = method->frame_height / 2;
+  gint Pitch = method->row_stride[0] * 2;
+  const guint8 *L1;             // ptr to Line1, of 3
+  const guint8 *L2;             // ptr to Line2, the weave line
+  const guint8 *L3;             // ptr to Line3
+  const guint8 *L2P;            // ptr to prev Line2
+  guint8 *Dest = GST_BUFFER_DATA (outbuf);
+  ScanlineFunction scanline;
 
-  unsigned char *L1;            // ptr to Line1, of 3
-  unsigned char *L2;            // ptr to Line2, the weave line
-  unsigned char *L3;            // ptr to Line3
-
-  unsigned char *L2P;           // ptr to prev Line2
-  unsigned char *Dest = GST_BUFFER_DATA (outbuf);
+  switch (method->format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
+      scanline = klass->scanline_yuy2;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
 
-  if (object->field_history[object->history_count - 1].flags ==
-      PICTURE_INTERLACED_BOTTOM) {
+  if (history[history_count - 1].flags == PICTURE_INTERLACED_BOTTOM) {
     InfoIsOdd = 1;
 
-    L1 = GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
-    L2 = GST_BUFFER_DATA (object->field_history[object->history_count - 1].buf);
+    L1 = GST_BUFFER_DATA (history[history_count - 2].buf);
+    if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
+      L1 += RowStride;
+
+    L2 = GST_BUFFER_DATA (history[history_count - 1].buf);
+    if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
+      L2 += RowStride;
+
     L3 = L1 + Pitch;
-    L2P =
-        GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf);
+    L2P = GST_BUFFER_DATA (history[history_count - 3].buf);
+    if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
+      L2P += RowStride;
 
     // copy first even line
-    oil_memcpy (Dest, L1, object->row_stride);
-    Dest += object->row_stride;
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
   } else {
     InfoIsOdd = 0;
-    L1 = GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
-    L2 = GST_BUFFER_DATA (object->field_history[object->history_count -
-            1].buf) + Pitch;
+    L1 = GST_BUFFER_DATA (history[history_count - 2].buf);
+    if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
+      L1 += RowStride;
+
+    L2 = GST_BUFFER_DATA (history[history_count - 1].buf) + Pitch;
+    if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
+      L2 += RowStride;
+
     L3 = L1 + Pitch;
-    L2P =
-        GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf) +
-        Pitch;
+    L2P = GST_BUFFER_DATA (history[history_count - 3].buf) + Pitch;
+    if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
+      L2P += RowStride;
 
     // copy first even line
-    oil_memcpy (Dest,
-        GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf),
-        object->row_stride);
-    Dest += object->row_stride;
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
     // then first odd line
-    oil_memcpy (Dest, L1, object->row_stride);
-    Dest += object->row_stride;
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
   }
 
-  for (Line = 0; Line < (object->field_height - 1); ++Line) {
-    klass->scanline (self, L1, L2, L3, L2P, Dest, object->row_stride);
-    Dest += object->row_stride;
-    oil_memcpy (Dest, L3, object->row_stride);
-    Dest += object->row_stride;
+  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
+    scanline (self, L1, L2, L3, L2P, Dest, RowStride);
+    Dest += RowStride;
+    oil_memcpy (Dest, L3, RowStride);
+    Dest += RowStride;
 
     L1 += Pitch;
     L2 += Pitch;
@@ -299,7 +324,7 @@ deinterlace_frame_di_greedyh (GstDeinterlaceMethod * d_method,
   }
 
   if (InfoIsOdd) {
-    oil_memcpy (Dest, L2, object->row_stride);
+    oil_memcpy (Dest, L2, RowStride);
   }
 }
 
@@ -308,10 +333,10 @@ G_DEFINE_TYPE (GstDeinterlaceMethodGreedyH, gst_deinterlace_method_greedy_h,
 
 enum
 {
-  ARG_0,
-  ARG_MAX_COMB,
-  ARG_MOTION_THRESHOLD,
-  ARG_MOTION_SENSE
+  PROP_0,
+  PROP_MAX_COMB,
+  PROP_MOTION_THRESHOLD,
+  PROP_MOTION_SENSE
 };
 
 static void
@@ -321,13 +346,13 @@ gst_deinterlace_method_greedy_h_set_property (GObject * object, guint prop_id,
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (object);
 
   switch (prop_id) {
-    case ARG_MAX_COMB:
+    case PROP_MAX_COMB:
       self->max_comb = g_value_get_uint (value);
       break;
-    case ARG_MOTION_THRESHOLD:
+    case PROP_MOTION_THRESHOLD:
       self->motion_threshold = g_value_get_uint (value);
       break;
-    case ARG_MOTION_SENSE:
+    case PROP_MOTION_SENSE:
       self->motion_sense = g_value_get_uint (value);
       break;
     default:
@@ -342,13 +367,13 @@ gst_deinterlace_method_greedy_h_get_property (GObject * object, guint prop_id,
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (object);
 
   switch (prop_id) {
-    case ARG_MAX_COMB:
+    case PROP_MAX_COMB:
       g_value_set_uint (value, self->max_comb);
       break;
-    case ARG_MOTION_THRESHOLD:
+    case PROP_MOTION_THRESHOLD:
       g_value_set_uint (value, self->motion_threshold);
       break;
-    case ARG_MOTION_SENSE:
+    case PROP_MOTION_SENSE:
       g_value_set_uint (value, self->motion_sense);
       break;
     default:
@@ -369,20 +394,20 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   gobject_class->set_property = gst_deinterlace_method_greedy_h_set_property;
   gobject_class->get_property = gst_deinterlace_method_greedy_h_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_MAX_COMB,
+  g_object_class_install_property (gobject_class, PROP_MAX_COMB,
       g_param_spec_uint ("max-comb",
           "Max comb",
           "Max Comb", 0, 255, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  g_object_class_install_property (gobject_class, ARG_MOTION_THRESHOLD,
+  g_object_class_install_property (gobject_class, PROP_MOTION_THRESHOLD,
       g_param_spec_uint ("motion-threshold",
           "Motion Threshold",
           "Motion Threshold",
           0, 255, 25, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  g_object_class_install_property (gobject_class, ARG_MOTION_SENSE,
+  g_object_class_install_property (gobject_class, PROP_MOTION_SENSE,
       g_param_spec_uint ("motion-sense",
           "Motion Sense",
           "Motion Sense",
@@ -390,23 +415,25 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
       );
 
   dim_class->fields_required = 4;
-  dim_class->deinterlace_frame = deinterlace_frame_di_greedyh;
   dim_class->name = "Motion Adaptive: Advanced Detection";
   dim_class->nick = "greedyh";
   dim_class->latency = 1;
 
+  dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedyh_packed;
+  dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedyh_packed;
+
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
-    klass->scanline = greedyDScaler_MMXEXT;
+    klass->scanline_yuy2 = greedyh_scanline_yuy2_MMXEXT;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
-    klass->scanline = greedyDScaler_3DNOW;
+    klass->scanline_yuy2 = greedyh_scanline_yuy2_3DNOW;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
-    klass->scanline = greedyDScaler_MMX;
+    klass->scanline_yuy2 = greedyh_scanline_yuy2_MMX;
   } else {
-    klass->scanline = greedyDScaler_C;
+    klass->scanline_yuy2 = greedyh_scanline_yuy2_C;
   }
 #else
-  klass->scanline = greedyDScaler_C;
+  klass->scanline_yuy2 = greedyh_scanline_yuy2_C;
 #endif
 }
 

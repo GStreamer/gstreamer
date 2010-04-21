@@ -61,36 +61,44 @@
 #define SEFUNC(x) Search_Effort_C_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #endif
 
-static void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace* object, GstBuffer *outbuf)
+static void FUNCT_NAME(GstDeinterlaceMethod *d_method, const GstDeinterlaceField* history, guint history_count, GstBuffer *outbuf)
 {
   GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
-  long SearchEffort = self->search_effort;
-  int UseStrangeBob = self->strange_bob;
-  int IsOdd;
-  const unsigned char *pWeaveSrc;
-  const unsigned char *pWeaveSrcP;
-  unsigned char *pWeaveDest;
-  const unsigned char *pCopySrc;
-  const unsigned char *pCopySrcP;
-  unsigned char *pCopyDest;
-  int src_pitch;
-  int dst_pitch;
-  int rowsize;
-  int FldHeight;
+  glong SearchEffort = self->search_effort;
+  gint UseStrangeBob = self->strange_bob;
+  gint IsOdd;
+  const guint8 *pWeaveSrc;
+  const guint8 *pWeaveSrcP;
+  guint8 *pWeaveDest;
+  const guint8 *pCopySrc;
+  const guint8 *pCopySrcP;
+  guint8 *pCopyDest;
+  gint src_pitch;
+  gint dst_pitch;
+  gint rowsize;
+  gint FldHeight;
 
   /* double stride do address just every odd/even scanline */
-  src_pitch = object->field_stride;
-  dst_pitch = object->row_stride;
-  rowsize   = object->row_stride;
-  FldHeight = object->field_height;
+  src_pitch = self->parent.row_stride[0]*2;
+  dst_pitch = self->parent.row_stride[0];
+  rowsize   = self->parent.row_stride[0];
+  FldHeight = self->parent.frame_height / 2;
 
-  pCopySrc   = GST_BUFFER_DATA(object->field_history[object->history_count-1].buf);
-  pCopySrcP  = GST_BUFFER_DATA(object->field_history[object->history_count-3].buf);
-  pWeaveSrc  = GST_BUFFER_DATA(object->field_history[object->history_count-2].buf);  
-  pWeaveSrcP = GST_BUFFER_DATA(object->field_history[object->history_count-4].buf);
+  pCopySrc   = GST_BUFFER_DATA(history[history_count-1].buf);
+  if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
+    pCopySrc += rowsize;
+  pCopySrcP  = GST_BUFFER_DATA(history[history_count-3].buf);
+  if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
+    pCopySrcP += rowsize;
+  pWeaveSrc  = GST_BUFFER_DATA(history[history_count-2].buf);  
+  if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
+    pWeaveSrc += rowsize;
+  pWeaveSrcP = GST_BUFFER_DATA(history[history_count-4].buf);
+  if (history[history_count - 4].flags & PICTURE_INTERLACED_BOTTOM)
+    pWeaveSrcP += rowsize;
 
   /* use bottom field and interlace top field */
-  if (object->field_history[object->history_count-2].flags == PICTURE_INTERLACED_BOTTOM) {
+  if (history[history_count-2].flags == PICTURE_INTERLACED_BOTTOM) {
     IsOdd      = 1;
 
     // if we have an odd field we copy an even field and weave an odd field

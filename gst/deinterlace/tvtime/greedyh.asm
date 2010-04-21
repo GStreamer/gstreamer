@@ -2,7 +2,7 @@
  *
  * GStreamer
  * Copyright (c) 2001 Tom Barry.  All rights reserved.
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,7 +15,7 @@
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
+ * License aglong with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
@@ -30,29 +30,28 @@
 #include "x86-64_macros.inc"
 
 static void
-FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8_t * L3, uint8_t * L2P,
-    uint8_t * Dest, int size)
+FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest, gint width)
 {
 
   // in tight loop some vars are accessed faster in local storage
-  int64_t YMask = 0x00ff00ff00ff00ffull;        // to keep only luma
-  int64_t UVMask = 0xff00ff00ff00ff00ull;       // to keep only chroma
-  int64_t ShiftMask = 0xfefefefefefefefeull;    // to avoid shifting chroma to luma
-  int64_t QW256 = 0x0100010001000100ull;        // 4 256's
-  int64_t MaxComb;
-  int64_t MotionThreshold;
-  int64_t MotionSense;
-  int64_t i;
-  long LoopCtr;
-  long oldbx;
+  gint64 YMask = 0x00ff00ff00ff00ffull;        // to keep only luma
+  gint64 UVMask = 0xff00ff00ff00ff00ull;       // to keep only chroma
+  gint64 ShiftMask = 0xfefefefefefefefeull;    // to avoid shifting chroma to luma
+  gint64 QW256 = 0x0100010001000100ull;        // 4 256's
+  gint64 MaxComb;
+  gint64 MotionThreshold;
+  gint64 MotionSense;
+  gint64 i;
+  glong LoopCtr;
+  glong oldbx;
 
-  int64_t QW256B;
-  int64_t LastAvg = 0;          //interp value from left qword
- 
+  gint64 QW256B;
+  gint64 LastAvg = 0;          //interp value from left qword
+
   // FIXME: Use C implementation if the width is not a multiple of 4
   // Do something more optimal later
-  if (size % 8 != 0)
-    greedyDScaler_C (self, L1, L2, L3, L2P, Dest, size);
+  if (width % 4 != 0)
+    C_FUNCT (self, L1, L2, L3, L2P, Dest, width);
 
   // Set up our two parms that are actually evaluated for each pixel
   i = self->max_comb;
@@ -68,7 +67,7 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, uint8_t * L1, uint8_t * L2, uint8
   i = 0xffffffff - 256;
   QW256B = i << 48 | i << 32 | i << 16 | i;     // save a couple instr on PMINSW instruct.
 
-  LoopCtr = size / 8 - 1;       // there are LineLength / 8 qwords per line but do 1 less, adj at end of loop
+  LoopCtr = width / 4 - 1;       // there are LineLength / 4 qwords per line but do 1 less, adj at end of loop
 
   // For ease of reading, the comments below assume that we're operating on an odd
   // field (i.e., that InfoIsOdd is true).  Assume the obvious for even lines..

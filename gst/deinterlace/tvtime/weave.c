@@ -1,7 +1,7 @@
 /**
  * Weave frames
  * Copyright (C) 2002 Billy Biggs <vektor@dumbterm.net>.
- * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,6 @@
 # include "config.h"
 #endif
 
-#include "_stdint.h"
 #include "gstdeinterlace.h"
 #include <string.h>
 
@@ -43,23 +42,20 @@
 GType gst_deinterlace_method_weave_get_type (void);
 
 typedef GstDeinterlaceSimpleMethod GstDeinterlaceMethodWeave;
-
 typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodWeaveClass;
 
-
 static void
-deinterlace_scanline_weave (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, parent->row_stride);
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
-copy_scanline (GstDeinterlaceMethod * self, GstDeinterlace * parent,
-    guint8 * out, GstDeinterlaceScanlineData * scanlines, gint width)
+copy_scanline_packed (GstDeinterlaceSimpleMethod * self, guint8 * out,
+    const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, parent->row_stride);
+  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodWeave, gst_deinterlace_method_weave,
@@ -77,8 +73,9 @@ gst_deinterlace_method_weave_class_init (GstDeinterlaceMethodWeaveClass * klass)
   dim_class->nick = "weave";
   dim_class->latency = 0;
 
-  dism_class->interpolate_scanline = deinterlace_scanline_weave;
-  dism_class->copy_scanline = copy_scanline;
+  dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
+  dism_class->copy_scanline_yvyu = copy_scanline_packed;
 }
 
 static void

@@ -3,7 +3,7 @@
  * GStreamer
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
  * Copyright (c) 2001, 2002, 2003 Fabrice Bellard.
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -33,7 +33,6 @@
 # include "config.h"
 #endif
 
-#include "_stdint.h"
 #include "gstdeinterlace.h"
 #include <string.h>
 
@@ -62,16 +61,10 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodVFIRClass;
   * C implementation.
   */
 static inline void
-deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace * parent,
-    guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_c (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
+    const guint8 * lum_m2, const guint8 * lum_m1, const guint8 * lum, gint size)
 {
   gint sum;
-  guint8 *lum_m4 = scanlines->tt1;
-  guint8 *lum_m3 = scanlines->t0;
-  guint8 *lum_m2 = scanlines->m1;
-  guint8 *lum_m1 = scanlines->b0;
-  guint8 *lum = scanlines->bb1;
-  gint size = width * 2;
 
   for (; size >= 0; size--) {
     sum = -lum_m4[0];
@@ -89,18 +82,27 @@ deinterlace_line_c (GstDeinterlaceMethod * self, GstDeinterlace * parent,
   }
 }
 
+static void
+deinterlace_line_packed_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
+    const GstDeinterlaceScanlineData * scanlines)
+{
+  const guint8 *lum_m4 = scanlines->tt1;
+  const guint8 *lum_m3 = scanlines->t0;
+  const guint8 *lum_m2 = scanlines->m1;
+  const guint8 *lum_m1 = scanlines->b0;
+  const guint8 *lum = scanlines->bb1;
+  gint size = self->parent.row_stride[0];
+
+  deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+}
+
 #ifdef BUILD_X86_ASM
 #include "mmx.h"
 static void
-deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace * parent,
-    guint8 * dst, GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_mmx (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
+    const guint8 * lum_m2, const guint8 * lum_m1, const guint8 * lum, gint size)
 {
   mmx_t rounder;
-  guint8 *lum_m4 = scanlines->tt1;
-  guint8 *lum_m3 = scanlines->t0;
-  guint8 *lum_m2 = scanlines->m1;
-  guint8 *lum_m1 = scanlines->b0;
-  guint8 *lum = scanlines->bb1;
 
   rounder.uw[0] = 4;
   rounder.uw[1] = 4;
@@ -109,7 +111,7 @@ deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace * parent,
   pxor_r2r (mm7, mm7);
   movq_m2r (rounder, mm6);
 
-  for (; width > 1; width -= 2) {
+  for (; size > 3; size -= 4) {
     movd_m2r (*lum_m4, mm0);
     movd_m2r (*lum_m3, mm1);
     movd_m2r (*lum_m2, mm2);
@@ -140,15 +142,22 @@ deinterlace_line_mmx (GstDeinterlaceMethod * self, GstDeinterlace * parent,
   emms ();
 
   /* Handle odd widths */
-  if (width > 0) {
-    scanlines->tt1 = lum_m4;
-    scanlines->t0 = lum_m3;
-    scanlines->m1 = lum_m2;
-    scanlines->b0 = lum_m1;
-    scanlines->bb1 = lum;
+  if (size > 0)
+    deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
+}
 
-    deinterlace_line_c (self, parent, dst, scanlines, width);
-  }
+static void
+deinterlace_line_packed_mmx (GstDeinterlaceSimpleMethod * self, guint8 * dst,
+    const GstDeinterlaceScanlineData * scanlines)
+{
+  const guint8 *lum_m4 = scanlines->tt1;
+  const guint8 *lum_m3 = scanlines->t0;
+  const guint8 *lum_m2 = scanlines->m1;
+  const guint8 *lum_m1 = scanlines->b0;
+  const guint8 *lum = scanlines->bb1;
+  gint size = self->parent.row_stride[0];
+
+  deinterlace_mmx (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
 #endif
 
@@ -172,12 +181,15 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
-    dism_class->interpolate_scanline = deinterlace_line_mmx;
+    dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_mmx;
+    dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_mmx;
   } else {
-    dism_class->interpolate_scanline = deinterlace_line_c;
+    dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_c;
+    dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_c;
   }
 #else
-  dism_class->interpolate_scanline = deinterlace_line_c;
+  dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_c;
+  dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_c;
 #endif
 }
 

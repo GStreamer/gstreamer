@@ -2,10 +2,10 @@ plugin_LTLIBRARIES = libgstdeinterlace.la
 
 libgstdeinterlace_la_SOURCES = \
 	gstdeinterlace.c \
+	tvtime/tomsmocomp.c \
 	tvtime/greedy.c \
 	tvtime/greedyh.c \
 	tvtime/vfir.c \
-	tvtime/tomsmocomp.c \
 	tvtime/weavetff.c \
 	tvtime/weavebff.c \
 	tvtime/weave.c \

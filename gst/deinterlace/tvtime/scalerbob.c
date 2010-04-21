@@ -1,6 +1,6 @@
 /**
  * Double lines
- * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2008,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,6 @@
 # include "config.h"
 #endif
 
-#include "_stdint.h"
 #include "gstdeinterlace.h"
 #include <string.h>
 
@@ -37,16 +36,13 @@
 GType gst_deinterlace_method_scaler_bob_get_type (void);
 
 typedef GstDeinterlaceSimpleMethod GstDeinterlaceMethodScalerBob;
-
 typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodScalerBobClass;
 
-
 static void
-deinterlace_scanline_scaler_bob (GstDeinterlaceMethod * self,
-    GstDeinterlace * parent, guint8 * out,
-    GstDeinterlaceScanlineData * scanlines, gint width)
+deinterlace_scanline_scaler_bob_packed (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->t0, parent->row_stride);
+  oil_memcpy (out, scanlines->t0, self->parent.row_stride[0]);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodScalerBob, gst_deinterlace_method_scaler_bob,
@@ -65,7 +61,10 @@ gst_deinterlace_method_scaler_bob_class_init (GstDeinterlaceMethodScalerBobClass
   dim_class->nick = "scalerbob";
   dim_class->latency = 0;
 
-  dism_class->interpolate_scanline = deinterlace_scanline_scaler_bob;
+  dism_class->interpolate_scanline_yuy2 =
+      deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_yvyu =
+      deinterlace_scanline_scaler_bob_packed;
 }
 
 static void
