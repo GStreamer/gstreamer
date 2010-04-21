@@ -135,11 +135,13 @@ static GstStaticPadTemplate gst_alpha_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";" GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")
         ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR
         ";" GST_VIDEO_CAPS_RGBA
         ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR
-        ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR)
+        ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR
+        ";" ";" GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("YV12")
+    )
     );
 
 static gboolean gst_alpha_start (GstBaseTransform * trans);
@@ -962,16 +964,16 @@ gst_alpha_set_i420_##name (const guint8 * src, guint8 * dest, gint width, \
   gint matrix[12]; \
   gint r, g, b; \
   \
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width); \
-  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width); \
+  y_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width); \
+  uv_stride = gst_video_format_get_row_stride (alpha->in_format, 1, width); \
   \
   src_wrap = y_stride - width; \
   src_uv_wrap = uv_stride - (width / 2); \
   \
   srcY = src; \
-  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+  srcU = src + gst_video_format_get_component_offset (alpha->in_format, \
       1, width, height); \
-  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+  srcV = src + gst_video_format_get_component_offset (alpha->in_format, \
       2, width, height); \
   \
   odd_width = (width % 2 != 0); \
@@ -1155,16 +1157,16 @@ gst_alpha_chroma_key_i420_##name (const guint8 * src, guint8 * dest, \
   dest_stride = \
       gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width); \
   src_y_stride = \
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width); \
+      gst_video_format_get_row_stride (alpha->in_format, 0, width); \
   src_uv_stride = \
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width); \
+      gst_video_format_get_row_stride (alpha->in_format, 1, width); \
   \
   srcY1 = src; \
   srcY2 = src + src_y_stride; \
   \
-  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+  srcU = src + gst_video_format_get_component_offset (alpha->in_format, \
       1, width, height); \
-  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, \
+  srcV = src + gst_video_format_get_component_offset (alpha->in_format, \
       2, width, height); \
   \
   dest1 = dest; \
@@ -1411,16 +1413,16 @@ gst_alpha_set_i420_ayuv (const guint8 * src, guint8 * dest, gint width,
   gint y_stride, uv_stride;
   gboolean odd_width;
 
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+  y_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
+  uv_stride = gst_video_format_get_row_stride (alpha->in_format, 1, width);
 
   src_wrap = y_stride - width;
   src_uv_wrap = uv_stride - (width / 2);
 
   srcY = src;
-  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcU = src + gst_video_format_get_component_offset (alpha->in_format,
       1, width, height);
-  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcV = src + gst_video_format_get_component_offset (alpha->in_format,
       2, width, height);
 
   odd_width = (width % 2 != 0);
@@ -1662,17 +1664,15 @@ gst_alpha_chroma_key_i420_ayuv (const guint8 * src, guint8 * dest,
 
   dest_stride =
       gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width);
-  src_y_stride =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  src_uv_stride =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+  src_y_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
+  src_uv_stride = gst_video_format_get_row_stride (alpha->in_format, 1, width);
 
   srcY1 = src;
   srcY2 = src + src_y_stride;
 
-  srcU = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcU = src + gst_video_format_get_component_offset (alpha->in_format,
       1, width, height);
-  srcV = src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+  srcV = src + gst_video_format_get_component_offset (alpha->in_format,
       2, width, height);
 
   dest1 = dest;
@@ -1776,6 +1776,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_set_ayuv_ayuv;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_set_i420_ayuv;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -1819,6 +1820,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_set_ayuv_argb;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_set_i420_argb;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -1861,6 +1863,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_set_ayuv_abgr;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_set_i420_abgr;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -1903,6 +1906,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_set_ayuv_rgba;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_set_i420_rgba;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -1945,6 +1949,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_set_ayuv_bgra;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_set_i420_bgra;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -1995,6 +2000,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_chroma_key_ayuv_ayuv;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_chroma_key_i420_ayuv;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -2037,6 +2043,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_chroma_key_ayuv_argb;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_chroma_key_i420_argb;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -2079,6 +2086,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_chroma_key_ayuv_abgr;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_chroma_key_i420_abgr;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -2121,6 +2129,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_chroma_key_ayuv_rgba;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_chroma_key_i420_rgba;
               break;
             case GST_VIDEO_FORMAT_ARGB:
@@ -2163,6 +2172,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
               alpha->process = gst_alpha_chroma_key_ayuv_bgra;
               break;
             case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:
               alpha->process = gst_alpha_chroma_key_i420_bgra;
               break;
             case GST_VIDEO_FORMAT_ARGB:
