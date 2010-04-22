@@ -126,20 +126,16 @@ gst_rtp_theora_depay_finalize (GObject * object)
 
 static gboolean
 gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
-    const gchar * configuration)
+    GstBuffer * confbuf)
 {
   GstBuffer *buf;
   guint32 num_headers;
   guint8 *data;
-  gsize size;
+  guint size;
   gint i, j;
 
-  /* deserialize base64 to buffer */
-  size = strlen (configuration);
-  GST_DEBUG_OBJECT (rtptheoradepay, "base64 config size %" G_GSIZE_FORMAT,
-      size);
-
-  data = g_base64_decode (configuration, &size);
+  data = GST_BUFFER_DATA (confbuf);
+  size = GST_BUFFER_SIZE (confbuf);
 
   GST_DEBUG_OBJECT (rtptheoradepay, "config size %" G_GSIZE_FORMAT, size);
 
@@ -209,6 +205,8 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
         "header %d, ident 0x%08x, length %u, left %" G_GSIZE_FORMAT, i, ident,
         length, size);
 
+    /* FIXME check if we already got this ident */
+
     if (size < length)
       goto too_small;
 
@@ -267,6 +265,29 @@ too_small:
 }
 
 static gboolean
+gst_rtp_theora_depay_parse_inband_configuration (GstRtpTheoraDepay *
+    rtptheoradepay, guint ident, guint8 * configuration, guint size)
+{
+  GstBuffer *confbuf;
+  guint8 *conf;
+
+  if (G_UNLIKELY (size < 4))
+    return FALSE;
+
+  /* transform inline to out-of-band and parse that one */
+  confbuf = gst_buffer_new_and_alloc (size + 3);
+  conf = GST_BUFFER_DATA (confbuf);
+  /* 1 header */
+  GST_WRITE_UINT32_BE (conf, 1);
+  /* write Ident */
+  GST_WRITE_UINT24_BE (conf + 4, ident);
+  /* copy remainder */
+  memcpy (conf + 7, configuration + 4, size - 4);
+
+  return gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf);
+}
+
+static gboolean
 gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
@@ -285,24 +306,35 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (delivery_method == NULL)
     goto no_delivery_method;
 
+  /* read and parse configuration string */
+  configuration = gst_structure_get_string (structure, "configuration");
   if (!g_ascii_strcasecmp (delivery_method, "inline")) {
-    /* configure string is in the caps */
+    GstBuffer *confbuf;
+    guint8 *data;
+    gsize size;
+
+    /* configure string should be in the caps */
+    if (configuration == NULL)
+      goto no_configuration;
+
+    /* deserialize base64 to buffer */
+    data = g_base64_decode (configuration, &size);
+
+    confbuf = gst_buffer_new ();
+    GST_BUFFER_DATA (confbuf) = data;
+    GST_BUFFER_MALLOCDATA (confbuf) = data;
+    GST_BUFFER_SIZE (confbuf) = size;
+
+    if (!gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf))
+      goto invalid_configuration;
   } else if (!g_ascii_strcasecmp (delivery_method, "in_band")) {
     /* headers will (also) be transmitted in the RTP packets */
-    goto unsupported_delivery_method;
+    GST_DEBUG_OBJECT (rtptheoradepay, "expecting in_band configuration");
   } else if (g_str_has_prefix (delivery_method, "out_band/")) {
     /* some other method of header delivery. */
     goto unsupported_delivery_method;
   } else
     goto unsupported_delivery_method;
-
-  /* read and parse configuration string */
-  configuration = gst_structure_get_string (structure, "configuration");
-  if (configuration == NULL)
-    goto no_configuration;
-
-  if (!gst_rtp_theora_depay_parse_configuration (rtptheoradepay, configuration))
-    goto invalid_configuration;
 
   /* set caps on pad and on header */
   srccaps = gst_caps_new_simple ("video/x-theora", NULL);
@@ -515,6 +547,15 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (G_UNLIKELY (length > payload_len))
       goto length_short;
 
+    /* handle in-band configuration */
+    if (G_UNLIKELY (TDT == 1)) {
+      GST_DEBUG_OBJECT (rtptheoradepay, "in-band configuration");
+      if (!gst_rtp_theora_depay_parse_inband_configuration (rtptheoradepay,
+              ident, payload, payload_len))
+        goto invalid_configuration;
+      goto no_output;
+    }
+
     /* create buffer for packet */
     if (G_UNLIKELY (to_free)) {
       outbuf = gst_buffer_new ();
@@ -574,6 +615,13 @@ length_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
+    return NULL;
+  }
+invalid_configuration:
+  {
+    /* fatal, as we otherwise risk carrying on without output */
+    GST_ELEMENT_ERROR (rtptheoradepay, STREAM, DECODE,
+        (NULL), ("Packet contains invalid configuration"));
     return NULL;
   }
 }
