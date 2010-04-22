@@ -31,7 +31,7 @@
 GST_DEBUG_CATEGORY (gst_vdp_debug);
 
 void
-gst_vdp_init ()
+gst_vdp_init (void)
 {
   /* do this so debug categories get created */
   gst_vdp_device_get_type ();

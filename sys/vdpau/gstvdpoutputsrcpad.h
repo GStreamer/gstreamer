@@ -46,7 +46,7 @@ GstFlowReturn gst_vdp_output_src_pad_get_device (GstVdpOutputSrcPad *vdp_pad, Gs
 gboolean gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad *vdp_pad, GstCaps *video_caps);
 
 GstVdpOutputSrcPad *gst_vdp_output_src_pad_new (GstCaps * templ_caps);
-GType gst_vdp_output_src_pad_get_type (void) G_GNUC_CONST;
+GType gst_vdp_output_src_pad_get_type (void);
 
 G_END_DECLS
 
