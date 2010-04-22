@@ -1715,6 +1715,17 @@ fill_yuy2 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 
       dest += stride;
     }
+  } else if (format == GST_VIDEO_FORMAT_YVYU) {
+    for (i = 0; i < height; i++) {
+      for (j = 0; j < width; j += 2) {
+        dest[j * 2 + 0] = y;
+        dest[j * 2 + 1] = v;
+        dest[j * 2 + 2] = y;
+        dest[j * 2 + 3] = u;
+      }
+
+      dest += stride;
+    }
   } else {
     for (i = 0; i < height; i++) {
       for (j = 0; j < width; j += 2) {
@@ -1775,6 +1786,22 @@ copy_yuy2_yuy2 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
         dest += dest_stride;
         src += src_stride;
       }
+    } else if (src_format == GST_VIDEO_FORMAT_YVYU) {
+      for (i = 0; i < h; i++) {
+        for (j = 0; j < w; j += 2) {
+          y1 = src[j * 2 + 0];
+          y2 = src[j * 2 + 2];
+          v1 = v2 = src[j * 2 + 1];
+          u1 = u2 = src[j * 2 + 3];
+
+          dest[j * 2 + 0] = APPLY_MATRIX (matrix, 0, y1, u1, v1);
+          dest[j * 2 + 1] = APPLY_MATRIX (matrix, 2, y1, u1, v1);
+          dest[j * 2 + 2] = APPLY_MATRIX (matrix, 0, y1, u2, v2);
+          dest[j * 2 + 3] = APPLY_MATRIX (matrix, 1, y2, u2, v2);
+        }
+        dest += dest_stride;
+        src += src_stride;
+      }
     } else {
       for (i = 0; i < h; i++) {
         for (j = 0; j < w; j += 2) {
@@ -1828,15 +1855,16 @@ static GstStaticPadTemplate gst_video_box_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
         GST_VIDEO_CAPS_GRAY8 ";"
         GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
         GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
@@ -1847,15 +1875,16 @@ static GstStaticPadTemplate gst_video_box_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";"
+        GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY") ";"
+        GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";"
         GST_VIDEO_CAPS_GRAY8 ";"
         GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
         GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
@@ -2542,10 +2571,12 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
       }
       break;
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       video_box->fill = fill_yuy2;
       switch (video_box->in_format) {
         case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_YVYU:
         case GST_VIDEO_FORMAT_UYVY:
           video_box->copy = copy_yuy2_yuy2;
           break;
