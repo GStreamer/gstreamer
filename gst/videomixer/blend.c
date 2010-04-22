@@ -546,10 +546,10 @@ _fill_color_loop_##name##_mmx (guint8 *dest, gint height, gint width, gint c1, g
   _memset_u32_mmx ((guint32 *) dest, val, height*width); \
 }
 
-A32_COLOR_LOOP_MMX (argb, 24, 16, 8, 0);
-A32_COLOR_LOOP_MMX (abgr, 24, 0, 8, 16);
-A32_COLOR_LOOP_MMX (rgba, 0, 24, 16, 8);
-A32_COLOR_LOOP_MMX (bgra, 0, 8, 16, 24);
+A32_COLOR_LOOP_MMX (argb, 0, 8, 16, 24);
+A32_COLOR_LOOP_MMX (abgr, 0, 24, 16, 8);
+A32_COLOR_LOOP_MMX (rgba, 24, 0, 8, 16);
+A32_COLOR_LOOP_MMX (bgra, 24, 16, 8, 0);
 
 A32_COLOR (argb_mmx, TRUE, _fill_color_loop_argb_mmx);
 A32_COLOR (bgra_mmx, TRUE, _fill_color_loop_bgra_mmx);
