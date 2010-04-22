@@ -627,8 +627,9 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_planar_yuv (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFormat format, guint8 * dest, gboolean sdtv, gint width,
+    gint height)
 {
   guint8 empty_pixel[3];
   guint8 *destY, *destU, *destV;
@@ -645,25 +646,535 @@ fill_i420 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
     empty_pixel[2] = yuv_hdtv_colors_V[fill_type];
   }
 
-  strideY = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, width);
-  strideUV = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, width);
+  strideY = gst_video_format_get_row_stride (format, 0, width);
+  strideUV = gst_video_format_get_row_stride (format, 1, width);
 
   destY =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
-      width, height);
+      dest + gst_video_format_get_component_offset (format, 0, width, height);
   destU =
       dest + gst_video_format_get_component_offset (format, 1, width, height);
   destV =
       dest + gst_video_format_get_component_offset (format, 2, width, height);
 
-  heightY =
-      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 0, height);
-  heightUV =
-      gst_video_format_get_component_height (GST_VIDEO_FORMAT_I420, 1, height);
+  heightY = gst_video_format_get_component_height (format, 0, height);
+  heightUV = gst_video_format_get_component_height (format, 1, height);
 
   oil_splat_u8_ns (destY, &empty_pixel[0], strideY * heightY);
   oil_splat_u8_ns (destU, &empty_pixel[1], strideUV * heightUV);
   oil_splat_u8_ns (destV, &empty_pixel[2], strideUV * heightUV);
+}
+
+static void
+copy_y444_y444 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  guint8 *destY, *destU, *destV;
+  const guint8 *srcY, *srcU, *srcV;
+  gint dest_stride;
+  gint src_stride;
+
+  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
+
+  destY =
+      dest + gst_video_format_get_component_offset (dest_format, 0,
+      dest_width, dest_height);
+  destU =
+      dest + gst_video_format_get_component_offset (dest_format, 1,
+      dest_width, dest_height);
+  destV =
+      dest + gst_video_format_get_component_offset (dest_format, 2,
+      dest_width, dest_height);
+
+  srcY =
+      src + gst_video_format_get_component_offset (src_format, 0,
+      src_width, src_height);
+  srcU =
+      src + gst_video_format_get_component_offset (src_format, 1,
+      src_width, src_height);
+  srcV =
+      src + gst_video_format_get_component_offset (src_format, 2,
+      src_width, src_height);
+
+  destY = destY + dest_y * dest_stride + dest_x;
+  destU = destU + dest_y * dest_stride + dest_x;
+  destV = destV + dest_y * dest_stride + dest_x;
+
+  srcY = srcY + src_y * src_stride + src_x;
+  srcU = srcU + src_y * src_stride + src_x;
+  srcV = srcV + src_y * src_stride + src_x;
+
+  if (src_sdtv != dest_sdtv) {
+    gint matrix[12];
+    gint y, u, v;
+
+    memcpy (matrix,
+        dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+
+    for (i = 0; i < h; i++) {
+      for (j = 0; j < w; j++) {
+        y = APPLY_MATRIX (matrix, 0, srcY[j], srcU[j], srcV[j]);
+        u = APPLY_MATRIX (matrix, 1, srcY[j], srcU[j], srcV[j]);
+        v = APPLY_MATRIX (matrix, 2, srcY[j], srcU[j], srcV[j]);
+
+        destY[j] = y;
+        destU[j] = u;
+        destV[j] = v;
+      }
+      destY += dest_stride;
+      destU += dest_stride;
+      destV += dest_stride;
+
+      srcY += src_stride;
+      srcU += src_stride;
+      srcV += src_stride;
+    }
+  } else {
+    for (i = 0; i < h; i++) {
+      oil_copy_u8 (destY, srcY, w);
+      oil_copy_u8 (destU, srcU, w);
+      oil_copy_u8 (destV, srcV, w);
+
+      destY += dest_stride;
+      destU += dest_stride;
+      destV += dest_stride;
+
+      srcY += src_stride;
+      srcU += src_stride;
+      srcV += src_stride;
+    }
+  }
+}
+
+static void
+copy_y42b_y42b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  guint8 *destY, *destU, *destV;
+  const guint8 *srcY, *srcU, *srcV;
+  gint dest_strideY, dest_strideUV;
+  gint src_strideY, src_strideUV;
+  gint src_y_idx, src_uv_idx;
+  gint dest_y_idx, dest_uv_idx;
+  gint matrix[12];
+  gint y1, y2;
+  gint u1, u2;
+  gint v1, v2;
+
+  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
+  src_strideY = gst_video_format_get_row_stride (src_format, 0, src_width);
+  src_strideUV = gst_video_format_get_row_stride (src_format, 1, src_width);
+
+  destY =
+      dest + gst_video_format_get_component_offset (dest_format, 0,
+      dest_width, dest_height);
+  destU =
+      dest + gst_video_format_get_component_offset (dest_format, 1,
+      dest_width, dest_height);
+  destV =
+      dest + gst_video_format_get_component_offset (dest_format, 2,
+      dest_width, dest_height);
+
+  srcY =
+      src + gst_video_format_get_component_offset (src_format, 0,
+      src_width, src_height);
+  srcU =
+      src + gst_video_format_get_component_offset (src_format, 1,
+      src_width, src_height);
+  srcV =
+      src + gst_video_format_get_component_offset (src_format, 2,
+      src_width, src_height);
+
+
+  destY = destY + dest_y * dest_strideY + dest_x;
+  destU = destU + dest_y * dest_strideUV + dest_x / 2;
+  destV = destV + dest_y * dest_strideUV + dest_x / 2;
+
+  srcY = srcY + src_y * src_strideY + src_x;
+  srcU = srcU + src_y * src_strideUV + src_x / 2;
+  srcV = srcV + src_y * src_strideUV + src_x / 2;
+
+  h = dest_y + h;
+  w = dest_x + w;
+
+  if (src_sdtv != dest_sdtv)
+    memcpy (matrix,
+        dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+  else
+    memcpy (matrix, cog_identity_matrix_8bit, 12 * sizeof (gint));
+
+  /* 1. Copy all macro pixel scanlines, the destination scanline
+   *    now starts at macro pixel boundary. */
+  for (i = dest_y; i < h; i++) {
+    /* 1.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 2 == 1) {
+      y1 = srcY[0];
+      u1 = srcU[0];
+      v1 = srcV[0];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[0] = CLAMP (
+          (destU[0] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 2, 0, 255);
+      destV[0] = CLAMP (
+          (destV[0] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 2, 0, 255);
+      j = dest_x + 1;
+      src_y_idx = dest_y_idx = dest_uv_idx = 1;
+      src_uv_idx = (src_x % 2) + 1;
+    } else {
+      j = dest_x;
+      src_y_idx = dest_y_idx = dest_uv_idx = 0;
+      src_uv_idx = (src_x % 2);
+    }
+
+    /* 1.2. Copy all macro pixels from the source to the destination.
+     *      All pixels now start at macro pixel boundary, i.e. no
+     *      blending with the background is necessary. */
+    for (; j < w - 1; j += 2) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+
+      u1 = srcU[src_uv_idx / 2];
+      v1 = srcV[src_uv_idx / 2];
+      src_uv_idx++;
+      u2 = srcU[src_uv_idx / 2];
+      v2 = srcV[src_uv_idx / 2];
+      src_uv_idx++;
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+
+      destU[dest_uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 1, y1, u1, v1) + APPLY_MATRIX (matrix, 1, y2,
+                  u2, v2)) / 2, 0, 255);
+      destV[dest_uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 2, y1, u1, v1) + APPLY_MATRIX (matrix, 2, y2,
+                  u2, v2)) / 2, 0, 255);
+
+      dest_y_idx += 2;
+      src_y_idx += 2;
+      dest_uv_idx++;
+    }
+
+    /* 1.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = srcY[src_y_idx];
+      u1 = srcU[src_uv_idx / 2];
+      v1 = srcV[src_uv_idx / 2];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+      destV[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+    } else if (j == w - 1) {
+      y1 = srcY[src_y_idx];
+      u1 = srcU[src_uv_idx / 2];
+      v1 = srcV[src_uv_idx / 2];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (
+          (destU[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 2, 0, 255);
+      destV[dest_uv_idx] = CLAMP (
+          (destV[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 2, 0, 255);
+    }
+
+    destY += dest_strideY;
+    destU += dest_strideUV;
+    destV += dest_strideUV;
+    srcY += src_strideY;
+
+    srcU += src_strideUV;
+    srcV += src_strideUV;
+  }
+}
+
+static void
+copy_y41b_y41b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
+    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
+    gint dest_y, GstVideoFormat src_format, const guint8 * src,
+    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
+    gint w, gint h)
+{
+  gint i, j;
+  guint8 *destY, *destU, *destV;
+  const guint8 *srcY, *srcU, *srcV;
+  gint dest_strideY, dest_strideUV;
+  gint src_strideY, src_strideUV;
+  gint src_y_idx, src_uv_idx;
+  gint dest_y_idx, dest_uv_idx;
+  gint matrix[12];
+  gint y1, y2, y3, y4;
+  gint u1, u2, u3, u4;
+  gint v1, v2, v3, v4;
+
+  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
+  src_strideY = gst_video_format_get_row_stride (src_format, 0, src_width);
+  src_strideUV = gst_video_format_get_row_stride (src_format, 1, src_width);
+
+  destY =
+      dest + gst_video_format_get_component_offset (dest_format, 0,
+      dest_width, dest_height);
+  destU =
+      dest + gst_video_format_get_component_offset (dest_format, 1,
+      dest_width, dest_height);
+  destV =
+      dest + gst_video_format_get_component_offset (dest_format, 2,
+      dest_width, dest_height);
+
+  srcY =
+      src + gst_video_format_get_component_offset (src_format, 0,
+      src_width, src_height);
+  srcU =
+      src + gst_video_format_get_component_offset (src_format, 1,
+      src_width, src_height);
+  srcV =
+      src + gst_video_format_get_component_offset (src_format, 2,
+      src_width, src_height);
+
+
+  destY = destY + dest_y * dest_strideY + dest_x;
+  destU = destU + dest_y * dest_strideUV + dest_x / 4;
+  destV = destV + dest_y * dest_strideUV + dest_x / 4;
+
+  srcY = srcY + src_y * src_strideY + src_x;
+  srcU = srcU + src_y * src_strideUV + src_x / 4;
+  srcV = srcV + src_y * src_strideUV + src_x / 4;
+
+  h = dest_y + h;
+  w = dest_x + w;
+
+  if (src_sdtv != dest_sdtv)
+    memcpy (matrix,
+        dest_sdtv ? cog_ycbcr_hdtv_to_ycbcr_sdtv_matrix_8bit :
+        cog_ycbcr_sdtv_to_ycbcr_hdtv_matrix_8bit, 12 * sizeof (gint));
+  else
+    memcpy (matrix, cog_identity_matrix_8bit, 12 * sizeof (gint));
+
+  /* 1. Copy all macro pixel scanlines, the destination scanline
+   *    now starts at macro pixel boundary. */
+  for (i = dest_y; i < h; i++) {
+    /* 1.1. Handle the first destination pixel if it doesn't
+     *      start at the macro pixel boundary, i.e. blend with
+     *      the background! */
+    if (dest_x % 4 == 1) {
+      y1 = srcY[0];
+      y2 = srcY[1];
+      y3 = srcY[2];
+      u1 = srcU[0];
+      v1 = srcV[0];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+      destY[2] = CLAMP (APPLY_MATRIX (matrix, 0, y3, u1, v1), 0, 255);
+
+      destU[0] = CLAMP (
+          (destU[0] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y3, u1, v1)) / 4, 0, 255);
+      destV[0] =
+          CLAMP ((destV[0] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y3, u1, v1)) / 4, 0, 255);
+
+      j = dest_x + 3;
+      src_y_idx = dest_y_idx = 3;
+      dest_uv_idx = 1;
+      src_uv_idx = (src_x % 4) + 3;
+    } else if (dest_x % 4 == 2) {
+      y1 = srcY[0];
+      y2 = srcY[1];
+      u1 = srcU[0];
+      v1 = srcV[0];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[1] = CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+
+      destU[0] = CLAMP (
+          (2 * destU[0] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 1, y2, u1, v1)) / 4, 0, 255);
+      destV[0] =
+          CLAMP ((2 * destV[0] + APPLY_MATRIX (matrix, 2, y1, u1,
+                  v1) + APPLY_MATRIX (matrix, 2, y2, u1, v1)) / 4, 0, 255);
+
+      j = dest_x + 2;
+      src_y_idx = dest_y_idx = 2;
+      dest_uv_idx = 1;
+      src_uv_idx = (src_x % 4) + 2;
+    } else if (dest_x % 4 == 3) {
+      y1 = srcY[0];
+      u1 = srcU[0];
+      v1 = srcV[0];
+
+      destY[0] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+
+      destU[0] = CLAMP (
+          (3 * destU[0] + APPLY_MATRIX (matrix, 1, y1, u1, v1)) / 4, 0, 255);
+      destV[0] = CLAMP (
+          (3 * destV[0] + APPLY_MATRIX (matrix, 2, y1, u1, v1)) / 4, 0, 255);
+
+      j = dest_x + 1;
+      src_y_idx = dest_y_idx = 1;
+      dest_uv_idx = 1;
+      src_uv_idx = (src_x % 4) + 1;
+    } else {
+      j = dest_x;
+      src_y_idx = dest_y_idx = dest_uv_idx = 0;
+      src_uv_idx = (src_x % 4);
+    }
+
+    /* 1.2. Copy all macro pixels from the source to the destination.
+     *      All pixels now start at macro pixel boundary, i.e. no
+     *      blending with the background is necessary. */
+    for (; j < w - 3; j += 4) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+      y3 = srcY[src_y_idx + 2];
+      y4 = srcY[src_y_idx + 3];
+
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+      src_uv_idx++;
+      u2 = srcU[src_uv_idx / 4];
+      v2 = srcV[src_uv_idx / 4];
+      src_uv_idx++;
+      u3 = srcU[src_uv_idx / 4];
+      v3 = srcV[src_uv_idx / 4];
+      src_uv_idx++;
+      u4 = srcU[src_uv_idx / 4];
+      v4 = srcV[src_uv_idx / 4];
+      src_uv_idx++;
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u2, v2), 0, 255);
+      destY[dest_y_idx + 2] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y3, u3, v3), 0, 255);
+      destY[dest_y_idx + 3] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y4, u4, v4), 0, 255);
+
+      destU[dest_uv_idx] = CLAMP (
+          (APPLY_MATRIX (matrix, 1, y1, u1, v1) + APPLY_MATRIX (matrix, 1, y2,
+                  u2, v2) + APPLY_MATRIX (matrix, 1, y3, u3,
+                  v3) + APPLY_MATRIX (matrix, 1, y4, u4, v4)) / 4, 0, 255);
+      destV[dest_uv_idx] =
+          CLAMP ((APPLY_MATRIX (matrix, 2, y1, u1, v1) + APPLY_MATRIX (matrix,
+                  2, y2, u2, v2) + APPLY_MATRIX (matrix, 2, y3, u3,
+                  v3) + APPLY_MATRIX (matrix, 2, y4, u4, v4)) / 4, 0, 255);
+
+      dest_y_idx += 4;
+      src_y_idx += 4;
+      dest_uv_idx++;
+    }
+
+    /* 1.3. Now copy the last pixel if one exists and blend it
+     *      with the background because we only fill part of
+     *      the macro pixel. In case this is the last pixel of
+     *      the destination we will a larger part. */
+    if (j == w - 1 && j == dest_width - 1) {
+      y1 = srcY[src_y_idx];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+      destV[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+    } else if (j == w - 1) {
+      y1 = srcY[src_y_idx];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (
+          (destU[dest_uv_idx] + 3 * APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 4, 0, 255);
+      destV[dest_uv_idx] = CLAMP (
+          (destV[dest_uv_idx] + 3 * APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 4, 0, 255);
+    } else if (j == w - 2 && j == dest_width - 2) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+      destV[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+    } else if (j == w - 2) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+      destU[dest_uv_idx] =
+          CLAMP ((destU[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 2, 0, 255);
+      destV[dest_uv_idx] =
+          CLAMP ((destV[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 2, 0, 255);
+    } else if (j == w - 3 && j == dest_width - 3) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+      y3 = srcY[src_y_idx + 2];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+      destY[dest_y_idx + 2] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y3, u1, v1), 0, 255);
+      destU[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+      destV[dest_uv_idx] = CLAMP (APPLY_MATRIX (matrix, 1, y1, u1, v1), 0, 255);
+    } else if (j == w - 3) {
+      y1 = srcY[src_y_idx];
+      y2 = srcY[src_y_idx + 1];
+      y3 = srcY[src_y_idx + 2];
+      u1 = srcU[src_uv_idx / 4];
+      v1 = srcV[src_uv_idx / 4];
+
+      destY[dest_y_idx] = CLAMP (APPLY_MATRIX (matrix, 0, y1, u1, v1), 0, 255);
+      destY[dest_y_idx + 1] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y2, u1, v1), 0, 255);
+      destY[dest_y_idx + 2] =
+          CLAMP (APPLY_MATRIX (matrix, 0, y3, u1, v1), 0, 255);
+      destU[dest_uv_idx] =
+          CLAMP ((3 * destU[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 4, 0, 255);
+      destV[dest_uv_idx] =
+          CLAMP ((3 * destV[dest_uv_idx] + APPLY_MATRIX (matrix, 1, y1, u1,
+                  v1)) / 4, 0, 255);
+    }
+
+    destY += dest_strideY;
+    destU += dest_strideUV;
+    destV += dest_strideUV;
+    srcY += src_strideY;
+    srcU += src_strideUV;
+    srcV += src_strideUV;
+  }
 }
 
 static void
@@ -1860,11 +2371,14 @@ static GstStaticPadTemplate gst_video_box_src_template =
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";"
         GST_VIDEO_CAPS_YUV ("YUY2") ";"
         GST_VIDEO_CAPS_YUV ("YVYU") ";"
         GST_VIDEO_CAPS_YUV ("UYVY") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
         GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("Y41B") ";"
         GST_VIDEO_CAPS_GRAY8 ";"
         GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
         GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
@@ -1880,11 +2394,14 @@ static GstStaticPadTemplate gst_video_box_sink_template =
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+        GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";"
         GST_VIDEO_CAPS_YUV ("YUY2") ";"
         GST_VIDEO_CAPS_YUV ("YVYU") ";"
         GST_VIDEO_CAPS_YUV ("UYVY") ";"
         GST_VIDEO_CAPS_YUV ("I420") ";"
         GST_VIDEO_CAPS_YUV ("YV12") ";"
+        GST_VIDEO_CAPS_YUV ("Y41B") ";"
         GST_VIDEO_CAPS_GRAY8 ";"
         GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
         GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
@@ -2511,7 +3028,7 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      video_box->fill = fill_i420;
+      video_box->fill = fill_planar_yuv;
       switch (video_box->in_format) {
         case GST_VIDEO_FORMAT_AYUV:
           video_box->copy = copy_ayuv_i420;
@@ -2579,6 +3096,24 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
         case GST_VIDEO_FORMAT_YVYU:
         case GST_VIDEO_FORMAT_UYVY:
           video_box->copy = copy_yuy2_yuy2;
+          break;
+        default:
+          break;
+      }
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      video_box->fill = fill_planar_yuv;
+      switch (video_box->in_format) {
+        case GST_VIDEO_FORMAT_Y444:
+          video_box->copy = copy_y444_y444;
+          break;
+        case GST_VIDEO_FORMAT_Y42B:
+          video_box->copy = copy_y42b_y42b;
+          break;
+        case GST_VIDEO_FORMAT_Y41B:
+          video_box->copy = copy_y41b_y41b;
           break;
         default:
           break;
