@@ -85,8 +85,11 @@
 #  include "config.h"
 #endif
 
+#define GST_USE_UNSTABLE_API 1
+
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/photography.h>
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
@@ -102,7 +105,6 @@
  */
 GST_DEBUG_CATEGORY_STATIC (camerabin_test);
 #define GST_CAT_DEFAULT camerabin_test
-
 typedef struct _ResultType
 {
   GstClockTime avg;
@@ -533,6 +535,7 @@ run_pipeline (gpointer user_data)
   GstCaps *preview_caps = NULL;
   gchar *filename_str = NULL;
   GString *filename_buffer = NULL;
+  GstElement *video_source = NULL;
 
   g_object_set (camera_bin, "mode", mode, NULL);
 
@@ -561,14 +564,21 @@ run_pipeline (gpointer user_data)
   g_free (filename_str);
 
 
-  g_object_set (camera_bin, "ev-compensation", ev_compensation, NULL);
-  g_object_set (camera_bin, "aperture", aperture, NULL);
-  g_object_set (camera_bin, "flash-mode", flash_mode, NULL);
-  g_object_set (camera_bin, "scene-mode", scene_mode, NULL);
-  g_object_set (camera_bin, "exposure", exposure, NULL);
-  g_object_set (camera_bin, "iso-speed", iso_speed, NULL);
-  g_object_set (camera_bin, "white-balance-mode", wb_mode, NULL);
-  g_object_set (camera_bin, "colour-tone-mode", color_mode, NULL);
+  g_object_get (camera_bin, "video-source", &video_source, NULL);
+  if (video_source) {
+    if (GST_IS_ELEMENT (video_source) &&
+        gst_element_implements_interface (video_source, GST_TYPE_PHOTOGRAPHY)) {
+      g_object_set (video_source, "ev-compensation", ev_compensation, NULL);
+      g_object_set (video_source, "aperture", aperture, NULL);
+      g_object_set (video_source, "flash-mode", flash_mode, NULL);
+      g_object_set (video_source, "scene-mode", scene_mode, NULL);
+      g_object_set (video_source, "exposure", exposure, NULL);
+      g_object_set (video_source, "iso-speed", iso_speed, NULL);
+      g_object_set (video_source, "white-balance-mode", wb_mode, NULL);
+      g_object_set (video_source, "colour-tone-mode", color_mode, NULL);
+    }
+    g_object_unref (video_source);
+  }
   g_object_set (camera_bin, "mute", mute, NULL);
   g_object_set (camera_bin, "zoom", zoom, NULL);
 

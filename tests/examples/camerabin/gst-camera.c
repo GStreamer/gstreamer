@@ -819,11 +819,11 @@ on_buttonPause_clicked (GtkButton * button, gpointer user_data)
     case CAP_STATE_IMAGE:
       if (g_str_equal (gtk_button_get_label (ui_bnt_pause), "Focus")) {
         /* Start autofocus */
-        gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_camera_bin), TRUE);
+        gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), TRUE);
         gtk_button_set_label (ui_bnt_pause, "Cancel Focus");
       } else {
         /* Cancel autofocus */
-        gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_camera_bin), FALSE);
+        gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), FALSE);
         gtk_button_set_label (ui_bnt_pause, "Focus");
       }
       break;
@@ -1043,7 +1043,7 @@ on_key_released (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
   switch (event->keyval) {
     case GDK_F11:
 #ifdef HAVE_GST_PHOTO_IFACE_H
-      gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_camera_bin), FALSE);
+      gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), FALSE);
 #endif
       break;
     default:
@@ -1061,7 +1061,7 @@ on_key_pressed (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
   switch (event->keyval) {
     case GDK_F11:
 #ifdef HAVE_GST_PHOTO_IFACE_H
-      gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_camera_bin), TRUE);
+      gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), TRUE);
 #endif
       break;
     case 0x0:
@@ -1337,31 +1337,31 @@ photo_menuitem_toggled_cb (GtkRadioMenuItem * menuitem, gpointer user_data)
       GstWhiteBalanceMode mode;
       ret =
           gst_photography_set_white_balance_mode (GST_PHOTOGRAPHY
-          (gst_camera_bin), val->value);
-      gst_photography_get_white_balance_mode (GST_PHOTOGRAPHY (gst_camera_bin),
+          (gst_videosrc), val->value);
+      gst_photography_get_white_balance_mode (GST_PHOTOGRAPHY (gst_videosrc),
           &mode);
       set_value = (gint) mode;
     } else if (etype == GST_TYPE_SCENE_MODE) {
       GstSceneMode mode;
       ret =
-          gst_photography_set_scene_mode (GST_PHOTOGRAPHY (gst_camera_bin),
+          gst_photography_set_scene_mode (GST_PHOTOGRAPHY (gst_videosrc),
           val->value);
-      gst_photography_get_scene_mode (GST_PHOTOGRAPHY (gst_camera_bin), &mode);
+      gst_photography_get_scene_mode (GST_PHOTOGRAPHY (gst_videosrc), &mode);
       set_value = (gint) mode;
     } else if (etype == GST_TYPE_COLOUR_TONE_MODE) {
       GstColourToneMode mode;
       ret =
           gst_photography_set_colour_tone_mode (GST_PHOTOGRAPHY
-          (gst_camera_bin), val->value);
-      gst_photography_get_colour_tone_mode (GST_PHOTOGRAPHY (gst_camera_bin),
+          (gst_videosrc), val->value);
+      gst_photography_get_colour_tone_mode (GST_PHOTOGRAPHY (gst_videosrc),
           &mode);
       set_value = (gint) mode;
     } else if (etype == GST_TYPE_FLASH_MODE) {
       GstFlashMode mode;
       ret =
-          gst_photography_set_flash_mode (GST_PHOTOGRAPHY (gst_camera_bin),
+          gst_photography_set_flash_mode (GST_PHOTOGRAPHY (gst_videosrc),
           val->value);
-      gst_photography_get_flash_mode (GST_PHOTOGRAPHY (gst_camera_bin), &mode);
+      gst_photography_get_flash_mode (GST_PHOTOGRAPHY (gst_videosrc), &mode);
       set_value = (gint) mode;
     }
 
@@ -1388,11 +1388,10 @@ photo_iso_speed_toggled_cb (GtkRadioMenuItem * menuitem, gpointer user_data)
     if (!g_str_equal (name, "auto")) {
       sscanf (name, "%d", &val);
     }
-    if (!gst_photography_set_iso_speed (GST_PHOTOGRAPHY (gst_camera_bin), val)) {
+    if (!gst_photography_set_iso_speed (GST_PHOTOGRAPHY (gst_videosrc), val)) {
       g_print ("ISO speed (%d) setting failed\n", val);
     } else {
-      gst_photography_get_iso_speed (GST_PHOTOGRAPHY (gst_camera_bin),
-          &set_val);
+      gst_photography_get_iso_speed (GST_PHOTOGRAPHY (gst_videosrc), &set_val);
       if (val != set_val) {
         g_print ("ISO speed (%d) setting failed, got %d\n", val, set_val);
       }
@@ -1411,11 +1410,11 @@ photo_ev_comp_toggled_cb (GtkRadioMenuItem * menuitem, gpointer user_data)
   if (active) {
     name = gtk_widget_get_name (GTK_WIDGET (menuitem));
     sscanf (name, "%f", &val);
-    if (!gst_photography_set_ev_compensation (GST_PHOTOGRAPHY (gst_camera_bin),
+    if (!gst_photography_set_ev_compensation (GST_PHOTOGRAPHY (gst_videosrc),
             val)) {
       g_print ("EV compensation (%.1f) setting failed\n", val);
     } else {
-      gst_photography_get_ev_compensation (GST_PHOTOGRAPHY (gst_camera_bin),
+      gst_photography_get_ev_compensation (GST_PHOTOGRAPHY (gst_videosrc),
           &set_val);
       if (val != set_val) {
         g_print ("EV compensation (%.1f) setting failed, got %.1f\n", val,
