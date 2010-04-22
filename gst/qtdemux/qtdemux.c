@@ -7484,6 +7484,13 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
    * codecs. */
   switch (object_type_id) {
     case 0x20:                 /* MPEG-4 */
+      /* 4 bytes for the visual_object_sequence_start_code and 1 byte for the
+       * profile_and_level_indication */
+      if (data_ptr != NULL && data_len >= 5 &&
+          GST_READ_UINT32_BE (data_ptr) == 0x000001b0) {
+        gst_codec_utils_mpeg4video_caps_set_level_and_profile (stream->caps,
+            data_ptr + 4, data_len - 4);
+      }
       break;                    /* Nothing special needed here */
     case 0x21:                 /* H.264 */
       codec_name = "H.264 / AVC";
