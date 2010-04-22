@@ -1514,11 +1514,10 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
     gint height, GstAlpha * alpha)
 {
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
-  const guint8 *srcY;
+  const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
   const guint8 *srcV, *srcV_tmp;
   gint i, j;
-  gint src_wrap, src_uv_wrap;
   gint y_stride, uv_stride;
   gint v_subs, h_subs;
   gint matrix[12];
@@ -1542,10 +1541,7 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
   y_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
   uv_stride = gst_video_format_get_row_stride (alpha->in_format, 1, width);
 
-  src_wrap = y_stride - width;
-  src_uv_wrap = uv_stride - (width / 2);
-
-  srcY = src;
+  srcY_tmp = srcY = src;
   srcU_tmp = srcU =
       src + gst_video_format_get_component_offset (alpha->in_format, 1, width,
       height);
@@ -1601,10 +1597,10 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
       }
     }
 
-    srcY += src_wrap;
+    srcY_tmp = srcY = srcY_tmp + y_stride;
     if ((i + 1) % v_subs == 0) {
-      srcU_tmp = srcU += src_uv_wrap;
-      srcV_tmp = srcV += src_uv_wrap;
+      srcU_tmp = srcU = srcU_tmp + uv_stride;
+      srcV_tmp = srcV = srcV_tmp + uv_stride;
     } else {
       srcU = srcU_tmp;
       srcV = srcV_tmp;
@@ -1617,13 +1613,12 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
     gint width, gint height, GstAlpha * alpha)
 {
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
-  const guint8 *srcY;
+  const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
   const guint8 *srcV, *srcV_tmp;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
-  gint src_wrap, src_uv_wrap;
   gint y_stride, uv_stride;
   gint v_subs, h_subs;
   gint smin = 128 - alpha->black_sensitivity;
@@ -1654,10 +1649,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
   y_stride = gst_video_format_get_row_stride (alpha->in_format, 0, width);
   uv_stride = gst_video_format_get_row_stride (alpha->in_format, 1, width);
 
-  src_wrap = y_stride - width;
-  src_uv_wrap = uv_stride - (width / 2);
-
-  srcY = src;
+  srcY_tmp = srcY = src;
   srcU_tmp = srcU =
       src + gst_video_format_get_component_offset (alpha->in_format, 1, width,
       height);
@@ -1720,10 +1712,10 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
       }
     }
 
-    srcY += src_wrap;
+    srcY_tmp = srcY = srcY_tmp + y_stride;
     if ((i + 1) % v_subs == 0) {
-      srcU_tmp = srcU += src_uv_wrap;
-      srcV_tmp = srcV += src_uv_wrap;
+      srcU_tmp = srcU = srcU_tmp + uv_stride;
+      srcV_tmp = srcV = srcV_tmp + uv_stride;
     } else {
       srcU = srcU_tmp;
       srcV = srcV_tmp;
