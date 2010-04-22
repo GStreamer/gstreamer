@@ -1523,6 +1523,7 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
   gint v_subs, h_subs;
   gint matrix[12];
   gint a, y, u, v;
+  gint r, g, b;
   gint p[4];
 
   p[0] =
@@ -1585,9 +1586,12 @@ gst_alpha_set_planar_yuv_argb (const guint8 * src, guint8 * dest, gint width,
       v = srcV[0];
 
       dest[p[0]] = a;
-      dest[p[1]] = APPLY_MATRIX (matrix, 0, y, u, v);
-      dest[p[2]] = APPLY_MATRIX (matrix, 1, y, u, v);
-      dest[p[3]] = APPLY_MATRIX (matrix, 2, y, u, v);
+      r = APPLY_MATRIX (matrix, 0, y, u, v);
+      g = APPLY_MATRIX (matrix, 1, y, u, v);
+      b = APPLY_MATRIX (matrix, 2, y, u, v);
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       dest += 4;
       srcY++;
@@ -1618,6 +1622,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
   const guint8 *srcV, *srcV_tmp;
   gint i, j;
   gint a, y, u, v;
+  gint r, g, b;
   gint src_wrap, src_uv_wrap;
   gint y_stride, uv_stride;
   gint v_subs, h_subs;
@@ -1699,10 +1704,13 @@ gst_alpha_chroma_key_planar_yuv_argb (const guint8 * src, guint8 * dest,
       u += 128;
       v += 128;
 
-      dest[0] = a;
-      dest[1] = APPLY_MATRIX (matrix, 0, y, u, v);
-      dest[2] = APPLY_MATRIX (matrix, 1, y, u, v);
-      dest[3] = APPLY_MATRIX (matrix, 2, y, u, v);
+      dest[p[0]] = a;
+      r = APPLY_MATRIX (matrix, 0, y, u, v);
+      g = APPLY_MATRIX (matrix, 1, y, u, v);
+      b = APPLY_MATRIX (matrix, 2, y, u, v);
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       dest += 4;
       srcY++;
@@ -2045,18 +2053,18 @@ gst_alpha_set_packed_422_argb (const guint8 * src, guint8 * dest, gint width,
       b = APPLY_MATRIX (matrix, 2, src[o[0]], src[o[1]], src[o[3]]);
 
       dest[p[0]] = s_alpha;
-      dest[p[1]] = r;
-      dest[p[2]] = g;
-      dest[p[3]] = b;
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       r = APPLY_MATRIX (matrix, 0, src[o[2]], src[o[1]], src[o[3]]);
       g = APPLY_MATRIX (matrix, 1, src[o[2]], src[o[1]], src[o[3]]);
       b = APPLY_MATRIX (matrix, 2, src[o[2]], src[o[1]], src[o[3]]);
 
       dest[4 + p[0]] = s_alpha;
-      dest[4 + p[1]] = r;
-      dest[4 + p[2]] = g;
-      dest[4 + p[3]] = b;
+      dest[4 + p[1]] = CLAMP (r, 0, 255);
+      dest[4 + p[2]] = CLAMP (g, 0, 255);
+      dest[4 + p[3]] = CLAMP (b, 0, 255);
 
       dest += 8;
       src += 4;
@@ -2068,9 +2076,9 @@ gst_alpha_set_packed_422_argb (const guint8 * src, guint8 * dest, gint width,
       b = APPLY_MATRIX (matrix, 2, src[o[0]], src[o[1]], src[o[3]]);
 
       dest[p[0]] = s_alpha;
-      dest[p[1]] = r;
-      dest[p[2]] = g;
-      dest[p[3]] = b;
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       dest += 4;
     }
@@ -2152,9 +2160,9 @@ gst_alpha_chroma_key_packed_422_argb (const guint8 * src, guint8 * dest,
       b = APPLY_MATRIX (matrix, 2, y, u, v);
 
       dest[p[0]] = a;
-      dest[p[1]] = r;
-      dest[p[2]] = g;
-      dest[p[3]] = b;
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       y = src[o[2]];
       u = src[o[1]] - 128;
@@ -2171,9 +2179,9 @@ gst_alpha_chroma_key_packed_422_argb (const guint8 * src, guint8 * dest,
       b = APPLY_MATRIX (matrix, 2, y, u, v);
 
       dest[4 + p[0]] = a;
-      dest[4 + p[1]] = r;
-      dest[4 + p[2]] = g;
-      dest[4 + p[3]] = b;
+      dest[4 + p[1]] = CLAMP (r, 0, 255);
+      dest[4 + p[2]] = CLAMP (g, 0, 255);
+      dest[4 + p[3]] = CLAMP (b, 0, 255);
 
       dest += 8;
       src += 4;
@@ -2195,9 +2203,9 @@ gst_alpha_chroma_key_packed_422_argb (const guint8 * src, guint8 * dest,
       b = APPLY_MATRIX (matrix, 2, y, u, v);
 
       dest[p[0]] = a;
-      dest[p[1]] = r;
-      dest[p[2]] = g;
-      dest[p[3]] = b;
+      dest[p[1]] = CLAMP (r, 0, 255);
+      dest[p[2]] = CLAMP (g, 0, 255);
+      dest[p[3]] = CLAMP (b, 0, 255);
 
       dest += 4;
     }
