@@ -42,6 +42,9 @@ extern BlendFunction gst_video_mixer_blend_rgbx;
 #define gst_video_mixer_blend_bgrx gst_video_mixer_blend_rgbx
 #define gst_video_mixer_blend_xrgb gst_video_mixer_blend_rgbx
 #define gst_video_mixer_blend_xbgr gst_video_mixer_blend_rgbx
+extern BlendFunction gst_video_mixer_blend_yuy2;
+#define gst_video_mixer_blend_uyvy gst_video_mixer_blend_yuy2;
+#define gst_video_mixer_blend_yvyu gst_video_mixer_blend_yuy2;
 
 extern FillCheckerFunction gst_video_mixer_fill_checker_argb;
 #define gst_video_mixer_fill_checker_abgr gst_video_mixer_fill_checker_argb
@@ -59,6 +62,9 @@ extern FillCheckerFunction gst_video_mixer_fill_checker_rgbx;
 #define gst_video_mixer_fill_checker_bgrx gst_video_mixer_fill_checker_rgbx
 #define gst_video_mixer_fill_checker_xrgb gst_video_mixer_fill_checker_rgbx
 #define gst_video_mixer_fill_checker_xbgr gst_video_mixer_fill_checker_rgbx
+extern FillCheckerFunction gst_video_mixer_fill_checker_yuy2;
+#define gst_video_mixer_fill_checker_yvyu gst_video_mixer_fill_checker_yuy2;
+extern FillCheckerFunction gst_video_mixer_fill_checker_uyvy;
 
 extern FillColorFunction gst_video_mixer_fill_color_argb;
 extern FillColorFunction gst_video_mixer_fill_color_abgr;
@@ -76,6 +82,9 @@ extern FillColorFunction gst_video_mixer_fill_color_xrgb;
 extern FillColorFunction gst_video_mixer_fill_color_xbgr;
 extern FillColorFunction gst_video_mixer_fill_color_rgbx;
 extern FillColorFunction gst_video_mixer_fill_color_bgrx;
+extern FillColorFunction gst_video_mixer_fill_color_yuy2;
+extern FillColorFunction gst_video_mixer_fill_color_yvyu;
+extern FillColorFunction gst_video_mixer_fill_color_uyvy;
 
 void gst_video_mixer_init_blend (void);
 

@@ -595,6 +595,121 @@ RGB_FILL_COLOR (rgbx_c, 4, _memset_rgbx_c);
 MEMSET_RGB_C (bgrx, 4, 2, 1, 0);
 RGB_FILL_COLOR (bgrx_c, 4, _memset_bgrx_c);
 
+/* YUY2, YVYU, UYVY */
+
+#define PACKED_422_BLEND(name, MEMCPY, BLENDLOOP) \
+static void \
+blend_##name (const guint8 * src, gint xpos, gint ypos, \
+    gint src_width, gint src_height, gdouble src_alpha, \
+    guint8 * dest, gint dest_width, gint dest_height) \
+{ \
+  gint b_alpha; \
+  gint i; \
+  gint src_stride, dest_stride; \
+  \
+  src_stride = GST_ROUND_UP_4 (src_width * 2); \
+  dest_stride = GST_ROUND_UP_4 (dest_width * 2); \
+  \
+  b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
+  \
+  xpos = GST_ROUND_UP_2 (xpos); \
+  \
+  /* adjust src pointers for negative sizes */ \
+  if (xpos < 0) { \
+    src += -xpos * 2; \
+    src_width -= -xpos; \
+    xpos = 0; \
+  } \
+  if (ypos < 0) { \
+    src += -ypos * src_stride; \
+    src_height -= -ypos; \
+    ypos = 0; \
+  } \
+  \
+  /* adjust width/height if the src is bigger than dest */ \
+  if (xpos + src_width > dest_width) { \
+    src_width = dest_width - xpos; \
+  } \
+  if (ypos + src_height > dest_height) { \
+    src_height = dest_height - ypos; \
+  } \
+  \
+  dest = dest + 2 * xpos + (ypos * dest_stride); \
+  /* If it's completely transparent... we just return */ \
+  if (G_UNLIKELY (src_alpha == 0.0)) { \
+    GST_INFO ("Fast copy (alpha == 0.0)"); \
+    return; \
+  } \
+  \
+  /* If it's completely opaque, we do a fast copy */ \
+  if (G_UNLIKELY (src_alpha == 1.0)) { \
+    GST_INFO ("Fast copy (alpha == 1.0)"); \
+    for (i = 0; i < src_height; i++) { \
+      MEMCPY (dest, src, 2 * src_width); \
+      src += src_stride; \
+      dest += dest_stride; \
+    } \
+    return; \
+  } \
+  \
+  BLENDLOOP(dest, src, src_stride, dest_stride, 2 * src_width, src_height, 2 * dest_width, b_alpha); \
+}
+
+#define PACKED_422_FILL_CHECKER_C(name, Y1, U, Y2, V) \
+static void \
+fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
+{ \
+  gint i, j; \
+  static const int tab[] = { 80, 160, 80, 160 }; \
+  gint dest_add; \
+  \
+  width = GST_ROUND_UP_2 (width); \
+  dest_add = GST_ROUND_UP_4 (width * 2) - width * 2; \
+  width /= 2; \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      dest[Y1] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+      dest[Y2] = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)]; \
+      dest[U] = 128; \
+      dest[V] = 128; \
+      dest += 4; \
+    } \
+    dest += dest_add; \
+  } \
+}
+
+#define PACKED_422_FILL_COLOR(name, Y1, U, Y2, V) \
+static void \
+fill_color_##name (guint8 * dest, gint width, gint height, \
+    gint colY, gint colU, gint colV) \
+{ \
+  gint i, j; \
+  gint dest_add; \
+  \
+  width = GST_ROUND_UP_2 (width); \
+  dest_add = GST_ROUND_UP_4 (width * 2) - width * 2; \
+  width /= 2; \
+  \
+  for (i = 0; i < height; i++) { \
+    for (j = 0; j < width; j++) { \
+      dest[Y1] = colY; \
+      dest[Y2] = colY; \
+      dest[U] = colU; \
+      dest[V] = colV; \
+      dest += 4; \
+    } \
+    dest += dest_add; \
+  } \
+}
+
+PACKED_422_BLEND (yuy2_c, memcpy, _blend_u8_c);
+PACKED_422_FILL_CHECKER_C (yuy2, 0, 1, 2, 3);
+PACKED_422_FILL_CHECKER_C (uyvy, 1, 0, 3, 2);
+PACKED_422_FILL_COLOR (yuy2_c, 0, 1, 2, 3);
+PACKED_422_FILL_COLOR (yvyu_c, 0, 3, 2, 1);
+PACKED_422_FILL_COLOR (uyvy_c, 1, 0, 3, 2);
+
 /* MMX Implementations */
 #ifdef BUILD_X86_ASM
 
@@ -674,6 +789,8 @@ RGB_FILL_COLOR (rgbx_mmx, 4, _memset_rgbx_mmx);
 
 MEMSET_xRGB_MMX (bgrx, 8, 16, 24);
 RGB_FILL_COLOR (bgrx_mmx, 4, _memset_bgrx_mmx);
+
+PACKED_422_BLEND (yuy2_mmx, _memcpy_u8_mmx, _blend_u8_mmx);
 #endif
 
 /* Init function */
@@ -689,6 +806,8 @@ BlendFunction gst_video_mixer_blend_rgb;
 /* BGR is equal to RGB */
 BlendFunction gst_video_mixer_blend_rgbx;
 /* BGRx, xRGB, xBGR are equal to RGBx */
+BlendFunction gst_video_mixer_blend_yuy2;
+/* YVYU and UYVY are equal to YUY2 */
 
 FillCheckerFunction gst_video_mixer_fill_checker_argb;
 FillCheckerFunction gst_video_mixer_fill_checker_bgra;
@@ -703,6 +822,9 @@ FillCheckerFunction gst_video_mixer_fill_checker_rgb;
 /* BGR is equal to RGB */
 FillCheckerFunction gst_video_mixer_fill_checker_xrgb;
 /* BGRx, xRGB, xBGR are equal to RGBx */
+FillCheckerFunction gst_video_mixer_fill_checker_yuy2;
+/* YVYU is equal to YUY2 */
+FillCheckerFunction gst_video_mixer_fill_checker_uyvy;
 
 FillColorFunction gst_video_mixer_fill_color_argb;
 FillColorFunction gst_video_mixer_fill_color_bgra;
@@ -720,6 +842,9 @@ FillColorFunction gst_video_mixer_fill_color_xrgb;
 FillColorFunction gst_video_mixer_fill_color_xbgr;
 FillColorFunction gst_video_mixer_fill_color_rgbx;
 FillColorFunction gst_video_mixer_fill_color_bgrx;
+FillColorFunction gst_video_mixer_fill_color_yuy2;
+FillColorFunction gst_video_mixer_fill_color_yvyu;
+FillColorFunction gst_video_mixer_fill_color_uyvy;
 
 void
 gst_video_mixer_init_blend (void)
@@ -737,6 +862,7 @@ gst_video_mixer_init_blend (void)
   gst_video_mixer_blend_y41b = blend_y41b_c;
   gst_video_mixer_blend_rgb = blend_rgb_c;
   gst_video_mixer_blend_xrgb = blend_xrgb_c;
+  gst_video_mixer_blend_yuy2 = blend_yuy2_c;
 
   gst_video_mixer_fill_checker_argb = fill_checker_argb_c;
   gst_video_mixer_fill_checker_bgra = fill_checker_bgra_c;
@@ -747,6 +873,8 @@ gst_video_mixer_init_blend (void)
   gst_video_mixer_fill_checker_y41b = fill_checker_y41b_c;
   gst_video_mixer_fill_checker_rgb = fill_checker_rgb_c;
   gst_video_mixer_fill_checker_xrgb = fill_checker_xrgb_c;
+  gst_video_mixer_fill_checker_yuy2 = fill_checker_yuy2_c;
+  gst_video_mixer_fill_checker_uyvy = fill_checker_uyvy_c;
 
   gst_video_mixer_fill_color_argb = fill_color_argb_c;
   gst_video_mixer_fill_color_bgra = fill_color_bgra_c;
@@ -764,6 +892,9 @@ gst_video_mixer_init_blend (void)
   gst_video_mixer_fill_color_xbgr = fill_color_xbgr_c;
   gst_video_mixer_fill_color_rgbx = fill_color_rgbx_c;
   gst_video_mixer_fill_color_bgrx = fill_color_bgrx_c;
+  gst_video_mixer_fill_color_yuy2 = fill_color_yuy2_c;
+  gst_video_mixer_fill_color_yvyu = fill_color_yvyu_c;
+  gst_video_mixer_fill_color_uyvy = fill_color_uyvy_c;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
@@ -775,6 +906,7 @@ gst_video_mixer_init_blend (void)
     gst_video_mixer_blend_y41b = blend_y41b_mmx;
     gst_video_mixer_blend_rgb = blend_rgb_mmx;
     gst_video_mixer_blend_xrgb = blend_xrgb_mmx;
+    gst_video_mixer_blend_yuy2 = blend_yuy2_mmx;
 
     gst_video_mixer_fill_checker_i420 = fill_checker_i420_mmx;
     gst_video_mixer_fill_checker_y444 = fill_checker_y444_mmx;
