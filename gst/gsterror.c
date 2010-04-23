@@ -114,15 +114,20 @@ GQuark gst_ ## string ## _error_quark (void) {                          \
     quark = g_quark_from_static_string ("gst-" # string "-error-quark"); \
   return quark; }
 
+/* FIXME: Deprecate when we depend on GLib 2.26 */
 GType
 gst_g_error_get_type (void)
 {
+#if GLIB_CHECK_VERSION(2,25,2)
+  return g_error_get_type ();
+#else
   static GType type = 0;
 
   if (G_UNLIKELY (type == 0))
     type = g_boxed_type_register_static ("GstGError",
         (GBoxedCopyFunc) g_error_copy, (GBoxedFreeFunc) g_error_free);
   return type;
+#endif
 }
 
 #define FILE_A_BUG "  Please file a bug at " PACKAGE_BUGREPORT "."
