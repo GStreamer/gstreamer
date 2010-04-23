@@ -43,23 +43,7 @@ GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 GST_DEBUG_CATEGORY (ffmpegcolorspace_performance);
 
-/* Stereo signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
-static GType gst_ffmpegcsp_get_type (void);
-
-static void gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass);
-static void gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass);
-static void gst_ffmpegcsp_init (GstFFMpegCsp * space);
+GType gst_ffmpegcsp_get_type (void);
 
 static gboolean gst_ffmpegcsp_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
@@ -67,15 +51,8 @@ static gboolean gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-#if 0
-static GstFlowReturn gst_ffmpegcsp_transform_ip (GstBaseTransform * btrans,
-    GstBuffer * inbuf);
-#endif
 
 static GstPadTemplate *sinktempl, *srctempl;
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_ffmpegcsp_signals[LAST_SIGNAL] = { 0 }; */
 
 /* copies the given caps */
 static GstCaps *
@@ -344,33 +321,11 @@ invalid_out_caps:
   }
 }
 
-static GType
-gst_ffmpegcsp_get_type (void)
-{
-  static GType ffmpegcsp_type = 0;
-
-  if (!ffmpegcsp_type) {
-    static const GTypeInfo ffmpegcsp_info = {
-      sizeof (GstFFMpegCspClass),
-      (GBaseInitFunc) gst_ffmpegcsp_base_init,
-      NULL,
-      (GClassInitFunc) gst_ffmpegcsp_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFFMpegCsp),
-      0,
-      (GInstanceInitFunc) gst_ffmpegcsp_init,
-    };
-
-    ffmpegcsp_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstFFMpegCsp", &ffmpegcsp_info, 0);
-  }
-
-  return ffmpegcsp_type;
-}
+GST_BOILERPLATE (GstFFMpegCsp, gst_ffmpegcsp, GstVideoFilter,
+    GST_TYPE_VIDEO_FILTER);
 
 static void
-gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass)
+gst_ffmpegcsp_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -396,13 +351,9 @@ gst_ffmpegcsp_finalize (GObject * obj)
 static void
 gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *gstbasetransform_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstbasetransform_class = (GstBaseTransformClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *gstbasetransform_class =
+      (GstBaseTransformClass *) klass;
 
   gobject_class->finalize = gst_ffmpegcsp_finalize;
 
@@ -413,18 +364,13 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_get_unit_size);
   gstbasetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform);
-#if 0
-  gstbasetransform_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_ip);
-#endif
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
-gst_ffmpegcsp_init (GstFFMpegCsp * space)
+gst_ffmpegcsp_init (GstFFMpegCsp * space, GstFFMpegCspClass * klass)
 {
-  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (space), TRUE);
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
   space->palette = NULL;
 }
@@ -476,16 +422,6 @@ beach:
 
   return ret;
 }
-
-#if 0
-/* FIXME: Could use transform_ip to implement endianness swap type operations */
-static GstFlowReturn
-gst_ffmpegcsp_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
-{
-  /* do nothing */
-  return GST_FLOW_OK;
-}
-#endif
 
 static GstFlowReturn
 gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,

@@ -23,7 +23,7 @@
 #define __GST_FFMPEGCOLORSPACE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/gstvideofilter.h>
 #include "avcodec.h"
 
 G_BEGIN_DECLS
@@ -43,7 +43,7 @@ typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
  * Opaque object data structure.
  */
 struct _GstFFMpegCsp {
-  GstBaseTransform element;
+  GstVideoFilter element;
 
   gint width, height;
   gboolean interlaced;
@@ -55,7 +55,7 @@ struct _GstFFMpegCsp {
 
 struct _GstFFMpegCspClass
 {
-  GstBaseTransformClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 G_END_DECLS
