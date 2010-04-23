@@ -252,6 +252,14 @@ else
     USE_VAAPISINK_GLX=0
 fi
 
+dnl Check for FFmpeg
+PKG_CHECK_MODULES(LIBAVFORMAT, [libavformat])
+AC_CHECK_HEADERS([libavformat/avformat.h])
+
+PKG_CHECK_MODULES(LIBAVCODEC, [libavcodec])
+AC_CHECK_HEADERS([libavcodec/avcodec.h])
+AC_CHECK_HEADERS([libavcodec/vaapi.h])
+
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)

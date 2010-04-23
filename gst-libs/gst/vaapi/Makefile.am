@@ -10,7 +10,20 @@ endif
 libgstvaapi_includedir =			\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vaapi
 
+libgstvaapi_ffmpeg_source_c =			\
+	gstvaapidecoder_ffmpeg.c		\
+	$(NULL)
+
+libgstvaapi_ffmpeg_source_h =			\
+	gstvaapidecoder_ffmpeg.h		\
+	$(NULL)
+
+libgstvaapi_ffmpeg_source_priv_h =		\
+	$(NULL)
+
 libgstvaapi_source_c =				\
+	gstvaapicontext.c			\
+	gstvaapidecoder.c			\
 	gstvaapidisplay.c			\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
@@ -22,15 +35,19 @@ libgstvaapi_source_c =				\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurfacepool.c			\
+	gstvaapisurfaceproxy.c			\
 	gstvaapiutils.c				\
 	gstvaapivalue.c				\
 	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
 	gstvaapivideosink.c			\
 	gstvaapiwindow.c			\
+	$(libgstvaapi_ffmpeg_source_c)		\
 	$(NULL)
 
 libgstvaapi_source_h =				\
+	gstvaapicontext.h			\
+	gstvaapidecoder.h			\
 	gstvaapidisplay.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
@@ -41,21 +58,25 @@ libgstvaapi_source_h =				\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurfacepool.h			\
+	gstvaapisurfaceproxy.h			\
 	gstvaapitypes.h				\
 	gstvaapivalue.h				\
 	gstvaapivideobuffer.h			\
 	gstvaapivideopool.h			\
 	gstvaapivideosink.h			\
 	gstvaapiwindow.h			\
+	$(libgstvaapi_ffmpeg_source_h)		\
 	$(NULL)
 
 libgstvaapi_source_priv_h =			\
 	gstvaapicompat.h			\
 	gstvaapidebug.h				\
+	gstvaapidecoder_priv.h			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapiutils.h				\
 	gstvaapi_priv.h				\
+	$(libgst_vaapi_ffmpeg_source_priv_h)	\
 	$(NULL)
 
 libgstvaapi_x11_source_c =			\
@@ -116,12 +137,16 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
+	$(LIBAVCODEC_CFLAGS)			\
+	$(LIBAVFORMAT_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GST_BASE_LIBS)			\
 	$(GST_LIBS)				\
+	$(LIBAVCODEC_LIBS)			\
+	$(LIBAVFORMAT_LIBS)			\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 
