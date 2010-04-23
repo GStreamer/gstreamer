@@ -37,42 +37,7 @@
 #endif
 
 #include "gstglfilterblur.h"
-
-/* horizontal convolution */
-static const gchar *hconv9_fragment_source =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;"
-    "uniform float norm_const;"
-    "uniform float norm_offset;"
-    "uniform float kernel[9];"
-    "void main () {"
-    "  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
-    "  vec2 texturecoord = gl_TexCoord[0].st;"
-    "  int i;"
-    "  vec4 sum = vec4 (0.0);"
-    "  for (i = 0; i < 9; i++) { "
-    "    if (kernel[i] != 0.0) {"
-    "        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s+offset[i], texturecoord.t)); "
-    "        sum += neighbor * kernel[i]/norm_const; "
-    "      }" "  }" "  gl_FragColor = sum + norm_offset;" "}";
-
-/* vertical convolution */
-static const gchar *vconv9_fragment_source =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;"
-    "uniform float norm_const;"
-    "uniform float norm_offset;"
-    "uniform float kernel[9];"
-    "void main () {"
-    "  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
-    "  vec2 texturecoord = gl_TexCoord[0].st;"
-    "  int i;"
-    "  vec4 sum = vec4 (0.0);"
-    "  for (i = 0; i < 9; i++) { "
-    "    if (kernel[i] != 0.0) {"
-    "        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s, texturecoord.t+offset[i])); "
-    "        sum += neighbor * kernel[i]/norm_const; "
-    "      }" "  }" "  gl_FragColor = sum + norm_offset;" "}";
+#include <gstgleffectssources.h>
 
 #define GST_CAT_DEFAULT gst_gl_filterblur_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
