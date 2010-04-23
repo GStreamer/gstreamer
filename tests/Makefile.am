@@ -1,4 +1,5 @@
 noinst_PROGRAMS = 	\
+	test-decode	\
 	test-display	\
 	test-surfaces	\
 	test-windows	\
@@ -34,6 +35,13 @@ if USE_GLX
 TEST_MIX_LIBS		+= $(TEST_GLX_LIBS)
 endif
 
+test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c
+test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h)
+
+test_decode_SOURCES	= test-decode.c $(test_codecs_source_c)
+test_decode_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
+test_decode_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
+
 test_display_SOURCES	= test-display.c
 test_display_CFLAGS	= $(TEST_CFLAGS) $(TEST_MIX_CFLAGS)
 test_display_LDADD	= $(TEST_LIBS) $(TEST_MIX_LIBS)
@@ -50,7 +58,7 @@ test_textures_SOURCES	= test-textures.c image.c
 test_textures_CFLAGS	= $(TEST_CFLAGS) $(TEST_GLX_CFLAGS)
 test_textures_LDADD	= $(TEST_LIBS) $(TEST_GLX_LIBS)
 
-EXTRA_DIST = image.h
+EXTRA_DIST = image.h $(test_codecs_source_c) $(test_codecs_source_h)
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
