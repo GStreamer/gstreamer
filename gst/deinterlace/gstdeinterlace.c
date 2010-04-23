@@ -948,6 +948,14 @@ gst_deinterlace_reset_history (GstDeinterlace * self)
 }
 
 static void
+gst_deinterlace_update_passthrough (GstDeinterlace * self)
+{
+  self->passthrough = (self->mode == GST_DEINTERLACE_MODE_DISABLED
+      || (!self->interlaced && self->mode != GST_DEINTERLACE_MODE_INTERLACED));
+  GST_DEBUG_OBJECT (self, "Passthrough: %d", self->passthrough);
+}
+
+static void
 gst_deinterlace_reset (GstDeinterlace * self)
 {
   GST_DEBUG_OBJECT (self, "Resetting internal state");
@@ -957,6 +965,7 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->height = 0;
   self->frame_size = 0;
   self->fps_n = self->fps_d = 0;
+  self->passthrough = FALSE;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
 
@@ -993,6 +1002,7 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (self);
       oldmode = self->mode;
       self->mode = g_value_get_enum (value);
+      gst_deinterlace_update_passthrough (self);
       if (self->mode != oldmode && GST_PAD_CAPS (self->srcpad))
         gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
       GST_OBJECT_UNLOCK (self);
@@ -1260,18 +1270,14 @@ gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
 static GstFlowReturn
 gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstDeinterlace *self = NULL;
+  GstDeinterlace *self = GST_DEINTERLACE (GST_PAD_PARENT (pad));
   GstClockTime timestamp;
   GstFlowReturn ret = GST_FLOW_OK;
   gint fields_required = 0;
   gint cur_field_idx = 0;
   GstBuffer *outbuf;
 
-  self = GST_DEINTERLACE (GST_PAD_PARENT (pad));
-
-  if (self->still_frame_mode ||
-      self->mode == GST_DEINTERLACE_MODE_DISABLED || (!self->interlaced
-          && self->mode != GST_DEINTERLACE_MODE_INTERLACED))
+  if (self->still_frame_mode || self->passthrough)
     return gst_pad_push (self->srcpad, buf);
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
@@ -1538,9 +1544,7 @@ gst_deinterlace_getcaps (GstPad * pad)
 
   GST_OBJECT_UNLOCK (self);
 
-  if ((self->interlaced || self->mode == GST_DEINTERLACE_MODE_INTERLACED) &&
-      self->fields == GST_DEINTERLACE_ALL
-      && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+  if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
     for (len = gst_caps_get_size (ret); len > 0; len--) {
       GstStructure *s = gst_caps_get_structure (ret, len - 1);
       const GValue *val;
@@ -1669,9 +1673,9 @@ gst_deinterlace_setcaps (GstPad * pad, GstCaps * caps)
   if (!res)
     goto invalid_caps;
 
-  if ((self->interlaced || self->mode == GST_DEINTERLACE_MODE_INTERLACED) &&
-      self->fields == GST_DEINTERLACE_ALL
-      && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+  gst_deinterlace_update_passthrough (self);
+
+  if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
     gint fps_n = self->fps_n, fps_d = self->fps_d;
 
     if (!gst_fraction_double (&fps_n, &fps_d, otherpad != self->srcpad))
@@ -1921,8 +1925,7 @@ gst_deinterlace_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
-      if ((self->interlaced || self->mode == GST_DEINTERLACE_MODE_INTERLACED)
-          && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+      if (!self->passthrough) {
         GstClockTime min, max;
         gboolean live;
         GstPad *peer;
@@ -2008,9 +2011,7 @@ gst_deinterlace_alloc_buffer (GstPad * pad, guint64 offset, guint size,
   GST_DEBUG_OBJECT (pad, "alloc with caps %" GST_PTR_FORMAT ", size %u", caps,
       size);
 
-  if (self->still_frame_mode ||
-      self->mode == GST_DEINTERLACE_MODE_DISABLED || (!self->interlaced
-          && self->mode != GST_DEINTERLACE_MODE_INTERLACED)) {
+  if (self->still_frame_mode || self->passthrough) {
     ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
   } else if (G_LIKELY (!self->request_caps)) {
     *buf = gst_buffer_try_new_and_alloc (size);
@@ -2026,9 +2027,7 @@ gst_deinterlace_alloc_buffer (GstPad * pad, guint64 offset, guint size,
     guint new_frame_size;
     GstCaps *new_caps = gst_caps_copy (self->request_caps);
 
-    if ((self->interlaced || self->mode == GST_DEINTERLACE_MODE_INTERLACED) &&
-        self->fields == GST_DEINTERLACE_ALL
-        && self->mode != GST_DEINTERLACE_MODE_DISABLED) {
+    if (self->fields == GST_DEINTERLACE_ALL) {
       gint n, d;
       GstStructure *s = gst_caps_get_structure (new_caps, 0);
 

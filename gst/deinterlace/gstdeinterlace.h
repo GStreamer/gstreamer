@@ -227,7 +227,6 @@ struct _GstDeinterlace
   GstPad *srcpad, *sinkpad;
 
   /* <private> */
-
   GstDeinterlaceMode mode;
 
   GstDeinterlaceFieldLayout field_layout;
@@ -242,6 +241,8 @@ struct _GstDeinterlace
   guint frame_size; /* frame size in bytes */
   gint fps_n, fps_d; /* frame rate */
   gboolean interlaced; /* is input interlaced? */
+
+  gboolean passthrough;
 
   GstClockTime field_duration; /* Duration of one field */
 
