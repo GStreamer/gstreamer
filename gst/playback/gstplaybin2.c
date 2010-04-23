@@ -2972,8 +2972,25 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 {
   GstCaps *subcaps;
   gboolean ret = FALSE;
+  GstElement *text_sink;
+  GstPad *text_sinkpad = NULL;
 
-  subcaps = gst_subtitle_overlay_create_factory_caps ();
+  text_sink =
+      (group->playbin->text_sink) ? gst_object_ref (group->
+      playbin->text_sink) : NULL;
+  if (text_sink)
+    text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
+
+  if (text_sinkpad) {
+    subcaps = gst_pad_get_caps_reffed (text_sinkpad);
+    gst_object_unref (text_sinkpad);
+  } else {
+    subcaps = gst_subtitle_overlay_create_factory_caps ();
+  }
+
+  if (text_sink)
+    gst_object_unref (text_sink);
+
   ret = !gst_caps_can_intersect (subcaps, caps);
   gst_caps_unref (subcaps);
 
