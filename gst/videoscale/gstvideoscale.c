@@ -87,14 +87,17 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y444")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("v308")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y42B")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YVYU")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("UYVY")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YV12")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y41B")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15),
   GST_STATIC_CAPS ("video/x-raw-gray, "
@@ -122,14 +125,17 @@ enum
   GST_VIDEO_SCALE_xRGB,
   GST_VIDEO_SCALE_BGRx,
   GST_VIDEO_SCALE_xBGR,
+  GST_VIDEO_SCALE_Y444,
   GST_VIDEO_SCALE_v308,
   GST_VIDEO_SCALE_RGB,
   GST_VIDEO_SCALE_BGR,
+  GST_VIDEO_SCALE_Y42B,
   GST_VIDEO_SCALE_YUY2,
   GST_VIDEO_SCALE_YVYU,
   GST_VIDEO_SCALE_UYVY,
   GST_VIDEO_SCALE_I420,
   GST_VIDEO_SCALE_YV12,
+  GST_VIDEO_SCALE_Y41B,
   GST_VIDEO_SCALE_RGB565,
   GST_VIDEO_SCALE_RGB555,
   GST_VIDEO_SCALE_GRAY16,
@@ -191,13 +197,9 @@ gst_video_scale_sink_template_factory (void)
 
 
 static void gst_video_scale_base_init (gpointer g_class);
-
 static void gst_video_scale_class_init (GstVideoScaleClass * klass);
-
 static void gst_video_scale_init (GstVideoScale * videoscale);
-
 static void gst_video_scale_finalize (GstVideoScale * videoscale);
-
 static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
@@ -425,17 +427,33 @@ gst_video_scale_prepare_size (GstVideoScale * videoscale, gint format,
       img->stride = img->width * 4;
       *size = img->stride * img->height;
       break;
+    case GST_VIDEO_SCALE_Y444:
+      img->stride = GST_ROUND_UP_4 (img->width);
+      *size = img->stride * img->height * 3;
+      break;
     case GST_VIDEO_SCALE_RGB:
     case GST_VIDEO_SCALE_BGR:
     case GST_VIDEO_SCALE_v308:
       img->stride = GST_ROUND_UP_4 (img->width * 3);
       *size = img->stride * img->height;
       break;
+    case GST_VIDEO_SCALE_Y42B:
+      img->stride = GST_ROUND_UP_4 (img->width);
+      *size =
+          (GST_ROUND_UP_4 (img->width) +
+          GST_ROUND_UP_8 (img->width)) * img->height;
+      break;
     case GST_VIDEO_SCALE_YUY2:
     case GST_VIDEO_SCALE_YVYU:
     case GST_VIDEO_SCALE_UYVY:
       img->stride = GST_ROUND_UP_4 (img->width * 2);
       *size = img->stride * img->height;
+      break;
+    case GST_VIDEO_SCALE_Y41B:
+      img->stride = GST_ROUND_UP_4 (img->width);
+      *size =
+          (GST_ROUND_UP_4 (img->width) +
+          (GST_ROUND_UP_16 (img->width) / 2)) * img->height;
       break;
     case GST_VIDEO_SCALE_Y:
     case GST_VIDEO_SCALE_GRAY8:
@@ -708,14 +726,89 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
       img_u->height = GST_ROUND_UP_2 (img->height) / 2;
       img_u->width = GST_ROUND_UP_2 (img->width) / 2;
       img_u->stride = GST_ROUND_UP_4 (img_u->width);
-      if (interlaced) {
-      }
       memcpy (img_v, img_u, sizeof (*img_v));
       img_v->pixels = img_u->pixels + img_u->height * img_u->stride;
       if (interlaced && step == 1) {
         img_v->pixels += img_v->stride;
         img_u->pixels += img_u->stride;
+      }
 
+      if (interlaced) {
+        img_u->height = (img_u->height / 2) + ((step == 0
+                && img_u->height % 2 == 1) ? 1 : 0);
+        img_u->stride *= 2;
+        img_v->height = (img_v->height / 2) + ((step == 0
+                && img_v->height % 2 == 1) ? 1 : 0);
+        img_v->stride *= 2;
+      }
+
+      break;
+    case GST_VIDEO_SCALE_Y444:
+      img_u->pixels =
+          GST_BUFFER_DATA (buf) + GST_ROUND_UP_4 (img->width) * img->height;
+      img_u->height = img->height;
+      img_u->width = img->width;
+      img_u->stride = img->stride;
+      memcpy (img_v, img_u, sizeof (*img_v));
+      img_v->pixels =
+          GST_BUFFER_DATA (buf) + GST_ROUND_UP_4 (img->width) * img->height * 2;
+
+      if (interlaced && step == 1) {
+        img_v->pixels += img_v->stride;
+        img_u->pixels += img_u->stride;
+      }
+
+      if (interlaced) {
+        img_u->height = (img_u->height / 2) + ((step == 0
+                && img_u->height % 2 == 1) ? 1 : 0);
+        img_u->stride *= 2;
+        img_v->height = (img_v->height / 2) + ((step == 0
+                && img_v->height % 2 == 1) ? 1 : 0);
+        img_v->stride *= 2;
+      }
+      break;
+    case GST_VIDEO_SCALE_Y42B:
+      img_u->pixels =
+          GST_BUFFER_DATA (buf) + GST_ROUND_UP_4 (img->width) * img->height;
+      img_u->height = img->height;
+      img_u->width = GST_ROUND_UP_2 (img->width) / 2;
+      img_u->stride = GST_ROUND_UP_8 (img->width) / 2;
+      memcpy (img_v, img_u, sizeof (*img_v));
+      img_v->pixels =
+          GST_BUFFER_DATA (buf) + (GST_ROUND_UP_4 (img->width) +
+          (GST_ROUND_UP_8 (img->width) / 2)) * img->height;
+
+      if (interlaced && step == 1) {
+        img_v->pixels += img_v->stride;
+        img_u->pixels += img_u->stride;
+      }
+
+      if (interlaced) {
+        img_u->height = (img_u->height / 2) + ((step == 0
+                && img_u->height % 2 == 1) ? 1 : 0);
+        img_u->stride *= 2;
+        img_v->height = (img_v->height / 2) + ((step == 0
+                && img_v->height % 2 == 1) ? 1 : 0);
+        img_v->stride *= 2;
+      }
+      break;
+    case GST_VIDEO_SCALE_Y41B:
+      img_u->pixels =
+          GST_BUFFER_DATA (buf) + GST_ROUND_UP_4 (img->width) * img->height;
+      img_u->height = img->height;
+      img_u->width = GST_ROUND_UP_4 (img->width) / 4;
+      img_u->stride = GST_ROUND_UP_16 (img->width) / 4;
+      memcpy (img_v, img_u, sizeof (*img_v));
+      img_v->pixels =
+          GST_BUFFER_DATA (buf) + (GST_ROUND_UP_4 (img->width) +
+          (GST_ROUND_UP_16 (img->width) / 4)) * img->height;
+
+      if (interlaced && step == 1) {
+        img_v->pixels += img_v->stride;
+        img_u->pixels += img_u->stride;
+      }
+
+      if (interlaced) {
         img_u->height = (img_u->height / 2) + ((step == 0
                 && img_u->height % 2 == 1) ? 1 : 0);
         img_u->stride *= 2;
@@ -827,6 +920,9 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
             break;
           case GST_VIDEO_SCALE_I420:
           case GST_VIDEO_SCALE_YV12:
+          case GST_VIDEO_SCALE_Y444:
+          case GST_VIDEO_SCALE_Y42B:
+          case GST_VIDEO_SCALE_Y41B:
             vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
             vs_image_scale_nearest_Y (&dest_u, &src_u, videoscale->tmp_buf);
             vs_image_scale_nearest_Y (&dest_v, &src_v, videoscale->tmp_buf);
@@ -876,6 +972,9 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
             break;
           case GST_VIDEO_SCALE_I420:
           case GST_VIDEO_SCALE_YV12:
+          case GST_VIDEO_SCALE_Y444:
+          case GST_VIDEO_SCALE_Y42B:
+          case GST_VIDEO_SCALE_Y41B:
             vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
             vs_image_scale_linear_Y (&dest_u, &src_u, videoscale->tmp_buf);
             vs_image_scale_linear_Y (&dest_v, &src_v, videoscale->tmp_buf);
@@ -925,6 +1024,9 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
             break;
           case GST_VIDEO_SCALE_I420:
           case GST_VIDEO_SCALE_YV12:
+          case GST_VIDEO_SCALE_Y444:
+          case GST_VIDEO_SCALE_Y42B:
+          case GST_VIDEO_SCALE_Y41B:
             vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
             vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
             vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
