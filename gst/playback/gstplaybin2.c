@@ -1730,12 +1730,31 @@ gst_play_bin_set_sink (GstPlayBin * playbin, GstElement ** elem,
 }
 
 static void
+gst_play_bin_set_encoding (GstPlayBin * playbin, const gchar * encoding)
+{
+  GstElement *elem;
+
+  GST_PLAY_BIN_LOCK (playbin);
+
+  /* set subtitles on all current and next decodebins. */
+  if ((elem = playbin->groups[0].uridecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[0].suburidecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[1].uridecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+  if ((elem = playbin->groups[1].suburidecodebin))
+    g_object_set (G_OBJECT (elem), "subtitle-encoding", encoding, NULL);
+
+  gst_play_sink_set_subtitle_encoding (playbin->playsink, encoding);
+  GST_PLAY_BIN_UNLOCK (playbin);
+}
+
+static void
 gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstPlayBin *playbin;
-
-  playbin = GST_PLAY_BIN (object);
+  GstPlayBin *playbin = GST_PLAY_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
@@ -1757,8 +1776,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_bin_set_current_text_stream (playbin, g_value_get_int (value));
       break;
     case PROP_SUBTITLE_ENCODING:
-      gst_play_sink_set_subtitle_encoding (playbin->playsink,
-          g_value_get_string (value));
+      gst_play_bin_set_encoding (playbin, g_value_get_string (value));
       break;
     case PROP_VIDEO_SINK:
       gst_play_bin_set_sink (playbin, &playbin->video_sink, "video",
@@ -1807,9 +1825,7 @@ static GstElement *
 gst_play_bin_get_current_sink (GstPlayBin * playbin, GstElement ** elem,
     const gchar * dbg, GstPlaySinkType type)
 {
-  GstElement *sink;
-
-  sink = gst_play_sink_get_sink (playbin->playsink, type);
+  GstElement *sink = gst_play_sink_get_sink (playbin->playsink, type);
 
   GST_LOG_OBJECT (playbin, "play_sink_get_sink() returned %s sink %"
       GST_PTR_FORMAT ", the originally set %s sink is %" GST_PTR_FORMAT,
@@ -1829,9 +1845,7 @@ static void
 gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstPlayBin *playbin;
-
-  playbin = GST_PLAY_BIN (object);
+  GstPlayBin *playbin = GST_PLAY_BIN (object);
 
   switch (prop_id) {
     case PROP_URI:
