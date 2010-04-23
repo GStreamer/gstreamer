@@ -22,11 +22,8 @@
 #include <gstgleffectscurves.h>
 #include <gstgleffectlumatocurve.h>
 
-/* Gaussian Kernel: std = 1.200000, size = 9x1 */
-static gfloat gauss_kernel[9] = { 0.001285f, 0.014607f, 0.082898f,
-  0.234927f, 0.332452f, 0.234927f,
-  0.082898f, 0.014607f, 0.001285f
-};
+static gboolean kernel_ready = FALSE;
+static float gauss_kernel[9];
 
 /* Normalization Constant = 0.999885 */
 
@@ -54,6 +51,11 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray1", shader);
   }
 
+  if (!kernel_ready) {
+    fill_gaussian_kernel (gauss_kernel, 9, 1.5);
+    kernel_ready = TRUE;
+  }
+
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
           hconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
@@ -68,10 +70,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885f);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }
@@ -104,10 +103,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885f);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }

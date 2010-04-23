@@ -125,6 +125,10 @@ gst_gl_filterblur_init (GstGLFilterBlur * filterblur,
   filterblur->shader0 = NULL;
   filterblur->shader1 = NULL;
   filterblur->midtexture = 0;
+  /* gaussian kernel (well, actually vector), size 9, standard
+   * deviation 3.0 */
+  /* FIXME: eventually make this a runtime property */
+  fill_gaussian_kernel (filterblur->gauss_kernel, 9, 3.0);
 }
 
 static void
@@ -223,14 +227,6 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
 
-  /* hard coded kernel, it could be easily generated at runtime with a
-   * property to change standard deviation */
-  gfloat gauss_kernel[9] = {
-    0.026995f, 0.064759f, 0.120985f,
-    0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f
-  };
-
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
@@ -242,11 +238,8 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9,
-      gauss_kernel);
-  gst_gl_shader_set_uniform_1f (filterblur->shader0, "norm_const", 0.977016f);
-  gst_gl_shader_set_uniform_1f (filterblur->shader0, "norm_offset", 0.0f);
+      filterblur->gauss_kernel);
 
   gst_gl_filterblur_draw_texture (filterblur, texture);
 }
@@ -257,14 +250,6 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
-
-  /* hard coded kernel, it could be easily generated at runtime with a
-   * property to change standard deviation */
-  gfloat gauss_kernel[9] = {
-    0.026995f, 0.064759f, 0.120985f,
-    0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f
-  };
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -277,11 +262,8 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9,
-      gauss_kernel);
-  gst_gl_shader_set_uniform_1f (filterblur->shader1, "norm_const", 0.977016f);
-  gst_gl_shader_set_uniform_1f (filterblur->shader1, "norm_offset", 0.0f);
+      filterblur->gauss_kernel);
 
   gst_gl_filterblur_draw_texture (filterblur, texture);
 }

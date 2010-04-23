@@ -48,6 +48,7 @@ struct _GstGLDifferenceMatte
   GLuint newbgtexture;
   GLuint midtexture[4];
   GLuint intexture;
+  float kernel[9];
 };
 
 struct _GstGLDifferenceMatteClass

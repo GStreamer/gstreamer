@@ -20,10 +20,8 @@
 
 #include <gstgleffects.h>
 
-static gfloat gauss_kernel[9] = { 0.060493f, 0.075284f, 0.088016f,
-  0.096667f, 0.099736f, 0.096667f,
-  0.088016f, 0.075284f, 0.060493f
-};
+static gboolean kernel_ready = FALSE;
+static float gauss_kernel[9];
 
 static void
 gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
@@ -64,14 +62,16 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   GstGLEffects *effects = GST_GL_EFFECTS (stuff);
   GstGLShader *shader;
 
-  /* hard coded kernel, it could be easily generated at runtime with a
-   * property to change standard deviation */
-
   shader = g_hash_table_lookup (effects->shaderstable, "glow1");
 
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "glow1", shader);
+  }
+
+  if (!kernel_ready) {
+    fill_gaussian_kernel (gauss_kernel, 9, 10.0);
+    kernel_ready = TRUE;
   }
 
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
@@ -88,10 +88,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656f);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }
@@ -124,10 +121,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.740656f);
-  gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
 }

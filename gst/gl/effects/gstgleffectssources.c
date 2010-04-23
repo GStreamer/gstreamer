@@ -20,6 +20,7 @@
 
 #include <gstgleffects.h>
 #include <gstgleffectssources.h>
+#include <math.h>
 
 /* A common file for sources is needed since shader sources can be
  * generic and reused by several effects */
@@ -27,6 +28,33 @@
 /* FIXME */
 /* Move sooner or later into single .frag .vert files and either bake
  * them into a c file at compile time or load them at run time */
+
+
+/* fill a normalized and zero centered gaussian vector for separable
+ * gaussian convolution */
+
+void
+fill_gaussian_kernel (float *kernel, int size, float sigma)
+{
+  int i;
+  float sum;
+  int l;
+
+  /* need an odd sized vector to center it at zero */
+  g_return_if_fail ((size % 2) != 0);
+
+  sum = 0.0;
+  l = (size - 1) / 2.0;
+
+  for (i = 0; i < size; i++) {
+    kernel[i] = exp (-pow ((i - l), 2.0) / (2 * sigma));
+    sum += kernel[i];
+  }
+
+  for (i = 0; i < size; i++) {
+    kernel[i] /= sum;
+  }
+}
 
 /* *INDENT-OFF* */
 
@@ -276,44 +304,36 @@ const gchar *sobel_fragment_source =
 const gchar *hconv9_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
-  "uniform float norm_const;"
-  "uniform float norm_offset;"
   "uniform float kernel[9];"
   "void main () {"
-/* "float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);" */
-/* don't use array constructor so we don't have to depend on #version 120 */
-  "  float offset = - 4.0;"
   "  vec2 texturecoord = gl_TexCoord[0].st;"
+  "  texturecoord.s -= 4.0;"
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
   "  for (i = 0; i < 9; i++) { "
-  "    ++offset;"
-  "    vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s+offset, texturecoord.t)); "
-  "    sum += neighbor * kernel[i]/norm_const; "
+  "    vec4 neighbor = texture2DRect(tex, texturecoord); "
+  "    ++texturecoord.s;"
+  "    sum += neighbor * kernel[i];"
   "  }"
-  "  gl_FragColor = sum + norm_offset;"
+  "  gl_FragColor = sum;"
   "}";
 
 /* vertical convolution */
 const gchar *vconv9_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
-  "uniform float norm_const;"
-  "uniform float norm_offset;"
   "uniform float kernel[9];"
   "void main () {"
-/* "float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);" */
-/* don't use array constructor so we don't have to depend on #version 120 */
-  "  float offset = - 4.0;"
   "  vec2 texturecoord = gl_TexCoord[0].st;"
+  "  texturecoord.t -= 4.0;"
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
   "  for (i = 0; i < 9; i++) { "
-  "    ++offset;"
-  "    vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s, texturecoord.t+offset)); "
-  "    sum += neighbor * kernel[i]/norm_const; "
+  "    vec4 neighbor = texture2DRect(tex, texturecoord); "
+  "    ++texturecoord.t;"
+  "    sum += neighbor * kernel[i]; "
   "  }"
-  "  gl_FragColor = sum + norm_offset;"
+  "  gl_FragColor = sum;"
   "}";
 
 

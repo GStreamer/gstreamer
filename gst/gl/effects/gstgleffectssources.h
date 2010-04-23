@@ -44,4 +44,6 @@ extern const gchar *texture_interp_fragment_source;
 extern const gchar *difference_fragment_source;
 extern const gchar *multiply_fragment_source;
 
+void fill_gaussian_kernel (float *kernel, int size, float sigma);
+
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */

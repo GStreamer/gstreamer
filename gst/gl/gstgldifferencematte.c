@@ -203,6 +203,8 @@ gst_gl_differencematte_init (GstGLDifferenceMatte * differencematte,
   differencematte->savedbgtexture = 0;
   differencematte->newbgtexture = 0;
   differencematte->bg_has_changed = FALSE;
+
+  fill_gaussian_kernel (differencematte->kernel, 9, 3.0);
 }
 
 static void
@@ -274,8 +276,8 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
   glGenTextures (1, &differencematte->newbgtexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-      (gint) differencematte->pbuf_width, (gint) differencematte->pbuf_height, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
+      (gint) differencematte->pbuf_width, (gint) differencematte->pbuf_height,
+      0, GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
 
   if (differencematte->savedbgtexture == 0) {
     glGenTextures (1, &differencematte->savedbgtexture);
@@ -326,11 +328,6 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
-  gfloat gauss_kernel[9] = {
-    0.026995f, 0.064759f, 0.120985f,
-    0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f
-  };
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -345,11 +342,7 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 9,
-      gauss_kernel);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[1], "norm_const",
-      0.977016f);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[1], "norm_offset",
-      0.0f);
+      differencematte->kernel);
 
   gst_gl_differencematte_draw_texture (differencematte, texture);
 }
@@ -359,11 +352,6 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (stuff);
-  gfloat gauss_kernel[9] = {
-    0.026995f, 0.064759f, 0.120985f,
-    0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f
-  };
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -378,11 +366,7 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 9,
-      gauss_kernel);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[2], "norm_const",
-      0.977016f);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[2], "norm_offset",
-      0.0f);
+      differencematte->kernel);
 
   gst_gl_differencematte_draw_texture (differencematte, texture);
 }
@@ -413,14 +397,14 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "base_width", (gfloat) differencematte->pbuf_width);
+      "base_width", (gfloat) differencematte->pbuf_width);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "base_height", (gfloat) differencematte->pbuf_height);
+      "base_height", (gfloat) differencematte->pbuf_height);
 
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "final_width", (gfloat) filter->width);
+      "final_width", (gfloat) filter->width);
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-                                "final_height", (gfloat) filter->height);
+      "final_height", (gfloat) filter->height);
 
   glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -572,7 +556,8 @@ gst_gl_differencematte_loader (GstGLFilter * filter)
   differencematte->pbuf_width = width;
   differencematte->pbuf_height = height;
 
-  differencematte->pixbuf = (guchar *) malloc (sizeof (guchar) * width * height * 4);
+  differencematte->pixbuf =
+      (guchar *) malloc (sizeof (guchar) * width * height * 4);
 
   rows = (guchar **) malloc (sizeof (guchar *) * height);
 
