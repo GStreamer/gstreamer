@@ -256,6 +256,19 @@ deinterlace_set_caps_and_check (GstCaps * input, gboolean must_deinterlace)
   if (must_deinterlace) {
     fail_if (gst_caps_is_interlaced (othercaps));
   } else {
+    GstStructure *s;
+
+    fail_unless (gst_caps_is_interlaced (input) ==
+        gst_caps_is_interlaced (othercaps));
+
+    othercaps = gst_caps_make_writable (othercaps);
+    s = gst_caps_get_structure (othercaps, 0);
+    gst_structure_remove_field (s, "interlaced");
+
+    input = gst_caps_make_writable (input);
+    s = gst_caps_get_structure (input, 0);
+    gst_structure_remove_field (s, "interlaced");
+
     fail_unless (gst_caps_is_equal (input, othercaps));
   }
   gst_caps_unref (input);
