@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/gstvideofilter.h>
 
 #include "vs_image.h"
 
@@ -64,7 +65,7 @@ typedef struct _GstVideoScaleClass GstVideoScaleClass;
  * Opaque data structure
  */
 struct _GstVideoScale {
-  GstBaseTransform element;
+  GstVideoFilter element;
 
   GstVideoScaleMethod method;
 
@@ -85,7 +86,7 @@ struct _GstVideoScale {
 };
 
 struct _GstVideoScaleClass {
-  GstBaseTransformClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_video_scale_get_type(void);

@@ -166,16 +166,20 @@ gst_video_scale_method_get_type (void)
 static GstCaps *
 gst_video_scale_get_capslist (void)
 {
-  static GstCaps *caps;
+  static GstCaps *caps = NULL;
+  static volatile gsize inited = 0;
 
-  if (caps == NULL) {
-    int i;
+  if (g_once_init_enter (&inited)) {
+    gint i;
+
+    g_assert (caps == NULL);
 
     caps = gst_caps_new_empty ();
     for (i = 0; i < G_N_ELEMENTS (gst_video_scale_format_caps); i++)
       gst_caps_append (caps,
           gst_caps_make_writable
           (gst_static_caps_get (&gst_video_scale_format_caps[i])));
+    g_once_init_leave (&inited, 1);
   }
 
   return caps;
@@ -196,9 +200,6 @@ gst_video_scale_sink_template_factory (void)
 }
 
 
-static void gst_video_scale_base_init (gpointer g_class);
-static void gst_video_scale_class_init (GstVideoScaleClass * klass);
-static void gst_video_scale_init (GstVideoScale * videoscale);
 static void gst_video_scale_finalize (GstVideoScale * videoscale);
 static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
@@ -220,33 +221,8 @@ static void gst_video_scale_set_property (GObject * object, guint prop_id,
 static void gst_video_scale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-
-GType
-gst_video_scale_get_type (void)
-{
-  static GType video_scale_type = 0;
-
-  if (!video_scale_type) {
-    static const GTypeInfo video_scale_info = {
-      sizeof (GstVideoScaleClass),
-      gst_video_scale_base_init,
-      NULL,
-      (GClassInitFunc) gst_video_scale_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoScale),
-      0,
-      (GInstanceInitFunc) gst_video_scale_init,
-    };
-
-    video_scale_type =
-        g_type_register_static (GST_TYPE_BASE_TRANSFORM, "GstVideoScale",
-        &video_scale_info, 0);
-  }
-  return video_scale_type;
-}
+GST_BOILERPLATE (GstVideoScale, gst_video_scale, GstVideoFilter,
+    GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_video_scale_base_init (gpointer g_class)
@@ -266,11 +242,8 @@ gst_video_scale_base_init (gpointer g_class)
 static void
 gst_video_scale_class_init (GstVideoScaleClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = (GObjectClass *) klass;
-  trans_class = (GstBaseTransformClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
 
   gobject_class->finalize = (GObjectFinalizeFunc) gst_video_scale_finalize;
   gobject_class->set_property = gst_video_scale_set_property;
@@ -291,14 +264,11 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
 
   trans_class->passthrough_on_same_caps = TRUE;
-
-  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-gst_video_scale_init (GstVideoScale * videoscale)
+gst_video_scale_init (GstVideoScale * videoscale, GstVideoScaleClass * klass)
 {
-  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (videoscale), TRUE);
   videoscale->tmp_buf = NULL;
   videoscale->method = DEFAULT_PROP_METHOD;
 }
@@ -352,14 +322,11 @@ static GstCaps *
 gst_video_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstVideoScale *videoscale;
   GstCaps *ret;
   GstStructure *structure;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
-
-  videoscale = GST_VIDEO_SCALE (trans);
 
   ret = gst_caps_copy (caps);
   structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
@@ -388,7 +355,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 static int
 gst_video_scale_get_format (GstCaps * caps)
 {
-  int i;
+  gint i;
   GstCaps *icaps, *scaps;
 
   for (i = 0; i < G_N_ELEMENTS (gst_video_scale_format_caps); i++) {
@@ -526,10 +493,8 @@ parse_caps (GstCaps * caps, gint * format, gint * width, gint * height,
 static gboolean
 gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
-  GstVideoScale *videoscale;
+  GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   gboolean ret;
-
-  videoscale = GST_VIDEO_SCALE (trans);
 
   ret = parse_caps (in, &videoscale->format, &videoscale->from_width,
       &videoscale->from_height, &videoscale->interlaced);
@@ -570,13 +535,11 @@ static gboolean
 gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
-  GstVideoScale *videoscale;
+  GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   gint format, width, height;
   VSImage img;
 
   g_assert (size);
-
-  videoscale = GST_VIDEO_SCALE (trans);
 
   if (!parse_caps (caps, &format, &width, &height, NULL))
     return FALSE;
@@ -1071,12 +1034,10 @@ unknown_mode:
 static gboolean
 gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstVideoScale *videoscale;
+  GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   gboolean ret;
-  double a;
+  gdouble a;
   GstStructure *structure;
-
-  videoscale = GST_VIDEO_SCALE (trans);
 
   GST_DEBUG_OBJECT (videoscale, "handling %s event",
       GST_EVENT_TYPE_NAME (event));
@@ -1095,8 +1056,6 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
             a * videoscale->from_height / videoscale->to_height, NULL);
       }
-      break;
-    case GST_EVENT_QOS:
       break;
     default:
       break;
