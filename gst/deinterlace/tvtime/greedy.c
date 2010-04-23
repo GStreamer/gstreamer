@@ -32,7 +32,7 @@
 # include "config.h"
 #endif
 
-#include "gstdeinterlace.h"
+#include "gstdeinterlacemethod.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_L	(gst_deinterlace_method_greedy_l_get_type ())

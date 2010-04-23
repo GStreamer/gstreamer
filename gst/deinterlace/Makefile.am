@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstdeinterlace.la
 
 libgstdeinterlace_la_SOURCES = \
 	gstdeinterlace.c \
+	gstdeinterlacemethod.c \
 	tvtime/tomsmocomp.c \
 	tvtime/greedy.c \
 	tvtime/greedyh.c \
@@ -22,6 +23,7 @@ libgstdeinterlace_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstdeinterlace.h \
+	gstdeinterlacemethod.h \
 	tvtime/mmx.h \
 	tvtime/sse.h \
 	tvtime/greedyh.asm \

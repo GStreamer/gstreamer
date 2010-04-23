@@ -1,0 +1,179 @@
+/*
+ * GStreamer
+ * Copyright (C) 2008-2010 Sebastian Dröge <slomo@collabora.co.uk>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef __GST_DEINTERLACE_METHOD_H__
+#define __GST_DEINTERLACE_METHOD_H__
+
+#include <liboil/liboil.h>
+#include <liboil/liboilcpu.h>
+#include <liboil/liboilfunction.h>
+
+#include <gst/gst.h>
+#include <gst/video/video.h>
+
+#ifdef HAVE_GCC_ASM
+#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
+#define BUILD_X86_ASM
+#endif
+#endif
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_DEINTERLACE_METHOD		(gst_deinterlace_method_get_type ())
+#define GST_IS_DEINTERLACE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD))
+#define GST_IS_DEINTERLACE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_METHOD))
+#define GST_DEINTERLACE_METHOD_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethodClass))
+#define GST_DEINTERLACE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethod))
+#define GST_DEINTERLACE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_METHOD, GstDeinterlaceMethodClass))
+#define GST_DEINTERLACE_METHOD_CAST(obj)	((GstDeinterlaceMethod*)(obj))
+
+typedef struct _GstDeinterlaceMethod GstDeinterlaceMethod;
+typedef struct _GstDeinterlaceMethodClass GstDeinterlaceMethodClass;
+
+
+#define PICTURE_PROGRESSIVE 0
+#define PICTURE_INTERLACED_BOTTOM 1
+#define PICTURE_INTERLACED_TOP 2
+#define PICTURE_INTERLACED_MASK (PICTURE_INTERLACED_BOTTOM | PICTURE_INTERLACED_TOP)
+
+typedef struct
+{
+  /* pointer to the start of data for this field */
+  GstBuffer *buf;
+  /* see PICTURE_ flags in *.c */
+  guint flags;
+} GstDeinterlaceField;
+
+/*
+ * This structure defines the deinterlacer plugin.
+ */
+
+typedef void (*GstDeinterlaceMethodDeinterlaceFunction) (GstDeinterlaceMethod *self, const GstDeinterlaceField *history, guint history_count, GstBuffer *outbuf);
+
+struct _GstDeinterlaceMethod {
+  GstObject parent;
+
+  GstVideoFormat format;
+  gint frame_width, frame_height;
+  gint width[4];
+  gint height[4];
+  gint offset[4];
+  gint row_stride[4];
+  gint pixel_stride[4];
+
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame;
+};
+
+struct _GstDeinterlaceMethodClass {
+  GstObjectClass parent_class;
+  guint fields_required;
+  guint latency;
+
+  gboolean (*supported) (GstDeinterlaceMethodClass *klass, GstVideoFormat format, gint width, gint height);
+
+  void (*setup) (GstDeinterlaceMethod *self, GstVideoFormat format, gint width, gint height);
+
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yuy2;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yvyu;
+
+  const gchar *name;
+  const gchar *nick;
+};
+
+GType gst_deinterlace_method_get_type (void);
+
+gboolean gst_deinterlace_method_supported (GType type, GstVideoFormat format, gint width, gint height);
+void gst_deinterlace_method_setup (GstDeinterlaceMethod * self, GstVideoFormat format, gint width, gint height);
+void gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self, const GstDeinterlaceField * history, guint history_count, GstBuffer * outbuf);
+gint gst_deinterlace_method_get_fields_required (GstDeinterlaceMethod * self);
+gint gst_deinterlace_method_get_latency (GstDeinterlaceMethod * self);
+
+#define GST_TYPE_DEINTERLACE_SIMPLE_METHOD		(gst_deinterlace_simple_method_get_type ())
+#define GST_IS_DEINTERLACE_SIMPLE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD))
+#define GST_IS_DEINTERLACE_SIMPLE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DEINTERLACE_SIMPLE_METHOD))
+#define GST_DEINTERLACE_SIMPLE_METHOD_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethodClass))
+#define GST_DEINTERLACE_SIMPLE_METHOD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethod))
+#define GST_DEINTERLACE_SIMPLE_METHOD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DEINTERLACE_SIMPLE_METHOD, GstDeinterlaceSimpleMethodClass))
+#define GST_DEINTERLACE_SIMPLE_METHOD_CAST(obj)	((GstDeinterlaceSimpleMethod*)(obj))
+
+typedef struct _GstDeinterlaceSimpleMethod GstDeinterlaceSimpleMethod;
+typedef struct _GstDeinterlaceSimpleMethodClass GstDeinterlaceSimpleMethodClass;
+typedef struct _GstDeinterlaceScanlineData GstDeinterlaceScanlineData;
+
+/*
+ * This structure defines the simple deinterlacer plugin.
+ */
+
+struct _GstDeinterlaceScanlineData {
+ const guint8 *tt0, *t0, *m0, *b0, *bb0;
+ const guint8 *tt1, *t1, *m1, *b1, *bb1;
+ const guint8 *tt2, *t2, *m2, *b2, *bb2;
+ const guint8 *tt3, *t3, *m3, *b3, *bb3;
+ gboolean bottom_field;
+};
+
+/**
+ * For interpolate_scanline the input is:
+ *
+ * |   t-3       t-2       t-1       t
+ * | Field 3 | Field 2 | Field 1 | Field 0 |
+ * |  TT3    |         |   TT1   |         |
+ * |         |   T2    |         |   T0    |
+ * |   M3    |         |    M1   |         |
+ * |         |   B2    |         |   B0    |
+ * |  BB3    |         |   BB1   |         |
+ *
+ * For copy_scanline the input is:
+ *
+ * |   t-3       t-2       t-1       t
+ * | Field 3 | Field 2 | Field 1 | Field 0 |
+ * |         |   TT2   |         |  TT0    |
+ * |   T3    |         |   T1    |         |
+ * |         |    M2   |         |   M0    |
+ * |   B3    |         |   B1    |         |
+ * |         |   BB2   |         |  BB0    |
+ *
+ * All other values are NULL.
+ */
+
+typedef void (*GstDeinterlaceSimpleMethodPackedFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines);
+
+struct _GstDeinterlaceSimpleMethod {
+  GstDeinterlaceMethod parent;
+
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_packed;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_packed;
+};
+
+struct _GstDeinterlaceSimpleMethodClass {
+  GstDeinterlaceMethodClass parent_class;
+
+  /* Packed formats */
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yuy2;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yuy2;
+  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yvyu;
+  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yvyu;
+};
+
+GType gst_deinterlace_simple_method_get_type (void);
+
+G_END_DECLS
+
+#endif /* __GST_DEINTERLACE_METHOD_H__ */

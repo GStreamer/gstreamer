@@ -22,7 +22,7 @@
 # include "config.h"
 #endif
 
-#include "gstdeinterlace.h"
+#include "gstdeinterlacemethod.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_SCALER_BOB	(gst_deinterlace_method_scaler_bob_get_type ())

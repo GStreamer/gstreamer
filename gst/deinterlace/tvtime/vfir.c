@@ -33,7 +33,7 @@
 # include "config.h"
 #endif
 
-#include "gstdeinterlace.h"
+#include "gstdeinterlacemethod.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_VFIR	(gst_deinterlace_method_vfir_get_type ())

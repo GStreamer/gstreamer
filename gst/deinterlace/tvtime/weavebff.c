@@ -28,7 +28,7 @@
 # include "config.h"
 #endif
 
-#include "gstdeinterlace.h"
+#include "gstdeinterlacemethod.h"
 #include <string.h>
 
 #define GST_TYPE_DEINTERLACE_METHOD_WEAVE_BFF	(gst_deinterlace_method_weave_bff_get_type ())

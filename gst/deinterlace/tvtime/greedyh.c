@@ -36,7 +36,7 @@
 
 #include <gst/gst.h>
 #include "plugins.h"
-#include "gstdeinterlace.h"
+#include "gstdeinterlacemethod.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_H	(gst_deinterlace_method_greedy_h_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
