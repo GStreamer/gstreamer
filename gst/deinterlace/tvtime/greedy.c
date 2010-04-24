@@ -52,12 +52,14 @@ typedef struct
   guint max_comb;
 } GstDeinterlaceMethodGreedyL;
 
+typedef void (*GreedyLScanlineFunction) (GstDeinterlaceMethodGreedyL * self,
+    const guint8 * L2, const guint8 * L1, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint width);
+
 typedef struct
 {
   GstDeinterlaceMethodClass parent_class;
-  void (*scanline) (GstDeinterlaceMethodGreedyL * self, const guint8 * L2,
-      const guint8 * L1, const guint8 * L3, const guint8 * L2P, guint8 * Dest,
-      gint width);
+  GreedyLScanlineFunction scanline;
 } GstDeinterlaceMethodGreedyLClass;
 
 // This is a simple lightweight DeInterlace method that uses little CPU time
@@ -387,7 +389,7 @@ deinterlace_frame_di_greedy_packed (GstDeinterlaceMethod * method,
       L2P += RowStride;
 
     // copy first even line
-    oil_memcpy (Dest, GST_BUFFER_DATA (history[0].buf), RowStride);
+    oil_memcpy (Dest, L1, RowStride);
     Dest += RowStride;
     // then first odd line
     oil_memcpy (Dest, L1, RowStride);
@@ -408,6 +410,96 @@ deinterlace_frame_di_greedy_packed (GstDeinterlaceMethod * method,
 
   if (InfoIsOdd) {
     oil_memcpy (Dest, L2, RowStride);
+  }
+}
+
+static void
+deinterlace_frame_di_greedy_planar_plane (GstDeinterlaceMethodGreedyL * self,
+    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint RowStride, gint FieldHeight, gint Pitch, gint InfoIsOdd,
+    GreedyLScanlineFunction scanline)
+{
+  gint Line;
+
+  // copy first even line no matter what, and the first odd line if we're
+  // processing an EVEN field. (note diff from other deint rtns.)
+
+  if (InfoIsOdd) {
+    // copy first even line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  } else {
+    // copy first even line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+    // then first odd line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  }
+
+  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
+    scanline (self, L2, L1, L3, L2P, Dest, RowStride);
+    Dest += RowStride;
+    oil_memcpy (Dest, L3, RowStride);
+    Dest += RowStride;
+
+    L1 += Pitch;
+    L2 += Pitch;
+    L3 += Pitch;
+    L2P += Pitch;
+  }
+
+  if (InfoIsOdd) {
+    oil_memcpy (Dest, L2, RowStride);
+  }
+}
+
+static void
+deinterlace_frame_di_greedy_planar (GstDeinterlaceMethod * method,
+    const GstDeinterlaceField * history, guint history_count,
+    GstBuffer * outbuf)
+{
+  GstDeinterlaceMethodGreedyL *self = GST_DEINTERLACE_METHOD_GREEDY_L (method);
+  GstDeinterlaceMethodGreedyLClass *klass =
+      GST_DEINTERLACE_METHOD_GREEDY_L_GET_CLASS (self);
+  gint InfoIsOdd;
+  gint RowStride;
+  gint FieldHeight;
+  gint Pitch;
+  const guint8 *L1;             // ptr to Line1, of 3
+  const guint8 *L2;             // ptr to Line2, the weave line
+  const guint8 *L3;             // ptr to Line3
+  const guint8 *L2P;            // ptr to prev Line2
+  guint8 *Dest;
+  gint i;
+  gint Offset;
+  GreedyLScanlineFunction scanline = klass->scanline;
+
+  for (i = 0; i < 3; i++) {
+    Offset = method->offset[i];
+
+    InfoIsOdd = (history[history_count - 1].flags == PICTURE_INTERLACED_BOTTOM);
+    RowStride = method->row_stride[i];
+    FieldHeight = method->height[i] / 2;
+    Pitch = method->row_stride[i] * 2;
+
+    Dest = GST_BUFFER_DATA (outbuf) + Offset;
+
+    L1 = GST_BUFFER_DATA (history[history_count - 2].buf) + Offset;
+    if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
+      L1 += RowStride;
+
+    L2 = GST_BUFFER_DATA (history[history_count - 1].buf) + Offset;
+    if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
+      L2 += RowStride;
+
+    L3 = L1 + Pitch;
+    L2P = GST_BUFFER_DATA (history[history_count - 3].buf) + Offset;
+    if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
+      L2P += RowStride;
+
+    deinterlace_frame_di_greedy_planar_plane (self, L1, L2, L3, L2P, Dest,
+        RowStride, FieldHeight, Pitch, InfoIsOdd, scanline);
   }
 }
 
@@ -476,6 +568,11 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
 
   dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedy_packed;
   dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_y444 = deinterlace_frame_di_greedy_planar;
+  dim_class->deinterlace_frame_y42b = deinterlace_frame_di_greedy_planar;
+  dim_class->deinterlace_frame_i420 = deinterlace_frame_di_greedy_planar;
+  dim_class->deinterlace_frame_yv12 = deinterlace_frame_di_greedy_planar;
+  dim_class->deinterlace_frame_y41b = deinterlace_frame_di_greedy_planar;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
