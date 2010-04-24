@@ -171,14 +171,12 @@ const gchar *tunnel_fragment_source =
   "  vec2 tex_size = vec2 (width, height);"
   "  vec2 texturecoord = gl_TexCoord[0].xy;"
   "  vec2 normcoord;"
-  /* little trick with normalized coords to obtain a circle */
-  "  normcoord = texturecoord / tex_size.x - tex_size / tex_size.x;"
+  /* little trick with normalized coords to obtain a circle with
+   * rect textures */
+  "  normcoord = (texturecoord - tex_size) / tex_size.x;"
   "  float r = length(normcoord);"
-  "  float phi = atan(normcoord.y, normcoord.x);"
-  "  r = clamp (r, 0.0, 0.5);"    /* is there a way to do this without polars? */
-  "  normcoord.x = r * cos(phi);"
-  "  normcoord.y = r * sin(phi); "
-  "  texturecoord = (normcoord + tex_size/tex_size.x) * tex_size.x;"
+  "  normcoord *= clamp (r, 0.0, 0.5) / r;"
+  "  texturecoord = (normcoord * tex_size.x) + tex_size;"
   "  vec4 color = texture2DRect (tex, texturecoord); "
   "  gl_FragColor = color;"
   "}";
