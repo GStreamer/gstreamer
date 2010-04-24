@@ -92,6 +92,11 @@ struct _GstDeinterlaceMethodClass {
 
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yuy2;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yvyu;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_i420;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yv12;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y444;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y42b;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y41b;
 
   const gchar *name;
   const gchar *nick;
@@ -153,23 +158,34 @@ struct _GstDeinterlaceScanlineData {
  * All other values are NULL.
  */
 
-typedef void (*GstDeinterlaceSimpleMethodPackedFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines);
+typedef void (*GstDeinterlaceSimpleMethodFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines);
 
 struct _GstDeinterlaceSimpleMethod {
   GstDeinterlaceMethod parent;
 
-  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_packed;
-  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_packed;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_packed;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_packed;
+
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar[3];
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar[3];
 };
 
 struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceMethodClass parent_class;
 
   /* Packed formats */
-  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yuy2;
-  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yuy2;
-  GstDeinterlaceSimpleMethodPackedFunction interpolate_scanline_yvyu;
-  GstDeinterlaceSimpleMethodPackedFunction copy_scanline_yvyu;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_yuy2;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_yuy2;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_yvyu;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_yvyu;
+
+  /* Planar formats */
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_y;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_y;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_u;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_u;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_planar_v;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_planar_v;
 };
 
 GType gst_deinterlace_simple_method_get_type (void);

@@ -58,6 +58,16 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_yuy2 != NULL);
     case GST_VIDEO_FORMAT_YVYU:
       return (klass->deinterlace_frame_yvyu != NULL);
+    case GST_VIDEO_FORMAT_I420:
+      return (klass->deinterlace_frame_i420 != NULL);
+    case GST_VIDEO_FORMAT_YV12:
+      return (klass->deinterlace_frame_yv12 != NULL);
+    case GST_VIDEO_FORMAT_Y444:
+      return (klass->deinterlace_frame_y444 != NULL);
+    case GST_VIDEO_FORMAT_Y42B:
+      return (klass->deinterlace_frame_y42b != NULL);
+    case GST_VIDEO_FORMAT_Y41B:
+      return (klass->deinterlace_frame_y41b != NULL);
     default:
       return FALSE;
   }
@@ -103,6 +113,21 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
       break;
     case GST_VIDEO_FORMAT_YVYU:
       self->deinterlace_frame = klass->deinterlace_frame_yvyu;
+      break;
+    case GST_VIDEO_FORMAT_I420:
+      self->deinterlace_frame = klass->deinterlace_frame_i420;
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+      self->deinterlace_frame = klass->deinterlace_frame_yv12;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      self->deinterlace_frame = klass->deinterlace_frame_y444;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      self->deinterlace_frame = klass->deinterlace_frame_y42b;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      self->deinterlace_frame = klass->deinterlace_frame_y41b;
       break;
     default:
       self->deinterlace_frame = NULL;
@@ -170,6 +195,17 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
     case GST_VIDEO_FORMAT_YVYU:
       return (klass->interpolate_scanline_yvyu != NULL
           && klass->copy_scanline_yvyu != NULL);
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      return (klass->interpolate_scanline_planar_y != NULL
+          && klass->copy_scanline_planar_y != NULL &&
+          klass->interpolate_scanline_planar_u != NULL
+          && klass->copy_scanline_planar_u != NULL &&
+          klass->interpolate_scanline_planar_v != NULL
+          && klass->copy_scanline_planar_v != NULL);
     default:
       return FALSE;
   }
@@ -199,7 +235,7 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   GstDeinterlaceScanlineData scanlines;
   guint8 *out = GST_BUFFER_DATA (outbuf);
-  guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
+  const guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
   gint cur_field_idx = history_count - dm_class->fields_required;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint line;
@@ -214,7 +250,7 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
   if (history[cur_field_idx].flags & PICTURE_INTERLACED_BOTTOM)
     field0 += row_stride;
 
-  g_return_if_fail (dm_class->fields_required <= 4);
+  g_assert (dm_class->fields_required <= 4);
 
   if (dm_class->fields_required >= 2) {
     field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf);
@@ -233,7 +269,6 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
     if (history[cur_field_idx + 3].flags & PICTURE_INTERLACED_BOTTOM)
       field3 += row_stride;
   }
-
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
     /* double the first scanline of the bottom field */
@@ -329,6 +364,222 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 }
 
 static void
+    gst_deinterlace_simple_method_interpolate_scanline_planar_y
+    (GstDeinterlaceSimpleMethod * self, guint8 * out,
+    const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+}
+
+static void
+gst_deinterlace_simple_method_copy_scanline_planar_y (GstDeinterlaceSimpleMethod
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+}
+
+static void
+    gst_deinterlace_simple_method_interpolate_scanline_planar_u
+    (GstDeinterlaceSimpleMethod * self, guint8 * out,
+    const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+}
+
+static void
+gst_deinterlace_simple_method_copy_scanline_planar_u (GstDeinterlaceSimpleMethod
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+}
+
+static void
+    gst_deinterlace_simple_method_interpolate_scanline_planar_v
+    (GstDeinterlaceSimpleMethod * self, guint8 * out,
+    const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+}
+
+static void
+gst_deinterlace_simple_method_copy_scanline_planar_v (GstDeinterlaceSimpleMethod
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+}
+
+static void
+    gst_deinterlace_simple_method_deinterlace_frame_planar_plane
+    (GstDeinterlaceSimpleMethod * self, guint8 * out, const guint8 * field0,
+    const guint8 * field1, const guint8 * field2, const guint8 * field3,
+    guint cur_field_flags,
+    gint plane, GstDeinterlaceSimpleMethodFunction copy_scanline,
+    GstDeinterlaceSimpleMethodFunction interpolate_scanline)
+{
+  GstDeinterlaceScanlineData scanlines;
+  gint line;
+  gint field_height = self->parent.height[plane] / 2;
+  gint row_stride = self->parent.row_stride[plane];
+  gint field_stride = self->parent.row_stride[plane] * 2;
+
+  g_assert (interpolate_scanline != NULL);
+  g_assert (copy_scanline != NULL);
+
+  if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
+    /* double the first scanline of the bottom field */
+    oil_memcpy (out, field0, row_stride);
+    out += row_stride;
+  }
+
+  oil_memcpy (out, field0, row_stride);
+  out += row_stride;
+
+  for (line = 2; line <= field_height; line++) {
+
+    memset (&scanlines, 0, sizeof (scanlines));
+    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
+
+    /* interp. scanline */
+    scanlines.t0 = field0;
+    scanlines.b0 = field0 + field_stride;
+
+    if (field1 != NULL) {
+      scanlines.tt1 = field1;
+      scanlines.m1 = field1 + field_stride;
+      scanlines.bb1 = field1 + field_stride * 2;
+      field1 += field_stride;
+    }
+
+    if (field2 != NULL) {
+      scanlines.t2 = field2;
+      scanlines.b2 = field2 + field_stride;
+    }
+
+    if (field3 != NULL) {
+      scanlines.tt3 = field3;
+      scanlines.m3 = field3 + field_stride;
+      scanlines.bb3 = field3 + field_stride * 2;
+      field3 += field_stride;
+    }
+
+    /* set valid data for corner cases */
+    if (line == 2) {
+      scanlines.tt1 = scanlines.bb1;
+      scanlines.tt3 = scanlines.bb3;
+    } else if (line == field_height) {
+      scanlines.bb1 = scanlines.tt1;
+      scanlines.bb3 = scanlines.tt3;
+    }
+
+    interpolate_scanline (self, out, &scanlines);
+    out += row_stride;
+
+    memset (&scanlines, 0, sizeof (scanlines));
+    scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
+
+    /* copy a scanline */
+    scanlines.tt0 = field0;
+    scanlines.m0 = field0 + field_stride;
+    scanlines.bb0 = field0 + field_stride * 2;
+    field0 += field_stride;
+
+    if (field1 != NULL) {
+      scanlines.t1 = field1;
+      scanlines.b1 = field1 + field_stride;
+    }
+
+    if (field2 != NULL) {
+      scanlines.tt2 = field2;
+      scanlines.m2 = field2 + field_stride;
+      scanlines.bb2 = field2 + field_stride * 2;
+      field2 += field_stride;
+    }
+
+    if (field3 != NULL) {
+      scanlines.t3 = field3;
+      scanlines.b3 = field3 + field_stride;
+    }
+
+    /* set valid data for corner cases */
+    if (line == field_height) {
+      scanlines.bb0 = scanlines.tt0;
+      scanlines.b1 = scanlines.t1;
+      scanlines.bb2 = scanlines.tt2;
+      scanlines.b3 = scanlines.t3;
+    }
+
+    copy_scanline (self, out, &scanlines);
+    out += row_stride;
+  }
+
+  if (cur_field_flags == PICTURE_INTERLACED_TOP) {
+    /* double the last scanline of the top field */
+    oil_memcpy (out, field0, row_stride);
+  }
+}
+
+static void
+gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
+    method, const GstDeinterlaceField * history, guint history_count,
+    GstBuffer * outbuf)
+{
+  GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
+  GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
+  guint8 *out;
+  const guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
+  gint cur_field_idx = history_count - dm_class->fields_required;
+  guint cur_field_flags = history[cur_field_idx].flags;
+  gint i, row_stride, offset;
+  GstDeinterlaceSimpleMethodFunction copy_scanline;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline;
+
+  g_assert (self->interpolate_scanline_planar[0] != NULL);
+  g_assert (self->interpolate_scanline_planar[1] != NULL);
+  g_assert (self->interpolate_scanline_planar[2] != NULL);
+  g_assert (self->copy_scanline_planar[0] != NULL);
+  g_assert (self->copy_scanline_planar[1] != NULL);
+  g_assert (self->copy_scanline_planar[2] != NULL);
+
+  for (i = 0; i < 3; i++) {
+    row_stride = self->parent.row_stride[i];
+    offset = self->parent.offset[i];
+    copy_scanline = self->copy_scanline_planar[i];
+    interpolate_scanline = self->interpolate_scanline_planar[i];
+
+    out = GST_BUFFER_DATA (outbuf) + offset;
+
+    field0 = GST_BUFFER_DATA (history[cur_field_idx].buf) + offset;
+    if (history[cur_field_idx].flags & PICTURE_INTERLACED_BOTTOM)
+      field0 += row_stride;
+
+    g_assert (dm_class->fields_required <= 4);
+
+    if (dm_class->fields_required >= 2) {
+      field1 = GST_BUFFER_DATA (history[cur_field_idx + 1].buf) + offset;
+      if (history[cur_field_idx + 1].flags & PICTURE_INTERLACED_BOTTOM)
+        field1 += row_stride;
+    }
+
+    if (dm_class->fields_required >= 3) {
+      field2 = GST_BUFFER_DATA (history[cur_field_idx + 2].buf) + offset;
+      if (history[cur_field_idx + 2].flags & PICTURE_INTERLACED_BOTTOM)
+        field2 += row_stride;
+    }
+
+    if (dm_class->fields_required >= 4) {
+      field3 = GST_BUFFER_DATA (history[cur_field_idx + 3].buf) + offset;
+      if (history[cur_field_idx + 3].flags & PICTURE_INTERLACED_BOTTOM)
+        field3 += row_stride;
+    }
+
+
+    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
+        field0, field1, field2, field3, cur_field_flags, i, copy_scanline,
+        interpolate_scanline);
+  }
+}
+
+static void
 gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
     GstVideoFormat format, gint width, gint height)
 {
@@ -343,6 +594,13 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
   self->interpolate_scanline_packed = NULL;
   self->copy_scanline_packed = NULL;
 
+  self->interpolate_scanline_planar[0] = NULL;
+  self->interpolate_scanline_planar[1] = NULL;
+  self->interpolate_scanline_planar[2] = NULL;
+  self->copy_scanline_planar[0] = NULL;
+  self->copy_scanline_planar[1] = NULL;
+  self->copy_scanline_planar[2] = NULL;
+
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return;
 
@@ -355,14 +613,29 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
       self->interpolate_scanline_packed = klass->interpolate_scanline_yvyu;
       self->copy_scanline_packed = klass->copy_scanline_yvyu;
       break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      self->interpolate_scanline_planar[0] =
+          klass->interpolate_scanline_planar_y;
+      self->copy_scanline_planar[0] = klass->copy_scanline_planar_y;
+      self->interpolate_scanline_planar[1] =
+          klass->interpolate_scanline_planar_u;
+      self->copy_scanline_planar[1] = klass->copy_scanline_planar_u;
+      self->interpolate_scanline_planar[2] =
+          klass->interpolate_scanline_planar_v;
+      self->copy_scanline_planar[2] = klass->copy_scanline_planar_v;
+      break;
     default:
       break;
   }
 }
 
 static void
-gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass *
-    klass)
+gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
+    * klass)
 {
   GstDeinterlaceMethodClass *dm_class = (GstDeinterlaceMethodClass *) klass;
 
@@ -370,6 +643,16 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass *
       gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_yvyu =
       gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_i420 =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
+  dm_class->deinterlace_frame_yv12 =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
+  dm_class->deinterlace_frame_y444 =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
+  dm_class->deinterlace_frame_y42b =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
+  dm_class->deinterlace_frame_y41b =
+      gst_deinterlace_simple_method_deinterlace_frame_planar;
   dm_class->fields_required = 2;
   dm_class->setup = gst_deinterlace_simple_method_setup;
   dm_class->supported = gst_deinterlace_simple_method_supported;
@@ -382,6 +665,19 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass *
       gst_deinterlace_simple_method_interpolate_scanline_packed;
   klass->copy_scanline_yvyu =
       gst_deinterlace_simple_method_copy_scanline_packed;
+
+  klass->interpolate_scanline_planar_y =
+      gst_deinterlace_simple_method_interpolate_scanline_planar_y;
+  klass->copy_scanline_planar_y =
+      gst_deinterlace_simple_method_copy_scanline_planar_y;
+  klass->interpolate_scanline_planar_u =
+      gst_deinterlace_simple_method_interpolate_scanline_planar_u;
+  klass->copy_scanline_planar_u =
+      gst_deinterlace_simple_method_copy_scanline_planar_u;
+  klass->interpolate_scanline_planar_v =
+      gst_deinterlace_simple_method_interpolate_scanline_planar_v;
+  klass->copy_scanline_planar_v =
+      gst_deinterlace_simple_method_copy_scanline_planar_v;
 }
 
 static void
