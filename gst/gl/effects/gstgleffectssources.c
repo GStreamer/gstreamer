@@ -209,11 +209,15 @@ const gchar *twirl_fragment_source =
   "  vec2 texturecoord = gl_TexCoord[0].xy;"
   "  vec2 normcoord;"
   "  normcoord = texturecoord / tex_size - 1.0;"
-  "  float r =  length (normcoord);"
-  "  float phi = atan (normcoord.y, normcoord.x);"
-  "  phi += (1.0 - smoothstep (-0.6, 0.6, r)) * 4.8;"
-  "  normcoord.x = r * cos(phi);"
-  "  normcoord.y = r * sin(phi);"
+  "  float r = length (normcoord);"
+  /* calculate rotation angle: maximum (about pi/2) at the origin and
+   * gradually decrease it up to 0.6 of each quadrant */
+  "  float phi = (1.0 - smoothstep (0.0, 0.6, r)) * 1.6;"
+  /* precalculate sin phi and cos phi, save some alu */
+  "  float s = sin(phi);"
+  "  float c = cos(phi);"
+  /* rotate */
+  "  normcoord *= mat2(c, s, -s, c);"
   "  texturecoord = (normcoord + 1.0) * tex_size;"
   "  vec4 color = texture2DRect (tex, texturecoord); "
   "  gl_FragColor = color;"
