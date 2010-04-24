@@ -29,7 +29,8 @@
 
 #include "gstdeinterlacemethod.h"
 
-G_DEFINE_TYPE (GstDeinterlaceMethod, gst_deinterlace_method, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstDeinterlaceMethod, gst_deinterlace_method,
+    GST_TYPE_OBJECT);
 
 gboolean
 gst_deinterlace_method_supported (GType type, GstVideoFormat format, gint width,
@@ -147,8 +148,8 @@ gst_deinterlace_method_get_latency (GstDeinterlaceMethod * self)
   return klass->latency;
 }
 
-G_DEFINE_TYPE (GstDeinterlaceSimpleMethod, gst_deinterlace_simple_method,
-    GST_TYPE_DEINTERLACE_METHOD);
+G_DEFINE_ABSTRACT_TYPE (GstDeinterlaceSimpleMethod,
+    gst_deinterlace_simple_method, GST_TYPE_DEINTERLACE_METHOD);
 
 static gboolean
 gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
