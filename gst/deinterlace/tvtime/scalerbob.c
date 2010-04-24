@@ -45,6 +45,27 @@ deinterlace_scanline_scaler_bob_packed (GstDeinterlaceSimpleMethod * self,
   oil_memcpy (out, scanlines->t0, self->parent.row_stride[0]);
 }
 
+static void
+deinterlace_scanline_scaler_bob_planar_y (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->t0, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_scaler_bob_planar_u (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->t0, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_scaler_bob_planar_v (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->t0, self->parent.row_stride[2]);
+}
+
 G_DEFINE_TYPE (GstDeinterlaceMethodScalerBob, gst_deinterlace_method_scaler_bob,
     GST_TYPE_DEINTERLACE_SIMPLE_METHOD);
 
@@ -65,6 +86,12 @@ gst_deinterlace_method_scaler_bob_class_init (GstDeinterlaceMethodScalerBobClass
       deinterlace_scanline_scaler_bob_packed;
   dism_class->interpolate_scanline_yvyu =
       deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_planar_y =
+      deinterlace_scanline_scaler_bob_planar_y;
+  dism_class->interpolate_scanline_planar_u =
+      deinterlace_scanline_scaler_bob_planar_u;
+  dism_class->interpolate_scanline_planar_v =
+      deinterlace_scanline_scaler_bob_planar_v;
 }
 
 static void

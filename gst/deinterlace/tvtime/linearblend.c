@@ -65,6 +65,30 @@ deinterlace_scanline_linear_blend_packed_c (GstDeinterlaceSimpleMethod * self,
       scanlines->m1, self->parent.row_stride[0]);
 }
 
+static void
+deinterlace_scanline_linear_blend_planar_y_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
+      scanlines->m1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_linear_blend_planar_u_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
+      scanlines->m1, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_linear_blend_planar_v_c (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
+      scanlines->m1, self->parent.row_stride[2]);
+}
+
 static inline void
 deinterlace_scanline_linear_blend2_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
@@ -81,6 +105,30 @@ deinterlace_scanline_linear_blend2_packed_c (GstDeinterlaceSimpleMethod * self,
 {
   deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
       scanlines->b1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_linear_blend2_planar_y_c (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
+      scanlines->b1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_linear_blend2_planar_u_c (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
+      scanlines->b1, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_linear_blend2_planar_v_c (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
+      scanlines->b1, self->parent.row_stride[2]);
 }
 
 #ifdef BUILD_X86_ASM
@@ -145,6 +193,30 @@ deinterlace_scanline_linear_blend_packed_mmx (GstDeinterlaceSimpleMethod * self,
       scanlines->b0, scanlines->m1, self->parent.row_stride[0]);
 }
 
+static void
+deinterlace_scanline_linear_blend_planar_y_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
+      scanlines->b0, scanlines->m1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_linear_blend_planar_u_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
+      scanlines->b0, scanlines->m1, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_linear_blend_planar_v_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
+      scanlines->b0, scanlines->m1, self->parent.row_stride[2]);
+}
+
 static inline void
 deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
@@ -206,6 +278,29 @@ deinterlace_scanline_linear_blend2_packed_mmx (GstDeinterlaceSimpleMethod *
       scanlines->t1, scanlines->b1, self->parent.row_stride[0]);
 }
 
+static void
+deinterlace_scanline_linear_blend2_planar_y_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
+      scanlines->t1, scanlines->b1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_linear_blend2_planar_u_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
+      scanlines->t1, scanlines->b1, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_linear_blend2_planar_v_mmx (GstDeinterlaceSimpleMethod *
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
+      scanlines->t1, scanlines->b1, self->parent.row_stride[2]);
+}
 #endif
 
 G_DEFINE_TYPE (GstDeinterlaceMethodLinearBlend,
@@ -231,8 +326,20 @@ static void
       deinterlace_scanline_linear_blend_packed_c;
   dism_class->interpolate_scanline_yvyu =
       deinterlace_scanline_linear_blend_packed_c;
+  dism_class->interpolate_scanline_planar_y =
+      deinterlace_scanline_linear_blend_planar_y_c;
+  dism_class->interpolate_scanline_planar_u =
+      deinterlace_scanline_linear_blend_planar_u_c;
+  dism_class->interpolate_scanline_planar_v =
+      deinterlace_scanline_linear_blend_planar_v_c;
   dism_class->copy_scanline_yuy2 = deinterlace_scanline_linear_blend2_packed_c;
   dism_class->copy_scanline_yvyu = deinterlace_scanline_linear_blend2_packed_c;
+  dism_class->copy_scanline_planar_y =
+      deinterlace_scanline_linear_blend2_planar_y_c;
+  dism_class->copy_scanline_planar_u =
+      deinterlace_scanline_linear_blend2_planar_u_c;
+  dism_class->copy_scanline_planar_v =
+      deinterlace_scanline_linear_blend2_planar_v_c;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
@@ -240,10 +347,23 @@ static void
         deinterlace_scanline_linear_blend_packed_mmx;
     dism_class->interpolate_scanline_yvyu =
         deinterlace_scanline_linear_blend_packed_mmx;
+    dism_class->interpolate_scanline_planar_y =
+        deinterlace_scanline_linear_blend_planar_y_mmx;
+    dism_class->interpolate_scanline_planar_u =
+        deinterlace_scanline_linear_blend_planar_u_mmx;
+    dism_class->interpolate_scanline_planar_v =
+        deinterlace_scanline_linear_blend_planar_v_mmx;
+
     dism_class->copy_scanline_yuy2 =
         deinterlace_scanline_linear_blend2_packed_mmx;
     dism_class->copy_scanline_yvyu =
         deinterlace_scanline_linear_blend2_packed_mmx;
+    dism_class->copy_scanline_planar_y =
+        deinterlace_scanline_linear_blend2_planar_y_mmx;
+    dism_class->copy_scanline_planar_u =
+        deinterlace_scanline_linear_blend2_planar_u_mmx;
+    dism_class->copy_scanline_planar_v =
+        deinterlace_scanline_linear_blend2_planar_v_mmx;
   }
 #endif
 }

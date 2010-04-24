@@ -53,6 +53,27 @@ deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
 }
 
 static void
+deinterlace_scanline_weave_planar_y (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+}
+
+static void
+deinterlace_scanline_weave_planar_u (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+}
+
+static void
+deinterlace_scanline_weave_planar_v (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  oil_memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+}
+
+static void
 copy_scanline_packed (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
@@ -61,6 +82,42 @@ copy_scanline_packed (GstDeinterlaceSimpleMethod * self,
     oil_memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
   } else {
     oil_memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
+  }
+}
+
+static void
+copy_scanline_planar_y (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  /* FIXME: original code used m2 and m0 but this looks really bad */
+  if (scanlines->bottom_field) {
+    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
+  } else {
+    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
+  }
+}
+
+static void
+copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  /* FIXME: original code used m2 and m0 but this looks really bad */
+  if (scanlines->bottom_field) {
+    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[1]);
+  } else {
+    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[1]);
+  }
+}
+
+static void
+copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self,
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+{
+  /* FIXME: original code used m2 and m0 but this looks really bad */
+  if (scanlines->bottom_field) {
+    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[2]);
+  } else {
+    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[2]);
   }
 }
 
@@ -82,8 +139,17 @@ gst_deinterlace_method_weave_tff_class_init (GstDeinterlaceMethodWeaveTFFClass *
 
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_planar_y =
+      deinterlace_scanline_weave_planar_y;
+  dism_class->interpolate_scanline_planar_u =
+      deinterlace_scanline_weave_planar_u;
+  dism_class->interpolate_scanline_planar_v =
+      deinterlace_scanline_weave_planar_v;
   dism_class->copy_scanline_yuy2 = copy_scanline_packed;
   dism_class->copy_scanline_yvyu = copy_scanline_packed;
+  dism_class->copy_scanline_planar_y = copy_scanline_planar_y;
+  dism_class->copy_scanline_planar_u = copy_scanline_planar_u;
+  dism_class->copy_scanline_planar_v = copy_scanline_planar_v;
 }
 
 static void
