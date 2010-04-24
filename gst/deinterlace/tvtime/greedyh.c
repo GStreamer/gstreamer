@@ -61,10 +61,12 @@ typedef struct
 {
   GstDeinterlaceMethodClass parent_class;
   ScanlineFunction scanline_yuy2;       /* This is for YVYU too */
+  ScanlineFunction scanline_planar_y;
+  ScanlineFunction scanline_planar_uv;
 } GstDeinterlaceMethodGreedyHClass;
 
 static void
-greedyh_scanline_yuy2_C (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
+greedyh_scanline_C_yuy2 (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
     const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest,
     gint width)
 {
@@ -206,33 +208,243 @@ greedyh_scanline_yuy2_C (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
   }
 }
 
+static void
+greedyh_scanline_C_planar_y (GstDeinterlaceMethodGreedyH * self,
+    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint width)
+{
+  gint Pos;
+  guint8 l1, l1_1, l3, l3_1;
+  guint8 avg, avg_1;
+  guint8 avg__1 = 0;
+  guint8 avg_s;
+  guint8 avg_sc;
+  guint8 best;
+  guint16 mov;
+  guint8 out;
+  guint8 l2, lp2;
+  guint8 l2_diff, lp2_diff;
+  guint8 min, max;
+  guint max_comb = self->max_comb;
+  guint motion_sense = self->motion_sense;
+  guint motion_threshold = self->motion_threshold;
+
+  for (Pos = 0; Pos < width; Pos++) {
+    l1 = L1[0];
+    l3 = L3[0];
+
+    if (Pos == width - 1) {
+      l1_1 = l1;
+      l3_1 = l3;
+    } else {
+      l1_1 = L1[1];
+      l3_1 = L3[1];
+    }
+
+    /* Average of L1 and L3 */
+    avg = (l1 + l3) / 2;
+
+    if (Pos == 0) {
+      avg__1 = avg;
+    }
+
+    /* Average of next L1 and next L3 */
+    avg_1 = (l1_1 + l3_1) / 2;
+
+    /* Calculate average of one pixel forward and previous */
+    avg_s = (avg__1 + avg_1) / 2;
+
+    /* Calculate average of center and surrounding pixels */
+    avg_sc = (avg + avg_s) / 2;
+
+    /* move forward */
+    avg__1 = avg;
+
+    /* Get best L2/L2P, i.e. least diff from above average */
+    l2 = L2[0];
+    lp2 = L2P[0];
+
+    l2_diff = ABS (l2 - avg_sc);
+
+    lp2_diff = ABS (lp2 - avg_sc);
+
+    if (l2_diff > lp2_diff)
+      best = lp2;
+    else
+      best = l2;
+
+    /* Clip this best L2/L2P by L1/L3 and allow to differ by GreedyMaxComb */
+    max = MAX (l1, l3);
+    min = MIN (l1, l3);
+
+    if (max < 256 - max_comb)
+      max += max_comb;
+    else
+      max = 255;
+
+    if (min > max_comb)
+      min -= max_comb;
+    else
+      min = 0;
+
+    out = CLAMP (best, min, max);
+
+    /* Do motion compensation for luma, i.e. how much
+     * the weave pixel differs */
+    mov = ABS (l2 - lp2);
+    if (mov > motion_threshold)
+      mov -= motion_threshold;
+    else
+      mov = 0;
+
+    mov = mov * motion_sense;
+    if (mov > 256)
+      mov = 256;
+
+    /* Weighted sum on clipped weave pixel and average */
+    out = (out * (256 - mov) + avg_sc * mov) / 256;
+
+    Dest[0] = out;
+
+    Dest += 1;
+    L1 += 1;
+    L2 += 1;
+    L3 += 1;
+    L2P += 1;
+  }
+}
+
+static void
+greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
+    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint width)
+{
+  gint Pos;
+  guint8 l1, l1_1, l3, l3_1;
+  guint8 avg, avg_1;
+  guint8 avg__1 = 0;
+  guint8 avg_s;
+  guint8 avg_sc;
+  guint8 best;
+  guint8 out;
+  guint8 l2, lp2;
+  guint8 l2_diff, lp2_diff;
+  guint8 min, max;
+  guint max_comb = self->max_comb;
+
+  for (Pos = 0; Pos < width; Pos++) {
+    l1 = L1[0];
+    l3 = L3[0];
+
+    if (Pos == width - 1) {
+      l1_1 = l1;
+      l3_1 = l3;
+    } else {
+      l1_1 = L1[1];
+      l3_1 = L3[1];
+    }
+
+    /* Average of L1 and L3 */
+    avg = (l1 + l3) / 2;
+
+    if (Pos == 0) {
+      avg__1 = avg;
+    }
+
+    /* Average of next L1 and next L3 */
+    avg_1 = (l1_1 + l3_1) / 2;
+
+    /* Calculate average of one pixel forward and previous */
+    avg_s = (avg__1 + avg_1) / 2;
+
+    /* Calculate average of center and surrounding pixels */
+    avg_sc = (avg + avg_s) / 2;
+
+    /* move forward */
+    avg__1 = avg;
+
+    /* Get best L2/L2P, i.e. least diff from above average */
+    l2 = L2[0];
+    lp2 = L2P[0];
+
+    l2_diff = ABS (l2 - avg_sc);
+
+    lp2_diff = ABS (lp2 - avg_sc);
+
+    if (l2_diff > lp2_diff)
+      best = lp2;
+    else
+      best = l2;
+
+    /* Clip this best L2/L2P by L1/L3 and allow to differ by GreedyMaxComb */
+    max = MAX (l1, l3);
+    min = MIN (l1, l3);
+
+    if (max < 256 - max_comb)
+      max += max_comb;
+    else
+      max = 255;
+
+    if (min > max_comb)
+      min -= max_comb;
+    else
+      min = 0;
+
+    out = CLAMP (best, min, max);
+
+    Dest[0] = out;
+
+    Dest += 1;
+    L1 += 1;
+    L2 += 1;
+    L3 += 1;
+    L2P += 1;
+  }
+}
+
 #ifdef BUILD_X86_ASM
 
 #define IS_MMXEXT
 #define SIMD_TYPE MMXEXT
-#define C_FUNCT greedyh_scanline_yuy2_C
-#define FUNCT_NAME greedyh_scanline_yuy2_MMXEXT
+#define C_FUNCT_YUY2 greedyh_scanline_C_yuy2
+#define C_FUNCT_PLANAR_Y greedyh_scanline_C_planar_y
+#define C_FUNCT_PLANAR_UV greedyh_scanline_C_planar_uv
+#define FUNCT_NAME_YUY2 greedyh_scanline_MMXEXT_yuy2
+#define FUNCT_NAME_PLANAR_Y greedyh_scanline_MMXEXT_planar_y
+#define FUNCT_NAME_PLANAR_UV greedyh_scanline_MMXEXT_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMXEXT
-#undef FUNCT_NAME
+#undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_PLANAR_Y
+#undef FUNCT_NAME_PLANAR_UV
 
 #define IS_3DNOW
 #define SIMD_TYPE 3DNOW
-#define FUNCT_NAME greedyh_scanline_yuy2_3DNOW
+#define FUNCT_NAME_YUY2 greedyh_scanline_3DNOW_yuy2
+#define FUNCT_NAME_PLANAR_Y greedyh_scanline_3DNOW_planar_y
+#define FUNCT_NAME_PLANAR_UV greedyh_scanline_3DNOW_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_3DNOW
-#undef FUNCT_NAME
+#undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_PLANAR_Y
+#undef FUNCT_NAME_PLANAR_UV
 
 #define IS_MMX
 #define SIMD_TYPE MMX
-#define FUNCT_NAME greedyh_scanline_yuy2_MMX
+#define FUNCT_NAME_YUY2 greedyh_scanline_MMX_yuy2
+#define FUNCT_NAME_PLANAR_Y greedyh_scanline_MMX_planar_y
+#define FUNCT_NAME_PLANAR_UV greedyh_scanline_MMX_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMX
-#undef FUNCT_NAME
-#undef C_FUNCT
+#undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_PLANAR_Y
+#undef FUNCT_NAME_PLANAR_UV
+#undef C_FUNCT_YUY2
+#undef C_FUNCT_PLANAR_Y
+#undef C_FUNCT_PLANAR_UV
 
 #endif
 
@@ -325,6 +537,101 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
 
   if (InfoIsOdd) {
     oil_memcpy (Dest, L2, RowStride);
+  }
+}
+
+static void
+deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
+    const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P,
+    guint8 * Dest, gint RowStride, gint FieldHeight, gint Pitch, gint InfoIsOdd,
+    ScanlineFunction scanline)
+{
+  gint Line;
+
+  // copy first even line no matter what, and the first odd line if we're
+  // processing an EVEN field. (note diff from other deint rtns.)
+
+  if (InfoIsOdd) {
+    // copy first even line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  } else {
+    // copy first even line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+    // then first odd line
+    oil_memcpy (Dest, L1, RowStride);
+    Dest += RowStride;
+  }
+
+  for (Line = 0; Line < (FieldHeight - 1); ++Line) {
+    scanline (self, L1, L2, L3, L2P, Dest, RowStride);
+    Dest += RowStride;
+    oil_memcpy (Dest, L3, RowStride);
+    Dest += RowStride;
+
+    L1 += Pitch;
+    L2 += Pitch;
+    L3 += Pitch;
+    L2P += Pitch;
+  }
+
+  if (InfoIsOdd) {
+    oil_memcpy (Dest, L2, RowStride);
+  }
+}
+
+static void
+deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
+    const GstDeinterlaceField * history, guint history_count,
+    GstBuffer * outbuf)
+{
+  GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
+  GstDeinterlaceMethodGreedyHClass *klass =
+      GST_DEINTERLACE_METHOD_GREEDY_H_GET_CLASS (self);
+  gint InfoIsOdd;
+  gint RowStride;
+  gint FieldHeight;
+  gint Pitch;
+  const guint8 *L1;             // ptr to Line1, of 3
+  const guint8 *L2;             // ptr to Line2, the weave line
+  const guint8 *L3;             // ptr to Line3
+  const guint8 *L2P;            // ptr to prev Line2
+  guint8 *Dest;
+  gint i;
+  gint Offset;
+  ScanlineFunction scanline;
+
+  for (i = 0; i < 3; i++) {
+    Offset = method->offset[i];
+
+    InfoIsOdd = (history[history_count - 1].flags == PICTURE_INTERLACED_BOTTOM);
+    RowStride = method->row_stride[i];
+    FieldHeight = method->height[i] / 2;
+    Pitch = method->row_stride[i] * 2;
+
+    if (i == 0)
+      scanline = klass->scanline_planar_y;
+    else
+      scanline = klass->scanline_planar_uv;
+
+    Dest = GST_BUFFER_DATA (outbuf) + Offset;
+
+    L1 = GST_BUFFER_DATA (history[history_count - 2].buf) + Offset;
+    if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
+      L1 += RowStride;
+
+    L2 = GST_BUFFER_DATA (history[history_count - 1].buf) + Offset;
+    if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
+      L2 += RowStride;
+
+    L3 = L1 + Pitch;
+    L2P = GST_BUFFER_DATA (history[history_count - 3].buf) + Offset;
+    if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
+      L2P += RowStride;
+
+    deinterlace_frame_di_greedyh_planar_plane (self, L1, L2, L3, L2P, Dest,
+        RowStride, FieldHeight, Pitch, InfoIsOdd, scanline);
   }
 }
 
@@ -421,20 +728,28 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 
   dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedyh_packed;
+  dim_class->deinterlace_frame_y444 = deinterlace_frame_di_greedyh_planar;
+  dim_class->deinterlace_frame_i420 = deinterlace_frame_di_greedyh_planar;
+  dim_class->deinterlace_frame_yv12 = deinterlace_frame_di_greedyh_planar;
+  dim_class->deinterlace_frame_y42b = deinterlace_frame_di_greedyh_planar;
+  dim_class->deinterlace_frame_y41b = deinterlace_frame_di_greedyh_planar;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
-    klass->scanline_yuy2 = greedyh_scanline_yuy2_MMXEXT;
+    klass->scanline_yuy2 = greedyh_scanline_MMXEXT_yuy2;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
-    klass->scanline_yuy2 = greedyh_scanline_yuy2_3DNOW;
+    klass->scanline_yuy2 = greedyh_scanline_3DNOW_yuy2;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
-    klass->scanline_yuy2 = greedyh_scanline_yuy2_MMX;
+    klass->scanline_yuy2 = greedyh_scanline_MMX_yuy2;
   } else {
-    klass->scanline_yuy2 = greedyh_scanline_yuy2_C;
+    klass->scanline_yuy2 = greedyh_scanline_C_yuy2;
   }
 #else
-  klass->scanline_yuy2 = greedyh_scanline_yuy2_C;
+  klass->scanline_yuy2 = greedyh_scanline_C_yuy2;
 #endif
+  /* TODO: MMX implementation of these two */
+  klass->scanline_planar_y = greedyh_scanline_C_planar_y;
+  klass->scanline_planar_uv = greedyh_scanline_C_planar_uv;
 }
 
 static void

@@ -30,7 +30,7 @@
 #include "x86-64_macros.inc"
 
 static void
-FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest, gint width)
+FUNCT_NAME_YUY2 (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest, gint width)
 {
 
   // in tight loop some vars are accessed faster in local storage
@@ -51,7 +51,7 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const guint8 *
   // FIXME: Use C implementation if the width is not a multiple of 4
   // Do something more optimal later
   if (width % 4 != 0)
-    C_FUNCT (self, L1, L2, L3, L2P, Dest, width);
+    C_FUNCT_YUY2 (self, L1, L2, L3, L2P, Dest, width);
 
   // Set up our two parms that are actually evaluated for each pixel
   i = self->max_comb;
@@ -247,3 +247,4 @@ FUNCT_NAME (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const guint8 *
 #endif
       "memory", "cc");
 }
+
