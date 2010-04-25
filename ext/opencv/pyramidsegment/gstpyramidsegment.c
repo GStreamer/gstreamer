@@ -302,7 +302,7 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
   cvPyrSegmentation (filter->cvImage, filter->cvSegmentedImage, filter->storage,
       &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
 
-  gst_buffer_set_data (buf, filter->cvSegmentedImage->imageData,
+  gst_buffer_set_data (buf, (guint8 *) filter->cvSegmentedImage->imageData,
       filter->cvSegmentedImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);

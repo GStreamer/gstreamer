@@ -282,7 +282,7 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
 
   }
 
-  gst_buffer_set_data (buf, filter->cvImage->imageData,
+  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
       filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);

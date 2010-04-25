@@ -223,7 +223,7 @@ gst_templatematch_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_TEMPLATE:
-      filter->template = g_value_get_string (value);
+      filter->template = (char *) g_value_get_string (value);
       gst_templatematch_load_template (filter);
       break;
     case PROP_DISPLAY:
@@ -308,7 +308,6 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
   GstTemplateMatch *filter;
   CvPoint best_pos;
   double best_res;
-  int i;
 
   filter = GST_TEMPLATEMATCH (GST_OBJECT_PARENT (pad));
   buf = gst_buffer_make_writable (buf);
@@ -354,7 +353,7 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
   }
 
 
-  gst_buffer_set_data (buf, filter->cvImage->imageData,
+  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
       filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);

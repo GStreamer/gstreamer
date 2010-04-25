@@ -305,7 +305,7 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
   } else {
     cvCvtColor (filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
   }
-  gst_buffer_set_data (buf, filter->cvCEdge->imageData,
+  gst_buffer_set_data (buf, (guint8 *) filter->cvCEdge->imageData,
       filter->cvCEdge->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);

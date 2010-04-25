@@ -386,7 +386,8 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
   
   cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(filter->colorR,filter->colorG,filter->colorB,0));
 
-  gst_buffer_set_data (buf, filter->cvImage->imageData,filter->cvImage->imageSize);
+  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
+      filter->cvImage->imageSize);
  
   return gst_pad_push (filter->srcpad, buf);
 }
