@@ -64,11 +64,10 @@ static gboolean gst_gl_filter_laplacian_filter (GstGLFilter * filter,
 static void gst_gl_filter_laplacian_callback (gint width, gint height,
     guint texture, gpointer stuff);
 
+/* *INDENT-OFF* */
 static const gchar *convolution_fragment_source =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;"
-    "uniform float norm_const;"
-    "uniform float norm_offset;"
     "uniform float kernel[9];"
     "void main () {"
     "  vec2 offset[9];"
@@ -85,10 +84,12 @@ static const gchar *convolution_fragment_source =
     "  int i;"
     "  vec4 sum = vec4 (0.0);"
     "  for (i = 0; i < 9; i++) { "
-    "    if (kernel[i] != 0.0) {"
-    "      vec4 neighbor = texture2DRect(tex, texturecoord + vec2(offset[i])); "
-    "      sum += neighbor * kernel[i]/norm_const; "
-    "    }" "  }" "  gl_FragColor = sum + norm_offset;" "}";
+    "    vec4 neighbor = texture2DRect(tex, texturecoord + vec2(offset[i]));"
+    "    sum += neighbor * kernel[i];"
+    "  }"
+    "  gl_FragColor = sum;"
+    "}";
+/* *INDENT-ON* */
 
 static void
 gst_gl_filter_laplacian_base_init (gpointer klass)
@@ -206,9 +207,6 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (laplacian_filter->shader, "tex", 0);
   gst_gl_shader_set_uniform_1fv (laplacian_filter->shader, "kernel", 9, kernel);
-  gst_gl_shader_set_uniform_1f (laplacian_filter->shader, "norm_const", 1.0);
-  gst_gl_shader_set_uniform_1f (laplacian_filter->shader, "norm_offset", 0.0);  //set to 0.5 to preserve overall greylevel
-
 
   glBegin (GL_QUADS);
   glTexCoord2i (0, 0);
