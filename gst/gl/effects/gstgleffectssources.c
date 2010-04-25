@@ -360,7 +360,7 @@ const gchar *multiply_fragment_source =
   "void main () {"
   "  vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
   "  vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
-  "  gl_FragColor = (1 - alpha) * basecolor + alpha * basecolor * blendcolor;"
+  "  gl_FragColor = (1.0 - alpha) * basecolor + alpha * basecolor * blendcolor;"
   "}";
 
 /* lut operations, map luma to tex1d, see orange book (chapter 19) */
