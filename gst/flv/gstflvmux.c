@@ -160,10 +160,14 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   gobject_class->set_property = gst_flv_mux_set_property;
   gobject_class->finalize = gst_flv_mux_finalize;
 
+  /* FIXME: disabled for release, needs a better/less wrong name; ideally the
+   * right mode of operation should be detected automatically using queries */
+#if 0
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
           "The stream is live and does not need an index", DEFAULT_IS_LIVE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_flv_mux_change_state);
   gstelement_class->request_new_pad =
