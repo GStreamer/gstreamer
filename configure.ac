@@ -40,10 +40,6 @@ dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.28.1
 GSTPB_REQ=0.10.28.1
 
-dnl export for .pc files
-AC_SUBST([GST_REQ])
-AC_SUBST([GSTPB_REQ])
-
 dnl *** autotools stuff ****
 
 dnl allow for different autotools
@@ -155,7 +151,7 @@ AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], [yes])
 
 GST_TOOLS_DIR=`$PKG_CONFIG --variable=toolsdir gstreamer-$GST_MAJORMINOR`
 if test -z $GST_TOOLS_DIR; then
@@ -167,9 +163,9 @@ GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
 AC_SUBST(GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 
-AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ], [yes])
 
-AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], [yes])
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
