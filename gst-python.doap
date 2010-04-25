@@ -26,11 +26,10 @@ It also comes with a number of examples.
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
 
  <repository>
-   <CVSRepository>
-     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
-     <module>gst-python</module>
-     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-python/" />
-   </CVSRepository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-python"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-python"/>
+   </GitRepository>
  </repository> 
 
  <release>
@@ -220,7 +219,7 @@ It also comes with a number of examples.
  </maintainer>
  <maintainer>
   <foaf:Person>
-     <foaf:name>Thomas Vander Stichele</foaf:name>
+     <foaf:name>Edward Hervey</foaf:name>
   </foaf:Person>
  </maintainer>
 
