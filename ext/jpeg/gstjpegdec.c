@@ -1031,6 +1031,9 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dec, "num_components=%d", dec->cinfo.num_components);
   GST_LOG_OBJECT (dec, "jpeg_color_space=%d", dec->cinfo.jpeg_color_space);
 
+  if (dec->cinfo.num_components > 3)
+    goto components_not_supported;
+
 #ifndef GST_DISABLE_GST_DEBUG
   {
     gint i;
@@ -1295,6 +1298,13 @@ drop_buffer:
     gst_buffer_unref (outbuf);
     ret = GST_FLOW_OK;
     goto exit;
+  }
+components_not_supported:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("more components than supported: %d > 3", dec->cinfo.num_components));
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 }
 
