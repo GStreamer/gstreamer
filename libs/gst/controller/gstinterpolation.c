@@ -50,6 +50,8 @@ gst_control_point_find (gconstpointer p1, gconstpointer p2)
  * @timestamp: the search key
  *
  * Find last value before given timestamp in control point list.
+ * If all values in the control point list come after the given
+ * timestamp or no values exist, %NULL is returned.
  *
  * Returns: the found #GSequenceIter or %NULL
  */
@@ -57,7 +59,6 @@ static GSequenceIter *gst_interpolation_control_source_find_control_point_iter
     (GstInterpolationControlSource * self, GstClockTime timestamp)
 {
   GSequenceIter *iter;
-  GstControlPoint *cp;
 
   if (!self->priv->values)
     return NULL;
@@ -66,28 +67,14 @@ static GSequenceIter *gst_interpolation_control_source_find_control_point_iter
       g_sequence_search (self->priv->values, &timestamp,
       (GCompareDataFunc) gst_control_point_find, NULL);
 
-  if (!iter)
-    return NULL;
-
   /* g_sequence_search() returns the iter where timestamp
    * would be inserted, i.e. the iter > timestamp, so
-   * we need to get the previous one */
-  iter = g_sequence_iter_prev (iter);
-
-  if (!iter)
+   * we need to get the previous one. And of course, if
+   * there is no previous one, we return NULL. */
+  if (g_sequence_iter_is_begin (iter))
     return NULL;
 
-  /* g_sequence_iter_prev () on the begin iter returns
-   * the begin iter. Check if the prev iter is still
-   * after our timestamp, in that case return NULL
-   */
-  cp = g_sequence_get (iter);
-  if (cp->timestamp > timestamp)
-    return NULL;
-
-  /* If the iter is the end iter return NULL as no
-   * data is linked to the end iter */
-  return G_UNLIKELY (g_sequence_iter_is_end (iter)) ? NULL : iter;
+  return g_sequence_iter_prev (iter);
 }
 
 /*  steps-like (no-)interpolation, default */
