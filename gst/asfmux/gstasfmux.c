@@ -1220,6 +1220,21 @@ gst_asf_mux_write_data_object (GstAsfMux * asfmux, guint8 ** buf)
   *buf += ASF_DATA_OBJECT_SIZE;
 }
 
+static void
+gst_asf_mux_put_buffer_in_streamheader (GValue * streamheader,
+    GstBuffer * buffer)
+{
+  GValue value = { 0 };
+  GstBuffer *buf;
+
+  g_value_init (&value, GST_TYPE_BUFFER);
+  buf = gst_buffer_copy (buffer);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
+  gst_value_array_append_value (streamheader, &value);
+  g_value_unset (&value);
+}
+
 static guint
 gst_asf_mux_find_payload_parsing_info_size (GstAsfMux * asfmux)
 {
@@ -1255,6 +1270,9 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   guint stream_num = g_slist_length (asfmux->collect->data);
   guint metadata_obj_size = 0;
   GstAsfTags *asftags;
+  GValue streamheader = { 0 };
+  GstCaps *caps;
+  GstStructure *structure;
   guint64 padding = asfmux->prop_padding;
   if (padding < ASF_PADDING_OBJECT_SIZE)
     padding = 0;
@@ -1333,6 +1351,21 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   /* store data object position for later updating some fields */
   asfmux->data_object_position = bufdata - GST_BUFFER_DATA (buf);
   gst_asf_mux_write_data_object (asfmux, &bufdata);
+
+  /* set streamheader in source pad if 'is-live' */
+  if (asfmux->prop_is_live) {
+    g_value_init (&streamheader, GST_TYPE_ARRAY);
+    gst_asf_mux_put_buffer_in_streamheader (&streamheader, buf);
+
+    caps = gst_caps_ref (GST_PAD_CAPS (asfmux->srcpad));
+    caps = gst_caps_make_writable (caps);
+    structure = gst_caps_get_structure (caps, 0);
+    gst_structure_set_value (structure, "streamheader", &streamheader);
+    gst_pad_set_caps (asfmux->srcpad, caps);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    g_value_unset (&streamheader);
+    gst_caps_unref (caps);
+  }
 
   g_assert (bufdata - GST_BUFFER_DATA (buf) == GST_BUFFER_SIZE (buf));
   return gst_asf_mux_push_buffer (asfmux, buf);
