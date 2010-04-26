@@ -1192,6 +1192,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 #ifndef OPENGL_ES2
         glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
             display->download_width, display->download_height);
+        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+            display->download_width, display->download_height);
 #else
         glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
             display->download_width, display->download_height);
@@ -1279,6 +1281,12 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
         glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
             GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT,
             display->download_depth_buffer);
+
+#ifndef OPENGL_ES2
+        glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
+            GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT,
+            display->download_depth_buffer);
+#endif
 
         gst_gl_display_check_framebuffer_status ();
 
@@ -1561,6 +1569,8 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
 #ifndef OPENGL_ES2
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
       display->gen_fbo_width, display->gen_fbo_height);
+  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+      display->gen_fbo_width, display->gen_fbo_height);
 #else
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
       display->gen_fbo_width, display->gen_fbo_height);
@@ -1586,6 +1596,11 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
   //attach the depth render buffer to the FBO
   glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
       GL_RENDERBUFFER_EXT, display->generated_depth_buffer);
+
+#ifndef OPENGL_ES2
+  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
+      GL_RENDERBUFFER_EXT, display->generated_depth_buffer);
+#endif
 
   g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
       GL_FRAMEBUFFER_COMPLETE_EXT);
@@ -2546,6 +2561,8 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
 #ifndef OPENGL_ES2
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
         display->upload_width, display->upload_height);
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_STENCIL_INDEX,
+        display->upload_width, display->upload_height);
 #else
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
         display->upload_width, display->upload_height);
@@ -2573,6 +2590,11 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
     //attach the depth render buffer to the FBO
     glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
         GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+
+#ifndef OPENGL_ES2
+    glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
+        GL_RENDERBUFFER_EXT, display->upload_depth_buffer);
+#endif
 
     gst_gl_display_check_framebuffer_status ();
 
