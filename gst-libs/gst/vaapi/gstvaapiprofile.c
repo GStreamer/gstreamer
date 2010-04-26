@@ -25,8 +25,12 @@
 
 #include "config.h"
 #include <string.h>
+#include <gst/gstbuffer.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiprofile.h"
+
+#define GST_VAAPI_PROFILE_CODEC(profile) \
+    ((GstVaapiCodec)(((guint32)profile) & GST_MAKE_FOURCC(0xff,0xff,0xff,0)))
 
 typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
 typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
@@ -137,6 +141,51 @@ gst_vaapi_profile(VAProfile profile)
 }
 
 /**
+ * gst_vaapi_profile_from_codec_data:
+ * @codec: a #GstVaapiCodec
+ * @buffer: a #GstBuffer holding code data
+ *
+ * Tries to parse VA profile from @buffer data and @codec information.
+ *
+ * Return value: the #GstVaapiProfile described in @buffer
+ */
+static GstVaapiProfile
+gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
+{
+    /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
+    uint8_t * const buf = GST_BUFFER_DATA(buffer);
+
+    if (buf[0] != 1)    /* configurationVersion = 1 */
+        return 0;
+
+    switch (buf[1]) {   /* AVCProfileIndication */
+    case 66:    return GST_VAAPI_PROFILE_H264_BASELINE;
+    case 77:    return GST_VAAPI_PROFILE_H264_MAIN;
+    case 100:   return GST_VAAPI_PROFILE_H264_HIGH;
+    }
+    return 0;
+}
+
+static GstVaapiProfile
+gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
+{
+    GstVaapiProfile profile;
+
+    if (!codec || !buffer)
+        return 0;
+
+    switch (codec) {
+    case GST_VAAPI_CODEC_H264:
+        profile = gst_vaapi_profile_from_codec_data_h264(buffer);
+        break;
+    default:
+        profile = 0;
+        break;
+    }
+    return profile;
+}
+
+/**
  * gst_vaapi_profile_from_caps:
  * @caps: a #GstCaps
  *
@@ -152,9 +201,10 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
     const GstVaapiProfileMap *m;
     GstCaps *caps_test;
     GstStructure *structure;
+    GstVaapiProfile profile;
+    GstBuffer *codec_data = NULL;
     const gchar *name;
     gsize namelen;
-    gboolean found;
 
     if (!caps)
         return 0;
@@ -166,15 +216,28 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
     name    = gst_structure_get_name(structure);
     namelen = strlen(name);
 
-    found = FALSE;
-    for (m = gst_vaapi_profiles; !found && m->profile; m++) {
+    if (!gst_structure_has_field(structure, "profile")) {
+        const GValue *v_codec_data;
+        v_codec_data = gst_structure_get_value(structure, "codec_data");
+        if (v_codec_data)
+            codec_data = gst_value_get_buffer(v_codec_data);
+    }
+
+    profile = 0;
+    for (m = gst_vaapi_profiles; !profile && m->profile; m++) {
         if (strncmp(name, m->caps_str, namelen) != 0)
             continue;
         caps_test = gst_caps_from_string(m->caps_str);
-        found = gst_caps_is_always_compatible(caps_test, caps);
+        if (gst_caps_is_always_compatible(caps, caps_test))
+            profile = m->profile;
+        else if (codec_data)
+            profile = gst_vaapi_profile_from_codec_data(
+                GST_VAAPI_PROFILE_CODEC(m->profile),
+                codec_data
+            );
         gst_caps_unref(caps_test);
     }
-    return found ? m->va_profile : 0;
+    return profile;
 }
 
 /**
@@ -223,7 +286,7 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile)
 GstVaapiCodec
 gst_vaapi_profile_get_codec(GstVaapiProfile profile)
 {
-    return (GstVaapiCodec)(((guint32)profile) & 0xffffff00);
+    return GST_VAAPI_PROFILE_CODEC(profile);
 }
 
 /**
