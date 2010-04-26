@@ -22,8 +22,8 @@
 #define C_ENUM(v) ((gint) v)
 #define C_FLAGS(v) ((guint) v)
 
-static void
-register_gst_autoplug_select_result (GType * id)
+GType
+gst_autoplug_select_result_get_type (void)
 {
   static const GEnumValue values[] = {
     {C_ENUM (GST_AUTOPLUG_SELECT_TRY), "GST_AUTOPLUG_SELECT_TRY", "try"},
@@ -32,21 +32,21 @@ register_gst_autoplug_select_result (GType * id)
     {C_ENUM (GST_AUTOPLUG_SELECT_SKIP), "GST_AUTOPLUG_SELECT_SKIP", "skip"},
     {0, NULL, NULL}
   };
-  *id = g_enum_register_static ("GstAutoplugSelectResult", values);
-}
+  static volatile GType id = 0;
 
-GType
-gst_autoplug_select_result_get_type (void)
-{
-  static GType id;
-  static GOnce once = G_ONCE_INIT;
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
 
-  g_once (&once, (GThreadFunc) register_gst_autoplug_select_result, &id);
+    _id = g_enum_register_static ("GstAutoplugSelectResult", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
   return id;
 }
 
-static void
-register_gst_play_flags (GType * id)
+GType
+gst_play_flags_get_type (void)
 {
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_PLAY_FLAG_VIDEO), "Render the video stream", "video"},
@@ -65,15 +65,15 @@ register_gst_play_flags (GType * id)
         "buffering"},
     {0, NULL, NULL}
   };
-  *id = g_flags_register_static ("GstPlayFlags", values);
-}
+  static volatile GType id = 0;
 
-GType
-gst_play_flags_get_type (void)
-{
-  static GType id;
-  static GOnce once = G_ONCE_INIT;
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
 
-  g_once (&once, (GThreadFunc) register_gst_play_flags, &id);
+    _id = g_flags_register_static ("GstPlayFlags", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
   return id;
 }
