@@ -66,6 +66,14 @@ typedef struct
 typedef struct
 {
   GstPlayChain chain;
+  GstPad *sinkpad, *srcpad;
+  GstElement *conv;
+  GstElement *deinterlace;
+} GstPlayVideoDeinterlaceChain;
+
+typedef struct
+{
+  GstPlayChain chain;
   GstPad *sinkpad;
   GstElement *queue;
   GstElement *conv;
@@ -120,6 +128,7 @@ struct _GstPlaySink
 
   /* chains */
   GstPlayAudioChain *audiochain;
+  GstPlayVideoDeinterlaceChain *videodeinterlacechain;
   GstPlayVideoChain *videochain;
   GstPlayVisChain *vischain;
   GstPlayTextChain *textchain;
@@ -375,6 +384,8 @@ gst_play_sink_dispose (GObject * object)
     playsink->text_sink = NULL;
   }
 
+  free_chain ((GstPlayChain *) playsink->videodeinterlacechain);
+  playsink->videodeinterlacechain = NULL;
   free_chain ((GstPlayChain *) playsink->videochain);
   playsink->videochain = NULL;
   free_chain ((GstPlayChain *) playsink->audiochain);
@@ -932,6 +943,99 @@ try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
     }
   }
   return element;
+}
+
+/* make the element (bin) that contains the elements needed to perform
+ * video display.
+ *
+ *  +------------------------------------------------------------+
+ *  | vbin                                                       |
+ *  |      +-------+   +----------+   +----------+   +---------+ |
+ *  |      | queue |   |colorspace|   |videoscale|   |videosink| |
+ *  |   +-sink    src-sink       src-sink       src-sink       | |
+ *  |   |  +-------+   +----------+   +----------+   +---------+ |
+ * sink-+                                                        |
+ *  +------------------------------------------------------------+
+ *
+ */
+static GstPlayVideoDeinterlaceChain *
+gen_video_deinterlace_chain (GstPlaySink * playsink)
+{
+  GstPlayVideoDeinterlaceChain *chain;
+  GstBin *bin;
+  GstPad *pad;
+  GstElement *head = NULL, *prev = NULL;
+
+  chain = g_new0 (GstPlayVideoDeinterlaceChain, 1);
+  chain->chain.playsink = playsink;
+
+  GST_DEBUG_OBJECT (playsink, "making video deinterlace chain %p", chain);
+
+  /* create a bin to hold objects, as we create them we add them to this bin so
+   * that when something goes wrong we only need to unref the bin */
+  chain->chain.bin = gst_bin_new ("vdbin");
+  bin = GST_BIN_CAST (chain->chain.bin);
+  gst_object_ref_sink (bin);
+
+  GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
+  chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vdconv");
+  if (chain->conv == NULL) {
+    post_missing_element_message (playsink, "ffmpegcolorspace");
+    GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "ffmpegcolorspace"), ("video rendering might fail"));
+  } else {
+    gst_bin_add (bin, chain->conv);
+    head = chain->conv;
+    prev = chain->conv;
+  }
+
+  GST_DEBUG_OBJECT (playsink, "creating deinterlace");
+  chain->deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
+  if (chain->deinterlace == NULL) {
+    post_missing_element_message (playsink, "deinterlace");
+    GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "deinterlace"), ("deinterlacing won't work"));
+  } else {
+    gst_bin_add (bin, chain->deinterlace);
+    if (prev) {
+      if (!gst_element_link_pads (prev, "src", chain->deinterlace, "sink"))
+        goto link_failed;
+    } else {
+      head = chain->deinterlace;
+    }
+    prev = chain->deinterlace;
+  }
+
+  if (head) {
+    pad = gst_element_get_static_pad (head, "sink");
+    chain->sinkpad = gst_ghost_pad_new ("sink", pad);
+    gst_object_unref (pad);
+  } else {
+    chain->sinkpad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
+  }
+
+  if (prev) {
+    pad = gst_element_get_static_pad (prev, "src");
+    chain->srcpad = gst_ghost_pad_new ("src", pad);
+    gst_object_unref (pad);
+  } else {
+    chain->srcpad = gst_ghost_pad_new ("src", chain->sinkpad);
+  }
+
+  gst_element_add_pad (chain->chain.bin, chain->sinkpad);
+  gst_element_add_pad (chain->chain.bin, chain->srcpad);
+
+  return chain;
+
+link_failed:
+  {
+    GST_ELEMENT_ERROR (playsink, CORE, PAD,
+        (NULL), ("Failed to configure the video deinterlace chain."));
+    free_chain ((GstPlayChain *) chain);
+    return NULL;
+  }
 }
 
 /* make the element (bin) that contains the elements needed to perform
@@ -1820,12 +1924,12 @@ gboolean
 gst_play_sink_reconfigure (GstPlaySink * playsink)
 {
   GstPlayFlags flags;
-  gboolean need_audio, need_video, need_vis, need_text;
+  gboolean need_audio, need_video, need_deinterlace, need_vis, need_text;
 
   GST_DEBUG_OBJECT (playsink, "reconfiguring");
 
   /* assume we need nothing */
-  need_audio = need_video = need_vis = need_text = FALSE;
+  need_audio = need_video = need_deinterlace = need_vis = need_text = FALSE;
 
   GST_PLAY_SINK_LOCK (playsink);
   GST_OBJECT_LOCK (playsink);
@@ -1843,6 +1947,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           || (flags & GST_PLAY_FLAG_NATIVE_VIDEO)) && playsink->video_pad) {
     /* we have video and we are requested to show it */
     need_video = TRUE;
+
+    /* we only deinterlace if native video is not requested and
+     * we have raw video */
+    if ((flags & GST_PLAY_FLAG_DEINTERLACE)
+        && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO) && playsink->video_pad_raw)
+      need_deinterlace = TRUE;
   }
 
   if (playsink->audio_pad) {
@@ -1897,6 +2007,23 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
 
+    if (need_deinterlace) {
+      if (!playsink->videodeinterlacechain)
+        playsink->videodeinterlacechain =
+            gen_video_deinterlace_chain (playsink);
+
+      GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
+
+      if (playsink->videodeinterlacechain) {
+        GST_DEBUG_OBJECT (playsink, "setting up deinterlacing chain");
+
+        add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
+        activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
+        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
+            playsink->videodeinterlacechain->sinkpad);
+      }
+    }
+
     if (playsink->videochain) {
       /* try to reactivate the chain */
       if (!setup_video_chain (playsink, raw, async, queue)) {
@@ -1910,6 +2037,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (!playsink->videochain) {
       playsink->videochain = gen_video_chain (playsink, raw, async, queue);
     }
+
     if (playsink->videochain) {
       GST_DEBUG_OBJECT (playsink, "adding video chain");
       add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
@@ -1918,8 +2046,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       if (!need_vis && !need_text && (!playsink->textchain
               || !playsink->text_pad)) {
         GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
-        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
-            playsink->videochain->sinkpad);
+        if (need_deinterlace)
+          gst_pad_link (playsink->videodeinterlacechain->srcpad,
+              playsink->videochain->sinkpad);
+        else
+          gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
+              playsink->videochain->sinkpad);
       }
     }
   } else {
@@ -1946,6 +2078,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
     }
+
+    if (playsink->videodeinterlacechain) {
+      add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
+      activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
+    }
+
     if (playsink->video_pad)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad), NULL);
   }
@@ -2087,8 +2225,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         gst_pad_link (srcpad, playsink->textchain->videosinkpad);
         gst_object_unref (srcpad);
       } else {
-        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
-            playsink->textchain->videosinkpad);
+        if (need_deinterlace)
+          gst_pad_link (playsink->videodeinterlacechain->srcpad,
+              playsink->textchain->videosinkpad);
+        else
+          gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
+              playsink->textchain->videosinkpad);
       }
       gst_pad_link (playsink->textchain->srcpad, playsink->videochain->sinkpad);
 
@@ -2674,6 +2816,11 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* remove sinks we added */
+      if (playsink->videodeinterlacechain) {
+        activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain),
+            FALSE);
+        add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
+      }
       if (playsink->videochain) {
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
         add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
