@@ -155,19 +155,19 @@ gst_deinterlace_modes_get_type (void)
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("Y41B"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y41B"))
     );
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("Y41B"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y444") ";"
+        GST_VIDEO_CAPS_YUV ("YUY2") ";" GST_VIDEO_CAPS_YUV ("YVYU") ";"
+        GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("YV12") ";" GST_VIDEO_CAPS_YUV ("Y41B"))
     );
 
 static void gst_deinterlace_finalize (GObject * self);
