@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2008 Pierre Pouzol<pierre.pouzol@hotmail.fr>
+ * Copyright (C) 2010 Pierre Pouzol<pierre.pouzol@hotmail.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -234,24 +234,9 @@ static void
 gst_gl_filter_reflected_screen_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
-  static gint64 start_time = 0;
-
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterReflectedScreen *reflected_screen_filter =
       GST_GL_FILTER_REFLECTED_SCREEN (stuff);
-
-  if (start_time == 0)
-    start_time = get_time ();
-  else {
-    gint64 time_left =
-        (reflected_screen_filter->timestamp / 1000) - (get_time () -
-        start_time);
-    time_left -= 1000000 / 25;
-    if (time_left > 2000) {
-      GST_LOG ("escape");
-      return;
-    }
-  }
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
