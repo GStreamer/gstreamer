@@ -293,6 +293,7 @@ static GstFlowReturn
 gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
 {
   Gstpyramidsegment *filter;
+  GstBuffer *outbuf;
 
   filter = GST_PYRAMIDSEGMENT (GST_OBJECT_PARENT (pad));
 
@@ -302,10 +303,19 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
   cvPyrSegmentation (filter->cvImage, filter->cvSegmentedImage, filter->storage,
       &(filter->comp), filter->level, filter->threshold1, filter->threshold2);
 
-  gst_buffer_set_data (buf, (guint8 *) filter->cvSegmentedImage->imageData,
-      filter->cvSegmentedImage->imageSize);
+  /* TODO look if there is a way in opencv to reuse the image data and
+   * delete only the struct headers. Would avoid a memcpy here */
 
-  return gst_pad_push (filter->srcpad, buf);
+  outbuf = gst_buffer_new_and_alloc (filter->cvSegmentedImage->imageSize);
+  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_ALL);
+  memcpy (GST_BUFFER_DATA (outbuf), filter->cvSegmentedImage->imageData,
+      GST_BUFFER_SIZE (outbuf));
+
+  gst_buffer_unref (buf);
+  cvReleaseImage (&filter->cvSegmentedImage);
+  g_assert (filter->cvSegmentedImage == NULL);
+
+  return gst_pad_push (filter->srcpad, outbuf);
 }
 
 
