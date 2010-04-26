@@ -191,6 +191,20 @@ get_raw_format(GstVaapiDecoder *decoder)
     return av_find_input_format(raw_format);
 }
 
+/** Flushes n bytes from the stream */
+static void
+stream_flush(GstVaapiDecoder *decoder, int buf_size)
+{
+    GstVaapiDecoderFfmpegPrivate * const priv =
+        GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
+
+    gst_vaapi_decoder_flush(decoder, buf_size);
+    if (priv->iobuf_pos > buf_size)
+        priv->iobuf_pos -= buf_size;
+    else
+        priv->iobuf_pos = 0;
+}
+
 /** Reads one packet */
 static int
 stream_read(void *opaque, uint8_t *buf, int buf_size)
@@ -200,17 +214,12 @@ stream_read(void *opaque, uint8_t *buf, int buf_size)
         GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
 
     if (buf_size > 0) {
-        if (priv->is_constructed) {
-            buf_size = gst_vaapi_decoder_read(decoder, buf, buf_size);
-        }
-        else {
-            buf_size = gst_vaapi_decoder_copy(
-                decoder,
-                priv->iobuf_pos,
-                buf, buf_size
-            );
-            priv->iobuf_pos += buf_size;
-        }
+        buf_size = gst_vaapi_decoder_copy(
+            decoder,
+            priv->iobuf_pos,
+            buf, buf_size
+        );
+        priv->iobuf_pos += buf_size;
     }
     return buf_size;
 }
@@ -472,16 +481,19 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
     GstVaapiSurface *surface = NULL;
-    int got_picture = 0;
+    int bytes_read, got_picture = 0;
 
     GST_VAAPI_DISPLAY_LOCK(display);
-    avcodec_decode_video(
+    bytes_read = avcodec_decode_video(
         priv->avctx,
         priv->frame,
         &got_picture,
         buf, buf_size
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
+
+    if (bytes_read > 0)
+        stream_flush(GST_VAAPI_DECODER_CAST(ffdecoder), bytes_read);
 
     if (got_picture) {
         surface = gst_vaapi_context_find_surface_by_id(
