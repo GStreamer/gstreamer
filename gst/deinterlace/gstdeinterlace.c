@@ -606,7 +606,7 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->fps_n = self->fps_d = 0;
   self->passthrough = FALSE;
 
-  gst_segment_init (&self->segment, GST_FORMAT_TIME);
+  gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
   if (self->sink_caps)
     gst_caps_unref (self->sink_caps);
@@ -1400,19 +1400,19 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
       GstFormat fmt;
       gboolean is_update;
       gint64 start, end, base;
-      gdouble rate;
+      gdouble rate, applied_rate;
 
-      gst_event_parse_new_segment (event, &is_update, &rate, &fmt, &start,
-          &end, &base);
+      gst_event_parse_new_segment_full (event, &is_update, &rate, &applied_rate,
+          &fmt, &start, &end, &base);
       if (fmt == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (pad,
             "Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
             GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
             GST_TIME_ARGS (end));
-        gst_segment_set_newsegment (&self->segment, is_update, rate, fmt, start,
-            end, base);
+        gst_segment_set_newsegment_full (&self->segment, is_update, rate,
+            applied_rate, fmt, start, end, base);
       } else {
-        gst_segment_init (&self->segment, GST_FORMAT_TIME);
+        gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       }
 
       gst_deinterlace_reset_qos (self);
