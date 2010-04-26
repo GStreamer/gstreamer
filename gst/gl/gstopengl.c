@@ -58,6 +58,7 @@ GType gst_gl_effects_get_type (void);
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
 #include "gstglfilterapp.h"
+#include "gstglfilterreflectedscreen.h"
 #include "gstglcolorscale.h"
 #include "gstgldeinterlace.h"
 #include "gstglbumper.h"
@@ -65,6 +66,7 @@ GType gst_gl_effects_get_type (void);
 
 GType gst_gl_deinterlace_get_type (void);
 GType gst_gl_filter_app_get_type (void);
+GType gst_gl_filter_reflected_screen_get_type (void);
 GType gst_gl_filterblur_get_type (void);
 GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
@@ -108,7 +110,6 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_effects_get_type ())) {
     return FALSE;
   }
-
 #ifndef OPENGL_ES2
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
@@ -150,6 +151,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterapp",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_APP)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfilterreflectedscreen",
+          GST_RANK_NONE, GST_TYPE_GL_FILTER_REFLECTED_SCREEN)) {
     return FALSE;
   }
 

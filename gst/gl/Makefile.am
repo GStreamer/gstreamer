@@ -19,6 +19,8 @@ OPENGL_SOURCES =  \
 	gstglfilterglass.h \
 	gstglfilterapp.c \
 	gstglfilterapp.h \
+	gstglfilterreflectedscreen.c \
+	gstglfilterreflectedscreen.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
 	gstgldeinterlace.c \

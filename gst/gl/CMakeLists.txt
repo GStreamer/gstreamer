@@ -33,6 +33,7 @@ add_library (gstopengl MODULE
   gstglfiltersobel.c
   gstglfilterglass.c
   gstglfilterapp.c
+  gstglfilterreflectedscreen.c
   gstglcolorscale.c
   gltestsrc.c
   gstgltestsrc.c
