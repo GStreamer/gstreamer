@@ -1183,9 +1183,15 @@ gst_deinterlace_getcaps (GstPad * pad)
 
   GST_OBJECT_UNLOCK (self);
 
-  if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
-    for (len = gst_caps_get_size (ret); len > 0; len--) {
-      GstStructure *s = gst_caps_get_structure (ret, len - 1);
+  for (len = gst_caps_get_size (ret); len > 0; len--) {
+    GstStructure *s = gst_caps_get_structure (ret, len - 1);
+
+    if (pad == self->sinkpad || self->passthrough)
+      gst_structure_remove_field (s, "interlaced");
+    else
+      gst_structure_set (s, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+
+    if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
       const GValue *val;
 
       val = gst_structure_get_value (s, "framerate");
