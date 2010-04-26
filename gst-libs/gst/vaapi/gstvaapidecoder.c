@@ -44,6 +44,12 @@ enum {
     PROP_CODEC,
 };
 
+static gboolean
+gst_vaapi_decoder_start(GstVaapiDecoder *decoder);
+
+static gboolean
+gst_vaapi_decoder_stop(GstVaapiDecoder *decoder);
+
 static gpointer
 decoder_thread_cb(gpointer data)
 {
@@ -71,6 +77,13 @@ decoder_thread_cb(gpointer data)
                 g_object_ref(decoder);
                 status = klass->decode(decoder);
                 g_object_unref(decoder);
+
+                /* Detect End-of-Stream conditions */
+                if (status != GST_VAAPI_DECODER_STATUS_SUCCESS &&
+                    priv->is_eos &&
+                    gst_vaapi_decoder_read_avail(decoder) == 0)
+                    status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
+
                 GST_DEBUG("decode frame (status = %d)", status);
             }
             else {
@@ -81,9 +94,14 @@ decoder_thread_cb(gpointer data)
                 g_mutex_unlock(priv->adapter_mutex);
 
                 /* Signal the main thread we got an error */
-                gst_vaapi_decoder_push_surface(decoder, NULL);
+                if (status != GST_VAAPI_DECODER_STATUS_END_OF_STREAM)
+                    gst_vaapi_decoder_push_surface(decoder, NULL);
             }
         }
+
+        /* End-of-Stream reached, decoder thread is no longer necessary */
+        if (status == GST_VAAPI_DECODER_STATUS_END_OF_STREAM)
+            break;
     }
     return NULL;
 }
@@ -92,6 +110,9 @@ static GstBuffer *
 create_buffer(const guchar *buf, guint buf_size, gboolean copy)
 {
     GstBuffer *buffer;
+
+    if (!buf || !buf_size)
+        return NULL;
 
     buffer = gst_buffer_new();
     if (!buffer)
@@ -119,29 +140,24 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
-    if (!buffer)
-        return FALSE;
+    if (!buffer) {
+        priv->is_eos = TRUE;
+        return TRUE;
+    }
 
     g_return_val_if_fail(priv->adapter_mutex && priv->adapter_cond, FALSE);
 
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
               buffer, GST_BUFFER_SIZE(buffer));
 
+    if (!priv->decoder_thread && !gst_vaapi_decoder_start(decoder))
+        return FALSE;
+
     /* XXX: add a mechanism to wait for enough buffer bytes to be consumed */
     g_mutex_lock(priv->adapter_mutex);
     gst_adapter_push(priv->adapter, buffer);
     g_cond_signal(priv->adapter_cond);
     g_mutex_unlock(priv->adapter_mutex);
-
-    if (!priv->decoder_thread) {
-        priv->decoder_thread = g_thread_create(
-            decoder_thread_cb, decoder,
-            TRUE,
-            NULL
-        );
-        if (!priv->decoder_thread)
-            return FALSE;
-    }
     return TRUE;
 }
 
@@ -155,18 +171,10 @@ unref_surface_cb(gpointer surface, gpointer user_data)
 static void
 gst_vaapi_decoder_finalize(GObject *object)
 {
-    GstVaapiDecoderPrivate * const priv = GST_VAAPI_DECODER(object)->priv;
+    GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
+    GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
-    if (priv->decoder_thread) {
-        priv->decoder_thread_cancel = TRUE;
-        if (priv->adapter_mutex && priv->adapter_cond) {
-            g_mutex_lock(priv->adapter_mutex);
-            g_cond_signal(priv->adapter_cond);
-            g_mutex_unlock(priv->adapter_mutex);
-        }
-        g_thread_join(priv->decoder_thread);
-        priv->decoder_thread = NULL;
-    }
+    gst_vaapi_decoder_stop(decoder);
 
     if (priv->adapter) {
         gst_adapter_clear(priv->adapter);
@@ -305,8 +313,66 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->surfaces_cond         = g_cond_new();
     priv->decoder_thread        = NULL;
     priv->decoder_thread_cancel = FALSE;
+    priv->is_eos                = FALSE;
 
     g_queue_init(&priv->surfaces);
+}
+
+/**
+ * gst_vaapi_decoder_start:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Starts the decoder. This creates the internal decoder thread, if
+ * necessary.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_decoder_start(GstVaapiDecoder *decoder)
+{
+    /* This is an internal function */
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (!priv->decoder_thread) {
+        priv->decoder_thread = g_thread_create(
+            decoder_thread_cb, decoder,
+            TRUE,
+            NULL
+        );
+        if (!priv->decoder_thread)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_decoder_stop:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Stops the decoder. This destroys any decoding thread that was
+ * previously created by gst_vaapi_decoder_start(). Only
+ * gst_vaapi_decoder_get_surface() on the queued surfaces will be
+ * allowed at this point.
+ *
+ * Return value: %FALSE on success
+ */
+gboolean
+gst_vaapi_decoder_stop(GstVaapiDecoder *decoder)
+{
+    /* This is an internal function */
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (priv->decoder_thread) {
+        priv->decoder_thread_cancel = TRUE;
+        if (priv->adapter_mutex && priv->adapter_cond) {
+            g_mutex_lock(priv->adapter_mutex);
+            g_cond_signal(priv->adapter_cond);
+            g_mutex_unlock(priv->adapter_mutex);
+        }
+        g_thread_join(priv->decoder_thread);
+        priv->decoder_thread = NULL;
+    }
+    return TRUE;
 }
 
 /**
@@ -334,8 +400,6 @@ gst_vaapi_decoder_put_buffer_data(
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
-    g_return_val_if_fail(buf, FALSE);
-    g_return_val_if_fail(buf_size > 0, FALSE);
 
     return push_buffer(decoder, create_buffer(buf, buf_size, FALSE));
 }
@@ -361,8 +425,6 @@ gst_vaapi_decoder_put_buffer_data_copy(
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
-    g_return_val_if_fail(buf, FALSE);
-    g_return_val_if_fail(buf_size > 0, FALSE);
 
     return push_buffer(decoder, create_buffer(buf, buf_size, TRUE));
 }
@@ -383,9 +445,8 @@ gboolean
 gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
-    g_return_val_if_fail(GST_IS_BUFFER(buf), FALSE);
 
-    return push_buffer(decoder, gst_buffer_ref(buf));
+    return push_buffer(decoder, buf ? gst_buffer_ref(buf) : NULL);
 }
 
 /**

@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 
     if (!gst_vaapi_decoder_put_buffer_data(decoder, vdata, vdata_size))
         g_error("could not send video data to the decoder");
-    if (0 && !gst_vaapi_decoder_put_buffer(decoder, NULL))
+    if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
         g_error("could not send EOS to the decoder");
 
     if (TIMEOUT < 0) {

@@ -63,6 +63,17 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER_CODEC(decoder) \
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec
 
+/**
+ * GST_VAAPI_DECODER_IS_EOS:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that checks if the @decoder reached an End-Of-Stream.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_IS_EOS
+#define GST_VAAPI_DECODER_IS_EOS(decoder) \
+    GST_VAAPI_DECODER_CAST(decoder)->priv->is_eos
+
 #define GST_VAAPI_DECODER_GET_PRIVATE(obj)                      \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
                                  GST_VAAPI_TYPE_DECODER,        \
@@ -80,6 +91,7 @@ struct _GstVaapiDecoderPrivate {
     GCond              *surfaces_cond;
     GThread            *decoder_thread;
     guint               decoder_thread_cancel   : 1;
+    guint               is_eos                  : 1;
 };
 
 gboolean
