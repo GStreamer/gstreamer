@@ -2561,7 +2561,7 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
 #ifndef OPENGL_ES2
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
         display->upload_width, display->upload_height);
-    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_STENCIL_INDEX,
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
         display->upload_width, display->upload_height);
 #else
     glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
