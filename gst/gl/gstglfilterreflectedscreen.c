@@ -226,7 +226,7 @@ gst_gl_filter_reflected_screen_draw_floor ()
   gluQuadricTexture (q, GL_FALSE);
 
   //drawing the disk. The texture are mapped thanks to the parameter we gave to the GLUquadric q
-  gluDisk (q, 0.0, 2.0, 50.0, 1.0);
+  gluDisk (q, 0.0, 2.0, 50, 1);
 }
 
 //opengl scene, params: input texture (not the output filter->texture)

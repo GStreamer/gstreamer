@@ -44,10 +44,10 @@ fill_gaussian_kernel (float *kernel, int size, float sigma)
   g_return_if_fail ((size % 2) != 0);
 
   sum = 0.0;
-  l = (size - 1) / 2.0;
+  l = (size - 1) / 2;
 
   for (i = 0; i < size; i++) {
-    kernel[i] = exp (-pow ((i - l), 2.0) / (2 * sigma));
+    kernel[i] = expf (-pow ((i - l), 2.0) / (2 * sigma));
     sum += kernel[i];
   }
 
