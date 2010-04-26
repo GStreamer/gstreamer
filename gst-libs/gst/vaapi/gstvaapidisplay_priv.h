@@ -69,7 +69,7 @@ G_BEGIN_DECLS
  * Base class for VA displays.
  */
 struct _GstVaapiDisplayPrivate {
-    GStaticMutex        mutex;
+    GStaticRecMutex     mutex;
     VADisplay           display;
     guint               width;
     guint               height;

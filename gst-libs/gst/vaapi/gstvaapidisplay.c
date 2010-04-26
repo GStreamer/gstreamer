@@ -419,13 +419,13 @@ end:
 static void
 gst_vaapi_display_lock_default(GstVaapiDisplay *display)
 {
-    g_static_mutex_lock(&display->priv->mutex);
+    g_static_rec_mutex_lock(&display->priv->mutex);
 }
 
 static void
 gst_vaapi_display_unlock_default(GstVaapiDisplay *display)
 {
-    g_static_mutex_unlock(&display->priv->mutex);
+    g_static_rec_mutex_unlock(&display->priv->mutex);
 }
 
 static void
@@ -562,7 +562,7 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->subpicture_formats    = NULL;
     priv->create_display        = TRUE;
 
-    g_static_mutex_init(&priv->mutex);
+    g_static_rec_mutex_init(&priv->mutex);
 }
 
 /**
