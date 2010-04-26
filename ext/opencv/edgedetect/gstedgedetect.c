@@ -288,6 +288,7 @@ static GstFlowReturn
 gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
 {
   Gstedgedetect *filter;
+  GstBuffer *outbuf;
 
   filter = GST_EDGEDETECT (GST_OBJECT_PARENT (pad));
 
@@ -305,10 +306,14 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
   } else {
     cvCvtColor (filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
   }
-  gst_buffer_set_data (buf, (guint8 *) filter->cvCEdge->imageData,
-      filter->cvCEdge->imageSize);
 
-  return gst_pad_push (filter->srcpad, buf);
+  outbuf = gst_buffer_new_and_alloc (filter->cvCEdge->imageSize);
+  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_ALL);
+  memcpy (GST_BUFFER_DATA (outbuf), filter->cvCEdge->imageData,
+      GST_BUFFER_SIZE (outbuf));
+
+  gst_buffer_unref (buf);
+  return gst_pad_push (filter->srcpad, outbuf);
 }
 
 /* entry point to initialize the plug-in
