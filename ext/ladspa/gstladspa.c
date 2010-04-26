@@ -880,7 +880,12 @@ plugin_init (GstPlugin * plugin)
   ladspa_plugin = plugin;
   descriptor_quark = g_quark_from_static_string ("ladspa-descriptor");
 
-  return ladspa_plugin_path_search ();
+  if (!ladspa_plugin_path_search ()) {
+    GST_WARNING ("no ladspa plugins found, check LADSPA_PATH");
+  }
+
+  /* we don't want to fail, even if there are no elements registered */
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

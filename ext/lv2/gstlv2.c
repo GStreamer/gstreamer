@@ -891,7 +891,12 @@ plugin_init (GstPlugin * plugin)
   if (!gst_audio_channel_position_get_type ())
     return FALSE;
 
-  return lv2_plugin_discover ();
+  if (!lv2_plugin_discover ()) {
+    GST_WARNING ("no lv2 plugins found, check LV2_PATH");
+  }
+
+  /* we don't want to fail, even if there are no elements registered */
+  return TRUE;
 }
 
 #ifdef __GNUC__
