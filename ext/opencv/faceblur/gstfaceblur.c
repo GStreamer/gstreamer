@@ -272,6 +272,9 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
 
+    if (faces && faces->total > 0) {
+      buf = gst_buffer_make_writable (buf);
+    }
     for (i = 0; i < (faces ? faces->total : 0); i++) {
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
       cvSetImageROI (filter->cvImage, *r);
@@ -279,11 +282,9 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
       cvSmooth (filter->cvImage, filter->cvImage, CV_GAUSSIAN, 11, 11, 0, 0);
       cvResetImageROI (filter->cvImage);
     }
-
   }
 
-  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
-      filter->cvImage->imageSize);
+  /* these filters operate in place, so we push the same buffer */
 
   return gst_pad_push (filter->srcpad, buf);
 }

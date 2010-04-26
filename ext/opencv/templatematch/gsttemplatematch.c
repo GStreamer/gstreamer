@@ -310,12 +310,13 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
   double best_res;
 
   filter = GST_TEMPLATEMATCH (GST_OBJECT_PARENT (pad));
-  buf = gst_buffer_make_writable (buf);
+
+  /* FIXME Why template == NULL returns OK?
+   * shouldn't it be a passthrough instead? */
   if ((!filter) || (!buf) || filter->template == NULL) {
     return GST_FLOW_OK;
   }
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
-
 
   if (!filter->cvDistImage) {
     filter->cvDistImage =
@@ -344,6 +345,9 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
 
     if (filter->display) {
       CvPoint corner = best_pos;
+
+      buf = gst_buffer_make_writable (buf);
+
       corner.x += filter->cvTemplateImage->width;
       corner.y += filter->cvTemplateImage->height;
       cvRectangle (filter->cvImage, best_pos, corner, CV_RGB (255, 32, 32), 3,
@@ -351,10 +355,6 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
     }
 
   }
-
-
-  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
-      filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }

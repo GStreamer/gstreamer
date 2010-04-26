@@ -284,6 +284,10 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
 
+    if (filter->display && faces && faces->total > 0) {
+      buf = gst_buffer_make_writable (buf);
+    }
+
     for (i = 0; i < (faces ? faces->total : 0); i++) {
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
 
@@ -309,9 +313,6 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
     }
 
   }
-
-  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
-      filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
 }

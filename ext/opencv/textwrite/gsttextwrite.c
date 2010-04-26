@@ -384,11 +384,9 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
  
   cvInitFont(&(filter->font),CV_FONT_VECTOR0, filter->width,filter->height,0,filter->thickness,0);
   
+  buf = gst_buffer_make_writable (buf);
   cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(filter->colorR,filter->colorG,filter->colorB,0));
 
-  gst_buffer_set_data (buf, (guint8 *) filter->cvImage->imageData,
-      filter->cvImage->imageSize);
- 
   return gst_pad_push (filter->srcpad, buf);
 }
 
