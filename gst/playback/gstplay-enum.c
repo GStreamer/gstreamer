@@ -63,6 +63,8 @@ gst_play_flags_get_type (void)
         "download"},
     {C_FLAGS (GST_PLAY_FLAG_BUFFERING), "Buffer demuxed/parsed data",
         "buffering"},
+    {C_FLAGS (GST_PLAY_FLAG_DEINTERLACE), "Deinterlace video if necessary",
+        "deinterlace"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
