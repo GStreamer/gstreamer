@@ -47,16 +47,29 @@ static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate audio_src_template =
-GST_STATIC_PAD_TEMPLATE ("audio",
+    GST_STATIC_PAD_TEMPLATE ("audio",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS
+    ("audio/x-adpcm, layout = (string) swf, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
+        "audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; "
+        "audio/mpeg, mpegversion = (int) 4, framed = (boolean) TRUE; "
+        "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
+        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 8, depth = (int) 8, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) FALSE; "
+        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 16, depth = (int) 16, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) TRUE; "
+        "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
+        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
+        "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
+    );
 
 static GstStaticPadTemplate video_src_template =
-GST_STATIC_PAD_TEMPLATE ("video",
+    GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("video/x-flash-video; "
+        "video/x-flash-screen; "
+        "video/x-vp6-flash; " "video/x-vp6-alpha; " "video/x-h264;")
+    );
 
 GST_DEBUG_CATEGORY_STATIC (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
