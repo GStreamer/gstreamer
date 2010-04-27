@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 /* this is a hack hack hack to get around jpeglib header bugs... */
 #ifdef HAVE_STDLIB_H
 # undef HAVE_STDLIB_H
@@ -41,8 +42,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEGENC))
 #define GST_IS_JPEGENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGENC))
+
 typedef struct _GstJpegEnc GstJpegEnc;
 typedef struct _GstJpegEncClass GstJpegEncClass;
+
+#define GST_JPEG_ENC_MAX_COMPONENT  4
 
 struct _GstJpegEnc
 {
@@ -51,15 +55,30 @@ struct _GstJpegEnc
   /* pads */
   GstPad *sinkpad, *srcpad;
 
-  /* video state */
-  gint format;
+  /* stream/image properties */
+  GstVideoFormat format;
   gint width;
   gint height;
+  gint channels;
+  gint fps_num, fps_den;
+  gint par_num, par_den;
+  /* standard video_format indexed */
+  gint stride[GST_JPEG_ENC_MAX_COMPONENT];
+  gint offset[GST_JPEG_ENC_MAX_COMPONENT];
+  gint inc[GST_JPEG_ENC_MAX_COMPONENT];
+  gint cwidth[GST_JPEG_ENC_MAX_COMPONENT];
+  gint cheight[GST_JPEG_ENC_MAX_COMPONENT];
+  gint h_samp[GST_JPEG_ENC_MAX_COMPONENT];
+  gint v_samp[GST_JPEG_ENC_MAX_COMPONENT];
+  gint h_max_samp;
+  gint v_max_samp;
+  gboolean planar;
   /* the video buffer */
   gint bufsize;
-  guint row_stride;
   /* the jpeg line buffer */
   guchar **line[3];
+  /* indirect encoding line buffers */
+  guchar *row[3][4 * DCTSIZE];
 
   struct jpeg_compress_struct cinfo;
   struct jpeg_error_mgr jerr;
