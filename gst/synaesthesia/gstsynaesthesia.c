@@ -23,6 +23,7 @@
  *
  * Synaesthesia is an audio visualisation element. It creates glitter and
  * pulsating fog based on the incomming audio signal.
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
