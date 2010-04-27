@@ -121,6 +121,8 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-pn-realvideo, "
         "rmversion = (int) [1, 4], "
         COMMON_VIDEO_CAPS "; "
+        "video/x-vp8, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420, YV12, UYVY, AYUV }, "
         COMMON_VIDEO_CAPS "; "
@@ -868,6 +870,8 @@ skip_details:
     }
   } else if (!strcmp (mimetype, "video/x-dirac")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
+  } else if (!strcmp (mimetype, "video/x-vp8")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VP8);
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 

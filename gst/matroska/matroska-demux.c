@@ -6408,6 +6408,10 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC)) {
     caps = gst_caps_new_simple ("video/x-dirac", NULL);
     context->send_xiph_headers = FALSE;
+    *codec_name = g_strdup_printf ("Dirac");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
+    caps = gst_caps_new_simple ("video/x-vp8", NULL);
+    *codec_name = g_strdup_printf ("On2 VP8");
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;
