@@ -18,6 +18,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-mp3parse
+ *
+ * Parses and frames mpeg1 audio streams. Provides seeking.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch filesrc location=test.mp3 ! mp3parse ! autoaudiosink
+ * ]|
+ * </refsect2>
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
