@@ -39,6 +39,7 @@ struct _GstGLFilterSobel
   GstGLShader *hconv;
   GstGLShader *vconv;
   GstGLShader *len;
+  GstGLShader *desat;
 
   GLuint midtexture[5];
 
