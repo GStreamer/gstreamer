@@ -73,8 +73,6 @@ struct _GstJackRingBufferClass
 static void gst_jack_ring_buffer_class_init(GstJackRingBufferClass * klass);
 static void gst_jack_ring_buffer_init(GstJackRingBuffer * ringbuffer,
     GstJackRingBufferClass * klass);
-static void gst_jack_ring_buffer_dispose(GObject * object);
-static void gst_jack_ring_buffer_finalize(GObject * object);
 
 static GstRingBufferClass *ring_parent_class = NULL;
 

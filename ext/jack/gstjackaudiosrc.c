@@ -178,9 +178,6 @@ gst_jack_ring_buffer_class_init (GstJackRingBufferClass * klass)
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = gst_jack_ring_buffer_dispose;
-  gobject_class->finalize = gst_jack_ring_buffer_finalize;
-
   gstringbuffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_jack_ring_buffer_open_device);
   gstringbuffer_class->close_device =
@@ -320,20 +317,6 @@ gst_jack_ring_buffer_init (GstJackRingBuffer * buf,
   buf->channels = -1;
   buf->buffer_size = -1;
   buf->sample_rate = -1;
-}
-
-static void
-gst_jack_ring_buffer_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (ring_parent_class)->dispose (object);
-}
-
-static void
-gst_jack_ring_buffer_finalize (GObject * object)
-{
-  GstJackRingBuffer *ringbuffer;
-  ringbuffer = GST_JACK_RING_BUFFER_CAST (object);
-  G_OBJECT_CLASS (ring_parent_class)->finalize (object);
 }
 
 /* the _open_device method should make a connection with the server
