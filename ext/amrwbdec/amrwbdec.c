@@ -59,6 +59,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_amrwbdec_debug);
 #define GST_CAT_DEFAULT gst_amrwbdec_debug
 
+#define L_FRAME16k      320     /* Frame size at 16kHz  */
+
 static const unsigned char block_size[16] =
     { 18, 24, 33, 37, 41, 47, 51, 59, 61,
   6, 6, 0, 0, 0, 1, 1

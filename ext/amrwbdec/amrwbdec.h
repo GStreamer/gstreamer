@@ -25,8 +25,6 @@
 #include <opencore-amrwb/dec_if.h>
 #include <opencore-amrwb/if_rom.h>
 
-#define L_FRAME16k      320   /* Frame size at 16kHz  */
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_AMRWBDEC			\
