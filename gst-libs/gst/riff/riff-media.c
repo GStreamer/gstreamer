@@ -818,6 +818,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("On2 VP7");
       break;
 
+    case GST_MAKE_FOURCC ('V', 'P', '8', '0'):
+      caps = gst_caps_new_simple ("video/x-vp8", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("On2 VP8");
+      break;
+
     case GST_MAKE_FOURCC ('L', 'M', '2', '0'):
       caps = gst_caps_new_simple ("video/x-mimic", NULL);
       if (codec_name)
@@ -1784,6 +1790,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('V', 'P', '5', '0'),
     GST_MAKE_FOURCC ('V', 'P', '6', '0'),
     GST_MAKE_FOURCC ('V', 'P', '7', '0'),
+    GST_MAKE_FOURCC ('V', 'P', '8', '0'),
     GST_MAKE_FOURCC ('L', 'M', '2', '0'),
     GST_MAKE_FOURCC ('R', 'P', 'Z', 'A'),
     GST_MAKE_FOURCC ('T', 'H', 'E', 'O'),
