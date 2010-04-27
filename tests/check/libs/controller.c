@@ -532,6 +532,78 @@ GST_START_TEST (controller_controlsource_refcounts)
 
 GST_END_TEST;
 
+/* tests if we don't fail on empty controllers */
+GST_START_TEST (controller_controlsource_empty1)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  GstControlSource *csource;
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  csource = (GstControlSource *) gst_interpolation_control_source_new ();
+  fail_unless (csource != NULL, NULL);
+
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong", csource));
+
+  /* don't fail on empty control point lists */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+
+  /* unref objects */
+  g_object_unref (csource);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests if we don't fail on controllers that are empty again */
+GST_START_TEST (controller_controlsource_empty2)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  GstInterpolationControlSource *csource;
+  GValue val = { 0, };
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  csource = gst_interpolation_control_source_new ();
+  fail_unless (csource != NULL, NULL);
+
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          (GstControlSource *) csource));
+
+  /* set control values */
+  g_value_init (&val, G_TYPE_ULONG);
+  g_value_set_ulong (&val, 0);
+  gst_interpolation_control_source_set (csource, 0 * GST_SECOND, &val);
+
+  /* ... and unset the value */
+  gst_interpolation_control_source_unset (csource, 0 * GST_SECOND);
+
+  /* don't fail on empty control point lists */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+
+  /* unref objects */
+  g_object_unref (csource);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* test timed value handling without interpolation */
 GST_START_TEST (controller_interpolate_none)
 {
@@ -2200,6 +2272,8 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_param_twice);
   tcase_add_test (tc, controller_finalize);
   tcase_add_test (tc, controller_controlsource_refcounts);
+  tcase_add_test (tc, controller_controlsource_empty1);
+  tcase_add_test (tc, controller_controlsource_empty2);
   tcase_add_test (tc, controller_interpolate_none);
   tcase_add_test (tc, controller_interpolate_trigger);
   tcase_add_test (tc, controller_interpolate_linear);
