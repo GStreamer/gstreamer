@@ -664,6 +664,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE_FULL (GstJackAudioSrc, gst_jack_audio_src, GstBaseAudioSrc,
     GST_TYPE_BASE_AUDIO_SRC, _do_init);
 
+static void gst_jack_audio_src_dispose (GObject * object);
 static void gst_jack_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jack_audio_src_get_property (GObject * object, guint prop_id,
@@ -703,6 +704,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
 
+  gobject_class->dispose = gst_jack_audio_src_dispose;
   gobject_class->set_property = gst_jack_audio_src_set_property;
   gobject_class->get_property = gst_jack_audio_src_get_property;
 
@@ -740,6 +742,15 @@ gst_jack_audio_src_init (GstJackAudioSrc * src, GstJackAudioSrcClass * gclass)
   src->server = g_strdup (DEFAULT_PROP_SERVER);
   src->ports = NULL;
   src->port_count = 0;
+}
+
+static void
+gst_jack_audio_src_dispose (GObject * object)
+{
+  GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
+
+  gst_caps_replace (&src->caps, NULL);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void

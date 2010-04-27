@@ -655,6 +655,7 @@ enum
 GST_BOILERPLATE_FULL (GstJackAudioSink, gst_jack_audio_sink, GstBaseAudioSink,
     GST_TYPE_BASE_AUDIO_SINK, _do_init);
 
+static void gst_jack_audio_sink_dispose (GObject * object);
 static void gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
@@ -689,6 +690,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
 
+  gobject_class->dispose = gst_jack_audio_sink_dispose;
   gobject_class->get_property = gst_jack_audio_sink_get_property;
   gobject_class->set_property = gst_jack_audio_sink_set_property;
 
@@ -722,6 +724,15 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink,
   sink->server = g_strdup (DEFAULT_PROP_SERVER);
   sink->ports = NULL;
   sink->port_count = 0;
+}
+
+static void
+gst_jack_audio_sink_dispose (GObject * object)
+{
+  GstJackAudioSink *sink = GST_JACK_AUDIO_SINK (object);
+
+  gst_caps_replace (&sink->caps, NULL);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
