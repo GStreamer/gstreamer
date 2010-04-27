@@ -36,11 +36,13 @@ typedef struct _GstGLFilterSobelClass GstGLFilterSobelClass;
 struct _GstGLFilterSobel
 {
   GstGLFilter filter;
-  GstGLShader *shader0;
+  GstGLShader *hconv;
+  GstGLShader *vconv;
+  GstGLShader *len;
+
+  GLuint midtexture[5];
 
   gboolean invert;
-
-  GLuint midtexture;
 };
 
 struct _GstGLFilterSobelClass

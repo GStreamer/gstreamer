@@ -308,8 +308,63 @@ const gchar *sobel_fragment_source =
   "  gl_FragColor = vec4(vec3(g), 1.0);"
   "}";
 
+const gchar *sobel_gradient_length_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect gx;"
+  "uniform sampler2DRect gy;"
+  "void main () {"
+  "  vec4 dx = texture2DRect (gx, gl_TexCoord[0].st);"
+  "  vec4 dy = texture2DRect (gy, gl_TexCoord[0].st);"
+  "  dx = (dx - 0.5);"
+  "  dy = (dy - 0.5);"
+  "  gl_FragColor = vec4(sqrt(dx*dx + dy*dy));"
+  "}";
 
-/* horizontal convolution */
+/* horizontal convolution 3x3 */
+const gchar *hconv3_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float kernel[3];"
+  "uniform float offset;"
+  "void main () {"
+  "  vec2 texturecoord[3];"
+  "  float s = gl_TexCoord[0].s;"
+  "  float t = gl_TexCoord[0].t;"
+  "  texturecoord[0] = vec2(s-1.0, t);"
+  "  texturecoord[1] = vec2(s, t);"
+  "  texturecoord[2] = vec2(s+1.0, t);"
+  "  int i;"
+  "  vec4 sum = vec4 (0.0);"
+  "  for (i = 0; i < 3; i++) { "
+  "    vec4 neighbor = texture2DRect(tex, texturecoord[i]); "
+  "    sum += neighbor * kernel[i];"
+  "  }"
+  "  gl_FragColor = sum + offset;"
+  "}";
+
+/* vertical convolution 3x3 */
+const gchar *vconv3_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect tex;"
+  "uniform float kernel[3];"
+  "uniform float offset;"
+  "void main () {"
+  "  vec2 texturecoord[3];"
+  "  float s = gl_TexCoord[0].s;"
+  "  float t = gl_TexCoord[0].t;"
+  "  texturecoord[0] = vec2(s, t-1.0);"
+  "  texturecoord[1] = vec2(s, t);"
+  "  texturecoord[2] = vec2(s, t+1.0);"
+  "  int i;"
+  "  vec4 sum = vec4 (0.0);"
+  "  for (i = 0; i < 3; i++) { "
+  "    vec4 neighbor = texture2DRect(tex, texturecoord[i]);"
+  "    sum += neighbor * kernel[i]; "
+  "  }"
+  "  gl_FragColor = sum + offset;"
+  "}";
+
+/* horizontal convolution 9x9 */
 const gchar *hconv9_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
@@ -336,7 +391,7 @@ const gchar *hconv9_fragment_source =
   "  gl_FragColor = sum;"
   "}";
 
-/* vertical convolution */
+/* vertical convolution 9x9 */
 const gchar *vconv9_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
