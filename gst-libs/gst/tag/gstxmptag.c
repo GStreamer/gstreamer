@@ -474,6 +474,11 @@ _init_xmp_tag_map ()
   _xmp_tag_add_simple_mapping (GST_TAG_USER_RATING, "xmp:Rating", NULL,
       deserialize_xmp_rating);
 
+  /* tiff */
+  _xmp_tag_add_simple_mapping (GST_TAG_DEVICE_MANUFACTURER, "tiff:Make", NULL,
+      NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_DEVICE_MODEL, "tiff:Model", NULL, NULL);
+
   /* exif schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LATITUDE,
       "exif:GPSLatitude", serialize_exif_latitude, deserialize_exif_latitude);

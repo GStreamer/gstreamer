@@ -936,6 +936,9 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_CITY, &value);
   do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_SUBLOCATION,
       &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DEVICE_MANUFACTURER,
+      &value);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DEVICE_MODEL, &value);
 
   g_value_unset (&value);
   g_value_init (&value, G_TYPE_DOUBLE);
