@@ -63,16 +63,11 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER_CODEC(decoder) \
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec
 
-/**
- * GST_VAAPI_DECODER_IS_EOS:
- * @decoder: a #GstVaapiDecoder
- *
- * Macro that checks if the @decoder reached an End-Of-Stream.
- * This is an internal macro that does not do any run-time type check.
- */
-#undef  GST_VAAPI_DECODER_IS_EOS
-#define GST_VAAPI_DECODER_IS_EOS(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->is_eos
+/* End-of-Stream buffer */
+#define GST_BUFFER_FLAG_EOS (GST_BUFFER_FLAG_LAST + 0)
+
+#define GST_BUFFER_IS_EOS(buffer) \
+    GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_EOS)
 
 #define GST_VAAPI_DECODER_GET_PRIVATE(obj)                      \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
@@ -80,18 +75,17 @@ G_BEGIN_DECLS
                                  GstVaapiDecoderPrivate))
 
 struct _GstVaapiDecoderPrivate {
-    GstVaapiDisplay    *display;
-    GstVaapiContext    *context;
-    GstVaapiCodec       codec;
-    GstAdapter         *adapter;
-    GMutex             *adapter_mutex;
-    GCond              *adapter_cond;
-    GQueue              surfaces;
-    GMutex             *surfaces_mutex;
-    GCond              *surfaces_cond;
+    GstVaapiDisplay            *display;
+    GstVaapiContext            *context;
+    GstVaapiCodec               codec;
+    guint                       fps_n;
+    guint               fps_d;
+    GstClockTime        next_ts;
+    GAsyncQueue        *buffers;
+    GAsyncQueue        *surfaces;
     GThread            *decoder_thread;
+    GstVaapiDecoderStatus decoder_status;
     guint               decoder_thread_cancel   : 1;
-    guint               is_eos                  : 1;
 };
 
 gboolean
@@ -102,26 +96,6 @@ gst_vaapi_decoder_ensure_context(
     guint               width,
     guint               height
 ) attribute_hidden;
-
-guint
-gst_vaapi_decoder_copy(
-    GstVaapiDecoder *decoder,
-    guint            offset,
-    guchar          *buf,
-    guint            buf_size
-) attribute_hidden;
-
-guint
-gst_vaapi_decoder_read_avail(GstVaapiDecoder *decoder)
-    attribute_hidden;
-
-guint
-gst_vaapi_decoder_read(GstVaapiDecoder *decoder, guchar *buf, guint buf_size)
-    attribute_hidden;
-
-void
-gst_vaapi_decoder_flush(GstVaapiDecoder *decoder, guint buf_size)
-    attribute_hidden;
 
 gboolean
 gst_vaapi_decoder_push_surface(

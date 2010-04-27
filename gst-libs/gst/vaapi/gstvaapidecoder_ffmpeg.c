@@ -44,9 +44,6 @@ G_DEFINE_TYPE(GstVaapiDecoderFfmpeg,
                                  GST_VAAPI_TYPE_DECODER_FFMPEG, \
                                  GstVaapiDecoderFfmpegPrivate))
 
-/** Default I/O buffer size (32 KB) */
-#define DEFAULT_IOBUF_SIZE (32 * 1024)
-
 typedef struct _GstVaapiContextFfmpeg GstVaapiContextFfmpeg;
 struct _GstVaapiContextFfmpeg {
     struct vaapi_context        base;
@@ -54,16 +51,10 @@ struct _GstVaapiContextFfmpeg {
 };
 
 struct _GstVaapiDecoderFfmpegPrivate {
-    AVPacket                    packet;
     AVFrame                    *frame;
-    guchar                     *iobuf;
-    guint                       iobuf_pos;
-    guint                       iobuf_size;
-    ByteIOContext               ioctx;
-    AVFormatContext            *fmtctx;
+    AVCodecParserContext       *pctx;
     AVCodecContext             *avctx;
     GstVaapiContextFfmpeg      *vactx;
-    guint                       video_stream_index;
     guint                       is_constructed  : 1;
 };
 
@@ -80,21 +71,6 @@ get_codec_id_from_codec(GstVaapiCodec codec)
     case GST_VAAPI_CODEC_VC1:   return CODEC_ID_VC1;
     }
     return CODEC_ID_NONE;
-}
-
-/** Converts codec to FFmpeg raw bitstream format */
-static const gchar *
-get_raw_format_from_codec(GstVaapiCodec codec)
-{
-    switch (codec) {
-    case GST_VAAPI_CODEC_MPEG1: return "mpegvideo";
-    case GST_VAAPI_CODEC_MPEG2: return "mpegvideo";
-    case GST_VAAPI_CODEC_MPEG4: return "m4v";
-    case GST_VAAPI_CODEC_H263:  return "h263";
-    case GST_VAAPI_CODEC_H264:  return "h264";
-    case GST_VAAPI_CODEC_VC1:   return "vc1";
-    }
-    return NULL;
 }
 
 /** Finds a suitable profile from FFmpeg context */
@@ -157,101 +133,6 @@ get_profile(AVCodecContext *avctx)
         if (gst_vaapi_display_has_decoder(display, test_profiles[i]))
             return test_profiles[i];
     return 0;
-}
-
-/** Probes FFmpeg format from input stream */
-static AVInputFormat *
-get_probed_format(GstVaapiDecoder *decoder)
-{
-    GstVaapiDecoderFfmpegPrivate * const priv =
-        GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
-
-    AVProbeData pd;
-    pd.filename = "";
-    pd.buf      = priv->iobuf;
-    pd.buf_size = MIN(gst_vaapi_decoder_read_avail(decoder), priv->iobuf_size);
-    if (!gst_vaapi_decoder_copy(decoder, 0, pd.buf, pd.buf_size))
-        return FALSE;
-
-    GST_DEBUG("probing format from buffer %p [%d bytes]", pd.buf, pd.buf_size);
-    return av_probe_input_format(&pd, 1);
-}
-
-/** Tries to get an FFmpeg format from the raw bitstream */
-static AVInputFormat *
-get_raw_format(GstVaapiDecoder *decoder)
-{
-    const gchar *raw_format;
-
-    raw_format = get_raw_format_from_codec(GST_VAAPI_DECODER_CODEC(decoder));
-    if (!raw_format)
-        return NULL;
-
-    GST_DEBUG("trying raw format %s", raw_format);
-    return av_find_input_format(raw_format);
-}
-
-/** Flushes n bytes from the stream */
-static void
-stream_flush(GstVaapiDecoder *decoder, int buf_size)
-{
-    GstVaapiDecoderFfmpegPrivate * const priv =
-        GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
-
-    gst_vaapi_decoder_flush(decoder, buf_size);
-    if (priv->iobuf_pos > buf_size)
-        priv->iobuf_pos -= buf_size;
-    else
-        priv->iobuf_pos = 0;
-}
-
-/** Reads one packet */
-static int
-stream_read(void *opaque, uint8_t *buf, int buf_size)
-{
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(opaque);
-    GstVaapiDecoderFfmpegPrivate * const priv =
-        GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
-
-    if (buf_size > 0) {
-        buf_size = gst_vaapi_decoder_copy(
-            decoder,
-            priv->iobuf_pos,
-            buf, buf_size
-        );
-        priv->iobuf_pos += buf_size;
-    }
-    return buf_size;
-}
-
-/** Seeks into stream */
-static int64_t
-stream_seek(void *opaque, int64_t offset, int whence)
-{
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(opaque);
-    GstVaapiDecoderFfmpegPrivate * const priv =
-        GST_VAAPI_DECODER_FFMPEG(decoder)->priv;
-
-    /* If we parsed the headers (decoder is constructed), we can no
-       longer seek into the stream */
-    if (priv->is_constructed &&
-        !((whence == SEEK_SET || whence == SEEK_CUR) && offset == 0))
-        return -1;
-
-    switch (whence) {
-    case SEEK_SET:
-        priv->iobuf_pos = offset;
-        break;
-    case SEEK_CUR:
-        priv->iobuf_pos += offset;
-        break;
-    case SEEK_END:
-        priv->iobuf_pos = gst_vaapi_decoder_read_avail(decoder) + offset;
-        break;
-    default:
-        return -1;
-    }
-    return priv->iobuf_pos;
 }
 
 /** AVCodecContext.get_format() implementation */
@@ -347,29 +228,22 @@ gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
 
-    if (priv->avctx) {
-        avcodec_close(priv->avctx);
-        priv->avctx = NULL;
-    }
-
     if (priv->vactx) {
         g_free(priv->vactx);
         priv->vactx = NULL;
     }
 
-    if (priv->fmtctx) {
-        av_close_input_stream(priv->fmtctx);
-        priv->fmtctx = NULL;
+    if (priv->avctx) {
+        avcodec_close(priv->avctx);
+        priv->avctx = NULL;
     }
 
-    if (priv->iobuf) {
-        g_free(priv->iobuf);
-        priv->iobuf = NULL;
-        priv->iobuf_pos = 0;
+    if (priv->pctx) {
+        av_parser_close(priv->pctx);
+        priv->pctx = NULL;
     }
 
     av_freep(&priv->frame);
-    av_free_packet(&priv->packet);
 }
 
 static gboolean
@@ -378,13 +252,28 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(ffdecoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(decoder);
-    enum CodecID codec_id = get_codec_id_from_codec(codec);
-    typedef AVInputFormat *(*GetFormatFunc)(GstVaapiDecoder *);
-    GetFormatFunc get_format[2];
-    AVInputFormat *format;
-    AVStream *video_stream;
+    enum CodecID codec_id;
     AVCodec *ffcodec;
-    guint i;
+
+    codec_id = get_codec_id_from_codec(codec);
+    if (codec_id == CODEC_ID_NONE)
+        return FALSE;
+
+    ffcodec = avcodec_find_decoder(codec_id);
+    if (!ffcodec)
+        return FALSE;
+
+    if (!priv->frame) {
+        priv->frame = avcodec_alloc_frame();
+        if (!priv->frame)
+            return FALSE;
+    }
+
+    if (!priv->avctx) {
+        priv->avctx = avcodec_alloc_context();
+        if (!priv->avctx)
+            return FALSE;
+    }
 
     if (!priv->vactx) {
         priv->vactx = g_new(GstVaapiContextFfmpeg, 1);
@@ -394,70 +283,6 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     memset(&priv->vactx->base, 0, sizeof(priv->vactx->base));
     priv->vactx->decoder = ffdecoder;
 
-    if (!priv->frame) {
-        priv->frame = avcodec_alloc_frame();
-        if (!priv->frame)
-            return FALSE;
-    }
-
-    if (!priv->iobuf) {
-        priv->iobuf = g_malloc0(priv->iobuf_size + FF_INPUT_BUFFER_PADDING_SIZE);
-        if (!priv->iobuf)
-            return FALSE;
-    }
-
-    get_format[ !codec] = get_raw_format;
-    get_format[!!codec] = get_probed_format;
-    for (i = 0; i < 2; i++) {
-        format = get_format[i](decoder);
-        if (!format)
-            continue;
-
-        priv->iobuf_pos = 0;
-        init_put_byte(
-            &priv->ioctx,
-            priv->iobuf,
-            priv->iobuf_size,
-            0,                  /* write flags */
-            ffdecoder,
-            stream_read,
-            NULL,               /* no packet writer callback */
-            stream_seek
-        );
-        priv->ioctx.is_streamed = 1;
-
-        if (av_open_input_stream(&priv->fmtctx, &priv->ioctx, "", format, NULL) < 0)
-            continue;
-
-        if (av_find_stream_info(priv->fmtctx) >= 0)
-            break;
-
-        av_close_input_stream(priv->fmtctx);
-        priv->fmtctx = NULL;
-    }
-    if (!priv->fmtctx)
-        return FALSE;
-
-    if (av_find_stream_info(priv->fmtctx) < 0)
-        return FALSE;
-    dump_format(priv->fmtctx, 0, "", 0);
-
-    video_stream = NULL;
-    for (i = 0; i < priv->fmtctx->nb_streams; i++) {
-        AVStream * const stream = priv->fmtctx->streams[i];
-        if (!video_stream &&
-            stream->codec->codec_type == CODEC_TYPE_VIDEO &&
-            (codec ? (stream->codec->codec_id == codec_id) : 1)) {
-            video_stream = stream;
-        }
-        else
-            stream->discard = AVDISCARD_ALL;
-    }
-    if (!video_stream)
-        return FALSE;
-
-    priv->video_stream_index     = video_stream->index;
-    priv->avctx                  = video_stream->codec;
     priv->avctx->hwaccel_context = priv->vactx;
     priv->avctx->get_format      = gst_vaapi_decoder_ffmpeg_get_format;
     priv->avctx->get_buffer      = gst_vaapi_decoder_ffmpeg_get_buffer;
@@ -467,20 +292,24 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     priv->avctx->draw_horiz_band = NULL;
     priv->avctx->slice_flags     = SLICE_FLAG_CODED_ORDER|SLICE_FLAG_ALLOW_FIELD;
 
-    ffcodec = avcodec_find_decoder(priv->avctx->codec_id);
-    if (!ffcodec || avcodec_open(priv->avctx, ffcodec) < 0)
+    if (priv->pctx)
+        av_parser_close(priv->pctx);
+    priv->pctx = av_parser_init(codec_id);
+    if (!priv->pctx)
         return FALSE;
 
-    av_init_packet(&priv->packet);
+    /* XXX: lock display? */
+    if (avcodec_open(priv->avctx, ffcodec) < 0)
+        return FALSE;
     return TRUE;
 }
 
-static GstVaapiSurface *
+static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
-    GstVaapiSurface *surface = NULL;
+    GstVaapiSurface *surface;
     int bytes_read, got_picture = 0;
 
     GST_VAAPI_DISPLAY_LOCK(display);
@@ -491,51 +320,65 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
         buf, buf_size
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
+    if (bytes_read < 0)
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    if (!got_picture)
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    if (bytes_read > 0)
-        stream_flush(GST_VAAPI_DECODER_CAST(ffdecoder), bytes_read);
+    surface = gst_vaapi_context_find_surface_by_id(
+        GST_VAAPI_DECODER_CONTEXT(ffdecoder),
+        GPOINTER_TO_UINT(priv->frame->data[3])
+    );
+    if (!surface)
+        return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
-    if (got_picture) {
-        surface = gst_vaapi_context_find_surface_by_id(
-            GST_VAAPI_DECODER_CONTEXT(ffdecoder),
-            GPOINTER_TO_UINT(priv->frame->data[3])
-        );
-    }
-    return surface;
+    gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder), surface);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder)
+gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderFfmpeg * const ffdecoder = GST_VAAPI_DECODER_FFMPEG(decoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
-    GstVaapiSurface *surface = NULL;
-    AVPacket packet;
+    GstVaapiDecoderStatus status;
+    GstClockTime inbuf_ts;
+    guchar *inbuf, *outbuf;
+    gint inbuf_size, outbuf_size;
+    gboolean got_frame;
 
     if (!priv->is_constructed) {
         priv->is_constructed = gst_vaapi_decoder_ffmpeg_create(ffdecoder);
-        if (!priv->is_constructed) {
-            gst_vaapi_decoder_ffmpeg_destroy(ffdecoder);
+        if (!priv->is_constructed)
             return GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED;
+    }
+
+    inbuf      = GST_BUFFER_DATA(buffer);
+    inbuf_size = GST_BUFFER_SIZE(buffer);
+    inbuf_ts   = GST_BUFFER_TIMESTAMP(buffer);
+
+    do {
+        int parsed_size = av_parser_parse(
+            priv->pctx,
+            priv->avctx,
+            &outbuf, &outbuf_size,
+            inbuf, inbuf_size,
+            inbuf_ts, inbuf_ts
+        );
+        got_frame = outbuf && outbuf_size > 0;
+        GST_DEBUG("outbuf %p (%d bytes), got frame %d, parsed size %d",
+                  outbuf, outbuf_size, got_frame, parsed_size);
+
+        if (parsed_size > 0) {
+            inbuf      += parsed_size;
+            inbuf_size -= parsed_size;
         }
-    }
+    } while (!got_frame && inbuf_size > 0);
 
-    av_init_packet(&packet);
-    while (av_read_frame(priv->fmtctx, &packet) == 0) {
-        if (packet.stream_index != priv->video_stream_index)
-            continue;
+    if (!got_frame && !GST_BUFFER_IS_EOS(buffer))
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-        surface = decode_frame(ffdecoder, packet.data, packet.size);
-        if (surface) /* decode a single frame only */
-            break;
-    }
-    if (!surface)
-        surface = decode_frame(ffdecoder, NULL, 0);
-    av_free_packet(&packet);
-
-    if (surface && gst_vaapi_decoder_push_surface(decoder, surface))
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
-    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    return decode_frame(ffdecoder, outbuf, outbuf_size);
 }
 
 static void
@@ -586,16 +429,10 @@ gst_vaapi_decoder_ffmpeg_init(GstVaapiDecoderFfmpeg *decoder)
     priv                        = GST_VAAPI_DECODER_FFMPEG_GET_PRIVATE(decoder);
     decoder->priv               = priv;
     priv->frame                 = NULL;
-    priv->iobuf                 = NULL;
-    priv->iobuf_pos             = 0;
-    priv->iobuf_size            = DEFAULT_IOBUF_SIZE;
-    priv->fmtctx                = NULL;
+    priv->pctx                  = NULL;
     priv->avctx                 = NULL;
     priv->vactx                 = NULL;
-    priv->video_stream_index    = 0;
     priv->is_constructed        = FALSE;
-
-    av_init_packet(&priv->packet);
 }
 
 /**

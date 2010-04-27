@@ -50,64 +50,57 @@ gst_vaapi_decoder_start(GstVaapiDecoder *decoder);
 static gboolean
 gst_vaapi_decoder_stop(GstVaapiDecoder *decoder);
 
+static GstBuffer *
+pop_buffer(GstVaapiDecoder *decoder);
+
 static gpointer
 decoder_thread_cb(gpointer data)
 {
     GstVaapiDecoder * const decoder = data;
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
-    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+    GstBuffer *buffer;
 
-    if (!klass->decode) {
-        g_error("unimplemented GstVaapiDecoder::decode() function");
-        return NULL;
-    }
-
+    g_object_ref(decoder);
     while (!priv->decoder_thread_cancel) {
-        g_mutex_lock(priv->adapter_mutex);
-        while (!gst_adapter_available(priv->adapter)) {
-            g_cond_wait(priv->adapter_cond, priv->adapter_mutex);
-            if (priv->decoder_thread_cancel)
-                break;
-        }
-        g_mutex_unlock(priv->adapter_mutex);
-
-        if (!priv->decoder_thread_cancel) {
-            switch (status) {
-            case GST_VAAPI_DECODER_STATUS_SUCCESS:
-            case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
-                GST_DEBUG("decode");
-                g_object_ref(decoder);
-                status = klass->decode(decoder);
-                g_object_unref(decoder);
-
-                /* Detect End-of-Stream conditions */
-                if (status != GST_VAAPI_DECODER_STATUS_SUCCESS &&
-                    priv->is_eos &&
-                    gst_vaapi_decoder_read_avail(decoder) == 0)
-                    status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
-
-                GST_DEBUG("decode frame (status = %d)", status);
-                break;
-            default:
-                /* XXX: something went wrong, simply destroy any
-                   buffer until this decoder is destroyed */
-                g_mutex_lock(priv->adapter_mutex);
-                gst_adapter_clear(priv->adapter);
-                g_mutex_unlock(priv->adapter_mutex);
-
-                /* Signal the main thread we got an error */
-                if (status != GST_VAAPI_DECODER_STATUS_END_OF_STREAM)
-                    gst_vaapi_decoder_push_surface(decoder, NULL);
-                break;
-            }
-        }
-
-        /* End-of-Stream reached, decoder thread is no longer necessary */
-        if (status == GST_VAAPI_DECODER_STATUS_END_OF_STREAM)
+        buffer = pop_buffer(decoder);
+        priv->decoder_status = klass->decode(decoder, buffer);
+        GST_DEBUG("decode frame (status = %d)", priv->decoder_status);
+        switch (priv->decoder_status) {
+        case GST_VAAPI_DECODER_STATUS_SUCCESS:
+        case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
             break;
+        default:
+            priv->decoder_thread_cancel = TRUE;
+            break;
+        }
+        gst_buffer_unref(buffer);
     }
+    g_object_unref(decoder);
     return NULL;
+}
+
+static inline void
+init_buffer(GstBuffer *buffer, const guchar *buf, guint buf_size)
+{
+    GST_BUFFER_DATA(buffer)      = (guint8 *)buf;
+    GST_BUFFER_SIZE(buffer)      = buf_size;
+    GST_BUFFER_TIMESTAMP(buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION(buffer)  = GST_CLOCK_TIME_NONE;
+}
+
+static inline GstBuffer *
+create_eos_buffer(void)
+{
+    GstBuffer *buffer;
+
+    buffer = gst_buffer_new();
+    if (!buffer)
+        return NULL;
+
+    init_buffer(buffer, NULL, 0);
+    GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
+    return buffer;
 }
 
 static GstBuffer *
@@ -129,13 +122,9 @@ create_buffer(const guchar *buf, guint buf_size, gboolean copy)
             return NULL;
         }
         memcpy(buffer->malloc_data, buf, buf_size);
-        GST_BUFFER_DATA(buffer) = buffer->malloc_data;
-        GST_BUFFER_SIZE(buffer) = buf_size;
+        buf = buffer->malloc_data;
     }
-    else {
-        GST_BUFFER_DATA(buffer) = (guint8 *)buf;
-        GST_BUFFER_SIZE(buffer) = buf_size;
-    }
+    init_buffer(buffer, buf, buf_size);
     return buffer;
 }
 
@@ -145,11 +134,10 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
     if (!buffer) {
-        priv->is_eos = TRUE;
-        return TRUE;
+        buffer = create_eos_buffer();
+        if (!buffer)
+            return FALSE;
     }
-
-    g_return_val_if_fail(priv->adapter_mutex && priv->adapter_cond, FALSE);
 
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
               buffer, GST_BUFFER_SIZE(buffer));
@@ -157,19 +145,31 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     if (!priv->decoder_thread && !gst_vaapi_decoder_start(decoder))
         return FALSE;
 
-    /* XXX: add a mechanism to wait for enough buffer bytes to be consumed */
-    g_mutex_lock(priv->adapter_mutex);
-    gst_adapter_push(priv->adapter, buffer);
-    g_cond_signal(priv->adapter_cond);
-    g_mutex_unlock(priv->adapter_mutex);
+    g_async_queue_push(priv->buffers, buffer);
     return TRUE;
 }
 
-static void
-unref_surface_cb(gpointer surface, gpointer user_data)
+static GstBuffer *
+pop_buffer(GstVaapiDecoder *decoder)
 {
-    if (surface)
-        g_object_unref(GST_VAAPI_SURFACE(surface));
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstBuffer *buffer;
+
+    buffer = g_async_queue_pop(priv->buffers);
+    g_return_val_if_fail(buffer, NULL);
+
+    if (!GST_BUFFER_TIMESTAMP_IS_VALID(buffer))
+        GST_BUFFER_TIMESTAMP(buffer) = priv->next_ts;
+    return buffer;
+}
+
+static void
+clear_async_queue(GAsyncQueue *q)
+{
+    guint i, qlen = g_async_queue_length(q);
+
+    for (i = 0; i < qlen; i++)
+        g_object_unref(g_async_queue_pop(q));
 }
 
 static void
@@ -180,37 +180,21 @@ gst_vaapi_decoder_finalize(GObject *object)
 
     gst_vaapi_decoder_stop(decoder);
 
-    if (priv->adapter) {
-        gst_adapter_clear(priv->adapter);
-        g_object_unref(priv->adapter);
-        priv->adapter = NULL;
-    }
-
-    if (priv->adapter_cond) {
-        g_cond_free(priv->adapter_cond);
-        priv->adapter_cond = NULL;
-    }
-
-    if (priv->adapter_mutex) {
-        g_mutex_free(priv->adapter_mutex);
-        priv->adapter_mutex = NULL;
-    }
-
     if (priv->context) {
         g_object_unref(priv->context);
         priv->context = NULL;
     }
 
-    g_queue_foreach(&priv->surfaces, unref_surface_cb, NULL);
-
-    if (priv->surfaces_cond) {
-        g_cond_free(priv->surfaces_cond);
-        priv->surfaces_cond = NULL;
+    if (priv->buffers) {
+        clear_async_queue(priv->buffers);
+        g_object_unref(priv->buffers);
+        priv->buffers = NULL;
     }
 
-    if (priv->surfaces_mutex) {
-        g_mutex_free(priv->surfaces_mutex);
-        priv->surfaces_mutex = NULL;
+    if (priv->surfaces) {
+        clear_async_queue(priv->surfaces);
+        g_object_unref(priv->surfaces);
+        priv->surfaces = NULL;
     }
 
     if (priv->display) {
@@ -310,16 +294,13 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     decoder->priv               = priv;
     priv->context               = NULL;
     priv->codec                 = 0;
-    priv->adapter               = gst_adapter_new();
-    priv->adapter_mutex         = g_mutex_new();
-    priv->adapter_cond          = g_cond_new();
-    priv->surfaces_mutex        = g_mutex_new();
-    priv->surfaces_cond         = g_cond_new();
+    priv->fps_n                 = 1000;
+    priv->fps_d                 = 30;
+    priv->next_ts               = 0;
+    priv->buffers               = g_async_queue_new();
+    priv->surfaces              = g_async_queue_new();
     priv->decoder_thread        = NULL;
     priv->decoder_thread_cancel = FALSE;
-    priv->is_eos                = FALSE;
-
-    g_queue_init(&priv->surfaces);
 }
 
 /**
@@ -367,16 +348,60 @@ gst_vaapi_decoder_stop(GstVaapiDecoder *decoder)
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
     if (priv->decoder_thread) {
+        push_buffer(decoder, NULL);
         priv->decoder_thread_cancel = TRUE;
-        if (priv->adapter_mutex && priv->adapter_cond) {
-            g_mutex_lock(priv->adapter_mutex);
-            g_cond_signal(priv->adapter_cond);
-            g_mutex_unlock(priv->adapter_mutex);
-        }
         g_thread_join(priv->decoder_thread);
         priv->decoder_thread = NULL;
     }
     return TRUE;
+}
+
+/**
+ * gst_vaapi_decoder_get_frame_rate:
+ * @decoder: a #GstVaapiDecoder
+ * @num: return location for the numerator of the frame rate
+ * @den: return location for the denominator of the frame rate
+ *
+ * Retrieves the current frame rate as the fraction @num / @den. The
+ * default frame rate is 30 fps.
+ */
+void
+gst_vaapi_decoder_get_frame_rate(
+    GstVaapiDecoder *decoder,
+    guint           *num,
+    guint           *den
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+
+    if (num)
+        *num = decoder->priv->fps_n;
+
+    if (den)
+        *den = decoder->priv->fps_d;
+}
+
+/**
+ * gst_vaapi_decoder_set_frame_rate:
+ * @decoder: a #GstVaapiDecoder
+ * @num: the numerator of the frame rate
+ * @den: the denominator of the frame rate
+ *
+ * Sets the frame rate for the stream to @num / @den. By default, the
+ * decoder will use the frame rate encoded in the elementary stream.
+ * If none is available, the decoder will default to 30 fps.
+ */
+void
+gst_vaapi_decoder_set_frame_rate(
+    GstVaapiDecoder *decoder,
+    guint            num,
+    guint            den
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
+
+    decoder->priv->fps_n = num;
+    decoder->priv->fps_d = den;
 }
 
 /**
@@ -467,36 +492,35 @@ gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
  *   or %NULL if none is available (e.g. an error). Caller owns the
  *   returned object. g_object_unref() after usage.
  */
-static GstVaapiSurface *
+static GstVaapiSurfaceProxy *
 _gst_vaapi_decoder_get_surface(
     GstVaapiDecoder       *decoder,
-    GTimeVal              *timeout,
+    GTimeVal              *end_time,
     GstVaapiDecoderStatus *pstatus
 )
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiDecoderStatus status;
     GstVaapiSurface *surface;
+    GstVaapiSurfaceProxy *proxy = NULL;
 
-    g_mutex_lock(priv->surfaces_mutex);
-    while (g_queue_is_empty(&priv->surfaces))
-        if (!g_cond_timed_wait(priv->surfaces_cond, priv->surfaces_mutex, timeout))
-            break;
-    surface = g_queue_pop_head(&priv->surfaces);
-    g_mutex_unlock(priv->surfaces_mutex);
+    surface = g_async_queue_timed_pop(priv->surfaces, end_time);
 
-    if (surface)
-        *pstatus = GST_VAAPI_DECODER_STATUS_SUCCESS;
-    else {
-        g_mutex_lock(priv->adapter_mutex);
-        if (gst_adapter_available(priv->adapter))
-            *pstatus = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-        else if (timeout)
-            *pstatus = GST_VAAPI_DECODER_STATUS_TIMEOUT;
-        else
-            *pstatus = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
-        g_mutex_unlock(priv->adapter_mutex);
+    if (surface) {
+        proxy  = gst_vaapi_surface_proxy_new(priv->context, surface);
+        status = (proxy ?
+                  GST_VAAPI_DECODER_STATUS_SUCCESS :
+                  GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED);
+        g_object_unref(surface);
     }
-    return surface;
+    else if (end_time)
+        status = GST_VAAPI_DECODER_STATUS_TIMEOUT;
+    else
+        status = priv->decoder_status;
+
+    if (pstatus)
+        *pstatus = status;
+    return proxy;
 }
 
 GstVaapiSurfaceProxy *
@@ -505,23 +529,9 @@ gst_vaapi_decoder_get_surface(
     GstVaapiDecoderStatus *pstatus
 )
 {
-    GstVaapiSurfaceProxy *proxy = NULL;
-    GstVaapiSurface *surface;
-    GstVaapiDecoderStatus status;
-
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
 
-    surface = _gst_vaapi_decoder_get_surface(decoder, NULL, &status);
-    if (surface) {
-        proxy = gst_vaapi_surface_proxy_new(decoder->priv->context, surface);
-        if (!proxy)
-            status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-        g_object_unref(surface);
-    }
-
-    if (pstatus)
-        *pstatus = status;
-    return proxy;
+    return _gst_vaapi_decoder_get_surface(decoder, NULL, pstatus);
 }
 
 /**
@@ -545,9 +555,6 @@ gst_vaapi_decoder_timed_get_surface(
     GstVaapiDecoderStatus *pstatus
 )
 {
-    GstVaapiSurfaceProxy *proxy = NULL;
-    GstVaapiSurface *surface;
-    GstVaapiDecoderStatus status;
     GTimeVal end_time;
 
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
@@ -555,17 +562,7 @@ gst_vaapi_decoder_timed_get_surface(
     g_get_current_time(&end_time);
     g_time_val_add(&end_time, timeout);
 
-    surface = _gst_vaapi_decoder_get_surface(decoder, &end_time, &status);
-    if (surface) {
-        proxy = gst_vaapi_surface_proxy_new(decoder->priv->context, surface);
-        if (!proxy)
-            status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-        g_object_unref(surface);
-    }
-
-    if (pstatus)
-        *pstatus = status;
-    return proxy;
+    return _gst_vaapi_decoder_get_surface(decoder, &end_time, pstatus);
 }
 
 gboolean
@@ -593,73 +590,6 @@ gst_vaapi_decoder_ensure_context(
     return priv->context != NULL;
 }
 
-guint
-gst_vaapi_decoder_copy(
-    GstVaapiDecoder *decoder,
-    guint            offset,
-    guchar          *buf,
-    guint            buf_size
-)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    guint avail;
-
-    if (!buf || !buf_size)
-        return 0;
-
-    avail = gst_vaapi_decoder_read_avail(decoder);
-    if (offset >= avail)
-        return 0;
-    if (buf_size > avail - offset)
-        buf_size = avail - offset;
-
-    if (buf_size > 0) {
-        g_mutex_lock(priv->adapter_mutex);
-        gst_adapter_copy(priv->adapter, buf, offset, buf_size);
-        g_mutex_unlock(priv->adapter_mutex);
-    }
-    return buf_size;
-}
-
-guint
-gst_vaapi_decoder_read_avail(GstVaapiDecoder *decoder)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    guint avail;
-
-    g_mutex_lock(priv->adapter_mutex);
-    avail = gst_adapter_available(priv->adapter);
-    g_mutex_unlock(priv->adapter_mutex);
-    return avail;
-}
-
-guint
-gst_vaapi_decoder_read(GstVaapiDecoder *decoder, guchar *buf, guint buf_size)
-{
-    buf_size = gst_vaapi_decoder_copy(decoder, 0, buf, buf_size);
-    if (buf_size > 0)
-        gst_vaapi_decoder_flush(decoder, buf_size);
-    return buf_size;
-}
-
-void
-gst_vaapi_decoder_flush(GstVaapiDecoder *decoder, guint buf_size)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    guint avail;
-
-    if (!buf_size)
-        return;
-
-    avail = gst_vaapi_decoder_read_avail(decoder);
-    if (buf_size > avail)
-        buf_size = avail;
-
-    g_mutex_lock(priv->adapter_mutex);
-    gst_adapter_flush(priv->adapter, buf_size);
-    g_mutex_unlock(priv->adapter_mutex);
-}
-
 gboolean
 gst_vaapi_decoder_push_surface(
     GstVaapiDecoder *decoder,
@@ -668,15 +598,11 @@ gst_vaapi_decoder_push_surface(
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
-    if (surface)
-        GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-                  GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
-    else
-        GST_DEBUG("queue null surface to signal an error");
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
 
-    g_mutex_lock(priv->surfaces_mutex);
-    g_queue_push_tail(&priv->surfaces, surface ? g_object_ref(surface) : NULL);
-    g_cond_signal(priv->surfaces_cond);
-    g_mutex_unlock(priv->surfaces_mutex);
+    GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
+
+    g_async_queue_push(priv->surfaces, g_object_ref(surface));
     return TRUE;
 }

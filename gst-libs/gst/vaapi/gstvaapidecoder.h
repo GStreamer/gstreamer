@@ -102,11 +102,25 @@ struct _GstVaapiDecoderClass {
     /*< private >*/
     GObjectClass parent_class;
 
-    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder);
+    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder, GstBuffer *buffer);
 };
 
 GType
 gst_vaapi_decoder_get_type(void);
+
+void
+gst_vaapi_decoder_get_frame_rate(
+    GstVaapiDecoder *decoder,
+    guint           *num,
+    guint           *den
+);
+
+void
+gst_vaapi_decoder_set_frame_rate(
+    GstVaapiDecoder *decoder,
+    guint            num,
+    guint            den
+);
 
 gboolean
 gst_vaapi_decoder_put_buffer_data(
