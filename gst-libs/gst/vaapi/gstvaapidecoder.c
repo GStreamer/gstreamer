@@ -73,7 +73,10 @@ decoder_thread_cb(gpointer data)
         g_mutex_unlock(priv->adapter_mutex);
 
         if (!priv->decoder_thread_cancel) {
-            if (status == GST_VAAPI_DECODER_STATUS_SUCCESS) {
+            switch (status) {
+            case GST_VAAPI_DECODER_STATUS_SUCCESS:
+            case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
+                GST_DEBUG("decode");
                 g_object_ref(decoder);
                 status = klass->decode(decoder);
                 g_object_unref(decoder);
@@ -85,8 +88,8 @@ decoder_thread_cb(gpointer data)
                     status = GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
 
                 GST_DEBUG("decode frame (status = %d)", status);
-            }
-            else {
+                break;
+            default:
                 /* XXX: something went wrong, simply destroy any
                    buffer until this decoder is destroyed */
                 g_mutex_lock(priv->adapter_mutex);
@@ -96,6 +99,7 @@ decoder_thread_cb(gpointer data)
                 /* Signal the main thread we got an error */
                 if (status != GST_VAAPI_DECODER_STATUS_END_OF_STREAM)
                     gst_vaapi_decoder_push_surface(decoder, NULL);
+                break;
             }
         }
 
