@@ -178,8 +178,8 @@ gst_jack_ring_buffer_class_init (GstJackRingBufferClass * klass)
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_jack_ring_buffer_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_jack_ring_buffer_finalize);
+  gobject_class->dispose = gst_jack_ring_buffer_dispose;
+  gobject_class->finalize = gst_jack_ring_buffer_finalize;
 
   gstringbuffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_jack_ring_buffer_open_device);
@@ -703,10 +703,8 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_jack_audio_src_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_jack_audio_src_get_property);
+  gobject_class->set_property = gst_jack_audio_src_set_property;
+  gobject_class->get_property = gst_jack_audio_src_get_property;
 
   g_object_class_install_property (gobject_class, PROP_CONNECT,
       g_param_spec_enum ("connect", "Connect",
