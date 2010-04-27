@@ -132,8 +132,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0/1, MAX ]")
+        "width = (int) [ 16, 65535 ], "
+        "height = (int) [ 16, 65535 ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static void
