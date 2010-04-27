@@ -80,6 +80,7 @@
 
 #include "gstjackaudiosrc.h"
 #include "gstjackringbuffer.h"
+#include "gstjackutil.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_src_debug);
 #define GST_CAT_DEFAULT gst_jack_audio_src_debug
@@ -417,6 +418,8 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   if (!gst_jack_audio_src_allocate_channels (src, channels))
     goto out_of_ports;
+
+  gst_jack_set_layout_on_caps (&spec->caps, channels);
 
   buffer_size = jack_get_buffer_size (client);
 
