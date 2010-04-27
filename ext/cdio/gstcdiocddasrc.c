@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-cdiocddasrc
- * @short_description: Reads raw audio from an Audio CD
  * @see_also: GstCdParanoiaSrc, GstCddaBaseSrc
  *
  * <refsect2>
