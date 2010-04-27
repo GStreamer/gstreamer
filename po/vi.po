@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.26.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 02:08+0100\n"
-"PO-Revision-Date: 2010-03-06 22:18+1030\n"
+"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"PO-Revision-Date: 2010-04-27 22:59+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -606,32 +606,29 @@ msgstr ""
 "độ cao định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo mét tùy theo "
 "WSG84 (mặt biển trung bình là số không)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "độ kinh định vị địa lý"
+msgstr "vị trí địa lý của quốc gia"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"vị trí miêu tả cho người đọc được của nơi ở đó nhạc/phím đã được thu hay tạo"
+"quốc gia (tên tiếng Anh, v.d. « Vietnam ») ở đó nhạc/phím đã được thu hay tạo"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "độ vĩ định vị địa lý"
+msgstr "vị trí địa lý của thành phố"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"vị trí miêu tả cho người đọc được của nơi ở đó nhạc/phím đã được thu hay tạo"
+"thành phố (tên tiếng Anh, v.d. « Hanoi ») ở đó nhạc/phím đã được thu hay tạo"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "độ cao định vị địa lý"
+msgstr "vị trí phụ địa lý"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"một vùng bên trong thành phố ở đó phương tiện đã được tạo hay sản xuất (v.d. "
+"hàng xóm)"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -685,14 +682,15 @@ msgstr ""
 "các phần khác nhau của một côngxectô). Cấp này cao hơn rãnh còn thấp hơn tập "
 "nhạc."
 
-#, fuzzy
 msgid "user rating"
-msgstr "thời gian"
+msgstr "đánh giá do người dùng"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Đánh giá bởi người dùng. Càng cao điểm càng nhiều người dùng thích nhạc/phim "
+"này"
 
 msgid ", "
 msgstr ", "
@@ -834,9 +832,8 @@ msgstr "Tập tin « %s » là ổ cắm."
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
+msgstr "Gặp lỗi khi ghi vào tập tin tải về."
 
 msgid "No Temp directory specified."
 msgstr "Chưa xác định thư mục tạm thời."

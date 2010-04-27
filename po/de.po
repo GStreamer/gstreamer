@@ -4,13 +4,12 @@
 #
 # Roland Illig <roland.illig@gmx.de>, 2004.
 # Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 02:08+0100\n"
-"PO-Revision-Date: 2010-01-28 22:54+0100\n"
+"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"PO-Revision-Date: 2010-04-26 23:23+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -628,32 +627,31 @@ msgstr ""
 "geografische Höhe des Ortes in Metern nach WGS84 (Höhe Null entspricht dem "
 "Meeresspiegel)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "geografischer Längengrad"
+msgstr "geografisches Land"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"Lesbare Ortsbeschreibung, wo das Medium aufgezeichnet oder produziert wurde"
+"Das Land (englischer Name), in dem das Medium aufgezeichnet oder produziert "
+"wurde"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "geografischer Breitengrad"
+msgstr "geografische Stadt"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"Lesbare Ortsbeschreibung, wo das Medium aufgezeichnet oder produziert wurde"
+"Die Stadt (englischer Name), in der das Medium aufgezeichnet oder produziert "
+"wurde"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "geografische Höhe"
+msgstr "geografischer Ortsteil"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"ein Ort innerhalb einer Stadt, in dem das Medium aufgezeichnet oder "
+"produziert wurde"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -706,14 +704,15 @@ msgstr ""
 "verschiedenen Stücke eines Konzertes. Es ist eine Ebene höher als ein Titel, "
 "aber niedriger als ein Album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "Dauer"
+msgstr "Benutzerbewertung"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Bewertet durch einen Benutzer. Je höher die Bewertung, desto beliebter ist "
+"das Medium beim Benutzer"
 
 msgid ", "
 msgstr ", "
@@ -849,9 +848,8 @@ msgstr "Die Datei »%s« ist ein Socket."
 msgid "Failed after iterations as requested."
 msgstr "Nach dem Durchlaufen fehlgeschlagen. Wie gewünscht."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Fehler beim Schreiben der Daten »%s«."
+msgstr "Fehler beim Schreiben in die Download-Datei."
 
 msgid "No Temp directory specified."
 msgstr "Kein temporärer Ordner angegeben."

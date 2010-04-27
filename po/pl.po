@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 02:08+0100\n"
-"PO-Revision-Date: 2010-01-27 17:31+0100\n"
+"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"PO-Revision-Date: 2010-04-27 20:35+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -612,34 +612,30 @@ msgstr ""
 "wysokość miejsca, gdzie utwór został nagrany lub wyprodukowany wyrażona w "
 "metrach zgodnie z WSG84 (0 to średni poziom morza)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "długość geograficzna"
+msgstr "kraj lokalizacji"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"czytelny dla człowieka opis miejsca, gdzie utwór został nagrany lub "
-"wyprodukowany"
+"kraj (nazwa angielska), w którym utwór został nagrany lub wyprodukowany"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "szerokość geograficzna"
+msgstr "miasto lokalizacji"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"czytelny dla człowieka opis miejsca, gdzie utwór został nagrany lub "
+"miejscowość (nazwa angielska), w której utwór został nagrany lub "
 "wyprodukowany"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "wysokość n.p.m."
+msgstr "część miejscowości lokalizacji"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"miejsce wewnątrz miejscowości, w którym utwór został nagrany lub "
+"wyprodukowany (np. dzielnica)"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -691,14 +687,15 @@ msgstr ""
 "Grupowanie powiązanych utworów rozciągające się na wiele ścieżek, jak różne "
 "części koncertu; jest to poziom wyższy niż ścieżka, a niższy niż album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "czas trwania"
+msgstr "ocena użytkownika"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Ocena przypisana przez użytkownika. Im wyższa, tym bardziej użytkownik lubi "
+"utwór"
 
 msgid ", "
 msgstr ", "
@@ -834,9 +831,8 @@ msgstr "Plik \"%s\" jest gniazdem."
 msgid "Failed after iterations as requested."
 msgstr "Niepowodzenie po iteracjach jak żądano."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Błąd podczas zapisu do pliku \"%s\"."
+msgstr "Błąd podczas zapisu do ściąganego pluku."
 
 msgid "No Temp directory specified."
 msgstr "Nie podano katalogu tymczasowego."
@@ -1130,12 +1126,3 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Błąd zapisu bufora rejestru do %s: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Błąd ponownego przeszukiwania rejestru %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Błąd ponownego przeszukiwania rejestru %s"

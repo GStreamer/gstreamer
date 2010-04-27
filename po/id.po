@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 02:08+0100\n"
-"PO-Revision-Date: 2010-01-28 10:04-0500\n"
+"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"PO-Revision-Date: 2010-04-26 21:55+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -611,34 +611,28 @@ msgstr ""
 "ketinggian geografis tempat media direkam atau dihasilkan dalam meter "
 "menurut WGS84 (nol adalah permukaan laut rata-rata)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "bujur lokasi geografis"
+msgstr "negara lokasi geografis"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau "
-"dihasilkan"
+"negara (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "lintang lokasi geografis"
+msgstr "kota lokasi geografis"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau "
-"dihasilkan"
+msgstr "kota (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "ketinggian lokasi geografis"
+msgstr "sublokasi lokasi geografis"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"lokasi di dalam kota tempat media dihasilkan atau dibuat (misalnya "
+"lingkungan)"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -691,14 +685,15 @@ msgstr ""
 "dari sebuah konser. Ini adalah level yang lebih tinggi dari jalur, tapi "
 "lebih rendah dari album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "durasi"
+msgstr "peringkat pengguna"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Peringkat diatribusi oleh pengguna. Makin tinggi peringkat, makin suka "
+"pengguna terhadap media ini"
 
 msgid ", "
 msgstr ", "
@@ -834,9 +829,8 @@ msgstr "Berkas \"%s\" adalah soket."
 msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Galat ketika menulis ke berkas \"%s\"."
+msgstr "Galat ketika menulis ke berkas unduhan."
 
 msgid "No Temp directory specified."
 msgstr "Tak ada direktori Temp yang ditentukan."

@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 02:08+0100\n"
-"PO-Revision-Date: 2010-01-27 17:50+0200\n"
+"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"PO-Revision-Date: 2010-04-26 21:24+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -616,34 +616,26 @@ msgstr ""
 "maantietellinen korkeustaso, jossa media on nauhoitettu tai tuotettu "
 "metreinä WGS84-koordinaateista (nolla on keskimääräinen merenpinta)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "maantieteellisen sijainnin pituuspiiri"
+msgstr "maantieteellisen sijainnin maa"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"ihmisluettava kuvaus sijainnista tai paikasta, jossa media on nauhoitettu "
-"tai tuotettu"
+msgstr "maa (englanninkielinen nimi), jossa media on nauhoitettu tai tuotettu"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "maantieteellisen sijainnin leveyspiiri"
+msgstr "maantieteellisen sijainnin kaupunki"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"ihmisluettava kuvaus sijainnista tai paikasta, jossa media on nauhoitettu "
-"tai tuotettu"
+"kaupunki (englanninkielinen nimi), jossa media on nauhoitettu tai tuotettu"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "maantieteellisen sijainnin korkeustaso"
+msgstr "maantieteellisen sijainnin alisijainti"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
-msgstr ""
+msgstr "sijainti kaupungin sisällä, jossa media on nauhoitettu tai tuotettu"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -697,14 +689,15 @@ msgstr ""
 "kuten konsertin eri osat. Tämä on korkeamman tason kuin raita, mutta "
 "matalamman tason kuin levy"
 
-#, fuzzy
 msgid "user rating"
-msgstr "kesto"
+msgstr "käyttäjän arvio"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Arvio käyttäjältä. Mitä suurempi sijoitus, sitä enemmän käyttäjä pitää tästä "
+"mediasta"
 
 msgid ", "
 msgstr ", "
@@ -723,20 +716,19 @@ msgstr ""
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "määritetty tyhjä säiliö \"%s\", ei sallittu"
+msgstr "määritetty tyhjä säiliö ”%s”, ei sallittu"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "ei säiliötä \"%s\", ohitetaan"
+msgstr "ei säiliötä ”%s”, ohitetaan"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "ominaisuutta \"%s\" ei ole elementissä \"%s\""
+msgstr "ominaisuutta ”%s” ei ole elementissä ”%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"elementin \"%2$s\" ominaisuutta \"%1$s\" ei voitu asettaa arvoon \"%3$s\""
+msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -744,11 +736,11 @@ msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "ei elementtiä \"%s\""
+msgstr "ei elementtiä ”%s”"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "kykyjä \"%s\" ei voitu jäsentää"
+msgstr "kykyjä ”%s” ei voitu jäsentää"
 
 msgid "link without source element"
 msgstr "linkki ilman lähde-elementtiä"
@@ -758,19 +750,19 @@ msgstr "linkki ilman nieluelementtiä"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "ei lähde-elementtiä URI:lle \"%s\""
+msgstr "ei lähde-elementtiä URI:lle ”%s”"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "ei elementtiä, jota linkittää URIin \"%s\""
+msgstr "ei elementtiä, jota linkittää URIin ”%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "ei nieluelementtiä URIlle \"%s\""
+msgstr "ei nieluelementtiä URIlle ”%s”"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "nieluelementtiä ei voitu linkittää URIlle \"%s\""
+msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
 
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
@@ -805,45 +797,44 @@ msgstr "Kirjoitusta varten ei määritetty tiedostonimeä."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Tiedostoa \"%s\" ei voitu avata kirjoittamista varten."
+msgstr "Tiedostoa ”%s” ei voitu avata kirjoittamista varten."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Virhe suljettaessa tiedostoa \"%s\"."
+msgstr "Virhe suljettaessa tiedostoa ”%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Virhe kelattaessa tiedostoa \"%s\"."
+msgstr "Virhe kelattaessa tiedostoa ”%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
+msgstr "Virhe kirjoitettaessa tiedostoon ”%s”."
 
 msgid "No file name specified for reading."
 msgstr "Lukemista varten ei ole määritetty tiedostonimeä."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Tiedostoa \"%s\" ei voitu avata lukemista varten."
+msgstr "Tiedostoa ”%s” ei voitu avata lukemista varten."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Ei saatu tietoja kohteesta \"%s\"."
+msgstr "Ei saatu tietoja kohteesta ”%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" on hakemisto."
+msgstr "”%s” on hakemisto."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Tiedosto \"%s\" on pistoke."
+msgstr "Tiedosto ”%s” on pistoke."
 
 msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
+msgstr "Virhe kirjoitettaessa lataustiedostoon."
 
 msgid "No Temp directory specified."
 msgstr "Tilapäishakemistoa ei ole määritetty."
@@ -944,7 +935,7 @@ msgstr "Ei voitu ladata liitännäistiedostoa: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Ei tällaista elementtiä tai liitännäistä \"%s\"\n"
+msgstr "Ei tällaista elementtiä tai liitännäistä ”%s”\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
@@ -952,11 +943,11 @@ msgstr ""
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "VIRHE: XML-tiedoston \"%s\" jäsentäminen epäonnistui.\n"
+msgstr "VIRHE: XML-tiedoston ”%s” jäsentäminen epäonnistui.\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "VIRHE: päätason liukuhihnaelementtiä ei ole tiedostossa \"%s\".\n"
+msgstr "VIRHE: päätason liukuhihnaelementtiä ei ole tiedostossa ”%s”.\n"
 
 msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "VAROITUS: vain yhtä päätason elementtiä tuetaan tällä kertaa.\n"
@@ -967,7 +958,7 @@ msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "VAROITUS: elementtiä nimeltä \"%s\" ei löytynyt.\n"
+msgstr "VAROITUS: elementtiä nimeltä ”%s” ei löytynyt.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -987,11 +978,11 @@ msgstr "Saatiin viesti #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Saatiin EOS (virran loppu) elementiltä \"%s\".\n"
+msgstr "Saatiin EOS (virran loppu) elementiltä ”%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
+msgstr "LÖYTYI MERKINTÄ: sen löysi elementti ”%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
@@ -1083,7 +1074,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROITUS: virheellinen liukuhihna: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "VIRHE: \"liukuhihna\"-elementtiä ei löytynyt.\n"
+msgstr "VIRHE: ”liukuhihna”-elementtiä ei löytynyt.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Asetetaan liukuhihna tilaan TAUOLLA...\n"
@@ -1147,12 +1138,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr "Sisäinen GStreamer-virhe: tilasiirtymä epäonnistui."
 
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Virhe kirjoitettaessa tiedostokahvaan \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Tiedostokahva \"%d\" on virheellinen."
-
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "VAPAUTETAAN liukuhihna...\n"
 
@@ -1170,12 +1155,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "REGISTRY"
 #~ msgstr "REKISTERI"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "polkuluettelo liitännäisten lataukseen (erottimena \"%s\")"
-
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Käytettävä vuorotin (oletus on \"%s\")"
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr "Sisäinen GStreamer-virhe: vuorotinongelma. Tee vikailmoitus."
