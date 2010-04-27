@@ -59,12 +59,17 @@ enum
   PROP_IDCT_METHOD
 };
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_jpeg_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") "; "
+        GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
+        GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
+        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR)
     );
+/* *INDENT-ON* */
 
 static GstStaticPadTemplate gst_jpeg_dec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -715,8 +720,50 @@ gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
 }
 
 static void
+gst_jpeg_dec_decode_rgb (GstJpegDec * dec, guchar * base[3],
+    guint width, guint height, guint pstride, guint rstride)
+{
+  guchar *r_rows[16], *g_rows[16], *b_rows[16];
+  guchar **scanarray[3] = { r_rows, g_rows, b_rows };
+  gint i, j, k;
+  gint lines;
+
+  GST_DEBUG_OBJECT (dec, "indirect decoding of RGB");
+
+  if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
+    return;
+
+  memcpy (r_rows, dec->idr_y, 16 * sizeof (gpointer));
+  memcpy (g_rows, dec->idr_u, 16 * sizeof (gpointer));
+  memcpy (b_rows, dec->idr_v, 16 * sizeof (gpointer));
+
+  i = 0;
+  while (i < height) {
+    lines = jpeg_read_raw_data (&dec->cinfo, scanarray, DCTSIZE);
+    if (G_LIKELY (lines > 0)) {
+      for (j = 0; (j < DCTSIZE) && (i < height); j++, i++) {
+        gint p;
+
+        p = 0;
+        for (k = 0; k < width; k++) {
+          base[0][p] = r_rows[j][k];
+          base[1][p] = g_rows[j][k];
+          base[2][p] = b_rows[j][k];
+          p += pstride;
+        }
+        base[0] += rstride;
+        base[1] += rstride;
+        base[2] += rstride;
+      }
+    } else {
+      GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
+    }
+  }
+}
+
+static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
-    guchar * last[3], guint width, guint height, gint r_v, gint r_h)
+    guchar * last[3], guint width, guint height, gint r_v, gint r_h, gint comp)
 {
   guchar *y_rows[16], *u_rows[16], *v_rows[16];
   guchar **scanarray[3] = { y_rows, u_rows, v_rows };
@@ -732,6 +779,15 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   memcpy (y_rows, dec->idr_y, 16 * sizeof (gpointer));
   memcpy (u_rows, dec->idr_u, 16 * sizeof (gpointer));
   memcpy (v_rows, dec->idr_v, 16 * sizeof (gpointer));
+
+  /* fill chroma components for grayscale */
+  if (comp == 1) {
+    GST_DEBUG_OBJECT (dec, "grayscale, filling chroma");
+    for (i = 0; i < 16; i++) {
+      memset (u_rows[i], GST_ROUND_UP_32 (width), 0x80);
+      memset (v_rows[i], GST_ROUND_UP_32 (width), 0x80);
+    }
+  }
 
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     lines = jpeg_read_raw_data (&dec->cinfo, scanarray, r_v * DCTSIZE);
@@ -927,6 +983,110 @@ gst_jpeg_dec_do_qos (GstJpegDec * dec, GstClockTime timestamp)
   return TRUE;
 }
 
+static void
+gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
+{
+  GstCaps *caps;
+  GstVideoFormat format;
+
+  if (G_UNLIKELY (width == dec->caps_width && height == dec->caps_height &&
+          dec->framerate_numerator == dec->caps_framerate_numerator &&
+          dec->framerate_denominator == dec->caps_framerate_denominator &&
+          clrspc == dec->clrspc))
+    return;
+
+  /* framerate == 0/1 is a still frame */
+  if (dec->framerate_denominator == 0) {
+    dec->framerate_numerator = 0;
+    dec->framerate_denominator = 1;
+  }
+
+  /* calculate or assume an average frame duration for QoS purposes */
+  GST_OBJECT_LOCK (dec);
+  if (dec->framerate_numerator != 0) {
+    dec->qos_duration = gst_util_uint64_scale (GST_SECOND,
+        dec->framerate_denominator, dec->framerate_numerator);
+  } else {
+    /* if not set just use 25fps */
+    dec->qos_duration = gst_util_uint64_scale (GST_SECOND, 1, 25);
+  }
+  GST_OBJECT_UNLOCK (dec);
+
+  if (dec->cinfo.jpeg_color_space == JCS_RGB) {
+    gint i;
+    GstCaps *allowed_caps;
+
+    GST_DEBUG_OBJECT (dec, "selecting RGB format");
+    /* retrieve allowed caps, and find the first one that reasonably maps
+     * to the parameters of the colourspace */
+    caps = gst_pad_get_allowed_caps (dec->srcpad);
+    if (!caps) {
+      GST_DEBUG_OBJECT (dec, "... but no peer, using template caps");
+      /* need to copy because get_allowed_caps returns a ref,
+       * and get_pad_template_caps doesn't */
+      caps = gst_caps_copy (gst_pad_get_pad_template_caps (dec->srcpad));
+    }
+    /* avoid lists of fourcc, etc */
+    allowed_caps = gst_caps_normalize (caps);
+    gst_caps_unref (caps);
+    caps = NULL;
+    GST_LOG_OBJECT (dec, "allowed source caps %" GST_PTR_FORMAT, allowed_caps);
+
+    for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
+      if (caps)
+        gst_caps_unref (caps);
+      caps = gst_caps_copy_nth (allowed_caps, i);
+      /* sigh, ds and _parse_caps need fixed caps for parsing, fixate */
+      gst_pad_fixate_caps (dec->srcpad, caps);
+      GST_LOG_OBJECT (dec, "checking caps %" GST_PTR_FORMAT, caps);
+      if (!gst_video_format_parse_caps (caps, &format, NULL, NULL))
+        continue;
+      /* we'll settle for the first (preferred) downstream rgb format */
+      if (gst_video_format_is_rgb (format))
+        break;
+      /* default fall-back */
+      format = GST_VIDEO_FORMAT_RGB;
+    }
+    if (caps)
+      gst_caps_unref (caps);
+    gst_caps_unref (allowed_caps);
+    caps = gst_video_format_new_caps (format, width, height,
+        dec->framerate_numerator, dec->framerate_denominator, 1, 1);
+    dec->outsize = gst_video_format_get_size (format, width, height);
+    /* some format info */
+    dec->offset[0] =
+        gst_video_format_get_component_offset (format, 0, width, height);
+    dec->offset[1] =
+        gst_video_format_get_component_offset (format, 1, width, height);
+    dec->offset[2] =
+        gst_video_format_get_component_offset (format, 2, width, height);
+    /* equal for all components */
+    dec->stride = gst_video_format_get_row_stride (format, 0, width);
+    dec->inc = gst_video_format_get_pixel_stride (format, 0);
+  } else {
+    /* go for plain and simple I420 */
+    /* TODO other YUV cases ? */
+    caps = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+        "framerate", GST_TYPE_FRACTION, dec->framerate_numerator,
+        dec->framerate_denominator, NULL);
+    dec->outsize = I420_SIZE (width, height);
+  }
+
+  GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
+  GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d", dec->cinfo.max_h_samp_factor);
+
+  gst_pad_set_caps (dec->srcpad, caps);
+  gst_caps_unref (caps);
+
+  dec->caps_width = width;
+  dec->caps_height = height;
+  dec->caps_framerate_numerator = dec->framerate_numerator;
+  dec->caps_framerate_denominator = dec->framerate_denominator;
+}
+
 static GstFlowReturn
 gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -1035,7 +1195,9 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     goto components_not_supported;
 
   /* verify color space expectation to avoid going *boom* or bogus output */
-  if (dec->cinfo.jpeg_color_space != JCS_YCbCr)
+  if (dec->cinfo.jpeg_color_space != JCS_YCbCr &&
+      dec->cinfo.jpeg_color_space != JCS_GRAYSCALE &&
+      dec->cinfo.jpeg_color_space != JCS_RGB)
     goto unsupported_colorspace;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -1054,7 +1216,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   /* prepare for raw output */
   dec->cinfo.do_fancy_upsampling = FALSE;
   dec->cinfo.do_block_smoothing = FALSE;
-  dec->cinfo.out_color_space = JCS_YCbCr;
+  dec->cinfo.out_color_space = dec->cinfo.jpeg_color_space;
   dec->cinfo.dct_method = dec->idct_method;
   dec->cinfo.raw_data_out = TRUE;
 
@@ -1064,11 +1226,27 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_WARNING_OBJECT (dec, "failed to start decompression cycle");
   }
 
-  /* YUV sanity checks to get safe and reasonable I420 output */
-  g_assert (dec->cinfo.num_components == 3);
-  if (r_v > 2 || r_v < dec->cinfo.comp_info[0].v_samp_factor ||
-      r_h < dec->cinfo.comp_info[0].h_samp_factor)
-    goto invalid_yuv;
+  /* sanity checks to get safe and reasonable output */
+  switch (dec->cinfo.jpeg_color_space) {
+    case JCS_GRAYSCALE:
+      break;
+    case JCS_RGB:
+      if (dec->cinfo.num_components != 3 || dec->cinfo.max_v_samp_factor > 1 ||
+          dec->cinfo.max_h_samp_factor > 1)
+        goto invalid_yuvrgb;
+      break;
+    case JCS_YCbCr:
+      if (dec->cinfo.num_components != 3 ||
+          r_v > 2 || r_v < dec->cinfo.comp_info[0].v_samp_factor ||
+          r_v < dec->cinfo.comp_info[1].v_samp_factor ||
+          r_h < dec->cinfo.comp_info[0].h_samp_factor ||
+          r_h < dec->cinfo.comp_info[1].h_samp_factor)
+        goto invalid_yuvrgb;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   width = dec->cinfo.output_width;
   height = dec->cinfo.output_height;
@@ -1077,50 +1255,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
           height < MIN_HEIGHT || height > MAX_HEIGHT))
     goto wrong_size;
 
-  if (G_UNLIKELY (width != dec->caps_width || height != dec->caps_height ||
-          dec->framerate_numerator != dec->caps_framerate_numerator ||
-          dec->framerate_denominator != dec->caps_framerate_denominator)) {
-    GstCaps *caps;
-
-    /* framerate == 0/1 is a still frame */
-    if (dec->framerate_denominator == 0) {
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 1;
-    }
-
-    /* calculate or assume an average frame duration for QoS purposes */
-    GST_OBJECT_LOCK (dec);
-    if (dec->framerate_numerator != 0) {
-      dec->qos_duration = gst_util_uint64_scale (GST_SECOND,
-          dec->framerate_denominator, dec->framerate_numerator);
-    } else {
-      /* if not set just use 25fps */
-      dec->qos_duration = gst_util_uint64_scale (GST_SECOND, 1, 25);
-    }
-    GST_OBJECT_UNLOCK (dec);
-
-    caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, dec->framerate_numerator,
-        dec->framerate_denominator, NULL);
-
-    GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
-    GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
-        dec->cinfo.max_v_samp_factor);
-    GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d",
-        dec->cinfo.max_h_samp_factor);
-
-    gst_pad_set_caps (dec->srcpad, caps);
-    gst_caps_unref (caps);
-
-    dec->caps_width = width;
-    dec->caps_height = height;
-    dec->caps_framerate_numerator = dec->framerate_numerator;
-    dec->caps_framerate_denominator = dec->framerate_denominator;
-    dec->outsize = I420_SIZE (width, height);
-  }
+  gst_jpeg_dec_negotiate (dec, width, height, dec->cinfo.jpeg_color_space);
 
   ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
       dec->outsize, GST_PAD_CAPS (dec->srcpad), &outbuf);
@@ -1153,43 +1288,51 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   }
   GST_BUFFER_DURATION (outbuf) = duration;
 
-  /* mind the swap, jpeglib outputs blue chroma first
-   * ensonic: I see no swap?
-   */
-  base[0] = outdata + I420_Y_OFFSET (width, height);
-  base[1] = outdata + I420_U_OFFSET (width, height);
-  base[2] = outdata + I420_V_OFFSET (width, height);
-
-  /* make sure we don't make jpeglib write beyond our buffer,
-   * which might happen if (height % (r_v*DCTSIZE)) != 0 */
-  last[0] = base[0] + (I420_Y_ROWSTRIDE (width) * (height - 1));
-  last[1] =
-      base[1] + (I420_U_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
-          1));
-  last[2] =
-      base[2] + (I420_V_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
-          1));
-
-  GST_LOG_OBJECT (dec, "decompressing (reqired scanline buffer height = %u)",
-      dec->cinfo.rec_outbuf_height);
-
-  /* For some widths jpeglib requires more horizontal padding than I420 
-   * provides. In those cases we need to decode into separate buffers and then
-   * copy over the data into our final picture buffer, otherwise jpeglib might
-   * write over the end of a line into the beginning of the next line,
-   * resulting in blocky artifacts on the left side of the picture. */
-  if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
-          || dec->cinfo.comp_info[0].h_samp_factor != 2
-          || dec->cinfo.comp_info[1].h_samp_factor != 1
-          || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
-        "indirect decoding using extra buffer copy");
-    gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h);
+  if (dec->cinfo.jpeg_color_space == JCS_RGB) {
+    base[0] = outdata + dec->offset[0];
+    base[1] = outdata + dec->offset[1];
+    base[2] = outdata + dec->offset[2];
+    gst_jpeg_dec_decode_rgb (dec, base, width, height, dec->inc, dec->stride);
   } else {
-    ret = gst_jpeg_dec_decode_direct (dec, base, last, width, height);
+    /* mind the swap, jpeglib outputs blue chroma first
+     * ensonic: I see no swap?
+     */
+    base[0] = outdata + I420_Y_OFFSET (width, height);
+    base[1] = outdata + I420_U_OFFSET (width, height);
+    base[2] = outdata + I420_V_OFFSET (width, height);
 
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto decode_direct_failed;
+    /* make sure we don't make jpeglib write beyond our buffer,
+     * which might happen if (height % (r_v*DCTSIZE)) != 0 */
+    last[0] = base[0] + (I420_Y_ROWSTRIDE (width) * (height - 1));
+    last[1] =
+        base[1] + (I420_U_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
+            1));
+    last[2] =
+        base[2] + (I420_V_ROWSTRIDE (width) * ((GST_ROUND_UP_2 (height) / 2) -
+            1));
+
+    GST_LOG_OBJECT (dec, "decompressing (reqired scanline buffer height = %u)",
+        dec->cinfo.rec_outbuf_height);
+
+    /* For some widths jpeglib requires more horizontal padding than I420 
+     * provides. In those cases we need to decode into separate buffers and then
+     * copy over the data into our final picture buffer, otherwise jpeglib might
+     * write over the end of a line into the beginning of the next line,
+     * resulting in blocky artifacts on the left side of the picture. */
+    if (G_UNLIKELY (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0
+            || dec->cinfo.comp_info[0].h_samp_factor != 2
+            || dec->cinfo.comp_info[1].h_samp_factor != 1
+            || dec->cinfo.comp_info[2].h_samp_factor != 1)) {
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
+          "indirect decoding using extra buffer copy");
+      gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h,
+          dec->cinfo.num_components);
+    } else {
+      ret = gst_jpeg_dec_decode_direct (dec, base, last, width, height);
+
+      if (G_UNLIKELY (ret != GST_FLOW_OK))
+        goto decode_direct_failed;
+    }
   }
 
   GST_LOG_OBJECT (dec, "decompressing finished");
@@ -1323,10 +1466,10 @@ unsupported_colorspace:
     ret = GST_FLOW_ERROR;
     goto done;
   }
-invalid_yuv:
+invalid_yuvrgb:
   {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Picture is corrupt or unhandled YUV layout"));
+        ("Picture is corrupt or unhandled YUV/RGB layout"));
     ret = GST_FLOW_ERROR;
     goto done;
   }
@@ -1456,6 +1599,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->caps_framerate_numerator = dec->caps_framerate_denominator = 0;
       dec->caps_width = -1;
       dec->caps_height = -1;
+      dec->clrspc = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
       dec->discont = TRUE;

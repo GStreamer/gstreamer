@@ -24,6 +24,7 @@
 
 #include <setjmp.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 /* this is a hack hack hack to get around jpeglib header bugs... */
 #ifdef HAVE_STDLIB_H
@@ -96,6 +97,11 @@ struct _GstJpegDec {
   gint     caps_width;
   gint     caps_height;
   gint     outsize;
+  gint     clrspc;
+
+  gint     offset[3];
+  gint     stride;
+  gint     inc;
 
   /* properties */
   gint     idct_method;
