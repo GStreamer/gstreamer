@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v videotestsrc ! glupload ! glfilterreflectedscreen active_graphic_mode=TRUE ! glimagesink
+ * gst-launch videotestsrc ! glupload ! glfilterreflectedscreen ! glimagesink
  * ]|
  * </refsect2>
  */
@@ -44,7 +44,13 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0,
-  PROP_ACTIVE_GRAPHIC_MODE
+  PROP_ACTIVE_GRAPHIC_MODE,
+  PROP_SEPARATED_SCREEN,
+  PROP_SHOW_FLOOR,
+  PROP_FOVY,
+  PROP_ASPECT,
+  PROP_ZNEAR,
+  PROP_ZFAR
 };
 
 #define DEBUG_INIT(bla)							\
@@ -62,12 +68,19 @@ static void gst_gl_filter_reflected_screen_get_property (GObject * object,
 static gboolean gst_gl_filter_reflected_screen_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
+static void gst_gl_filter_reflected_screen_draw_background ();
 static void gst_gl_filter_reflected_screen_draw_floor ();
 static void gst_gl_filter_reflected_screen_draw_screen (GstGLFilter * filter,
     gint width, gint height, guint texture);
+static void gst_gl_filter_reflected_screen_draw_separated_screen (GstGLFilter *
+    filter, gint width, gint height, guint texture, gfloat alphs, gfloat alphe);
 
 static void gst_gl_filter_reflected_screen_callback (gint width, gint height,
     guint texture, gpointer stuff);
+
+static GLfloat LightPos[] = { 4.0f, -4.0f, 6.0f, 1.0f };        // Light Position
+static GLfloat LightAmb[] = { 4.0f, 4.0f, 4.0f, 1.0f }; // Ambient Light
+static GLfloat LightDif[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // Diffuse Light
 
 static void
 gst_gl_filter_reflected_screen_base_init (gpointer klass)
@@ -96,14 +109,49 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
           "Activate graphic mode",
           "Allow user to activate stencil buffer and blending.",
           TRUE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SEPARATED_SCREEN,
+      g_param_spec_boolean ("separated_screen",
+          "Create a separation space",
+          "Allow to insert a space between the two screen. Will cancel 'show floor' if active. Value are TRUE or FALSE(default)",
+          FALSE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SHOW_FLOOR,
+      g_param_spec_boolean ("show_floor",
+          "Show the support",
+          "Allow the user to show the supportive floor. Will cancel 'separated screen' if active. Value are TRUE(default) or FALSE",
+          TRUE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_FOVY,
+      g_param_spec_double ("fovy", "Fovy", "Field of view angle in degrees",
+          0.0, 180.0, 60, G_PARAM_WRITABLE));
+
+  g_object_class_install_property (gobject_class, PROP_ASPECT,
+      g_param_spec_double ("aspect", "Aspect",
+          "Field of view in the x direction", 0.0, 100, 0.0, G_PARAM_WRITABLE));
+
+  g_object_class_install_property (gobject_class, PROP_ZNEAR,
+      g_param_spec_double ("znear", "Znear",
+          "Specifies the distance from the viewer to the near clipping plane",
+          0.0, 100.0, 0.1, G_PARAM_WRITABLE));
+
+  g_object_class_install_property (gobject_class, PROP_ZFAR,
+      g_param_spec_double ("zfar", "Zfar",
+          "Specifies the distance from the viewer to the far clipping plane",
+          0.0, 1000.0, 100.0, G_PARAM_WRITABLE));
 }
 
 static void
 gst_gl_filter_reflected_screen_init (GstGLFilterReflectedScreen * filter,
     GstGLFilterReflectedScreenClass * klass)
 {
-  filter->timestamp = 0;
   filter->active_graphic_mode = TRUE;
+  filter->separated_screen = FALSE;
+  filter->show_floor = TRUE;
+  filter->fovy = 80;
+  filter->aspect = 0;
+  filter->znear = 0.1;
+  filter->zfar = 1000;
 }
 
 static void
@@ -114,10 +162,26 @@ gst_gl_filter_reflected_screen_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ACTIVE_GRAPHIC_MODE:
-    {
       filter->active_graphic_mode = g_value_get_boolean (value);
       break;
-    }
+    case PROP_SEPARATED_SCREEN:
+      filter->separated_screen = g_value_get_boolean (value);
+      break;
+    case PROP_SHOW_FLOOR:
+      filter->show_floor = g_value_get_boolean (value);
+      break;
+    case PROP_FOVY:
+      filter->fovy = g_value_get_double (value);
+      break;
+    case PROP_ASPECT:
+      filter->aspect = g_value_get_double (value);
+      break;
+    case PROP_ZNEAR:
+      filter->znear = g_value_get_double (value);
+      break;
+    case PROP_ZFAR:
+      filter->zfar = g_value_get_double (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -134,6 +198,12 @@ gst_gl_filter_reflected_screen_get_property (GObject * object, guint prop_id,
     case PROP_ACTIVE_GRAPHIC_MODE:
       g_value_set_boolean (value, filter->active_graphic_mode);
       break;
+    case PROP_SEPARATED_SCREEN:
+      g_value_set_boolean (value, filter->separated_screen);
+      break;
+    case PROP_SHOW_FLOOR:
+      g_value_set_boolean (value, filter->show_floor);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -144,28 +214,72 @@ static gboolean
 gst_gl_filter_reflected_screen_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf)
 {
-  gpointer reflected_screen_filter = GST_GL_FILTER_REFLECTED_SCREEN (filter);
-  GST_GL_FILTER_REFLECTED_SCREEN (reflected_screen_filter)->timestamp =
-      GST_BUFFER_TIMESTAMP (inbuf);
+  GstGLFilterReflectedScreen *reflected_screen_filter =
+      GST_GL_FILTER_REFLECTED_SCREEN (filter);
+
+  if (reflected_screen_filter->aspect == 0.0)
+    reflected_screen_filter->aspect =
+        (gfloat) (filter->width) / (gfloat) (filter->height);
 
   //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
       filter->fbo, filter->depthbuffer, outbuf->texture,
       gst_gl_filter_reflected_screen_callback, inbuf->width, inbuf->height,
-      inbuf->texture, 80, (gdouble) filter->width / (gdouble) filter->height,
-      1.0, 5000.0, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
+      inbuf->texture, reflected_screen_filter->fovy,
+      reflected_screen_filter->aspect, reflected_screen_filter->znear,
+      reflected_screen_filter->zfar, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
       (gpointer) reflected_screen_filter);
 
   return TRUE;
 }
 
-static gint64
-get_time (void)
+static void
+gst_gl_filter_reflected_screen_draw_separated_screen (GstGLFilter * filter,
+    gint width, gint height, guint texture, gfloat alphs, gfloat alphe)
 {
-  static GTimeVal val;
-  g_get_current_time (&val);
+  //enable ARB Rectangular texturing
+  //that's necessary to have the video displayed on our screen (with gstreamer)
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  //configure parameters for the texturing
+  //the two first are used to specified how the texturing will be done if the screen is greater than the texture herself
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  //the next two specified how the texture will comport near the limits
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
 
-  return (val.tv_sec * G_USEC_PER_SEC) + val.tv_usec;
+  //creating screen and setting the texture (depending on texture's height and width)
+  glBegin (GL_QUADS);
+
+  // right Face
+  glColor4f (1.0f, 1.0f, 1.0f, alphs);
+  glTexCoord2f ((gfloat) (width / 2.0), (gfloat) height);
+  glVertex3f (-0.75f, 0.0f, -1.0f);
+  glColor4f (1.0f, 1.0f, 1.0f, alphe);
+  glTexCoord2f ((gfloat) (width / 2.0), 0.0f);
+  glVertex3f (-0.75f, 1.25f, -1.0f);
+  glTexCoord2f ((gfloat) width, 0.0f);
+  glVertex3f (1.25f, 1.25f, -1.0f);
+  glColor4f (1.0f, 1.0f, 1.0f, alphs);
+  glTexCoord2f ((gfloat) width, (gfloat) height);
+  glVertex3f (1.25f, 0.0f, -1.0f);
+  // Left Face
+  glColor4f (1.0f, 1.0f, 1.0f, alphs);
+  glTexCoord2f (((gfloat) width / 2.0f), (gfloat) height);
+  glVertex3f (-1.0f, 0.0f, -0.75f);
+  glTexCoord2f (0.0f, (gfloat) height);
+  glVertex3f (-1.0f, 0.0f, 1.25f);
+  glColor4f (1.0f, 1.0f, 1.0f, alphe);
+  glTexCoord2f (0.0f, 0.0f);
+  glVertex3f (-1.0f, 1.25f, 1.25f);
+  glTexCoord2f (((gfloat) width / 2.0f), 0.0f);
+  glVertex3f (-1.0f, 1.25f, -0.75f);
+
+  glEnd ();
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
 }
 
 static void
@@ -185,34 +299,50 @@ gst_gl_filter_reflected_screen_draw_screen (GstGLFilter * filter,
       GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   //creating screen and setting the texture (depending on texture's height and width)
   glBegin (GL_QUADS);
 
-  // right Face
-  glTexCoord2f (0.0f, (gfloat) height);
+  glTexCoord2f ((gfloat) (width / 2.0), (gfloat) height);
   glVertex3f (-1.0f, 0.0f, -1.0f);
-  glTexCoord2f (0.0f, 0.0f);
+  glTexCoord2f ((gfloat) (width / 2.0), 0.0f);
   glVertex3f (-1.0f, 1.0f, -1.0f);
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (1.0f, 1.0f, -1.0f);
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (1.0f, 0.0f, -1.0f);
   // Left Face
-  glTexCoord2f ((gfloat) width, (gfloat) height);
+  glTexCoord2f (((gfloat) width / 2.0f), (gfloat) height);
   glVertex3f (-1.0f, 0.0f, -1.0f);
   glTexCoord2f (0.0f, (gfloat) height);
   glVertex3f (-1.0f, 0.0f, 1.0f);
   glTexCoord2f (0.0f, 0.0f);
   glVertex3f (-1.0f, 1.0f, 1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
+  glTexCoord2f (((gfloat) width / 2.0f), 0.0f);
   glVertex3f (-1.0f, 1.0f, -1.0f);
 
   glEnd ();
 
   //disable this kind of texturing (useless for the gluDisk)
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
+}
+
+static void
+gst_gl_filter_reflected_screen_draw_background ()
+{
+  glBegin (GL_QUADS);
+
+  // right Face
+
+  glColor4f (0.0f, 0.0f, 0.0f, 1.0f);
+  glVertex3f (-10.0f, -10.0f, -1.0f);
+
+  glColor4f (0.0f, 0.0f, 0.2f, 1.0f);
+  glVertex3f (-10.0f, 10.0f, -1.0f);
+  glVertex3f (10.0f, 10.0f, -1.0f);
+  glVertex3f (10.0f, -10.0f, -1.0f);
+
+  glEnd ();
 }
 
 static void
@@ -226,7 +356,7 @@ gst_gl_filter_reflected_screen_draw_floor ()
   gluQuadricTexture (q, GL_FALSE);
 
   //drawing the disk. The texture are mapped thanks to the parameter we gave to the GLUquadric q
-  gluDisk (q, 0.0, 2.0, 50, 1);
+  gluDisk (q, 0.0, 2.2, 50.0, 1.0);
 }
 
 //opengl scene, params: input texture (not the output filter->texture)
@@ -243,64 +373,104 @@ gst_gl_filter_reflected_screen_callback (gint width, gint height, guint texture,
   //load identity befor tracing
   glLoadIdentity ();
   //camera translation
-  glTranslatef (0.0f, 0.1f, -1.5f);
+  glTranslatef (0.0f, 0.1f, -1.3f);
   //camera configuration
-  gluLookAt (0.1, -0.2, 1.4, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  if (reflected_screen_filter->separated_screen)
+    gluLookAt (0.1, -0.25, 2.0, 0.025, 0.0, 0.0, 0.0, 1.0, 0.0);
+  else
+    gluLookAt (0.1, -0.35, 2.0, 0.025, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-  if (reflected_screen_filter->active_graphic_mode) {
-    //Stencil buffer use start
-    //creation of a black mask upon the entire screen. This mean that none of the red, blue, green and alpha color on the screen will be shown
-    glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    //enable stencil buffer use
-    glEnable (GL_STENCIL_TEST);
-    //setting the stencil buffer. Each time a pixel will be drawn by now, this pixel value will be set to 1
-    glStencilFunc (GL_ALWAYS, 1, 1);
-    glStencilOp (GL_KEEP, GL_KEEP, GL_REPLACE);
+  gst_gl_filter_reflected_screen_draw_background ();
 
-    //disable the zbuffer
-    glDisable (GL_DEPTH_TEST);
-    //make a rotation of 90 degree on x axis. By default, gluDisk draw a disk on z axis
-    glRotatef (-90.0f, 1.0, 0.0, 0.0);
-    //draw the floor. Each pixel representing this floor will now have a value of 1 on stencil buffer
-    gst_gl_filter_reflected_screen_draw_floor ();
-    //make an anti-rotation of 90 degree to draw the rest of the scene on the right angle
-    glRotatef (90.0f, 1.0, 0.0, 0.0);
-    //enable zbuffer again
-    glEnable (GL_DEPTH_TEST);
-    //enable the drawing to be shown
-    glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    //say that the next object have to be drawn ONLY where the stencil buffer's pixel's value is 1
-    glStencilFunc (GL_EQUAL, 1, 1);
-    glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
-    //save the actual matrix
+  if (reflected_screen_filter->separated_screen) {
+    glEnable (GL_BLEND);
+
     glPushMatrix ();
-    //translate the object on z axis
-    glTranslatef (0.0f, 0.0f, 1.3f);
-    //rotate it (because the drawing method place the user behind the left part of the screen)
+    glScalef (1.0f, -1.0f, 1.0f);
+    glTranslatef (0.0f, 0.0f, 1.2f);
     glRotatef (-45.0f, 0.0, 1.0, 0.0);
-    //draw the reflexion
-    gst_gl_filter_reflected_screen_draw_screen (filter, width, height, texture);
-    //return to the saved matrix position
+    gst_gl_filter_reflected_screen_draw_separated_screen (filter, width, height,
+        texture, 1.0f, 1.0f);
     glPopMatrix ();
-    //end of the stencil buffer uses
-    glDisable (GL_STENCIL_TEST);
-  }
-  //enable the blending to mix the floor and reflexion color
-  glEnable (GL_BLEND);
-  glColor4f (1.0f, 1.0f, 1.0f, 0.8f);
-  //configuration of the transparency function
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //draw the floor (which will appear this time)
-  //specified a white color (for the floor) with 20% transparency
-  glRotatef (-90.0f, 1.0, 0.0, 0.0);
-  gst_gl_filter_reflected_screen_draw_floor ();
-  glRotatef (90.0f, 1.0, 0.0, 0.0);
-  glDisable (GL_BLEND);
-  //draw the real object
-  //scale on y axis. The object must be drawn upside down (to suggest a reflexion)
 
-  glScalef (1.0f, -1.0f, 1.0f);
-  glTranslatef (0.0f, 0.0f, 1.3f);
-  glRotatef (-45.0f, 0.0, 1.0, 0.0);
-  gst_gl_filter_reflected_screen_draw_screen (filter, width, height, texture);
+    if (reflected_screen_filter->active_graphic_mode) {
+      //configuration of the transparency function
+      glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glTranslatef (0.0f, 0.0f, 1.2f);
+      glRotatef (-45.0f, 0.0, 1.0, 0.0);
+      gst_gl_filter_reflected_screen_draw_separated_screen (filter, width,
+          height, texture, 0.5f, 0.0f);
+      glDisable (GL_BLEND);
+    }
+  }
+  if (reflected_screen_filter->show_floor) {
+    glLightfv (GL_LIGHT0, GL_AMBIENT, LightAmb);
+    glLightfv (GL_LIGHT0, GL_DIFFUSE, LightDif);
+    glLightfv (GL_LIGHT0, GL_POSITION, LightPos);
+
+    //enable lighting
+    glEnable (GL_LIGHT0);
+    glEnable (GL_LIGHTING);
+
+    if (reflected_screen_filter->active_graphic_mode) {
+      glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+      //enable stencil buffer use
+      glEnable (GL_STENCIL_TEST);
+      //setting the stencil buffer. Each time a pixel will be drawn by now, this pixel value will be set to 1
+      glStencilFunc (GL_ALWAYS, 1, 1);
+      glStencilOp (GL_KEEP, GL_KEEP, GL_REPLACE);
+
+      //disable the zbuffer
+      glDisable (GL_DEPTH_TEST);
+      //make a rotation of 90 degree on x axis. By default, gluDisk draw a disk on z axis
+      glRotatef (-90.0f, 1.0, 0.0, 0.0);
+      //draw the floor. Each pixel representing this floor will now have a value of 1 on stencil buffer
+      gst_gl_filter_reflected_screen_draw_floor ();
+      //make an anti-rotation of 90 degree to draw the rest of the scene on the right angle
+      glRotatef (90.0f, 1.0, 0.0, 0.0);
+      //enable zbuffer again
+      glEnable (GL_DEPTH_TEST);
+      //enable the drawing to be shown
+      glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      //say that the next object have to be drawn ONLY where the stencil buffer's pixel's value is 1
+      glStencilFunc (GL_EQUAL, 1, 1);
+      glStencilOp (GL_KEEP, GL_KEEP, GL_KEEP);
+
+      //save the actual matrix
+      glPushMatrix ();
+      glLightfv (GL_LIGHT0, GL_POSITION, LightPos);
+      //translate the object on z axis
+      glTranslatef (0.0f, 0.0f, 1.4f);
+      //rotate it (because the drawing method place the user behind the left part of the screen)
+      glRotatef (-45.0f, 0.0, 1.0, 0.0);
+      //draw the reflexion
+      gst_gl_filter_reflected_screen_draw_screen (filter, width, height,
+          texture);
+      //return to the saved matrix position
+      glPopMatrix ();
+      //end of the stencil buffer uses
+      glDisable (GL_STENCIL_TEST);
+
+      //enable the blending to mix the floor and reflexion color
+      glEnable (GL_BLEND);
+      glDisable (GL_LIGHTING);
+      //specified a white color (for the floor) with 20% transparency
+      glColor4f (1.0f, 1.0f, 1.0f, 0.8f);
+      //configuration of the transparency function
+      glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    //draw the floor (which will appear this time)
+    glRotatef (-90.0f, 1.0, 0.0, 0.0);
+    gst_gl_filter_reflected_screen_draw_floor ();
+    glRotatef (90.0f, 1.0, 0.0, 0.0);
+    glDisable (GL_BLEND);
+    glEnable (GL_LIGHTING);
+    //draw the real object
+    //scale on y axis. The object must be drawn upside down (to suggest a reflexion)
+    glScalef (1.0f, -1.0f, 1.0f);
+    glTranslatef (0.0f, 0.0f, 1.4f);
+    glRotatef (-45.0f, 0.0, 1.0, 0.0);
+    gst_gl_filter_reflected_screen_draw_screen (filter, width, height, texture);
+    glDisable (GL_LIGHTING);
+  }
 }

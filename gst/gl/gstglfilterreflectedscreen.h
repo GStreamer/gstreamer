@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Pierre Pouzol<pierre.pouzol@hotmail.fr>
  *
@@ -38,10 +38,14 @@ typedef struct _GstGLFilterReflectedScreenClass GstGLFilterReflectedScreenClass;
 struct _GstGLFilterReflectedScreen
 {
 	GstGLFilter filter;
-	GstGLShader *shader;
-	gint64 timestamp;
-	
+	gdouble fovy;
+	gdouble aspect;
+	gdouble znear;
+	gdouble zfar;
+
 	gboolean active_graphic_mode;
+	gboolean separated_screen;
+	gboolean show_floor;
 };
 
 struct _GstGLFilterReflectedScreenClass
