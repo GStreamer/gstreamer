@@ -119,7 +119,6 @@ ges_timeline_pipeline_new (void)
 static gboolean
 ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
 {
-  gboolean res = FALSE;
   GList *ltrack, *tracks, *lstream;
 
   if (!self->profile)
@@ -173,7 +172,6 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
 
   GST_DEBUG ("Done updating caps");
 
-beach:
   return TRUE;
 }
 
