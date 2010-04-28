@@ -79,7 +79,11 @@ GType
 gst_vaapi_decoder_ffmpeg_get_type(void);
 
 GstVaapiDecoder *
-gst_vaapi_decoder_ffmpeg_new(GstVaapiDisplay *display, GstVaapiCodec codec);
+gst_vaapi_decoder_ffmpeg_new(
+    GstVaapiDisplay *display,
+    GstVaapiCodec    codec,
+    GstBuffer       *codec_data
+);
 
 G_END_DECLS
 

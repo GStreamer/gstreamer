@@ -234,6 +234,7 @@ gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
     }
 
     if (priv->avctx) {
+        av_freep(&priv->avctx->extradata);
         avcodec_close(priv->avctx);
         priv->avctx = NULL;
     }
@@ -252,6 +253,7 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(ffdecoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(decoder);
+    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
     enum CodecID codec_id;
     AVCodec *ffcodec;
 
@@ -273,6 +275,18 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
         priv->avctx = avcodec_alloc_context();
         if (!priv->avctx)
             return FALSE;
+    }
+
+    if (codec_data) {
+        const guchar *data = GST_BUFFER_DATA(codec_data);
+        const guint   size = GST_BUFFER_SIZE(codec_data);
+        av_freep(&priv->avctx->extradata);
+        priv->avctx->extradata = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
+        if (!priv->avctx->extradata)
+            return FALSE;
+        priv->avctx->extradata_size = size;
+        memcpy(priv->avctx->extradata, data, size);
+        memset(priv->avctx->extradata + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (!priv->vactx) {
@@ -436,21 +450,25 @@ gst_vaapi_decoder_ffmpeg_init(GstVaapiDecoderFfmpeg *decoder)
  * gst_vaapi_decoder_ffmpeg_new:
  * @display: a #GstVaapiDisplay
  * @codec: a #GstVaapiCodec
+ * @codec_data: an optional #GstBuffer holding extra codec data, or %NULL
  *
  * Creates a new #GstVaapiDecoder with the specified @codec bound to
- * @display. If @codec is zero, the first video stream will be
- * selected. Otherwise, the first video stream matching @codec is
- * used, if any.
+ * @display. @codec_data holds extra codec data like sequence headers.
  *
  * Return value: the newly allocated #GstVaapiDecoder object
  */
 GstVaapiDecoder *
-gst_vaapi_decoder_ffmpeg_new(GstVaapiDisplay *display, GstVaapiCodec codec)
+gst_vaapi_decoder_ffmpeg_new(
+    GstVaapiDisplay *display,
+    GstVaapiCodec    codec,
+    GstBuffer       *codec_data
+)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
 
     return g_object_new(GST_VAAPI_TYPE_DECODER_FFMPEG,
-                        "display", display,
-                        "codec",   codec,
+                        "display",    display,
+                        "codec",      codec,
+                        "codec-data", codec_data,
                         NULL);
 }

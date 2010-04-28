@@ -114,7 +114,7 @@ main(int argc, char *argv[])
         g_error("could not create window");
 
     codec->get_video_data(&vdata, &vdata_size);
-    decoder = gst_vaapi_decoder_ffmpeg_new(display, codec->codec);
+    decoder = gst_vaapi_decoder_ffmpeg_new(display, codec->codec, NULL);
     if (!decoder)
         g_error("could not create FFmpeg decoder");
 

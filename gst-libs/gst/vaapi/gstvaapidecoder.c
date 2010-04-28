@@ -42,6 +42,7 @@ enum {
 
     PROP_DISPLAY,
     PROP_CODEC,
+    PROP_CODEC_DATA
 };
 
 static gboolean
@@ -163,6 +164,20 @@ pop_buffer(GstVaapiDecoder *decoder)
     return buffer;
 }
 
+static inline void
+set_codec_data(GstVaapiDecoder *decoder, GstBuffer *codec_data)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (priv->codec_data) {
+        gst_buffer_unref(priv->codec_data);
+        priv->codec_data = NULL;
+    }
+
+    if (codec_data)
+        priv->codec_data = gst_buffer_ref(codec_data);
+}
+
 static void
 clear_async_queue(GAsyncQueue *q)
 {
@@ -179,6 +194,8 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
     gst_vaapi_decoder_stop(decoder);
+
+    set_codec_data(decoder, NULL);
 
     if (priv->context) {
         g_object_unref(priv->context);
@@ -222,6 +239,9 @@ gst_vaapi_decoder_set_property(
     case PROP_CODEC:
         priv->codec = g_value_get_uint(value);
         break;
+    case PROP_CODEC_DATA:
+        set_codec_data(GST_VAAPI_DECODER(object), gst_value_get_buffer(value));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -244,6 +264,9 @@ gst_vaapi_decoder_get_property(
         break;
     case PROP_CODEC:
         g_value_set_uint(value, priv->codec);
+        break;
+    case PROP_CODEC_DATA:
+        gst_value_set_buffer(value, priv->codec_data);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -284,6 +307,15 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
                            "The codec handled by the decoder",
                            0, G_MAXINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_CODEC_DATA,
+         gst_param_spec_mini_object("codec-data",
+                                    "Codec data",
+                                    "Extra codec data",
+                                    GST_TYPE_BUFFER,
+                                    G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -294,6 +326,7 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     decoder->priv               = priv;
     priv->context               = NULL;
     priv->codec                 = 0;
+    priv->codec_data            = NULL;
     priv->fps_n                 = 1000;
     priv->fps_d                 = 30;
     priv->next_ts               = 0;

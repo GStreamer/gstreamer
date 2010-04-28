@@ -63,6 +63,18 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER_CODEC(decoder) \
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec
 
+/**
+ * GST_VAAPI_DECODER_CODEC_DATA:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the #GstBuffer holding optional codec data
+ * for @decoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_CODEC_DATA
+#define GST_VAAPI_DECODER_CODEC_DATA(decoder) \
+    GST_VAAPI_DECODER_CAST(decoder)->priv->codec_data
+
 /* End-of-Stream buffer */
 #define GST_BUFFER_FLAG_EOS (GST_BUFFER_FLAG_LAST + 0)
 
@@ -78,6 +90,7 @@ struct _GstVaapiDecoderPrivate {
     GstVaapiDisplay            *display;
     GstVaapiContext            *context;
     GstVaapiCodec               codec;
+    GstBuffer                  *codec_data;
     guint                       fps_n;
     guint                       fps_d;
     GstClockTime                next_ts;
