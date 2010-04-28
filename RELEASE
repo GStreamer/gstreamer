@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.21 "Lemons"
+Release notes for GStreamer Good Plug-ins 0.10.22 "Square One"
         
 
 
@@ -52,21 +52,98 @@ contains a set of less supported plug-ins that haven't passed the
 
   
 
-Features of this release (and 0.10.20)
+Features of this release
     
-      * Fixes for RTP h263 depayloader timestamping regressions that broke video calls
-      * Fixes for FLAC decoder when FLAC is embedded in a container such as Ogg or Matroska
-      * rtpsource: bitrate estimation improvements
-      * rtspsrc, udp: multicast fixes
-      * identical to 0.10.20 but with one commit that broke make check reverted
+      * alpha: add support for different color matrixes
+      * alpha: add support for generating ARGB output
+      * alpha: add support for ARGB, RGB and xRGB input
+      * alphacolor: support inplace and on-the-fly conversions from AYUV to ARGB
+      * alphacolor: Implement color-matrix support and use integer arithmetic only
+      * videobox: add support for most common RGB(A), (A)YUV, and grayscale formats
+      * videobox: add support for on-the-fly conversions for some formats
+      * videobox: add support for filling the background with red, yellow and white
+      * videobox: add support for YV12, including conversion support for I420/AYUV
+      * videomixer: add support for ABGR and RGBA
+      * shapewipe: add support for the remaining ARGB formats
+      * qtdemux, matroska: export h.264 profile and level in caps
+      * multifilesink: Add key-frame option to next-file
+      * directsoundsink: Implement SPDIF support for AC3
+      * h264depay: handle STAPs properly
+      * speexdec: adapt to new oggdemux
+      * flvdemux: mark delta frames properly
+      * flvdemux: improve index building and scaning in pull mode
+      * flvdemux: add support for backwards playback (when operating in pull mode)
+      * avidemux: fix offset handling in push mode seeking
+      * matroskademux: prefer index of video track to perform seeking
+      * matroskademux: add support for backwards playback (when operating in pull mode)
+      * matroskademux: push correctly sized flac header buffers
+      * matroskademux: restrict resyncing to subtitle tracks
+      * rtpsession: Make it possible to favor new sources in case of SSRC conflict
+      * rtspsrc: send keep alive when paused
+      * rtspsrc: handle ipv6 listening ports when needed
+      * rtspsrc: require a destination for multicast
+      * rtspsrc: parse connection information
+      * qtdemux: Set stream-format=raw on AAC caps
+      * qtdemux: add XMP parsing support
+      * qtdemux: Read replaygain peak/gain tags
+      * qtdemux: extract stream language in more cases
+      * id3demux: fix parsing of unsynced frames with data length indicator
+      * jpegdec: don't crash if jpeg image contains more than three components
+      * ximagesrc: send new segment event in TIME format
+      * mp4gdepay: improve constantDuration guessing
+      * h264pay: fix config-interval property
+      * rtspsrc: add property to control the buffering method
+      * png: make work with libpng 1.4
 
-Bugs fixed in this release (and 0.10.20)
+Bugs fixed in this release
      
-      * 532117 : [matroskamux] Doesn't update the track duration
-      * 610959 : [flacdec] certain flac-in-ogg file only plays after long delay
-      * 611213 : [rtpsource] estimate bitrate on receiver side
-      * 612154 : rtph263depay removes all timestamps from outgoing buffers
-
+      * 517588 : [avidemux] Allow seeking in push mode
+      * 593910 : [dv1394src] live streaming / clock issues
+      * 597739 : Test suite not slow-machine-safe(?)
+      * 601236 : [flvmux] script tag with index gets written at end of file, contains all tags
+      * 601617 : matroska-demuxer triggers an assert in gststructure.c
+      * 604870 : [udpsink] Can't set TTL socket option
+      * 607615 : Make it possible to favor new sources in case of SSRC conflict
+      * 610447 : [flvdemux] Be more flexible in script tag (metadata) parsing
+      * 611659 : [ximagesrc] should send new_segment with GST_FORMAT_TIME format
+      * 612397 : [multiudpsink] [PATCH] Fix print of socket's error code on Windows
+      * 612411 : [rtspsrc] lock/performance problem
+      * 612553 : Segfault in rtspsrc (tcp interleaved and local gst-rtsp-server)
+      * 612657 : [rtph264depay] refuse caps without profile-level-id when byte-stream is unset
+      * 612696 : rtspsrc with tcp timeouts after recent commit
+      * 612700 : pngenc can't be built against libpng 1.4.x anymore
+      * 612751 : [udpsink] regression when external sockfd is used
+      * 612777 : Deprecated macro in gstspeexdec.c causes compile error in MSVC
+      * 613002 : [flvmux] always put duration in metadata tag
+      * 613003 : [flvmux] EOS after supposedly reaching FLV timestamp limit, but real limit is lower
+      * 613013 : rtph264pay does not insert config parameters anymore in the stream
+      * 613094 : [flvmux] put more info (like width and height) in the metadata
+      * 613206 : [rtph264depay] wrong timestamp for gst_base_rtp_depayload_push_ts?
+      * 613663 : New warnings in osx plugins
+      * 613789 : [jpegenc] Updating caps is not supported
+      * 614158 : [id3demux] doesn't read tags from file correctly (tag with unsynced frames, data length indicator)
+      * 614353 : matroskademux: can't correctly demux flac-in-MKV
+      * 614354 : fix small compile break if $(top_srcdir) != $(top_builddir)
+      * 614460 : matroskademux: wrong H.264 demux in some file
+      * 614466 : videomixer makes some formats grayscale
+      * 614471 : [qtdemux] Gstreamer not reading replaygain tags from m4a files
+      * 614651 : Export h.264 profile and level in caps
+      * 614765 : racy stream status leave implementation
+      * 614842 : [jpegenc] sink pad returns ANY (not subset of its template) when connected to a filesink
+      * 614843 : [alphacolor] unneeded variable
+      * 614927 : qtdemux: Post avg/max bitrate tags for H.264
+      * 615051 : h264depay: STAP are handled the wrong way
+      * 615143 : [videobox] I420- > AYUV conversion broken
+      * 615161 : Remove -Wundef from CFLAGS
+      * 615460 : [deinterlace] broken ...
+      * 615996 : doesn't detect HAVE_CPU_I386 or HAVE_CPU_X86_64 properly on Solaris
+      * 615998 : GOOM plugin crashes on Solaris when built with MMX code enabled
+      * 616166 : [videobox] Use correct order for RGB filling
+      * 616409 : [videomixer] AYUV blending broken
+      * 611986 : [cairotextoverlay] Out-of-range deltas give SIGSEGV or other funkyness
+      * 604106 : [jpegdec] Crash in jpeg_idct_ifast if more than 3 components
+      * 614001 : [qtdemux] parse Macintosh language codes
+      * 615793 : [flactag] when used after flacenc: gst_adapter_take_buffer: assertion `nbytes > 0'
 
 Download
 
@@ -95,7 +172,29 @@ Applications
   
 Contributors to this release
     
+      * Andoni Morales Alastruey
+      * André Dieb Martins
+      * Arun Raghavan
+      * Benjamin Otte
+      * Brian Cameron
+      * Damien Lespiau
+      * David Schleef
+      * Edward Hervey
+      * Jan Urbański
+      * Julien Moutte
+      * Marco Ballesio
+      * Mark Nauwelaerts
+      * Michael Smith
+      * Olivier Crête
+      * Raimo Järvi
+      * Rob Clark
+      * Sebastian Dröge
+      * Stefan Kost
+      * Thadeu Lima de Souza Cascardo
+      * Thiago Santos
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Tristan Matthews
       * Wim Taymans
+      * Руслан Ижбулатов
  
