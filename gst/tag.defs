@@ -253,3 +253,20 @@
   )
 )
 
+(define-function tag_list_from_xmp_buffer
+  (c-name "gst_tag_list_from_xmp_buffer")
+  (return-type "GstTagList*")
+  (parameters
+    '("const-GstBuffer*" "buffer")
+  )
+)
+
+(define-function tag_list_to_xmp_buffer
+  (c-name "gst_tag_list_to_xmp_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("const-GstTagList*" "taglist")
+    '("gboolean" "readonly")
+  )
+)
+
