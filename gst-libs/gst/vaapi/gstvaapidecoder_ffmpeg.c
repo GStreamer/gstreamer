@@ -341,7 +341,6 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderFfmpeg * const ffdecoder = GST_VAAPI_DECODER_FFMPEG(decoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
-    GstVaapiDecoderStatus status;
     GstClockTime inbuf_ts;
     guchar *inbuf, *outbuf;
     gint inbuf_size, outbuf_size;
@@ -366,8 +365,6 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
             inbuf_ts, inbuf_ts
         );
         got_frame = outbuf && outbuf_size > 0;
-        GST_DEBUG("outbuf %p (%d bytes), got frame %d, parsed size %d",
-                  outbuf, outbuf_size, got_frame, parsed_size);
 
         if (parsed_size > 0) {
             inbuf      += parsed_size;
