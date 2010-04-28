@@ -1,15 +1,14 @@
-# German messages for gst-plugins-base.
+# German messages for gst-plugins-base 0.10.28.2
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
-#
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 13:49+0100\n"
-"PO-Revision-Date: 2009-09-19 11:59+0200\n"
+"POT-Creation-Date: 2010-04-28 01:26+0100\n"
+"PO-Revision-Date: 2010-04-26 23:28+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -188,9 +187,9 @@ msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
 msgid "The autovideosink element is missing."
 msgstr "Das Element »autovideosink« fehlt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Das Element »autovideosink« funktioniert nicht."
+msgstr "Die konfigurierte Videosenke »%s« funktioniert nicht."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -212,9 +211,9 @@ msgstr "Beide Elemente »autoaudiosink« und »%s« fehlen."
 msgid "The autoaudiosink element is missing."
 msgstr "Das Element »autoaudiosink« fehlt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Das Element »autoaudiosink« funktioniert nicht."
+msgstr "Die konfigurierte Audiosenke »%s« funktioniert nicht."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -223,9 +222,9 @@ msgstr "Beide Elemente »autoaudiosink« und »%s« funktionieren nicht."
 msgid "The autoaudiosink element is not working."
 msgstr "Das Element »autoaudiosink« funktioniert nicht."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Es kann keine Textdatei ohne Video abgespielt werden."
+msgstr ""
+"Es kann keine Textdatei ohne Video oder Visualisierungen abgespielt werden."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -486,15 +485,6 @@ msgstr "Das Gerät »%s« wird bereits verwendet."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
 
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Das Element »decodebin2« konnte nicht erstellt werden."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Das Element »queue2« konnte nicht erstellt werden."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Das Element »typefind« konnte nicht erstellt werden."
-
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr ""
 #~ "Es können nicht Untertiteltexte und Kleinbilder zugleich angezeigt werden."
@@ -510,6 +500,15 @@ msgstr "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden.
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Interner Fehler im Datenstrom."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Das Element »decodebin2« konnte nicht erstellt werden."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Das Element »queue2« konnte nicht erstellt werden."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Das Element »typefind« konnte nicht erstellt werden."
 
 #~ msgid "No file name specified."
 #~ msgstr "Kein Dateiname angegeben."

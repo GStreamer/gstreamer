@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 13:49+0100\n"
-"PO-Revision-Date: 2009-09-17 18:51+0200\n"
+"POT-Creation-Date: 2010-04-28 01:26+0100\n"
+"PO-Revision-Date: 2010-04-27 20:45+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -191,9 +191,9 @@ msgstr "Nie ma żadnego z elementów autovideosink i %s."
 msgid "The autovideosink element is missing."
 msgstr "Nie ma elementu autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Element autovideosink nie działa."
+msgstr "Skonfigurowany element videosink %s nie działa."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -215,9 +215,9 @@ msgstr "Nie ma żadnego z elementów autoaudiosink i %s."
 msgid "The autoaudiosink element is missing."
 msgstr "Nie ma elementu autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Element autoaudiosink nie działa."
+msgstr "Skonfigurowany element audiosink %s nie działa."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -226,9 +226,8 @@ msgstr "Żaden z elementów autoaudiosink i %s nie działa."
 msgid "The autoaudiosink element is not working."
 msgstr "Element autoaudiosink nie działa."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nie można odtwarzać pliku tekstowego bez obrazu."
+msgstr "Nie można odtwarzać pliku tekstowego bez obrazu lub wizualizacji."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -488,27 +487,3 @@ msgstr "Urządzenie \"%s\" jest już używane."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"decodebin2\"."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"queue2\"."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"typefind\"."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Nie można wyświetlać jednocześnie podpisów tekstowych i podobrazów."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Nie określono katalogu tymczasowego."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Błąd wewnętrzny przepływu danych."

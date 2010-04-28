@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2009.
+# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 13:49+0100\n"
-"PO-Revision-Date: 2009-09-17 16:38+0100\n"
+"POT-Creation-Date: 2010-04-28 01:26+0100\n"
+"PO-Revision-Date: 2010-04-27 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
@@ -186,9 +186,9 @@ msgstr "Både autovideosink og %s elementer mangler."
 msgid "The autovideosink element is missing."
 msgstr "Elementet autovideosink mangler."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Elementet autovideosink virker ikke."
+msgstr "Konfigureret videosink %s virker ikke."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -210,9 +210,9 @@ msgstr "Både autoaudiosink og %s elementerne mangler."
 msgid "The autoaudiosink element is missing."
 msgstr "Elementet autoaudiosink mangler."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Elementet autoaudiosink virker ikke."
+msgstr "Konfigureret audiosink %s virker ikke."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -221,9 +221,8 @@ msgstr "Både autoaudiosink og  %s elementerne virker ikke."
 msgid "The autoaudiosink element is not working."
 msgstr "Elementet autoaudiosink virker ikke."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Kan ikke afspille en tekstfil uden video."
+msgstr "Kan ikke afspille en tekstfil uden video eller visualiseringer."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -489,17 +488,6 @@ msgstr "Enheden \"%s\" er allerede i brug."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke tilgå enheden \"%s\"."
 
-# eller oprette (evt. sammensat).
-# beholdt danne og ikke sammensat da tillægsord.
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Kunne ikke danne et \"decodebin2\" element."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Kunne ikke danne et \"queue2\" element."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Kunne ikke danne et \"typefind\" element."
-
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Kan ikke vise både undertekster og underbilleder."
 
@@ -514,6 +502,17 @@ msgstr "Kunne ikke tilgå enheden \"%s\"."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Intern datastrømsfejl."
+
+# eller oprette (evt. sammensat).
+# beholdt danne og ikke sammensat da tillægsord.
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Kunne ikke danne et \"decodebin2\" element."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Kunne ikke danne et \"queue2\" element."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Kunne ikke danne et \"typefind\" element."
 
 #~ msgid "No file name specified."
 #~ msgstr "Intet filnavn angivet."

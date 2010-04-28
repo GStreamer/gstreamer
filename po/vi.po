@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 13:49+0100\n"
-"PO-Revision-Date: 2010-03-06 22:16+1030\n"
+"POT-Creation-Date: 2010-04-28 01:26+0100\n"
+"PO-Revision-Date: 2010-04-27 22:51+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -181,9 +181,9 @@ msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử %s."
 msgid "The autovideosink element is missing."
 msgstr "Thiếu phần tử autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Phần tử autovideosink không hoạt động."
+msgstr "Phần tử videosink %s đã cấu hình mà không hoạt động."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -205,9 +205,9 @@ msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử %s."
 msgid "The autoaudiosink element is missing."
 msgstr "Thiếu phần tử autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Phần tử autoaudiosink không hoạt động."
+msgstr "Phần tử audiosink %s đã cấu hình mà không hoạt động."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -216,9 +216,9 @@ msgstr "Cả hai phần tử autoaudiosink và %s không hoạt động."
 msgid "The autoaudiosink element is not working."
 msgstr "Phần tử autoaudiosink không hoạt động."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Không thể phát tập tin văn bản mà không có ảnh động."
+msgstr ""
+"Không thể phát tập tin văn bản mà không có ảnh động hay cách thức hiển thị."
 
 #, c-format
 msgid "No decoder available for type '%s'."

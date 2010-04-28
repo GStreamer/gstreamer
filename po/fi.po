@@ -1,19 +1,19 @@
 # Finnish messages for gst-plugins-base.
 #
 # This file is distributed under the same license as the gst-plugins-base package.
-# Copyright (C) 2008-2009 Tommi Vainikainen,
+# Copyright (C) 2008-2010 Tommi Vainikainen,
 # Copyright (C) 2007 Ilkka Tuohela.
 #
-# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2008-2009.
+# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2008-2010.
 # Ilkka Tuohela <hile@iki.fi>, 2007.
 #
 # Suomennos: http://gnome.fi/
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-14 13:49+0100\n"
-"PO-Revision-Date: 2009-09-17 11:02+0300\n"
+"POT-Creation-Date: 2010-04-28 01:26+0100\n"
+"PO-Revision-Date: 2010-04-26 21:15+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -189,9 +189,9 @@ msgstr "Sekä autovideosink- ja %s-elementit puuttuvat."
 msgid "The autovideosink element is missing."
 msgstr "Autovideosink-elementti puuttuu."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Autovideosink-elementti ei toimi."
+msgstr "Asetettu videonielu %s ei toimi."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -213,9 +213,9 @@ msgstr "Sekä autoaudiosink- että %s-elementit puuttuvat."
 msgid "The autoaudiosink element is missing."
 msgstr "Autoaudiosink-elementti puuttuu."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Autoaudiosink-elementti ei toimi."
+msgstr "Asetettu ääninielu %s ei toimi."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -224,9 +224,8 @@ msgstr "Sekä autoaudiosink- että %s-elementit eivät toimi."
 msgid "The autoaudiosink element is not working."
 msgstr "Autoaudiosink-elementti ei toimi."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
+msgstr "Ei voida toistaa tekstitiedosta ilman videota tai visualisointia."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -487,15 +486,6 @@ msgstr "Laite \"%s\" on jo käytössä."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
 
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Elementtiä \"queue2\" ei voitu luoda."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Elementtiä \"typefind\" ei voitu luoda."
-
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr "Ei voida toistaa sekä tekstitystä että alikuvaa."
 
@@ -510,6 +500,15 @@ msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Sisäisen tietovirran virhe."
+
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
+
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Elementtiä \"queue2\" ei voitu luoda."
+
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Elementtiä \"typefind\" ei voitu luoda."
 
 #~ msgid "No file name specified."
 #~ msgstr "Tiedostonimeä ei annettu."
