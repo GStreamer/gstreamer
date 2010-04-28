@@ -145,6 +145,45 @@ class GstIteratorArg(ArgType):
 		info.varlist.add('GstIterator', '*ret')
 		info.codeafter.append('    return pygst_iterator_new(ret);')
 
+class GstMiniObjectArg(ArgType):
+
+	before = ('    %(name)s = %(macro)s(pygstminiobject_get (py_%(name)s));\n'
+		  '    if (PyErr_Occurred())\n'
+		  '      return NULL;\n')
+
+	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
+		if pdflt:
+			assert pdflt == 'NULL'
+			info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
+		else:
+			info.varlist.add('PyObject', '*py_' + pname)
+
+		#Converts 'GstBuffer*' to 'GstBuffer'
+		#and const-GstBuffer* to 'const GstBuffer'
+		info.varlist.add(ptype.replace('-',' ').replace('*',''), '*'+pname)
+
+		if ptype in ['GstBuffer*', 'const-GstBuffer*']:
+			info.codebefore.append(self.before % { 'name' : pname, 'macro' : 'GST_BUFFER' })
+
+		elif ptype in ['GstMessage*', 'const-GstMessage*']:
+			info.codebefore.append(self.before % { 'name' : pname, 'macro' : 'GST_MESSAGE' })
+
+		elif ptype in ['GstEvent*', 'const-GstEvent*']:
+			info.codebefore.append(self.before % { 'name' : pname, 'macro' : 'GST_EVENT' })
+
+		elif ptype in ['GstQuery*', 'const-GstQuery*']:
+			info.codebefore.append(self.before % { 'name' : pname, 'macro' : 'GST_QUERY' })
+
+		else:
+			raise RuntimeError, "write_param not implemented for %s" % ptype
+			
+		info.add_parselist('O', ['&py_'+pname], [pname])
+		info.arglist.append(pname)
+
+	def write_return(self, ptype, ownsreturn, info):
+		info.varlist.add('GstMiniObject', '*ret')
+		info.codeafter.append('    return pygstminiobject_new((GstMiniObject *) ret);')
+
 class GstMiniObjectParam(Parameter):
 
 	def get_c_type(self):
@@ -352,7 +391,8 @@ for typename in ["GstPlugin", "GstStructure", "GstTagList", "GError", "GstDate",
 	matcher.register_reverse(typename, GBoxedParam)
 	matcher.register_reverse_ret(typename, GBoxedReturn)
 
-for typename in ["GstBuffer*", "GstEvent*", "GstMessage*", "GstQuery*"]:
+for typename in ["GstBuffer*", "const-GstBuffer*", "GstEvent*", "const-GstEvent*", "GstMessage*", "const-GstMessage*", "GstQuery*", "const-GstQuery*"]:
+	matcher.register(typename, GstMiniObjectArg())
 	matcher.register_reverse(typename, GstMiniObjectParam)
 	matcher.register_reverse_ret(typename, GstMiniObjectReturn)
 
