@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <opencore-amrnb/interf_dec.h>
+#include <interf_dec.h>
 
 G_BEGIN_DECLS
 

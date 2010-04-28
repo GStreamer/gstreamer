@@ -22,8 +22,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <opencore-amrwb/dec_if.h>
-#include <opencore-amrwb/if_rom.h>
+#include <dec_if.h>
+#include <if_rom.h>
 
 G_BEGIN_DECLS
 

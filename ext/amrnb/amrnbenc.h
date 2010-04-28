@@ -21,7 +21,7 @@
 #define __GST_AMRNBENC_H__
 
 #include <gst/gst.h>
-#include <opencore-amrnb/interf_enc.h>
+#include <interf_enc.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
