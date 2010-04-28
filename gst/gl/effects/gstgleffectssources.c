@@ -455,48 +455,27 @@ const gchar *rgb_to_curve_fragment_source =
 const gchar *sin_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
-  "vec3 rgb2hsl (vec3 v)"
-  "{"
-/* TODO: check this algorythm */
-  "  float MIN, MAX;"
-  "  float r, g, b;"
-  "  float h, l, s;"
-  "  float delta;"
-  "  h = 0.0; l = 0.0; s = 0.0;"
-  "  r = v.r; g = v.g; b = v.b;"
-  "  MIN = min (r, min (g, b));"
-  "  MAX = max (r, max (g, b));"
-  "  delta = MAX - MIN;"
-  "  l = (MAX + MIN) / 2.0;"
-  "  if ((MAX - MIN) < 0.0001) { h = 0.0; s = 0.0; }"
-  "  else {"
-  "    if (l <= 0.5) s = (MAX - MIN) / (MAX + MIN);"
-  "    else s = (MAX - MIN) / (2.0 - MAX - MIN);"
-  "    if (r == MAX) h = (g - b) / delta;"
-  "    else if (g == MAX) h = 2.0 + (b - r) / delta;"
-  "    else h = 4.0 + (r - g) / delta;"
-  "    h *= 60.0;"
-  "    if (h < 0.0) h += 360.0;"
-  "  }"
-  "  return vec3 (h, l, s);"
-  "}"
   "void main () {"
-  "  vec3 HSL, RGB;"
   "  vec4 color = texture2DRect (tex, vec2(gl_TexCoord[0].st));"
   "  float luma = dot(color.rgb, vec3(0.2125, 0.7154, 0.0721));"
-  "  HSL = rgb2hsl (color.rgb);"
-/* move hls discontinuity away from the desired red zone so we can use
- * smoothstep.. to try: convert degrees in radiants, divide by 2 and
- * smoothstep cosine */
-  "  HSL.x += 180.0;"
-  "  if ((HSL.x) > 360.0) HSL.x -= 360.0;"
-/* damn, it is extremely hard to get rid of human face reds! */
-/* picked hue is slightly shifted towards violet to prevent this but
- * still fails.. maybe hsl is not well suited for this */
-  "  float a = smoothstep (110.0, 150.0, HSL.x);"
-  "  float b = smoothstep (170.0, 210.0, HSL.x);"
-  "  float alpha = a - b;"
-  "  gl_FragColor = color * alpha + luma * (1.0 - alpha);"
+/* calculate hue with the Preucil formula */
+  "  float cosh = 0.5*(2*color.r - color.g - color.b);"
+/* sqrt(3)/2 = 0.866 */
+  "  float sinh = 0.866*(color.g - color.b);"
+/* hue = atan2 h */
+  "  float tanh = sinh/cosh;"
+/* ok this is a little trick I came up because I didn't find any
+ * detailed proof of the Preucil formula. The issue is that tan(h) is
+ * pi-periodic so the smoothstep thing gives both reds (h = 0) and
+ * cyans (h = 180). I don't want to use atan since it requires
+ * branching and doesn't work on i915. So take only the right half of
+ * the circle where cosine is positive */
+/* take a slightly purple color trying to get rid of human skin reds */
+/* tanh = +-1.0 for h = +-45, where yellow=60, magenta=-60 */
+  "  float a = smoothstep (-1.0, -0.5, tanh);"
+  "  float b = smoothstep (-0.1, 0.4, tanh);"
+  "  float mix = (a - b) * step (0.0, cosh);"
+  "  gl_FragColor = color * mix + luma * (1.0 - mix);"
   "}";
 
 const gchar *interpolate_fragment_source =
