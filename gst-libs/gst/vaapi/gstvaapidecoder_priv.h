@@ -79,13 +79,13 @@ struct _GstVaapiDecoderPrivate {
     GstVaapiContext            *context;
     GstVaapiCodec               codec;
     guint                       fps_n;
-    guint               fps_d;
-    GstClockTime        next_ts;
-    GAsyncQueue        *buffers;
-    GAsyncQueue        *surfaces;
-    GThread            *decoder_thread;
-    GstVaapiDecoderStatus decoder_status;
-    guint               decoder_thread_cancel   : 1;
+    guint                       fps_d;
+    GstClockTime                next_ts;
+    GAsyncQueue                *buffers;
+    GAsyncQueue                *surfaces;
+    GThread                    *decoder_thread;
+    GstVaapiDecoderStatus       decoder_status;
+    guint                       decoder_thread_cancel   : 1;
 };
 
 gboolean
