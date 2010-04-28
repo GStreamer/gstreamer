@@ -36,6 +36,17 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>0.10.29</revision>
+   <branch>0.10</branch>
+   <name>Freaks</name>
+   <created>2010-04-27</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.29.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.29.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.28</revision>
    <branch>0.10</branch>
    <name>Those Norwegians</name>

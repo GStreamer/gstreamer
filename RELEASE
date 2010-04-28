@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.28 "Those Norwegians"
+Release notes for GStreamer Base Plug-ins 0.10.29 "Freaks"
         
 
 
@@ -27,13 +27,13 @@ This module contains elements for, among others:
   containers: ogg
   codecs: vorbis, theora
   text: textoverlay, subparse
-  sources: audiotestsrc, videotestsrc, giosrc, gnomevfssrc
+  sources: audiotestsrc, videotestsrc, gnomevfssrc
   network: tcp
   typefind
   audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
   video processing: ffmpegcolorspace
-  aggregate elements: playbin2, decodebin2, uridecodebin, decodebin, playbin
+  aggregate elements: uridecodebin, playbin2, decodebin2, decodebin, playbin
 
 
 Other modules containing plug-ins are:
@@ -54,15 +54,71 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Ogg/Dirac fixes
-      * build: really dist qtgv-xoverlay.h header file needed by overlay examples this time
-      * rtspconnection: fix handling of x-server-ip-address
-      * alsasrc fixes
+      * video: add support for color-matrix and chroma-site fields in video caps and selected elements
+      * video: Add support for 8-bit and 16-bit grayscale formats
+      * typefinding: add AAC profile, level, channels and rate to ADTS caps
+      * tags: add basic xmp metadata support
+      * gio, gnomevfs: invert ranks of gio and gnomevfs elements: gio is prefered now, gnomevfs has been deprecated
+      * riff: add mapping for On2 VP62 and VP7 and add some more MPEG4 fourccs
+      * playsink: Don't fail if there are subtitles and audio but no video
+      * oggdemux: map old FLAC mapping correctly
+      * alsa: handle disappearing of sound device whilst in use more gracefully
+      * playbin: Only unref the volume element on dispose and when a new audio sink is set
+      * build: build plugin, example and libs directories in parallel if make -jN is used
+      * uridecodebin/playbin2: we can handle avi in download mode too
+      * rtsp: handle closed POST socket in tunneling, ignore unparsable ranges, allow for more ipv6 addresses
+      * audiopayload: add property to control packet duration
 
 Bugs fixed in this release
      
-      * 610832 : qtgv-xoverlay.h header file missing in the tarball
-      * 611900 : [oggdemux] Incorrect parsing of Dirac headers
+      * 615647 : xvimagesink could miss initial expose
+      * 423086 : vorbisdec introduces timestamp discontinuity at the end
+      * 601315 : [uridecodebin] No download buffering for AVI files
+      * 609539 : xmp metadata support in tag library
+      * 609801 : [volume] Use sample accurate property values if a controller is used
+      * 610248 : don't poll geometry for every frame
+      * 610249 : [xoverlay] add set_render_rectangle() methods
+      * 610866 : [playbin2] Don't fail if there are subtitles and audio but no video
+      * 611702 : playbin2: Warning: g_object_set: assertion `G_IS_OBJECT (object)' failed with custom text sink
+      * 612223 : [base(audio)sink] hangs in _wait_eos
+      * 612312 : typefind: Post AAC profile in caps
+      * 612552 : Examples and tests don't compile with -DGSEAL_ENABLE
+      * 612783 : Warning when compiling gstsubparse.c with MSVC
+      * 612845 : [typefindfunctions] crash in strncasecmp() on windows
+      * 612968 : Add On2 VP62 and VP7 support in riff-media
+      * 613093 : Improper boundary condition handling in videoscale.
+      * 613198 : ximagesink memory leak
+      * 613248 : [audiopayload] add property to control packet duration
+      * 613281 : [PATCH] autogen.sh: Don't call configure with --enable-plugin-docs
+      * 613387 : [gio] compiler warning with GLib 2.18, breaks build with -Werror
+      * 613403 : docs: gst_x_overlay_handle_events() lacks Since: tag
+      * 613589 : typefind: Export AAC level in caps
+      * 613591 : rtspsrc doesn't parse negative port numbers
+      * 613690 : [xmp] refactoring to 1-n tag mappings
+      * 613809 : [oggdemux] flac: file does not play locally
+      * 614288 : Setting playbin volume has no effect the second time around
+      * 614545 : gstalsasrc mixer task spins 100% CPU when USB sound card is removed
+      * 614622 : Trying to compile and it blows up at seek
+      * 614764 : Compile breaks on Mac OS 10.5.8 on new jsseek example
+      * 615572 : Buffer Leak in audiorate during fill process
+      * 615697 : Problems with Makefile
+      * 615789 : [ximagesink] gst_ximagesink_xwindow_update_geometry: assertion `xwindow != NULL' failed
+      * 616545 : [ffmpegcolorspace] Crashes when converting Y41B with some width/height combinations
+
+API changed in this release
+     
+- API additions:
+    
+* gst_x_overlay_set_render_rectangle()
+* gst_tag_list_from_xmp_buffer()
+* gst_tag_list_to_xmp_buffer()
+* gst_video_format_is_gray()
+* gst_video_parse_caps_chroma_site()
+* gst_video_parse_caps_color_matrix()
+* GST_VIDEO_CAPS_GRAY8
+* GST_VIDEO_CAPS_GRAY16
+* GST_TYPE_RTSP_LOWER_TRANS
+* gst_rtsp_lower_trans_get_type()
 
 Download
 
@@ -91,9 +147,25 @@ Applications
   
 Contributors to this release
     
+      * Arun Raghavan
       * Benjamin Otte
-      * Dake Gu
+      * Damien Lespiau
+      * David Hoyt
       * David Schleef
+      * Edward Hervey
+      * Jan Schmidt
+      * Mark Nauwelaerts
+      * Olivier Crête
+      * Peter Kjellerstedt
+      * Reuben Dowle
+      * Rob Clark
+      * Robert Swain
+      * Sebastian Dröge
+      * Stefan Kost
+      * Thiago Santos
+      * Thomas Green
       * Tim-Philipp Müller
+      * Torsten Schönfeld
+      * Vincent Untz
       * Wim Taymans
  
