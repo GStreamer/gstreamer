@@ -37,6 +37,13 @@
 
 G_DEFINE_TYPE(GstVaapiDecoder, gst_vaapi_decoder, G_TYPE_OBJECT);
 
+/* XXX: Make it a GstVaapiDecodedSurface + propagate PTS */
+typedef struct _DecodedSurface DecodedSurface;
+struct _DecodedSurface {
+    GstVaapiSurfaceProxy *proxy;
+    GstVaapiDecoderStatus status;
+};
+
 enum {
     PROP_0,
 
@@ -53,6 +60,12 @@ gst_vaapi_decoder_stop(GstVaapiDecoder *decoder);
 
 static GstBuffer *
 pop_buffer(GstVaapiDecoder *decoder);
+
+static gboolean
+push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface);
+
+static DecodedSurface *
+pop_surface(GstVaapiDecoder *decoder, GTimeVal *end_time);
 
 static gpointer
 decoder_thread_cb(gpointer data)
@@ -72,6 +85,8 @@ decoder_thread_cb(gpointer data)
         case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
             break;
         default:
+            /*  Send an empty surface to signal an error */
+            push_surface(decoder, NULL);
             priv->decoder_thread_cancel = TRUE;
             break;
         }
@@ -164,6 +179,50 @@ pop_buffer(GstVaapiDecoder *decoder)
     return buffer;
 }
 
+static inline DecodedSurface *
+create_surface(void)
+{
+    return g_slice_new0(DecodedSurface);
+}
+
+static inline void
+destroy_surface(DecodedSurface *ds)
+{
+    g_slice_free(DecodedSurface, ds);
+}
+
+static gboolean
+push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiDecoderStatus status = priv->decoder_status;
+    DecodedSurface *ds;
+
+    ds = create_surface();
+    if (!ds)
+        return FALSE;
+
+    if (surface) {
+        GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
+                  GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
+        ds->proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
+        if (!ds->proxy)
+            status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    ds->status = status;
+
+    g_async_queue_push(priv->surfaces, ds);
+    return TRUE;
+}
+
+static inline DecodedSurface *
+pop_surface(GstVaapiDecoder *decoder, GTimeVal *end_time)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    return g_async_queue_timed_pop(priv->surfaces, end_time);
+}
+
 static inline void
 set_codec_data(GstVaapiDecoder *decoder, GstBuffer *codec_data)
 {
@@ -179,12 +238,12 @@ set_codec_data(GstVaapiDecoder *decoder, GstBuffer *codec_data)
 }
 
 static void
-clear_async_queue(GAsyncQueue *q)
+clear_async_queue(GAsyncQueue *q, GDestroyNotify destroy)
 {
     guint i, qlen = g_async_queue_length(q);
 
     for (i = 0; i < qlen; i++)
-        g_object_unref(g_async_queue_pop(q));
+        destroy(g_async_queue_pop(q));
 }
 
 static void
@@ -203,13 +262,13 @@ gst_vaapi_decoder_finalize(GObject *object)
     }
 
     if (priv->buffers) {
-        clear_async_queue(priv->buffers);
+        clear_async_queue(priv->buffers, (GDestroyNotify)g_object_unref);
         g_object_unref(priv->buffers);
         priv->buffers = NULL;
     }
 
     if (priv->surfaces) {
-        clear_async_queue(priv->surfaces);
+        clear_async_queue(priv->surfaces, (GDestroyNotify)destroy_surface);
         g_object_unref(priv->surfaces);
         priv->surfaces = NULL;
     }
@@ -532,24 +591,20 @@ _gst_vaapi_decoder_get_surface(
     GstVaapiDecoderStatus *pstatus
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
-    GstVaapiSurface *surface;
-    GstVaapiSurfaceProxy *proxy = NULL;
+    GstVaapiSurfaceProxy *proxy;
+    DecodedSurface *ds;
 
-    surface = g_async_queue_timed_pop(priv->surfaces, end_time);
-
-    if (surface) {
-        proxy  = gst_vaapi_surface_proxy_new(priv->context, surface);
-        status = (proxy ?
-                  GST_VAAPI_DECODER_STATUS_SUCCESS :
-                  GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED);
-        g_object_unref(surface);
+    ds = pop_surface(decoder, end_time);
+    if (ds) {
+        proxy  = ds->proxy;
+        status = ds->status;
+        destroy_surface(ds);
     }
-    else if (end_time)
+    else {
+        proxy  = NULL;
         status = GST_VAAPI_DECODER_STATUS_TIMEOUT;
-    else
-        status = priv->decoder_status;
+    }
 
     if (pstatus)
         *pstatus = status;
@@ -629,13 +684,5 @@ gst_vaapi_decoder_push_surface(
     GstVaapiSurface *surface
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
-
-    GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
-
-    g_async_queue_push(priv->surfaces, g_object_ref(surface));
-    return TRUE;
+    return push_surface(decoder, surface);
 }
