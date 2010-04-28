@@ -45,6 +45,9 @@ Save XML representation of pipeline to FILE and exit
 .B  \-f, \-\-no_fault
 Do not install a fault handler
 .TP 8
+.B  \-p, \-\-no_play
+Do not install a playback handler (SIGUSR1/2)
+.TP 8
 .B  \-T, \-\-trace
 Print memory allocation traces. The feature must be enabled at compile time to
 work.

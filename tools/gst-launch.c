@@ -669,6 +669,7 @@ main (int argc, char *argv[])
   /* options */
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
+  gboolean no_play = FALSE;
   gboolean trace = FALSE;
   gboolean eos_on_shutdown = FALSE;
   gchar *savefile = NULL;
@@ -691,6 +692,8 @@ main (int argc, char *argv[])
 #endif
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
+    {"no-play", 'p', 0, G_OPTION_ARG_NONE, &no_play,
+        N_("Do not install a play handler"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
@@ -740,7 +743,9 @@ main (int argc, char *argv[])
     fault_setup ();
 
   sigint_setup ();
-  play_signal_setup ();
+
+  if (!no_play)
+    play_signal_setup ();
 #endif
 
   if (trace) {
