@@ -360,11 +360,8 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
     gint inbuf_size, outbuf_size;
     gboolean got_frame;
 
-    if (!priv->is_constructed) {
-        priv->is_constructed = gst_vaapi_decoder_ffmpeg_create(ffdecoder);
-        if (!priv->is_constructed)
-            return GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED;
-    }
+    g_return_val_if_fail(priv->is_constructed,
+                         GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
 
     inbuf      = GST_BUFFER_DATA(buffer);
     inbuf_size = GST_BUFFER_SIZE(buffer);
@@ -403,6 +400,20 @@ gst_vaapi_decoder_ffmpeg_finalize(GObject *object)
 }
 
 static void
+gst_vaapi_decoder_ffmpeg_constructed(GObject *object)
+{
+    GstVaapiDecoderFfmpeg * const ffdecoder = GST_VAAPI_DECODER_FFMPEG(object);
+    GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
+    GObjectClass *parent_class;
+
+    parent_class = G_OBJECT_CLASS(gst_vaapi_decoder_ffmpeg_parent_class);
+    if (parent_class->constructed)
+        parent_class->constructed(object);
+
+    priv->is_constructed = gst_vaapi_decoder_ffmpeg_create(ffdecoder);
+}
+
+static void
 gst_vaapi_decoder_ffmpeg_class_init(GstVaapiDecoderFfmpegClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
@@ -411,6 +422,7 @@ gst_vaapi_decoder_ffmpeg_class_init(GstVaapiDecoderFfmpegClass *klass)
     g_type_class_add_private(klass, sizeof(GstVaapiDecoderFfmpegPrivate));
 
     object_class->finalize      = gst_vaapi_decoder_ffmpeg_finalize;
+    object_class->constructed   = gst_vaapi_decoder_ffmpeg_constructed;
 
     decoder_class->decode       = gst_vaapi_decoder_ffmpeg_decode;
 }
