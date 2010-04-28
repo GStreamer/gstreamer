@@ -56,6 +56,7 @@ struct _GstVaapiDecoderFfmpegPrivate {
     AVCodecContext             *avctx;
     GstVaapiContextFfmpeg      *vactx;
     guint                       is_constructed  : 1;
+    guint                       is_open         : 1;
 };
 
 /** Converts codec to FFmpeg codec id */
@@ -224,38 +225,30 @@ gst_vaapi_decoder_ffmpeg_release_buffer(AVCodecContext *avctx, AVFrame *pic)
 }
 
 static void
-gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
+gst_vaapi_decoder_ffmpeg_close(GstVaapiDecoderFfmpeg *ffdecoder)
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
-
-    if (priv->vactx) {
-        g_free(priv->vactx);
-        priv->vactx = NULL;
-    }
 
     if (priv->avctx) {
         av_freep(&priv->avctx->extradata);
         avcodec_close(priv->avctx);
-        priv->avctx = NULL;
     }
 
-    if (priv->pctx) {
+    if (priv->pctx)
         av_parser_close(priv->pctx);
-        priv->pctx = NULL;
-    }
-
-    av_freep(&priv->frame);
 }
 
 static gboolean
-gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
+gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffer)
 {
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(ffdecoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
-    GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(decoder);
-    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
+    GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
+    GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(ffdecoder);
     enum CodecID codec_id;
     AVCodec *ffcodec;
+    int ret;
+
+    gst_vaapi_decoder_ffmpeg_close(ffdecoder);
 
     codec_id = get_codec_id_from_codec(codec);
     if (codec_id == CODEC_ID_NONE)
@@ -264,6 +257,40 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     ffcodec = avcodec_find_decoder(codec_id);
     if (!ffcodec)
         return FALSE;
+
+    priv->pctx = av_parser_init(codec_id);
+    if (!priv->pctx)
+        return FALSE;
+
+    GST_VAAPI_DISPLAY_LOCK(display);
+    ret = avcodec_open(priv->avctx, ffcodec);
+    GST_VAAPI_DISPLAY_UNLOCK(display);
+    return ret == 0;
+}
+
+static void
+gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
+{
+    GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
+
+    gst_vaapi_decoder_ffmpeg_close(ffdecoder);
+
+    if (priv->vactx) {
+        g_free(priv->vactx);
+        priv->vactx = NULL;
+    }
+
+    av_freep(&priv->avctx);
+    av_freep(&priv->pctx);
+    av_freep(&priv->frame);
+}
+
+static gboolean
+gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
+{
+    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(ffdecoder);
+    GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
+    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
 
     if (!priv->frame) {
         priv->frame = avcodec_alloc_frame();
@@ -305,16 +332,6 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     priv->avctx->thread_count    = 1;
     priv->avctx->draw_horiz_band = NULL;
     priv->avctx->slice_flags     = SLICE_FLAG_CODED_ORDER|SLICE_FLAG_ALLOW_FIELD;
-
-    if (priv->pctx)
-        av_parser_close(priv->pctx);
-    priv->pctx = av_parser_init(codec_id);
-    if (!priv->pctx)
-        return FALSE;
-
-    /* XXX: lock display? */
-    if (avcodec_open(priv->avctx, ffcodec) < 0)
-        return FALSE;
     return TRUE;
 }
 
@@ -362,6 +379,12 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
+
+    if (!priv->is_open) {
+        priv->is_open = gst_vaapi_decoder_ffmpeg_open(ffdecoder, buffer);
+        if (!priv->is_open)
+            return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
+    }
 
     inbuf      = GST_BUFFER_DATA(buffer);
     inbuf_size = GST_BUFFER_SIZE(buffer);
@@ -456,6 +479,7 @@ gst_vaapi_decoder_ffmpeg_init(GstVaapiDecoderFfmpeg *decoder)
     priv->avctx                 = NULL;
     priv->vactx                 = NULL;
     priv->is_constructed        = FALSE;
+    priv->is_open               = FALSE;
 }
 
 /**
