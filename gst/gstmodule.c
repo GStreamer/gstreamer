@@ -242,17 +242,78 @@ init_gst (void)
 #if ((GST_VERSION_MICRO >= 10) || (GST_VERSION_MICRO == 9 && GST_VERSION_NANO > 0 ))
   PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT",
       GST_TAG_EXTENDED_COMMENT);
+#if ((GST_VERSION_MICRO >= 12) || (GST_VERSION_MICRO == 11 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_REFERENCE_LEVEL",
+      GST_TAG_REFERENCE_LEVEL);
+  PyModule_AddStringConstant (m, "TAG_BEATS_PER_MINUTE",
+      GST_TAG_BEATS_PER_MINUTE);
 #if ((GST_VERSION_MICRO >= 14) || (GST_VERSION_MICRO == 13 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_LICENSE_URI", GST_TAG_LICENSE_URI);
+  PyModule_AddStringConstant (m, "TAG_COPYRIGHT_URI", GST_TAG_COPYRIGHT_URI);
 #if ((GST_VERSION_MICRO >= 15) || (GST_VERSION_MICRO == 14 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_COMPOSER", GST_TAG_COMPOSER);
   PyModule_AddStringConstant (m, "TAG_ARTIST_SORTNAME",
       GST_TAG_ARTIST_SORTNAME);
   PyModule_AddStringConstant (m, "TAG_ALBUM_SORTNAME", GST_TAG_ALBUM_SORTNAME);
   PyModule_AddStringConstant (m, "TAG_TITLE_SORTNAME", GST_TAG_TITLE_SORTNAME);
+#if ((GST_VERSION_MICRO >= 21) || (GST_VERSION_MICRO == 20 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_ATTACHMENT", GST_TAG_ATTACHMENT);
+  PyModule_AddStringConstant (m, "TAG_KEYWORDS", GST_TAG_KEYWORDS);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_NAME",
+      GST_TAG_GEO_LOCATION_NAME);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_LATITUDE",
+      GST_TAG_GEO_LOCATION_LATITUDE);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_LONGITUDE",
+      GST_TAG_GEO_LOCATION_LONGITUDE);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_ELEVATION",
+      GST_TAG_GEO_LOCATION_ELEVATION);
 #if ((GST_VERSION_MICRO >= 23) || (GST_VERSION_MICRO == 22 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_SUBTITLE_CODEC", GST_TAG_SUBTITLE_CODEC);
   PyModule_AddStringConstant (m, "TAG_HOMEPAGE", GST_TAG_HOMEPAGE);
+#if ((GST_VERSION_MICRO >= 24) || (GST_VERSION_MICRO == 23 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_CONTAINER_FORMAT",
+      GST_TAG_CONTAINER_FORMAT);
+#if ((GST_VERSION_MICRO >= 25) || (GST_VERSION_MICRO == 24 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_ALBUM_ARTIST", GST_TAG_ALBUM_ARTIST);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_ARTIST_SORTNAME",
+      GST_TAG_ALBUM_ARTIST_SORTNAME);
+#if ((GST_VERSION_MICRO >= 26) || (GST_VERSION_MICRO == 25 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_SHOW_NAME", GST_TAG_SHOW_NAME);
+  PyModule_AddStringConstant (m, "TAG_SHOW_SORTNAME", GST_TAG_SHOW_SORTNAME);
+  PyModule_AddStringConstant (m, "TAG_SHOW_EPISODE_NUMBER",
+      GST_TAG_SHOW_EPISODE_NUMBER);
+  PyModule_AddStringConstant (m, "TAG_SHOW_SEASON_NUMBER",
+      GST_TAG_SHOW_SEASON_NUMBER);
+  PyModule_AddStringConstant (m, "TAG_LYRICS", GST_TAG_LYRICS);
+  PyModule_AddStringConstant (m, "TAG_COMPOSER_SORTNAME",
+      GST_TAG_COMPOSER_SORTNAME);
+  PyModule_AddStringConstant (m, "TAG_GROUPING", GST_TAG_GROUPING);
+#if ((GST_VERSION_MICRO >= 29) || (GST_VERSION_MICRO == 28 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_COUNTRY",
+      GST_TAG_GEO_LOCATION_COUNTRY);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_CITY",
+      GST_TAG_GEO_LOCATION_CITY);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_SUBLOCATION",
+      GST_TAG_GEO_LOCATION_SUBLOCATION);
+  PyModule_AddStringConstant (m, "TAG_USER_RATING",
+      GST_TAG_GEO_LOCATION_SUBLOCATION);
+#if ((GST_VERSION_MICRO >= 30) || (GST_VERSION_MICRO == 29 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_DEVICE_MANUFACTURER",
+      GST_TAG_DEVICE_MANUFACTURER);
+  PyModule_AddStringConstant (m, "TAG_DEVICE_MODEL", GST_TAG_DEVICE_MODEL);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_MOVEMENT_SPEED",
+      GST_TAG_GEO_LOCATION_MOVEMENT_SPEED);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_MOVEMENT_DIRECTION",
+      GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION);
+  PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_CAPTURE_DIRECTION",
+      GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION);
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
 #endif
 #endif
 #endif
