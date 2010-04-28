@@ -136,6 +136,20 @@ get_profile(AVCodecContext *avctx)
     return 0;
 }
 
+/** Sets AVCodecContext.extradata with additional codec data */
+static gboolean
+set_codec_data(AVCodecContext *avctx, const guchar *buf, guint buf_size)
+{
+    av_freep(&avctx->extradata);
+    avctx->extradata = av_malloc(buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
+    if (!avctx->extradata)
+        return FALSE;
+    avctx->extradata_size = buf_size;
+    memcpy(avctx->extradata, buf, buf_size);
+    memset(avctx->extradata + buf_size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
+    return TRUE;
+}
+
 /** AVCodecContext.get_format() implementation */
 static enum PixelFormat
 gst_vaapi_decoder_ffmpeg_get_format(AVCodecContext *avctx, const enum PixelFormat *fmt)
@@ -262,6 +276,16 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     if (!priv->pctx)
         return FALSE;
 
+    /* XXX: av_find_stream_info() does this and some codecs really
+       want hard an extradata buffer for initialization (e.g. VC-1) */
+    if (!priv->avctx->extradata && priv->pctx->parser->split) {
+        const guchar *buf = GST_BUFFER_DATA(buffer);
+        guint buf_size = GST_BUFFER_SIZE(buffer);
+        buf_size = priv->pctx->parser->split(priv->avctx, buf, buf_size);
+        if (buf_size > 0 && !set_codec_data(priv->avctx, buf, buf_size))
+            return FALSE;
+    }
+
     GST_VAAPI_DISPLAY_LOCK(display);
     ret = avcodec_open(priv->avctx, ffcodec);
     GST_VAAPI_DISPLAY_UNLOCK(display);
@@ -307,13 +331,8 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     if (codec_data) {
         const guchar *data = GST_BUFFER_DATA(codec_data);
         const guint   size = GST_BUFFER_SIZE(codec_data);
-        av_freep(&priv->avctx->extradata);
-        priv->avctx->extradata = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
-        if (!priv->avctx->extradata)
+        if (!set_codec_data(priv->avctx, data, size))
             return FALSE;
-        priv->avctx->extradata_size = size;
-        memcpy(priv->avctx->extradata, data, size);
-        memset(priv->avctx->extradata + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (!priv->vactx) {
