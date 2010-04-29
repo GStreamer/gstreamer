@@ -675,7 +675,7 @@ gst_asf_mux_write_file_properties (GstAsfMux * asfmux, guint8 ** buf)
   GST_WRITE_UINT64_LE (*buf + 56, 0);   /* data packets - needs update */
   GST_WRITE_UINT64_LE (*buf + 64, 0);   /* play duration - needs update */
   GST_WRITE_UINT64_LE (*buf + 72, 0);   /* send duration - needs update */
-  GST_WRITE_UINT64_LE (*buf + 80, 0);   /* preroll */
+  GST_WRITE_UINT64_LE (*buf + 80, asfmux->preroll);     /* preroll */
   GST_WRITE_UINT32_LE (*buf + 88, 0x1); /* flags - broadcast on */
   GST_WRITE_UINT32_LE (*buf + 92, asfmux->packet_size); /* minimum data packet size */
   GST_WRITE_UINT32_LE (*buf + 96, asfmux->packet_size); /* maximum data packet size */
