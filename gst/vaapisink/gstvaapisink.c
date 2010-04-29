@@ -275,6 +275,54 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     return TRUE;
 }
 
+static GstFlowReturn
+gst_vaapisink_buffer_alloc(
+    GstBaseSink *base_sink,
+    guint64      offset,
+    guint        size,
+    GstCaps     *caps,
+    GstBuffer  **pout_buffer
+)
+{
+    GstBuffer *buffer;
+    GstCaps *sink_caps;
+
+    sink_caps = gst_static_pad_template_get_caps(&gst_vaapisink_sink_factory);
+    if (!sink_caps)
+        goto error_no_sink_caps;
+
+    if (!gst_caps_is_always_compatible(caps, sink_caps))
+        goto error_invalid_caps;
+
+    buffer = gst_vaapi_video_buffer_new();
+    if (!buffer)
+        goto error_create_buffer;
+
+    gst_buffer_set_caps(buffer, caps);
+    gst_caps_unref(sink_caps);
+    *pout_buffer = buffer;
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_no_sink_caps:
+    {
+        GST_DEBUG("failed to get static sink caps");
+        return GST_FLOW_UNEXPECTED;
+    }
+error_invalid_caps:
+    {
+        GST_DEBUG("failed to validate input caps");
+        gst_caps_unref(sink_caps);
+        return GST_FLOW_UNEXPECTED;
+    }
+error_create_buffer:
+    {
+        GST_DEBUG("failed to create video buffer");
+        gst_caps_unref(sink_caps);
+        return GST_FLOW_UNEXPECTED;
+    }
+}
+
 #if USE_VAAPISINK_GLX
 static void
 render_background(GstVaapiSink *sink)
@@ -539,18 +587,19 @@ static void gst_vaapisink_base_init(gpointer klass)
 
 static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
-    GObjectClass * const      object_class    = G_OBJECT_CLASS(klass);
-    GstBaseSinkClass * const  basesink_class  = GST_BASE_SINK_CLASS(klass);
+    GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
+    GstBaseSinkClass * const basesink_class = GST_BASE_SINK_CLASS(klass);
 
-    object_class->finalize      = gst_vaapisink_finalize;
-    object_class->set_property  = gst_vaapisink_set_property;
-    object_class->get_property  = gst_vaapisink_get_property;
+    object_class->finalize       = gst_vaapisink_finalize;
+    object_class->set_property   = gst_vaapisink_set_property;
+    object_class->get_property   = gst_vaapisink_get_property;
 
-    basesink_class->start       = gst_vaapisink_start;
-    basesink_class->stop        = gst_vaapisink_stop;
-    basesink_class->set_caps    = gst_vaapisink_set_caps;
-    basesink_class->preroll     = gst_vaapisink_show_frame;
-    basesink_class->render      = gst_vaapisink_show_frame;
+    basesink_class->start        = gst_vaapisink_start;
+    basesink_class->stop         = gst_vaapisink_stop;
+    basesink_class->set_caps     = gst_vaapisink_set_caps;
+    basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
+    basesink_class->preroll      = gst_vaapisink_show_frame;
+    basesink_class->render       = gst_vaapisink_show_frame;
 
 #if USE_VAAPISINK_GLX
     g_object_class_install_property
