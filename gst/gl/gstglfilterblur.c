@@ -53,8 +53,6 @@ static void gst_gl_filterblur_set_property (GObject * object, guint prop_id,
 static void gst_gl_filterblur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_filterblur_reset (GstGLFilter * filter);
-static void gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur,
-    GLuint tex);
 
 static void gst_gl_filterblur_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
@@ -183,29 +181,6 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
       &blur_filter->shader1);
 }
 
-static void
-gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur, GLuint tex)
-{
-  GstGLFilter *filter = GST_GL_FILTER (filterblur);
-
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-
-  glBegin (GL_QUADS);
-
-  glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, 0.0);
-  glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
-  glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) filter->height);
-  glVertex2f (-1.0, 1.0);
-
-  glEnd ();
-}
-
 static gboolean
 gst_gl_filterblur_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
     GstGLBuffer * outbuf)
@@ -241,7 +216,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9,
       filterblur->gauss_kernel);
 
-  gst_gl_filterblur_draw_texture (filterblur, texture);
+  gst_gl_filter_draw_texture (filterblur, texture);
 }
 
 
@@ -265,5 +240,5 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9,
       filterblur->gauss_kernel);
 
-  gst_gl_filterblur_draw_texture (filterblur, texture);
+  gst_gl_filter_draw_texture (filterblur, texture);
 }
