@@ -237,7 +237,7 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
 
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
-  g_return_if_fail (gst_buffer_is_metadata_writable (dest));
+  g_warn_if_fail (gst_buffer_is_metadata_writable (dest));
 #endif
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", src, dest);
@@ -487,7 +487,7 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
   g_return_if_fail (buffer != NULL);
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
-  g_return_if_fail (gst_buffer_is_metadata_writable (buffer));
+  g_warn_if_fail (gst_buffer_is_metadata_writable (buffer));
 #endif
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
