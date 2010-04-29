@@ -221,7 +221,6 @@ static gboolean
 push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVaapiDecoderStatus status = priv->decoder_status;
     DecodedSurface *ds;
 
     ds = create_surface();
@@ -232,13 +231,16 @@ push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
         GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
         ds->proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
-        if (ds->proxy)
+        if (ds->proxy) {
+            ds->status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             gst_vaapi_surface_proxy_set_timestamp(
                 ds->proxy, priv->surface_timestamp);
+        }
         else
-            status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+            ds->status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
-    ds->status = status;
+    else
+        ds->status = priv->decoder_status;
 
     g_async_queue_push(priv->surfaces, ds);
     return TRUE;
