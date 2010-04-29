@@ -238,7 +238,7 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
                 strcmp(profile_str, m->profile_str) == 0)
                 profile = best_profile;
         }
-        else if (codec_data)
+        if (!profile)
             profile = gst_vaapi_profile_from_codec_data(
                 GST_VAAPI_PROFILE_CODEC(m->profile),
                 codec_data
