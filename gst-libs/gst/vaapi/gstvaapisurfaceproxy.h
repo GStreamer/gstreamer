@@ -51,7 +51,27 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_SURFACE_PROXY,    \
                                GstVaapiSurfaceProxyClass))
 
+/**
+ * GST_VAAPI_SURFACE_PROXY_SURFACE:
+ * @surface: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the #GstVaapiSurface of @surface.
+ */
+#define GST_VAAPI_SURFACE_PROXY_SURFACE(surface) \
+    gst_vaapi_surface_proxy_get_surface(surface)
+
+/**
+ * GST_VAAPI_SURFACE_PROXY_TIMESTAMP:
+ * @surface: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the @surface timestamp, or
+ * %GST_CLOCK_TIME_NONE if none was set.
+ */
+#define GST_VAAPI_SURFACE_PROXY_TIMESTAMP(surface) \
+    gst_vaapi_surface_proxy_get_timestamp(surface)
+
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
+typedef struct _GstVaapiSurfaceProxyPrivate     GstVaapiSurfaceProxyPrivate;
 typedef struct _GstVaapiSurfaceProxyClass       GstVaapiSurfaceProxyClass;
 
 /**
@@ -65,8 +85,7 @@ struct _GstVaapiSurfaceProxy {
     /*< private >*/
     GObject parent_instance;
 
-    GstVaapiContext *context;
-    GstVaapiSurface *surface;
+    GstVaapiSurfaceProxyPrivate *priv;
 };
 
 /**
@@ -101,6 +120,15 @@ void
 gst_vaapi_surface_proxy_set_surface(
     GstVaapiSurfaceProxy *proxy,
     GstVaapiSurface      *surface
+);
+
+GstClockTime
+gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_timestamp(
+    GstVaapiSurfaceProxy *proxy,
+    GstClockTime          timestamp
 );
 
 G_END_DECLS

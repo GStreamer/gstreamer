@@ -136,7 +136,10 @@ main(int argc, char *argv[])
 
     gst_vaapi_window_show(window);
 
-    if (!gst_vaapi_window_put_surface(window, proxy->surface, NULL, NULL,
+    if (!gst_vaapi_window_put_surface(window,
+                                      GST_VAAPI_SURFACE_PROXY_SURFACE(proxy),
+                                      NULL,
+                                      NULL,
                                       GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         g_error("could not render surface");
 
