@@ -22,7 +22,7 @@
 #define GST_VAAPI_DECODER_PRIV_H
 
 #include <glib.h>
-#include <gst/base/gstadapter.h>
+#include <gst/gsttask.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapicontext.h>
 
@@ -97,9 +97,9 @@ struct _GstVaapiDecoderPrivate {
     GAsyncQueue                *surfaces;
     GstClockTime                surface_timestamp;
     GstClockTime                surface_duration;
-    GThread                    *decoder_thread;
+    GstTask                    *decoder_task;
+    GStaticRecMutex             decoder_task_lock;
     GstVaapiDecoderStatus       decoder_status;
-    guint                       decoder_thread_cancel   : 1;
 };
 
 gboolean
