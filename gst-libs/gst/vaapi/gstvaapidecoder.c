@@ -96,6 +96,30 @@ decoder_thread_cb(gpointer data)
     return NULL;
 }
 
+static void
+update_clock(GstVaapiDecoder *decoder, GstBuffer *buffer)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstClockTime timestamp, duration;
+
+    timestamp = GST_BUFFER_TIMESTAMP(buffer);
+    duration  = GST_BUFFER_DURATION(buffer);
+
+    if (GST_CLOCK_TIME_IS_VALID(duration)) {
+        if (GST_CLOCK_TIME_IS_VALID(timestamp))
+            priv->surface_timestamp = timestamp;
+        priv->surface_duration = duration;
+    }
+    else {
+        /* Assumes those are user-generated buffers with no timestamp
+           or duration information. Try to rely on "framerate". */
+        if (!GST_CLOCK_TIME_IS_VALID(priv->surface_timestamp))
+            priv->surface_timestamp = 0;
+        priv->surface_duration =
+            gst_util_uint64_scale_int(GST_SECOND, priv->fps_d, priv->fps_n);
+    }
+}
+
 static inline void
 init_buffer(GstBuffer *buffer, const guchar *buf, guint buf_size)
 {
@@ -174,8 +198,10 @@ pop_buffer(GstVaapiDecoder *decoder)
     buffer = g_async_queue_pop(priv->buffers);
     g_return_val_if_fail(buffer, NULL);
 
-    if (!GST_BUFFER_TIMESTAMP_IS_VALID(buffer))
-        GST_BUFFER_TIMESTAMP(buffer) = priv->next_ts;
+    GST_DEBUG("dequeue buffer %p for decoding (%d bytes)",
+              buffer, GST_BUFFER_SIZE(buffer));
+
+    update_clock(decoder, buffer);
     return buffer;
 }
 
@@ -206,7 +232,10 @@ push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
         GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
         ds->proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
-        if (!ds->proxy)
+        if (ds->proxy)
+            gst_vaapi_surface_proxy_set_timestamp(
+                ds->proxy, priv->surface_timestamp);
+        else
             status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
     ds->status = status;
@@ -388,7 +417,8 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->codec_data            = NULL;
     priv->fps_n                 = 1000;
     priv->fps_d                 = 30;
-    priv->next_ts               = 0;
+    priv->surface_timestamp     = GST_CLOCK_TIME_NONE;
+    priv->surface_duration      = GST_CLOCK_TIME_NONE;
     priv->buffers               = g_async_queue_new();
     priv->surfaces              = g_async_queue_new();
     priv->decoder_thread        = NULL;

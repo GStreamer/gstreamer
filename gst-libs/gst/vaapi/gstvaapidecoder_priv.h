@@ -93,9 +93,10 @@ struct _GstVaapiDecoderPrivate {
     GstBuffer                  *codec_data;
     guint                       fps_n;
     guint                       fps_d;
-    GstClockTime                next_ts;
     GAsyncQueue                *buffers;
     GAsyncQueue                *surfaces;
+    GstClockTime                surface_timestamp;
+    GstClockTime                surface_duration;
     GThread                    *decoder_thread;
     GstVaapiDecoderStatus       decoder_status;
     guint                       decoder_thread_cancel   : 1;
