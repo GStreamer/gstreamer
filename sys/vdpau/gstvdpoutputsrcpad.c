@@ -297,11 +297,6 @@ gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad * vdp_pad,
   g_return_val_if_fail (GST_IS_VDP_OUTPUT_SRC_PAD (vdp_pad), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (video_caps), FALSE);
 
-  allowed_caps = gst_pad_get_caps (GST_PAD_CAST (vdp_pad));
-  GST_DEBUG ("caps: %" GST_PTR_FORMAT, allowed_caps);
-  allowed_caps = gst_pad_peer_get_caps (GST_PAD_CAST (vdp_pad));
-  GST_DEBUG ("peer_caps: %" GST_PTR_FORMAT, allowed_caps);
-
   allowed_caps = gst_pad_get_allowed_caps (GST_PAD_CAST (vdp_pad));
   if (G_UNLIKELY (!allowed_caps))
     goto allowed_caps_error;
