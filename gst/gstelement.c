@@ -712,7 +712,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* check for flushing pads */
   if (flushing && (GST_STATE (element) > GST_STATE_READY ||
           GST_STATE_NEXT (element) == GST_STATE_PAUSED)) {
-    g_warning ("adding flushing pad '%s' to running element '%s'",
+    g_warning ("adding flushing pad '%s' to running element '%s', you need to "
+        "use gst_pad_set_active(pad,TRUE) before adding it.",
         GST_STR_NULL (pad_name), GST_ELEMENT_NAME (element));
     /* unset flushing */
     GST_OBJECT_LOCK (pad);
