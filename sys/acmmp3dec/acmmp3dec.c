@@ -259,7 +259,7 @@ acmmp3dec_push_output (ACMMP3Dec * dec)
     if (dec->timestamp != GST_CLOCK_TIME_NONE)
       dec->timestamp += GST_BUFFER_DURATION (outbuf);
 
-    GST_DEBUG_OBJECT (dec, "Pushing %d byte decoded buffer",
+    GST_DEBUG_OBJECT (dec, "Pushing %lu byte decoded buffer",
         dec->header.cbDstLengthUsed);
     ret = gst_pad_push (dec->srcpad, outbuf);
   } else

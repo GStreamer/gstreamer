@@ -625,7 +625,7 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
       bitrate = g_value_get_int (value) * 1000;
       if (bitrate % 400 != 0) {
         bitrate = (bitrate / 400 + 1) * 400;
-        GST_INFO ("MPEG bitrate must be a multiple of 400",
+        GST_INFO ("MPEG bitrate must be a multiple of 400"
             " - rounded up to bitrate %d", bitrate / 1000);
       }
       break;

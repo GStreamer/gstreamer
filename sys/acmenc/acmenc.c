@@ -310,7 +310,7 @@ acmenc_push_output (ACMEnc * enc)
           enc->outfmt->nAvgBytesPerSec);
     }
     enc->bytes_output += enc->header.cbDstLengthUsed;
-    GST_DEBUG_OBJECT (enc, "Pushing %d byte encoded buffer",
+    GST_DEBUG_OBJECT (enc, "Pushing %lu byte encoded buffer",
         enc->header.cbDstLengthUsed);
     ret = gst_pad_push (enc->srcpad, outbuf);
   }
@@ -594,7 +594,7 @@ acmenc_register (GstPlugin * plugin)
   wcscat (dirname, L"\\*.acm");
   find = FindFirstFileW (dirname, &filedata);
   if (find == INVALID_HANDLE_VALUE) {
-    GST_WARNING ("Failed to find ACM files: %x", GetLastError ());
+    GST_WARNING ("Failed to find ACM files: %lx", GetLastError ());
     return FALSE;
   }
 

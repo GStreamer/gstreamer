@@ -271,7 +271,7 @@ gst_win_inet_src_get_header_value_as_int (GstWinInetSrc * self,
         error_str = "ERROR_HTTP_HEADER_NOT_FOUND";
 
       GST_WARNING_OBJECT (self, "HttpQueryInfo for header '%s' failed: %s "
-          "(0x%08x)", header_name, error_str, error_code);
+          "(0x%08lx)", header_name, error_str, error_code);
     }
 
     return FALSE;
@@ -314,7 +314,7 @@ gst_win_inet_src_open (GstWinInetSrc * self)
 
 error:
   GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (NULL),
-      ("Could not open location \"%s\" for reading: 0x%08x",
+      ("Could not open location \"%s\" for reading: 0x%08lx",
           self->location, GetLastError ()));
   gst_win_inet_src_reset (self);
 
@@ -372,7 +372,7 @@ gst_win_inet_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
           }
         }
       } else {
-        GST_ERROR_OBJECT (self, "InternetReadFile failed: 0x%08x",
+        GST_ERROR_OBJECT (self, "InternetReadFile failed: 0x%08lx",
             GetLastError ());
 
         ret = GST_FLOW_ERROR;

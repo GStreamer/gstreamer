@@ -91,7 +91,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   fd_set testfds;
   int maxfdp1;
   int ret;
-  ssize_t bytes_read;
+  gssize bytes_read;
 #ifndef G_OS_WIN32
   int readsize;
   struct msghdr mh;
@@ -154,7 +154,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
     return GST_FLOW_ERROR;
   }
 
-  GST_LOG_OBJECT (this, "bytes read %" G_GSIZE_FORMAT, bytes_read);
+  GST_LOG_OBJECT (this, "bytes read %" G_GSSIZE_FORMAT, bytes_read);
   GST_LOG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (*buf));
 
   return GST_FLOW_OK;

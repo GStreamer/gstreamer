@@ -539,7 +539,7 @@ gst_timidity_fill_buffer (GstTimidity * timidity, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (timidity,
       "generated buffer %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
-      " (%d samples)",
+      " (%" G_GINT64_FORMAT " samples)",
       GST_TIME_ARGS ((guint64) GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (((guint64) (GST_BUFFER_TIMESTAMP (buffer) +
                   GST_BUFFER_DURATION (buffer)))), samples);
