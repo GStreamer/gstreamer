@@ -270,7 +270,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
-  gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.4f);
+  gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
   gst_gl_effects_draw_texture (effects, texture);
