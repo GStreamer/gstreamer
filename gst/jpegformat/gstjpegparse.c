@@ -78,6 +78,7 @@ struct _GstJpegParsePrivate
 
   GstAdapter *adapter;
   guint last_offset;
+  guint last_entropy_len;
 
   /* negotiated state */
   gint caps_width, caps_height;
@@ -291,7 +292,8 @@ gst_jpeg_parse_parse_tag_has_entropy_segment (guint8 tag)
  * enough data.
  */
 static guint
-gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
+gst_jpeg_parse_match_next_marker (GstJpegParse * parse, const guint8 * data,
+    guint size)
 {
   guint marker_len;
   guint8 tag;
@@ -316,11 +318,19 @@ gst_jpeg_parse_match_next_marker (const guint8 * data, guint size)
     goto need_more_data;
 
   if (G_UNLIKELY (gst_jpeg_parse_parse_tag_has_entropy_segment (tag))) {
+    if (parse->priv->last_entropy_len) {
+      marker_len = parse->priv->last_entropy_len;
+      GST_LOG_OBJECT (parse, "resuming entropy segment scan at len %u",
+          marker_len);
+    }
     while (!(data[marker_len] == 0xff && data[marker_len + 1] != 0x00)) {
       ++marker_len;
-      if (G_UNLIKELY (marker_len + 2 > size))
+      if (G_UNLIKELY (marker_len + 2 > size)) {
+        parse->priv->last_entropy_len = marker_len;
         goto need_more_data;
+      }
     }
+    parse->priv->last_entropy_len = 0;
   }
   return marker_len;
 
@@ -369,7 +379,7 @@ gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
       return offset;
     }
     /* Skip over this marker. */
-    marker_len = gst_jpeg_parse_match_next_marker (data + offset,
+    marker_len = gst_jpeg_parse_match_next_marker (parse, data + offset,
         size - offset);
     if (G_UNLIKELY (marker_len == -1)) {
       return -1;
@@ -736,6 +746,7 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
 
   /* reset the offset (only when we flushed) */
   parse->priv->last_offset = 2;
+  parse->priv->last_entropy_len = 0;
 
   outbuf = gst_adapter_take_buffer (parse->priv->adapter, len);
   if (outbuf == NULL) {
@@ -885,6 +896,7 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
 
       parse->priv->last_offset = 2;
+      parse->priv->last_entropy_len = 0;
     default:
       break;
   }
