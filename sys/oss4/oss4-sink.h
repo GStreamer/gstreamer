@@ -44,6 +44,7 @@ struct _GstOss4Sink {
   gchar       * device_name;        /* set if the device is open */
   gint          fd;                 /* -1 if not open            */
   gint          bytes_per_sample;
+  gint          mute_volume;
 
   GstCaps     * probed_caps;
 

@@ -59,6 +59,7 @@
 #include <string.h>
 
 #include <gst/gst-i18n-plugin.h>
+#include <gst/interfaces/streamvolume.h>
 
 #define NO_LEGACY_MIXER
 #include "oss4-audio.h"
@@ -93,12 +94,18 @@ static void gst_oss4_sink_reset (GstAudioSink * asink);
 
 #define DEFAULT_DEVICE      NULL
 #define DEFAULT_DEVICE_NAME NULL
+#define DEFAULT_MUTE        FALSE
+#define DEFAULT_VOLUME      1.0
+#define MAX_VOLUME          10.0
 
 enum
 {
   PROP_0,
   PROP_DEVICE,
-  PROP_DEVICE_NAME
+  PROP_DEVICE_NAME,
+  PROP_VOLUME,
+  PROP_MUTE,
+  PROP_LAST
 };
 
 GST_BOILERPLATE_FULL (GstOss4Sink, gst_oss4_sink, GstAudioSink,
@@ -156,6 +163,18 @@ gst_oss4_sink_class_init (GstOss4SinkClass * klass)
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE));
 
+  g_object_class_install_property (gobject_class,
+      PROP_VOLUME,
+      g_param_spec_double ("volume", "Volume",
+          "Linear volume of this stream, 1.0=100%", 0.0, MAX_VOLUME,
+          DEFAULT_VOLUME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute",
+          "Mute state of this stream", DEFAULT_MUTE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss4_sink_getcaps);
 
   audiosink_class->open = GST_DEBUG_FUNCPTR (gst_oss4_sink_open_func);
@@ -180,6 +199,7 @@ gst_oss4_sink_init (GstOss4Sink * osssink, GstOss4SinkClass * klass)
   osssink->bytes_per_sample = 0;
   osssink->probed_caps = NULL;
   osssink->device_name = NULL;
+  osssink->mute_volume = 100 | (100 << 8);
 }
 
 static void
@@ -194,6 +214,96 @@ gst_oss4_sink_finalise (GObject * object)
   osssink->property_probe_list = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_oss4_sink_set_volume (GstOss4Sink * oss, gdouble volume)
+{
+  int ivol;
+
+  volume = volume * 100.0;
+  ivol = (int) volume | ((int) volume << 8);
+  GST_OBJECT_LOCK (oss);
+  if (ioctl (oss->fd, SNDCTL_DSP_SETPLAYVOL, &ivol) < 0) {
+    GST_LOG_OBJECT (oss, "SETPLAYVOL failed");
+  }
+  GST_OBJECT_UNLOCK (oss);
+}
+
+static gdouble
+gst_oss4_sink_get_volume (GstOss4Sink * oss)
+{
+  int ivol, lvol, rvol;
+  gdouble dvol = DEFAULT_VOLUME;
+
+  GST_OBJECT_LOCK (oss);
+  if (ioctl (oss->fd, SNDCTL_DSP_GETPLAYVOL, &ivol) < 0) {
+    GST_LOG_OBJECT (oss, "GETPLAYVOL failed");
+  } else {
+    /* Return the higher of the two volume channels, if different */
+    lvol = ivol & 0xff;
+    rvol = (ivol >> 8) & 0xff;
+    dvol = MAX (lvol, rvol) / 100.0;
+  }
+  GST_OBJECT_UNLOCK (oss);
+
+  return dvol;
+}
+
+static void
+gst_oss4_sink_set_mute (GstOss4Sink * oss, gboolean mute)
+{
+  int ivol;
+
+  if (mute) {
+    /*
+     * OSSv4 does not have a per-channel mute, so simulate by setting
+     * the value to 0.  Save the volume before doing a mute so we can
+     * reset the value when the user un-mutes.
+     */
+    ivol = 0;
+
+    GST_OBJECT_LOCK (oss);
+    if (ioctl (oss->fd, SNDCTL_DSP_GETPLAYVOL, &oss->mute_volume) < 0) {
+      GST_LOG_OBJECT (oss, "GETPLAYVOL failed");
+    }
+    if (ioctl (oss->fd, SNDCTL_DSP_SETPLAYVOL, &ivol) < 0) {
+      GST_LOG_OBJECT (oss, "SETPLAYVOL failed");
+    }
+    GST_OBJECT_UNLOCK (oss);
+  } else {
+    /*
+     * If the saved volume is 0, then reset it to 100.  Otherwise the mute
+     * can get stuck.  This can happen, for example, due to rounding
+     * errors in converting from the float to an integer.
+     */
+    if (oss->mute_volume == 0) {
+      oss->mute_volume = 100 | (100 << 8);
+    }
+    GST_OBJECT_LOCK (oss);
+    if (ioctl (oss->fd, SNDCTL_DSP_SETPLAYVOL, &oss->mute_volume) < 0) {
+      GST_LOG_OBJECT (oss, "SETPLAYVOL failed");
+    }
+    GST_OBJECT_UNLOCK (oss);
+  }
+}
+
+static gboolean
+gst_oss4_sink_get_mute (GstOss4Sink * oss)
+{
+  int ivol, lvol, rvol;
+
+  GST_OBJECT_LOCK (oss);
+  if (ioctl (oss->fd, SNDCTL_DSP_GETPLAYVOL, &ivol) < 0) {
+    GST_LOG_OBJECT (oss, "GETPLAYVOL failed");
+    lvol = rvol = 100;
+  } else {
+    lvol = ivol & 0xff;
+    rvol = (ivol >> 8) & 0xff;
+  }
+  GST_OBJECT_UNLOCK (oss);
+
+  return (lvol == 0 && rvol == 0);
 }
 
 static void
@@ -219,6 +329,12 @@ gst_oss4_sink_set_property (GObject * object, guint prop_id,
             "is open", GST_OBJECT_NAME (oss));
       }
       GST_OBJECT_UNLOCK (oss);
+      break;
+    case PROP_VOLUME:
+      gst_oss4_sink_set_volume (oss, g_value_get_double (value));
+      break;
+    case PROP_MUTE:
+      gst_oss4_sink_set_mute (oss, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -257,6 +373,12 @@ gst_oss4_sink_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, oss->device_name);
       }
       GST_OBJECT_UNLOCK (oss);
+      break;
+    case PROP_VOLUME:
+      g_value_set_double (value, gst_oss4_sink_get_volume (oss));
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, gst_oss4_sink_get_mute (oss));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -544,10 +666,14 @@ gst_oss4_sink_delay (GstAudioSink * asink)
 
   oss = GST_OSS4_SINK_CAST (asink);
 
+  GST_OBJECT_LOCK (oss);
   if (ioctl (oss->fd, SNDCTL_DSP_GETODELAY, &delay) < 0 || delay < 0) {
     GST_LOG_OBJECT (oss, "GETODELAY failed");
-    return 0;
   }
+  GST_OBJECT_UNLOCK (oss);
+
+  if (G_UNLIKELY (delay < 0))   /* error case */
+    return 0;
 
   return delay / oss->bytes_per_sample;
 }
@@ -563,5 +689,11 @@ gst_oss4_sink_reset (GstAudioSink * asink)
 static void
 gst_oss4_sink_init_interfaces (GType type)
 {
+  static const GInterfaceInfo svol_iface_info = {
+    NULL, NULL, NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_iface_info);
+
   gst_oss4_add_property_probe_interface (type);
 }
