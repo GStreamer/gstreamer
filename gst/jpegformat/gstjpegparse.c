@@ -578,7 +578,32 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
           goto error;
 
-        if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
+        if (!strcmp (id_str, "Exif")) {
+          const guint8 *exif_data = NULL;
+          guint exif_size = size - 2;
+          GstTagList *tags;
+          GstBuffer *buf;
+
+          /* skip padding */
+          gst_byte_reader_skip (&reader, 1);
+
+          /* handle exif metadata */
+          if (!gst_byte_reader_get_data (&reader, exif_size, &exif_data))
+            goto error;
+
+          buf = gst_buffer_new ();
+          GST_BUFFER_DATA (buf) = (guint8 *) exif_data;
+          GST_BUFFER_SIZE (buf) = exif_size;
+          tags = gst_tag_list_from_exif_buffer_with_tiff_header (buf);
+          gst_buffer_unref (buf);
+          if (tags) {
+            GST_INFO_OBJECT (parse, "post exif metadata");
+            gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
+                parse->priv->srcpad, tags);
+          }
+          GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
+              marker, id_str, size - 2);
+        } else if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
           const guint8 *xmp_data = NULL;
           guint xmp_size = size - 2 - 29;
           GstTagList *tags;
