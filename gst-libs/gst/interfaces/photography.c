@@ -573,4 +573,11 @@ gst_photography_iface_class_init (gpointer g_class)
           "Image capture supported caps",
           "Caps describing supported image capture formats", GST_TYPE_CAPS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /* Image preview caps */
+  g_object_interface_install_property (g_class,
+      g_param_spec_boxed (GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS,
+          "Image preview supported caps",
+          "Caps describing supported image preview formats", GST_TYPE_CAPS,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }

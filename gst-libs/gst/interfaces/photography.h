@@ -65,6 +65,8 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_EXPOSURE     "exposure"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS \
     "image-capture-supported-caps"
+#define GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS \
+    "image-preview-supported-caps"
 #define GST_PHOTOGRAPHY_PROP_FLICKER_MODE "flicker-mode"
 #define GST_PHOTOGRAPHY_PROP_FOCUS_MODE   "focus-mode"
 
