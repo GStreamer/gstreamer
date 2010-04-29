@@ -414,6 +414,7 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
 {
   guint8 *start, *data, *end;
   guint size;
+  gboolean resync;
 
   size = GST_BUFFER_SIZE (dec->tempbuf);
   start = GST_BUFFER_DATA (dec->tempbuf);
@@ -424,12 +425,14 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
 
   GST_DEBUG ("Parsing jpeg image data (%u bytes)", size);
 
-  /* skip start marker */
-  data += 2;
+  GST_DEBUG ("Parse state: offset=%d, resync=%d, entropy len=%d",
+      dec->parse_offset, dec->parse_resync, dec->parse_entropy_len);
+
+  /* resume from state offset (also skips start marker) */
+  data += (dec->parse_offset ? dec->parse_offset : 2);
 
   while (1) {
     guint frame_len;
-    gboolean resync;
 
     /* do we need to resync? */
     resync = (*data != 0xff);
@@ -441,28 +444,33 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
         ++data;
       if (G_UNLIKELY (*data != 0xff)) {
         GST_DEBUG ("at end of input and no next marker found, need more data");
-        return 0;
+        goto need_more_data;
       }
     }
+    /* may have marker, but could have been resyncng */
+    resync = resync || dec->parse_resync;
     /* Skip over extra 0xff */
     while (*data == 0xff && data < end)
       ++data;
     /* enough bytes left for marker? (we need 0xNN after the 0xff) */
     if (data >= end) {
       GST_DEBUG ("at end of input and no EOI marker found, need more data");
-      return 0;
+      goto need_more_data1;
     }
 
     if (*data == 0xd9) {
       GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: EOI marker",
           (gint64) (data - start));
+      /* clear parse state */
+      dec->parse_resync = FALSE;
+      dec->parse_offset = 0;
       return (data - start + 1);
     }
 
     if (*data >= 0xd0 && *data <= 0xd7)
       frame_len = 0;
     else if (data >= end - 2)
-      return 0;
+      goto need_more_data1;
     else
       frame_len = GST_READ_UINT16_BE (data + 1);
     GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: tag %02x, frame_len=%u",
@@ -478,22 +486,26 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
       /* theoretically we could have lost sync and not really need more
        * data, but that's just tough luck and a broken image then */
       GST_DEBUG ("at end of input and no EOI marker found, need more data");
-      return 0;
+      goto need_more_data1;
     }
 
     if (gst_jpeg_dec_parse_tag_has_entropy_segment (*data)) {
       guint8 *d2 = data + 1 + frame_len;
-      guint eseglen = 0;
+      guint eseglen = dec->parse_entropy_len;
 
       GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: finding entropy segment length",
           (gint64) (data - start - 1));
       while (1) {
-        if (d2 + eseglen >= end - 1)
-          return 0;             /* need more data */
+        if (d2 + eseglen >= end - 1) {
+          /* need more data */
+          dec->parse_entropy_len = eseglen;
+          goto need_more_data1;
+        }
         if (d2[eseglen] == 0xff && d2[eseglen + 1] != 0x00)
           break;
         ++eseglen;
       }
+      dec->parse_entropy_len = 0;
       frame_len += eseglen;
       GST_DEBUG ("entropy segment length=%u => frame_len=%u", eseglen,
           frame_len);
@@ -510,6 +522,21 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     }
 
     data += 1 + frame_len;
+  }
+
+  /* EXITS */
+need_more_data:
+  {
+    dec->parse_offset = data - start;
+    dec->parse_resync = resync;
+    return 0;
+  }
+need_more_data1:
+  {
+    /* step back one to point at marker */
+    dec->parse_offset = (data - start) - 1;
+    dec->parse_resync = resync;
+    return 0;
   }
 }
 
@@ -1605,6 +1632,9 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->packetized = FALSE;
       dec->next_ts = 0;
       dec->discont = TRUE;
+      dec->parse_offset = 0;
+      dec->parse_resync = FALSE;
+      dec->parse_entropy_len = FALSE;
       gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
       gst_jpeg_dec_reset_qos (dec);
     default:

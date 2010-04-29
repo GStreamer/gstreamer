@@ -103,6 +103,11 @@ struct _GstJpegDec {
   gint     stride;
   gint     inc;
 
+  /* parse state */
+  gint     parse_offset;
+  gint     parse_entropy_len;
+  gint     parse_resync;
+
   /* properties */
   gint     idct_method;
 
