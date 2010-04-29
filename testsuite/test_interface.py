@@ -59,7 +59,6 @@ class MixerTest(TestCase):
             self.mixer = amix.create()
         else:
             self.mixer = None
-        assert self.mixer
 
     def tearDown(self):
         del self.mixer
