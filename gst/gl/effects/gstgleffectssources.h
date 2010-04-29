@@ -32,7 +32,6 @@ extern const gchar *twirl_fragment_source;
 extern const gchar *bulge_fragment_source;
 extern const gchar *square_fragment_source;
 extern const gchar *luma_threshold_fragment_source;
-extern const gchar *sobel_fragment_source;
 extern const gchar *sep_sobel_length_fragment_source;
 extern const gchar *desaturate_fragment_source;
 extern const gchar *sep_sobel_hconv3_fragment_source;
