@@ -245,7 +245,7 @@ AC_SUBST(LIBVA_GLX_PKGNAME)
 AC_SUBST(LIBVA_EXTRA_CFLAGS)
 AC_SUBST(LIBVA_EXTRA_LIBS)
 
-dnl Check for OpenGL support to
+dnl Check for OpenGL support to vaapisink
 if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
     USE_VAAPISINK_GLX=1
 else
