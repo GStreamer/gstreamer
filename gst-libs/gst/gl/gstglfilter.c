@@ -223,10 +223,12 @@ gst_gl_filter_reset (GstGLFilter * filter)
     g_object_unref (filter->display);
     filter->display = NULL;
   }
+
   filter->width = 0;
   filter->height = 0;
   filter->fbo = 0;
   filter->depthbuffer = 0;
+  filter->default_shader = NULL;
   filter->external_gl_context = 0;
 }
 
@@ -252,7 +254,8 @@ gst_gl_filter_start (GstBaseTransform * bt)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       filter->display = gst_gl_display_new ();
-      gst_gl_display_create_context (filter->display, filter->external_gl_context);
+      gst_gl_display_create_context (filter->display,
+          filter->external_gl_context);
     }
   }
 
@@ -441,4 +444,56 @@ gst_gl_filter_render_to_target (GstGLFilter * filter,
       filter->width, filter->height, input,
       0, filter->width, 0, filter->height,
       GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
+}
+
+static void
+_draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (filter->default_shader);
+
+  glActiveTexture (GL_TEXTURE1);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
+
+  gst_gl_filter_draw_texture (filter, texture);
+}
+
+/* attach target to a FBO, use shader, pass input as "tex" uniform to
+ * the shader, render input to a quad */
+void
+gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
+    GLuint input, GLuint target, GstGLShader * shader)
+{
+  filter->default_shader = shader;
+  gst_gl_filter_render_to_target (filter, input, target, _draw_with_shader_cb,
+      filter);
+}
+
+void
+gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture)
+{
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  glBegin (GL_QUADS);
+
+  glTexCoord2f (0.0, 0.0);
+  glVertex2f (-1.0, -1.0);
+  glTexCoord2f ((gfloat) filter->width, 0.0);
+  glVertex2f (1.0, -1.0);
+  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
+  glVertex2f (1.0, 1.0);
+  glTexCoord2f (0.0, (gfloat) filter->height);
+  glVertex2f (-1.0, 1.0);
+
+  glEnd ();
 }
