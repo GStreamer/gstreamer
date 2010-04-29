@@ -248,8 +248,10 @@ gst_vaapi_decoder_ffmpeg_close(GstVaapiDecoderFfmpeg *ffdecoder)
         avcodec_close(priv->avctx);
     }
 
-    if (priv->pctx)
+    if (priv->pctx) {
         av_parser_close(priv->pctx);
+        priv->pctx = NULL;
+    }
 }
 
 static gboolean
@@ -305,7 +307,6 @@ gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
     }
 
     av_freep(&priv->avctx);
-    av_freep(&priv->pctx);
     av_freep(&priv->frame);
 }
 
