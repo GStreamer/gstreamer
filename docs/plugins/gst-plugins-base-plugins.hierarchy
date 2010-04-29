@@ -109,7 +109,6 @@ GObject
       GstAudioSrcRingBuffer
   GstSignalObject
   GstMixerTrack
-    GstMixerOptions
   GstStreamInfo
   GstColorBalanceChannel
   GstTunerNorm
