@@ -279,8 +279,17 @@ GstCaps *
 gst_vaapi_profile_get_caps(GstVaapiProfile profile)
 {
     const GstVaapiProfileMap * const m = get_profiles_map(profile);
+    GstCaps *caps;
 
-    return m ? gst_caps_from_string(m->caps_str) : NULL;
+    if (!m)
+        return NULL;
+
+    caps = gst_caps_from_string(m->caps_str);
+    if (!caps)
+        return NULL;
+
+    gst_caps_set_simple(caps, "profile", G_TYPE_STRING, m->profile_str, NULL);
+    return caps;
 }
 
 /**
