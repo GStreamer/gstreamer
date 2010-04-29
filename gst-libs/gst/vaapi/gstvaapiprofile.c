@@ -39,6 +39,7 @@ struct _GstVaapiProfileMap {
     GstVaapiProfile             profile;
     VAProfile                   va_profile;
     const char                 *caps_str;
+    const gchar                *profile_str;
 };
 
 struct _GstVaapiEntrypointMap {
@@ -49,42 +50,42 @@ struct _GstVaapiEntrypointMap {
 /* Profiles */
 static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_MPEG2_SIMPLE, VAProfileMPEG2Simple,
-      "video/mpeg, mpegversion=2, profile=simple"
+      "video/mpeg, mpegversion=2", "simple"
     },
     { GST_VAAPI_PROFILE_MPEG2_MAIN, VAProfileMPEG2Main,
-      "video/mpeg, mpegversion=2, profile=main"
+      "video/mpeg, mpegversion=2", "main"
     },
     { GST_VAAPI_PROFILE_MPEG4_SIMPLE, VAProfileMPEG4Simple,
-      "video/mpeg, mpegversion=4, profile=simple"
+      "video/mpeg, mpegversion=4", "simple"
     },
     { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
-      "video/mpeg, mpegversion=4, profile=advanced-simple"
+      "video/mpeg, mpegversion=4", "advanced-simple",
     },
     { GST_VAAPI_PROFILE_MPEG4_MAIN, VAProfileMPEG4Main,
-      "video/mpeg, mpegversion=4, profile=main"
+      "video/mpeg, mpegversion=4", "main"
     },
 #if VA_CHECK_VERSION(0,30,0)
     { GST_VAAPI_PROFILE_H263_BASELINE, VAProfileH263Baseline,
-      "video/x-h263, variant=itu, h263version=h263, profile=baseline"
+      "video/x-h263, variant=itu, h263version=h263", "baseline"
     },
 #endif
     { GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
-      "video/x-h264, variant=itu, profile=baseline"
+      "video/x-h264, variant=itu", "baseline"
     },
     { GST_VAAPI_PROFILE_H264_MAIN, VAProfileH264Main,
-      "video/x-h264, variant=itu, profile=main"
+      "video/x-h264, variant=itu", "main"
     },
     { GST_VAAPI_PROFILE_H264_HIGH, VAProfileH264High,
-      "video/x-h264, variant=itu, profile=high"
+      "video/x-h264, variant=itu", "high"
     },
     { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
-      "video/x-vc1, profile=simple"
+      "video/x-vc1", "simple"
     },
     { GST_VAAPI_PROFILE_VC1_MAIN, VAProfileVC1Main,
-      "video/x-vc1, profile=main"
+      "video/x-vc1", "main"
     },
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
-      "video/x-vc1, profile=advanced"
+      "video/x-vc1", "advanced"
     },
     { 0, }
 };
@@ -201,7 +202,8 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
     const GstVaapiProfileMap *m;
     GstCaps *caps_test;
     GstStructure *structure;
-    GstVaapiProfile profile;
+    const gchar *profile_str;
+    GstVaapiProfile profile, best_profile;
     GstBuffer *codec_data = NULL;
     const gchar *name;
     gsize namelen;
@@ -216,7 +218,8 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
     name    = gst_structure_get_name(structure);
     namelen = strlen(name);
 
-    if (!gst_structure_has_field(structure, "profile")) {
+    profile_str = gst_structure_get_string(structure, "profile");
+    if (!profile_str) {
         const GValue *v_codec_data;
         v_codec_data = gst_structure_get_value(structure, "codec_data");
         if (v_codec_data)
@@ -224,12 +227,17 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
     }
 
     profile = 0;
+    best_profile = 0;
     for (m = gst_vaapi_profiles; !profile && m->profile; m++) {
         if (strncmp(name, m->caps_str, namelen) != 0)
             continue;
-        caps_test = gst_caps_from_string(m->caps_str);
-        if (gst_caps_is_always_compatible(caps, caps_test))
-            profile = m->profile;
+        caps_test = gst_caps_from_string(m->caps_str);;
+        if (gst_caps_is_always_compatible(caps, caps_test)) {
+            best_profile = m->profile;
+            if (profile_str && m->profile_str &&
+                strcmp(profile_str, m->profile_str) == 0)
+                profile = best_profile;
+        }
         else if (codec_data)
             profile = gst_vaapi_profile_from_codec_data(
                 GST_VAAPI_PROFILE_CODEC(m->profile),
@@ -237,7 +245,7 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
             );
         gst_caps_unref(caps_test);
     }
-    return profile;
+    return profile ? profile : best_profile;
 }
 
 /**
