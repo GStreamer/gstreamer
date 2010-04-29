@@ -239,6 +239,7 @@ GObject
       GstWavParse
       GstFlvDemux
       GstFlvMux
+      GstMonoscope
       GstICYDemux
       GstVideoMixer
     GstBus
@@ -260,8 +261,6 @@ GObject
   RTPSession
   GstTunerNorm
   GstTunerChannel
-  GstMixerTrack
-    GstMixerOptions
   GdkPixbuf
 GInterface
   GTypePlugin
