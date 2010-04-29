@@ -245,6 +245,7 @@ gst_vaapi_decoder_ffmpeg_close(GstVaapiDecoderFfmpeg *ffdecoder)
 
     if (priv->avctx) {
         av_freep(&priv->avctx->extradata);
+        priv->avctx->extradata_size = 0;
         avcodec_close(priv->avctx);
     }
 
@@ -259,12 +260,20 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
+    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(ffdecoder);
     GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(ffdecoder);
     enum CodecID codec_id;
     AVCodec *ffcodec;
     int ret;
 
     gst_vaapi_decoder_ffmpeg_close(ffdecoder);
+
+    if (codec_data) {
+        const guchar *data = GST_BUFFER_DATA(codec_data);
+        const guint   size = GST_BUFFER_SIZE(codec_data);
+        if (!set_codec_data(priv->avctx, data, size))
+            return FALSE;
+    }
 
     codec_id = get_codec_id_from_codec(codec);
     if (codec_id == CODEC_ID_NONE)
@@ -274,18 +283,20 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     if (!ffcodec)
         return FALSE;
 
-    priv->pctx = av_parser_init(codec_id);
-    if (!priv->pctx)
-        return FALSE;
-
-    /* XXX: av_find_stream_info() does this and some codecs really
-       want hard an extradata buffer for initialization (e.g. VC-1) */
-    if (!priv->avctx->extradata && priv->pctx->parser->split) {
-        const guchar *buf = GST_BUFFER_DATA(buffer);
-        guint buf_size = GST_BUFFER_SIZE(buffer);
-        buf_size = priv->pctx->parser->split(priv->avctx, buf, buf_size);
-        if (buf_size > 0 && !set_codec_data(priv->avctx, buf, buf_size))
+    if (codec_id != CODEC_ID_H264 || priv->avctx->extradata_size == 0) {
+        priv->pctx = av_parser_init(codec_id);
+        if (!priv->pctx)
             return FALSE;
+
+        /* XXX: av_find_stream_info() does this and some codecs really
+           want hard an extradata buffer for initialization (e.g. VC-1) */
+        if (!priv->avctx->extradata && priv->pctx->parser->split) {
+            const guchar *buf = GST_BUFFER_DATA(buffer);
+            guint buf_size = GST_BUFFER_SIZE(buffer);
+            buf_size = priv->pctx->parser->split(priv->avctx, buf, buf_size);
+            if (buf_size > 0 && !set_codec_data(priv->avctx, buf, buf_size))
+                return FALSE;
+        }
     }
 
     GST_VAAPI_DISPLAY_LOCK(display);
@@ -313,9 +324,7 @@ gst_vaapi_decoder_ffmpeg_destroy(GstVaapiDecoderFfmpeg *ffdecoder)
 static gboolean
 gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
 {
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(ffdecoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
-    GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
 
     if (!priv->frame) {
         priv->frame = avcodec_alloc_frame();
@@ -326,13 +335,6 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
     if (!priv->avctx) {
         priv->avctx = avcodec_alloc_context();
         if (!priv->avctx)
-            return FALSE;
-    }
-
-    if (codec_data) {
-        const guchar *data = GST_BUFFER_DATA(codec_data);
-        const guint   size = GST_BUFFER_SIZE(codec_data);
-        if (!set_codec_data(priv->avctx, data, size))
             return FALSE;
     }
 
@@ -410,21 +412,28 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
     inbuf_size = GST_BUFFER_SIZE(buffer);
     inbuf_ts   = GST_BUFFER_TIMESTAMP(buffer);
 
-    do {
-        int parsed_size = av_parser_parse(
-            priv->pctx,
-            priv->avctx,
-            &outbuf, &outbuf_size,
-            inbuf, inbuf_size,
-            inbuf_ts, inbuf_ts
-        );
-        got_frame = outbuf && outbuf_size > 0;
+    if (priv->pctx) {
+        do {
+            int parsed_size = av_parser_parse(
+                priv->pctx,
+                priv->avctx,
+                &outbuf, &outbuf_size,
+                inbuf, inbuf_size,
+                inbuf_ts, inbuf_ts
+            );
+            got_frame = outbuf && outbuf_size > 0;
 
-        if (parsed_size > 0) {
-            inbuf      += parsed_size;
-            inbuf_size -= parsed_size;
-        }
-    } while (!got_frame && inbuf_size > 0);
+            if (parsed_size > 0) {
+                inbuf      += parsed_size;
+                inbuf_size -= parsed_size;
+            }
+        } while (!got_frame && inbuf_size > 0);
+    }
+    else {
+        outbuf      = inbuf;
+        outbuf_size = inbuf_size;
+        got_frame   = inbuf && inbuf_size > 0;
+    }
 
     if (!got_frame && !GST_BUFFER_IS_EOS(buffer))
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
