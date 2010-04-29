@@ -200,7 +200,8 @@ static void
 gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
     gpointer stuff)
 {
-  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -216,7 +217,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9,
       filterblur->gauss_kernel);
 
-  gst_gl_filter_draw_texture (filterblur, texture);
+  gst_gl_filter_draw_texture (filter, texture);
 }
 
 
@@ -224,7 +225,8 @@ static void
 gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
     gpointer stuff)
 {
-  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
+  GstGLFilter *filter = GST_GL_FILTER (stuff);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -240,5 +242,5 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9,
       filterblur->gauss_kernel);
 
-  gst_gl_filter_draw_texture (filterblur, texture);
+  gst_gl_filter_draw_texture (filter, texture);
 }
