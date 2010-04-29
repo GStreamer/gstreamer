@@ -64,6 +64,8 @@ struct _GstGLFilter
   GLuint fbo;
   GLuint depthbuffer;
 
+  GstGLShader *default_shader;
+
   gulong external_gl_context;
 };
 
@@ -90,7 +92,11 @@ void
 gst_gl_filter_render_to_target (GstGLFilter *filter, 
 				GLuint input, GLuint target,
 				GLCB func, gpointer data);
+void
+gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
+                                            GLuint input, GLuint target, GstGLShader *shader);
 
+void gst_gl_filter_draw_texture (GstGLFilter *filter, GLuint texture);
 
 G_END_DECLS
 
