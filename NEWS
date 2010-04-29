@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-03-30
+gst-vaapi NEWS -- summary of changes.  2010-04-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.0 - DD.Apr.2010
+* Add FFmpeg/VAAPI decoder for the new `vaapidecode' element
 
 Version 0.1.2 - 30.Mar.2010
 * Add AYUV image format

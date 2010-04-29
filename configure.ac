@@ -321,6 +321,7 @@ pkgconfig/gstreamer-vaapi-glx.pc.in
 pkgconfig/gstreamer-vaapi-x11.pc.in
     gst/Makefile
     gst/vaapiconvert/Makefile
+    gst/vaapidecode/Makefile
     gst/vaapisink/Makefile
     tests/Makefile
 ])
