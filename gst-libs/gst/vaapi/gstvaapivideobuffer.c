@@ -39,11 +39,12 @@ G_DEFINE_TYPE(GstVaapiVideoBuffer, gst_vaapi_video_buffer, GST_TYPE_BUFFER);
                                  GstVaapiVideoBufferPrivate))
 
 struct _GstVaapiVideoBufferPrivate {
-    GstVaapiVideoPool  *image_pool;
-    GstVaapiImage      *image;
-    GstVaapiVideoPool  *surface_pool;
-    GstVaapiSurface    *surface;
-    guint               flags;
+    GstVaapiVideoPool          *image_pool;
+    GstVaapiImage              *image;
+    GstVaapiVideoPool          *surface_pool;
+    GstVaapiSurface            *surface;
+    GstVaapiSurfaceProxy       *proxy;
+    guint                       flags;
 };
 
 static void
@@ -69,6 +70,11 @@ static void
 gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
 {
     GstVaapiVideoBufferPrivate * const priv = buffer->priv;
+
+    if (priv->proxy) {
+        g_object_unref(priv->proxy);
+        priv->proxy = NULL;
+    }
 
     if (priv->surface) {
         if (priv->surface_pool)
@@ -119,6 +125,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
     priv->image         = NULL;
     priv->surface_pool  = NULL;
     priv->surface       = NULL;
+    priv->proxy         = NULL;
 }
 
 static inline GstVaapiVideoBuffer *
@@ -212,6 +219,28 @@ gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
     buffer = gst_vaapi_video_buffer_new();
     if (buffer)
         gst_vaapi_video_buffer_set_surface(buffer, surface);
+    return GST_BUFFER(buffer);
+}
+
+/**
+ * gst_vaapi_video_buffer_new_with_surface_proxy:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Creates a #GstBuffer with the specified surface @proxy. The
+ * resulting buffer holds an additional reference to the @proxy.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
+ */
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
+{
+    GstVaapiVideoBuffer *buffer;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+
+    buffer = gst_vaapi_video_buffer_new();
+    if (buffer)
+        gst_vaapi_video_buffer_set_surface_proxy(buffer, proxy);
     return GST_BUFFER(buffer);
 }
 
@@ -361,4 +390,50 @@ gst_vaapi_video_buffer_set_surface_from_pool(
         buffer->priv->surface_pool = g_object_ref(pool);
     }
     return TRUE;
+}
+
+/**
+ * gst_vaapi_video_buffer_get_surface_proxy:
+ * @buffer: a #GstVaapiVideoBuffer
+ *
+ * Retrieves the #GstVaapiSurfaceProxy bound to the @buffer. The @buffer
+ * owns the #GstVaapiSurfaceProxy so the caller is responsible for calling
+ * g_object_ref() when needed.
+ *
+ * Return value: the #GstVaapiSurfaceProxy bound to the @buffer, or
+ *   %NULL if there is none
+ */
+GstVaapiSurfaceProxy *
+gst_vaapi_video_buffer_get_surface_proxy(GstVaapiVideoBuffer *buffer)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), NULL);
+
+    return buffer->priv->proxy;
+}
+
+/**
+ * gst_vaapi_video_buffer_set_surface_proxy:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Binds surface @proxy to the @buffer. If the @buffer contains another
+ * surface previously allocated from a pool, it's pushed back to its
+ * parent pool and the pool is also released.
+ */
+void
+gst_vaapi_video_buffer_set_surface_proxy(
+    GstVaapiVideoBuffer  *buffer,
+    GstVaapiSurfaceProxy *proxy
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    gst_vaapi_video_buffer_destroy_surface(buffer);
+
+    if (proxy) {
+        GstVaapiVideoBufferPrivate * const priv = buffer->priv;
+        priv->proxy   = g_object_ref(proxy);
+        priv->surface = g_object_ref(GST_VAAPI_SURFACE_PROXY_SURFACE(proxy));
+    }
 }

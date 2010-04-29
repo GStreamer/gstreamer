@@ -24,6 +24,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapisurfaceproxy.h>
 #include <gst/vaapi/gstvaapivideopool.h>
 
 G_BEGIN_DECLS
@@ -90,6 +91,9 @@ gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
 
+GstBuffer *
+gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
+
 GstVaapiImage *
 gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer);
 
@@ -118,6 +122,15 @@ gboolean
 gst_vaapi_video_buffer_set_surface_from_pool(
     GstVaapiVideoBuffer *buffer,
     GstVaapiVideoPool   *pool
+);
+
+GstVaapiSurfaceProxy *
+gst_vaapi_video_buffer_get_surface_proxy(GstVaapiVideoBuffer *buffer);
+
+void
+gst_vaapi_video_buffer_set_surface_proxy(
+    GstVaapiVideoBuffer  *buffer,
+    GstVaapiSurfaceProxy *proxy
 );
 
 G_END_DECLS
