@@ -108,34 +108,23 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   gst_gl_effects_draw_texture (effects, texture);
 }
 
+/* multipass separable sobel */
 static void
-gst_gl_effects_xray_step_four (gint width, gint height, guint texture,
+gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
     gpointer data)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLShader *shader;
 
-  gfloat hkern[9] = {
-    1.0, 0.0, -1.0,
-    2.0, 0.0, -2.0,
-    1.0, 0.0, -1.0
-  };
-
-  gfloat vkern[9] = {
-    1.0, 2.0, 1.0,
-    0.0, 0.0, 0.0,
-    -1.0, -2.0, -1.0
-  };
-
-  shader = g_hash_table_lookup (effects->shaderstable, "xray3");
+  shader = g_hash_table_lookup (effects->shaderstable, "xray_desat");
 
   if (!shader) {
     shader = gst_gl_shader_new ();
-    g_hash_table_insert (effects->shaderstable, "xray3", shader);
+    g_hash_table_insert (effects->shaderstable, "xray_desat", shader);
   }
 
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sobel_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+          desaturate_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -148,14 +137,104 @@ gst_gl_effects_xray_step_four (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
-
-  gst_gl_shader_set_uniform_1fv (shader, "hkern", 9, hkern);
-  gst_gl_shader_set_uniform_1fv (shader, "vkern", 9, vkern);
-
-  gst_gl_shader_set_uniform_1i (shader, "invert", TRUE);
-
   gst_gl_effects_draw_texture (effects, texture);
 }
+
+static void
+gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
+    gpointer data)
+{
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLShader *shader;
+
+  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_hconv");
+
+  if (!shader) {
+    shader = gst_gl_shader_new ();
+    g_hash_table_insert (effects->shaderstable, "xray_sob_hconv", shader);
+  }
+
+  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
+          sep_sobel_hconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (shader);
+
+  glActiveTexture (GL_TEXTURE1);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 1);
+  gst_gl_effects_draw_texture (effects, texture);
+}
+
+static void
+gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
+    gpointer data)
+{
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLShader *shader;
+
+  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_vconv");
+
+  if (!shader) {
+    shader = gst_gl_shader_new ();
+    g_hash_table_insert (effects->shaderstable, "xray_sob_vconv", shader);
+  }
+
+  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
+          sep_sobel_vconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (shader);
+
+  glActiveTexture (GL_TEXTURE1);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 1);
+  gst_gl_effects_draw_texture (effects, texture);
+}
+
+static void
+gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
+    gpointer data)
+{
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLShader *shader;
+
+  shader = g_hash_table_lookup (effects->shaderstable, "xray_sob_len");
+
+  if (!shader) {
+    shader = gst_gl_shader_new ();
+    g_hash_table_insert (effects->shaderstable, "xray_sob_len", shader);
+  }
+
+  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
+          sep_sobel_length_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  gst_gl_shader_use (shader);
+
+  glActiveTexture (GL_TEXTURE1);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 1);
+  gst_gl_shader_set_uniform_1i (shader, "invert", TRUE);
+  gst_gl_effects_draw_texture (effects, texture);
+}
+
+/* end of sobel passes */
 
 void
 gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
@@ -191,7 +270,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
-  gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.28f);
+  gst_gl_shader_set_uniform_1f (shader, "alpha", (gfloat) 0.4f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
   gst_gl_effects_draw_texture (effects, texture);
@@ -212,9 +291,23 @@ gst_gl_effects_xray (GstGLEffects * effects)
   gst_gl_filter_render_to_target (filter, effects->midtexture[1],
       effects->midtexture[2], gst_gl_effects_xray_step_three, effects);
   /* detect edges with Sobel */
-  gst_gl_filter_render_to_target (filter, effects->midtexture[2],
-      effects->midtexture[3], gst_gl_effects_xray_step_four, effects);
-  /* multiply edges with the blurred image */
+  /* the old version used edges from the blurred texture, this uses
+   * the ones from original texture, still not sure what I like
+   * more. This one gives better edges obviously but behaves badly
+   * with noise */
+  /* desaturate */
+  gst_gl_filter_render_to_target (filter, effects->intexture,
+      effects->midtexture[3], gst_gl_effects_xray_desaturate, effects);
+  /* horizonal convolution */
   gst_gl_filter_render_to_target (filter, effects->midtexture[3],
+      effects->midtexture[4], gst_gl_effects_xray_sobel_hconv, effects);
+  /* vertical convolution */
+  gst_gl_filter_render_to_target (filter, effects->midtexture[4],
+      effects->midtexture[3], gst_gl_effects_xray_sobel_vconv, effects);
+  /* gradient length */
+  gst_gl_filter_render_to_target (filter, effects->midtexture[3],
+      effects->midtexture[4], gst_gl_effects_xray_sobel_length, effects);
+  /* multiply edges with the blurred image */
+  gst_gl_filter_render_to_target (filter, effects->midtexture[4],
       effects->outtexture, gst_gl_effects_xray_step_five, effects);
 }

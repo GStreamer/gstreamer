@@ -43,7 +43,7 @@ typedef struct _GstGLEffectsClass GstGLEffectsClass;
 
 typedef void (* GstGLEffectProcessFunc) (GstGLEffects *effects);
 
-#define NEEDED_TEXTURES 4
+#define NEEDED_TEXTURES 5
 
 enum {
   GST_GL_EFFECTS_CURVE_HEAT,
