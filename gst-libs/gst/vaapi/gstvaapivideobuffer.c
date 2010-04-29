@@ -44,7 +44,6 @@ struct _GstVaapiVideoBufferPrivate {
     GstVaapiVideoPool          *surface_pool;
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
-    guint                       flags;
 };
 
 static void
