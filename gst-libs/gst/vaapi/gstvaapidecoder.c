@@ -440,18 +440,35 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 gboolean
 gst_vaapi_decoder_start(GstVaapiDecoder *decoder)
 {
-    /* This is an internal function */
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
 
-    if (priv->decoder_task)
+    if (decoder->priv->decoder_task)
         return TRUE;
 
-    priv->decoder_task = gst_task_create(decoder_task, decoder);
-    if (!priv->decoder_task)
+    decoder->priv->decoder_task = gst_task_create(decoder_task, decoder);
+    if (!decoder->priv->decoder_task)
         return FALSE;
 
-    gst_task_set_lock(priv->decoder_task, &priv->decoder_task_lock);
-    return gst_task_start(priv->decoder_task);
+    gst_task_set_lock(decoder->priv->decoder_task, &decoder->priv->decoder_task_lock);
+    return gst_task_start(decoder->priv->decoder_task);
+}
+
+/**
+ * gst_vaapi_decoder_pause:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Pauses the decoder. It can be made active again through
+ * gst_vaapi_decoder_start() or definitely stopped through
+ * gst_vaapi_decoder_stop().
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_decoder_pause(GstVaapiDecoder *decoder)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
+
+    return gst_task_pause(decoder->priv->decoder_task);
 }
 
 /**
@@ -468,15 +485,16 @@ gst_vaapi_decoder_start(GstVaapiDecoder *decoder)
 gboolean
 gst_vaapi_decoder_stop(GstVaapiDecoder *decoder)
 {
-    /* This is an internal function */
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     gboolean success;
 
-    if (!priv->decoder_task)
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
+
+    if (!decoder->priv->decoder_task)
         return FALSE;
 
-    success = gst_task_join(priv->decoder_task);
-    priv->decoder_task = NULL;
+    success = gst_task_join(decoder->priv->decoder_task);
+    g_object_unref(decoder->priv->decoder_task);
+    decoder->priv->decoder_task = NULL;
     return success;
 }
 

@@ -128,6 +128,9 @@ gboolean
 gst_vaapi_decoder_start(GstVaapiDecoder *decoder);
 
 gboolean
+gst_vaapi_decoder_pause(GstVaapiDecoder *decoder);
+
+gboolean
 gst_vaapi_decoder_stop(GstVaapiDecoder *decoder);
 
 gboolean
