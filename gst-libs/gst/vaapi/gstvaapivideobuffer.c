@@ -127,16 +127,25 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
     priv->proxy         = NULL;
 }
 
-static inline GstVaapiVideoBuffer *
+/**
+ * gst_vaapi_video_buffer_new:
+ *
+ * Creates an empty #GstBuffer. The caller is responsible for completing
+ * the initialization of the buffer with the gst_vaapi_video_buffer_set_*()
+ * functions.
+ *
+ * Return value: the newly allocated #GstBuffer, or %NULL or error
+ */
+static inline gpointer
+_gst_vaapi_video_buffer_new(void)
+{
+    return gst_mini_object_new(GST_VAAPI_TYPE_VIDEO_BUFFER);
+}
+
+GstBuffer *
 gst_vaapi_video_buffer_new(void)
 {
-    GstMiniObject *object;
-
-    object = gst_mini_object_new(GST_VAAPI_TYPE_VIDEO_BUFFER);
-    if (!object)
-        return NULL;
-
-    return GST_VAAPI_VIDEO_BUFFER(object);
+    return _gst_vaapi_video_buffer_new();
 }
 
 /**
@@ -165,7 +174,7 @@ gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
     if (!is_image_pool && !is_surface_pool)
         return NULL;
 
-    buffer = gst_vaapi_video_buffer_new();
+    buffer = _gst_vaapi_video_buffer_new();
     if (buffer &&
         ((is_image_pool &&
           gst_vaapi_video_buffer_set_image_from_pool(buffer, pool)) ||
@@ -193,7 +202,7 @@ gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
-    buffer = gst_vaapi_video_buffer_new();
+    buffer = _gst_vaapi_video_buffer_new();
     if (buffer)
         gst_vaapi_video_buffer_set_image(buffer, image);
     return GST_BUFFER(buffer);
@@ -215,7 +224,7 @@ gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    buffer = gst_vaapi_video_buffer_new();
+    buffer = _gst_vaapi_video_buffer_new();
     if (buffer)
         gst_vaapi_video_buffer_set_surface(buffer, surface);
     return GST_BUFFER(buffer);
@@ -237,7 +246,7 @@ gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
-    buffer = gst_vaapi_video_buffer_new();
+    buffer = _gst_vaapi_video_buffer_new();
     if (buffer)
         gst_vaapi_video_buffer_set_surface_proxy(buffer, proxy);
     return GST_BUFFER(buffer);

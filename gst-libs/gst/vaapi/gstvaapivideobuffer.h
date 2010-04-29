@@ -83,6 +83,9 @@ GType
 gst_vaapi_video_buffer_get_type(void);
 
 GstBuffer *
+gst_vaapi_video_buffer_new(void);
+
+GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
 
 GstBuffer *
