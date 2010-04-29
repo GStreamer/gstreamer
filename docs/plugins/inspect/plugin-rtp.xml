@@ -1072,6 +1072,27 @@
       </pads>
     </element>
     <element>
+      <name>rtpqcelpdepay</name>
+      <longname>RTP QCELP depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts QCELP (PureVoice) audio from RTP packets (RFC 2658)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)QCELP; application/x-rtp, media=(string)audio, payload=(int)12, clock-rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/qcelp, channels=(int)1, rate=(int)8000</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpqdm2depay</name>
       <longname>RTP QDM2 depayloader</longname>
       <class>Codec/Depayloader/Network</class>

@@ -202,6 +202,13 @@ gst_smpte_alpha_class_init (GstSMPTEAlphaClass * klass)
       g_param_spec_double ("position", "Position",
           "Position of the transition effect", 0.0, 1.0, DEFAULT_PROP_POSITION,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstSMPTEAlpha:invert:
+   *
+   * Set to TRUE to invert the transition mask (ie. flip it horizontally).
+   *
+   * Since: 0.10.23
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INVERT,
       g_param_spec_boolean ("invert", "Invert",
           "Invert transition mask", DEFAULT_PROP_POSITION,

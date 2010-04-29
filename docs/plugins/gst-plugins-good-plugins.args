@@ -579,6 +579,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSMPTE::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert</NICK>
+<BLURB>Invert transition mask.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTSPSrc::debug</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2135,7 +2145,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>Rotate clockwise 90 degrees</DEFAULT>
+<DEFAULT>Identity (no rotation)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19486,6 +19496,16 @@
 <NICK>Type</NICK>
 <BLURB>The type of transition to use.</BLURB>
 <DEFAULT>A bar moves from left to right</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSMPTEAlpha::invert</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Invert</NICK>
+<BLURB>Invert transition mask.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

@@ -190,7 +190,6 @@
     <xi:include href="xml/plugin-flac.xml" />
     <xi:include href="xml/plugin-flv.xml" />
     <xi:include href="xml/plugin-flxdec.xml" />
-    <xi:include href="xml/plugin-gamma.xml" />
     <xi:include href="xml/plugin-gconfelements.xml" />
     <xi:include href="xml/plugin-gdkpixbuf.xml" />
     <xi:include href="xml/plugin-goom.xml" />
@@ -226,10 +225,9 @@
     <xi:include href="xml/plugin-taglib.xml" />
     <xi:include href="xml/plugin-udp.xml" />
     <xi:include href="xml/plugin-video4linux2.xml" />
-    <xi:include href="xml/plugin-videobalance.xml" />
     <xi:include href="xml/plugin-videobox.xml" />
     <xi:include href="xml/plugin-videocrop.xml" />
-    <xi:include href="xml/plugin-videoflip.xml" />
+    <xi:include href="xml/plugin-videofilter.xml" />
     <xi:include href="xml/plugin-videomixer.xml" />
     <xi:include href="xml/plugin-waveform.xml" />
     <xi:include href="xml/plugin-wavenc.xml" />

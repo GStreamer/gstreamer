@@ -88,9 +88,9 @@ GObject
           GstStreakTV
           GstRippleTV
           GstNavigationtest
-          GstVideoFlip
-          GstVideoBalance
           GstGamma
+          GstVideoBalance
+          GstVideoFlip
           GstSMPTEAlpha
           GstAlpha
           GstAlphaColor
@@ -166,6 +166,7 @@ GObject
         GstRtpMP4VDepay
         GstRtpMP4ADepay
         GstRtpMP4GDepay
+        GstRtpQCELPDepay
         GstRtpQDM2Depay
         GstRTPSirenDepay
         GstRtpSPEEXDepay
