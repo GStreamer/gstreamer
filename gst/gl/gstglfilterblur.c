@@ -126,7 +126,7 @@ gst_gl_filterblur_init (GstGLFilterBlur * filterblur,
   /* gaussian kernel (well, actually vector), size 9, standard
    * deviation 3.0 */
   /* FIXME: eventually make this a runtime property */
-  fill_gaussian_kernel (filterblur->gauss_kernel, 9, 3.0);
+  fill_gaussian_kernel (filterblur->gauss_kernel, 7, 3.0);
 }
 
 static void
@@ -173,11 +173,11 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
   GstGLFilterBlur *blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, hconv9_fragment_source,
+  gst_gl_display_gen_shader (filter->display, 0, hconv7_fragment_source,
       &blur_filter->shader0);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, vconv9_fragment_source,
+  gst_gl_display_gen_shader (filter->display, 0, vconv7_fragment_source,
       &blur_filter->shader1);
 }
 
@@ -214,7 +214,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
-  gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9,
+  gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 7,
       filterblur->gauss_kernel);
 
   gst_gl_filter_draw_texture (filter, texture);
@@ -239,7 +239,7 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
-  gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9,
+  gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 7,
       filterblur->gauss_kernel);
 
   gst_gl_filter_draw_texture (filter, texture);

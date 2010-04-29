@@ -40,7 +40,7 @@ struct _GstGLFilterBlur
   GstGLShader *shader1;
 
   GLuint midtexture;
-  float gauss_kernel[9];
+  float gauss_kernel[7];
 };
 
 struct _GstGLFilterBlurClass

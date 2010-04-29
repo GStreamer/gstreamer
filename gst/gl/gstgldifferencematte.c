@@ -101,10 +101,10 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
   g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[0],
           difference_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
   g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[1],
-          hconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[2],
-          vconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[3],
           texture_interp_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
@@ -204,7 +204,7 @@ gst_gl_differencematte_init (GstGLDifferenceMatte * differencematte,
   differencematte->newbgtexture = 0;
   differencematte->bg_has_changed = FALSE;
 
-  fill_gaussian_kernel (differencematte->kernel, 9, 3.0);
+  fill_gaussian_kernel (differencematte->kernel, 7, 30.0);
 }
 
 static void
@@ -341,7 +341,7 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
 
-  gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 9,
+  gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 7,
       differencematte->kernel);
 
   gst_gl_differencematte_draw_texture (differencematte, texture);
@@ -365,7 +365,7 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
 
-  gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 9,
+  gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 7,
       differencematte->kernel);
 
   gst_gl_differencematte_draw_texture (differencematte, texture);

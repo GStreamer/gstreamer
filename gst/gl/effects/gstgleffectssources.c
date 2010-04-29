@@ -348,50 +348,46 @@ const gchar *sep_sobel_vconv3_fragment_source =
   "  gl_FragColor = sum + vec4(0.5, 0.0, 0.0, 0.0);"
   "}";
 
-/* horizontal convolution 9x9 */
-const gchar *hconv9_fragment_source =
+/* horizontal convolution 7x7 */
+const gchar *hconv7_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
-  "uniform float kernel[9];"
+  "uniform float kernel[7];"
   "void main () {"
-  "  vec2 texturecoord[9];"
-  "  texturecoord[4] = gl_TexCoord[0].st;"
-  "  texturecoord[3] = texturecoord[4] - vec2(1.0, 0.0);"
+  "  vec2 texturecoord[7];"
+  "  texturecoord[3] = gl_TexCoord[0].st;"
   "  texturecoord[2] = texturecoord[3] - vec2(1.0, 0.0);"
   "  texturecoord[1] = texturecoord[2] - vec2(1.0, 0.0);"
   "  texturecoord[0] = texturecoord[1] - vec2(1.0, 0.0);"
+  "  texturecoord[4] = texturecoord[3] + vec2(1.0, 0.0);"
   "  texturecoord[5] = texturecoord[4] + vec2(1.0, 0.0);"
   "  texturecoord[6] = texturecoord[5] + vec2(1.0, 0.0);"
-  "  texturecoord[7] = texturecoord[6] + vec2(1.0, 0.0);"
-  "  texturecoord[8] = texturecoord[7] + vec2(1.0, 0.0);"
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
-  "  for (i = 0; i < 9; i++) { "
+  "  for (i = 0; i < 7; i++) { "
   "    vec4 neighbor = texture2DRect(tex, texturecoord[i]); "
   "    sum += neighbor * kernel[i];"
   "  }"
   "  gl_FragColor = sum;"
   "}";
 
-/* vertical convolution 9x9 */
-const gchar *vconv9_fragment_source =
+/* vertical convolution 7x7 */
+const gchar *vconv7_fragment_source =
   "#extension GL_ARB_texture_rectangle : enable\n"
   "uniform sampler2DRect tex;"
-  "uniform float kernel[9];"
+  "uniform float kernel[7];"
   "void main () {"
-  "  vec2 texturecoord[9];"
-  "  texturecoord[4] = gl_TexCoord[0].st;"
-  "  texturecoord[3] = texturecoord[4] - vec2(0.0, 1.0);"
+  "  vec2 texturecoord[7];"
+  "  texturecoord[3] = gl_TexCoord[0].st;"
   "  texturecoord[2] = texturecoord[3] - vec2(0.0, 1.0);"
   "  texturecoord[1] = texturecoord[2] - vec2(0.0, 1.0);"
   "  texturecoord[0] = texturecoord[1] - vec2(0.0, 1.0);"
+  "  texturecoord[4] = texturecoord[3] + vec2(0.0, 1.0);"
   "  texturecoord[5] = texturecoord[4] + vec2(0.0, 1.0);"
   "  texturecoord[6] = texturecoord[5] + vec2(0.0, 1.0);"
-  "  texturecoord[7] = texturecoord[6] + vec2(0.0, 1.0);"
-  "  texturecoord[8] = texturecoord[7] + vec2(0.0, 1.0);"
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
-  "  for (i = 0; i < 9; i++) { "
+  "  for (i = 0; i < 7; i++) { "
   "    vec4 neighbor = texture2DRect(tex, texturecoord[i]);"
   "    sum += neighbor * kernel[i];"
   "  }"

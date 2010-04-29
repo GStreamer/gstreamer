@@ -23,9 +23,7 @@
 #include <gstgleffectlumatocurve.h>
 
 static gboolean kernel_ready = FALSE;
-static float gauss_kernel[9];
-
-/* Normalization Constant = 0.999885 */
+static float gauss_kernel[7];
 
 static void
 gst_gl_effects_xray_step_one (gint width, gint height, guint texture,
@@ -52,12 +50,12 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
   }
 
   if (!kernel_ready) {
-    fill_gaussian_kernel (gauss_kernel, 9, 1.5);
+    fill_gaussian_kernel (gauss_kernel, 7, 1.5);
     kernel_ready = TRUE;
   }
 
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          hconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -90,7 +88,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
   }
 
   g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          vconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
