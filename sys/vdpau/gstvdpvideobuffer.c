@@ -163,14 +163,16 @@ gst_vdp_video_buffer_get_caps (gboolean filter, VdpChromaType chroma_type)
 }
 
 GstCaps *
-gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device)
+gst_vdp_video_buffer_get_allowed_caps (GstVdpDevice * device)
 {
-  GstCaps *caps;
+  GstCaps *video_caps, *yuv_caps;
   gint i;
+  VdpStatus status;
 
-  caps = gst_caps_new_empty ();
+  video_caps = gst_caps_new_empty ();
+  yuv_caps = gst_caps_new_empty ();
+
   for (i = 0; i < G_N_ELEMENTS (chroma_types); i++) {
-    VdpStatus status;
     VdpBool is_supported;
     guint32 max_w, max_h;
 
@@ -178,16 +180,18 @@ gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device)
         device->vdp_video_surface_query_capabilities (device->device,
         chroma_types[i], &is_supported, &max_w, &max_h);
 
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
-      GST_ERROR_OBJECT (device,
-          "Could not get query VDPAU video surface capabilites, "
-          "Error returned from vdpau was: %s",
-          device->vdp_get_error_string (status));
+    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE)
+      goto surface_query_caps_error;
 
-      goto error;
-    }
     if (is_supported) {
+      GstCaps *format_caps;
       gint j;
+
+      format_caps = gst_caps_new_simple ("video/x-vdpau-video",
+          "chroma-type", G_TYPE_INT, chroma_types[i],
+          "width", GST_TYPE_INT_RANGE, 1, max_w,
+          "height", GST_TYPE_INT_RANGE, 1, max_h, NULL);
+      gst_caps_append (video_caps, format_caps);
 
       for (j = 0; j < G_N_ELEMENTS (formats); j++) {
         if (formats[j].chroma_type != chroma_types[i])
@@ -197,69 +201,36 @@ gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device)
             device->vdp_video_surface_query_ycbcr_capabilities (device->device,
             formats[j].chroma_type, formats[j].format, &is_supported);
         if (status != VDP_STATUS_OK
-            && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
-          GST_ERROR_OBJECT (device, "Could not query VDPAU YCbCr capabilites, "
-              "Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status));
-
-          goto error;
-        }
+            && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT)
+          goto surface_query_ycbcr_error;
 
         if (is_supported) {
-          GstCaps *format_caps;
-
           format_caps = gst_caps_new_simple ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, formats[j].fourcc,
               "width", GST_TYPE_INT_RANGE, 1, max_w,
               "height", GST_TYPE_INT_RANGE, 1, max_h, NULL);
-          gst_caps_append (caps, format_caps);
+          gst_caps_append (yuv_caps, format_caps);
         }
       }
     }
   }
 
-error:
-  return caps;
-}
+done:
+  gst_caps_append (video_caps, yuv_caps);
+  return video_caps;
 
-GstCaps *
-gst_vdp_video_buffer_get_allowed_video_caps (GstVdpDevice * device)
-{
-  GstCaps *caps;
-  gint i;
+surface_query_caps_error:
+  GST_ERROR_OBJECT (device,
+      "Could not get query VDPAU video surface capabilites, "
+      "Error returned from vdpau was: %s",
+      device->vdp_get_error_string (status));
+  goto done;
 
-  caps = gst_caps_new_empty ();
-  for (i = 0; i < G_N_ELEMENTS (chroma_types); i++) {
-    VdpStatus status;
-    VdpBool is_supported;
-    guint32 max_w, max_h;
-
-    status =
-        device->vdp_video_surface_query_capabilities (device->device,
-        chroma_types[i], &is_supported, &max_w, &max_h);
-
-    if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
-      GST_ERROR_OBJECT (device,
-          "Could not get query VDPAU video surface capabilites, "
-          "Error returned from vdpau was: %s",
-          device->vdp_get_error_string (status));
-
-      goto error;
-    }
-
-    if (is_supported) {
-      GstCaps *format_caps;
-
-      format_caps = gst_caps_new_simple ("video/x-vdpau-video",
-          "chroma-type", G_TYPE_INT, chroma_types[i],
-          "width", GST_TYPE_INT_RANGE, 1, max_w,
-          "height", GST_TYPE_INT_RANGE, 1, max_h, NULL);
-      gst_caps_append (caps, format_caps);
-    }
-  }
-
-error:
-  return caps;
+surface_query_ycbcr_error:
+  GST_ERROR_OBJECT (device, "Could not query VDPAU YCbCr capabilites, "
+      "Error returned from vdpau was: %s",
+      device->vdp_get_error_string (status));
+  goto done;
 }
 
 gboolean

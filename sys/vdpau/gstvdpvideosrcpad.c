@@ -127,21 +127,19 @@ gst_vdp_video_src_pad_push (GstVdpVideoSrcPad * vdp_pad,
 static void
 gst_vdp_video_src_pad_update_caps (GstVdpVideoSrcPad * vdp_pad)
 {
-  GstCaps *yuv_caps, *video_caps;
+  GstCaps *caps;
   const GstCaps *templ_caps;
-
-  video_caps = gst_vdp_video_buffer_get_allowed_video_caps (vdp_pad->device);
-  yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (vdp_pad->device);
-  gst_caps_append (video_caps, yuv_caps);
 
   if (vdp_pad->caps)
     gst_caps_unref (vdp_pad->caps);
 
+  caps = gst_vdp_video_buffer_get_allowed_caps (vdp_pad->device);
+
   if ((templ_caps = gst_pad_get_pad_template_caps (GST_PAD (vdp_pad)))) {
-    vdp_pad->caps = gst_caps_intersect (video_caps, templ_caps);
-    gst_caps_unref (video_caps);
+    vdp_pad->caps = gst_caps_intersect (caps, templ_caps);
+    gst_caps_unref (caps);
   } else
-    vdp_pad->caps = video_caps;
+    vdp_pad->caps = caps;
 }
 
 GstFlowReturn

@@ -844,11 +844,7 @@ gst_vdp_vpp_sink_getcaps (GstPad * pad)
   GstCaps *caps;
 
   if (vpp->device) {
-    GstCaps *video_caps, *yuv_caps;
-    video_caps = gst_vdp_video_buffer_get_allowed_video_caps (vpp->device);
-    yuv_caps = gst_vdp_video_buffer_get_allowed_yuv_caps (vpp->device);
-    gst_caps_append (video_caps, yuv_caps);
-    caps = video_caps;
+    caps = gst_vdp_video_buffer_get_allowed_caps (vpp->device);
   } else {
     GstElementClass *element_class = GST_ELEMENT_GET_CLASS (vpp);
     GstPadTemplate *sink_template;

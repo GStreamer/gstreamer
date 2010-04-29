@@ -809,8 +809,8 @@ gst_vdp_sink_show_frame (GstBaseSink * bsink, GstBuffer * outbuf)
 
     g_mutex_lock (vdp_sink->x_lock);
     status =
-        device->vdp_presentation_queue_query_surface_status (vdp_sink->window->
-        queue, surface, &queue_status, &pres_time);
+        device->vdp_presentation_queue_query_surface_status (vdp_sink->
+        window->queue, surface, &queue_status, &pres_time);
     g_mutex_unlock (vdp_sink->x_lock);
 
     if (queue_status == VDP_PRESENTATION_QUEUE_STATUS_QUEUED) {

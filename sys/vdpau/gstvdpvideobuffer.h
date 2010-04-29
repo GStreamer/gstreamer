@@ -96,8 +96,7 @@ GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaTyp
 void gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer *buffer, GstVdpVideoBuffer *buf);
 
 GstCaps *gst_vdp_video_buffer_get_caps (gboolean filter, VdpChromaType chroma_type);
-GstCaps *gst_vdp_video_buffer_get_allowed_yuv_caps (GstVdpDevice * device);
-GstCaps *gst_vdp_video_buffer_get_allowed_video_caps (GstVdpDevice * device);
+GstCaps *gst_vdp_video_buffer_get_allowed_caps (GstVdpDevice * device);
 
 GstCaps *gst_vdp_video_buffer_parse_yuv_caps (GstCaps *yuv_caps);
 
