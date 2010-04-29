@@ -262,14 +262,14 @@ gst_vaapi_decoder_finalize(GObject *object)
     }
 
     if (priv->buffers) {
-        clear_async_queue(priv->buffers, (GDestroyNotify)g_object_unref);
-        g_object_unref(priv->buffers);
+        clear_async_queue(priv->buffers, (GDestroyNotify)gst_buffer_unref);
+        g_async_queue_unref(priv->buffers);
         priv->buffers = NULL;
     }
 
     if (priv->surfaces) {
         clear_async_queue(priv->surfaces, (GDestroyNotify)destroy_surface);
-        g_object_unref(priv->surfaces);
+        g_async_queue_unref(priv->surfaces);
         priv->surfaces = NULL;
     }
 
