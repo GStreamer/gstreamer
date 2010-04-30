@@ -294,6 +294,22 @@ _gst_tag_initialize (void)
       G_TYPE_STRING, _("geo location sublocation"),
       _("a location whithin a city where the media has been produced "
           "or created (e.g. the neighborhood)"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location movement speed"),
+      _("movement speed of the capturing device while performing the capture "
+          "in m/s"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location movement direction"),
+      _("indicates the movement direction of the device performing the capture"
+          " of a media. It is represented as degrees in floating point "
+          "representation, 0 means the geographic north, and increases "
+          "clockwise"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location capture direction"),
+      _("indicates the direction the device is pointing to when capturing "
+          " a media. It is represented as degrees in floating point "
+          " representation, 0 means the geographic north, and increases "
+          "clockwise"), NULL);
   gst_tag_register (GST_TAG_SHOW_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
       /* TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here */
       _("show name"),

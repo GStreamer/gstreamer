@@ -823,6 +823,41 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GEO_LOCATION_SUBLOCATION             "geo-location-sublocation"
 /**
+ * GST_TAG_GEO_LOCATION_MOVEMENT_SPEED:
+ *
+ * Speed of the capturing device when performing the capture.
+ * Represented in m/s. (double)
+ *
+ * See also #GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION
+ *
+ * Since 0.10.30
+ */
+#define GST_TAG_GEO_LOCATION_MOVEMENT_SPEED       "geo-location-movement-speed"
+/**
+ * GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION:
+ *
+ * Indicates the movement direction of the device performing the capture
+ * of a media. It is represented as degrees in floating point representation,
+ * 0 means the geographic north, and increases clockwise (double from 0 to 360)
+ *
+ * See also #GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION
+ *
+ * Since: 0.10.30
+ */
+#define GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION "geo-location-movement-direction"
+/**
+ * GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION:
+ *
+ * Indicates the direction the device is pointing to when capturing
+ * a media. It is represented as degrees in floating point representation,
+ * 0 means the geographic north, and increases clockwise (double from 0 to 360)
+ *
+ * See also #GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION
+ *
+ * Since: 0.10.30
+ */
+#define GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION  "geo-location-capture-direction"
+/**
  * GST_TAG_SHOW_NAME:
  *
  * Name of the show, used for displaying (string)
