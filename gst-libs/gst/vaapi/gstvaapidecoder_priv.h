@@ -87,19 +87,16 @@ G_BEGIN_DECLS
                                  GstVaapiDecoderPrivate))
 
 struct _GstVaapiDecoderPrivate {
-    GstVaapiDisplay            *display;
-    GstVaapiContext            *context;
-    GstVaapiCodec               codec;
-    GstBuffer                  *codec_data;
-    guint                       fps_n;
-    guint                       fps_d;
-    GAsyncQueue                *buffers;
-    GAsyncQueue                *surfaces;
-    GstClockTime                surface_timestamp;
-    GstClockTime                surface_duration;
-    GstTask                    *decoder_task;
-    GStaticRecMutex             decoder_task_lock;
-    GstVaapiDecoderStatus       decoder_status;
+    GstVaapiDisplay    *display;
+    GstVaapiContext    *context;
+    GstVaapiCodec       codec;
+    GstBuffer          *codec_data;
+    guint               fps_n;
+    guint               fps_d;
+    GQueue             *buffers;
+    GQueue             *surfaces;
+    GstClockTime        surface_timestamp;
+    GstClockTime        surface_duration;
 };
 
 gboolean

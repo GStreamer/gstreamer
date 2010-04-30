@@ -28,10 +28,6 @@
 #include "test-h264.h"
 #include "test-vc1.h"
 
-/* Default timeout to wait for the first decoded frame (10 ms) */
-/* Defined to -1 if the application indefintely waits for the decoded frame */
-#define TIMEOUT -1
-
 typedef void (*GetVideoDataFunc)(const guchar **data, guint *size);
 
 typedef struct _CodecDefs CodecDefs;
@@ -123,16 +119,9 @@ main(int argc, char *argv[])
     if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
         g_error("could not send EOS to the decoder");
 
-    if (TIMEOUT < 0) {
-        proxy = gst_vaapi_decoder_get_surface(decoder, &status);
-        if (!proxy)
-            g_error("could not get decoded surface");
-    }
-    else {
-        proxy = gst_vaapi_decoder_timed_get_surface(decoder, TIMEOUT, &status);
-        if (!proxy)
-            g_warning("Could not get decoded surface after %d us", TIMEOUT);
-    }
+    proxy = gst_vaapi_decoder_get_surface(decoder, &status);
+    if (!proxy)
+        g_error("could not get decoded surface (decoder status %d)", status);
 
     gst_vaapi_window_show(window);
 

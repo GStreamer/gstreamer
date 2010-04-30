@@ -91,18 +91,21 @@ enum {
     PROP_USE_FFMPEG,
 };
 
-static void
-gst_vaapidecode_task_cb(gpointer data)
+static GstFlowReturn
+gst_vaapidecode_step(GstVaapiDecode *decode)
 {
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(data);
-    GstVaapiDecoderStatus status;
     GstVaapiSurfaceProxy *proxy;
+    GstVaapiDecoderStatus status;
     GstBuffer *buffer;
     GstFlowReturn ret;
 
-    proxy = gst_vaapi_decoder_timed_get_surface(decode->decoder, 10000, &status);
-    if (!proxy || status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return;
+    proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
+    if (!proxy) {
+        if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
+            goto error_decode;
+        /* More data is needed */
+        return GST_FLOW_OK;
+    }
 
     buffer = NULL;
     ret = gst_pad_alloc_buffer(
@@ -125,9 +128,14 @@ gst_vaapidecode_task_cb(gpointer data)
         goto error_commit_buffer;
 
     g_object_unref(proxy);
-    return;
+    return GST_FLOW_OK;
 
     /* ERRORS */
+error_decode:
+    {
+        GST_DEBUG("decode error %d", status);
+        return GST_FLOW_UNEXPECTED;
+    }
 error_create_buffer:
     {
         const GstVaapiID surface_id =
@@ -137,50 +145,14 @@ error_create_buffer:
                   "surface %" GST_VAAPI_ID_FORMAT " (error %d)",
                   GST_VAAPI_ID_ARGS(surface_id), ret);
         g_object_unref(proxy);
-        return;
+        return GST_FLOW_UNEXPECTED;
     }
 error_commit_buffer:
     {
         GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
         g_object_unref(proxy);
-        return;
+        return GST_FLOW_UNEXPECTED;
     }
-}
-
-static gboolean
-gst_vaapidecode_start(GstVaapiDecode *decode)
-{
-    if (gst_task_get_state(decode->decoder_task) == GST_TASK_STARTED)
-        return TRUE;
-
-    GST_DEBUG("start decoding threads");
-    if (!gst_vaapi_decoder_start(decode->decoder))
-        return FALSE;
-    return gst_task_start(decode->decoder_task);
-}
-
-static gboolean
-gst_vaapidecode_pause(GstVaapiDecode *decode)
-{
-    if (gst_task_get_state(decode->decoder_task) == GST_TASK_PAUSED)
-        return TRUE;
-
-    GST_DEBUG("pause decoding threads");
-    if (!gst_vaapi_decoder_pause(decode->decoder))
-        return FALSE;
-    return gst_task_pause(decode->decoder_task);
-}
-
-static gboolean
-gst_vaapidecode_stop(GstVaapiDecode *decode)
-{
-    if (gst_task_get_state(decode->decoder_task) == GST_TASK_STOPPED)
-        return TRUE;
-
-    GST_DEBUG("stop decoding threads");
-    if (!gst_vaapi_decoder_stop(decode->decoder))
-        return FALSE;
-    return gst_task_stop(decode->decoder_task);
 }
 
 static gboolean
@@ -208,26 +180,12 @@ gst_vaapidecode_create(GstVaapiDecode *decode)
     if (decode->use_ffmpeg)
         decode->decoder =
             gst_vaapi_decoder_ffmpeg_new(display, codec, decode->codec_data);
-    if (!decode->decoder)
-        return FALSE;
-
-    decode->decoder_task = gst_task_create(gst_vaapidecode_task_cb, decode);
-    if (!decode->decoder_task)
-        return FALSE;
-
-    gst_task_set_lock(decode->decoder_task, &decode->decoder_task_lock);
-    return TRUE;
+    return decode->decoder != NULL;
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    if (decode->decoder_task) {
-        gst_task_join(decode->decoder_task);
-        g_object_unref(decode->decoder_task);
-        decode->decoder_task = NULL;
-    }
-
     if (decode->decoder) {
         gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
@@ -322,8 +280,6 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
         break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-        if (!gst_vaapidecode_start(decode))
-            return GST_STATE_CHANGE_FAILURE;
         break;
     default:
         break;
@@ -335,12 +291,8 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
 
     switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-        if (!gst_vaapidecode_pause(decode))
-            return GST_STATE_CHANGE_FAILURE;
         break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-        if (!gst_vaapidecode_stop(decode))
-            return GST_STATE_CHANGE_FAILURE;
         break;
     default:
         break;
@@ -424,25 +376,16 @@ gst_vaapidecode_chain(GstPad *pad, GstBuffer *buf)
             goto error_create_decoder;
     }
 
-    if (!gst_vaapidecode_start(decode))
-        goto error_start_decoder;
-
     if (!gst_vaapi_decoder_put_buffer(decode->decoder, buf))
         goto error_push_buffer;
 
     gst_buffer_unref(buf);
-    return GST_FLOW_OK;
+    return gst_vaapidecode_step(decode);
 
     /* ERRORS */
 error_create_decoder:
     {
         GST_DEBUG("failed to create decoder");
-        gst_buffer_unref(buf);
-        return GST_FLOW_UNEXPECTED;
-    }
-error_start_decoder:
-    {
-        GST_DEBUG("failed to start decoder");
         gst_buffer_unref(buf);
         return GST_FLOW_UNEXPECTED;
     }
@@ -481,14 +424,11 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
-    decode->display             = NULL;
-    decode->profile             = 0;
-    decode->codec_data          = NULL;
-    decode->decoder             = NULL;
-    decode->decoder_task        = NULL;
-    decode->use_ffmpeg          = TRUE;
-
-    g_static_rec_mutex_init(&decode->decoder_task_lock);
+    decode->display     = NULL;
+    decode->profile     = 0;
+    decode->codec_data  = NULL;
+    decode->decoder     = NULL;
+    decode->use_ffmpeg  = TRUE;
 
     /* Pad through which data comes in to the element */
     decode->sinkpad = gst_pad_new_from_template(

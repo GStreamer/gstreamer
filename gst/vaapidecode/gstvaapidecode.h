@@ -65,8 +65,6 @@ struct _GstVaapiDecode {
     GstVaapiProfile     profile;
     GstBuffer          *codec_data;
     GstVaapiDecoder    *decoder;
-    GstTask            *decoder_task;
-    GStaticRecMutex     decoder_task_lock;
     unsigned int        use_ffmpeg      : 1;
 };
 

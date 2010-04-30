@@ -156,13 +156,6 @@ gst_vaapi_decoder_get_surface(
     GstVaapiDecoderStatus *pstatus
 );
 
-GstVaapiSurfaceProxy *
-gst_vaapi_decoder_timed_get_surface(
-    GstVaapiDecoder       *decoder,
-    guint32                timeout,
-    GstVaapiDecoderStatus *pstatus
-);
-
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_H */
