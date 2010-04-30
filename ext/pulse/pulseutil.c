@@ -180,7 +180,7 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     if (map->map[i] == PA_CHANNEL_POSITION_INVALID) {
       invalid = TRUE;
       break;
-    } else if (map->map[i] < GST_AUDIO_CHANNEL_POSITION_NUM) {
+    } else if ((int) map->map[i] < (int) GST_AUDIO_CHANNEL_POSITION_NUM) {
       pos[i] = pa_to_gst_pos[map->map[i] + 1];
     } else {
       invalid = TRUE;
