@@ -1047,6 +1047,13 @@ gst_ogg_chain_free (GstOggChain * chain)
 }
 
 static void
+gst_ogg_pad_mark_discont (GstOggPad * pad)
+{
+  pad->discont = TRUE;
+  pad->map.last_size = 0;
+}
+
+static void
 gst_ogg_chain_mark_discont (GstOggChain * chain)
 {
   gint i;
@@ -1054,8 +1061,7 @@ gst_ogg_chain_mark_discont (GstOggChain * chain)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-    pad->discont = TRUE;
-    pad->map.last_size = 0;
+    gst_ogg_pad_mark_discont (pad);
   }
 }
 
@@ -1087,8 +1093,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   gst_object_sink (ret);
 
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
-  ret->discont = TRUE;
-  ret->map.last_size = 0;
+  gst_ogg_pad_mark_discont (ret);
 
   ret->chain = chain;
   ret->ogg = chain->ogg;
@@ -1640,8 +1645,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
       /* mark discont */
-      pad->discont = TRUE;
-      pad->map.last_size = 0;
+      gst_ogg_pad_mark_discont (pad);
       pad->last_ret = GST_FLOW_OK;
       pad->added = TRUE;
 
@@ -2261,10 +2265,37 @@ no_chain:
 static gboolean
 gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
 {
-  /* can't seek if we are not pullmode, FIXME could pass the
-   * seek query upstream after converting it to bytes using
-   * the average bitrate of the stream. */
-  return FALSE;
+  gint bitrate;
+  gboolean res;
+
+  bitrate = ogg->bitrate;
+
+  if (bitrate > 0) {
+    GstFormat format;
+    gdouble rate;
+    GstSeekFlags flags;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
+    GstEvent *sevent;
+
+    gst_event_parse_seek (event, &rate, &format, &flags,
+        &start_type, &start, &stop_type, &stop);
+
+    /* convert the seek positions to bytes */
+    if (start_type != GST_SEEK_TYPE_NONE) {
+      start = gst_util_uint64_scale (start, bitrate, 8 * GST_SECOND);
+    }
+    if (stop_type != GST_SEEK_TYPE_NONE) {
+      stop = gst_util_uint64_scale (stop, bitrate, 8 * GST_SECOND);
+    }
+    sevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+        start_type, start, stop_type, stop);
+
+    res = gst_pad_push_event (ogg->sinkpad, sevent);
+  } else {
+    res = FALSE;
+  }
+  return res;
 }
 
 static gboolean
@@ -2284,7 +2315,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 /* finds each bitstream link one at a time using a bisection search
  * (has to begin by knowing the offset of the lb's initial page).
  * Recurses for each link so it can alloc the link storage after
- * finding them all, then unroll and fill the cache at the same time 
+ * finding them all, then unroll and fill the cache at the same time
  */
 static GstFlowReturn
 gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
