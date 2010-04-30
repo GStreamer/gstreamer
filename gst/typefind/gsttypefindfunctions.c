@@ -660,7 +660,6 @@ static void
 aac_type_find (GstTypeFind * tf, gpointer unused)
 {
   /* LUT to convert the AudioObjectType from the ADTS header to a string */
-  static const gchar profile_to_string[][5] = { "main", "lc", "ssr", "ltp" };
   DataScanCtx c = { 0, NULL, 0 };
 
   while (c.offset < AAC_AMOUNT) {
@@ -693,11 +692,11 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
       snc = GST_READ_UINT16_BE (c.data + len);
       if ((snc & 0xfff6) == 0xfff0) {
         GstCaps *caps;
-        guint mpegversion, sample_freq_idx, channel_config, profile, rate;
+        guint mpegversion, sample_freq_idx, channel_config, profile_idx, rate;
         guint8 audio_config[2];
 
         mpegversion = (c.data[1] & 0x08) ? 2 : 4;
-        profile = c.data[2] >> 6;
+        profile_idx = c.data[2] >> 6;
         sample_freq_idx = ((c.data[2] & 0x3c) >> 2);
         channel_config = ((c.data[2] & 0x01) << 2) + (c.data[3] >> 6);
 
@@ -713,13 +712,13 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         }
 
         rate = gst_codec_utils_aac_get_sample_rate_from_index (sample_freq_idx);
-        GST_LOG ("ADTS: profile=%u, rate=%u", profile, rate);
+        GST_LOG ("ADTS: profile=%u, rate=%u", profile_idx, rate);
 
         /* The ADTS frame header is slightly different from the
          * AudioSpecificConfig defined for the MPEG-4 container, so we just
          * construct enough of it for getting the level here. */
         /* ADTS counts profiles from 0 instead of 1 to save bits */
-        audio_config[0] = (profile + 1) << 3;
+        audio_config[0] = (profile_idx + 1) << 3;
         audio_config[0] |= (sample_freq_idx >> 1) & 0x7;
         audio_config[1] = (sample_freq_idx & 0x1) << 7;
         audio_config[1] |= (channel_config & 0xf) << 3;
@@ -727,11 +726,9 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         caps = gst_caps_new_simple ("audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
             "mpegversion", G_TYPE_INT, mpegversion,
-            "stream-type", G_TYPE_STRING, "adts",
-            "base-profile", G_TYPE_STRING, profile_to_string[profile],
-            "profile", G_TYPE_STRING, profile_to_string[profile], NULL);
+            "stream-type", G_TYPE_STRING, "adts", NULL);
 
-        gst_codec_utils_aac_caps_set_level (caps, audio_config, 2);
+        gst_codec_utils_aac_caps_set_level_and_profile (caps, audio_config, 2);
 
         /* add rate and number of channels if we can */
         if (channel_config != 0 && channel_config <= 7) {

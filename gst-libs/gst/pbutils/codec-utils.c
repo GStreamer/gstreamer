@@ -34,6 +34,12 @@
 
 #include "pbutils.h"
 
+#define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
+    gst_structure_has_name(gst_caps_get_structure((caps),0),(name))
+
+#define GST_SIMPLE_CAPS_HAS_FIELD(caps,field) \
+    gst_structure_has_field(gst_caps_get_structure((caps),0),(field))
+
 /**
  * gst_codec_utils_aac_get_sample_rate_from_index:
  * @sr_idx: Sample rate index as from the AudioSpecificConfig (MPEG-4
@@ -56,6 +62,50 @@ gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
 
   GST_WARNING ("Invalid sample rate index %u", sr_idx);
   return 0;
+}
+
+/**
+ * gst_codec_utils_aac_get_profile:
+ * @audio_config: a pointer to the AudioSpecificConfig as specified in the
+ *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
+ *                below for a more details).
+ * @len: Length of @audio_config in bytes
+ *
+ * Returns the profile of the given AAC stream as a string. The profile is
+ * determined using the AudioObjectType field which is in the first 5 bits of
+ * @audio_config.
+ *
+ * <note>
+ * HE-AAC support has not yet been implemented.
+ * </note>
+ *
+ * Returns: The profile as a const string and NULL if the profile could not be
+ * determined.
+ */
+const gchar *
+gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
+{
+  guint profile;
+
+  if (len < 1)
+    return NULL;
+
+  profile = audio_config[0] >> 3;
+  switch (profile) {
+    case 1:
+      return "main";
+    case 2:
+      return "lc";
+    case 3:
+      return "ssr";
+    case 4:
+      return "ltp";
+    default:
+      break;
+  }
+
+  GST_DEBUG ("Invalid profile idx: %u", profile);
+  return NULL;
 }
 
 /**
@@ -246,33 +296,55 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
 }
 
 /**
- * gst_codec_utils_aac_caps_set_level:
- * @caps: the #GstCaps to which the level is to be added
+ * gst_codec_utils_aac_caps_set_level_and_profile:
+ * @caps: the #GstCaps to which level and profile fields are to be added
  * @audio_config: a pointer to the AudioSpecificConfig as specified in the
  *                Elementary Stream Descriptor (esds) in ISO/IEC 14496-1 (see
  *                below for a more details).
  * @len: Length of @audio_config in bytes
  *
- * Sets the level in @caps if it can be determined from @audio_config. See
- * #gst_codec_utils_aac_get_level() for more details on the parameters.
+ * Sets the level and profile on @caps if it can be determined from
+ * @audio_config. See #gst_codec_utils_aac_get_level() and
+ * gst_codec_utils_aac_get_profile() for more details on the parameters.
+ * @caps must be audio/mpeg caps with an "mpegversion" field of either 2 or 4.
+ * If mpegversion is 4, the <tt>base-profile</tt> field is also set in @caps.
  *
- * Returns: TRUE if the level could be set, FALSE otherwise.
+ * Returns: TRUE if the level and profile could be set, FALSE otherwise.
  */
 gboolean
-gst_codec_utils_aac_caps_set_level (GstCaps * caps,
+gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
     const guint8 * audio_config, guint len)
 {
-  const gchar *level;
+  GstStructure *s;
+  const gchar *level, *profile;
+  int mpegversion = 0;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+  g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "audio/mpeg"), FALSE);
+  g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_FIELD (caps, "mpegversion"), FALSE);
   g_return_val_if_fail (audio_config != NULL, FALSE);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (s, "mpegversion", &mpegversion);
+  g_return_val_if_fail (mpegversion == 2 || mpegversion == 4, FALSE);
 
   level = gst_codec_utils_aac_get_level (audio_config, len);
 
-  if (!level)
-    return FALSE;
+  if (level != NULL)
+    gst_structure_set (s, "level", G_TYPE_STRING, level, NULL);
 
-  gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+  profile = gst_codec_utils_aac_get_profile (audio_config, len);
 
-  return TRUE;
+  if (profile != NULL) {
+    if (mpegversion == 4) {
+      gst_structure_set (s, "base-profile", G_TYPE_STRING, profile,
+          "profile", G_TYPE_STRING, profile, NULL);
+    } else {
+      gst_structure_set (s, "profile", G_TYPE_STRING, profile, NULL);
+    }
+  }
+
+  return (level != NULL && profile != NULL);
 }

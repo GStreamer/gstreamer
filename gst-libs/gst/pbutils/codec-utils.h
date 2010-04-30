@@ -30,12 +30,13 @@ G_BEGIN_DECLS
 
 guint         gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx);
 
-const gchar * gst_codec_utils_aac_get_level      (const guint8 * audio_config,
-                                                  guint          len);
+const gchar * gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len);
 
-gboolean      gst_codec_utils_aac_caps_set_level (GstCaps      * caps,
-                                                  const guint8 * audio_config,
-                                                  guint          len);
+const gchar * gst_codec_utils_aac_get_level   (const guint8 * audio_config, guint len);
+
+gboolean      gst_codec_utils_aac_caps_set_level_and_profile (GstCaps      * caps,
+                                                              const guint8 * audio_config,
+                                                              guint          len);
 
 G_END_DECLS
 
