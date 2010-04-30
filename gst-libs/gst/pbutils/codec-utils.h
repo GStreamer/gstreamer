@@ -48,6 +48,16 @@ gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * ca
                                                                const guint8 * sps,
                                                                guint          len);
 
+/* MPEG-4 part 2 */
+
+const gchar * gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len);
+
+const gchar * gst_codec_utils_mpeg4video_get_level   (const guint8 * vis_obj_seq, guint len);
+
+gboolean      gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps      * caps,
+                                                                     const guint8 * vis_obj_seq,
+                                                                     guint          len);
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_CODEC_UTILS_H__ */

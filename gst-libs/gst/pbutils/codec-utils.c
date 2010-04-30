@@ -526,3 +526,185 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
 
   return (level != NULL && profile != NULL);
 }
+
+/**
+ * gst_codec_utils_mpeg4video_get_profile:
+ * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Converts the profile indication in the stream's visual object sequence into
+ * a string. @vis_obj_seq is expected to be the data following the visual
+ * object sequence start code. Only the first byte
+ * (profile_and_level_indication) is used.
+ *
+ * Returns: The profile as a const string, or NULL if there is an error.
+ */
+const gchar *
+gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
+{
+  /* The profile/level codes are from 14496-2, table G-1, and the Wireshark
+   * sources: epan/dissectors/packet-mp4ves.c */
+
+  /* These are a direct mapping from the integer profile id -> string. Profiles
+   * 0x6, 0xe and 0xf can correspond to more than one profile depending on the
+   * second 4 bits of vis_obj_seq[0], so they are handled separately. */
+  static const char *profiles[] = { "simple", "simple-scalable", "core",
+    "main", "n-bit", "scalable", NULL, "basic-animated-texture", "hybrid",
+    "advanced-real-time-simple", "core-scalable", "advanced-coding-efficiency",
+    "advanced-core", "advanced-scalable-texture",
+  };
+  int profile_id, level_id;
+
+  g_return_val_if_fail (vis_obj_seq != NULL, NULL);
+
+  if (len < 1)
+    return NULL;
+
+  profile_id = vis_obj_seq[0] >> 4;
+  level_id = vis_obj_seq[0] & 0xf;
+
+  if (profile_id != 6 && profile_id < 0xe)
+    return profiles[profile_id];
+
+  if (profile_id != 0xf && level_id == 0)
+    return NULL;
+
+  switch (profile_id) {
+    case 0x6:
+      if (level_id < 3)
+        return "simple-face";
+      else if (level_id < 5)
+        return "simple-fba";
+      break;
+
+    case 0xe:
+      if (level_id < 5)
+        return "simple-studio";
+      else if (level_id < 9)
+        return "core-studio";
+      break;
+
+    case 0xf:
+      if (level_id < 6)
+        return "advanced-simple";
+      else if (level_id > 7 && level_id < 0xe)
+        return "fine-granularity-scalable";
+      break;
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_codec_utils_mpeg4video_get_level:
+ * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Converts the level indication in the stream's visual object sequence into
+ * a string. @vis_obj_seq is expected to be the data following the visual
+ * object sequence start code. Only the first byte
+ * (profile_and_level_indication) is used.
+ *
+ * Returns: The level as a const string, or NULL if there is an error.
+ */
+const gchar *
+gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
+{
+  /* The profile/level codes are from 14496-2, table G-1, and the Wireshark
+   * sources: epan/dissectors/packet-mp4ves.c
+   *
+   * Each profile has a different maximum level it defines. Some of them still
+   * need special case handling, because not all levels start from 1, and the
+   * Simple profile defines an intermediate level as well. */
+  static const int level_max[] = { 3, 2, 2, 4, 2, 1, 2, 2, 2, 4, 3, 4, 2, 3, 4,
+    5
+  };
+  int profile_id, level_id;
+
+  g_return_val_if_fail (vis_obj_seq != NULL, NULL);
+
+  if (len < 1)
+    return NULL;
+
+  profile_id = vis_obj_seq[0] >> 4;
+  level_id = vis_obj_seq[0] & 0xf;
+
+  if (profile_id != 0xf && level_id == 0)
+    return NULL;
+
+  /* Let's do some validation of the level */
+  switch (profile_id) {
+    case 0x3:
+      if (level_id == 1)
+        return NULL;
+      break;
+
+    case 0x4:
+      if (level_id != 2)
+        return NULL;
+      break;
+
+    case 0x6:
+      if (level_id > 5)
+        return NULL;
+      break;
+
+    case 0xe:
+      if (level_id > 9)
+        return NULL;
+      break;
+
+    case 0xf:
+      if (level_id == 7 && level_id > 0xd)
+        return NULL;
+      break;
+  }
+
+  if (profile_id == 0 && level_id == 8)
+    /* Simple Profile / Level 0 */
+    return "0";
+  else if (profile_id == 0 && level_id == 9)
+    /* Simple Profile / Level 0b */
+    return "0b";
+  else if (level_id <= level_max[profile_id])
+    /* Levels for all other cases */
+    return digit_to_string (level_id);
+
+  return NULL;
+}
+
+/**
+ * gst_codec_utils_mpeg4video_caps_set_level_and_profile:
+ * @caps: the #GstCaps to which the level and profile are to be added
+ * @vis_obj_seq: Pointer to the visual object sequence for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Sets the level and profile in @caps if it can be determined from
+ * @vis_obj_seq. See #gst_codec_utils_mpeg4video_get_level() and
+ * #gst_codec_utils_mpeg4video_get_profile() for more details on the
+ * parameters.
+ *
+ * Returns: TRUE if the level and profile could be set, FALSE otherwise.
+ */
+gboolean
+gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps * caps,
+    const guint8 * vis_obj_seq, guint len)
+{
+  const gchar *profile, *level;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+  g_return_val_if_fail (vis_obj_seq != NULL, FALSE);
+
+  profile = gst_codec_utils_mpeg4video_get_profile (vis_obj_seq, len);
+
+  if (profile != NULL)
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  level = gst_codec_utils_mpeg4video_get_profile (vis_obj_seq, len);
+
+  if (level != NULL)
+    gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+  return (profile != NULL && level != NULL);
+}
