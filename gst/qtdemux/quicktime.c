@@ -27,6 +27,8 @@
 #include "qtdemux.h"
 #include "gstrtpxqtdepay.h"
 
+#include <gst/pbutils/pbutils.h>
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -35,6 +37,8 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
+
+  gst_pb_utils_init ();
 
   /* ensure private tag is registered */
   gst_tag_register (GST_QT_DEMUX_PRIVATE_TAG, GST_TAG_FLAG_META,
