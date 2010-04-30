@@ -99,35 +99,37 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
     GstBuffer *buffer;
     GstFlowReturn ret;
 
-    proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
-    if (!proxy) {
-        if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
-            goto error_decode;
-        /* More data is needed */
-        return GST_FLOW_OK;
+    for (;;) {
+        proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
+        if (!proxy) {
+            if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
+                goto error_decode;
+            /* More data is needed */
+            break;
+        }
+
+        buffer = NULL;
+        ret = gst_pad_alloc_buffer(
+            decode->srcpad,
+            0, 0,
+            GST_PAD_CAPS(decode->srcpad),
+            &buffer
+        );
+        if (ret != GST_FLOW_OK || !buffer)
+            goto error_create_buffer;
+
+        GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+        gst_vaapi_video_buffer_set_surface_proxy(
+            GST_VAAPI_VIDEO_BUFFER(buffer),
+            proxy
+        );
+
+        ret = gst_pad_push(decode->srcpad, buffer);
+        if (ret != GST_FLOW_OK)
+            goto error_commit_buffer;
+
+        g_object_unref(proxy);
     }
-
-    buffer = NULL;
-    ret = gst_pad_alloc_buffer(
-        decode->srcpad,
-        0, 0,
-        GST_PAD_CAPS(decode->srcpad),
-        &buffer
-    );
-    if (ret != GST_FLOW_OK || !buffer)
-        goto error_create_buffer;
-
-    GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
-    gst_vaapi_video_buffer_set_surface_proxy(
-        GST_VAAPI_VIDEO_BUFFER(buffer),
-        proxy
-    );
-
-    ret = gst_pad_push(decode->srcpad, buffer);
-    if (ret != GST_FLOW_OK)
-        goto error_commit_buffer;
-
-    g_object_unref(proxy);
     return GST_FLOW_OK;
 
     /* ERRORS */
