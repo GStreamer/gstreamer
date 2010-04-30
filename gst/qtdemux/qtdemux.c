@@ -63,6 +63,8 @@
 #include "gst/riff/riff-media.h"
 #include "gst/riff/riff-read.h"
 
+#include <gst/pbutils/pbutils.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -4236,7 +4238,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -4254,7 +4256,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -4378,7 +4380,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
@@ -7495,10 +7497,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
        * wrong. */
       /* Only do so for basic setup without HE-AAC extension */
       if (data_ptr && data_len == 2) {
-        guint channels, rateindex;
-        int rates[] = { 96000, 88200, 64000, 48000, 44100, 32000,
-          24000, 22050, 16000, 12000, 11025, 8000
-        };
+        guint channels, rateindex, rate;
 
         channels = (data_ptr[1] & 0x7f) >> 3;
         if (channels <= 7) {
@@ -7506,9 +7505,12 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         }
 
         rateindex = ((data_ptr[0] & 0x7) << 1) | ((data_ptr[1] & 0x80) >> 7);
-        if (rateindex < sizeof (rates) / sizeof (*rates)) {
-          stream->rate = rates[rateindex];
-        }
+        rate = gst_codec_utils_aac_get_sample_rate_from_index (rateindex);
+        if (rate > 0)
+          stream->rate = rate;
+
+        gst_codec_utils_aac_caps_set_level_and_profile (stream->caps,
+            data_ptr, data_len);
       }
       break;
     case 0x60:                 /* MPEG-2, various profiles */

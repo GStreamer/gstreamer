@@ -8,6 +8,7 @@ libgstqtdemux_la_LIBADD = \
     -lgstaudio-@GST_MAJORMINOR@ \
     -lgstrtp-@GST_MAJORMINOR@ \
     -lgsttag-@GST_MAJORMINOR@ \
+    -lgstpbutils-@GST_MAJORMINOR@ \
     $(GST_BASE_LIBS) $(GST_LIBS) $(ZLIB_LIBS)
 libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
 libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c \
