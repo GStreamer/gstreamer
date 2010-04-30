@@ -1486,6 +1486,7 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               break;
             default:
               button = 4;
+              action = NULL;
           }
 
           x = LOWORD (lParam);
