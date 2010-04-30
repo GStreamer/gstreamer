@@ -87,7 +87,7 @@ main (gint argc, gchar ** argv)
   }
   if (use_adder) {
     mix = gst_element_factory_make ("adder", NULL);
-    if (!src) {
+    if (!mix) {
       GST_WARNING ("need adder from gst-plugins-base");
       goto Error;
     }
