@@ -29,6 +29,7 @@ libgstmatroska_la_LIBADD = \
 	-lgstriff-@GST_MAJORMINOR@ \
 	-lgstaudio-@GST_MAJORMINOR@ \
 	-lgsttag-@GST_MAJORMINOR@ \
+	-lgstpbutils-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ZLIB_LIBS) \

@@ -28,10 +28,14 @@
 #include "matroska-ids.h"
 #include "webm-mux.h"
 
+#include <gst/pbutils/pbutils.h>
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+
+  gst_pb_utils_init ();
 
   gst_matroska_register_tags ();
 
