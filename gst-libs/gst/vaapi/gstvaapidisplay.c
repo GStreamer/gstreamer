@@ -35,6 +35,12 @@ GST_DEBUG_CATEGORY(gst_debug_vaapi);
 
 G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
 
+typedef struct _GstVaapiConfig GstVaapiConfig;
+struct _GstVaapiConfig {
+    GstVaapiProfile     profile;
+    GstVaapiEntrypoint  entrypoint;
+};
+
 enum {
     PROP_0,
 
@@ -124,23 +130,30 @@ compare_rgb_formats(gconstpointer a, gconstpointer b)
             (gint)gst_vaapi_image_format_get_score(fmt2));
 }
 
-/* Check if profiles array contains profile */
+/* Check if configs array contains profile at entrypoint */
 static inline gboolean
-find_profile(GArray *profiles, GstVaapiProfile profile)
+find_config(
+    GArray             *configs,
+    GstVaapiProfile     profile,
+    GstVaapiEntrypoint  entrypoint
+)
 {
+    GstVaapiConfig *config;
     guint i;
 
-    for (i = 0; i < profiles->len; i++)
-        if (g_array_index(profiles, GstVaapiProfile, i) == profile)
+    for (i = 0; i < configs->len; i++) {
+        config = &g_array_index(configs, GstVaapiConfig, i);
+        if (config->profile == profile && config->entrypoint == entrypoint)
             return TRUE;
+    }
     return FALSE;
 }
 
-/* Convert profiles array to GstCaps */
+/* Convert configs array to profiles as GstCaps */
 static GstCaps *
-get_profile_caps(GArray *profiles)
+get_profile_caps(GArray *configs)
 {
-    GstVaapiProfile profile;
+    GstVaapiConfig *config;
     GstCaps *out_caps, *caps;
     guint i;
 
@@ -148,11 +161,11 @@ get_profile_caps(GArray *profiles)
     if (!out_caps)
         return NULL;
 
-    for (i = 0; i < profiles->len; i++) {
-        profile = g_array_index(profiles, GstVaapiProfile, i);
-        caps    = gst_vaapi_profile_get_caps(profile);
+    for (i = 0; i < configs->len; i++) {
+        config = &g_array_index(configs, GstVaapiConfig, i);
+        caps   = gst_vaapi_profile_get_caps(config->profile);
         if (caps)
-            gst_caps_append(out_caps, caps);
+            gst_caps_merge(out_caps, caps);
     }
     return out_caps;
 }
@@ -322,19 +335,18 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     for (i = 0; i < n; i++)
         GST_DEBUG("  %s", string_of_VAProfile(profiles[i]));
 
-    priv->decoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiProfile));
+    priv->decoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiConfig));
     if (!priv->decoders)
         goto end;
-    priv->encoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiProfile));
+    priv->encoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiConfig));
     if (!priv->encoders)
         goto end;
 
     for (i = 0; i < n; i++) {
-        GstVaapiProfile profile;
-        gboolean has_decoder = FALSE, has_encoder = FALSE;
+        GstVaapiConfig config;
 
-        profile = gst_vaapi_profile(profiles[i]);
-        if (!profile)
+        config.profile = gst_vaapi_profile(profiles[i]);
+        if (!config.profile)
             continue;
 
         status = vaQueryConfigEntrypoints(
@@ -346,25 +358,18 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             goto end;
 
         for (j = 0; j < num_entrypoints; j++) {
-            switch (entrypoints[j]) {
-            case VAEntrypointVLD:
-            case VAEntrypointIZZ:
-            case VAEntrypointIDCT:
-            case VAEntrypointMoComp:
-            case VAEntrypointDeblocking:
-                has_decoder = TRUE;
+            config.entrypoint = gst_vaapi_entrypoint(entrypoints[j]);
+            switch (config.entrypoint) {
+            case GST_VAAPI_ENTRYPOINT_VLD:
+            case GST_VAAPI_ENTRYPOINT_IDCT:
+            case GST_VAAPI_ENTRYPOINT_MOCO:
+                g_array_append_val(priv->decoders, config);
                 break;
-#if VA_CHECK_VERSION(0,30,0)
-            case VAEntrypointEncSlice:
-                has_encoder = TRUE;
+            case GST_VAAPI_ENTRYPOINT_SLICE_ENCODE:
+                g_array_append_val(priv->encoders, config);
                 break;
-#endif
             }
         }
-        if (has_decoder)
-            g_array_append_val(priv->decoders, profile);
-        if (has_encoder)
-            g_array_append_val(priv->encoders, profile);
     }
 
     /* VA image formats */
@@ -780,20 +785,23 @@ gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display)
  * gst_vaapi_display_has_decoder:
  * @display: a #GstVaapiDisplay
  * @profile: a #VAProfile
+ * @entrypoint: a #GstVaaiEntrypoint
  *
- * Returns whether VA @display supports @profile for decoding.
+ * Returns whether VA @display supports @profile for decoding at the
+ * specified @entrypoint.
  *
  * Return value: %TRUE if VA @display supports @profile for decoding.
  */
 gboolean
 gst_vaapi_display_has_decoder(
-    GstVaapiDisplay *display,
-    GstVaapiProfile  profile
+    GstVaapiDisplay    *display,
+    GstVaapiProfile     profile,
+    GstVaapiEntrypoint  entrypoint
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
 
-    return find_profile(display->priv->decoders, profile);
+    return find_config(display->priv->decoders, profile, entrypoint);
 }
 
 /**
@@ -816,20 +824,23 @@ gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display)
  * gst_vaapi_display_has_encoder:
  * @display: a #GstVaapiDisplay
  * @profile: a #VAProfile
+ * @entrypoint: a #GstVaapiEntrypoint
  *
- * Returns whether VA @display supports @profile for encoding.
+ * Returns whether VA @display supports @profile for encoding at the
+ * specified @entrypoint.
  *
  * Return value: %TRUE if VA @display supports @profile for encoding.
  */
 gboolean
 gst_vaapi_display_has_encoder(
-    GstVaapiDisplay *display,
-    GstVaapiProfile  profile
+    GstVaapiDisplay    *display,
+    GstVaapiProfile     profile,
+    GstVaapiEntrypoint  entrypoint
 )
 {
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
 
-    return find_profile(display->priv->encoders, profile);
+    return find_config(display->priv->encoders, profile, entrypoint);
 }
 
 /**

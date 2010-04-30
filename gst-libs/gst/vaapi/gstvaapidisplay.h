@@ -147,8 +147,9 @@ gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display);
 
 gboolean
 gst_vaapi_display_has_decoder(
-    GstVaapiDisplay *display,
-    GstVaapiProfile  profile
+    GstVaapiDisplay    *display,
+    GstVaapiProfile     profile,
+    GstVaapiEntrypoint  entrypoint
 );
 
 GstCaps *
@@ -156,8 +157,9 @@ gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display);
 
 gboolean
 gst_vaapi_display_has_encoder(
-    GstVaapiDisplay *display,
-    GstVaapiProfile  profile
+    GstVaapiDisplay    *display,
+    GstVaapiProfile     profile,
+    GstVaapiEntrypoint  entrypoint
 );
 
 GstCaps *
