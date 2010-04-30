@@ -38,6 +38,16 @@ gboolean      gst_codec_utils_aac_caps_set_level_and_profile (GstCaps      * cap
                                                               const guint8 * audio_config,
                                                               guint          len);
 
+/* H.264 */
+
+const gchar * gst_codec_utils_h264_get_profile (const guint8 * sps, guint len);
+
+const gchar * gst_codec_utils_h264_get_level   (const guint8 * sps, guint len);
+
+gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * caps,
+                                                               const guint8 * sps,
+                                                               guint          len);
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_CODEC_UTILS_H__ */

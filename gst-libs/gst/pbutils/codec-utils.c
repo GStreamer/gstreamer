@@ -40,6 +40,19 @@
 #define GST_SIMPLE_CAPS_HAS_FIELD(caps,field) \
     gst_structure_has_field(gst_caps_get_structure((caps),0),(field))
 
+static const gchar *
+digit_to_string (guint digit)
+{
+  static const char itoa[][2] = {
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+  };
+
+  if (G_LIKELY (digit < 10))
+    return itoa[digit];
+  else
+    return NULL;
+}
+
 /**
  * gst_codec_utils_aac_get_sample_rate_from_index:
  * @sr_idx: Sample rate index as from the AudioSpecificConfig (MPEG-4
@@ -285,13 +298,7 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
         rcu);
     return NULL;
   } else {
-    /* For fast and convenient int -> string conversion */
-    static const char itoa[][2] = {
-      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
-    };
-
-    g_assert (ret < G_N_ELEMENTS (itoa));
-    return itoa[ret];
+    return digit_to_string (ret);
   }
 }
 
@@ -345,6 +352,177 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
       gst_structure_set (s, "profile", G_TYPE_STRING, profile, NULL);
     }
   }
+
+  return (level != NULL && profile != NULL);
+}
+
+/**
+ * gst_codec_utils_h264_get_profile:
+ * @sps: Pointer to the sequence parameter set for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Converts the profile indication (<tt>profile_idc</tt>) in the stream's
+ * sequence parameter set into a string. The SPS is expected to have the
+ * following format, as defined in the H.264 specification. The SPS is viewed
+ * as a bitstream here, with bit 0 being the most significant bit of the first
+ * byte.
+ *
+ * Bit 0:7   - Profile indication
+ * Bit 8     - constraint_set0_flag
+ * Bit 9     - constraint_set1_flag
+ * Bit 10    - constraint_set2_flag
+ * Bit 11    - constraint_set3_flag
+ * Bit 12    - constraint_set3_flag
+ * Bit 13:15 - Reserved
+ * Bit 16:24 - Level indication
+ *
+ * Returns: The profile as a const string, or NULL if there is an error.
+ */
+const gchar *
+gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
+{
+  const gchar *profile = NULL;
+  gint csf1, csf3;
+
+  g_return_val_if_fail (sps != NULL, NULL);
+
+  if (len < 2)
+    return NULL;
+
+  csf1 = (sps[1] & 0x40) >> 6;
+  csf3 = (sps[1] & 0x10) >> 4;
+
+  switch (sps[0]) {
+    case 66:
+      if (csf1)
+        profile = "constrained-baseline";
+      else
+        profile = "baseline";
+      break;
+    case 77:
+      profile = "main";
+      break;
+    case 88:
+      profile = "extended";
+      break;
+    case 100:
+      profile = "high";
+      break;
+    case 110:
+      if (csf3)
+        profile = "high-10-intra";
+      else
+        profile = "high-10";
+      break;
+    case 122:
+      if (csf3)
+        profile = "high-4:2:2-intra";
+      else
+        profile = "high-4:2:2";
+      break;
+    case 244:
+      if (csf3)
+        profile = "high-4:4:4-intra";
+      else
+        profile = "high-4:4:4";
+      break;
+    case 44:
+      profile = "cavlc-4:4:4-intra";
+      break;
+    default:
+      return NULL;
+  }
+
+  return profile;
+}
+
+/**
+ * gst_codec_utils_h264_get_level:
+ * @sps: Pointer to the sequence parameter set for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Converts the level indication (<tt>level_idc</tt>) in the stream's
+ * sequence parameter set into a string. The SPS is expected to have the
+ * same format as for @gst_codec_utils_aac_get_profile().
+ *
+ * Returns: The level as a const string, or NULL if there is an error.
+ */
+const gchar *
+gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
+{
+  gint csf3;
+
+  g_return_val_if_fail (sps != NULL, NULL);
+
+  if (len < 3)
+    return NULL;
+
+  csf3 = (sps[1] & 0x10) >> 4;
+
+  if (sps[2] == 11 && csf3)
+    return "1b";
+  else if (sps[2] % 10 == 0)
+    return digit_to_string (sps[2] / 10);
+  else {
+    switch (sps[2]) {
+      case 11:
+        return "1.1";
+      case 12:
+        return "1.2";
+      case 13:
+        return "1.3";
+      case 21:
+        return "2.1";
+      case 22:
+        return "2.2";
+      case 31:
+        return "3.1";
+      case 32:
+        return "3.2";
+      case 41:
+        return "4.1";
+      case 42:
+        return "4.2";
+      case 51:
+        return "5.1";
+      default:
+        return NULL;
+    }
+  }
+}
+
+/**
+ * gst_codec_utils_h264_caps_set_level_and_profile:
+ * @caps: the #GstCaps to which the level and profile are to be added
+ * @sps: Pointer to the sequence parameter set for the stream.
+ * @len: Length of the data available in @sps.
+ *
+ * Sets the level and profile in @caps if it can be determined from @sps. See
+ * #gst_codec_utils_h264_get_level() and #gst_codec_utils_h264_get_profile()
+ * for more details on the parameters.
+ *
+ * Returns: TRUE if the level and profile could be set, FALSE otherwise.
+ */
+gboolean
+gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
+    const guint8 * sps, guint len)
+{
+  const gchar *level, *profile;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), FALSE);
+  g_return_val_if_fail (GST_SIMPLE_CAPS_HAS_NAME (caps, "video/x-h264"), FALSE);
+  g_return_val_if_fail (sps != NULL, FALSE);
+
+  level = gst_codec_utils_h264_get_level (sps, len);
+
+  if (level != NULL)
+    gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+  profile = gst_codec_utils_h264_get_profile (sps, len);
+
+  if (profile != NULL)
+    gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
   return (level != NULL && profile != NULL);
 }
