@@ -486,6 +486,9 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
 
   priv = filter->priv;
 
+  /* almost certainly required */
+  out_buf = gst_buffer_make_metadata_writable (out_buf);
+
   /* set the caps if any */
   srccaps = GST_PAD_CAPS (filter->srcpad);
   if (G_LIKELY (srccaps))
