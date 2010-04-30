@@ -311,14 +311,6 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* can't seek if we are not pullmode, FIXME could pass the
-       * seek query upstream after converting it to bytes using
-       * the average bitrate of the stream. */
-      if (!ogg->pullmode) {
-        GST_DEBUG_OBJECT (ogg, "seek on push mode stream not implemented yet");
-        goto error;
-      }
-
       /* now do the seek */
       res = gst_ogg_demux_perform_seek (ogg, event);
       gst_event_unref (event);
@@ -349,14 +341,6 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* can't seek if we are not pullmode, FIXME could pass the
-       * seek query upstream after converting it to bytes using
-       * the average bitrate of the stream. */
-      if (!ogg->pullmode) {
-        GST_DEBUG_OBJECT (ogg, "seek on pull mode stream not implemented yet");
-        goto error;
-      }
-
       /* now do the seek */
       res = gst_ogg_demux_perform_seek (ogg, event);
       gst_event_unref (event);
@@ -365,19 +349,9 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
   }
-done:
   gst_object_unref (ogg);
 
   return res;
-
-  /* ERRORS */
-error:
-  {
-    GST_DEBUG_OBJECT (ogg, "error handling event");
-    gst_event_unref (event);
-    res = FALSE;
-    goto done;
-  }
 }
 
 static void
@@ -2039,7 +2013,7 @@ seek_error:
 
 /* does not take ownership of the event */
 static gboolean
-gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
+gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
 {
   GstOggChain *chain = NULL;
   gboolean res;
@@ -2283,6 +2257,29 @@ no_chain:
     return FALSE;
   }
 }
+
+static gboolean
+gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
+{
+  /* can't seek if we are not pullmode, FIXME could pass the
+   * seek query upstream after converting it to bytes using
+   * the average bitrate of the stream. */
+  return FALSE;
+}
+
+static gboolean
+gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
+{
+  gboolean res;
+
+  if (ogg->pullmode) {
+    res = gst_ogg_demux_perform_seek_pull (ogg, event);
+  } else {
+    res = gst_ogg_demux_perform_seek_push (ogg, event);
+  }
+  return res;
+}
+
 
 /* finds each bitstream link one at a time using a bisection search
  * (has to begin by knowing the offset of the lb's initial page).
@@ -3154,7 +3151,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
     GST_OBJECT_UNLOCK (ogg);
 
     /* and seek to configured positions without FLUSH */
-    res = gst_ogg_demux_perform_seek (ogg, event);
+    res = gst_ogg_demux_perform_seek_pull (ogg, event);
     if (event)
       gst_event_unref (event);
 
