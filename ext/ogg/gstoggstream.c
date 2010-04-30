@@ -304,6 +304,9 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->n_header_packets = 3;
   pad->frame_size = 1;
 
+  pad->bitrate = GST_READ_UINT24_BE (data + 37);
+  GST_LOG ("bit rate: %d", pad->bitrate);
+
   if (pad->granulerate_n == 0 || pad->granulerate_d == 0) {
     GST_WARNING ("frame rate %d/%d", pad->granulerate_n, pad->granulerate_d);
     return FALSE;
@@ -478,6 +481,10 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->last_size = 0;
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
+  data += 8;
+  pad->bitrate = GST_READ_UINT32_LE (data);
+  GST_LOG ("bit rate: %d", pad->bitrate);
+
   pad->n_header_packets = 3;
 
   if (pad->granulerate_n == 0)
@@ -546,8 +553,11 @@ setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
 
   data += 4 + 4 + 4;
   chans = GST_READ_UINT32_LE (data);
+  data += 4;
+  pad->bitrate = GST_READ_UINT32_LE (data);
 
   GST_LOG ("sample rate: %d, channels: %u", pad->granulerate_n, chans);
+  GST_LOG ("bit rate: %d", pad->bitrate);
 
   pad->n_header_packets = GST_READ_UINT32_LE (packet->packet + 68) + 2;
   pad->frame_size = GST_READ_UINT32_LE (packet->packet + 64) *

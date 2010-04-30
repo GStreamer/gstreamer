@@ -145,6 +145,7 @@ struct _GstOggDemux
   GMutex *chain_lock;           /* we need the lock to protect the chains */
   GArray *chains;               /* list of chains we know */
   GstClockTime total_time;
+  gint bitrate;                 /* bitrate of the current chain */
 
   GstOggChain *current_chain;
   GstOggChain *building_chain;

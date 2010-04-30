@@ -230,7 +230,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_DURATION:
     {
       GstFormat format;
-      gint64 total_time;
+      gint64 total_time = -1;
 
       gst_query_parse_duration (query, &format, NULL);
       /* can only get position in time */
@@ -241,8 +241,29 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
         /* we must return the total length */
         total_time = ogg->total_time;
       } else {
-        /* in push mode we can answer the query and we must return -1 */
-        total_time = -1;
+        gint bitrate = ogg->bitrate;
+
+        /* try with length and bitrate */
+        if (bitrate > 0) {
+          GstQuery *uquery;
+
+          /* ask upstream for total length in bytes */
+          uquery = gst_query_new_duration (GST_FORMAT_BYTES);
+          if (gst_pad_peer_query (ogg->sinkpad, uquery)) {
+            gint64 length;
+
+            gst_query_parse_duration (uquery, NULL, &length);
+
+            /* estimate using the bitrate */
+            total_time =
+                gst_util_uint64_scale (length, 8 * GST_SECOND, bitrate);
+
+            GST_LOG_OBJECT (ogg,
+                "length: %" G_GINT64_FORMAT ", bitrate %d, total_time %"
+                GST_TIME_FORMAT, length, bitrate, GST_TIME_ARGS (total_time));
+          }
+          gst_query_unref (uquery);
+        }
       }
 
       gst_query_set_duration (query, GST_FORMAT_TIME, total_time);
@@ -1624,7 +1645,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   /* FIXME, should not be called with NULL */
   if (chain != NULL) {
+    gint bitrate;
+
     GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
+
+    bitrate = 0;
 
     /* first add the pads */
     for (i = 0; i < chain->streams->len; i++) {
@@ -1632,6 +1657,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       GstStructure *structure;
 
       pad = g_array_index (chain->streams, GstOggPad *, i);
+
+      bitrate += pad->map.bitrate;
 
       if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
         continue;
@@ -1656,6 +1683,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
       gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
     }
+    ogg->bitrate = bitrate;
   }
 
   /* after adding the new pads, remove the old pads */
@@ -3293,6 +3321,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_sync_reset (&ogg->sync);
       ogg->running = FALSE;
+      ogg->bitrate = 0;
       ogg->segment_running = FALSE;
       gst_segment_init (&ogg->segment, GST_FORMAT_TIME);
       break;
