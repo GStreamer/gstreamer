@@ -47,6 +47,8 @@ G_DEFINE_TYPE(GstVaapiDecoderFfmpeg,
 typedef struct _GstVaapiContextFfmpeg GstVaapiContextFfmpeg;
 struct _GstVaapiContextFfmpeg {
     struct vaapi_context        base;
+    GstVaapiProfile             profile;
+    GstVaapiEntrypoint          entrypoint;
     GstVaapiDecoderFfmpeg      *decoder;
 };
 
@@ -74,17 +76,30 @@ get_codec_id_from_codec(GstVaapiCodec codec)
     return CODEC_ID_NONE;
 }
 
+/** Converts PixelFormat to entrypoint */
+static GstVaapiEntrypoint
+get_entrypoint(enum PixelFormat pix_fmt)
+{
+    switch (pix_fmt) {
+    case PIX_FMT_VAAPI_VLD:     return GST_VAAPI_ENTRYPOINT_VLD;
+    case PIX_FMT_VAAPI_IDCT:    return GST_VAAPI_ENTRYPOINT_IDCT;
+    case PIX_FMT_VAAPI_MOCO:    return GST_VAAPI_ENTRYPOINT_MOCO;
+    default:                    break;
+    }
+    return 0;
+}
+
 /** Finds a suitable profile from FFmpeg context */
 static GstVaapiProfile
-get_profile(AVCodecContext *avctx)
+get_profile(AVCodecContext *avctx, GstVaapiEntrypoint entrypoint)
 {
     GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
     GstVaapiDisplay *display;
-    GstVaapiProfile test_profiles[4];
+    GstVaapiProfile profiles[4];
     guint i, n_profiles = 0;
 
-#define ADD_PROFILE(profile) do {                                       \
-        test_profiles[n_profiles++] = GST_VAAPI_PROFILE_##profile;      \
+#define ADD_PROFILE(profile) do {                               \
+        profiles[n_profiles++] = GST_VAAPI_PROFILE_##profile;   \
     } while (0)
 
     switch (avctx->codec_id) {
@@ -131,9 +146,43 @@ get_profile(AVCodecContext *avctx)
         return 0;
 
     for (i = 0; i < n_profiles; i++)
-        if (gst_vaapi_display_has_decoder(display, test_profiles[i]))
-            return test_profiles[i];
+        if (gst_vaapi_display_has_decoder(display, profiles[i], entrypoint))
+            return profiles[i];
     return 0;
+}
+
+/** Ensures VA context is correctly set up for the current FFmpeg context */
+static GstVaapiContext *
+get_context(AVCodecContext *avctx)
+{
+    GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
+    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(vactx->decoder);
+    GstVaapiDisplay *display;
+    GstVaapiContext *context;
+    gboolean success;
+
+    if (!avctx->width || !avctx->height)
+        return NULL;
+
+    success = gst_vaapi_decoder_ensure_context(
+        decoder,
+        vactx->profile,
+        vactx->entrypoint,
+        avctx->width,
+        avctx->height
+    );
+    if (!success) {
+        GST_DEBUG("failed to reset VA context:");
+        GST_DEBUG("  profile 0x%08x", vactx->profile);
+        GST_DEBUG("  entrypoint %d", vactx->entrypoint);
+        GST_DEBUG("  surface size %dx%d", avctx->width, avctx->height);
+        return NULL;
+    }
+    display                = GST_VAAPI_DECODER_DISPLAY(decoder);
+    context                = GST_VAAPI_DECODER_CONTEXT(decoder);
+    vactx->base.display    = GST_VAAPI_DISPLAY_VADISPLAY(display);
+    vactx->base.context_id = GST_VAAPI_OBJECT_ID(context);
+    return context;
 }
 
 /** Sets AVCodecContext.extradata with additional codec data */
@@ -141,6 +190,10 @@ static gboolean
 set_codec_data(AVCodecContext *avctx, const guchar *buf, guint buf_size)
 {
     av_freep(&avctx->extradata);
+    avctx->extradata_size = 0;
+    if (!buf || buf_size < 1)
+        return TRUE;
+
     avctx->extradata = av_malloc(buf_size + FF_INPUT_BUFFER_PADDING_SIZE);
     if (!avctx->extradata)
         return FALSE;
@@ -155,32 +208,22 @@ static enum PixelFormat
 gst_vaapi_decoder_ffmpeg_get_format(AVCodecContext *avctx, const enum PixelFormat *fmt)
 {
     GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
-    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(vactx->decoder);
     GstVaapiProfile profile;
-    gboolean success;
+    GstVaapiEntrypoint entrypoint;
     guint i;
 
-    profile = get_profile(avctx);
-    if (!profile)
-        return PIX_FMT_NONE;
-
     /* XXX: only VLD entrypoint is supported at this time */
-    for (i = 0; fmt[i] != PIX_FMT_NONE; i++)
-        if (fmt[i] == PIX_FMT_VAAPI_VLD)
-            break;
+    for (i = 0; fmt[i] != PIX_FMT_NONE; i++) {
+        entrypoint = get_entrypoint(fmt[i]);
+        if (entrypoint != GST_VAAPI_ENTRYPOINT_VLD)
+            continue;
 
-    success = gst_vaapi_decoder_ensure_context(
-        decoder,
-        profile,
-        GST_VAAPI_ENTRYPOINT_VLD,
-        avctx->width, avctx->height
-    );
-    if (success) {
-        GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(decoder);
-        GstVaapiContext * const context = GST_VAAPI_DECODER_CONTEXT(decoder);
-        vactx->base.display    = GST_VAAPI_DISPLAY_VADISPLAY(display);
-        vactx->base.context_id = GST_VAAPI_OBJECT_ID(context);
-        return fmt[i];
+        profile = get_profile(avctx, entrypoint);
+        if (profile) {
+            vactx->profile    = profile;
+            vactx->entrypoint = entrypoint;
+            return fmt[i];
+        }
     }
     return PIX_FMT_NONE;
 }
@@ -189,10 +232,13 @@ gst_vaapi_decoder_ffmpeg_get_format(AVCodecContext *avctx, const enum PixelForma
 static int
 gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
 {
-    GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
-    GstVaapiContext * const context = GST_VAAPI_DECODER_CONTEXT(vactx->decoder);
+    GstVaapiContext *context;
     GstVaapiSurface *surface;
     GstVaapiID surface_id;
+
+    context = get_context(avctx);
+    if (!context)
+        return -1;
 
     surface = gst_vaapi_context_get_surface(context);
     if (!surface) {
@@ -244,9 +290,9 @@ gst_vaapi_decoder_ffmpeg_close(GstVaapiDecoderFfmpeg *ffdecoder)
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
 
     if (priv->avctx) {
+        avcodec_close(priv->avctx);
         av_freep(&priv->avctx->extradata);
         priv->avctx->extradata_size = 0;
-        avcodec_close(priv->avctx);
     }
 
     if (priv->pctx) {
@@ -314,7 +360,9 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     GST_VAAPI_DISPLAY_LOCK(display);
     ret = avcodec_open(priv->avctx, ffcodec);
     GST_VAAPI_DISPLAY_UNLOCK(display);
-    return ret == 0;
+    if (ret < 0)
+        return FALSE;
+    return TRUE;
 }
 
 static void
