@@ -112,13 +112,15 @@ enum _GstVaapiProfile {
  * @GST_VAAPI_ENTRYPOINT_VLD: Variable Length Decoding
  * @GST_VAAPI_ENTRYPOINT_IDCT: Inverse Decrete Cosine Transform
  * @GST_VAAPI_ENTRYPOINT_MOCO: Motion Compensation
+ * @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE: Encode Slice
  *
  * The set of all entrypoints for #GstVaapiEntrypoint
  */
 enum _GstVaapiEntrypoint {
     GST_VAAPI_ENTRYPOINT_VLD = 1,
     GST_VAAPI_ENTRYPOINT_IDCT,
-    GST_VAAPI_ENTRYPOINT_MOCO
+    GST_VAAPI_ENTRYPOINT_MOCO,
+    GST_VAAPI_ENTRYPOINT_SLICE_ENCODE
 };
 
 GstVaapiProfile

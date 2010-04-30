@@ -92,9 +92,12 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
 
 /* Entry-points */
 static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
-    { GST_VAAPI_ENTRYPOINT_VLD,         VAEntrypointVLD         },
-    { GST_VAAPI_ENTRYPOINT_IDCT,        VAEntrypointIDCT        },
-    { GST_VAAPI_ENTRYPOINT_MOCO,        VAEntrypointMoComp      },
+    { GST_VAAPI_ENTRYPOINT_VLD,          VAEntrypointVLD        },
+    { GST_VAAPI_ENTRYPOINT_IDCT,         VAEntrypointIDCT       },
+    { GST_VAAPI_ENTRYPOINT_MOCO,         VAEntrypointMoComp     },
+#if VA_CHECK_VERSION(0,30,0)
+    { GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, VAEntrypointEncSlice   },
+#endif
     { 0, }
 };
 
