@@ -2072,11 +2072,15 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
           break;
         }
       }
-      GST_DEBUG_OBJECT (playbin,
-          "Taking cached duration because of pending group switch: %d", ret);
-      GST_SOURCE_GROUP_UNLOCK (group);
-      GST_PLAY_BIN_UNLOCK (playbin);
-      return ret;
+      /* if nothing cached yet, we might as well request duration,
+       * such as during initial startup */
+      if (ret) {
+        GST_DEBUG_OBJECT (playbin,
+            "Taking cached duration because of pending group switch: %d", ret);
+        GST_SOURCE_GROUP_UNLOCK (group);
+        GST_PLAY_BIN_UNLOCK (playbin);
+        return ret;
+      }
     }
     GST_SOURCE_GROUP_UNLOCK (group);
   }
