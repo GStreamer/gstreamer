@@ -264,6 +264,7 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(ffdecoder);
     enum CodecID codec_id;
     AVCodec *ffcodec;
+    gboolean parser_is_needed;
     int ret;
 
     gst_vaapi_decoder_ffmpeg_close(ffdecoder);
@@ -283,7 +284,18 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     if (!ffcodec)
         return FALSE;
 
-    if (codec_id != CODEC_ID_H264 || priv->avctx->extradata_size == 0) {
+    switch (codec_id) {
+    case CODEC_ID_H264:
+        /* For AVC1 formats, sequence headers are in extradata and
+           input encoded buffers represent the whole NAL unit */
+        parser_is_needed = priv->avctx->extradata_size == 0;
+        break;
+    default:
+        parser_is_needed = TRUE;
+        break;
+    }
+
+    if (parser_is_needed) {
         priv->pctx = av_parser_init(codec_id);
         if (!priv->pctx)
             return FALSE;
