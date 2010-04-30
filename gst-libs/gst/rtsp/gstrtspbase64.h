@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __BASE64_H__
-#define __BASE64_H__
+#ifndef __GST_RTSP_BASE64_H__
+#define __GST_RTSP_BASE64_H__
 
 #include <glib.h>
 
@@ -28,8 +28,10 @@ G_BEGIN_DECLS
 gchar *gst_rtsp_base64_encode    (const gchar *data, gsize len);
 #endif
 
+#ifndef GST_DISABLE_DEPRECATED
 void   gst_rtsp_base64_decode_ip (gchar *data, gsize *len);
+#endif
 
 G_END_DECLS
 
-#endif
+#endif /* __GST_RTSP_BASE64_H__ */

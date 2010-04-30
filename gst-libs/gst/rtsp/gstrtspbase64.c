@@ -63,10 +63,13 @@ gst_rtsp_base64_encode (const gchar * data, gsize len)
  *
  * Decode the base64 string pointed to by @data in-place. When @len is not #NULL
  * it will contain the length of the decoded data.
+ *
+ * Deprecated: use g_base64_decode_inplace() instead.
  */
-/* FIXME: Deprecate this once we depend on GLib 2.20 and
- * use g_base64_decode_inplace then.
- */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void gst_rtsp_base64_decode_ip (gchar * data, gsize * len);
+#endif
 void
 gst_rtsp_base64_decode_ip (gchar * data, gsize * len)
 {
@@ -85,3 +88,4 @@ gst_rtsp_base64_decode_ip (gchar * data, gsize * len)
   if (len)
     *len = output_length;
 }
+#endif
