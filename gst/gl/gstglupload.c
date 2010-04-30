@@ -318,12 +318,10 @@ gst_gl_upload_transform_caps (GstBaseTransform * bt,
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstCaps *newcaps = NULL;
   const GValue *framerate_value = NULL;
-  const GValue *par_value = NULL;
 
   GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
 
   framerate_value = gst_structure_get_value (structure, "framerate");
-  par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   if (direction == GST_PAD_SRC) {
     GstCaps *newothercaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
@@ -339,11 +337,6 @@ gst_gl_upload_transform_caps (GstBaseTransform * bt,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   gst_structure_set_value (structure, "framerate", framerate_value);
-  if (par_value)
-    gst_structure_set_value (structure, "pixel-aspect-ratio", par_value);
-  else
-    gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        1, 1, NULL);
 
   gst_caps_merge_structure (newcaps, gst_structure_copy (structure));
 
