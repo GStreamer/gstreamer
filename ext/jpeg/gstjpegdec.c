@@ -1034,6 +1034,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (dec->cinfo.num_components > 3)
     goto components_not_supported;
 
+  /* verify color space expectation to avoid going *boom* or bogus output */
+  if (dec->cinfo.jpeg_color_space != JCS_YCbCr)
+    goto unsupported_colorspace;
+
 #ifndef GST_DISABLE_GST_DEBUG
   {
     gint i;
@@ -1059,6 +1063,12 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (!jpeg_start_decompress (&dec->cinfo)) {
     GST_WARNING_OBJECT (dec, "failed to start decompression cycle");
   }
+
+  /* YUV sanity checks to get safe and reasonable I420 output */
+  g_assert (dec->cinfo.num_components == 3);
+  if (r_v > 2 || r_v < dec->cinfo.comp_info[0].v_samp_factor ||
+      r_h < dec->cinfo.comp_info[0].h_samp_factor)
+    goto invalid_yuv;
 
   width = dec->cinfo.output_width;
   height = dec->cinfo.output_height;
@@ -1303,6 +1313,20 @@ components_not_supported:
   {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("more components than supported: %d > 3", dec->cinfo.num_components));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+unsupported_colorspace:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("Picture has unknown or unsupported colourspace"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+invalid_yuv:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("Picture is corrupt or unhandled YUV layout"));
     ret = GST_FLOW_ERROR;
     goto done;
   }
