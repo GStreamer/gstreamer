@@ -314,30 +314,38 @@ static GstCaps *
 gst_jpegenc_getcaps (GstPad * pad)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
-  GstCaps *caps;
-  int i;
+  GstCaps *caps, *othercaps;
+  const GstCaps *templ;
+  gint i, j;
   GstStructure *structure = NULL;
 
   /* we want to proxy properties like width, height and framerate from the
      other end of the element */
 
-  caps = gst_pad_get_allowed_caps (jpegenc->srcpad);
+  othercaps = gst_pad_get_allowed_caps (jpegenc->srcpad);
+  if (othercaps == NULL ||
+      gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
+    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
-  if (caps == NULL) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-  } else if (gst_caps_is_any (caps)) {
-    gst_caps_unref (caps);
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-  } else {
-    caps = gst_caps_make_writable (caps);
-  }
+  caps = gst_caps_new_empty ();
+  templ = gst_pad_get_pad_template_caps (pad);
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
+  for (i = 0; i < gst_caps_get_size (templ); i++) {
+    /* pick fields from peer caps */
+    for (j = 0; j < gst_caps_get_size (othercaps); j++) {
+      GstStructure *s = gst_caps_get_structure (othercaps, j);
+      const GValue *val;
 
-    gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_structure_set (structure, "format", GST_TYPE_FOURCC,
-        GST_STR_FOURCC ("I420"), NULL);
+      structure = gst_structure_copy (gst_caps_get_structure (templ, i));
+      if ((val = gst_structure_get_value (s, "width")))
+        gst_structure_set_value (structure, "width", val);
+      if ((val = gst_structure_get_value (s, "height")))
+        gst_structure_set_value (structure, "height", val);
+      if ((val = gst_structure_get_value (s, "framerate")))
+        gst_structure_set_value (structure, "framerate", val);
+
+      gst_caps_merge_structure (caps, structure);
+    }
   }
   gst_object_unref (jpegenc);
 
