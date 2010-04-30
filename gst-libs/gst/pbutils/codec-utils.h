@@ -1,9 +1,7 @@
-/* GStreamer
- * Copyright (C) 2010 Nokia Corporation
- * Copyright (C) 2010 Collabora Multimedia
+/* GStreamer base utils library codec-specific utility functions
  * Copyright (C) 2010 Arun Raghavan <arun.raghavan@collabora.co.uk>
- *
- * gstaacutil.h: collection of AAC helper utilities
+ *               2010 Collabora Multimedia
+ *               2010 Nokia Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,23 +19,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AAC_UTIL_H__
-#define __GST_AAC_UTIL_H__
+#ifndef __GST_PB_UTILS_CODEC_UTILS_H__
+#define __GST_PB_UTILS_CODEC_UTILS_H__
 
-#include <glib.h>
-
-/* FIXME: This file is duplicated in gst-plugins-* wherever needed, so if you
- * update this file, please find all other instances and update them as well.
- * This less-than-optimal setup is being used till there is a standard location
- * for such common functionality.
- */
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-gint    gst_aac_level_from_header (guint profile,
-                                   guint sample_freq_idx,
-                                   guint channel_config);
+/* AAC */
+
+guint         gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx);
+
+const gchar * gst_codec_utils_aac_get_level      (const guint8 * audio_config,
+                                                  guint          len);
+
+gboolean      gst_codec_utils_aac_caps_set_level (GstCaps      * caps,
+                                                  const guint8 * audio_config,
+                                                  guint          len);
 
 G_END_DECLS
 
-#endif /* __GST_AAC_UTIL_H__*/
+#endif /* __GST_PB_UTILS_CODEC_UTILS_H__ */

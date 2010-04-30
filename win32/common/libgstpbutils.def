@@ -1,4 +1,7 @@
 EXPORTS
+	gst_codec_utils_aac_caps_set_level
+	gst_codec_utils_aac_get_level
+	gst_codec_utils_aac_get_sample_rate_from_index
 	gst_discoverer_audio_info_get_bitrate
 	gst_discoverer_audio_info_get_channels
 	gst_discoverer_audio_info_get_depth

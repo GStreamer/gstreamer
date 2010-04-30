@@ -26,6 +26,7 @@
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/pbutils/install-plugins.h>
+#include <gst/pbutils/codec-utils.h>
 #include <gst/pbutils/pbutils-enumtypes.h>
 #include <gst/pbutils/pbutils-marshal.h>
 #include <gst/pbutils/gstdiscoverer.h>

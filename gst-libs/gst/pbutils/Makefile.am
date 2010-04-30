@@ -2,6 +2,7 @@ lib_LTLIBRARIES = libgstpbutils-@GST_MAJORMINOR@.la
 
 headers_pbutils = \
 	pbutils.h         \
+	codec-utils.h     \
 	descriptions.h    \
 	install-plugins.h \
 	missing-plugins.h \
@@ -27,6 +28,7 @@ built_headers_configure = \
 libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	gstpluginsbaseversion.c \
 	pbutils.c         \
+	codec-utils.c     \
 	descriptions.c    \
 	install-plugins.c \
 	missing-plugins.c \
