@@ -130,7 +130,7 @@ static void gst_gl_upload_set_property (GObject * object, guint prop_id,
 static void gst_gl_upload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_upload_src_query (GstPad *pad, GstQuery * query);
+static gboolean gst_gl_upload_src_query (GstPad * pad, GstQuery * query);
 
 static void gst_gl_upload_reset (GstGLUpload * upload);
 static gboolean gst_gl_upload_set_caps (GstBaseTransform * bt,
@@ -195,7 +195,7 @@ static void
 gst_gl_upload_init (GstGLUpload * upload, GstGLUploadClass * klass)
 {
   GstBaseTransform *base_trans = GST_BASE_TRANSFORM (upload);
-  
+
   gst_pad_set_query_function (base_trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_gl_upload_src_query));
 
@@ -243,7 +243,9 @@ gst_gl_upload_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_get_structure (query);
-      res = g_strcmp0 (gst_element_get_name (parent), gst_structure_get_name (structure)) == 0;
+      res =
+          g_strcmp0 (gst_element_get_name (parent),
+          gst_structure_get_name (structure)) == 0;
       if (!res)
         res = gst_pad_query_default (pad, query);
       break;
@@ -269,22 +271,26 @@ gst_gl_upload_reset (GstGLUpload * upload)
 static gboolean
 gst_gl_upload_start (GstBaseTransform * bt)
 {
-  GstGLUpload* upload = GST_GL_UPLOAD (bt);
+  GstGLUpload *upload = GST_GL_UPLOAD (bt);
   GstElement *parent = GST_ELEMENT (gst_element_get_parent (upload));
-  GstStructure *structure = gst_structure_new (gst_element_get_name (upload), NULL);
+  GstStructure *structure =
+      gst_structure_new (gst_element_get_name (upload), NULL);
   GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
 
   gboolean isPerformed = gst_element_query (parent, query);
 
   if (isPerformed) {
-    const GValue *id_value = gst_structure_get_value (structure, "gstgldisplay");
+    const GValue *id_value =
+        gst_structure_get_value (structure, "gstgldisplay");
     if (G_VALUE_HOLDS_POINTER (id_value))
       /* at least one gl element is after in our gl chain */
-      upload->display = g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+      upload->display =
+          g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
     else {
       /* this gl filter is a sink in terms of the gl chain */
       upload->display = gst_gl_display_new ();
-      gst_gl_display_create_context (upload->display, upload->external_gl_context);
+      gst_gl_display_create_context (upload->display,
+          upload->external_gl_context);
     }
   }
 
@@ -490,7 +496,6 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GST_DEBUG ("caps connot be parsed");
     return FALSE;
   }
-
   //init colorspace conversion if needed
   gst_gl_display_init_upload (upload->display, upload->video_format,
       upload->gl_width, upload->gl_height,
