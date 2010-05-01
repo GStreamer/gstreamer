@@ -538,6 +538,7 @@ gst_matroska_mux_reset (GstElement * element)
   mux->cluster = 0;
   mux->cluster_time = 0;
   mux->cluster_pos = 0;
+  mux->prev_cluster_size = 0;
 
   /* reset tags */
   gst_tag_setter_reset_tags (GST_TAG_SETTER (mux));
@@ -2509,12 +2510,15 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
         || is_video_keyframe) {
 
       gst_ebml_write_master_finish (ebml, mux->cluster);
+      mux->prev_cluster_size = ebml->pos - mux->cluster_pos;
       mux->cluster_pos = ebml->pos;
       mux->cluster =
           gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
           GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
       mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
+          mux->prev_cluster_size);
     }
   } else {
     /* first cluster */

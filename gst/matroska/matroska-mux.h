@@ -116,7 +116,8 @@ typedef struct _GstMatroskaMux {
   /* current cluster */
   guint64        cluster,
                  cluster_time,
-                 cluster_pos;
+                 cluster_pos,
+		 prev_cluster_size;
 
 } GstMatroskaMux;
 
