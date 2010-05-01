@@ -2435,8 +2435,8 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
 
   /* check for having parsed index already */
   if (!demux->index_parsed) {
-    guint64 offset;
     gboolean building_index;
+    guint64 offset = 0;
 
     if (!demux->index_offset) {
       GST_DEBUG_OBJECT (demux, "no index (location); no seek in push mode");
