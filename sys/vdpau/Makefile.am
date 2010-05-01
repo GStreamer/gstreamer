@@ -38,7 +38,8 @@ libgstvdp_@GST_MAJORMINOR@include_HEADERS = \
 	gstvdpvideobuffer.h \
 	gstvdpoutputbuffer.h \
 	gstvdpvideosrcpad.h \
-	gstvdpoutputsrcpad.h
+	gstvdpoutputsrcpad.h \
+	gstvdp.h
  
 libgstvdp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
   $(GST_PLUGINS_BASE_CFLAGS) $(X11_CFLAGS) $(VDPAU_CFLAGS)
