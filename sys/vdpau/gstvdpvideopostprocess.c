@@ -1245,6 +1245,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   GstPadTemplate *src_template, *sink_template;
 
   vpp->device = NULL;
+  vpp->mixer = VDP_INVALID_HANDLE;
 
   vpp->display = NULL;
 
