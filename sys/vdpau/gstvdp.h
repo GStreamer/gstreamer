@@ -23,4 +23,4 @@
 
 void gst_vdp_init(void);
 
-#endif /* _GST_VDP_UTILS_H_ */
+#endif /* _GST_VDP_H_ */
