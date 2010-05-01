@@ -167,7 +167,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
   data = GST_BUFFER_DATA (confbuf);
   size = GST_BUFFER_SIZE (confbuf);
 
-  GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %" G_GSIZE_FORMAT, size);
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %u", size);
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |
@@ -234,8 +234,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     offset += 6;
 
     GST_DEBUG_OBJECT (rtpvorbisdepay,
-        "header %d, ident 0x%08x, length %u, left %" G_GSIZE_FORMAT, i, ident,
-        length, size);
+        "header %d, ident 0x%08x, length %u, left %u", i, ident, length, size);
 
     /* FIXME check if we already got this ident */
 
