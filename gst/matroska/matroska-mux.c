@@ -661,6 +661,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   const GstBuffer *codec_buf = NULL;
   gint width, height, pixel_width, pixel_height;
   gint fps_d, fps_n;
+  gboolean interlaced = FALSE;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -676,6 +677,10 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   mimetype = gst_structure_get_name (structure);
+
+  if (gst_structure_get_boolean (structure, "interlaced", &interlaced)
+      && interlaced)
+    context->flags |= GST_MATROSKA_VIDEOTRACK_INTERLACED;
 
   if (!strcmp (mimetype, "video/x-theora")) {
     /* we'll extract the details later from the theora identification header */
