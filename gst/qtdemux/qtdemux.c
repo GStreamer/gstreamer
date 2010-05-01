@@ -7585,7 +7585,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           NULL);
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
-      _codec ("Raw packed YUV 4:2:0");
+      _codec ("Raw packed YUV 4:2:2");
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
           NULL);
