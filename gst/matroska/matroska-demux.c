@@ -6485,6 +6485,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
             25, 1, NULL);
       }
+
+      if (videocontext->parent.flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
+        gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
     }
 
     gst_caps_do_simplify (caps);
