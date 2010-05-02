@@ -781,7 +781,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * @writer: #GstByteWriter instance
  * @data: UTF8 string to write
  *
- * Writes a null-terminated UTF8 string to @writer.
+ * Writes a NUL-terminated UTF8 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
  *
@@ -792,7 +792,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * @writer: #GstByteWriter instance
  * @data: UTF16 string to write
  *
- * Writes a null-terminated UTF16 string to @writer.
+ * Writes a NUL-terminated UTF16 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
  *
@@ -803,7 +803,7 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * @writer: #GstByteWriter instance
  * @data: UTF32 string to write
  *
- * Writes a null-terminated UTF32 string to @writer.
+ * Writes a NUL-terminated UTF32 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
  *
