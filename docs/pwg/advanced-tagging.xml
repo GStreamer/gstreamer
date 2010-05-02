@@ -74,73 +74,8 @@
       tag events downstream, either over all source pad or the pad specified.
     </para>
     <para>
-      The following example program will parse a file and parse the data as
-      metadata/tags rather than as actual content-data. It will parse each
-      line as <quote>name:value</quote>, where name is the type of metadata
-      (title, author, ...) and value is the metadata value. The
-      <function>_getline ()</function> is the same as the one given in
-      <xref linkend="section-reqpad-sometimes"/>.
-    </para>
-    <programlisting>
-<![CDATA[
-static void
-gst_my_filter_task_func (GstElement *element)
-{
-  GstMyFilter *filter = GST_MY_FILTER (element);
-  GstBuffer *buf;
-  GstTagList *taglist = gst_tag_list_new ();
-
-  /* get each line and parse as metadata */
-  while ((buf = gst_my_filter_getline (filter))) {
-    gchar *line = GST_BUFFER_DATA (buf), *colon_pos, *type = NULL;a
-
-    /* get the position of the ':' and go beyond it */
-    if (!(colon_pos = strchr (line, ':')))
-      goto next:
-
-    /* get the string before that as type of metadata */
-    type = g_strndup (line, colon_pos - line);
-
-    /* content is one character beyond the ':' */
-    colon_pos = &colon_pos[1];
-    if (*colon_pos == '\0')
-      goto next;
-
-    /* get the metadata category, it's value type, store it in that
-     * type and add it to the taglist. */
-    if (gst_tag_exists (type)) {
-      GValue from = { 0 }, to = { 0 };
-      GType to_type;
-
-      to_type = gst_tag_get_type (type);
-      g_value_init (&from, G_TYPE_STRING);
-      g_value_set_string (&from, colon_pos);
-      g_value_init (&to, to_type);
-      g_value_transform (&from, &to);
-      g_value_unset (&from);
-      gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
-			       type, &to, NULL);
-      g_value_unset (&to);
-    }
-
-next:
-    g_free (type);
-    gst_buffer_unref (buf);
-  }
-
-  /* signal metadata */
-  gst_element_found_tags_for_pad (element, filter->srcpad, 0, taglist);
-  gst_tag_list_free (taglist);
-
-  /* send EOS */
-  gst_pad_send_event (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-  gst_element_set_eos (element);
-}
-]]>
-    </programlisting>
-    <para>
-      We currently assume the core to already <emphasis>know</emphasis> the
-      mimetype (<function>gst_tag_exists ()</function>). You can add new tags
+      We currently require the core to know the GType of tags before they are
+      being used, so all tags must be registered first.  You can add new tags
       to the list of known tags using <function>gst_tag_register ()</function>.
       If you think the tag will be useful in more cases than just your own
       element, it might be a good idea to add it to <filename>gsttag.c</filename>
