@@ -38,7 +38,7 @@
 
 G_DEFINE_TYPE(GstVaapiDecoder, gst_vaapi_decoder, G_TYPE_OBJECT);
 
-/* XXX: Make it a GstVaapiDecodedSurface + propagate PTS */
+/* XXX: Make it a GstVaapiDecodedSurface? */
 typedef struct _DecodedSurface DecodedSurface;
 struct _DecodedSurface {
     GstVaapiSurfaceProxy *proxy;
@@ -75,31 +75,6 @@ create_eos_buffer(void)
 
     init_buffer(buffer, NULL, 0);
     GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
-    return buffer;
-}
-
-static GstBuffer *
-create_buffer(const guchar *buf, guint buf_size, gboolean copy)
-{
-    GstBuffer *buffer;
-
-    if (!buf || !buf_size)
-        return NULL;
-
-    buffer = gst_buffer_new();
-    if (!buffer)
-        return NULL;
-
-    if (copy) {
-        buffer->malloc_data = g_malloc(buf_size);
-        if (!buffer->malloc_data) {
-            gst_buffer_unref(buffer);
-            return NULL;
-        }
-        memcpy(buffer->malloc_data, buf, buf_size);
-        buf = buffer->malloc_data;
-    }
-    init_buffer(buffer, buf, buf_size);
     return buffer;
 }
 
@@ -408,108 +383,6 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->fps_d                 = 30;
     priv->buffers               = g_queue_new();
     priv->surfaces              = g_queue_new();
-}
-
-/**
- * gst_vaapi_decoder_get_frame_rate:
- * @decoder: a #GstVaapiDecoder
- * @num: return location for the numerator of the frame rate
- * @den: return location for the denominator of the frame rate
- *
- * Retrieves the current frame rate as the fraction @num / @den. The
- * default frame rate is 30 fps.
- */
-void
-gst_vaapi_decoder_get_frame_rate(
-    GstVaapiDecoder *decoder,
-    guint           *num,
-    guint           *den
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
-
-    if (num)
-        *num = decoder->priv->fps_n;
-
-    if (den)
-        *den = decoder->priv->fps_d;
-}
-
-/**
- * gst_vaapi_decoder_set_frame_rate:
- * @decoder: a #GstVaapiDecoder
- * @num: the numerator of the frame rate
- * @den: the denominator of the frame rate
- *
- * Sets the frame rate for the stream to @num / @den. By default, the
- * decoder will use the frame rate encoded in the elementary stream.
- * If none is available, the decoder will default to 30 fps.
- */
-void
-gst_vaapi_decoder_set_frame_rate(
-    GstVaapiDecoder *decoder,
-    guint            num,
-    guint            den
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_DECODER(decoder));
-
-    decoder->priv->fps_n = num;
-    decoder->priv->fps_d = den;
-}
-
-/**
- * gst_vaapi_decoder_put_buffer_data:
- * @decoder: a #GstVaapiDecoder
- * @buf: pointer to buffer data
- * @buf_size: size of buffer data in bytes
- *
- * Queues @buf_size bytes from the data @buf to the HW decoder. The
- * caller is responsible for making sure @buf is live beyond this
- * function. So, this function is mostly useful with static data
- * buffers. gst_vaapi_decoder_put_buffer_data_copy() does the same but
- * copies the data.
- *
- * Caller can notify an End-Of-Stream with @buf set to %NULL and
- * @buf_size set to zero.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_decoder_put_buffer_data(
-    GstVaapiDecoder *decoder,
-    const guchar    *buf,
-    guint            buf_size
-)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
-
-    return push_buffer(decoder, create_buffer(buf, buf_size, FALSE));
-}
-
-/**
- * gst_vaapi_decoder_put_buffer_data_copy:
- * @decoder: a #GstVaapiDecoder
- * @buf: pointer to buffer data
- * @buf_size: size of buffer data in bytes
- *
- * Queues a copy of @buf to the HW decoder.
- *
- * Caller can notify an End-Of-Stream with @buf set to %NULL and
- * @buf_size set to zero.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_decoder_put_buffer_data_copy(
-    GstVaapiDecoder *decoder,
-    const guchar    *buf,
-    guint            buf_size
-)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
-
-    return push_buffer(decoder, create_buffer(buf, buf_size, TRUE));
 }
 
 /**

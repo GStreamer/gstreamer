@@ -82,6 +82,7 @@ main(int argc, char *argv[])
     GstStructure         *structure;
     GstVaapiDecoderStatus status;
     const CodecDefs      *codec;
+    GstBuffer            *buffer;
     GstVaapiSurfaceProxy *proxy;
     VideoDecodeInfo       info;
 
@@ -128,9 +129,17 @@ main(int argc, char *argv[])
     decoder = gst_vaapi_decoder_ffmpeg_new_from_caps(display, decoder_caps);
     if (!decoder)
         g_error("could not create FFmpeg decoder");
+    gst_caps_unref(decoder_caps);
 
-    if (!gst_vaapi_decoder_put_buffer_data(decoder, info.data, info.data_size))
+    buffer = gst_buffer_new();
+    if (!buffer)
+        g_error("could not create encoded data buffer");
+    gst_buffer_set_data(buffer, (guchar *)info.data, info.data_size);
+
+    if (!gst_vaapi_decoder_put_buffer(decoder, buffer))
         g_error("could not send video data to the decoder");
+    gst_buffer_unref(buffer);
+
     if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
         g_error("could not send EOS to the decoder");
 
@@ -150,7 +159,6 @@ main(int argc, char *argv[])
     pause();
 
     g_object_unref(proxy);
-    gst_caps_unref(decoder_caps);
     g_object_unref(decoder);
     g_object_unref(window);
     g_object_unref(display);
