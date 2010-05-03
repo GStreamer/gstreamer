@@ -161,7 +161,7 @@ static GstVaapiProfile
 gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
 {
     /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
-    uint8_t * const buf = GST_BUFFER_DATA(buffer);
+    guchar * const buf = GST_BUFFER_DATA(buffer);
 
     if (buf[0] != 1)    /* configurationVersion = 1 */
         return 0;
