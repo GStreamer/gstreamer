@@ -2,6 +2,7 @@ gst-vaapi NEWS -- summary of changes.  2010-04-DD
 Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.2.0 - DD.Apr.2010
+* Relicense gst-libs/ code to LGPL v2.1+
 * Add FFmpeg/VAAPI decoder for the new `vaapidecode' element
 
 Version 0.1.2 - 30.Mar.2010

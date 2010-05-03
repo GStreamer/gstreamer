@@ -8,8 +8,11 @@
 License
 -------
 
-gstreamer-vaapi is available under the terms of the GNU General Public
-License.
+gstreamer-vaapi helper libraries are available under the terms of the
+GNU Lesser General Public License v2.1+.
+
+gstreamer-vaapi plugin elements are available under the terms of the
+GNU General Public License v2+.
 
 
 Overview
