@@ -76,6 +76,28 @@ G_BEGIN_DECLS
 #define GST_VAAPI_DECODER_CODEC_DATA(decoder) \
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec_data
 
+/**
+ * GST_VAAPI_DECODER_WIDTH:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the coded width of the picture
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_WIDTH
+#define GST_VAAPI_DECODER_WIDTH(decoder) \
+    GST_VAAPI_DECODER_CAST(decoder)->priv->width
+
+/**
+ * GST_VAAPI_DECODER_HEIGHT:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the coded height of the picture
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_HEIGHT
+#define GST_VAAPI_DECODER_HEIGHT(decoder) \
+    GST_VAAPI_DECODER_CAST(decoder)->priv->height
+
 /* End-of-Stream buffer */
 #define GST_BUFFER_FLAG_EOS (GST_BUFFER_FLAG_LAST + 0)
 

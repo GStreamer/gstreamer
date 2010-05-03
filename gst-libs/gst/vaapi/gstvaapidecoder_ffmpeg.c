@@ -366,6 +366,10 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
         }
     }
 
+    /* Use size information from the demuxer, whenever available */
+    priv->avctx->coded_width  = GST_VAAPI_DECODER_WIDTH(ffdecoder);
+    priv->avctx->coded_height = GST_VAAPI_DECODER_HEIGHT(ffdecoder);
+
     GST_VAAPI_DISPLAY_LOCK(display);
     ret = avcodec_open(priv->avctx, ffcodec);
     GST_VAAPI_DISPLAY_UNLOCK(display);
