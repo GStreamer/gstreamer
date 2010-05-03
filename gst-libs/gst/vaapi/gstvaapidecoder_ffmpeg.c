@@ -472,7 +472,9 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
     if (!surface)
         return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
-    gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder), surface, priv->frame->pts);
+    if (!gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder),
+                                        surface, priv->frame->pts))
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
