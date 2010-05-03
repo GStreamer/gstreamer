@@ -22,7 +22,8 @@
 #define TEST_H264_H
 
 #include <glib.h>
+#include "test-decode.h"
 
-void h264_get_video_data(const guchar **data, guint *size);
+void h264_get_video_info(VideoDecodeInfo *info);
 
 #endif /* TEST_H264_H */

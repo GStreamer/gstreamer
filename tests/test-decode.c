@@ -28,19 +28,20 @@
 #include "test-h264.h"
 #include "test-vc1.h"
 
-typedef void (*GetVideoDataFunc)(const guchar **data, guint *size);
+typedef void (*GetVideoInfoFunc)(VideoDecodeInfo *info);
 
 typedef struct _CodecDefs CodecDefs;
 struct _CodecDefs {
     const gchar        *codec_str;
-    GstVaapiCodec       codec;
-    GetVideoDataFunc    get_video_data;
+    GetVideoInfoFunc    get_video_info;
 };
 
 static const CodecDefs g_codec_defs[] = {
-    { "mpeg2",  GST_VAAPI_CODEC_MPEG2,  mpeg2_get_video_data    },
-    { "h264",   GST_VAAPI_CODEC_H264,   h264_get_video_data     },
-    { "vc1",    GST_VAAPI_CODEC_VC1,    vc1_get_video_data      },
+#define INIT_FUNCS(CODEC) { #CODEC, CODEC##_get_video_info }
+    INIT_FUNCS(mpeg2),
+    INIT_FUNCS(h264),
+    INIT_FUNCS(vc1),
+#undef INIT_FUNCS
     { NULL, }
 };
 
@@ -77,11 +78,11 @@ main(int argc, char *argv[])
     GstVaapiDisplay      *display;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
+    GstCaps              *decoder_caps;
     GstVaapiDecoderStatus status;
     const CodecDefs      *codec;
     GstVaapiSurfaceProxy *proxy;
-    const guchar         *vdata;
-    guint                 vdata_size;
+    VideoDecodeInfo       info;
 
     static const guint win_width  = 640;
     static const guint win_height = 480;
@@ -109,12 +110,12 @@ main(int argc, char *argv[])
     if (!window)
         g_error("could not create window");
 
-    codec->get_video_data(&vdata, &vdata_size);
-    decoder = gst_vaapi_decoder_ffmpeg_new(display, codec->codec, NULL);
+    codec->get_video_info(&info);
+    decoder = gst_vaapi_decoder_ffmpeg_new(display, gst_vaapi_profile_get_codec(info.profile), NULL);
     if (!decoder)
         g_error("could not create FFmpeg decoder");
 
-    if (!gst_vaapi_decoder_put_buffer_data(decoder, vdata, vdata_size))
+    if (!gst_vaapi_decoder_put_buffer_data(decoder, info.data, info.data_size))
         g_error("could not send video data to the decoder");
     if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
         g_error("could not send EOS to the decoder");

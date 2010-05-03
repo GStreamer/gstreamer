@@ -1,5 +1,5 @@
 /*
- *  test-vc1.h - VC-1 test data
+ *  test-decode.h - Test GstVaapiDecoder
  *
  *  gstreamer-vaapi (C) 2010 Splitted-Desktop Systems
  *
@@ -18,12 +18,18 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
-#ifndef TEST_VC1_H
-#define TEST_VC1_H
+#ifndef TEST_DECODE_H
+#define TEST_DECODE_H
 
-#include <glib.h>
-#include "test-decode.h"
+#include <gst/vaapi/gstvaapiprofile.h>
 
-void vc1_get_video_info(VideoDecodeInfo *info);
+typedef struct _VideoDecodeInfo VideoDecodeInfo;
+struct _VideoDecodeInfo {
+    GstVaapiProfile     profile;
+    guint               width;
+    guint               height;
+    const guchar       *data;
+    guint               data_size;
+};
 
-#endif /* TEST_VC1_H */
+#endif /* TEST_DECODE_H */

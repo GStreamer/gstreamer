@@ -1638,8 +1638,11 @@ static const guchar mpeg2_clip[MPEG2_CLIP_DATA_SIZE] = {
     0x00, 0x01, 0xb7
 };
 
-void mpeg2_get_video_data(const guchar **data, guint *size)
+void mpeg2_get_video_info(VideoDecodeInfo *info)
 {
-    *data = mpeg2_clip;
-    *size = MPEG2_CLIP_DATA_SIZE;
+    info->profile   = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
+    info->width     = MPEG2_CLIP_WIDTH;
+    info->height    = MPEG2_CLIP_HEIGHT;
+    info->data      = mpeg2_clip;
+    info->data_size = MPEG2_CLIP_DATA_SIZE;
 }

@@ -22,7 +22,8 @@
 #define TEST_MPEG2_H
 
 #include <glib.h>
+#include "test-decode.h"
 
-void mpeg2_get_video_data(const guchar **data, guint *size);
+void mpeg2_get_video_info(VideoDecodeInfo *info);
 
 #endif /* TEST_MPEG2_H */

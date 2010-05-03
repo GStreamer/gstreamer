@@ -20,7 +20,7 @@
 
 #include "test-vc1.h"
 
-#define VC1_CLIP_WIDTH            320
+#define VC1_CLIP_WIDTH            293
 #define VC1_CLIP_HEIGHT           240
 #define VC1_CLIP_DATA_SIZE      20864
 
@@ -1767,8 +1767,11 @@ static const guchar vc1_clip[VC1_CLIP_DATA_SIZE] = {
     0x0f, 0x55, 0xbf, 0x40, 0x00, 0x00, 0x01, 0x0a
 };
 
-void vc1_get_video_data(const guchar **data, guint *size)
+void vc1_get_video_info(VideoDecodeInfo *info)
 {
-    *data = vc1_clip;
-    *size = VC1_CLIP_DATA_SIZE;
+    info->profile   = GST_VAAPI_PROFILE_VC1_ADVANCED;
+    info->width     = VC1_CLIP_WIDTH;
+    info->height    = VC1_CLIP_HEIGHT;
+    info->data      = vc1_clip;
+    info->data_size = VC1_CLIP_DATA_SIZE;
 }

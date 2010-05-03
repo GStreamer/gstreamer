@@ -1038,8 +1038,11 @@ static const guchar h264_clip[H264_CLIP_DATA_SIZE] = {
     0x00, 0x01, 0x0a
 };
 
-void h264_get_video_data(const guchar **data, guint *size)
+void h264_get_video_info(VideoDecodeInfo *info)
 {
-    *data = h264_clip;
-    *size = H264_CLIP_DATA_SIZE;
+    info->profile   = GST_VAAPI_PROFILE_H264_MAIN;
+    info->width     = H264_CLIP_WIDTH;
+    info->height    = H264_CLIP_HEIGHT;
+    info->data      = h264_clip;
+    info->data_size = H264_CLIP_DATA_SIZE;
 }
