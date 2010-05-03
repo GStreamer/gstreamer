@@ -126,15 +126,6 @@ gst_vaapi_decoder_set_frame_rate(
 );
 
 gboolean
-gst_vaapi_decoder_start(GstVaapiDecoder *decoder);
-
-gboolean
-gst_vaapi_decoder_pause(GstVaapiDecoder *decoder);
-
-gboolean
-gst_vaapi_decoder_stop(GstVaapiDecoder *decoder);
-
-gboolean
 gst_vaapi_decoder_put_buffer_data(
     GstVaapiDecoder *decoder,
     const guchar    *buf,
