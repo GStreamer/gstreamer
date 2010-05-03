@@ -178,7 +178,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode)
 
     if (decode->use_ffmpeg)
         decode->decoder =
-            gst_vaapi_decoder_ffmpeg_new_from_caps(display, decode->decoder_caps);
+            gst_vaapi_decoder_ffmpeg_new(display, decode->decoder_caps);
     return decode->decoder != NULL;
 }
 

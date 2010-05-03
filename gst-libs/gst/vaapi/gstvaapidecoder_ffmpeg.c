@@ -608,33 +608,6 @@ gst_vaapi_decoder_ffmpeg_init(GstVaapiDecoderFfmpeg *decoder)
 /**
  * gst_vaapi_decoder_ffmpeg_new:
  * @display: a #GstVaapiDisplay
- * @codec: a #GstVaapiCodec
- * @codec_data: an optional #GstBuffer holding extra codec data, or %NULL
- *
- * Creates a new #GstVaapiDecoder with the specified @codec bound to
- * @display. @codec_data holds extra codec data like sequence headers.
- *
- * Return value: the newly allocated #GstVaapiDecoder object
- */
-GstVaapiDecoder *
-gst_vaapi_decoder_ffmpeg_new(
-    GstVaapiDisplay *display,
-    GstVaapiCodec    codec,
-    GstBuffer       *codec_data
-)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
-
-    return g_object_new(GST_VAAPI_TYPE_DECODER_FFMPEG,
-                        "display",    display,
-                        "codec",      codec,
-                        "codec-data", codec_data,
-                        NULL);
-}
-
-/**
- * st_vaapi_decoder_ffmpeg_new_from_caps:
- * @display: a #GstVaapiDisplay
  * @caps: a #GstCaps holding codec information
  *
  * Creates a new #GstVaapiDecoder based on FFmpeg where the codec is
@@ -644,7 +617,7 @@ gst_vaapi_decoder_ffmpeg_new(
  * Return value: the newly allocated #GstVaapiDecoder object
  */
 GstVaapiDecoder *
-gst_vaapi_decoder_ffmpeg_new_from_caps(GstVaapiDisplay *display, GstCaps *caps)
+gst_vaapi_decoder_ffmpeg_new(GstVaapiDisplay *display, GstCaps *caps)
 {
     GstVaapiDecoderFfmpeg *ffdecoder;
 

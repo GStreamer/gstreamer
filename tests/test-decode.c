@@ -126,7 +126,7 @@ main(int argc, char *argv[])
             NULL
         );
 
-    decoder = gst_vaapi_decoder_ffmpeg_new_from_caps(display, decoder_caps);
+    decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
     if (!decoder)
         g_error("could not create FFmpeg decoder");
     gst_caps_unref(decoder_caps);
