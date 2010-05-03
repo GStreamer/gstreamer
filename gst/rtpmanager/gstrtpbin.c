@@ -1804,16 +1804,22 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
           GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
 
           GST_RTP_SESSION_LOCK (session);
-          for (streams = session->streams; streams;
-              streams = g_slist_next (streams)) {
-            GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+          if (session->streams) {
+            for (streams = session->streams; streams;
+                streams = g_slist_next (streams)) {
+              GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
 
-            GST_DEBUG_OBJECT (bin, "stream %p percent %d", stream,
-                stream->percent);
+              GST_DEBUG_OBJECT (bin, "stream %p percent %d", stream,
+                  stream->percent);
 
-            /* find min percent */
-            if (min_percent > stream->percent)
-              min_percent = stream->percent;
+              /* find min percent */
+              if (min_percent > stream->percent)
+                min_percent = stream->percent;
+            }
+          } else {
+            GST_INFO_OBJECT (bin,
+                "session has no streams, setting min_percent to 0");
+            min_percent = 0;
           }
           GST_RTP_SESSION_UNLOCK (session);
         }
