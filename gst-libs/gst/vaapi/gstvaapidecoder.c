@@ -53,30 +53,6 @@ enum {
     PROP_CODEC_DATA
 };
 
-static void
-update_clock(GstVaapiDecoder *decoder, GstBuffer *buffer)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstClockTime timestamp, duration;
-
-    timestamp = GST_BUFFER_TIMESTAMP(buffer);
-    duration  = GST_BUFFER_DURATION(buffer);
-
-    if (GST_CLOCK_TIME_IS_VALID(duration)) {
-        if (GST_CLOCK_TIME_IS_VALID(timestamp))
-            priv->surface_timestamp = timestamp;
-        priv->surface_duration = duration;
-    }
-    else {
-        /* Assumes those are user-generated buffers with no timestamp
-           or duration information. Try to rely on "framerate". */
-        if (!GST_CLOCK_TIME_IS_VALID(priv->surface_timestamp))
-            priv->surface_timestamp = 0;
-        priv->surface_duration =
-            gst_util_uint64_scale_int(GST_SECOND, priv->fps_d, priv->fps_n);
-    }
-}
-
 static inline void
 init_buffer(GstBuffer *buffer, const guchar *buf, guint buf_size)
 {
@@ -156,7 +132,6 @@ pop_buffer(GstVaapiDecoder *decoder)
     GST_DEBUG("dequeue buffer %p for decoding (%d bytes)",
               buffer, GST_BUFFER_SIZE(buffer));
 
-    update_clock(decoder, buffer);
     return buffer;
 }
 
@@ -391,8 +366,6 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->codec_data            = NULL;
     priv->fps_n                 = 1000;
     priv->fps_d                 = 30;
-    priv->surface_timestamp     = GST_CLOCK_TIME_NONE;
-    priv->surface_duration      = GST_CLOCK_TIME_NONE;
     priv->buffers               = g_queue_new();
     priv->surfaces              = g_queue_new();
 }

@@ -96,8 +96,6 @@ struct _GstVaapiDecoderPrivate {
     guint               fps_d;
     GQueue             *buffers;
     GQueue             *surfaces;
-    GstClockTime        surface_timestamp;
-    GstClockTime        surface_duration;
 };
 
 gboolean
