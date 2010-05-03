@@ -190,6 +190,23 @@ out:
   return ret;
 }
 
+/* utility functions/macros */
+
+#define METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR (3.6)
+#define KILOMETERS_PER_HOUR_TO_METERS_PER_SECOND (1/3.6)
+#define MILES_PER_HOUR_TO_METERS_PER_SECOND (0.44704)
+#define KNOTS_TO_METERS_PER_SECOND (0.514444)
+
+static gchar *
+double_to_fraction_string (gdouble num)
+{
+  gint frac_n;
+  gint frac_d;
+
+  gst_util_double_to_fraction (num, &frac_n, &frac_d);
+  return g_strdup_printf ("%d/%d", frac_n, frac_d);
+}
+
 /* (de)serialize functions */
 static gchar *
 serialize_exif_gps_coordinate (const GValue * value, gchar pos, gchar neg)
@@ -318,17 +335,13 @@ static gchar *
 serialize_exif_altitude (const GValue * value)
 {
   gdouble num;
-  gint frac_n;
-  gint frac_d;
 
   num = g_value_get_double (value);
 
   if (num < 0)
     num *= -1;
 
-  gst_util_double_to_fraction (num, &frac_n, &frac_d);
-
-  return g_strdup_printf ("%d/%d", frac_n, frac_d);
+  return double_to_fraction_string (num);
 }
 
 static gchar *
@@ -422,6 +435,208 @@ deserialize_exif_altitude (GstTagList * taglist, const gchar * gst_tag,
   *pending_tags = g_slist_delete_link (*pending_tags, entry);
 }
 
+static gchar *
+serialize_exif_gps_speed (const GValue * value)
+{
+  return double_to_fraction_string (g_value_get_double (value) *
+      METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR);
+}
+
+static gchar *
+serialize_exif_gps_speedref (const GValue * value)
+{
+  /* we always use km/h */
+  return g_strdup ("K");
+}
+
+static void
+deserialize_exif_gps_speed (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  const gchar *speed_str = NULL;
+  const gchar *speedref_str = NULL;
+  gint frac_n;
+  gint frac_d;
+  gdouble value;
+
+  GSList *entry;
+  PendingXmpTag *ptag = NULL;
+
+  /* find the other missing part */
+  if (strcmp (xmp_tag, "exif:GPSSpeed") == 0) {
+    speed_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, "exif:GPSSpeedRef") == 0) {
+        speedref_str = ptag->str;
+        break;
+      }
+    }
+
+  } else if (strcmp (xmp_tag, "exif:GPSSpeedRef") == 0) {
+    speedref_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, "exif:GPSSpeed") == 0) {
+        speed_str = ptag->str;
+        break;
+      }
+    }
+
+  } else {
+    GST_WARNING ("Unexpected xmp tag %s", xmp_tag);
+    return;
+  }
+
+  if (!speed_str) {
+    GST_WARNING ("Missing exif:GPSSpeed tag");
+    return;
+  }
+  if (!speedref_str) {
+    GST_WARNING ("Missing exif:GPSSpeedRef tag");
+    return;
+  }
+
+  if (sscanf (speed_str, "%d/%d", &frac_n, &frac_d) != 2) {
+    GST_WARNING ("Failed to parse fraction: %s", speed_str);
+    return;
+  }
+
+  gst_util_fraction_to_double (frac_n, frac_d, &value);
+
+  if (speedref_str[0] == 'K') {
+    value *= KILOMETERS_PER_HOUR_TO_METERS_PER_SECOND;
+  } else if (speedref_str[0] == 'M') {
+    value *= MILES_PER_HOUR_TO_METERS_PER_SECOND;
+  } else if (speedref_str[0] == 'N') {
+    value *= KNOTS_TO_METERS_PER_SECOND;
+  } else {
+    GST_WARNING ("Unexpected exif:SpeedRef value: %s", speedref_str);
+    return;
+  }
+
+  /* add to the taglist */
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, value, NULL);
+
+  /* clean up entry */
+  g_free (ptag->str);
+  g_slice_free (PendingXmpTag, ptag);
+  *pending_tags = g_slist_delete_link (*pending_tags, entry);
+}
+
+static gchar *
+serialize_exif_gps_direction (const GValue * value)
+{
+  return double_to_fraction_string (g_value_get_double (value));
+}
+
+static gchar *
+serialize_exif_gps_directionref (const GValue * value)
+{
+  /* T for true geographic direction (M would mean magnetic) */
+  return g_strdup ("T");
+}
+
+static void
+deserialize_exif_gps_direction (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags,
+    const gchar * direction_tag, const gchar * directionref_tag)
+{
+  const gchar *dir_str = NULL;
+  const gchar *dirref_str = NULL;
+  gint frac_n;
+  gint frac_d;
+  gdouble value;
+
+  GSList *entry;
+  PendingXmpTag *ptag = NULL;
+
+  /* find the other missing part */
+  if (strcmp (xmp_tag, direction_tag) == 0) {
+    dir_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, directionref_tag) == 0) {
+        dirref_str = ptag->str;
+        break;
+      }
+    }
+
+  } else if (strcmp (xmp_tag, directionref_tag) == 0) {
+    dirref_str = str;
+
+    for (entry = *pending_tags; entry; entry = g_slist_next (entry)) {
+      ptag = (PendingXmpTag *) entry->data;
+
+      if (strcmp (ptag->xmp_tag->tag_name, direction_tag) == 0) {
+        dir_str = ptag->str;
+        break;
+      }
+    }
+
+  } else {
+    GST_WARNING ("Unexpected xmp tag %s", xmp_tag);
+    return;
+  }
+
+  if (!dir_str) {
+    GST_WARNING ("Missing %s tag", dir_str);
+    return;
+  }
+  if (!dirref_str) {
+    GST_WARNING ("Missing %s tag", dirref_str);
+    return;
+  }
+
+  if (sscanf (dir_str, "%d/%d", &frac_n, &frac_d) != 2) {
+    GST_WARNING ("Failed to parse fraction: %s", dir_str);
+    return;
+  }
+
+  gst_util_fraction_to_double (frac_n, frac_d, &value);
+
+  if (dirref_str[0] == 'T') {
+    /* nop */
+  } else if (dirref_str[0] == 'M') {
+    GST_WARNING ("Magnetic direction tags aren't supported yet");
+    return;
+  } else {
+    GST_WARNING ("Unexpected %s value: %s", directionref_tag, dirref_str);
+    return;
+  }
+
+  /* add to the taglist */
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, gst_tag, value, NULL);
+
+  /* clean up entry */
+  g_free (ptag->str);
+  g_slice_free (PendingXmpTag, ptag);
+  *pending_tags = g_slist_delete_link (*pending_tags, entry);
+}
+
+static void
+deserialize_exif_gps_track (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  deserialize_exif_gps_direction (taglist, gst_tag, xmp_tag, str, pending_tags,
+      "exif:GPSTrack", "exif:GPSTrackRef");
+}
+
+static void
+deserialize_exif_gps_img_direction (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  deserialize_exif_gps_direction (taglist, gst_tag, xmp_tag, str, pending_tags,
+      "exif:GPSImgDirection", "exif:GPSImgDirectionRef");
+}
+
 static void
 deserialize_xmp_rating (GstTagList * taglist, const gchar * gst_tag,
     const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
@@ -486,7 +701,7 @@ _init_xmp_tag_map ()
       "exif:GPSLongitude", serialize_exif_longitude,
       deserialize_exif_longitude);
 
-  /* compound tag */
+  /* compound exif tags */
   array = g_ptr_array_sized_new (2);
   xmpinfo = g_slice_new (XmpTag);
   xmpinfo->tag_name = "exif:GPSAltitude";
@@ -499,6 +714,45 @@ _init_xmp_tag_map ()
   xmpinfo->deserialize = deserialize_exif_altitude;
   g_ptr_array_add (array, xmpinfo);
   _xmp_tag_add_mapping (GST_TAG_GEO_LOCATION_ELEVATION, array);
+
+  array = g_ptr_array_sized_new (2);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSSpeed";
+  xmpinfo->serialize = serialize_exif_gps_speed;
+  xmpinfo->deserialize = deserialize_exif_gps_speed;
+  g_ptr_array_add (array, xmpinfo);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSSpeedRef";
+  xmpinfo->serialize = serialize_exif_gps_speedref;
+  xmpinfo->deserialize = deserialize_exif_gps_speed;
+  g_ptr_array_add (array, xmpinfo);
+  _xmp_tag_add_mapping (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, array);
+
+  array = g_ptr_array_sized_new (2);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSTrack";
+  xmpinfo->serialize = serialize_exif_gps_direction;
+  xmpinfo->deserialize = deserialize_exif_gps_track;
+  g_ptr_array_add (array, xmpinfo);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSTrackRef";
+  xmpinfo->serialize = serialize_exif_gps_directionref;
+  xmpinfo->deserialize = deserialize_exif_gps_track;
+  g_ptr_array_add (array, xmpinfo);
+  _xmp_tag_add_mapping (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, array);
+
+  array = g_ptr_array_sized_new (2);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSImgDirection";
+  xmpinfo->serialize = serialize_exif_gps_direction;
+  xmpinfo->deserialize = deserialize_exif_gps_img_direction;
+  g_ptr_array_add (array, xmpinfo);
+  xmpinfo = g_slice_new (XmpTag);
+  xmpinfo->tag_name = "exif:GPSImgDirectionRef";
+  xmpinfo->serialize = serialize_exif_gps_directionref;
+  xmpinfo->deserialize = deserialize_exif_gps_img_direction;
+  g_ptr_array_add (array, xmpinfo);
+  _xmp_tag_add_mapping (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, array);
 
   /* photoshop schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_COUNTRY,

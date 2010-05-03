@@ -888,6 +888,17 @@ tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
           g_free (vs);
           g_free (vr);
         }
+        if (comparison != GST_VALUE_EQUAL &&
+            G_VALUE_HOLDS (value_sent, G_TYPE_DOUBLE)) {
+          gdouble vs;
+          gdouble vr;
+
+          /* add some tolerance for doubles */
+          vs = g_value_get_double (value_sent);
+          vr = g_value_get_double (value_recv);
+          if (vr >= vs - 0.001 && vr <= vs + 0.001)
+            comparison = GST_VALUE_EQUAL;
+        }
         fail_unless (comparison == GST_VALUE_EQUAL,
             "tag item %s has been received with different type or value",
             name_sent);
@@ -971,6 +982,39 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   g_value_set_double (&value, -12.75);
   do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_ELEVATION,
       &value);
+
+  g_value_set_double (&value, 0.0);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED,
+      &value);
+  g_value_set_double (&value, 10.0);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED,
+      &value);
+  g_value_set_double (&value, 786.125);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED,
+      &value);
+  g_value_set_double (&value, -2.5);
+  do_xmp_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED,
+      &value);
+
+  g_value_set_double (&value, 0.0);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, &value);
+  g_value_set_double (&value, 180.0);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, &value);
+  g_value_set_double (&value, 359.99);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, &value);
+
+  g_value_set_double (&value, 0.0);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+  g_value_set_double (&value, 90.0);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+  g_value_set_double (&value, 359.99);
+  do_xmp_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, GST_TYPE_DATE);
