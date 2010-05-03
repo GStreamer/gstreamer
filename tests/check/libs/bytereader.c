@@ -535,7 +535,7 @@ GST_START_TEST (test_scan)
   do_scan (&reader, 0x00ffffff, 0xffffffff, 0x65, 99, -1);
 
   /* flush some bytes */
-  gst_byte_reader_skip (&reader, 0x20);
+  fail_unless (gst_byte_reader_skip (&reader, 0x20));
 
   do_scan (&reader, 0xffffffff, 0x20212223, 0, 100, 0);
   do_scan (&reader, 0xffffffff, 0x20212223, 0, 4, 0);
