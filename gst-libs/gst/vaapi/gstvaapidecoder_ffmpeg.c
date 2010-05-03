@@ -315,7 +315,7 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     GstVaapiCodec codec = GST_VAAPI_DECODER_CODEC(ffdecoder);
     enum CodecID codec_id;
     AVCodec *ffcodec;
-    gboolean parser_is_needed;
+    gboolean try_parser, need_parser;
     int ret;
 
     gst_vaapi_decoder_ffmpeg_close(ffdecoder);
@@ -339,36 +339,45 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
     case CODEC_ID_H264:
         /* For AVC1 formats, sequence headers are in extradata and
            input encoded buffers represent the whole NAL unit */
-        parser_is_needed = priv->avctx->extradata_size == 0;
+        try_parser  = priv->avctx->extradata_size == 0;
+        need_parser = try_parser;
         break;
     case CODEC_ID_WMV3:
         /* There is no WMV3 parser in FFmpeg */
-        parser_is_needed = FALSE;
+        try_parser  = FALSE;
+        need_parser = FALSE;
         break;
     case CODEC_ID_VC1:
         /* For VC-1, sequence headers ae in extradata and input encoded
            buffers represent the whole slice */
-        parser_is_needed = FALSE;
+        try_parser  = priv->avctx->extradata_size == 0;
+        need_parser = FALSE;
         break;
     default:
-        parser_is_needed = TRUE;
+        try_parser  = TRUE;
+        need_parser = TRUE;
         break;
     }
 
-    if (parser_is_needed) {
+    if (try_parser) {
         priv->pctx = av_parser_init(codec_id);
-        if (!priv->pctx)
+        if (!priv->pctx && need_parser)
             return FALSE;
+    }
 
-        /* XXX: av_find_stream_info() does this and some codecs really
-           want hard an extradata buffer for initialization (e.g. VC-1) */
-        if (!priv->avctx->extradata && priv->pctx->parser->split) {
-            const guchar *buf = GST_BUFFER_DATA(buffer);
-            guint buf_size = GST_BUFFER_SIZE(buffer);
-            buf_size = priv->pctx->parser->split(priv->avctx, buf, buf_size);
-            if (buf_size > 0 && !set_codec_data(priv->avctx, buf, buf_size))
-                return FALSE;
-        }
+    /* XXX: av_find_stream_info() does this and some codecs really
+       want hard an extradata buffer for initialization (e.g. VC-1) */
+    if (!priv->avctx->extradata && priv->pctx && priv->pctx->parser->split) {
+        const guchar *buf = GST_BUFFER_DATA(buffer);
+        guint buf_size = GST_BUFFER_SIZE(buffer);
+        buf_size = priv->pctx->parser->split(priv->avctx, buf, buf_size);
+        if (buf_size > 0 && !set_codec_data(priv->avctx, buf, buf_size))
+            return FALSE;
+    }
+
+    if (priv->pctx && !need_parser) {
+        av_parser_close(priv->pctx);
+        priv->pctx = NULL;
     }
 
     /* Use size information from the demuxer, whenever available */
