@@ -48,29 +48,6 @@ enum {
     PROP_HEIGHT,
 };
 
-static inline void
-init_buffer(GstBuffer *buffer, const guchar *buf, guint buf_size)
-{
-    GST_BUFFER_DATA(buffer)      = (guint8 *)buf;
-    GST_BUFFER_SIZE(buffer)      = buf_size;
-    GST_BUFFER_TIMESTAMP(buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION(buffer)  = GST_CLOCK_TIME_NONE;
-}
-
-static inline GstBuffer *
-create_eos_buffer(void)
-{
-    GstBuffer *buffer;
-
-    buffer = gst_buffer_new();
-    if (!buffer)
-        return NULL;
-
-    init_buffer(buffer, NULL, 0);
-    GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
-    return buffer;
-}
-
 static void
 destroy_buffer(GstBuffer *buffer)
 {
@@ -83,9 +60,10 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     GstVaapiDecoderPrivate * const priv = decoder->priv;
 
     if (!buffer) {
-        buffer = create_eos_buffer();
+        buffer = gst_buffer_new();
         if (!buffer)
             return FALSE;
+        GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
     }
 
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
