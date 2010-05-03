@@ -345,6 +345,11 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
         /* There is no WMV3 parser in FFmpeg */
         parser_is_needed = FALSE;
         break;
+    case CODEC_ID_VC1:
+        /* For VC-1, sequence headers ae in extradata and input encoded
+           buffers represent the whole slice */
+        parser_is_needed = FALSE;
+        break;
     default:
         parser_is_needed = TRUE;
         break;
