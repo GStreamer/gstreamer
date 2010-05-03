@@ -92,6 +92,8 @@ struct _GstVaapiDecoderPrivate {
     GstVaapiContext    *context;
     GstVaapiCodec       codec;
     GstBuffer          *codec_data;
+    guint               width;
+    guint               height;
     guint               fps_n;
     guint               fps_d;
     GQueue             *buffers;

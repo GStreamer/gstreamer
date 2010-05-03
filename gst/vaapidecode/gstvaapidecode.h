@@ -62,9 +62,8 @@ struct _GstVaapiDecode {
     GstPad             *sinkpad;
     GstPad             *srcpad;
     GstVaapiDisplay    *display;
-    GstVaapiProfile     profile;
-    GstBuffer          *codec_data;
     GstVaapiDecoder    *decoder;
+    GstCaps            *decoder_caps;
     unsigned int        use_ffmpeg      : 1;
 };
 

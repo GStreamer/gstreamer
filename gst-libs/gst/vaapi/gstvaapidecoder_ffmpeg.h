@@ -86,6 +86,9 @@ gst_vaapi_decoder_ffmpeg_new(
     GstBuffer       *codec_data
 );
 
+GstVaapiDecoder *
+gst_vaapi_decoder_ffmpeg_new_from_caps(GstVaapiDisplay *display, GstCaps *caps);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_FFMPEG_H */

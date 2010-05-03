@@ -608,3 +608,59 @@ gst_vaapi_decoder_ffmpeg_new(
                         "codec-data", codec_data,
                         NULL);
 }
+
+/**
+ * st_vaapi_decoder_ffmpeg_new_from_caps:
+ * @display: a #GstVaapiDisplay
+ * @caps: a #GstCaps holding codec information
+ *
+ * Creates a new #GstVaapiDecoder whose codec is determined from
+ * @caps. The @caps can hold extra information like codec-data and
+ * size.
+ *
+ * Return value: the newly allocated #GstVaapiDecoder object
+ */
+GstVaapiDecoder *
+gst_vaapi_decoder_ffmpeg_new_from_caps(GstVaapiDisplay *display, GstCaps *caps)
+{
+    GstStructure *structure;
+    GstVaapiProfile profile;
+    GstVaapiCodec codec;
+    const GValue *v_codec_data;
+    GstBuffer *codec_data;
+    gint width, height;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+
+    structure = gst_caps_get_structure(caps, 0);
+    if (!structure)
+        return NULL;
+
+    profile = gst_vaapi_profile_from_caps(caps);
+    if (!profile)
+        return NULL;
+
+    codec = gst_vaapi_profile_get_codec(profile);
+    if (!codec)
+        return NULL;
+
+    if (!gst_structure_get_int(structure, "width", &width))
+        width = 0;
+    if (!gst_structure_get_int(structure, "height", &height))
+        height = 0;
+
+    v_codec_data = gst_structure_get_value(structure, "codec_data");
+    if (v_codec_data)
+        codec_data = gst_value_get_buffer(v_codec_data);
+    else
+        codec_data = NULL;
+
+    return g_object_new(GST_VAAPI_TYPE_DECODER_FFMPEG,
+                        "display",    display,
+                        "codec",      codec,
+                        "codec-data", codec_data,
+                        "width",      width,
+                        "height",     height,
+                        NULL);
+}

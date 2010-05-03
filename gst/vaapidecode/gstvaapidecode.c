@@ -162,7 +162,6 @@ gst_vaapidecode_create(GstVaapiDecode *decode)
 {
     GstVaapiVideoSink *sink;
     GstVaapiDisplay *display;
-    GstVaapiCodec codec;
 
     /* Look for a downstream vaapisink */
     sink = gst_vaapi_video_sink_lookup(GST_ELEMENT(decode));
@@ -175,28 +174,24 @@ gst_vaapidecode_create(GstVaapiDecode *decode)
 
     decode->display = g_object_ref(display);
 
-    codec = gst_vaapi_profile_get_codec(decode->profile);
-    if (!codec)
-        return FALSE;
-
     if (decode->use_ffmpeg)
         decode->decoder =
-            gst_vaapi_decoder_ffmpeg_new(display, codec, decode->codec_data);
+            gst_vaapi_decoder_ffmpeg_new_from_caps(display, decode->decoder_caps);
     return decode->decoder != NULL;
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
+    if (decode->decoder_caps) {
+        gst_caps_unref(decode->decoder_caps);
+        decode->decoder_caps = NULL;
+    }
+
     if (decode->decoder) {
         gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
         decode->decoder = NULL;
-    }
-
-    if (decode->codec_data) {
-        gst_buffer_unref(decode->codec_data);
-        decode->codec_data = NULL;
     }
 
     if (decode->display) {
@@ -331,7 +326,7 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
     GstPad *other_pad;
     GstCaps *other_caps = NULL;
     GstStructure *structure;
-    const GValue *v_width, *v_height, *v_framerate, *v_par, *v_codec_data;
+    const GValue *v_width, *v_height, *v_framerate, *v_par;
 
     if (pad == decode->sinkpad) {
         other_pad  = decode->srcpad;
@@ -348,14 +343,9 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
     v_height     = gst_structure_get_value(structure, "height");
     v_framerate  = gst_structure_get_value(structure, "framerate");
     v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
-    v_codec_data = gst_structure_get_value(structure, "codec_data");
 
-    if (pad == decode->sinkpad) {
-        decode->profile = gst_vaapi_profile_from_caps(caps);
-        if (v_codec_data)
-            decode->codec_data =
-                gst_buffer_ref(gst_value_get_buffer(v_codec_data));
-    }
+    if (pad == decode->sinkpad)
+        decode->decoder_caps = gst_caps_ref(caps);
 
     structure = gst_caps_get_structure(other_caps, 0);
     gst_structure_set_value(structure, "width", v_width);
@@ -426,11 +416,10 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
-    decode->display     = NULL;
-    decode->profile     = 0;
-    decode->codec_data  = NULL;
-    decode->decoder     = NULL;
-    decode->use_ffmpeg  = TRUE;
+    decode->display      = NULL;
+    decode->decoder      = NULL;
+    decode->decoder_caps = NULL;
+    decode->use_ffmpeg   = TRUE;
 
     /* Pad through which data comes in to the element */
     decode->sinkpad = gst_pad_new_from_template(

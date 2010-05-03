@@ -50,7 +50,9 @@ enum {
 
     PROP_DISPLAY,
     PROP_CODEC,
-    PROP_CODEC_DATA
+    PROP_CODEC_DATA,
+    PROP_WIDTH,
+    PROP_HEIGHT,
 };
 
 static inline void
@@ -285,6 +287,12 @@ gst_vaapi_decoder_set_property(
     case PROP_CODEC_DATA:
         set_codec_data(GST_VAAPI_DECODER(object), gst_value_get_buffer(value));
         break;
+    case PROP_WIDTH:
+        priv->width = g_value_get_uint(value);
+        break;
+    case PROP_HEIGHT:
+        priv->height = g_value_get_uint(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -310,6 +318,12 @@ gst_vaapi_decoder_get_property(
         break;
     case PROP_CODEC_DATA:
         gst_value_set_buffer(value, priv->codec_data);
+        break;
+    case PROP_WIDTH:
+        g_value_set_uint(value, priv->width);
+        break;
+    case PROP_HEIGHT:
+        g_value_set_uint(value, priv->height);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -359,6 +373,24 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
                                     "Extra codec data",
                                     GST_TYPE_BUFFER,
                                     G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_WIDTH,
+         g_param_spec_uint("width",
+                           "Width",
+                           "The coded width of the picture",
+                           0, G_MAXINT32, 0,
+                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_HEIGHT,
+         g_param_spec_uint("height",
+                           "Height",
+                           "The coded height of the picture",
+                           0, G_MAXINT32, 0,
+                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -370,6 +402,8 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->context               = NULL;
     priv->codec                 = 0;
     priv->codec_data            = NULL;
+    priv->width                 = 0;
+    priv->height                = 0;
     priv->fps_n                 = 1000;
     priv->fps_d                 = 30;
     priv->buffers               = g_queue_new();
