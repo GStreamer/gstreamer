@@ -112,7 +112,8 @@ gst_vaapi_decoder_ensure_context(
 gboolean
 gst_vaapi_decoder_push_surface(
     GstVaapiDecoder *decoder,
-    GstVaapiSurface *surface
+    GstVaapiSurface *surface,
+    GstClockTime     timestamp
 ) attribute_hidden;
 
 G_END_DECLS

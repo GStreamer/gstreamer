@@ -54,6 +54,7 @@ struct _GstVaapiContextFfmpeg {
 };
 
 struct _GstVaapiDecoderFfmpegPrivate {
+    GstClockTime                in_timestamp; /* timestamp from the demuxer */
     AVFrame                    *frame;
     AVCodecParserContext       *pctx;
     AVCodecContext             *avctx;
@@ -233,6 +234,7 @@ gst_vaapi_decoder_ffmpeg_get_format(AVCodecContext *avctx, const enum PixelForma
 static int
 gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
 {
+    GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
     GstVaapiContext *context;
     GstVaapiSurface *surface;
     GstVaapiID surface_id;
@@ -260,6 +262,7 @@ gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
     pic->linesize[1] = 0;
     pic->linesize[2] = 0;
     pic->linesize[3] = 0;
+    pic->pts         = vactx->decoder->priv->in_timestamp;
     return 0;
 }
 
@@ -446,7 +449,7 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
     if (!surface)
         return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
-    gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder), surface);
+    gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder), surface, priv->frame->pts);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -489,6 +492,7 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
                 inbuf_size -= parsed_size;
             }
         } while (!got_frame && inbuf_size > 0);
+        inbuf_ts    = priv->pctx->pts;
     }
     else {
         outbuf      = inbuf;
@@ -499,6 +503,7 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
     if (!got_frame && !GST_BUFFER_IS_EOS(buffer))
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
+    priv->in_timestamp = inbuf_ts;
     return decode_frame(ffdecoder, outbuf, outbuf_size);
 }
 

@@ -195,7 +195,11 @@ destroy_surface(DecodedSurface *ds)
 }
 
 static gboolean
-push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
+push_surface(
+    GstVaapiDecoder *decoder,
+    GstVaapiSurface *surface,
+    GstClockTime     timestamp
+)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
     DecodedSurface *ds;
@@ -209,7 +213,7 @@ push_surface(GstVaapiDecoder *decoder, GstVaapiSurface *surface)
     ds->proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
     if (ds->proxy) {
         ds->status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-        gst_vaapi_surface_proxy_set_timestamp(ds->proxy, priv->surface_timestamp);
+        gst_vaapi_surface_proxy_set_timestamp(ds->proxy, timestamp);
     }
     else
         ds->status = GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -586,8 +590,9 @@ gst_vaapi_decoder_ensure_context(
 gboolean
 gst_vaapi_decoder_push_surface(
     GstVaapiDecoder *decoder,
-    GstVaapiSurface *surface
+    GstVaapiSurface *surface,
+    GstClockTime     timestamp
 )
 {
-    return push_surface(decoder, surface);
+    return push_surface(decoder, surface, timestamp);
 }
