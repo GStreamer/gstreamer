@@ -59,7 +59,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/mpeg, mpegversion=4", "simple"
     },
     { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
-      "video/mpeg, mpegversion=4", "advanced-simple",
+      "video/mpeg, mpegversion=4", "advanced-simple"
     },
     { GST_VAAPI_PROFILE_MPEG4_MAIN, VAProfileMPEG4Main,
       "video/mpeg, mpegversion=4", "main"
