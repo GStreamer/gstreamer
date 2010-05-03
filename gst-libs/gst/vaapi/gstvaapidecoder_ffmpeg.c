@@ -164,15 +164,15 @@ get_context(AVCodecContext *avctx)
     GstVaapiContext *context;
     gboolean success;
 
-    if (!avctx->width || !avctx->height)
+    if (!avctx->coded_width || !avctx->coded_height)
         return NULL;
 
     success = gst_vaapi_decoder_ensure_context(
         decoder,
         vactx->profile,
         vactx->entrypoint,
-        avctx->width,
-        avctx->height
+        avctx->coded_width,
+        avctx->coded_height
     );
     if (!success) {
         GST_DEBUG("failed to reset VA context:");
