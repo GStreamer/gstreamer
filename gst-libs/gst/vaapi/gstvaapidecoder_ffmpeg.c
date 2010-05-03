@@ -60,7 +60,7 @@ struct _GstVaapiDecoderFfmpegPrivate {
     AVCodecContext             *avctx;
     GstVaapiContextFfmpeg      *vactx;
     guint                       is_constructed  : 1;
-    guint                       is_open         : 1;
+    guint                       is_opened       : 1;
 };
 
 /** Converts codec to FFmpeg codec id */
@@ -466,9 +466,9 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
 
-    if (!priv->is_open) {
-        priv->is_open = gst_vaapi_decoder_ffmpeg_open(ffdecoder, buffer);
-        if (!priv->is_open)
+    if (!priv->is_opened) {
+        priv->is_opened = gst_vaapi_decoder_ffmpeg_open(ffdecoder, buffer);
+        if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
     }
 
@@ -574,7 +574,7 @@ gst_vaapi_decoder_ffmpeg_init(GstVaapiDecoderFfmpeg *decoder)
     priv->avctx                 = NULL;
     priv->vactx                 = NULL;
     priv->is_constructed        = FALSE;
-    priv->is_open               = FALSE;
+    priv->is_opened             = FALSE;
 }
 
 /**
