@@ -101,6 +101,12 @@ create_buffer(const guchar *buf, guint buf_size, gboolean copy)
     return buffer;
 }
 
+static void
+destroy_buffer(GstBuffer *buffer)
+{
+    gst_buffer_unref(buffer);
+}
+
 static gboolean
 push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
@@ -240,7 +246,7 @@ gst_vaapi_decoder_finalize(GObject *object)
     }
 
     if (priv->buffers) {
-        clear_queue(priv->buffers, (GDestroyNotify)gst_buffer_unref);
+        clear_queue(priv->buffers, (GDestroyNotify)destroy_buffer);
         g_queue_free(priv->buffers);
         priv->buffers = NULL;
     }
