@@ -329,7 +329,7 @@ gst_vaapi_profile_get_codec(GstVaapiProfile profile)
 
 /**
  * gst_vaapi_entrypoint:
- * @entryprofile: a #VAEntrypoint
+ * @entrypoint: a #VAEntrypoint
  *
  * Converts a VA entry-point into the corresponding #GstVaapiEntrypoint.
  * If the entry-point cannot be represented by #GstVaapiEntrypoint,
