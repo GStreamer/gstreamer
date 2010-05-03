@@ -1886,7 +1886,7 @@ gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
 
                 if (last_out == -1)
                   last_out = 0;
-                if (last_out < min_out_time)
+                if (min_out_time == -1 || last_out < min_out_time)
                   min_out_time = last_out;
               }
 
