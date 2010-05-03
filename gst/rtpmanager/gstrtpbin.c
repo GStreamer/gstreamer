@@ -1181,6 +1181,15 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   if (demux)
     gst_element_link (buffer, demux);
 
+  if (rtpbin->buffering) {
+    guint64 last_out;
+
+    GST_INFO_OBJECT (rtpbin,
+        "bin is buffering, set jitterbuffer as not active");
+    g_signal_emit_by_name (buffer, "set-active", FALSE, (gint64) 0, &last_out);
+  }
+
+
   GST_OBJECT_LOCK (rtpbin);
   target = GST_STATE_TARGET (rtpbin);
   GST_OBJECT_UNLOCK (rtpbin);
