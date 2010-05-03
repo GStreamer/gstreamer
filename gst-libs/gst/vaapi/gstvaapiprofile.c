@@ -30,9 +30,6 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiprofile.h"
 
-#define GST_VAAPI_PROFILE_CODEC(profile) \
-    ((GstVaapiCodec)(((guint32)profile) & GST_MAKE_FOURCC(0xff,0xff,0xff,0)))
-
 typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
 typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
 
@@ -244,7 +241,7 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
         }
         if (!profile)
             profile = gst_vaapi_profile_from_codec_data(
-                GST_VAAPI_PROFILE_CODEC(m->profile),
+                gst_vaapi_profile_get_codec(m->profile),
                 codec_data
             );
         gst_caps_unref(caps_test);
@@ -307,7 +304,21 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile)
 GstVaapiCodec
 gst_vaapi_profile_get_codec(GstVaapiProfile profile)
 {
-    return GST_VAAPI_PROFILE_CODEC(profile);
+    GstVaapiCodec codec;
+
+    switch (profile) {
+    case GST_VAAPI_PROFILE_VC1_SIMPLE:
+    case GST_VAAPI_PROFILE_VC1_MAIN:
+        codec = GST_VAAPI_CODEC_WMV3;
+        break;
+    case GST_VAAPI_PROFILE_VC1_ADVANCED:
+        codec = GST_VAAPI_CODEC_VC1;
+        break;
+    default:
+        codec = (guint32)profile & GST_MAKE_FOURCC(0xff,0xff,0xff,0);
+        break;
+    }
+    return codec;
 }
 
 /**

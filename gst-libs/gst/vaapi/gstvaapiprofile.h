@@ -37,7 +37,8 @@ typedef enum _GstVaapiEntrypoint                GstVaapiEntrypoint;
  * @GST_VAAPI_CODEC_MPEG4: MPEG-4 Part 2 (ISO/IEC 14496-2)
  * @GST_VAAPI_CODEC_H263: H.263
  * @GST_VAAPI_CODEC_H264: H.264 aka MPEG-4 Part 10 (ISO/IEC 14496-10)
- * @GST_VAAPI_CODEC_VC1: VC-1 (SMPTE 421M)
+ * @GST_VAAPI_CODEC_WMV3: Windows Media Video 9. VC-1 Simple or Main profile (SMPTE 421M)
+ * @GST_VAAPI_CODEC_VC1: VC-1 Advanced profile (SMPTE 421M)
  *
  * The set of all codecs for #GstVaapiCodec.
  */
@@ -47,6 +48,7 @@ enum _GstVaapiCodec {
     GST_VAAPI_CODEC_MPEG4       = GST_MAKE_FOURCC('M','P','4',0),
     GST_VAAPI_CODEC_H263        = GST_MAKE_FOURCC('2','6','3',0),
     GST_VAAPI_CODEC_H264        = GST_MAKE_FOURCC('2','6','4',0),
+    GST_VAAPI_CODEC_WMV3        = GST_MAKE_FOURCC('W','M','V',0),
     GST_VAAPI_CODEC_VC1         = GST_MAKE_FOURCC('V','C','1',0),
 };
 
@@ -86,7 +88,7 @@ enum _GstVaapiCodec {
  * @GST_VAAPI_PROFILE_VC1_SIMPLE:
  *   VC-1 simple profile
  * @GST_VAAPI_PROFILE_VC1_MAIN:
- *   VC-1 main profile (WMV3)
+ *   VC-1 main profile
  * @GST_VAAPI_PROFILE_VC1_ADVANCED:
  *   VC-1 advanced profile
  *

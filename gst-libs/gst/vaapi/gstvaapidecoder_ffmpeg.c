@@ -73,6 +73,7 @@ get_codec_id_from_codec(GstVaapiCodec codec)
     case GST_VAAPI_CODEC_MPEG4: return CODEC_ID_MPEG4;
     case GST_VAAPI_CODEC_H263:  return CODEC_ID_H263;
     case GST_VAAPI_CODEC_H264:  return CODEC_ID_H264;
+    case GST_VAAPI_CODEC_WMV3:  return CODEC_ID_WMV3;
     case GST_VAAPI_CODEC_VC1:   return CODEC_ID_VC1;
     }
     return CODEC_ID_NONE;
@@ -339,6 +340,10 @@ gst_vaapi_decoder_ffmpeg_open(GstVaapiDecoderFfmpeg *ffdecoder, GstBuffer *buffe
         /* For AVC1 formats, sequence headers are in extradata and
            input encoded buffers represent the whole NAL unit */
         parser_is_needed = priv->avctx->extradata_size == 0;
+        break;
+    case CODEC_ID_WMV3:
+        /* There is no WMV3 parser in FFmpeg */
+        parser_is_needed = FALSE;
         break;
     default:
         parser_is_needed = TRUE;
