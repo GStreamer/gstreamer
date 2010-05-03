@@ -156,40 +156,32 @@ static void
 set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstStructure *structure;
+    GstStructure * const structure = gst_caps_get_structure(caps, 0);
     GstVaapiProfile profile;
     const GValue *v_codec_data;
-    gint width, height;
+    gint v1, v2;
 
-    if (priv->caps) {
-        gst_caps_unref(priv->caps);
-        priv->caps = NULL;
+    profile = gst_vaapi_profile_from_caps(caps);
+    if (!profile)
+        return;
+
+    priv->codec = gst_vaapi_profile_get_codec(profile);
+    if (!priv->codec)
+        return;
+
+    if (gst_structure_get_int(structure, "width", &v1))
+        priv->width = v1;
+    if (gst_structure_get_int(structure, "height", &v2))
+        priv->height = v2;
+
+    if (gst_structure_get_fraction(structure, "framerate", &v1, &v2)) {
+        priv->fps_n = v1;
+        priv->fps_d = v2;
     }
 
-    if (caps) {
-        structure = gst_caps_get_structure(caps, 0);
-        if (!structure)
-            return;
-
-        profile = gst_vaapi_profile_from_caps(caps);
-        if (!profile)
-            return;
-
-        priv->codec = gst_vaapi_profile_get_codec(profile);
-        if (!priv->codec)
-            return;
-
-        if (!gst_structure_get_int(structure, "width", &width))
-            width = 0;
-        if (!gst_structure_get_int(structure, "height", &height))
-            height = 0;
-        priv->width  = width;
-        priv->height = height;
-
-        v_codec_data = gst_structure_get_value(structure, "codec_data");
-        if (v_codec_data)
-            set_codec_data(decoder, gst_value_get_buffer(v_codec_data));
-    }
+    v_codec_data = gst_structure_get_value(structure, "codec_data");
+    if (v_codec_data)
+        set_codec_data(decoder, gst_value_get_buffer(v_codec_data));
 }
 
 static void
@@ -205,7 +197,6 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
-    set_caps(decoder, NULL);
     set_codec_data(decoder, NULL);
 
     if (priv->context) {
@@ -318,7 +309,6 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 
     decoder->priv               = priv;
     priv->context               = NULL;
-    priv->caps                  = NULL;
     priv->codec                 = 0;
     priv->codec_data            = NULL;
     priv->width                 = 0;

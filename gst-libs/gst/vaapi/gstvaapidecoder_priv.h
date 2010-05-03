@@ -112,7 +112,6 @@ G_BEGIN_DECLS
 struct _GstVaapiDecoderPrivate {
     GstVaapiDisplay    *display;
     GstVaapiContext    *context;
-    GstCaps            *caps;
     GstVaapiCodec       codec;
     GstBuffer          *codec_data;
     guint               width;
