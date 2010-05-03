@@ -55,6 +55,8 @@ static const GstElementDetails gst_vaapidecode_details =
 static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/mpeg, mpegversion=2")
     GST_CAPS_CODEC("video/mpeg, mpegversion=4")
+    GST_CAPS_CODEC("video/x-divx")
+    GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
     GST_CAPS_CODEC("video/x-wmv")

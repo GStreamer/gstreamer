@@ -62,6 +62,12 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_MPEG4_MAIN, VAProfileMPEG4Main,
       "video/mpeg, mpegversion=4", "main"
     },
+    { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
+      "video/x-divx, divxversion=5", "advanced-simple"
+    },
+    { GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE, VAProfileMPEG4AdvancedSimple,
+      "video/x-xvid", "advanced-simple"
+    },
 #if VA_CHECK_VERSION(0,30,0)
     { GST_VAAPI_PROFILE_H263_BASELINE, VAProfileH263Baseline,
       "video/x-h263, variant=itu, h263version=h263", "baseline"
