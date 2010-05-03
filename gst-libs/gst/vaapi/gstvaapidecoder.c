@@ -42,10 +42,7 @@ enum {
     PROP_0,
 
     PROP_DISPLAY,
-    PROP_CODEC,
-    PROP_CODEC_DATA,
-    PROP_WIDTH,
-    PROP_HEIGHT,
+    PROP_CAPS,
 };
 
 static void
@@ -156,6 +153,46 @@ set_codec_data(GstVaapiDecoder *decoder, GstBuffer *codec_data)
 }
 
 static void
+set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstStructure *structure;
+    GstVaapiProfile profile;
+    const GValue *v_codec_data;
+    gint width, height;
+
+    if (priv->caps) {
+        gst_caps_unref(priv->caps);
+        priv->caps = NULL;
+    }
+
+    if (caps) {
+        structure = gst_caps_get_structure(caps, 0);
+        if (!structure)
+            return;
+
+        profile = gst_vaapi_profile_from_caps(caps);
+        if (!profile)
+            return;
+
+        priv->codec = gst_vaapi_profile_get_codec(profile);
+        if (!priv->codec)
+            return;
+
+        if (!gst_structure_get_int(structure, "width", &width))
+            width = 0;
+        if (!gst_structure_get_int(structure, "height", &height))
+            height = 0;
+        priv->width  = width;
+        priv->height = height;
+
+        v_codec_data = gst_structure_get_value(structure, "codec_data");
+        if (v_codec_data)
+            set_codec_data(decoder, gst_value_get_buffer(v_codec_data));
+    }
+}
+
+static void
 clear_queue(GQueue *q, GDestroyNotify destroy)
 {
     while (!g_queue_is_empty(q))
@@ -168,13 +205,14 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
+    set_caps(decoder, NULL);
     set_codec_data(decoder, NULL);
 
     if (priv->context) {
         g_object_unref(priv->context);
         priv->context = NULL;
     }
-
+ 
     if (priv->buffers) {
         clear_queue(priv->buffers, (GDestroyNotify)destroy_buffer);
         g_queue_free(priv->buffers);
@@ -203,23 +241,15 @@ gst_vaapi_decoder_set_property(
     GParamSpec   *pspec
 )
 {
-    GstVaapiDecoderPrivate * const priv = GST_VAAPI_DECODER(object)->priv;
+    GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
+    GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
     switch (prop_id) {
     case PROP_DISPLAY:
         priv->display = g_object_ref(g_value_get_object(value));
         break;
-    case PROP_CODEC:
-        priv->codec = g_value_get_uint(value);
-        break;
-    case PROP_CODEC_DATA:
-        set_codec_data(GST_VAAPI_DECODER(object), gst_value_get_buffer(value));
-        break;
-    case PROP_WIDTH:
-        priv->width = g_value_get_uint(value);
-        break;
-    case PROP_HEIGHT:
-        priv->height = g_value_get_uint(value);
+    case PROP_CAPS:
+        set_caps(decoder, g_value_get_pointer(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -240,18 +270,6 @@ gst_vaapi_decoder_get_property(
     switch (prop_id) {
     case PROP_DISPLAY:
         g_value_set_object(value, priv->display);
-        break;
-    case PROP_CODEC:
-        g_value_set_uint(value, priv->codec);
-        break;
-    case PROP_CODEC_DATA:
-        gst_value_set_buffer(value, priv->codec_data);
-        break;
-    case PROP_WIDTH:
-        g_value_set_uint(value, priv->width);
-        break;
-    case PROP_HEIGHT:
-        g_value_set_uint(value, priv->height);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -286,39 +304,11 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
 
     g_object_class_install_property
         (object_class,
-         PROP_CODEC,
-         g_param_spec_uint("codec",
-                           "Codec",
-                           "The codec handled by the decoder",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_CODEC_DATA,
-         gst_param_spec_mini_object("codec-data",
-                                    "Codec data",
-                                    "Extra codec data",
-                                    GST_TYPE_BUFFER,
-                                    G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "Width",
-                           "The coded width of the picture",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "Height",
-                           "The coded height of the picture",
-                           0, G_MAXINT32, 0,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+         PROP_CAPS,
+         g_param_spec_pointer("caps",
+                              "Decoder caps",
+                              "The decoder caps",
+                              G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -328,6 +318,7 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 
     decoder->priv               = priv;
     priv->context               = NULL;
+    priv->caps                  = NULL;
     priv->codec                 = 0;
     priv->codec_data            = NULL;
     priv->width                 = 0;
