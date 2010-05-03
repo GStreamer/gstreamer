@@ -11,6 +11,7 @@
 
   <chapter>
     <title>gst-plugins-vaapi Plugins</title>
+    <xi:include href="xml/gstvaapidecode.xml"/>
     <xi:include href="xml/gstvaapiconvert.xml"/>
     <xi:include href="xml/gstvaapisink.xml"/>
   </chapter>

@@ -28,6 +28,10 @@
     <xi:include href="xml/gstvaapisurfacepool.xml"/>
     <xi:include href="xml/gstvaapiimagepool.xml"/>
     <xi:include href="xml/gstvaapivideobuffer.xml"/>
+    <xi:include href="xml/gstvaapicontext.xml"/>
+    <xi:include href="xml/gstvaapidecoder.xml"/>
+    <xi:include href="xml/gstvaapidecoder_ffmpeg.xml"/>
+    <xi:include href="xml/gstvaapisurfaceproxy.xml"/>
     <xi:include href="xml/gstvaapivideosink.xml"/>
   </chapter>
 

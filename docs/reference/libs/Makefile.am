@@ -59,13 +59,24 @@ CFILE_GLOB = $(top_srcdir)/gst-libs/gst/vaapi/*.c $(srcdir)/$(DOC_MODULE).types
 # Header files to ignore when scanning.
 # e.g. IGNORE_HFILES=gtkdebug.h gtkintl.h
 IGNORE_HFILES = \
+	gstvaapi_priv.h \
+	gstvaapicompat.h \
 	gstvaapidebug.h \
+	gstvaapidecoder_priv.h \
+	gstvaapidisplay_priv.h \
+	gstvaapidisplay_glx_priv.h \
+	gstvaapidisplay_x11_priv.h \
+	gstvaapimarshal.h \
+	gstvaapiobject_priv.h \
+	gstvaapiparamspecs.h \
 	gstvaapiutils.h \
 	gstvaapiutils_glx.h \
 	gstvaapiutils_x11.h \
+	gstvaapivalue.h \
 	$(NULL)
 
 EXTRA_HFILES = \
+	gstvaapimarshal.c \
 	$(NULL)
 
 # Images to copy into HTML directory.
