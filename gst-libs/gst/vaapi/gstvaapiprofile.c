@@ -86,7 +86,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-vc1", "main"
     },
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
-      "video/x-vc1", "advanced"
+      "video/x-wmv, wmvversion=3, fourcc=(fourcc)WVC1", "advanced"
     },
     { 0, }
 };
