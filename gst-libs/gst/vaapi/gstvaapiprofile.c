@@ -70,13 +70,13 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     },
 #endif
     { GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
-      "video/x-h264, variant=itu", "baseline"
+      "video/x-h264", "baseline"
     },
     { GST_VAAPI_PROFILE_H264_MAIN, VAProfileH264Main,
-      "video/x-h264, variant=itu", "main"
+      "video/x-h264", "main"
     },
     { GST_VAAPI_PROFILE_H264_HIGH, VAProfileH264High,
-      "video/x-h264, variant=itu", "high"
+      "video/x-h264", "high"
     },
     { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
       "video/x-vc1", "simple"
