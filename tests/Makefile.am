@@ -58,7 +58,12 @@ test_textures_SOURCES	= test-textures.c image.c
 test_textures_CFLAGS	= $(TEST_CFLAGS) $(TEST_GLX_CFLAGS)
 test_textures_LDADD	= $(TEST_LIBS) $(TEST_GLX_LIBS)
 
-EXTRA_DIST = image.h $(test_codecs_source_c) $(test_codecs_source_h)
+EXTRA_DIST = \
+	image.h			\
+	test-decode.h 		\
+	$(test_codecs_source_c)	\
+	$(test_codecs_source_h)	\
+	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
