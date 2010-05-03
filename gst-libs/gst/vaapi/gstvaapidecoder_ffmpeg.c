@@ -634,9 +634,9 @@ gst_vaapi_decoder_ffmpeg_new(
  * @display: a #GstVaapiDisplay
  * @caps: a #GstCaps holding codec information
  *
- * Creates a new #GstVaapiDecoder whose codec is determined from
- * @caps. The @caps can hold extra information like codec-data and
- * size.
+ * Creates a new #GstVaapiDecoder based on FFmpeg where the codec is
+ * determined from @caps. The @caps can hold extra information like
+ * codec-data and pictured coded size.
  *
  * Return value: the newly allocated #GstVaapiDecoder object
  */
