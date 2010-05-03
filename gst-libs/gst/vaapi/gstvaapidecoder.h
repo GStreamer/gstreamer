@@ -60,7 +60,6 @@ typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
 /**
  * GstVaapiDecoderStatus:
  * @GST_VAAPI_DECODER_STATUS_SUCCESS: Success.
- * @GST_VAAPI_DECODER_STATUS_TIMEOUT: Timeout. Try again later.
  * @GST_VAAPI_DECODER_STATUS_END_OF_STREAM: End-Of-Stream.
  * @GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED: No memory left.
  * @GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED: Decoder initialization failure.
@@ -73,7 +72,6 @@ typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
  */
 enum _GstVaapiDecoderStatus {
     GST_VAAPI_DECODER_STATUS_SUCCESS = 0,
-    GST_VAAPI_DECODER_STATUS_TIMEOUT,
     GST_VAAPI_DECODER_STATUS_END_OF_STREAM,
     GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED,
     GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED,
