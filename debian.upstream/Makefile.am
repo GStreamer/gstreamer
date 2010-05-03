@@ -1,8 +1,9 @@
 DOCS = \
-	AUTHORS	\
-	COPYING	\
-	NEWS	\
-	README	\
+	AUTHORS		\
+	COPYING		\
+	COPYING.LIB	\
+	NEWS		\
+	README		\
 	$(NULL)
 
 DEBIANFILES = \
