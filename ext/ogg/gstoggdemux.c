@@ -1194,7 +1194,7 @@ static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
     gboolean active);
 static GstStateChangeReturn gst_ogg_demux_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
+static gboolean gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event);
 
 static void gst_ogg_print (GstOggDemux * demux);
 
@@ -1277,17 +1277,23 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
   ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      /* FIXME */
-      GST_DEBUG_OBJECT (ogg, "got a new segment event");
+    case GST_EVENT_FLUSH_START:
+      res = gst_ogg_demux_send_event (ogg, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (ogg, "got a flush stop event");
       ogg_sync_reset (&ogg->sync);
+      res = gst_ogg_demux_send_event (ogg, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      GST_DEBUG_OBJECT (ogg, "got a new segment event");
       gst_event_unref (event);
       res = TRUE;
       break;
     case GST_EVENT_EOS:
     {
       GST_DEBUG_OBJECT (ogg, "got an EOS event");
-      res = gst_pad_event_default (pad, event);
+      res = gst_ogg_demux_send_event (ogg, event);
       if (ogg->current_chain == NULL) {
         GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
             ("can't get first chain"));
@@ -1295,7 +1301,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_ogg_demux_send_event (ogg, event);
       break;
   }
   gst_object_unref (ogg);
@@ -2947,10 +2953,11 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
   return result;
 }
 
-static void
+static gboolean
 gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 {
   GstOggChain *chain = ogg->current_chain;
+  gboolean res = TRUE;
 
   if (chain) {
     gint i;
@@ -2960,10 +2967,12 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
 
       gst_event_ref (event);
       GST_DEBUG_OBJECT (pad, "Pushing event %" GST_PTR_FORMAT, event);
-      gst_pad_push_event (GST_PAD (pad), event);
+      res &= gst_pad_push_event (GST_PAD (pad), event);
     }
   }
   gst_event_unref (event);
+
+  return res;
 }
 
 static GstFlowReturn
