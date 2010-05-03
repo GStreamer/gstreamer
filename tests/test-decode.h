@@ -21,6 +21,7 @@
 #ifndef TEST_DECODE_H
 #define TEST_DECODE_H
 
+#include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiprofile.h>
 
 typedef struct _VideoDecodeInfo VideoDecodeInfo;

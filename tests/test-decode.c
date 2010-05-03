@@ -79,6 +79,7 @@ main(int argc, char *argv[])
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
     GstCaps              *decoder_caps;
+    GstStructure         *structure;
     GstVaapiDecoderStatus status;
     const CodecDefs      *codec;
     GstVaapiSurfaceProxy *proxy;
@@ -111,7 +112,20 @@ main(int argc, char *argv[])
         g_error("could not create window");
 
     codec->get_video_info(&info);
-    decoder = gst_vaapi_decoder_ffmpeg_new(display, gst_vaapi_profile_get_codec(info.profile), NULL);
+    decoder_caps = gst_vaapi_profile_get_caps(info.profile);
+    if (!decoder_caps)
+        g_error("could not create decoder caps");
+
+    structure = gst_caps_get_structure(decoder_caps, 0);
+    if (info.width > 0 && info.height > 0)
+        gst_structure_set(
+            structure,
+            "width",  G_TYPE_INT, info.width,
+            "height", G_TYPE_INT, info.height,
+            NULL
+        );
+
+    decoder = gst_vaapi_decoder_ffmpeg_new_from_caps(display, decoder_caps);
     if (!decoder)
         g_error("could not create FFmpeg decoder");
 
@@ -136,6 +150,7 @@ main(int argc, char *argv[])
     pause();
 
     g_object_unref(proxy);
+    gst_caps_unref(decoder_caps);
     g_object_unref(decoder);
     g_object_unref(window);
     g_object_unref(display);
