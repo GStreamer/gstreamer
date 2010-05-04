@@ -56,12 +56,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define DEFAULT_SEND_CONFIG     FALSE
 #define DEFAULT_BUFFER_LIST     FALSE
+#define DEFAULT_CONFIG_INTERVAL 0
 
 enum
 {
   ARG_0,
   ARG_SEND_CONFIG,
-  ARG_BUFFER_LIST
+  ARG_BUFFER_LIST,
+  ARG_CONFIG_INTERVAL
 };
 
 
@@ -118,6 +120,14 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
           "Use Buffer Arrays",
           DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONFIG_INTERVAL,
+      g_param_spec_uint ("config-interval", "Config Send Interval",
+          "Send Config Insertion Interval in seconds (configuration headers "
+          "will be multiplexed in the data stream when detected.) (0 = disabled)",
+          0, 3600, DEFAULT_CONFIG_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
   gobject_class->finalize = gst_rtp_mp4v_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4v_pay_setcaps;
@@ -138,6 +148,8 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay, GstRtpMP4VPayClass * klass)
   rtpmp4vpay->buffer_list = DEFAULT_BUFFER_LIST;
   rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
   rtpmp4vpay->need_config = TRUE;
+  rtpmp4vpay->config_interval = DEFAULT_CONFIG_INTERVAL;
+  rtpmp4vpay->last_config = -1;
 
   rtpmp4vpay->config = NULL;
 
@@ -346,10 +358,11 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
 static gboolean
 gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
-    gint * strip)
+    gint * strip, gboolean * vopi)
 {
   guint32 code;
   gboolean result;
+  *vopi = FALSE;
 
   *strip = 0;
 
@@ -413,6 +426,16 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
       GST_DEBUG_OBJECT (enc, "VOP");
       /* VOP startcode, we don't have to flush the packet */
       result = FALSE;
+      /* vop-coding-type == I-frame */
+      if (size > 4 && (data[4] >> 6 == 0)) {
+        GST_DEBUG_OBJECT (enc, "VOP-I");
+        *vopi = TRUE;
+      }
+      break;
+    case GOP_STARTCODE:
+      GST_DEBUG_OBJECT (enc, "GOP");
+      *vopi = TRUE;
+      result = TRUE;
       break;
     case 0x00000100:
       enc->need_config = FALSE;
@@ -446,8 +469,11 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gboolean flush;
   gint strip;
   GstClockTime timestamp, duration;
+  gboolean vopi;
+  gboolean send_config;
 
   ret = GST_FLOW_OK;
+  send_config = FALSE;
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (basepayload);
 
@@ -468,7 +494,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* depay incomming data and see if we need to start a new RTP
    * packet */
-  flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip);
+  flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip, &vopi);
   if (strip) {
     /* strip off config if requested */
     if (!rtpmp4vpay->send_config) {
@@ -484,6 +510,62 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       buffer = subbuf;
 
       size = GST_BUFFER_SIZE (buffer);
+    } else {
+      GST_LOG_OBJECT (rtpmp4vpay, "found config in stream");
+      rtpmp4vpay->last_config = timestamp;
+    }
+  }
+
+  /* there is a config request, see if we need to insert it */
+  if (rtpmp4vpay->send_config && vopi && (rtpmp4vpay->config_interval > 0) &&
+      rtpmp4vpay->config) {
+    if (rtpmp4vpay->last_config != -1) {
+      guint64 diff;
+
+      GST_LOG_OBJECT (rtpmp4vpay,
+          "now %" GST_TIME_FORMAT ", last VOP-I %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtpmp4vpay->last_config));
+
+      /* calculate diff between last config in milliseconds */
+      if (timestamp > rtpmp4vpay->last_config) {
+        diff = timestamp - rtpmp4vpay->last_config;
+      } else {
+        diff = 0;
+      }
+
+      GST_DEBUG_OBJECT (rtpmp4vpay,
+          "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
+
+      /* bigger than interval, queue config */
+      /* FIXME should convert timestamps to running time */
+      if (GST_TIME_AS_SECONDS (diff) >= rtpmp4vpay->config_interval) {
+        GST_DEBUG_OBJECT (rtpmp4vpay, "time to send config");
+        send_config = TRUE;
+      }
+    } else {
+      /* no known previous config time, send now */
+      GST_DEBUG_OBJECT (rtpmp4vpay, "no previous config time, send now");
+      send_config = TRUE;
+    }
+
+    if (send_config) {
+      /* we need to send config now first */
+      GstBuffer *superbuf;
+
+      GST_LOG_OBJECT (rtpmp4vpay, "inserting config in stream");
+
+      /* insert header */
+      superbuf = gst_buffer_merge (rtpmp4vpay->config, buffer);
+
+      GST_BUFFER_TIMESTAMP (superbuf) = timestamp;
+      gst_buffer_unref (buffer);
+      buffer = superbuf;
+
+      size = GST_BUFFER_SIZE (buffer);
+
+      if (timestamp != -1) {
+        rtpmp4vpay->last_config = timestamp;
+      }
     }
   }
 
@@ -559,6 +641,9 @@ gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
     case ARG_BUFFER_LIST:
       rtpmp4vpay->buffer_list = g_value_get_boolean (value);
       break;
+    case ARG_CONFIG_INTERVAL:
+      rtpmp4vpay->config_interval = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -578,6 +663,9 @@ gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
       break;
     case ARG_BUFFER_LIST:
       g_value_set_boolean (value, rtpmp4vpay->buffer_list);
+      break;
+    case ARG_CONFIG_INTERVAL:
+      g_value_set_uint (value, rtpmp4vpay->config_interval);
       break;
     default:
       break;

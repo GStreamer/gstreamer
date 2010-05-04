@@ -56,6 +56,11 @@ struct _GstRtpMP4VPay
 
   gboolean      buffer_list;
 
+  /* naming might be confusing with send_config; but naming matches h264
+   * payloader */
+  guint         config_interval;
+  GstClockTime  last_config;
+
   GstPadEventFunction old_event_func;
 };
 
