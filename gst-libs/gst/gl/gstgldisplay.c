@@ -2167,8 +2167,9 @@ gst_gl_display_create_context (GstGLDisplay * display,
 
 /* Called by the glimagesink element */
 gboolean
-gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
-    gint height, gboolean keep_aspect_ratio)
+gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
+    gint gl_width, gint gl_height, gint window_width, gint window_height,
+    gboolean keep_aspect_ratio)
 {
   gboolean isAlive = TRUE;
 
@@ -2185,12 +2186,12 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
 
     if (texture) {
       display->redisplay_texture = texture;
-      display->redisplay_texture_width = width;
-      display->redisplay_texture_height = height;
+      display->redisplay_texture_width = gl_width;
+      display->redisplay_texture_height = gl_height;
     }
     display->keep_aspect_ratio = keep_aspect_ratio;
     if (display->gl_window)
-      gst_gl_window_draw (display->gl_window, width, height);
+      gst_gl_window_draw (display->gl_window, window_width, window_height);
   }
   gst_gl_display_unlock (display);
 
