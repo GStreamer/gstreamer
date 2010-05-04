@@ -21,6 +21,10 @@ Overview
 gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
+  * `vaapidecode' is used to decode MPEG-2, MPEG-4, H.264, VC-1, WMV3
+    videos to video/x-vaapi-surfaces surfaces, depending on the
+    underlying HW capabilities.
+
   * `vaapiconvert' is used to convert from video/x-raw-yuv pixels to
     video/x-vaapi-surface surfaces.
 
@@ -33,11 +37,22 @@ Features
 
   * VA-API support from 0.29 to 0.31
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
+  * Support for major HW video decoding solutions on Linux (AMD, Intel, NVIDIA)
 
 
 Requirements
 ------------
 
-libgstreamer0.10-dev >= 0.10.0
-libgstreamer-plugins-base0.10-dev >= 0.10.0
-libva-dev >= 0.31.0-1+sds9 (VA/GLX)
+Software requirements
+
+  * libgstreamer0.10-dev >= 0.10.0
+  * libgstreamer-plugins-base0.10-dev >= 0.10.0
+  * libva-dev >= 0.31.0-1+sds9 (VA/GLX)
+
+Hardware requirements
+
+  * AMD platforms with UVD2 (XvBA supported)
+  * Intel Poulsbo (US15W)
+  * Intel Eaglelake (G45)
+  * Intel Ironlake (HD Graphics)
+  * NVIDIA platforms with PureVideo (VDPAU supported)
