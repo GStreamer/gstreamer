@@ -240,8 +240,8 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       if (format != GST_FORMAT_TIME)
         goto wrong_format;
 
-      if (ogg->pullmode) {
-        /* we must return the total length */
+      if (ogg->total_time != -1) {
+        /* we can return the total length */
         total_time = ogg->total_time;
       } else {
         gint bitrate = ogg->bitrate;
@@ -694,6 +694,13 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       /* copy values over to global ogg level */
       ogg->basetime = pad->map.basetime;
       ogg->prestime = pad->map.prestime;
+
+      /* use total time to update the total ogg time */
+      if (ogg->total_time == -1) {
+        ogg->total_time = pad->map.total_time;
+      } else if (pad->map.total_time > 0) {
+        ogg->total_time = MAX (ogg->total_time, pad->map.total_time);
+      }
     }
     if (pad->map.caps) {
       gst_pad_set_caps (GST_PAD (pad), pad->map.caps);
@@ -2351,6 +2358,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
 
   return res;
 
+  /* ERRORS */
 error:
   {
     GST_DEBUG_OBJECT (ogg, "seek failed");
@@ -2775,12 +2783,16 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
   chain->total_time = GST_CLOCK_TIME_NONE;
   GST_DEBUG_OBJECT (ogg, "trying to collect chain info");
 
+  /* see if we have a start time on all streams */
   chain->segment_start = gst_ogg_demux_collect_start_time (ogg, chain);
 
-  if (chain->segment_start == G_MAXUINT64)
+  if (chain->segment_start == G_MAXUINT64) {
+    /* not yet, stream some more data */
     res = FALSE;
-  else if (chain->segment_stop != GST_CLOCK_TIME_NONE)
+  } else if (chain->segment_stop != GST_CLOCK_TIME_NONE) {
+    /* we can calculate a total time */
     chain->total_time = chain->segment_stop - chain->segment_start;
+  }
 
   GST_DEBUG ("total time %" G_GUINT64_FORMAT, chain->total_time);
 
@@ -3443,6 +3455,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       ogg->running = FALSE;
       ogg->bitrate = 0;
       ogg->segment_running = FALSE;
+      ogg->total_time = -1;
       gst_segment_init (&ogg->segment, GST_FORMAT_TIME);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
