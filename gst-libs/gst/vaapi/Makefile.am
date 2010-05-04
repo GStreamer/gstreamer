@@ -150,6 +150,10 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 
+libgstvaapi_@GST_MAJORMINOR@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
+	$(NULL)
+
 libgstvaapi_x11_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_x11_source_c)		\
 	$(libgstvaapi_x11_source_priv_h)	\
@@ -175,6 +179,10 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(X11_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-@GST_MAJORMINOR@.la		\
+	$(NULL)
+
+libgstvaapi_x11_@GST_MAJORMINOR@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_glx_@GST_MAJORMINOR@_la_SOURCES =	\
