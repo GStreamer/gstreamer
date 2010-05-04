@@ -870,7 +870,11 @@ gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
   }
 
   n_keypoints = GST_READ_UINT64_LE (data);
+
   pad->kp_denom = GST_READ_UINT64_LE (data + 8);
+  if (pad->kp_denom == 0)
+    pad->kp_denom = 1;
+
   data += 16;
   size -= 16;
 
