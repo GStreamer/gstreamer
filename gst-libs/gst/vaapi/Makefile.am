@@ -204,6 +204,10 @@ libgstvaapi_glx_@GST_MAJORMINOR@_la_LIBADD =	\
 	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
 	$(NULL)
 
+libgstvaapi_glx_@GST_MAJORMINOR@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
+	$(NULL)
+
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
 
