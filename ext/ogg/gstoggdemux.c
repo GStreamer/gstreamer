@@ -1956,7 +1956,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   gint64 begin, end;
   gint64 begintime, endtime;
   gint64 target, keytarget;
-  gint64 best, best_time;
+  gint64 best;
   gint64 total;
   gint64 result = 0;
   GstFlowReturn ret;
@@ -1982,22 +1982,6 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   begintime = chain->begin_time;
   endtime = begintime + chain->total_time;
   target = position - total + begintime;
-
-  if (do_index_search (ogg, chain, begin, end, begintime, endtime, target,
-          &best, &best_time)) {
-    /* the index gave some result */
-    GST_DEBUG_OBJECT (ogg,
-        "found offset %" G_GINT64_FORMAT " with time %" G_GUINT64_FORMAT, best,
-        best_time);
-
-#if 1
-    keytarget = best_time + begintime;
-    best += begin;
-
-    gst_ogg_demux_seek (ogg, best);
-    goto done;
-#endif
-  }
 
   if (!do_binary_search (ogg, chain, begin, end, begintime, endtime, target,
           &best))
@@ -2376,36 +2360,63 @@ static gboolean
 gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
 {
   gint bitrate;
-  gboolean res;
+  gboolean res = TRUE;
+  GstFormat format;
+  gdouble rate;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  GstEvent *sevent;
+  GstOggChain *chain;
+  gint64 best, best_time;
 
-  bitrate = ogg->bitrate;
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &start_type, &start, &stop_type, &stop);
 
-  if (bitrate > 0) {
-    GstFormat format;
-    gdouble rate;
-    GstSeekFlags flags;
-    GstSeekType start_type, stop_type;
-    gint64 start, stop;
-    GstEvent *sevent;
+  if (format != GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (ogg, "can only seek on TIME");
+    goto error;
+  }
 
-    gst_event_parse_seek (event, &rate, &format, &flags,
-        &start_type, &start, &stop_type, &stop);
+  chain = ogg->current_chain;
 
-    /* convert the seek positions to bytes */
+  if (do_index_search (ogg, chain, 0, -1, 0, -1, start, &best, &best_time)) {
+    /* the index gave some result */
+    GST_DEBUG_OBJECT (ogg,
+        "found offset %" G_GINT64_FORMAT " with time %" G_GUINT64_FORMAT,
+        best, best_time);
+    start = best;
+  } else if ((bitrate = ogg->bitrate) > 0) {
+    /* try with bitrate convert the seek positions to bytes */
     if (start_type != GST_SEEK_TYPE_NONE) {
       start = gst_util_uint64_scale (start, bitrate, 8 * GST_SECOND);
     }
     if (stop_type != GST_SEEK_TYPE_NONE) {
       stop = gst_util_uint64_scale (stop, bitrate, 8 * GST_SECOND);
     }
+  } else {
+    /* we don't know */
+    res = FALSE;
+  }
+
+  if (res) {
+    GST_DEBUG_OBJECT (ogg,
+        "seeking to %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT, start, stop);
+    /* do seek */
     sevent = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
         start_type, start, stop_type, stop);
 
     res = gst_pad_push_event (ogg->sinkpad, sevent);
-  } else {
-    res = FALSE;
   }
+
   return res;
+
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG_OBJECT (ogg, "seek failed");
+    return FALSE;
+  }
 }
 
 static gboolean
