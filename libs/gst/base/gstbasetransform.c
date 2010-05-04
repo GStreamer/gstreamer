@@ -1071,7 +1071,7 @@ done:
   /* ERRORS */
 no_transform_possible:
   {
-    GST_WARNING_OBJECT (trans,
+    GST_DEBUG_OBJECT (trans,
         "transform could not transform %" GST_PTR_FORMAT
         " in anything we support", caps);
     ret = FALSE;
