@@ -1299,7 +1299,7 @@ no_sinks:
             (_("Both autovideosink and %s elements are not working."),
                 DEFAULT_VIDEOSINK), (NULL));
       } else {
-        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
             (_("The autovideosink element is not working.")), (NULL));
       }
     }
@@ -1788,7 +1788,7 @@ no_sinks:
             (_("Both autoaudiosink and %s elements are not working."),
                 DEFAULT_AUDIOSINK), (NULL));
       } else {
-        GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+        GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
             (_("The autoaudiosink element is not working.")), (NULL));
       }
     }
