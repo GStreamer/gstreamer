@@ -129,13 +129,21 @@ unmangle_libtool (gchar ** dir, gchar ** base)
   if (!*base)
     return;
 
-  /* we assume libtool when base starts with lt- and dir ends with .libs */
+  /* We assume libtool when base starts with "lt-" and dir ends with ".libs".
+   * On Windows libtool doesn't seem to be adding "lt-" prefix. */
+#ifndef G_OS_WIN32
   if (!g_str_has_prefix (*base, "lt-"))
     return;
+#endif
+
   if (!g_str_has_suffix (*dir, ".libs"))
     return;
 
+#ifndef G_OS_WIN32
   new_base = g_strdup (&((*base)[3]));
+#else
+  new_base = g_strdup (*base);
+#endif
   new_dir = g_path_get_dirname (*dir);
   g_free (*base);
   g_free (*dir);
@@ -162,6 +170,23 @@ get_dir_of_binary (const gchar * binary)
    * then we have the right breakup.  If not, it's because no path was
    * specified which caused get_basename to return "." */
   full = g_build_filename (dir, base, NULL);
+
+#ifdef G_OS_WIN32
+
+  /* g_build_filename() should be using the last path separator used in the
+   * input according to the docs, but doesn't actually do that, so we have
+   * to fix up the result. */
+  {
+    gchar *tmp;
+
+    for (tmp = (gchar *) binary + strlen (binary) - 1; tmp >= binary; tmp--) {
+      if (*tmp == '/' || *tmp == '\\') {
+        full[strlen (dir)] = *tmp;
+        break;
+      }
+    }
+  }
+#endif
 
   if (strcmp (full, binary) != 0) {
     if (strcmp (dir, ".") != 0) {
@@ -319,6 +344,13 @@ main (int argc, char **argv)
 
   /* unmangle libtool if necessary */
   unmangle_libtool (&dir, &base);
+
+#ifdef G_OS_WIN32
+  /* remove .exe suffix, otherwise we'll be looking for gst-blah.exe-*.* */
+  if (strlen (base) > 4 && g_str_has_suffix (base, ".exe")) {
+    base[strlen (base) - 4] = '\0';
+  }
+#endif
 
   /* get all candidate binaries */
   candidates = get_candidates (dir, base);
