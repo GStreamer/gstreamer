@@ -46,8 +46,6 @@
 #include "gstoggdemux.h"
 
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
-#define SKELETON_FISHEAD_SIZE 64
-#define SKELETON_FISBONE_MIN_SIZE 52
 
 #define GST_FLOW_LIMIT GST_FLOW_CUSTOM_ERROR
 
