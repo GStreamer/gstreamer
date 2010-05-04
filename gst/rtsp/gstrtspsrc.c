@@ -1884,6 +1884,21 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gboolean seekable =
+            src->cur_protocols != GST_RTSP_LOWER_TRANS_UDP_MCAST;
+
+        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
+            src->segment.start, src->segment.stop);
+        res = TRUE;
+      }
+      break;
+    }
     default:
     {
       GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
@@ -4591,6 +4606,9 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       gst_rtsp_message_unset (&response);
     }
   }
+
+  /* store the transport protocol that was configured */
+  src->cur_protocols = protocols;
 
   gst_rtsp_ext_list_stream_select (src->extensions, url);
 
