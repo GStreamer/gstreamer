@@ -712,6 +712,29 @@ no_buffer:
   }
 }
 
+static guint64
+gst_ogg_demux_collect_start_time (GstOggDemux * ogg, GstOggChain * chain)
+{
+  gint i;
+  guint64 start_time = G_MAXUINT64;
+
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    if (pad->map.is_skeleton)
+      continue;
+
+    /*  can do this if the pad start time is not defined */
+    if (pad->start_time == GST_CLOCK_TIME_NONE) {
+      start_time = G_MAXUINT64;
+      break;
+    } else {
+      start_time = MIN (start_time, pad->start_time);
+    }
+  }
+  return start_time;
+}
+
 /* submit a packet to the oggpad, this function will run the
  * typefind code for the pad if this is the first packet for this
  * stream 
@@ -820,23 +843,55 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
     /* check if complete chain has start time */
     if (chain == ogg->building_chain) {
+      GstEvent *event = NULL;
 
-      /* see if we have enough info to activate the chain, we have enough info
-       * when all streams have a valid start time. */
-      if (gst_ogg_demux_collect_chain_info (ogg, chain)) {
-        GstEvent *event;
+      if (ogg->resync) {
+        guint64 start_time;
 
-        GST_DEBUG_OBJECT (ogg, "segment_start: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->segment_start));
-        GST_DEBUG_OBJECT (ogg, "segment_stop:  %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->segment_stop));
-        GST_DEBUG_OBJECT (ogg, "segment_time:  %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->begin_time));
+        GST_DEBUG_OBJECT (ogg, "need to resync");
 
-        /* create the newsegment event we are going to send out */
-        event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
-            GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
-            chain->begin_time);
+        /* when we need to resync after a seek, we wait until we have received
+         * timestamps on all streams */
+        start_time = gst_ogg_demux_collect_start_time (ogg, chain);
+
+        if (start_time != G_MAXUINT64) {
+          gint64 segment_time;
+
+          GST_DEBUG_OBJECT (ogg, "start_time:  %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start_time));
+
+          if (chain->segment_start < start_time)
+            segment_time =
+                (start_time - chain->segment_start) + chain->begin_time;
+          else
+            segment_time = chain->begin_time;
+
+          /* create the newsegment event we are going to send out */
+          event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+              GST_FORMAT_TIME, start_time, chain->segment_stop, segment_time);
+
+          ogg->resync = FALSE;
+        }
+      } else {
+        /* see if we have enough info to activate the chain, we have enough info
+         * when all streams have a valid start time. */
+        if (gst_ogg_demux_collect_chain_info (ogg, chain)) {
+
+          GST_DEBUG_OBJECT (ogg, "segment_start: %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (chain->segment_start));
+          GST_DEBUG_OBJECT (ogg, "segment_stop:  %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (chain->segment_stop));
+          GST_DEBUG_OBJECT (ogg, "segment_time:  %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (chain->begin_time));
+
+          /* create the newsegment event we are going to send out */
+          event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+              GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
+              chain->begin_time);
+        }
+      }
+
+      if (event) {
         gst_event_set_seqnum (event, ogg->seqnum);
 
         gst_ogg_demux_activate_chain (ogg, chain, event);
@@ -1149,8 +1204,6 @@ gst_ogg_chain_has_stream (GstOggChain * chain, glong serialno)
   return gst_ogg_chain_get_stream (chain, serialno) != NULL;
 }
 
-#define CURRENT_CHAIN(ogg) (&g_array_index ((ogg)->chains, GstOggChain, (ogg)->current_chain))
-
 /* signals and args */
 enum
 {
@@ -1268,6 +1321,27 @@ gst_ogg_demux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_ogg_demux_reset_streams (GstOggDemux * ogg)
+{
+  GstOggChain *chain;
+  guint i;
+
+  chain = ogg->current_chain;
+  if (chain == NULL)
+    return;
+
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, i);
+
+    stream->start_time = -1;
+    stream->map.accumulated_granule = 0;
+  }
+  ogg->building_chain = chain;
+  ogg->current_chain = NULL;
+  ogg->resync = TRUE;
+}
+
 static gboolean
 gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -1284,6 +1358,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (ogg, "got a flush stop event");
       ogg_sync_reset (&ogg->sync);
       res = gst_ogg_demux_send_event (ogg, event);
+      gst_ogg_demux_reset_streams (ogg);
       break;
     case GST_EVENT_NEWSEGMENT:
       GST_DEBUG_OBJECT (ogg, "got a new segment event");
@@ -1645,15 +1720,14 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
       bitrate += pad->map.bitrate;
 
+      /* mark discont */
+      gst_ogg_pad_mark_discont (pad);
+      pad->last_ret = GST_FLOW_OK;
+
       if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
         continue;
 
       GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
-
-      /* mark discont */
-      gst_ogg_pad_mark_discont (pad);
-      pad->last_ret = GST_FLOW_OK;
-      pad->added = TRUE;
 
       structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
       pad->is_sparse =
@@ -1666,6 +1740,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
 
       gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
+      pad->added = TRUE;
     }
     ogg->bitrate = bitrate;
   }
@@ -2674,29 +2749,16 @@ gst_ogg_demux_find_chain (GstOggDemux * ogg, glong serialno)
 static gboolean
 gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
 {
-  gint i;
   gboolean res = TRUE;
 
   chain->total_time = GST_CLOCK_TIME_NONE;
-  chain->segment_start = G_MAXUINT64;
-
   GST_DEBUG_OBJECT (ogg, "trying to collect chain info");
 
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+  chain->segment_start = gst_ogg_demux_collect_start_time (ogg, chain);
 
-    if (pad->map.is_skeleton)
-      continue;
-
-    /*  can do this if the pad start time is not defined */
-    if (pad->start_time == GST_CLOCK_TIME_NONE)
-      res = FALSE;
-    else
-      chain->segment_start = MIN (chain->segment_start, pad->start_time);
-  }
-
-  if (chain->segment_stop != GST_CLOCK_TIME_NONE
-      && chain->segment_start != G_MAXUINT64)
+  if (chain->segment_start == G_MAXUINT64)
+    res = FALSE;
+  else if (chain->segment_stop != GST_CLOCK_TIME_NONE)
     chain->total_time = chain->segment_stop - chain->segment_start;
 
   GST_DEBUG ("total time %" G_GUINT64_FORMAT, chain->total_time);
@@ -3316,6 +3378,7 @@ gst_ogg_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
   ogg->pullmode = FALSE;
+  ogg->resync = FALSE;
 
   return TRUE;
 }

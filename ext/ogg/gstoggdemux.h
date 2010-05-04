@@ -140,6 +140,7 @@ struct _GstOggDemux
   gboolean running;
 
   gboolean need_chains;
+  gboolean resync;
 
   /* state */
   GMutex *chain_lock;           /* we need the lock to protect the chains */
