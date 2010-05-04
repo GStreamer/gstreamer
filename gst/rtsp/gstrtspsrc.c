@@ -945,12 +945,25 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
      * we will fail then. */
     if (g_str_has_prefix (control_url, "rtsp://"))
       stream->setup_url = g_strdup (control_url);
-    else if (src->content_base)
+    else {
+      const gchar *base;
+      gboolean has_slash;
+
+      if (src->content_base)
+        base = src->content_base;
+      else if (src->req_location)
+        base = src->req_location;
+      else
+        base = "/";
+
+      /* check if the base ends or control starts with / */
+      has_slash = g_str_has_prefix (control_url, "/");
+      has_slash = has_slash || g_str_has_suffix (base, "/");
+
+      /* concatenate the two strings, insert / when not present */
       stream->setup_url =
-          g_strdup_printf ("%s%s", src->content_base, control_url);
-    else
-      stream->setup_url =
-          g_strdup_printf ("%s/%s", src->req_location, control_url);
+          g_strdup_printf ("%s%s%s", base, has_slash ? "" : "/", control_url);
+    }
   }
   GST_DEBUG_OBJECT (src, " setup: %s", GST_STR_NULL (stream->setup_url));
 
