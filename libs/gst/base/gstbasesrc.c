@@ -927,6 +927,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           seg_format = src->segment.format;
           GST_OBJECT_UNLOCK (src);
 
+          GST_LOG_OBJECT (src, "duration %" G_GINT64_FORMAT ", format %s",
+              duration, gst_format_get_name (seg_format));
+
           if (duration != -1) {
             /* convert to requested format, if this fails, we have a duration
              * but we cannot answer the query, we must return FALSE. */
