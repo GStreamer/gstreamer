@@ -473,7 +473,7 @@ static GstFlowReturn
 gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
     guint8 * data, guint size, GstClockTime timestamp, GstClockTime duration)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint newsize;
   guint packet_len;
   GstClockTime newduration;
@@ -499,7 +499,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
   if (rtptheorapay->packet)
     flush |= (rtptheorapay->payload_TDT != TDT);
   if (flush)
-    gst_rtp_theora_pay_flush_packet (rtptheorapay);
+    ret = gst_rtp_theora_pay_flush_packet (rtptheorapay);
 
   /* create new packet if we must */
   if (!rtptheorapay->packet) {
@@ -509,8 +509,6 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
   payload = gst_rtp_buffer_get_payload (rtptheorapay->packet);
   ppos = payload + rtptheorapay->payload_pos;
   fragmented = FALSE;
-
-  ret = GST_FLOW_OK;
 
   /* put buffer in packet, it either fits completely or needs to be fragmented
    * over multiple RTP packets. */
