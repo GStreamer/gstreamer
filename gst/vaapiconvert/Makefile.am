@@ -28,6 +28,7 @@ libgstvaapiconvert_la_LIBADD =	\
 	$(GST_VIDEO_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS)
 
+libgstvaapiconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvaapiconvert_la_LIBTOOLFLAGS = --tag=disable-static
 
 # Extra clean files so that maintainer-clean removes *everything*

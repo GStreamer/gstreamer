@@ -154,6 +154,18 @@ PKG_CHECK_MODULES([GST_VIDEO],
 AC_SUBST(GST_VIDEO_CFLAGS)
 AC_SUBST(GST_VIDEO_LIBS)
 
+dnl GST_ALL_LDFLAGS:
+dnl LDFLAGS really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_ALL_LDFLAGS="-no-undefined"
+AC_SUBST(GST_ALL_LDFLAGS)
+
+dnl GST_PLUGIN_LDFLAGS:
+dnl this really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plugin_desc|gst_.*_get_type)\$\$' $GST_ALL_LDFLAGS"
+AC_SUBST(GST_PLUGIN_LDFLAGS)
+
 dnl Check for the GStreamer plugins directory
 AC_MSG_CHECKING([for GStreamer plugins directory])
 GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
