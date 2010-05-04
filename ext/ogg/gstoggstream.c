@@ -836,38 +836,49 @@ gst_ogg_map_add_fisbone (GstOggStream * pad,
   return TRUE;
 }
 
-static guint64
-read_vlc (const guint8 ** data, guint * size)
+static gboolean
+read_vlc (const guint8 ** data, guint * size, guint64 * result)
 {
   gint shift = 0;
-  guint64 result = 0;
   gint64 byte;
 
+  *result = 0;
+
   do {
+    if (G_UNLIKELY (*size < 1))
+      return FALSE;
+
     byte = **data;
-    result |= ((byte & 0x7f) << shift);
+    *result |= ((byte & 0x7f) << shift);
     shift += 7;
+
     (*data)++;
+    (*size)--;
   } while ((byte & 0x80) != 0x80);
 
-  return result;
+  return TRUE;
 }
 
 gboolean
 gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
 {
-  guint64 n_keypoints;
-  guint i;
+  guint64 i, n_keypoints, isize;
   guint64 offset, timestamp;
-
-  /* skip "index\0" + serialno */
-  data += 6 + 4;
-  size -= 6 + 4;
+  guint64 offset_d, timestamp_d;
 
   if (pad->index) {
     GST_DEBUG ("already have index, ignoring second one");
     return TRUE;
   }
+
+  if (size < 26) {
+    GST_WARNING ("small index packet of size %u, ignoring", size);
+    return FALSE;
+  }
+
+  /* skip "index\0" + serialno */
+  data += 6 + 4;
+  size -= 6 + 4;
 
   n_keypoints = GST_READ_UINT64_LE (data);
 
@@ -885,21 +896,32 @@ gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
   if (!pad->index)
     return FALSE;
 
-  pad->n_index = n_keypoints;
-
+  isize = 0;
   offset = 0;
   timestamp = 0;
 
   for (i = 0; i < n_keypoints; i++) {
-    offset += read_vlc (&data, &size);
-    timestamp += read_vlc (&data, &size);
+    /* read deltas */
+    if (!read_vlc (&data, &size, &offset_d))
+      break;
+    if (!read_vlc (&data, &size, &timestamp_d))
+      break;
+
+    offset += offset_d;
+    timestamp += timestamp_d;
 
     pad->index[i].offset = offset;
     pad->index[i].timestamp = timestamp;
+    isize++;
 
     GST_INFO ("offset %" G_GUINT64_FORMAT " time %" G_GUINT64_FORMAT, offset,
         timestamp);
   }
+  if (isize != n_keypoints) {
+    GST_WARNING ("truncated index, expected %" G_GUINT64_FORMAT ", found %"
+        G_GUINT64_FORMAT, n_keypoints, isize);
+  }
+  pad->n_index = isize;
 
   return TRUE;
 }
@@ -920,6 +942,7 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
   GST_INFO ("timestamp %" G_GUINT64_FORMAT, ts);
 
   best = -1;
+  /* FIXME, do binary search */
   for (i = 0; i < n_index; i++) {
     if (pad->index[i].timestamp <= ts)
       best = i;
