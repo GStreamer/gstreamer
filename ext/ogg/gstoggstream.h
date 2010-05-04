@@ -65,6 +65,7 @@ struct _GstOggStream
   gint64 accumulated_granule;
   gint frame_size;
   gint bitrate;
+  guint64 total_time;
 
   GstCaps *caps;
 

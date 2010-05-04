@@ -59,7 +59,7 @@ typedef gint64 (*GstOggMapPacketDurationFunc) (GstOggStream * pad,
 
 
 #define SKELETON_FISBONE_MIN_SIZE  52
-
+#define SKELETON_FISHEAD_3_3_MIN_SIZE 112
 
 struct _GstOggMap
 {
@@ -713,6 +713,45 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
     pad->prestime = gst_util_uint64_scale (GST_SECOND, prestime_n, prestime_d);
   else
     pad->prestime = -1;
+
+  /* Ogg Skeleton 3.3 streams provide additional information in the header */
+  if (packet->bytes >= SKELETON_FISHEAD_3_3_MIN_SIZE) {
+    gint64 firstsampletime_n, firstsampletime_d;
+    gint64 lastsampletime_n, lastsampletime_d;
+    gint64 firstsampletime, lastsampletime;
+
+    firstsampletime_n = GST_READ_UINT64_LE (data + 64);
+    firstsampletime_d = GST_READ_UINT64_LE (data + 72);
+    lastsampletime_n = GST_READ_UINT64_LE (data + 80);
+    lastsampletime_d = GST_READ_UINT64_LE (data + 88);
+
+    GST_INFO ("firstsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+        firstsampletime_n, firstsampletime_d);
+    GST_INFO ("lastsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+        lastsampletime_n, lastsampletime_d);
+
+    if (firstsampletime_d > 0)
+      firstsampletime = gst_util_uint64_scale (GST_SECOND,
+          firstsampletime_n, firstsampletime_d);
+    else
+      firstsampletime = 0;
+
+    if (lastsampletime_d > 0)
+      lastsampletime = gst_util_uint64_scale (GST_SECOND,
+          lastsampletime_n, lastsampletime_d);
+    else
+      lastsampletime = 0;
+
+    if (lastsampletime > firstsampletime)
+      pad->total_time = lastsampletime - firstsampletime;
+    else
+      pad->total_time = -1;
+
+    GST_INFO ("skeleton fishead parsed total: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pad->total_time));
+  } else {
+    pad->total_time = -1;
+  }
 
   GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT
       ", prestime: %" GST_TIME_FORMAT ")", GST_TIME_ARGS (pad->basetime),
