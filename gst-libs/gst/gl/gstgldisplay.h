@@ -241,7 +241,8 @@ GstGLDisplay *gst_gl_display_new (void);
 void gst_gl_display_create_context (GstGLDisplay * display,
     gulong external_gl_context);
 gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
-    gint width, gint height, gboolean keep_aspect_ratio);
+    gint gl_width, gint gl_height, gint window_width, gint window_height,
+    gboolean keep_aspect_ratio);
 
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
