@@ -610,8 +610,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* check stream eos */
   if ((ogg->segment.rate > 0.0 && ogg->segment.stop != GST_CLOCK_TIME_NONE &&
           current_time > ogg->segment.stop) ||
-      (ogg->segment.rate > 0.0 && ogg->segment.start != GST_CLOCK_TIME_NONE &&
+      (ogg->segment.rate < 0.0 && ogg->segment.start != GST_CLOCK_TIME_NONE &&
           current_time < ogg->segment.start)) {
+    GST_DEBUG_OBJECT (ogg, "marking pad %p EOS", pad);
     pad->is_eos = TRUE;
   }
 
@@ -3172,6 +3173,7 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
 
   /* check for the end of the segment */
   if (gst_ogg_demux_check_eos (ogg)) {
+    GST_LOG_OBJECT (ogg, "got EOS");
     ret = GST_FLOW_UNEXPECTED;
     goto done;
   }
@@ -3219,6 +3221,7 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
 
   /* check for the end of the segment */
   if (gst_ogg_demux_check_eos (ogg)) {
+    GST_LOG_OBJECT (ogg, "got EOS");
     ret = GST_FLOW_UNEXPECTED;
     goto done;
   }
