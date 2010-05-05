@@ -291,8 +291,9 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstBufferList *l
  * #GST_FLOW_UNEXPECTED, which corresponds to EOS. In this case @buffer does not
  * contain a valid buffer.
  *
- * The buffer size of @buffer might be smaller than @length when @offset is near
- * the end of the stream.
+ * The buffer size of @buffer will only be smaller than @length when @offset is
+ * near the end of the stream. In all other cases, the size of @buffer must be
+ * exactly the requested size.
  *
  * It is allowed to call this function with a 0 @length and valid @offset, in
  * which case @buffer will contain a 0-sized buffer and the function returns
@@ -305,7 +306,8 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstBufferList *l
  * optimal length is returned in @buffer. The length might depend on the value
  * of @offset.
  *
- * Returns: #GST_FLOW_OK for success
+ * Returns: #GST_FLOW_OK for success and a valid buffer in @buffer. Any other
+ * return value leaves @buffer undefined.
  */
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);

@@ -132,11 +132,19 @@ struct _GstBaseSrc {
  * @get_size: Return the total size of the resource, in the configured format.
  * @is_seekable: Check if the source can seek
  * @unlock: Unlock any pending access to the resource. Subclasses should
- *    unblock any blocked function ASAP
+ *    unblock any blocked function ASAP. In particular, any create() function in
+ *    progress should be unblocked and should return GST_FLOW_WRONG_STATE. Any
+ *    future create() function call should also return GST_FLOW_WRONG_STATE
+ *    until the unlock_stop() function has been called.
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
  *    any state they set during unlock(), such as clearing command queues.
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
+ *   When the subclass returns GST_FLOW_OK, it MUST return a buffer of the
+ *   requested size unless fewer bytes are available because an EOS condition
+ *   is near. No buffer should be returned when the return value is different
+ *   from GST_FLOW_OK. A return value of GST_FLOW_UNEXPECTED signifies that the
+ *   end of stream is reached.
  * @do_seek: Perform seeking on the resource to the indicated segment.
  * @prepare_seek_segment: Prepare the GstSegment that will be passed to the
  *   do_seek vmethod for executing a seek request. Sub-classes should override

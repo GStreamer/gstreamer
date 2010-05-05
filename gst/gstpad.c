@@ -4588,7 +4588,7 @@ not_connected:
  * @buffer: a pointer to hold the #GstBuffer, returns #GST_FLOW_ERROR if %NULL.
  *
  * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
- * immediatly.
+ * immediatly and @buffer is %NULL.
  *
  * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
  * description of a getrange function. If @pad has no getrange function
