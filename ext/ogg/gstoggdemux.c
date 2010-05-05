@@ -718,7 +718,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             &serialno, &type)) {
 
       GST_WARNING_OBJECT (pad->ogg,
-          "got skeleton packet for stream %08lx", serialno);
+          "got skeleton packet for stream 0x%08x", serialno);
 
       skel_pad = gst_ogg_chain_get_stream (pad->chain, serialno);
       if (skel_pad) {
@@ -738,7 +738,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
       } else {
         GST_WARNING_OBJECT (pad->ogg,
-            "found skeleton fisbone for an unknown stream %08lx", serialno);
+            "found skeleton fisbone for an unknown stream 0x%08x", serialno);
       }
     }
   }
