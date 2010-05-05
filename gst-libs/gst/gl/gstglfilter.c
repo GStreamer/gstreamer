@@ -238,11 +238,20 @@ gst_gl_filter_start (GstBaseTransform * bt)
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstElement *parent = GST_ELEMENT (gst_element_get_parent (filter));
-  GstStructure *structure =
-      gst_structure_new (gst_element_get_name (filter), NULL);
-  GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+  GstStructure *structure = NULL;
+  GstQuery *query = NULL;
+  gboolean isPerformed = FALSE;
 
-  gboolean isPerformed = gst_element_query (parent, query);
+  if (!parent) {
+    GST_ELEMENT_ERROR (filter, CORE, STATE_CHANGE, (NULL),
+        ("A parent bin is required"));
+    return FALSE;
+  }
+
+  structure = gst_structure_new (gst_element_get_name (filter), NULL);
+  query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+
+  isPerformed = gst_element_query (parent, query);
 
   if (isPerformed) {
     const GValue *id_value =
