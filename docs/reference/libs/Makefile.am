@@ -72,7 +72,6 @@ IGNORE_HFILES = \
 	gstvaapiutils.h \
 	gstvaapiutils_glx.h \
 	gstvaapiutils_x11.h \
-	gstvaapivalue.h \
 	$(NULL)
 
 EXTRA_HFILES = \

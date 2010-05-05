@@ -95,7 +95,6 @@ struct _GstVaapiDecoder {
 
 /**
  * GstVaapiDecoderClass:
- * @decode: decode one frame.
  *
  * A VA decoder base class.
  */

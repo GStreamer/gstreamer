@@ -77,8 +77,6 @@ typedef struct _GstVaapiSurfaceProxyClass       GstVaapiSurfaceProxyClass;
 
 /**
  * GstVaapiSurfaceProxy:
- * @surface: a #GstVaapiSurface
- * @context: the #GstVaapiContext to which the @surface is bound
  *
  * A wrapper around a VA surface and context.
  */
