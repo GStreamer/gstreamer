@@ -437,7 +437,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_BUFFER_SIZE (buf) = bytes;
 
       tags = gst_tag_list_from_vorbiscomment_buffer (buf,
-          (guint8 *) "\003vorbis", 7, NULL);
+          (const guint8 *) "\003vorbis", 7, NULL);
       gst_buffer_unref (buf);
       buf = NULL;
 
@@ -465,6 +465,39 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
         bytes--;
       }
     }
+  } else if (pad->map.is_vp8) {
+    /* packet 0 is from the BOS page, packet 1 is the vorbiscomment page */
+    if (packet->packetno == 1 && packet->bytes >= 7
+        && memcmp (packet->packet, "VP8_TAG", 7) == 0) {
+      GstTagList *tags;
+
+      buf = gst_buffer_new ();
+
+      GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
+      GST_BUFFER_SIZE (buf) = packet->bytes;
+
+      tags = gst_tag_list_from_vorbiscomment_buffer (buf,
+          (const guint8 *) "VP8_TAG", 7, NULL);
+      gst_buffer_unref (buf);
+      buf = NULL;
+
+      if (tags) {
+        GST_DEBUG_OBJECT (ogg, "tags = %" GST_PTR_FORMAT, tags);
+        gst_element_found_tags_for_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad),
+            tags);
+      } else {
+        GST_DEBUG_OBJECT (ogg, "failed to extract tags from vorbis comment");
+      }
+      /* We don't push header packets for VP8 */
+      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+      goto done;
+    } else if (packet->b_o_s) {
+      /* We don't push header packets for VP8 */
+      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
+      goto done;
+    }
+    offset = 0;
+    trim = 0;
   } else {
     offset = 0;
     trim = 0;
@@ -524,8 +557,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
             pad->current_granule) - out_timestamp;
       }
       out_offset_end =
-          gst_ogg_stream_granule_to_granulepos (&pad->map, pad->current_granule,
-          pad->keyframe_granule);
+          gst_ogg_stream_granule_to_granulepos (&pad->map,
+          pad->current_granule, pad->keyframe_granule);
       out_offset =
           gst_ogg_stream_granule_to_time (&pad->map, pad->current_granule);
     }
@@ -629,12 +662,14 @@ empty_packet:
     cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
+
 no_timestamp:
   {
     GST_DEBUG_OBJECT (ogg, "skipping packet: no valid granule found yet");
     cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
     goto done;
   }
+
 no_buffer:
   {
     GST_DEBUG_OBJECT (ogg,
@@ -1485,8 +1520,8 @@ error:
  * is.
  */
 static GstFlowReturn
-gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
-    gint64 * offset)
+gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og,
+    gint64 boundary, gint64 * offset)
 {
   gint64 end_offset = -1;
   GstFlowReturn ret;
@@ -1511,8 +1546,8 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
     if (more < 0) {
       /* skipped n bytes */
       ogg->offset -= more;
-      GST_LOG_OBJECT (ogg, "skipped %ld bytes, offset %" G_GINT64_FORMAT, more,
-          ogg->offset);
+      GST_LOG_OBJECT (ogg, "skipped %ld bytes, offset %" G_GINT64_FORMAT,
+          more, ogg->offset);
     } else if (more == 0) {
       /* we need more data */
       if (boundary == 0)
@@ -1783,8 +1818,8 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
   best = begin;
 
   GST_DEBUG_OBJECT (ogg,
-      "chain offset %" G_GINT64_FORMAT ", end offset %" G_GINT64_FORMAT, begin,
-      end);
+      "chain offset %" G_GINT64_FORMAT ", end offset %" G_GINT64_FORMAT,
+      begin, end);
   GST_DEBUG_OBJECT (ogg,
       "chain begin time %" GST_TIME_FORMAT ", end time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (begintime), GST_TIME_ARGS (endtime));
@@ -2048,8 +2083,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       continue;
 
     /* convert granule of this pad to the granule of the keyframe */
-    pad->keyframe_granule = gst_ogg_stream_granulepos_to_key_granule (&pad->map,
-        granulepos);
+    pad->keyframe_granule =
+        gst_ogg_stream_granulepos_to_key_granule (&pad->map, granulepos);
     GST_LOG_OBJECT (ogg, "marking stream granule %" G_GINT64_FORMAT,
         pad->keyframe_granule);
 
@@ -2894,8 +2929,8 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
     /* we still call this function here but with an empty range so that
      * we can reuse the setup code in this routine. */
     ret =
-        gst_ogg_demux_bisect_forward_serialno (ogg, 0, ogg->length, ogg->length,
-        chain, 0);
+        gst_ogg_demux_bisect_forward_serialno (ogg, 0, ogg->length,
+        ogg->length, chain, 0);
   }
   if (ret != GST_FLOW_OK)
     goto done;
@@ -3550,8 +3585,9 @@ gst_ogg_print (GstOggDemux * ogg)
     GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
 
     GST_INFO_OBJECT (ogg, " chain %d (%u streams):", i, chain->streams->len);
-    GST_INFO_OBJECT (ogg, "  offset: %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT,
-        chain->offset, chain->end_offset);
+    GST_INFO_OBJECT (ogg,
+        "  offset: %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT, chain->offset,
+        chain->end_offset);
     GST_INFO_OBJECT (ogg, "  begin time: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (chain->begin_time));
     GST_INFO_OBJECT (ogg, "  total time: %" GST_TIME_FORMAT,

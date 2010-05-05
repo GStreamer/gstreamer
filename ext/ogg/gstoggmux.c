@@ -41,6 +41,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/tag/tag.h>
 
 #include "gstoggmux.h"
 
@@ -100,7 +101,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_STATIC_CAPS ("video/x-theora; "
         "audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
         "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
-        "video/x-smoke; text/x-cmml, encoded = (boolean) TRUE; "
+        "video/x-smoke; video/x-vp8; text/x-cmml, encoded = (boolean) TRUE; "
         "subtitle/x-kate; application/x-kate")
     );
 
@@ -1037,7 +1038,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GST_LOG_OBJECT (mux, "swapped out page with mime type %s",
         gst_structure_get_name (structure));
 
-    /* quick hack: put Theora and Dirac video pages at the front.
+    /* quick hack: put Theora, VP8 and Dirac video pages at the front.
      * Ideally, we would have a settable enum for which Ogg
      * profile we work with, and order based on that.
      * (FIXME: if there is more than one video stream, shouldn't we only put
@@ -1050,6 +1051,9 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Dirac");
       hbufs = g_list_prepend (hbufs, hbuf);
       pad->always_flush_page = TRUE;
+    } else if (gst_structure_has_name (structure, "video/x-vp8")) {
+      GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "VP8");
+      hbufs = g_list_prepend (hbufs, hbuf);
     } else {
       hbufs = g_list_append (hbufs, hbuf);
     }
@@ -1188,7 +1192,6 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
   if (ogg_mux->pulling && best &&
       ogg_mux->pulling != best && ogg_mux->pulling->buffer) {
     GstOggPadData *pad = ogg_mux->pulling;
-
     GstClockTime last_ts = GST_BUFFER_END_TIME (pad->buffer);
 
     /* if the next packet in the current page is going to make the page

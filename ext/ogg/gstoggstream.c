@@ -56,8 +56,6 @@ typedef gboolean (*GstOggMapIsHeaderPacketFunc) (GstOggStream * pad,
 typedef gint64 (*GstOggMapPacketDurationFunc) (GstOggStream * pad,
     ogg_packet * packet);
 
-
-
 #define SKELETON_FISBONE_MIN_SIZE  52
 #define SKELETON_FISHEAD_3_3_MIN_SIZE 112
 
@@ -206,9 +204,6 @@ gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet * packet)
 
   return mappers[pad->map].packet_duration_func (pad, packet);
 }
-
-
-
 
 /* some generic functions */
 
@@ -463,6 +458,93 @@ granule_to_granulepos_dirac (GstOggStream * pad, gint64 granule,
   return -1;
 }
 
+/* VP8 */
+
+static gboolean
+setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
+{
+  gint width, height, par_n, par_d, fps_n, fps_d;
+
+  if (packet->bytes < 24) {
+    GST_DEBUG ("Failed to parse VP8 BOS page");
+    return FALSE;
+  }
+
+  width = GST_READ_UINT16_BE (packet->packet + 6);
+  height = GST_READ_UINT16_BE (packet->packet + 8);
+  par_n = GST_READ_UINT24_BE (packet->packet + 10);
+  par_d = GST_READ_UINT24_BE (packet->packet + 13);
+  fps_n = GST_READ_UINT32_BE (packet->packet + 16);
+  fps_d = GST_READ_UINT32_BE (packet->packet + 20);
+
+  pad->is_vp8 = TRUE;
+  pad->granulerate_n = fps_n;
+  pad->granulerate_d = fps_d;
+  pad->n_header_packets = 2;
+  pad->frame_size = 1;
+
+  pad->caps = gst_caps_new_simple ("video/x-vp8",
+      "width", G_TYPE_INT, width,
+      "height", G_TYPE_INT, height,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION,
+      par_n, par_d, "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+is_keyframe_vp8 (GstOggStream * pad, gint64 granulepos)
+{
+  guint64 gpos = granulepos;
+
+  if (granulepos == -1)
+    return FALSE;
+
+  /* Get rid of flags */
+  gpos >>= 3;
+
+  return ((gpos & 0x07ffffff) == 0);
+}
+
+static gint64
+granulepos_to_granule_vp8 (GstOggStream * pad, gint64 gpos)
+{
+  guint64 gp = (guint64) gpos;
+  guint32 pt;
+  guint32 dist;
+
+  pt = (gp >> 32);
+  dist = (gp >> 3) & 0x07ffffff;
+
+  GST_DEBUG ("pt %u, dist %u", pt, dist);
+
+  return pt;
+}
+
+static gint64
+granule_to_granulepos_vp8 (GstOggStream * pad, gint64 granule,
+    gint64 keyframe_granule)
+{
+  /* FIXME: This requires to look into the content of the packets
+   * because the simple granule counter doesn't know about invisible
+   * frames...
+   */
+  return -1;
+}
+
+/* Check if this packet contains an invisible frame or not */
+static gint64
+packet_duration_vp8 (GstOggStream * pad, ogg_packet * packet)
+{
+  guint32 hdr;
+
+  if (packet->bytes < 3)
+    return 0;
+
+  hdr = GST_READ_UINT24_LE (packet->packet);
+
+  return (((hdr >> 4) & 1) != 0) ? 1 : 0;
+}
 
 /* vorbis */
 
@@ -1452,7 +1534,7 @@ static const GstOggMap mappers[] = {
     NULL,
     NULL,
     NULL,
-    NULL,
+    NULL
   },
   {
     "CELT    ", 8, 0,
@@ -1483,6 +1565,16 @@ static const GstOggMap mappers[] = {
     is_keyframe_dirac,
     is_header_count,
     packet_duration_constant
+  },
+  {
+    "VP80\1", 5, 4,
+    "video/x-vp8",
+    setup_vp8_mapper,
+    granulepos_to_granule_vp8,
+    granule_to_granulepos_vp8,
+    is_keyframe_vp8,
+    is_header_count,
+    packet_duration_vp8
   },
   {
     "\001audio\0\0\0", 9, 53,
