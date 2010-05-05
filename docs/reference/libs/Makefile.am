@@ -68,7 +68,6 @@ IGNORE_HFILES = \
 	gstvaapidisplay_x11_priv.h \
 	gstvaapimarshal.h \
 	gstvaapiobject_priv.h \
-	gstvaapiparamspecs.h \
 	gstvaapiutils.h \
 	gstvaapiutils_glx.h \
 	gstvaapiutils_x11.h \
