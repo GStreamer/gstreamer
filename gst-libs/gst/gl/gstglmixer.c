@@ -609,10 +609,10 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
           /* id_value is set by upstream element of itself when going
            * to paused state */
           const GValue *id_value =
-            gst_structure_get_value (structure, "gstgldisplay");
+              gst_structure_get_value (structure, "gstgldisplay");
           foreign_display = GST_GL_DISPLAY (g_value_get_pointer (id_value));
         }
-        
+
         foreign_gl_context =
             gst_gl_display_get_internal_gl_context (foreign_display);
 
@@ -1243,12 +1243,21 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       gint i = 0;
 
       GstElement *parent = GST_ELEMENT (gst_element_get_parent (mix));
-      GstStructure *structure =
-          gst_structure_new (gst_element_get_name (mix), NULL);
-      GstQuery *query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+      GstStructure *structure = NULL;
+      GstQuery *query = NULL;
+      gboolean isPerformed = FALSE;
+
+      if (!parent) {
+        GST_ELEMENT_ERROR (mix, CORE, STATE_CHANGE, (NULL),
+            ("A parent bin is required"));
+        return FALSE;
+      }
+
+      structure = gst_structure_new (gst_element_get_name (mix), NULL);
+      query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
 
       /* retrieve the gldisplay that is owned by gl elements after the gl mixer */
-      gboolean isPerformed = gst_element_query (parent, query);
+      isPerformed = gst_element_query (parent, query);
 
       if (isPerformed) {
         const GValue *id_value =
