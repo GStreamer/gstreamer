@@ -88,6 +88,16 @@ gst_deinterlace_method_scaler_bob_class_init (GstDeinterlaceMethodScalerBobClass
       deinterlace_scanline_scaler_bob_packed;
   dism_class->interpolate_scanline_yvyu =
       deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_argb =
+      deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_abgr =
+      deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_rgba =
+      deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_bgra =
+      deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_rgb = deinterlace_scanline_scaler_bob_packed;
+  dism_class->interpolate_scanline_bgr = deinterlace_scanline_scaler_bob_packed;
   dism_class->interpolate_scanline_planar_y =
       deinterlace_scanline_scaler_bob_planar_y;
   dism_class->interpolate_scanline_planar_u =

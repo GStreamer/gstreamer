@@ -574,6 +574,12 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
   dim_class->deinterlace_frame_yv12 = deinterlace_frame_di_greedy_planar;
   dim_class->deinterlace_frame_y41b = deinterlace_frame_di_greedy_planar;
   dim_class->deinterlace_frame_ayuv = deinterlace_frame_di_greedy_planar;
+  dim_class->deinterlace_frame_argb = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_rgba = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_abgr = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_bgra = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_rgb = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_bgr = deinterlace_frame_di_greedy_packed;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {

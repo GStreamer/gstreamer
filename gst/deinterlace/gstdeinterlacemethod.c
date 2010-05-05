@@ -70,6 +70,22 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_y41b != NULL);
     case GST_VIDEO_FORMAT_AYUV:
       return (klass->deinterlace_frame_ayuv != NULL);
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      return (klass->deinterlace_frame_argb != NULL);
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      return (klass->deinterlace_frame_abgr != NULL);
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      return (klass->deinterlace_frame_rgba != NULL);
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      return (klass->deinterlace_frame_bgra != NULL);
+    case GST_VIDEO_FORMAT_RGB:
+      return (klass->deinterlace_frame_rgb != NULL);
+    case GST_VIDEO_FORMAT_BGR:
+      return (klass->deinterlace_frame_bgr != NULL);
     default:
       return FALSE;
   }
@@ -134,6 +150,28 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
     case GST_VIDEO_FORMAT_AYUV:
       self->deinterlace_frame = klass->deinterlace_frame_ayuv;
       break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      self->deinterlace_frame = klass->deinterlace_frame_argb;
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      self->deinterlace_frame = klass->deinterlace_frame_abgr;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      self->deinterlace_frame = klass->deinterlace_frame_rgba;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      self->deinterlace_frame = klass->deinterlace_frame_bgra;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      self->deinterlace_frame = klass->deinterlace_frame_rgb;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      self->deinterlace_frame = klass->deinterlace_frame_bgr;
+      break;
     default:
       self->deinterlace_frame = NULL;
       break;
@@ -194,6 +232,28 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
     return FALSE;
 
   switch (format) {
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      return (klass->interpolate_scanline_argb != NULL
+          && klass->copy_scanline_argb != NULL);
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      return (klass->interpolate_scanline_rgba != NULL
+          && klass->copy_scanline_rgba != NULL);
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      return (klass->interpolate_scanline_abgr != NULL
+          && klass->copy_scanline_abgr != NULL);
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      return (klass->interpolate_scanline_bgra != NULL
+          && klass->copy_scanline_bgra != NULL);
+    case GST_VIDEO_FORMAT_RGB:
+      return (klass->interpolate_scanline_rgb != NULL
+          && klass->copy_scanline_rgb != NULL);
+    case GST_VIDEO_FORMAT_BGR:
+      return (klass->interpolate_scanline_bgr != NULL
+          && klass->copy_scanline_bgr != NULL);
     case GST_VIDEO_FORMAT_YUY2:
       return (klass->interpolate_scanline_yuy2 != NULL
           && klass->copy_scanline_yuy2 != NULL);
@@ -580,7 +640,6 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
         field3 += row_stride;
     }
 
-
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
         field0, field1, field2, field3, cur_field_flags, i, copy_scanline,
         interpolate_scanline);
@@ -625,6 +684,34 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
       self->interpolate_scanline_packed = klass->interpolate_scanline_ayuv;
       self->copy_scanline_packed = klass->copy_scanline_ayuv;
       break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xRGB:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_argb;
+      self->copy_scanline_packed = klass->copy_scanline_argb;
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_xBGR:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_abgr;
+      self->copy_scanline_packed = klass->copy_scanline_abgr;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_rgba;
+      self->copy_scanline_packed = klass->copy_scanline_rgba;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_bgra;
+      self->copy_scanline_packed = klass->copy_scanline_bgra;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_rgb;
+      self->copy_scanline_packed = klass->copy_scanline_rgb;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_bgr;
+      self->copy_scanline_packed = klass->copy_scanline_bgr;
+      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -657,6 +744,18 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
       gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_yvyu =
       gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_argb =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_abgr =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_rgba =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_bgra =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_rgb =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_bgr =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_i420 =
       gst_deinterlace_simple_method_deinterlace_frame_planar;
   dm_class->deinterlace_frame_yv12 =
@@ -679,6 +778,35 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
       gst_deinterlace_simple_method_interpolate_scanline_packed;
   klass->copy_scanline_yvyu =
       gst_deinterlace_simple_method_copy_scanline_packed;
+  klass->interpolate_scanline_ayuv =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_ayuv =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+
+  klass->interpolate_scanline_argb =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_argb =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+  klass->interpolate_scanline_abgr =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_abgr =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+
+  klass->interpolate_scanline_rgba =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_rgba =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+  klass->interpolate_scanline_bgra =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_bgra =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+
+  klass->interpolate_scanline_rgb =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_rgb = gst_deinterlace_simple_method_copy_scanline_packed;
+  klass->interpolate_scanline_bgr =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_bgr = gst_deinterlace_simple_method_copy_scanline_packed;
 
   klass->interpolate_scanline_planar_y =
       gst_deinterlace_simple_method_interpolate_scanline_planar_y;

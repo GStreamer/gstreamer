@@ -139,15 +139,28 @@ gst_deinterlace_method_weave_bff_class_init (GstDeinterlaceMethodWeaveBFFClass *
   dism_class->interpolate_scanline_ayuv = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_argb = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_abgr = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_rgba = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_bgra = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_rgb = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_bgr = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_planar_y =
       deinterlace_scanline_weave_planar_y;
   dism_class->interpolate_scanline_planar_u =
       deinterlace_scanline_weave_planar_u;
   dism_class->interpolate_scanline_planar_v =
       deinterlace_scanline_weave_planar_v;
+
   dism_class->copy_scanline_ayuv = copy_scanline_packed;
   dism_class->copy_scanline_yuy2 = copy_scanline_packed;
   dism_class->copy_scanline_yvyu = copy_scanline_packed;
+  dism_class->copy_scanline_argb = copy_scanline_packed;
+  dism_class->copy_scanline_abgr = copy_scanline_packed;
+  dism_class->copy_scanline_rgba = copy_scanline_packed;
+  dism_class->copy_scanline_bgra = copy_scanline_packed;
+  dism_class->copy_scanline_rgb = copy_scanline_packed;
+  dism_class->copy_scanline_bgr = copy_scanline_packed;
   dism_class->copy_scanline_planar_y = copy_scanline_planar_y;
   dism_class->copy_scanline_planar_u = copy_scanline_planar_u;
   dism_class->copy_scanline_planar_v = copy_scanline_planar_v;

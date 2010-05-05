@@ -98,6 +98,12 @@ struct _GstDeinterlaceMethodClass {
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y42b;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y41b;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_ayuv;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_argb;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_abgr;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_rgba;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_bgra;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_rgb;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_bgr;
 
   const gchar *name;
   const gchar *nick;
@@ -181,6 +187,18 @@ struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceSimpleMethodFunction copy_scanline_yvyu;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_ayuv;
   GstDeinterlaceSimpleMethodFunction copy_scanline_ayuv;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_argb;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_argb;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_abgr;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_abgr;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_rgba;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_rgba;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_bgra;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_bgra;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_rgb;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_rgb;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_bgr;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_bgr;
 
   /* Planar formats */
   GstDeinterlaceSimpleMethodFunction copy_scanline_planar_y;
