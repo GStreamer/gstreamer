@@ -1101,7 +1101,9 @@ gst_videomixer_request_new_pad (GstElement * element,
     gchar *name = NULL;
     GstVideoMixerCollect *mixcol = NULL;
 
-    if (req_name == NULL || strlen (req_name) < 6) {
+    GST_VIDEO_MIXER_STATE_LOCK (mix);
+    if (req_name == NULL || strlen (req_name) < 6
+        || !g_str_has_prefix (req_name, "sink_")) {
       /* no name given when requesting the pad, use next available int */
       serial = mix->next_sinkpad++;
     } else {
@@ -1116,7 +1118,6 @@ gst_videomixer_request_new_pad (GstElement * element,
         templ->direction, "template", templ, NULL);
     g_free (name);
 
-    GST_VIDEO_MIXER_STATE_LOCK (mix);
     mixpad->zorder = mix->numpads;
     mixpad->xpos = DEFAULT_PAD_XPOS;
     mixpad->ypos = DEFAULT_PAD_YPOS;
