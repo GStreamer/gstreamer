@@ -218,6 +218,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define DEFAULT_V4L2CAMSRC_DRIVER_NAME "omap3cam"
 
 #define DEFAULT_BLOCK_VIEWFINDER FALSE
+#define DEFAULT_READY_FOR_CAPTURE TRUE
 
 /* message names */
 #define PREVIEW_MESSAGE_NAME "preview-image"
@@ -1914,6 +1915,9 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
   /* our work is done, disconnect */
   gst_pad_remove_buffer_probe (pad, camera->image_captured_id);
 
+  /* Image captured, notify that preparing a new capture is possible */
+  g_object_notify (G_OBJECT (camera), "ready-for-capture");
+
   return TRUE;
 }
 
@@ -3053,6 +3057,20 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstCameraBin:ready-for-capture:
+   *
+   * When TRUE new capture can be prepared. If FALSE capturing is ongoing
+   * and starting a new capture immediately is not possible.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_READY_FOR_CAPTURE,
+      g_param_spec_boolean ("ready-for-capture",
+          "Indicates if preparing a new capture is possible",
+          "Indicates if preparing a new capture is possible",
+          DEFAULT_READY_FOR_CAPTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
    *
@@ -3685,6 +3703,11 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
     case ARG_BLOCK_VIEWFINDER:
       g_value_set_boolean (value, camera->block_viewfinder_prop);
       break;
+    case ARG_READY_FOR_CAPTURE:
+      g_mutex_lock (camera->capture_mutex);
+      g_value_set_boolean (value, !camera->capturing);
+      g_mutex_unlock (camera->capture_mutex);
+      break;
     case ARG_IMAGE_CAPTURE_WIDTH:
       g_value_set_int (value, camera->image_capture_width);
       break;
@@ -3930,6 +3953,8 @@ gst_camerabin_capture_start (GstCameraBin * camera)
       gst_camerabin_start_video_recording (camera);
     }
   }
+  /* Capturing is now ongoing, notify that new capture isn't possible */
+  g_object_notify (G_OBJECT (camera), "ready-for-capture");
 }
 
 static void
@@ -3939,6 +3964,8 @@ gst_camerabin_capture_stop (GstCameraBin * camera)
     GST_INFO_OBJECT (camera, "stopping video capture");
     gst_camerabin_do_stop (camera);
     gst_camerabin_reset_to_view_finder (camera);
+    /* Video capture stopped, notify that preparing a new capture is possible */
+    g_object_notify (G_OBJECT (camera), "ready-for-capture");
   } else {
     GST_INFO_OBJECT (camera, "stopping image capture isn't needed");
   }

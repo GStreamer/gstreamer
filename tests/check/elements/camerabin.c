@@ -243,7 +243,10 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
     default:
       st = gst_message_get_structure (message);
       if (st && gst_structure_has_name (st, "image-captured")) {
+        gboolean ready = FALSE;
         GST_INFO ("image captured");
+        g_object_get (camera, "ready-for-capture", &ready, NULL);
+        fail_if (!ready, "not ready for capture");
       }
       break;
   }
@@ -489,6 +492,7 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist)
 
 GST_START_TEST (test_single_image_capture)
 {
+  gboolean ready = FALSE;
   if (!camera)
     return;
 
@@ -506,8 +510,15 @@ GST_START_TEST (test_single_image_capture)
   /* don't run viewfinder after capture */
   g_object_set (camera, "block-after-capture", TRUE, NULL);
 
+  /* check that capturing is possible */
+  g_object_get (camera, "ready-for-capture", &ready, NULL);
+  fail_if (!ready, "not ready for capture");
+
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
+
+  g_object_get (camera, "ready-for-capture", &ready, NULL);
+  fail_if (ready, "ready for capture during capture");
 
   g_main_loop_run (main_loop);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
