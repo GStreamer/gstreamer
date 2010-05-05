@@ -128,7 +128,7 @@ gst_image_freeze_init (GstImageFreeze * self, GstImageFreezeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_image_freeze_src_query));
   gst_pad_set_query_type_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_image_freeze_src_query_type));
-  gst_pad_use_fixed_caps (self->sinkpad);
+  gst_pad_use_fixed_caps (self->srcpad);
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   gst_image_freeze_reset (self);
