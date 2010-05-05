@@ -686,7 +686,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 
     return gst_element_register(plugin,
                                 GST_PLUGIN_NAME,
-                                GST_RANK_PRIMARY,
+                                GST_RANK_NONE,
                                 GST_TYPE_VAAPISINK);
 }
 
