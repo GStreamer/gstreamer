@@ -265,6 +265,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    dism_class->interpolate_scanline_ayuv = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_mmx;
     dism_class->interpolate_scanline_planar_y = deinterlace_line_planar_y_mmx;
@@ -278,6 +279,7 @@ gst_deinterlace_method_vfir_class_init (GstDeinterlaceMethodVFIRClass * klass)
     dism_class->interpolate_scanline_planar_v = deinterlace_line_planar_v_c;
   }
 #else
+  dism_class->interpolate_scanline_ayuv = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_yuy2 = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_yvyu = deinterlace_line_packed_c;
   dism_class->interpolate_scanline_planar_y = deinterlace_line_planar_y_c;

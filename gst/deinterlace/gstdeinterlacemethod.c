@@ -68,6 +68,8 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_y42b != NULL);
     case GST_VIDEO_FORMAT_Y41B:
       return (klass->deinterlace_frame_y41b != NULL);
+    case GST_VIDEO_FORMAT_AYUV:
+      return (klass->deinterlace_frame_ayuv != NULL);
     default:
       return FALSE;
   }
@@ -128,6 +130,9 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
       break;
     case GST_VIDEO_FORMAT_Y41B:
       self->deinterlace_frame = klass->deinterlace_frame_y41b;
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      self->deinterlace_frame = klass->deinterlace_frame_ayuv;
       break;
     default:
       self->deinterlace_frame = NULL;
@@ -195,6 +200,9 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
     case GST_VIDEO_FORMAT_YVYU:
       return (klass->interpolate_scanline_yvyu != NULL
           && klass->copy_scanline_yvyu != NULL);
+    case GST_VIDEO_FORMAT_AYUV:
+      return (klass->interpolate_scanline_ayuv != NULL
+          && klass->copy_scanline_ayuv != NULL);
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -613,6 +621,10 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
       self->interpolate_scanline_packed = klass->interpolate_scanline_yvyu;
       self->copy_scanline_packed = klass->copy_scanline_yvyu;
       break;
+    case GST_VIDEO_FORMAT_AYUV:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_ayuv;
+      self->copy_scanline_packed = klass->copy_scanline_ayuv;
+      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -639,6 +651,8 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
 {
   GstDeinterlaceMethodClass *dm_class = (GstDeinterlaceMethodClass *) klass;
 
+  dm_class->deinterlace_frame_ayuv =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_yuy2 =
       gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_yvyu =

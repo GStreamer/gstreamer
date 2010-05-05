@@ -67,7 +67,7 @@ FUNCT_NAME_YUY2 (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const gui
   i = 0xffffffff - 256;
   QW256B = i << 48 | i << 32 | i << 16 | i;     // save a couple instr on PMINSW instruct.
 
-  LoopCtr = width / 4 - 1;       // there are LineLength / 4 qwords per line but do 1 less, adj at end of loop
+  LoopCtr = width / 8 - 1;       // there are LineLength / 4 qwords per line but do 1 less, adj at end of loop
 
   // For ease of reading, the comments below assume that we're operating on an odd
   // field (i.e., that InfoIsOdd is true).  Assume the obvious for even lines..

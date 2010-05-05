@@ -61,9 +61,121 @@ typedef struct
 {
   GstDeinterlaceMethodClass parent_class;
   ScanlineFunction scanline_yuy2;       /* This is for YVYU too */
+  ScanlineFunction scanline_ayuv;
   ScanlineFunction scanline_planar_y;
   ScanlineFunction scanline_planar_uv;
 } GstDeinterlaceMethodGreedyHClass;
+
+static void
+greedyh_scanline_C_ayuv (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
+    const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest,
+    gint width)
+{
+  gint Pos, Comp;
+  guint8 l1, l1_1, l3, l3_1;
+  guint8 avg, avg_1;
+  guint8 avg__1[4] = { 0, };
+  guint8 avg_s;
+  guint8 avg_sc;
+  guint8 best;
+  guint16 mov;
+  guint8 out;
+  guint8 l2, lp2;
+  guint8 l2_diff, lp2_diff;
+  guint8 min, max;
+  guint max_comb = self->max_comb;
+  guint motion_sense = self->motion_sense;
+  guint motion_threshold = self->motion_threshold;
+
+  width /= 4;
+  for (Pos = 0; Pos < width; Pos++) {
+    for (Comp = 0; Comp < 4; Comp++) {
+      l1 = L1[0];
+      l3 = L3[0];
+
+      if (Pos == width - 1) {
+        l1_1 = l1;
+        l3_1 = l3;
+      } else {
+        l1_1 = L1[4];
+        l3_1 = L3[4];
+      }
+
+      /* Average of L1 and L3 */
+      avg = (l1 + l3) / 2;
+
+      if (Pos == 0) {
+        avg__1[Comp] = avg;
+      }
+
+      /* Average of next L1 and next L3 */
+      avg_1 = (l1_1 + l3_1) / 2;
+
+      /* Calculate average of one pixel forward and previous */
+      avg_s = (avg__1[Comp] + avg_1) / 2;
+
+      /* Calculate average of center and surrounding pixels */
+      avg_sc = (avg + avg_s) / 2;
+
+      /* move forward */
+      avg__1[Comp] = avg;
+
+      /* Get best L2/L2P, i.e. least diff from above average */
+      l2 = L2[0];
+      lp2 = L2P[0];
+
+      l2_diff = ABS (l2 - avg_sc);
+
+      lp2_diff = ABS (lp2 - avg_sc);
+
+      if (l2_diff > lp2_diff)
+        best = lp2;
+      else
+        best = l2;
+
+      /* Clip this best L2/L2P by L1/L3 and allow to differ by GreedyMaxComb */
+      max = MAX (l1, l3);
+      min = MIN (l1, l3);
+
+      if (max < 256 - max_comb)
+        max += max_comb;
+      else
+        max = 255;
+
+      if (min > max_comb)
+        min -= max_comb;
+      else
+        min = 0;
+
+      out = CLAMP (best, min, max);
+
+      if (Comp < 2) {
+        /* Do motion compensation for luma, i.e. how much
+         * the weave pixel differs */
+        mov = ABS (l2 - lp2);
+        if (mov > motion_threshold)
+          mov -= motion_threshold;
+        else
+          mov = 0;
+
+        mov = mov * motion_sense;
+        if (mov > 256)
+          mov = 256;
+
+        /* Weighted sum on clipped weave pixel and average */
+        out = (out * (256 - mov) + avg_sc * mov) / 256;
+      }
+
+      Dest[0] = out;
+
+      Dest += 1;
+      L1 += 1;
+      L2 += 1;
+      L3 += 1;
+      L2P += 1;
+    }
+  }
+}
 
 static void
 greedyh_scanline_C_yuy2 (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
@@ -87,6 +199,7 @@ greedyh_scanline_C_yuy2 (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
   guint motion_sense = self->motion_sense;
   guint motion_threshold = self->motion_threshold;
 
+  width /= 2;
   for (Pos = 0; Pos < width; Pos++) {
     l1_l = L1[0];
     l1_c = L1[1];
@@ -473,6 +586,9 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     case GST_VIDEO_FORMAT_YVYU:
       scanline = klass->scanline_yuy2;
       break;
+    case GST_VIDEO_FORMAT_AYUV:
+      scanline = klass->scanline_ayuv;
+      break;
     default:
       g_assert_not_reached ();
       break;
@@ -728,6 +844,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 
   dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedyh_packed;
+  dim_class->deinterlace_frame_ayuv = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_y444 = deinterlace_frame_di_greedyh_planar;
   dim_class->deinterlace_frame_i420 = deinterlace_frame_di_greedyh_planar;
   dim_class->deinterlace_frame_yv12 = deinterlace_frame_di_greedyh_planar;
@@ -748,6 +865,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   klass->scanline_yuy2 = greedyh_scanline_C_yuy2;
 #endif
   /* TODO: MMX implementation of these two */
+  klass->scanline_ayuv = greedyh_scanline_C_ayuv;
   klass->scanline_planar_y = greedyh_scanline_C_planar_y;
   klass->scanline_planar_uv = greedyh_scanline_C_planar_uv;
 }

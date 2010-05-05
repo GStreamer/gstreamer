@@ -292,6 +292,7 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
 
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_linear_packed_c;
+  dism_class->interpolate_scanline_ayuv = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_planar_y =
       deinterlace_scanline_linear_planar_y_c;
   dism_class->interpolate_scanline_planar_u =
@@ -301,6 +302,8 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+    dism_class->interpolate_scanline_ayuv =
+        deinterlace_scanline_linear_packed_mmxext;
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_packed_mmxext;
     dism_class->interpolate_scanline_yvyu =
@@ -312,6 +315,8 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
     dism_class->interpolate_scanline_planar_v =
         deinterlace_scanline_linear_planar_v_mmxext;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+    dism_class->interpolate_scanline_ayuv =
+        deinterlace_scanline_linear_packed_mmx;
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_packed_mmx;
     dism_class->interpolate_scanline_yvyu =

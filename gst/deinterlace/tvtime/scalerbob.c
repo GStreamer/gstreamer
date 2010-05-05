@@ -82,6 +82,8 @@ gst_deinterlace_method_scaler_bob_class_init (GstDeinterlaceMethodScalerBobClass
   dim_class->nick = "scalerbob";
   dim_class->latency = 0;
 
+  dism_class->interpolate_scanline_ayuv =
+      deinterlace_scanline_scaler_bob_packed;
   dism_class->interpolate_scanline_yuy2 =
       deinterlace_scanline_scaler_bob_packed;
   dism_class->interpolate_scanline_yvyu =

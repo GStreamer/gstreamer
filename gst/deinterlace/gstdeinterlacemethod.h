@@ -97,6 +97,7 @@ struct _GstDeinterlaceMethodClass {
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y444;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y42b;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y41b;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_ayuv;
 
   const gchar *name;
   const gchar *nick;
@@ -178,6 +179,8 @@ struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceSimpleMethodFunction copy_scanline_yuy2;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_yvyu;
   GstDeinterlaceSimpleMethodFunction copy_scanline_yvyu;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_ayuv;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_ayuv;
 
   /* Planar formats */
   GstDeinterlaceSimpleMethodFunction copy_scanline_planar_y;

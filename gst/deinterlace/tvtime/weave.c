@@ -115,6 +115,7 @@ gst_deinterlace_method_weave_class_init (GstDeinterlaceMethodWeaveClass * klass)
   dim_class->nick = "weave";
   dim_class->latency = 0;
 
+  dism_class->interpolate_scanline_ayuv = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_planar_y =
@@ -123,6 +124,7 @@ gst_deinterlace_method_weave_class_init (GstDeinterlaceMethodWeaveClass * klass)
       deinterlace_scanline_weave_planar_u;
   dism_class->interpolate_scanline_planar_v =
       deinterlace_scanline_weave_planar_v;
+  dism_class->copy_scanline_ayuv = copy_scanline_packed;
   dism_class->copy_scanline_yuy2 = copy_scanline_packed;
   dism_class->copy_scanline_yvyu = copy_scanline_packed;
   dism_class->copy_scanline_planar_y = copy_scanline_planar_y;
