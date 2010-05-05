@@ -132,6 +132,9 @@ struct _GstQueue2
    * because we can't save it on the file */
   gboolean segment_event_received;
   GstEvent *starting_segment;
+
+  gboolean use_ring_buffer;
+  guint ring_buffer_max_size;
 };
 
 struct _GstQueue2Class
