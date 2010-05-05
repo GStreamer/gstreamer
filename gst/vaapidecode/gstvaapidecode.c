@@ -160,10 +160,13 @@ error_commit_buffer:
 }
 
 static gboolean
-gst_vaapidecode_create(GstVaapiDecode *decode)
+gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
     GstVaapiVideoSink *sink;
     GstVaapiDisplay *display;
+
+    if (decode->display)
+        return TRUE;
 
     /* Look for a downstream vaapisink */
     sink = gst_vaapi_video_sink_lookup(GST_ELEMENT(decode));
@@ -175,10 +178,18 @@ gst_vaapidecode_create(GstVaapiDecode *decode)
         return FALSE;
 
     decode->display = g_object_ref(display);
+    return TRUE;
+}
+
+static gboolean
+gst_vaapidecode_create(GstVaapiDecode *decode)
+{
+    if (!gst_vaapidecode_ensure_display(decode))
+        return FALSE;
 
     if (decode->use_ffmpeg)
         decode->decoder =
-            gst_vaapi_decoder_ffmpeg_new(display, decode->decoder_caps);
+            gst_vaapi_decoder_ffmpeg_new(decode->display, decode->decoder_caps);
     return decode->decoder != NULL;
 }
 
