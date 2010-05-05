@@ -2,6 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *                    2005 Andy Wingo <wingo@pobox.com>
+ * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * gstnetclientclock.h: clock that synchronizes itself to a time provider over
  * the network
@@ -31,21 +32,6 @@
 
 G_BEGIN_DECLS
 
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-
-#ifdef G_OS_WIN32
-# include <winsock2.h>
-#else
-# include <netdb.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-#endif /*G_OS_WIN32 */
-
-#include <fcntl.h>
-
 #define GST_TYPE_NET_CLIENT_CLOCK \
   (gst_net_client_clock_get_type())
 #define GST_NET_CLIENT_CLOCK(obj) \
@@ -69,20 +55,6 @@ typedef struct _GstNetClientClockPrivate GstNetClientClockPrivate;
 struct _GstNetClientClock {
   GstSystemClock clock;
 
-  /*< protected >*/
-  gchar *address;
-  gint port;
-
-  /*< private >*/
-  int sock;
-  int control_sock[2];
-
-  GstClockTime current_timeout;
-
-  struct sockaddr_in *servaddr;
-
-  GThread *thread;
-
   /*< private >*/
   GstNetClientClockPrivate *priv;
 
@@ -97,6 +69,7 @@ struct _GstNetClientClockClass {
 };
 
 GType           gst_net_client_clock_get_type	(void);
+
 GstClock*	gst_net_client_clock_new	(gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 

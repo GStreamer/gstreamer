@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+ * Copyright (C) 2010 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -107,112 +109,106 @@ gst_net_time_packet_serialize (const GstNetTimePacket * packet)
 
 /**
  * gst_net_time_packet_receive:
- * @fd: a file descriptor created by socket(2)
- * @addr: a pointer to a sockaddr to hold the address of the sender
- * @len: a pointer to the size of the data pointed to by @addr
+ * @socket: socket to receive the time packet on
+ * @src_addr: (out): address of variable to return sender address
+ * @err: return address for a #GError, or NULL
  *
- * Receives a #GstNetTimePacket over a socket. Handles interrupted system calls,
- * but otherwise returns NULL on error. See recvfrom(2) for more information on
- * how to interpret @sockaddr.
+ * Receives a #GstNetTimePacket over a socket. Handles interrupted system
+ * calls, but otherwise returns NULL on error.
  *
- * MT safe. Caller owns return value (g_free to free).
- *
- * Returns: The new #GstNetTimePacket.
+ * Returns: (transfer full): a new #GstNetTimePacket, or NULL on error. Free
+ *    with g_free() when done.
  */
 GstNetTimePacket *
-gst_net_time_packet_receive (gint fd, struct sockaddr * addr, socklen_t * len)
+gst_net_time_packet_receive (GSocket * socket,
+    GSocketAddress ** src_address, GError ** error)
 {
-  guint8 buffer[GST_NET_TIME_PACKET_SIZE];
-  gint ret;
+  gchar buffer[GST_NET_TIME_PACKET_SIZE];
+  GError *err = NULL;
+  gssize ret;
+
+  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   while (TRUE) {
-#ifdef G_OS_WIN32
-    ret = recvfrom (fd, (char *) buffer, GST_NET_TIME_PACKET_SIZE,
-#else
-    ret = recvfrom (fd, buffer, GST_NET_TIME_PACKET_SIZE,
-#endif
-        0, (struct sockaddr *) addr, len);
+    ret = g_socket_receive_from (socket, src_address, buffer,
+        GST_NET_TIME_PACKET_SIZE, NULL, &err);
+
     if (ret < 0) {
-      if (errno != EAGAIN && errno != EINTR)
-        goto receive_error;
-      else
+      if (err->code == G_IO_ERROR_WOULD_BLOCK) {
+        g_error_free (err);
+        err = NULL;
         continue;
+      } else {
+        goto receive_error;
+      }
     } else if (ret < GST_NET_TIME_PACKET_SIZE) {
       goto short_packet;
     } else {
-      return gst_net_time_packet_new (buffer);
+      return gst_net_time_packet_new ((const guint8 *) buffer);
     }
   }
 
 receive_error:
   {
-    GST_DEBUG ("receive error %d: %s (%d)", ret, g_strerror (errno), errno);
+    GST_DEBUG ("receive error: %s", err->message);
+    g_propagate_error (error, err);
     return NULL;
   }
 short_packet:
   {
     GST_DEBUG ("someone sent us a short packet (%d < %d)",
         ret, GST_NET_TIME_PACKET_SIZE);
+    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+        "short time packet (%d < %d)", (int) ret, GST_NET_TIME_PACKET_SIZE);
     return NULL;
   }
 }
 
 /**
  * gst_net_time_packet_send:
- * @packet: the #GstNetTimePacket
- * @fd: a file descriptor created by socket(2)
- * @addr: a pointer to a sockaddr to hold the address of the sender
- * @len: the size of the data pointed to by @addr
+ * @packet: the #GstNetTimePacket to send
+ * @socket: socket to send the time packet on
+ * @dest_addr: address to send the time packet to
+ * @err: return address for a #GError, or NULL
  *
- * Sends a #GstNetTimePacket over a socket. Essentially a thin wrapper around
- * sendto(2) and gst_net_time_packet_serialize(). 
+ * Sends a #GstNetTimePacket over a socket.
  *
  * MT safe.
  *
- * Returns: The return value of sendto(2).
+ * Returns: TRUE if successful, FALSE in case an error occured.
  */
-gint
-gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
-    struct sockaddr * addr, socklen_t len)
+gboolean
+gst_net_time_packet_send (const GstNetTimePacket * packet,
+    GSocket * socket, GSocketAddress * dest_address, GError ** error)
 {
-#if defined __CYGWIN__
-  gint fdflags;
-#elif defined G_OS_WIN32
-  gulong flags;
-#endif
-
+  gboolean was_blocking;
   guint8 *buffer;
-  gint ret, send_flags;
+  gssize res;
 
-  g_return_val_if_fail (packet != NULL, -EINVAL);
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
+  g_return_val_if_fail (G_IS_SOCKET_ADDRESS (dest_address), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-#ifdef __CYGWIN__
-  send_flags = 0;
-  fdflags = fcntl (fd, F_GETFL);
-  fcntl (fd, F_SETFL, fdflags | O_NONBLOCK);
-#elif defined G_OS_WIN32
-  flags = 1;
-  send_flags = 0;
-#else
-  send_flags = MSG_DONTWAIT;
-#endif
+  was_blocking = g_socket_get_blocking (socket);
 
+  if (was_blocking)
+    g_socket_set_blocking (socket, FALSE);
+
+  /* FIXME: avoid pointless alloc/free, serialise into stack-allocated buffer */
   buffer = gst_net_time_packet_serialize (packet);
 
-#ifdef G_OS_WIN32
-  ioctlsocket (fd, FIONBIO, &flags);    /* Set nonblocking mode */
-  ret =
-      sendto (fd, (char *) buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr,
-      len);
-#else
-  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr, len);
-#endif
+  res = g_socket_send_to (socket, dest_address, (const gchar *) buffer,
+      GST_NET_TIME_PACKET_SIZE, NULL, error);
 
-#ifdef __CYGWIN__
-  fcntl (fd, F_SETFL, fdflags);
-#endif
+  /* datagram packets should be sent as a whole or not at all */
+  g_assert (res < 0 || res == GST_NET_TIME_PACKET_SIZE);
 
   g_free (buffer);
 
-  return ret;
+  if (was_blocking)
+    g_socket_set_blocking (socket, TRUE);
+
+  return (res == GST_NET_TIME_PACKET_SIZE);
 }

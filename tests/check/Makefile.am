@@ -193,7 +193,7 @@ libs_gstnetclientclock_LDADD = \
 	$(LDADD)
 libs_gstnettimeprovider_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
-	$(LDADD)
+	$(GIO_LIBS) $(LDADD)
 
 # valgrind testing
 # these just need valgrind fixing, period

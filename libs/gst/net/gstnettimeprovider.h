@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
  *               2006 Joni Valtanen <joni.valtanen@movial.fi>
+ * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,31 +23,9 @@
 #ifndef __GST_NET_TIME_PROVIDER_H__
 #define __GST_NET_TIME_PROVIDER_H__
 
-/* to determinate os */
-#include <glib.h>
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#ifndef socklen_t
-#define socklen_t int
-#endif
-#else
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
-
-#include <fcntl.h>
 
 #define GST_TYPE_NET_TIME_PROVIDER \
   (gst_net_time_provider_get_type())
@@ -72,20 +51,6 @@ struct _GstNetTimeProvider {
   GstObject parent;
 
   /*< private >*/
-  gchar *address;
-  int port;
-
-  int sock;
-  int control_sock[2];
-
-  GThread *thread;
-
-  GstClock *clock;
-
-  /* has to be a gint, we use atomic ops here */
-  gint active;
-
-  /*< private >*/
   GstNetTimeProviderPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -98,6 +63,7 @@ struct _GstNetTimeProviderClass {
 };
 
 GType                   gst_net_time_provider_get_type  (void);
+
 GstNetTimeProvider*     gst_net_time_provider_new       (GstClock *clock,
                                                          const gchar *address,
                                                          gint port);
