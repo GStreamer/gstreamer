@@ -118,6 +118,7 @@ gst_gdk_pixbuf_get_capslist (void)
   GSList *slist0;
   GstCaps *capslist = NULL;
   GstCaps *return_caps = NULL;
+  GstCaps *tmpl_caps;
 
   capslist = gst_caps_new_empty ();
   slist0 = gdk_pixbuf_get_formats ();
@@ -137,9 +138,10 @@ gst_gdk_pixbuf_get_capslist (void)
   }
   g_slist_free (slist0);
 
-  return_caps = gst_caps_intersect (capslist,
-      gst_static_caps_get (&gst_gdk_pixbuf_sink_template.static_caps));
+  tmpl_caps = gst_static_caps_get (&gst_gdk_pixbuf_sink_template.static_caps);
+  return_caps = gst_caps_intersect (capslist, tmpl_caps);
 
+  gst_caps_unref (tmpl_caps);
   gst_caps_unref (capslist);
   return return_caps;
 }
