@@ -1664,13 +1664,6 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
       G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device,
       TRUE, FALSE);
-
-  /* override with a custom clock */
-  if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
-    gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
-  GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
-      gst_audio_clock_new ("GstPulseSinkClock",
-      (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
 }
 
 static void
@@ -2275,6 +2268,13 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       g_assert (pulsesink->mainloop != NULL);
       res = pa_threaded_mainloop_start (pulsesink->mainloop);
       g_assert (res == 0);
+
+      /* override with a custom clock */
+      if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
+        gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
+          gst_audio_clock_new ("GstPulseSinkClock",
+          (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
       break;
     default:
       break;
@@ -2284,6 +2284,9 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
+        gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock = NULL;
       if (pulsesink->mainloop) {
         pa_threaded_mainloop_stop (pulsesink->mainloop);
         pa_threaded_mainloop_free (pulsesink->mainloop);
