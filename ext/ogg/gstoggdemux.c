@@ -724,9 +724,11 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       if (skel_pad) {
         switch (type) {
           case GST_OGG_SKELETON_FISBONE:
-            /* parse the remainder of the fisbone in the pad with the serialno */
+            /* parse the remainder of the fisbone in the pad with the serialno,
+             * note that we ignore the start_time as this is usually wrong for
+             * live streams */
             gst_ogg_map_add_fisbone (&skel_pad->map, packet->packet,
-                packet->bytes, &skel_pad->start_time);
+                packet->bytes, NULL);
             break;
           case GST_OGG_SKELETON_INDEX:
             gst_ogg_map_add_index (&skel_pad->map, packet->packet,
