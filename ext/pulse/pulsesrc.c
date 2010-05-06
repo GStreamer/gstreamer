@@ -250,8 +250,6 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
 static void
 gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 {
-  int e;
-
   pulsesrc->server = NULL;
   pulsesrc->device = NULL;
   pulsesrc->device_description = NULL;
@@ -273,12 +271,6 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
   pulsesrc->operation_success = FALSE;
   pulsesrc->paused = FALSE;
   pulsesrc->in_read = FALSE;
-
-  pulsesrc->mainloop = pa_threaded_mainloop_new ();
-  g_assert (pulsesrc->mainloop);
-
-  e = pa_threaded_mainloop_start (pulsesrc->mainloop);
-  g_assert (e == 0);
 
   pulsesrc->mixer = NULL;
 
@@ -320,14 +312,8 @@ gst_pulsesrc_finalize (GObject * object)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
 
-  pa_threaded_mainloop_stop (pulsesrc->mainloop);
-
-  gst_pulsesrc_destroy_context (pulsesrc);
-
   g_free (pulsesrc->server);
   g_free (pulsesrc->device);
-
-  pa_threaded_mainloop_free (pulsesrc->mainloop);
 
   if (pulsesrc->mixer) {
     gst_pulsemixer_ctrl_free (pulsesrc->mixer);
@@ -1177,9 +1163,16 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstPulseSrc *this = GST_PULSESRC_CAST (element);
+  int e;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      this->mainloop = pa_threaded_mainloop_new ();
+      g_assert (this->mainloop);
+
+      e = pa_threaded_mainloop_start (this->mainloop);
+      g_assert (e == 0);
+
       if (!this->mixer)
         this->mixer =
             gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
@@ -1211,6 +1204,16 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
       if (this->mixer) {
         gst_pulsemixer_ctrl_free (this->mixer);
         this->mixer = NULL;
+      }
+
+      if (this->mainloop)
+        pa_threaded_mainloop_stop (this->mainloop);
+
+      gst_pulsesrc_destroy_context (this);
+
+      if (this->mainloop) {
+        pa_threaded_mainloop_free (this->mainloop);
+        this->mainloop = NULL;
       }
       break;
     default:
