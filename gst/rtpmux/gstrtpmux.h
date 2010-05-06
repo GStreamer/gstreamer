@@ -50,9 +50,6 @@ struct _GstRTPMux
   /* pad */
   GstPad *srcpad;
 
-  /* sinkpads */
-  gint numpads;
-
   guint32 ts_base;
   guint16 seqnum_base;
 
