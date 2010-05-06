@@ -104,24 +104,16 @@ static GstStaticPadTemplate gst_video_rate_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        "video/x-raw-yuv;"
-        "video/x-raw-rgb;"
-        "video/x-raw-gray;"
-        "image/jpeg;"
-        "image/png")
+    GST_STATIC_CAPS ("video/x-raw-yuv;"
+        "video/x-raw-rgb;" "video/x-raw-gray;" "image/jpeg;" "image/png")
     );
 
 static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        "video/x-raw-yuv;"
-        "video/x-raw-rgb;"
-        "video/x-raw-gray;"
-        "image/jpeg;"
-        "image/png")
+    GST_STATIC_CAPS ("video/x-raw-yuv;"
+        "video/x-raw-rgb;" "video/x-raw-gray;" "image/jpeg;" "image/png")
     );
 
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
@@ -314,7 +306,6 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
       ret = TRUE;
     } else {
       GstCaps *peercaps;
-      GstCaps *intersect;
       GstCaps *transform = NULL;
 
       ret = FALSE;
@@ -330,15 +321,14 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
       GST_DEBUG ("transform %" GST_PTR_FORMAT, transform);
 
       /* filter against our possibilities */
-      intersect = gst_caps_intersect (peercaps, transform);
+      caps = gst_caps_intersect (peercaps, transform);
       gst_caps_unref (peercaps);
       gst_caps_unref (transform);
 
-      GST_DEBUG ("intersect %" GST_PTR_FORMAT, intersect);
+      GST_DEBUG ("intersect %" GST_PTR_FORMAT, caps);
 
       /* take first possibility */
-      caps = gst_caps_copy_nth (intersect, 0);
-      gst_caps_unref (intersect);
+      gst_caps_truncate (caps);
       structure = gst_caps_get_structure (caps, 0);
 
       /* and fixate */
