@@ -244,7 +244,7 @@ gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
   GSList *errors = NULL;
   GstBus *bus = gst_bus_new ();
   GstPad *el_pad = NULL;
-  GstCaps *el_caps = NULL, *intersect = NULL;
+  GstCaps *el_caps = NULL;
   gboolean no_match = TRUE;
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
@@ -274,10 +274,8 @@ gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
         GST_DEBUG_OBJECT (src,
             "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
             src->filter_caps, el_caps);
-        intersect = gst_caps_intersect (src->filter_caps, el_caps);
-        no_match = gst_caps_is_empty (intersect);
+        no_match = !gst_caps_can_intersect (src->filter_caps, el_caps);
         gst_caps_unref (el_caps);
-        gst_caps_unref (intersect);
 
         if (no_match) {
           GST_DEBUG_OBJECT (src, "Incompatible caps");
