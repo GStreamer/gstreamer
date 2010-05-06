@@ -1405,6 +1405,9 @@ static void gst_pulsesink_finalize (GObject * object);
 
 static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
 
+static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
+    GstStateChange transition);
+
 static void gst_pulsesink_init_interfaces (GType type);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
@@ -1544,6 +1547,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
   GstBaseSinkClass *bc;
   GstBaseAudioSinkClass *gstaudiosink_class = GST_BASE_AUDIO_SINK_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesink_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsesink_set_property);
@@ -1554,6 +1558,9 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   /* restore the original basesink pull methods */
   bc = g_type_class_peek (GST_TYPE_BASE_SINK);
   gstbasesink_class->activate_pull = GST_DEBUG_FUNCPTR (bc->activate_pull);
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_pulsesink_change_state);
 
   gstaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_pulsesink_create_ringbuffer);
@@ -1635,8 +1642,6 @@ server_dead:
 static void
 gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 {
-  guint res;
-
   pulsesink->server = NULL;
   pulsesink->device = NULL;
   pulsesink->device_description = NULL;
@@ -1654,11 +1659,6 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 
   GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
       pulsesink->pa_version);
-
-  pulsesink->mainloop = pa_threaded_mainloop_new ();
-  g_assert (pulsesink->mainloop != NULL);
-  res = pa_threaded_mainloop_start (pulsesink->mainloop);
-  g_assert (res == 0);
 
   /* TRUE for sinks, FALSE for sources */
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
@@ -1678,13 +1678,9 @@ gst_pulsesink_finalize (GObject * object)
 {
   GstPulseSink *pulsesink = GST_PULSESINK_CAST (object);
 
-  pa_threaded_mainloop_stop (pulsesink->mainloop);
-
   g_free (pulsesink->server);
   g_free (pulsesink->device);
   g_free (pulsesink->device_description);
-
-  pa_threaded_mainloop_free (pulsesink->mainloop);
 
   if (pulsesink->probe) {
     gst_pulseprobe_free (pulsesink->probe);
@@ -2263,4 +2259,40 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
   }
 
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+}
+
+static GstStateChangeReturn
+gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstPulseSink *pulsesink = GST_PULSESINK (element);
+  GstStateChangeReturn ret;
+  guint res;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      g_assert (pulsesink->mainloop == NULL);
+      pulsesink->mainloop = pa_threaded_mainloop_new ();
+      g_assert (pulsesink->mainloop != NULL);
+      res = pa_threaded_mainloop_start (pulsesink->mainloop);
+      g_assert (res == 0);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (pulsesink->mainloop) {
+        pa_threaded_mainloop_stop (pulsesink->mainloop);
+        pa_threaded_mainloop_free (pulsesink->mainloop);
+        pulsesink->mainloop = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
