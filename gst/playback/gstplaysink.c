@@ -231,6 +231,11 @@ static GstStateChangeReturn gst_play_sink_change_state (GstElement * element,
 
 static void gst_play_sink_handle_message (GstBin * bin, GstMessage * message);
 
+static void notify_volume_cb (GObject * object, GParamSpec * pspec,
+    GstPlaySink * playsink);
+static void notify_mute_cb (GObject * object, GParamSpec * pspec,
+    GstPlaySink * playsink);
+
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_TYPE (GstPlaySink, gst_play_sink, GST_TYPE_BIN);
@@ -344,6 +349,19 @@ gst_play_sink_init (GstPlaySink * playsink)
 
   g_static_rec_mutex_init (&playsink->lock);
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
+}
+
+static void
+disconnect_chain (GstPlayAudioChain * chain, GstPlaySink * playsink)
+{
+  if (chain) {
+    if (chain->volume)
+      g_signal_handlers_disconnect_by_func (chain->volume, notify_volume_cb,
+          playsink);
+    if (chain->mute)
+      g_signal_handlers_disconnect_by_func (chain->mute, notify_mute_cb,
+          playsink);
+  }
 }
 
 static void
@@ -1762,13 +1780,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     if (!raw) {
       GST_LOG_OBJECT (playsink, "non-raw format, can't do soft volume control");
 
-      if (chain->volume)
-        g_signal_handlers_disconnect_by_func (chain->volume, notify_volume_cb,
-            playsink);
-      if (chain->mute)
-        g_signal_handlers_disconnect_by_func (chain->mute, notify_mute_cb,
-            playsink);
-
+      disconnect_chain (chain, playsink);
       chain->volume = NULL;
       chain->mute = NULL;
     } else {
@@ -2119,6 +2131,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         }
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+        disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
         free_chain ((GstPlayChain *) playsink->audiochain);
@@ -2155,6 +2168,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         playsink->audio_tee_asrc = NULL;
       }
       if (playsink->audiochain->sink_volume) {
+        disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
       }
@@ -2770,6 +2784,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       if (playsink->audiochain && playsink->audiochain->sink_volume) {
         /* remove our links to the mute and volume elements when they were
          * provided by a sink */
+        disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
       }
