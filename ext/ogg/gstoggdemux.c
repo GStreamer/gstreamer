@@ -809,8 +809,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   /* we know the start_time of the pad data, see if we
    * can activate the complete chain if this is a dynamic
-   * chain. */
-  if (pad->start_time != GST_CLOCK_TIME_NONE) {
+   * chain. We need all the headers too for this. */
+  if (pad->start_time != GST_CLOCK_TIME_NONE && pad->map.have_headers) {
     GstOggChain *chain = pad->chain;
 
     /* check if complete chain has start time */
