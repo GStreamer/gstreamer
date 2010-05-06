@@ -2384,6 +2384,8 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   }
 
   chain = ogg->current_chain;
+  if (!chain)
+    return FALSE;
 
   if (do_index_search (ogg, chain, 0, -1, 0, -1, start, &best, &best_time)) {
     /* the index gave some result */
