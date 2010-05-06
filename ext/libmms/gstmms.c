@@ -439,9 +439,10 @@ gst_mms_start (GstBaseSrc * bsrc)
 
     GST_ERROR_OBJECT (mms,
         "Could not connect to this stream, redirecting to rtsp");
-    location = gst_uri_get_location (mms->uri_name);
-    url = g_strdup_printf ("rtsp://%s", location);
-    g_free (location);
+    location = strstr (mms->uri_name, "://");
+    if (location == NULL || *location == '\0' || *(location + 3) == '\0')
+      goto no_uri;
+    url = g_strdup_printf ("rtsp://%s", location + 3);
 
     gst_element_post_message (GST_ELEMENT_CAST (mms),
         gst_message_new_element (GST_OBJECT_CAST (mms),
