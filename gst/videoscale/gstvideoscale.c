@@ -356,16 +356,13 @@ static int
 gst_video_scale_get_format (GstCaps * caps)
 {
   gint i;
-  GstCaps *icaps, *scaps;
+  GstCaps *scaps;
 
   for (i = 0; i < G_N_ELEMENTS (gst_video_scale_format_caps); i++) {
     scaps = gst_static_caps_get (&gst_video_scale_format_caps[i]);
-    icaps = gst_caps_intersect (caps, scaps);
-    if (!gst_caps_is_empty (icaps)) {
-      gst_caps_unref (icaps);
+    if (gst_caps_can_intersect (caps, scaps)) {
       return i;
     }
-    gst_caps_unref (icaps);
   }
 
   return -1;
