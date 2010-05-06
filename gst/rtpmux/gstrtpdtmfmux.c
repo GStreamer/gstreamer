@@ -2,8 +2,10 @@
  *
  * gstrtpdtmfmux.c:
  *
- * Copyright (C) <2007> Nokia Corporation.
+ * Copyright (C) <2007-2010> Nokia Corporation.
  *   Contact: Zeeshan Ali <zeeshan.ali@nokia.com>
+ * Copyright (C) <2007-2010> Collabora Ltd
+ *   Contact: Olivier Crete <olivier.crete@collabora.co.uk>
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *               2000,2005 Wim Taymans <wim@fluendo.com>
  *
@@ -28,7 +30,7 @@
  * @see_also: rtpdtmfsrc, dtmfsrc
  *
  * The RTPDTMFMuxer mixes/muxes RTP DTMF stream(s) into other RTP
- * streams. It does exactly what it's parent (RTPMuxer) does, except
+ * streams. It does exactly what it's parent (rtpmux) does, except
  * that it allows upstream peer elements to request exclusive access
  * to the stream, which is required by the RTP DTMF standards (see RFC
  * 2833, section 3.2, para 1 for details). The peer upstream element
