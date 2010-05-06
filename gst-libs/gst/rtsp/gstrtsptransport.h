@@ -103,8 +103,7 @@ GType gst_rtsp_lower_trans_get_type (void);
  *
  * A type to specify a range.
  */
-typedef struct
-{
+typedef struct _GstRTSPRange {
   gint min;
   gint max;
 } GstRTSPRange;
