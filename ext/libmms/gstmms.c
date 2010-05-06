@@ -67,6 +67,9 @@ static gboolean gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment);
 
 static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 
+static gboolean gst_mms_uri_set_uri (GstURIHandler * handler,
+    const gchar * uri);
+
 static void
 gst_mms_urihandler_init (GType mms_type)
 {
@@ -490,23 +493,20 @@ gst_mms_set_property (GObject * object, guint prop_id,
 {
   GstMMS *mmssrc = GST_MMS (object);
 
-  GST_OBJECT_LOCK (mmssrc);
   switch (prop_id) {
     case PROP_LOCATION:
-      if (mmssrc->uri_name) {
-        g_free (mmssrc->uri_name);
-        mmssrc->uri_name = NULL;
-      }
-      mmssrc->uri_name = g_value_dup_string (value);
+      gst_mms_uri_set_uri (GST_URI_HANDLER (mmssrc),
+          g_value_get_string (value));
       break;
     case PROP_CONNECTION_SPEED:
+      GST_OBJECT_LOCK (mmssrc);
       mmssrc->connection_speed = g_value_get_uint (value) * 1000;
+      GST_OBJECT_UNLOCK (mmssrc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (mmssrc);
 }
 
 static void
@@ -564,20 +564,69 @@ gst_mms_uri_get_uri (GstURIHandler * handler)
   return src->uri_name;
 }
 
-static gboolean
-gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+static gchar *
+gst_mms_src_make_valid_uri (const gchar * uri)
 {
   gchar *protocol;
-  GstMMS *src = GST_MMS (handler);
+  const gchar *colon, *tmp;
+  gsize len;
+
+  if (!uri || !gst_uri_is_valid (uri))
+    return NULL;
 
   protocol = gst_uri_get_protocol (uri);
+
   if ((strcmp (protocol, "mms") != 0) && (strcmp (protocol, "mmsh") != 0) &&
       (strcmp (protocol, "mmst") != 0) && (strcmp (protocol, "mmsu") != 0)) {
     g_free (protocol);
     return FALSE;
   }
   g_free (protocol);
-  g_object_set (src, "location", uri, NULL);
+
+  colon = strstr (uri, "://");
+  if (!colon)
+    return NULL;
+
+  tmp = colon + 3;
+  len = strlen (tmp);
+  if (len == 0)
+    return NULL;
+
+  /* libmms segfaults if there's no hostname or
+   * no / after the hostname
+   */
+  colon = strstr (tmp, "/");
+  if (colon == tmp)
+    return NULL;
+
+  if (strstr (tmp, "/") == NULL) {
+    gchar *ret;
+
+    len = strlen (uri);
+    ret = g_malloc0 (len + 2);
+    memcpy (ret, uri, len);
+    ret[len] = '/';
+    return ret;
+  } else {
+    return g_strdup (uri);
+  }
+}
+
+static gboolean
+gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstMMS *src = GST_MMS (handler);
+  gchar *fixed_uri;
+
+  fixed_uri = gst_mms_src_make_valid_uri (uri);
+  if (!fixed_uri && uri)
+    return FALSE;
+
+  GST_OBJECT_LOCK (src);
+  if (src->uri_name)
+    g_free (src->uri_name);
+  src->uri_name = fixed_uri;
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
