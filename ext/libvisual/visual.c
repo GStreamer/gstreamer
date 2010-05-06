@@ -379,7 +379,7 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_vis_src_negotiate (GstVisual * visual)
 {
-  GstCaps *othercaps, *target, *intersect;
+  GstCaps *othercaps, *target;
   GstStructure *structure;
   GstCaps *caps;
 
@@ -388,15 +388,14 @@ gst_vis_src_negotiate (GstVisual * visual)
   /* see what the peer can do */
   othercaps = gst_pad_peer_get_caps (visual->srcpad);
   if (othercaps) {
-    intersect = gst_caps_intersect (othercaps, caps);
+    target = gst_caps_intersect (othercaps, caps);
     gst_caps_unref (othercaps);
     gst_caps_unref (caps);
 
-    if (gst_caps_is_empty (intersect))
+    if (gst_caps_is_empty (target))
       goto no_format;
 
-    target = gst_caps_copy_nth (intersect, 0);
-    gst_caps_unref (intersect);
+    gst_caps_truncate (target);
   } else {
     /* need a copy, we'll be modifying it when fixating */
     target = gst_caps_copy (caps);
@@ -421,7 +420,7 @@ no_format:
   {
     GST_ELEMENT_ERROR (visual, STREAM, FORMAT, (NULL),
         ("could not negotiate output format"));
-    gst_caps_unref (intersect);
+    gst_caps_unref (target);
     return FALSE;
   }
 }
