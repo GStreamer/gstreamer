@@ -50,6 +50,8 @@ struct _GstRTPDTMFMux
   /* Protected by object lock */
   /* our special pad */
   GstPad *special_pad;
+
+  GstClockTime last_priority_end;
 };
 
 struct _GstRTPDTMFMuxClass

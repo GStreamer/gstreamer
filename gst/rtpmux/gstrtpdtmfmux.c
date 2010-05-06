@@ -94,6 +94,8 @@ static void gst_rtp_dtmf_mux_dispose (GObject * object);
 static GstPad *gst_rtp_dtmf_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_dtmf_mux_release_pad (GstElement * element, GstPad * pad);
+static GstStateChangeReturn gst_rtp_dtmf_mux_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer);
@@ -145,6 +147,8 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_release_pad);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_change_state);
   gstrtpmux_class->chain_func = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_chain);
   gstrtpmux_class->sink_event_func =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_sink_event);
@@ -171,28 +175,56 @@ static GstFlowReturn
 gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPDTMFMux *mux;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_ERROR;
+  GstRTPMuxPadPrivate *padpriv = NULL;
+  GstClockTime running_ts;
 
   mux = GST_RTP_DTMF_MUX (gst_pad_get_parent (pad));
 
+  running_ts = GST_BUFFER_TIMESTAMP (buffer);
+
   GST_OBJECT_LOCK (mux);
-  if (mux->special_pad != NULL && mux->special_pad != pad) {
-    /* Drop the buffer */
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_OK;
-    GST_OBJECT_UNLOCK (mux);
-  } else {
-    GST_OBJECT_UNLOCK (mux);
-    if (parent_class->chain_func)
-      ret = parent_class->chain_func (pad, buffer);
-    else {
-      gst_buffer_unref (buffer);
-      ret = GST_FLOW_ERROR;
+  if (GST_CLOCK_TIME_IS_VALID (running_ts)) {
+    padpriv = gst_pad_get_element_private (pad);
+    if (padpriv && padpriv->segment.format == GST_FORMAT_TIME)
+      running_ts = gst_segment_to_running_time (&padpriv->segment,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer));
+
+    if (padpriv && padpriv->priority) {
+      if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+        if (GST_CLOCK_TIME_IS_VALID (mux->last_priority_end))
+          mux->last_priority_end =
+              MAX (running_ts + GST_BUFFER_DURATION (buffer),
+              mux->last_priority_end);
+        else
+          mux->last_priority_end = running_ts + GST_BUFFER_DURATION (buffer);
+      }
+    } else {
+      if (GST_CLOCK_TIME_IS_VALID (mux->last_priority_end) &&
+          running_ts < mux->last_priority_end)
+        goto drop_buffer;
     }
   }
 
+  if (mux->special_pad != NULL && mux->special_pad != pad)
+    goto drop_buffer;
+  GST_OBJECT_UNLOCK (mux);
+
+  if (parent_class->chain_func)
+    ret = parent_class->chain_func (pad, buffer);
+  else
+    gst_buffer_unref (buffer);
+
+out:
+
   gst_object_unref (mux);
   return ret;
+
+drop_buffer:
+  gst_buffer_unref (buffer);
+  ret = GST_FLOW_OK;
+  GST_OBJECT_UNLOCK (mux);
+  goto out;
 }
 
 static void
@@ -345,6 +377,29 @@ gst_rtp_dtmf_mux_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_UNLOCK (mux);
 
   GST_CALL_PARENT (GST_ELEMENT_CLASS, release_pad, (element, pad));
+}
+
+static GstStateChangeReturn
+gst_rtp_dtmf_mux_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstRTPDTMFMux *mux = GST_RTP_DTMF_MUX (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    {
+      GST_OBJECT_LOCK (mux);
+      mux->last_priority_end = GST_CLOCK_TIME_NONE;
+      GST_OBJECT_UNLOCK (mux);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return ret;
 }
 
 gboolean
