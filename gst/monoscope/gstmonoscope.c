@@ -239,7 +239,7 @@ gst_monoscope_src_setcaps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_monoscope_src_negotiate (GstMonoscope * monoscope)
 {
-  GstCaps *othercaps, *target, *intersect;
+  GstCaps *othercaps, *target;
   GstStructure *structure;
   const GstCaps *templ;
 
@@ -250,14 +250,13 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   /* see what the peer can do */
   othercaps = gst_pad_peer_get_caps (monoscope->srcpad);
   if (othercaps) {
-    intersect = gst_caps_intersect (othercaps, templ);
+    target = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);
 
-    if (gst_caps_is_empty (intersect))
+    if (gst_caps_is_empty (target))
       goto no_format;
 
-    target = gst_caps_copy_nth (intersect, 0);
-    gst_caps_unref (intersect);
+    gst_caps_truncate (target);
   } else {
     target = gst_caps_ref ((GstCaps *) templ);
   }
@@ -274,7 +273,7 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
 
 no_format:
   {
-    gst_caps_unref (intersect);
+    gst_caps_unref (target);
     return FALSE;
   }
 }
