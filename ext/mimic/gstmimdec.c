@@ -126,6 +126,7 @@ gst_mimdec_init (GstMimDec * mimdec, GstMimDecClass * klass)
   mimdec->have_header = FALSE;
   mimdec->payload_size = -1;
   mimdec->current_ts = -1;
+  mimdec->need_newsegment = TRUE;
 }
 
 static void
@@ -151,6 +152,8 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
   GstCaps *caps;
   GstFlowReturn res = GST_FLOW_OK;
   GstClockTime in_time = GST_BUFFER_TIMESTAMP (in);
+  GstEvent *event = NULL;
+  gboolean result = TRUE;
 
   GST_DEBUG ("in gst_mimdec_chain");
 
@@ -212,9 +215,6 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
         (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
     if (mimdec->dec == NULL) {
-      GstEvent *event = NULL;
-      gboolean result = TRUE;
-
       /* Check if its a keyframe, otherwise skip it */
       if (GUINT32_FROM_LE (*((guint32 *) (frame_body + 12))) != 0) {
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
@@ -256,21 +256,28 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
         res = GST_FLOW_ERROR;
         goto out;
       }
+    }
 
-      if (mimdec->need_newsegment)
+
+    if (mimdec->need_newsegment) {
+      if (GST_CLOCK_TIME_IS_VALID (in_time))
+        event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+            in_time, -1, 0);
+      else
         event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
             mimdec->current_ts * GST_MSECOND, -1, 0);
-      mimdec->need_newsegment = FALSE;
-      GST_OBJECT_UNLOCK (mimdec);
-      if (event)
-        result = gst_pad_push_event (mimdec->srcpad, event);
-      GST_OBJECT_LOCK (mimdec);
-      if (!result) {
-        GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
-        res = GST_FLOW_ERROR;
-        goto out;
-      }
     }
+    mimdec->need_newsegment = FALSE;
+    GST_OBJECT_UNLOCK (mimdec);
+    if (event)
+      result = gst_pad_push_event (mimdec->srcpad, event);
+    GST_OBJECT_LOCK (mimdec);
+    if (!result) {
+      GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
+      res = GST_FLOW_ERROR;
+      goto out;
+    }
+
 
     out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
 
