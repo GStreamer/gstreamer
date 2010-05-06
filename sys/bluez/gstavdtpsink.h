@@ -51,6 +51,7 @@ struct _GstAvdtpSink {
 	GstBaseSink sink;
 
 	gchar *device;
+	gchar *transport;
 	GIOChannel *stream;
 
 	struct bluetooth_data *data;
@@ -86,7 +87,12 @@ guint gst_avdtp_sink_get_link_mtu(GstAvdtpSink *sink);
 void gst_avdtp_sink_set_device(GstAvdtpSink *sink,
 		const gchar* device);
 
+void gst_avdtp_sink_set_transport(GstAvdtpSink *sink,
+		const gchar *transport);
+
 gchar *gst_avdtp_sink_get_device(GstAvdtpSink *sink);
+
+gchar *gst_avdtp_sink_get_transport(GstAvdtpSink *sink);
 
 gboolean gst_avdtp_sink_plugin_init(GstPlugin *plugin);
 

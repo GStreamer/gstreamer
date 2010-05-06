@@ -53,6 +53,7 @@ struct _GstA2dpSink {
 	GstElement *fakesink;
 
 	gchar *device;
+	gchar *transport;
 	gboolean autoconnect;
 	gboolean sink_is_in_bin;
 
