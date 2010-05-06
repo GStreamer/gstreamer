@@ -32,9 +32,9 @@
 
 enum
 {
-  ARG_0,
-  ARG_LOCATION,
-  ARG_CONNECTION_SPEED
+  PROP_0,
+  PROP_LOCATION,
+  PROP_CONNECTION_SPEED
 };
 
 
@@ -102,27 +102,24 @@ gst_mms_base_init (gpointer g_class)
 static void
 gst_mms_class_init (GstMMSClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseSrcClass *gstbasesrc_class;
-  GstPushSrcClass *gstpushsrc_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstpushsrc_class = (GstPushSrcClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
+  GstPushSrcClass *gstpushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_mms_set_property;
   gobject_class->get_property = gst_mms_get_property;
   gobject_class->finalize = gst_mms_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
           "Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_CONNECTION_SPEED,
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
+          0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* Note: connection-speed is intentionaly limited to G_MAXINT as libmms use int for it */
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mms_start);
@@ -174,9 +171,7 @@ gst_mms_finalize (GObject * gobject)
     mmssrc->uri_name = NULL;
   }
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (gobject);
-
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 /* FIXME operating in TIME rather than BYTES could remove this altogether
@@ -318,7 +313,7 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
 static GstFlowReturn
 gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
-  GstMMS *mmssrc;
+  GstMMS *mmssrc = GST_MMS (psrc);
   guint8 *data;
   guint blocksize;
   gint result;
@@ -326,13 +321,11 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   *buf = NULL;
 
-  mmssrc = GST_MMS (psrc);
-
   offset = mmsx_get_current_pos (mmssrc->connection);
 
   /* Check if a seek perhaps has wrecked our connection */
   if (offset == -1) {
-    GST_DEBUG_OBJECT (mmssrc,
+    GST_ERROR_OBJECT (mmssrc,
         "connection broken (probably an error during mmsx_seek_time during a convert query) returning FLOW_ERROR");
     return GST_FLOW_ERROR;
   }
@@ -343,7 +336,11 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   else
     blocksize = mmsx_get_asf_packet_len (mmssrc->connection);
 
-  *buf = gst_buffer_new_and_alloc (blocksize);
+  *buf = gst_buffer_try_new_and_alloc (blocksize);
+  if (!*buf) {
+    GST_ERROR_OBJECT (mmssrc, "Failed to allocate %u bytes", blocksize);
+    return GST_FLOW_ERROR;
+  }
 
   data = GST_BUFFER_DATA (*buf);
   GST_BUFFER_SIZE (*buf) = 0;
@@ -398,10 +395,8 @@ gst_mms_get_size (GstBaseSrc * src, guint64 * size)
 static gboolean
 gst_mms_start (GstBaseSrc * bsrc)
 {
-  GstMMS *mms;
+  GstMMS *mms = GST_MMS (bsrc);
   guint bandwidth_avail;
-
-  mms = GST_MMS (bsrc);
 
   if (!mms->uri_name || *mms->uri_name == '\0')
     goto no_uri;
@@ -471,9 +466,8 @@ no_uri:
 static gboolean
 gst_mms_stop (GstBaseSrc * bsrc)
 {
-  GstMMS *mms;
+  GstMMS *mms = GST_MMS (bsrc);
 
-  mms = GST_MMS (bsrc);
   if (mms->connection != NULL) {
     /* Check if the connection is still pristine, that is if no more then
        just the mmslib cached asf header has been read. If it is still pristine
@@ -494,20 +488,18 @@ static void
 gst_mms_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMMS *mmssrc;
-
-  mmssrc = GST_MMS (object);
+  GstMMS *mmssrc = GST_MMS (object);
 
   GST_OBJECT_LOCK (mmssrc);
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       if (mmssrc->uri_name) {
         g_free (mmssrc->uri_name);
         mmssrc->uri_name = NULL;
       }
       mmssrc->uri_name = g_value_dup_string (value);
       break;
-    case ARG_CONNECTION_SPEED:
+    case PROP_CONNECTION_SPEED:
       mmssrc->connection_speed = g_value_get_uint (value) * 1000;
       break;
     default:
@@ -521,17 +513,15 @@ static void
 gst_mms_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstMMS *mmssrc;
-
-  mmssrc = GST_MMS (object);
+  GstMMS *mmssrc = GST_MMS (object);
 
   GST_OBJECT_LOCK (mmssrc);
   switch (prop_id) {
-    case ARG_LOCATION:
+    case PROP_LOCATION:
       if (mmssrc->uri_name)
         g_value_set_string (value, mmssrc->uri_name);
       break;
-    case ARG_CONNECTION_SPEED:
+    case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, mmssrc->connection_speed / 1000);
       break;
     default:
@@ -581,7 +571,8 @@ gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   GstMMS *src = GST_MMS (handler);
 
   protocol = gst_uri_get_protocol (uri);
-  if ((strcmp (protocol, "mms") != 0) && (strcmp (protocol, "mmsh") != 0)) {
+  if ((strcmp (protocol, "mms") != 0) && (strcmp (protocol, "mmsh") != 0) &&
+      (strcmp (protocol, "mmst") != 0) && (strcmp (protocol, "mmsu") != 0)) {
     g_free (protocol);
     return FALSE;
   }
