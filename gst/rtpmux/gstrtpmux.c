@@ -56,15 +56,6 @@ enum
 #define DEFAULT_SEQNUM_OFFSET    -1
 #define DEFAULT_SSRC             -1
 
-typedef struct
-{
-  gboolean have_clock_base;
-  guint clock_base;
-
-  GstCaps *out_caps;
-  GstSegment segment;
-} GstRTPMuxPadPrivate;
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,

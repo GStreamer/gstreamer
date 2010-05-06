@@ -70,6 +70,20 @@ struct _GstRTPMuxClass
     gboolean (*sink_event_func) (GstPad * pad, GstEvent * event);
 };
 
+
+typedef struct
+{
+  gboolean have_clock_base;
+  guint clock_base;
+
+  GstCaps *out_caps;
+
+  GstSegment segment;
+
+  gboolean priority;
+} GstRTPMuxPadPrivate;
+
+
 GType gst_rtp_mux_get_type (void);
 gboolean gst_rtp_mux_plugin_init (GstPlugin * plugin);
 
