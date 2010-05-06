@@ -1677,11 +1677,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   /* FIXME, should not be called with NULL */
   if (chain != NULL) {
-    gint bitrate;
+    gint bitrate, idx_bitrate;
 
     GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
 
-    bitrate = 0;
+    bitrate = idx_bitrate = 0;
 
     /* first add the pads */
     for (i = 0; i < chain->streams->len; i++) {
@@ -1689,6 +1689,9 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       GstStructure *structure;
 
       pad = g_array_index (chain->streams, GstOggPad *, i);
+
+      if (pad->map.idx_bitrate)
+        idx_bitrate = MAX (idx_bitrate, pad->map.idx_bitrate);
 
       bitrate += pad->map.bitrate;
 
@@ -1714,7 +1717,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
       pad->added = TRUE;
     }
-    ogg->bitrate = bitrate;
+    /* prefer the index bitrate over the ones encoded in the streams */
+    ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);
   }
 
   /* after adding the new pads, remove the old pads */

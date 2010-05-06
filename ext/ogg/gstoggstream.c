@@ -922,6 +922,26 @@ gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
         G_GUINT64_FORMAT, n_keypoints, isize);
   }
   pad->n_index = isize;
+  /* try to use the index to estimate the bitrate */
+  if (isize > 2) {
+    guint64 so, eo, st, et, b, t;
+
+    /* get start and end offset and timestamps */
+    so = pad->index[0].offset;
+    st = pad->index[0].timestamp;
+    eo = pad->index[isize - 1].offset;
+    et = pad->index[isize - 1].timestamp;
+
+    b = eo - so;
+    t = et - st;
+
+    GST_DEBUG ("bytes/time %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT, b, t);
+
+    /* this is the total stream bitrate according to this index */
+    pad->idx_bitrate = gst_util_uint64_scale (8 * b, pad->kp_denom, t);
+
+    GST_DEBUG ("bitrate %" G_GUINT64_FORMAT, pad->idx_bitrate);
+  }
 
   return TRUE;
 }

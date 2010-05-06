@@ -89,6 +89,7 @@ struct _GstOggStream
   guint n_index;
   GstOggIndex *index;
   guint64 kp_denom;
+  guint64 idx_bitrate;
 };
 
 
