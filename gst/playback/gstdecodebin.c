@@ -631,23 +631,21 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
 
       /* we only care about the sink templates */
       if (templ->direction == GST_PAD_SINK) {
-        GstCaps *intersect;
+        gboolean can_intersect;
         GstCaps *tmpl_caps;
 
         /* try to intersect the caps with the caps of the template */
         tmpl_caps = gst_static_caps_get (&templ->static_caps);
 
-        intersect = gst_caps_intersect (caps, tmpl_caps);
+        can_intersect = gst_caps_can_intersect (caps, tmpl_caps);
         gst_caps_unref (tmpl_caps);
 
         /* check if the intersection is empty */
-        if (!gst_caps_is_empty (intersect)) {
+        if (can_intersect) {
           /* non empty intersection, we can use this element */
           to_try = g_list_prepend (to_try, factory);
-          gst_caps_unref (intersect);
           break;
         }
-        gst_caps_unref (intersect);
       }
     }
   }
