@@ -427,7 +427,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   ctx->in = *in;
   ctx->out = *out;
 
-  /* Don't dither or apply noise shaping if our depth is bigger than 20 bits
+  /* Don't dither or apply noise shaping if target depth is bigger than 20 bits
    * as DA converters only can do a SNR up to 20 bits in reality.
    * Also don't dither or apply noise shaping if target depth is larger than
    * source depth. */
