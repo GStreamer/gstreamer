@@ -45,11 +45,7 @@
  * @short_description: common RTSP defines
  * @see_also: gstrtspurl, gstrtspconnection
  *  
- * <refsect2>
- * <para>
  * Provides common defines for the RTSP library. 
- * </para>
- * </refsect2>
  *  
  * Last reviewed on 2007-07-24 (0.10.14)
  */

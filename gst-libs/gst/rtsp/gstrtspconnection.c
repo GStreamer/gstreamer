@@ -45,12 +45,8 @@
  * @short_description: manage RTSP connections
  * @see_also: gstrtspurl
  *  
- * <refsect2>
- * <para>
  * This object manages the RTSP connection to the server. It provides function
  * to receive and send bytes and messages.
- * </para>
- * </refsect2>
  *  
  * Last reviewed on 2007-07-24 (0.10.14)
  */

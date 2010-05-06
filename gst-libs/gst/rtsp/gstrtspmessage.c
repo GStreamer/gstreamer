@@ -46,11 +46,7 @@
  * @short_description: RTSP messages
  * @see_also: gstrtspconnection
  *  
- * <refsect2>
- * <para>
  * Provides methods for creating and parsing request, response and data messages.
- * </para>
- * </refsect2>
  *  
  * Last reviewed on 2007-07-25 (0.10.14)
  */

@@ -44,11 +44,7 @@
  * SECTION:gstrtspurl
  * @short_description: handling RTSP urls
  *  
- * <refsect2>
- * <para>
  * Provides helper functions to handle RTSP urls.
- * </para>
- * </refsect2>
  *  
  * Last reviewed on 2007-07-25 (0.10.14)
  */

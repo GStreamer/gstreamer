@@ -45,11 +45,7 @@
  * SECTION:gstrtsptransport
  * @short_description: dealing with RTSP transports
  *  
- * <refsect2>
- * <para>
  * Provides helper functions to deal with RTSP transport strings.
- * </para>
- * </refsect2>
  *  
  * Last reviewed on 2007-07-25 (0.10.14)
  */
