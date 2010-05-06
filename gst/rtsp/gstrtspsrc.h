@@ -130,6 +130,10 @@ struct _GstRTSPStream {
   guint         as_bandwidth;
   guint         rs_bandwidth;
   guint         rr_bandwidth;
+
+  /* destination */
+  gchar        *destination;
+  guint         ttl;
 };
 
 /**

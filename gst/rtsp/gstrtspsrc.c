@@ -838,7 +838,10 @@ gst_rtspsrc_do_stream_connection (GstRTSPSrc * src, GstRTSPStream * stream,
   else
     return;
 
-  /* FIXME check for multicast */
+  /* save address, FIXME, check for multicast */
+  g_free (stream->destination);
+  stream->destination = g_strdup (conn->address);
+  stream->ttl = conn->ttl;
 }
 
 /* Go over the connections for a stream.
@@ -985,6 +988,7 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
   if (stream->caps)
     gst_caps_unref (stream->caps);
 
+  g_free (stream->destination);
   g_free (stream->control_url);
   g_free (stream->setup_url);
 
@@ -2387,8 +2391,10 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
   gst_rtspsrc_stream_free_udp (stream);
 
   /* we need a destination now */
-  if (!(destination = transport->destination))
-    goto no_destination;
+  if (!(destination = transport->destination)) {
+    if (!(destination = stream->destination))
+      goto no_destination;
+  }
 
   min = transport->port.min;
   max = transport->port.max;
@@ -2509,13 +2515,18 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   gint rtp_port, rtcp_port, sockfd = -1;
   const gchar *destination;
   gchar *uri, *name;
+  guint ttl = 0;
 
   /* get host and port */
   if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     rtp_port = transport->port.min;
     rtcp_port = transport->port.max;
     /* multicast destination */
-    destination = transport->destination;
+    if (!(destination = transport->destination))
+      destination = stream->destination;
+    /* get ttl */
+    if (!(ttl = transport->ttl))
+      ttl = stream->ttl;
   } else {
     rtp_port = transport->server_port.min;
     rtcp_port = transport->server_port.max;
@@ -2540,7 +2551,10 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     if (stream->udpsink[0] == NULL)
       goto no_sink_element;
 
+    /* don't join multicast group, we will have the source socket do that */
     g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE, NULL);
+    if (ttl > 0)
+      g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
     g_object_set (G_OBJECT (stream->udpsink[0]), "loop", FALSE, NULL);
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[0]), "sync", FALSE, "async", FALSE,
@@ -2594,7 +2608,10 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     if (stream->udpsink[1] == NULL)
       goto no_sink_element;
 
+    /* don't join multicast group, we will have the source socket do that */
     g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE, NULL);
+    if (ttl > 0)
+      g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
     g_object_set (G_OBJECT (stream->udpsink[1]), "loop", FALSE, NULL);
     /* no sync needed */
     g_object_set (G_OBJECT (stream->udpsink[1]), "sync", FALSE, NULL);
