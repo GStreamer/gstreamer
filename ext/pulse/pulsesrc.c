@@ -884,23 +884,17 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
-    GstCaps *icaps;
-
     /* get intersection */
-    icaps = gst_caps_intersect (thiscaps, peercaps);
-    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
+    caps = gst_caps_intersect (thiscaps, peercaps);
+    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, caps);
     gst_caps_unref (thiscaps);
     gst_caps_unref (peercaps);
-    if (icaps) {
-      /* take first (and best, since they are sorted) possibility */
-      caps = gst_caps_copy_nth (icaps, 0);
-      gst_caps_unref (icaps);
-    }
   } else {
     /* no peer, work with our own caps then */
     caps = thiscaps;
   }
   if (caps) {
+    /* take first (and best, since they are sorted) possibility */
     caps = gst_caps_make_writable (caps);
     gst_caps_truncate (caps);
 
