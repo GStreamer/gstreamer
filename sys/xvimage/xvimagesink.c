@@ -2039,14 +2039,9 @@ gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
     GstXvImageFormat *format = list->data;
 
     if (format) {
-      GstCaps *icaps = NULL;
-
-      icaps = gst_caps_intersect (caps, format->caps);
-      if (!gst_caps_is_empty (icaps)) {
-        gst_caps_unref (icaps);
+      if (gst_caps_can_intersect (caps, format->caps)) {
         return format->format;
       }
-      gst_caps_unref (icaps);
     }
     list = g_list_next (list);
   }
@@ -2074,7 +2069,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
   GstStructure *structure;
-  GstCaps *intersection;
   guint32 im_format = 0;
   gboolean ret;
   gint video_width, video_height;
@@ -2093,13 +2087,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
 
-  intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
-  GST_DEBUG_OBJECT (xvimagesink, "intersection returned %" GST_PTR_FORMAT,
-      intersection);
-  if (gst_caps_is_empty (intersection))
+  if (!gst_caps_intersect (xvimagesink->xcontext->caps, caps))
     goto incompatible_caps;
-
-  gst_caps_unref (intersection);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width", &video_width);
@@ -2242,7 +2231,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 incompatible_caps:
   {
     GST_ERROR_OBJECT (xvimagesink, "caps incompatible");
-    gst_caps_unref (intersection);
     return FALSE;
   }
 incomplete_caps:

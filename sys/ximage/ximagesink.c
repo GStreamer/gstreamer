@@ -1460,7 +1460,6 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstXImageSink *ximagesink;
   gboolean ret = TRUE;
   GstStructure *structure;
-  GstCaps *intersection;
   const GValue *par;
   gint new_width, new_height;
   const GValue *fps;
@@ -1475,15 +1474,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
 
   /* We intersect those caps with our template to make sure they are correct */
-  intersection = gst_caps_intersect (ximagesink->xcontext->caps, caps);
-  GST_DEBUG_OBJECT (ximagesink, "intersection returned %" GST_PTR_FORMAT,
-      intersection);
-  if (gst_caps_is_empty (intersection)) {
-    gst_caps_unref (intersection);
-    return FALSE;
-  }
-
-  gst_caps_unref (intersection);
+  if (!gst_caps_can_intersect (ximagesink->xcontext->caps, caps))
+    goto incompatible_caps;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -1554,6 +1546,11 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 
   /* ERRORS */
+incompatible_caps:
+  {
+    GST_ERROR_OBJECT (ximagesink, "caps incompatible");
+    return FALSE;
+  }
 wrong_aspect:
   {
     GST_INFO_OBJECT (ximagesink, "pixel aspect ratio does not match");
