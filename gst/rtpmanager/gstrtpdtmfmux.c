@@ -80,10 +80,19 @@ enum
   LAST_SIGNAL
 };
 
+
+static GstStaticPadTemplate priority_sink_factory =
+GST_STATIC_PAD_TEMPLATE ("priority_sink_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("application/x-rtp"));
+
 static guint gst_rtpdtmfmux_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_rtp_dtmf_mux_dispose (GObject * object);
 
+static GstPad *gst_rtp_dtmf_mux_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_dtmf_mux_release_pad (GstElement * element, GstPad * pad);
 
 static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event);
@@ -100,6 +109,9 @@ static void
 gst_rtp_dtmf_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&priority_sink_factory));
 
   gst_element_class_set_details_simple (element_class, "RTP muxer",
       "Codec/Muxer",
@@ -129,6 +141,8 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_dispose);
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_release_pad);
   gstrtpmux_class->chain_func = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_chain);
@@ -167,9 +181,7 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
     GST_OBJECT_UNLOCK (mux);
-  }
-
-  else {
+  } else {
     GST_OBJECT_UNLOCK (mux);
     if (parent_class->chain_func)
       ret = parent_class->chain_func (pad, buffer);
@@ -294,6 +306,30 @@ gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (mux);
   return ret;
+}
+
+static GstPad *
+gst_rtp_dtmf_mux_request_new_pad (GstElement * element, GstPadTemplate * templ,
+    const gchar * name)
+{
+  GstPad *pad;
+
+  pad = GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, request_new_pad,
+      (element, templ, name), NULL);
+
+  if (pad) {
+    GstRTPMuxPadPrivate *padpriv;
+
+    GST_OBJECT_LOCK (element);
+    padpriv = gst_pad_get_element_private (pad);
+
+    if (gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+            "priority_sink_%d") == gst_pad_get_pad_template (pad))
+      padpriv->priority = TRUE;
+    GST_OBJECT_UNLOCK (element);
+  }
+
+  return pad;
 }
 
 static void
