@@ -1230,7 +1230,7 @@ gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
  * Discovery methods
  *****/
 
-static gboolean are_raw_caps (GstDecodeBin * dbin, GstCaps * caps);
+static gboolean are_final_caps (GstDecodeBin * dbin, GstCaps * caps);
 static gboolean is_demuxer_element (GstElement * srcelement);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
@@ -1315,7 +1315,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       &apcontinue);
 
   /* 1.a if autoplug-continue is FALSE or caps is a raw format, goto pad_is_final */
-  if ((!apcontinue) || are_raw_caps (dbin, caps))
+  if ((!apcontinue) || are_final_caps (dbin, caps))
     goto expose_pad;
 
   /* 1.b when the caps are not fixed yet, we can't be sure what element to
@@ -2019,13 +2019,13 @@ is_demuxer_element (GstElement * srcelement)
   return TRUE;
 }
 
-/* Returns TRUE if the caps are raw, or if they are compatible with the caps 
- * specified in the 'caps' property 
+/* Returns TRUE if the caps are compatible with the caps specified in the 'caps'
+ * property (which by default are the raw caps)
  * 
  * The decodebin_lock should be taken !
  */
 static gboolean
-are_raw_caps (GstDecodeBin * dbin, GstCaps * caps)
+are_final_caps (GstDecodeBin * dbin, GstCaps * caps)
 {
   gboolean res;
 
