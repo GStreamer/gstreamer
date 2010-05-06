@@ -866,8 +866,10 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
   gint event, len;
 
   /* Allocate an output buffer if there isn't a pending one */
-  if (src->alloc_buf == NULL)
+  if (src->alloc_buf == NULL) {
     src->alloc_buf = gst_buffer_new_and_alloc (DVD_VIDEO_LB_LEN);
+    gst_buffer_set_caps (src->alloc_buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
+  }
 
   data = GST_BUFFER_DATA (src->alloc_buf);
   len = DVD_VIDEO_LB_LEN;
