@@ -4307,6 +4307,8 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
 {
   GstPad *peer;
   GstFlowReturn ret;
+  GstCaps *caps;
+  gboolean caps_changed;
 
   GST_OBJECT_LOCK (pad);
 
@@ -4337,10 +4339,24 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
 
+  /* Before pushing the buffer to the peer pad, ensure that caps
+   * are set on this pad */
+  caps = gst_pad_data_get_caps (is_buffer, data);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
+
   /* take ref to peer pad before releasing the lock */
   gst_object_ref (peer);
 
   GST_OBJECT_UNLOCK (pad);
+
+  /* we got a new datatype from the pad, it had better handle it */
+  if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG_OBJECT (pad,
+        "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
+        GST_PAD_CAPS (pad), caps, caps);
+    if (G_UNLIKELY (!gst_pad_set_caps (pad, caps)))
+      goto not_negotiated;
+  }
 
   ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
 
@@ -4402,6 +4418,14 @@ not_linked:
         "pushing, but it was not linked");
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
+  }
+not_negotiated:
+  {
+    gst_pad_data_unref (is_buffer, data);
+    gst_object_unref (peer);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "element pushed data then refused to accept the caps");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
