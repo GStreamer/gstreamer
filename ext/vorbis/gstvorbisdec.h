@@ -75,6 +75,8 @@ struct _GstVorbisDec {
 
   GList            *pendingevents;
   GstTagList       *taglist;
+  
+  CopySampleFunc    copy_samples;
 };
 
 struct _GstVorbisDecClass {

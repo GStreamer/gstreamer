@@ -588,10 +588,17 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       s = gst_caps_get_structure (caps, 0);
       /* template ensures 16 or 32 */
       gst_structure_get_int (s, "width", &width);
+
+      GST_INFO_OBJECT (vd, "using %s with %d channels and %d bit audio depth",
+          gst_structure_get_name (s), vd->vi.channels, width);
     }
     gst_caps_unref (caps);
   }
   vd->width = width >> 3;
+
+  /* select a copy_samples function, this way we can have specialized versions
+   * for mono/stereo and avoid the depth switch in tremor case */
+  vd->copy_samples = get_copy_sample_func (vd->vi.channels, vd->width);
 
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (vd->srcpad));
   gst_caps_set_simple (caps, "rate", G_TYPE_INT, vd->vi.rate,
@@ -881,8 +888,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     goto wrong_samples;
 
   /* copy samples in buffer */
-  copy_samples ((vorbis_sample_t *) GST_BUFFER_DATA (out), pcm, sample_count,
-      vd->vi.channels, vd->width);
+  vd->copy_samples ((vorbis_sample_t *) GST_BUFFER_DATA (out), pcm,
+      sample_count, vd->vi.channels, vd->width);
 
   GST_LOG_OBJECT (vd, "setting output size to %d", size);
   GST_BUFFER_SIZE (out) = size;
