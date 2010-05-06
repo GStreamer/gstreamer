@@ -45,6 +45,7 @@ struct _GstCapsSetter
 {
   GstBaseTransform parent;
 
+  /* < private > */
   /* properties */
   GstCaps *caps;
   gboolean join;

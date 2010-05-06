@@ -133,30 +133,28 @@ gst_caps_setter_base_init (gpointer g_class)
 static void
 gst_caps_setter_class_init (GstCapsSetterClass * g_class)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
 
   GST_DEBUG_CATEGORY_INIT (caps_setter_debug, "capssetter", 0, "capssetter");
 
   gobject_class->set_property = gst_caps_setter_set_property;
   gobject_class->get_property = gst_caps_setter_get_property;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_caps_setter_finalize);
+  gobject_class->finalize = gst_caps_setter_finalize;
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Merge caps",
           "Merge these caps (thereby overwriting) in the stream",
-          GST_TYPE_CAPS, G_PARAM_READWRITE));
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_JOIN,
       g_param_spec_boolean ("join", "Join",
           "Match incoming caps' mime-type to mime-type of provided caps",
-          DEFAULT_JOIN, G_PARAM_READWRITE));
+          DEFAULT_JOIN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_REPLACE,
       g_param_spec_boolean ("replace", "Replace",
-          "Drop fields of incoming caps", DEFAULT_REPLACE, G_PARAM_READWRITE));
+          "Drop fields of incoming caps", DEFAULT_REPLACE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_caps_setter_transform_size);
@@ -198,13 +196,11 @@ static GstCaps *
 gst_caps_setter_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstCapsSetter *filter;
+  GstCapsSetter *filter = GST_CAPS_SETTER (trans);
   GstCaps *ret, *filter_caps;
   GstStructure *structure, *merge;
   const gchar *name;
   gint i, j;
-
-  filter = GST_CAPS_SETTER (trans);
 
   GST_DEBUG_OBJECT (trans, "receiving caps: %" GST_PTR_FORMAT, caps);
 
@@ -265,10 +261,7 @@ static void
 gst_caps_setter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCapsSetter *filter;
-
-  g_return_if_fail (GST_IS_CAPS_SETTER (object));
-  filter = GST_CAPS_SETTER (object);
+  GstCapsSetter *filter = GST_CAPS_SETTER (object);
 
   switch (prop_id) {
     case PROP_CAPS:{
@@ -325,10 +318,7 @@ static void
 gst_caps_setter_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstCapsSetter *filter;
-
-  g_return_if_fail (GST_IS_CAPS_SETTER (object));
-  filter = GST_CAPS_SETTER (object);
+  GstCapsSetter *filter = GST_CAPS_SETTER (object);
 
   switch (prop_id) {
     case PROP_CAPS:
