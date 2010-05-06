@@ -27,18 +27,19 @@
 #include <gst/profile/gstprofile.h>
 
 static GstEncodingProfile *
-make_encoding_profile (gchar * audio, gchar * video, gchar * container)
+make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction, gchar * container)
 {
   GstEncodingProfile *profile;
   GstStreamEncodingProfile *stream;
 
   profile = gst_encoding_profile_new ("ges-test4",
-      gst_caps_new_simple (container, NULL), NULL, FALSE);
+      gst_caps_from_string (container), NULL, FALSE);
   stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
       gst_caps_from_string (audio), NULL, NULL, 0);
   gst_encoding_profile_add_stream (profile, stream);
   stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_VIDEO,
-      gst_caps_from_string (video), NULL, NULL, 0);
+      gst_caps_from_string (video), NULL, 
+					    gst_caps_from_string(video_restriction), 0);
   gst_encoding_profile_add_stream (profile, stream);
   return profile;
 }
@@ -120,6 +121,7 @@ main (int argc, gchar ** argv)
   gchar *container = "application/ogg";
   gchar *audio = "audio/x-vorbis";
   gchar *video = "video/x-theora";
+  gchar *video_restriction = "ANY";
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   GOptionEntry options[] = {
@@ -134,7 +136,9 @@ main (int argc, gchar ** argv)
     {"vformat", 'v', 0, G_OPTION_ARG_STRING, &video,
         "Video format", "<GstCaps>"},
     {"aformat", 'a', 0, G_OPTION_ARG_STRING, &audio,
-        "Audio format", "<GstCaps>"},
+     "Audio format", "<GstCaps>"},
+    {"vrestriction", 'x', 0, G_OPTION_ARG_STRING, &video_restriction,
+     "Video restriction", "<GstCaps>"},
     {NULL}
   };
   GOptionContext *ctx;
@@ -179,7 +183,7 @@ main (int argc, gchar ** argv)
   /* Setup profile/encoding if needed */
   if (render || smartrender) {
     GstEncodingProfile *prof;
-    prof = make_encoding_profile (audio, video, container);
+    prof = make_encoding_profile (audio, video, video_restriction, container);
 
     if (!prof ||
         !ges_timeline_pipeline_set_render_settings (pipeline, outputuri, prof)
