@@ -48,6 +48,8 @@ enum
 #define DEFAULT_INTERNAL_SOURCE      NULL
 #define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
 #define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_RTCP_RR_BANDWIDTH    -1
+#define DEFAULT_RTCP_RS_BANDWIDTH    -1
 #define DEFAULT_RTCP_MTU             1400
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_NUM_SOURCES          0
@@ -61,6 +63,8 @@ enum
   PROP_INTERNAL_SOURCE,
   PROP_BANDWIDTH,
   PROP_RTCP_FRACTION,
+  PROP_RTCP_RR_BANDWIDTH,
+  PROP_RTCP_RS_BANDWIDTH,
   PROP_RTCP_MTU,
   PROP_SDES,
   PROP_NUM_SOURCES,
@@ -256,6 +260,16 @@ rtp_session_class_init (RTPSessionClass * klass)
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
+      g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
+          "The RTCP bandwidth used for receivers in bytes per second (-1 = default)",
+          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
+      g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
+          "The RTCP bandwidth used for senders in bytes per second (-1 = default)",
+          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class, PROP_RTCP_MTU,
       g_param_spec_uint ("rtcp-mtu", "RTCP MTU",
           "The maximum size of the RTCP packets",
@@ -339,6 +353,12 @@ rtp_session_init (RTPSession * sess)
   sess->cnames = g_hash_table_new_full (NULL, NULL, g_free, NULL);
 
   rtp_stats_init_defaults (&sess->stats);
+
+  sess->recalc_bandwidth = TRUE;
+  sess->bandwidth = DEFAULT_BANDWIDTH;
+  sess->rtcp_bandwidth = DEFAULT_RTCP_FRACTION;
+  sess->rtcp_rr_bandwidth = DEFAULT_RTCP_RR_BANDWIDTH;
+  sess->rtcp_rs_bandwidth = DEFAULT_RTCP_RS_BANDWIDTH;
 
   /* create an active SSRC for this session manager */
   sess->source = rtp_session_create_source (sess);
@@ -427,10 +447,20 @@ rtp_session_set_property (GObject * object, guint prop_id,
       rtp_session_set_internal_ssrc (sess, g_value_get_uint (value));
       break;
     case PROP_BANDWIDTH:
-      rtp_session_set_bandwidth (sess, g_value_get_double (value));
+      sess->bandwidth = g_value_get_double (value);
+      sess->recalc_bandwidth = TRUE;
       break;
     case PROP_RTCP_FRACTION:
-      rtp_session_set_rtcp_fraction (sess, g_value_get_double (value));
+      sess->rtcp_bandwidth = g_value_get_double (value);
+      sess->recalc_bandwidth = TRUE;
+      break;
+    case PROP_RTCP_RR_BANDWIDTH:
+      sess->rtcp_rr_bandwidth = g_value_get_int (value);
+      sess->recalc_bandwidth = TRUE;
+      break;
+    case PROP_RTCP_RS_BANDWIDTH:
+      sess->rtcp_rs_bandwidth = g_value_get_int (value);
+      sess->recalc_bandwidth = TRUE;
       break;
     case PROP_RTCP_MTU:
       sess->mtu = g_value_get_uint (value);
@@ -463,10 +493,16 @@ rtp_session_get_property (GObject * object, guint prop_id,
       g_value_take_object (value, rtp_session_get_internal_source (sess));
       break;
     case PROP_BANDWIDTH:
-      g_value_set_double (value, rtp_session_get_bandwidth (sess));
+      g_value_set_double (value, sess->bandwidth);
       break;
     case PROP_RTCP_FRACTION:
-      g_value_set_double (value, rtp_session_get_rtcp_fraction (sess));
+      g_value_set_double (value, sess->rtcp_bandwidth);
+      break;
+    case PROP_RTCP_RR_BANDWIDTH:
+      g_value_set_int (value, sess->rtcp_rr_bandwidth);
+      break;
+    case PROP_RTCP_RS_BANDWIDTH:
+      g_value_set_int (value, sess->rtcp_rs_bandwidth);
       break;
     case PROP_RTCP_MTU:
       g_value_set_uint (value, sess->mtu);
@@ -795,7 +831,7 @@ rtp_session_get_bandwidth (RTPSession * sess)
  * @sess: an #RTPSession
  * @bandwidth: the RTCP bandwidth
  *
- * Set the bandwidth that should be used for RTCP
+ * Set the bandwidth in bytes per second that should be used for RTCP
  * messages.
  */
 void
@@ -2032,6 +2068,13 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
 {
   GstClockTime result;
 
+  if (sess->recalc_bandwidth) {
+    /* recalculate bandwidth when it changed */
+    rtp_stats_set_bandwidths (&sess->stats, sess->bandwidth,
+        sess->rtcp_bandwidth, sess->rtcp_rs_bandwidth, sess->rtcp_rr_bandwidth);
+    sess->recalc_bandwidth = FALSE;
+  }
+
   if (sess->source->received_bye) {
     result = rtp_stats_calculate_bye_interval (&sess->stats);
   } else {
@@ -2042,7 +2085,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
   GST_DEBUG ("next deterministic interval: %" GST_TIME_FORMAT ", first %d",
       GST_TIME_ARGS (result), first);
 
-  if (!deterministic)
+  if (!deterministic && result != GST_CLOCK_TIME_NONE)
     result = rtp_stats_add_rtcp_jitter (&sess->stats, result);
 
   GST_DEBUG ("next interval: %" GST_TIME_FORMAT, GST_TIME_ARGS (result));

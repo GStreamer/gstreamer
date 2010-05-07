@@ -163,6 +163,13 @@ struct _RTPSession {
   guint         header_len;
   guint         mtu;
 
+  /* bandwidths */
+  gboolean     recalc_bandwidth;
+  guint        bandwidth;
+  guint        rtcp_bandwidth;
+  guint        rtcp_rr_bandwidth;
+  guint        rtcp_rs_bandwidth;
+
   RTPSource    *source;
 
   /* for sender/receiver counting */
