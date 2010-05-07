@@ -479,6 +479,20 @@ fps_display_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-freeze</FILE>
+<TITLE>freeze</TITLE>
+GstFreeze
+<SUBSECTION Standard>
+GstFreezeClass
+GST_FREEZE
+GST_FREEZE_CLASS
+GST_IS_FREEZE
+GST_IS_FREEZE_CLASS
+GST_TYPE_FREEZE
+gst_freeze_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-imagefreeze</FILE>
 <TITLE>imagefreeze</TITLE>
 GstImageFreeze
