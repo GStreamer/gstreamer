@@ -217,6 +217,15 @@ gst_jif_mux_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static void
+gst_jif_mux_marker_free (GstJifMuxMarker * m)
+{
+  if (m->owned)
+    g_free ((gpointer) m->data);
+
+  g_slice_free (GstJifMuxMarker, m);
+}
+
+static void
 gst_jif_mux_reset (GstJifMux * self)
 {
   GList *node;
@@ -224,11 +233,7 @@ gst_jif_mux_reset (GstJifMux * self)
 
   for (node = self->priv->markers; node; node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
-
-    if (m->owned)
-      g_free ((gpointer) m->data);
-
-    g_slice_free (GstJifMuxMarker, m);
+    gst_jif_mux_marker_free (m);
   }
   g_list_free (self->priv->markers);
   self->priv->markers = NULL;
@@ -459,15 +464,22 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     memcpy (&data[29], xmp, size);
     m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
 
-    pos = file_hdr;
-    if (app1_exif)
-      pos = app1_exif;
-    else if (app0_jfif)
-      pos = app0_jfif;
-    pos = g_list_next (pos);
+    /* replace the old xmp marker and not add a new one */
+    if (app1_xmp) {
+      gst_jif_mux_marker_free ((GstJifMuxMarker *) app1_xmp->data);
+      app1_xmp->data = m;
+    } else {
 
-    self->priv->markers = g_list_insert_before (self->priv->markers, pos, m);
+      pos = file_hdr;
+      if (app1_exif)
+        pos = app1_exif;
+      else if (app0_jfif)
+        pos = app0_jfif;
+      pos = g_list_next (pos);
 
+      self->priv->markers = g_list_insert_before (self->priv->markers, pos, m);
+
+    }
     gst_buffer_unref (xmp_data);
     modified = TRUE;
   }
