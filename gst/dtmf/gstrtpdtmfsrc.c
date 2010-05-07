@@ -507,22 +507,6 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_rtp_dtmf_src_set_stream_lock (GstRTPDTMFSrc * dtmfsrc, gboolean lock)
-{
-  GstEvent *event;
-  GstStructure *structure;
-
-  structure = gst_structure_new ("stream-lock",
-      "lock", G_TYPE_BOOLEAN, lock, NULL);
-
-  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-  if (!gst_pad_push_event (GST_BASE_SRC_PAD (dtmfsrc), event)) {
-    GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
-  }
-
-}
-
-static void
 gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
@@ -688,9 +672,6 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
           gst_rtp_dtmf_prepare_timestamps (dtmfsrc);
 
-          /* Don't forget to get exclusive access to the stream */
-          gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
-
           dtmfsrc->payload = event->payload;
           event->payload = NULL;
           break;
@@ -803,9 +784,6 @@ send_last:
 
   /* This is the end of the event */
   if (dtmfsrc->last_packet == TRUE && dtmfsrc->redundancy_count == 0) {
-
-    /* Don't forget to release the stream lock */
-    gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
     g_slice_free (GstRTPDTMFPayload, dtmfsrc->payload);
     dtmfsrc->payload = NULL;

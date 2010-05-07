@@ -440,22 +440,6 @@ gst_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_dtmf_src_set_stream_lock (GstDTMFSrc * dtmfsrc, gboolean lock)
-{
-  GstPad *srcpad = GST_BASE_SRC_PAD (dtmfsrc);
-  GstEvent *event;
-  GstStructure *structure;
-
-  structure = gst_structure_new ("stream-lock",
-      "lock", G_TYPE_BOOLEAN, lock, NULL);
-
-  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-  if (!gst_pad_push_event (srcpad, event)) {
-    GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
-  }
-}
-
-static void
 gst_dtmf_prepare_timestamps (GstDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
@@ -638,9 +622,6 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         case DTMF_EVENT_TYPE_START:
           gst_dtmf_prepare_timestamps (dtmfsrc);
 
-          /* Don't forget to get exclusive access to the stream */
-          gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
-
           event->packet_count = 0;
           dtmfsrc->last_event = event;
           event = NULL;
@@ -673,8 +654,6 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
                 "Received two consecutive DTMF start events");
             break;
           case DTMF_EVENT_TYPE_STOP:
-            gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
-
             g_slice_free (GstDTMFSrcEvent, dtmfsrc->last_event);
             dtmfsrc->last_event = NULL;
             break;
@@ -747,7 +726,6 @@ paused:
   if (dtmfsrc->last_event) {
     GST_DEBUG_OBJECT (dtmfsrc, "Stopping current event");
     /* Don't forget to release the stream lock */
-    gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
     g_slice_free (GstDTMFSrcEvent, dtmfsrc->last_event);
     dtmfsrc->last_event = NULL;
   }
