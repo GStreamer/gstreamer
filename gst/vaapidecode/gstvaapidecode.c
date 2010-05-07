@@ -63,9 +63,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
-    "video/x-vaapi-surface, "
-    "width = (int) [ 1, MAX ], "
-    "height = (int) [ 1, MAX ]; ";
+    GST_VAAPI_SURFACE_CAPS;
 
 static GstStaticPadTemplate gst_vaapidecode_sink_factory =
     GST_STATIC_PAD_TEMPLATE(

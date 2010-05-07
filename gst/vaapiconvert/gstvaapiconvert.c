@@ -53,9 +53,7 @@ static const char gst_vaapiconvert_yuv_caps_str[] =
     "height = (int) [ 1, MAX ]; ";
 
 static const char gst_vaapiconvert_vaapi_caps_str[] =
-    "video/x-vaapi-surface, "
-    "width = (int) [ 1, MAX ], "
-    "height = (int) [ 1, MAX ]; ";
+    GST_VAAPI_SURFACE_CAPS;
 
 static GstStaticPadTemplate gst_vaapiconvert_sink_factory =
     GST_STATIC_PAD_TEMPLATE(

@@ -60,10 +60,7 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         "sink",
         GST_PAD_SINK,
         GST_PAD_ALWAYS,
-        GST_STATIC_CAPS(
-            "video/x-vaapi-surface, "
-            "width = (int) [ 1, MAX ], "
-            "height = (int) [ 1, MAX ]; "));
+        GST_STATIC_CAPS(GST_VAAPI_SURFACE_CAPS));
 
 static void gst_vaapisink_iface_init(GType type);
 
