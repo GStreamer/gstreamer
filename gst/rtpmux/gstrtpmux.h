@@ -66,8 +66,7 @@ struct _GstRTPMuxClass
 {
   GstElementClass parent_class;
 
-    GstFlowReturn (*chain_func) (GstPad * pad, GstBuffer * buffer);
-    gboolean (*sink_event_func) (GstPad * pad, GstEvent * event);
+  GstFlowReturn (*chain_func) (GstPad * pad, GstBuffer * buffer);
 };
 
 
