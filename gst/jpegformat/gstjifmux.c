@@ -586,6 +586,12 @@ gst_jif_mux_chain (GstPad * pad, GstBuffer * buf)
   guint8 *data = GST_BUFFER_DATA (buf);
   GstFlowReturn fret = GST_FLOW_OK;
 
+  if (GST_BUFFER_CAPS (buf) == NULL) {
+    GST_WARNING_OBJECT (self, "Rejecting buffer without caps");
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
   GST_MEMDUMP ("jpeg beg", data, 64);
   GST_MEMDUMP ("jpeg end", &data[GST_BUFFER_SIZE (buf) - 64], 64);
 
