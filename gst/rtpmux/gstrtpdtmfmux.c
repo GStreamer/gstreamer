@@ -278,14 +278,11 @@ static gboolean
 gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
 {
   GstRTPDTMFMux *mux;
-  GstEventType type;
   gboolean ret = FALSE;
-
-  type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   mux = (GstRTPDTMFMux *) gst_pad_get_parent (pad);
 
-  switch (type) {
+  switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
       ret = gst_rtp_dtmf_mux_handle_downstream_event (mux, pad, event);
       gst_event_unref (event);
