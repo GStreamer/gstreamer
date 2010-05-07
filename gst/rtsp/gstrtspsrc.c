@@ -2250,6 +2250,35 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     name = g_strdup_printf ("recv_rtcp_sink_%d", stream->id);
     stream->channelpad[1] = gst_element_get_request_pad (src->session, name);
     g_free (name);
+
+    /* now configure the bandwidth in the session */
+    if (g_signal_lookup ("get-internal-session",
+            G_OBJECT_TYPE (src->session)) != 0) {
+      GObject *rtpsession;
+
+      g_signal_emit_by_name (src->session, "get-internal-session", stream->id,
+          &rtpsession);
+      if (rtpsession) {
+        GST_INFO_OBJECT (src, "configure bandwidth in session %p", rtpsession);
+
+        if (stream->as_bandwidth != -1) {
+          GST_INFO_OBJECT (src, "setting AS: %f",
+              (gdouble) (stream->as_bandwidth * 1000));
+          g_object_set (rtpsession, "bandwidth",
+              (gdouble) (stream->as_bandwidth * 1000), NULL);
+        }
+        if (stream->rr_bandwidth != -1) {
+          GST_INFO_OBJECT (src, "setting RR: %u", stream->rr_bandwidth);
+          g_object_set (rtpsession, "rtcp-rr-bandwidth", stream->rr_bandwidth,
+              NULL);
+        }
+        if (stream->rs_bandwidth != -1) {
+          GST_INFO_OBJECT (src, "setting RS: %u", stream->rr_bandwidth);
+          g_object_set (rtpsession, "rtcp-rs-bandwidth", stream->rs_bandwidth,
+              NULL);
+        }
+      }
+    }
   }
 
 use_no_manager:
