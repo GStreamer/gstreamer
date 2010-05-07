@@ -1088,6 +1088,8 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
         MPLEX_LIBS="$MPLEX_LIBS -lmplex2 -lm"
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPLEX_LIBS"
+        OLD_LDFLAGS="$LDFLAGS"
+        LDFLAGS="$LDFLAGS $MPLEX_LDFLAGS"
         dnl older libmplex uses off_t SegmentSize (), which leads to fuzzy ABI;
         dnl don't want this here
         AC_MSG_CHECKING([for valid mplex objects])
@@ -1120,9 +1122,11 @@ main (int   argc,
           HAVE_MPLEX="yes"
           AC_SUBST(MPLEX_CFLAGS)
           AC_SUBST(MPLEX_LIBS)
+          AC_SUBST(MPLEX_LDFLAGS)
           AC_MSG_RESULT(yes)
         ], AC_MSG_RESULT(no))
         LIBS="$OLD_LIBS"
+        LDFLAGS="$OLD_LDFLAGS"
       ])
       CPPFLAGS="$OLD_CPPFLAGS"
       AC_LANG_C
