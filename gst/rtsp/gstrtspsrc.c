@@ -2398,6 +2398,20 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
 
   min = transport->port.min;
   max = transport->port.max;
+  /* some bad servers use the server_port attribute for multicast, try to handle
+   * those cases too here */
+  if (min == -1 && max == -1) {
+    GST_DEBUG_OBJECT (src, "no port attribute set, fallback to server_port");
+    min = transport->server_port.min;
+    max = transport->server_port.max;
+  }
+
+  GST_DEBUG_OBJECT (src, "have destination '%s' and ports (%d)-(%d)",
+      destination, min, max);
+
+  /* we really need ports now or we won't be able to receive anything at all */
+  if (min == -1 && max == -1)
+    goto no_ports;
 
   /* creating UDP source for RTP */
   if (min != -1) {
@@ -2440,6 +2454,11 @@ no_element:
 no_destination:
   {
     GST_DEBUG_OBJECT (src, "no destination found");
+    return FALSE;
+  }
+no_ports:
+  {
+    GST_DEBUG_OBJECT (src, "no ports found");
     return FALSE;
   }
 }
