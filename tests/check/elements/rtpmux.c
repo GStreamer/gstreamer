@@ -60,6 +60,14 @@ setcaps_func (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
+static gboolean
+event_func (GstPad * pad, GstEvent * event)
+{
+  gst_event_unref (event);
+
+  return TRUE;
+}
+
 static void
 test_basic (const gchar * elem_name, int count, check_cb cb)
 {
@@ -74,6 +82,7 @@ test_basic (const gchar * elem_name, int count, check_cb cb)
   GstCaps *src2caps = NULL;
   GstCaps *sinkcaps = NULL;
   GstCaps *caps;
+  GstEvent *newsegment;
   int i;
 
   rtpmux = gst_check_setup_element (elem_name);
@@ -92,6 +101,7 @@ test_basic (const gchar * elem_name, int count, check_cb cb)
   gst_pad_set_getcaps_function (src2, getcaps_func);
   gst_pad_set_getcaps_function (sink, getcaps_func);
   gst_pad_set_setcaps_function (sink, setcaps_func);
+  gst_pad_set_event_function (sink, event_func);
   g_object_set_data (G_OBJECT (src1), "caps", &src1caps);
   g_object_set_data (G_OBJECT (src2), "caps", &src2caps);
   g_object_set_data (G_OBJECT (sink), "caps", &sinkcaps);
@@ -130,8 +140,17 @@ test_basic (const gchar * elem_name, int count, check_cb cb)
       "ssrc", G_TYPE_UINT, 66, NULL);
   fail_unless (gst_pad_set_caps (src1, caps));
 
+  newsegment = gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME,
+      100000, -1, 0);
+  fail_unless (gst_pad_push_event (src1, newsegment));
+  newsegment = gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME,
+      50000, -1, 0);
+  fail_unless (gst_pad_push_event (src2, newsegment));
+
   for (i = 0; i < count; i++) {
     inbuf = gst_rtp_buffer_new_allocate (10, 0, 0);
+    GST_BUFFER_TIMESTAMP (inbuf) = i * 1000 + 100000;
+    GST_BUFFER_DURATION (inbuf) = 1000;
     gst_buffer_set_caps (inbuf, caps);
     gst_rtp_buffer_set_version (inbuf, 2);
     gst_rtp_buffer_set_payload_type (inbuf, 98);
@@ -139,6 +158,10 @@ test_basic (const gchar * elem_name, int count, check_cb cb)
     gst_rtp_buffer_set_timestamp (inbuf, 200 + i);
     gst_rtp_buffer_set_seq (inbuf, 2000 + i);
     fail_unless (gst_pad_push (src1, inbuf) == GST_FLOW_OK);
+
+    if (buffers)
+      fail_unless (GST_BUFFER_TIMESTAMP (buffers->data) == i * 1000, "%lld",
+          GST_BUFFER_TIMESTAMP (buffers->data));
 
     cb (src2, i);
 

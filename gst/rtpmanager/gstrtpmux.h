@@ -58,6 +58,8 @@ struct _GstRTPMux
   guint16 seqnum;               /* protected by object lock */
   guint ssrc;
   guint current_ssrc;
+
+  gboolean segment_pending;
 };
 
 struct _GstRTPMuxClass
