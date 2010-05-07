@@ -100,19 +100,19 @@ typedef struct {
  *
  * The Conference Total bandwidth modifier.
  */
-#define GST_SDP_BWTYPE_CT 		"CT"
+#define GST_SDP_BWTYPE_CT               "CT"
 /**
  * GST_SDP_BWTYPE_AS:
  *
  * The Application-Specific Maximum bandwidth modifier.
  */
-#define GST_SDP_BWTYPE_AS 		"AS"
+#define GST_SDP_BWTYPE_AS               "AS"
 /**
  * GST_SDP_BWTYPE_EXT_PREFIX:
  *
  * The extension prefix bandwidth modifier.
  */
-#define GST_SDP_BWTYPE_EXT_PREFIX 	"X-"
+#define GST_SDP_BWTYPE_EXT_PREFIX       "X-"
 
 /**
  * GST_SDP_BWTYPE_RS:
@@ -121,7 +121,7 @@ typedef struct {
  *
  * Since: 0.10.15
  */
-#define GST_SDP_BWTYPE_RS 		"RS"
+#define GST_SDP_BWTYPE_RS               "RS"
 /**
  * GST_SDP_BWTYPE_RR:
  *
@@ -129,7 +129,16 @@ typedef struct {
  *
  * Since: 0.10.15
  */
-#define GST_SDP_BWTYPE_RR 		"RR"
+#define GST_SDP_BWTYPE_RR               "RR"
+/**
+ * GST_SDP_BWTYPE_TIAS:
+ *
+ * Transport Independent Application Specific Maximum bandwidth (RFC 3890).
+ *
+ * Since: 0.10.30
+ */
+#define GST_SDP_BWTYPE_TIAS             "TIAS"
+
 
 /**
  * GstSDPBandwidth:
@@ -317,7 +326,7 @@ guint                   gst_sdp_message_bandwidths_len      (const GstSDPMessage
 const GstSDPBandwidth*  gst_sdp_message_get_bandwidth       (const GstSDPMessage *msg, guint idx);
 GstSDPResult            gst_sdp_message_add_bandwidth       (GstSDPMessage *msg, const gchar *bwtype,
                                                              guint bandwidth);
-/* t=<start-time> <stop-time> and 
+/* t=<start-time> <stop-time> and
  * r=<repeat interval> <active duration> <offsets from start-time> */
 guint                   gst_sdp_message_times_len           (const GstSDPMessage *msg);
 const GstSDPTime*       gst_sdp_message_get_time            (const GstSDPMessage *msg, guint idx);
@@ -332,7 +341,7 @@ GstSDPResult            gst_sdp_message_add_zone            (GstSDPMessage *msg,
 /* k=<method>[:<encryption key>] */
 const GstSDPKey*        gst_sdp_message_get_key             (const GstSDPMessage *msg);
 GstSDPResult            gst_sdp_message_set_key             (GstSDPMessage *msg, const gchar *type,
-		                                             const gchar *data);
+                                                             const gchar *data);
 /* a=... */
 guint                   gst_sdp_message_attributes_len      (const GstSDPMessage *msg);
 const GstSDPAttribute*  gst_sdp_message_get_attribute       (const GstSDPMessage *msg, guint idx);
@@ -388,12 +397,12 @@ GstSDPResult            gst_sdp_media_add_connection        (GstSDPMedia *media,
 guint                   gst_sdp_media_bandwidths_len        (const GstSDPMedia *media);
 const GstSDPBandwidth*  gst_sdp_media_get_bandwidth         (const GstSDPMedia *media, guint idx);
 GstSDPResult            gst_sdp_media_add_bandwidth         (GstSDPMedia *media, const gchar *bwtype,
-		                                             guint bandwidth);
+                                                             guint bandwidth);
 
 /* k=<method>:<encryption key> */
 const GstSDPKey*        gst_sdp_media_get_key               (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_key               (GstSDPMedia *media, const gchar *type,
-		                                             const gchar *data);
+                                                             const gchar *data);
 /* a=... */
 guint                   gst_sdp_media_attributes_len        (const GstSDPMedia *media);
 const GstSDPAttribute * gst_sdp_media_get_attribute         (const GstSDPMedia *media, guint idx);
