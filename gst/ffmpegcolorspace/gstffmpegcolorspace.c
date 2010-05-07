@@ -142,13 +142,12 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   s = gst_caps_get_structure (caps, 0);
   is_alpha = gst_ffmpegcsp_structure_is_alpha (s);
 
-  template = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
-  result = gst_caps_intersect (caps, template);
+  template = gst_pad_template_get_caps (srctempl);
+  result = gst_caps_copy (caps);
 
   /* Get all possible caps that we can transform to */
   tmp = gst_ffmpegcsp_caps_remove_format_info (caps);
   tmp2 = gst_caps_intersect (tmp, template);
-  gst_caps_unref (template);
   gst_caps_unref (tmp);
   tmp = tmp2;
 
