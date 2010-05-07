@@ -924,9 +924,13 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
        * container and we only need to add one pad. */
       if (find_stream (src, &stream->pt, (gpointer) find_stream_by_pt)) {
         stream->container = TRUE;
+        GST_DEBUG ("found another stream with pt %d, marking as container",
+            stream->pt);
       }
     }
   }
+  /* collect port number */
+  stream->port = gst_sdp_media_get_port (media);
 
   /* get control url to construct the setup url. The setup url is used to
    * configure the transport of the stream and is used to identity the stream in
@@ -935,6 +939,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
+  GST_DEBUG_OBJECT (src, " port: %d", stream->port);
   GST_DEBUG_OBJECT (src, " container: %d", stream->container);
   GST_DEBUG_OBJECT (src, " caps: %" GST_PTR_FORMAT, stream->caps);
   GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
@@ -2393,12 +2398,10 @@ gst_rtspsrc_get_transport_info (GstRTSPSrc * src, GstRTSPStream * stream,
       *max = transport->port.max;
       if (*min == -1 && *max == -1) {
         /* then try from SDP */
-      }
-      if (*min == -1 && *max == -1) {
-        /* some bad servers use the server_port attribute for multicast, try to handle
-         * those cases too here */
-        *min = transport->server_port.min;
-        *max = transport->server_port.max;
+        if (stream->port != 0) {
+          *min = stream->port;
+          *max = stream->port + 1;
+        }
       }
     }
 
@@ -2414,6 +2417,7 @@ gst_rtspsrc_get_transport_info (GstRTSPSrc * src, GstRTSPStream * stream,
         *destination = gst_rtsp_connection_get_ip (src->connection);
     }
     if (min && max) {
+      /* for unicast we only expect the ports here */
       *min = transport->server_port.min;
       *max = transport->server_port.max;
     }

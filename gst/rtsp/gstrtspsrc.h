@@ -117,6 +117,7 @@ struct _GstRTSPStream {
 
   /* state */
   gint          pt;
+  guint         port;
   gboolean      container;
   /* original control url */
   gchar        *control_url;
