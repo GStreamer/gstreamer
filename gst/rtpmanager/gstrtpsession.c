@@ -193,6 +193,8 @@ enum
 #define DEFAULT_NTP_NS_BASE          0
 #define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
 #define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_RTCP_RR_BANDWIDTH    -1
+#define DEFAULT_RTCP_RS_BANDWIDTH    -1
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
@@ -203,6 +205,8 @@ enum
   PROP_NTP_NS_BASE,
   PROP_BANDWIDTH,
   PROP_RTCP_FRACTION,
+  PROP_RTCP_RR_BANDWIDTH,
+  PROP_RTCP_RS_BANDWIDTH,
   PROP_SDES,
   PROP_NUM_SOURCES,
   PROP_NUM_ACTIVE_SOURCES,
@@ -530,13 +534,23 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
-          "The bandwidth of the session",
+          "The bandwidth of the session in bytes per second",
           0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
-          "The fraction of the bandwidth used for RTCP",
+          "The RTCP bandwidth of the session in bytes per second",
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
+      g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
+          "The RTCP bandwidth used for receivers in bytes per second (-1 = default)",
+          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
+      g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
+          "The RTCP bandwidth used for senders in bytes per second (-1 = default)",
+          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
@@ -652,10 +666,18 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (rtpsession);
       break;
     case PROP_BANDWIDTH:
-      rtp_session_set_bandwidth (priv->session, g_value_get_double (value));
+      g_object_set_property (G_OBJECT (priv->session), "bandwidth", value);
       break;
     case PROP_RTCP_FRACTION:
-      rtp_session_set_rtcp_fraction (priv->session, g_value_get_double (value));
+      g_object_set_property (G_OBJECT (priv->session), "rtcp-fraction", value);
+      break;
+    case PROP_RTCP_RR_BANDWIDTH:
+      g_object_set_property (G_OBJECT (priv->session), "rtcp-rr-bandwidth",
+          value);
+      break;
+    case PROP_RTCP_RS_BANDWIDTH:
+      g_object_set_property (G_OBJECT (priv->session), "rtcp-rs-bandwidth",
+          value);
       break;
     case PROP_SDES:
       rtp_session_set_sdes_struct (priv->session, g_value_get_boxed (value));
@@ -683,10 +705,18 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (rtpsession);
       break;
     case PROP_BANDWIDTH:
-      g_value_set_double (value, rtp_session_get_bandwidth (priv->session));
+      g_object_get_property (G_OBJECT (priv->session), "bandwidth", value);
       break;
     case PROP_RTCP_FRACTION:
-      g_value_set_double (value, rtp_session_get_rtcp_fraction (priv->session));
+      g_object_get_property (G_OBJECT (priv->session), "rtcp-fraction", value);
+      break;
+    case PROP_RTCP_RR_BANDWIDTH:
+      g_object_get_property (G_OBJECT (priv->session), "rtcp-rr-bandwidth",
+          value);
+      break;
+    case PROP_RTCP_RS_BANDWIDTH:
+      g_object_get_property (G_OBJECT (priv->session), "rtcp-rs-bandwidth",
+          value);
       break;
     case PROP_SDES:
       g_value_take_boxed (value, rtp_session_get_sdes_struct (priv->session));
