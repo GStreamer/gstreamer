@@ -336,10 +336,7 @@ static gboolean
 gst_jif_mux_mangle_markers (GstJifMux * self)
 {
   gboolean modified = FALSE;
-  const GstTagList *tagsetter_tags;
-  GstTagList *tags;
-  GstTagList *xmp_tags;
-  gboolean cleanup_tags = TRUE;
+  const GstTagList *tags;
   GstJifMuxMarker *m;
   GList *node, *file_hdr = NULL, *frame_hdr = NULL, *scan_hdr = NULL;
   GList *app0_jfif = NULL, *app1_exif = NULL, *app1_xmp = NULL, *com = NULL;
@@ -436,48 +433,6 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   /* else */
   /* remove JFIF if exists */
 
-  /* get tags in the current file */
-  if (app1_xmp) {
-    GstJifMuxMarker *xmp_m;
-    GstBuffer *buf;
-
-    xmp_m = (GstJifMuxMarker *) app1_xmp->data;
-
-    buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = (guint8 *) xmp_m->data + 29;
-    GST_BUFFER_SIZE (buf) = xmp_m->size - 29;
-
-    xmp_tags = gst_tag_list_from_xmp_buffer (buf);
-    gst_buffer_unref (buf);
-    GST_DEBUG_OBJECT (self, "Found xmp tags: %" GST_PTR_FORMAT, tags);
-  } else {
-    xmp_tags = NULL;
-  }
-
-  tagsetter_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (self));
-  if (xmp_tags) {
-    if (tagsetter_tags) {
-      tags = gst_tag_list_merge (tagsetter_tags, xmp_tags,
-          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (self)));
-      gst_tag_list_free (xmp_tags);
-    } else {
-      tags = xmp_tags;
-    }
-    xmp_tags = NULL;
-  } else {
-    tags = (GstTagList *) tagsetter_tags;
-    cleanup_tags = FALSE;
-  }
-
-  if (!tags) {
-    tags = gst_tag_list_new ();
-  }
-  /* FIXME: not happy with those
-   * - else where we would use VIDEO_CODEC = "Jpeg"
-   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-   GST_TAG_VIDEO_CODEC, "image/jpeg", NULL);
-   */
-
   /* if we want combined or EXIF */
   /* check if we don't have EXIF APP1 */
   if (!app1_exif) {
@@ -487,7 +442,15 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   /* else */
   /* remove EXIF if exists */
 
-  GST_DEBUG_OBJECT (self, "Merged tags: %" GST_PTR_FORMAT, tags);
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (self));
+  if (!tags) {
+    tags = gst_tag_list_new ();
+  }
+  /* FIXME: not happy with those
+   * - else where we would use VIDEO_CODEC = "Jpeg"
+   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+   GST_TAG_VIDEO_CODEC, "image/jpeg", NULL);
+   */
 
   /* add xmp */
   xmp_data = gst_tag_list_to_xmp_buffer (tags, FALSE);
@@ -501,7 +464,11 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     memcpy (&data[29], xmp, size);
     m = gst_jif_mux_new_marker (APP1, size + 29, data, TRUE);
 
-    /* replace the old xmp marker and not add a new one */
+    /* 
+     * Replace the old xmp marker and not add a new one.
+     * There shouldn't be a xmp packet in the input, but it is better
+     * to be safe than add another one and end up with 2 packets.
+     */
     if (app1_xmp) {
       gst_jif_mux_marker_free ((GstJifMuxMarker *) app1_xmp->data);
       app1_xmp->data = m;
@@ -537,8 +504,6 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
 
     modified = TRUE;
   }
-  if (cleanup_tags && tags)
-    gst_tag_list_free (tags);
   return modified;
 }
 
