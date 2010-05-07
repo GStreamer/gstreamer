@@ -27,38 +27,12 @@
 
 /**
  * SECTION:element-rtpdtmfmux
- * @see_also: rtpdtmfsrc, dtmfsrc
+ * @see_also: rtpdtmfsrc, dtmfsrc, rtpmux
  *
- * The RTPDTMFMuxer mixes/muxes RTP DTMF stream(s) into other RTP
- * streams. It does exactly what it's parent (rtpmux) does, except
- * that it allows upstream peer elements to request exclusive access
- * to the stream, which is required by the RTP DTMF standards (see RFC
- * 2833, section 3.2, para 1 for details). The peer upstream element
- * requests the acquisition and release of a stream lock beginning
- * using custom downstream gstreamer events. To request the acquisition
- * of the lock, the peer element must send an event of type
- * GST_EVENT_CUSTOM_DOWNSTREAM_OOB, having a
- * structure of name "stream-lock" with only one boolean field:
- * "lock". If this field is set to TRUE, the request is for the
- * acquisition of the lock, otherwise it is for release of the lock.
- *
- * For example, the following code in an upstream peer element
- * requests the acquisition of the stream lock:
- *
- * <programlisting>
- * GstEvent *event;
- * GstStructure *structure;
- * GstPad *srcpad;
- *
- * ... /\* srcpad initialization goes here \*\/
- *
- * structure = gst_structure_new ("stream-lock",
- *                    "lock", G_TYPE_BOOLEAN, TRUE, NULL);
- *
- * event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
- * gst_pad_push_event (dtmfsrc->srcpad, event);
- * </programlisting>
- *
+ * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP
+ * stream. It does exactly what it's parent (#rtpmux) does, except
+ * that it prevent buffers coming over a regular sink_%%d pad from going through
+ * for the duration of buffers that came in a priority_sink_%%d pad.
  */
 
 #ifdef HAVE_CONFIG_H
