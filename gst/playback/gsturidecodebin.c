@@ -101,6 +101,8 @@ struct _GstURIDecodeBin
   gint pending;
 
   gboolean async_pending;       /* async-start has been emited */
+
+  gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 };
 
 struct _GstURIDecodeBinClass
@@ -155,6 +157,7 @@ enum
 #define DEFAULT_BUFFER_SIZE         -1
 #define DEFAULT_DOWNLOAD            FALSE
 #define DEFAULT_USE_BUFFERING       FALSE
+#define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
 
 enum
 {
@@ -168,6 +171,7 @@ enum
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
+  PROP_EXPOSE_ALL_STREAMS,
   PROP_LAST
 };
 
@@ -365,6 +369,23 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstURIDecodeBin::expose-all-streams
+   *
+   * Expose streams of unknown type.
+   *
+   * If set to %FALSE, then only the streams that can be decoded to the final
+   * caps (see 'caps' property) will have a pad exposed. Streams that do not
+   * match those caps but could have been decoded will not have decoder plugged
+   * in internally and will not have a pad exposed. 
+   *
+   * Since: 0.10.30
+   */
+  g_object_class_install_property (gobject_class, PROP_EXPOSE_ALL_STREAMS,
+      g_param_spec_boolean ("expose-all-streams", "Expose All Streams",
+          "Expose all streams, including those of unknown type or that don't match the 'caps' property",
+          DEFAULT_EXPOSE_ALL_STREAMS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
    * GstURIDecodeBin::unknown-type:
    * @bin: The uridecodebin
    * @pad: the new pad containing caps that cannot be resolved to a 'final'
@@ -502,6 +523,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
   dec->buffer_size = DEFAULT_BUFFER_SIZE;
   dec->download = DEFAULT_DOWNLOAD;
   dec->use_buffering = DEFAULT_USE_BUFFERING;
+  dec->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
 }
 
 static void
@@ -584,6 +606,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_USE_BUFFERING:
       dec->use_buffering = g_value_get_boolean (value);
       break;
+    case PROP_EXPOSE_ALL_STREAMS:
+      dec->expose_allstreams = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -637,6 +662,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, dec->use_buffering);
+      break;
+    case PROP_EXPOSE_ALL_STREAMS:
+      g_value_set_boolean (value, dec->expose_allstreams);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1361,6 +1389,10 @@ make_decoder (GstURIDecodeBin * decoder)
   /* configure caps if we have any */
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
+
+  /* Propagate expose-all-streams property */
+  g_object_set (decodebin, "expose-all-streams", decoder->expose_allstreams,
+      NULL);
 
   if (!decoder->is_stream) {
     /* propagate the use-buffering property but only when we are not already
