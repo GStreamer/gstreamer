@@ -140,6 +140,7 @@ gst_deinterlace_method_weave_tff_class_init (GstDeinterlaceMethodWeaveTFFClass *
   dism_class->interpolate_scanline_ayuv = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_weave_packed;
+  dism_class->interpolate_scanline_uyvy = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_argb = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_abgr = deinterlace_scanline_weave_packed;
   dism_class->interpolate_scanline_rgba = deinterlace_scanline_weave_packed;
@@ -156,6 +157,7 @@ gst_deinterlace_method_weave_tff_class_init (GstDeinterlaceMethodWeaveTFFClass *
   dism_class->copy_scanline_ayuv = copy_scanline_packed;
   dism_class->copy_scanline_yuy2 = copy_scanline_packed;
   dism_class->copy_scanline_yvyu = copy_scanline_packed;
+  dism_class->copy_scanline_uyvy = copy_scanline_packed;
   dism_class->copy_scanline_argb = copy_scanline_packed;
   dism_class->copy_scanline_abgr = copy_scanline_packed;
   dism_class->copy_scanline_rgba = copy_scanline_packed;

@@ -92,6 +92,7 @@ struct _GstDeinterlaceMethodClass {
 
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yuy2;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yvyu;
+  GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_uyvy;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_i420;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yv12;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_y444;
@@ -185,6 +186,8 @@ struct _GstDeinterlaceSimpleMethodClass {
   GstDeinterlaceSimpleMethodFunction copy_scanline_yuy2;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_yvyu;
   GstDeinterlaceSimpleMethodFunction copy_scanline_yvyu;
+  GstDeinterlaceSimpleMethodFunction interpolate_scanline_uyvy;
+  GstDeinterlaceSimpleMethodFunction copy_scanline_uyvy;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_ayuv;
   GstDeinterlaceSimpleMethodFunction copy_scanline_ayuv;
   GstDeinterlaceSimpleMethodFunction interpolate_scanline_argb;

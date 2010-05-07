@@ -292,6 +292,7 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
 
   dism_class->interpolate_scanline_yuy2 = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_yvyu = deinterlace_scanline_linear_packed_c;
+  dism_class->interpolate_scanline_uyvy = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_ayuv = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_argb = deinterlace_scanline_linear_packed_c;
   dism_class->interpolate_scanline_abgr = deinterlace_scanline_linear_packed_c;
@@ -313,6 +314,8 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_packed_mmxext;
     dism_class->interpolate_scanline_yvyu =
+        deinterlace_scanline_linear_packed_mmxext;
+    dism_class->interpolate_scanline_uyvy =
         deinterlace_scanline_linear_packed_mmxext;
     dism_class->interpolate_scanline_argb =
         deinterlace_scanline_linear_packed_mmxext;
@@ -338,6 +341,8 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_packed_mmx;
     dism_class->interpolate_scanline_yvyu =
+        deinterlace_scanline_linear_packed_mmx;
+    dism_class->interpolate_scanline_uyvy =
         deinterlace_scanline_linear_packed_mmx;
     dism_class->interpolate_scanline_argb =
         deinterlace_scanline_linear_packed_mmx;

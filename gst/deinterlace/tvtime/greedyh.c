@@ -61,6 +61,7 @@ typedef struct
 {
   GstDeinterlaceMethodClass parent_class;
   ScanlineFunction scanline_yuy2;       /* This is for YVYU too */
+  ScanlineFunction scanline_uyvy;
   ScanlineFunction scanline_ayuv;
   ScanlineFunction scanline_planar_y;
   ScanlineFunction scanline_planar_uv;
@@ -312,6 +313,150 @@ greedyh_scanline_C_yuy2 (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
 
     Dest[0] = out_l;
     Dest[1] = out_c;
+
+    Dest += 2;
+    L1 += 2;
+    L2 += 2;
+    L3 += 2;
+    L2P += 2;
+  }
+}
+
+static void
+greedyh_scanline_C_uyvy (GstDeinterlaceMethodGreedyH * self, const guint8 * L1,
+    const guint8 * L2, const guint8 * L3, const guint8 * L2P, guint8 * Dest,
+    gint width)
+{
+  gint Pos;
+  guint8 l1_l, l1_1_l, l3_l, l3_1_l;
+  guint8 l1_c, l1_1_c, l3_c, l3_1_c;
+  guint8 avg_l, avg_c, avg_l_1, avg_c_1;
+  guint8 avg_l__1 = 0, avg_c__1 = 0;
+  guint8 avg_s_l, avg_s_c;
+  guint8 avg_sc_l, avg_sc_c;
+  guint8 best_l, best_c;
+  guint16 mov_l;
+  guint8 out_l, out_c;
+  guint8 l2_l, l2_c, lp2_l, lp2_c;
+  guint8 l2_l_diff, l2_c_diff, lp2_l_diff, lp2_c_diff;
+  guint8 min_l, min_c, max_l, max_c;
+  guint max_comb = self->max_comb;
+  guint motion_sense = self->motion_sense;
+  guint motion_threshold = self->motion_threshold;
+
+  width /= 2;
+  for (Pos = 0; Pos < width; Pos++) {
+    l1_l = L1[1];
+    l1_c = L1[0];
+    l3_l = L3[1];
+    l3_c = L3[0];
+
+    if (Pos == width - 1) {
+      l1_1_l = l1_l;
+      l1_1_c = l1_c;
+      l3_1_l = l3_l;
+      l3_1_c = l3_c;
+    } else {
+      l1_1_l = L1[3];
+      l1_1_c = L1[2];
+      l3_1_l = L3[3];
+      l3_1_c = L3[2];
+    }
+
+    /* Average of L1 and L3 */
+    avg_l = (l1_l + l3_l) / 2;
+    avg_c = (l1_c + l3_c) / 2;
+
+    if (Pos == 0) {
+      avg_l__1 = avg_l;
+      avg_c__1 = avg_c;
+    }
+
+    /* Average of next L1 and next L3 */
+    avg_l_1 = (l1_1_l + l3_1_l) / 2;
+    avg_c_1 = (l1_1_c + l3_1_c) / 2;
+
+    /* Calculate average of one pixel forward and previous */
+    avg_s_l = (avg_l__1 + avg_l_1) / 2;
+    avg_s_c = (avg_c__1 + avg_c_1) / 2;
+
+    /* Calculate average of center and surrounding pixels */
+    avg_sc_l = (avg_l + avg_s_l) / 2;
+    avg_sc_c = (avg_c + avg_s_c) / 2;
+
+    /* move forward */
+    avg_l__1 = avg_l;
+    avg_c__1 = avg_c;
+
+    /* Get best L2/L2P, i.e. least diff from above average */
+    l2_l = L2[1];
+    l2_c = L2[0];
+    lp2_l = L2P[1];
+    lp2_c = L2P[0];
+
+    l2_l_diff = ABS (l2_l - avg_sc_l);
+    l2_c_diff = ABS (l2_c - avg_sc_c);
+
+    lp2_l_diff = ABS (lp2_l - avg_sc_l);
+    lp2_c_diff = ABS (lp2_c - avg_sc_c);
+
+    if (l2_l_diff > lp2_l_diff)
+      best_l = lp2_l;
+    else
+      best_l = l2_l;
+
+    if (l2_c_diff > lp2_c_diff)
+      best_c = lp2_c;
+    else
+      best_c = l2_c;
+
+    /* Clip this best L2/L2P by L1/L3 and allow to differ by GreedyMaxComb */
+    max_l = MAX (l1_l, l3_l);
+    min_l = MIN (l1_l, l3_l);
+
+    if (max_l < 256 - max_comb)
+      max_l += max_comb;
+    else
+      max_l = 255;
+
+    if (min_l > max_comb)
+      min_l -= max_comb;
+    else
+      min_l = 0;
+
+    max_c = MAX (l1_c, l3_c);
+    min_c = MIN (l1_c, l3_c);
+
+    if (max_c < 256 - max_comb)
+      max_c += max_comb;
+    else
+      max_c = 255;
+
+    if (min_c > max_comb)
+      min_c -= max_comb;
+    else
+      min_c = 0;
+
+    out_l = CLAMP (best_l, min_l, max_l);
+    out_c = CLAMP (best_c, min_c, max_c);
+
+    /* Do motion compensation for luma, i.e. how much
+     * the weave pixel differs */
+    mov_l = ABS (l2_l - lp2_l);
+    if (mov_l > motion_threshold)
+      mov_l -= motion_threshold;
+    else
+      mov_l = 0;
+
+    mov_l = mov_l * motion_sense;
+    if (mov_l > 256)
+      mov_l = 256;
+
+    /* Weighted sum on clipped weave pixel and average */
+    out_l = (out_l * (256 - mov_l) + avg_sc_l * mov_l) / 256;
+
+    Dest[1] = out_l;
+    Dest[0] = out_c;
 
     Dest += 2;
     L1 += 2;
@@ -866,6 +1011,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 #endif
   /* TODO: MMX implementation of these two */
   klass->scanline_ayuv = greedyh_scanline_C_ayuv;
+  klass->scanline_uyvy = greedyh_scanline_C_uyvy;
   klass->scanline_planar_y = greedyh_scanline_C_planar_y;
   klass->scanline_planar_uv = greedyh_scanline_C_planar_uv;
 }

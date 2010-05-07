@@ -568,6 +568,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
 
   dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedy_packed;
   dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedy_packed;
+  dim_class->deinterlace_frame_uyvy = deinterlace_frame_di_greedy_packed;
   dim_class->deinterlace_frame_y444 = deinterlace_frame_di_greedy_planar;
   dim_class->deinterlace_frame_y42b = deinterlace_frame_di_greedy_planar;
   dim_class->deinterlace_frame_i420 = deinterlace_frame_di_greedy_planar;

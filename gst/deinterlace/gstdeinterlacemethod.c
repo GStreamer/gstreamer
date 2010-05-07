@@ -58,6 +58,8 @@ gst_deinterlace_method_supported_impl (GstDeinterlaceMethodClass * klass,
       return (klass->deinterlace_frame_yuy2 != NULL);
     case GST_VIDEO_FORMAT_YVYU:
       return (klass->deinterlace_frame_yvyu != NULL);
+    case GST_VIDEO_FORMAT_UYVY:
+      return (klass->deinterlace_frame_uyvy != NULL);
     case GST_VIDEO_FORMAT_I420:
       return (klass->deinterlace_frame_i420 != NULL);
     case GST_VIDEO_FORMAT_YV12:
@@ -131,6 +133,9 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
       break;
     case GST_VIDEO_FORMAT_YVYU:
       self->deinterlace_frame = klass->deinterlace_frame_yvyu;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      self->deinterlace_frame = klass->deinterlace_frame_uyvy;
       break;
     case GST_VIDEO_FORMAT_I420:
       self->deinterlace_frame = klass->deinterlace_frame_i420;
@@ -260,6 +265,9 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
     case GST_VIDEO_FORMAT_YVYU:
       return (klass->interpolate_scanline_yvyu != NULL
           && klass->copy_scanline_yvyu != NULL);
+    case GST_VIDEO_FORMAT_UYVY:
+      return (klass->interpolate_scanline_uyvy != NULL
+          && klass->copy_scanline_uyvy != NULL);
     case GST_VIDEO_FORMAT_AYUV:
       return (klass->interpolate_scanline_ayuv != NULL
           && klass->copy_scanline_ayuv != NULL);
@@ -679,6 +687,10 @@ gst_deinterlace_simple_method_setup (GstDeinterlaceMethod * method,
     case GST_VIDEO_FORMAT_YVYU:
       self->interpolate_scanline_packed = klass->interpolate_scanline_yvyu;
       self->copy_scanline_packed = klass->copy_scanline_yvyu;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      self->interpolate_scanline_packed = klass->interpolate_scanline_uyvy;
+      self->copy_scanline_packed = klass->copy_scanline_uyvy;
       break;
     case GST_VIDEO_FORMAT_AYUV:
       self->interpolate_scanline_packed = klass->interpolate_scanline_ayuv;

@@ -326,6 +326,8 @@ static void
       deinterlace_scanline_linear_blend_packed_c;
   dism_class->interpolate_scanline_yvyu =
       deinterlace_scanline_linear_blend_packed_c;
+  dism_class->interpolate_scanline_uyvy =
+      deinterlace_scanline_linear_blend_packed_c;
   dism_class->interpolate_scanline_ayuv =
       deinterlace_scanline_linear_blend_packed_c;
   dism_class->interpolate_scanline_argb =
@@ -350,6 +352,7 @@ static void
 
   dism_class->copy_scanline_yuy2 = deinterlace_scanline_linear_blend2_packed_c;
   dism_class->copy_scanline_yvyu = deinterlace_scanline_linear_blend2_packed_c;
+  dism_class->copy_scanline_uyvy = deinterlace_scanline_linear_blend2_packed_c;
   dism_class->copy_scanline_ayuv = deinterlace_scanline_linear_blend2_packed_c;
   dism_class->copy_scanline_argb = deinterlace_scanline_linear_blend2_packed_c;
   dism_class->copy_scanline_abgr = deinterlace_scanline_linear_blend2_packed_c;
@@ -370,6 +373,8 @@ static void
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_blend_packed_mmx;
     dism_class->interpolate_scanline_yvyu =
+        deinterlace_scanline_linear_blend_packed_mmx;
+    dism_class->interpolate_scanline_uyvy =
         deinterlace_scanline_linear_blend_packed_mmx;
     dism_class->interpolate_scanline_ayuv =
         deinterlace_scanline_linear_blend_packed_mmx;
@@ -399,6 +404,8 @@ static void
     dism_class->copy_scanline_yuy2 =
         deinterlace_scanline_linear_blend2_packed_mmx;
     dism_class->copy_scanline_yvyu =
+        deinterlace_scanline_linear_blend2_packed_mmx;
+    dism_class->copy_scanline_uyvy =
         deinterlace_scanline_linear_blend2_packed_mmx;
     dism_class->copy_scanline_argb =
         deinterlace_scanline_linear_blend2_packed_mmx;
