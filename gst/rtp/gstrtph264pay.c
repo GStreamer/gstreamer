@@ -955,7 +955,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
           rtph264pay->update_caps = FALSE;
 
-          GST_DEBUG ("outcaps udpate: sprop-parameter-sets=%s",
+          GST_DEBUG ("outcaps update: sprop-parameter-sets=%s",
               rtph264pay->sprop_parameter_sets);
         }
       } else {
