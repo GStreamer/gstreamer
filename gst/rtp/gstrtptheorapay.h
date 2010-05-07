@@ -59,6 +59,13 @@ struct _GstRtpTheoraPay
   GstClockTime  payload_timestamp;
   GstClockTime  payload_duration;
 
+  /* config (re-sending) */
+  guint8       *config_data;
+  guint         config_size;
+  guint         config_extra_len;
+  guint         config_interval;
+  GstClockTime  last_config;
+
   gint          width;
   gint          height;
 };
