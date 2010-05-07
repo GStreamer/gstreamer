@@ -48,9 +48,6 @@ struct _GstRTPDTMFMux
   GstRTPMux mux;
 
   /* Protected by object lock */
-  /* our special pad */
-  GstPad *special_pad;
-
   GstClockTime last_priority_end;
 };
 

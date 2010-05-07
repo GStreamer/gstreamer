@@ -638,14 +638,8 @@ gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  if (forward) {
-    GstRTPMuxClass *klass = GST_RTP_MUX_GET_CLASS (mux);
-
-    if (klass->sink_event_func)
-      klass->sink_event_func (pad, event);
-    else
-      ret = gst_pad_push_event (mux->srcpad, event);
-  }
+  if (forward)
+    ret = gst_pad_push_event (mux->srcpad, event);
 
   gst_object_unref (mux);
   return ret;
