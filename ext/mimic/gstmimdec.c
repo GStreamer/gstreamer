@@ -271,6 +271,7 @@ gst_mimdec_chain (GstPad * pad, GstBuffer * in)
     GST_OBJECT_UNLOCK (mimdec);
     if (event)
       result = gst_pad_push_event (mimdec->srcpad, event);
+    event = NULL;
     GST_OBJECT_LOCK (mimdec);
     if (!result) {
       GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
@@ -393,20 +394,19 @@ gst_mimdec_sink_event (GstPad * pad, GstEvent * event)
       mimdec->need_newsegment = FALSE;
       GST_OBJECT_UNLOCK (mimdec);
 
-      res = gst_pad_push_event (mimdec->srcpad, event);
-    }
       break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (mimdec);
       mimdec->need_newsegment = TRUE;
       GST_OBJECT_UNLOCK (mimdec);
 
-      res = gst_pad_push_event (mimdec->srcpad, event);
       break;
     default:
-      res = gst_pad_push_event (mimdec->srcpad, event);
       break;
   }
+
+  res = gst_pad_push_event (mimdec->srcpad, event);
 
 done:
 
