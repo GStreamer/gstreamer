@@ -69,7 +69,7 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
     structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_structure_remove_field (structure, "format", "endianness", "depth",
+    gst_structure_remove_fields (structure, "format", "endianness", "depth",
         "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
         "palette_data", NULL);
   }
