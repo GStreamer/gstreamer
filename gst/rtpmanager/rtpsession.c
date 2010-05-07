@@ -2180,7 +2180,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
 {
   GstClockTime result, interval = 0;
 
-  g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
+  g_return_val_if_fail (RTP_IS_SESSION (sess), GST_CLOCK_TIME_NONE);
 
   RTP_SESSION_LOCK (sess);
 
