@@ -2377,12 +2377,56 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
   return TRUE;
 }
 
+static void
+gst_rtspsrc_get_transport_info (GstRTSPSrc * src, GstRTSPStream * stream,
+    GstRTSPTransport * transport, const gchar ** destination, gint * min,
+    gint * max, guint * ttl)
+{
+  if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    if (destination) {
+      if (!(*destination = transport->destination))
+        *destination = stream->destination;
+    }
+    if (min && max) {
+      /* transport first */
+      *min = transport->port.min;
+      *max = transport->port.max;
+      if (*min == -1 && *max == -1) {
+        /* then try from SDP */
+      }
+      if (*min == -1 && *max == -1) {
+        /* some bad servers use the server_port attribute for multicast, try to handle
+         * those cases too here */
+        *min = transport->server_port.min;
+        *max = transport->server_port.max;
+      }
+    }
+
+    if (ttl) {
+      if (!(*ttl = transport->ttl))
+        *ttl = stream->ttl;
+    }
+  } else {
+    if (destination) {
+      /* first take the source, then the endpoint to figure out where to send
+       * the RTCP. */
+      if (!(*destination = transport->source))
+        *destination = gst_rtsp_connection_get_ip (src->connection);
+    }
+    if (min && max) {
+      *min = transport->server_port.min;
+      *max = transport->server_port.max;
+    }
+  }
+}
+
 /* For multicast create UDP sources and join the multicast group. */
 static gboolean
 gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
     GstRTSPTransport * transport, GstPad ** outpad)
 {
-  gchar *uri, *destination;
+  gchar *uri;
+  const gchar *destination;
   gint min, max;
 
   GST_DEBUG_OBJECT (src, "creating UDP sources for multicast");
@@ -2390,28 +2434,19 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
   /* we can remove the allocated UDP ports now */
   gst_rtspsrc_stream_free_udp (stream);
 
+  gst_rtspsrc_get_transport_info (src, stream, transport, &destination, &min,
+      &max, NULL);
+
   /* we need a destination now */
-  if (!(destination = transport->destination)) {
-    if (!(destination = stream->destination))
-      goto no_destination;
-  }
-
-  min = transport->port.min;
-  max = transport->port.max;
-  /* some bad servers use the server_port attribute for multicast, try to handle
-   * those cases too here */
-  if (min == -1 && max == -1) {
-    GST_DEBUG_OBJECT (src, "no port attribute set, fallback to server_port");
-    min = transport->server_port.min;
-    max = transport->server_port.max;
-  }
-
-  GST_DEBUG_OBJECT (src, "have destination '%s' and ports (%d)-(%d)",
-      destination, min, max);
+  if (destination == NULL)
+    goto no_destination;
 
   /* we really need ports now or we won't be able to receive anything at all */
   if (min == -1 && max == -1)
     goto no_ports;
+
+  GST_DEBUG_OBJECT (src, "have destination '%s' and ports (%d)-(%d)",
+      destination, min, max);
 
   /* creating UDP source for RTP */
   if (min != -1) {
@@ -2532,35 +2567,28 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
 {
   GstPad *pad;
   gint rtp_port, rtcp_port, sockfd = -1;
+  gboolean do_rtp, do_rtcp;
   const gchar *destination;
   gchar *uri, *name;
   guint ttl = 0;
 
-  /* get host and port */
-  if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    rtp_port = transport->port.min;
-    rtcp_port = transport->port.max;
-    /* multicast destination */
-    if (!(destination = transport->destination))
-      destination = stream->destination;
-    /* get ttl */
-    if (!(ttl = transport->ttl))
-      ttl = stream->ttl;
-  } else {
-    rtp_port = transport->server_port.min;
-    rtcp_port = transport->server_port.max;
-    /* first take the source, then the endpoint to figure out where to send
-     * the RTCP. */
-    destination = transport->source;
-    if (destination == NULL)
-      destination = gst_rtsp_connection_get_ip (src->connection);
-  }
-  if (destination == NULL)
+  /* get transport info */
+  gst_rtspsrc_get_transport_info (src, stream, transport, &destination,
+      &rtp_port, &rtcp_port, &ttl);
+
+  /* see what we need to do */
+  do_rtp = (rtp_port != -1);
+  /* it's possible that the server does not want us to send RTCP in which case
+   * the port is -1 */
+  do_rtcp = (rtcp_port != -1 && src->session != NULL && src->do_rtcp);
+
+  /* we need a destination when we have RTP or RTCP ports */
+  if (destination == NULL && (do_rtp || do_rtcp))
     goto no_destination;
 
   /* try to construct the fakesrc to the RTP port of the server to open up any
    * NAT firewalls */
-  if (rtp_port != -1) {
+  if (do_rtp) {
     GST_DEBUG_OBJECT (src, "configure RTP UDP sink for %s:%d", destination,
         rtp_port);
 
@@ -2615,9 +2643,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
 
     gst_element_link (stream->fakesrc, stream->udpsink[0]);
   }
-  /* it's possible that the server does not want us to send RTCP in which case
-   * the port is -1 */
-  if (rtcp_port != -1 && src->session != NULL && src->do_rtcp) {
+  if (do_rtcp) {
     GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
         rtcp_port);
 
