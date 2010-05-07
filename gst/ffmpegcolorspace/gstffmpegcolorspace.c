@@ -69,15 +69,9 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
     structure = gst_caps_get_structure (caps, i);
 
     gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "endianness");
-    gst_structure_remove_field (structure, "depth");
-    gst_structure_remove_field (structure, "bpp");
-    gst_structure_remove_field (structure, "red_mask");
-    gst_structure_remove_field (structure, "green_mask");
-    gst_structure_remove_field (structure, "blue_mask");
-    gst_structure_remove_field (structure, "alpha_mask");
-    gst_structure_remove_field (structure, "palette_data");
+    gst_structure_remove_field (structure, "format", "endianness", "depth",
+        "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
+        "palette_data", NULL);
   }
 
   gst_caps_do_simplify (caps);
@@ -135,12 +129,8 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   GstCaps *tmp, *tmp2;
   GstCaps *result;
   guint i, n;
-  gboolean is_alpha;
   GstStructure *s;
   GstCaps *alpha, *non_alpha;
-
-  s = gst_caps_get_structure (caps, 0);
-  is_alpha = gst_ffmpegcsp_structure_is_alpha (s);
 
   template = gst_pad_template_get_caps (srctempl);
   result = gst_caps_copy (caps);
