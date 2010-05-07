@@ -2135,7 +2135,7 @@ rtp_session_schedule_bye (RTPSession * sess, const gchar * reason,
 GstClockTime
 rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
 {
-  GstClockTime result;
+  GstClockTime result, interval = 0;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -2156,23 +2156,29 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
   if (sess->source->received_bye) {
     if (sess->sent_bye) {
       GST_DEBUG ("we sent BYE already");
-      result = GST_CLOCK_TIME_NONE;
+      interval = GST_CLOCK_TIME_NONE;
     } else if (sess->stats.active_sources >= 50) {
       GST_DEBUG ("reconsider BYE, more than 50 sources");
       /* reconsider BYE if members >= 50 */
-      result += calculate_rtcp_interval (sess, FALSE, TRUE);
+      interval = calculate_rtcp_interval (sess, FALSE, TRUE);
     }
   } else {
     if (sess->first_rtcp) {
       GST_DEBUG ("first RTCP packet");
       /* we are called for the first time */
-      result += calculate_rtcp_interval (sess, FALSE, TRUE);
+      interval = calculate_rtcp_interval (sess, FALSE, TRUE);
     } else if (sess->next_rtcp_check_time < current_time) {
       GST_DEBUG ("old check time expired, getting new timeout");
       /* get a new timeout when we need to */
-      result += calculate_rtcp_interval (sess, FALSE, FALSE);
+      interval = calculate_rtcp_interval (sess, FALSE, FALSE);
     }
   }
+
+  if (interval != GST_CLOCK_TIME_NONE)
+    result += interval;
+  else
+    result = GST_CLOCK_TIME_NONE;
+
   sess->next_rtcp_check_time = result;
 
   GST_DEBUG ("next timeout: %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
