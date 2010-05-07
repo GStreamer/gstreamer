@@ -24,7 +24,9 @@
  * SECTION:element-jifmux
  * @short_description: JPEG interchange format writer
  *
- * Writes a JPEG image as JPEG/EXIF or JPEG/JFIF including various metadata.
+ * Writes a JPEG image as JPEG/EXIF or JPEG/JFIF including various metadata. The
+ * jpeg image received on the sink pad should be minimal (e.g. should not
+ * contain metadata already).
  *
  * <refsect2>
  * <title>Example launch line</title>

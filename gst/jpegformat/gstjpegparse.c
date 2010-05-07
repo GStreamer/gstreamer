@@ -28,7 +28,7 @@
  * Parses a JPEG stream into JPEG images.  It looks for EOI boundaries to
  * split a continuous stream into single-frame buffers. Also reads the
  * image header searching for image properties such as width and height
- * among others.
+ * among others. Jpegparse can also extract metadata (e.g. xmp).
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -39,7 +39,11 @@
  * HTTP and stores it in a matroska file.
  * </refsect2>
  */
-
+/* FIXME: output plain JFIF APP marker only. This provides best code reuse.
+ * JPEG decoders would not need to handle this part anymore. Also when remuxing
+ * (... ! jpegparse ! ... ! jifmux ! ...) metadata consolidation would be
+ * easier.
+ */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
