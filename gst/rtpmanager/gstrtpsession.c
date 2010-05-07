@@ -752,19 +752,23 @@ rtcp_thread (GstRtpSession * rtpsession)
   GstClockTime next_timeout;
   guint64 ntpnstime;
   GstClockTime running_time;
+  RTPSession *session;
+  GstClock *sysclock;
 
   GST_DEBUG_OBJECT (rtpsession, "entering RTCP thread");
 
   GST_RTP_SESSION_LOCK (rtpsession);
 
-  current_time = gst_clock_get_time (rtpsession->priv->sysclock);
+  sysclock = rtpsession->priv->sysclock;
+  current_time = gst_clock_get_time (sysclock);
+
+  session = rtpsession->priv->session;
 
   while (!rtpsession->priv->stop_thread) {
     GstClockReturn res;
 
     /* get initial estimate */
-    next_timeout =
-        rtp_session_next_timeout (rtpsession->priv->session, current_time);
+    next_timeout = rtp_session_next_timeout (session, current_time);
 
     GST_DEBUG_OBJECT (rtpsession, "next check time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (next_timeout));
@@ -774,7 +778,7 @@ rtcp_thread (GstRtpSession * rtpsession)
       break;
 
     id = rtpsession->priv->id =
-        gst_clock_new_single_shot_id (rtpsession->priv->sysclock, next_timeout);
+        gst_clock_new_single_shot_id (sysclock, next_timeout);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
     res = gst_clock_id_wait (id, NULL);
@@ -787,7 +791,7 @@ rtcp_thread (GstRtpSession * rtpsession)
       break;
 
     /* update current time */
-    current_time = gst_clock_get_time (rtpsession->priv->sysclock);
+    current_time = gst_clock_get_time (sysclock);
 
     /* get current NTP time */
     get_current_times (rtpsession, &running_time, &ntpnstime);
@@ -799,8 +803,7 @@ rtcp_thread (GstRtpSession * rtpsession)
 
     /* perform actions, we ignore result. Release lock because it might push. */
     GST_RTP_SESSION_UNLOCK (rtpsession);
-    rtp_session_on_timeout (rtpsession->priv->session, current_time, ntpnstime,
-        running_time);
+    rtp_session_on_timeout (session, current_time, ntpnstime, running_time);
     GST_RTP_SESSION_LOCK (rtpsession);
   }
   /* mark the thread as stopped now */
