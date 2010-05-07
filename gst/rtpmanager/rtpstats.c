@@ -49,6 +49,9 @@ void
 rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw, guint rtcp_bw,
     guint rs, guint rr)
 {
+  GST_DEBUG ("recalc bandwidths: RTP %u, RTCP %u, RS %u, RR %u", rtp_bw,
+      rtcp_bw, rs, rr);
+
   /* when given, sender and receive bandwidth add up to the total
    * rtcp bandwidth */
   if (rs != -1 && rr != -1)
